@@ -1,0 +1,17 @@
+target/
+project/target/
+project/project/
+.bsp/
+.idea/
+.metals/
+.bloop/
+simWorkspace/
+node_modules/
+/gui/build/
+/gui/.svelte-kit/
+/gui/src-tauri/gen/
+/gui/src-tauri/target/
+/target/
+*.log
+!/docs/**/*.log
+*.tywaves.vcd

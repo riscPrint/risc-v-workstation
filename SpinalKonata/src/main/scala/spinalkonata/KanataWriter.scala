@@ -1,0 +1,92 @@
+package spinalkonata
+
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
+import scala.collection.mutable
+
+sealed trait Event
+final case class Fetch(id: Long, simId: Long, thread: String = "0") extends Event
+final case class Label(id: Long, text: String, kind: Int = 0) extends Event
+final case class Enter(id: Long, stage: String, lane: String = "0") extends Event
+final case class Leave(id: Long, stage: String, lane: String = "0") extends Event
+final case class Retire(id: Long) extends Event
+final case class Flush(id: Long) extends Event
+final case class Dependency(consumer: Long, producer: Long) extends Event
+
+/** Buffered event writer. Schedule future events freely, then seal each sampled cycle.
+  * No ISA, pipeline names, ROB indices, or simulator assumptions live here.
+  * Open instructions at close remain open (a bounded trace is not a flush).
+  */
+final class KanataWriter(out: File, startCycle: Long = 0) extends AutoCloseable {
+  require(startCycle >= 0)
+  Option(out.getAbsoluteFile.getParentFile).foreach(_.mkdirs())
+  private val writer = new PrintWriter(new BufferedWriter(new FileWriter(out), 1 << 20))
+  writer.print(s"Kanata\t0004\nC=\t$startCycle\n")
+  private val pending = mutable.TreeMap.empty[Long, mutable.ArrayBuffer[Event]]
+  private val seen = mutable.HashSet.empty[Long]
+  private val alive = mutable.HashSet.empty[Long]
+  private val lanes = mutable.HashMap.empty[(Long, String), String]
+  private var sealedThrough = startCycle - 1
+  private var cursor = startCycle
+  private var retired = 0L
+  private var closed = false
+
+  private def safe(s: String): String = s.replace('\t', ' ').replace('\r', ' ').replace('\n', ' ')
+  def record(at: Long, event: Event): Unit = {
+    require(!closed, "writer closed")
+    require(at > sealedThrough && at >= startCycle, s"event at sealed cycle $at")
+    pending.getOrElseUpdate(at, mutable.ArrayBuffer.empty) += event
+  }
+  private def live(id: Long): Unit = require(alive(id), s"unknown or ended instruction $id")
+  private def line(s: String): Unit = writer.println(s)
+  private def finish(id: Long, flush: Boolean): Unit = {
+    live(id)
+    lanes.keys.filter(_._1 == id).toList.sorted.foreach { key =>
+      line(s"E\t$id\t${safe(key._2)}\t${safe(lanes.remove(key).get)}")
+    }
+    line(s"R\t$id\t${if (flush) 0 else retired}\t${if (flush) 1 else 0}")
+    if (!flush) retired += 1
+    alive -= id
+  }
+  private def write(event: Event): Unit = event match {
+    case Fetch(id, sim, thread) =>
+      require(!seen(id), s"duplicate instruction $id")
+      seen += id; alive += id
+      line(s"I\t$id\t$sim\t${safe(thread)}")
+    case Label(id, text, kind) =>
+      live(id); require(kind >= 0 && kind <= 2)
+      line(s"L\t$id\t$kind\t${safe(text)}")
+    case Enter(id, stage, lane) =>
+      live(id); require(stage.nonEmpty)
+      lanes.remove((id, lane)).foreach(old => line(s"E\t$id\t${safe(lane)}\t${safe(old)}"))
+      lanes((id, lane)) = stage
+      line(s"S\t$id\t${safe(lane)}\t${safe(stage)}")
+    case Leave(id, stage, lane) =>
+      live(id); require(lanes.get((id, lane)).contains(stage), s"stage $stage is not active")
+      lanes.remove((id, lane))
+      line(s"E\t$id\t${safe(lane)}\t${safe(stage)}")
+    case Retire(id) => finish(id, flush = false)
+    case Flush(id) => finish(id, flush = true)
+    case Dependency(consumer, producer) =>
+      live(consumer); require(seen(producer), s"unknown producer $producer")
+      line(s"W\t$consumer\t$producer\t0")
+  }
+  /** Flush through this cycle, including quiet cycles so observation length is explicit. */
+  def seal(at: Long): Unit = {
+    require(!closed && at >= sealedThrough && at >= startCycle)
+    pending.keys.takeWhile(_ <= at).toList.foreach { t =>
+      if (t != cursor) line(s"C\t${t - cursor}")
+      cursor = t
+      pending.remove(t).get.foreach(write)
+    }
+    if (at != cursor) line(s"C\t${at - cursor}")
+    cursor = at
+    sealedThrough = at
+  }
+  override def close(): Unit = if (!closed) {
+    try {
+      if (pending.nonEmpty) seal(pending.lastKey)
+      writer.flush()
+      require(!writer.checkError(), s"failed to write ${out.getPath}")
+    } finally { writer.close(); closed = true }
+  }
+}

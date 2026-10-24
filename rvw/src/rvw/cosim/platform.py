@@ -1,0 +1,163 @@
+"""Explicit platform inputs; no core-specific behavior in the checker."""
+import json
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+
+
+def number(value):
+    if type(value) not in (str, int):
+        raise ValueError("integer or integer string expected")
+    return int(value, 0) if isinstance(value, str) else int(value)
+
+
+PMPADDR0 = 0x3b0
+# Interrupts whose pending bit only software sets (no Sstc): never a platform input.
+SOFTWARE_ONLY_IRQS = (1, 5)
+
+
+def parse_csr_masks(items, xlen, pmp_regions):
+    """{csr: mask} from {"0x301": "0x6", "0x3b0-0x3b7": "0xffffffffc0000000"}.
+
+    A mask holds the implementation-defined bits of a CSR; all other bits compare strictly.
+    """
+    if not isinstance(items, dict):
+        raise ValueError("csr_masks must be an object of CSR (or range) to mask")
+    out = {}
+    for key, value in items.items():
+        lo, _, hi = str(key).partition("-")
+        lo, hi = int(lo, 0), int(hi or lo, 0)
+        mask = number(value)
+        if not 0 <= lo <= hi < 4096:
+            raise ValueError(f"invalid csr_masks entry {key!r}")
+        if not 0 < mask < 1 << xlen:
+            raise ValueError(f"csr_masks {key!r}: mask must be nonzero and fit XLEN")
+        for csr in range(lo, hi + 1):
+            if PMPADDR0 + pmp_regions <= csr < PMPADDR0 + 64:
+                raise ValueError(f"csr_masks {key!r}: pmpaddr{csr - PMPADDR0} exceeds pmp_regions={pmp_regions}")
+            if csr in out:
+                raise ValueError(f"csr_masks: CSR {csr:#x} listed twice")
+            out[csr] = mask
+    return out
+
+
+@dataclass
+class Platform:
+    name: str
+    xlen: int
+    isa: str
+    reset_pc: int
+    ram: list[tuple[int, int]]
+    mmio: list[tuple[int, int]]
+    pmp_regions: int = 8
+    aligned_mem: bool = False
+    reference_isa: str | None = None
+    illegal_insn_tval: str = "insn"   # what the core writes to xtval on an illegal instruction: "insn" or "zero"
+    mode_after_change: bool = False     # known trace quirk: an instruction that changes mode (xRET, trap) is reported in the new mode
+    trace_from_reset: bool = True       # false: the trace starts after reset, so the first instret read sets the offset
+    csr_masks: dict = field(default_factory=dict)  # {csr: mask of implementation-defined bits}; a read takes those bits from the core
+    sail_overrides: dict = field(default_factory=dict)  # Sail config override (JSON object) for this core
+    irq_input_latency: int = 4          # cycles an interrupt input level may take to reach mip (C2 irq events)
+    # Interrupt causes (mip bits) driven by platform inputs. Only these may be injected into a reference
+    # at a core's trap event; any other interrupt (SSIP, STIP: set by software) must come from the
+    # reference's own pending and enable state. Default: MSIP, MTIP, SEIP, MEIP.
+    irq_inputs: list = field(default_factory=lambda: [3, 7, 9, 11])
+
+    @classmethod
+    def load(cls, core, path=None):
+        path = Path(path) if path else Path(__file__).parent / "configs" / f"{core}.json"
+        obj = json.loads(path.read_text())
+        def ranges(key):
+            return [(number(r["base"]), number(r["size"])) for r in obj[key]]
+        p = cls(obj["name"], obj["xlen"], obj["isa"], number(obj["reset_pc"]),
+                ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
+                obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
+                obj.get("trace_from_reset", True))
+        p.sail_overrides = obj.get("sail_overrides", {})
+        if not isinstance(p.sail_overrides, dict):
+            raise ValueError("sail_overrides must be a JSON object (a Sail config override)")
+        p.irq_input_latency = obj.get("irq_input_latency", 4)
+        if type(p.irq_input_latency) is not int or not 0 <= p.irq_input_latency <= 1000:
+            raise ValueError("irq_input_latency must be an integer number of cycles (0 to 1000)")
+        p.irq_inputs = obj.get("irq_inputs", [3, 7, 9, 11])
+        if (not isinstance(p.irq_inputs, list) or len(set(p.irq_inputs)) != len(p.irq_inputs)
+                or any(type(c) is not int or not 0 <= c < min(p.xlen, 64) or c in SOFTWARE_ONLY_IRQS
+                       for c in p.irq_inputs)):
+            raise ValueError("irq_inputs must be a list of distinct interrupt cause codes (< XLEN) driven by "
+                             "platform inputs; SSIP (1) and STIP (5) are set by software, not inputs")
+        if "csr_sync" in obj:
+            raise ValueError("csr_sync took whole CSR values from the core; use csr_masks with the implementation-defined bits")
+        if type(p.pmp_regions) is not int or not 0 <= p.pmp_regions <= 64:
+            raise ValueError("invalid PMP count")
+        p.csr_masks = parse_csr_masks(obj.get("csr_masks", {}), p.xlen, p.pmp_regions)
+        if type(p.mode_after_change) is not bool or type(p.trace_from_reset) is not bool:
+            raise ValueError("mode_after_change and trace_from_reset must be boolean")
+        if p.illegal_insn_tval not in ("insn", "zero"):
+            raise ValueError("illegal_insn_tval must be insn or zero")
+        if (p.xlen not in (32, 64) or not isinstance(p.isa, str)
+                or not re.fullmatch(r"rv(?:32|64)[a-z0-9_]+", p.isa)
+                or not p.isa.startswith(f"rv{p.xlen}")):
+            raise ValueError("platform xlen and ISA disagree")
+        if p.reference_isa is not None and (not isinstance(p.reference_isa, str)
+                or not re.fullmatch(r"rv(?:32|64)[a-z0-9_]+", p.reference_isa)
+                or not p.reference_isa.startswith(f"rv{p.xlen}")):
+            raise ValueError("invalid reference_isa")
+        if type(p.aligned_mem) is not bool:
+            raise ValueError("aligned_mem must be boolean")
+        if not 0 <= p.reset_pc < 1 << p.xlen:
+            raise ValueError("reset PC exceeds XLEN")
+        if not 0 <= p.pmp_regions <= 64 or not p.ram:
+            raise ValueError("invalid PMP count or empty RAM map")
+        ordered = sorted(p.ram + p.mmio)
+        for i, (base, size) in enumerate(ordered):
+            if base < 0 or size <= 0 or base + size > 1 << p.xlen:
+                raise ValueError("invalid memory region")
+            if i and ordered[i-1][0] + ordered[i-1][1] > base:
+                raise ValueError("overlapping platform regions")
+        if any(base % 4096 or size % 4096 for base, size in p.ram):
+            raise ValueError("RAM regions must have page-aligned base and size")
+        return p
+
+    def describe(self):
+        """JSON form, with CSR masks in hex."""
+        out = dict(vars(self))
+        out["csr_masks"] = {hex(k): hex(v) for k, v in sorted(self.csr_masks.items())}
+        return out
+
+    def check_segments(self, image):
+        """Every ELF load segment (its file bytes and BSS) lies wholly in one RAM region.
+        Shared by all reference models, so none loads a program the platform cannot hold."""
+        for addr, _, memsz in image.segments:
+            if not any(base <= addr and addr + memsz <= base + size for base, size in self.ram):
+                raise ValueError(f"ELF segment {addr:#x}+{memsz:#x} outside configured RAM")
+
+    @property
+    def irq_input_mask(self):
+        """mip bits of the platform's interrupt inputs."""
+        return sum(1 << c for c in self.irq_inputs)
+
+    def is_mmio(self, addr, size):
+        return any(base <= addr and addr + size <= base + length for base, length in self.mmio)
+
+    def normalize_effect(self, effect):
+        if self.aligned_mem and (effect["mem_rmask"] or effect["mem_wmask"]):
+            offset = effect["mem_addr"] % (self.xlen//8)
+            effect["mem_addr"] -= offset
+            for field in ("mem_rmask", "mem_wmask"):
+                effect[field] <<= offset
+                if effect[field] >= 1 << (self.xlen//8):
+                    raise ValueError("memory access crosses an aligned RVFI word")
+            for field in ("mem_rdata", "mem_wdata"):
+                effect[field] = (effect[field] << (8*offset)) & ((1 << self.xlen)-1)
+        return effect
+
+    def mmio_read(self, record):
+        mask = record["mem_rmask"]
+        if not mask:
+            return None
+        offset = (mask & -mask).bit_length()-1 if self.aligned_mem else 0
+        address = record["mem_addr"] + offset
+        size = mask.bit_length()-offset
+        if self.is_mmio(address, size):
+            return address, record["mem_rdata"] >> (8*offset)
+        return None

@@ -1,0 +1,537 @@
+#!/usr/bin/env bash
+# Install the workstation once. Core projects stay in separate repositories.
+set -euo pipefail
+export PYTHONDONTWRITEBYTECODE=1
+
+usage() {
+  cat <<'HELP'
+Usage: scripts/install.sh [OPTIONS]
+  --prefix DIR       Clone into DIR (default: current checkout, or
+                     $HOME/tools/risc-v-workstation for a standalone script).
+  --source DIR       Clone a local checkout instead of GitHub (needs --prefix).
+  --with-sim         JDK 21, sbt 1.10.7+, Verilator 5+, make and C++ compiler.
+  --with-riscv-gcc   Bare-metal RISC-V GCC and binutils.
+  --with-cosim       Spike headers/libraries and the workstation shim.
+  --with-formal      OSS CAD Suite: Yosys, SymbiYosys and Yices.
+  --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
+  --all              Select all optional components.
+  --shell-rc FILE    Add the env.sh source line to FILE. Default: print it only.
+  --yes             Approve package commands without a prompt.
+  --dry-run         Print actions. Do not write files or install packages.
+  --check           Report requested tools and versions. Do not change files.
+  -h, --help        Show this help.
+System package commands require approval unless --yes is set.
+Python 3.11+ is required. Local downloads go under RVW_HOME/.tools.
+RVW_GEM5 selects an existing gem5 executable path. It must be v25.1.0.1
+with RISC-V support. An invalid selection is an error.
+HELP
+}
+fail() { printf 'install.sh: %s\n' "$*" >&2; exit 2; }
+show() { printf '  +'; printf ' %q' "$@"; printf '\n'; }
+run() { show "$@"; if [ "$dry" = 0 ]; then "$@"; fi; }
+value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a value"; }
+
+sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
+prefix='' source_dir='' shell_rc=''
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --prefix) value "$@"; prefix="$2"; shift 2 ;;
+    --source) value "$@"; source_dir="$2"; shift 2 ;;
+    --shell-rc) value "$@"; shell_rc="$2"; shift 2 ;;
+    --with-sim) sim=1; shift ;;
+    --with-riscv-gcc) gcc=1; shift ;;
+    --with-cosim) cosim=1; shift ;;
+    --with-formal) formal=1; shift ;;
+    --with-gem5) gem5=1; shift ;;
+    --all) sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
+    --yes) yes=1; shift ;;
+    --dry-run) dry=1; shift ;;
+    --check) check=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) fail "unknown argument: $1" ;;
+  esac
+done
+[ "$dry" = 0 ] || [ "$check" = 0 ] || fail '--check and --dry-run are separate modes'
+[ -z "$source_dir" ] || [ -n "$prefix" ] || fail '--source needs --prefix'
+script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -z "$prefix" ]; then
+  if [ -f "$script_root/rvw/pyproject.toml" ]; then prefix="$script_root";
+  else prefix="$HOME/tools/risc-v-workstation"; fi
+fi
+# Use absolute paths without creating directories in check or dry-run mode.
+[[ "$prefix" = /* ]] || prefix="$PWD/$prefix"
+[[ "$prefix" != *$'\n'* ]] || fail 'prefix must not contain a newline'
+if [ -n "$source_dir" ]; then
+  source_dir="$(cd "$source_dir" && pwd)"
+  [ -f "$source_dir/rvw/pyproject.toml" ] || fail '--source is not a workstation checkout'
+fi
+rvw_home="$prefix"
+tools="$rvw_home/.tools"
+gem5_version=25.1.0.1
+gem5_revision=c8222cc67a399bfc01e8658dd14b30d5bfd634f9
+gem5_source="$tools/src/gem5-v$gem5_version"
+gem5_external=0
+if [ -n "${RVW_GEM5:-}" ]; then gem5_external=1;
+else RVW_GEM5="$gem5_source/build/RISCV/gem5.opt"; fi
+[[ "$RVW_GEM5" = /* ]] || RVW_GEM5="$PWD/$RVW_GEM5"
+[[ "$RVW_GEM5" != *$'\n'* ]] || fail 'RVW_GEM5 must not contain a newline'
+export RVW_GEM5
+export PATH="$rvw_home/rvw/.venv/bin:$tools/bin:$tools/oss-cad-suite/bin:$PATH:$HOME/.local/bin"
+# Reuse installer-managed tools on a second run without sourcing env.sh first.
+if [ -d "$tools/jdk" ]; then export JAVA_HOME="$tools/jdk"; fi
+if [ -n "${JAVA_HOME:-}" ]; then export PATH="$JAVA_HOME/bin:$PATH"; fi
+if [ -z "${SPIKE_PREFIX:-}" ]; then
+  if command -v spike >/dev/null 2>&1; then SPIKE_PREFIX="$(dirname "$(dirname "$(command -v spike)")")";
+  else SPIKE_PREFIX="$tools/spike"; fi
+fi
+export SPIKE_PREFIX
+export PATH="$tools/riscv/bin:$PATH"
+case ":$PATH:" in *":$SPIKE_PREFIX/bin:"*) ;; *) export PATH="$SPIKE_PREFIX/bin:$PATH" ;; esac
+
+system="$(uname -s)"
+pm=''
+case "$system" in
+  Darwin) pm=brew ;;
+  Linux)
+    if [ -r /etc/os-release ]; then
+      # os-release is supplied by the OS, not the target checkout.
+      . /etc/os-release
+      case " ${ID:-} ${ID_LIKE:-} " in
+        *debian*|*ubuntu*) pm=apt ;;
+        *fedora*|*rhel*|*centos*) pm=dnf ;;
+      esac
+    fi ;;
+esac
+if [ -z "$pm" ]; then
+  printf '%s\n' 'Unsupported OS. Install Python 3.11+, git and uv manually.' \
+    'Create rvw/.venv with uv venv --python python3 rvw/.venv.' \
+    "Install with: uv pip install --python rvw/.venv/bin/python -e 'rvw[mcp]'" \
+    "Native tools: https://github.com/riscPrint/risc-v-workstation/blob/main/docs/BRING_YOUR_OWN_CORE.md#install-the-workstation"
+  exit 1
+fi
+
+# Every system mutation has its own approval and displays its exact command.
+package() {
+  local command=()
+  if [ "$pm" = brew ]; then
+    command=(env HOMEBREW_NO_AUTO_UPDATE=1 brew "$@")
+  elif [ "$(id -u)" = 0 ]; then command=("$@");
+  else command=(sudo "$@"); fi
+  show "${command[@]}"
+  [ "$dry" = 0 ] || return 0
+  if [ "$yes" = 0 ]; then
+    local answer=''
+    printf 'Run this system package command? [y/N] '
+    read -r answer || true
+    case "$answer" in y|Y|yes|YES) ;; *) fail 'package command declined; nothing more was installed' ;; esac
+  fi
+  "${command[@]}"
+}
+updated=0
+packages() {
+  case "$pm" in
+    brew)
+      command -v brew >/dev/null || fail 'Install Homebrew first: https://brew.sh'
+      package install "$@" ;;
+    apt)
+      if [ "$updated" = 0 ]; then package apt-get update; updated=1; fi
+      package env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@" ;;
+    dnf) package dnf install -y "$@" ;;
+  esac
+}
+version_ge() {
+  local actual="$1" required="$2" a b c x y z
+  IFS=. read -r a b c <<< "$actual"
+  IFS=. read -r x y z <<< "$required"
+  a=$((10#${a:-0})); b=$((10#${b:-0})); c=$((10#${c:-0}))
+  x=$((10#${x:-0})); y=$((10#${y:-0})); z=$((10#${z:-0}))
+  (( a > x || (a == x && b > y) || (a == x && b == y && c >= z) ))
+}
+# Does not launch a JVM for sbt. --script-version reads its launcher version.
+probe() {
+  local label="$1" minimum="$2" output number
+  shift 2
+  if ! command -v "$1" >/dev/null 2>&1; then printf 'MISSING %s\n' "$label"; return 1; fi
+  if ! output=$("$@" 2>&1); then printf 'UNUSABLE %s: %s\n' "$label" "$output"; return 1; fi
+  if [[ "$output" =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]; then number="${BASH_REMATCH[1]}";
+  elif [[ "$output" =~ ([0-9]+) ]]; then number="${BASH_REMATCH[1]}";
+  else printf 'UNKNOWN VERSION %s: %s\n' "$label" "$output"; return 1; fi
+  if [ "$label" = 'JDK' ] || [ "$label" = 'javac' ]; then
+    if [[ "$number" != 21 && "$number" != 21.* ]]; then
+      printf 'WRONG VERSION %s: %s (need 21)\n' "$label" "$number"; return 1
+    fi
+  elif ! version_ge "$number" "$minimum"; then
+    printf 'TOO OLD %s: %s (need %s+)\n' "$label" "$number" "$minimum"; return 1
+  fi
+  printf 'PRESENT %s: %s\n' "$label" "$number"
+}
+core_check() {
+  local failed=0
+  probe Python 3.11 "$python_cmd" --version || failed=1
+  probe uv 0.6 uv --version || failed=1
+  probe git 2 git --version || failed=1
+  if [ -x "$rvw_home/rvw/.venv/bin/python" ]; then
+    probe 'rvw venv Python' 3.11 "$rvw_home/rvw/.venv/bin/python" --version || failed=1
+    if ! "$rvw_home/rvw/.venv/bin/python" -B -I -c 'from importlib.metadata import version; print("PRESENT rvw:", version("rvw")); print("PRESENT mcp:", version("mcp")); print("PRESENT jsonschema:", version("jsonschema"))'; then failed=1; fi
+    "$rvw_home/rvw/.venv/bin/rvw" --help >/dev/null || failed=1
+  else printf 'MISSING rvw venv: %s\n' "$rvw_home/rvw/.venv"; failed=1; fi
+  if [ -f "$rvw_home/env.sh" ]; then printf 'PRESENT env.sh\n';
+  else printf 'MISSING env.sh\n'; failed=1; fi
+  return "$failed"
+}
+sim_check() {
+  local failed=0
+  probe JDK 21 java -version || failed=1
+  probe javac 21 javac -version || failed=1
+  probe sbt 1.10.7 sbt --script-version || failed=1
+  probe Verilator 5 verilator --version || failed=1
+  probe make 3 make --version || failed=1
+  probe C++ 0 "${CXX:-c++}" --version || failed=1
+  return "$failed"
+}
+gem5_check() {
+  local output number
+  if [ ! -f "$RVW_GEM5" ] || [ ! -x "$RVW_GEM5" ]; then
+    printf 'MISSING gem5: %s\n' "$RVW_GEM5"; return 1
+  fi
+  # gem5 has no --version option. Build info also identifies the guest ISA.
+  if ! output=$(nice "$RVW_GEM5" --build-info 2>&1); then
+    printf 'UNUSABLE gem5: %s\n' "$output"; return 1
+  fi
+  number=$(printf '%s\n' "$output" | sed -n 's/^gem5 version //p')
+  if [ "$number" != "$gem5_version" ]; then
+    printf 'WRONG VERSION gem5: %s (need %s)\n' "${number:-unknown}" "$gem5_version"; return 1
+  fi
+  if ! printf '%s\n' "$output" | grep -Eq '^[[:space:]]*USE_RISCV_ISA = True[[:space:]]*$'; then
+    printf 'MISSING gem5 RISC-V support: %s\n' "$RVW_GEM5"; return 1
+  fi
+  printf 'PRESENT gem5: %s (RISC-V) %s\n' "$number" "$RVW_GEM5"
+}
+spike_inputs() {
+  local part
+  for part in include/riscv/processor.h include/fesvr include/softfloat include/fdt lib/libdisasm.a lib/libfesvr.a; do
+    [ -e "$SPIKE_PREFIX/$part" ] || return 1
+  done
+  [ -f "$SPIKE_PREFIX/lib/libriscv.so" ] || [ -f "$SPIKE_PREFIX/lib/libriscv.dylib" ] || [ -f "$SPIKE_PREFIX/lib/libriscv.a" ]
+}
+optional_check() {
+  local failed=0
+  if [ "$gem5" = 1 ]; then gem5_check || failed=1; fi
+  if [ "$sim" = 1 ]; then sim_check || failed=1; fi
+  if [ "$gcc" = 1 ]; then
+    probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version || failed=1
+    probe 'RISC-V binutils' 2 riscv64-unknown-elf-objdump --version || failed=1
+  fi
+  if [ "$cosim" = 1 ]; then
+    probe Spike 1 spike --help || failed=1
+    if spike_inputs; then printf 'PRESENT Spike headers and libraries: %s\n' "$SPIKE_PREFIX";
+    else printf 'MISSING Spike headers/libraries: %s\n' "$SPIKE_PREFIX"; failed=1; fi
+    if ! "$rvw_home/rvw/.venv/bin/python" -B -I - "$rvw_home/Cosim/build/librvw_spike.so" <<'PYTHON'
+import ctypes, hashlib, json, pathlib, sys
+from rvw.cosim.spike import SHIM_SOURCE, SHIM_VERSION
+from rvw.cosim.build import build_id
+try:
+    path = pathlib.Path(sys.argv[1])
+    manifest = json.loads(path.with_name(path.name + '.manifest.json').read_text())
+    digest = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+    source_hash = digest(SHIM_SOURCE)
+    if (manifest['schema'] != 'rvw.spike-build/1'
+        or manifest['shim_version'] != SHIM_VERSION
+        or manifest['shim_source_sha256'] != source_hash
+        or manifest['shim_sha256'] != digest(path)
+        or manifest['spike_library_sha256'] != digest(manifest['spike_library'])
+        or manifest['build_id'] != build_id(manifest['build_inputs'])):
+        raise ValueError('shim manifest does not match installed inputs')
+    lib = ctypes.CDLL(str(path))
+    lib.rvw_shim_version.restype = ctypes.c_uint
+    lib.rvw_shim_source_sha256.restype = ctypes.c_char_p
+    lib.rvw_shim_build_sha256.restype = ctypes.c_char_p
+    if (lib.rvw_shim_version() != SHIM_VERSION
+        or lib.rvw_shim_source_sha256().decode() != source_hash
+        or lib.rvw_shim_build_sha256().decode() != manifest['build_id']):
+        raise ValueError('shim embedded identity does not match')
+    print('PRESENT Spike shim: version', SHIM_VERSION)
+except (OSError, ValueError, KeyError, AttributeError) as error:
+    sys.exit('MISSING or unusable Spike shim: ' + str(error))
+PYTHON
+    then failed=1; fi
+  fi
+  if [ "$formal" = 1 ]; then
+    probe Yosys 0.46 yosys -V || failed=1
+    probe SymbiYosys 0 sby --version || failed=1
+    probe Yices 2 yices-smt2 --version || failed=1
+    if command -v yosys >/dev/null && yosys -Q -T -p 'help xprop' 2>&1 | grep -q 'No such command'; then
+      printf 'MISSING Yosys xprop support\n'; failed=1
+    fi
+  fi
+  return "$failed"
+}
+# Use this archive where the distro has no JDK 21 package.
+temurin_jdk() {
+  local arch jdk_url
+  command -v curl >/dev/null || packages curl ca-certificates
+  arch="$(uname -m)"
+  case "$arch" in x86_64) arch=x64 ;; aarch64|arm64) arch=aarch64 ;; *) fail "No Temurin JDK for $arch" ;; esac
+  run mkdir -p "$tools/downloads" "$tools/jdk21"
+  run curl -fL --retry 3 "https://api.adoptium.net/v3/assets/latest/21/hotspot?architecture=$arch&image_type=jdk&os=linux&vendor=eclipse" -o "$tools/downloads/jdk-release.json"
+  if [ "$dry" = 0 ]; then
+    jdk_url=$("$RVW_PYTHON" -I -c 'import json,sys; print(json.load(open(sys.argv[1]))[0]["binary"]["package"]["link"])' "$tools/downloads/jdk-release.json")
+  else jdk_url="https://github.com/adoptium/temurin21-binaries/releases/download/RELEASE/jdk21-$arch.tar.gz"; fi
+  run curl -fL --retry 3 "$jdk_url" -o "$tools/downloads/jdk.tar.gz"
+  run "$RVW_PYTHON" -I -c 'import hashlib,json,pathlib,sys; p=pathlib.Path(sys.argv[1]); expected=json.loads((p/"jdk-release.json").read_text())[0]["binary"]["package"]["checksum"]; actual=hashlib.sha256((p/"jdk.tar.gz").read_bytes()).hexdigest(); sys.exit(0 if expected == actual else "JDK checksum mismatch")' "$tools/downloads"
+  run tar -xzf "$tools/downloads/jdk.tar.gz" --strip-components=1 -C "$tools/jdk21"
+  export JAVA_HOME="$tools/jdk21"
+}
+
+python_cmd=python3
+if ! probe Python 3.11 python3 --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
+  python_cmd=python3.11
+fi
+if [ "$check" = 1 ]; then
+  failed=0
+  core_check || failed=1
+  optional_check || failed=1
+  exit "$failed"
+fi
+if [ "$gem5" = 1 ] && [ "$gem5_external" = 1 ]; then
+  gem5_check || fail 'RVW_GEM5 is invalid; select a native RISC-V gem5 v25.1.0.1 executable'
+fi
+
+# Install only missing core tools. uv uses the OS Python, with no hidden downloads.
+if ! command -v git >/dev/null; then packages git; fi
+if ! probe Python 3.11 "$python_cmd" --version; then
+  case "$pm" in
+    brew)
+      packages python@3.11
+      if [ "$dry" = 0 ]; then export PATH="$(brew --prefix python@3.11)/libexec/bin:$PATH"; fi ;;
+    apt)
+      packages python3 python3-venv
+      if [ "$dry" = 0 ] && ! probe Python 3.11 python3 --version >/dev/null; then
+        packages python3.11 python3.11-venv
+        python_cmd=python3.11
+      fi ;;
+    dnf) packages python3.11 python3.11-pip; python_cmd=python3.11 ;;
+  esac
+  [ "$dry" = 1 ] || probe Python 3.11 "$python_cmd" --version || fail 'Install Python 3.11+ on this OS, then retry'
+fi
+local_uv=0
+if ! probe uv 0.6 uv --version; then
+  case "$pm" in
+    brew) packages uv ;;
+    dnf)
+      # uv is in Fedora. RHEL can use pip when its repos do not provide uv.
+      if [ "$dry" = 1 ] || dnf -q list --available uv >/dev/null 2>&1; then packages uv;
+      else
+        packages python3.11-pip
+        run "$python_cmd" -m pip install --user --upgrade uv
+        local_uv=1
+      fi ;;
+    apt)
+      packages pipx python3-venv ca-certificates
+      run pipx install --force uv
+      local_uv=1
+      ;;
+  esac
+fi
+if [ -e "$rvw_home" ]; then
+  [ -f "$rvw_home/rvw/pyproject.toml" ] && [ -f "$rvw_home/Cosim/build.sh" ] || fail "prefix is not a workstation checkout: $rvw_home"
+else
+  run mkdir -p "$(dirname "$rvw_home")"
+  if [ -n "$source_dir" ]; then run git clone --no-hardlinks "$source_dir" "$rvw_home";
+  else run git clone https://github.com/riscPrint/risc-v-workstation.git "$rvw_home"; fi
+fi
+if [ "$local_uv" = 1 ]; then
+  run mkdir -p "$tools/bin"
+  run ln -sf "$HOME/.local/bin/uv" "$tools/bin/uv"
+fi
+run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_home/rvw/.venv"
+run uv pip install --python "$rvw_home/rvw/.venv/bin/python" -e "$rvw_home/rvw[mcp]"
+export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
+export RVW_LOCK_PYTHON="$RVW_PYTHON"
+
+if [ "$sim" = 1 ]; then
+  if ! probe JDK 21 java -version || ! probe javac 21 javac -version; then
+    case "$pm" in
+      brew)
+        packages openjdk@21
+        if [ "$dry" = 0 ]; then export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home";
+        else export JAVA_HOME='/path/from/brew/openjdk@21/libexec/openjdk.jdk/Contents/Home'; fi ;;
+      apt)
+        if apt-cache show openjdk-21-jdk-headless >/dev/null 2>&1; then
+          packages openjdk-21-jdk-headless
+          if [ "$dry" = 0 ]; then
+            JAVA_HOME=$(find /usr/lib/jvm -maxdepth 1 -type d -name '*21*' | sort | head -n 1)
+            [ -n "$JAVA_HOME" ] || fail 'Cannot find the installed JDK 21'
+            export JAVA_HOME
+          fi
+        else temurin_jdk; fi ;;
+      dnf) temurin_jdk ;;
+    esac
+    if [ "$dry" = 1 ] && [ -z "${JAVA_HOME:-}" ]; then export JAVA_HOME=/path/to/jdk21; fi
+    export PATH="$JAVA_HOME/bin:$PATH"
+    run mkdir -p "$tools"
+    run ln -sfn "$JAVA_HOME" "$tools/jdk"
+  fi
+  if ! probe Verilator 5 verilator --version; then packages verilator; fi
+  if ! command -v make >/dev/null || ! command -v "${CXX:-c++}" >/dev/null; then
+    case "$pm" in
+      brew) fail 'Install the Xcode command line tools with xcode-select --install, then retry' ;;
+      apt) packages build-essential ;;
+      dnf) packages make gcc-c++ ;;
+    esac
+  fi
+  if ! probe sbt 1.10.7 sbt --script-version; then
+    if [ "$pm" = brew ]; then packages sbt;
+    else
+      command -v curl >/dev/null || packages curl ca-certificates
+      run mkdir -p "$tools/downloads" "$tools/bin"
+      url=https://github.com/sbt/sbt/releases/download/v1.10.7/sbt-1.10.7.tgz
+      run curl -fL --retry 3 "$url" -o "$tools/downloads/sbt.tgz"
+      run curl -fL --retry 3 "$url.sha256" -o "$tools/downloads/sbt.sha256"
+      run "$RVW_PYTHON" -I -c 'import hashlib,pathlib,sys; p=pathlib.Path(sys.argv[1]); expected=(p/"sbt.sha256").read_text().split()[0]; actual=hashlib.sha256((p/"sbt.tgz").read_bytes()).hexdigest(); sys.exit(0 if expected == actual else "sbt checksum mismatch")' "$tools/downloads"
+      run tar -xzf "$tools/downloads/sbt.tgz" -C "$tools"
+      run ln -sf ../sbt/bin/sbt "$tools/bin/sbt"
+    fi
+  fi
+fi
+if [ "$gcc" = 1 ] && ! probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version; then
+  case "$pm" in
+    brew) package tap riscv-software-src/riscv; packages riscv-software-src/riscv/riscv-gnu-toolchain ;;
+    apt) packages gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf ;;
+    dnf)
+      packages autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel make diffutils which
+      run mkdir -p "$tools/src"
+      if [ ! -d "$tools/src/riscv-gnu-toolchain/.git" ]; then
+        run git clone https://github.com/riscv-collab/riscv-gnu-toolchain.git "$tools/src/riscv-gnu-toolchain"
+      fi
+      run bash -c 'cd "$1" && ./configure --prefix="$2" --with-arch=rv64gc --with-abi=lp64d' _ "$tools/src/riscv-gnu-toolchain" "$tools/riscv"
+      run nice make -C "$tools/src/riscv-gnu-toolchain" -j2 ;;
+  esac
+fi
+if [ "$cosim" = 1 ]; then
+  if ! spike_inputs; then
+    case "$pm" in
+      brew)
+        package tap riscv-software-src/riscv
+        packages riscv-software-src/riscv/riscv-isa-sim
+        if [ "$dry" = 0 ]; then export SPIKE_PREFIX="$(brew --prefix riscv-isa-sim)"; fi
+        run mkdir -p "$tools"
+        run ln -sfn "$SPIKE_PREFIX" "$tools/spike" ;;
+      apt|dnf)
+        if [ "$pm" = apt ]; then packages build-essential device-tree-compiler libboost-regex-dev libboost-system-dev;
+        else packages make gcc-c++ dtc boost-devel; fi
+        run mkdir -p "$tools/src"
+        if [ ! -d "$tools/src/spike/.git" ]; then
+          run git clone --depth 1 https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike"
+        fi
+        run mkdir -p "$tools/src/spike/build"
+        run bash -c 'cd "$1" && ../configure --prefix="$2"' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
+        run nice make -C "$tools/src/spike/build" -j2
+        run make -C "$tools/src/spike/build" install ;;
+    esac
+  fi
+  export PATH="$SPIKE_PREFIX/bin:$PATH"
+  run env PATH="$rvw_home/rvw/.venv/bin:$PATH" SPIKE_PREFIX="$SPIKE_PREFIX" nice "$rvw_home/Cosim/build.sh"
+fi
+if [ "$formal" = 1 ]; then
+  if ! probe Yosys 0.46 yosys -V || ! probe SymbiYosys 0 sby --version || ! probe Yices 2 yices-smt2 --version; then
+    command -v curl >/dev/null || packages curl ca-certificates
+    arch="$(uname -m)"
+    case "$arch" in x86_64) arch=x64 ;; aarch64|arm64) arch=arm64 ;; *) fail "No OSS CAD Suite archive for $arch" ;; esac
+    case "$system" in Darwin) os=darwin ;; Linux) os=linux ;; esac
+    run mkdir -p "$tools/downloads"
+    run curl -fL --retry 3 https://api.github.com/repos/YosysHQ/oss-cad-suite-build/releases/latest -o "$tools/downloads/oss-release.json"
+    if [ "$dry" = 0 ]; then
+      oss_url=$("$RVW_PYTHON" -I -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(a["browser_download_url"] for a in d["assets"] if a["name"].startswith("oss-cad-suite-"+sys.argv[2]+"-"+sys.argv[3]+"-")))' "$tools/downloads/oss-release.json" "$os" "$arch")
+    else oss_url="https://github.com/YosysHQ/oss-cad-suite-build/releases/download/RELEASE/oss-cad-suite-$os-$arch-DATE.tgz"; fi
+    run curl -fL --retry 3 "$oss_url" -o "$tools/downloads/oss-cad-suite.tgz"
+    run tar -xzf "$tools/downloads/oss-cad-suite.tgz" -C "$tools"
+  fi
+fi
+if [ "$gem5" = 1 ] && [ "$gem5_external" = 0 ] && ! gem5_check; then
+  # Match Python headers and python-config to the interpreter used by SCons.
+  gem5_python="$python_cmd"
+  case "$pm" in
+    brew)
+      command -v xcrun >/dev/null && xcrun clang++ --version >/dev/null 2>&1 ||
+        fail 'Install the Xcode command line tools with xcode-select --install, then retry'
+      packages python@3.14 protobuf gperftools libpng pkgconf zlib m4
+      if [ "$dry" = 0 ]; then
+        gem5_brew="$(brew --prefix)"
+        gem5_python="$(brew --prefix python@3.14)/bin/python3.14"
+      else
+        gem5_brew=/path/from/brew
+        gem5_python="$gem5_brew/opt/python@3.14/bin/python3.14"
+      fi
+      export CPATH="$gem5_brew/include${CPATH:+:$CPATH}"
+      export LIBRARY_PATH="$gem5_brew/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+      ;;
+    apt)
+      packages build-essential "${python_cmd}-dev" "${python_cmd}-venv" \
+        zlib1g-dev m4 pkg-config libprotobuf-dev protobuf-compiler \
+        libprotoc-dev libgoogle-perftools-dev libpng-dev
+      ;;
+    dnf)
+      packages gcc gcc-c++ make "${python_cmd}-devel" zlib-devel m4 \
+        pkgconf-pkg-config protobuf-devel protobuf-compiler \
+        gperftools-devel libpng-devel
+      ;;
+  esac
+  if [ "$dry" = 0 ]; then
+    # PATH can select rvw's venv. python-config belongs to its base Python.
+    gem5_python="$("$gem5_python" -I -c 'import sys; print(sys._base_executable)')"
+    command -v "$gem5_python-config" >/dev/null || fail "Missing Python build config: $gem5_python-config"
+  fi
+  run uv venv --python "$gem5_python" --no-managed-python --allow-existing "$tools/gem5-venv"
+  run uv pip install --python "$tools/gem5-venv/bin/python" 'scons==4.11.1'
+  run mkdir -p "$tools/src"
+  if [ ! -e "$gem5_source" ]; then
+    run git clone --depth 1 --branch "v$gem5_version" https://github.com/gem5/gem5.git "$gem5_source"
+  fi
+  if [ "$dry" = 0 ]; then
+    [ -d "$gem5_source/.git" ] &&
+      [ "$(git -C "$gem5_source" rev-parse HEAD)" = "$gem5_revision" ] &&
+      git -C "$gem5_source" diff --quiet HEAD -- ||
+      fail "gem5 source must be clean at $gem5_revision: $gem5_source"
+  else printf 'Verify gem5 source is clean at %s\n' "$gem5_revision"; fi
+  export PYTHON_CONFIG="$gem5_python-config"
+  # Use a native build root and the RISC-V defconfig on both host systems.
+  if [ ! -d "$gem5_source/build/RISCV/gem5.build" ]; then
+    run "$rvw_home/scripts/with-lock.sh" gem5 nice "$tools/gem5-venv/bin/scons" \
+      -C "$gem5_source" defconfig "$gem5_source/build/RISCV" "$gem5_source/build_opts/RISCV" --ignore-style
+  fi
+  run "$rvw_home/scripts/with-lock.sh" gem5 nice "$tools/gem5-venv/bin/scons" \
+    -C "$gem5_source" "$RVW_GEM5" -j2 --ignore-style
+  if [ "$dry" = 0 ]; then gem5_check || fail 'Native gem5 build check failed'; fi
+fi
+
+# Quote values for both bash and zsh. Do not change shell startup files by default.
+printf 'Write %s\n' "$rvw_home/env.sh"
+if [ "$dry" = 0 ]; then
+  {
+    printf '# Generated by scripts/install.sh. Source this file in bash or zsh.\n'
+    printf 'export RVW_HOME=%q\n' "$rvw_home"
+    printf 'export RVW_PYTHON=%q\nexport RVW_LOCK_PYTHON=%q\n' "$RVW_PYTHON" "$RVW_LOCK_PYTHON"
+    if [ "$gem5" = 1 ] || [ -x "$RVW_GEM5" ]; then printf 'export RVW_GEM5=%q\n' "$RVW_GEM5"; fi
+    if [ -n "${JAVA_HOME:-}" ]; then
+      printf 'export JAVA_HOME=%q\nexport PATH="$JAVA_HOME/bin:$PATH"\n' "$JAVA_HOME"
+    fi
+    printf 'export SPIKE_PREFIX=%q\nexport PATH="$SPIKE_PREFIX/bin:$PATH"\n' "$SPIKE_PREFIX"
+    printf 'export PATH="$RVW_HOME/rvw/.venv/bin:$RVW_HOME/.tools/bin:$RVW_HOME/.tools/oss-cad-suite/bin:$RVW_HOME/.tools/riscv/bin:$PATH"\n'
+  } > "$rvw_home/env.sh"
+fi
+printf -v source_line 'source %q' "$rvw_home/env.sh"
+printf 'Add this line to your shell startup file:\n%s\n' "$source_line"
+if [ -n "$shell_rc" ]; then
+  printf 'Add source line to %s if absent\n' "$shell_rc"
+  if [ "$dry" = 0 ] && ! grep -Fqx "$source_line" "$shell_rc" 2>/dev/null; then
+    printf '\n%s\n' "$source_line" >> "$shell_rc"
+  fi
+fi
+run "$rvw_home/rvw/.venv/bin/rvw" --help
+if [ "$dry" = 0 ]; then
+  core_check || fail 'Core self-check failed'
+  optional_check || fail 'Requested native tool self-check failed'
+fi
+printf '%s\n' 'Next: put the project files in your core repository.' \
+  'https://github.com/riscPrint/risc-v-workstation/blob/main/docs/BRING_YOUR_OWN_CORE.md#put-the-project-files-in-your-core-repository'

@@ -1,0 +1,37 @@
+[package]
+name = "spinaltrace"
+version = "0.1.0"
+edition = "2024"
+description = "Graph viewer front-end for SpinalTrace (fork of the ChiselTrace GUI)"
+authors = ["Jarl Brand <jarl.brand@gmail.com>", "SpinalTrace contributors"]
+license = "Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "spinaltrace_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = {version = "1.0", features = ["unbounded_depth"] }
+clap = { version = "4.5.31", features = ["derive"] }
+anyhow = "1.0.97"
+spinaltrace-rs = { path = "../../spinaltrace-rs" }
+thiserror = "2.0.12"
+itertools = "0.14.0"
+mimalloc = "0.1.46"
+
+[profile.release]
+lto = "fat"
+
+[build]
+rustflags = ["-C", "target-cpu=native"]

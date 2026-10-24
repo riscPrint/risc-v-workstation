@@ -1,0 +1,17 @@
+[package]
+name = "spinaltrace-rs"
+version = "0.1.0"
+edition = "2024"
+description = "Back-end data processing library for SpinalTrace (fork of chiseltrace-rs)"
+authors = ["Jarl Brand <jarl.brand@gmail.com>", "SpinalTrace contributors"]
+license = "Apache-2.0"
+
+[dependencies]
+anyhow = "1.0.97"
+itertools = "0.14.0"
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = {version = "1.0", features = ["unbounded_depth"]}
+thiserror = "2.0.12"
+vcd = "0.7.0"
+# tywaves-rs as vendored (and patched for Spinal) by the sibling SpinalWaves project.
+tywaves-rs = {path = "../../SpinalWaves/third_party/tywaves-rs", version = "0.1.4" }

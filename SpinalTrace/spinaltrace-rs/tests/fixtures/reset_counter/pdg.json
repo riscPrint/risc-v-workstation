@@ -1,0 +1,222 @@
+{
+ "vertices": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 120,
+   "char": 1,
+   "name": "input_io_enable",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "enable"
+   },
+   "assignsTo": "io_enable",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 121,
+   "char": 1,
+   "name": "output_io_count",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 123,
+   "char": 1,
+   "name": "defreg_counter",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "counter",
+    "fieldPath": ""
+   },
+   "assignsTo": "counter",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 124,
+   "char": 1,
+   "name": "cond_on_[io_enable]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "enable"
+   },
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 125,
+   "char": 1,
+   "name": "connect_counter",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "counter",
+    "fieldPath": ""
+   },
+   "assignsTo": "counter",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 127,
+   "char": 1,
+   "name": "connect_io_count",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "count"
+   },
+   "assignsTo": "io_count",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  }
+ ],
+ "edges": [
+  {
+   "from": 1,
+   "to": 5,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 3,
+   "to": 0,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 4,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 4,
+   "to": 2,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 4,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 4,
+   "to": 3,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 5,
+   "to": 2,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 5,
+   "to": 2,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 5,
+   "to": 4,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  }
+ ],
+ "predicates": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 124,
+   "char": 1,
+   "name": "io_enable",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  }
+ ],
+ "cfg": [
+  {
+   "stmtRef": 0
+  },
+  {
+   "stmtRef": 1
+  },
+  {
+   "stmtRef": 2
+  },
+  {
+   "stmtRef": 3,
+   "predStmtRef": 0,
+   "trueBranch": [
+    {
+     "stmtRef": 4
+    }
+   ]
+  },
+  {
+   "stmtRef": 5
+  }
+ ],
+ "spinaltrace": {
+  "formatVersion": 1,
+  "toplevel": "ResetCounter",
+  "extraScopes": [
+   "TOP",
+   "ResetCounter"
+  ],
+  "clockDomains": [
+   {
+    "clock": "clk",
+    "reset": "reset",
+    "resetKind": "ASYNC",
+    "resetActiveLow": false,
+    "clockEnable": null,
+    "softReset": null,
+    "registers": 1
+   }
+  ],
+  "warnings": []
+ }
+}

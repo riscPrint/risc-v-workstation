@@ -1,0 +1,141 @@
+[project]
+schema = "rvw.project/1"
+
+[arch]
+description = "${RVW_ARCH_CONFIG:-arch/large.json}"
+sources = "${RISCV_TESTS_SRC:-../../../ref/riscv-tests/benchmarks}"
+benchmarks = "${RVW_ARCH_BENCHMARKS:-out/arch/bench}"
+
+# BOOM core config for `rvw regress`. Everything BOOM-specific lives here; the regress code is generic.
+# Relative paths are relative to this file. ${VAR:-default} reads the environment.
+# Suites mirror spinal-boom's Scala specs at 0cb0b69 (RiscvTestsSpec, Act4Spec, VmTestsSpec,
+# BenchmarksSpec, BoomElabSpec). Keep known failures visible to the gate.
+
+[core]
+name = "boom"
+adapter = "${RVW_HOME}/RiscvSim/boom/run.sh"   # contract C1
+configs = ["small", "medium", "large", "mega", "giga"]
+default_config = "small"
+lock = "boom"                     # machine-wide heavy-job lock, same as scripts/with-lock.sh boom
+source_repo = "${SPINAL_BOOM}"
+source_env = "SPINAL_BOOM"        # the adapter builds the core from this tree
+cache_paths = [
+  "${RVW_HOME}/RiscvSim", "${RVW_HOME}/rvw/src/rvw/common", "${RVW_HOME}/rvw/src/rvw/__init__.py", "${RVW_HOME}/scripts/with-lock.sh",
+]  # results are reused only while these sources are unchanged
+identity = true                   # `run.sh identity`: Verilator, JDK and classpath key join the cache key
+# The launcher supplies a sealed classpath and native capture record. The runner checks it.
+input_complete = true
+identity_capture = true
+identity_timeout_s = 1200
+input_tools = ["git", "bash", "java", "verilator", "make"]
+# Match the compiler/linker selection used by native-identity.py. Unused alternatives are optional.
+input_verilator_toolchain = true
+input_commands = [
+  "ar", "awk", "basename", "cat", "chmod", "cmp", "cp", "cut", "date", "dirname", "du", "env",
+  "expr", "find", "getconf", "grep", "head", "hostname", "ld", "ln", "mkdir", "mktemp", "mv",
+  "perl", "ps", "readlink", "realpath", "rm", "rmdir", "sbt", "sed", "sh", "shasum", "sleep",
+  "sort", "stat", "tail", "tee", "touch", "tr", "uname", "unzip", "wc", "which", "xargs",
+  "zip",
+]
+input_commands_by_platform = { darwin = ["xcode-select", "xcrun"] }
+input_env = [
+  "AR", "BASH_ENV", "CC", "CCACHE_CONFIGPATH", "CCACHE_PATH", "CCACHE_PREFIX",
+  "CCC_OVERRIDE_OPTIONS", "CFLAGS", "COMPILER_PATH", "COURSIER_CACHE", "COURSIER_REPOSITORIES",
+  "CPATH", "CPLUS_INCLUDE_PATH", "CPP", "CPPFLAGS", "CXX", "CXXFLAGS", "C_INCLUDE_PATH",
+  "DEVELOPER_DIR", "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH", "ENV", "GCC_EXEC_PREFIX",
+  "GNUMAKEFLAGS", "HOME", "IVY_HOME", "JAVA_HOME", "JAVA_OPTS", "JAVA_TOOL_OPTIONS", "JDK_HOME",
+  "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
+  "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
+  "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE",
+  "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
+  "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
+  "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "SPINAL_BOOM", "SPINAL_MAKE_CMD",
+  "SPINAL_VERILATOR_FLAGS", "USER_CPPFLAGS", "USER_LDFLAGS", "USER_LDLIBS", "VERILATOR_BIN",
+  "VERILATOR_FLAGS", "VERILATOR_GDB", "VERILATOR_GDBBT", "VERILATOR_NO_OPT", "VERILATOR_ROOT",
+  "VFLAGS", "_JAVA_OPTIONS",
+]
+wall_timeout = true               # RiscvSim stops (or abandons) a run after the suite's timeout_s
+known_failures = "${RVW_HOME}/rvw/configs/boom.known.toml"
+jobs = 4
+build_timeout_s = 5400
+startup_s = 300
+perf_tolerance = 0.01
+
+[suites.riscv-tests]
+description = "riscv-tests ISA suite, p and v environments"
+dir = "${RISCV_TESTS:-../../../ref/riscv-tests/build/isa}"
+include = ['^rv64(ui|um|ua|uf|ud|uc|mi|si|uzba|uzbb|uzbs)-(p|v)-']
+exclude = [
+  '\.dump$',
+  # Need hardware misaligned access support, which BOOM (like Rocket) does not have.
+  '^rv64ui-p-ma_data$', '^rv64ui-v-ma_data$',
+]
+# instret_overflow remains selected. The gate reports its unchanged failure as still_failing.
+max_cycles = 200000
+timeout_s = 300
+
+[suites.act4]
+description = "ACT4 architectural certification tests (self-checking ELFs)"
+dir = "${ACT4_ELFS:-../../../ref/act4/work/boom-rv64gc/elfs}"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["small"]
+max_cycles = 5000000
+timeout_s = 900
+
+[suites.vm-tests]
+description = "directed virtual-memory tests (spinal-boom tests/vm)"
+dir = "${VM_TESTS:-../../../spinal-boom/tests/vm/build}"
+configs = ["small"]
+max_cycles = 200000
+timeout_s = 300
+
+[suites.benchmarks]
+description = "riscv-tests benchmarks, fixed memory latency 20, ROI cycles/IPC from bench_stats"
+dir = "${BENCH_DIR:-out/arch/bench}"
+glob = "*.riscv"
+strip_suffix = ".riscv"
+configs = ["large"]
+mem_latency = 20
+max_cycles = 50000000
+timeout_s = 3600
+# The adapter reports the bench_stats ROI counters (cycles, instret: two 64-bit words the program
+# stores at the `bench_stats` symbol) under metrics; whole-program counts are the fallback.
+cycles_key = "metrics.roi_cycles|cycles"
+instret_key = "metrics.roi_instret|instret"
+perf_metrics = ["cycles"]
+
+[suites.stress]
+description = "benchmarks with randomized memory timing over several seeds"
+dir = "${BENCH_DIR:-out/arch/bench}"
+glob = "*.riscv"
+strip_suffix = ".riscv"
+configs = ["large"]
+seeds = 4
+max_cycles = 50000000
+timeout_s = 3600
+
+[suites.elaboration]
+description = "elaborate and build every preset (adapter build)"
+kind = "build"
+configs = ["small", "medium", "large", "mega", "giga"]
+timeout_s = 7200
+
+[tiers.quick]
+description = "minutes: riscv-tests p environment and VM tests on small"
+runs = [
+  { suite = "riscv-tests", configs = ["small"], include = ['-p-'] },
+  { suite = "vm-tests", configs = ["small"] },
+]
+
+[tiers.full]
+description = "hours: every suite"
+runs = [
+  { suite = "riscv-tests", configs = ["small", "large"] },
+  { suite = "act4", configs = ["small"] },
+  { suite = "vm-tests", configs = ["small"] },
+  { suite = "benchmarks", configs = ["large"] },
+  { suite = "stress", configs = ["large"] },
+  { suite = "elaboration" },
+]

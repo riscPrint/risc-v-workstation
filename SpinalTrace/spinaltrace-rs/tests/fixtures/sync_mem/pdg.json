@@ -1,0 +1,1514 @@
+{
+ "vertices": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defwire_mem_wen_Features_l141",
+   "kind": "Definition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem_wen_Features_l141",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem_wen_Features_l141",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 133,
+   "char": 1,
+   "name": "input_io_wrEn",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrEn"
+   },
+   "assignsTo": "io_wrEn",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 134,
+   "char": 1,
+   "name": "input_io_wrAddr",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrAddr"
+   },
+   "assignsTo": "io_wrAddr",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 135,
+   "char": 1,
+   "name": "input_io_wrData",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrData"
+   },
+   "assignsTo": "io_wrData",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 136,
+   "char": 1,
+   "name": "input_io_rdAddr",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "rdAddr"
+   },
+   "assignsTo": "io_rdAddr",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 137,
+   "char": 1,
+   "name": "output_io_rdData",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.0",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.1",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.2",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.3",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.4",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.5",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.6",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 139,
+   "char": 1,
+   "name": "defmem_mem.7",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 140,
+   "char": 1,
+   "name": "cond_on_[io_wrEn]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrEn"
+   },
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem_wen_Features_l141",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem_wen_Features_l141",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe2",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe3",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.0",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.0",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     0
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe4",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe5",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.1",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.1",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     1
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe6",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe7",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.2",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.2",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     2
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe8",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe9",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.3",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.3",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     3
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe10",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe11",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.4",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.4",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     4
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe12",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe13",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.5",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.5",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     5
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe14",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe15",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.6",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.6",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     6
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_mem_wen_Features_l141",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe16",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "defnode_probe_io_wrAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe17",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 141,
+   "char": 1,
+   "name": "connect_mem.7",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "mem.7",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "mem_wen_Features_l141",
+     "io_wrAddr"
+    ],
+    "probeValue": [
+     1,
+     7
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 143,
+   "char": 1,
+   "name": "defnode_probe_io_rdAddr",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe18",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 143,
+   "char": 1,
+   "name": "connect_io_rdData",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "rdData"
+   },
+   "assignsTo": "io_rdData",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 1
+  }
+ ],
+ "edges": [
+  {
+   "from": 6,
+   "to": 42,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 15,
+   "to": 2,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 16,
+   "to": 15,
+   "kind": "Conditional",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 17,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 17,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 17,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 18,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 19,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 19,
+   "to": 17,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 19,
+   "to": 18,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 20,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 20,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 20,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 21,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 22,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 22,
+   "to": 20,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 22,
+   "to": 21,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 23,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 23,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 23,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 24,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 25,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 25,
+   "to": 23,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 25,
+   "to": 24,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 26,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 26,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 26,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 27,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 28,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 28,
+   "to": 26,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 28,
+   "to": 27,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 29,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 29,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 29,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 30,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 31,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 31,
+   "to": 29,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 31,
+   "to": 30,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 32,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 32,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 32,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 33,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 34,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 34,
+   "to": 32,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 34,
+   "to": 33,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 35,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 35,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 35,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 36,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 37,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 37,
+   "to": 35,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 37,
+   "to": 36,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 38,
+   "to": 0,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 38,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 38,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 39,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 40,
+   "to": 4,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 40,
+   "to": 38,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 40,
+   "to": 39,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 41,
+   "to": 5,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 42,
+   "to": 7,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     0
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 19,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     0
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 8,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     1
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 22,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     1
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 9,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     2
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 25,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     2
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 10,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     3
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 28,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     3
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 11,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     4
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 31,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     4
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 12,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     5
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 34,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     5
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 13,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     6
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 37,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     6
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 14,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     7
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 40,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdAddr"
+    ],
+    "probeValue": [
+     7
+    ]
+   }
+  },
+  {
+   "from": 42,
+   "to": 41,
+   "kind": "Index",
+   "clocked": false,
+   "condition": null
+  }
+ ],
+ "predicates": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 140,
+   "char": 1,
+   "name": "io_wrEn",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  }
+ ],
+ "cfg": [
+  {
+   "stmtRef": 0
+  },
+  {
+   "stmtRef": 1
+  },
+  {
+   "stmtRef": 2
+  },
+  {
+   "stmtRef": 3
+  },
+  {
+   "stmtRef": 4
+  },
+  {
+   "stmtRef": 5
+  },
+  {
+   "stmtRef": 6
+  },
+  {
+   "stmtRef": 7
+  },
+  {
+   "stmtRef": 8
+  },
+  {
+   "stmtRef": 9
+  },
+  {
+   "stmtRef": 10
+  },
+  {
+   "stmtRef": 11
+  },
+  {
+   "stmtRef": 12
+  },
+  {
+   "stmtRef": 13
+  },
+  {
+   "stmtRef": 14
+  },
+  {
+   "stmtRef": 15,
+   "predStmtRef": 0,
+   "trueBranch": [
+    {
+     "stmtRef": 16
+    }
+   ]
+  },
+  {
+   "stmtRef": 17
+  },
+  {
+   "stmtRef": 18
+  },
+  {
+   "stmtRef": 19
+  },
+  {
+   "stmtRef": 20
+  },
+  {
+   "stmtRef": 21
+  },
+  {
+   "stmtRef": 22
+  },
+  {
+   "stmtRef": 23
+  },
+  {
+   "stmtRef": 24
+  },
+  {
+   "stmtRef": 25
+  },
+  {
+   "stmtRef": 26
+  },
+  {
+   "stmtRef": 27
+  },
+  {
+   "stmtRef": 28
+  },
+  {
+   "stmtRef": 29
+  },
+  {
+   "stmtRef": 30
+  },
+  {
+   "stmtRef": 31
+  },
+  {
+   "stmtRef": 32
+  },
+  {
+   "stmtRef": 33
+  },
+  {
+   "stmtRef": 34
+  },
+  {
+   "stmtRef": 35
+  },
+  {
+   "stmtRef": 36
+  },
+  {
+   "stmtRef": 37
+  },
+  {
+   "stmtRef": 38
+  },
+  {
+   "stmtRef": 39
+  },
+  {
+   "stmtRef": 40
+  },
+  {
+   "stmtRef": 41
+  },
+  {
+   "stmtRef": 42
+  }
+ ],
+ "spinaltrace": {
+  "formatVersion": 1,
+  "toplevel": "SyncMem",
+  "extraScopes": [
+   "TOP",
+   "SyncMem"
+  ],
+  "clockDomains": [
+   {
+    "clock": "clk",
+    "reset": "reset",
+    "resetKind": "ASYNC",
+    "resetActiveLow": false,
+    "clockEnable": null,
+    "softReset": null,
+    "registers": 2
+   }
+  ],
+  "warnings": []
+ }
+}

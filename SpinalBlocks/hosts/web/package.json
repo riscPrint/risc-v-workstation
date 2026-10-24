@@ -1,0 +1,17 @@
+{
+  "name": "@spinalblocks/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser host for the SpinalBlocks engine.",
+  "type": "module",
+  "bin": {
+    "spinalblocks-web": "serve.mjs"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "serve": "node serve.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

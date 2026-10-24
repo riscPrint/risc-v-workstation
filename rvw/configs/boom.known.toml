@@ -1,0 +1,3 @@
+# Known failures for `rvw regress compare` / `gate`. A failure listed here does not reject a
+# change; a different signature of the same test still does. Edit by hand or with
+# `rvw regress known add`.

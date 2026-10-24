@@ -1,0 +1,14 @@
+[package]
+name = "spinaltrace-cli"
+version = "0.1.0"
+edition = "2024"
+description = "Command Line Interface to interact with the SpinalTrace back-end (fork of chiseltrace-cli)"
+authors = ["Jarl Brand <jarl.brand@gmail.com>", "SpinalTrace contributors"]
+license = "Apache-2.0"
+
+[dependencies]
+clap = { version = "4.5.31", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_json = "1.0"
+anyhow = "1.0.97"
+spinaltrace-rs = { path = "../spinaltrace-rs" }

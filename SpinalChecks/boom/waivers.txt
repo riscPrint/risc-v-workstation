@@ -1,0 +1,53 @@
+# SpinalChecks waivers for BOOM (spinal-boom-eda 0cb0b69, config small).
+# One "<id> <reason>" per line. Every line is the exact id of one check that fired in the triage run
+# (riscv-tests rv64ui-p-* + median, qsort, towers, dhrystone; seed 1; out/suite-small, 2026-10-21) and
+# one kind: no globs, so a check that never fired stays active, and a stream that fired only one rule
+# keeps the other. Read by BoomChecks (SPINALCHECKS_WAIVERS overrides). See README "BOOM".
+#
+# Chisel ready/valid semantics. BOOM is ported from Chisel, whose DecoupledIO lets a producer drop
+# `valid` or change the payload before `ready` (only Irrevocable forbids it). The consumers below are
+# ports of chisel3.util Queue/Arbiter (ChiselUtil.scala) or BOOM logic that samples on fire, so a
+# withdrawn or changed request is not a bug there.
+stream.valid_hold:tile.frontend.f3.io_enq                 Chisel Queue port (ChiselUtil.scala:14): f3 enqueue is re-decided every cycle (redirects, kills)
+stream.valid_hold:tile.frontend.f4.io_enq                 Chisel Queue port: f4 enqueue re-decided every cycle
+stream.payload_stable:tile.frontend.f4.io_enq             Chisel Queue port: f4 enqueue re-decided every cycle
+stream.valid_hold:tile.frontend.f4_bpd_queue.io_enq       Chisel Queue port: BPD metadata queue enqueue re-decided every cycle
+stream.payload_stable:tile.frontend.f4_bpd_queue.io_enq   Chisel Queue port: BPD metadata queue enqueue re-decided every cycle
+stream.valid_hold:tile.frontend.fb.io_enq                 FetchBuffer enqueue: fetch packet withdrawn on redirect/flush, sampled on fire
+stream.payload_stable:tile.frontend.fb.io_enq             FetchBuffer enqueue: fetch packet replaced on redirect/flush, sampled on fire
+stream.valid_hold:tile.core.io_ifu_fetchpacket            fetch packets to decode: withdrawn on flush/redirect (Chisel Decoupled)
+stream.valid_hold:tile.frontend.icache.io_req             I$ request is a per-cycle lookup (s0 PC), not a held transaction
+stream.payload_stable:tile.frontend.icache.io_req         I$ request is a per-cycle lookup (s0 PC), not a held transaction
+stream.valid_hold:tile.frontend.ftq.io_enq                FTQ enqueue re-decided every cycle (redirects)
+stream.valid_hold:tile.core.ftq_arb.io_in_2               Chisel Arbiter port (ChiselUtil.scala:90): per-cycle FTQ read requests
+stream.valid_hold:tile.core.iregfile.io_arb_read_reqs_3   register-file read requests are per-cycle (issue slots), not held
+stream.valid_hold:tile.core.iregfile.rfs_0.io_arb_read_reqs_3  register-file bank read requests, per-cycle
+stream.valid_hold:tile.dcache.io_lsu_req                  LSU -> D$ requests are re-issued every cycle (nack/replay), Chisel Decoupled
+stream.payload_stable:tile.dcache.io_lsu_req              LSU -> D$ requests are re-issued every cycle (nack/replay), Chisel Decoupled
+stream.valid_hold:tile.dcache.metaReadArb.io_in_4         Chisel Arbiter port: per-cycle metadata read requests
+stream.payload_stable:tile.dcache.metaReadArb.io_in_4     Chisel Arbiter port: per-cycle metadata read requests
+stream.valid_hold:tile.dcache.dataReadArb.io_in_2         Chisel Arbiter port: per-cycle data-array read requests
+stream.payload_stable:tile.dcache.dataReadArb.io_in_2     Chisel Arbiter port: per-cycle data-array read requests
+stream.valid_hold:tile.dcache.meta_0.io_read              metadata array read port, per-cycle request
+stream.payload_stable:tile.dcache.meta_0.io_read          metadata array read port, per-cycle request
+stream.valid_hold:tile.dcache.mshrs.req                   MSHR file request: re-decided every cycle (Chisel Decoupled)
+stream.payload_stable:tile.dcache.mshrs.req               MSHR file request: re-decided every cycle (Chisel Decoupled)
+stream.valid_hold:tile.dcache.mshrs.io_req_0              MSHR file request port: re-decided every cycle
+stream.payload_stable:tile.dcache.mshrs.io_req_0          MSHR file request port: re-decided every cycle
+stream.valid_hold:tile.lsu.wakeupArbs_0.io_in_1           Chisel Arbiter port: per-cycle wakeup requests
+stream.payload_stable:tile.lsu.wakeupArbs_0.io_in_1       Chisel Arbiter port: per-cycle wakeup requests
+#
+# Upstream behaviour, documented in the port.
+vec.index:tile.frontend.bpd.banked_predictors_0.components_3.index_of24  micro-BTB (faubtb2.scala:86): allocation way is a 16-bit LFSR truncated to 5 bits, ways 24..31 allocate nothing (upstream); the index is out of range whether or not an update happens
+#
+# TileLink A channel. The D$ MSHR file merges its A-channel requests with rocket-chip's TLArbiter.lowest
+# (mshrs.scala:719), which re-arbitrates every cycle until the sink is ready: a stalled single-beat
+# AcquireBlock (source 1) is replaced by a lower-index MSHR's (source 0, another line) before acceptance
+# (qsort, seed 1, cycle 13001). Legal TileLink (rocket's TLMonitor checks only multi-beat bursts), so the
+# generic Spinal Stream rule is waived on the three ids it fired on. The TileLink rule
+# `tilelink.burst_stable` (same header on every beat of a burst, stable payload while a beat inside a
+# burst is stalled) stays active on these channels. A Spinal TileLink slave that latches a request on
+# `valid` before `ready` would still see it change: reported, not changed (core code).
+stream.payload_stable:io_mem_a                       rocket TLArbiter re-arbitrates a single-beat A request until ready (legal TileLink; tilelink.burst_stable stays on)
+stream.payload_stable:arbiter.io_ups_0_a             same A-channel beat, at the Spinal tilelink.Arbiter input (tilelink.burst_stable stays on)
+stream.payload_stable:arbiter.a_arbiter.io_inputs_0  same A-channel beat, inside the Spinal tilelink.Arbiter (tilelink.burst_stable stays on)

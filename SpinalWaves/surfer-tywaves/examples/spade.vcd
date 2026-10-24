@@ -1,0 +1,302 @@
+$date
+	Mon Oct 28 11:20:28 2024
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module proj::pipeline_ready_valid::ready_valid_pipeline $end
+$var wire 1 ! \#s1_enable $end
+$var wire 1 " \#s2_enable $end
+$var wire 1 # \#s3_enable $end
+$var wire 1 $ _e_1214 $end
+$var wire 1 % _e_1216 $end
+$var wire 1 & _e_1219 $end
+$var wire 1 ' _e_1221 $end
+$var wire 1 ( _e_1224 $end
+$var wire 1 ) _e_1226 $end
+$var wire 1 * _e_1230 $end
+$var wire 1 + clk $end
+$var wire 1 , clk_i $end
+$var wire 4 - enables [3:0] $end
+$var wire 4 . enables_i [3:0] $end
+$var wire 18 / output__ [17:0] $end
+$var wire 8 0 val [7:0] $end
+$var wire 8 1 val_i [7:0] $end
+$var wire 2 2 s4 [1:0] $end
+$var wire 2 3 s3 [1:0] $end
+$var wire 2 4 s2 [1:0] $end
+$var wire 2 5 s1 [1:0] $end
+$var wire 2 6 s0 [1:0] $end
+$var wire 1 7 _e_997 $end
+$var wire 1 8 _e_994 $end
+$var wire 1 9 _e_991 $end
+$var wire 1 : _e_988 $end
+$var wire 1 ; _e_985 $end
+$var wire 1 < _e_982 $end
+$var wire 1 = _e_979 $end
+$var wire 18 > _e_978 [17:0] $end
+$var wire 1 ? _e_960 $end
+$var wire 1 @ _e_951 $end
+$var wire 1 A _e_942 $end
+$var wire 1 B _e_1229 $end
+$var wire 1 C _e_1228 $end
+$var wire 1 D _e_1227 $end
+$var wire 1 E _e_1225 $end
+$var wire 1 F _e_1223 $end
+$var wire 1 G _e_1222 $end
+$var wire 1 H _e_1220 $end
+$var wire 1 I _e_1218 $end
+$var wire 1 J _e_1217 $end
+$var wire 1 K _e_1215 $end
+$var wire 1 L _e_1213 $end
+$var wire 1 M _e_1211 $end
+$var wire 8 N _e_1210 [7:0] $end
+$var wire 8 O _e_1209 [7:0] $end
+$var wire 8 P _e_1208 [7:0] $end
+$var wire 8 Q _e_1207 [7:0] $end
+$var wire 1 R _e_1006 $end
+$var wire 1 S _e_1003 $end
+$var wire 1 T _e_1000 $end
+$var wire 1 U \#s4_enable $end
+$var parameter 1 V _e_1212 $end
+$var parameter 1 W _e_939 $end
+$var parameter 2 X _e_945 $end
+$var parameter 2 Y _e_954 $end
+$var parameter 2 Z _e_963 $end
+$var parameter 2 [ _e_972 $end
+$var parameter 1 \ _e_976 $end
+$var reg 1 ] \#s1_valid $end
+$var reg 1 ^ \#s2_valid $end
+$var reg 1 _ \#s3_valid $end
+$var reg 1 ` \#s4_valid $end
+$var reg 8 a s1_val [7:0] $end
+$var reg 8 b s2_val [7:0] $end
+$var reg 8 c s3_val [7:0] $end
+$var reg 8 d s4_val [7:0] $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+1\
+b11 [
+b10 Z
+b1 Y
+b0 X
+1W
+1V
+$end
+#0
+$dumpvars
+bx d
+bx c
+bx b
+bx a
+x`
+x_
+x^
+x]
+1U
+1T
+1S
+1R
+bz Q
+bx P
+bx O
+bx N
+1M
+0L
+1K
+xJ
+0I
+1H
+xG
+0F
+1E
+xD
+0C
+1B
+1A
+1@
+1?
+b1xxxx11111xxxxxxxx >
+1=
+x<
+x;
+x:
+x9
+18
+17
+b11 6
+b1x 5
+b1x 4
+b1x 3
+b1x 2
+bz 1
+bz 0
+b1xxxx11111xxxxxxxx /
+bz .
+b1111 -
+1,
+1+
+x*
+x)
+0(
+x'
+0&
+1%
+0$
+1#
+1"
+1!
+$end
+#500
+b0 Q
+b0 0
+0+
+0,
+#1000
+1'
+1J
+b11xxx11111xxxxxxxx /
+b11xxx11111xxxxxxxx >
+1<
+b0 P
+b11 5
+1]
+b0 a
+1+
+1,
+#1500
+b1 Q
+b1 0
+0+
+0,
+#2000
+1)
+b1 P
+b0 O
+1G
+b111xx11111xxxxxxxx /
+b111xx11111xxxxxxxx >
+1;
+b1 a
+b0 b
+b11 4
+1^
+1+
+1,
+#2500
+b10 Q
+b10 0
+0+
+0,
+#3000
+1*
+1D
+b1111x11111xxxxxxxx /
+b1111x11111xxxxxxxx >
+1:
+b0 N
+b1 O
+b10 P
+b11 3
+1_
+b0 c
+b1 b
+b10 a
+1+
+1,
+#3500
+b11 Q
+b11 0
+0+
+0,
+#4000
+b11 P
+b10 O
+b1 N
+19
+b11 a
+b10 b
+b1 c
+b111111111100000000 /
+b111111111100000000 >
+b0 d
+b11 2
+1`
+1+
+1,
+#4500
+b100 Q
+b100 0
+0+
+0,
+#5000
+b10 N
+b11 O
+b100 P
+b111111111100000001 /
+b111111111100000001 >
+b1 d
+b10 c
+b11 b
+b100 a
+1+
+1,
+#5500
+b101 Q
+b101 0
+0+
+0,
+#6000
+b101 P
+b100 O
+b11 N
+b101 a
+b100 b
+b11 c
+b111111111100000010 /
+b111111111100000010 >
+b10 d
+1+
+1,
+#6500
+0+
+0,
+#7000
+b100 N
+b101 O
+b111111111100000011 /
+b111111111100000011 >
+b11 d
+b100 c
+b101 b
+1+
+1,
+#7500
+0+
+0,
+#8000
+b101 N
+b101 c
+b111111111100000100 /
+b111111111100000100 >
+b100 d
+1+
+1,
+#8500
+0+
+0,
+#9000
+b111111111100000101 /
+b111111111100000101 >
+b101 d
+1+
+1,
+#9500
+0+
+0,
+#9501

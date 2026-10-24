@@ -1,0 +1,436 @@
+{
+ "vertices": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 34,
+   "char": 1,
+   "name": "input_io_op",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "op"
+   },
+   "assignsTo": "io_op",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 35,
+   "char": 1,
+   "name": "input_io_a",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "a"
+   },
+   "assignsTo": "io_a",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 35,
+   "char": 1,
+   "name": "input_io_b",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "b"
+   },
+   "assignsTo": "io_b",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 36,
+   "char": 1,
+   "name": "output_io_result",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 39,
+   "char": 1,
+   "name": "defreg_acc",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "acc",
+    "fieldPath": ""
+   },
+   "assignsTo": "acc",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 40,
+   "char": 1,
+   "name": "switch_on_[io_op]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "op"
+   },
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 42,
+   "char": 1,
+   "name": "case_on_[io_op is ADD]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 42,
+   "char": 1,
+   "name": "connect_acc",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "acc",
+    "fieldPath": ""
+   },
+   "assignsTo": "acc",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 45,
+   "char": 1,
+   "name": "case_on_[io_op is SUB]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 45,
+   "char": 1,
+   "name": "connect_acc",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "acc",
+    "fieldPath": ""
+   },
+   "assignsTo": "acc",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 48,
+   "char": 1,
+   "name": "case_on_[io_op default]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 48,
+   "char": 1,
+   "name": "connect_acc",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "acc",
+    "fieldPath": ""
+   },
+   "assignsTo": "acc",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 52,
+   "char": 1,
+   "name": "connect_io_result",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "result"
+   },
+   "assignsTo": "io_result",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  }
+ ],
+ "edges": [
+  {
+   "from": 3,
+   "to": 12,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 5,
+   "to": 0,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 6,
+   "to": 5,
+   "kind": "Conditional",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 1,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 6,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 8,
+   "to": 5,
+   "kind": "Conditional",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 1,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 8,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 5,
+   "kind": "Conditional",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 11,
+   "to": 1,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 11,
+   "to": 10,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 4,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 4,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 7,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 9,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 11,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  }
+ ],
+ "predicates": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 40,
+   "char": 1,
+   "name": "io_op",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  }
+ ],
+ "cfg": [
+  {
+   "stmtRef": 0
+  },
+  {
+   "stmtRef": 1
+  },
+  {
+   "stmtRef": 2
+  },
+  {
+   "stmtRef": 3
+  },
+  {
+   "stmtRef": 4
+  },
+  {
+   "stmtRef": 5,
+   "predStmtRef": 0,
+   "cases": [
+    {
+     "keys": [
+      {
+       "pattern": "00"
+      }
+     ],
+     "branch": [
+      {
+       "stmtRef": 6
+      },
+      {
+       "stmtRef": 7
+      }
+     ]
+    },
+    {
+     "keys": [
+      {
+       "pattern": "01"
+      }
+     ],
+     "branch": [
+      {
+       "stmtRef": 8
+      },
+      {
+       "stmtRef": 9
+      }
+     ]
+    }
+   ],
+   "defaultBranch": [
+    {
+     "stmtRef": 10
+    },
+    {
+     "stmtRef": 11
+    }
+   ]
+  },
+  {
+   "stmtRef": 12
+  }
+ ],
+ "spinaltrace": {
+  "formatVersion": 1,
+  "toplevel": "SwitchEnum",
+  "extraScopes": [
+   "TOP",
+   "SwitchEnum"
+  ],
+  "clockDomains": [
+   {
+    "clock": "clk",
+    "reset": "reset",
+    "resetKind": "ASYNC",
+    "resetActiveLow": false,
+    "clockEnable": null,
+    "softReset": null,
+    "registers": 1
+   }
+  ],
+  "warnings": []
+ }
+}

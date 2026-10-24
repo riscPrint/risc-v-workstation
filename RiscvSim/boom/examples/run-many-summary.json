@@ -1,0 +1,73 @@
+{
+  "schema": "rvw.run-many/1",
+  "core": "boom",
+  "manifest": "/tmp/rvw-boom-adapter/ex.jsonl",
+  "jobs": 5,
+  "workers": 3,
+  "wall_s": 105.9,
+  "counts": {
+    "pass": 3,
+    "fail": 1,
+    "timeout": 1,
+    "assert": 0,
+    "rvfi_error": 0,
+    "error": 0
+  },
+  "runs": [
+    {
+      "elf": "/work/ref/riscv-tests/build/isa/rv64ui-p-add",
+      "out": "/tmp/rvw-boom-adapter/ex/pass-rv64ui-p-add",
+      "result": "/tmp/rvw-boom-adapter/ex/pass-rv64ui-p-add/result.json",
+      "status": "pass",
+      "seed": 1,
+      "cycles": 2487,
+      "instret": 512,
+      "wall_s": 105.82,
+      "message": null
+    },
+    {
+      "elf": "/work/ref/riscv-tests/build/isa/rv64mi-p-ma_addr",
+      "out": "/tmp/rvw-boom-adapter/ex/traps-rv64mi-p-ma_addr",
+      "result": "/tmp/rvw-boom-adapter/ex/traps-rv64mi-p-ma_addr/result.json",
+      "status": "pass",
+      "seed": 1,
+      "cycles": 4685,
+      "instret": 721,
+      "wall_s": 105.82,
+      "message": null
+    },
+    {
+      "elf": "/work/rvw-boom-adapter/RiscvSim/tests/programs/build/fail",
+      "out": "/tmp/rvw-boom-adapter/ex/fail-code3",
+      "result": "/tmp/rvw-boom-adapter/ex/fail-code3/result.json",
+      "status": "fail",
+      "seed": 1,
+      "cycles": 125,
+      "instret": 10,
+      "wall_s": 56.42,
+      "message": "tohost = 0x7 (test 3 failed)"
+    },
+    {
+      "elf": "/work/rvw-boom-adapter/RiscvSim/tests/programs/build/hang",
+      "out": "/tmp/rvw-boom-adapter/ex/timeout",
+      "result": "/tmp/rvw-boom-adapter/ex/timeout/result.json",
+      "status": "timeout",
+      "seed": 1,
+      "cycles": 20000,
+      "instret": 19873,
+      "wall_s": 1.73,
+      "message": "no result after 20000 cycles"
+    },
+    {
+      "elf": "/work/rvw-boom-adapter/RiscvSim/tests/programs/build/bench",
+      "out": "/tmp/rvw-boom-adapter/ex/bench-metrics",
+      "result": "/tmp/rvw-boom-adapter/ex/bench-metrics/result.json",
+      "status": "pass",
+      "seed": 1,
+      "cycles": 2263,
+      "instret": 2018,
+      "wall_s": 0.24,
+      "message": null
+    }
+  ]
+}

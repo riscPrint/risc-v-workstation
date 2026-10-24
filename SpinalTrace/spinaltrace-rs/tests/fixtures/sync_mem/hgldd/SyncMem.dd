@@ -1,0 +1,228 @@
+{
+  "HGLDD": {
+    "version": "0.1.0",
+    "file_info": [
+      "/work/SpinalTrace/spinaltrace/DirectConstructorHandleAccessor.java",
+      "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala"
+    ]
+  },
+  "objects": [
+    {
+      "kind": "struct",
+      "obj_name": "SyncMem_io_struct",
+      "port_vars": [
+        {
+          "var_name": "rdAddr",
+          "source_lang_type_info": {
+            "type_name": "in UInt(3 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 136,
+            "end_line": 136,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            2,
+            0
+          ]
+        },
+        {
+          "var_name": "rdData",
+          "source_lang_type_info": {
+            "type_name": "out UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 137,
+            "end_line": 137,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "wrAddr",
+          "source_lang_type_info": {
+            "type_name": "in UInt(3 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 134,
+            "end_line": 134,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            2,
+            0
+          ]
+        },
+        {
+          "var_name": "wrData",
+          "source_lang_type_info": {
+            "type_name": "in UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 135,
+            "end_line": 135,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "wrEn",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 133,
+            "end_line": 133,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "obj_name": "SyncMem",
+      "module_name": "SyncMem",
+      "port_vars": [
+        {
+          "var_name": "clk",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "clk"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "io",
+          "source_lang_type_info": {
+            "type_name": "Bundle",
+            "params": [
+              {
+                "name": "$outer",
+                "type": "spinaltrace.examples.SyncMem"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 132,
+            "end_line": 132,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "opcode": "'{",
+            "operands": [
+              {
+                "sig_name": "io_rdAddr"
+              },
+              {
+                "sig_name": "io_rdData"
+              },
+              {
+                "sig_name": "io_wrAddr"
+              },
+              {
+                "sig_name": "io_wrData"
+              },
+              {
+                "sig_name": "io_wrEn"
+              }
+            ]
+          },
+          "type_name": "SyncMem_io_struct"
+        },
+        {
+          "var_name": "mem_wen_Features_l141",
+          "source_lang_type_info": {
+            "type_name": "Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 141,
+            "end_line": 141,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "mem_wen_Features_l141"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "reset",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "reset"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "children": [],
+      "source_lang_type_info": {
+        "type_name": "SyncMem"
+      },
+      "hgl_loc": {
+        "file": 1,
+        "begin_line": 131,
+        "end_line": 131,
+        "begin_column": 1,
+        "end_column": 1
+      }
+    }
+  ]
+}

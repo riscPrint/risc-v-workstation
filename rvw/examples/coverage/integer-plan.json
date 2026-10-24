@@ -1,0 +1,19 @@
+{
+  "groups": [
+    {
+      "name": "mnemonic_mode",
+      "fields": ["mnemonic", "mode"],
+      "domains": [
+        ["lui", "auipc", "jal", "jalr", "beq", "bne", "blt", "bge", "bltu", "bgeu",
+         "lb", "lh", "lw", "ld", "lbu", "lhu", "lwu", "sb", "sh", "sw", "sd",
+         "addi", "slti", "sltiu", "xori", "ori", "andi", "slli", "srli", "srai",
+         "add", "sub", "sll", "slt", "sltu", "xor", "srl", "sra", "or", "and",
+         "addiw", "slliw", "srliw", "sraiw", "addw", "subw", "sllw", "srlw", "sraw",
+         "mul", "mulh", "mulhsu", "mulhu", "div", "divu", "rem", "remu",
+         "mulw", "divw", "divuw", "remw", "remuw", "fence", "fence.i",
+         "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci", "ecall", "ebreak", "mret"],
+        ["U", "S", "M"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+:root {
+  color-scheme: light dark;
+  --sb-bg: var(--vscode-editor-background);
+  --sb-text: var(--vscode-editor-foreground);
+  --sb-text-muted: var(--vscode-descriptionForeground);
+  --sb-frame-fill: var(--vscode-editor-background);
+  --sb-frame-stroke: var(--vscode-panel-border, var(--vscode-editorWidget-border));
+  --sb-frame-title: var(--vscode-foreground);
+  --sb-frame-header: var(--vscode-sideBarSectionHeader-background, var(--vscode-editorWidget-background));
+  --sb-glyph: var(--vscode-foreground);
+  --sb-control-fill: var(--vscode-editor-background);
+  --sb-state-fill: var(--vscode-editor-background);
+  --sb-state-stroke: var(--vscode-foreground);
+  --sb-state-bad: var(--vscode-errorForeground);
+  --sb-state-unused-fill: var(--vscode-inputValidation-errorBackground);
+  --sb-transition: var(--vscode-foreground);
+  --sb-condition: var(--vscode-editor-foreground);
+  --sb-comment: var(--vscode-descriptionForeground);
+  --sb-tip-bg: var(--vscode-editorHoverWidget-background);
+  --sb-tip-text: var(--vscode-editorHoverWidget-foreground);
+  --sb-tip-border: var(--vscode-editorHoverWidget-border);
+  --sb-inst-fill: var(--vscode-editorWidget-background);
+  --sb-inst-header: var(--vscode-sideBarSectionHeader-background, var(--vscode-editorWidget-background));
+  --sb-inst-stroke: var(--vscode-symbolIcon-classForeground, var(--vscode-foreground));
+  --sb-reg-fill: var(--vscode-editorWidget-background);
+  --sb-reg-stroke: var(--vscode-symbolIcon-variableForeground, var(--vscode-foreground));
+  --sb-comb-fill: var(--vscode-editorWidget-background);
+  --sb-comb-stroke: var(--vscode-symbolIcon-functionForeground, var(--vscode-foreground));
+  --sb-mixed-fill: var(--vscode-editorWidget-background);
+  --sb-mixed-stroke: var(--vscode-symbolIcon-interfaceForeground, var(--vscode-foreground));
+  --sb-mem-fill: var(--vscode-editorWidget-background);
+  --sb-mem-stroke: var(--vscode-symbolIcon-arrayForeground, var(--vscode-foreground));
+  --sb-logic-fill: var(--vscode-editorWidget-background);
+  --sb-logic-stroke: var(--vscode-editorLineNumber-foreground);
+  --sb-area-fill: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  --sb-area-stroke: var(--vscode-editorIndentGuide-activeBackground, var(--vscode-foreground));
+  --sb-port-in-fill: var(--vscode-editorWidget-background);
+  --sb-port-in-stroke: var(--vscode-symbolIcon-fieldForeground, var(--vscode-foreground));
+  --sb-port-out-fill: var(--vscode-editorWidget-background);
+  --sb-port-out-stroke: var(--vscode-symbolIcon-methodForeground, var(--vscode-foreground));
+  --sb-port-inout-fill: var(--vscode-editorWidget-background);
+  --sb-port-inout-stroke: var(--vscode-symbolIcon-interfaceForeground, var(--vscode-foreground));
+  --sb-marker-fill: var(--vscode-editor-background);
+  --sb-marker-stroke: var(--vscode-foreground);
+  --sb-edge: var(--vscode-editorLineNumber-foreground);
+  --sb-edge-control: var(--vscode-symbolIcon-eventForeground, var(--vscode-foreground));
+  --sb-edge-clock: var(--vscode-symbolIcon-constantForeground, var(--vscode-foreground));
+  --sb-edge-label: var(--vscode-descriptionForeground);
+  --sb-control: var(--vscode-foreground);
+  --sb-highlight: var(--vscode-textLink-activeForeground);
+  --sb-select: var(--vscode-focusBorder);
+}
+body.vscode-high-contrast, body.vscode-high-contrast-light {
+  --sb-frame-stroke: var(--vscode-contrastBorder, var(--vscode-foreground));
+  --sb-edge: var(--vscode-foreground);
+  --sb-area-stroke: var(--vscode-contrastBorder, var(--vscode-foreground));
+}
+body { margin:0; padding:0; height:100vh; display:flex; flex-direction:column; overflow:hidden; color:var(--vscode-foreground); background:var(--vscode-editor-background); font:var(--vscode-font-size) var(--vscode-font-family); }
+header { padding:6px 10px; border-bottom:1px solid var(--vscode-panel-border); }
+#crumbs { overflow:auto; white-space:nowrap; margin-bottom:5px; }
+#toolbar { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+button { cursor:pointer; color:var(--vscode-button-secondaryForeground); background:var(--vscode-button-secondaryBackground); border:1px solid var(--vscode-contrastBorder, transparent); border-radius:2px; padding:4px 7px; font:inherit; }
+button:hover { background:var(--vscode-button-secondaryHoverBackground); }
+button:focus-visible, input:focus-visible { outline:1px solid var(--vscode-focusBorder); outline-offset:1px; }
+#crumbs button { background:transparent; color:var(--vscode-textLink-foreground); }
+label { display:flex; gap:3px; align-items:center; }
+input { accent-color:var(--vscode-focusBorder); }
+main { flex:1; min-height:0; display:flex; }
+#canvas { flex:1; min-width:0; }
+#details { width:270px; padding:10px; overflow:auto; border-left:1px solid var(--vscode-panel-border); overflow-wrap:anywhere; }
+#details ul { padding-left:18px; } #details li { margin-bottom:5px; } #details button { margin:3px; }
+#busy { color:var(--vscode-descriptionForeground); padding-top:5px; }
+#status { padding:3px 10px; color:var(--vscode-descriptionForeground); border-top:1px solid var(--vscode-panel-border); }
+#menu { position:fixed; z-index:10; padding:5px; background:var(--vscode-menu-background); border:1px solid var(--vscode-menu-border, var(--vscode-contrastBorder, var(--vscode-panel-border))); box-shadow:0 3px 8px var(--vscode-widget-shadow); }
+#menu button { display:block; width:100%; text-align:left; background:transparent; color:var(--vscode-menu-foreground); }
+#menu button:hover { background:var(--vscode-menu-selectionBackground); color:var(--vscode-menu-selectionForeground); }
+[hidden] { display:none !important; }
+select { color:var(--vscode-dropdown-foreground); background:var(--vscode-dropdown-background); border:1px solid var(--vscode-dropdown-border, var(--vscode-panel-border)); max-width:320px; font:inherit; padding:3px; }

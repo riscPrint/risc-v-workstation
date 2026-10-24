@@ -1,0 +1,361 @@
+# SpinalChecks
+
+Assertions generated from an elaborated Spinal design, and the flows that use them: simulation
+monitors, SymbiYosys BMC from reset, BMC from a simulation state, and X-propagation.
+
+Commercial counterparts: JasperGold Superlint / FXP and VC Formal AutoChecks / FXP (checks derived from
+the design), Jasper state swarm and VC Formal sim-based init (start a proof from a simulation state).
+TODO FV items 5 and 7. Generic for any Spinal design; BOOM is one user (`boom/`).
+
+| Path | What |
+|---|---|
+| `src/main/scala/spinalchecks/` | The library: `SpinalChecks.install` (the phase), config, report, `ChecksSim` (simulation read-back) |
+| `src/main/scala/spinalchecks/demo/` | Demo designs with planted bugs (`ChecksDemo`, `DeepBugDemo`) and `GenDemo` |
+| `src/test/scala/` | Verilator tests: every planted bug fires its check and only it |
+| `scripts/demo.sh` | Everything on the demos, end to end (no BOOM, no lock) |
+| `scripts/make-j4.sh` | `SPINAL_MAKE_CMD` wrapper capping SpinalSim's Verilator `make -j` |
+| `boom/` | BOOM adapter: separate sbt build over the spinal-boom clone (`BoomChecks`), `waivers.txt` |
+| `../rvw/src/rvw/formal/` | `rvw formal bmc | from-sim | xprop` (Python CLI, uses yosys/sby) |
+
+## Checks
+
+A Spinal phase, inserted after naming and before the IO/hierarchy checks, walks every component of the
+elaborated design and adds:
+
+| Kind | Where | Fails when |
+|---|---|---|
+| `stream.valid_hold` | every `Stream` port and selected internal stream, except a producer fully covered by consumer checks | `valid` dropped while stalled (`valid && !ready` the cycle before) |
+| `stream.payload_stable` | same streams (driven payload signals only) | payload changed while stalled |
+| `mem.index` | every port of a `Mem` whose size is not a power of two | enabled port with `address >= wordCount` |
+| `vec.index` | every dynamic read of a non-power-of-two `Vec` (Spinal `Multiplexer`), one per index signal | `index >= size` |
+| `enum.legal`, `fsm.state_legal` | enum registers whose encoding has unused codes (StateMachine state registers get `fsm.`) | value is not a declared state |
+| `progress.watchdog` | opt-in: `ProgressSpec(name, signalRegex, maxCycles)` | no progress for `maxCycles` cycles (Bools: any high; one wider signal: value changed) |
+| `tilelink.burst_stable` | channels of a Spinal `tilelink.Bus` with multi-beat messages (in addition to the stream rules) | inside a burst (after its first beat was accepted): a header field (opcode, param, size, source, address, ...) differs from the first beat's, or a stalled beat's payload changed. Before the first beat is accepted the message may change (rocket-chip's TLArbiter does; its TLMonitor allows it) |
+
+All checks are inactive while the component's reset is active. `mem.index`, `vec.index` and `enum`
+checks on a register without a reset value are armed once the register is first written (an
+assignment of it executes), so every written value is checked, the first included, and the power-up
+value of a register that is never written is not (it is X in hardware; `rvw formal xprop` covers it). Stream rules on the toplevel's slave
+(input) streams describe the environment: in a formal config (`SpinalConfig.includeFormal`) they become
+`assume`. A producer can use consumer checks only when the phase proves a full direct connection
+of `valid`, `ready` and every payload field. This applies to internal streams feeding child slaves
+and child masters feeding parent streams or sibling slaves. All required consumer checks must be
+enabled and unwaived. A wrapper chain must end at retained checks. Otherwise both streams keep
+their checks. A child master consumed only through its fields keeps its own checks.
+
+Each check has a stable id `<kind>:<instance path>.<object>` (e.g. `stream.valid_hold:fifo.io_push`),
+the Scala source line of the checked object (with `SpinalChecks.withLocations`), and a named fail
+signal `chk_<kind>_<object>` in the Verilog. Ids are taken when the checks are inserted, before Spinal
+allocates final names, so they use identity paths fixed at that point (`SpinalChecks.instanceIds`):
+a named component's segment is its name, an unnamed one (created inside a loop body) gets its class
+name with a lower-case first letter, and siblings that would share a segment get `_1`, `_2`, ... in
+child order (named children first). Objects without a name (`stream`, `mem`, `state`, `index`) or with
+a repeated name get the same suffixes within their component. Each id therefore names exactly one
+check, and a repeated id stops elaboration with an error. The report's `path`, signal names and the
+run report's `fail_signal` use the final Verilog instance name, which can differ from the id
+(`branchDecode_1` in the id, `branchDecode_4` in the Verilog; `wrap` can become `wrap_1` when a
+definition `Wrap` holds the name). No path segment is empty.
+
+Selection: `ChecksConfig(enable = globs, disable = globs, waivers = Seq(Waiver(glob, reason)))`, a
+waiver file (`<glob> <reason>` per line; prefer exact ids, as `boom/waivers.txt` does), or environment variables (`SPINALCHECKS_MODE`, `_ENABLE`,
+`_DISABLE`, `_WAIVERS`, `_PROGRESS=name=regex@cycles`). Globs match ids; `*` crosses dots. Waived and
+disabled checks are not inserted, but the report lists them with the reason.
+
+Modes:
+
+- `assert` (default): Spinal `assert` (severity ERROR). The Verilog has `assert(!chk_...)` under
+  `ifdef FORMAL` (SymbiYosys) and a `$display` otherwise (Verilator keeps running).
+- `monitor`: simulation bookkeeping instead of asserts: sticky `fired`, a firing count, the first firing
+  cycle (all `simPublic`), and a `$display` of the first 3 firings. `ChecksSim.firings(dut)` reads them.
+- `both`.
+
+`ChecksSim.firings`, `runReport` and `writeRunReport` require `monitor` or `both` mode.
+They refuse reports when an inserted check has no monitor state. A report with firing checks
+changes a caller's `status: pass` to `status: fail`.
+
+## Use
+
+```scala
+import spinalchecks._
+val (cfg, checks) = SpinalChecks.install(SpinalConfig(targetDirectory = "gen"),
+  ChecksConfig(mode = Mode.Monitor, progress = Seq(ProgressSpec("retire", """io_retire_\d+_valid""", 10000))))
+val located = SpinalChecks.withLocations(cfg)(new MyTop)   // optional: source lines (elaborates twice)
+SimConfig.withConfig(located).withVerilator.compile(new MyTop).doSim { dut =>
+  ...
+  ChecksSim.writeRunReport(dut, "run-checks.json")       // rvw.checks-run/1: fired checks, counts, first cycle
+}
+// gen/MyTop.checks.json (or ChecksConfig.reportPath): rvw.checks/1, every check with id, status,
+// source, module and fail signal, plus every Stream/Flow (valid/ready/payload names) for xprop.
+```
+
+For formal, elaborate with `SpinalConfig(...).includeFormal` and `Mode.Assert`, then:
+
+```sh
+rvw formal bmc      --verilog gen/MyTop.v --top MyTop --checks gen/MyTop.checks.json --depth 20 --out out/bmc
+rvw formal xprop    --verilog gen/MyTop.v --top MyTop --checks gen/MyTop.checks.json --outputs --payload --out out/x
+rvw formal from-sim --verilog gen/MyTop.v --top MyTop --trace wave.fst --cycle 7680 --depth 30 \
+                    --checks gen/MyTop.checks.json --out out/fs
+```
+
+Every command writes `result.json` (`rvw.formal/1`) and prints failures by check id and Scala line.
+
+What a result means:
+
+- `status`: `pass`, `fail`, `unknown`, `error`, `timeout`, or `no_checks` (the proven design has no
+  assertion: nothing was checked). `assertions` is the number of `$assert` cells in the design sby
+  proved (`sby/model/design_prep.il`, counted per instance). Exit code 0 only for `pass`; 1 for every
+  other status (result written); 2 for an input error (no result).
+- A run owns its `--out` directory. It takes an exclusive `flock` on `<out>/.rvw-formal.lock` before
+  it removes or writes anything there, and holds it until it ends. A second run on the same directory
+  (another process, or a nested call) stops with exit 2 and changes nothing. Use one `--out` per
+  concurrent run.
+- After the lock, the run deletes the previous `result.json` first. A failed run never leaves an old one.
+  The MCP tools (`formal_bmc`, `formal_from_sim`, `formal_xprop`) return a result only if it parses and
+  its status agrees with the exit code. Otherwise they return an error with the log tail.
+- Before sby starts, the run removes the earlier `sby/` directory and the earlier Yosys outputs
+  (`state.il`, `module_ports.il`, `targets.json`). `pass` needs sby's exit code 0 and the same `rc=0`
+  in its log. `result.json` records both as `solver` (`exit`, `log_rc`).
+- Depths that cannot check anything after the reset are rejected: `bmc` needs `--depth >= reset-cycles
+  + 2`, `xprop` `--depth >= reset-cycles + settle + 3`, `from-sim` `--depth >= 2`.
+- `--tie PORT=VALUE` works in every flow; `ties`, `reset` and `restrictions` (ties, reset sequence,
+  inputs assumed defined) are recorded in the result.
+- Every name (top, clock, reset, tie ports, scope, `--signal`, names from the checks report), the engine
+  and every path is checked against a strict pattern before a Yosys/sby script is written: names are
+  identifiers joined by dots; paths may only contain letters, digits and `_ . / + @ % , = : ~ -` (a path
+  with a space is rejected). A bad name is an input error (exit 2). For a bad name from the checks
+  report (older reports had empty path segments, `tile.frontend..io_x_valid`), the message says to
+  regenerate the report. Clock, reset and tie ports must be inputs of the toplevel, `--signal` must exist
+  in the flattened design. `--reset` defaults to `reset` if the toplevel has it.
+- One clock only. sby runs with `multiclock off`: one solver step is one cycle of every flip-flop, memory
+  port and clocked assertion. Before the proof, every flow runs a Yosys clock probe on the flattened
+  design (`clock_probe.ys`, `clock_cells.json`) and refuses (exit 2, no `result.json`) a design where any
+  enabled clock or trigger input is not the rising edge of `--clock`: a second clock, a gated or derived
+  clock, a falling edge, a constant clock. Such a design would otherwise be proven as if all its clocks
+  ticked together (a false pass). Asynchronous memory read ports and unclocked assertions have
+  no clock and are accepted. Asynchronous state (async reset or set, `$adff`, `$aldff`, `$dffsr`, `$sr`)
+  and latches are refused the same way: the single-clock model misses a pulse between edges.
+- With `--json`, stdout is the result document only; notes (e.g. `bmc` on a toplevel without a reset)
+  go to stderr. `result.json` is the same document.
+- `--timeout` (and an MCP cancel) stops yosys, sby and the solvers: they run in their own process
+  group; sby gets SIGTERM and stops the solver groups it started, then SIGKILL after 10 s (below the
+  MCP job's 15 s SIGTERM-to-SIGKILL grace, so the CLI is still alive to finish the stop).
+
+### `rvw formal from-sim` (start a proof from a simulation state)
+
+1. Streams the trace (FST through `fst2vcd`, or VCD) up to the requested state, the values right after
+   the N-th rising edge of `--clock` (or `--time T`), and stops reading there. Keeps the variables under
+   the toplevel's scope and hoists Verilator's memory sub-scopes (`mem.mem[3]` becomes `mem[3]`, which
+   is what Yosys expects). Writes a one-timestamp `state.vcd`. A `--time` before the first or after the
+   last recorded timestamp is an error (exit 2, the message gives the recorded interval).
+2. `yosys: prep; setattr -unset init; (drop memory init contents); async2sync; sim -clock clk -r state.vcd
+   -scope <top> -at <T> -w; write_rtlil` gives every register an `init` and every memory an `INIT` from
+   the trace. The RTL's own initial values (`initial` blocks, memory init contents) are dropped first:
+   they hold at time 0, not at cycle N, so state missing from the trace starts free (any value) instead.
+3. SymbiYosys BMC over `state.il` with the reset tied inactive (`delete -input` + `connect -set`), other
+   inputs free unless `--tie PORT=VALUE`. Step k is cycle N+k; a clocked assertion (all of Spinal's)
+   reported at step k failed on the values of cycle N+k-1, which is the `cycle` reported.
+4. Reports where the start state came from, bit by bit (`state` in `result.json`): `ff_bits_from_trace`,
+   `ff_bits_free` (not in the trace: any value; the first names in `registers_free`) and `ff_bits_flow`
+   (registers the flow adds and starts itself: async2sync's assertion samplers start disabled), out of
+   `ff_bits`; `mem_bits_from_trace` of `mem_bits`, and the memories with no traced word (`mems_uninit`).
+   Free state can only add behaviours: a pass still holds, a failure at the first steps may be spurious.
+
+Memories: `--memories trace` (default) takes contents from the trace; memories absent from it stay
+free (any contents). Verilator only dumps arrays up to `--trace-max-array` words (default 32) and signals
+up to `--trace-max-width` bits (256), and skips names that start with `_` unless `--trace-underscore`:
+set all three for the simulation (the BOOM runner does). `free` drops
+all contents (sound, may give spurious failures: the test suite shows a property that holds from the
+traced memory and fails with free memory); `zero` fills words the trace did not give with zeros.
+
+### `rvw formal xprop`
+
+Flattens the design, brings the targets out as ports (`expose`), runs Yosys `xprop -split-outputs`
+(registers and memories without init are X; inputs assumed defined) and asserts in a wrapper that no
+target is X once reset is over: toplevel outputs (`--outputs`), and from a checks report every
+Stream/Flow `valid`, `ready` while valid and (`--payload`) payload while valid. That is where Spinal's
+knowledge helps: a payload is allowed to be X while `valid` is low.
+
+## Demo and evidence
+
+`scripts/demo.sh` (log of a run: everything below).
+
+1. Simulation (`ChecksDemoSpec`, 8 tests): the clean `ChecksDemo` has all 7 stream/memory/index/enum/
+   progress kinds inserted (20 checks; in formal 18 are assertions and the 2 rules on the toplevel's
+   input stream are assumptions) and nothing fires in 3000 random cycles; each of the 6 planted bugs
+   fires exactly its check; waivers/disables remove checks and are reported. `ArmingSpec` (2 tests):
+   the first written illegal index fires, an unwritten register's illegal power-up value does not.
+   `TileLinkSpec` (5 tests): the TileLink burst rule.
+2. BMC from reset, depth 25 (yices), 18 assertions: clean passes; `hold`, `stable`, `mem`, `vec`, `enum` each fail
+   with only their check, at steps 5 to 10, in about 2 s, reported as e.g.
+   `FAIL mem.index:mem_port0_write at step 7 (cycle 6) ChecksDemo.v:412 [Demos.scala:44]`. `hang` needs
+   ~240 cycles and passes at depth 25 (the simulation monitor catches it).
+3. xprop: on the clean design, X reaches `io_memOut` (a read of a memory word never written: true)
+   and `io_aux` (the two registers deliberately left without reset);
+   with the planted `xvalid` bug (a stream valid gated by a register without reset, invisible in
+   Verilator's 2-state simulation), X is found first on the internal stream `stage`'s valid at step 4
+   and then followed through the FIFO to `io_out`.
+4. Deep bug (`DeepBugDemo`: a 6-entry queue in a non-power-of-two memory; valid is withdrawn while
+   stalled only when exactly 2000 packets were served and the head packet is 0x5A):
+   - random simulation, 9000 cycles: 2333 packets served, the bug is not hit;
+   - BMC from reset, depth 30: passes (2.7 s), the bug is ~7700 cycles deep;
+   - from-sim at cycle 7680 (served = 1990), depth 30: fails at cycle 7691,
+     `stream.valid_hold:io_out [Demos.scala:101]`, in 2.6 s, with 56/56 register bits and 1/1 memory
+     loaded from the trace. The counterexample shows served = 0x7d0, head = 0x5a, ready low, valid
+     dropped. From cycle 3000 the same BMC passes.
+
+## BOOM (`boom/`)
+
+A separate sbt build over the spinal-boom clone (`SPINAL_BOOM`, default `../../../spinal-boom-eda`):
+`BoomChecks` elaborates `boom.system.BoomSimTop` with the checks phase and runs ELFs through the clone's
+own harness (`boom.sim.BoomSim.run`: TileLink memory agent with randomized timing, `tohost`). Nothing in
+the clone is edited. BOOM-specific settings: the retirement watchdog on `io_trace_insns_*_valid`
+(20000 cycles) and `boom/waivers.txt`. Both scripts take the machine-wide `boom` lock.
+
+```sh
+SpinalChecks/boom/run-suite.sh small out/suite-small   # rv64ui-p-* + median, qsort, towers, dhrystone
+SpinalChecks/boom/from-sim.sh 1440 4 out/fs2-small     # simulate with waves, then BMC from cycle 1440
+# results: boom/out/<dir>/summary.txt, summary.json, tests/<elf>.json; from-sim-*/result.json
+```
+
+`BoomChecks run` requires `monitor` or `both` after it applies `SPINALCHECKS_MODE`.
+A firing check makes a program fail even if `tohost` reports a pass. The runner writes its
+reports, then exits 1 if any program did not pass.
+
+`boom/from-sim.sh` builds BoomSimTop with the checks as asserts and monitors (`--formal --mode both`),
+simulates rv64ui-p-add with an FST of the whole state, and runs `rvw formal from-sim` from cycle N.
+TileLink D/B `valid` and the interrupts are tied to 0; A/C/E `ready` stay free. The script passes
+caller values as shell arguments, quotes file arguments and refuses unsupported sbt paths before
+simulation. It returns the failure status of the formal command. `boom/xprop.sh` runs xprop on
+BoomSimTop with targets from the checks report.
+
+Set `ENV_SH` to the core environment script before using these BOOM helpers.
+Set `RISCV_TESTS` to the built ISA test directory for `run-suite.sh` and for
+`from-sim.sh` when it runs simulation. `SKIP_SIM=1` uses existing artifacts.
+`BENCH_DIR` defaults to `examples/boom/out/arch/bench` in this checkout.
+The scripts reject missing required settings. For example, from the repo root:
+
+```sh
+export ENV_SH=/path/to/boom/env.sh
+export RISCV_TESTS=/path/to/riscv-tests/build/isa
+SpinalChecks/boom/run-suite.sh small
+```
+
+Earlier measurements on BOOM `small`, seed 1:
+
+- Simulation of 58 programs (measured 2026-10-23): 516 checks, 484 inserted, 32 waived, 24 fire. The firings are
+  candidates for triage, not confirmed core bugs. 57/58 programs pass `tohost`; `rv64ui-p-ma_data`
+  fails, also without checks.
+- from-sim on rv64ui-p-add from cycle 1440 passed at depths 4 and 16, and BOOM xprop reported 367
+  candidate X targets. These ran with earlier flows and were not repeated. No BOOM proof validates the current flow.
+
+## Decisions
+
+- **A phase, not a wrapper.** The checks are inserted by a Spinal phase (`SpinalConfig.phasesInserters`)
+  right before `PhaseCheckIoBundle`: names are known, and the inserted logic still goes through clock
+  domain pulling, width inference and the usual checks. Works for `generateVerilog` and `SimConfig`
+  alike, and needs no change to the design (BOOM's sources are untouched).
+- **Which streams.** Every Stream port and selected internal stream. A producer can use consumer
+  checks only for full direct assignments: `valid` and every matching payload field go into the
+  consumer, and `ready` comes from that consumer. Each target must have one full, unconditional wire
+  assignment. The components must use the same clock domain, and the payload directions and TileLink
+  channel rules must match. All required consumer checks must be enabled and not waived. Otherwise the
+  producer checks stay. Top input assumptions cannot cover a child assertion. Coverage chains must end
+  at retained checks; cycles keep all checks. An exact consumer waiver does not waive a producer check.
+  Looser rules missed a parent stream with `ready` tied low and a toggling child master; both gave
+  a false BMC pass (`ReadyWiringSpec`, `ChildMasterSpec`). This rule can keep duplicate checks for
+  equivalent logic that is not a direct connection. Checking only producers would miss streams built
+  by hand in the parent.
+- **Vec reads are found as multiplexers.** `Vec(a, b, c)` does not set element parents, so Vecs cannot
+  be found from signals; every dynamic Vec read is a Spinal `Multiplexer` with the index as select.
+  Fires for any out-of-range index, used or not (as JasperGold's array-out-of-bounds does).
+- **Enum encodings** are resolved when the phase runs (native becomes binarySequential, as Spinal's
+  Verilog backend does); the legal check compares the full bit pattern, so one-hot multi-hot values fail.
+- **Source locations** need Spinal's `debugComponents`, so `withLocations` elaborates the design twice:
+  once up to naming to learn every component class (as SpinalWaves does), then the real elaboration.
+  Without `withLocations` there is one elaboration and no source lines. The innermost frame outside
+  Spinal and this library is reported; for StateMachines, the StateMachine's own location.
+- **Waived checks are not inserted** (they cost nothing); the report still lists them.
+- **Monitor state is read with `simPublic`** rather than ports, so no IO is added to any component.
+  SpinalSim's own simPublic phase runs before ours, so the phase also adds `Verilator.public`.
+- **Simulation reports need monitors.** Assert mode prints simulation messages but has no firing
+  counters. The report APIs refuse it. The BOOM runner also refuses it after environment overrides.
+  A monitored check failure makes the run fail.
+- **Arming by writes.** Arming on the first change of value missed the first illegal value. A
+  `chk_<reg>_write` wire is False at the head of the body and True in every outermost scope that
+  assigns the register. A register assigned from another component's scope falls back to "changed
+  value", combinationally. A partial assignment (`r(3 downto 0) := ...`) arms the whole register.
+- **TileLink rule next to, not instead of, the stream rules.** The generic `stream.payload_stable` is
+  stricter than TileLink; it stays on every channel where it did not fire, and where it is waived the
+  TileLink rule still checks bursts. Applied only to `tilelink.Bus` channels: the beat protocol belongs
+  to the bus, not to the message type.
+- **Waivers are exact ids.** A glob can silently remove checks that never fired (and the other kind of a
+  stream); `boom/waivers.txt` lists one id per fired and triaged check.
+- **Ids are unique per instance.** Ids use identity paths made distinct among siblings before any id
+  is formed. Objects are made distinct within a component. A repeated id is an error. Without this,
+  two unnamed siblings shared one id, and one exact waiver waived both. Predicting Spinal's final names
+  instead was rejected: they are allocated after the checks are inserted, against definition and enum
+  names in a global scope. Cost: loop-built siblings get different `[spinalchecks] FIRE <id>` messages,
+  so Spinal does not merge their definitions (`Stage`, `Stage_1`).
+- **Report names come from the final netlist.** Components created in a loop body are unnamed when the
+  checks are inserted. The report takes paths after name allocation, and ids use the class name as a
+  placeholder. `xprop` refuses a report name it cannot use (exit 2, regenerate the report). A bad
+  `--signal` is also an error.
+- **`rvw formal` lives in `rvw`** (`rvw/src/rvw/formal/`), Python standard library only, `--json` on every
+  command, results in `result.json`. The [formal package README](../rvw/src/rvw/formal/README.md) has
+  its input capture, tool, reachability and replay rules.
+- **Default engine yices.** bitwuzla stalled at step 19 on `ChecksDemo` (minutes per step) where yices
+  takes 4 s for depth 25; on `DeepBugDemo` bitwuzla is ~40x faster than yices. Choose with `--engine`;
+  an engine portfolio is FV item 1. `smtbmc:abc` is unsupported: this Yosys 0.64+174 release
+  crashes in its ABC SMT parser on a small counter. `rvw formal` refuses it before proof.
+- **Step to cycle.** Spinal's asserts are clocked, so sby flags them one step after the cycle in which
+  the condition held. `rvw formal` corrects cycles only when Yosys property metadata confirms
+  that delay. Unclocked or ambiguous properties retain the solver step and have `cycle: null`.
+- **from-sim drops the RTL's initial values.** Yosys `sim -w` keeps a register's `init` when the trace
+  does not have it, so a register missing from the waveform starts at its time-0 value and can turn a
+  failure into a pass. All `init` attributes and memory init contents are removed before the state is
+  loaded. Only async2sync's assertion samplers keep theirs, marked `rvw_flow_init` and counted as
+  `ff_bits_flow`.
+- **One run per output directory.** Two runs on one `--out` share the wrapper, the `.sby` file and the
+  solver directory, so one run can prove the other run's wrapper (a false pass). A busy directory is
+  refused at once (exit 2), not waited for: a wait could block for the length of a proof, and a nested
+  call in the same process would wait for itself.
+- **Formal inputs are rejected rather than escaped.** Yosys and sby scripts have no reliable quoting, so
+  names and paths outside a strict character set are errors (paths with spaces included).
+- **One clock, refused otherwise.** `multiclock on` was rejected: it makes the clocks free inputs, so a
+  step is no longer a cycle, and the depth checks, the reset wrapper, the from-sim cycle numbers and
+  xprop's arming all count cycles. `inconclusive` was rejected too: nothing is proven about such a
+  design, so it is an input error like a bad depth. The check is conservative: a design entirely on the
+  falling edge, or with a buffered clock copy kept as a separate net, is refused although it could be
+  modelled. Asynchronous state controls, latches and unsupported state cell types (also fine-grained
+  gate cells) are refused too: events between clock edges are outside this model. Each flow checks
+  every elaborated module before optimization, ties or replay state loading. Async memory reads remain
+  supported; memory async reset ports must be tied to zero. Refusal exits 2 and removes any old
+  `result.json`. A regression keeps an async-reset design that gave a false pass at depth 8; all
+  three flows refuse it.
+- **No pass without a checked assertion**: zero assertions is `no_checks`; too shallow a depth is an
+  input error. The minimum depths are exact for clocked assertions (tested: the minimum depth finds a
+  failure possible in the first cycle after reset).
+
+## Gaps
+
+- Flow has no rule at all (no handshake, no payload rule); Flows are only X-propagation targets.
+- `vec.index` fires for any out-of-range index whether or not the read value is used, and `mem.index`
+  for an asynchronous read port fires whether or not the read data is used (no enable to gate it).
+- TileLink: only burst stability. No source/sink bookkeeping (in-flight ids, responses matching
+  requests) and nothing for AXI yet. Channels of the TileLink message types outside a `tilelink.Bus`
+  get only the generic stream rules.
+- `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
+- Components without reset: checks there are always active.
+- xprop wrapper needs a clock port: purely combinational modules (e.g. BOOM's `Arbiter_*`) error out.
+- No per-module X sweep command yet (manual runs only); no 4-state replay of xprop
+  counterexamples.
+- Designs with more than one clock (or a gated clock, or registers on the falling edge) are refused by
+  every `rvw formal` flow; there is no multi-clock model yet.
+- Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model
+  for their events between clock edges.
+- Check placement uses the component's clock domain; streams in another clock domain of the same
+  component would need the domain of their signals.
+- from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
+  includes registers with an RTL initial value.
+- Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
+  `rvw/src/rvw/cov/proof.py`; merge them into one.

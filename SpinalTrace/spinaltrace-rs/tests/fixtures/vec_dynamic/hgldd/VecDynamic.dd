@@ -1,0 +1,277 @@
+{
+  "HGLDD": {
+    "version": "0.1.0",
+    "file_info": [
+      "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+      "/work/SpinalTrace/spinaltrace/DirectConstructorHandleAccessor.java"
+    ]
+  },
+  "objects": [
+    {
+      "kind": "struct",
+      "obj_name": "VecDynamic_io_struct",
+      "port_vars": [
+        {
+          "var_name": "rdData",
+          "source_lang_type_info": {
+            "type_name": "out UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "rdIdx",
+          "source_lang_type_info": {
+            "type_name": "in UInt(2 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 61,
+            "end_line": 61,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            1,
+            0
+          ]
+        },
+        {
+          "var_name": "wrData",
+          "source_lang_type_info": {
+            "type_name": "in UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 60,
+            "end_line": 60,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "wrEn",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 58,
+            "end_line": 58,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "wrIdx",
+          "source_lang_type_info": {
+            "type_name": "in UInt(2 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 59,
+            "end_line": 59,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "obj_name": "VecDynamic",
+      "module_name": "VecDynamic",
+      "port_vars": [
+        {
+          "var_name": "_zz_1",
+          "source_lang_type_info": {
+            "type_name": "UInt(4 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 67,
+            "end_line": 67,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "_zz_1"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            3,
+            0
+          ]
+        },
+        {
+          "var_name": "clk",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "clk"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "io",
+          "source_lang_type_info": {
+            "type_name": "Bundle",
+            "params": [
+              {
+                "name": "$outer",
+                "type": "spinaltrace.examples.VecDynamic"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 57,
+            "end_line": 57,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "opcode": "'{",
+            "operands": [
+              {
+                "sig_name": "io_rdData"
+              },
+              {
+                "sig_name": "io_rdIdx"
+              },
+              {
+                "sig_name": "io_wrData"
+              },
+              {
+                "sig_name": "io_wrEn"
+              },
+              {
+                "sig_name": "io_wrIdx"
+              }
+            ]
+          },
+          "type_name": "VecDynamic_io_struct"
+        },
+        {
+          "var_name": "regs",
+          "source_lang_type_info": {
+            "type_name": "Reg Vec[UInt(8 bits)](4)",
+            "params": [
+              {
+                "name": "_dataType",
+                "type": "spinal.core.HardType[T]"
+              },
+              {
+                "name": "vec",
+                "type": "Vector[T]"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 65,
+            "end_line": 65,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "opcode": "'{",
+            "operands": [
+              {
+                "sig_name": "regs_0"
+              },
+              {
+                "sig_name": "regs_1"
+              },
+              {
+                "sig_name": "regs_2"
+              },
+              {
+                "sig_name": "regs_3"
+              }
+            ]
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ],
+          "unpacked_range": [
+            3,
+            0
+          ]
+        },
+        {
+          "var_name": "reset",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "reset"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "children": [],
+      "source_lang_type_info": {
+        "type_name": "VecDynamic"
+      },
+      "hgl_loc": {
+        "file": 0,
+        "begin_line": 56,
+        "end_line": 56,
+        "begin_column": 1,
+        "end_column": 1
+      }
+    }
+  ]
+}

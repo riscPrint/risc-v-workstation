@@ -1,0 +1,49 @@
+{
+  "schema": "rvw.run/1",
+  "core": "boom",
+  "config": "small",
+  "elf": "/work/rvw-boom-adapter/RiscvSim/tests/programs/build/fail",
+  "elf_sha256": "adcc7eaf4f9a20d562ef2cc2fbc556b2be505dffa5a8dd0a96ece3e63b02e0b2",
+  "seed": 1,
+  "max_cycles": 200000,
+  "mem_latency": null,
+  "status": "fail",
+  "fail_code": 3,
+  "message": "tohost = 0x7 (test 3 failed)",
+  "cycles": 125,
+  "instret": 10,
+  "wall_s": 56.42,
+  "source": {
+    "core_repo": "/work/spinal-boom-eda",
+    "core_rev": "0cb0b69",
+    "core_dirty": false,
+    "tools_rev": "161ebda",
+    "tools_dirty": true
+  },
+  "tools": {
+    "verilator": "5.049",
+    "spinalhdl": "1.15.0",
+    "java": "21.0.7"
+  },
+  "artifacts": {
+    "log": "run.log"
+  },
+  "replay": "SPINAL_BOOM=/work/spinal-boom-eda /work/rvw-boom-adapter/RiscvSim/boom/run.sh run --elf /work/rvw-boom-adapter/RiscvSim/tests/programs/build/fail --out /tmp/rvw-boom-adapter/ex/fail-code3-replay --config small --seed 1 --max-cycles 200000",
+  "details": {
+    "traps": 0,
+    "tohost": "0x7",
+    "mem_timing": "random",
+    "wave_time_per_cycle": 10,
+    "wave_time_of_cycle_1": 170,
+    "model": {
+      "config": "small",
+      "rvfi": false,
+      "wave": false,
+      "coverage": false,
+      "konata": false,
+      "name": "small"
+    },
+    "model_compile_s": 54.9,
+    "rtl_dir": "/work/user/.cache/rvw/riscvsim/boom/rtl/ff983b4f80403799"
+  }
+}

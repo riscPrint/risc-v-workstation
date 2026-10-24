@@ -1,0 +1,165 @@
+{
+  "HGLDD": {
+    "version": "0.1.0",
+    "file_info": [
+      "/work/SpinalTrace/spinaltrace/DirectConstructorHandleAccessor.java",
+      "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala"
+    ]
+  },
+  "objects": [
+    {
+      "kind": "struct",
+      "obj_name": "ResetCounter_io_struct",
+      "port_vars": [
+        {
+          "var_name": "count",
+          "source_lang_type_info": {
+            "type_name": "out UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 121,
+            "end_line": 121,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "enable",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 120,
+            "end_line": 120,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "obj_name": "ResetCounter",
+      "module_name": "ResetCounter",
+      "port_vars": [
+        {
+          "var_name": "clk",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "clk"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "counter",
+          "source_lang_type_info": {
+            "type_name": "Reg UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 123,
+            "end_line": 123,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "counter"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "io",
+          "source_lang_type_info": {
+            "type_name": "Bundle",
+            "params": [
+              {
+                "name": "$outer",
+                "type": "spinaltrace.examples.ResetCounter"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 119,
+            "end_line": 119,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "opcode": "'{",
+            "operands": [
+              {
+                "sig_name": "io_count"
+              },
+              {
+                "sig_name": "io_enable"
+              }
+            ]
+          },
+          "type_name": "ResetCounter_io_struct"
+        },
+        {
+          "var_name": "reset",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "reset"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "children": [],
+      "source_lang_type_info": {
+        "type_name": "ResetCounter"
+      },
+      "hgl_loc": {
+        "file": 1,
+        "begin_line": 118,
+        "end_line": 118,
+        "begin_column": 1,
+        "end_column": 1
+      }
+    }
+  ]
+}

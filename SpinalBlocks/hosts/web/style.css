@@ -1,0 +1,59 @@
+:root { --bg: #f6f8fa; --panel: #fff; --line: #d8dee4; --text: #1f2933; --muted: #6b7785; --accent: #1f6feb;
+        font: 13px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--text); }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { display: flex; flex-direction: column; background: var(--bg); }
+button, input, select { font: inherit; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+header, #toolbar { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { font-size: 15px; }
+.grow { flex: 1; }
+#crumbs a { color: var(--accent); cursor: pointer; text-decoration: none; }
+#crumbs .sep { color: var(--muted); margin: 0 4px; }
+#crumbs .mod { color: var(--muted); margin-left: 4px; }
+#search { width: 240px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; }
+main { flex: 1; display: flex; min-height: 0; }
+#tree-panel { width: 260px; border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+#tree-panel.hidden { display: none; }
+#tree-filter { margin: 8px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; }
+#tree { overflow: auto; flex: 1; padding: 0 4px 8px; }
+#tree details { margin-left: 12px; }
+#tree summary, #tree .leaf { padding: 2px 4px; border-radius: 4px; cursor: pointer; white-space: nowrap; list-style-position: outside; }
+#tree .leaf { margin-left: 12px; list-style: none; }
+#tree .current { background: #ddeaff; }
+#tree .mod { color: var(--muted); font-size: 11px; margin-left: 4px; }
+#canvas, #fsm-canvas { flex: 1; position: relative; min-width: 0; overflow: hidden; }
+#canvas[hidden], #fsm-canvas[hidden] { display: none; }
+#toolbar > span { display: inline-flex; align-items: center; gap: 10px; }
+#toolbar > span[hidden] { display: none; }
+.seg { gap: 0 !important; }
+.seg button { border-radius: 0; }
+.seg button:first-child { border-radius: 6px 0 0 6px; }
+.seg button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+.seg button.on { background: #ddeaff; border-color: var(--accent); }
+#menu { position: fixed; z-index: 20; margin: 0; padding: 4px; list-style: none; min-width: 180px;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px #0003; }
+#menu li { padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+#menu li:hover { background: #ddeaff; }
+#menu li.sep { height: 1px; padding: 0; margin: 4px 0; background: var(--line); cursor: default; }
+#drop { position: absolute; inset: 40px; display: grid; place-items: center; border: 2px dashed var(--line); border-radius: 12px; color: var(--muted); }
+#drop.over { border-color: var(--accent); color: var(--accent); }
+#hits { position: absolute; top: 6px; right: 6px; z-index: 5; width: 360px; max-height: 60%; overflow: auto; margin: 0; padding: 4px; list-style: none;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px #0002; }
+#hits li { padding: 4px 6px; border-radius: 4px; cursor: pointer; display: flex; gap: 8px; }
+#hits li:hover, #hits li.active { background: #ddeaff; }
+#hits .kind, #hits .ctx { color: var(--muted); font-size: 11px; }
+#details { width: 320px; border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 10px 12px; }
+#details h2 { font-size: 15px; margin: 0 0 2px; word-break: break-all; }
+#details .sub { color: var(--muted); margin-bottom: 8px; }
+#details h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 14px 0 4px; }
+#details table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#details td { padding: 2px 4px; border-bottom: 1px solid #eef1f4; vertical-align: top; word-break: break-all; }
+#details a { color: var(--accent); cursor: pointer; }
+#details .actions { display: flex; gap: 6px; margin: 6px 0; }
+footer { display: flex; justify-content: space-between; padding: 3px 12px; font-size: 12px; color: var(--muted); background: var(--panel); border-top: 1px solid var(--line); }
+#busy { color: var(--accent); }
+#details td { word-break: normal; overflow-wrap: anywhere; }
+#details td:first-child { width: 42%; }
+#details td:last-child { width: 1%; white-space: nowrap; color: var(--muted); }

@@ -1,0 +1,154 @@
+{
+  "id": "spinalblocks",
+  "title": "SpinalBlocks",
+  "description": "Block and state machine diagrams for elaborated SpinalHDL designs, linked to the Scala source.",
+  "activationEvents": [
+    "onCustomEditor:spinalblocks.diagram",
+    "onLanguage:scala",
+    "workspaceContains:**/blocks/*.json.gz",
+    "workspaceContains:**/*.spinalblocks.json"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "spinalblocks.diagram",
+        "displayName": "SpinalBlocks Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.spinalblocks.json"
+          },
+          {
+            "filenamePattern": "*.json.gz"
+          },
+          {
+            "filenamePattern": "*.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "spinalblocks.open",
+        "title": "SpinalBlocks: Open Block Diagram",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "spinalblocks.find",
+        "title": "SpinalBlocks: Find in Diagram"
+      },
+      {
+        "command": "spinalblocks.navigate",
+        "title": "SpinalBlocks: Navigate to Instance"
+      },
+      {
+        "command": "spinalblocks.showLocation",
+        "title": "SpinalBlocks: Show in Block Diagram"
+      },
+      {
+        "command": "spinalblocks.openFsm",
+        "title": "SpinalBlocks: Open State Machines Diagram"
+      },
+      {
+        "command": "spinalblocks.showFsmLocation",
+        "title": "SpinalBlocks: Show in State Machines Diagram"
+      },
+      {
+        "command": "spinalblocks.forgetDesignChoice",
+        "title": "SpinalBlocks: Forget Remembered Design Choices"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "spinalblocks.hierarchy",
+          "name": "SpinalBlocks",
+          "when": "spinalblocks.hasDiagram"
+        }
+      ]
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "spinalblocks.open",
+          "group": "navigation",
+          "when": "resourceExtname == .json || resourceExtname == .gz"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "spinalblocks.open",
+          "when": "resourceExtname == .scala",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "spinalblocks.showLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        },
+        {
+          "command": "spinalblocks.showFsmLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "spinalblocks.find",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeCustomEditorId == spinalblocks.diagram"
+      }
+    ],
+    "configuration": {
+      "title": "SpinalBlocks",
+      "properties": {
+        "spinalblocks.designFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/blocks/*.json.gz",
+            "**/*.spinalblocks.json"
+          ],
+          "description": "Workspace globs for generated SpinalBlocks design files."
+        },
+        "spinalblocks.followCursor": {
+          "type": "boolean",
+          "default": false,
+          "description": "Select the matching element in visible diagrams when the Scala editor cursor moves."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "scala",
+        "aliases": [
+          "Scala",
+          "scala"
+        ],
+        "extensions": [
+          ".scala"
+        ]
+      }
+    ]
+  },
+  "webviews": [
+    "src/webview.ts",
+    "src/fsm-webview.ts"
+  ],
+  "assets": {
+    "src/webview.css": "webview.css",
+    "elkjs/lib/elk-worker.min.js": "elk-worker.js"
+  },
+  "tests": {
+    "unit": [
+      "test/protocol.test.ts"
+    ],
+    "integration": "test/integration.ts"
+  }
+}

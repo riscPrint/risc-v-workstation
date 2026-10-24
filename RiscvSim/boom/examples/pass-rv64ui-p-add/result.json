@@ -1,0 +1,53 @@
+{
+  "schema": "rvw.run/1",
+  "core": "boom",
+  "config": "small",
+  "elf": "/work/ref/riscv-tests/build/isa/rv64ui-p-add",
+  "elf_sha256": "68f387e9350f148fafae1163e6fcd79f5537738af340fd97708183c1285a1fbe",
+  "seed": 1,
+  "max_cycles": 200000,
+  "mem_latency": null,
+  "status": "pass",
+  "fail_code": null,
+  "message": null,
+  "cycles": 2487,
+  "instret": 512,
+  "wall_s": 105.82,
+  "source": {
+    "core_repo": "/work/spinal-boom-eda",
+    "core_rev": "0cb0b69",
+    "core_dirty": false,
+    "tools_rev": "161ebda",
+    "tools_dirty": true
+  },
+  "tools": {
+    "verilator": "5.049",
+    "spinalhdl": "1.15.0",
+    "java": "21.0.7"
+  },
+  "artifacts": {
+    "log": "run.log",
+    "rvfi_trace": "rvfi.jsonl"
+  },
+  "replay": "SPINAL_BOOM=/work/spinal-boom-eda /work/rvw-boom-adapter/RiscvSim/boom/run.sh run --elf /work/ref/riscv-tests/build/isa/rv64ui-p-add --out /tmp/rvw-boom-adapter/ex/pass-rv64ui-p-add-replay --config small --seed 1 --max-cycles 200000 --rvfi-trace",
+  "details": {
+    "traps": 2,
+    "tohost": "0x1",
+    "mem_timing": "random",
+    "wave_time_per_cycle": 10,
+    "wave_time_of_cycle_1": 170,
+    "rvfi_records": 514,
+    "rvfi_trap_records": 2,
+    "rvfi_order_gaps": 0,
+    "model": {
+      "config": "small",
+      "rvfi": true,
+      "wave": false,
+      "coverage": false,
+      "konata": false,
+      "name": "small_rvfi"
+    },
+    "model_compile_s": 49.2,
+    "rtl_dir": "/work/user/.cache/rvw/riscvsim/boom/rtl/2e7109629cf33c75"
+  }
+}

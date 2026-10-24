@@ -1,0 +1,178 @@
+{
+  "name": "risc-v-workstation",
+  "displayName": "RISC-V Workstation",
+  "description": "Tools for RISC-V and SpinalHDL hardware development in one extension: block diagrams today, more tools as they are added.",
+  "version": "0.1.0",
+  "publisher": "riscprint",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/riscPrint/risc-v-workstation.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCustomEditor:spinalblocks.diagram",
+    "onLanguage:scala",
+    "workspaceContains:**/blocks/*.json.gz",
+    "workspaceContains:**/*.spinalblocks.json"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "spinalblocks.diagram",
+        "displayName": "SpinalBlocks Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.spinalblocks.json"
+          },
+          {
+            "filenamePattern": "*.json.gz"
+          },
+          {
+            "filenamePattern": "*.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "spinalblocks.open",
+        "title": "SpinalBlocks: Open Block Diagram",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "spinalblocks.find",
+        "title": "SpinalBlocks: Find in Diagram"
+      },
+      {
+        "command": "spinalblocks.navigate",
+        "title": "SpinalBlocks: Navigate to Instance"
+      },
+      {
+        "command": "spinalblocks.showLocation",
+        "title": "SpinalBlocks: Show in Block Diagram"
+      },
+      {
+        "command": "spinalblocks.openFsm",
+        "title": "SpinalBlocks: Open State Machines Diagram"
+      },
+      {
+        "command": "spinalblocks.showFsmLocation",
+        "title": "SpinalBlocks: Show in State Machines Diagram"
+      },
+      {
+        "command": "spinalblocks.forgetDesignChoice",
+        "title": "SpinalBlocks: Forget Remembered Design Choices"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "spinalblocks.hierarchy",
+          "name": "SpinalBlocks",
+          "when": "spinalblocks.hasDiagram"
+        }
+      ]
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "spinalblocks.open",
+          "group": "navigation",
+          "when": "resourceExtname == .json || resourceExtname == .gz"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "spinalblocks.open",
+          "when": "resourceExtname == .scala",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "spinalblocks.showLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        },
+        {
+          "command": "spinalblocks.showFsmLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "spinalblocks.find",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeCustomEditorId == spinalblocks.diagram"
+      }
+    ],
+    "languages": [
+      {
+        "id": "scala",
+        "aliases": [
+          "Scala",
+          "scala"
+        ],
+        "extensions": [
+          ".scala"
+        ]
+      }
+    ],
+    "configuration": [
+      {
+        "title": "SpinalBlocks",
+        "properties": {
+          "spinalblocks.designFiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "**/blocks/*.json.gz",
+              "**/*.spinalblocks.json"
+            ],
+            "description": "Workspace globs for generated SpinalBlocks design files."
+          },
+          "spinalblocks.followCursor": {
+            "type": "boolean",
+            "default": false,
+            "description": "Select the matching element in visible diagrams when the Scala editor cursor moves."
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "manifest": "node scripts/manifest.mjs",
+    "manifest:check": "node scripts/manifest.mjs --check",
+    "build": "node scripts/manifest.mjs && node build.mjs",
+    "vscode:prepublish": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run manifest:check && node --test \"dist/*/test/*.test.js\"",
+    "test:integration:spinalblocks": "node features/spinalblocks/test/run.cjs",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.6.0",
+    "elkjs": "0.12.0",
+    "esbuild": "^0.25.0",
+    "playwright-core": "^1.56.0",
+    "typescript": "^5.6.0"
+  }
+}

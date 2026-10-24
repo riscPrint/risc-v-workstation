@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpinalBlocks</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <button id="toggle-tree" title="Hierarchy">☰</button>
+  <strong class="brand">SpinalBlocks</strong>
+  <nav id="crumbs"></nav>
+  <span class="grow"></span>
+  <input id="search" type="search" placeholder="Find in module (⌘F)" autocomplete="off">
+  <button id="open" title="Open a .json or .json.gz design">Open…</button>
+  <input id="file" type="file" accept=".json,.gz" hidden>
+</header>
+<div id="toolbar">
+  <span class="seg"><button id="mode-blocks" class="on">Block diagram</button><button id="mode-fsm" disabled>State machines <span id="fsm-count"></span></button></span>
+  <button id="fit" title="Fit (F)">Fit</button>
+  <span id="blocks-tools">
+    <button id="up" title="Up one level (Backspace)">↑ Up</button>
+    <button id="collapse">Collapse areas</button>
+    <button id="expand">Expand areas</button>
+    <label><input id="labels" type="checkbox" checked> Net labels</label>
+    <label><input id="control" type="checkbox" checked> Control nets</label>
+    <label><input id="clocks" type="checkbox"> Clocks</label>
+    <label title="Merge the wires between two blocks into one bus"><input id="buses" type="checkbox" checked> Bundle wires</label>
+  </span>
+  <span id="fsm-tools" hidden>
+    <select id="fsm-pick"></select>
+    <label><input id="conditions" type="checkbox" checked> Conditions</label>
+    <label><input id="comments" type="checkbox"> Comments</label>
+  </span>
+  <span class="grow"></span>
+  <label>Editor <select id="editor">
+    <option value="vscode">VS Code</option><option value="cursor">Cursor</option>
+    <option value="idea">IntelliJ</option><option value="file">file://</option>
+  </select></label>
+  <button id="export">SVG</button>
+  <button id="export-png">PNG</button>
+</div>
+<main>
+  <aside id="tree-panel"><input id="tree-filter" type="search" placeholder="Filter instances"><div id="tree"></div></aside>
+  <section id="canvas"><div id="drop">Drop a SpinalBlocks <code>.json</code> / <code>.json.gz</code> here, or use Open…</div><ul id="hits" hidden></ul></section>
+  <section id="fsm-canvas" hidden></section>
+  <aside id="details" hidden></aside>
+</main>
+<ul id="menu" hidden></ul>
+<footer><span id="status">No design loaded</span><span id="busy" hidden>Laying out…</span></footer>
+<script type="module" src="main.js"></script>
+</body>
+</html>

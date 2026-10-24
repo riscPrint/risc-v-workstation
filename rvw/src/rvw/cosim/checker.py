@@ -1,0 +1,321 @@
+"""Model-independent comparison policy. All accepted differences are recorded."""
+from collections import deque
+from .trace import HEX, Trace
+
+# Kinds of synchronization (each can be switched off on its own; --strict turns off all).
+SYNC_KINDS = ("counter", "mmio", "csr", "irq")
+
+# Standard counters and machine aliases, including RV32 high halves.
+COUNTERS = set(range(0xc00, 0xc20)) | set(range(0xc80, 0xca0)) | {0xb00, 0xb02, 0xb80, 0xb82} | set(range(0xb03, 0xb20)) | set(range(0xb83, 0xba0))
+
+
+INSTRET = {0xb02, 0xc02, 0xb82, 0xc82}
+# mip/sip bits that show external interrupt inputs (MSIP, MTIP, SEIP, MEIP; further limited to the
+# platform's declared `irq_inputs`). The reference has no
+# interrupt sources, so a read may take such a bit from the core, but only as a 1 the reference
+# lacks (an input ORs into the bit; SEIP that software wrote is reference state and compared) and
+# only with evidence that the input was high: an irq level event in the trace (from the input
+# latency before the previous retirement up to the read), or, in a trace without level events,
+# the handler of an interrupt with that cause (up to its xRET). Level events are kept as bounded
+# per-bit state (last cycle set high, cycle it went low after that), never as a history.
+IRQ_INPUT_MASKS = {0x344: 0xa88, 0x144: 0x200}
+XRET = (0x30200073, 0x10200073)
+HEX_FIELDS = set(HEX) | {"cause", "tval"}
+# C2 lets the records of cycle N come before the irq event of cycle N, so the checker reads one
+# cycle at a time and applies its irq events before its other records. A real core retires a few
+# instructions per cycle; a trace with more records than this in one cycle is refused with an error
+# rather than compared without some of that cycle's level events.
+MAX_RECORDS_PER_CYCLE = 4096
+
+
+def irq_first_by_cycle(records):
+    """The records of `records` (cycles never decrease) with each cycle's irq events moved before
+    that cycle's other records; otherwise in file order. Holds at most one cycle."""
+    group, cycle = [], None
+    for record in records:
+        if record["cycle"] != cycle:
+            yield from sorted(group, key=lambda r: r.get("event") != "irq")   # stable
+            group, cycle = [], record["cycle"]
+        if len(group) >= MAX_RECORDS_PER_CYCLE:
+            raise ValueError(f"more than {MAX_RECORDS_PER_CYCLE} records in cycle {cycle}: the checker "
+                             "cannot place that cycle's irq level events")
+        group.append(record)
+    yield from sorted(group, key=lambda r: r.get("event") != "irq")
+
+
+class ReferenceEnded(Exception):
+    """The reference stopped at its own program termination (`status` "pass" or "fail"),
+    for example Sail at an HTIF tohost write. The comparison ends there."""
+    def __init__(self, status):
+        super().__init__(f"reference ended ({status})")
+        self.status = status
+
+
+def c2_view(values):
+    """A record or effect with C2 value fields as lowercase hex strings, like the trace."""
+    return {k: hex(v) if k in HEX_FIELDS and type(v) is int else v for k, v in values.items()}
+
+
+def counter_read(insn):
+    # CSRRS/CSRRC rs1=x0 or CSRRSI/CSRRCI zimm=0, never a modifying access.
+    return (insn & 0x7f == 0x73 and (insn >> 12) & 7 in (2, 3, 6, 7)
+            and (insn >> 15) & 31 == 0 and insn >> 20 in COUNTERS)
+
+
+def csr_access(insn):
+    """CSR number of a Zicsr instruction, or None."""
+    if insn & 0x7f == 0x73 and (insn >> 12) & 7 in (1, 2, 3, 5, 6, 7):
+        return insn >> 20
+    return None
+
+
+def masked(value, mask):
+    return value & sum(255 << (8*i) for i in range(8) if mask >> i & 1)
+
+
+def differences(actual, expected, fields):
+    return {k: {"expected": expected[k], "actual": actual[k]}
+            for k in fields if actual[k] != expected[k]}
+
+
+def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
+    """Compare a C2 trace with `model`. `sync` lists the enabled synchronization kinds
+    (SYNC_KINDS); sync=() turns all of them off."""
+    enabled = set(sync)
+    if enabled - set(SYNC_KINDS):
+        raise ValueError(f"unknown synchronization kinds {sorted(enabled - set(SYNC_KINDS))}")
+    xmask = (1 << platform.xlen) - 1
+    trace = Trace(trace_path)
+    recent = deque(maxlen=history)
+    core_regs = [0] * 32
+    count, trap_events, sync_count = 0, 0, 0
+    instret_synced = False
+    sync_recent = deque(maxlen=history)
+    quirks = deque(maxlen=history)
+    last_trap = None
+    after_trap = False
+    event_effect = None
+    event_prior_handler = False
+    ended = False
+    end_status = None
+    last_order = None
+    last_cycle = None
+    # Once the trace carries irq level events: {bit: [cycle last set high, cycle it went low
+    # after that or None while high]}; at most XLEN entries however long the trace. Else None.
+    irq_inputs = None
+    irq_handler = 0        # without level events: interrupt causes (as mip bits) whose handler runs
+    previous_cycle = 0     # cycle of the previous instruction record
+    def irq_level(cycle, levels):
+        for bit, state in irq_inputs.items():
+            if not levels >> bit & 1 and state[1] is None:
+                state[1] = cycle               # went low
+        while levels:
+            low = levels & -levels
+            irq_inputs[low.bit_length() - 1] = [cycle, None]
+            levels ^= low
+    def irq_evidence():
+        """mip bits of interrupt inputs that may have been high for the read being checked: high
+        at some cycle from `irq_input_latency` before the previous retirement up to the read
+        (cycles never decrease, so every event read so far is at or before the read)."""
+        if irq_inputs is None:
+            return irq_handler
+        start = previous_cycle - platform.irq_input_latency
+        return sum(1 << bit for bit, (_, low) in irq_inputs.items() if low is None or low > start)
+    def result(status, **extra):
+        return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
+                "instructions": count, "trap_events": trap_events,
+                "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
+                "trace_complete": ended, "end_status": end_status,
+                "last_order": last_order, "last_cycle": last_cycle, "pending_handler": after_trap,
+                "recent_quirks": list(quirks), "sync_enabled": sorted(enabled), **extra}
+    def mismatch(actual, expected, diff, index):
+        regs = list(core_regs)
+        if "event" not in actual and actual["rd"]:
+            regs[actual["rd"]] = actual["rd_wdata"]
+        reg_diff = [{"reg": f"x{i}", "expected": hex(expected["regs"][i]), "actual": hex(regs[i])}
+                    for i in range(1, 32) if regs[i] != expected["regs"][i]]
+        return result("mismatch", mismatch={"instruction_index": index,
+                      "order": actual.get("order", last_order), "cycle": actual["cycle"],
+                      "pc": hex(expected["pc"]), "disassembly": expected["disasm"],
+                      "differences": {k: {side: hex(x) if k in HEX_FIELDS else x for side, x in v.items()}
+                                      for k, v in diff.items()},
+                      "actual": c2_view(actual),
+                      "expected": c2_view({k: v for k, v in expected.items() if k not in ("regs", "before")}),
+                      "last_matching": list(recent), "register_diff": reg_diff})
+    try:
+        if trace.header["xlen"] != platform.xlen or trace.header["isa"].lower() != platform.isa.lower():
+            raise ValueError("trace ISA/XLEN must exactly match the selected platform")
+        records = irq_first_by_cycle(iter(trace))
+        reference_end = None
+        for actual in records:
+            last_cycle = actual["cycle"]
+            if actual.get("event") == "end":
+                ended, end_status = True, actual["status"]
+                continue
+            if actual.get("event") == "irq":
+                if irq_inputs is None:
+                    irq_inputs = {}
+                irq_level(actual["cycle"], actual["levels"])
+                continue
+            if actual.get("event") == "trap":
+                represented = last_trap is not None
+                # With recorded input levels, an input interrupt is injected only when its input
+                # was high (same window as the mip/sip evidence). A trap whose input stayed low
+                # contradicts the trace: it is not injected and is a mismatch.
+                unasserted = False
+                if actual["intr"] and not represented and irq_inputs is not None:
+                    code = actual["cause"] & ~(1 << (platform.xlen - 1))
+                    unasserted = code in platform.irq_inputs and not irq_evidence() >> code & 1
+                try:
+                    expected = last_trap if represented else model.step(
+                        interrupt=actual["cause"] if actual["intr"] and not unasserted else 0)
+                except ReferenceEnded as end:
+                    reference_end = end.status
+                    break
+                diff = differences(actual, expected, ["intr", "cause", "tval"])
+                if unasserted:
+                    diff["irq_input"] = {"expected": "high within irq_input_latency", "actual": "low"}
+                # The spec lets a core write zero to xtval for illegal instructions.
+                if ("tval" in diff and platform.illegal_insn_tval == "zero" and not actual["intr"]
+                        and actual["cause"] == 2 and expected["cause"] == 2 and actual["tval"] == 0):
+                    if not hasattr(model, "set_trap_tval"):
+                        raise ValueError("the model cannot apply illegal_insn_tval=zero (configure it to write zero)")
+                    del diff["tval"]
+                    model.set_trap_tval(0)
+                if not expected["trap"]:
+                    diff["trap"] = {"expected": False, "actual": True}
+                if diff:
+                    return mismatch(actual, expected, diff, count-1 if last_trap is not None else count)
+                trap_events += 1
+                if actual["intr"]:
+                    code = actual["cause"] & ~(1 << (platform.xlen - 1))
+                    if code < platform.xlen:
+                        irq_handler |= 1 << code
+                event_prior_handler = after_trap
+                event_effect = None if represented else expected
+                after_trap = True
+                last_trap = None
+                continue
+            last_order = actual["order"]
+            # intr marks the first handler instruction after any trap. An
+            # interrupt event supplies cause; never infer a cause from a boolean.
+            mmio = platform.mmio_read(actual) if "mmio" in enabled else None
+            represented_by_event = (event_effect is not None and not event_effect["intr"]
+                                    and actual["trap"] and actual["pc"] == event_effect["pc"])
+            try:
+                expected = event_effect if represented_by_event else model.step(mmio=mmio)
+            except ReferenceEnded as end:
+                reference_end = end.status
+                break
+            expected_handler = event_prior_handler if represented_by_event else after_trap
+            event_effect = None
+            fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
+            diff = differences(actual, expected, fields)
+            # Trace quirk declared by the platform: mode reported after an xRET or trap took effect.
+            # The next instruction's mode is still checked, so a wrong return mode is caught there.
+            if ("mode" in diff and platform.mode_after_change
+                    and (expected["trap"] or expected["insn"] in (0x30200073, 0x10200073))):
+                if not hasattr(model, "mode"):
+                    raise ValueError("the model cannot report its mode after a step (needed by mode_after_change)")
+                if actual["mode"] == model.mode():
+                    del diff["mode"]
+                    quirks.append({"order": actual["order"], "quirk": "mode_after_change",
+                                   "reference": expected["mode"], "core": actual["mode"]})
+            if actual["intr"] != expected_handler:
+                diff["intr"] = {"expected": expected_handler, "actual": actual["intr"]}
+            after_trap = bool(expected["trap"])
+            if actual["mem_rmask"] or actual["mem_wmask"] or expected["mem_rmask"] or expected["mem_wmask"]:
+                diff.update(differences(actual, expected, ["mem_addr"]))
+            for data, mask in (("mem_rdata", "mem_rmask"), ("mem_wdata", "mem_wmask")):
+                a, e = masked(actual[data], actual[mask]), masked(expected[data], expected[mask])
+                if a != e:
+                    diff[data] = {"expected": e, "actual": a}
+            sync_reason = None
+            sync_mask = None   # bits of rd_wdata taken from the core; None means all of them
+            initial_instret = False
+            csr = csr_access(expected["insn"])
+            if not expected["trap"] and expected["rd"]:
+                if counter_read(expected["insn"]):
+                    # A trace from reset has a deterministic instret: compare it strictly.
+                    if csr in INSTRET and platform.trace_from_reset:
+                        pass
+                    elif "counter" in enabled:
+                        is_instret = platform.xlen == 64 and csr in INSTRET
+                        if not is_instret or not instret_synced:
+                            sync_reason = "counter"
+                            initial_instret = is_instret
+                elif mmio and expected["mem_addr"] == actual["mem_addr"] and expected["mem_rmask"]:
+                    sync_reason = "mmio"
+                elif csr in platform.csr_masks and "csr" in enabled:
+                    sync_reason, sync_mask = "csr", platform.csr_masks[csr]
+                elif csr in IRQ_INPUT_MASKS and "irq" in enabled and actual["rd"] == expected["rd"]:
+                    # Only bits the core reads as 1 and the reference as 0, with evidence.
+                    taken = (actual["rd_wdata"] & ~expected["rd_wdata"] & IRQ_INPUT_MASKS[csr]
+                             & platform.irq_input_mask
+                             & irq_evidence())
+                    if taken:
+                        sync_reason, sync_mask = "irq", taken
+            if actual["rd"] and sync_reason != "counter":
+                strict = xmask & ~sync_mask if sync_mask is not None else xmask
+                if (actual["rd_wdata"] ^ expected["rd_wdata"]) & strict:
+                    diff["rd_wdata"] = {"expected": expected["rd_wdata"], "actual": actual["rd_wdata"]}
+            if diff:
+                return mismatch(actual, expected, diff, count)
+            if sync_mask is not None and actual["rd_wdata"] == expected["rd_wdata"]:
+                sync_reason = None   # the masked bits agree: nothing to take from the core
+            if sync_reason and not hasattr(model, "set_reg"):
+                raise ValueError(f"the model cannot take the core's value at order {actual['order']} "
+                                 f"({sync_reason}); use a model that synchronizes or disable this kind")
+            if sync_reason:
+                # No structural mismatch can be hidden by synchronization.
+                if initial_instret:
+                    model.sync_instret(actual["rd_wdata"], expected["rd_wdata"])
+                    instret_synced = True
+                model.set_reg(actual["rd"], actual["rd_wdata"])
+                sync_count += 1
+                entry = {"order": actual["order"], "reason": sync_reason,
+                         "reference": hex(expected["rd_wdata"]), "core": hex(actual["rd_wdata"])}
+                if sync_mask is not None:
+                    entry.update(csr=hex(csr), mask=hex(sync_mask))
+                sync_recent.append(entry)
+            if actual["rd"]:
+                core_regs[actual["rd"]] = actual["rd_wdata"]
+            if not expected["trap"] and expected["insn"] in XRET:
+                irq_handler = 0
+            previous_cycle = actual["cycle"]
+            recent.append({"order": actual["order"], "cycle": actual["cycle"],
+                           "pc": hex(actual["pc"]), "insn": hex(actual["insn"]),
+                           "disassembly": expected["disasm"]})
+            last_trap = expected if expected["trap"] and not represented_by_event else None
+            count += 1
+        if reference_end is not None:
+            # The reference ended at its own termination (Sail stops at the HTIF tohost store;
+            # a core may retire a few more instructions before its harness sees the store).
+            # The rest of the trace is read, not compared, and reported.
+            uncompared = 1 if actual.get("event") != "trap" else 0
+            for rest in records:
+                last_cycle = rest["cycle"]
+                if rest.get("event") == "end":
+                    ended, end_status = True, rest["status"]
+                elif "event" not in rest:
+                    uncompared += 1
+            if ended and end_status in ("pass", "fail") and end_status != reference_end:
+                raise ValueError(f"the reference ended with {reference_end} but the core trace ends with {end_status}")
+            if not count:
+                raise ValueError("the reference ended before the first instruction")
+            return result("match", scope="until the reference's termination" + ("" if ended else " (core trace prefix)"),
+                          reference_end=reference_end, uncompared_instructions=uncompared)
+        if not count and not trap_events:
+            raise ValueError("trace contains no instructions or traps")
+        # A reference that stops at its own termination may stop exactly at the core's last
+        # instruction (a core trace that ends at the tohost store): no step raised ReferenceEnded,
+        # so ask it, and check its status against the core's end event.
+        reference_final = model.terminated() if hasattr(model, "terminated") else None
+        if reference_final is not None:
+            if ended and end_status in ("pass", "fail") and end_status != reference_final:
+                raise ValueError(f"the reference ended with {reference_final} but the core trace ends with {end_status}")
+            return result("match", scope="complete trace" if ended else "trace prefix",
+                          reference_end=reference_final, uncompared_instructions=0)
+        return result("match", scope="complete trace" if ended else "trace prefix")
+    finally:
+        trace.close()

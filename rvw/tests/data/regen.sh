@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# Regenerates the design-database fixtures (SQL dumps, so they diff as text) from the small example
+# designs: SpinalTrace's GCD and BuggyGCD (a one-line logic change, for `diff`) and SpinalBlocks'
+# GcdCluster (hierarchy, Streams, a FIFO, a memory, an FSM, Areas). Needs JDK + sbt, and yosys on PATH
+# (BlackBox bodies are scanned for their includes): source spinal-boom/env.sh first.
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(cd "$here/../../.." && pwd)"
+tmp="$(mktemp -d)"
+command -v yosys >/dev/null || { echo "regen.sh: yosys not on PATH" >&2; exit 1; }
+# Round 9: one BlackBox body that includes a header next to it; only the header's `K` differs.
+for n in 0 1; do
+  mkdir -p "$tmp/inc$n"
+  printf '`include "external.svh"\nmodule External(input [7:0] a, output [7:0] y); assign y = a + `K; endmodule\n' > "$tmp/inc$n/External.v"
+  printf '`define K %d\n' $((n + 1)) > "$tmp/inc$n/external.svh"
+done
+export SPINALDB_FIXTURE_DIR="$tmp"
+cd "$repo/SpinalDB/spinaldb"
+roots="--source-root $repo/SpinalTrace/examples/src --source-root $repo/SpinalBlocks/spinalblocks/src/main/scala"
+# Review probes (SpinalDB/spinaldb/src/test/scala/spinaldb/SpinalDBSpec.scala): netlist tables only.
+probe="--source-root $repo/SpinalDB/spinaldb/src/test/scala --no-pdg --no-blocks --no-hgldd"
+sbt -J-Xmx4g -batch \
+  "Test/runMain spinaldb.Main spinaltrace.examples.GCD $tmp/gcd.db --rtl $tmp/rtl-gcd $roots" \
+  "Test/runMain spinaldb.Main spinaltrace.examples.BuggyGCD $tmp/buggy_gcd.db --rtl $tmp/rtl-buggy $roots" \
+  "Test/runMain spinaldb.Main spinalblocks.examples.GcdCluster $tmp/cluster.db --rtl $tmp/rtl-cluster $roots" \
+  "Test/runMain spinaldb.Main spinaldb.CastUnsigned $tmp/cast_unsigned.db --rtl $tmp/rtl-cu $probe" \
+  "Test/runMain spinaldb.Main spinaldb.CastSigned $tmp/cast_signed.db --rtl $tmp/rtl-cs $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Rom1 $tmp/rom1.db --rtl $tmp/rtl-r1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Rom2 $tmp/rom2.db --rtl $tmp/rtl-r2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.MaskDesign $tmp/masked.db --rtl $tmp/rtl-m $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Mux2 $tmp/mux2.db --rtl $tmp/rtl-mux2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Mux3 $tmp/mux3.db --rtl $tmp/rtl-mux3 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.ShiftA $tmp/shift_a.db --rtl $tmp/rtl-sa $probe" \
+  "Test/runMain spinaldb.Main spinaldb.ShiftB $tmp/shift_b.db --rtl $tmp/rtl-sb $probe" \
+  "Test/runMain spinaldb.Main spinaldb.ShiftC $tmp/shift_c.db --rtl $tmp/rtl-sc $probe" \
+  "Test/runMain spinaldb.Main spinaldb.GenInit1 $tmp/gen_init1.db --rtl $tmp/rtl-g1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.GenInit2 $tmp/gen_init2.db --rtl $tmp/rtl-g2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DomainRise $tmp/domain_rise.db --rtl $tmp/rtl-dr $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DomainFall $tmp/domain_fall.db --rtl $tmp/rtl-df $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DomainSync $tmp/domain_sync.db --rtl $tmp/rtl-ds $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DomainLow $tmp/domain_low.db --rtl $tmp/rtl-dl $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnableHigh $tmp/enable_high.db --rtl $tmp/rtl-eh $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnableLow $tmp/enable_low.db --rtl $tmp/rtl-el $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SoftHigh $tmp/soft_high.db --rtl $tmp/rtl-sh $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SoftLow $tmp/soft_low.db --rtl $tmp/rtl-sl $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SwapA $tmp/swap_a.db --rtl $tmp/rtl-wa $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SwapB $tmp/swap_b.db --rtl $tmp/rtl-wb $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DeepA $tmp/deep_a.db --rtl $tmp/rtl-da $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DeepB $tmp/deep_b.db --rtl $tmp/rtl-db $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnableLogic1 $tmp/enable_logic1.db --rtl $tmp/rtl-e1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnableLogic2 $tmp/enable_logic2.db --rtl $tmp/rtl-e2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Sharing0 $tmp/sharing0.db --rtl $tmp/rtl-s0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Sharing1 $tmp/sharing1.db --rtl $tmp/rtl-s1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Rw0 $tmp/rw0.db --rtl $tmp/rtl-rw0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Rw1 $tmp/rw1.db --rtl $tmp/rtl-rw1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Box1 $tmp/box1.db --rtl $tmp/rtl-b1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Box2 $tmp/box2.db --rtl $tmp/rtl-b2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Box1 $tmp/box1_src.db --rtl $tmp/rtl-b1s $probe --blackbox-source External=$here/External.v" \
+  "Test/runMain spinaldb.Main spinaldb.Box2 $tmp/box2_src.db --rtl $tmp/rtl-b2s $probe --blackbox-source External=$here/External.v" \
+  "Test/runMain spinaldb.Main spinaldb.PlainNot $tmp/plain_not.db --rtl $tmp/rtl-pn $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SaltedNot1 $tmp/salted_not1.db --rtl $tmp/rtl-sn1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.SaltedNot2 $tmp/salted_not2.db --rtl $tmp/rtl-sn2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.InitReg $tmp/init_reg.db --rtl $tmp/rtl-ir $probe" \
+  "Test/runMain spinaldb.Main spinaldb.InitialReg $tmp/initial_reg.db --rtl $tmp/rtl-ilr $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnumCustom0 $tmp/enum_custom0.db --rtl $tmp/rtl-ec0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnumCustom1 $tmp/enum_custom1.db --rtl $tmp/rtl-ec1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnumOrder0 $tmp/enum_order0.db --rtl $tmp/rtl-eo0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.EnumOrder1 $tmp/enum_order1.db --rtl $tmp/rtl-eo1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Include0 $tmp/include0.db --rtl $tmp/rtl-in0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Include1 $tmp/include1.db --rtl $tmp/rtl-in1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Default0 $tmp/default0.db --rtl $tmp/rtl-default0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Default1 $tmp/default1.db --rtl $tmp/rtl-default1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DefaultTemp0 $tmp/default_temp0.db --rtl $tmp/rtl-default_temp0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.DefaultTemp1 $tmp/default_temp1.db --rtl $tmp/rtl-default_temp1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Overlap0 $tmp/overlap0.db --rtl $tmp/rtl-overlap0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Overlap1 $tmp/overlap1.db --rtl $tmp/rtl-overlap1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.TagClock0 $tmp/tagclock0.db --rtl $tmp/rtl-tagclock0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.TagClock1 $tmp/tagclock1.db --rtl $tmp/rtl-tagclock1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.TagClockHidden $tmp/tagclock_hidden.db --rtl $tmp/rtl-tagclock_hidden $probe" \
+  "Test/runMain spinaldb.Main spinaldb.CompAttr0 $tmp/comp_attr0.db --rtl $tmp/rtl-comp_attr0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.CompAttr1 $tmp/comp_attr1.db --rtl $tmp/rtl-comp_attr1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.CompAttr2 $tmp/comp_attr2.db --rtl $tmp/rtl-comp_attr2 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.NamedRegs0 $tmp/named_regs0.db --rtl $tmp/rtl-named_regs0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.NamedRegs1 $tmp/named_regs1.db --rtl $tmp/rtl-named_regs1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.PortOrder0 $tmp/port_order0.db --rtl $tmp/rtl-port_order0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.PortOrder1 $tmp/port_order1.db --rtl $tmp/rtl-port_order1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.ObjTag0 $tmp/obj_tag0.db --rtl $tmp/rtl-obj_tag0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.ObjTag1 $tmp/obj_tag1.db --rtl $tmp/rtl-obj_tag1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.AssertMsg0 $tmp/assert_msg0.db --rtl $tmp/rtl-assert_msg0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.AssertMsg1 $tmp/assert_msg1.db --rtl $tmp/rtl-assert_msg1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Seq0 $tmp/r12_seq0.db --rtl $tmp/rtl-r12_seq0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Seq1 $tmp/r12_seq1.db --rtl $tmp/rtl-r12_seq1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Assert0 $tmp/r12_assert0.db --rtl $tmp/rtl-r12_assert0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Assert1 $tmp/r12_assert1.db --rtl $tmp/rtl-r12_assert1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Lang0 $tmp/r12_lang0.db --rtl $tmp/rtl-r12_lang0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round12Lang1 $tmp/r12_lang1.db --rtl $tmp/rtl-r12_lang1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Order0 $tmp/r13_order0.db --rtl $tmp/rtl-r13_order0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Order1 $tmp/r13_order1.db --rtl $tmp/rtl-r13_order1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Bitmap0 $tmp/r13_bitmap0.db --rtl $tmp/rtl-r13_bitmap0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Bitmap1 $tmp/r13_bitmap1.db --rtl $tmp/rtl-r13_bitmap1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Serial0 $tmp/r13_serial0.db --rtl $tmp/rtl-r13_serial0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round13Serial1 $tmp/r13_serial1.db --rtl $tmp/rtl-r13_serial1 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round14Hidden0 $tmp/r14_hidden0.db --rtl $tmp/rtl-r14_hidden0 $probe" \
+  "Test/runMain spinaldb.Main spinaldb.Round14Hidden1 $tmp/r14_hidden1.db --rtl $tmp/rtl-r14_hidden1 $probe" \
+  "Test/runMain spinaldb.Round15Fixtures $tmp" \
+  "Test/runMain spinaldb.Round16Fixtures $tmp" \
+  "Test/runMain spinaldb.Round17Fixtures $tmp" \
+  "Test/runMain spinaldb.Round18Fixtures $tmp" \
+  "Test/runMain spinaldb.Round19Fixtures $tmp"
+for n in gcd buggy_gcd cluster cast_unsigned cast_signed rom1 rom2 masked mux2 mux3 shift_a shift_b shift_c \
+         gen_init1 gen_init2 domain_rise domain_fall domain_sync domain_low enable_high enable_low soft_high soft_low \
+         swap_a swap_b deep_a deep_b enable_logic1 enable_logic2 sharing0 sharing1 rw0 rw1 box1 box2 box1_src box2_src \
+         plain_not salted_not1 salted_not2 init_reg initial_reg enum_custom0 enum_custom1 enum_order0 enum_order1 \
+         include0 include1 default0 default1 default_temp0 default_temp1 overlap0 overlap1 tagclock0 tagclock1 \
+         tagclock_hidden comp_attr0 comp_attr1 comp_attr2 named_regs0 named_regs1 port_order0 port_order1 obj_tag0 \
+         obj_tag1 assert_msg0 assert_msg1 r12_seq0 r12_seq1 r12_assert0 r12_assert1 r12_lang0 r12_lang1 \
+         r13_order0 r13_order1 r13_bitmap0 r13_bitmap1 r13_serial0 r13_serial1 r14_hidden0 r14_hidden1 \
+         r15_analog0 r15_analog1 r15_literal0 r15_literal1 r15_mask0 r15_mask1 r15_meminit0 r15_meminit1 r15_poison0 r15_poison1 r16_literal0 r16_literal1 r16_clockdata r17_reset0_named r17_reset1_named r17_reset0_gen r17_reset1_gen r17_clockbox r17_unused0 r17_unused1 \
+         r18_sync_dont r18_sync_read r18_enabled_dont r18_enabled_read r18_rw_dont r18_rw_read r18_rw_write \
+         r18_async_dont r18_rw_during_do r18_rw_during_dont r18_box0 r18_box1 r18_box_unknown \
+         r19_port_init0 r19_port_init1 r19_port_unknown; do
+  # Machine paths become placeholders so the dumps do not depend on where the repository lives.
+  sqlite3 "$tmp/$n.db" .dump | grep -v -e sqlite_stat -e "^ANALYZE" | sed -e "s#$repo#@REPO@#g" -e "s#$tmp#@TMP@#g" > "$here/$n.sql"
+done
+rm -rf "$tmp"
+echo "wrote design-database fixtures under $here"

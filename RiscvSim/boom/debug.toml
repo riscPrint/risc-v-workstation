@@ -1,0 +1,112 @@
+# BOOM's debug description for `rvw bundle` (format: rvw/src/rvw/bundle/README.md).
+#
+# Signal patterns are Python regexes over the dotted VCD paths of the Verilator sim build of
+# BoomSimTop (`TOP.BoomSimTop.tile...`). Names were taken from a `small` wave build at 0cb0b69;
+# entry indices are matched with (\d+), so the same patterns cover every preset (small..giga).
+
+[core]
+name = "boom"
+clock = 'TOP\.BoomSimTop\.clk$'
+period = 10            # wave time units per cycle (forkStimulus(10), 1ps timescale)
+source_env = "SPINAL_BOOM"   # the adapter builds the core from this checkout (rvw bisect points it at a clone)
+# ROB commit valids: the bundle measures how many cycles the RVFI trace's stamps follow them
+# (measured 2 on `large` at 0cb0b69: commit at wave cycle 50073, RVFI stamp 50075).
+commit = 'TOP\.BoomSimTop\.tile\.core\.rob_1\.io_commit_valids_\d+$'
+# The wave time of cycle 1 (after reset) comes from the run: details.wave_time_of_cycle_1.
+
+[failure]
+# Assertion source file -> suspected unit
+units = { 'lsu\.scala' = "LSU (load/store unit)", 'dcache\.scala|mshrs\.scala|prefetcher\.scala' = "D$ (non-blocking data cache)", 'rob\.scala' = "ROB", 'rename.*\.scala|freelist.*\.scala|busytable.*\.scala' = "Rename", 'issue.*\.scala' = "Issue queues", 'tlb\.scala|TLB\.scala|PTW\.scala' = "TLB / page-table walker", 'frontend\.scala|fetch.*\.scala|ftq\.scala|icache\.scala' = "Frontend", 'core\.scala' = "Core (dispatch/commit glue)", 'exe.*\.scala|functional.*\.scala|fpu.*\.scala' = "Execution units", 'csr\.scala|CSR\.scala' = "CSR file" }
+# Class of the oldest unretired instruction -> suspected unit (timeouts, hangs)
+insn_units = { load = "LSU / D$", store = "LSU / D$", amo = "LSU / D$", fence = "LSU / ROB (fence drain)", system = "CSR / ROB", muldiv = "Mul/Div unit", fp = "FPU", branch = "Branch resolution / frontend", alu = "Issue / ALU", unknown = "Frontend (nothing fetched?)" }
+
+[[snapshot]]
+name = "ROB"
+unit = "ROB"
+scope = 'TOP\.BoomSimTop\.tile\.core\.rob_1\.'
+values = { state = 'rob_state', head = 'rob_head', tail = 'rob_tail', pnr = 'rob_pnr', empty = 'empty', full = 'full', exception = 'exception_thrown', flush = 'io_flush_valid' }
+enums = { state = ["reset", "normal", "wait_till_empty", "rollback"] }
+
+[[snapshot]]
+name = "Issue queues"
+unit = "Issue"
+scope = 'TOP\.BoomSimTop\.tile\.core\.'
+counts = { int = 'alu_issue_unit\.(col_\d+\.)?slots_\d+\.io_valid', mem = 'mem_issue_unit\.slots_\d+\.io_valid', unique = 'unq_issue_unit\.slots_\d+\.io_valid', fp = 'fp_pipeline\.fp_issue_unit\.slots_\d+\.io_valid' }
+values = { dispatch_ready = 'rename_stage\.io_dis_ready' }
+
+[[snapshot]]
+name = "Load queue"
+unit = "LSU"
+scope = 'TOP\.BoomSimTop\.tile\.lsu_1\.'
+values = { head = 'ldq_head', tail = 'ldq_tail' }
+counts = { valid = 'ldq_valid_\d+', executed = 'ldq_executed_\d+', succeeded = 'ldq_succeeded_\d+', observed = 'ldq_observed_\d+', order_fail = 'ldq_order_fail_\d+' }
+[snapshot.table]
+key = 'ldq_valid_(\d+)'
+columns = { pc = 'ldq_uop_(\d+)_debug_pc', rob = 'ldq_uop_(\d+)_rob_idx', addr_valid = 'ldq_addr_(\d+)_valid', virt = 'ldq_addr_is_virtual_(\d+)', executed = 'ldq_executed_(\d+)', succeeded = 'ldq_succeeded_(\d+)', will_succeed = 'ldq_will_succeed_(\d+)', observed = 'ldq_observed_(\d+)', order_fail = 'ldq_order_fail_(\d+)', fwd_std = 'ldq_forward_std_val_(\d+)', br_mask = 'ldq_uop_(\d+)_br_mask' }
+
+[[snapshot]]
+name = "Store queue"
+unit = "LSU"
+scope = 'TOP\.BoomSimTop\.tile\.lsu_1\.'
+values = { head = 'stq_head', tail = 'stq_tail', commit_head = 'stq_commit_head', execute_head = 'stq_execute_head' }
+counts = { valid = 'stq_valid_\d+', committed = 'stq_committed_\d+', succeeded = 'stq_succeeded_\d+' }
+[snapshot.table]
+key = 'stq_valid_(\d+)'
+columns = { pc = 'stq_uop_(\d+)_debug_pc', rob = 'stq_uop_(\d+)_rob_idx', addr_valid = 'stq_addr_(\d+)_valid', data_valid = 'stq_data_(\d+)_valid', committed = 'stq_committed_(\d+)', succeeded = 'stq_succeeded_(\d+)', can_execute = 'stq_can_execute_(\d+)' }
+
+[[snapshot]]
+name = "D$ MSHRs"
+unit = "D$"
+scope = 'TOP\.BoomSimTop\.tile\.dcache\.'
+busy = { mshrs = { pattern = 'mshrs\.mshrs_\d+\.state', idle = 0 }, mmio = { pattern = 'mshrs\.mmios_\d+\.state', idle = 0 } }
+values = { prober = 'prober\.state', writeback = 'wb\.state' }
+enums = { prober = ["invalid", "meta_read", "meta_resp", "mshr_req", "mshr_resp", "lsu_release", "release", "writeback_req", "writeback_resp", "meta_write", "meta_write_resp"], writeback = ["invalid", "fill_buffer", "lsu_release", "active", "grant"] }
+[snapshot.table]
+key = 'mshrs\.mshrs_(\d+)\.state'
+idle = 0
+columns = { state = 'mshrs\.mshrs_(\d+)\.state', addr = 'mshrs\.mshrs_(\d+)\.req_addr', pc = 'mshrs\.mshrs_(\d+)\.req_uop_debug_pc', rob = 'mshrs\.mshrs_(\d+)\.req_uop_rob_idx' }
+
+[[snapshot]]
+name = "Page-table walker / TLB"
+unit = "PTW"
+scope = 'TOP\.BoomSimTop\.tile\.'
+values = { ptw_state = 'ptw_1\.state', ptw_req_addr = 'ptw_1\.r_req_addr' }
+enums = { ptw_state = ["ready", "req", "wait1", "dummy1", "wait2", "wait3", "dummy2", "fragment_superpage"] }
+
+[[snapshot]]
+name = "Frontend"
+unit = "Frontend"
+scope = 'TOP\.BoomSimTop\.tile\.'
+values = { fetch_valid = 'core\.io_ifu_fetchpacket_valid', fetch_ready = 'core\.io_ifu_fetchpacket_ready', fb_head = 'frontend\.fb\.head', fb_tail = 'frontend\.fb\.tail', ftq_deq = 'frontend\.ftq\.deq_ptr', icache_refill = 'frontend\.icache_1\.refill_valid', commit_pc = 'core\.io_ifu_com_pc' }
+
+[[snapshot]]
+name = "Memory port (TileLink)"
+unit = "Memory system"
+scope = 'TOP\.BoomSimTop\.'
+values = { a_valid = 'io_mem_a_valid', a_ready = 'io_mem_a_ready', a_opcode = 'io_mem_a_payload_opcode', a_address = 'io_mem_a_payload_address', b_valid = 'io_mem_b_valid', c_valid = 'io_mem_c_valid', c_ready = 'io_mem_c_ready', d_valid = 'io_mem_d_valid', d_ready = 'io_mem_d_ready', d_opcode = 'io_mem_d_payload_opcode', e_valid = 'io_mem_e_valid' }
+
+[handshakes]
+scope = 'TOP\.BoomSimTop\.'
+clock = 'clk'
+requests = ["a", "c"]
+responses = ["d"]
+# TileLink: only Release/ReleaseData on C expect a response (ReleaseAck); A gets AccessAck(Data),
+# HintAck or Grant(Data). A D message closes only the request type it answers.
+opens = { c = [6, 7] }
+closes = { d = { a = [0, 1, 2, 4, 5], c = [6] } }
+[handshakes.channels]
+a = { valid = 'io_mem_a_valid', ready = 'io_mem_a_ready', id = 'io_mem_a_payload_source', opcode = 'io_mem_a_payload_opcode', info = 'io_mem_a_payload_address' }
+b = { valid = 'io_mem_b_valid', ready = 'io_mem_b_ready' }
+c = { valid = 'io_mem_c_valid', ready = 'io_mem_c_ready', id = 'io_mem_c_payload_source', opcode = 'io_mem_c_payload_opcode', info = 'io_mem_c_payload_address' }
+d = { valid = 'io_mem_d_valid', ready = 'io_mem_d_ready', id = 'io_mem_d_payload_source', opcode = 'io_mem_d_payload_opcode' }
+e = { valid = 'io_mem_e_valid', ready = 'io_mem_e_ready' }
+
+[spinaltrace]
+# Adapter with a SpinalTrace-instrumented model (prototype); the bundle re-runs the failure through it
+adapter = "RiscvSim/boom-spinaltrace/run.sh"
+# A SpinalTrace-instrumented build writes <workspace>/spinaltrace/pdg.json; the adapter records it as
+# the run artifact "pdg". Without it the bundle skips the dependency trace (see README).
+top_module = "BoomSimTop"
+extra_scopes = ["TOP", "BoomSimTop"]
+# Criterion for failures without an assertion location (hangs: why did the ROB head stop moving)
+criteria = { timeout = "signal:tile.core.rob_1.rob_head" }

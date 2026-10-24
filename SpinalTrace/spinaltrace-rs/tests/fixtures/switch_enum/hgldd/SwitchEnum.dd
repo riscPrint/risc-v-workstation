@@ -1,0 +1,222 @@
+{
+  "HGLDD": {
+    "version": "0.1.0",
+    "file_info": [
+      "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+      "/work/SpinalTrace/spinaltrace/DirectConstructorHandleAccessor.java"
+    ]
+  },
+  "objects": [
+    {
+      "kind": "struct",
+      "obj_name": "SwitchEnum_io_struct",
+      "port_vars": [
+        {
+          "var_name": "a",
+          "source_lang_type_info": {
+            "type_name": "in UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 35,
+            "end_line": 35,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "b",
+          "source_lang_type_info": {
+            "type_name": "in UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 35,
+            "end_line": 35,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "op",
+          "source_lang_type_info": {
+            "type_name": "in AluOp",
+            "params": [
+              {
+                "name": "spinalEnum",
+                "type": "spinal.core.SpinalEnum"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 34,
+            "end_line": 34,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            1,
+            0
+          ],
+          "enum_def_ref": 0
+        },
+        {
+          "var_name": "result",
+          "source_lang_type_info": {
+            "type_name": "out UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 36,
+            "end_line": 36,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "module",
+      "obj_name": "SwitchEnum",
+      "module_name": "SwitchEnum",
+      "port_vars": [
+        {
+          "var_name": "acc",
+          "source_lang_type_info": {
+            "type_name": "Reg UInt(8 bits)"
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 39,
+            "end_line": 39,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "acc"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            7,
+            0
+          ]
+        },
+        {
+          "var_name": "clk",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "clk"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        },
+        {
+          "var_name": "io",
+          "source_lang_type_info": {
+            "type_name": "Bundle",
+            "params": [
+              {
+                "name": "$outer",
+                "type": "spinaltrace.examples.SwitchEnum"
+              }
+            ]
+          },
+          "hgl_loc": {
+            "file": 0,
+            "begin_line": 33,
+            "end_line": 33,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "opcode": "'{",
+            "operands": [
+              {
+                "sig_name": "io_a"
+              },
+              {
+                "sig_name": "io_b"
+              },
+              {
+                "sig_name": "io_op"
+              },
+              {
+                "sig_name": "io_result"
+              }
+            ]
+          },
+          "type_name": "SwitchEnum_io_struct"
+        },
+        {
+          "var_name": "reset",
+          "source_lang_type_info": {
+            "type_name": "in Bool"
+          },
+          "hgl_loc": {
+            "file": 1,
+            "begin_line": 62,
+            "end_line": 62,
+            "begin_column": 1,
+            "end_column": 1
+          },
+          "value": {
+            "sig_name": "reset"
+          },
+          "type_name": "logic",
+          "packed_range": [
+            0,
+            0
+          ]
+        }
+      ],
+      "children": [],
+      "source_lang_type_info": {
+        "type_name": "SwitchEnum"
+      },
+      "hgl_loc": {
+        "file": 0,
+        "begin_line": 32,
+        "end_line": 32,
+        "begin_column": 1,
+        "end_column": 1
+      },
+      "enum_defs": {
+        "0": {
+          "0": "ADD",
+          "1": "SUB",
+          "2": "AND",
+          "3": "PASS"
+        }
+      }
+    }
+  ]
+}

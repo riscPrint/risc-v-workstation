@@ -1,0 +1,603 @@
+{
+ "vertices": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 8,
+   "char": 1,
+   "name": "input_io_a",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "a"
+   },
+   "assignsTo": "io_a",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 9,
+   "char": 1,
+   "name": "input_io_b",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "b"
+   },
+   "assignsTo": "io_b",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 10,
+   "char": 1,
+   "name": "input_io_loadValues",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "loadValues"
+   },
+   "assignsTo": "io_loadValues",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 11,
+   "char": 1,
+   "name": "output_io_result",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 12,
+   "char": 1,
+   "name": "output_io_resultIsValid",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 15,
+   "char": 1,
+   "name": "defreg_x",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 16,
+   "char": 1,
+   "name": "defreg_y",
+   "kind": "Definition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 19,
+   "char": 1,
+   "name": "defnode_when_Gcd_l19",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "when_Gcd_l19",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 19,
+   "char": 1,
+   "name": "cond_on_[y, x]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 20,
+   "char": 1,
+   "name": "connect_x",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "x",
+    "fieldPath": ""
+   },
+   "assignsTo": "x",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 22,
+   "char": 1,
+   "name": "connect_y",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "y",
+    "fieldPath": ""
+   },
+   "assignsTo": "y",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 25,
+   "char": 1,
+   "name": "cond_on_[io_loadValues]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "loadValues"
+   },
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 26,
+   "char": 1,
+   "name": "connect_x",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "x",
+    "fieldPath": ""
+   },
+   "assignsTo": "x",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 27,
+   "char": 1,
+   "name": "connect_y",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "y",
+    "fieldPath": ""
+   },
+   "assignsTo": "y",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 30,
+   "char": 1,
+   "name": "connect_io_result",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "result"
+   },
+   "assignsTo": "io_result",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 31,
+   "char": 1,
+   "name": "connect_io_resultIsValid",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "resultIsValid"
+   },
+   "assignsTo": "io_resultIsValid",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  }
+ ],
+ "edges": [
+  {
+   "from": 3,
+   "to": 14,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 4,
+   "to": 15,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 6,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 10,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 13,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 5,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 9,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 7,
+   "to": 12,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 8,
+   "to": 7,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 8,
+   "to": 7,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 5,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 9,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 12,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 6,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 10,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 13,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 8,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 6,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 10,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 13,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 5,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 9,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 12,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 8,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 11,
+   "to": 2,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 0,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 11,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 13,
+   "to": 1,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 13,
+   "to": 11,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 5,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 9,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 12,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 15,
+   "to": 6,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 15,
+   "to": 10,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 15,
+   "to": 13,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  }
+ ],
+ "predicates": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 19,
+   "char": 1,
+   "name": "when_Gcd_l19",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala",
+   "line": 25,
+   "char": 1,
+   "name": "io_loadValues",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  }
+ ],
+ "cfg": [
+  {
+   "stmtRef": 0
+  },
+  {
+   "stmtRef": 1
+  },
+  {
+   "stmtRef": 2
+  },
+  {
+   "stmtRef": 3
+  },
+  {
+   "stmtRef": 4
+  },
+  {
+   "stmtRef": 5
+  },
+  {
+   "stmtRef": 6
+  },
+  {
+   "stmtRef": 7
+  },
+  {
+   "stmtRef": 8,
+   "predStmtRef": 0,
+   "trueBranch": [
+    {
+     "stmtRef": 9
+    }
+   ],
+   "falseBranch": [
+    {
+     "stmtRef": 10
+    }
+   ]
+  },
+  {
+   "stmtRef": 11,
+   "predStmtRef": 1,
+   "trueBranch": [
+    {
+     "stmtRef": 12
+    },
+    {
+     "stmtRef": 13
+    }
+   ]
+  },
+  {
+   "stmtRef": 14
+  },
+  {
+   "stmtRef": 15
+  }
+ ],
+ "spinaltrace": {
+  "formatVersion": 1,
+  "toplevel": "GCD",
+  "extraScopes": [
+   "TOP",
+   "GCD"
+  ],
+  "clockDomains": [
+   {
+    "clock": "clk",
+    "reset": "reset",
+    "resetKind": "ASYNC",
+    "resetActiveLow": false,
+    "clockEnable": null,
+    "softReset": null,
+    "registers": 2
+   }
+  ],
+  "warnings": []
+ }
+}

@@ -1,0 +1,8 @@
+.DS_Store
+.build-logs/
+**/target/
+**/project/project/
+**/simWorkspace/
+**/tmp/
+**/.bsp/
+**/.metals/

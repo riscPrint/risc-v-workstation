@@ -1,0 +1,54 @@
+{
+  "schema": "rvw.run/1",
+  "core": "boom",
+  "config": "small",
+  "elf": "/work/rvw-boom-adapter/RiscvSim/tests/programs/build/bench",
+  "elf_sha256": "36d11e85da159e915fc7d812f25fbe792554499a70bbfa916baec11a8aa53e51",
+  "seed": 1,
+  "max_cycles": 200000,
+  "mem_latency": 20,
+  "status": "pass",
+  "fail_code": null,
+  "message": null,
+  "cycles": 2263,
+  "instret": 2018,
+  "wall_s": 0.24,
+  "source": {
+    "core_repo": "/work/spinal-boom-eda",
+    "core_rev": "0cb0b69",
+    "core_dirty": false,
+    "tools_rev": "161ebda",
+    "tools_dirty": true
+  },
+  "tools": {
+    "verilator": "5.049",
+    "spinalhdl": "1.15.0",
+    "java": "21.0.7"
+  },
+  "artifacts": {
+    "log": "run.log"
+  },
+  "replay": "SPINAL_BOOM=/work/spinal-boom-eda /work/rvw-boom-adapter/RiscvSim/boom/run.sh run --elf /work/rvw-boom-adapter/RiscvSim/tests/programs/build/bench --out /tmp/rvw-boom-adapter/ex/bench-metrics-replay --config small --seed 1 --max-cycles 200000 --mem-latency 20",
+  "details": {
+    "traps": 0,
+    "tohost": "0x1",
+    "mem_timing": "fixed 20",
+    "wave_time_per_cycle": 10,
+    "wave_time_of_cycle_1": 170,
+    "model": {
+      "config": "small",
+      "rvfi": false,
+      "wave": false,
+      "coverage": false,
+      "konata": false,
+      "name": "small"
+    },
+    "model_compile_s": 54.9,
+    "rtl_dir": "/work/user/.cache/rvw/riscvsim/boom/rtl/ff983b4f80403799"
+  },
+  "metrics": {
+    "roi_cycles": 2169,
+    "roi_instret": 2003,
+    "roi_ipc": 0.9235
+  }
+}

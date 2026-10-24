@@ -1,0 +1,116 @@
+# SpinalWaves
+
+SpinalWaves preserves SpinalHDL types and source locations in Verilator VCD waveforms. It emits HGLDD for the Tywaves fork of Surfer, reusing the Tywaves Rust loader and VCD rewriter. It runs after RTL generation and does not rename, keep, or add hardware signals.
+
+This is an independent local port. See [UPSTREAM_WATCH.md](UPSTREAM_WATCH.md) for the separate TU Delft project and [PORTING_NOTES.md](PORTING_NOTES.md) for supported constructs and limitations.
+
+## Install and test
+
+The supported toolchain is Scala 2.13.14, SpinalHDL 1.15.0 with its IDSL compiler plugin, JDK 21, sbt, Rust/Cargo, Verilator, a C++ compiler and macOS SDK tools. On this workstation:
+
+```sh
+cd SpinalWaves
+source ../../spinal-boom/env.sh   # JDK 21 and oss-cad-suite; from a spinal-boom checkout next to this repo
+./scripts/install.sh --test --prefix "$PWD/.build-logs/bin"
+export PATH="$PWD/.build-logs/bin:$PATH"
+cd spinalwaves
+sbt -batch clean test
+```
+
+The install script builds the vendored viewer and checker. Tests run headlessly, simulate the example designs with Verilator and validate their VCDs with the Rust checker. No GUI is opened. Initial Rust builds download dependencies and can take several minutes.
+
+## Quick start
+
+Add the Scala library to another sbt build:
+
+```scala
+lazy val spinalwaves = ProjectRef(file("../SpinalWaves/spinalwaves"), "spinalwaves")
+lazy val application = (project in file(".")).dependsOn(spinalwaves).settings(fork := true)
+```
+
+The application must use Scala 2.13.14, SpinalHDL 1.15.0 and its normal IDSL compiler plugin. `fork := true` is required by SpinalSim for Verilator entrypoints.
+
+Use the normal Spinal simulation API through the wrapper:
+
+```scala
+import spinal.core._
+import spinal.core.sim._
+import spinalwaves._
+import spinalwaves.examples.Gcd
+
+val sim = SpinalWavesSim(SimConfig.workspacePath("simWorkspace"))
+  .compile(new Gcd(16))
+sim.doSim("gcd", 42) { dut =>
+  dut.io.a #= 48
+  dut.io.b #= 18
+  dut.io.load #= false
+  dut.clockDomain.forkStimulus(10)
+  dut.clockDomain.waitSampling(3)
+  dut.io.load #= true
+  dut.clockDomain.waitSampling()
+  dut.io.load #= false
+  dut.clockDomain.waitSampling()
+  while (!dut.io.valid.toBoolean) dut.clockDomain.waitSampling()
+  assert(dut.io.result.toInt == 6)
+}
+println(sim.hglddDir)
+println(sim.vcdFile)
+println(sim.extraScopes.mkString(" "))
+```
+
+Pass `sourceRoots = Seq(java.nio.file.Paths.get("src/main/scala"), ...)` to resolve source files outside the default main/test roots. The hardware generator runs twice to enable Spinal's stack trace capture. Keep elaboration deterministic and avoid external side effects in the generator and transformation phases.
+
+With the default simulation paths, metadata is written to `simWorkspace/Gcd/spinalwaves/hgldd/Gcd.dd`. `sim.vcdFile` is the actual VCD path selected by SpinalSim. `SimLayout.extraScopes(vcd, topModule)` reads the VCD header rather than assuming a testbench scope.
+
+The wrapper can launch Surfer after simulation with `launchViewer = true` and an optional `viewerBinary` path. The default is `false`; no environment variable enables a GUI implicitly.
+
+## Lower-level API
+
+```scala
+val report = SpinalWaves.elaborateWithLocations(
+  SpinalConfig(targetDirectory = "rtl")
+)(new MyTop)
+val file = HglddEmitter.emit(report, java.nio.file.Paths.get("myWorkspace"))
+```
+
+The emitter accepts an existing report too, but source locations require elaboration with `debugComponents` enabled. For the naming API shared with SpinalTrace, see [docs/CONTRACT.md](docs/CONTRACT.md).
+
+## Examples and validation
+
+[Designs.scala](spinalwaves/src/main/scala/spinalwaves/examples/Designs.scala) contains a GCD, nested Bundles and Vecs, Vecs of Bundles, enum encodings, repeated child modules with Areas, Stream/Flow interfaces and a library StateMachine. The integration suite simulates each, expands its typed hierarchy, checks the shared naming paths, and runs the Rust checker. It also checks source lines, natural type names and enum maps. Additional tests check pruning, constructor parameters and byte-identical generated Verilog with and without location capture.
+
+The viewer is tested with a headless `--help` smoke check. Interactive rendering is not part of the automated test suite.
+
+The example can also be run directly:
+
+```sh
+cd spinalwaves
+sbt -batch 'runMain spinalwaves.examples.GcdDemo'
+```
+
+Pass `--viewer` to that example only when you want an interactive viewer window.
+
+## CLI validation and viewer
+
+From the repository root, after running the GCD integration test:
+
+```sh
+spinalwaves-check \
+  --vcd spinalwaves/target/integration/gcd/Gcd/gcd/wave.vcd \
+  --hgldd spinalwaves/target/integration/gcd/Gcd/spinalwaves/hgldd \
+  --extra-scopes TOP Gcd --top-module Gcd \
+  --out spinalwaves/target/integration/gcd/Gcd/spinalwaves/typed.vcd
+
+surfer-tywaves spinalwaves/target/integration/gcd/Gcd/gcd/wave.vcd \
+  --hgldd-dir spinalwaves/target/integration/gcd/Gcd/spinalwaves/hgldd \
+  --extra-scopes TOP Gcd --top-module Gcd
+```
+
+The checker exits nonzero for missing signals/scopes, incorrect widths, failed typed field lookup, dropped module variables or failed rewriting. `--json FILE` writes its report. Uncovered VCD signals are informational by default: Verilator adds top-level aliases and backend-generated values that are not typed Scala roots. `--fail-on-uncovered` is available for stricter input sets. Use `--help` for the full CLI.
+
+Surfer is optional for simulation and validation. Its invocation above opens a GUI. Viewer validation for this port is a separate headless `surfer-tywaves --help` smoke check. Keep the input VCD, HGLDD and the original Scala sources together when moving results between machines, since source paths are absolute.
+
+The shared API is defined in [docs/CONTRACT.md](docs/CONTRACT.md).
+Tests cover typed hierarchy lookup, source locations and VCD rewriting.
+Interactive Surfer rendering has not been tested. Fixed-point values keep raw
+bits and type metadata. Memories and blackbox internals have no special typed model.

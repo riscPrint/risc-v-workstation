@@ -1,0 +1,24 @@
+# Coverage collection only. All rv64ui-p-* and rv64um-p-* ELFs, including ma_data.
+# Results preserve failures; they are not exclusions or claims of ISA compliance.
+[core]
+name = "boom"
+adapter = "${RVW_BOOM_ADAPTER:-../../../RiscvSim/boom/run.sh}"
+configs = ["small"]
+default_config = "small"
+# Invoke through scripts/with-lock.sh boom; avoid taking the same lock recursively.
+lock = ""
+source_repo = "${SPINAL_BOOM:-../../../../spinal-boom-eda}"
+source_env = "SPINAL_BOOM"
+cache_paths = ["../../../RiscvSim"]
+jobs = 1
+build_timeout_s = 1800
+startup_s = 300
+
+[suites.integer-coverage]
+description = "rv64ui-p and rv64um-p code/functional coverage on small"
+dir = "${RISCV_TESTS:-../../../../ref/riscv-tests/build/isa}"
+include = ['^rv64u[im]-p-[A-Za-z0-9_]+$']
+max_cycles = 200000
+timeout_s = 120
+options = { coverage = true, rvfi_trace = true }
+build_options = ["--rvfi", "--coverage"]

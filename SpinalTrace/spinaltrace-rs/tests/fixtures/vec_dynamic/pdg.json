@@ -1,0 +1,791 @@
+{
+ "vertices": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 58,
+   "char": 1,
+   "name": "input_io_wrEn",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrEn"
+   },
+   "assignsTo": "io_wrEn",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 59,
+   "char": 1,
+   "name": "input_io_wrIdx",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrIdx"
+   },
+   "assignsTo": "io_wrIdx",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 60,
+   "char": 1,
+   "name": "input_io_wrData",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrData"
+   },
+   "assignsTo": "io_wrData",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 61,
+   "char": 1,
+   "name": "input_io_rdIdx",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "rdIdx"
+   },
+   "assignsTo": "io_rdIdx",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 62,
+   "char": 1,
+   "name": "output_io_rdData",
+   "kind": "IO",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 65,
+   "char": 1,
+   "name": "defreg_regs_0",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "0"
+   },
+   "assignsTo": "regs_0",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 65,
+   "char": 1,
+   "name": "defreg_regs_1",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "1"
+   },
+   "assignsTo": "regs_1",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 65,
+   "char": 1,
+   "name": "defreg_regs_2",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "2"
+   },
+   "assignsTo": "regs_2",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 65,
+   "char": 1,
+   "name": "defreg_regs_3",
+   "kind": "DataDefinition",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "3"
+   },
+   "assignsTo": "regs_3",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 66,
+   "char": 1,
+   "name": "cond_on_[io_wrEn]",
+   "kind": "ControlFlow",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "wrEn"
+   },
+   "assignsTo": null,
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "defnode__zz_1",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "_zz_1",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "defnode_probe_io_wrIdx",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe2",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "connect_regs_0",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "0"
+   },
+   "assignsTo": "regs_0",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "io_wrIdx"
+    ],
+    "probeValue": [
+     0
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "defnode_probe_io_wrIdx",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe3",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "connect_regs_1",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "1"
+   },
+   "assignsTo": "regs_1",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "io_wrIdx"
+    ],
+    "probeValue": [
+     1
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "defnode_probe_io_wrIdx",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe4",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "connect_regs_2",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "2"
+   },
+   "assignsTo": "regs_2",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "io_wrIdx"
+    ],
+    "probeValue": [
+     2
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "defnode_probe_io_wrIdx",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe5",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 67,
+   "char": 1,
+   "name": "connect_regs_3",
+   "kind": "Connection",
+   "clocked": true,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "regs",
+    "fieldPath": "3"
+   },
+   "assignsTo": "regs_3",
+   "isChiselStatement": true,
+   "condition": {
+    "probeName": [
+     "io_wrIdx"
+    ],
+    "probeValue": [
+     3
+    ]
+   },
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 70,
+   "char": 1,
+   "name": "defnode_probe_io_rdIdx",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": null,
+   "assignsTo": "$probe6",
+   "isChiselStatement": false,
+   "condition": null,
+   "assignDelay": 0
+  },
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 70,
+   "char": 1,
+   "name": "connect_io_rdData",
+   "kind": "Connection",
+   "clocked": false,
+   "modulePath": [],
+   "relatedSignal": {
+    "signalPath": "io",
+    "fieldPath": "rdData"
+   },
+   "assignsTo": "io_rdData",
+   "isChiselStatement": true,
+   "condition": null,
+   "assignDelay": 0
+  }
+ ],
+ "edges": [
+  {
+   "from": 4,
+   "to": 20,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 9,
+   "to": 0,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 10,
+   "to": 9,
+   "kind": "Conditional",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 11,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 11,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 12,
+   "to": 9,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 13,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 13,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 14,
+   "to": 9,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 15,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 16,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 16,
+   "to": 15,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 16,
+   "to": 9,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 17,
+   "to": 1,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 18,
+   "to": 2,
+   "kind": "Data",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 18,
+   "to": 17,
+   "kind": "Index",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 18,
+   "to": 9,
+   "kind": "Conditional",
+   "clocked": true,
+   "condition": null
+  },
+  {
+   "from": 19,
+   "to": 3,
+   "kind": "Data",
+   "clocked": false,
+   "condition": null
+  },
+  {
+   "from": 20,
+   "to": 5,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     0
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 5,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     0
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 12,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     0
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 6,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     1
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 6,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     1
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 14,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     1
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 7,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     2
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 7,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     2
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 16,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     2
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 8,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     3
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 8,
+   "kind": "Declaration",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     3
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 18,
+   "kind": "Data",
+   "clocked": false,
+   "condition": {
+    "probeName": [
+     "io_rdIdx"
+    ],
+    "probeValue": [
+     3
+    ]
+   }
+  },
+  {
+   "from": 20,
+   "to": 19,
+   "kind": "Index",
+   "clocked": false,
+   "condition": null
+  }
+ ],
+ "predicates": [
+  {
+   "file": "/work/SpinalTrace/examples/src/spinaltrace/examples/Features.scala",
+   "line": 66,
+   "char": 1,
+   "name": "io_wrEn",
+   "kind": "DataDefinition",
+   "clocked": false,
+   "isChiselStatement": false
+  }
+ ],
+ "cfg": [
+  {
+   "stmtRef": 0
+  },
+  {
+   "stmtRef": 1
+  },
+  {
+   "stmtRef": 2
+  },
+  {
+   "stmtRef": 3
+  },
+  {
+   "stmtRef": 4
+  },
+  {
+   "stmtRef": 5
+  },
+  {
+   "stmtRef": 6
+  },
+  {
+   "stmtRef": 7
+  },
+  {
+   "stmtRef": 8
+  },
+  {
+   "stmtRef": 9,
+   "predStmtRef": 0,
+   "trueBranch": [
+    {
+     "stmtRef": 10
+    },
+    {
+     "stmtRef": 11
+    },
+    {
+     "stmtRef": 12
+    },
+    {
+     "stmtRef": 13
+    },
+    {
+     "stmtRef": 14
+    },
+    {
+     "stmtRef": 15
+    },
+    {
+     "stmtRef": 16
+    },
+    {
+     "stmtRef": 17
+    },
+    {
+     "stmtRef": 18
+    }
+   ]
+  },
+  {
+   "stmtRef": 19
+  },
+  {
+   "stmtRef": 20
+  }
+ ],
+ "spinaltrace": {
+  "formatVersion": 1,
+  "toplevel": "VecDynamic",
+  "extraScopes": [
+   "TOP",
+   "VecDynamic"
+  ],
+  "clockDomains": [
+   {
+    "clock": "clk",
+    "reset": "reset",
+    "resetKind": "ASYNC",
+    "resetActiveLow": false,
+    "clockEnable": null,
+    "softReset": null,
+    "registers": 4
+   }
+  ],
+  "warnings": []
+ }
+}
