@@ -57,37 +57,11 @@ Done: Use a patched JDK 21. Host-specific patch records remain outside this repo
 - [ ] At the next JDK update, move to an OpenJDK 21 build that includes the fix (owner's preferred
   source; any build from the OpenJDK source works) and drop the in-place patch.
 
-## Core bugs found by the tools (not fixed here; for `spinal-boom`)
+## Core bugs found by the tools
 
-- [ ] `minstret`: after `csrwi minstret,0`, BOOM reads 1 where Spike reads 0 (`rv64mi-p-instret_overflow`,
-  found by `rvw cosim`).
-
-- [ ] BOOM's RVFI `mode` reports the new privilege on traps and xRETs (`rvfi.scala`, `r.mode := io.prv`);
-  allowed by the `mode_after_change` platform key until fixed.
-
-- [ ] `lsu.scala:1241` assertion (upstream BOOM v4): a cache probe between two loads to the same word
-  makes the older load retry after the younger one succeeded. Likely fix: restore the younger load's
-  order-failure replay. See `rvw/src/rvw/bundle/README.md`.
-
-- [ ] Possible X-propagation in FpPipeline (`io_dgen_valid`, `io_wakeups_0_valid`) and the ITLB
-  (`io_ptw_req_valid`): confirm with a 4-state replay.
-
-- [ ] Rocket `TLArbiter` port (`mshrs.scala:719`) re-arbitrates a stalled A request at the
-  Chisel/Spinal boundary (waived in `SpinalChecks/boom/waivers.txt`); decide whether to change it.
-
-- [ ] SpinalChecks (after the stream coverage fix; BOOM `small`, seed 1, 58 programs): two newly
-  inserted checks fire. Triage each (core bug or over-strict check); do not waive without a reason.
-  - `stream.valid_hold:tile.core.xcpt_pc_req`: 46 firings in six programs, first at cycle 655 in
-    `rv64ui-p-jalr` (valid drops while stalled).
-  - `stream.payload_stable:arbiter.ups_0_a`: 2 firings in `qsort.riscv`, first at cycle 13001.
-  - `rv64ui-p-ma_data` fails with code 668 in the SpinalChecks suite run (both before and after the fix).
-
-- [ ] SpinalChecks (with child-master coverage; BOOM `small`, seed 1, 58 programs): 516 checks,
-  484 inserted, 32 waived; **24 fire** (all `stream.valid_hold` / `stream.payload_stable`; no TileLink check).
-  Likely cause for most: BOOM came from Chisel, whose `Decoupled` allows `valid` to drop before `ready`
-  (only `Irrevocable` forbids it); BOOM's kill/flush queues drop entries on purpose. Decide per stream in the
-  core: mark legal drops (with the reason) in `SpinalChecks/boom/`, or fix a real protocol bug. Program results are unchanged (57/58;
-  `rv64ui-p-ma_data` code 668).
+Tracked in the `spinal-boom` issue tracker: riscPrint/spinal-boom#1–#7 (`minstret`, RVFI `mode`,
+`lsu.scala:1241`, X-propagation candidates, `TLArbiter`, `rv64ui-p-ma_data` code 668, SpinalChecks
+stream firings). The roadmap for the tools is in this repository's GitHub issues.
 
 ## ARCH: architecture exploration and virtual platforms
 
