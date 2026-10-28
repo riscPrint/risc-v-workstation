@@ -4,7 +4,7 @@ IDE tools to make RISC-V development easier. SpinalHDL gets first-class treatmen
 
 The RISC-V core these tools are built alongside lives in [riscPrint/spinal-boom](https://github.com/riscPrint/spinal-boom).
 
-Start with [AGENTS.md](AGENTS.md) (layout, commands, rules), [ROADMAP.md](ROADMAP.md) (plan, and where each area stands against commercial EDA tools) and [TODO.md](TODO.md) (tasks and open findings).
+Start with [AGENTS.md](AGENTS.md) (layout, commands, rules), [ROADMAP.md](ROADMAP.md) (plan, and where each area stands against commercial EDA tools) and [TODO.md](TODO.md) (the open GitHub issues, by area).
 
 ## Quickstart
 
@@ -101,7 +101,7 @@ Experimental features need manual result checks before use:
 - Gates on stored result folders (`--base`/`--cand` folders) and performance metrics (`perf_metrics`).
 - Mutation testing (`rvw cov mutate`).
 - SpinalChecks generated checks (run reports, check selection). On BOOM, 24 stream checks fire;
-  most are probably legal `Decoupled` behaviour from the Chisel port (see `TODO.md`).
+  most are probably legal `Decoupled` behaviour from the Chisel port (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
 
 ## VS Code extension
 

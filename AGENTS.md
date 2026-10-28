@@ -13,12 +13,13 @@ reusing open-source tools and extending them where they fall short.
 `CLAUDE.md` is a symlink to this file. Edit `AGENTS.md`.
 
 - `ROADMAP.md`: the plan for every area, and where each area stands against commercial tools.
-- `TODO.md`: the tasks, under the same areas.
+- GitHub issues: the tasks. `TODO.md` lists them under the roadmap areas.
 - `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C8).
 - [docs/BRING_YOUR_OWN_CORE.md](docs/BRING_YOUR_OWN_CORE.md): install once, then use a
   separate core repository with `rvw.toml`, core adapters and project selection.
 
-Keep `ROADMAP.md` and `TODO.md` up to date when work starts or finishes.
+Keep `ROADMAP.md` up to date when work starts or finishes. Track tasks as GitHub issues, and
+keep the issue list in `TODO.md` in step with them.
 
 ## Layout
 
@@ -117,9 +118,10 @@ Exit codes and JSON formats are in `docs/PLATFORM_CONTRACTS.md`. A gate verdict 
   `rvw.common.proc.run_group`, so the whole process tree stops.
 - Threat model: see "Threat model" in C8 (`docs/PLATFORM_CONTRACTS.md`). Verdicts that let work go
   ahead (`gate` accept) come only from committed revisions; races and hostile inputs are out of scope.
-- Do not change the core from this repository. Report core bugs the tools find in `TODO.md`.
+- Do not change the core from this repository. Report core bugs the tools find as
+  issues in `riscPrint/spinal-boom`.
 - New tool: add a row to the Components table in `ROADMAP.md`, a `README.md`, a row in the Layout
-  table above, and its tasks in `TODO.md`.
+  table above, and its tasks as issues listed in `TODO.md`.
 - Reuse open-source tools first (Verilator, Spike, Sail, Yosys, SymbiYosys, mcy, Surfer, ...); write
   only what they lack, and record in `ROADMAP.md` what each area builds on.
 

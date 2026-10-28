@@ -58,7 +58,7 @@ the latest OSS CAD Suite release. Linux Spike builds from its source checkout.
 Fedora bare-metal GCC builds from source and can take a long time.
 The installer does not pin all native dependencies. Native installation uses
 the host package manager. Native package availability depends on the host.
-The pinned tool bundle remains open in [TODO.md](../TODO.md).
+The pinned tool bundle remains open ([#71](https://github.com/riscPrint/risc-v-workstation/issues/71)).
 
 For a manual install, use Python 3.11 or later and `uv`. For example, install the
 workstation under `$HOME/tools` and keep your core under `$HOME/projects`:
@@ -482,7 +482,7 @@ input declaration. The workstation still ships BOOM examples at their existing
 paths for explicit `--core boom` use.
 
 External BOOM and second-core integration checks are tracked in
-[TODO.md](../TODO.md#plat-one-integrated-platform). Do not read these setup steps
+[#1](https://github.com/riscPrint/risc-v-workstation/issues/1) and [#34](https://github.com/riscPrint/risc-v-workstation/issues/34). Do not read these setup steps
 as a claim that those checks passed. Record measured run counts, gate verdicts,
 query outputs and formal outcomes before claiming support for another core.
 
