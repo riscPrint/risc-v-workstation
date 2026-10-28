@@ -125,6 +125,20 @@ Exit codes and JSON formats are in `docs/PLATFORM_CONTRACTS.md`. A gate verdict 
 - Reuse open-source tools first (Verilator, Spike, Sail, Yosys, SymbiYosys, mcy, Surfer, ...); write
   only what they lack, and record in `ROADMAP.md` what each area builds on.
 
+## Commits and pull requests
+
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages
+and pull request titles: `type(scope): summary`.
+
+- Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `revert`.
+- Scope: the tool or area, for example `regress`, `cosim`, `arch`, `query`, `formal`, `install`.
+- Summary: imperative, lower case, no full stop, at most 72 characters.
+- Breaking changes: add `!` after the scope and a `BREAKING CHANGE:` footer. Update the docs in
+  the same commit.
+- Link issues in a footer: `Refs: #12` or `Closes: #12`.
+- A pull request title follows the same format. Its body has `## Summary`, `## Testing` (commands
+  and pass/skip counts) and `## Issues` sections.
+
 ## Architecture models
 
 Install native gem5 with `scripts/install.sh --with-gem5`. Use `RVW_GEM5` to
