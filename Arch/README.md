@@ -142,3 +142,85 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   alignment, and automated microbenchmarks remain open work.
 - An in-order or RV32 core needs a CPU model selection, a matching runtime and
   ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
+
+## Linux reference flow
+
+`rvw arch linux` separates image construction, table capture and reference boot.
+The first platform is QEMU `virt`, one RV64 hart with Sv39 and 128 MiB RAM. Its declared
+properties live in `examples/qemu-linux/platform.json`. This is reference data.
+It does not describe a verified RTL Linux platform.
+
+On native Linux, install GCC, make, bc, bison, flex, cpio, rsync, file, wget,
+curl, unzip, Git, Python, ncurses headers, OpenSSL headers, QEMU and dtc.
+Then run:
+
+```sh
+rvw arch linux build --out /tmp/linux-build --timeout 9000 --jobs 2 --json
+rvw arch linux prepare --images /tmp/linux-build/build/images \
+  --platform examples/qemu-linux/platform.json --out /tmp/linux-prepared --json
+rvw arch linux boot --images /tmp/linux-build/build/images \
+  --platform examples/qemu-linux/platform.json --out /tmp/linux-boot --timeout 120 --json
+```
+
+Each action needs a new output directory. `--timeout` bounds each build command
+or QEMU process. `--jobs` accepts 1 through 4. Builds run serial commands.
+The tool stops the full process group on timeout or cancellation.
+The build checks the Buildroot 2025.02.1 archive SHA-256. Buildroot pins the
+internal musl toolchain, BusyBox, Linux 6.12.9 and OpenSBI 1.6. It checks package
+hashes from the release, including its QEMU board patches. The root filesystem
+is a gzip cpio initramfs. `Arch/linux/overlay/init` mounts proc, sysfs and devtmpfs.
+It runs a separate shell process to check the kernel type. It prints a marker
+and calls poweroff. This is a minimal userspace check. It is not a Linux selftest
+suite or a test of signals, page faults or scheduling correctness.
+
+macOS cannot build Buildroot. Use `.github/workflows/linux-boot.yml` for that
+step on native Ubuntu 24.04. The workflow uses no container. It builds images,
+boots QEMU and uploads images, configuration, console and reports. A workflow
+that has not finished is NOT RUN evidence. To build firmware alone on macOS:
+
+```sh
+brew install make qemu dtc llvm lld
+export PATH="$(brew --prefix llvm)/bin:$(brew --prefix lld)/bin:$PATH"
+rvw arch linux firmware --llvm --out /tmp/linux-firmware --timeout 300 --json
+```
+
+The firmware action fetches the pinned OpenSBI v1.6 commit. It uses GNU make
+and `riscv64-unknown-elf-gcc` by default. OpenSBI 1.6 requires PIE linker support.
+The installed bare-metal GNU linker can lack this support. Use `--llvm` with
+Clang, LLD and LLVM tools on PATH, or `--cross-compile PREFIX` with a native
+Linux-target toolchain. No GNU linker check is bypassed. The LLVM build keeps the Clang 23
+`unused-but-set-variable` and `unused-but-set-global` diagnostics as warnings.
+The manifest records this policy. Other compiler errors still stop the build.
+This action does not build Linux or a root filesystem.
+
+QEMU starts firmware at `0x80000000` in M-mode. It supplies the hart ID in a0
+and the device tree in a1. `fw_jump` enters Linux at `0x80200000` in S-mode.
+QEMU places the initramfs and updates the chosen node. The same captured DTB is
+passed back to the boot. Selected RAM, timer, UART, PLIC and MMU properties must
+match project data. These are table checks. They do not check device state,
+interrupt delivery or model timing. QEMU timing is not RTL timing.
+
+Reports bind firmware, kernel, initramfs, device tree, command line and QEMU
+by hash. Build reports also bind the source archive and configuration.
+Console input, network and disk input are disabled. No external input replay
+or equivalence claim is supported. A prompt or OpenSBI banner is insufficient.
+The boot action requires its userspace marker, power-down message and a clean
+QEMU exit. Timeouts, panics and failed property checks stay inconclusive.
+
+`prepare` copies the images and device tree for an RTL adapter. Its manifest
+lists firmware and kernel load addresses. RTL preparation remains blocked until
+an adapter places the initramfs and DTB, sets a0/a1 and implements the declared
+UART, timer, PLIC, reset and interrupt behavior. Do not load these images with a
+bare-metal C1 adapter and infer Linux support. No full RTL Linux boot is part
+of this command. Only a bounded first-N retirement comparison is permitted
+when an adapter can supply the initial platform state. The current BOOM adapter
+has no verified Linux loader/device contract, so that comparison is NOT RUN.
+OpenSBI 1.6 also produces a PIE ELF. The current Spike shim requires a static
+executable ELF. A first-N comparison needs explicit PIE loading support; do not
+change an ELF header or bypass that check to infer a comparison.
+
+The close condition for #56 remains broader: the same captured tables and images
+must run on reference and RTL, device states and replay inputs must agree, and
+SBI, user-process, page-fault, signal, context-switch and selected kernel selftests
+must pass. FreeRTOS/Zephyr adapters also remain open. None is inferred from the
+minimal reference boot.
