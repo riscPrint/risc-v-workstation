@@ -306,3 +306,39 @@ or correct memory transactions from this bounded run. Independent transaction
 checks for retire width, order, traps, killed instructions, memory lanes and
 multiple effects remain open. The current tests cover configuration refusal,
 private input copies, missing status, failing cover, timeout and result mapping.
+
+## Sail SystemVerilog checks (#64)
+
+Sail-generated RVFI properties are not implemented. The native riscv-formal
+runner above uses upstream hand-written instruction models. Do not label them
+as Sail-generated checks.
+
+The first intended subset is RV32I ADD, SUB and ADDI, with one retirement
+channel and no memory, CSR, trap or privileged effects. The source baseline is
+[sail-riscv 0.15](https://github.com/riscv/sail-riscv/tree/549e723031b34b5ffea5bbb56367be15c7a38a9e),
+commit `549e723031b34b5ffea5bbb56367be15c7a38a9e`.
+`model/extensions/I/base_insts.sail` has SHA-256
+`07ce0b099023b6e9ce9aeedb0be15a800f2cec8dd7382a076853391537b5add3`.
+The rule locations at that commit are:
+
+| Instruction | Decode rule | Execution rule |
+|---|---|---|
+| ADD | `encdec RTYPE`, line 225 | `execute RTYPE`, lines 237 to 251; ADD at 239 |
+| SUB | `encdec RTYPE`, line 233 | `execute RTYPE`, lines 237 to 251; SUB at 247 |
+| ADDI | `encdec_iop` and `encdec ITYPE`, lines 145 to 155 | `execute ITYPE`, lines 158 to 169; ADDI at 161 |
+
+The compiler is a separate prerequisite. `sail_riscv_sim` from the binary
+release is an executable ISA simulator. It is not the Sail compiler and does
+not expose the SystemVerilog backend. The Sail compiler's backend option is
+`--sv`; see the [Sail manual](https://github.com/rems-project/sail/blob/master/doc/asciidoc/usage.adoc).
+A simulator version alone cannot identify the compiler or its backend.
+
+Before implementing this subset, install and pin a native Sail compiler with
+that backend. Supply the pinned model's full type and state dependencies.
+Record XLEN, extension settings, compiler identity, model input hashes and
+backend options with generated properties. Do not infer those options from
+DUT behavior. Test correct and deliberately wrong units against a separate
+oracle, including x0 and sign-extension cases. Then connect the generated
+transition outputs to RVFI checks. These steps remain required; no generated
+property, supported implementation configuration or independent Sail proof is
+claimed here. Local attempts and blockers belong in issue #64, not in this repo.
