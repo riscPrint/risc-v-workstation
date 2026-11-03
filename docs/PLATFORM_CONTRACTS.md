@@ -1031,6 +1031,8 @@ record `reset: "adapter-defined"` in ordinary run metadata.
 `{"op":"shutdown"}` returns `shutdown: true` and ends the server. EOF also ends
 it. Cancellation ends the whole process group. An abandoned worker ends the
 server with exit 2 after its timeout response. Other run failures do not end it.
+C1 `execution_mode` is `server` for server requests and `process` for ordinary
+runs. Error and abandoned results also retain this field.
 C1 `details.simulation_session` has `id` (process UUID), `model_run` (one-based
 completed-run number per model), `reset: "new-native-instance"` and
 `verilator_cached` (native cache hit at model compilation). These fields are

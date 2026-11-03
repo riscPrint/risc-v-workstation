@@ -291,6 +291,8 @@ records the process UUID, model run number, `reset: "new-native-instance"` and
 native cache-hit flag. Existing RTL and native hashes bind model identity.
 `details.execution_s` excludes model compilation. Source capture occurs at
 server start. Restart after source edits.
+C1 `execution_mode` is `server` for each server request and `process` for
+ordinary runs. Error and abandoned results also record this field.
 
 A failed run can be followed by another request. A watchdog-abandoned worker
 poisons the server: it sends the timeout result and exits 2. It does not accept

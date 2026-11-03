@@ -54,12 +54,34 @@ class ServerSpec extends AnyFunSuite {
       assert(replies.size == 4 && replies.head.obj.contains("error"))
       assert(adapter.compiled == 1 && adapter.executed == 2)
       val sessions = replies.slice(1, 3).map(_("result")("details")("simulation_session"))
+      assert(replies.slice(1, 3).forall(_("result")("execution_mode").str == "server"))
       assert(sessions(0)("id") == sessions(1)("id"))
       assert(sessions.map(_("model_run").num) == Seq(1.0, 2.0))
       assert(replies.last("shutdown").bool)
+      val direct = driver.runOne(Cli.job(Map("elf" -> elf.getPath, "out" -> new File(dir, "direct").getPath), adapter, dir))
+      assert(direct("execution_mode").str == "process")
       driver.cleanWorkspace()
     }
   }
+  test("a crashed request reports an error before the next request runs") {
+    fixture { (dir, elf) =>
+      val adapter = new Adapter(false) {
+        override def run(model: Unit, job: RunJob, ctx: RunContext): RunOutcome = {
+          if (executed == 0) { executed += 1; throw new IllegalStateException("injected crash") }
+          super.run(model, job, ctx)
+        }
+      }
+      val driver = new Driver(adapter)
+      val replies = scala.collection.mutable.ArrayBuffer.empty[ujson.Obj]
+      assert(driver.serve(Map.empty, Iterator(request(dir, elf, "crash"),
+        request(dir, elf, "next")), replies += _) == 0)
+      assert(replies.map(_("result")("status").str) == Seq("error", "fail"))
+      assert(replies.forall(_("result")("execution_mode").str == "server"))
+      assert(adapter.executed == 2)
+      driver.cleanWorkspace()
+    }
+  }
+
   test("server exits on abandoned worker before it reads another request") {
     fixture { (dir, elf) =>
       val adapter = new Adapter(true)
@@ -69,6 +91,7 @@ class ServerSpec extends AnyFunSuite {
         Iterator(request(dir, elf, "one"), request(dir, elf, "two")), replies += _) == 2)
       assert(replies.size == 1)
       assert(replies.head("result")("details")("abandoned").bool)
+      assert(replies.head("result")("execution_mode").str == "server")
       assert(adapter.executed == 1)
       driver.cleanWorkspace()
     }

@@ -24,6 +24,7 @@ def test_server_reset_matches_fresh_process(tmp_path):
     replies = [json.loads(line)['result'] for line in result.stdout.splitlines()]
     assert [r['status'] for r in replies] == ['timeout', 'fail', 'pass', 'pass']
     assert not any(r.get('inconclusive') for r in replies)
+    assert all(r['execution_mode'] == 'server' for r in replies)
     sessions = [r['details']['simulation_session'] for r in replies]
     assert len({s['id'] for s in sessions}) == 1
     assert [s['model_run'] for s in sessions] == [1, 2, 3, 4]
@@ -50,6 +51,7 @@ def test_server_reset_matches_fresh_process(tmp_path):
         '--rvfi-trace', '--json'], env=env, capture=True, text=True, timeout=600)
     assert fresh.returncode == 0, fresh.stderr
     reference = json.loads(fresh.stdout)
+    assert reference['execution_mode'] == 'process'
     for result in replies[2:]:
         for key in ('status', 'cycles', 'instret', 'fail_code', 'elf_sha256', 'rtl_sha256'):
             assert result[key] == reference[key]
