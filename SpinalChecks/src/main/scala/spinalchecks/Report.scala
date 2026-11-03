@@ -65,7 +65,7 @@ object Report {
   private def alive(bt: BaseType): Boolean = bt.parentScope != null && bt.component != null
 
   def json(r: ChecksResult): String = {
-    val byKind = Kind.all.flatMap { k =>
+    val byKind = r.records.toSeq.map(_.kind).distinct.sorted.flatMap { k =>
       val rs = r.records.filter(_.kind == k)
       if (rs.isEmpty) None else Some(k -> (obj(rs.groupBy(_.status).toSeq.sortBy(_._1).map { case (s, v) => s -> (v.size: V) }: _*): V))
     }

@@ -275,7 +275,7 @@ Earlier measurements on BOOM `small`, seed 1:
   by hand in the parent.
 - **Vec reads are found as multiplexers.** `Vec(a, b, c)` does not set element parents, so Vecs cannot
   be found from signals; every dynamic Vec read is a Spinal `Multiplexer` with the index as select.
-  Fires for any out-of-range index, used or not (as JasperGold's array-out-of-bounds does).
+  Direct conditional uses are gated by their enclosing `when` scopes.
 - **Enum encodings** are resolved when the phase runs (native becomes binarySequential, as Spinal's
   Verilog backend does); the legal check compares the full bit pattern, so one-hot multi-hot values fail.
 - **Source locations** need Spinal's `debugComponents`, so `withLocations` elaborates the design twice:
@@ -390,9 +390,9 @@ opcode and size faults, parameter faults, and AXI address faults.
 
 ## Gaps
 
-- Flow has no rule at all (no handshake, no payload rule); Flows are only X-propagation targets.
-- `vec.index` fires for any out-of-range index whether or not the read value is used, and `mem.index`
-  for an asynchronous read port fires whether or not the read data is used (no enable to gate it).
+- Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
+- Vec use through intermediate wires and switch scopes remains conservative. Asynchronous memory
+  read indexes remain ungated.
 - TileLink: probe tracking, negotiated transfer capabilities,
   B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
   end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
@@ -407,7 +407,7 @@ opcode and size faults, parameter faults, and AXI address faults.
   bursts and a DMA copy with response delays and interruptions. The helper serializes
   memory operations. Concurrent overlapping memory traffic needs an ordering model.
   AXI4-Lite needs its own explicit rules and reference designs.
-- `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
+- Dynamic bit reads have range checks; intermediate-wire use remains conservative.
 - Components without reset: checks there are always active.
 - `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
   Use `xprop --combinational` for a clock-free wrapper. See the
@@ -417,8 +417,7 @@ opcode and size faults, parameter faults, and AXI address faults.
   every `rvw formal` flow; there is no multi-clock model yet.
 - Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model
   for their events between clock edges.
-- Check placement uses the component's clock domain; streams in another clock domain of the same
-  component would need the domain of their signals.
+- Stream checks still use the component domain. Project-declared rules use their binding domain.
 - from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
@@ -429,3 +428,29 @@ opcode and size faults, parameter faults, and AXI address faults.
 Check rules: [#65](https://github.com/riscPrint/risc-v-workstation/issues/65). Protocol coverage: [#66](https://github.com/riscPrint/risc-v-workstation/issues/66). BOOM dispositions: [#5](https://github.com/riscPrint/risc-v-workstation/issues/5). Multi-clock/async formal: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). Shared runners: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67).
 
 Retained limit: The documented TileLink/AXI subsets, queue capacities, free replay state, clock-domain placement and index-check behavior remain bounded restrictions. Reference traffic does not establish complete protocol compliance or coherent ordering.
+
+## Project-declared checks
+
+Call these APIs from the project wrapper during elaboration. Install SpinalChecks
+on that wrapper. Use the sampling `ClockingArea` for each binding. The phase adds
+normal check records, exact IDs, waivers, assertions and monitor counters.
+`DeclaredChecks.rule(kind, name, detail)(failure)` is the low-level binding API.
+It does not infer intent. A missing binding does not establish checked behavior.
+
+`DeclaredChecks.flowValues(name, flow, allowed)` checks a `Flow[Bits]` payload
+against a nonempty declared set on valid beats. No rule requires a Flow to hold
+valid or payload between beats. Each call captures its current clock domain.
+
+Dynamic bit reads on non-power-of-two widths produce `bits.index` checks.
+Vec and bit-read checks use the enclosing `when` conditions. An unused read in
+an inactive direct assignment does not fire. Uses through intermediate wires,
+expression multiplexers and `switch` scopes remain conservative. Asynchronous
+memory reads remain ungated. A register select or bit source supplies the clock
+domain; otherwise the component domain is used. Each domain has its own monitor
+cycle counter. Existing `NamingSpec` tests keep loop-built IDs distinct.
+
+Connectivity and CSR applications are selected as explicit project bindings.
+Deadlock generation remains deferred to #21. This choice does not add automatic
+application discovery or core-specific rename, LSQ, ROB or issue bindings.
+Run `sbt "testOnly spinalchecks.LocalRulesSpec spinalchecks.NamingSpec"` under
+the `sbt` lock for the local rules.
