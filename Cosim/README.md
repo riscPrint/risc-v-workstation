@@ -593,3 +593,22 @@ Keep reference-device tests separate from instruction co-simulation.
 Do not use a DUT MMIO read as the expected device state.
 Edge gateways, bus errors, asynchronous CDC and arbitrary PLIC register WARL
 behavior are outside this model. `max_priority` must be a contiguous low-bit mask.
+
+### Timer and software interrupts
+
+`Timer(TimerMap.from_dict(data['timer']))` loads a declared map from JSON.
+See `examples/boom/devices.json` and `examples/vexriscv/devices.json`.
+The examples declare reference maps. They do not install devices in the adapters.
+BOOM's timer addresses match its current memory map. Its `intGen` at
+`0x0c000000` is not a PLIC. Do not replace it with the reference PLIC implicitly.
+VexRiscv has only scheduled interrupt inputs and no MMIO timer device.
+
+`Timer` supports CLINT and relocated ACLINT MTIMER/MSWI registers, one compare
+and software register per declared hart. Call `tick(n)` to advance time.
+Use aligned 32-bit split accesses or aligned 64-bit timer accesses.
+Software registers retain bit zero only. IRQ bit 3 is MSIP; bit 7 is MTIP.
+MTIP asserts at unsigned `mtime >= mtimecmp`. Time wraps at 64 bits.
+Reset values come from project data. They are not architectural reset guarantees.
+The native oracle compares CLINT accesses, split writes and two-hart IRQ state
+with Spike's `clint_t`. Relocated ACLINT accesses have model unit tests only.
+ACLINT SSWI, bus timing and a native ACLINT oracle remain unsupported.

@@ -112,3 +112,85 @@ class Plic:
                 if value in self.level:
                     self.set_level(value, True)
         # Writes to pending bits have no effect.
+
+
+@dataclass(frozen=True)
+class TimerMap:
+    """Absolute CLINT or ACLINT MTIMER/MSWI addresses, in hart index order."""
+    mtime: int
+    mtimecmp: tuple[int, ...]
+    msip: tuple[int, ...]
+    reset_mtime: int
+    reset_mtimecmp: int
+
+    def __post_init__(self):
+        if not self.mtimecmp or len(self.msip) != len(self.mtimecmp):
+            raise ValueError('timer and software hart counts differ')
+        ranges = [(self.mtime, 8)] + [(a, 8) for a in self.mtimecmp] + [(a, 4) for a in self.msip]
+        used = set()
+        for address, width in ranges:
+            if address < 0 or address % width or used.intersection(range(address, address + width)):
+                raise ValueError('invalid or overlapping timer registers')
+            used.update(range(address, address + width))
+        if any(not 0 <= value < 1 << 64 for value in (self.reset_mtime, self.reset_mtimecmp)):
+            raise ValueError('invalid timer reset value')
+
+    @classmethod
+    def from_dict(cls, data):
+        """Parse a project-owned JSON object. No core name or default map."""
+        return cls(mtime=data['mtime'], mtimecmp=tuple(data['mtimecmp']),
+                   msip=tuple(data['msip']), reset_mtime=data['reset_mtime'],
+                   reset_mtimecmp=data['reset_mtimecmp'])
+
+
+class Timer:
+    """CLINT/ACLINT MTIMER and MSWI model, with explicit time advancement."""
+    MASK = (1 << 64) - 1
+
+    def __init__(self, layout: TimerMap):
+        self.map = layout
+        self.reset()
+
+    def reset(self):
+        self.mtime = self.map.reset_mtime
+        self.compare = [self.map.reset_mtimecmp] * len(self.map.mtimecmp)
+        self.software = [0] * len(self.map.msip)
+
+    def tick(self, ticks=1):
+        if type(ticks) is not int or ticks < 0:
+            raise ValueError('ticks must be a nonnegative integer')
+        self.mtime = (self.mtime + ticks) & self.MASK
+
+    def irq(self, hart):
+        return (8 if self.software[hart] else 0) | (128 if self.mtime >= self.compare[hart] else 0)
+
+    def _decode(self, address, size):
+        if size not in (4, 8) or address % size:
+            raise ValueError('timer needs aligned 32-bit or 64-bit accesses')
+        for kind, addresses, width in [('mtime', (self.map.mtime,), 8),
+                                       ('compare', self.map.mtimecmp, 8),
+                                       ('software', self.map.msip, 4)]:
+            for hart, base in enumerate(addresses):
+                if base <= address and address + size <= base + width:
+                    return kind, hart, 8 * (address - base)
+        raise ValueError('unmapped timer address')
+
+    def read(self, address, size=4):
+        kind, hart, shift = self._decode(address, size)
+        value = self.mtime if kind == 'mtime' else getattr(self, kind)[hart]
+        return (value >> shift) & ((1 << (size * 8)) - 1)
+
+    def write(self, address, value, size=4):
+        kind, hart, shift = self._decode(address, size)
+        if not 0 <= value < 1 << (size * 8):
+            raise ValueError('value exceeds access width')
+        if kind == 'software':
+            self.software[hart] = value & 1
+        else:
+            old = self.mtime if kind == 'mtime' else self.compare[hart]
+            mask = ((1 << (size * 8)) - 1) << shift
+            new = (old & ~mask) | (value << shift)
+            if kind == 'mtime':
+                self.mtime = new
+            else:
+                self.compare[hart] = new
