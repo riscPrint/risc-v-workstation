@@ -68,6 +68,8 @@ def register(sub) -> None:
 
     from rvw.sim.cli import register as register_sim
     register_sim(rs)
+    from . import mmu
+    mmu.register(rs)
 
     r = rs.add_parser("run", help="run suites or a tier; writes C3 results")
     _core_arg(r)

@@ -1576,3 +1576,14 @@ is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal RE
 for the supported subset and initialization limits. This contract is separate from
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
 the recorded restrictions. A wall-time budget does not bound the cycles proved.
+
+### Directed MMU regression inputs
+
+`rvw regress mmu` extends the existing ELF suite flow. It does not change C1–C4.
+Its tool-local formats are `rvw.mmu/1` (scenario description),
+`rvw.mmu-pma/1` (core-owned PMA declarations), `rvw.mmu-build/1` (ELF/hash manifest),
+`rvw.mmu-reference/1` (Spike self-check results) and `rvw.mmu-check/1`
+(C1 completion plus strict C2 oracle comparison). Field rules and limits are in
+`rvw/src/rvw/regress/README.md`. Scenario bins are architectural-effect coverage.
+A declaration or generated program alone gives no coverage. PMA declarations
+are recorded inputs and do not imply PMA device observations.
