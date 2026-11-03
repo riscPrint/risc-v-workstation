@@ -560,3 +560,36 @@ external-input synchronization.
 FP state: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10). Unread CSR effects: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87). Faulting accesses: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Hypervisor state: [#114](https://github.com/riscPrint/risc-v-workstation/issues/114). Debug state: [#136](https://github.com/riscPrint/risc-v-workstation/issues/136). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75). WFI: [#149](https://github.com/riscPrint/risc-v-workstation/issues/149).
 
 Retained limit: The comparison matrix bounds every match. Synchronization is not a timing or device proof. Little-endian scalar C2 evidence, refused unknown input structures and incomplete runtime dependency capture remain explicit restrictions.
+## Reference interrupt devices
+
+`rvw.cosim.devices.Plic` is a deterministic level-triggered PLIC reference.
+`PlicMap` takes absolute register addresses and dimensions from the caller.
+It supports priority, threshold, enable words, pending bits and claim/complete.
+Source zero is reserved. Equal priorities select the lowest source ID.
+Claim ignores the threshold. Completion reopens the level gateway.
+Calls form one ordered sequence. Apply concurrent inputs in a declared order.
+Unmapped or unsupported access widths raise `ValueError`.
+
+Run the directed suite and native Spike oracle:
+
+```sh
+RVW_DEVICE_SPIKE_PREFIX=/path/to/spike nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices -q
+```
+
+The prefix must have matching Spike headers and libraries. The tests compile
+`spike_devices.cc` and use Spike's `plic_t` directly. The oracle uses two harts
+with M/S contexts. Native oracle tests skip when the prefix is absent.
+The Python model has global pending state and level gateways. Spike's device
+has its own context bookkeeping. Oracle tests cover only the common sequence
+in the test. They do not establish equivalence for all context races.
+These models do not connect an RTL bus or establish DUT device coverage.
+The current BOOM and VexRiscv adapters do not implement a PLIC.
+
+### Decisions and limits
+
+Keep addresses and context dimensions in project data or caller data.
+Keep reference-device tests separate from instruction co-simulation.
+Do not use a DUT MMIO read as the expected device state.
+Edge gateways, bus errors, asynchronous CDC and arbitrary PLIC register WARL
+behavior are outside this model. `max_priority` must be a contiguous low-bit mask.
