@@ -16,7 +16,7 @@ runner. The shared macOS host is not a clean-install host.
 | Spike | 1.1.1-dev | Linux source `75fb7ef0aa89ae1f9ee361eb84d47753bc8349f8`; macOS Homebrew | Prior arm64 Homebrew co-simulation; Linux pin pending |
 | Sail RISC-V model | 0.15 | `549e723031b34b5ffea5bbb56367be15c7a38a9e` | Prior co-simulation; separate archive installer pending |
 | gem5 | 25.1.0.1 | `c8222cc67a399bfc01e8658dd14b30d5bfd634f9` | Existing architecture flow; clean install pending |
-| JDK | 21.0.13 | Host packages; fallback Temurin 21.0.9+10 | Local version probe; fallback warns |
+| JDK | 21.0.13 | Host packages; fallback Temurin 21.0.13+9 | Local version probe; fallback flow pending |
 | sbt | 1.11.7 | Homebrew; Linux archive 1.10.7 | Local version probe; Linux selection warns |
 | RISC-V GCC sources | 2025.01.20 | Fedora `a33dac0251d17a7b74d99bd8fd401bfce87d2aed` and its recorded submodules | Clean source build pending |
 

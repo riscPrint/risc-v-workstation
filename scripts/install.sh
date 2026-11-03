@@ -312,10 +312,10 @@ temurin_jdk() {
   case "$arch" in x86_64) arch=x64 ;; aarch64|arm64) arch=aarch64 ;; *) fail "No Temurin JDK for $arch" ;; esac
   run mkdir -p "$tools/downloads" "$tools/jdk21"
   case "$arch" in
-    x64) checksum=810d3773df7e0d6c4394e4e244b264c8b30e0b05a0acf542d065fd78a6b65c2f ;;
-    aarch64) checksum=edf0da4debe7cf475dbe320d174d6eed81479eb363f41e38a2efb740428c603a ;;
+    x64) checksum=d7f5d5cf865a2902b70ff549b97586a7d3f234e016f041ab447ea740c7d66d1c ;;
+    aarch64) checksum=e3522e707fc7dbe2a72c30746b1e7068301a0213ecd213d4491f35a14eb55578 ;;
   esac
-  jdk_url="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.9%2B10/OpenJDK21U-jdk_${arch}_linux_hotspot_21.0.9_10.tar.gz"
+  jdk_url="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_${arch}_linux_hotspot_21.0.13_9.tar.gz"
   run curl -fL --retry 3 "$jdk_url" -o "$tools/downloads/jdk.tar.gz"
   verify_archive "$tools/downloads/jdk.tar.gz" "$checksum"
   run tar -xzf "$tools/downloads/jdk.tar.gz" --strip-components=1 -C "$tools/jdk21"
