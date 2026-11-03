@@ -82,8 +82,15 @@ Fixed memory latency applies to fetches and loads. Without it, the recorded seed
 selects waits from zero to three cycles. Stores have no response channel.
 
 Database extraction uses the same `VexTop` configuration. It captures the core
-and adapter source roots. PDG, block and HGLDD exports are disabled. Navigation
-uses the direct graph. These checks do not prove full ISA, privileged-mode,
+and adapter source roots. PDG, block and HGLDD exports are enabled. Export them with
+`rvw query export pdg pdg.json`, `rvw query export blocks blocks.json.gz` and
+`rvw query export hgldd VexTop.dd`. Navigation uses the direct graph. It remains
+partial evidence: graph edges show possible structural influence. They do not
+show the active cause in a cycle. The default PDG naming phase adds probe wires,
+so its HGLDD requires the database RTL. For a plain simulation VCD, use a
+separate database built with `rvw/build-db.sh rv32im plain/design.db --no-pdg`.
+Keep that RTL separate from the PDG-named RTL. The launcher accepts the shared
+SpinalDB options after `OUT`. These checks do not prove full ISA, privileged-mode,
 interrupt, formal or hardware correctness.
 
 ## Adapter controls
