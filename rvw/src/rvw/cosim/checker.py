@@ -242,6 +242,17 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                         raise ValueError(f"reference cannot observe CSR {address}")
                     if value != snapshot[address]:
                         diff[f"csr[{address}]"] = {"expected": hex(snapshot[address]), "actual": hex(value)}
+            if "fault_access" in actual:
+                from .fault import reference_fault
+                access = actual["fault_access"]
+                if access["completed_rmask"] or access["completed_wmask"]:
+                    raise ValueError("partial fault effects are unsupported by this reference interface")
+                if getattr(model, "name", "spike") != "spike":
+                    raise ValueError("reference cannot check fault-access records")
+                reference_access = reference_fault(expected, platform.xlen)
+                for key, value in access.items():
+                    if value != reference_access[key]:
+                        diff[f"fault_access.{key}"] = {"expected": reference_access[key], "actual": value}
             # Trace quirk declared by the platform: mode reported after an xRET or trap took effect.
             # The next instruction's mode is still checked, so a wrong return mode is caught there.
             if ("mode" in diff and platform.mode_after_change

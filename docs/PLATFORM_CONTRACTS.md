@@ -279,6 +279,34 @@ must refuse version 2 comparison. Version 1 keeps its integer-only scope.
 Version 2 does not imply that a DUT adapter exports these fields.
 FLEN above 64, vectors and per-hart state remain unsupported.
 
+C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
+Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
+The key set must equal the declared set. Values are full XLEN state after the
+instruction and synchronous trap entry, before the next reference step.
+These snapshots check effects even if software never reads the CSR. They do
+not assert that every changed CSR was captured. No CSR snapshot uses read
+synchronization or a platform mask. Counters and external pending state can
+differ with timing; include them only when the adapter can supply the same
+architectural observation point. An unavailable backend CSR is an error.
+
+Version 2 trap instructions can include `fault_access` with exactly these fields:
+`addr` (XLEN hex virtual start address, access-relative), `rmask`, `wmask`,
+`completed_rmask`, `completed_wmask` (integer byte masks), `rdata`, `wdata`.
+Attempted masks describe bytes requested by the instruction, not successful
+transfers. Completed masks must be subsets of the respective attempted masks.
+Data is XLEN hex with valid bytes only in completed lanes. With no completed
+lanes, data must be JSON null. Unknown data must never come from the reference.
+Legacy `mem_*` fields still describe completed effects. A missing fault record
+makes no claim about attempted accesses. This extension describes data accesses;
+instruction fetch faults still use trap cause/tval.
+
+Spike checks zero-completion, uncompressed scalar load/store attempts for width
+codes 0..3. It computes address and width from its own instruction and pre-step
+registers, then checks the synchronous cause. Other encodings, partial effects,
+and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Partial records define validity but do not establish checker support.
+
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
@@ -1028,13 +1056,3 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
-
-C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
-Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
-The key set must equal the declared set. Values are full XLEN state after the
-instruction and synchronous trap entry, before the next reference step.
-These snapshots check effects even if software never reads the CSR. They do
-not assert that every changed CSR was captured. No CSR snapshot uses read
-synchronization or a platform mask. Counters and external pending state can
-differ with timing; include them only when the adapter can supply the same
-architectural observation point. An unavailable backend CSR is an error.

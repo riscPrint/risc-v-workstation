@@ -104,6 +104,26 @@ class Trace:
                     if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
                         raise ValueError("csr_state must contain exactly the declared snapshot addresses")
                     obj["csr_state"] = {k: hexnum(v, xlen) for k, v in snapshots.items()}
+                if "fault_access" in obj:
+                    if self.header["schema"] != "rvw.rvfi/2" or "event" in obj or not obj["trap"]:
+                        raise ValueError("fault_access requires a version 2 trap instruction")
+                    access = obj["fault_access"]
+                    keys = {"addr", "rmask", "wmask", "completed_rmask", "completed_wmask", "rdata", "wdata"}
+                    if not isinstance(access, dict) or set(access) != keys:
+                        raise ValueError("invalid fault_access fields")
+                    access["addr"] = hexnum(access["addr"], xlen)
+                    for key in ("rmask", "wmask", "completed_rmask", "completed_wmask"):
+                        if type(access[key]) is not int or not 0 <= access[key] < 1 << (xlen//8):
+                            raise ValueError("invalid fault-access mask")
+                    for direction in ("r", "w"):
+                        completed = access[f"completed_{direction}mask"]
+                        if completed & ~access[f"{direction}mask"]:
+                            raise ValueError("completed mask exceeds attempted mask")
+                        data = access[f"{direction}data"]
+                        if completed:
+                            access[f"{direction}data"] = hexnum(data, xlen)
+                        elif data is not None:
+                            raise ValueError("uncompleted access data must be null")
                 yield obj
             except (ValueError, KeyError, TypeError) as exc:
                 raise ValueError(f"C2 line {line}: {exc}") from exc

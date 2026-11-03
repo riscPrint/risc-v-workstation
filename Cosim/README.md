@@ -575,3 +575,12 @@ or sstatus to check FS dirty-state transitions. The adapter must resolve the
 state after each retirement, including each slot of a multi-retire cycle.
 Only the declared CSR set is covered. Sail has no snapshot API and refuses
 these records. Timing-dependent CSRs need an agreed observation point.
+
+### Fault-access records
+
+C2 version 2 separates attempted data accesses from completed `mem_*` effects.
+`fault_access` uses access-relative byte lanes even with `aligned_mem=true`.
+Spike checks zero-completion uncompressed scalar loads/stores (width codes 0..3)
+using reference operands. Partly completed faults, compressed attempts, unsigned
+load width codes and AMOs are refused. Sail refuses this extension. Null means
+unobserved data. Neither checker fills missing DUT data from the reference.

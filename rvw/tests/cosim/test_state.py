@@ -90,3 +90,34 @@ def test_backend_cannot_snapshot(tmp_path):
     row['csr_state'] = {'0x300': '0x0'}
     with pytest.raises(ValueError, match='cannot check CSR'):
         run(tmp_path, row, header=h)
+
+
+def fault_fixture():
+    h, row = fixture()
+    row.update(trap=True, mem_fault=True, fd_valid=False, insn='0x2083')
+    row['fault_access'] = dict(addr='0x0', rmask=15, wmask=0,
+                              completed_rmask=0, completed_wmask=0, rdata=None, wdata=None)
+    model = Model(row)
+    model.effect.update(cause=5, before=[0]*32, intr=False)
+    return h, row, model
+
+
+def test_fault_attempt(tmp_path):
+    h, row, model = fault_fixture()
+    assert run(tmp_path, row, model, h)['status'] == 'match'
+    row['fault_access']['addr'] = '0x4'
+    assert 'fault_access.addr' in run(tmp_path, row, model, h)['mismatch']['differences']
+
+
+def test_fault_partial_refused(tmp_path):
+    h, row, model = fault_fixture()
+    row['fault_access'].update(completed_rmask=1, rdata='0x0')
+    with pytest.raises(ValueError, match='partial fault'):
+        run(tmp_path, row, model, h)
+
+
+def test_unknown_fault_data_not_filled(tmp_path):
+    h, row, model = fault_fixture()
+    row['fault_access']['rdata'] = '0x0'
+    with pytest.raises(ValueError, match='must be null'):
+        run(tmp_path, row, model, h)
