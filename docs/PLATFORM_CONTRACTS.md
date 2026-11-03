@@ -215,6 +215,11 @@ program wrote an odd value other than 1 to `tohost` (`fail_code` is the value >>
 HDL assertion or simulation exception; `rvfi_error` the riscv-formal monitor flagged an error;
 `error` the harness itself failed (bad ELF, build failure).
 
+C1 `run` and `run-many` exit 2 for `status: error`, including input errors before
+model compilation. This takes priority over missing-evidence markers such as missing RTL.
+Otherwise they exit 3 for an explicit `inconclusive` marker, 0 when all runs pass,
+and 1 for other run failures. Error results remain unsuitable as core evidence.
+
 ## C2. RVFI trace (`rvfi.jsonl`)
 
 First line is a header, then one object per retired instruction in `order`:

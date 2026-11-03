@@ -63,7 +63,8 @@ class GenericAdapterSpec extends AnyFunSuite {
         val adapter = new Adapter(xlen)
         val job = RunJob(file, new File(dir, "out"), "test", 1, false, 100, None,
           false, false, false, None, None, false, false)
-        val result = new Driver(adapter).runOne(job)
+        val driver = new Driver(adapter)
+        val result = driver.runOne(job)
         assert(ujson.read(new File(job.out, "result.json"))("status") == result("status"))
         if (xlen == elfXlen) {
           assert(result("status").str == "fail")
@@ -72,6 +73,14 @@ class GenericAdapterSpec extends AnyFunSuite {
           assert(result("status").str == "error")
           assert(result("message").str.contains(s"ELF XLEN $elfXlen does not match adapter XLEN $xlen"))
           assert(result("cycles").num == 0 && result("instret").num == 0)
+          assert(adapter.compiled == 0 && adapter.executed == 0)
+          val options = Map("elf" -> file.getPath, "out" -> new File(dir, "cli").getPath,
+            "config" -> "test", "seed" -> "1", "json" -> "true")
+          assert(driver.cmdRun(options) == 2)
+          val manifest = new File(dir, "jobs.jsonl")
+          Files.write(manifest.toPath, ujson.write(ujson.Obj("elf" -> file.getPath,
+            "out" -> new File(dir, "batch").getPath, "config" -> "test", "seed" -> 1)).getBytes("UTF-8"))
+          assert(driver.cmdRunMany(Map("manifest" -> manifest.getPath, "json" -> "true")) == 2)
           assert(adapter.compiled == 0 && adapter.executed == 0)
         }
       } finally org.apache.commons.io.FileUtils.deleteDirectory(dir)
