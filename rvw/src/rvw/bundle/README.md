@@ -375,3 +375,10 @@ What the wave shows, and what it does not:
   argument, not a demonstrated result: it holds if a store from another agent changes the line between
   the two loads' data returns, which this run does not show. Restoring the order-failure replay of the
   younger load is the likely fix, but that is a decision for the core, not made here.
+
+### Historical adapter limits
+
+A source revision can predate the current adapter API. A failed build is a skipped
+endpoint. The result marks it `inconclusive: true`. It does not identify a guilty
+commit. Use a compatible adapter before repeating the comparison. Do not use
+`--no-verify` to turn an untested endpoint into evidence.
