@@ -29,6 +29,10 @@ jobs:
       - name: Warm the classpath used by Python extraction tests
         working-directory: SpinalDB/spinaldb
         run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
+      - name: Create the Python environment used by launcher scripts
+        run: |
+          python -m venv rvw/.venv
+          echo "$GITHUB_WORKSPACE/rvw/.venv/bin" >> "$GITHUB_PATH"
       - run: python -m pip install -e './rvw[dev,mcp]' 
       - name: Full Python collection (fast and slow; optional native tools can skip)
         run: python -m pytest rvw/tests --strict-markers -q -ra --durations=20 --junitxml=nightly-results.xml
