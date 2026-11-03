@@ -83,6 +83,12 @@ def run(o):
     if core and os.path.exists(os.path.join(core, "build-broken")):
         sys.exit("build failed")
     fc = fail_cycle(seed, lat, o.get("elf"))
+    if os.environ.get('FAKE_INSN_OFFSET'):
+        with open(o['elf'], 'rb') as f:
+            f.seek(int(os.environ['FAKE_INSN_OFFSET']))
+            fc = 700 if f.read(4) != bytes.fromhex('13000000') else None
+    if os.environ.get('FAKE_IRQ'):
+        fc = 700 if '100:0x80' in o.get('irq-schedule', '').split(',') else None
     hang = int(os.environ["FAKE_HANG"]) if os.environ.get("FAKE_HANG") else None
     end = 8000 if hang is None else maxc + 1
     status, msg = "pass", None
@@ -135,6 +141,7 @@ def run(o):
         arts["wave"] = "wave.vcd"
     replay = " ".join([os.path.abspath(__file__), "run", "--elf", o["elf"], "--seed", str(seed),
                        "--max-cycles", str(maxc)] + (["--mem-latency", str(lat)] if lat is not None else [])
+                      + (["--irq-schedule", o["irq-schedule"]] if "irq-schedule" in o else [])
                       + ["--out", out])
     res = {"schema": "rvw.run/1", "core": "fake", "config": o.get("config", "small"), "elf": o["elf"],
            "elf_sha256": hashlib.sha256(open(o["elf"], "rb").read()).hexdigest(), "seed": seed, "max_cycles": maxc, "mem_latency": lat, "status": status,

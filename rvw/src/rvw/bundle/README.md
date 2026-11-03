@@ -150,6 +150,43 @@ What counts as a reproduction:
 - `reduce.json` has `reproduced`; the CLI exits 1 when no trial matched (then the "best" run is the
   original one, and `reduce.md` says so).
 
+### Instruction and interrupt reduction
+
+```sh
+rvw reduce RUN_DIR --modes instructions --instruction-symbol failing_loop --budget 64 --json
+rvw reduce RUN_DIR --modes irq --budget 64 --json
+```
+
+`instructions` accepts a little-endian RISC-V ELF with a nonempty sized symbol
+in an executable section. The symbol must contain only 16-bit or 32-bit
+instructions. Use `.type NAME,@function` and `.size NAME,.-NAME` in assembly.
+The reducer replaces removed instructions with same-size NOPs. It preserves
+addresses, branch offsets, data, and all bytes outside the symbol. It does not
+relocate code. Keep setup, trap handlers, and required exit code outside the
+selected symbol. Repeat `--instruction-symbol` to reduce more than one symbol.
+This mode is separate from integer data reduction with `--symbol`.
+
+`irq` reduces the inline `--irq-schedule` from the saved replay. It removes
+full-level events. It keeps the first event, the original cycle values, event
+order, ELF, seed, memory timing, and other replay options. It never removes the
+schedule option, which would enable device-generated interrupts. Event removal
+can extend a prior level until the next event. Use this mode only when that is a
+valid environment. Required transactions, multi-hart inputs, and arbitrary device
+schedules are not supported in this increment.
+
+Both modes first rerun the unchanged input. Each candidate runs through the
+same conclusive failure-signature and hang checks as the other modes. A new
+wall timeout or harness error cannot reproduce the failure. An inconclusive
+candidate stops the search. Each accepted removal starts from the last confirmed
+candidate, even if the failure occurs later. The saved best replay uses that input.
+
+Chunk removal uses delta debugging. `streams` records retained instruction or
+event indices and completion for each search. `one_minimal: true` means that no
+single remaining item can be removed under the tested predicate at that stage.
+It does not prove a global minimum. `budget_exhausted` and `inconclusive` stop
+reasons never claim local minimality. All trials, including initial confirmation,
+count against `--budget`. Later modes can change the search context.
+
 ## rvw bisect
 
 Finds the first core commit with the failure signature. It never touches the shared checkout: it makes
@@ -310,7 +347,7 @@ re-run layer (fresh attempt directories, process-tree timeouts, replay paths, C1
   Binary search reports the smallest tested failing value. It proves the minimum only with
   a declared monotone failure or a complete exhaustive search. Symbol metadata cannot
   replace C1 run fields. Only integer data symbols are reduced. Without `:BYTES`, accept
-  only 1, 2, 4 or 8 byte symbols. Instruction-stream reduction is not implemented.
+  only 1, 2, 4 or 8 byte symbols. Instruction reduction uses sized executable ELF symbols and NOP replacement.
 - Derive snapshots from VCD/FST. A covering wave must reach the failing cycle's edge and
   have a known cycle mapping. Otherwise rerun or label the snapshot with its actual end.
   Unknown values cannot prove an empty queue, stall, fire or completed request. Collect

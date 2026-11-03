@@ -18,6 +18,7 @@ def mcp_tools():
                 "modes": {**S, "default": "cycles,seeds,latency", "description": "comma-separated mode names"},
                 "seeds": {**I, "default": 12}, "seed_start": {**I, "default": 1},
                 "latencies": {**S, "default": "1,2,5,10,20,50", "description": "comma-separated fixed latencies"},
+                "instruction_symbol": {"type": "array", "items": S, "description": "sized executable ELF symbols; adds instructions mode"},
                 "symbol": {"type": "array", "items": S, "description": "NAME[:BYTES] data symbols; adds symbols mode"},
                 "margin": {**I, "default": 100}, "hang_cycles": {**I, "minimum": 1, "default": 5000},
                 "jobs": {**I, "minimum": 1, "default": 1}, "batch": {**I, "minimum": 1, "default": 4},

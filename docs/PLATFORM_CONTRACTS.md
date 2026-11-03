@@ -522,6 +522,22 @@ Snapshot counts use `?/N` when any input is unknown or absent. A snapshot table 
 `unknown_entries`, a list of `{"#": index, "value": value}` keys whose live state is unknown.
 An empty `rows` list with unknown entries does not prove that the table is empty.
 
+### Reduction and bisect reports
+
+`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL` or `irq`.
+Each entry has `original`, `remaining`, `kept` (zero-based input indices),
+`completion`, `one_minimal`, and `global_minimum` (always false).
+IRQ indices exclude the fixed initial event from the search, but still refer to
+the full original schedule. Completion is `one_minimal`, `initial_not_reproduced`,
+`inconclusive`, or `budget_exhausted`. `one_minimal` applies only to that search's
+context. It proves no global minimum. Top-level `budget_exhausted` reports whether
+the trial count reached the configured limit. The best replay includes the
+captured candidate ELF and the reduced inline schedule. Every candidate uses the
+shared conclusive reproduction rules. Integer data reduction stays in `symbols`.
+
+`rvw.bisect/1` marks `result.inconclusive: true` when endpoint verification
+stops on a skipped run. It cannot publish `first_bad` for that result.
+
 ## C6. Design database (`rvw query`)
 
 One elaboration of a Spinal design, written by `SpinalDB` as a SQLite file with schema
