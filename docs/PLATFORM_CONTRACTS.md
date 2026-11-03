@@ -1034,3 +1034,14 @@ in Arch/README.md, Memory observations. Reports preserve all input counters,
 observation identities and evidence hashes. Missing metrics are null and listed
 as unobserved. Status reported means arithmetic completed. It does not validate
 the producer's mapping or establish the cause of contention.
+
+### C9 bounded experiment extension
+
+`rvw.arch-sweep/1` declares parameters (dotted paths to value arrays), max_points
+and timeout_s. `rvw arch sweep` and MCP arch_sweep implement the limits and
+identity rules in Arch/README.md, Small design-space sweeps. Unknown fields
+are errors. `rvw.arch-dse/1` records the input hash, model-only point records,
+objective and speed-only Pareto list. Its status is reported only when all
+points produced reports; otherwise it is inconclusive (CLI exit 3).
+SQLite points retain completed and incomplete trials. Null area and power
+and unquantified uncertainty must not be interpreted as zero cost or confidence.

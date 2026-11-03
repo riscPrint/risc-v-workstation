@@ -2,6 +2,7 @@
 from types import SimpleNamespace
 import pytest
 from test_arch_model import model, description
+from test_arch import native_fixture
 
 
 def topology():
@@ -53,3 +54,15 @@ def test_invalid_topology(description, key, value):
     description['soc'] = soc
     with pytest.raises(ValueError):
         model.validate_description(description)
+
+
+def test_soc_calibration_requires_matching_rtl(native_fixture, tmp_path):
+    import json
+    from rvw.arch import core
+    description = native_fixture.parent / 'description.json'
+    data = json.loads(description.read_text())
+    data['soc'] = topology()
+    description.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='matching RTL'):
+        core.calibrate(native_fixture, 'fixture-0', tmp_path / 'refused')
+    assert not (tmp_path / 'refused').exists()

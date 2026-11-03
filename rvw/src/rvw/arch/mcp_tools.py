@@ -16,6 +16,9 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec('arch_sweep', 'Run a bounded serial gem5 sweep. Retain model-only identities and SQLite results.',
+                 schema({'spec': {'type': 'string'}, 'out': {'type': 'string'}, **common}, ['spec', 'out']),
+                 handler('rvw.arch.cli', 'sweep'), long=True),
         ToolSpec('arch_memory_report', 'Report declared memory observations. Missing metrics stay unobserved.',
                  schema({'observations': {'type': 'string'}, 'project': {'type': 'string'}}, ['observations']),
                  handler('rvw.arch.cli', 'memory-report'), long=True),

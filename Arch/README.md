@@ -202,3 +202,51 @@ Use separate regions for sequential bandwidth, dependent pointer-chase latency,
 and concurrent-traffic contention experiments. Record every active traffic
 agent and the observation boundary in the mapping. This command does not
 generate or run microbenchmarks, infer interference, or extract gem5 counters.
+
+## Small design-space sweeps
+
+Create a project-owned sweep file:
+
+```json
+{
+  "schema": "rvw.arch-sweep/1",
+  "parameters": {"cpu.fetchWidth": [2, 4], "dcache.assoc": [2, 4]},
+  "max_points": 4,
+  "timeout_s": 120
+}
+```
+
+```sh
+rvw arch sweep sweep.json --bench median --out out/sweep-1 --json
+```
+
+MCP provides `arch_sweep` with the same inputs. The output directory must be
+new. Build the selected workloads first. The command captures workload bytes
+once. Each candidate uses those bytes. Dotted paths replace existing scalar
+fields of the same type. Array indices use decimal path parts, for example
+`soc.levels.0.assoc`. Allowed roots are cpu, icache, dcache, soc, bus_bytes,
+and memory_latency. No core-specific preset mapping is added.
+
+The Cartesian product must fit `max_points` (1 to 32). The command refuses
+more than 64 model processes before running any point. `timeout_s` bounds
+each process, from above zero to 3600 seconds. Thus the process-time budget
+is points times workloads times timeout_s. Lock wait and tool checks are
+outside this budget. Runs remain serial under the gem5 lock. This tool does
+not dispatch to a farm or run RTL.
+
+Each point ID is SHA-256 of canonical JSON with the effective description,
+ordered workload IDs and hashes, model source hash and gem5 binary hash.
+The point keeps identity.json, the description, model source and raw evidence.
+The root keeps project data, the sweep and captured ELFs. Equal identities
+can reproduce the same inputs. They do not guarantee equal timing across hosts.
+The command does not resume or reuse an earlier run.
+
+`results.sqlite` has a `points` table with id, status, cycles, and result_json.
+Each point is committed as inconclusive before launch and updated after the
+run. Failed points retain their error and cannot enter the frontier. `dse.json`
+contains all point records and a Pareto list for the single objective: minimize
+the sum of selected ROI cycles. Each workload has equal weight. Ties remain.
+This is a speed-only frontier. Area, power and uncertainty are unknown. All
+points are model-only and need RTL confirmation. Multi-objective area/power
+trade-offs, uncertainty intervals and RTL confirmation remain open work.
+A partial sweep reports inconclusive and exits 3. Input errors exit 2.

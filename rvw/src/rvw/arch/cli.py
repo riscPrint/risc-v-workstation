@@ -5,6 +5,9 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == "sweep":
+        from .dse import sweep
+        return sweep(**kw)
     if action == "memory-report":
         from .memory import memory_report
         return memory_report(**kw)
@@ -19,7 +22,7 @@ def _run(args):
         result = execute_json(args.arch_action, **kw)
         text = json.dumps(result, indent=2, allow_nan=False)
         print(text if args.json or args.arch_action != 'calibrate' else core.summary(result))
-        return 0
+        return 3 if result.get("status") == "inconclusive" else 0
     except (ValueError, OSError, KeyError, TypeError) as exc:
         if args.json:
             print(json.dumps({'error': str(exc)}, allow_nan=False))
@@ -34,6 +37,12 @@ def register(subparsers):
     p = sub.add_parser('memory-report')
     p.set_defaults(func=_run)
     p.add_argument('observations')
+    p.add_argument('--json', action='store_true')
+    p = sub.add_parser('sweep')
+    p.set_defaults(func=_run)
+    p.add_argument('spec')
+    p.add_argument('--out', required=True)
+    p.add_argument('--bench')
     p.add_argument('--json', action='store_true')
     for action in ('build', 'run', 'calibrate', 'compare'):
         p = sub.add_parser(action)

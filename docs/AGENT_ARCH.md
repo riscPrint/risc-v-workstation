@@ -7,6 +7,11 @@ Read [Arch/README.md](../Arch/README.md) and
 [contract C9](PLATFORM_CONTRACTS.md#c9-native-architecture-models) for the model
 and report limits.
 
+For optional SoC topology, declared memory observations, and bounded model-only
+sweeps, use the matching sections of [Arch/README.md](../Arch/README.md).
+SoC descriptions cannot use this playbook's fixed-latency C1 calibration.
+The sweep frontier covers speed only; area, power and uncertainty stay unknown.
+
 gem5 shows trends. RTL is the truth. A report measures a model gap. It does not
 give a correctness result, a C4 gate verdict, or complete C8 evidence.
 
