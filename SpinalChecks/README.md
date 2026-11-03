@@ -486,3 +486,18 @@ Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
 covers count transitions, inhibit, filtering, writes and modular wrap. It does
 not check privilege faults, RV32 half accesses, event selector CSRs or counter
 interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
+
+### Value connectivity model
+
+`ConnectivityChecks.bind(name, source, destination, enable, latency)` checks equal
+width values at a nonnegative fixed latency. Each enabled sample creates an
+obligation. Enable is sampled with the source and delayed with its value.
+Reset clears pipeline-valid state. Mode conditions can be included in enable.
+Run `sbt "testOnly spinalchecks.ConnectivityChecksSpec"` under the `sbt` lock.
+The reference has zero-cycle and one-cycle paths with injected transfer faults.
+
+This emits `connectivity.value` assertions for simulation or a formal backend.
+Simulation checks exercised transfers only. It is not a structural proof.
+SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
+formal qualification remain open under #107. No proof result is inferred from
+successful elaboration or simulation.
