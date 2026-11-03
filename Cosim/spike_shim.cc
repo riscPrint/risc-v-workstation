@@ -26,7 +26,7 @@ struct Effect {
 struct Region { uint64_t base, size; };
 struct Machine : simif_t {
   cfg_t cfg;
-  std::string isa;
+  std::string isa, privilege;
   std::vector<Region> ram, io;
   std::map<uint64_t, std::array<char,4096>> pages;
   std::map<size_t, processor_t*> harts;
@@ -36,15 +36,26 @@ struct Machine : simif_t {
   uint64_t io_addr = 0, io_value = 0;
   bool inject = false;
   Machine(const char* instruction_set, const uint64_t* regions, size_t nr,
-          const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp) : isa(instruction_set) {
-    cfg.isa = isa.c_str(); cfg.priv = "MSU"; cfg.hartids = {0};
-    cfg.pmpregions = pmp; cfg.misaligned = false;
+          const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp,
+          const char* modes, bool misaligned, bool absent_pmp_zero)
+      : isa(instruction_set), privilege(modes) {
+    cfg.isa = isa.c_str(); cfg.priv = privilege.c_str(); cfg.hartids = {0};
+    cfg.pmpregions = pmp; cfg.misaligned = misaligned;
     cfg.mem_layout.clear();
     for (size_t i=0;i<nr;i++) { ram.push_back({regions[2*i],regions[2*i+1]});
       cfg.mem_layout.emplace_back(regions[2*i],regions[2*i+1]); }
     for (size_t i=0;i<ni;i++) io.push_back({mmio[2*i],mmio[2*i+1]});
     log = tmpfile(); if (!log) throw std::runtime_error("cannot create Spike diagnostic stream");
     cpu = std::make_unique<processor_t>(cfg.isa,cfg.priv,&cfg,this,0,false,log,sout);
+    if(absent_pmp_zero) {
+      if(pmp) throw std::runtime_error("absent PMP zero policy requires no PMP regions");
+      auto* state=cpu->get_state();
+      // const_csr_t keeps normal CSR privilege checks and ignores writes.
+      for(unsigned addr=0x3a0;addr<=0x3ef;addr++) {
+        if(addr<0x3b0 && cpu->get_xlen()==64 && (addr&1)) continue;
+        state->add_csr(addr,std::make_shared<const_csr_t>(cpu.get(),addr,0));
+      }
+    }
     harts[0] = cpu.get();
     cpu->enable_log_commits(); cpu->set_debug(true);
     cpu->get_state()->pc = pc;
@@ -84,6 +95,30 @@ struct Machine : simif_t {
       auto dis=cpu->get_disassembler()->disassemble(fetch.insn);
       snprintf(e.disasm,sizeof(e.disasm),"%s",dis.c_str());
     } catch(...) { snprintf(e.disasm,sizeof(e.disasm),"<instruction fetch fault>"); }
+    // Refuse emulated split accesses before execution. A fault on the second
+    // part could leave partial stores that scalar C2 cannot report.
+    if(cfg.misaligned) {
+      insn_t insn(e.insn);
+      unsigned op=e.insn&0x7f, f=(e.insn>>12)&7, width=0, rs=0;
+      int64_t offset=0;
+      if((e.insn&3)==3 && (op==3 || op==7 || op==0x23 || op==0x27)) {
+        width=1u<<(f&3); rs=insn.rs1();
+        offset=(op==3 || op==7) ? insn.i_imm() : insn.s_imm();
+      } else if((e.insn&3)!=3) {
+        unsigned q=e.insn&3, cf=(e.insn>>13)&7;
+        if((q==0 || q==2) && (cf==1 || cf==2 || cf==3 || cf==5 || cf==6 || cf==7)) {
+          bool word=cf==2 || cf==6 || (cpu->get_xlen()==32 && (cf==3 || cf==7));
+          width=word ? 4 : 8;
+          rs=q==0 ? insn.rvc_rs1s() : 2;
+          offset=q==0 ? (word ? insn.rvc_lw_imm() : insn.rvc_ld_imm()) :
+            cf<4 ? (word ? insn.rvc_lwsp_imm() : insn.rvc_ldsp_imm()) :
+                   (word ? insn.rvc_swsp_imm() : insn.rvc_sdsp_imm());
+        }
+      }
+      uint64_t addr=(s->XPR[rs]+offset) & (cpu->get_xlen()==32 ? 0xffffffffULL : ~0ULL);
+      if(width && addr%(cpu->get_xlen()/8)+width>cpu->get_xlen()/8)
+        throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
+    }
     // Spike's load log stores addresses and sizes, but not raw load values.
     // Preserve the pre-store value of AMOs (including rd=x0); ordinary loads
     // can be observed after execution because this platform has inert MMIO.
@@ -136,6 +171,14 @@ struct Machine : simif_t {
       }
       if(s->log_mem_read.size()>1 || s->log_mem_write.size()>1)
         throw std::runtime_error("multiple memory accesses cannot be represented by scalar C2");
+      // Scalar C2 has one address and no bus transaction/partial-effect records.
+      // Refuse split-word/page completion even if the reference can execute it.
+      auto check_split = [&](const auto& accesses) {
+        for(auto [addr,data,size]:accesses)
+          if(size && addr/(cpu->get_xlen()/8)!=(addr+size-1)/(cpu->get_xlen()/8))
+            throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
+      };
+      check_split(s->log_mem_read); check_split(s->log_mem_write);
       auto reads=s->log_mem_read;
       auto writes=s->log_mem_write;
       for(auto [addr,data,size]:reads) {
@@ -168,15 +211,15 @@ static thread_local std::string error;
 #endif
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
-// 2: an injected interrupt bit is restored to its stored value after the step (round 10).
-unsigned rvw_shim_version() { return 2; }
+// 3: explicit privilege, misaligned and absent-PMP platform arguments.
+unsigned rvw_shim_version() { return 3; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
 const char* rvw_error() { return error.c_str(); }
 void* rvw_create(const char* isa,const uint64_t* ram,size_t nr,const uint64_t* io,size_t ni,
-                 uint64_t pc,unsigned pmp) {
-  try { return new Machine(isa,ram,nr,io,ni,pc,pmp); }
+                 uint64_t pc,unsigned pmp,const char* modes,int misaligned,int absent_pmp_zero) {
+  try { return new Machine(isa,ram,nr,io,ni,pc,pmp,modes,misaligned,absent_pmp_zero); }
   catch(const std::exception& ex) { error=ex.what(); return nullptr; }
   catch(...) { error="Spike initialization failed"; return nullptr; }
 }

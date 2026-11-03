@@ -182,6 +182,20 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                         raise ValueError("the model cannot apply illegal_insn_tval=zero (configure it to write zero)")
                     del diff["tval"]
                     model.set_trap_tval(0)
+                # ECALL has one declared value. Never take an arbitrary tval from the core.
+                if (not actual["intr"] and expected["trap"] and not expected["intr"]
+                        and actual["cause"] == expected["cause"]
+                        and expected["cause"] in (8, 9, 11) and expected["insn"] == 0x73):
+                    wanted = 0x73 if platform.ecall_tval == "insn" else 0
+                    if actual["tval"] != wanted:
+                        diff["tval"] = {"expected": wanted, "actual": actual["tval"]}
+                    else:
+                        diff.pop("tval", None)
+                        if expected["tval"] != wanted:
+                            if not hasattr(model, "set_trap_tval"):
+                                raise ValueError("the model cannot apply ecall_tval")
+                            model.set_trap_tval(wanted)
+                            quirks.append({"quirk": "ecall_tval", "value": hex(wanted)})
                 if not expected["trap"]:
                     diff["trap"] = {"expected": False, "actual": True}
                 if diff:

@@ -86,7 +86,7 @@ def build(source, output, prefix=None, compiler=None):
                 raise CaptureError('input_not_captured:shim_build', f'compiler changed private input: {path}')
         capture.verify_tools()
         built = capture.file(binary)
-        manifest = {'schema': 'rvw.spike-build/1', 'shim_version': 2,
+        manifest = {'schema': 'rvw.spike-build/1', 'shim_version': 3,
                     'shim_source_sha256': shim.sha256, 'shim_sha256': built.sha256,
                     'spike_library': libraries['riscv'].resolved,
                     'spike_library_sha256': libraries['riscv'].sha256,

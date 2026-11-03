@@ -16,7 +16,7 @@ from rvw.cosim import build as builder, spike
 SOURCE = r'''
 #include <riscv/options.h>
 extern "C" int dependency_value();
-extern "C" unsigned rvw_shim_version() { return 2; }
+extern "C" unsigned rvw_shim_version() { return 3; }
 extern "C" const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 extern "C" const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
 extern "C" int observed_value() { return CAPTURED_VALUE + dependency_value(); }
