@@ -177,3 +177,28 @@ fixed memory latency cannot describe this topology. Multiple traffic agents,
 multiple controllers, Ruby, and matching RTL interference comparisons remain
 unsupported. `memory_latency` remains required metadata for old report readers;
 it does not set the SoC memory timing.
+
+## Memory observations
+
+`rvw arch memory-report observations.json --json` reports explicit interval
+counters. MCP provides `arch_memory_report`. The input uses schema
+`rvw.memory-observations/1`, engine `gem5` or `rtl`, and a nonempty `observations`
+array. Each row requires string `point`, `region`, `hart`, `workload`, positive
+`duration_ns`, `evidence` (path relative to the input), its `evidence_sha256`,
+and `mapping` (the producer's counter names, units and interval selection).
+One row covers one point, region, hart and workload. Aggregate repeated trials
+before import or give each trial a distinct workload ID.
+
+Optional counters are `bytes`, `transactions`, `latency_ns_sum`, `cache_accesses`,
+`cache_misses`, `outstanding_ns` (the integral of outstanding transactions),
+and `queue_full_ns`. All must be finite and nonnegative. The report computes
+decimal GB/s, mean transaction latency, miss rate, mean outstanding count,
+and full-queue fraction. A missing counter or zero denominator gives null,
+with the metric listed as `unobserved`. Contention causes stay unobserved.
+A hash binds the input and each raw evidence file. Mapping is declared by the
+producer; the tool cannot verify that mapping against arbitrary raw formats.
+
+Use separate regions for sequential bandwidth, dependent pointer-chase latency,
+and concurrent-traffic contention experiments. Record every active traffic
+agent and the observation boundary in the mapping. This command does not
+generate or run microbenchmarks, infer interference, or extract gem5 counters.

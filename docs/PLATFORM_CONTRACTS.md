@@ -1026,3 +1026,11 @@ requires width and the four crossbar latency parameters. Memory selects
 DRAM models are DDR3_1600_8x8 and DDR4_2400_8x8. One classic memory path and
 one controller are supported. The address window does not change.
 SoC runs are model-only. C1 fixed-latency calibration refuses this extension.
+
+### C9 memory interval reports
+
+`rvw.memory-observations/1` and `rvw.memory-report/1` use the fields and units
+in Arch/README.md, Memory observations. Reports preserve all input counters,
+observation identities and evidence hashes. Missing metrics are null and listed
+as unobserved. Status reported means arithmetic completed. It does not validate
+the producer's mapping or establish the cause of contention.

@@ -16,6 +16,9 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec('arch_memory_report', 'Report declared memory observations. Missing metrics stay unobserved.',
+                 schema({'observations': {'type': 'string'}, 'project': {'type': 'string'}}, ['observations']),
+                 handler('rvw.arch.cli', 'memory-report'), long=True),
         ToolSpec('arch_build', 'Locate native gem5 and build bare-metal benchmarks with local GCC.',
                  schema(common), handler('rvw.arch.cli', 'build'), long=True),
         ToolSpec('arch_run', 'Run native gem5 with the selected project description. The output directory must be new.',
