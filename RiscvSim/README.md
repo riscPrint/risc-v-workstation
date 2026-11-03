@@ -272,3 +272,18 @@ These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings
 They have no caches and are not full RISC-V cores. The test checks a known shared
 memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
 Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
+
+## Cache content scoreboard
+
+`MemoryImage` holds independent expected bytes from test stimulus.
+`CacheScoreboard` checks accepted fills, hits, stores and writebacks against it.
+Give it line size, set count and associativity from project data.
+Call `MemoryImage.write` with expected program writes before checking observed
+cache stores. Never copy DUT read values into the oracle. Split cross-line
+transactions in the adapter. Replacement requires explicit eviction; the generic
+checker does not assume LRU. A denied fill cannot install a resident line.
+Instruction invalidation is explicit. `CacheScoreboardSpec` tests self-modifying
+code at the model level, separately from coherence.
+
+Run: `sbt -batch 'testOnly riscvsim.CacheScoreboardSpec'` with the `sbt` lock.
+These tests check the scoreboard. They do not establish RTL cache coverage.
