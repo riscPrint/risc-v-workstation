@@ -1,0 +1,4 @@
+# BOOM channel semantics. One '<exact stream identity path> <reason>' per line.
+# Each entry permits withdrawal and payload replacement before acceptance.
+# Add an entry only after checking both producer and receiver semantics.
+# Keep suspected core defects active. Use waivers.txt for other check kinds.

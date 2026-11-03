@@ -30,7 +30,15 @@ elaborated design and adds:
 | `vec.index` | every dynamic read of a non-power-of-two `Vec` (Spinal `Multiplexer`), one per index signal | `index >= size` |
 | `enum.legal`, `fsm.state_legal` | enum registers whose encoding has unused codes (StateMachine state registers get `fsm.`) | value is not a declared state |
 | `progress.watchdog` | opt-in: `ProgressSpec(name, signalRegex, maxCycles)` | no progress for `maxCycles` cycles (Bools: any high; one wider signal: value changed) |
-| `tilelink.burst_stable` | channels of a Spinal `tilelink.Bus` with multi-beat messages (in addition to the stream rules) | inside a burst (after its first beat was accepted): a header field (opcode, param, size, source, address, ...) differs from the first beat's, or a stalled beat's payload changed. Before the first beat is accepted the message may change (rocket-chip's TLArbiter does; its TLMonitor allows it) |
+| `tilelink.burst_stable` | channels of a Spinal `tilelink.Bus` with multi-beat messages | inside a burst (after its first beat was accepted): a header field (opcode, param, size, source, address, ...) differs from the first beat's, or a stalled beat's payload changed. Before the first beat is accepted the message may change (rocket-chip's TLArbiter does; its TLMonitor allows it) |
+
+| `tilelink.request_legal`, `tilelink.response_legal` | TileLink A/D | illegal opcode, parameter, size, alignment, mask or corrupt flag |
+| `tilelink.source_busy`, `tilelink.response_match` | TileLink A/D | source reuse or response without a matching request opcode and size |
+| `tilelink.release_busy`, `tilelink.release_match` | TileLink C/D | Release source reuse or unmatched ReleaseAck |
+| `tilelink.sink_busy`, `tilelink.sink_match` | TileLink D/E | Grant sink reuse or unmatched GrantAck |
+| `axi4.address_legal` | AXI4 address channels | illegal size, burst, boundary or exclusive address options |
+| `axi4.read_match`, `axi4.read_capacity` | AXI4 AR/R with a declared limit | unmatched ID, wrong last beat, illegal EXOKAY or issuing overflow |
+| `axi4.write_match`, `axi4.write_beats`, `axi4.write_capacity` | AXI4 AW/W/B with a declared limit | unmatched B, wrong W length, illegal EXOKAY or queue overflow |
 
 All checks are inactive while the component's reset is active. `mem.index`, `vec.index` and `enum`
 checks on a register without a reset value are armed once the register is first written (an
@@ -58,7 +66,7 @@ definition `Wrap` holds the name). No path segment is empty.
 
 Selection: `ChecksConfig(enable = globs, disable = globs, waivers = Seq(Waiver(glob, reason)))`, a
 waiver file (`<glob> <reason>` per line; prefer exact ids, as `boom/waivers.txt` does), or environment variables (`SPINALCHECKS_MODE`, `_ENABLE`,
-`_DISABLE`, `_WAIVERS`, `_PROGRESS=name=regex@cycles`). Globs match ids; `*` crosses dots. Waived and
+`_DISABLE`, `_WAIVERS`, `_STREAMS`, `_PROGRESS=name=regex@cycles`). Globs match ids; `*` crosses dots. Waived and
 disabled checks are not inserted, but the report lists them with the reason.
 
 Modes:
@@ -284,10 +292,9 @@ Earlier measurements on BOOM `small`, seed 1:
   `chk_<reg>_write` wire is False at the head of the body and True in every outermost scope that
   assigns the register. A register assigned from another component's scope falls back to "changed
   value", combinationally. A partial assignment (`r(3 downto 0) := ...`) arms the whole register.
-- **TileLink rule next to, not instead of, the stream rules.** The generic `stream.payload_stable` is
-  stricter than TileLink; it stays on every channel where it did not fire, and where it is waived the
-  TileLink rule still checks bursts. Applied only to `tilelink.Bus` channels: the beat protocol belongs
-  to the bus, not to the message type.
+- **TileLink channel semantics.** Strict Stream rules are retained in the report with a
+  protocol reason. TileLink burst and transaction rules remain active. The beat protocol belongs
+  to a `tilelink.Bus`, not to the message type.
 - **Waivers are exact ids.** A glob can silently remove checks that never fired (and the other kind of a
   stream); `boom/waivers.txt` lists one id per fired and triaged check.
 - **Ids are unique per instance.** Ids use identity paths made distinct among siblings before any id
@@ -336,14 +343,66 @@ Earlier measurements on BOOM `small`, seed 1:
   input error. The minimum depths are exact for clocked assertions (tested: the minimum depth finds a
   failure possible in the first cycle after reset).
 
+## Channel semantics and bus checks
+
+Use `ChecksConfig(mayDropValid = Seq(StreamSemantics("path.stream", "reason")))`
+for a Decoupled producer. The pattern matches the stream identity path without
+its check kind. This setting permits both withdrawal and replacement before
+acceptance. It removes the two strict Stream rules. The report retains both
+records and their reason. A reason is required. Use `SPINALCHECKS_STREAMS` to
+load a file with one `<stream path> <reason>` per line. BOOM data belongs in
+`boom/streams.txt`. Generic code does not identify BOOM streams.
+
+TileLink bus channels use protocol semantics automatically. An unaccepted offer
+can change. `tilelink.burst_stable` still checks accepted multibeat messages.
+A Stream that only carries a TileLink payload remains a strict Stream.
+
+The checks target the TileLink subset in SpinalHDL 1.15.0. Its A opcodes are
+Get, PutFullData, PutPartialData, AcquireBlock and AcquirePerm. Hint and atomic
+opcodes are absent from this library version. A/D bookkeeping checks source
+reuse, response opcode and response size. It permits responses in the first
+request cycle. A source is released on the first accepted D beat, as in Rocket's
+TLMonitor. AcquireBlock permits Grant or GrantData. AcquirePerm requires Grant.
+C/D bookkeeping checks Release source reuse and ReleaseAck size.
+D/E bookkeeping checks Grant sink reuse and unmatched GrantAck. Reset clears
+all bookkeeping. Source and sink widths above eight bits are rejected.
+
+AXI address checks target AXI4, including omitted optional fields. They check
+transfer size, reserved burst encoding, FIXED length, WRAP length and alignment,
+and the INCR 4 KiB boundary. WRAP length uses beats minus one. AXI3 is rejected.
+Declare `readIssuingCapability` or `writeIssuingCapability` to add transaction
+checks to `Axi4`, `Axi4ReadOnly` and `Axi4WriteOnly`. Each limit must be in 1..32.
+ID width must not exceed four bits. Read queues check RID, per-ID response order,
+RLAST and EXOKAY. Write queues accept AW and W independently. They check burst
+length, BID and EXOKAY. B responses can reorder across IDs. Queue overflow is a
+reported capacity failure. Reset clears all queue state. A bus without a positive
+limit gets a report note and address checks only. Shared ARW buses are not tracked.
+The checks do not establish data correctness or complete AXI compliance.
+AXI4-Lite has a separate Spinal type and is not discovered by these AXI4 rules.
+
+The small reference designs are in the protocol and reference `*Spec` files. Run them with `sbt test` under the `sbt` lock.
+They inject legal offer changes, source reuse, unmatched responses, response
+opcode and size faults, parameter faults, and AXI address faults.
+
 ## Gaps
 
 - Flow has no rule at all (no handshake, no payload rule); Flows are only X-propagation targets.
 - `vec.index` fires for any out-of-range index whether or not the read value is used, and `mem.index`
   for an asynchronous read port fires whether or not the read data is used (no enable to gate it).
-- TileLink: only burst stability. No source/sink bookkeeping (in-flight ids, responses matching
-  requests) and nothing for AXI yet. Channels of the TileLink message types outside a `tilelink.Bus`
-  get only the generic stream rules.
+- TileLink: probe tracking, negotiated transfer capabilities,
+  B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
+  end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
+  `MasterDriver` and `Monitor`. Its separate memory scoreboard checks Get/Put data,
+  masked writes, response reordering and declared denials. Initialize every read byte.
+  The model serializes operations at complete A acceptance. Concurrent overlapping
+  operations need a separate ordering model. Coherent traffic is rejected.
+  `TileLinkReferenceSpec` connects this model to a small memory with backpressure.
+- AXI4: full exclusive monitor behavior and Shared ARW tracking remain open.
+  `spinalchecks.sim.AxiReference` uses Spinal's master with a separate byte model.
+  `AxiReferenceSpec` connects it to Spinal's subordinate memory model. It tests INCR
+  bursts and a DMA copy with response delays and interruptions. The helper serializes
+  memory operations. Concurrent overlapping memory traffic needs an ordering model.
+  AXI4-Lite needs its own explicit rules and reference designs.
 - `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
 - Components without reset: checks there are always active.
 - xprop wrapper needs a clock port: purely combinational modules (e.g. BOOM's `Arbiter_*`) error out.

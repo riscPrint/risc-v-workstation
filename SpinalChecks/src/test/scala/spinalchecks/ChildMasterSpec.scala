@@ -146,7 +146,8 @@ class ChildMasterSpec extends AnyFunSuite {
         dut.clockDomain.forkStimulus(10)
         dut.clockDomain.waitSampling(12)
         assert(result.inserted.exists(_.id == "tilelink.burst_stable:producer.bus_a"))
-        assert(ChecksSim.firings(dut).map(_.check.id).toSet == Set("tilelink.burst_stable:producer.bus_a"))
+        assert(ChecksSim.firings(dut).map(_.check.id).toSet == Set("tilelink.burst_stable:producer.bus_a",
+          "tilelink.request_legal:producer.bus_a", "tilelink.source_busy:producer.bus_a"))
       }
   }
 

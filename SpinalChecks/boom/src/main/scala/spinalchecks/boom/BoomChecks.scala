@@ -38,7 +38,10 @@ object BoomChecks {
     val base = ChecksConfig(mode = mode, reportPath = report,
       progress = Seq(ProgressSpec("retire", """io_trace_insns_\d+_valid""", sys.env.getOrElse("BOOM_PROGRESS_CYCLES", "20000").toInt)))
     val withWaivers = if (defaultWaivers.exists() && !sys.env.contains("SPINALCHECKS_WAIVERS")) base.withWaiverFile(defaultWaivers.getPath) else base
-    ChecksConfig.fromEnv(withWaivers)
+    val streams = new File("streams.txt")
+    val withStreams = if (streams.exists() && !sys.env.contains("SPINALCHECKS_STREAMS"))
+      withWaivers.withStreamFile(streams.getPath) else withWaivers
+    ChecksConfig.fromEnv(withStreams)
   }
 
   private def flag(args: Seq[String], f: String) = args.contains(f)
