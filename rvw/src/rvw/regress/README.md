@@ -342,3 +342,16 @@ Run and gate return a job ID. Use `job_status(wait_s=60)` for the final CLI JSON
 for progress and `job_cancel` to stop the adapter process tree and release its resource lock.
 The runner still owns locking, cache/resume, provenance and verdict generation. Compare writes
 `verdict.json`; known add/remove update TOML. List/history/known list are read-only.
+
+## Review status and close rules
+
+Waivers and failure signatures remain experimental (#2). The review covers changed RVFI
+messages, stale saved fail codes and status changes. Compare derives RVFI identity from the
+full saved message. Without a monitor code or message, old RVFI evidence needs a rerun.
+A saved fail code overrides its saved signature. Unchanged failures must also have the same status.
+
+The close rule requires negative tests for changed failures, legacy evidence and waiver scope.
+It also requires a policy for wildcard waivers, config-wide waivers and coarse identities
+(cycle timeout, fail code, monitor code or source line). These identities can group different
+root causes. A wildcard can deliberately cover a changed failure. This review does not prove
+that such a waiver is safe. Check each waiver and its full failure evidence before use.

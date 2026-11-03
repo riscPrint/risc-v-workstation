@@ -12,7 +12,7 @@ is `<status>` or `<status>:<detail>`:
     assert:sha256:<digest>    assertion without a location, hash of the full message
     assert:<Type>@Foo.scala:12   testbench exception: its class and the first Scala location
     rvfi_error:105            riscv-formal monitor error, by its error code
-    rvfi_error:<message>      monitor error without a code, message normalized
+    rvfi_error:sha256:<digest>  monitor error without a code, full message hash
     error:<message>           harness error
 """
 from __future__ import annotations
@@ -97,6 +97,7 @@ def failure_signature(status: str, fail_code: int | None = None, message: str | 
             rvfi_code = int(m.group(1)) if m else None
         if rvfi_code is not None:
             return f"rvfi_error:{rvfi_code}"
+        return "rvfi_error:sha256:" + hashlib.sha256((message or "").encode()).hexdigest()
     if status == "assert":
         exc = exception_type(message)
         loc = scala_location(message)

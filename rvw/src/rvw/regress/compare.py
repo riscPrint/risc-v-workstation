@@ -52,6 +52,18 @@ def _source_identity(r: SuiteResults) -> str:
 
 def with_assertion_identity(t: TestEntry) -> TestEntry:
     """Derive assertion identity from complete saved evidence, without changing the input."""
+    if t.status == "fail" and "fail_code" in t.extra:
+        code = t.extra["fail_code"]
+        if isinstance(code, int) and not isinstance(code, bool) and code > 0:
+            return replace(t, signature=failure_signature("fail", fail_code=code))
+        return replace(t, extra={**t.extra, "inconclusive": "invalid fail code; rerun"})
+    if t.status == "rvfi_error":
+        message = t.extra.get("message")
+        if isinstance(message, str) and message:
+            return replace(t, signature=failure_signature("rvfi_error", message=message))
+        if not re.fullmatch(r"rvfi_error:[0-9]+", t.signature or ""):
+            return replace(t, extra={**t.extra, "inconclusive":
+                           "RVFI identity needs a monitor code or full message; rerun"})
     if t.status != "assert":
         return t
     message = t.extra.get("message")
@@ -327,7 +339,7 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                     known_hits.append({**item, "reason": hit.reason, "recorded_at_rev": hit.recorded_at_rev})
                     classified.add(("known", t.signature))
             elif (t.seed in bs and bs[t.seed].conclusive and bs[t.seed].failed
-                  and t.signature == bs[t.seed].signature):
+                  and t.status == bs[t.seed].status and t.signature == bs[t.seed].signature):
                 if ("still", t.signature) not in classified:
                     still.append(item)
                     classified.add(("still", t.signature))

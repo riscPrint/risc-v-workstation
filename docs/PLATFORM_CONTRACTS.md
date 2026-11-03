@@ -330,7 +330,10 @@ used to tell a known failure from a new one (`rvw.results.failure_signature`): e
 `assert:IllegalStateException@Mem.scala:42` (testbench exception), `rvfi_error:105`.
 Assertions use the HDL file and line when there is no Scala location, for example `assert:core.sv:4`.
 Without either location, `assert:sha256:<digest>` binds the full, unnormalized message.
-Compare derives assertion signatures again from saved messages, including older C3 results.
+Uncoded RVFI errors use `rvfi_error:sha256:<digest>` over the full message.
+Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
+Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
+override saved fail signatures. An unchanged failure must also have the same status.
 An assertion without a saved message or a complete location is inconclusive and needs a rerun.
 Test entries and the top level may carry extra keys (e.g. `message`, `fail_code`, `cached`, `perf_metrics`);
 readers ignore keys they do not know. An entry is *inconclusive* (`TestEntry.conclusive` is
