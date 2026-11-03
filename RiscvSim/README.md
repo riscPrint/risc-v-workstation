@@ -251,3 +251,9 @@ Sail cannot synchronize external inputs and refuses this comparison.
 See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
 suites. These use the existing ELF run contract. ACT4 expected signatures
 must come from Sail or the suite, never from a DUT run.
+
+## Atomic and ordering programs
+
+See [the reusable ordering suites](tests/ordering/README.md). They build RV32/RV64
+ELFs, validate assertions on Spike, and produce C1 random-timing manifests.
+Reference and DUT results remain separate from ordering evidence.
