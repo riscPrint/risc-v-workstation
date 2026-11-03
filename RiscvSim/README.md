@@ -301,3 +301,17 @@ These require project channel adapters. It checks modeled permissions, not a
 full implementation of TileLink-C.
 
 Run: `sbt -batch 'testOnly riscvsim.CoherenceMonitorSpec'` with the `sbt` lock.
+
+## Bounded forward progress
+
+`ProgressMonitor(boundCycles, capacity, fairness)` tracks logical requests from
+presentation through completion. Supply the project's arbitration and response
+fairness assumptions as a nonempty string. Call `check` every sampled cycle.
+Keep the same request ID on retry. Retry and unrelated completions cannot renew
+its deadline. Check `finish` at campaign end; pending requests are not success.
+The bound includes backpressure. A fairness violation can trigger the watchdog;
+the monitor cannot distinguish that from a DUT progress failure without channel
+evidence. Capacity is the declared outstanding resource limit.
+This is a bounded test, not an unbounded liveness proof.
+
+Run: `sbt -batch 'testOnly riscvsim.ProgressMonitorSpec'` with the `sbt` lock.
