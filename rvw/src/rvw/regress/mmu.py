@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 
 from rvw.common.proc import run_group
@@ -48,7 +49,7 @@ def load(path):
 
 def validate(s):
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -61,13 +62,17 @@ def validate(s):
         raise ValueError('unsupported access or expectation')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
-    for key in ('sum', 'mxr'):
+    for key in ('sum', 'mxr', 'mprv'):
         if key in s and type(s[key]) is not bool:
             raise ValueError(f'{key} must be boolean')
     for key in ('va', 'pa'):
         n = number(s.get(key, 0x40000000 if key == 'va' else DATA))
         if not 0 <= n < 2**64 or n % 4096:
             raise ValueError(f'{key} must be an unsigned page address')
+    if s.get('satp_mode', 'sv39') not in ('sv39', 'bare'):
+        raise ValueError('satp_mode must be sv39 or bare')
+    if s.get('satp_mode') == 'bare' and (s.get('asid', 0) or s.get('remap')):
+        raise ValueError('bare mode requires ASID zero and no remap')
     if s.get('remap', False):
         if s['level'] != 0 or s['access'] != 'load' or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA:
             raise ValueError('remap requires a successful level-0 load from DATA')
@@ -103,7 +108,7 @@ def assembly(s):
     leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
     fault = s['expect'] == 'page-fault'
     cause = 13 if s['access'] == 'load' else 15
-    status = (1 << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
+    status = (int(s.get('mprv', True)) << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
     status |= int(s.get('sum', False)) << 18 | int(s.get('mxr', False)) << 19
     asid = s.get('asid', 0)
     fence = {'all': 'sfence.vma x0, x0', 'va': 'sfence.vma t3, x0',
@@ -115,11 +120,14 @@ def assembly(s):
 _start:
  la t0, trap
  csrw mtvec, t0
+ csrw mie, zero
+ csrw medeleg, zero
+ csrw mideleg, zero
  li t0, -1
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
- li t0, {(8 << 60) | (asid << 44) | (ROOT >> 12)}
+ li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
  csrw satp, t0
  {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
  sfence.vma x0, x0
@@ -130,7 +138,7 @@ _start:
  csrc mstatus, t0
  li t0, {status}
  csrs mstatus, t0
- li a0, 42
+ li a0, {43 if s['access'] == 'store' else 42}
 access_site:
  {'ld a0, 0(t3)' if s['access'] == 'load' else 'sd a0, 0(t3)'}
  li t0, 0x20000
@@ -155,7 +163,7 @@ check_data:
 '''
     if s['access'] == 'store':
         code += f' li t0, {DATA}\n ld a0, 0(t0)\n'
-    code += ' li t1, 42\n bne a0, t1, fail\n'
+    code += f" li t1, {43 if s['access'] == 'store' else 42}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         code += f''' li t0, {leaf}
@@ -254,20 +262,82 @@ def build(description, out, gcc, pma=None):
 def reference(directory, spike, timeout):
     directory = Path(directory).resolve()
     manifest = json.loads((directory / 'manifest.json').read_text())
+    executable = shutil.which(spike)
+    if not executable:
+        raise ValueError('Spike executable not found')
+    executable = str(Path(executable).resolve())
+    executable_sha256 = digest(executable)
+    version = run_group([executable, '--help'], capture=True, timeout=10)
     rows = []
     for s in manifest['scenarios']:
         elf = directory / s['elf']
         if digest(elf) != s['elf_sha256']:
             raise ValueError('ELF differs from build manifest')
         isa = 'rv64im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
-        command = [spike, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
+        command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
         r = run_group(command, capture=True, timeout=timeout)
-        status = 'inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else 'fail'
+        status = ('inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else
+                  'fail' if re.search(r'\*\*\* FAILED \*\*\* \(tohost = [0-9a-fx]+\)', r.stderr or '') else 'inconclusive')
         rows.append({'id': s['id'], 'status': status, 'elf_sha256': s['elf_sha256'],
                      'command': command, 'returncode': r.returncode, 'stderr': r.stderr,
                      'bins': {b: status for b in s['bins']}})
-    return {'schema': 'rvw.mmu-reference/1', 'model': 'spike', 'scope': 'self-checking architectural effects only',
-            'status': 'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive' if any(r['status'] == 'inconclusive' for r in rows) else 'fail',
+    if digest(executable) != executable_sha256:
+        raise ValueError('Spike executable changed during reference run')
+    return {'schema': 'rvw.mmu-reference/1', 'model': 'spike',
+            'executable': executable, 'executable_sha256': executable_sha256,
+            'version': ((version.stderr or '') + (version.stdout or '')).splitlines()[:1], 'scope': 'self-checking architectural effects only',
+            'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
+            'scenarios': rows}
+
+
+def check(directory, results, platform, model, timeout, sail=None):
+    """Require a conclusive self-check and a complete, strict oracle match."""
+    import sys
+    from rvw.results import load_run
+    directory = Path(directory).resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    rows = []
+    for s in manifest['scenarios']:
+        elf = directory / s['elf']
+        if digest(elf) != s['elf_sha256']:
+            raise ValueError('ELF differs from build manifest')
+        candidates = [r for r in runs if r.elf_sha256 == s['elf_sha256']]
+        status, reason, comparison = 'inconclusive', 'need exactly one C1 result for this ELF', None
+        if len(candidates) == 1:
+            run = candidates[0]
+            reason = run.why_inconclusive
+            if not reason and run.status != 'pass':
+                status, reason = 'fail', 'C1 self-check failed: ' + run.status
+            elif not reason:
+                trace = run.artifacts.get('rvfi_trace')
+                if not trace or not (run.path / trace).is_file():
+                    reason = 'missing C2 trace'
+                else:
+                    command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--elf', str(elf),
+                               '--trace', str(run.path / trace), '--platform', str(Path(platform).resolve()),
+                               '--model', model, '--strict', '--timeout', str(timeout), '--json']
+                    if sail:
+                        command += ['--sail', sail]
+                    result = run_group(command, capture=True, timeout=timeout + 10)
+                    try:
+                        comparison = json.loads(result.stdout or '{}')
+                    except ValueError:
+                        comparison = {}
+                    reason = 'oracle did not establish a complete strict match'
+                    if not result.timed_out and comparison.get('status') == 'mismatch':
+                        status, reason = 'fail', 'architectural mismatch'
+                    elif (not result.timed_out and result.returncode == 0
+                          and comparison.get('status') == 'match'
+                          and comparison.get('trace_complete') is True
+                          and comparison.get('end_status') == 'pass'
+                          and comparison.get('instructions', 0) > 0
+                          and comparison.get('synchronized') == 0):
+                        status, reason = 'pass', None
+        rows.append({'id': s['id'], 'elf_sha256': s['elf_sha256'], 'status': status,
+                     'reason': reason, 'comparison': comparison, 'bins': {b: status for b in s['bins']}})
+    return {'schema': 'rvw.mmu-check/1', 'model': model,
+            'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
             'scenarios': rows}
 
 
@@ -283,7 +353,14 @@ def register(sub):
     r.add_argument('directory', type=Path)
     r.add_argument('--spike', default='spike')
     r.add_argument('--timeout', type=float, default=10)
-    for p in (b, r):
+    c = actions.add_parser('check')
+    c.add_argument('directory', type=Path)
+    c.add_argument('--results', type=Path, required=True)
+    c.add_argument('--platform', type=Path, required=True)
+    c.add_argument('--model', choices=('spike', 'sail'), default='spike')
+    c.add_argument('--timeout', type=float, default=120)
+    c.add_argument('--sail')
+    for p in (b, r, c):
         p.add_argument('--json', action='store_true')
         p.set_defaults(func=main)
 
@@ -291,9 +368,14 @@ def register(sub):
 def main(args):
     import math
     try:
-        if args.mmu_action == 'reference' and (not math.isfinite(args.timeout) or args.timeout <= 0):
+        if args.mmu_action != 'build' and (not math.isfinite(args.timeout) or args.timeout <= 0):
             raise ValueError('timeout must be finite and positive')
-        result = build(args.description, args.out, args.gcc, args.pma) if args.mmu_action == 'build' else reference(args.directory, args.spike, args.timeout)
+        if args.mmu_action == 'build':
+            result = build(args.description, args.out, args.gcc, args.pma)
+        elif args.mmu_action == 'reference':
+            result = reference(args.directory, args.spike, args.timeout)
+        else:
+            result = check(args.directory, args.results, args.platform, args.model, args.timeout, args.sail)
         print(json.dumps(result, allow_nan=False))
         return 0 if result.get('status', 'pass') == 'pass' else 3 if result.get('status') == 'inconclusive' else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:

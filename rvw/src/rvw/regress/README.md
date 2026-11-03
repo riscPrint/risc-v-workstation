@@ -406,3 +406,27 @@ The manifest binds the declaration hash. This is platform input validation,
 not a device model or PMA test. Spike's RAM backend does not check these
 attributes. No PMA coverage bin earns a pass from this declaration. Boundary
 accesses, attribute conflicts and independent device observations remain open.
+
+The privilege cases cover SUM off/on, MXR off/on, effective U-mode permissions,
+MPRV off/on and `satp` Bare/Sv39. Set `mprv = false` to test physical M-mode
+access. Set `satp_mode = "bare"` to test address-translation bypass. These
+programs do not enter S-mode for instruction fetch. TVM, TW, TSR, SRET, disabled
+features and unsupported WARL mode writes still need separate campaigns.
+
+After a traced RTL suite run, use the independent checker:
+
+```sh
+rvw regress mmu check ELF_DIR --results RUN_DIR --platform PROJECT/cosim.json --model spike --json
+rvw regress mmu check ELF_DIR --results RUN_DIR --platform PROJECT/cosim.json --model sail --json
+```
+
+It finds C1 `result.json` files by ELF hash. Each scenario needs exactly one
+conclusive C1 result. A pass also requires a complete C2 trace, a passing end
+event and an independent model match with `--strict` (zero synchronizations).
+Missing traces, prefix matches and unavailable models remain inconclusive.
+A conclusive RTL failure or architectural mismatch fails the scenario. Each
+scenario's bins carry that same status. Run separate directories for seeds or
+configs. Match the model platform, including Svade/Svadu, to the selected suite.
+Sail uses the existing `rvw cosim` platform configuration and `--sail` option.
+The checker preserves the full comparison result and its captured input identity.
+It checks architectural effects; page-walk transactions need a separate observer.

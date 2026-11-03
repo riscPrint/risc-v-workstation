@@ -171,6 +171,94 @@
       "bins": [
         "ad.svade.dirty-fault"
       ]
+    },
+    {
+      "id": "sum-deny",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.sum-deny"
+      ]
+    },
+    {
+      "id": "sum-allow",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.sum-allow"
+      ],
+      "sum": true
+    },
+    {
+      "id": "mxr-deny",
+      "level": 0,
+      "flags": "VXAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.mxr-deny"
+      ]
+    },
+    {
+      "id": "mxr-allow",
+      "level": 0,
+      "flags": "VXAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.mxr-allow"
+      ],
+      "mxr": true
+    },
+    {
+      "id": "user-page",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.user-page"
+      ],
+      "privilege": "U"
+    },
+    {
+      "id": "user-deny-supervisor",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.user-deny-supervisor"
+      ],
+      "privilege": "U"
+    },
+    {
+      "id": "mprv-clear-bypass",
+      "level": 0,
+      "flags": "",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.mprv-clear-bypass"
+      ],
+      "va": "0x80200000",
+      "mprv": false
+    },
+    {
+      "id": "bare-bypass",
+      "level": 0,
+      "flags": "",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.bare-bypass"
+      ],
+      "va": "0x80200000",
+      "satp_mode": "bare"
     }
   ]
 }

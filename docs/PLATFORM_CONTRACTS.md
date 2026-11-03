@@ -1015,3 +1015,14 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### Directed MMU regression inputs
+
+`rvw regress mmu` extends the existing ELF suite flow. It does not change C1–C4.
+Its tool-local formats are `rvw.mmu/1` (scenario description),
+`rvw.mmu-pma/1` (core-owned PMA declarations), `rvw.mmu-build/1` (ELF/hash manifest),
+`rvw.mmu-reference/1` (Spike self-check results) and `rvw.mmu-check/1`
+(C1 completion plus strict C2 oracle comparison). Field rules and limits are in
+`rvw/src/rvw/regress/README.md`. Scenario bins are architectural-effect coverage.
+A declaration or generated program alone gives no coverage. PMA declarations
+are recorded inputs and do not imply PMA device observations.
