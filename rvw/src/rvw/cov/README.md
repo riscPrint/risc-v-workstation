@@ -700,3 +700,18 @@ address aliasing or memory visibility. Branch-after-load does not require a
 register dependency; RAW records that condition separately. These bins cannot
 measure forwarding, stalls, speculative execution, flushes or wrong-path work.
 Use RTL coverage for those behaviors. No sequence crosses a missing record.
+
+### Review a proposed spec update
+
+```
+rvw cov isa-diff OLD.json NEW.json --old-source-root OLD_OPCODES --source-root NEW_OPCODES --json
+```
+
+Each manifest pins its own source files. The command verifies both sets of
+hashes. It reports added, removed and changed opcode definitions, changed
+versions and options, affected declared consumers, and instruction tests to
+review. Changed pins require adoption and return `inconclusive` (exit 3).
+The command never updates a pin or model. Optional `specifications` declarations
+can hold profile, debug and platform document pins. Their metadata is compared;
+their semantic obligations are not parsed. Test presence and changed semantic
+obligations still need review. An unchanged result is not a compliance verdict.

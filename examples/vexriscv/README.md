@@ -105,3 +105,8 @@ VEXRISCV=/path/to/VexRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
   examples/vexriscv/rvw/tests -q --basetemp=/tmp/cw-vex-pytest
 rm -rf /tmp/cw-vex-pytest
 ```
+
+`isa.json` declares the adapter trace ISA and pins the opcode coverage source.
+Extension versions remain null until verified. Use it with `rvw cov isa-check`
+and `rvw cov functional --manifest`; see the coverage tool README. It does not
+certify VexRiscv ISA compliance or change the adapter configuration.

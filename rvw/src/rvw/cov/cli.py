@@ -85,6 +85,9 @@ def calculate(args):
                 raise ValueError('merged counts differ from verilator_coverage; refusing inconsistent output')
             captured.verify_tools()
             write_bytes(output, exported.copy.read_bytes())
+    elif args.cov_command == 'isa-diff':
+        from .isa import spec_diff
+        result = spec_diff(args.before, args.after, args.old_source_root, args.source_root)
     elif args.cov_command == 'isa-check':
         from .isa import check_manifest
         result = check_manifest(args.manifest)
@@ -181,6 +184,11 @@ def register(subparsers):
     select.add_argument('database')
     select.add_argument('--diff', required=True)
     select.add_argument('--repo', default='.')
+    isa_diff = sub.add_parser('isa-diff', help='compare pinned ISA proposals without adopting changes')
+    isa_diff.add_argument('before')
+    isa_diff.add_argument('after')
+    isa_diff.add_argument('--old-source-root', required=True)
+    isa_diff.add_argument('--source-root', required=True)
     isa_check = sub.add_parser('isa-check', help='validate core-owned ISA declarations')
     isa_check.add_argument('manifest')
     functional = sub.add_parser('functional', help='merge C2 traces into declarative cover groups')
@@ -203,7 +211,7 @@ def register(subparsers):
     mutate.add_argument('--jobs', type=int, default=1)
     mutate.add_argument('--test', action='append', help='detection test name; repeatable, defaults to saved roles on inspection or all non-equivalence tests on a fresh run')
     mutate.add_argument('--equivalence-test', action='append', help='equivalence test name; repeatable, defaults to saved roles on inspection or none on a fresh run; FAIL is not a kill')
-    for command in (merge, report, rank, select, functional, prove, mutate, isa_check):
+    for command in (merge, report, rank, select, functional, prove, mutate, isa_check, isa_diff):
         command.add_argument('--json', action='store_true')
         command.add_argument('--out', help='write structured JSON result')
         command.set_defaults(func=execute)
@@ -216,7 +224,7 @@ def execute_json(action: str, **options) -> dict:
                     work_dir=None, timeout=60 if action == "prove" else 120, project=None,
                     run=False, jobs=1, baseline=None, test=None, equivalence_test=None,
                     exclusions=None, annotate=None, exact=False, diff=None, repo=".", out=None,
-                    platform=None, manifest=None)
+                    platform=None, manifest=None, before=None, after=None, old_source_root=None)
     unknown = options.keys() - defaults.keys()
     if unknown:
         raise TypeError(f"unknown options: {sorted(unknown)}")

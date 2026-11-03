@@ -33,3 +33,8 @@ A nine-benchmark native gem5 v25.1.0.1 comparison with BOOM `large`, seed 1 and
 fixed memory latency 20 had a geometric mean model/RTL IPC ratio of 0.906 with
 equal ROI instruction counts. This measures the model gap; it does not establish
 cycle accuracy, hardware behavior or a C8 gate verdict.
+
+`isa.json` declares the adapter trace ISA and pins the opcode coverage source.
+Extension versions remain null until verified. Use it with `rvw cov isa-check`
+and `rvw cov functional --manifest`; see the coverage tool README. It does not
+certify BOOM ISA compliance or change the adapter configuration.

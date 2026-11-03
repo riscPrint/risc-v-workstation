@@ -229,7 +229,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             first = json.loads(next(stream))
             if first.get('schema') != 'rvw.rvfi/1' or first.get('xlen') not in (32, 64):
                 raise ValueError(f'{path}: expected C2 RVFI header with xlen 32 or 64')
-            if manifest and first['isa'] != config['isa_plan']['manifest']['isa']:
+            if manifest and (first['isa'] != config['isa_plan']['manifest']['isa']
+                             or first['xlen'] != int(config['isa_plan']['manifest']['isa'][2:4])):
                 raise ValueError('trace ISA contradicts manifest')
             this_context = (first['xlen'], first['isa'])
             if context is not None and this_context != context:

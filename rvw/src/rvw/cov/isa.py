@@ -28,6 +28,8 @@ def load_manifest(path):
     for name, item in data['extensions'].items():
         if not isinstance(item, dict) or 'version' not in item:
             raise ValueError(f'{name}: declare version (null if not verified)')
+        if item['version'] is not None and (not isinstance(item['version'], str) or not item['version']):
+            raise ValueError(f'{name}: version must be a non-empty string or null')
         if set(item.get('requires', [])) - names:
             raise ValueError(f'{name}: missing required extensions')
     for consumer, isa in data.get('consumers', {}).items():
@@ -134,3 +136,26 @@ def observe_encoding(obs, isa_plan):
     for arg in item['args']:
         hi, lo = isa_plan['args'][arg]
         obs[f'isa_{arg}'] = (insn >> lo) & ((1 << (hi - lo + 1)) - 1)
+
+
+@captured.command
+def spec_diff(before, after, old_root, new_root):
+    """Compare two proposals without adopting either one."""
+    old, new = load_manifest(before), load_manifest(after)
+    a = {i['name']: i for i in opcode_records(pinned_files(old, old_root))}
+    b = {i['name']: i for i in opcode_records(pinned_files(new, new_root))}
+    added, removed = sorted(b.keys() - a.keys()), sorted(a.keys() - b.keys())
+    changed = sorted(k for k in a.keys() & b.keys() if a[k] != b[k])
+    declarations = {k: {'before': old.get(k), 'after': new.get(k)} for k in
+                    ('isa', 'extensions', 'options', 'consumers', 'source', 'specifications', 'unavailable')
+                    if old.get(k) != new.get(k)}
+    needs_review = bool(declarations or added or removed or changed)
+    return {'schema': 'rvw.isa-diff/1', 'status': 'inconclusive' if needs_review else 'unchanged',
+            'adoption_required': needs_review, 'declarations': declarations,
+            'instructions': {'added': added, 'removed': removed, 'changed': changed},
+            'affected_checkers': ['ISA manifest validation', 'functional opcode coverage',
+                                  *sorted(set(old.get('consumers', {})) | set(new.get('consumers', {})))] if needs_review else [],
+            'tests_to_review': sorted(set(added + removed + changed)),
+            'obligations': 'Semantic obligations and test presence are not determined by opcode diffs.',
+            'notes': ['Read-only comparison. No pin, model or project file is updated.',
+                      'specifications can pin profile, debug and platform documents; this command compares their declarations only.']}

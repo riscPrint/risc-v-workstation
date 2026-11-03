@@ -1023,3 +1023,13 @@ extension name with `version` (string or null) and optional `requires` list,
 `options` object, and optional `consumers` mapping tool names to ISA strings.
 Null means not verified. `rvw cov isa-check` validates these declarations.
 This optional file does not change the project selection contract.
+
+For generated functional bins, the ISA manifest can include `source` with
+`url`, a full commit `revision`, and `files` (relative opcode paths to SHA-256).
+`arg_lut.csv` defines the encoded operand fields. `unavailable` lists excluded
+coverage scope. Optional `specifications` stores other spec pin declarations.
+The functional report embeds the generated plan in `config.isa_plan`. Its
+fingerprint includes all pins and generated bins. `sequences.distances` in a
+functional plan enables retirement-order pair bins. These additions do not
+change the C2 trace format. `rvw.isa-diff/1` reports proposal changes and an
+explicit `adoption_required` flag. It does not adopt specifications.
