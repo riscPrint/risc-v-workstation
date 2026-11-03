@@ -44,20 +44,20 @@ install_bin() {  # install_bin <built binary> <name>
 
 if [ "$TEST" = 1 ]; then
   echo "== cargo test: third_party/tywaves-rs"
-  cargo test --manifest-path "$ROOT/third_party/tywaves-rs/Cargo.toml"
+  cargo test --locked --manifest-path "$ROOT/third_party/tywaves-rs/Cargo.toml"
   echo "== cargo test: tools/spinalwaves-check"
-  cargo test --manifest-path "$ROOT/tools/spinalwaves-check/Cargo.toml"
+  cargo test --locked --manifest-path "$ROOT/tools/spinalwaves-check/Cargo.toml"
 fi
 
 if [ "$ONLY" != surfer ]; then
   echo "== cargo build --release: tools/spinalwaves-check"
-  cargo build --release --manifest-path "$ROOT/tools/spinalwaves-check/Cargo.toml"
+  cargo build --release --locked --manifest-path "$ROOT/tools/spinalwaves-check/Cargo.toml"
   install_bin "$ROOT/tools/spinalwaves-check/target/release/spinalwaves-check" spinalwaves-check
 fi
 
 if [ "$ONLY" != check ]; then
   echo "== cargo build --release: surfer-tywaves"
-  cargo build --release --manifest-path "$ROOT/surfer-tywaves/Cargo.toml" -p surfer-tywaves
+  cargo build --release --locked --manifest-path "$ROOT/surfer-tywaves/Cargo.toml" -p surfer-tywaves
   install_bin "$ROOT/surfer-tywaves/target/release/surfer-tywaves" surfer-tywaves
 fi
 

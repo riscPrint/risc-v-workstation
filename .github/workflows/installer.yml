@@ -1,0 +1,52 @@
+name: Native installer
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * 1'
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        flags:
+          - ''
+          - '--with-sim'
+          - '--with-riscv-gcc'
+          - '--with-cosim'
+          - '--with-formal'
+          - '--with-sim --with-riscv-gcc --with-cosim'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install on the native host
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: scripts/install.sh --yes $FLAGS
+      - name: Check requested tools
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          source env.sh
+          scripts/install.sh --check $FLAGS
+  long-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        flags: ['--with-gem5', '--all']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install on the native host
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: scripts/install.sh --yes $FLAGS
+      - name: Check requested tools
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          source env.sh
+          scripts/install.sh --check $FLAGS

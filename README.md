@@ -20,7 +20,9 @@ Keep your core in a separate repository. Follow the
 [agent setup playbook](docs/AGENT_SETUP.md) or the
 [bring-your-own-core guide](docs/BRING_YOUR_OWN_CORE.md).
 Use the [architecture playbook](docs/AGENT_ARCH.md) for gem5.
-The installer asks before system package commands.
+The installer asks before system package commands. Homebrew is required on macOS.
+The full quickstart combination is not yet qualified on clean macOS and Linux
+hosts. See [tool versions and install limits](docs/TOOL_VERSIONS.md).
 
 Track work in the [v0.2 (near term) milestone](https://github.com/riscPrint/risc-v-workstation/milestone/1)
 and the [Later phases milestone](https://github.com/riscPrint/risc-v-workstation/milestone/2).
