@@ -134,7 +134,7 @@ What a result means:
   report (older reports had empty path segments, `tile.frontend..io_x_valid`), the message says to
   regenerate the report. Clock, reset and tie ports must be inputs of the toplevel, `--signal` must exist
   in the flattened design. `--reset` defaults to `reset` if the toplevel has it.
-- One clock only. sby runs with `multiclock off`: one solver step is one cycle of every flip-flop, memory
+- By default, one clock only. sby runs with `multiclock off`: one solver step is one cycle of every flip-flop, memory
   port and clocked assertion. Before the proof, every flow runs a Yosys clock probe on the flattened
   design (`clock_probe.ys`, `clock_cells.json`) and refuses (exit 2, no `result.json`) a design where any
   enabled clock or trigger input is not the rising edge of `--clock`: a second clock, a gated or derived
@@ -328,17 +328,12 @@ Earlier measurements on BOOM `small`, seed 1:
   call in the same process would wait for itself.
 - **Formal inputs are rejected rather than escaped.** Yosys and sby scripts have no reliable quoting, so
   names and paths outside a strict character set are errors (paths with spaces included).
-- **One clock, refused otherwise.** `multiclock on` was rejected: it makes the clocks free inputs, so a
-  step is no longer a cycle, and the depth checks, the reset wrapper, the from-sim cycle numbers and
-  xprop's arming all count cycles. `inconclusive` was rejected too: nothing is proven about such a
-  design, so it is an input error like a bad depth. The check is conservative: a design entirely on the
-  falling edge, or with a buffered clock copy kept as a separate net, is refused although it could be
-  modelled. Asynchronous state controls, latches and unsupported state cell types (also fine-grained
-  gate cells) are refused too: events between clock edges are outside this model. Each flow checks
-  every elaborated module before optimization, ties or replay state loading. Async memory reads remain
-  supported; memory async reset ports must be tied to zero. Refusal exits 2 and removes any old
-  `result.json`. A regression keeps an async-reset design that gave a false pass at depth 8; all
-  three flows refuse it.
+- **Explicit clock and state models.** Default flows require one rising-edge clock and synchronous
+  state. BMC can opt into the sampled event model below. It separately enables constant-value async
+  reset FFs. Other unsupported clocks and state remain input errors. Each flow checks elaborated state
+  before optimization, ties or replay loading. Asynchronous memory reads remain supported; memory
+  async reset ports must be tied to zero. Refusal exits 2 and removes any old `result.json`.
+  The async-reset false-pass regression remains refused by default.
 - **No pass without a checked assertion**: zero assertions is `no_checks`; too shallow a depth is an
   input error. The minimum depths are exact for clocked assertions (tested: the minimum depth finds a
   failure possible in the first cycle after reset).
@@ -413,12 +408,10 @@ opcode and size faults, parameter faults, and AXI address faults.
   Use `xprop --combinational` for a clock-free wrapper. See the
   [formal commands](../rvw/src/rvw/formal/README.md#x-campaigns-and-four-state-replay) for dispositions.
   Module inputs are free; a confirmed module observation does not establish a core bug.
-- Designs with more than one clock (or a gated clock, or registers on the falling edge) are refused by
-  every `rvw formal` flow; there is no multi-clock model yet.
-- Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model
-  for their events between clock edges.
-- Check placement uses the component's clock domain; streams in another clock domain of the same
-  component would need the domain of their signals.
+- BMC's event model supports independent rising-edge top clocks and optional constant-value
+  async-reset state. Gated, derived and falling-edge clocks remain refused. Other flows retain
+  the one-clock model. Async loads, set/clear and latches remain refused.
+- Streams in a component with registers in another domain are refused. Use child components.
 - from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
@@ -455,3 +448,43 @@ Each caller keeps its captured environment and tool bindings.
 Formal still checks the DONE line, process exit and assertion count.
 Coverage still checks its captured status, source snapshot and vacuity evidence.
 A timeout cannot earn a proof or an exclusion.
+
+## Multiple clock domains and asynchronous reset
+
+`rvw formal bmc --event-model` uses SBY `multiclock on` and Yosys `clk2fflogic`.
+Declare every extra independent rising-edge top input with `--event-clock PORT`.
+Enable constant-value asynchronous-reset flip-flops separately with `--async-reset`.
+All other formal flows keep their current clock and state refusals.
+
+```sh
+rvw formal bmc --verilog SpinalChecks/examples/events/clocks_fail.sv --top top --event-clock other_clk --depth 14 --out out/clocks
+rvw formal bmc --verilog SpinalChecks/examples/events/async_fail.sv --top top --event-model --async-reset --depth 14 --out out/async
+```
+
+Both examples must fail. Their `*_pass.sv` peers must pass at the same bound.
+The clocks have no rate, phase or fairness constraints. One solver step is one
+global input sample. The model includes inter-edge reset pulses that remain
+visible for a sample. Pulses entirely between samples are outside the model.
+It does not establish analog CDC behavior or physical reset recovery/removal.
+
+Enum-register checks use the register's Spinal clock domain. Vec checks whose
+selector is a register use that register's domain. Memory checks retain the
+memory port's domain. Their reset gating, assertion and monitor state use the
+same domain. Monitor cycle counters are local to each domain. Stream, bus,
+combinational-selector and progress checks still use the containing component's
+domain. Place these interfaces in a component with the correct domain.
+A component with streams, a combinational Vec selector, or a progress check
+and registers in another domain
+is refused. Use child components for these domains. The phase does not infer
+a stream's domain from its wiring.
+
+Inserted checks report `clock_domain` with clock, edge, reset, reset kind, reset
+active level and clock-enable names. This records Spinal's domain information.
+It does not declare relationships between domains or replace the RTL clock probe.
+See [the formal event model](../rvw/src/rvw/formal/README.md#sampled-event-bmc)
+for reset sequencing, result meaning and the full refusal list.
+
+Formal generated assertions sample on clock edges even when the state has an async
+reset. Reset still gates the check. Formal mode omits monitor text reports.
+Raw assertions with an async reset in their sensitivity list remain refused.
+Their trigger semantics are outside this increment.

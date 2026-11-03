@@ -7,10 +7,12 @@
 With `--checks <top>.checks.json` (written by SpinalChecks), failures are reported by check id and
 Scala source location instead of Verilog line.
 
-One clock only: every register, memory port and clocked assertion must be on the rising edge of --clock.
+By default, one clock only: every register, memory port and clocked assertion must be on the rising edge of --clock.
 A design with another clock, a gated clock or a falling edge is refused (exit 2): the flows step every
 clock together (sby multiclock off), which could give a false pass.
 Asynchronous state controls and latches are also refused: events between clock edges are not modelled.
+BMC --event-model enables sampled clock events. Declare extra clocks with --event-clock.
+BMC --async-reset separately enables constant-value asynchronous-reset flip-flops in that model.
 Use xprop --combinational for a clock-free module. That mode refuses all state.
 
 Exit codes: 0 pass; 1 any other status (fail, unknown, timeout, error, no_checks), with result.json
@@ -56,7 +58,7 @@ def _common(p: argparse.ArgumentParser, depth: int) -> None:
     p.add_argument("--reset", help="reset input (default: `reset` if the toplevel has it; an explicit name must exist)")
     p.add_argument("--reset-active", choices=["high", "low"], default="high")
     p.add_argument("--checks", help="SpinalChecks report (<top>.checks.json) to name failures")
-    p.add_argument("--depth", type=int, default=depth, help=f"BMC depth in cycles (default {depth})")
+    p.add_argument("--depth", type=int, default=depth, help=f"BMC steps: cycles by default, global samples in event BMC (default {depth})")
     p.add_argument("--engine", default="smtbmc:yices", help="sby engine, ':'-separated, or a comma-separated portfolio run in parallel "
                         "(default smtbmc:yices; e.g. abc:bmc3, smtbmc:bitwuzla, 'smtbmc:yices,smtbmc:bitwuzla')")
     p.add_argument("--timeout", type=float, help="seconds before sby is stopped")
@@ -127,7 +129,11 @@ def register(sub) -> None:
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
-    b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")
+    b.add_argument("--event-clock", action="append", metavar="PORT",
+                   help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
+    b.add_argument("--event-model", action="store_true", help="use sampled events and sby multiclock on")
+    b.add_argument("--async-reset", action="store_true", help="allow constant-value async reset FFs in event BMC")
+    b.add_argument("--reset-cycles", type=int, default=1, help="primary-clock cycles the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")
     b.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")
     b.set_defaults(func=lambda a: _flow("bmc", a))

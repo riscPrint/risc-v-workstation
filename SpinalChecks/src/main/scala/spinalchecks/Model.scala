@@ -185,6 +185,7 @@ class CheckRecord(val id: String, val kind: String, val component: Component, va
   var status: String = "inserted"
   var reason: String = null
   var fail: Bool = null
+  var clockDomain: ClockDomain = null
   var fired: Bool = null
   var count: UInt = null
   var firstCycle: UInt = null

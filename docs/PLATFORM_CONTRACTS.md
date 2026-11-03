@@ -1481,3 +1481,27 @@ inconclusive. Without retirement cover, assertion PASS entries carry an
 C4 rejects assertion failures. Other outcomes remain inconclusive, including
 complete bounded tests. These files cannot establish committed gate acceptance.
 C1 is not emitted because these jobs do not execute an ELF.
+
+## Formal event model extension
+
+BMC can explicitly select a sampled event model with `--event-model` and repeatable
+`--event-clock PORT`. Extra clocks must be independent rising-edge top inputs.
+`--async-reset` separately enables constant-value reset FFs (`$adff`, `$adffe`).
+SBY `multiclock on` applies Yosys `clk2fflogic`. Each step is a global input
+sample, with arbitrary clock rates, phases, simultaneous edges and stalls.
+There are no declared ratio constraints or fairness assumptions.
+Async reset pulses visible for a sample are represented without a clock edge.
+Pulses wholly between samples and analog timing are outside the model.
+
+`rvw.formal/1` BMC results in this mode add `event_model`:
+`backend`, `step`, `clocks`, `relationships` and boolean `async_reset`.
+Failure `step` counts global samples; `cycle` is null.
+The reset harness counts primary-clock edges, not global samples.
+Other domains need not see an edge during that reset interval.
+`from-sim` and X flows retain their single-clock refusals.
+
+Inserted `rvw.checks/1` check entries add nullable `clock_domain`:
+`clock`, `edge`, `reset`, `reset_kind`, `reset_active` and `clock_enable`.
+Signal names are relative to the design top. Unavailable signal names are null.
+This field records the check's Spinal domain, not a relationship constraint.
+Older reports without this field remain readable.

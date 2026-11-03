@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "open"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open"}
 
 
 def _argv(command, args):
@@ -80,7 +80,8 @@ def mcp_tools():
                  _runner("cex"), long=True),
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "
                  "bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.",
-                 schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B}, ["out"]),
+                 schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B,
+                         "event_model": B, "event_clock": {"type": "array", "items": S}, "async_reset": B}, ["out"]),
                  _runner("bmc"), long=True),
         ToolSpec("formal_from_sim", "Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the "
                  "same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.",
