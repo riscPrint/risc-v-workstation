@@ -473,3 +473,16 @@ aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
 These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
 under the `sbt` lock. The reference injects state and access faults separately
 from the expected-state model. No BOOM CSR binding is supplied.
+
+### HPM count model
+
+`HpmChecks.bind` accepts `HpmModel(1, width, reset, eventMeaning)` and the observed
+counter, independent event count, inhibit, permitted filter, software write and
+write data. It checks `hpm.count`. Write has priority over counting. Arithmetic
+wraps at the declared width. Each project must state the event meaning and bind
+an independent observation. A DUT event output alone does not supply an oracle.
+
+Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
+covers count transitions, inhibit, filtering, writes and modular wrap. It does
+not check privilege faults, RV32 half accesses, event selector CSRs or counter
+interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
