@@ -1,6 +1,12 @@
 name: Native installer
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/installer.yml'
+      - 'scripts/install*.sh'
+      - 'rvw/pyproject.toml'
+      - 'rvw/uv.lock'
   schedule:
     - cron: '23 4 * * 1'
 permissions:
