@@ -375,3 +375,9 @@ What the wave shows, and what it does not:
   argument, not a demonstrated result: it holds if a store from another agent changes the line between
   the two loads' data returns, which this run does not show. Restoring the order-failure replay of the
   younger load is the likely fix, but that is a decision for the core, not made here.
+
+## Limit ownership
+
+Real-history bisect validation: [#45](https://github.com/riscPrint/risc-v-workstation/issues/45). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Integrated debug: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: Cause traces require suitable waves, a matching graph and a bounded window. A partial bundle does not prove a root cause.

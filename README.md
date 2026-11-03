@@ -24,7 +24,8 @@ Keep your core in a separate repository. Follow the
 Use the [architecture playbook](docs/AGENT_ARCH.md) for gem5.
 The installer asks before system package commands. Homebrew is required on macOS.
 The full quickstart combination is not yet qualified on clean macOS and Linux
-hosts. See [tool versions and install limits](docs/TOOL_VERSIONS.md).
+hosts ([#17](https://github.com/riscPrint/risc-v-workstation/issues/17),
+[#40](https://github.com/riscPrint/risc-v-workstation/issues/40)). See [tool versions and install limits](docs/TOOL_VERSIONS.md).
 
 Track work in the [v0.2 (near term) milestone](https://github.com/riscPrint/risc-v-workstation/milestone/1)
 and the [Later phases milestone](https://github.com/riscPrint/risc-v-workstation/milestone/2).
@@ -88,7 +89,7 @@ The separate VexRiscv project passed 41 aligned RV32UI tests, a four-test commit
 gate with equal RTL hashes, a 17-instruction Spike smoke comparison and database
 queries. See the [VexRiscv limits](examples/vexriscv/README.md#design-and-limits).
 
-## Status (2026-10-24)
+## Status (integration branch, 2026-11-03)
 
 Supported scope under contract C8:
 
@@ -101,11 +102,11 @@ Supported scope under contract C8:
 
 Experimental features need manual result checks before use:
 
-- Known-failure waivers (`rvw regress known`) and failure-signature matching.
-- Gates on stored result folders (`--base`/`--cand` folders) and performance metrics (`perf_metrics`).
-- Mutation testing (`rvw cov mutate`).
+- Known-failure waivers (`rvw regress known`) and failure-signature matching ([#2](https://github.com/riscPrint/risc-v-workstation/issues/2)).
+- Gates on stored result folders (`--base`/`--cand` folders) and performance metrics (`perf_metrics`) ([#4](https://github.com/riscPrint/risc-v-workstation/issues/4)).
+- Mutation testing (`rvw cov mutate`) ([#3](https://github.com/riscPrint/risc-v-workstation/issues/3)).
 - SpinalChecks generated checks (run reports, check selection). On BOOM, 24 stream checks fire;
-  most are probably legal `Decoupled` behaviour from the Chisel port (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
+  source-backed dispositions are recorded, but runtime triage remains open (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
 
 ## VS Code extension
 

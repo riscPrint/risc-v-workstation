@@ -92,3 +92,7 @@ rvw/.venv/bin/python -m pytest -q rvw/tests/test_results.py rvw/tests/test_gener
 Legacy standalone C3 files copied away from their owner may have no origin markers.
 Their run-set origin cannot be checked. Raw paths into a generation do not verify bytes;
 use `Generation.read_bytes` for claim-bearing reads.
+
+## Limit ownership
+
+Retained limit: The documented schema and evidence restrictions remain required. Compatibility parsing does not qualify missing evidence. No separate issue is assigned for broader result formats.

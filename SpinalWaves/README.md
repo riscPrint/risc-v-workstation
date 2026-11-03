@@ -115,3 +115,9 @@ The shared API is defined in [docs/CONTRACT.md](docs/CONTRACT.md).
 Tests cover typed hierarchy lookup, source locations and VCD rewriting.
 Interactive Surfer rendering has not been tested. Fixed-point values keep raw
 bits and type metadata. Memories and blackbox internals have no special typed model.
+
+## Limit ownership
+
+Interactive rendering: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83). Vendored viewer and backend triage: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Shared database input: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Fork dependency: [#43](https://github.com/riscPrint/risc-v-workstation/issues/43).
+
+Retained limit: The simulation wrapper remains Verilator/VCD only. Typed memories, BlackBox internals, generated temporaries, fixed-point scaling and complete constructor values remain outside scope. Source lookup remains best effort and needs local source roots.

@@ -241,3 +241,9 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
   backends need separate checks. The workstation's Scala and SpinalHDL versions
   must match the core build. NaxRiscv's upstream build uses Scala 2.12 and local
   SpinalHDL submodules; it cannot use a Scala 2.13 library `ProjectRef` unchanged.
+
+## Limit ownership
+
+Database migration and legacy entry removal: [#44](https://github.com/riscPrint/risc-v-workstation/issues/44). More-design checks: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Cross-navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: Database export is available. Legacy entry removal still needs parity evidence. Missing source files and extraction approximations do not become verified navigation.

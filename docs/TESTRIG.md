@@ -46,3 +46,9 @@ TestRIG cannot replace fetch/cache tests when its injection path bypasses them.
 Keep U/S/M trap-priority, illegal-encoding, FP, compressed-boundary, Zb, crypto,
 ABI and configuration-matrix campaigns separate. Each needs independent checks
 and declared coverage. A random stream count does not close those requirements.
+
+## Limit ownership
+
+TestRIG integration: [#48](https://github.com/riscPrint/risc-v-workstation/issues/48). Observation streams: [#189](https://github.com/riscPrint/risc-v-workstation/issues/189).
+
+Retained limit: Only the documented stream subset is supported. Malformed or incomplete evidence cannot become a match.

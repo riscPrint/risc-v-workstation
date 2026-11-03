@@ -69,3 +69,9 @@ Equal bounds select a single timestamp. An omitted end selects through the end o
 VCD queries stream one pass and keep signal state. `changes` and `cut` stop after `--to`.
 End-time detection scans the full file. Clock detection has a record limit. Earlier timing
 numbers used the old line reader; the new reader has not been benchmarked on BOOM waves.
+
+## Limit ownership
+
+Indexed large-wave storage: [#173](https://github.com/riscPrint/risc-v-workstation/issues/173).
+
+Retained limit: The documented query, sample and window bounds remain required. Unsupported formats or invalid times must refuse the call.

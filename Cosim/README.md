@@ -554,3 +554,9 @@ replace Spike instruction comparison. Spike injection still uses C2 trap events;
 a Spike match alone does not prove legal interrupt timing. The regression checks
 both results. Missing independent bounds stays inconclusive. Sail still refuses
 external-input synchronization.
+
+## Limit ownership
+
+FP state: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10). Unread CSR effects: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87). Faulting accesses: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Hypervisor state: [#114](https://github.com/riscPrint/risc-v-workstation/issues/114). Debug state: [#136](https://github.com/riscPrint/risc-v-workstation/issues/136). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75). WFI: [#149](https://github.com/riscPrint/risc-v-workstation/issues/149).
+
+Retained limit: The comparison matrix bounds every match. Synchronization is not a timing or device proof. Little-endian scalar C2 evidence, refused unknown input structures and incomplete runtime dependency capture remain explicit restrictions.

@@ -49,3 +49,9 @@ SpinalTrace GUI, the VS Code extension and Sail each need a separate setup step.
 See their READMEs. `scripts/install-sail.sh` downloads the pinned Sail model,
 checks its archive hash, and extracts it under `.tools/sail-0.15`. Set `RVW_SAIL`
 to the extracted executable. This separate setup path is not yet qualified.
+
+## Limit ownership
+
+Clean Linux qualification: [#17](https://github.com/riscPrint/risc-v-workstation/issues/17). Reproducible versions: [#40](https://github.com/riscPrint/risc-v-workstation/issues/40). Native bundles: [#71](https://github.com/riscPrint/risc-v-workstation/issues/71).
+
+Retained limit: Unqualified host/tool combinations remain unqualified. Extracted executables do not establish a tested setup.
