@@ -565,3 +565,13 @@ all 64 FP data bits. No FP data or flag field permits synchronization. Legacy
 BOOM traces remain version 1 and cannot establish FP register coverage. The
 reference generator still emits version 1. Adapters must capture DUT state;
 they must never fill these fields from Spike.
+
+### Unread CSR state
+
+Version 2 adapters can declare `csr_snapshot` addresses and emit `csr_state`
+after each instruction. Spike reads its own CSRs through its public peek API.
+The comparison uses full values and does not use `csr_masks`. Include mstatus
+or sstatus to check FS dirty-state transitions. The adapter must resolve the
+state after each retirement, including each slot of a multi-retire cycle.
+Only the declared CSR set is covered. Sail has no snapshot API and refuses
+these records. Timing-dependent CSRs need an agreed observation point.

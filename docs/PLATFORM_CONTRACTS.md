@@ -1028,3 +1028,13 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
+Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
+The key set must equal the declared set. Values are full XLEN state after the
+instruction and synchronous trap entry, before the next reference step.
+These snapshots check effects even if software never reads the CSR. They do
+not assert that every changed CSR was captured. No CSR snapshot uses read
+synchronization or a platform mask. Counters and external pending state can
+differ with timing; include them only when the adapter can supply the same
+architectural observation point. An unavailable backend CSR is an error.

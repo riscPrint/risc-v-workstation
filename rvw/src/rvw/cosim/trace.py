@@ -26,6 +26,13 @@ class Trace:
             h = self.header
             if not isinstance(h, dict) or h.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2") or h.get("xlen") not in (32, 64):
                 raise ValueError("expected rvw.rvfi/1 header with xlen 32 or 64")
+            csrs = h.get("csr_snapshot", [])
+            if not isinstance(csrs, list) or len(set(csrs)) != len(csrs):
+                raise ValueError("csr_snapshot must be a unique address list")
+            for address in csrs:
+                hexnum(address, 12)
+            if csrs and h["schema"] != "rvw.rvfi/2":
+                raise ValueError("CSR snapshots require rvw.rvfi/2")
             for k in ("isa", "core", "config", "elf"):
                 if not isinstance(h.get(k), str):
                     raise ValueError(f"missing or invalid C2 header {k}")
@@ -92,6 +99,11 @@ class Trace:
                         raise ValueError("fflags and fcsr disagree")
                 elif "event" not in obj and any(k in obj for k in ("fd_valid", "fd_wdata", "fflags", "fcsr")):
                     raise ValueError("FP fields require rvw.rvfi/2")
+                if "event" not in obj:
+                    snapshots = obj.get("csr_state", {})
+                    if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
+                        raise ValueError("csr_state must contain exactly the declared snapshot addresses")
+                    obj["csr_state"] = {k: hexnum(v, xlen) for k, v in snapshots.items()}
                 yield obj
             except (ValueError, KeyError, TypeError) as exc:
                 raise ValueError(f"C2 line {line}: {exc}") from exc

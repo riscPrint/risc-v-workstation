@@ -255,6 +255,10 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
   auto* s=static_cast<Machine*>(m)->cpu->get_state();
   if(s->prv==PRV_M) s->mtval->write(value); else s->stval->write(value);
 }
+int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
+  try { *value=static_cast<Machine*>(m)->cpu->get_csr(address); return 0; }
+  catch(...) { error="reference cannot observe requested CSR"; return -1; }
+}
 unsigned rvw_prv(void* m) { return static_cast<Machine*>(m)->cpu->get_state()->prv; }
 void rvw_set_reg(void* m,unsigned rd,uint64_t value) {
   if(rd>0 && rd<32) static_cast<Machine*>(m)->cpu->get_state()->XPR.write(rd,value);

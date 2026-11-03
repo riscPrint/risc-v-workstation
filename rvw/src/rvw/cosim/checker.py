@@ -233,6 +233,15 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError(f"reference cannot check C2 state fields: {sorted(missing)}")
                 fields += state_fields
             diff = differences(actual, expected, fields)
+            if actual.get("csr_state"):
+                if not hasattr(model, "csr_snapshot"):
+                    raise ValueError("reference cannot check CSR snapshots")
+                snapshot = model.csr_snapshot(trace.header["csr_snapshot"])
+                for address, value in actual["csr_state"].items():
+                    if address not in snapshot:
+                        raise ValueError(f"reference cannot observe CSR {address}")
+                    if value != snapshot[address]:
+                        diff[f"csr[{address}]"] = {"expected": hex(snapshot[address]), "actual": hex(value)}
             # Trace quirk declared by the platform: mode reported after an xRET or trap took effect.
             # The next instruction's mode is still checked, so a wrong return mode is caught there.
             if ("mode" in diff and platform.mode_after_change

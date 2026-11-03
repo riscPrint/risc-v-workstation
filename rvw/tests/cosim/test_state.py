@@ -64,3 +64,29 @@ def test_invalid_flags(tmp_path):
     row['fflags'] = '0x1'
     with pytest.raises(ValueError, match='disagree'):
         run(tmp_path, row)
+
+
+def test_unread_csr(tmp_path):
+    h, row = fixture()
+    h['csr_snapshot'] = ['0x300']
+    row['csr_state'] = {'0x300': '0x6000'}
+    model = Model(row)
+    model.csr_snapshot = lambda addresses: {'0x300': 0x6000}
+    assert run(tmp_path, row, model, h)['status'] == 'match'
+    row['csr_state']['0x300'] = '0x0'
+    assert 'csr[0x300]' in run(tmp_path, row, model, h)['mismatch']['differences']
+
+
+def test_missing_csr_snapshot(tmp_path):
+    h, row = fixture()
+    h['csr_snapshot'] = ['0x300']
+    with pytest.raises(ValueError, match='exactly'):
+        run(tmp_path, row, header=h)
+
+
+def test_backend_cannot_snapshot(tmp_path):
+    h, row = fixture()
+    h['csr_snapshot'] = ['0x300']
+    row['csr_state'] = {'0x300': '0x0'}
+    with pytest.raises(ValueError, match='cannot check CSR'):
+        run(tmp_path, row, header=h)
