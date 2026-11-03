@@ -64,3 +64,24 @@ rvw regress run --core boom --tier presets --jobs 1 --out /tmp/preset-run
 A build pass proves elaboration and native compilation only. Each preset needs
 its own execution result. A pass on `small` gives no result for another preset.
 The short tier is a smoke check. It does not cover the full configuration matrix.
+
+## Benchmark co-simulation
+
+Build a small integer benchmark with `rvw arch build --bench vvadd --json`.
+Run it with `--rvfi-trace`, then compare the trace with the same ELF:
+
+```sh
+RiscvSim/boom/run.sh run --elf vvadd.riscv --out /tmp/bench-run --config small \
+  --seed 1 --mem-latency 20 --max-cycles 2000000 --wall-timeout 60 --rvfi-trace
+rvw cosim check --core boom --elf vvadd.riscv --trace /tmp/bench-run/rvfi.jsonl --json
+RVW_TEST_BENCHMARK_ELF=/absolute/path/vvadd.riscv \
+  rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_benchmark_native.py -q
+```
+
+The native test holds the BOOM lock. It bounds the whole adapter command,
+including lock wait and compilation, to 900 seconds. It requires a conclusive
+C1 pass and a nonempty, complete trace match with `end_status = pass`.
+`RVW_TEST_BENCHMARK_CONFIG` selects the preset. Its default is `small`.
+An absent ELF setting skips this expensive test. A selected missing ELF fails.
+The usual Spike synchronization limits still apply. Counter reads in benchmark
+timing code can synchronize. A match does not check FP register state or fflags.
