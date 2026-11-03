@@ -165,6 +165,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       val enums   = ArrayBuffer[SpinalEnumCraft[_]]()
       val signals = ArrayBuffer[BaseType]()
       /** Multiplexers (dynamic Vec reads) with a non-power-of-two input count, grouped by select. */
+      val bits = ArrayBuffer[(BitVectorBitAccessFloating, Statement)]()
       val muxes   = mutable.LinkedHashMap[(Expression, Int), ArrayBuffer[(Multiplexer, Statement)]]()
     }
     val found = comps.map { c =>
@@ -190,6 +191,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
       c.dslBody.walkStatements { st =>
         st.walkExpression {
+          case b: BitVectorBitAccessFloating if !isPow2(b.source.getWidth) => f.bits += ((b, st))
           case m: Multiplexer if m.inputs != null && m.select != null && !isPow2(m.inputs.size) =>
             f.muxes.getOrElseUpdate((m.select, m.inputs.size), ArrayBuffer()) += ((m, st))
           case _ =>
@@ -283,11 +285,14 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
       // Cycle counter for Monitor mode, created on first use in this component.
       private val cycleCounters = mutable.HashMap[ClockDomain, UInt]()
-      def cycles: UInt = cycleCounters.getOrElseUpdate(ClockDomain.current, {
-        val counter = Reg(UInt(40 bits)).init(0).setName(uniqueName("chk_cycle"))
-        counter := counter + 1
-        counter
-      })
+      def cycles: UInt = {
+        cycleCounters.getOrElseUpdate(ClockDomain.current, {
+          val counter = Reg(UInt(40 bits)).init(0).setName(uniqueName("chk_cycle"))
+          counter := counter + 1
+          counter
+        })
+      }
+
       /** For a register without a reset value: True once it has been written after reset, so the check
         * covers every written value, the first one included, and never the power-up value of a register
         * that was not written (X in hardware; `rvw formal xprop` covers that).
@@ -419,6 +424,40 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
 
       val todo = ArrayBuffer[() => Unit]()
+      // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
+      def useGuard(st: Statement): Bool = {
+        def walk(scope: ScopeStatement): Bool = {
+          if (scope == null || scope.parentStatement == null) True
+          else scope.parentStatement match {
+            case w: WhenStatement =>
+              val cond = w.cond match {
+                case b: Bool => b
+                case e => val b = Bool(); b.assignFrom(e); w.cond = b; b
+              }
+              walk(w.parentScope) && (if (scope eq w.whenTrue) cond else !cond)
+            case other => walk(other.parentScope)
+          }
+        }
+        walk(st.parentScope)
+      }
+      for (d <- c.getTags().collect { case d: DeclaredRule => d }) {
+        val rec = newRecord(d.kind, d.name, false, None, d.detail)
+        if (rec.inserted) todo += { () => d.cd.on { emit(rec, active(d.cd) && d.fail) } }
+      }
+      for (((bit, st), i) <- f.bits.zipWithIndex) {
+        val rec = newRecord("bits.index", s"select_$i", false, SourceLoc.of(st), "use-gated dynamic bit select")
+        if (rec.inserted) todo += { () =>
+          val cd = bit.source match {
+            case b: BaseType if b.isReg => b.clockDomain
+            case _ => st match { case a: AssignmentStatement if a.finalTarget.isReg => a.finalTarget.clockDomain; case _ => ClockDomain.current }
+          }
+          cd.on {
+            val idx = UInt(); idx.assignFrom(bit.bitId); bit.bitId = idx
+            emit(rec, active(cd) && useGuard(st) && idx >= U(bit.source.getWidth))
+          }
+        }
+      }
+
 
       // Check every port and selected internal stream. Omit producer checks only when a complete
       // direct connection leads to enabled, unwaived consumer checks. Top inputs are assumptions.
@@ -628,11 +667,8 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               w
           }
           rec.signals("index") = Seq(idx)
-          val cd = sel match {
-            case b: BaseType if b.isReg => b.clockDomain
-            case _ => ClockDomain.current
-          }
-          cd.on { emit(rec, active(cd) && armed(sel) && idx >= U(n)) }
+          val cd = sel match { case b: BaseType if b.isReg => b.clockDomain; case _ => ClockDomain.current }
+          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => useGuard(x._2)).reduce(_ || _) && idx >= U(n)) }
         }
       }
 

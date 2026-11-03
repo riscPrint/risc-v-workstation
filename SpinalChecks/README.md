@@ -275,7 +275,7 @@ Earlier measurements on BOOM `small`, seed 1:
   by hand in the parent.
 - **Vec reads are found as multiplexers.** `Vec(a, b, c)` does not set element parents, so Vecs cannot
   be found from signals; every dynamic Vec read is a Spinal `Multiplexer` with the index as select.
-  Fires for any out-of-range index, used or not (as JasperGold's array-out-of-bounds does).
+  Direct conditional uses are gated by their enclosing `when` scopes.
 - **Enum encodings** are resolved when the phase runs (native becomes binarySequential, as Spinal's
   Verilog backend does); the legal check compares the full bit pattern, so one-hot multi-hot values fail.
 - **Source locations** need Spinal's `debugComponents`, so `withLocations` elaborates the design twice:
@@ -385,9 +385,9 @@ opcode and size faults, parameter faults, and AXI address faults.
 
 ## Gaps
 
-- Flow has no rule at all (no handshake, no payload rule); Flows are only X-propagation targets.
-- `vec.index` fires for any out-of-range index whether or not the read value is used, and `mem.index`
-  for an asynchronous read port fires whether or not the read data is used (no enable to gate it).
+- Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
+- Vec use through intermediate wires and switch scopes remains conservative. Asynchronous memory
+  read indexes remain ungated.
 - TileLink: probe tracking, negotiated transfer capabilities,
   B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
   end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
@@ -402,7 +402,7 @@ opcode and size faults, parameter faults, and AXI address faults.
   bursts and a DMA copy with response delays and interruptions. The helper serializes
   memory operations. Concurrent overlapping memory traffic needs an ordering model.
   AXI4-Lite needs its own explicit rules and reference designs.
-- `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
+- Dynamic bit reads have range checks; intermediate-wire use remains conservative.
 - Components without reset: checks there are always active.
 - `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
   Use `xprop --combinational` for a clock-free wrapper. See the
@@ -412,6 +412,12 @@ opcode and size faults, parameter faults, and AXI address faults.
   async-reset state. Gated, derived and falling-edge clocks remain refused. Other flows retain
   the one-clock model. Async loads, set/clear and latches remain refused.
 - Streams in a component with registers in another domain are refused. Use child components.
+
+- Designs with more than one clock (or a gated clock, or registers on the falling edge) are refused by
+  every `rvw formal` flow; there is no multi-clock model yet.
+- Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model
+  for their events between clock edges.
+- Stream checks still use the component domain. Project-declared rules use their binding domain.
 - from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
@@ -496,3 +502,92 @@ It supports one clock, aligned synchronous reset, automatic register names and
 manual pairs. Unknown partitions and unmatched state stay inconclusive. See the
 [formal README](../rvw/src/rvw/formal/README.md#sequential-equivalence-first-increment-issue-18)
 for the result contract, tests and limits. Issue #18 remains an epic.
+
+## Project-declared checks
+
+Call these APIs from the project wrapper during elaboration. Install SpinalChecks
+on that wrapper. Use the sampling `ClockingArea` for each binding. The phase adds
+normal check records, exact IDs, waivers, assertions and monitor counters.
+`DeclaredChecks.rule(kind, name, detail)(failure)` is the low-level binding API.
+It does not infer intent. A missing binding does not establish checked behavior.
+
+`DeclaredChecks.flowValues(name, flow, allowed)` checks a `Flow[Bits]` payload
+against a nonempty declared set on valid beats. No rule requires a Flow to hold
+valid or payload between beats. Each call captures its current clock domain.
+
+Dynamic bit reads on non-power-of-two widths produce `bits.index` checks.
+Vec and bit-read checks use the enclosing `when` conditions. An unused read in
+an inactive direct assignment does not fire. Uses through intermediate wires,
+expression multiplexers and `switch` scopes remain conservative. Asynchronous
+memory reads remain ungated. A register select or bit source supplies the clock
+domain; otherwise the component domain is used. Each domain has its own monitor
+cycle counter. Existing `NamingSpec` tests keep loop-built IDs distinct.
+
+Connectivity and CSR applications are selected as explicit project bindings.
+Deadlock generation remains deferred to #21. This choice does not add automatic
+application discovery or core-specific rename, LSQ, ROB or issue bindings.
+Run `sbt "testOnly spinalchecks.LocalRulesSpec spinalchecks.NamingSpec"` under
+the `sbt` lock for the local rules.
+
+### Architectural CSR model
+
+`CsrChecks.bind` accepts a version-1 `CsrModel` and independent accepted access
+signals. The model declares width, reset, write mask, minimum privilege and an
+optional allowed-value set. Unwritable bits retain their value. A masked candidate
+outside the set is rejected. Hardware clear follows the software update.
+Hardware set has final priority. Expected state starts at the declared reset.
+The model never initializes expected state from the DUT.
+
+For example, `CsrModel(1, 32, 0, 255, 3)` declares eight writable bits and machine
+access. Bind the observed state, read/write requests, write data, privilege,
+access-denied response, hardware-set mask and hardware-clear mask, in that order.
+Requests must include denied attempts so that `csr.access` can check the response.
+`csr.state` checks the state each active cycle. This model does not implement
+aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
+These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
+under the `sbt` lock. The reference injects state and access faults separately
+from the expected-state model. No BOOM CSR binding is supplied.
+
+### HPM count model
+
+`HpmChecks.bind` accepts `HpmModel(1, width, reset, eventMeaning)` and the observed
+counter, independent event count, inhibit, permitted filter, software write and
+write data. It checks `hpm.count`. Write has priority over counting. Arithmetic
+wraps at the declared width. Each project must state the event meaning and bind
+an independent observation. A DUT event output alone does not supply an oracle.
+
+Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
+covers count transitions, inhibit, filtering, writes and modular wrap. It does
+not check privilege faults, RV32 half accesses, event selector CSRs or counter
+interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
+
+### Value connectivity model
+
+`ConnectivityChecks.bind(name, source, destination, enable, latency)` checks equal
+width values at a nonnegative fixed latency. Each enabled sample creates an
+obligation. Enable is sampled with the source and delayed with its value.
+Reset clears pipeline-valid state. Mode conditions can be included in enable.
+Run `sbt "testOnly spinalchecks.ConnectivityChecksSpec"` under the `sbt` lock.
+The reference has zero-cycle and one-cycle paths with injected transfer faults.
+
+This emits `connectivity.value` assertions for simulation or a formal backend.
+Simulation checks exercised transfers only. It is not a structural proof.
+SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
+formal qualification remain open under #107. No proof result is inferred from
+successful elaboration or simulation.
+
+### Device register transactions
+
+`RegisterChecks.bind` uses a version-1 `RegisterModel` with width, reset,
+ordinary-write mask, W1C mask and read-clear mask. Ordinary and W1C masks must
+be disjoint. Bind observed state, accepted read/write, data, strobes expanded to
+bit enables, and independent hardware-set and hardware-clear events.
+The update order is read-clear, software write/W1C, hardware clear, hardware set.
+Unwritten bits retain their independent expected value. Reset uses project data.
+The model never copies expected state from observed state.
+
+Run `sbt "testOnly spinalchecks.RegisterChecksSpec"` under the `sbt` lock.
+The reference uses separate per-bit logic and injects an observed-state fault.
+This checks accepted transactions, not bus decoding, response data, response
+ordering or latency. A project must supply those bindings and test its address
+decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
