@@ -1431,3 +1431,19 @@ source identities and reproduction data. `traces` names witness artifacts;
 `reason` explains inconclusive results. A new output directory is required.
 See [the C reference flow](../SpinalChecks/c2rtl/README.md) for the C-model
 review requirement, native runtime trust and FP limits.
+
+### Counterexample replay observations
+
+`rvw formal cex` and MCP `formal_cex` write `rvw.formal.cex/1` to a separate
+output directory. This is an observation format, not `rvw.formal/1` proof evidence.
+`status` is always `inconclusive` (CLI exit 1). `disposition` is `reproduced`,
+`failure_not_observed`, or `inconclusive`. The first two require an original replay
+that observes a property named in the formal failure report. Reproduction also
+requires that same property in the edited replay. Assumption violations and tool
+failures remain inconclusive. Absence of an observed failure is not a pass.
+
+`original_result`, `input_capture`, `restrictions` and `edits` retain the declared
+inputs and environment. `baseline` and `edited` contain the Yosys sim summaries.
+`wave` and `fst` name the edited replay artifacts. Optional `navigation` records
+type-check, cause-trace and viewer launch outcomes. A viewer launch does not
+establish successful source navigation. See the formal command README for limits.

@@ -435,3 +435,11 @@ Retained limit: The documented TileLink/AXI subsets, queue capacities, free repl
 See [c2rtl/README.md](c2rtl/README.md) for the native C truth-table and
 SymbiYosys flow. It supports unsigned combinational units with widths 1 to 4.
 It reports proved, counterexample or inconclusive with the checked bound.
+
+## Counterexample what-if replay
+
+`rvw formal cex --result OUT/bmc --edit bad@0=0 --out OUT/whatif` replays a
+captured BMC witness with Yosys `sim`. It keeps the original inputs and constraints.
+It writes VCD/FST and can call SpinalWaves, Surfer and SpinalTrace with matching
+metadata. Replay never earns a proof pass. See the [command guide](../rvw/src/rvw/formal/README.md#counterexample-what-if-replay)
+for edit syntax, result meanings and validation limits.
