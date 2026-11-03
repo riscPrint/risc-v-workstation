@@ -1227,3 +1227,41 @@ Checks have `name`, `actual`, `expected`, and `status` (`consistent`, `mismatch`
 `unavailable`). Overall `mismatch` exits 1, `inconclusive` exits 3, and malformed
 input exits 2 with `status=error`. No check result can grant C8 acceptance.
 The [SoC tool README](../rvw/src/rvw/soc/README.md) defines the bounded evidence.
+
+### C9 offline event fitting
+
+`rvw arch fit PLAN --json` and MCP `arch_fit` consume `rvw.arch-fit-plan/1`.
+The exact fields are `schema`, `rtl`, `candidates` (name to gem5 report path),
+`train`, `held_out`, `events`, `scope`, `uncertainty`, and `unsupported`.
+Paths resolve against PLAN. Each event has `name`, `rtl_metric`, `gem5_stat`,
+`unit`, and `semantics`. Events map raw C1 `metrics` to the first ROI stats
+block in gem5 `stats.txt` beside `bare.json`. Event semantics are a project
+assertion. All mapped values must be finite and nonnegative. Missing values
+are errors. Existing C9 comparison evidence checks apply to every candidate.
+Train and held-out IDs must be distinct, nonempty and cover all report IDs.
+Their ELF hash sets must also be disjoint. Renamed ELF copies cannot be held out.
+
+`rvw.arch-fit/1` records status `reported`, the selected candidate, training
+scores, the winner's held-out score, winner event errors, split IDs, mappings,
+scope, uncertainty, unsupported structures, plan/RTL/candidate report hashes,
+and raw stats paths and hashes. Error is `abs(model-RTL)/max(1,RTL)`.
+Scores use equal weights across events and workloads. Only training scores
+select the winner. Lexical candidate names break ties. No acceptance or
+confidence claim follows from this report. The caller must keep held-out
+workloads separate when creating candidates. No parameter search runs here.
+
+### C9 static compatibility preflight
+
+`rvw arch inspect --elf ELF --isa ISA --kind KIND --json` checks static ELF
+layout independently of performance calibration. MCP exposes `arch_inspect`.
+`rvw.arch-compatibility/1` records status, ELF path/hash, ISA, XLEN, CPU kind,
+RAM base/bytes, required symbol addresses/sizes, blockers and limits.
+Supported input labels are `rv32im`, `rv64gc`, `rv64gc_zba_zbb_zbs` and CPU
+kinds `o3`, `minor`, `timing`. ELF class must match XLEN. Required runtime
+symbols and the fixed RAM layout are checked in ELF32 and ELF64.
+Only RV64 O3 returns `compatible` (CLI exit 0). Other known combinations
+return `unsupported` (CLI exit 2) with runtime and CPU blockers. Unknown
+labels or invalid files give the normal error object and exit 2.
+Compatibility does not establish instruction behavior, ISA extensions,
+ROI counter validity or model fidelity. It does not enable a new runner.
+MCP returns the same status in the result of its background job.

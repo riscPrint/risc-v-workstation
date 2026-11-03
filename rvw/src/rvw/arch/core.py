@@ -343,3 +343,28 @@ def summary(report):
     lines.append(f'Geomean IPC ratio: {report["geomean_ipc_ratio"]:.3f}')
     lines.append(report['limits'])
     return '\n'.join(lines)
+
+
+def inspect(elf, isa, kind, project=None):
+    """Static compatibility only. This never runs a core or certifies an ISA."""
+    if project is not None:
+        load_project(project)
+    if isa not in ('rv32im', 'rv64gc', 'rv64gc_zba_zbb_zbs'):
+        raise ArchError('unsupported ISA selection')
+    if kind not in ('o3', 'minor', 'timing'):
+        raise ArchError('unsupported CPU selection: use o3, minor or timing')
+    xlen = 32 if isa == 'rv32im' else 64
+    path = Path(elf).resolve()
+    symbols = runpy.run_path(str(ROOT / 'Arch/model.py'))['elf_symbols'](path, xlen=xlen)
+    missing = []
+    if kind != 'o3':
+        missing.append('In-order CPU construction and ROI probe validation are not implemented.')
+    if xlen == 32:
+        missing.append('RV32 runtime, stable 64-bit CSR reads and gem5 ISA configuration are not validated.')
+    return {'schema': 'rvw.arch-compatibility/1',
+            'status': 'unsupported' if missing else 'compatible',
+            'elf': str(path), 'elf_sha256': digest(path.read_bytes()),
+            'isa': isa, 'xlen': xlen, 'kind': kind,
+            'memory': {'base': 0x80000000, 'bytes': 512 * 1024 * 1024},
+            'symbols': symbols, 'blockers': missing,
+            'limits': 'Static ELF layout check only. ISA extensions, instruction behavior, ROI counters and model fidelity are not validated.'}

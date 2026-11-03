@@ -122,7 +122,7 @@ and ELF hashes. A missing, failed, changed, or unequal run gives an error.
 ratio above 1 means gem5 ran the ROI faster. `cycle_gap_percent` is candidate
 cycles divided by base cycles, minus 1, times 100. The aggregate is a geometric
 mean of IPC ratios. The report status is `reported`. It is not a gate verdict.
-The tool does not fit parameters or claim calibration acceptance. It does not
+The comparison does not fit parameters or claim calibration acceptance. It does not
 claim complete C8 capture or immutable generations. Reports are local measured
 evidence. The threat model excludes file races and hostile input.
 
@@ -138,8 +138,8 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   The runtime drops console HTIF calls and stores ROI counters for both engines.
 - Require exactly two ROI markers and a passing tohost value. A tick limit or
   incomplete exit must not produce successful evidence.
-- Report the gap before adding a fitter. Held-out fitting, event-counter
-  alignment, and automated microbenchmarks remain open work.
+- Report the gap before adding a fitter. Offline held-out candidate selection and measurement microbenchmarks are available.
+  Live RTL event integration and parameter search remain open work.
 - An in-order or RV32 core needs a CPU model selection, a matching runtime and
   ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
 
@@ -148,3 +148,99 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
 Fitting: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12). RV32/in-order models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Wide-core features: [#72](https://github.com/riscPrint/risc-v-workstation/issues/72). Experiments: [#160](https://github.com/riscPrint/risc-v-workstation/issues/160).
 
 Retained limit: Complete C8 capture and immutable generations have no dedicated issue. Keep C9 reports local, with absolute paths and status=reported. Parameter generation remains a source-inspection guide, not a verified extractor. Fixed topology and benchmark sensitivity still apply.
+
+## Event fitting
+
+`rvw arch fit plan.json --json` selects among saved project-owned candidates.
+The MCP tool is `arch_fit`. It does not run gem5 or change parameters.
+Use a new held-out set after you use its result to change candidates.
+Keep model parameters and event mappings in the core project.
+
+A plan uses this format. Paths resolve against the plan directory.
+
+```json
+{
+  "schema": "rvw.arch-fit-plan/1",
+  "rtl": "runs/rtl.json",
+  "candidates": {"baseline": "runs/gem5.json", "candidate": "runs-2/gem5.json"},
+  "train": ["pointer-chase", "dependent-chain"],
+  "held_out": ["branch-loop", "independent-misses"],
+  "events": [{
+    "name": "retired branches",
+    "rtl_metric": "roi_retired_branches",
+    "gem5_stat": "system.cpu.branchPred.condPredicted",
+    "unit": "count",
+    "semantics": "Example only. Replace with independently verified ROI event semantics."
+  }],
+  "scope": "Name the tested core, memory setup and workloads.",
+  "uncertainty": "State counter boundary errors and measurement variation.",
+  "unsupported": ["List structures that this model does not represent."]
+}
+```
+
+The statistic above is a format example, not an asserted semantic match.
+The project owner must check that both events count the same behavior in the
+same ROI. Missing events fail. No event is inferred from an IPC ratio.
+The fitter rechecks the run evidence, ELF hashes, instruction counts and run
+settings through `compare`. It reads C1 `metrics` and the first complete block
+in `stats.txt` beside each gem5 `bare.json`. This model resets stats at ROI
+entry and writes that block at ROI exit. Use reports from this model only.
+It hashes the stats files in the fit report. It does not certify the mappings.
+
+Error is `abs(model - RTL) / max(1, RTL)` per event and workload.
+The training score is the arithmetic mean of these errors, with equal weights.
+The lowest training score wins. Names break ties in lexical order.
+Only the winner gets a held-out score. Splits must be nonempty, disjoint and
+cover exactly the report workloads. Training and held-out ELF hashes must also
+be disjoint. Renaming the same ELF does not make an unseen workload.
+The report has status `reported`.
+It gives no fidelity threshold, confidence interval or correctness verdict.
+A single workload cannot establish general model fidelity.
+Candidate generation and parameter search remain project-owned work.
+The test target uses synthetic event evidence. It does not validate RTL counters.
+
+## Measurement microbenchmarks
+
+The benchmark builder also accepts `pointer-chase`, `branch-loop`,
+`dependent-chain` and `independent-misses`:
+
+```sh
+rvw arch build --bench pointer-chase,branch-loop,dependent-chain,independent-misses --json
+```
+
+These sources live in `Arch/bench/micro`. They use the existing ROI runtime.
+The pointer chase loads one linked node per cache line. The branch loop runs
+an alternating conditional branch. The dependent chain uses four dependent
+integer additions per iteration. The independent load test uses four separate
+arrays. Its name describes the intended pressure. Actual misses depend on
+cache capacity, cache state and the compiler. Inspect disassembly and measured
+events before drawing a timing conclusion. Setup and return checks sit outside
+the marked ROI. No source guarantees a cold cache or a given miss count.
+
+## CPU and ELF compatibility preflight
+
+Run a static check before model construction:
+
+```sh
+rvw arch inspect --elf kernel.riscv --isa rv32im --kind minor --json
+```
+
+The MCP tool is `arch_inspect`. The checker accepts ELF32 for `rv32im` and
+ELF64 for `rv64gc` or `rv64gc_zba_zbb_zbs`. It checks the machine, load ranges,
+entry and required runtime symbols. It checks both classes against the same
+512 MiB RAM range at `0x80000000`. It does not read ISA extension attributes
+or validate instruction behavior. The CPU choices are `o3`, `minor` and
+`timing`. Only RV64 O3 is currently compatible with the runtime runner.
+
+A valid RV32IM ELF with `minor` is the first small preflight case. Its expected
+result is `status: unsupported`, with separate CPU and RV32 runtime blockers.
+CLI exit 2 keeps it blocked. ELF layout success cannot enable a simulation.
+The RV32 case uses synthetic ELF data in unit tests. It is not VexRiscv
+validation. Unknown choices and invalid ELFs produce errors. A compatible
+RV64 O3 layout exits 0. Compatibility remains separate from performance
+calibration and does not prove ISA support, ROI counters or model fidelity.
+
+The next increments need in-order CPU construction and probe validation,
+an RV32 runtime with stable 64-bit CSR reads, gem5 RV32 ISA configuration,
+and second-core instruction, memory and ROI checks. The existing runner still
+refuses RV32 and in-order descriptions. No VexRiscv model is claimed.
