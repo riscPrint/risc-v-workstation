@@ -63,6 +63,15 @@ class Platform:
     # reference's own pending and enable state. Default: MSIP, MTIP, SEIP, MEIP.
     irq_inputs: list = field(default_factory=lambda: [3, 7, 9, 11])
 
+    privilege_modes: str = "MSU"
+    misaligned: dict = field(default_factory=lambda: {
+        "load": "trap", "store": "trap", "atomic": "trap",
+        "split_page": "refuse", "split_bus": "refuse"})
+    endianness: dict = field(default_factory=lambda: {
+        "instruction": "little", "data": "little", "page_table": "little", "device": "little"})
+    absent_pmp_csrs: str = "trap"
+    ecall_tval: str = "zero"
+
     @classmethod
     def load(cls, core, path=None):
         path = Path(path) if path else Path(__file__).parent / "configs" / f"{core}.json"
@@ -73,6 +82,29 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        p.privilege_modes = obj.get("privilege_modes", "MSU")
+        if p.privilege_modes not in ("M", "MU", "MSU"):
+            raise ValueError("privilege_modes must be M, MU or MSU")
+        policy_keys = p.misaligned.keys()
+        p.misaligned = obj.get("misaligned", p.misaligned)
+        if (not isinstance(p.misaligned, dict) or p.misaligned.keys() != policy_keys
+                or p.misaligned["load"] not in ("trap", "emulate")
+                or p.misaligned["store"] != p.misaligned["load"]
+                or p.misaligned["atomic"] != ("trap" if p.misaligned["load"] == "trap" else "access_fault")
+                or any(p.misaligned[k] != "refuse" for k in ("split_page", "split_bus"))):
+            raise ValueError("unsupported misaligned policy: equal load/store trap or emulate, atomic trap or access_fault respectively, split_page/split_bus refuse required")
+        endianness = obj.get("endianness", p.endianness)
+        if endianness != p.endianness:
+            raise ValueError("only little endianness for instruction, data, page_table and device is supported")
+        p.endianness = endianness
+        p.absent_pmp_csrs = obj.get("absent_pmp_csrs", "trap")
+        if p.absent_pmp_csrs not in ("trap", "read_zero_write_ignored"):
+            raise ValueError("absent_pmp_csrs must be trap or read_zero_write_ignored")
+        if p.absent_pmp_csrs != "trap" and p.pmp_regions != 0:
+            raise ValueError("absent_pmp_csrs read_zero_write_ignored requires pmp_regions=0")
+        p.ecall_tval = obj.get("ecall_tval", "zero")
+        if p.ecall_tval not in ("zero", "insn"):
+            raise ValueError("ecall_tval must be zero or insn")
         p.sail_overrides = obj.get("sail_overrides", {})
         if not isinstance(p.sail_overrides, dict):
             raise ValueError("sail_overrides must be a JSON object (a Sail config override)")
@@ -90,6 +122,9 @@ class Platform:
         if type(p.pmp_regions) is not int or not 0 <= p.pmp_regions <= 64:
             raise ValueError("invalid PMP count")
         p.csr_masks = parse_csr_masks(obj.get("csr_masks", {}), p.xlen, p.pmp_regions)
+        if p.absent_pmp_csrs == "read_zero_write_ignored" and any(
+                0x3a0 <= csr <= 0x3ef for csr in p.csr_masks):
+            raise ValueError("absent PMP CSR values must compare exactly; csr_masks cannot cover them")
         if type(p.mode_after_change) is not bool or type(p.trace_from_reset) is not bool:
             raise ValueError("mode_after_change and trace_from_reset must be boolean")
         if p.illegal_insn_tval not in ("insn", "zero"):

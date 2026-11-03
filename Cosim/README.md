@@ -79,6 +79,40 @@ Use `--core LABEL --platform /path/platform.json` for another core:
 }
 ```
 
+Platform policy keys are explicit in the BOOM and VexRiscv JSON files:
+
+- `privilege_modes`: `M`, `MU` or `MSU` (default `MSU`). Spike receives this value.
+- `misaligned`: an object with `load`, `store`, `atomic`, `split_page` and
+  `split_bus`. Loads and stores must both select `trap` (default), or both
+  select `emulate`. With `trap`, `atomic` must be `trap`. With `emulate`,
+  `atomic` must be `access_fault`, the installed Spike outcome. Alignment
+  traps use causes 4/6; atomic access faults use causes 5/7. Trap events compare
+  the failing address in `tval` without a mask.
+- `split_page` and `split_bus` must be `refuse`. Scalar C2 cannot describe
+  partial writes, bus fault precedence or intermediate transactions. Completed
+  accesses across an XLEN word, and multiple reference memory effects, are
+  refused. XLEN is the trace word boundary, not a claim about physical bus width.
+  An alignment trap before a split compares as a trap. Partial effects and fault
+  precedence after a split are outside this comparison. Other policies are refused.
+- `endianness`: an object with `instruction`, `data`, `page_table` and `device`.
+  Each must be `little`. Other combinations are refused before model execution.
+  This declaration does not establish big-endian support.
+- `absent_pmp_csrs`: `trap` (default), or `read_zero_write_ignored` with
+  `pmp_regions: 0`. The latter installs constant-zero PMP CSRs in Spike.
+  Writes have no effect. Normal CSR privilege checks still apply. RV64 odd
+  `pmpcfg` addresses remain illegal. This applies only to `0x3a0..0x3ef`.
+  Other CSR accesses, wrong read values and unexpected traps still mismatch.
+- `ecall_tval`: `zero` (default) or `insn` (exactly `0x73`). Only a matching
+  synchronous ECALL cause 8, 9 or 11 can use this rule. The checker sets the
+  reference trap CSR to that declared value for later reads. Other causes and
+  other values still mismatch. This is a platform rule, not synchronization;
+  `--strict` retains it. Without a trap event, C2 cannot check `tval`.
+
+VexRiscv declares zero PMP reads with ignored writes and ECALL `tval=0x73`.
+BOOM retains its previous outcomes. Sail currently refuses non-MSU modes,
+misaligned emulation, zero absent-PMP CSRs and nonzero ECALL `tval`.
+It does not silently replace these settings with its defaults.
+
 `aligned_mem` selects RVFI's `RISCV_FORMAL_ALIGNED_MEM` convention: word-aligned
 addresses with masks/data shifted into the active byte lanes. It defaults to
 false for access-relative addresses; BOOM sets it true. Reference effects and
@@ -449,3 +483,39 @@ Both return a job ID. `job_status(wait_s=60)` returns the same JSON as the corre
 and synchronization limits described in the main README ("What match guarantees"): no FP
 registers, `fflags`, unread CSR side effects or unread memory; a matching prefix also returns
 `match`. It is not proof that the program passed: check `trace_complete` and `end_status`.
+
+## Architectural comparison coverage
+
+This matrix describes the current C2 contract and comparators. It does not add
+features or claim independent-reference experiment results. A match applies only
+to the fields and recorded execution below.
+
+| State or effect | C2 evidence | Spike | Sail |
+|---|---|---|---|
+| PC, next PC, instruction, privilege | Per instruction | Compared; declared mode-after-change quirk | Compared; same quirk |
+| Integer destination and value | Per instruction | Compared; declared synchronization below | Compared; external values cannot be injected |
+| Integer source operands | Present in C2 | Not directly compared; later effects can expose errors | Same |
+| Scalar memory address, masks, active bytes, fault flag | Per instruction | Compared; inert MMIO load data synchronized | Compared; model device behavior, no external data injection |
+| Trap cause and failing address (`tval`) | Optional trap event | Compared; exact declared illegal/ECALL value | Compared; unsupported ECALL policy refused |
+| CSR read result | Integer destination | Compared except declared masks, counters and evidenced input bits | Compared; nondeterministic reads refused |
+| Unread CSR state and CSR side effects | No CSR snapshot | Out of scope until observed by a later effect | Same |
+| Cycle/time/HPM read | Integer destination | Synchronized on pure reads; strict mode disables this | Refused when offline synchronization would be needed |
+| instret/minstret | Integer destination | Strict from reset; declared late-trace offset only | Compared; no external offset injection |
+| MMIO and interrupt external inputs | Optional IRQ levels, load result and trap event | Declared MMIO/input synchronization; not a device or timing proof | External-input synchronization unsupported; nondeterministic traces refused |
+| FP registers, `fflags`, `fcsr` | No FP state | Out of scope; FP integer/memory effects can compare | Same |
+| Vector, hypervisor state | No matching state contract | Out of scope; scalar-unrepresentable effects refused | Unsupported ISA/virtualized modes refused |
+| Debug state | No debug state contract | Debug execution refused | Unsupported execution refused; no debug-state comparison |
+| Per-hart state, inter-hart order | No hart identity or shared-memory order | Single hart only; multi-hart out of scope | Same |
+| Partial memory effects, split-bus/page fault precedence | No transaction history | Refused split completion; partial effects out of scope | No partial-effect comparison; no split policy support |
+| Endianness | Platform declaration, little-endian ELF | Little only; other combinations refused | Little only |
+| PMP TOR/NA4/NAPOT, priority, grain, locked entries | Only observed instruction effects | Model execution; no claim of a complete coverage suite | Same |
+| Halt/WFI and timing | C2 halt/cycle fields | No cycle or halt equality; WFI may resume | No timing proof |
+
+Dependencies: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10)
+(FP state), [#47](https://github.com/riscPrint/risc-v-workstation/issues/47)
+(interrupt stimulus), and [#75](https://github.com/riscPrint/risc-v-workstation/issues/75).
+Related scope: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87),
+[#114](https://github.com/riscPrint/risc-v-workstation/issues/114),
+[#136](https://github.com/riscPrint/risc-v-workstation/issues/136),
+[#90](https://github.com/riscPrint/risc-v-workstation/issues/90), and
+[#100](https://github.com/riscPrint/risc-v-workstation/issues/100).

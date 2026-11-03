@@ -229,6 +229,14 @@ at every change; records of cycle `N` may come before it. `rvw cosim` takes an i
 `mip`/`sip` read from the core only with such evidence (see `rvw/src/rvw/cosim/README.md`).
 Tools that report C2 values (for example `rvw cosim` mismatch JSON) use the same hex strings.
 
+The cosim platform JSON declares `privilege_modes`, `misaligned` outcomes,
+`endianness`, `absent_pmp_csrs` and `ecall_tval`. Missing keys retain the legacy
+MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
+Unsupported policies must be refused. These settings do not permit arbitrary
+trace values or broad CSR masks. See the exact settings and the
+[C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
+C2 does not carry partial memory effects, FP state or per-hart state.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

@@ -68,9 +68,10 @@ own target directory. This avoids the bundled BOOM `ProjectRef` in RiscvSim's
 build. The database build uses SpinalDB through `ProjectRef`. Core build files
 and core Scala sources are unchanged.
 
-The smoke program matches Spike. The ISA startup code differs at absent PMP CSR
-access. The ECALL program differs on `mtval=0x73`. The adapter preserves those
-values. It does not mask either difference. The external project check passed
+The smoke program matches Spike. The platform JSON declares absent PMP CSRs as
+zero on reads with ignored writes. It declares ECALL `mtval=0x73`. The adapter
+preserves those values. The comparator checks these exact outcomes. Wrong values
+still mismatch. Full PMP behavior is outside this example because it has no PMP. The external project check passed
 41 aligned RV32UI tests and a four-test committed gate with equal RTL hashes.
 These simulator checks do not establish formal or hardware correctness.
 
