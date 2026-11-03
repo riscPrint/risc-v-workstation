@@ -385,3 +385,13 @@ def test_pinned_sources_include_recorded_submodules(tmp_path):
                        capture=True, timeout=10)
     assert result.returncode == 0
     assert 'submodule update --init --recursive' in result.stdout
+
+
+def test_installer_workflow_passes_actionlint():
+    import shutil
+    actionlint = shutil.which('actionlint')
+    if not actionlint:
+        pytest.skip('actionlint is not installed')
+    result = run_group([actionlint, '.github/workflows/installer.yml'],
+                       cwd=ROOT, capture=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr

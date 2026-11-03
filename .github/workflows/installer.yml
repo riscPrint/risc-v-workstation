@@ -30,13 +30,16 @@ jobs:
       - name: Install on the native host
         env:
           FLAGS: ${{ matrix.flags }}
-        run: scripts/install.sh --yes $FLAGS
+        run: |
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --yes "${flags[@]}"
       - name: Check requested tools
         env:
           FLAGS: ${{ matrix.flags }}
         run: |
           source env.sh
-          scripts/install.sh --check $FLAGS
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --check "${flags[@]}"
   long-install:
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -49,10 +52,13 @@ jobs:
       - name: Install on the native host
         env:
           FLAGS: ${{ matrix.flags }}
-        run: scripts/install.sh --yes $FLAGS
+        run: |
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --yes "${flags[@]}"
       - name: Check requested tools
         env:
           FLAGS: ${{ matrix.flags }}
         run: |
           source env.sh
-          scripts/install.sh --check $FLAGS
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --check "${flags[@]}"
