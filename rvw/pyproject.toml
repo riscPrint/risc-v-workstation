@@ -10,6 +10,7 @@ dependencies = ["jsonschema>=4.18"]
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 dev = ["pytest>=8"]
+cocotb = ["cocotb>=2.0,<3"]
 
 [project.urls]
 Source = "https://github.com/riscPrint/risc-v-workstation"

@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.cocotb/1",
+  "name": "counter",
+  "backend": "verilator",
+  "top": "CounterUnit",
+  "sources": [
+    "rtl/CounterUnit.v"
+  ],
+  "test_module": "test_counter",
+  "python_paths": [
+    "."
+  ],
+  "requires": [
+    "timer"
+  ],
+  "clock": {
+    "signal": "clk",
+    "period_ns": 10
+  },
+  "reset": {
+    "signal": "reset",
+    "active": 1,
+    "cycles": 2
+  }
+}

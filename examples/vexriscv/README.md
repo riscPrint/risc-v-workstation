@@ -111,3 +111,9 @@ rm -rf /tmp/cw-vex-pytest
 PMP/ECALL policy: [#11](https://github.com/riscPrint/risc-v-workstation/issues/11). RV32 architecture models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
 
 Retained limit: The documented ISA, adapter and validation subset applies only to this example. It does not qualify other VexRiscv configurations.
+
+## Cocotb component tests
+
+The [cocotb example](cocotb/README.md) generates a small counter and the upstream
+PMP address unit. It runs both with Icarus and Verilator through `rvw regress
+cocotb`. The test bindings stay outside the generic library.
