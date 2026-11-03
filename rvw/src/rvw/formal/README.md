@@ -290,3 +290,22 @@ run an elaborator, or claim that a supplied revision label produced those files.
 For tracked RTL, use `git show REV:path/to/Top.v > old/Top.v` for each side.
 For Spinal designs, elaborate each committed revision in a separate build area.
 Do not build or change an owner's shared core checkout.
+
+### Validation scope and export gap
+
+The committed equivalence tests use small Verilog designs. Run them from the
+workstation root with the native formal tools on `PATH`:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/formal/test_equiv.py -q
+```
+
+This increment has no committed BOOM leaf export recipe. It does not establish
+BOOM leaf or whole-core equivalence. A source revision label alone does not
+establish the origin of generated RTL.
+
+A reproducible source-revision comparison still needs a tested export flow.
+It must declare the generator dependencies and settings for each revision.
+Module selection must use the project's generated Verilog and project data.
+Core names and settings must stay outside `rvw/src`. Copying a Scala class and
+selected helpers into a temporary harness is not a supported export flow.
