@@ -100,6 +100,8 @@ def run_group(argv, cwd=None, env=None, timeout=None, stdout=None, stderr=None,
     stdout open (a daemon, a background job) neither delays the result nor turns a finished run into
     a timeout. Then the rest of the group is stopped and the pipes are drained for at most DRAIN_S
     seconds (a process that left the group may still hold them)."""
+    from .budget import reserve_launch
+    reserve_launch()
     if isinstance(argv, (str, bytes)):
         raise TypeError("run_group takes an argument list, not a shell string")
     if capture:

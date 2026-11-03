@@ -96,3 +96,6 @@ the registry directly and a real client session over stdio (including a plugin's
   inline within 20 s or become cancellable jobs. They use a separate thread pool.
 - Truncation keeps valid JSON, result shape, retained summaries and explicit cut paths.
   Keep support for MCP SDK 1.x and 2.x. Tool declarations do not import the SDK.
+
+Native worker budgets use `RVW_JOB_BUDGET`. See [common](../common/README.md#native-job-budgets).
+A budget stop fails the worker call and retains its cost report in job status.

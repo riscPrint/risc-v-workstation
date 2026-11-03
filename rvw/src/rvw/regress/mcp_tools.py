@@ -15,6 +15,8 @@ RUN = {"jobs": {**I, "minimum": 1}, "seeds": {**I, "minimum": 1},
        "max_cycles": I, "timeout": {**N, "exclusiveMinimum": 0}, "rvfi_trace": B, "no_cache": B,
        "replay_max_bytes": {**I, "minimum": 1,
                             "description": "Unique replay ELF byte limit; default 268435456. Checked before execution."}}
+BUDGET = {"budget_cpu_seconds": {**N, "exclusiveMinimum": 0}, "budget_wall_seconds": {**N, "exclusiveMinimum": 0},
+          "budget_job_count": {**I, "minimum": 1}, "cost_report": S}
 COMPARE = {**CORE, "known": S, "perf_tolerance": N, "allow_missing": B,
            "seed_policy": {**S, "enum": ["auto", "exact", "count"], "default": "auto"}}
 
@@ -45,7 +47,7 @@ def mcp_tools():
                  "base and base_rev are mutually exclusive; cand and cand_rev are mutually exclusive. "
                  "Use base_rev or base; candidate defaults to HEAD when clean. Dirty trees run but cannot accept: "
                  "C4 /2 reports tests separately and not_accepted_reason=uncommitted. Commit (a scratch branch is fine) and rerun; complete RTL identities reuse passing results. Returns a job; the runner takes the core lock.",
-                 schema({**COMPARE, **RUN, "tier": {**S, "default": "quick"}, "config": S,
+                 schema({**COMPARE, **RUN, **BUDGET, "tier": {**S, "default": "quick"}, "config": S,
                          "base_rev": S, "base": S, "cand_rev": S, "cand": S}),
                  handler("rvw.regress.cli", "gate"), long=True),
         ToolSpec("regress_history", "Find stored runs and their status before comparing or resuming; filter core, revision prefix or tier.",

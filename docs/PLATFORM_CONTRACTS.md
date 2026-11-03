@@ -1021,3 +1021,14 @@ collection. Unreported targets retain their existing disposition.
 Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.
+
+### Native job cost reports (first increment, #57)
+
+`rvw.cost/1` records limits, local logical CPU capacity, elapsed wall seconds,
+measured child CPU seconds, conservative charged CPU seconds, launched job units,
+exit code, status and stop reason. A unit is one launch through `run_group`.
+Native descendants within an adapter batch are not separate count units.
+A locked command-owned counter covers nested launches. CPU reservation is host
+capacity times wall time. Cleanup has a separate grace and remains in the report.
+Missing or exhausted budgets cannot grant a gate accept. Reports are external
+artifacts. See `rvw/src/rvw/common/README.md` for enforcement limits.
