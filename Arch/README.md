@@ -122,7 +122,7 @@ and ELF hashes. A missing, failed, changed, or unequal run gives an error.
 ratio above 1 means gem5 ran the ROI faster. `cycle_gap_percent` is candidate
 cycles divided by base cycles, minus 1, times 100. The aggregate is a geometric
 mean of IPC ratios. The report status is `reported`. It is not a gate verdict.
-The tool does not fit parameters or claim calibration acceptance. It does not
+The comparison does not fit parameters or claim calibration acceptance. It does not
 claim complete C8 capture or immutable generations. Reports are local measured
 evidence. The threat model excludes file races and hostile input.
 
@@ -138,8 +138,8 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   The runtime drops console HTIF calls and stores ROI counters for both engines.
 - Require exactly two ROI markers and a passing tohost value. A tick limit or
   incomplete exit must not produce successful evidence.
-- Report the gap before adding a fitter. Held-out fitting, event-counter
-  alignment, and automated microbenchmarks remain open work.
+- Report the gap before adding a fitter. Offline held-out candidate selection and measurement microbenchmarks are available.
+  Live RTL event integration and parameter search remain open work.
 - An in-order or RV32 core needs a CPU model selection, a matching runtime and
   ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
 
@@ -148,3 +148,69 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
 Fitting: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12). RV32/in-order models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Wide-core features: [#72](https://github.com/riscPrint/risc-v-workstation/issues/72). Experiments: [#160](https://github.com/riscPrint/risc-v-workstation/issues/160).
 
 Retained limit: Complete C8 capture and immutable generations have no dedicated issue. Keep C9 reports local, with absolute paths and status=reported. Parameter generation remains a source-inspection guide, not a verified extractor. Fixed topology and benchmark sensitivity still apply.
+
+## Event fitting
+
+`rvw arch fit plan.json --json` selects among saved project-owned candidates.
+The MCP tool is `arch_fit`. It does not run gem5 or change parameters.
+Use a new held-out set after you use its result to change candidates.
+Keep model parameters and event mappings in the core project.
+
+A plan uses this format. Paths resolve against the plan directory.
+
+```json
+{
+  "schema": "rvw.arch-fit-plan/1",
+  "rtl": "runs/rtl.json",
+  "candidates": {"baseline": "runs/gem5.json", "candidate": "runs-2/gem5.json"},
+  "train": ["pointer-chase", "dependent-chain"],
+  "held_out": ["branch-loop", "independent-misses"],
+  "events": [{
+    "name": "retired branches",
+    "rtl_metric": "roi_retired_branches",
+    "gem5_stat": "system.cpu.branchPred.condPredicted",
+    "unit": "count",
+    "semantics": "Example only. Replace with independently verified ROI event semantics."
+  }],
+  "scope": "Name the tested core, memory setup and workloads.",
+  "uncertainty": "State counter boundary errors and measurement variation.",
+  "unsupported": ["List structures that this model does not represent."]
+}
+```
+
+The statistic above is a format example, not an asserted semantic match.
+The project owner must check that both events count the same behavior in the
+same ROI. Missing events fail. No event is inferred from an IPC ratio.
+The fitter rechecks the run evidence, ELF hashes, instruction counts and run
+settings through `compare`. It reads C1 `metrics` and the first complete block
+in `stats.txt` beside each gem5 `bare.json`. This model resets stats at ROI
+entry and writes that block at ROI exit. Use reports from this model only.
+It hashes the stats files in the fit report. It does not certify the mappings.
+
+Error is `abs(model - RTL) / max(1, RTL)` per event and workload.
+The training score is the arithmetic mean of these errors, with equal weights.
+The lowest training score wins. Names break ties in lexical order.
+Only the winner gets a held-out score. Splits must be nonempty, disjoint and
+cover exactly the report workloads. The report has status `reported`.
+It gives no fidelity threshold, confidence interval or correctness verdict.
+A single workload cannot establish general model fidelity.
+Candidate generation and parameter search remain project-owned work.
+The test target uses synthetic event evidence. It does not validate RTL counters.
+
+## Measurement microbenchmarks
+
+The benchmark builder also accepts `pointer-chase`, `branch-loop`,
+`dependent-chain` and `independent-misses`:
+
+```sh
+rvw arch build --bench pointer-chase,branch-loop,dependent-chain,independent-misses --json
+```
+
+These sources live in `Arch/bench/micro`. They use the existing ROI runtime.
+The pointer chase loads one linked node per cache line. The branch loop runs
+an alternating conditional branch. The dependent chain uses four dependent
+integer additions per iteration. The independent load test uses four separate
+arrays. Its name describes the intended pressure. Actual misses depend on
+cache capacity, cache state and the compiler. Inspect disassembly and measured
+events before drawing a timing conclusion. Setup and return checks sit outside
+the marked ROI. No source guarantees a cold cache or a given miss count.

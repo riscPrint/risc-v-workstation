@@ -1021,3 +1021,24 @@ collection. Unreported targets retain their existing disposition.
 Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.
+
+### C9 offline event fitting
+
+`rvw arch fit PLAN --json` and MCP `arch_fit` consume `rvw.arch-fit-plan/1`.
+The exact fields are `schema`, `rtl`, `candidates` (name to gem5 report path),
+`train`, `held_out`, `events`, `scope`, `uncertainty`, and `unsupported`.
+Paths resolve against PLAN. Each event has `name`, `rtl_metric`, `gem5_stat`,
+`unit`, and `semantics`. Events map raw C1 `metrics` to the first ROI stats
+block in gem5 `stats.txt` beside `bare.json`. Event semantics are a project
+assertion. All mapped values must be finite and nonnegative. Missing values
+are errors. Existing C9 comparison evidence checks apply to every candidate.
+Train and held-out IDs must be distinct, nonempty and cover all report IDs.
+
+`rvw.arch-fit/1` records status `reported`, the selected candidate, training
+scores, the winner's held-out score, winner event errors, split IDs, mappings,
+scope, uncertainty, unsupported structures, plan/RTL/candidate report hashes,
+and raw stats paths and hashes. Error is `abs(model-RTL)/max(1,RTL)`.
+Scores use equal weights across events and workloads. Only training scores
+select the winner. Lexical candidate names break ties. No acceptance or
+confidence claim follows from this report. The caller must keep held-out
+workloads separate when creating candidates. No parameter search runs here.

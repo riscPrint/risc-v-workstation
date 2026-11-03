@@ -25,7 +25,7 @@ sequential equivalence, IDE views, tool bundle, emulation) has not started.
 
 | ID | Area | Replaces | Open-source base | Ours so far | Status | Next |
 |---|---|---|---|---|---|---|
-| ARCH | Architecture exploration and virtual platforms | Arm Fast Models, Synopsys Platform Architect | gem5, QEMU, Spike, Sail | `Arch/` and `rvw arch`: native gem5 setup, project O3 descriptions, C1 ROI calibration and MCP; `rvw perf` | exploring | Event counters, measurement microbenchmarks, held-out fitting and drift checks |
+| ARCH | Architecture exploration and virtual platforms | Arm Fast Models, Synopsys Platform Architect | gem5, QEMU, Spike, Sail | `Arch/` and `rvw arch`: native gem5 setup, project O3 descriptions, C1 ROI calibration and MCP; `rvw perf` | exploring | Offline event fitting and four microbenchmarks added; live counters and drift checks remain |
 | IDE | Design entry and IDE | Sigasi Studio, DVT IDE | VS Code, Verible, Metals (Scala) | SpinalBlocks; SpinalDB + `rvw query` | in progress | Cross-navigation in VS Code backed by the design database |
 | SIM | Simulation and regression | Synopsys VCS, Cadence Xcelium, Siemens Questa; vManager | Verilator, Icarus Verilog, GHDL | RiscvSim (run contract, BOOM adapter); `rvw regress`; `rvw cov` | usable | Persistent simulation server (no per-run elaboration); other presets and ACT4 through RiscvSim |
 | VER | Testbenches, VIP, co-simulation | UVM, Questa VIP, Synopsys VIP, Imperas ImperasDV | riscv-tests, ACT4, riscv-dv, TestRIG, Spike, Sail, cocotb | `rvw cosim` (Spike lockstep, Sail offline); riscv-tests/ACT4/VM suites in `rvw regress` | in progress (interrupt schedules; BOOM runtime pending) | Cosim on ACT4, benchmarks and random programs (riscv-dv); interrupt stimulus; TestRIG |
