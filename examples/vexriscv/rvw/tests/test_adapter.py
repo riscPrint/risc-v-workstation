@@ -93,7 +93,7 @@ def test_rejects_rv64_elf(tmp_path):
     result = invoke(['run', '--elf', elf, '--out', tmp_path / 'run', '--rvfi-trace', '--json'])
     assert result.returncode != 0
     run = json.loads(result.stdout)
-    assert run['status'] == 'error' and 'ELF32' in run['message']
+    assert run['status'] == 'error' and 'ELF XLEN 64 does not match adapter XLEN 32' in run['message']
     assert run['instret'] == 0
 
 

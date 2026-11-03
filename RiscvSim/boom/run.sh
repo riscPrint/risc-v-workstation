@@ -46,7 +46,7 @@ fi
 # Record revisions before compilation. RTL, not the sbt classpath, identifies the design.
 "$RVW_PYTHON" "$root/scripts/source-identity.py" "$boom" "$repo" > "$launch_owner/source.json"
 sbt_cmd=(sbt -J-Xmx4g -batch -Dsbt.offline=true "boom/compile" "export boom/Runtime/fullClasspath")
-output="$(cd "$root" && "${sbt_cmd[@]}" 2>&1)" || { echo "$output" >&2; exit 2; }
+output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt "${sbt_cmd[@]}" 2>&1)" || { echo "$output" >&2; exit 2; }
 cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
 if [ -z "$cp" ]; then echo "$output" >&2; echo '[run.sh] no classpath in sbt output' >&2; exit 2; fi
 # The supervisor owns temporary metadata until all child processes stop.

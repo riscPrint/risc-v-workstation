@@ -63,9 +63,9 @@ RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or de
 unit. SATP stays bare. Interrupt inputs stay low. Misaligned data access traps.
 The only configuration is `rv32im`.
 
-The build compiles core sources and the generic RiscvSim sources in the adapter's
-own target directory. This avoids the bundled BOOM `ProjectRef` in RiscvSim's
-build. The database build uses SpinalDB through `ProjectRef`. Core build files
+The build compiles core sources in the adapter's own target directory.
+It consumes the generic RiscvSim library through `ProjectRef`.
+The library does not load a BOOM checkout. The database build uses SpinalDB through `ProjectRef`. Core build files
 and core Scala sources are unchanged.
 
 The smoke program matches Spike. The platform JSON declares absent PMP CSRs as

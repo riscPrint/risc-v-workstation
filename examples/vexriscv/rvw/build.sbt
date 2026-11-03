@@ -4,13 +4,13 @@ val spinalVersion = "1.15.0"
 val workstation = file(sys.env("RVW_HOME")).getCanonicalFile
 val vex = file(sys.env.getOrElse("VEXRISCV", "..")).getCanonicalFile
 
-// Compile external core sources in this example's target tree. Loading RiscvSim's
-// build would also load its BOOM ProjectRef. No core checkout is built by this project.
+// Compile external core sources here; consume the generic simulator as a library.
 lazy val root = (project in file("."))
+  .dependsOn(ProjectRef(workstation / "RiscvSim", "riscvsim"))
   .settings(
     name := "rvw-vexriscv",
     Compile / unmanagedSourceDirectories ++= Seq(
-      vex / "src/main/scala", workstation / "RiscvSim/src/main/scala"),
+      vex / "src/main/scala"),
     libraryDependencies ++= Seq(
       "com.github.spinalhdl" %% "spinalhdl-core" % spinalVersion,
       "com.github.spinalhdl" %% "spinalhdl-lib" % spinalVersion,

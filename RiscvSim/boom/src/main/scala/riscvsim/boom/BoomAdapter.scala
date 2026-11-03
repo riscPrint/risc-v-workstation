@@ -100,9 +100,9 @@ object BoomAdapter extends CoreAdapter {
   def run(compiled: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     val elf = ctx.elf
     val tohostAddr = ToHost.find(elf).getOrElse(throw new IllegalArgumentException(s"${job.elf} has no tohost symbol"))
-    val tohost = new ToHost(tohostAddr)
+    val tohost = new ToHost(tohostAddr, busBytes)
     // riscv-tests benchmarks store ROI cycles and instret here (see BenchmarksSpec)
-    val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2))
+    val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
     val konataFile = new File(job.out, "konata.log")
     var tracer: Option[KonataTracer] = None

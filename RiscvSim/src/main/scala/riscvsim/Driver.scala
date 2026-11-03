@@ -323,6 +323,8 @@ class Driver(val adapter: CoreAdapter) {
         job.wallTimeoutS.map(w => f" wall_timeout=$w%.0fs").getOrElse(""))
       val elf = capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
       elfSha = elf.sha256
+      require(elf.xlen == adapter.xlen,
+        s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen} (${adapter.core}/${job.config})")
       val b = model(job.model, log)
       built = Some(b)
       st.wall.start()

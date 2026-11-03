@@ -11,7 +11,7 @@ default_config = "rv32im"
 lock = "vex"                     # same lock as run.sh
 source_repo = "."
 source_env = "VEXRISCV"
-cache_paths = ["rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
+cache_paths = ["rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
 identity = true                   # generated RTL and native tool identity
 # The launcher binds the generated RTL, harness revision and native tool record.
 input_complete = true

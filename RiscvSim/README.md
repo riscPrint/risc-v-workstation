@@ -7,7 +7,8 @@ Simulation runner for Spinal RISC-V cores, implementing the run contract (C1) an
   tohost decoding, the RVFI probe and trace writer, `result.json`, native-output capture for
   assertion messages, and the command-line driver (`build`, `run`, `run-many`, `info`) with
   a worker pool.
-- `boom/` is BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
+- `build.sbt` builds the generic library without a core checkout.
+- `boom/` has a separate sbt build for BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
 
 Status: `build`, `run`, `run-many` and `info` work on BOOM `small` (see "Verified"). The other
 presets build through the same code but were not run.
@@ -173,8 +174,13 @@ checks cover only the selected tests and configuration. They do not prove the co
 ## Tests
 
 ```sh
-scripts/with-lock.sh boom bash -c 'cd RiscvSim && sbt -J-Xmx4g -batch -Dsbt.offline=true "riscvsim/test"'
+scripts/with-lock.sh sbt bash -c 'cd RiscvSim && sbt -J-Xmx4g -batch -Dsbt.offline=true "riscvsim/test"'
 ```
+
+The driver rejects an ELF whose XLEN differs from `CoreAdapter.xlen` before model compilation.
+It writes C1 `status: error` with both XLEN values.
+`CoreAdapter.busBytes` defaults to `xlen / 8`. Pass it to `ToHost` and `MemWords`.
+These helpers track 64-bit words and select data lanes from the store address and bus width.
 
 The tests need a RISC-V GCC compiler. They build the small test ELFs on first use.
 `RISCV_GCC` can select the compiler. Missing tools cause a test failure with a reason.

@@ -411,12 +411,9 @@ libraries that your adapter uses. Add a `compile->test` mapping only if it needs
 the core's test sources. Match Scala, SpinalHDL and compiler-plugin versions.
 The current workstation builds use Scala 2.13.14 and SpinalHDL 1.15.0.
 
-The current `RiscvSim` sbt build also loads its bundled BOOM `ProjectRef`.
-For a standalone core without that checkout, compile `RiscvSim/src/main/scala`
-as an unmanaged source directory in your adapter build. Use the matching library
-dependencies from the [VexRiscv project example](../examples/vexriscv/rvw/build.sbt).
-This workaround does not require a change to the core's build or sources.
-SpinalDB can still use its `ProjectRef`.
+The `RiscvSim` build loads only the generic library. It needs no core checkout.
+The bundled BOOM adapter has a separate build under `RiscvSim/boom`.
+Use the library `ProjectRef` above for external adapters.
 
 Run builds offline from the adapter build directory. Use the machine lock for
 shared sbt outputs:
