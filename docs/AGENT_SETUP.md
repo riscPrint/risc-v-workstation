@@ -14,6 +14,18 @@ Save its exit code and log. Fix its cause before you continue.
 [#36](https://github.com/riscPrint/risc-v-workstation/issues/36).
 The commands below are the current setup path.
 
+## Setup diagnostics
+
+After the initial install, use `rvw doctor --features sim,riscv-gcc,cosim --json`
+in the core project. It checks native versions through the installer and reports
+project, adapter, ELF and gate actions. Exit 1 means setup is not ready.
+Use `rvw doctor --install sim,riscv-gcc,cosim --dry-run --json` to inspect
+installation. Remove `--dry-run` to run it. The installer asks before system
+packages. Source `env.sh` afterward. MCP `rvw_doctor` is diagnostic-only.
+Use `--smoke-elf PATH` to permit a build and one C1 run after the adapter works.
+This does not prove RVFI mapping or earn a gate verdict.
+See [doctor](../rvw/src/rvw/doctor/README.md) for exits and limits.
+
 ## 1. Select paths and check the installation
 
 Set these paths to existing directories. Use absolute paths.

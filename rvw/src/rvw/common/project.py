@@ -68,7 +68,7 @@ def parse_project(raw, path, environment):
     from rvw.regress.config import _path, _cmd, _check_keys
     base = path.parent
     tables = {
-        "project": {"schema", "root"}, "cosim": {"platform"},
+        "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
         "query": {"build", "db"},
         "arch": {"description", "sources", "benchmarks"},
@@ -84,12 +84,17 @@ def parse_project(raw, path, environment):
         sections[section] = dict(table)
     if sections["project"].get("schema", "rvw.project/1") != "rvw.project/1":
         raise ProjectError(f"{path}: unsupported project schema")
+    pin = sections["project"].get("rvw_version")
+    if pin is not None:
+        import rvw
+        if not isinstance(pin, str) or pin != rvw.__version__:
+            raise ProjectError(f"{path}: needs rvw {pin!r}; running {rvw.__version__}")
     core = raw.get("core", {})
     if not isinstance(core, dict) or not isinstance(core.get("name"), str) or not core["name"].strip():
         raise ProjectError(f"{path}: project needs [core] name")
     for section, table in sections.items():
         for key, value in list(table.items()):
-            if key in {"schema", "top", "clock", "reset"}:
+            if key in {"schema", "rvw_version", "top", "clock", "reset"}:
                 if not isinstance(value, str) or not value:
                     raise ProjectError(f"{section}.{key} must be a non-empty string")
             elif key in {"build", "verilog"}:
