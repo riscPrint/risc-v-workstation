@@ -1,0 +1,18 @@
+{
+  "tests": {
+    "url": "https://github.com/litmus-tests/litmus-tests-riscv.git",
+    "rev": "08728edcd99c7e1819d2d4c6789df6d5299ccb69"
+  },
+  "herd": {
+    "url": "https://github.com/herd/herdtools7.git",
+    "rev": "1ca343e16a2038e406d1ac674e7e3a1b722b36c7",
+    "version": "7.58",
+    "libdir_sha256": "1d4062ce6d92bfac2935b0610049f25f4d2c2a89a91ba145a5fa53fc18ba205f"
+  },
+  "cases": {
+    "tests/non-mixed-size/BASIC_2_THREAD/SB.litmus": "a993c65cb218cac51d303d8b992026446e448dde05d5347b071dce4c1a2e5c3c",
+    "tests/non-mixed-size/BASIC_2_THREAD/MP.litmus": "2db21dd1757739502eeb3af1c5d09117888da2386175e1b969da0107ad2f4a45",
+    "tests/non-mixed-size/BASIC_2_THREAD/LB.litmus": "a5eecd1d9a35804add3a8bbf686b5b09370676b17a865d00ee3f35759c9ad42a",
+    "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c976fff9616a213538496ccae93380e1f2af0e861ca05f2e833926914103ee57"
+  }
+}

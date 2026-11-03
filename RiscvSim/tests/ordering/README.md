@@ -3,7 +3,7 @@
 These sources use the C1 ELF contract. They contain no core names or signals.
 Run them from any project with an RV32IMA or RV64IMA target and Zicsr/Zifencei.
 The link script assumes executable, writable RAM at 0x80000000 and `tohost` support.
-Change the link script for a different memory map. Machine traps mean failure.
+Use `--linker PROJECT.ld` for a different memory map. Machine traps mean failure.
 
 ```sh
 rvw/.venv/bin/python RiscvSim/tests/ordering/run.py --out /tmp/ordering --xlen 64
@@ -76,3 +76,62 @@ This requires writable executable RAM and a coherent data path for instruction
 stores. It checks same-hart visibility after synchronization. The unsynchronized
 outcome is deliberately unchecked. Cache geometry, pending fetch requests and
 cross-hart publication require project-specific stimulus and remain untested.
+
+## RVWMO litmus
+
+`litmus-pins.json` pins four tests from the
+[official RISC-V concurrency collection](https://github.com/litmus-tests/litmus-tests-riscv)
+and the herdtools7 7.58 model library. No third-party sources are copied here.
+The [collection README](https://github.com/litmus-tests/litmus-tests-riscv/blob/08728edcd99c7e1819d2d4c6789df6d5299ccb69/README.md)
+explains its use by the RISC-V Memory Model Task Group.
+
+Use native `opam install herdtools7.7.58` to install the reference tool.
+Prepare source checkouts outside this repository:
+
+```sh
+git clone https://github.com/litmus-tests/litmus-tests-riscv.git /tmp/rv-litmus
+git -C /tmp/rv-litmus checkout 08728edcd99c7e1819d2d4c6789df6d5299ccb69
+git clone https://github.com/herd/herdtools7.git /tmp/rv-herd
+git -C /tmp/rv-herd checkout 1ca343e16a2038e406d1ac674e7e3a1b722b36c7
+rvw/.venv/bin/python RiscvSim/tests/ordering/litmus.py \
+  --tests /tmp/rv-litmus --herd-source /tmp/rv-herd \
+  --herd "$HOME/.opam/default/bin/herd7" --out /tmp/rv-outcomes
+```
+
+The runner verifies revisions, selected test bytes and the whole model library.
+It checks the tool version and records the executable hash. The tool version
+alone cannot certify a custom executable's source. Use the pinned native release.
+The model uses `riscv.cat`. Allowed sets come only from herd, never from the DUT.
+The output contains every allowed final-register state and separate raw logs.
+The smoke set covers SB, MP, LB and SB with full memory fences.
+It does not cover the whole upstream collection. It does not use isla-axiomatic.
+
+When a multi-hart target exists, add `--dut-adapter /path/to/project-script`.
+The runner calls that script with one absolute `.litmus` path. The script owns
+translation, target loading, shared-memory initialization, hart start barriers,
+execution, observation and iteration reset. It must implement the same litmus
+semantics. It writes only this JSON to stdout:
+
+```json
+{"harts":2,"complete":true,"observations":[{"state":{"0:x7":0,"1:x7":1},"count":100}]}
+```
+
+Return every final register in herd's projection. Do not omit failed or timed-out
+iterations. Set `complete:false` if required observations are missing.
+No target means `dut:not_run`. Empty or incomplete samples mean `inconclusive`.
+Any observed forbidden state means `mismatch`. Permitted states not observed stay
+in `permitted_not_observed`. A consistent finite sample is not exhaustive proof.
+No current adapter can execute these multi-hart tests.
+
+## Tests
+
+```sh
+rvw/.venv/bin/python -m pytest rvw/tests/ordering -q
+RVW_SPIKE_SHIM=/path/to/librvw_spike.so RVW_SAIL=/path/to/sail_riscv_sim \
+  rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_ordering_reference.py -q
+```
+
+The second command compares Spike-generated traces with Sail for one RV64 seed.
+It is a reference cross-check. It is not a DUT comparison.
+The first command runs assertions on Spike for both XLENs and three seeds.
+Observer and outcome tests include forbidden and missing-evidence cases.

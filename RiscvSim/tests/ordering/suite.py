@@ -160,12 +160,12 @@ patch{index}:
     return text.replace('.section .tohost', '\n'.join(functions) + '\n.section .tohost')
 
 
-def generate(out, xlen=64, seed=1, suites=('lrsc',)):
+def generate(out, xlen=64, seed=1, suites=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     (out / 'link.ld').write_text(LINK)
     jobs = []
-    for name in suites:
+    for name in (tuple(GENERATORS) if suites is None else suites):
         source = out / f'{name}-{seed}.S'
         source.write_text(GENERATORS[name](xlen, seed))
         jobs.append(dict(name=name, seed=seed, xlen=xlen, source=str(source.resolve()),

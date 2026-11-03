@@ -1,5 +1,6 @@
 """Portable ordering source tests and real native reference runs."""
 import importlib.util
+import json
 import os
 from pathlib import Path
 import shutil
@@ -18,6 +19,7 @@ def test_manifest_uses_random_timing(tmp_path):
     text = (tmp_path / 'manifest-1.jsonl').read_text()
     assert 'mem_latency' not in text and 'mem-latency' not in text
     assert jobs[0]['seed'] == 1 and jobs[0]['rvfi_trace']
+    assert {j['name'] for j in jobs} == set(suite.GENERATORS)
 
 
 @pytest.mark.parametrize('xlen', [32, 64])
@@ -29,6 +31,9 @@ def test_spike_assertions(tmp_path, xlen, seed):
                    '--out', str(tmp_path), '--xlen', str(xlen), '--seeds', str(seed)],
                   timeout=120, capture=True)
     assert r.returncode == 0, (r.stdout, r.stderr)
+    summary = json.loads((tmp_path / 'summary.json').read_text())
+    assert len(summary['reference']) == len(suite.GENERATORS)
+    assert all(r['status'] == 'pass' for r in summary['reference'])
 
 
 def test_spike_rejects_bad_assertion(tmp_path):
@@ -43,3 +48,15 @@ def test_spike_rejects_bad_assertion(tmp_path):
     assert r.returncode == 0, r.stderr
     r = run_group(['spike', '--isa=rv64ima_zicsr_zifencei', str(tmp_path / 'bad')], timeout=10, capture=True)
     assert r.returncode != 0 and not r.timed_out
+
+
+def test_runner_refuses_stale_dut_results(tmp_path):
+    # This must fail before any compiler or reference command can run.
+    old = tmp_path / 'lrsc-1-run'
+    old.mkdir()
+    (old / 'result.json').write_text('{"status":"pass"}')
+    result = run_group([str(ROOT / 'rvw/.venv/bin/python'), str(ROOT / 'RiscvSim/tests/ordering/run.py'),
+                        '--out', str(tmp_path), '--seeds', '1', '--gcc', '/missing/compiler',
+                        '--adapter', '/missing/adapter'], timeout=10, capture=True)
+    assert result.returncode == 2
+    assert 'DUT output directories exist' in result.stderr
