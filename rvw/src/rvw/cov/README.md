@@ -687,3 +687,16 @@ classes, operand values, CSR legality, privilege and exceptions are not complete
 in this increment. These require semantic data beyond opcode masks. Register
 fields are encoded indices, including FP indices; they are not FP data values.
 These reports measure selected encoding coverage. They are not compliance results.
+
+### Retirement sequences
+
+Add `"sequences": {"distances": [1, 2, 4]}` to a functional JSON plan. The
+command generates fixed bins for RAW, WAW, WAR, branch-after-load, and all
+load/store pairs at each distance. Distance counts consecutive C2 instruction
+records, not cycles. x0 is not a producer. Register banks stay separate.
+A trap, handler entry, unknown instruction or missing order resets the window.
+Each file starts a fresh window. Memory pairs describe retirement order, not
+address aliasing or memory visibility. Branch-after-load does not require a
+register dependency; RAW records that condition separately. These bins cannot
+measure forwarding, stalls, speculative execution, flushes or wrong-path work.
+Use RTL coverage for those behaviors. No sequence crosses a missing record.
