@@ -449,14 +449,14 @@ fi
 if [ "$cosim" = 1 ]; then
   if ! spike_inputs; then
     case "$pm" in
-      brew) packages dtc boost ;;
-      apt) packages build-essential device-tree-compiler libboost-regex-dev libboost-system-dev ;;
-      dnf) packages make gcc-c++ dtc boost-devel ;;
+      brew) packages dtc ;;
+      apt) packages build-essential device-tree-compiler ;;
+      dnf) packages make gcc-c++ dtc ;;
     esac
     run mkdir -p "$tools/src"
     pinned_source https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike" "$spike_revision"
     run mkdir -p "$tools/src/spike/build"
-    run bash -c 'cd "$1" && ../configure --prefix="$2"' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
+    run bash -c 'cd "$1" && ../configure --prefix="$2" --without-boost --without-boost-asio --without-boost-regex' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
     run nice make -C "$tools/src/spike/build" -j2
     run make -C "$tools/src/spike/build" install
     run mkdir -p "$SPIKE_PREFIX/share/rvw"

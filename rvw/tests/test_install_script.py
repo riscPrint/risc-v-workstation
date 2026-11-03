@@ -401,6 +401,7 @@ def test_spike_pin_matches_qualified_reference():
     script = SCRIPT.read_text()
     assert 'spike_revision=eff659cd43d7eafb7f3559bceed2540eabb31c50' in script
     assert 'spike-source.json' in script
+    assert '--without-boost --without-boost-asio --without-boost-regex' in script
 
 
 def test_macos_cosim_uses_same_source_pin(tmp_path):
