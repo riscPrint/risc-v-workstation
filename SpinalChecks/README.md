@@ -501,3 +501,19 @@ Simulation checks exercised transfers only. It is not a structural proof.
 SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
 formal qualification remain open under #107. No proof result is inferred from
 successful elaboration or simulation.
+
+### Device register transactions
+
+`RegisterChecks.bind` uses a version-1 `RegisterModel` with width, reset,
+ordinary-write mask, W1C mask and read-clear mask. Ordinary and W1C masks must
+be disjoint. Bind observed state, accepted read/write, data, strobes expanded to
+bit enables, and independent hardware-set and hardware-clear events.
+The update order is read-clear, software write/W1C, hardware clear, hardware set.
+Unwritten bits retain their independent expected value. Reset uses project data.
+The model never copies expected state from observed state.
+
+Run `sbt "testOnly spinalchecks.RegisterChecksSpec"` under the `sbt` lock.
+The reference uses separate per-bit logic and injects an observed-state fault.
+This checks accepted transactions, not bus decoding, response data, response
+ordering or latency. A project must supply those bindings and test its address
+decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
