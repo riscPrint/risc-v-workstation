@@ -103,3 +103,21 @@ def test_real_gem5_distribution_columns(tmp_path):
                     'system.cpu.numIssuedDist::underflows 0 0.00% 0.00% # Count\n'
                     '---------- End Simulation Statistics   ----------\n')
     assert roi_stats(path)[0]['system.cpu.numIssuedDist::underflows'] == '0'
+
+
+def test_holdout_rejects_renamed_training_elf(plan):
+    spec = read_json(plan)
+    for report_path in (Path(spec['rtl']), Path(spec['candidates']['synthetic'])):
+        report = read_json(report_path)
+        train, held = report['benchmarks']
+        held['elf'] = train['elf']
+        held['elf_sha256'] = train['elf_sha256']
+        if report['engine'] == 'rtl':
+            evidence_path = Path(held['evidence'])
+            evidence = read_json(evidence_path)
+            evidence['elf_sha256'] = train['elf_sha256']
+            write_json(evidence_path, evidence)
+            held['evidence_sha256'] = core.digest(evidence_path.read_bytes())
+        write_json(report_path, report)
+    with pytest.raises(ValueError, match='ELF.*disjoint'):
+        fit(plan)

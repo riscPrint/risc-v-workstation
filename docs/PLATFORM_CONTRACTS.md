@@ -1033,6 +1033,7 @@ block in gem5 `stats.txt` beside `bare.json`. Event semantics are a project
 assertion. All mapped values must be finite and nonnegative. Missing values
 are errors. Existing C9 comparison evidence checks apply to every candidate.
 Train and held-out IDs must be distinct, nonempty and cover all report IDs.
+Their ELF hash sets must also be disjoint. Renamed ELF copies cannot be held out.
 
 `rvw.arch-fit/1` records status `reported`, the selected candidate, training
 scores, the winner's held-out score, winner event errors, split IDs, mappings,

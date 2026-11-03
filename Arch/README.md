@@ -191,7 +191,9 @@ Error is `abs(model - RTL) / max(1, RTL)` per event and workload.
 The training score is the arithmetic mean of these errors, with equal weights.
 The lowest training score wins. Names break ties in lexical order.
 Only the winner gets a held-out score. Splits must be nonempty, disjoint and
-cover exactly the report workloads. The report has status `reported`.
+cover exactly the report workloads. Training and held-out ELF hashes must also
+be disjoint. Renaming the same ELF does not make an unseen workload.
+The report has status `reported`.
 It gives no fidelity threshold, confidence interval or correctness verdict.
 A single workload cannot establish general model fidelity.
 Candidate generation and parameter search remain project-owned work.

@@ -75,6 +75,10 @@ def fit(plan, project=None):
     selected = set(spec['train'] + spec['held_out'])
     if selected != set(rows):
         raise ValueError('split must cover exactly the report workloads')
+    training_elfs = {rows[name]['elf_sha256'] for name in spec['train']}
+    held_out_elfs = {rows[name]['elf_sha256'] for name in spec['held_out']}
+    if training_elfs & held_out_elfs:
+        raise ValueError('train and held_out ELF hashes must be disjoint')
     evidence = []
     errors = {}
     for name, candidate in candidates.items():
