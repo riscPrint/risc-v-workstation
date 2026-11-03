@@ -454,3 +454,22 @@ Deadlock generation remains deferred to #21. This choice does not add automatic
 application discovery or core-specific rename, LSQ, ROB or issue bindings.
 Run `sbt "testOnly spinalchecks.LocalRulesSpec spinalchecks.NamingSpec"` under
 the `sbt` lock for the local rules.
+
+### Architectural CSR model
+
+`CsrChecks.bind` accepts a version-1 `CsrModel` and independent accepted access
+signals. The model declares width, reset, write mask, minimum privilege and an
+optional allowed-value set. Unwritable bits retain their value. A masked candidate
+outside the set is rejected. Hardware clear follows the software update.
+Hardware set has final priority. Expected state starts at the declared reset.
+The model never initializes expected state from the DUT.
+
+For example, `CsrModel(1, 32, 0, 255, 3)` declares eight writable bits and machine
+access. Bind the observed state, read/write requests, write data, privilege,
+access-denied response, hardware-set mask and hardware-clear mask, in that order.
+Requests must include denied attempts so that `csr.access` can check the response.
+`csr.state` checks the state each active cycle. This model does not implement
+aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
+These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
+under the `sbt` lock. The reference injects state and access faults separately
+from the expected-state model. No BOOM CSR binding is supplied.
