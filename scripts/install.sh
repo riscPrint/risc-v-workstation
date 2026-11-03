@@ -14,6 +14,10 @@ Usage: scripts/install.sh [OPTIONS]
   --with-cosim       Spike headers/libraries and the workstation shim.
   --with-formal      OSS CAD Suite: Yosys, SymbiYosys and Yices.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
+  --with-sail        Pinned Sail model (bundle mode only).
+  --from-bundle      Use native workflow artifacts for selected tools.
+  --bundle-run ID    Download artifacts from this private Actions run (needs gh).
+  --bundle-dir DIR   Use artifacts saved in DIR. No artifact network requests.
   --all              Select all optional components.
   --shell-rc FILE    Add the env.sh source line to FILE. Default: print it only.
   --yes             Approve package commands without a prompt.
@@ -33,11 +37,16 @@ value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a
 
 sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
+bundle=0 sail=0 bundle_run='' bundle_dir=''
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --prefix) value "$@"; prefix="$2"; shift 2 ;;
     --source) value "$@"; source_dir="$2"; shift 2 ;;
     --shell-rc) value "$@"; shell_rc="$2"; shift 2 ;;
+    --from-bundle) bundle=1; shift ;;
+    --bundle-run) value "$@"; bundle_run="$2"; shift 2 ;;
+    --bundle-dir) value "$@"; bundle_dir="$2"; shift 2 ;;
+    --with-sail) sail=1; shift ;;
     --with-sim) sim=1; shift ;;
     --with-riscv-gcc) gcc=1; shift ;;
     --with-cosim) cosim=1; shift ;;
@@ -69,6 +78,7 @@ rvw_home="$prefix"
 tools="$rvw_home/.tools"
 # Source identities are immutable. Host package versions can drift.
 # Matches the tested Homebrew source timestamp and installed headers.
+verilator_revision=ea338be98e1e838d3518809ce8899f85a009963c
 spike_revision=eff659cd43d7eafb7f3559bceed2540eabb31c50
 gcc_revision=a33dac0251d17a7b74d99bd8fd401bfce87d2aed
 oss_version=2026-10-22
@@ -80,7 +90,11 @@ if [ -n "${RVW_GEM5:-}" ]; then gem5_external=1;
 else RVW_GEM5="$gem5_source/build/RISCV/gem5.opt"; fi
 [[ "$RVW_GEM5" = /* ]] || RVW_GEM5="$PWD/$RVW_GEM5"
 [[ "$RVW_GEM5" != *$'\n'* ]] || fail 'RVW_GEM5 must not contain a newline'
+if [ -x "$tools/gem5/bin/gem5.opt" ] && [ "$gem5_external" = 0 ]; then RVW_GEM5="$tools/gem5/bin/gem5.opt"; fi
+if [ -d "$tools/verilator" ]; then export VERILATOR_ROOT="$tools/verilator/share/verilator"; fi
+if [ -x "$tools/sail/bin/sail_riscv_sim" ]; then export RVW_SAIL="$tools/sail/bin/sail_riscv_sim"; fi
 export RVW_GEM5
+export PATH="$tools/verilator/bin:$tools/sail/bin:$PATH"
 export PATH="$rvw_home/rvw/.venv/bin:$tools/bin:$tools/oss-cad-suite/bin:$PATH:$HOME/.local/bin"
 # Reuse installer-managed tools on a second run without sourcing env.sh first.
 if [ -d "$tools/jdk" ]; then export JAVA_HOME="$tools/jdk"; fi
@@ -89,6 +103,7 @@ if [ -z "${SPIKE_PREFIX:-}" ]; then
   if command -v spike >/dev/null 2>&1; then SPIKE_PREFIX="$(dirname "$(dirname "$(command -v spike)")")";
   else SPIKE_PREFIX="$tools/spike"; fi
 fi
+if [ "$bundle" = 1 ]; then SPIKE_PREFIX="$tools/spike"; fi
 export SPIKE_PREFIX
 export PATH="$tools/riscv/bin:$PATH"
 case ":$PATH:" in *":$SPIKE_PREFIX/bin:"*) ;; *) export PATH="$SPIKE_PREFIX/bin:$PATH" ;; esac
@@ -286,6 +301,7 @@ PYTHON
       printf 'MISSING Yosys xprop support\n'; failed=1
     fi
   fi
+  if [ "$sail" = 1 ] && [ -z "${RVW_SAIL:-}" ]; then printf 'MISSING Sail\n'; failed=1; fi
   if [ -n "${RVW_SAIL:-}" ]; then probe Sail 0.15 "$RVW_SAIL" --version || failed=1; fi
   return "$failed"
 }
@@ -327,6 +343,10 @@ temurin_jdk() {
 python_cmd=python3
 if ! probe Python 3.11 python3 --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
   python_cmd=python3.11
+fi
+[ "$sail" = 0 ] || [ "$bundle" = 1 ] || fail '--with-sail needs --from-bundle'
+if [ "$bundle" = 1 ] && [ "$check" = 0 ]; then
+  [ -n "$bundle_run" ] || [ -n "$bundle_dir" ] || fail '--from-bundle needs --bundle-run or --bundle-dir'
 fi
 if [ "$check" = 1 ]; then
   failed=0
@@ -390,6 +410,21 @@ run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_ho
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 
+if [ "$bundle" = 1 ]; then
+  bundle_args=(--home "$rvw_home")
+  [ -z "$bundle_run" ] || bundle_args+=(--run "$bundle_run")
+  [ -z "$bundle_dir" ] || bundle_args+=(--directory "$bundle_dir")
+  [ "$sim" = 0 ] || bundle_args+=(--tool verilator)
+  [ "$gcc" = 0 ] || bundle_args+=(--tool gcc)
+  [ "$cosim" = 0 ] || bundle_args+=(--tool spike)
+  [ "$gem5" = 0 ] || bundle_args+=(--tool gem5)
+  [ "$sail" = 0 ] || bundle_args+=(--tool sail)
+  run "$RVW_PYTHON" "$rvw_home/scripts/native-bundle.py" install "${bundle_args[@]}"
+  if [ "$sim" = 1 ]; then export VERILATOR_ROOT="$tools/verilator/share/verilator"; fi
+  if [ "$gem5" = 1 ]; then RVW_GEM5="$tools/gem5/bin/gem5.opt"; export RVW_GEM5; gem5_external=1; fi
+  if [ "$sail" = 1 ]; then export RVW_SAIL="$tools/sail/bin/sail_riscv_sim"; fi
+fi
+
 if [ "$sim" = 1 ]; then
   if ! probe JDK 21 java -version || ! probe javac 21 javac -version; then
     case "$pm" in
@@ -413,7 +448,10 @@ if [ "$sim" = 1 ]; then
     run mkdir -p "$tools"
     run ln -sfn "$JAVA_HOME" "$tools/jdk"
   fi
-  if ! probe Verilator 5 verilator --version; then packages verilator; fi
+  if ! probe Verilator 5 verilator --version; then
+    [ "$bundle" = 0 ] || [ "$dry" = 1 ] || fail 'Bundled Verilator is unusable'
+    packages verilator
+  fi
   if ! command -v make >/dev/null || ! command -v "${CXX:-c++}" >/dev/null; then
     case "$pm" in
       brew) fail 'Install the Xcode command line tools with xcode-select --install, then retry' ;;
@@ -435,6 +473,7 @@ if [ "$sim" = 1 ]; then
   fi
 fi
 if [ "$gcc" = 1 ] && ! probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version; then
+  [ "$bundle" = 0 ] || [ "$dry" = 1 ] || fail 'Bundled GCC is unusable'
   case "$pm" in
     brew) package tap riscv-software-src/riscv; packages riscv-software-src/riscv/riscv-gnu-toolchain ;;
     apt) packages gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf ;;
@@ -446,7 +485,7 @@ if [ "$gcc" = 1 ] && ! probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version; 
       run nice make -C "$tools/src/riscv-gnu-toolchain" -j2 ;;
   esac
 fi
-if [ "$cosim" = 1 ]; then
+if [ "$cosim" = 1 ] && [ "$bundle" = 0 ]; then
   if ! spike_inputs; then
     case "$pm" in
       brew) packages dtc ;;
@@ -555,6 +594,9 @@ if [ "$dry" = 0 ]; then
     if [ -n "${JAVA_HOME:-}" ]; then
       printf 'export JAVA_HOME=%q\nexport PATH="$JAVA_HOME/bin:$PATH"\n' "$JAVA_HOME"
     fi
+    if [ -n "${VERILATOR_ROOT:-}" ]; then printf 'export VERILATOR_ROOT=%q\n' "$VERILATOR_ROOT"; fi
+    if [ -n "${RVW_SAIL:-}" ]; then printf 'export RVW_SAIL=%q\n' "$RVW_SAIL"; fi
+    printf 'export PATH="$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'
     printf 'export SPIKE_PREFIX=%q\nexport PATH="$SPIKE_PREFIX/bin:$PATH"\n' "$SPIKE_PREFIX"
     printf 'export PATH="$RVW_HOME/rvw/.venv/bin:$RVW_HOME/.tools/bin:$RVW_HOME/.tools/oss-cad-suite/bin:$RVW_HOME/.tools/riscv/bin:$PATH"\n'
   } > "$rvw_home/env.sh"
