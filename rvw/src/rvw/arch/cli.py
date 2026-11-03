@@ -19,7 +19,7 @@ def _run(args):
         result = execute_json(args.arch_action, **kw)
         text = json.dumps(result, indent=2, allow_nan=False)
         print(text if args.json or args.arch_action != 'calibrate' else core.summary(result))
-        return 0
+        return 2 if result.get('status') == 'unsupported' else 0
     except (ValueError, OSError, KeyError, TypeError) as exc:
         if args.json:
             print(json.dumps({'error': str(exc)}, allow_nan=False))
@@ -31,11 +31,15 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
-    for action in ('build', 'run', 'calibrate', 'compare', 'fit'):
+    for action in ('build', 'run', 'calibrate', 'compare', 'fit', 'inspect'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)
         p.add_argument('--json', action='store_true')
-        if action == 'fit':
+        if action == 'inspect':
+            p.add_argument('--elf', required=True)
+            p.add_argument('--isa', required=True)
+            p.add_argument('--kind', required=True)
+        elif action == 'fit':
             p.add_argument('plan')
         elif action == 'compare':
             p.add_argument('base')

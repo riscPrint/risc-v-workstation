@@ -214,3 +214,31 @@ arrays. Its name describes the intended pressure. Actual misses depend on
 cache capacity, cache state and the compiler. Inspect disassembly and measured
 events before drawing a timing conclusion. Setup and return checks sit outside
 the marked ROI. No source guarantees a cold cache or a given miss count.
+
+## CPU and ELF compatibility preflight
+
+Run a static check before model construction:
+
+```sh
+rvw arch inspect --elf kernel.riscv --isa rv32im --kind minor --json
+```
+
+The MCP tool is `arch_inspect`. The checker accepts ELF32 for `rv32im` and
+ELF64 for `rv64gc` or `rv64gc_zba_zbb_zbs`. It checks the machine, load ranges,
+entry and required runtime symbols. It checks both classes against the same
+512 MiB RAM range at `0x80000000`. It does not read ISA extension attributes
+or validate instruction behavior. The CPU choices are `o3`, `minor` and
+`timing`. Only RV64 O3 is currently compatible with the runtime runner.
+
+A valid RV32IM ELF with `minor` is the first small preflight case. Its expected
+result is `status: unsupported`, with separate CPU and RV32 runtime blockers.
+CLI exit 2 keeps it blocked. ELF layout success cannot enable a simulation.
+The RV32 case uses synthetic ELF data in unit tests. It is not VexRiscv
+validation. Unknown choices and invalid ELFs produce errors. A compatible
+RV64 O3 layout exits 0. Compatibility remains separate from performance
+calibration and does not prove ISA support, ROI counters or model fidelity.
+
+The next increments need in-order CPU construction and probe validation,
+an RV32 runtime with stable 64-bit CSR reads, gem5 RV32 ISA configuration,
+and second-core instruction, memory and ROI checks. The existing runner still
+refuses RV32 and in-order descriptions. No VexRiscv model is claimed.

@@ -134,8 +134,8 @@ def load_description(path):
         return validate_description(json.load(f, object_pairs_hook=_unique_object))
 
 
-def elf_symbols(path):
-    """Read and validate a little-endian RV64 executable and its required symbols."""
+def elf_symbols(path, xlen=64):
+    """Read an ELF32/ELF64 image. Simulation still requires RV64."""
     elf = Path(path).read_bytes()
 
     def unpack(fmt, offset):
@@ -148,18 +148,24 @@ def elf_symbols(path):
             raise ValueError("ELF section or segment is outside the file")
         return elf[offset:offset + size]
 
-    if len(elf) < 64 or elf[:7] != b"\x7fELF\x02\x01\x01":
-        raise ValueError("expected a little-endian ELF64 executable")
+    if xlen not in (32, 64):
+        raise ValueError("ELF xlen must be 32 or 64")
+    elf_class = 1 if xlen == 32 else 2
+    if len(elf) < (52 if xlen == 32 else 64) or elf[:7] != b"\x7fELF" + bytes((elf_class, 1, 1)):
+        raise ValueError(f"expected a little-endian ELF{xlen} executable")
     kind, machine = unpack("<HH", 16)
     if kind != 2 or machine != 243:
         raise ValueError("expected a RISC-V executable")
-    entry, phoff, shoff = unpack("<QQQ", 24)
-    phentsize, phnum, shentsize, shnum = unpack("<HHHH", 54)
-    if phentsize != 56 or not phnum or shentsize != 64 or not shnum:
+    entry, phoff, shoff = unpack("<III" if xlen == 32 else "<QQQ", 24)
+    phentsize, phnum, shentsize, shnum = unpack("<HHHH", 42 if xlen == 32 else 54)
+    if phentsize != (32 if xlen == 32 else 56) or not phnum or shentsize != (40 if xlen == 32 else 64) or not shnum:
         raise ValueError("ELF needs program headers and a symbol table")
     loaded = []
     for i in range(phnum):
-        typ, flags, off, va, pa, filesz, memsz, _ = unpack("<IIQQQQQQ", phoff + i * phentsize)
+        if xlen == 32:
+            typ, off, va, pa, filesz, memsz, flags, _ = unpack("<IIIIIIII", phoff + i * phentsize)
+        else:
+            typ, flags, off, va, pa, filesz, memsz, _ = unpack("<IIQQQQQQ", phoff + i * phentsize)
         if typ == 1:
             span(off, filesz)
             if filesz > memsz or va != pa or not RAM_BASE <= pa < pa + memsz <= RAM_BASE + RAM_SIZE:
@@ -169,17 +175,20 @@ def elf_symbols(path):
     # M-mode uses the physical mapping; it does not enforce these flags.
     if not any(lo <= entry < hi for lo, hi in loaded):
         raise ValueError("ELF entry must be in a load segment")
-    sections = [unpack("<IIQQQQIIQQ", shoff + i * shentsize) for i in range(shnum)]
+    sections = [unpack("<IIIIIIIIII" if xlen == 32 else "<IIQQQQIIQQ", shoff + i * shentsize) for i in range(shnum)]
     syms = {}
     for _, typ, _, _, off, size, link, _, _, entsize in sections:
         if typ != 2:  # SHT_SYMTAB
             continue
         span(off, size)
-        if entsize != 24 or size % entsize or link >= len(sections) or sections[link][1] != 3:
+        if entsize != (16 if xlen == 32 else 24) or size % entsize or link >= len(sections) or sections[link][1] != 3:
             raise ValueError("invalid ELF symbol table")
         strings = span(sections[link][4], sections[link][5])
         for pos in range(off, off + size, entsize):
-            name, _, _, index, value, sz = unpack("<IBBHQQ", pos)
+            if xlen == 32:
+                name, value, sz, _, _, index = unpack("<IIIBBH", pos)
+            else:
+                name, _, _, index, value, sz = unpack("<IBBHQQ", pos)
             if not index:
                 continue  # Undefined symbols are not evidence.
             if name >= len(strings) or (end := strings.find(b"\0", name)) < 0:

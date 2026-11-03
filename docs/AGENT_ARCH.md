@@ -33,7 +33,10 @@ the instructions emitted for `rv64gc` or `rv64gc_zba_zbb_zbs`, with ABI `lp64d`.
 Record the selected preset and the source locations that establish these facts.
 Search other source roots if the project does not use `src/`.
 
-**Failure action:** Stop this playbook for an RV32 or in-order core. Track the
+**Failure action:** Stop this playbook for an RV32 or in-order core.
+Use `rvw arch inspect --elf ELF --isa rv32im --kind minor --json` to check
+ELF layout separately. Its expected result is `unsupported` (exit 2).
+This static check does not enable simulation or validate ROI counters. Track the
 missing support in [issue #13](https://github.com/riscPrint/risc-v-workstation/issues/13).
 The current flow needs a matching CPU model, ISA build options, runtime,
 description and C1 adapter before it can support that core. Do not label an

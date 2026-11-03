@@ -16,6 +16,9 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec('arch_inspect', 'Check ELF layout and report CPU/ISA compatibility. Static only; unsupported combinations stay blocked.',
+                 schema({k: {'type': 'string'} for k in ('elf', 'isa', 'kind', 'project')}, ['elf', 'isa', 'kind']),
+                 handler('rvw.arch.cli', 'inspect'), long=True),
         ToolSpec('arch_fit', 'Select saved model candidates on training events and score the winner on held-out workloads.',
                  schema({'plan': {'type': 'string'}, 'project': {'type': 'string'}}, ['plan']),
                  handler('rvw.arch.cli', 'fit'), long=True),
