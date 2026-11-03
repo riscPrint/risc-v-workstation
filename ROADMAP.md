@@ -119,7 +119,7 @@ is from being usable on other designs.
 | rvw CLI + MCP project selection | `rvw/`, `docs/BRING_YOUR_OWN_CORE.md` | PLAT | Explicit `--core boom` compatibility; background MCP jobs | Install once; core-owned `rvw.toml` and adapters; `--project`, `RVW_PROJECT`, upward discovery | project interface documented; external BOOM validated, BOOM and VexRiscv projects validated |
 | Workstation installer | `scripts/install.sh` | PLAT | Core install; optional native tools; check and dry-run modes | Separate core projects on macOS and Linux | package-manager setup; native bundle remains open |
 | SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: needs the Tywaves fork of Surfer |
-| SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic |
+| SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic; accuracy status in CLI and GUI |
 | SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: BOOM entry point in the extractor |
 | VS Code extension | `vscode/` | PLAT | Hosts SpinalBlocks | One extension, one feature per tool | generic |
 

@@ -151,3 +151,18 @@ ChiselTrace.
 
 If you use this work, please cite ChiselTrace: J. Brand, C. Cromjongh, H.P. Hofstee, Z. Al-Ars,
 "ChiselTrace: Typed Behavioral Debugging in Chisel Through Signal Dependency Tracing", IEEE NorCAS 2025.
+
+## Trace accuracy
+
+Read `accuracy.status` and `accuracy.reasons` in every graph or slice JSON result.
+The GUI shows the same status above the graph. Source grouping reports `approximate`.
+Missing causes or unmodeled timing report `incomplete`. Do not use either result as
+an exact dependency trace. Limits apply to the whole design, including paths outside
+the criterion. Legacy extraction files report incomplete. Re-extract with the current
+front-end to use the formatVersion 2 contract.
+
+The supported subset uses one rising-edge clock without a clock enable or soft reset.
+Memory writes must be synchronous, equal-width and unmasked. Memory reads can be
+synchronous or asynchronous. Large memories and dynamic partial writes report
+incomplete. See [the accuracy contract](docs/PDG_FORMAT.md#accuracy-contract-formatversion-2)
+for the bounds and source grouping rules.

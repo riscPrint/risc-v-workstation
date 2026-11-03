@@ -194,8 +194,11 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
       memRead(r.mem, r.address, r.getWidth, c, info); info.delay = 1
       enableCond(r.chipSelect, info)
     case r: MemReadAsyncWrite =>
+      warn(s"memory ${memSym(r.mem)}: asynchronous write attribution is not modeled")
       memRead(r.mem, r.address, r.getWidth, c, info)
     case other =>
+      if (other.getClass.getName.contains("$Formal$"))
+        warn(s"formal expression ${other.getClass.getSimpleName} is not modeled")
       other.foreachExpression(walkExpr(_, c, info, from))
   }
 
@@ -441,6 +444,7 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
 
   private def emitMemWrite(m: Mem[_], address: Expression, data: Expression, enables: Seq[Expression],
                            loc: Location, ctx: Ctx, out: ArrayBuffer[CfgNode]): Unit = {
+    if ((data match { case b: BitVector => b.getWidth != m.width; case _ => true })) warn(s"mixed-width write to memory ${memSym(m)} is not modeled")
     val info = new ExprInfo
     walkExpr(data, Condition.empty, info, ctx.comp)
     var vcond = ctx.vcond
@@ -481,7 +485,9 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
       case w: WhenStatement       => emitWhen(w, ctx, out)
       case sw: SwitchStatement    => emitSwitch(sw, ctx, out)
       case a: AssignmentStatement => emitAssign(a, ctx, out)
-      case bt: BaseType           => emitDecl(bt, ctx, out)
+      case bt: BaseType           =>
+        if (bt.isAnalog) warn(s"analog/inout signal ${sym(bt)} is not modeled")
+        emitDecl(bt, ctx, out)
       case m: Mem[_] =>
         val loc = locs.of(m)
         memWords(m) match {
@@ -578,6 +584,9 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
   private def clockDomains(): Seq[ClockDomainInfo] = {
     val byClock = mutable.LinkedHashMap[BaseType, (ClockDomain, Int)]()
     def count(cd: ClockDomain): Unit = if (cd != null && cd.clock != null) {
+      if (cd.clockEnable != null) warn(s"clock enable ${path(cd.clockEnable)} is not modeled")
+      if (cd.softReset != null) warn(s"soft reset ${path(cd.softReset)} is not modeled")
+      if (cd.config.clockEdge != RISING) warn(s"clock ${path(cd.clock)} uses an unsupported edge")
       val root = Option(cdPort.get(cd.clock)).map(rootOf).getOrElse(cd.clock)
       val key  = byClock.keys.find(k => (k eq root) || path(k) == path(root)).getOrElse(root)
       val prev = byClock.get(key).map(_._2).getOrElse(0)
@@ -641,6 +650,8 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
     val cfg     = walkComponent(top, None)
     val edges   = buildEdges()
     val domains = clockDomains()
+    if (vertices.exists(v => v.loc.file.isEmpty || v.loc.line <= 0))
+      warn("some source causes have no source location")
     if (domains.size > 1)
       warn(s"design has ${domains.size} clock domains (${domains.map(_.clock).mkString(", ")}); SpinalTrace (like " +
         "ChiselTrace) steps all registers on one clock, so dependencies through other domains are approximate")

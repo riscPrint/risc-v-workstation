@@ -101,8 +101,8 @@
    defaults from the PDG metadata; HGLDD optional with fallback to raw values; `signal:` criteria by RTL
    path or Spinal/HGL path (`io.result`); multi-clock-domain warning; text summary.
 5. `slicing.rs`: CFG reduction understands switch forks; metadata kept; statistics to stderr.
-6. `conversion.rs`: unchanged (statement grouping by file/line, `defnode_probe` filtering, Index
-   redirection).
+6. `conversion.rs`: statement grouping by file/line, `defnode_probe` filtering, Index
+   redirection; accuracy status survives conversion and reports grouping limits.
 
 `cli/`: crate/binary `spinaltrace-cli`; `dyn-pdg` and `dyn-slice` take flags shared with the GUI
 (ChiselTrace's `dyn-pdg` used positional arguments with an optional one in the middle):
@@ -111,7 +111,7 @@
 
 `gui/`: crate/binary `spinaltrace`, lib `spinaltrace_lib`; same flags as the CLI plus `--hier-grouping`;
 HGLDD optional; uses `pipeline::trace`; product name / identifier / window title renamed. The
-SvelteKit front-end is unchanged.
+SvelteKit front-end shows trace accuracy above the graph.
 
 Workspace: crates renamed (`chiseltrace-rs` → `spinaltrace-rs`, `chiseltrace-cli` → `spinaltrace-cli`,
 `chiseltrace` → `spinaltrace`), tywaves-rs taken from `../SpinalWaves/third_party/tywaves-rs`.
@@ -119,7 +119,7 @@ Workspace: crates renamed (`chiseltrace-rs` → `spinaltrace-rs`, `chiseltrace-c
 ## Limitations
 
 * **One clock.** Like ChiselTrace, all registers are stepped on one clock (the domain with most
-  registers). Multiple clock domains are detected and reported (PDG `warnings`, CLI/GUI stderr);
+  registers). Multiple clock domains are detected and reported (PDG `warnings`, JSON accuracy, GUI status);
   dependencies through other domains are timed incorrectly. Clock enables and soft resets are not
   modelled (warned).
 * VCD from Verilator only (FST and other simulators untested).
@@ -160,3 +160,20 @@ because Tauri rejects mismatched JS/Rust versions. `svelte-check`, the GUI build
 
 Remaining: 3 low findings, all one advisory (`cookie` < 0.7 inside SvelteKit 2). It concerns server-side cookie
 parsing; the GUI is a static, server-less Tauri page, so it is not reachable. The fix needs SvelteKit 3 (major).
+
+## Accuracy reporting
+
+Format version 2 makes the limits above part of the result. Extraction warnings
+produce incomplete status. Rust graph and slice exports preserve status and reasons.
+Source conversion reports approximate grouping. The GUI displays the original trace
+status even when hierarchy groups change. Dynamic partial attribution remains bounded
+at 16 providers and reports incomplete. Clock enables, soft resets, multiple domains,
+falling edges and unsupported memory writes remain outside the exact subset.
+The signed initial timestamp regression verifies separate groups at -1 and 0;
+the obsolete unsigned timestamp TODO in conversion.rs was removed.
+
+The mixed-width reference design reaches a Spinal Verilog backend refusal before
+PDG extraction. Its extraction test also changes a completed reference netlist to
+exercise the mixed-width warning directly. This is extraction evidence, not a
+mixed-width simulation result. The unsupported switch-key test likewise exposes a
+raw expression after naming. Normal named keys remain supported.

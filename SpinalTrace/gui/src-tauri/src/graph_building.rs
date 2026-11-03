@@ -199,7 +199,7 @@ pub fn rebuild_hier_graph(state: &State<'_, RwLock<AppState>>) -> Result<()> {
     }
     
     vgraph.current_hier_dpdg = Some(HierarchicalGraph {
-        dpdg: ExportablePDG { vertices: new_nodes, edges: new_edges.into_iter().collect::<Vec<_>>() },
+        dpdg: ExportablePDG { accuracy: vgraph.dpdg.accuracy.clone(), vertices: new_nodes, edges: new_edges.into_iter().collect::<Vec<_>>() },
         group_ids,
         original_ids,
         time_to_nodes,
@@ -360,4 +360,9 @@ fn build_node_hierarchy(dpdg: &ExportablePDG) -> (Vec<Arc<RwLock<GraphNodeHierar
     }
 
     (groups, reverse_hier_lookup)
+}
+#[tauri::command]
+pub fn get_trace_accuracy(state: State<'_, RwLock<AppState>>) -> Result<spinaltrace_rs::pdg_spec::TraceAccuracy, String> {
+    let state = state.read().map_err(|e| e.to_string())?;
+    state.graph.as_ref().map(|g| g.dpdg.accuracy.clone()).ok_or_else(|| "Trace is not loaded.".into())
 }
