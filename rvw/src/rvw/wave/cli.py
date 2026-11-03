@@ -14,12 +14,18 @@ TIME_HELP = "time in wave units, or 'Nc' for cycle N (period from --period or th
 
 
 def register(sub: argparse._SubParsersAction) -> None:
-    p = sub.add_parser("wave", help="query and cut VCD/FST waveforms (streaming)",
+    p = sub.add_parser("wave", help="query and cut VCD/FST waveforms or indexed snapshots",
                        description=__doc__)
     w = p.add_subparsers(dest="wave_cmd", required=True)
 
+    q = w.add_parser("index", help="build an identity-bound SQLite waveform snapshot")
+    q.add_argument("wave")
+    q.add_argument("-o", "--out", required=True)
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_index)
+
     def common(q, regex=True, regex_required=True):
-        q.add_argument("wave", help=".vcd, .vcd.gz or .fst")
+        q.add_argument("wave", help=".vcd, .vcd.gz, .fst or .rvwi")
         if regex:
             q.add_argument("regex", nargs=None if regex_required else "?",
                            help="Python regex searched in dotted signal paths (TOP.Top.unit.sig)")
@@ -53,7 +59,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--to", dest="t1", help=TIME_HELP + " (default: end)")
     q.add_argument("--signals", help="keep only signals matching this regex")
     q.add_argument("--rebase", action="store_true", help="shift times so the window starts at 0")
-    q.add_argument("-o", "--out", required=True, help="output .vcd, .vcd.gz or .fst")
+    q.add_argument("-o", "--out", required=True, help="output .vcd, .vcd.gz, .fst or .rvwi")
     q.set_defaults(func=_cut)
 
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
@@ -168,3 +174,17 @@ def _info(a):
         for k, v in d.items():
             print(f"{k}: {v}")
     return 0
+
+
+def _index(a):
+    from .index import build
+    try:
+        result = build(a.wave, a.out)
+        if a.json:
+            jsonout.write(result)
+        else:
+            print(f"wrote {a.out}: {result['records']} records")
+        return 0
+    except (WaveError, CaptureError, jsonout.JsonOutputError) as e:
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2

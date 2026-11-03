@@ -121,3 +121,12 @@ bits and type metadata. Memories and blackbox internals have no special typed mo
 Interactive rendering: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83). Vendored viewer and backend triage: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Shared database input: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Fork dependency: [#43](https://github.com/riscPrint/risc-v-workstation/issues/43).
 
 Retained limit: The simulation wrapper remains Verilator/VCD only. Typed memories, BlackBox internals, generated temporaries, fixed-point scaling and complete constructor values remain outside scope. Source lookup remains best effort and needs local source roots.
+
+## Viewer package and vendored limits
+
+See [the package guide](docs/VIEWER_PACKAGE.md) for pinned source inputs,
+`cargo --locked`, EUPL notices and the upstream WASM plugin assessment (#43).
+See [vendored limits](docs/VENDORED_LIMITS.md) for the TODO triage (#120).
+Restart the viewer after metadata changes. Typed reload, External values,
+arithmetic HGLDD expressions and real/string typed updates are unsupported.
+Interactive validation remains tracked in #83.

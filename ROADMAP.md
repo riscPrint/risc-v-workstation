@@ -120,7 +120,7 @@ is from being usable on other designs.
 | Workstation installer | `scripts/install.sh` | PLAT | Core install; optional native tools; check and dry-run modes | Separate core projects on macOS and Linux | package-manager setup; manual native bundle workflow added; host qualification and offline dependencies open (#71) |
 | rvw init | `rvw/src/rvw/init/` | PLAT | Core project scaffolding | Safe core-owned setup files | minimal Spinal/sbt scaffold; automatic build wiring and optional maps pending |
 | rvw doctor | `rvw/src/rvw/doctor/` | PLAT | Setup diagnostics and explicit installer forwarding | Version, project, adapter and gate preflight checks | first increment; full C1/C2 conformance pending |
-| SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: needs the Tywaves fork of Surfer |
+| SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: pinned fork package; WASM migration and interactive checks pending |
 | SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic; accuracy status in CLI and GUI |
 | SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: database export ready; legacy BOOM entry retained for caller-dependent clock locations |
 | VS Code extension | `vscode/` | PLAT | Hosts SpinalBlocks | One extension, one feature per tool | generic |

@@ -81,6 +81,11 @@ def scope(inputs):
 
 @contextmanager
 def wave_input(path):
+    if str(path).endswith('.rvwi'):
+        # Published SQLite indexes are immutable snapshots. Each query opens a
+        # read transaction. Do not copy a multi-GB index for a range query.
+        yield str(path)
+        return
     active = _current.get()
     if active is not None:
         yield str(active.file(path))
@@ -106,6 +111,9 @@ def captured(fn):
             if out and os.path.exists(out) and os.path.samefile(path, out):
                 from .vcd import WaveError
                 raise WaveError(f'{out} is the input wave; cut to a different file')
+        if str(path).endswith('.rvwi') and fn.__name__ not in ('changes_page',):
+            from .index import query
+            return query(fn.__name__, str(path), *args, **kwargs)
         with wave_input(path) as saved:
             result = fn(saved, *args, **kwargs)
             if fn.__name__ == 'info':

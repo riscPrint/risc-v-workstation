@@ -1029,3 +1029,20 @@ loader rejects a mismatch. Existing projects without this key remain valid.
 `rvw doctor --json` and MCP `rvw_doctor` return `rvw.doctor/1`. See the
 [doctor contract](../rvw/src/rvw/doctor/README.md#output-and-exits) for fields
 and exits. Diagnostic readiness does not imply a gate accept or native flow qualification.
+
+## Wave index (`rvw.wave-index/1`)
+
+`rvw wave index INPUT -o SNAPSHOT.rvwi` publishes an explicit SQLite snapshot.
+It does not change C1 artifacts. The `metadata` table has one JSON `value` row
+with `schema`, captured input `sha256`, `size`, original `source` path, `records`
+`tools` (captured converter paths and SHA-256 hashes), and `header` (lines,
+timescale, vars). Each var keeps code, name, width, kind and
+range. The `events` table stores `seq` (integer primary key, file order), `t`
+(signed 64-bit time), `code`, and unmodified `raw` VCD value. Timestamp records
+have null code and raw. Indexes cover `(t, seq)` and `(code, t, seq)`.
+
+The source hash identifies the captured input bytes, including compression.
+The index is a saved snapshot, not a cache lookup against a live source. Queries
+open a read-only SQLite transaction without a full source scan or capture-copy.
+Publishers must not edit an index in place. Querying a snapshot establishes no
+new simulator result or verdict. Unknown values retain their VCD meaning.
