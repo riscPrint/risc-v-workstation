@@ -44,3 +44,25 @@ Signed extrema and seed-based random operands exercise the returned old value,
 new memory value, RV64 word sign extension and adjacent guard bytes.
 The same assertions run on Spike before the DUT. This is a functional check.
 Concurrent observers, faults and external aq/rl ordering remain untested.
+
+## FENCE and independent observation
+
+The FENCE program exercises 49 predecessor/successor combinations, with seeded
+values and order. RAM loads check local visibility. No device accesses occur.
+This exercises encodings; it does not check the ordering of device accesses.
+
+`observer.py PLAN.json OBSERVATION.json` checks required edges from a test plan.
+The project must supply an independent bus or device monitor. No current adapter
+supplies this monitor. Do not use retirement records as its input.
+
+A plan declares `boundary` (a platform-defined string) and `edges`, for example
+`{"boundary":"device-visible","edges":[["write","read"]]}`.
+An observation declares the same boundary, `independent:true`, `complete:true`
+and an `events` list. Each event has a unique `id`, class `r`, `w`, `i` or `o`,
+and integer `issue` and `complete` timestamps from the monitor's common clock.
+For each required edge, predecessor completion must precede or equal successor
+issue. Define completion at the selected boundary in the project test plan.
+Missing events, incomplete monitoring and empty edge sets stay inconclusive.
+A reversed or overlapping required edge is a mismatch. Other edges are unchecked.
+The project owns class assignment, completeness and monitor independence.
+The checker cannot certify those declarations. Its tests use synthetic monitors.

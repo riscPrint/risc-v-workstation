@@ -113,6 +113,24 @@ def amo(xlen, seed):
     return program('\n'.join(bodies), xlen=xlen).replace('cell: .dword 0', '.dword 0\ncell: .dword 0')
 
 
+def fence(xlen, seed):
+    rng = random.Random(seed)
+    classes = ['r', 'w', 'rw', 'i', 'o', 'io', 'iorw']
+    pairs = [(p, s) for p in classes for s in classes]
+    rng.shuffle(pairs)
+    bodies = []
+    for pred, succ in pairs:
+        value = rng.randrange(1, 1 << 20)
+        bodies.append(f"""la t0, cell
+ li t1, {value}
+ sw t1, 0(t0)
+ fence {pred}, {succ}
+ lw t2, 0(t0)
+ bne t1, t2, fail
+""")
+    return program('\n'.join(bodies), xlen=xlen)
+
+
 def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -131,7 +149,7 @@ def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     return jobs
 
 
-GENERATORS = {'lrsc': lrsc, 'amo': amo}
+GENERATORS = {'lrsc': lrsc, 'amo': amo, 'fence': fence}
 
 
 def main():
