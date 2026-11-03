@@ -19,3 +19,26 @@ def test_combined_state_and_multihart():
     del row['fcsr']
     with pytest.raises(ValueError):
         list(Trace(io.StringIO('\n'.join(map(json.dumps, [h, *records])))))
+
+
+@pytest.mark.parametrize('change', ['gap', 'epoch', 'hart', 'order'])
+def test_multihart_missing_evidence_refused(change):
+    h, row = fixture()
+    h.update(harts=[0], capabilities=['state', 'multihart'])
+    row.update(hart=0, epoch=0, order='0', capture_seq='1')
+    row.update({'gap': {'capture_seq': '2'}, 'epoch': {'epoch': 1},
+                'hart': {'hart': 2}, 'order': {'order': '1'}}[change])
+    records = [dict(event='reset', hart=0, epoch=0, cycle=0, capture_seq='0'), row]
+    with pytest.raises(ValueError):
+        list(Trace(io.StringIO('\n'.join(map(json.dumps, [h, *records])))))
+
+
+def test_multihart_only_has_no_state_match(tmp_path):
+    from rvw.cosim.checker import check
+    from rvw.cosim.platform import Platform
+    h, row = fixture()
+    h.update(harts=[0], capabilities=['multihart'])
+    path = tmp_path / 'trace.jsonl'
+    path.write_text(json.dumps(h) + '\n')
+    with pytest.raises(ValueError, match='multi-hart reference'):
+        check(path, object(), Platform.load('boom'))
