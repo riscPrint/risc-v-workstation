@@ -36,3 +36,11 @@ Spike validates single-hart assertions. It is not an RVWMO outcome oracle.
 A retired load after a store does not establish external bus order.
 These programs do not establish concurrent AMO atomicity or cross-hart visibility.
 No pass from these programs closes those coverage gaps.
+
+## AMO
+
+All nine integer AMOs run at each supported width and aq/rl encoding.
+Signed extrema and seed-based random operands exercise the returned old value,
+new memory value, RV64 word sign extension and adjacent guard bytes.
+The same assertions run on Spike before the DUT. This is a functional check.
+Concurrent observers, faults and external aq/rl ordering remain untested.

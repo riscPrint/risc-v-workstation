@@ -73,6 +73,46 @@ def lrsc(xlen, seed):
     return program('\n'.join(bodies), xlen=xlen)
 
 
+def amo(xlen, seed):
+    rng = random.Random(seed)
+    bodies = []
+    ops = ('swap', 'add', 'xor', 'and', 'or', 'min', 'max', 'minu', 'maxu')
+    for width in (['w', 'd'] if xlen == 64 else ['w']):
+        bits = 32 if width == 'w' else 64
+        mask = (1 << bits) - 1
+        signed = lambda n: n - (1 << bits) if n >> (bits - 1) else n
+        for suffix in ['', '.aq', '.rl', '.aqrl']:
+            for op in ops:
+                # The first vector tests signed extrema. The second is random.
+                for a, b in [(1 << (bits-1), mask), (rng.getrandbits(bits), rng.getrandbits(bits))]:
+                    result = {'swap': b, 'add': (a+b) & mask, 'xor': a^b,
+                              'and': a&b, 'or': a|b, 'min': min(a,b,key=signed),
+                              'max': max(a,b,key=signed), 'minu': min(a,b), 'maxu': max(a,b)}[op]
+                    # LW and AMO.W return a sign-extended value on RV64.
+                    old = signed(a) if bits == 32 and xlen == 64 else a
+                    new = signed(result) if bits == 32 and xlen == 64 else result
+                    bodies.append(f"""la t0, cell
+ li t1, 0xa5
+ sb t1, -1(t0)
+ sb t1, {bits//8}(t0)
+ li t1, {a}
+ s{width} t1, 0(t0)
+ li t1, {b}
+ amo{op}.{width}{suffix} t2, t1, (t0)
+ li t3, {old}
+ bne t2, t3, fail
+ l{width} t2, 0(t0)
+ li t3, {new}
+ bne t2, t3, fail
+ lbu t2, -1(t0)
+ li t3, 0xa5
+ bne t2, t3, fail
+ lbu t2, {bits//8}(t0)
+ bne t2, t3, fail
+""")
+    return program('\n'.join(bodies), xlen=xlen).replace('cell: .dword 0', '.dword 0\ncell: .dword 0')
+
+
 def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -91,7 +131,7 @@ def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     return jobs
 
 
-GENERATORS = {'lrsc': lrsc}
+GENERATORS = {'lrsc': lrsc, 'amo': amo}
 
 
 def main():
