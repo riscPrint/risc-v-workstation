@@ -552,13 +552,16 @@ for source attribution. The example config disables the runner's nested lock bec
 already owns it. Use `RVW_BOOM_ADAPTER` to choose another checked-out adapter explicitly.
 The shared simulation config enables Spinal assignment line comments when coverage is requested.
 The installed Verilator 5.049 aborts in experimental FSM detection on a BOOM empty reset
-branch (`V3FsmDetect.cpp:641`). The adapter therefore asks Verilator for explicit coverage
-kinds (`RISCVSIM_COVERAGE`, default `line,user`; line coverage includes branches) instead of
-`--coverage`, which would include FSM coverage. The collector sets `RISCVSIM_COVERAGE=line,user`.
+branch (`V3FsmDetect.cpp:641`). The adapter asks Verilator for explicit coverage kinds through `RISCVSIM_COVERAGE`
+instead of `--coverage`. Line coverage includes branches. The collector uses the adapter
+version gate by default. Set `RISCVSIM_COVERAGE=line,user` to reproduce the historical universe.
 Toggle and expression coverage can be added (`line,user,toggle,expr`), at about 230 MB of
 `coverage.dat` per BOOM small run for toggle. Each C1 model records `coverage_types`, and its
 replay preserves the setting. This is a compiler workaround, not an RTL or coverage exclusion;
-native FSM coverage remains a gap on this installed tool version.
+native FSM coverage remains unavailable on 5.049. RiscvSim now enables FSM coverage by default
+when the native `verilator -V` reports 5.052 or later. It refuses an explicit FSM request on
+older or unknown versions. `RISCVSIM_COVERAGE=line,user` still selects the historical point universe.
+Do not merge runs from different coverage-kind sets.
 Merge each generated C3 `results.json` with `cov merge`, then report/rank the merged database;
 feed the runs' `rvfi.jsonl` artifacts to `cov functional`. Keep collection failures visible.
 
@@ -579,7 +582,7 @@ excluded by proof. These measurements do not set an acceptance threshold.
 
 ## Remaining gaps
 
-Native FSM coverage is disabled on this installed compiler. Whole-core Scala attribution needs
+Native FSM coverage needs Verilator >= 5.052. Whole-core Scala attribution needs
 more HGLDD coverage, particularly declarations and memories. Collapsed Verilator hierarchy
 cannot provide exact per-instance counts from these artifacts. Proof exclusions require reviewed
 expression mappings and do not compute proof cores; the only cone they trace is the combinational
@@ -662,3 +665,27 @@ Proof exclusions and mutation survivors retain the evidence limits documented ab
 FSM and Scala attribution: [#42](https://github.com/riscPrint/risc-v-workstation/issues/42). Expected ISA bins: [#82](https://github.com/riscPrint/risc-v-workstation/issues/82). Typed RTL events: [#88](https://github.com/riscPrint/risc-v-workstation/issues/88). Temporal coverage: [#115](https://github.com/riscPrint/risc-v-workstation/issues/115). BOOM mutation review: [#3](https://github.com/riscPrint/risc-v-workstation/issues/3). Proof-core reports: [#62](https://github.com/riscPrint/risc-v-workstation/issues/62).
 
 Retained limit: Reviewed expression mappings are not automatic semantic proofs. Capture bounds, unsupported state refusals, reset assumptions and proof/mutation evidence limits remain required. No complete coverage claim follows from observed bins.
+
+## Scala mapping and denominators
+
+HGLDD signal mapping follows nested struct and vector expressions. A leaf uses
+its own Scala declaration. A container line does not stand in for its fields.
+Conflicting declarations for the same module and signal stay unmapped.
+This mapping applies to toggle points. It does not attribute a branch to a
+signal declaration. Assignment comments and explicit HDL spans still map
+statement points. Memory declarations without HGLDD expressions stay unmapped.
+
+`report.scala_mapping` gives the mapped-point numerator and the complete
+instrumented-point denominator. The small nested-bundle regression target is
+100% of its declared leaf toggle points, with no attribution of its unrelated
+branch point. This is a checkable fixture target, not a whole-core target.
+`instance_scope` gives each hierarchy bucket's instrumented point count.
+A literal hierarchy has an exact denominator for that recorded instance bucket.
+A wildcard hierarchy has aggregate counts and a null exact-instance denominator.
+Missing hierarchy also gives null. These fields cannot recover physical instance
+counts after Verilator merges modules. Scala line groups can overlap because
+one point can link to several source lines. Do not sum their denominators.
+
+FSM compatibility and Scala mapping are separate checks. `--coverage-fsm`
+can compile while some points still lack Scala lines. A compilation check does
+not establish state or transition hits.

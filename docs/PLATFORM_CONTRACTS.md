@@ -1021,3 +1021,13 @@ collection. Unreported targets retain their existing disposition.
 Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.
+
+### Coverage mapping denominator fields
+
+`rvw.coverage-report/1` adds `scala_mapping` with `mapped`, `denominator`
+and `unit`. Each instrumented point counts once in that denominator.
+`instance_scope` maps recorded hierarchy strings to `scope`,
+`instrumented_points` and `exact_instance_denominator`. A wildcard gives
+`scope: aggregate` and a null exact denominator. Missing hierarchy gives
+`scope: unknown` and null. Literal hierarchy gives `scope: instance`.
+No report expands aggregate counts into inferred physical instances.

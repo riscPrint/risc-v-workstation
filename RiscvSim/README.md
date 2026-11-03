@@ -271,3 +271,14 @@ must come from Sail or the suite, never from a DUT run.
 Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
 
 Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.
+
+## FSM coverage version gate
+
+Coverage models select explicit Verilator coverage kinds. The default is
+`line,user,fsm` when the native `verilator -V` reports version 5.052 or later.
+Older or unknown versions default to `line,user`. An explicit `fsm` request
+on those versions fails before native compilation. Set `RISCVSIM_COVERAGE`
+to select kinds from `line,user,toggle,expr,fsm`. The C1 model and replay record
+the resolved list. Runs with different lists have different point universes.
+Use the native `-V` version: an installed Perl launcher can report a stale
+version with `--version`.
