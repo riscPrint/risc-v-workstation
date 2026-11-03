@@ -43,6 +43,8 @@ def sweep(args):
                *map(str, snapshot.sources), '--top', name, '--outputs', '--depth', str(args.depth),
                '--engine', args.engine, '--clock', args.clock, '--replay', args.replay,
                '--timeout', str(min(remaining, args.module_timeout)), '--out', str(directory)]
+        if args.first_failure:
+            cmd.append('--first-failure')
         cmd += ['--reset-active', args.reset_active]
         if args.reset:
             cmd += ['--reset', args.reset]

@@ -104,7 +104,14 @@ def register(sub) -> None:
     x.add_argument("--x-inputs", action="store_true", help="do not assume the inputs are defined")
     x.add_argument("--combinational", action="store_true", help="clock-free module (state is refused)")
     x.add_argument("--replay", choices=["icarus"], help="replay candidates with native 4-state Icarus")
+    x.add_argument("--first-failure", action="store_true", help="stop after the first formal witness; other targets stay not_reported")
     x.set_defaults(func=lambda a: _flow("xprop", a))
+
+    context = s.add_parser("x-context", help="native parent-design replay from reset with explicit input ties")
+    _common(context, 16)
+    context.add_argument("--reset-cycles", type=int, default=2)
+    context.add_argument("--signal", action="append", required=True, help="hierarchical observation in the parent")
+    context.set_defaults(replay="icarus", func=lambda a: _flow("x_context", a))
 
     sweep = s.add_parser("x-sweep", help="bounded per-module X campaign")
     _common(sweep, 8)
@@ -112,4 +119,5 @@ def register(sub) -> None:
     sweep.add_argument("--module-timeout", type=float, default=30, help="seconds per module")
     sweep.add_argument("--campaign-timeout", type=float, default=300, help="total campaign seconds")
     sweep.add_argument("--replay", choices=["icarus"], default="icarus")
+    sweep.add_argument("--first-failure", action="store_true", help="stop each module after the first formal witness")
     sweep.set_defaults(func=lambda a: _flow("x_sweep", a))
