@@ -666,3 +666,24 @@ Use an expanded unversioned ISA string. Use null for an unverified version.
 The command rejects missing dependencies and contradictory consumer strings.
 Null versions give `inconclusive`. Consumer strings are declarations. This
 increment does not probe compiler, adapter, reference model or ACT settings.
+
+### Pinned opcode bins
+
+Clone `https://github.com/riscv/riscv-opcodes` and check out the `source.revision`
+in `examples/boom/isa.json` or `examples/vexriscv/isa.json`. Then run:
+
+```
+rvw cov functional TRACE --manifest examples/boom/isa.json --source-root OPCODES --json
+```
+
+The manifest pins each selected file by SHA-256. A changed file is an error.
+The plan generates every selected canonical opcode and its encoded register
+fields. It also generates static rounding-mode fields where present. Each
+unobserved bin remains a hole. Trapped records and ambiguous encoding matches
+receive no instruction hit. The trace ISA must equal the manifest ISA.
+The plan and pins enter the report fingerprint and prevent incompatible merges.
+`unavailable` lists excluded scope. Compressed instructions, semantic immediate
+classes, operand values, CSR legality, privilege and exceptions are not complete
+in this increment. These require semantic data beyond opcode masks. Register
+fields are encoded indices, including FP indices; they are not FP data values.
+These reports measure selected encoding coverage. They are not compliance results.

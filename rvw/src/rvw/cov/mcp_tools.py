@@ -53,7 +53,7 @@ def mcp_tools():
                  handler("rvw.cov.cli", "select"), long=True, annotations={"readOnlyHint": True}),
         ToolSpec("cov_functional", "Report RVFI functional coverage bins and holes from C2 traces or saved functional reports. "
                  "Use config for a declarative coverage plan; large traces run as a job.",
-                 schema({"traces": ARRAY, "config": S,
+                 schema({"traces": ARRAY, "config": S, "manifest": S, "source_root": S,
                          "platform": {**S, "description": "platform name or JSON for the RVFI address convention "
                                       "(default: the bundled platform named by the trace header's core)"}}, ["traces"]),
                  handler("rvw.cov.cli", "functional"), long=True, annotations={"readOnlyHint": True}),

@@ -46,3 +46,91 @@ def check_manifest(path):
             'status': 'inconclusive' if unknown else 'declared',
             'unverified_versions': unknown, 'consumers': data.get('consumers', {}),
             'notes': ['Consumer strings are declarations; tools are not probed.']}
+
+
+def pinned_files(data, root):
+    source = data['source']
+    if not re.fullmatch('[0-9a-f]{40}', source['revision']):
+        raise ValueError('source revision must be a full commit ID')
+    files = {}
+    for name, digest in source['files'].items():
+        text = captured.read_text(Path(root) / name)
+        if sha256(text.encode()).hexdigest() != digest:
+            raise ValueError(f'{name}: pinned source hash mismatch')
+        files[name] = text
+    return files
+
+
+def opcode_records(files):
+    records = {}
+    for file, text in sorted(files.items()):
+        if not file.startswith('extensions/'):
+            continue
+        for line in text.splitlines():
+            words = line.split('#', 1)[0].split()
+            if not words or words[0] == '$import':
+                continue
+            if words[0] == '$pseudo_op':
+                # XLEN-specific definitions of the same instruction, not aliases.
+                if file != 'extensions/rv32_i' or words[1].split('::')[-1] != words[2]:
+                    continue
+                words = words[2:]
+            name, *tokens = words
+            mask = value = 0
+            args = []
+            for token in tokens:
+                if '=' not in token:
+                    args.append(token)
+                    continue
+                bits, raw = token.split('=')
+                hi, lo = map(int, bits.split('..')) if '..' in bits else (int(bits), int(bits))
+                part = ((1 << (hi - lo + 1)) - 1) << lo
+                mask |= part
+                value |= int(raw, 0) << lo
+            item = {'name': name, 'mask': mask, 'value': value, 'args': args, 'source': file}
+            if name in records and records[name] != item:
+                raise ValueError(f'duplicate instruction {name}; select one XLEN definition')
+            records[name] = item
+    return list(records.values())
+
+
+@captured.command
+def plan(manifest, root):
+    import csv
+    data = load_manifest(manifest)
+    files = pinned_files(data, root)
+    instructions = opcode_records(files)
+    if not instructions:
+        raise ValueError('no opcode definitions selected')
+    args = {row[0]: [int(row[1]), int(row[2])] for row in csv.reader(files['arg_lut.csv'].splitlines(), skipinitialspace=True)}
+    groups = [{'name': 'isa_instruction', 'fields': ['isa_instruction'],
+               'bins': [[i['name']] for i in instructions]}]
+    for insn in instructions:
+        for arg in insn['args']:
+            if arg not in args:
+                raise ValueError(f'unknown opcode argument {arg}')
+            hi, lo = args[arg]
+            # Encoded fields, not reconstructed signed immediates or FP values.
+            values = list(range(32)) if arg in ('rd', 'rs1', 'rs2', 'rs3') else (
+                [0, 1, 2, 3, 4, 7] if arg == 'rm' else None)
+            if values is None:
+                continue
+            groups.append({'name': f"isa_{insn['name']}_{arg}", 'fields': [f'isa_{arg}'],
+                           'when': {'isa_instruction': insn['name']}, 'bins': [[v] for v in values]})
+    return {'groups': groups, 'isa_plan': {'manifest': data, 'instructions': instructions, 'args': args,
+            'scope': 'Selected opcode encodings and register fields; not legal-combination or compliance coverage.',
+            'unavailable': data.get('unavailable', [])}}
+
+
+def observe_encoding(obs, isa_plan):
+    if obs['event'] != 'retire' or obs.get('trap'):
+        return
+    insn = int(obs['insn'], 0) if isinstance(obs['insn'], str) else obs['insn']
+    found = [i for i in isa_plan['instructions'] if insn & i['mask'] == i['value']]
+    if len(found) != 1:
+        return  # Ambiguous encodings earn no hit.
+    item = found[0]
+    obs['isa_instruction'] = item['name']
+    for arg in item['args']:
+        hi, lo = isa_plan['args'][arg]
+        obs[f'isa_{arg}'] = (insn >> lo) & ((1 << (hi - lo + 1)) - 1)

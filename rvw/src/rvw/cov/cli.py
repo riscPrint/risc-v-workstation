@@ -90,7 +90,7 @@ def calculate(args):
         result = check_manifest(args.manifest)
     elif args.cov_command == 'functional':
         from .functional import functional
-        result = functional(args.traces, args.config, args.platform)
+        result = functional(args.traces, args.config, args.platform, args.manifest, args.source_root)
     elif args.cov_command == 'prove':
         from .proof import prove
         result = prove(args.config, args.database, args.work_dir, args.timeout)
@@ -185,6 +185,8 @@ def register(subparsers):
     isa_check.add_argument('manifest')
     functional = sub.add_parser('functional', help='merge C2 traces into declarative cover groups')
     functional.add_argument('traces', nargs='+')
+    functional.add_argument('--manifest', help='core-owned rvw.isa/1 file')
+    functional.add_argument('--source-root', help='local pinned riscv-opcodes checkout')
     functional.add_argument('--config', help='JSON coverage plan; adds or replaces named default groups')
     functional.add_argument('--platform', help="platform name or JSON (as rvw cosim) for the RVFI address convention; "
                             "default: the bundled platform named by the trace header's core")

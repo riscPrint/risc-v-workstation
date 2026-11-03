@@ -21,5 +21,21 @@
   },
   "consumers": {
     "adapter_trace": "rv32im_zicsr_zifencei"
-  }
+  },
+  "source": {
+    "url": "https://github.com/riscv/riscv-opcodes",
+    "revision": "f24ac23ec9fa947011781a09cd6fd25a7c36dc45",
+    "files": {
+      "extensions/rv_i": "146e297ddbe346f325d993aaf56d7006f1bfde39df584b888b221543def17b97",
+      "extensions/rv_m": "1a53ea03820b7044de4f0f04d207c1e4fc0ced46deb2c6ed4a3ca268fa37ddbe",
+      "extensions/rv_zicsr": "dd8cc0e2c32fb5658d4aa719cef6ab1b714e2145ba071c9aeb382d9963e4901f",
+      "extensions/rv_zifencei": "be2d8f7286e06fadafffbde14656e6adb3f923ce704ea0829229d3a3b5f35758",
+      "extensions/rv32_i": "8ef811f8e1d4435e4c61c1d9e0384032c431106f0ef5068f48d3a506701ce463",
+      "arg_lut.csv": "de5302010d8634bda8382a6ddfba73ea51ab4f80a7a57d6d68f809da057ea97a"
+    }
+  },
+  "unavailable": [
+    "Compressed encodings are outside this first generated plan.",
+    "Semantic immediates, operand values, CSR legality, privilege and exceptions need a semantic spec source."
+  ]
 }
