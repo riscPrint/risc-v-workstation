@@ -21,7 +21,8 @@
       "elkjs/*": [
         "./node_modules/elkjs/*"
       ]
-    }
+    },
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*.ts",

@@ -1,0 +1,1 @@
+{"schema": "rvw.functional-coverage/1", "groups": {"mode": {"expected_bins": 2, "hits": [{"bin": ["M"], "count": 4}], "holes": [["U"]]}}, "unknown_encodings": {"unsupported": 1}}

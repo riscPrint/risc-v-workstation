@@ -1,0 +1,107 @@
+{
+  "id": "regress",
+  "title": "Regression",
+  "description": "Show saved rvw regress results.",
+  "activationEvents": [
+    "onCommand:regress.open",
+    "onView:regress.results"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "regress.open",
+        "title": "Regression: Open Report"
+      },
+      {
+        "command": "regress.refresh",
+        "title": "Regression: Refresh Report"
+      },
+      {
+        "command": "regress.raw",
+        "title": "Regression: Open Raw Report"
+      },
+      {
+        "command": "regress.source",
+        "title": "Regression: Jump to Source via Design Database"
+      },
+      {
+        "command": "regress.wave",
+        "title": "Regression: Open Waveform in Surfer"
+      },
+      {
+        "command": "regress.trace",
+        "title": "Regression: Open SpinalTrace"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "regress.results",
+          "name": "RVW Regression"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "regress.open",
+          "when": "view == regress.results",
+          "group": "navigation"
+        },
+        {
+          "command": "regress.refresh",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.raw",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.source",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.wave",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.trace",
+          "when": "view == regress.results",
+          "group": "results"
+        }
+      ]
+    },
+    "configuration": {
+      "properties": {
+        "regress.rvwExecutable": {
+          "type": "string",
+          "default": "rvw",
+          "description": "Path to rvw.",
+          "restricted": true
+        },
+        "regress.surferExecutable": {
+          "type": "string",
+          "default": "surfer",
+          "description": "Path to Surfer.",
+          "restricted": true
+        },
+        "regress.spinaltraceExecutable": {
+          "type": "string",
+          "default": "spinaltrace",
+          "description": "Path to the SpinalTrace GUI.",
+          "restricted": true
+        }
+      }
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts",
+      "test/host.test.ts"
+    ]
+  }
+}

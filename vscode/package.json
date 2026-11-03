@@ -19,31 +19,91 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
+    "onCommand:coverage.open",
+    "onView:coverage.results",
+    "onCommand:perf.open",
+    "onView:perf.results",
+    "onCommand:regress.open",
+    "onView:regress.results",
     "onCustomEditor:spinalblocks.diagram",
     "onLanguage:scala",
     "workspaceContains:**/blocks/*.json.gz",
     "workspaceContains:**/*.spinalblocks.json"
   ],
   "contributes": {
-    "customEditors": [
-      {
-        "viewType": "spinalblocks.diagram",
-        "displayName": "SpinalBlocks Diagram",
-        "selector": [
-          {
-            "filenamePattern": "*.spinalblocks.json"
-          },
-          {
-            "filenamePattern": "*.json.gz"
-          },
-          {
-            "filenamePattern": "*.json"
-          }
-        ],
-        "priority": "option"
-      }
-    ],
     "commands": [
+      {
+        "command": "coverage.open",
+        "title": "Coverage: Open Report"
+      },
+      {
+        "command": "coverage.refresh",
+        "title": "Coverage: Refresh Report"
+      },
+      {
+        "command": "coverage.raw",
+        "title": "Coverage: Open Raw Report"
+      },
+      {
+        "command": "coverage.source",
+        "title": "Coverage: Jump to Source via Design Database"
+      },
+      {
+        "command": "coverage.wave",
+        "title": "Coverage: Open Waveform in Surfer"
+      },
+      {
+        "command": "coverage.trace",
+        "title": "Coverage: Open SpinalTrace"
+      },
+      {
+        "command": "perf.open",
+        "title": "Performance: Open Report"
+      },
+      {
+        "command": "perf.refresh",
+        "title": "Performance: Refresh Report"
+      },
+      {
+        "command": "perf.raw",
+        "title": "Performance: Open Raw Report"
+      },
+      {
+        "command": "perf.source",
+        "title": "Performance: Jump to Source via Design Database"
+      },
+      {
+        "command": "perf.wave",
+        "title": "Performance: Open Waveform in Surfer"
+      },
+      {
+        "command": "perf.trace",
+        "title": "Performance: Open SpinalTrace"
+      },
+      {
+        "command": "regress.open",
+        "title": "Regression: Open Report"
+      },
+      {
+        "command": "regress.refresh",
+        "title": "Regression: Refresh Report"
+      },
+      {
+        "command": "regress.raw",
+        "title": "Regression: Open Raw Report"
+      },
+      {
+        "command": "regress.source",
+        "title": "Regression: Jump to Source via Design Database"
+      },
+      {
+        "command": "regress.wave",
+        "title": "Regression: Open Waveform in Surfer"
+      },
+      {
+        "command": "regress.trace",
+        "title": "Regression: Open SpinalTrace"
+      },
       {
         "command": "spinalblocks.open",
         "title": "SpinalBlocks: Open Block Diagram",
@@ -77,6 +137,18 @@
     "views": {
       "explorer": [
         {
+          "id": "coverage.results",
+          "name": "RVW Coverage"
+        },
+        {
+          "id": "perf.results",
+          "name": "RVW Performance"
+        },
+        {
+          "id": "regress.results",
+          "name": "RVW Regression"
+        },
+        {
           "id": "spinalblocks.hierarchy",
           "name": "SpinalBlocks",
           "when": "spinalblocks.hasDiagram"
@@ -84,6 +156,98 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "coverage.open",
+          "when": "view == coverage.results",
+          "group": "navigation"
+        },
+        {
+          "command": "coverage.refresh",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.raw",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.source",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.wave",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.trace",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.open",
+          "when": "view == perf.results",
+          "group": "navigation"
+        },
+        {
+          "command": "perf.refresh",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.raw",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.source",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.wave",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.trace",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.open",
+          "when": "view == regress.results",
+          "group": "navigation"
+        },
+        {
+          "command": "regress.refresh",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.raw",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.source",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.wave",
+          "when": "view == regress.results",
+          "group": "results"
+        },
+        {
+          "command": "regress.trace",
+          "when": "view == regress.results",
+          "group": "results"
+        }
+      ],
       "explorer/context": [
         {
           "command": "spinalblocks.open",
@@ -111,6 +275,24 @@
         }
       ]
     },
+    "customEditors": [
+      {
+        "viewType": "spinalblocks.diagram",
+        "displayName": "SpinalBlocks Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.spinalblocks.json"
+          },
+          {
+            "filenamePattern": "*.json.gz"
+          },
+          {
+            "filenamePattern": "*.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
     "keybindings": [
       {
         "command": "spinalblocks.find",
@@ -132,6 +314,75 @@
       }
     ],
     "configuration": [
+      {
+        "title": "Coverage",
+        "properties": {
+          "coverage.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
+          },
+          "coverage.surferExecutable": {
+            "type": "string",
+            "default": "surfer",
+            "description": "Path to Surfer.",
+            "restricted": true
+          },
+          "coverage.spinaltraceExecutable": {
+            "type": "string",
+            "default": "spinaltrace",
+            "description": "Path to the SpinalTrace GUI.",
+            "restricted": true
+          }
+        }
+      },
+      {
+        "title": "Performance",
+        "properties": {
+          "perf.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
+          },
+          "perf.surferExecutable": {
+            "type": "string",
+            "default": "surfer",
+            "description": "Path to Surfer.",
+            "restricted": true
+          },
+          "perf.spinaltraceExecutable": {
+            "type": "string",
+            "default": "spinaltrace",
+            "description": "Path to the SpinalTrace GUI.",
+            "restricted": true
+          }
+        }
+      },
+      {
+        "title": "Regression",
+        "properties": {
+          "regress.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
+          },
+          "regress.surferExecutable": {
+            "type": "string",
+            "default": "surfer",
+            "description": "Path to Surfer.",
+            "restricted": true
+          },
+          "regress.spinaltraceExecutable": {
+            "type": "string",
+            "default": "spinaltrace",
+            "description": "Path to the SpinalTrace GUI.",
+            "restricted": true
+          }
+        }
+      },
       {
         "title": "SpinalBlocks",
         "properties": {
