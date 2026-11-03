@@ -52,6 +52,7 @@ def _flow(name: str, args) -> int:
 
 
 def _common(p: argparse.ArgumentParser, depth: int) -> None:
+    p.set_defaults(event_model=False, event_clock=None, async_reset=False)
     p.add_argument("--verilog", nargs="+", help="design Verilog files")
     p.add_argument("--top", help="toplevel module")
     p.add_argument("--clock", help="clock port (default clk)")
