@@ -1,0 +1,246 @@
+"""Declarative, self-checking RV64 Sv39 data-access programs."""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+from pathlib import Path
+
+from rvw.common.proc import run_group
+
+SPEC = 'https://docs.riscv.org/reference/isa/v20260120/priv/supervisor.html'
+FLAGS = dict(zip('VRWXUGAD', (1, 2, 4, 8, 16, 32, 64, 128)))
+ROOT = 0x80010000
+DATA = 0x80200000
+LINK = '''OUTPUT_ARCH("riscv")
+ENTRY(_start)
+SECTIONS {
+ . = 0x80000000; .text : { *(.text) }
+ . = 0x80008000; .tohost : { *(.tohost) }
+ . = 0x80010000; .tables : { *(.tables) }
+ . = 0x80200000; .data : { *(.data) }
+}
+'''
+
+
+def number(value):
+    if isinstance(value, str):
+        return int(value, 0)
+    if type(value) is not int:
+        raise ValueError('expected an integer or integer string')
+    return value
+
+
+def load(path):
+    raw = json.loads(Path(path).read_text())
+    if set(raw) != {'schema', 'scenarios'} or raw['schema'] != 'rvw.mmu/1':
+        raise ValueError('expected rvw.mmu/1 with scenarios')
+    if not isinstance(raw['scenarios'], list) or not raw['scenarios']:
+        raise ValueError('scenarios must be a nonempty list')
+    ids = set()
+    for s in raw['scenarios']:
+        validate(s)
+        if s['id'] in ids:
+            raise ValueError('duplicate scenario id')
+        ids.add(s['id'])
+    return raw['scenarios']
+
+
+def validate(s):
+    required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence'}
+    if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
+        raise ValueError('invalid scenario fields')
+    if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
+        raise ValueError('invalid scenario id')
+    if type(s['level']) is not int or s['level'] not in (0, 1, 2):
+        raise ValueError('level must be 0, 1 or 2')
+    if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
+        raise ValueError('invalid PTE flags')
+    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault'):
+        raise ValueError('unsupported access or expectation')
+    if s.get('privilege', 'S') not in ('S', 'U'):
+        raise ValueError('privilege must be S or U')
+    for key in ('sum', 'mxr'):
+        if key in s and type(s[key]) is not bool:
+            raise ValueError(f'{key} must be boolean')
+    for key in ('va', 'pa'):
+        n = number(s.get(key, 0x40000000 if key == 'va' else DATA))
+        if not 0 <= n < 2**64 or n % 4096:
+            raise ValueError(f'{key} must be an unsigned page address')
+    va = number(s.get('va', 0x40000000))
+    if va >> 39 != ((1 << 25) - 1 if va & (1 << 38) else 0):
+        raise ValueError('va must be canonical Sv39')
+    if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
+        raise ValueError('bins must be nonempty strings')
+    if 'ad_expect' in s and (type(s['ad_expect']) is not int or s['ad_expect'] & ~192):
+        raise ValueError('ad_expect must contain only A/D bits')
+    if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
+        raise ValueError('asid must fit 16 bits')
+    if s.get('fence', 'all') not in ('all', 'va', 'asid', 'va-asid'):
+        raise ValueError('unsupported fence scope')
+
+
+def assembly(s):
+    validate(s)
+    va = number(s.get('va', 0x40000000))
+    pa = number(s.get('pa', DATA))
+    level = s['level']
+    indexes = [(va >> (12 + 9 * i)) & 511 for i in range(3)]
+    tables = [[0] * 512 for _ in range(3 - level)]
+    for depth, table in enumerate(tables):
+        i = 2 - depth
+        table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+    leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
+    fault = s['expect'] == 'page-fault'
+    cause = 13 if s['access'] == 'load' else 15
+    status = (1 << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
+    status |= int(s.get('sum', False)) << 18 | int(s.get('mxr', False)) << 19
+    asid = s.get('asid', 0)
+    fence = {'all': 'sfence.vma x0, x0', 'va': 'sfence.vma t3, x0',
+             'asid': 'sfence.vma x0, t4', 'va-asid': 'sfence.vma t3, t4'}[s.get('fence', 'all')]
+    # All fetches stay in M-mode. MPRV selects S/U only for the tested data access.
+    code = f'''.option norvc
+.section .text
+.globl _start
+_start:
+ la t0, trap
+ csrw mtvec, t0
+ li t0, -1
+ csrw pmpaddr0, t0
+ li t0, 15
+ csrw pmpcfg0, t0
+ li t0, {(8 << 60) | (asid << 44) | (ROOT >> 12)}
+ csrw satp, t0
+ sfence.vma x0, x0
+ li t3, {va}
+ li t4, {asid}
+ {fence}
+ li t0, 0xe1800
+ csrc mstatus, t0
+ li t0, {status}
+ csrs mstatus, t0
+ li a0, 42
+access_site:
+ {'ld a0, 0(t3)' if s['access'] == 'load' else 'sd a0, 0(t3)'}
+ li t0, 0x20000
+ csrc mstatus, t0
+ {'j fail' if fault else 'j check_data'}
+trap:
+ li t0, 0x20000
+ csrc mstatus, t0
+ {'j check_trap' if fault else 'j fail'}
+check_trap:
+ csrr t0, mcause
+ li t1, {cause}
+ bne t0, t1, fail
+ csrr t0, mtval
+ li t1, {va}
+ bne t0, t1, fail
+ csrr t0, mepc
+ la t1, access_site
+ bne t0, t1, fail
+ j check_ad
+check_data:
+'''
+    if s['access'] == 'store':
+        code += f' li t0, {DATA}\n ld a0, 0(t0)\n'
+    code += ' li t1, 42\n bne a0, t1, fail\ncheck_ad:\n'
+    if 'ad_expect' in s:
+        code += f' li t0, {leaf}\n ld t0, 0(t0)\n andi t0, t0, 192\n li t1, {s["ad_expect"]}\n bne t0, t1, fail\n'
+    code += ''' li t1, 1
+ j finish
+fail:
+ li t1, 3
+finish:
+ la t0, tohost
+ sd t1, 0(t0)
+1: j 1b
+.section .tohost,"aw"
+.balign 64
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0
+.section .tables,"aw"
+'''
+    for table in tables:
+        code += '\n'.join(f' .dword {v}' for v in table) + '\n'
+    code += '.section .data\n .dword 42\n'
+    return code
+
+
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def build(description, out, gcc):
+    scenarios = load(description)
+    out = Path(out).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    # Refuse stale ELFs from an earlier description.
+    if any(out.iterdir()):
+        raise ValueError('build output must be empty')
+    (out / 'link.ld').write_text(LINK)
+    rows = []
+    for s in scenarios:
+        source = out / (s['id'] + '.S')
+        elf = out / (s['id'] + '.elf')
+        source.write_text(assembly(s))
+        command = [gcc, '-march=rv64im_zicsr_zifencei', '-mabi=lp64', '-nostdlib', '-nostartfiles',
+                   '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'), '-o', str(elf), str(source)]
+        result = run_group(command, capture=True, timeout=60)
+        if result.returncode:
+            raise ValueError(f'compiler failed for {s["id"]}: {result.stderr}')
+        rows.append(dict(s, elf=elf.name, elf_sha256=digest(elf), source_sha256=digest(source)))
+    manifest = {'schema': 'rvw.mmu-build/1', 'spec': SPEC, 'description_sha256': digest(description),
+                'scenarios': rows}
+    (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    return manifest
+
+
+def reference(directory, spike, timeout):
+    directory = Path(directory).resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    rows = []
+    for s in manifest['scenarios']:
+        elf = directory / s['elf']
+        if digest(elf) != s['elf_sha256']:
+            raise ValueError('ELF differs from build manifest')
+        command = [spike, '--isa=rv64im_zicsr_zifencei', '--priv=msu', '-m128', str(elf)]
+        r = run_group(command, capture=True, timeout=timeout)
+        status = 'inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else 'fail'
+        rows.append({'id': s['id'], 'status': status, 'elf_sha256': s['elf_sha256'],
+                     'command': command, 'returncode': r.returncode, 'stderr': r.stderr,
+                     'bins': {b: status for b in s['bins']}})
+    return {'schema': 'rvw.mmu-reference/1', 'model': 'spike', 'scope': 'self-checking architectural effects only',
+            'status': 'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive' if any(r['status'] == 'inconclusive' for r in rows) else 'fail',
+            'scenarios': rows}
+
+
+def register(sub):
+    parser = sub.add_parser('mmu', help='build declarative Sv39 suites or validate them on Spike')
+    actions = parser.add_subparsers(dest='mmu_action', required=True)
+    b = actions.add_parser('build')
+    b.add_argument('description', type=Path)
+    b.add_argument('--out', required=True, type=Path)
+    b.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
+    r = actions.add_parser('reference')
+    r.add_argument('directory', type=Path)
+    r.add_argument('--spike', default='spike')
+    r.add_argument('--timeout', type=float, default=10)
+    for p in (b, r):
+        p.add_argument('--json', action='store_true')
+        p.set_defaults(func=main)
+
+
+def main(args):
+    import math
+    try:
+        if args.mmu_action == 'reference' and (not math.isfinite(args.timeout) or args.timeout <= 0):
+            raise ValueError('timeout must be finite and positive')
+        result = build(args.description, args.out, args.gcc) if args.mmu_action == 'build' else reference(args.directory, args.spike, args.timeout)
+        print(json.dumps(result, allow_nan=False))
+        return 0 if result.get('status', 'pass') == 'pass' else 3 if result.get('status') == 'inconclusive' else 1
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(json.dumps({'status': 'error', 'message': str(exc)}))
+        return 2

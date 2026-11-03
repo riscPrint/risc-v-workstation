@@ -66,6 +66,9 @@ def register(sub) -> None:
                        description=__doc__)
     rs = p.add_subparsers(dest="regress_cmd", required=True)
 
+    from . import mmu
+    mmu.register(rs)
+
     r = rs.add_parser("run", help="run suites or a tier; writes C3 results")
     _core_arg(r)
     g = r.add_mutually_exclusive_group(required=True)

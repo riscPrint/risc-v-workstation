@@ -342,3 +342,41 @@ Run and gate return a job ID. Use `job_status(wait_s=60)` for the final CLI JSON
 for progress and `job_cancel` to stop the adapter process tree and release its resource lock.
 The runner still owns locking, cache/resume, provenance and verdict generation. Compare writes
 `verdict.json`; known add/remove update TOML. List/history/known list are read-only.
+
+## Directed Sv39 programs
+
+`rvw regress mmu build DESCRIPTION --out EMPTY_DIR --json` builds RV64 ELFs
+from `rvw.mmu/1` JSON. Set `--gcc` to the native cross compiler if needed.
+`rvw regress mmu reference DIR --timeout 10 --json` runs each ELF on Spike
+before RTL use. Each program checks one declared load or store. It checks the
+value, or `mcause`, `mtval` and `mepc` for a page fault. Failure writes 3 to
+`tohost`. Success writes 1. A timeout is inconclusive.
+
+The description contains `schema` and a nonempty `scenarios` list. Each scenario
+has `id`, `level` (0, 1 or 2), PTE `flags` (`VRWXUGAD`), `access` (`load` or
+`store`), `expect` (`success` or `page-fault`) and a nonempty `bins` list.
+Optional fields are `va`, `pa`, `privilege` (`S` or `U`), `sum`, `mxr`,
+`ad_expect` (A/D mask), `asid` and `fence` (`all`, `va`, `asid`, `va-asid`).
+Unknown fields are errors. Expectations are explicit requirements. The generator
+does not use a DUT result to set them.
+
+Programs require RV64IM, Zicsr, Zifencei, S/U, Sv39 and PMP entry 0. They use
+MPRV for S/U data accesses. Fetch stays in M-mode. The linker reserves text at
+0x80000000, `tohost` at 0x80008000, tables at 0x80010000 and data at 0x80200000.
+This first increment uses a fixed RAM layout. Other S-mode platforms must map
+this RAM layout. It does not yet support RV32/Sv32 or arbitrary device layouts.
+
+The build writes source, ELFs and `manifest.json`. The manifest binds the
+input and ELF hashes. Reference results contain per-scenario bins. A bin earns
+`pass` only when its whole self-check program completes on that model. Generated
+bins alone are not coverage. These bins measure architectural effects only.
+They do not measure page-walk bus traffic, physical address signals, TLB contents,
+A/D atomicity or device effects. Use the pinned [Supervisor ISA 1.13,
+20260120](https://docs.riscv.org/reference/isa/v20260120/priv/supervisor.html),
+sections 11.1.1.1.2, 11.1.1.11 and the Sv39 translation algorithm.
+
+Use any C1 project's `elf-dir` suite with `glob = "*.elf"` and
+`strip_suffix = ".elf"`. Set its `dir` to the generated directory. Keep this
+suite outside default tiers until it has reference and RTL results. The BOOM
+example declares `mmu-priv`. It keeps all failures visible, including the known
+ACT4 Sv39 exception failures. It applies no waiver.

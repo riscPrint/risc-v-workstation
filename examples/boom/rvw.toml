@@ -146,3 +146,12 @@ description = "bounded integer, multiply and compressed correctness on medium an
 runs = [
   { suite = "riscv-tests", configs = ["medium", "large"], include = ['^rv64(ui-p-add|um-p-mul|uc-p-rvc)$'] },
 ]
+
+[suites.mmu-priv]
+description = "declarative RV64 Sv39 data-access requirements; no waivers"
+dir = "${RVW_MMU_ELFS:-out/mmu}"
+glob = "*.elf"
+strip_suffix = ".elf"
+configs = ["small"]
+max_cycles = 30000
+timeout_s = 120

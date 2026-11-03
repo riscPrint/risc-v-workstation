@@ -1,0 +1,88 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "page-load",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.page-load"
+      ]
+    },
+    {
+      "id": "page-store",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "success",
+      "bins": [
+        "sv39.page-store"
+      ]
+    },
+    {
+      "id": "megapage-load",
+      "level": 1,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.megapage-load"
+      ]
+    },
+    {
+      "id": "gigapage-load",
+      "level": 2,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.gigapage-load"
+      ],
+      "pa": "0x80000000",
+      "va": "0x40200000"
+    },
+    {
+      "id": "invalid-pte",
+      "level": 0,
+      "flags": "RWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.invalid-pte"
+      ]
+    },
+    {
+      "id": "write-without-read",
+      "level": 0,
+      "flags": "VWAD",
+      "access": "store",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.write-without-read"
+      ]
+    },
+    {
+      "id": "read-only-store",
+      "level": 0,
+      "flags": "VRAD",
+      "access": "store",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.read-only-store"
+      ]
+    },
+    {
+      "id": "misaligned-superpage",
+      "level": 1,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.misaligned-superpage"
+      ],
+      "pa": "0x80201000"
+    }
+  ]
+}
