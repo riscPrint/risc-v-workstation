@@ -829,7 +829,7 @@ depth {args.depth}
 multiclock off
 
 [engines]
-{_engine_block(args.engine, True)}
+{_engine_block(args.engine, not getattr(args, "first_failure", False))}
 
 [script]
 {ys_prep}
@@ -913,3 +913,8 @@ def parse_xprop_failures(text: str, labels: list[dict]) -> list[dict]:
 def x_sweep(args):
     from .xsweep import sweep
     return sweep(args)
+
+
+def x_context(args):
+    from .xcontext import run
+    return run(args)

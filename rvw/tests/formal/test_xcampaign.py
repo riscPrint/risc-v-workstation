@@ -148,3 +148,12 @@ def test_unencoded_blackbox_cannot_earn_clean_result(tmp_path):
       module top(input clk, output y); bb u(y); endmodule''')
     assert result['status'] != 'pass'
     assert 'bb' in result['unencoded_cells']
+
+
+def test_first_failure_preserves_unreported_targets(tmp_path):
+    _, result = run(tmp_path, """module top(input clk, reset, output y, output z);
+      reg u; assign y=u; assign z=0; endmodule""", ['--first-failure'])
+    assert result['inventory'][0]['disposition'] == 'confirmed'
+    assert result['inventory'][1]['disposition'] == 'not_reported'
+    script = (tmp_path / 'out' / 'xprop.sby').read_text()
+    assert '--keep-going' not in script
