@@ -215,6 +215,14 @@ program wrote an odd value other than 1 to `tohost` (`fail_code` is the value >>
 HDL assertion or simulation exception; `rvfi_error` the riscv-formal monitor flagged an error;
 `error` the harness itself failed (bad ELF, build failure).
 
+Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
+installed reference's version, source revision when supplied, and origin. The same
+label is bound into `build_inputs`. Source installs supply `share/rvw/spike-source.json`;
+Homebrew builds capture their receipt and available SBOM. An unlabelled external
+build has null version/revision. These labels are package provenance, not binary
+attestation. The captured library and shim hashes identify the executed bytes.
+C1 from an RTL-only run does not imply that Spike ran.
+
 ## C2. RVFI trace (`rvfi.jsonl`)
 
 First line is a header, then one object per retired instruction in `order`:

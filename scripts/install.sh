@@ -68,7 +68,8 @@ fi
 rvw_home="$prefix"
 tools="$rvw_home/.tools"
 # Source identities are immutable. Host package versions can drift.
-spike_revision=5cf8c829d2033c5132158b59860fea8d6c06a94d
+# Matches the tested Homebrew source timestamp and installed headers.
+spike_revision=eff659cd43d7eafb7f3559bceed2540eabb31c50
 gcc_revision=a33dac0251d17a7b74d99bd8fd401bfce87d2aed
 oss_version=2026-10-22
 gem5_version=25.1.0.1
@@ -448,22 +449,20 @@ fi
 if [ "$cosim" = 1 ]; then
   if ! spike_inputs; then
     case "$pm" in
-      brew)
-        package tap riscv-software-src/riscv
-        packages riscv-software-src/riscv/riscv-isa-sim
-        if [ "$dry" = 0 ]; then export SPIKE_PREFIX="$(brew --prefix riscv-isa-sim)"; fi
-        run mkdir -p "$tools"
-        run ln -sfn "$SPIKE_PREFIX" "$tools/spike" ;;
-      apt|dnf)
-        if [ "$pm" = apt ]; then packages build-essential device-tree-compiler libboost-regex-dev libboost-system-dev;
-        else packages make gcc-c++ dtc boost-devel; fi
-        run mkdir -p "$tools/src"
-        pinned_source https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike" "$spike_revision"
-        run mkdir -p "$tools/src/spike/build"
-        run bash -c 'cd "$1" && ../configure --prefix="$2"' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
-        run nice make -C "$tools/src/spike/build" -j2
-        run make -C "$tools/src/spike/build" install ;;
+      brew) packages dtc boost ;;
+      apt) packages build-essential device-tree-compiler libboost-regex-dev libboost-system-dev ;;
+      dnf) packages make gcc-c++ dtc boost-devel ;;
     esac
+    run mkdir -p "$tools/src"
+    pinned_source https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike" "$spike_revision"
+    run mkdir -p "$tools/src/spike/build"
+    run bash -c 'cd "$1" && ../configure --prefix="$2"' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
+    run nice make -C "$tools/src/spike/build" -j2
+    run make -C "$tools/src/spike/build" install
+    run mkdir -p "$SPIKE_PREFIX/share/rvw"
+    if [ "$dry" = 0 ]; then
+      printf '{"version":"1.1.1-dev","revision":"%s","origin":"rvw-source-build"}\n' "$spike_revision" > "$SPIKE_PREFIX/share/rvw/spike-source.json"
+    fi
   fi
   export PATH="$SPIKE_PREFIX/bin:$PATH"
   run env PATH="$rvw_home/rvw/.venv/bin:$PATH" SPIKE_PREFIX="$SPIKE_PREFIX" nice "$rvw_home/Cosim/build.sh"

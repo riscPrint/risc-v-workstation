@@ -33,6 +33,21 @@ def build(source, output, prefix=None, compiler=None):
         libraries = {'riscv': capture.file(library),
                      'disasm': capture.file(prefix / 'lib/libdisasm.a'),
                      'fesvr': capture.file(prefix / 'lib/libfesvr.a')}
+        # Keep the package/source label with the captured binary hashes. This is
+        # provenance supplied by the install, not an independent binary attestation.
+        spike_identity = {"version": None, "revision": None, "origin": "external"}
+        source_info = prefix / 'share/rvw/spike-source.json'
+        receipt = library.resolve().parents[1] / 'INSTALL_RECEIPT.json'
+        if source_info.is_file():
+            spike_identity = json.loads(capture.file(source_info).copy.read_text())
+        elif receipt.is_file():
+            package = json.loads(capture.file(receipt).copy.read_text())
+            spike_identity.update(origin='homebrew',
+                                  version=package['source']['versions']['stable'],
+                                  tap_git_head=package['source'].get('tap_git_head'))
+            sbom = receipt.with_name('sbom.spdx.json')
+            if sbom.is_file():
+                capture.file(sbom)
         # The Python builder and shell entry point affect compilation too.
         capture.file(Path(__file__))
         capture.file(Path(__file__).resolve().parents[4] / 'Cosim/build.sh')
@@ -45,7 +60,7 @@ def build(source, output, prefix=None, compiler=None):
                  '-Wl,-rpath,' + str(library.parent), '-o', '@output']
         inputs = {'schema': 'rvw.spike-build-inputs/1', 'capture': capture.record(),
                   'source': shim.source, 'libraries': {name: item.source for name, item in libraries.items()},
-                  'flags': flags}
+                  'flags': flags, 'spike_identity': spike_identity}
         identity = build_id(inputs)
         include = work / 'include'
         for name, tree in headers.items():
@@ -91,7 +106,7 @@ def build(source, output, prefix=None, compiler=None):
                     'spike_library': libraries['riscv'].resolved,
                     'spike_library_sha256': libraries['riscv'].sha256,
                     'spike_headers': headers['riscv'].resolved,
-                    'build_id': identity, 'build_inputs': inputs}
+                    'build_id': identity, 'build_inputs': inputs, 'spike_identity': spike_identity}
         staged_manifest = work / 'manifest.json'
         staged_manifest.write_text(json.dumps(manifest, indent=2) + '\n')
         os.replace(binary, output)

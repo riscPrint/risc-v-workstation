@@ -395,3 +395,18 @@ def test_installer_workflow_passes_actionlint():
     result = run_group([actionlint, '.github/workflows/installer.yml'],
                        cwd=ROOT, capture=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_spike_pin_matches_qualified_reference():
+    script = SCRIPT.read_text()
+    assert 'spike_revision=eff659cd43d7eafb7f3559bceed2540eabb31c50' in script
+    assert 'spike-source.json' in script
+
+
+def test_macos_cosim_uses_same_source_pin(tmp_path):
+    env = package_environment(tmp_path)
+    result = invoke('--prefix', tmp_path / 'install', '--with-cosim', '--dry-run', env=env)
+    assert result.returncode == 0, result.stderr
+    assert 'eff659cd43d7eafb7f3559bceed2540eabb31c50' in result.stdout
+    assert 'make -C' in result.stdout
+    assert 'brew install riscv-software-src/riscv/riscv-isa-sim' not in result.stdout
