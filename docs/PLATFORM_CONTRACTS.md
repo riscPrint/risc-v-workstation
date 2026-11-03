@@ -1015,3 +1015,12 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+## Native backend semantic profiles
+
+`rvw regress backends --json` maps backend names to semantic profiles. Fields
+are `values`, `scheduling`, `x_handling`, `languages`, `assertions`, `foreign`,
+`coverage` and `features`. `features` is the closed set of guarantees that a
+component test can require. Unknown backends or requirements are errors.
+Profiles describe the adapter invocation. They do not certify every installed
+simulator version. Two-state runs cannot satisfy four-state or X/Z requirements.

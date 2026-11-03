@@ -342,3 +342,9 @@ Run and gate return a job ID. Use `job_status(wait_s=60)` for the final CLI JSON
 for progress and `job_cancel` to stop the adapter process tree and release its resource lock.
 The runner still owns locking, cache/resume, provenance and verdict generation. Compare writes
 `verdict.json`; known add/remove update TOML. List/history/known list are read-only.
+
+## Native backend capabilities
+
+`rvw regress backends --json` lists the supported native semantic profiles.
+See [native simulation](../sim/README.md). Requirements are explicit feature
+names. Unsupported requirements must fail before compilation.
