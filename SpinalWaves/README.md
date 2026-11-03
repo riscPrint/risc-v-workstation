@@ -115,3 +115,12 @@ The shared API is defined in [docs/CONTRACT.md](docs/CONTRACT.md).
 Tests cover typed hierarchy lookup, source locations and VCD rewriting.
 Interactive Surfer rendering has not been tested. Fixed-point values keep raw
 bits and type metadata. Memories and blackbox internals have no special typed model.
+
+## Viewer package and vendored limits
+
+See [the package guide](docs/VIEWER_PACKAGE.md) for pinned source inputs,
+`cargo --locked`, EUPL notices and the upstream WASM plugin assessment (#43).
+See [vendored limits](docs/VENDORED_LIMITS.md) for the TODO triage (#120).
+Restart the viewer after metadata changes. Typed reload, External values,
+arithmetic HGLDD expressions and real/string typed updates are unsupported.
+Interactive validation remains tracked in #83.
