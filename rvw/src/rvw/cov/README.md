@@ -689,3 +689,54 @@ one point can link to several source lines. Do not sum their denominators.
 FSM compatibility and Scala mapping are separate checks. `--coverage-fsm`
 can compile while some points still lack Scala lines. A compilation check does
 not establish state or transition hits.
+
+
+## Typed RTL event samples
+
+`rvw cov rtl SAMPLES.jsonl --config PLAN.json --json` reads exact-instance
+RTL samples. MCP exposes the same calculation as `cov_rtl`. This path is
+separate from C2 retirement coverage. It samples internal or interface signals.
+Projects supply the plan and sampler. Spinal annotation exporters can emit the
+same plan. No native Spinal annotation exporter is included yet.
+
+The plan uses schema `rvw.rtl-plan/1`. `design` identifies the instrumented RTL
+and configuration. Use a content hash, not a display name. `signals` maps
+exact hierarchical paths to `width`, `type` and `scala`. A Scala link has
+`file` and `line`. Use null when no source link is available. Types are
+source labels, with an unsigned integer sampling representation. Predicates
+map signal names to finite lists of integer values. Their entries form an AND.
+Use multiple bins for OR. No expression evaluation or automatic bins occur.
+
+`clock` has `signal`, `edge: rising` and `sampling: pre-edge`.
+`reset` has `signal`, `active: 0|1` and `rule: disable-clear`.
+The sampler must emit values immediately before every rising edge. The sampled
+clock value must be zero. Reset samples disable bins and clear transition
+history. Asynchronous reset events between samples are not supported. Refuse
+such a sampling model rather than silently treating it as synchronous.
+
+Each bin has a stable `id`, `kind`, `domain` and `when` predicate.
+Kinds are `event`, `occupancy`, `state`, `transition` and `arbitration`.
+Domains are `structural`, `committed` and `speculative`. Transition bins also
+have a `from` predicate for the preceding enabled sample. Ordinary bins count
+matching cycles. Transition bins count matching adjacent sample pairs.
+The plan lists the whole supported bin universe. Zero-hit bins stay unobserved.
+Their reachability is undetermined. This sampler accepts no proof exclusions
+and cannot mark a bin unreachable. A covered bin is an observation, not proof.
+
+The first JSONL record has `schema: rvw.rtl-samples/1`, `plan_id` and `design`.
+Compute `plan_id` with `rvw.cov.rtl.identity(plan)`: SHA-256 of sorted compact
+JSON. Each sample has `cycle` and `values`. Cycles must be consecutive.
+Values must contain every declared signal with an in-range integer value.
+Unknown values, missing signals and gaps refuse the calculation. The last
+record has `event: end` and `complete: true|false`. Missing or false completion
+makes the report inconclusive (exit 3), while preserving observations.
+The sampler owns this completeness assertion. The reader cannot prove that the
+producer sampled the declared edge or observed every cycle.
+
+Supply several sample files to sum independent runs. Each header must match
+the exact plan hash and design. Transition history never crosses runs.
+Duplicate trace bytes refuse counting. Saved reports are not merge inputs.
+The bin merge key is `(plan_id, id)`. Changing a domain, source link, clock,
+reset rule or bin universe changes the plan hash. `rvw.rtl-coverage/1` reports
+the declared denominator, observed bins, per-bin counts, event domains and
+reachability separately. Input captures retain plan and sample hashes.

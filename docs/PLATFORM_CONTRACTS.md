@@ -1031,3 +1031,15 @@ and `unit`. Each instrumented point counts once in that denominator.
 `scope: aggregate` and a null exact denominator. Missing hierarchy gives
 `scope: unknown` and null. Literal hierarchy gives `scope: instance`.
 No report expands aggregate counts into inferred physical instances.
+
+
+### Typed RTL sampling coverage
+
+`rvw.rtl-plan/1`, `rvw.rtl-samples/1` and `rvw.rtl-coverage/1` are the
+project-defined RTL event sampling contract. See the coverage README for all
+fields and refusal rules. Plan identity is SHA-256 over sorted compact JSON.
+Every trace binds that identity and the design identity. Only unsigned integer
+values sampled before a rising edge with disable-clear reset are supported.
+Exact instance paths and an explicit bin universe define the denominator.
+Incomplete traces give inconclusive results. Unobserved is not unreachable.
+C2 retirement events and speculative RTL events remain separate domains.
