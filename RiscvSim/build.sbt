@@ -25,18 +25,3 @@ lazy val riscvsim = (project in file("."))
       s"-Driscvsim.script=${(baseDirectory.value / "boom" / "run.sh").getAbsolutePath}",
       s"-Driscvsim.tools=${baseDirectory.value.getParentFile.getAbsolutePath}")
   )
-
-// BOOM's adapter. Needs a spinal-boom checkout; by default the private clone next to this
-// repository (../../spinal-boom-eda from here). Set SPINAL_BOOM to use another one.
-val spinalBoomDir = file(sys.env.getOrElse("SPINAL_BOOM", "../../spinal-boom-eda")).getCanonicalFile
-lazy val boom = (project in file("boom"))
-  .dependsOn(riscvsim, ProjectRef(spinalBoomDir, "root") % "compile->compile;compile->test")
-  .settings(
-    name := "riscvsim-boom",
-    libraryDependencies += compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion),
-    scalacOptions ++= Seq("-deprecation", "-feature", "-language:reflectiveCalls"),
-    fork := true,
-    // BoomSim-style relative paths (formal/, tests) resolve against the BOOM checkout
-    run / baseDirectory := spinalBoomDir,
-    run / javaOptions ++= Seq("-Xss64m", "-Xmx8g", s"-Driscvsim.boom.dir=$spinalBoomDir")
-  )

@@ -402,9 +402,10 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
     project = tmp_path / "generic-project"
     (project / "project").mkdir(parents=True)
     (project / "src").symlink_to(sim / "src", target_is_directory=True)
-    (project / "build.sbt").write_text((sim / "build.sbt").read_text().split("// BOOM's adapter.")[0])
+    (project / "build.sbt").write_text((sim / "build.sbt").read_text())
     shutil.copy2(sim / "project/build.properties", project / "project/build.properties")
     env = {**os.environ, "RVW_LOCK_PYTHON": sys.executable, "RVW_PYTHON": sys.executable}
+    env.pop("SPINAL_BOOM", None)
     # Use the checked-in make wrapper. This test must also prove stable native cache hits.
     env["SPINAL_MAKE_CMD"] = str(sim / "scripts/make-jobs.sh")
     build = run_group([str(repo / "scripts/with-lock.sh"), "sbt", "nice", "-n", "10", "sbt",
@@ -556,3 +557,17 @@ def test_native_launch_pins_the_collected_lookup_target(launcher, tmp_path, monk
     assert module.launch(record, tmp_path, ['--version']) == 0
     assert len(launched) == 1
     assert not list(tmp_path.glob('native-bin.*'))
+
+
+def test_generic_build_does_not_load_core_projects():
+    """The library must load in installations with no adjacent core checkout."""
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[2]
+    build = (repo / "RiscvSim/build.sbt").read_text()
+    assert "ProjectRef" not in build
+    assert "SPINAL_BOOM" not in build
+    adapter = (repo / "RiscvSim/boom/build.sbt").read_text()
+    assert 'ProjectRef(file("..").getCanonicalFile, "riscvsim")' in adapter
+    vex = (repo / "examples/vexriscv/rvw/build.sbt").read_text()
+    assert 'ProjectRef(workstation / "RiscvSim", "riscvsim")' in vex
+    assert 'workstation / "RiscvSim/src/main/scala"' not in vex
