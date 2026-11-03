@@ -1,3 +1,11 @@
 # Known failures for `rvw regress compare` / `gate`. A failure listed here does not reject a
 # change; a different signature of the same test still does. Edit by hand or with
 # `rvw regress known add`.
+
+[[known]]
+suite = "stress"
+id = "qsort"
+config = "large"
+signature = "assert:lsu.scala:1241"
+reason = "A probe between loads to the same word can trigger the LSU assertion. See https://github.com/riscPrint/spinal-boom/issues/3."
+recorded_at_rev = "0cb0b69"
