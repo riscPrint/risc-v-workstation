@@ -380,3 +380,10 @@ Use any C1 project's `elf-dir` suite with `glob = "*.elf"` and
 suite outside default tiers until it has reference and RTL results. The BOOM
 example declares `mmu-priv`. It keeps all failures visible, including the known
 ACT4 Sv39 exception failures. It applies no waiver.
+
+Set `remap = true` on a successful level-0 load to prime a translation, replace
+its leaf PPN, execute the selected fence and check the new page's distinct value.
+The fixture uses ASID 7 for ASID scope tests. Global mappings require an
+all-ASID fence. Over-invalidation is legal. This does not prove that unrelated
+entries stay cached. ASID switching, cross-hart shootdowns and software races
+remain unchecked. The test makes no claim about an unfenced stale translation.

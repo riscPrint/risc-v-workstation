@@ -48,7 +48,7 @@ def load(path):
 
 def validate(s):
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -68,6 +68,13 @@ def validate(s):
         n = number(s.get(key, 0x40000000 if key == 'va' else DATA))
         if not 0 <= n < 2**64 or n % 4096:
             raise ValueError(f'{key} must be an unsigned page address')
+    if s.get('remap', False):
+        if s['level'] != 0 or s['access'] != 'load' or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA:
+            raise ValueError('remap requires a successful level-0 load from DATA')
+        if 'G' in s['flags'] and s.get('fence', 'all') not in ('all', 'va'):
+            raise ValueError('global remap requires an all-ASID fence')
+    if 'remap' in s and type(s['remap']) is not bool:
+        raise ValueError('remap must be boolean')
     va = number(s.get('va', 0x40000000))
     if va >> 39 != ((1 << 25) - 1 if va & (1 << 38) else 0):
         raise ValueError('va must be canonical Sv39')
@@ -145,7 +152,22 @@ check_data:
 '''
     if s['access'] == 'store':
         code += f' li t0, {DATA}\n ld a0, 0(t0)\n'
-    code += ' li t1, 42\n bne a0, t1, fail\ncheck_ad:\n'
+    code += ' li t1, 42\n bne a0, t1, fail\n'
+    if s.get('remap', False):
+        replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+        code += f''' li t0, {leaf}
+ li t1, {replacement}
+ sd t1, 0(t0)
+ {fence}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 43
+ bne a0, t1, fail
+'''
+    code += 'check_ad:\n'
     if 'ad_expect' in s:
         code += f' li t0, {leaf}\n ld t0, 0(t0)\n andi t0, t0, 192\n li t1, {s["ad_expect"]}\n bne t0, t1, fail\n'
     code += ''' li t1, 1
@@ -165,7 +187,7 @@ fromhost: .dword 0
 '''
     for table in tables:
         code += '\n'.join(f' .dword {v}' for v in table) + '\n'
-    code += '.section .data\n .dword 42\n'
+    code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
     return code
 
 

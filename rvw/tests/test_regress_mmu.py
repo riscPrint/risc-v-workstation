@@ -42,9 +42,9 @@ def test_assembly_checks_fault_address_and_instruction():
 
 def test_table_depth():
     s = scenario()
-    assert assembly(s).count('.dword') == 1539
+    assert assembly(s).count('.dword') == 1540
     s['level'] = 2
-    assert assembly(s).count('.dword') == 515
+    assert assembly(s).count('.dword') == 516
 
 
 @pytest.mark.parametrize('returncode,timed_out,status', [(0,False,'pass'), (1,False,'fail'), (124,True,'inconclusive')])
@@ -72,3 +72,13 @@ def test_native_spike(tmp_path):
     build(DESCRIPTION, tmp_path, gcc)
     result = reference(tmp_path, spike, 5)
     assert result['status'] == 'pass', result
+
+
+def test_scoped_remap_requires_global_invalidation():
+    s = scenario(remap=True, fence='asid')
+    text = assembly(s)
+    assert text.count('sfence.vma x0, t4') == 2
+    assert 'li t1, 43' in text and 'sd t1, 0(t0)' in text
+    s['flags'] += 'G'
+    with pytest.raises(ValueError, match='global'):
+        assembly(s)

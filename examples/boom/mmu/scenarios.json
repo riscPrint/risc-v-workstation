@@ -83,6 +83,70 @@
         "sv39.misaligned-superpage"
       ],
       "pa": "0x80201000"
+    },
+    {
+      "id": "remap-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "all",
+      "remap": true,
+      "bins": [
+        "tlb.remap.all"
+      ]
+    },
+    {
+      "id": "remap-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "va",
+      "remap": true,
+      "bins": [
+        "tlb.remap.va"
+      ]
+    },
+    {
+      "id": "remap-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "asid",
+      "remap": true,
+      "bins": [
+        "tlb.remap.asid"
+      ]
+    },
+    {
+      "id": "remap-va-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "va-asid",
+      "remap": true,
+      "bins": [
+        "tlb.remap.va-asid"
+      ]
+    },
+    {
+      "id": "remap-global",
+      "level": 0,
+      "flags": "VRWGAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "va",
+      "remap": true,
+      "bins": [
+        "tlb.remap.global"
+      ]
     }
   ]
 }
