@@ -142,3 +142,38 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   alignment, and automated microbenchmarks remain open work.
 - An in-order or RV32 core needs a CPU model selection, a matching runtime and
   ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
+
+## SoC topology
+
+A project description can add `soc`. Without it, the previous L1 and fixed
+memory path stays in use. `icache` and `dcache` still define split L1 caches.
+This example adds L2, LLC, a classic crossbar per level, and one DRAM controller:
+
+```json
+"soc": {
+  "levels": [
+    {"size": "256KiB", "assoc": 8, "tag_latency": 8, "data_latency": 8,
+     "response_latency": 1, "mshrs": 16, "tgts_per_mshr": 8},
+    {"size": "2MiB", "assoc": 16, "tag_latency": 20, "data_latency": 20,
+     "response_latency": 1, "mshrs": 32, "tgts_per_mshr": 8}
+  ],
+  "interconnect": {"width": 16, "frontend_latency": 1, "forward_latency": 2,
+                   "response_latency": 1, "snoop_response_latency": 1},
+  "memory": {"kind": "dram", "model": "DDR4_2400_8x8",
+             "controller": {}, "interface": {}}
+}
+```
+
+`levels` has zero, one, or two cache parameter objects in CPU-to-memory order.
+The DRAM model can be `DDR3_1600_8x8` or `DDR4_2400_8x8`. `controller` and
+`interface` accept scalar gem5 parameters. The RAM window stays at 512 MiB.
+The interconnect object sets each classic crossbar. It does not describe a NoC.
+For fixed memory use `{"kind":"simple","latency":"40ns","bandwidth":"8GiB/s"}`.
+All values above are examples, not tuned core data. The captured description
+and gem5 `config.json` retain the declared and effective settings.
+
+Use `arch run` for SoC descriptions. `calibrate` refuses them because C1's
+fixed memory latency cannot describe this topology. Multiple traffic agents,
+multiple controllers, Ruby, and matching RTL interference comparisons remain
+unsupported. `memory_latency` remains required metadata for old report readers;
+it does not set the SoC memory timing.

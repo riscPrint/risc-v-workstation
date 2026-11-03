@@ -1015,3 +1015,14 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### C9 SoC description extension
+
+`rvw.arch-core/1` accepts optional `soc` as documented in `Arch/README.md`.
+Its exact keys are `levels`, `interconnect`, and `memory`. Levels are an ordered
+array of zero to two scalar Cache parameter objects (L2, LLC). Interconnect
+requires width and the four crossbar latency parameters. Memory selects
+`simple` (latency, bandwidth) or `dram` (model, controller, interface).
+DRAM models are DDR3_1600_8x8 and DDR4_2400_8x8. One classic memory path and
+one controller are supported. The address window does not change.
+SoC runs are model-only. C1 fixed-latency calibration refuses this extension.
