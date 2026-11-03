@@ -1265,3 +1265,33 @@ labels or invalid files give the normal error object and exit 2.
 Compatibility does not establish instruction behavior, ISA extensions,
 ROI counter validity or model fidelity. It does not enable a new runner.
 MCP returns the same status in the result of its background job.
+
+### C9 SoC description extension
+
+`rvw.arch-core/1` accepts optional `soc` as documented in `Arch/README.md`.
+Its exact keys are `levels`, `interconnect`, and `memory`. Levels are an ordered
+array of zero to two scalar Cache parameter objects (L2, LLC). Interconnect
+requires width and the four crossbar latency parameters. Memory selects
+`simple` (latency, bandwidth) or `dram` (model, controller, interface).
+DRAM models are DDR3_1600_8x8 and DDR4_2400_8x8. One classic memory path and
+one controller are supported. The address window does not change.
+SoC runs are model-only. C1 fixed-latency calibration refuses this extension.
+
+### C9 memory interval reports
+
+`rvw.memory-observations/1` and `rvw.memory-report/1` use the fields and units
+in Arch/README.md, Memory observations. Reports preserve all input counters,
+observation identities and evidence hashes. Missing metrics are null and listed
+as unobserved. Status reported means arithmetic completed. It does not validate
+the producer's mapping or establish the cause of contention.
+
+### C9 bounded experiment extension
+
+`rvw.arch-sweep/1` declares parameters (dotted paths to value arrays), max_points
+and timeout_s. `rvw arch sweep` and MCP arch_sweep implement the limits and
+identity rules in Arch/README.md, Small design-space sweeps. Unknown fields
+are errors. `rvw.arch-dse/1` records the input hash, model-only point records,
+objective and speed-only Pareto list. Its status is reported only when all
+points produced reports; otherwise it is inconclusive (CLI exit 3).
+SQLite points retain completed and incomplete trials. Null area and power
+and unquantified uncertainty must not be interpreted as zero cost or confidence.

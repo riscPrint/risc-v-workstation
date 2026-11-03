@@ -240,6 +240,9 @@ def collect_rtl(raw, item, context):
 
 
 def calibrate(project=None, bench=None, out='arch-calibration', timeout=3600):
+    p, _, selected = settings(project)
+    if "soc" in selected:
+        raise ArchError("SoC calibration needs matching RTL topology observations; use arch run")
     p, desc, out, files, context = prepare(project, bench, out)
     config = load_config(project=p.path)
     if desc['config'] not in (config.configs or [config.default_config]):

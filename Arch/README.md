@@ -244,3 +244,111 @@ The next increments need in-order CPU construction and probe validation,
 an RV32 runtime with stable 64-bit CSR reads, gem5 RV32 ISA configuration,
 and second-core instruction, memory and ROI checks. The existing runner still
 refuses RV32 and in-order descriptions. No VexRiscv model is claimed.
+
+## SoC topology
+
+A project description can add `soc`. Without it, the previous L1 and fixed
+memory path stays in use. `icache` and `dcache` still define split L1 caches.
+This example adds L2, LLC, a classic crossbar per level, and one DRAM controller:
+
+```json
+"soc": {
+  "levels": [
+    {"size": "256KiB", "assoc": 8, "tag_latency": 8, "data_latency": 8,
+     "response_latency": 1, "mshrs": 16, "tgts_per_mshr": 8},
+    {"size": "2MiB", "assoc": 16, "tag_latency": 20, "data_latency": 20,
+     "response_latency": 1, "mshrs": 32, "tgts_per_mshr": 8}
+  ],
+  "interconnect": {"width": 16, "frontend_latency": 1, "forward_latency": 2,
+                   "response_latency": 1, "snoop_response_latency": 1},
+  "memory": {"kind": "dram", "model": "DDR4_2400_8x8",
+             "controller": {}, "interface": {}}
+}
+```
+
+`levels` has zero, one, or two cache parameter objects in CPU-to-memory order.
+The DRAM model can be `DDR3_1600_8x8` or `DDR4_2400_8x8`. `controller` and
+`interface` accept scalar gem5 parameters. The RAM window stays at 512 MiB.
+The interconnect object sets each classic crossbar. It does not describe a NoC.
+For fixed memory use `{"kind":"simple","latency":"40ns","bandwidth":"8GiB/s"}`.
+All values above are examples, not tuned core data. The captured description
+and gem5 `config.json` retain the declared and effective settings.
+
+Use `arch run` for SoC descriptions. `calibrate` refuses them because C1's
+fixed memory latency cannot describe this topology. Multiple traffic agents,
+multiple controllers, Ruby, and matching RTL interference comparisons remain
+unsupported. `memory_latency` remains required metadata for old report readers;
+it does not set the SoC memory timing.
+
+## Memory observations
+
+`rvw arch memory-report observations.json --json` reports explicit interval
+counters. MCP provides `arch_memory_report`. The input uses schema
+`rvw.memory-observations/1`, engine `gem5` or `rtl`, and a nonempty `observations`
+array. Each row requires string `point`, `region`, `hart`, `workload`, positive
+`duration_ns`, `evidence` (path relative to the input), its `evidence_sha256`,
+and `mapping` (the producer's counter names, units and interval selection).
+One row covers one point, region, hart and workload. Aggregate repeated trials
+before import or give each trial a distinct workload ID.
+
+Optional counters are `bytes`, `transactions`, `latency_ns_sum`, `cache_accesses`,
+`cache_misses`, `outstanding_ns` (the integral of outstanding transactions),
+and `queue_full_ns`. All must be finite and nonnegative. The report computes
+decimal GB/s, mean transaction latency, miss rate, mean outstanding count,
+and full-queue fraction. A missing counter or zero denominator gives null,
+with the metric listed as `unobserved`. Contention causes stay unobserved.
+A hash binds the input and each raw evidence file. Mapping is declared by the
+producer; the tool cannot verify that mapping against arbitrary raw formats.
+
+Use separate regions for sequential bandwidth, dependent pointer-chase latency,
+and concurrent-traffic contention experiments. Record every active traffic
+agent and the observation boundary in the mapping. This command does not
+generate or run microbenchmarks, infer interference, or extract gem5 counters.
+
+## Small design-space sweeps
+
+Create a project-owned sweep file:
+
+```json
+{
+  "schema": "rvw.arch-sweep/1",
+  "parameters": {"cpu.fetchWidth": [2, 4], "dcache.assoc": [2, 4]},
+  "max_points": 4,
+  "timeout_s": 120
+}
+```
+
+```sh
+rvw arch sweep sweep.json --bench median --out out/sweep-1 --json
+```
+
+MCP provides `arch_sweep` with the same inputs. The output directory must be
+new. Build the selected workloads first. The command captures workload bytes
+once. Each candidate uses those bytes. Dotted paths replace existing scalar
+fields of the same type. Array indices use decimal path parts, for example
+`soc.levels.0.assoc`. Allowed roots are cpu, icache, dcache, soc, bus_bytes,
+and memory_latency. No core-specific preset mapping is added.
+
+The Cartesian product must fit `max_points` (1 to 32). The command refuses
+more than 64 model processes before running any point. `timeout_s` bounds
+each process, from above zero to 3600 seconds. Thus the process-time budget
+is points times workloads times timeout_s. Lock wait and tool checks are
+outside this budget. Runs remain serial under the gem5 lock. This tool does
+not dispatch to a farm or run RTL.
+
+Each point ID is SHA-256 of canonical JSON with the effective description,
+ordered workload IDs and hashes, model source hash and gem5 binary hash.
+The point keeps identity.json, the description, model source and raw evidence.
+The root keeps project data, the sweep and captured ELFs. Equal identities
+can reproduce the same inputs. They do not guarantee equal timing across hosts.
+The command does not resume or reuse an earlier run.
+
+`results.sqlite` has a `points` table with id, status, cycles, and result_json.
+Each point is committed as inconclusive before launch and updated after the
+run. Failed points retain their error and cannot enter the frontier. `dse.json`
+contains all point records and a Pareto list for the single objective: minimize
+the sum of selected ROI cycles. Each workload has equal weight. Ties remain.
+This is a speed-only frontier. Area, power and uncertainty are unknown. All
+points are model-only and need RTL confirmation. Multi-objective area/power
+trade-offs, uncertainty intervals and RTL confirmation remain open work.
+A partial sweep reports inconclusive and exits 3. Input errors exit 2.

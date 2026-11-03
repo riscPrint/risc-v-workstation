@@ -8,6 +8,12 @@ def execute_json(action, **kw):
     if action == 'fit':
         from .fitting import fit
         return fit(**kw)
+    if action == "sweep":
+        from .dse import sweep
+        return sweep(**kw)
+    if action == "memory-report":
+        from .memory import memory_report
+        return memory_report(**kw)
     return getattr(core, action)(**kw)
 
 
@@ -19,7 +25,7 @@ def _run(args):
         result = execute_json(args.arch_action, **kw)
         text = json.dumps(result, indent=2, allow_nan=False)
         print(text if args.json or args.arch_action != 'calibrate' else core.summary(result))
-        return 2 if result.get('status') == 'unsupported' else 0
+        return 2 if result.get("status") == "unsupported" else (3 if result.get("status") == "inconclusive" else 0)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         if args.json:
             print(json.dumps({'error': str(exc)}, allow_nan=False))
@@ -31,6 +37,16 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
+    p = sub.add_parser('memory-report')
+    p.set_defaults(func=_run)
+    p.add_argument('observations')
+    p.add_argument('--json', action='store_true')
+    p = sub.add_parser('sweep')
+    p.set_defaults(func=_run)
+    p.add_argument('spec')
+    p.add_argument('--out', required=True)
+    p.add_argument('--bench')
+    p.add_argument('--json', action='store_true')
     for action in ('build', 'run', 'calibrate', 'compare', 'fit', 'inspect'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)
