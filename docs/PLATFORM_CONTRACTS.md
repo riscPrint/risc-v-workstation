@@ -1319,3 +1319,21 @@ check has `node`, `property`, `type` (fdtget format) and `expected` (exact text)
 It is independent of the project's C1 selection. Network, storage devices and
 console input are disabled. RTL loading and device replay remain unsupported.
 See `Arch/README.md` for pinned sources, host limits and the close condition.
+
+### Core-owned ISA declarations (optional)
+
+`rvw.isa/1` JSON declares an expanded `isa` string, `extensions` keyed by
+extension name with `version` (string or null) and optional `requires` list,
+`options` object, and optional `consumers` mapping tool names to ISA strings.
+Null means not verified. `rvw cov isa-check` validates these declarations.
+This optional file does not change the project selection contract.
+
+For generated functional bins, the ISA manifest can include `source` with
+`url`, a full commit `revision`, and `files` (relative opcode paths to SHA-256).
+`arg_lut.csv` defines the encoded operand fields. `unavailable` lists excluded
+coverage scope. Optional `specifications` stores other spec pin declarations.
+The functional report embeds the generated plan in `config.isa_plan`. Its
+fingerprint includes all pins and generated bins. `sequences.distances` in a
+functional plan enables retirement-order pair bins. These additions do not
+change the C2 trace format. `rvw.isa-diff/1` reports proposal changes and an
+explicit `adoption_required` flag. It does not adopt specifications.

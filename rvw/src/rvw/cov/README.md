@@ -662,3 +662,62 @@ Proof exclusions and mutation survivors retain the evidence limits documented ab
 FSM and Scala attribution: [#42](https://github.com/riscPrint/risc-v-workstation/issues/42). Expected ISA bins: [#82](https://github.com/riscPrint/risc-v-workstation/issues/82). Typed RTL events: [#88](https://github.com/riscPrint/risc-v-workstation/issues/88). Temporal coverage: [#115](https://github.com/riscPrint/risc-v-workstation/issues/115). BOOM mutation review: [#3](https://github.com/riscPrint/risc-v-workstation/issues/3). Proof-core reports: [#62](https://github.com/riscPrint/risc-v-workstation/issues/62).
 
 Retained limit: Reviewed expression mappings are not automatic semantic proofs. Capture bounds, unsupported state refusals, reset assumptions and proof/mutation evidence limits remain required. No complete coverage claim follows from observed bins.
+
+### ISA declarations
+
+`rvw cov isa-check isa.json --json` validates a core-owned `rvw.isa/1`
+manifest. Declare `isa`, `extensions` (each has `version` and optional
+`requires`), `options`, and optional `consumers` (tool name to ISA string).
+Use an expanded unversioned ISA string. Use null for an unverified version.
+The command rejects missing dependencies and contradictory consumer strings.
+Null versions give `inconclusive`. Consumer strings are declarations. This
+increment does not probe compiler, adapter, reference model or ACT settings.
+
+### Pinned opcode bins
+
+Clone `https://github.com/riscv/riscv-opcodes` and check out the `source.revision`
+in `examples/boom/isa.json` or `examples/vexriscv/isa.json`. Then run:
+
+```
+rvw cov functional TRACE --manifest examples/boom/isa.json --source-root OPCODES --json
+```
+
+The manifest pins each selected file by SHA-256. A changed file is an error.
+The plan generates every selected canonical opcode and its encoded register
+fields. It also generates static rounding-mode fields where present. Each
+unobserved bin remains a hole. Trapped records and ambiguous encoding matches
+receive no instruction hit. The trace ISA must equal the manifest ISA.
+The plan and pins enter the report fingerprint and prevent incompatible merges.
+`unavailable` lists excluded scope. Compressed instructions, semantic immediate
+classes, operand values, CSR legality, privilege and exceptions are not complete
+in this increment. These require semantic data beyond opcode masks. Register
+fields are encoded indices, including FP indices; they are not FP data values.
+These reports measure selected encoding coverage. They are not compliance results.
+
+### Retirement sequences
+
+Add `"sequences": {"distances": [1, 2, 4]}` to a functional JSON plan. The
+command generates fixed bins for RAW, WAW, WAR, branch-after-load, and all
+load/store pairs at each distance. Distance counts consecutive C2 instruction
+records, not cycles. x0 is not a producer. Register banks stay separate.
+A trap, handler entry, unknown instruction or missing order resets the window.
+Each file starts a fresh window. Memory pairs describe retirement order, not
+address aliasing or memory visibility. Branch-after-load does not require a
+register dependency; RAW records that condition separately. These bins cannot
+measure forwarding, stalls, speculative execution, flushes or wrong-path work.
+Use RTL coverage for those behaviors. No sequence crosses a missing record.
+
+### Review a proposed spec update
+
+```
+rvw cov isa-diff OLD.json NEW.json --old-source-root OLD_OPCODES --source-root NEW_OPCODES --json
+```
+
+Each manifest pins its own source files. The command verifies both sets of
+hashes. It reports added, removed and changed opcode definitions, changed
+versions and options, affected declared consumers, and instruction tests to
+review. Changed pins require adoption and return `inconclusive` (exit 3).
+The command never updates a pin or model. Optional `specifications` declarations
+can hold profile, debug and platform document pins. Their metadata is compared;
+their semantic obligations are not parsed. Test presence and changed semantic
+obligations still need review. An unchanged result is not a compliance verdict.

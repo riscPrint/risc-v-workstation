@@ -43,3 +43,8 @@ needed for measured stall causes and predicated-off commit counts.
 Run `rvw soc generate soc.json --out /tmp/boom-soc --json` from this folder.
 See the [format and limits](../../rvw/src/rvw/soc/README.md).
 The existing adapter does not yet consume the generated simulation map.
+
+`isa.json` declares the adapter trace ISA and pins the opcode coverage source.
+Extension versions remain null until verified. Use it with `rvw cov isa-check`
+and `rvw cov functional --manifest`; see the coverage tool README. It does not
+certify BOOM ISA compliance or change the adapter configuration.

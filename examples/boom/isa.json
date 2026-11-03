@@ -1,0 +1,78 @@
+{
+  "schema": "rvw.isa/1",
+  "isa": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs",
+  "extensions": {
+    "i": {
+      "version": null
+    },
+    "m": {
+      "version": null
+    },
+    "a": {
+      "version": null
+    },
+    "f": {
+      "version": null
+    },
+    "d": {
+      "version": null,
+      "requires": [
+        "f"
+      ]
+    },
+    "c": {
+      "version": null
+    },
+    "zicsr": {
+      "version": null
+    },
+    "zifencei": {
+      "version": null
+    },
+    "zba": {
+      "version": null
+    },
+    "zbb": {
+      "version": null
+    },
+    "zbs": {
+      "version": null
+    }
+  },
+  "options": {
+    "version_evidence": "not verified",
+    "misaligned_data_access": "trap"
+  },
+  "consumers": {
+    "adapter_trace": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs"
+  },
+  "source": {
+    "url": "https://github.com/riscv/riscv-opcodes",
+    "revision": "f24ac23ec9fa947011781a09cd6fd25a7c36dc45",
+    "files": {
+      "extensions/rv_i": "146e297ddbe346f325d993aaf56d7006f1bfde39df584b888b221543def17b97",
+      "extensions/rv_m": "1a53ea03820b7044de4f0f04d207c1e4fc0ced46deb2c6ed4a3ca268fa37ddbe",
+      "extensions/rv_zicsr": "dd8cc0e2c32fb5658d4aa719cef6ab1b714e2145ba071c9aeb382d9963e4901f",
+      "extensions/rv_zifencei": "be2d8f7286e06fadafffbde14656e6adb3f923ce704ea0829229d3a3b5f35758",
+      "extensions/rv64_i": "262cbd0884fe1383fcb7c42070cbc73e309d0452ff8d00b38452a4dee7cfa7f5",
+      "arg_lut.csv": "de5302010d8634bda8382a6ddfba73ea51ab4f80a7a57d6d68f809da057ea97a",
+      "extensions/rv64_m": "112bf223a31b7cc51761ce1572a8a35c2502ab2c5a6e318db80c0601b587480e",
+      "extensions/rv_a": "d9eaa988c4779ca352d9da9eabacf6c71771d0b81e04b234302627f69e0863d9",
+      "extensions/rv64_a": "819e0487131bc97cfc0b6f3de62390f2f9936b43e80aef7c6cec14fbe7c7a1b6",
+      "extensions/rv_f": "227e09504c0d758add114d5a77ac06d7e2ffab9c6a9509633c4f531db58b3e3e",
+      "extensions/rv64_f": "5c01c243ccd8a1c0e24a48a1ffcf62eecb10aa36fd6bdcedf7392e670cd46cf9",
+      "extensions/rv_d": "24bc7c6384f9a009dbafb3f177ec68b0d4f8fb1c2c2b7b07767320fdd7d4acbc",
+      "extensions/rv64_d": "883e668be4c536d0dfdb8c02bd1f3eb959801eb953f1fb7a4b4e5e623cbf19a9",
+      "extensions/rv_zba": "a4dc32354f28ce2922669e996dc5aca19fcf0170282c35c276f8e86c5afe867f",
+      "extensions/rv64_zba": "d3d241bcde645b474166472415975d8be36af1c14f138b7b18f0b24d1867794d",
+      "extensions/rv_zbb": "f5d7d97b8d5d74135170cc13ba935bf97f39eac03893428604df71c9f8b64c13",
+      "extensions/rv64_zbb": "45d3514729cd135ee08ede34d9787f0a647dfed10a571b163b4b37b9ea03e3bd",
+      "extensions/rv_zbs": "065aa2c1e7f68e23767786300a2270e5aef2a48fae5063a02b6587f27cb90df5",
+      "extensions/rv64_zbs": "3c4d8806c79e081e3aec154b7c45aed78c41f7270ca33e4ffd73b20cbb40bf49"
+    }
+  },
+  "unavailable": [
+    "Compressed encodings are outside this first generated plan.",
+    "Semantic immediates, operand values, CSR legality, privilege and exceptions need a semantic spec source."
+  ]
+}
