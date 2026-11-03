@@ -351,6 +351,11 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                 if ("new", t.signature) not in classified:
                     new.append(item)
                     classified.add(("new", t.signature))
+        metrics = _metric_specs(bperf.get((suite, config)), cperf.get((suite, config)))
+        if metrics and (b is None or any(t.failed for t in [*(b or []), *c])):
+            inconclusive.append({"suite": suite, "config": config, "id": tid,
+                                 "why": "required performance comparison needs a passing baseline and candidate "
+                                        "on every seed"})
         if b is None:
             if not seen and not seen_inc:
                 added.append({"suite": suite, "config": config, "id": tid})
@@ -364,7 +369,6 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                               "seeds": sorted(s.seed for s in failing if s.seed is not None),
                               "run": _run_path(bown[(k, failing[0].seed)], failing[0])})
         # Performance: only when the test passed on every seed on both sides.
-        metrics = _metric_specs(bperf.get((suite, config)), cperf.get((suite, config)))
         if metrics and not seen and not seen_inc and seeds_complete:
             if bs.keys() != cs.keys():
                 inconclusive.append({"suite": suite, "config": config, "id": tid,
@@ -418,7 +422,9 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                 perf.append({"suite": suite, "config": config, "id": tid, "metric": name,
                              "base": round(bv, 4) if isinstance(bv, float) and not bv.is_integer() else int(bv),
                              "candidate": round(cv, 4) if isinstance(cv, float) and not cv.is_integer() else int(cv),
-                             "change": round(change, 5), "regression": worse > perf_tolerance})
+                             "change": round(change, 5), "regression": worse > perf_tolerance,
+                             "samples": {"base": len(b), "candidate": len(c), "paired": len(bs)},
+                             "comparison_rule": "relative_mean", "confidence": "not_estimated"})
 
     reasons = []
     if new:

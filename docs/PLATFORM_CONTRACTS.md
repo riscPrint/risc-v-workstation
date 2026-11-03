@@ -499,6 +499,16 @@ Imports keep each result's config. `--config` filters imports and never relabels
 Only conclusive failures are imported. Empty selections and `--from` with `--signature` are errors.
 An all-config waiver requires a manual entry with no `config` field.
 
+### Regression performance evidence (C4)
+
+Each `perf` item also records `samples: {base, candidate, paired}`,
+`comparison_rule: "relative_mean"` and `confidence: "not_estimated"`.
+The counts refer to the seeds used in that workload's arithmetic means. The means use equal
+seed sets. The relative mean loss must exceed `perf_tolerance` to reject. No confidence
+interval or statistical significance is claimed. A declared performance workload without a
+baseline or without passing results on every seed is inconclusive, even when its failure
+is known or unchanged. A new correctness failure still rejects.
+
 ## C5. Failure bundle (`rvw bundle`)
 
 `rvw bundle RUN_DIR [--out DIR]` turns a failed run (C1 result) into a directory:

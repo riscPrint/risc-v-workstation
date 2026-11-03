@@ -160,7 +160,13 @@ A perf test whose base result is inconclusive cannot be compared and makes the v
 inconclusive. So does a
 configured metric that is missing, non-finite or non-positive for any compared seed on either
 side. All samples of a metric must record the same origin. Missing origins make old performance
-evidence inconclusive. A metric is never silently left out.
+evidence inconclusive. A metric is never silently left out. A declared performance workload needs a passing
+baseline and candidate on every seed. An added workload without a baseline, or a failed
+workload (including a known or unchanged failure), makes performance evidence inconclusive.
+Each C4 performance item reports base, candidate and paired sample counts. Its
+`comparison_rule` is `relative_mean`. Its `confidence` is `not_estimated`. The threshold
+applies to the relative change in arithmetic means. Equality with the threshold does not reject.
+This rule supplies no statistical confidence and does not bound per-seed losses.
 
 Verdict: `reject` if anything rejects; else `inconclusive` if any candidate result is
 inconclusive, no test ran on both sides, or either source lacks a clean committed identity;
@@ -355,3 +361,21 @@ It also requires a policy for wildcard waivers, config-wide waivers and coarse i
 (cycle timeout, fail code, monitor code or source line). These identities can group different
 root causes. A wildcard can deliberately cover a changed failure. This review does not prove
 that such a waiver is safe. Check each waiver and its full failure evidence before use.
+
+Stored-folder gates and performance metrics remain experimental (#4). Keep these reviews separate:
+
+- Stored identity: negative tests must cover wrong core, mixed source or model, changed ELF,
+  options, metric selectors, stimulus bytes, missing seeds and missing required workloads.
+  Existing plan tests include quick folders requested as full, even with `allow_missing`.
+  This round reruns those fixtures. It does not establish native historical-folder compatibility.
+- Performance: use the same workload, seeds, options and measurement origins on both sides.
+  Declare ROI counters through `cycles_key` and `instret_key`. A selector name alone does not
+  define semantic ROI boundaries. The adapter must keep those boundaries stable and identify
+  changes in its inputs. The tests use repeated fixed-seed fixtures, not native noise experiments.
+  A mean can cancel a slow seed with a fast seed. Sample counts are visible, but confidence is
+  not estimated. The close rule requires native repeated-seed experiments, stable ROI boundaries
+  and a reviewed statistical acceptance rule. Do not treat this increment as that evidence.
+
+A quick gate covers only its requested tier. It must not substitute for required performance
+workloads in a full tier. Request that tier explicitly. A stored gate checks the requested plan;
+standalone `compare` does not load the current project plan.
