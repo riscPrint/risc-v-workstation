@@ -167,6 +167,26 @@ synchronous or asynchronous. Large memories and dynamic partial writes report
 incomplete. See [the accuracy contract](docs/PDG_FORMAT.md#accuracy-contract-formatversion-2)
 for the bounds and source grouping rules.
 
+## Read a design database
+
+Use the PDG and HGLDD from one SpinalDB extraction. This command does not run
+Scala or elaborate the design:
+
+```sh
+SpinalDB/debug.sh --db design.db --out trace-metadata --consumer trace -- \
+  -s signal:io_result -v wave.vcd --at-cycle 9 -o dynpdg.json --summary
+```
+
+Run this from the workstation root. Use `--consumer gui` for the native viewer.
+Use `--binary PATH` to select a binary. Install `rvw` in `rvw/.venv` first, or set
+`RVW_PYTHON` to an interpreter with `rvw` installed. The output directory must be
+empty. `database.json` records the captured database identity and artifact hashes.
+The launcher requires both PDG and HGLDD. Missing artifacts give an error.
+Keep the waveform from the same instrumented RTL. A database does not establish
+waveform compatibility or make an incomplete dependency graph complete.
+The existing elaboration API remains available. Exact parity between separate
+elaboration entry points can differ in caller source attribution.
+
 ## Viewer node IDs
 
 The viewer assigns each long-distance pseudo-node the ID `vertex_count + edge_index`.

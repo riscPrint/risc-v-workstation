@@ -329,3 +329,13 @@ include mutable `ArrayBuffer` versus immutable `Seq`, removed collection
 operations and changed Spinal APIs. This is a build compatibility gap before
 extraction. No NaxRiscv database or artifact support is claimed. A matching
 Scala/SpinalHDL library build needs a separate integration check.
+
+### Debug consumers
+
+`SpinalDB/debug.sh --db design.db --out metadata --consumer export` writes the
+PDG and all HGLDD files from one captured database. It records the database
+identity in `metadata/database.json`. It does not elaborate the design.
+Use `--consumer trace|gui|surfer|check` to launch a native consumer with these
+files. Pass consumer arguments after `--`. See the SpinalTrace and SpinalWaves
+READMEs for commands and waveform compatibility limits. SpinalBlocks is the third
+database consumer; its integration is tracked in #44.

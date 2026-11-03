@@ -115,3 +115,23 @@ The shared API is defined in [docs/CONTRACT.md](docs/CONTRACT.md).
 Tests cover typed hierarchy lookup, source locations and VCD rewriting.
 Interactive Surfer rendering has not been tested. Fixed-point values keep raw
 bits and type metadata. Memories and blackbox internals have no special typed model.
+
+## Read a design database
+
+Use the HGLDD stored by SpinalDB. No Scala process or new elaboration is needed:
+
+```sh
+SpinalDB/debug.sh --db design.db --out wave-metadata --consumer surfer -- \
+  wave.vcd --top-module MyTop --extra-scopes TOP MyTop
+SpinalDB/debug.sh --db design.db --out check-metadata --consumer check -- \
+  --vcd wave.vcd --top-module MyTop --extra-scopes TOP MyTop --json check.json
+```
+
+Run from the workstation root after installing `rvw` and the native consumer.
+Use `--binary PATH` to select the consumer. The output directory must be empty.
+The launcher writes all HGLDD files and `database.json`, with the captured database
+identity and artifact hashes. Surfer and the checker require HGLDD but do not require
+PDG. Use `--consumer export` to export both PDG and HGLDD without a consumer.
+Use a waveform from the RTL described by the database. PDG naming adds probe wires;
+a plain waveform can need a separate database built with `--no-pdg`.
+Native checker results and interactive Surfer rendering are separate evidence.

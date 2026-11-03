@@ -122,3 +122,13 @@ with transparent temporaries), `diff.py`, `cli.py` (argparse and text output), `
   the database. Source and RTL locations use their captured content bindings.
 - Keep BOOM examples and fixtures separate from generic query code. See
   `SpinalDB/README.md` for the key model, column reference and extraction limits.
+
+## Native debug consumers
+
+From the workstation root, run `SpinalDB/debug.sh --db design.db --out metadata`.
+This exports PDG and all HGLDD files from one captured database. It also writes
+`database.json` with the database identity and artifact hashes. The output
+directory must be empty. `--consumer trace|gui|surfer|check` launches a native
+consumer. Pass its arguments after `--`. Use `--timeout SECONDS` for bounded checks.
+See the SpinalTrace and SpinalWaves READMEs for commands and waveform limits.
+The launcher does not elaborate or build the design.
