@@ -128,3 +128,13 @@ with transparent temporaries), `diff.py`, `cli.py` (argparse and text output), `
 More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Non-Spinal inputs: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55).
 
 Retained limit: SpinalDB extraction and incomplete-key restrictions apply to every query and diff.
+
+## Native debug consumers
+
+From the workstation root, run `SpinalDB/debug.sh --db design.db --out metadata`.
+This exports PDG and all HGLDD files from one captured database. It also writes
+`database.json` with the database identity and artifact hashes. The output
+directory must be empty. `--consumer trace|gui|surfer|check` launches a native
+consumer. Pass its arguments after `--`. Use `--timeout SECONDS` for bounded checks.
+See the SpinalTrace and SpinalWaves READMEs for commands and waveform limits.
+The launcher does not elaborate or build the design.

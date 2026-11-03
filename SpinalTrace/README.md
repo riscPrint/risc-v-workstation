@@ -172,3 +172,31 @@ for the bounds and source grouping rules.
 Clock semantics: [#89](https://github.com/riscPrint/risc-v-workstation/issues/89). Memory attribution: [#92](https://github.com/riscPrint/risc-v-workstation/issues/92). Accuracy and source grouping: [#94](https://github.com/riscPrint/risc-v-workstation/issues/94). Viewer node IDs: [#113](https://github.com/riscPrint/risc-v-workstation/issues/113). Database integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Integrated navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
 
 Retained limit: VCD/Verilator is the validated input. FST and other simulators remain unqualified. Use short trace windows. Source paths require the original source tree. Graph copying and graph-representation cleanup remain performance work without a separate issue; neither establishes a correctness defect.
+
+## Read a design database
+
+Use the PDG and HGLDD from one SpinalDB extraction. This command does not run
+Scala or elaborate the design:
+
+```sh
+SpinalDB/debug.sh --db design.db --out trace-metadata --consumer trace -- \
+  -s signal:io_result -v wave.vcd --at-cycle 9 -o dynpdg.json --summary
+```
+
+Run this from the workstation root. Use `--consumer gui` for the native viewer.
+Use `--binary PATH` to select a binary. Install `rvw` in `rvw/.venv` first, or set
+`RVW_PYTHON` to an interpreter with `rvw` installed. The output directory must be
+empty. `database.json` records the captured database identity and artifact hashes.
+The launcher requires both PDG and HGLDD. Missing artifacts give an error.
+Keep the waveform from the same instrumented RTL. A database does not establish
+waveform compatibility or make an incomplete dependency graph complete.
+The existing elaboration API remains available. Exact parity between separate
+elaboration entry points can differ in caller source attribution.
+
+## Viewer node IDs
+
+The viewer assigns each long-distance pseudo-node the ID `vertex_count + edge_index`.
+This reserves real vertex IDs and gives repeated relations distinct IDs in both
+views. IDs must fit JavaScript's exact integer range. Source navigation follows
+the relation's destination. Test with `cargo test -p spinaltrace --lib viewer_tests`
+and `cargo test -p spinaltrace-rs viewer_ids`.

@@ -335,3 +335,13 @@ Scala/SpinalHDL library build needs a separate integration check.
 More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Non-Spinal queries: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55). Consumer integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: Best-effort source and parameter capture, incomplete keys, dependency refusals and local source paths remain deliberate restrictions. An incomplete identity cannot support reuse. No general extraction-completeness claim is made.
+
+### Debug consumers
+
+`SpinalDB/debug.sh --db design.db --out metadata --consumer export` writes the
+PDG and all HGLDD files from one captured database. It records the database
+identity in `metadata/database.json`. It does not elaborate the design.
+Use `--consumer trace|gui|surfer|check` to launch a native consumer with these
+files. Pass consumer arguments after `--`. See the SpinalTrace and SpinalWaves
+READMEs for commands and waveform compatibility limits. SpinalBlocks is the third
+database consumer; its integration is tracked in #44.

@@ -698,6 +698,17 @@ Reports made outside `SpinalDB.elaborate` remain incomplete. Diff refuses `/19` 
 This records compiled code and instance state. Arbitrary generator reads of files, environment
 variables or mutable global state are not a captured input contract.
 
+
+### C6 debug metadata export
+
+`SpinalDB/debug.sh` reads one C8 capture of a design database. It writes stored
+`pdg.json` and `hgldd/*.dd` bytes without a new elaboration. `database.json` holds
+`input_capture` (the C8 database record), `meta` (database metadata), and `artifacts`
+(entries with `name`, uncompressed `bytes`, and uncompressed `sha256`). Surfer and
+checker mode export HGLDD only. Trace, GUI and export mode require PDG and HGLDD.
+The output directory must be empty. Native consumer exit codes pass through.
+This export establishes artifact identity, not waveform or dynamic trace parity.
+
 ## C7. MCP tools (`rvw mcp`)
 
 `rvw mcp` is one stdio MCP server for every rvw tool. Each subpackage plugs in without editing
