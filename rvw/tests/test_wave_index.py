@@ -93,3 +93,18 @@ def test_gzip_and_bounds(pair, tmp_path):
             ops.changes(path, '.', 10, 5)
         with pytest.raises(vcd.WaveError, match='input wave'):
             ops.cut(path, path, 0)
+
+
+@pytest.mark.parametrize('updates', ['1"\n0!', '0!\n1"'])
+def test_cut_preserves_initial_value_order(tmp_path, updates):
+    source = tmp_path / 'source.vcd'
+    saved = tmp_path / 'source.rvwi'
+    source.write_text('$timescale 1ns $end\n$scope module t $end\n'
+                      '$var wire 1 ! a $end\n$var wire 1 " b $end\n'
+                      '$upscope $end\n$enddefinitions $end\n'
+                      '#0\n' + updates + '\n#2\n1!\n#5\n')
+    index.build(str(source), str(saved))
+    full_cut, indexed_cut = tmp_path / 'full.vcd', tmp_path / 'indexed.vcd'
+    ops.cut(str(source), str(full_cut), 3, 8)
+    ops.cut(str(saved), str(indexed_cut), 3, 8)
+    assert ops.changes(str(indexed_cut), '.') == ops.changes(str(full_cut), '.')

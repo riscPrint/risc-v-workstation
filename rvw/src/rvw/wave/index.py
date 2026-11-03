@@ -78,13 +78,17 @@ def reader(path):
 
 
 def state(db, codes, t):
-    vals = {}
+    values = []
     for code in codes:
         row = db.execute('SELECT raw FROM events WHERE code=? AND t<=? '
                          'ORDER BY t DESC, seq DESC LIMIT 1', (code, t)).fetchone()
         if row:
-            vals[code] = row[0]
-    return vals
+            # The streaming reader inserts each code at its first update.
+            # Keep that order when cut writes its initial dumpvars block.
+            first = db.execute('SELECT seq FROM events WHERE code=? '
+                               'ORDER BY t, seq LIMIT 1', (code,)).fetchone()[0]
+            values.append((first, code, row[0]))
+    return {code: raw for _, code, raw in sorted(values)}
 
 
 def query(name, path, *args, **kwargs):
