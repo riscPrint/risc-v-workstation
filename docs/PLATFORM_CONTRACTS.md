@@ -1000,3 +1000,18 @@ Module dispositions are `bounded_clean`, `confirmed`, or `inconclusive`. Bounded
 requires a formal pass with reachability evidence. It applies only to this module's
 free boundary inputs and selected bound. Campaign `status` is always `inconclusive`
 and exit is 1. The inventory does not establish distinct bugs or core reachability.
+
+### Native parent X context
+
+`rvw formal x-context` writes `rvw.formal.x-context/1`. It records `top`,
+`backend: "icarus"`, `depth`, `reset_cycles`, explicit constant `ties`,
+`restrictions`, input capture identities and an `inventory`.
+Each inventory entry has `signal`, `disposition` and `observations`.
+An observation has `step` and a four-state binary `bits` string.
+`reachable-in-core` requires a complete native run with X/Z after reset.
+It is an unconditional signal observation in the selected top, not a claim that
+a transaction is valid or a core bug exists. All other entries are `inconclusive`;
+absence of X is not an unreachability proof. Overall `status` is always
+`inconclusive`, and exit is 1. Invalid inputs exit 2.
+`xprop` and `x-sweep` accept `--first-failure` to limit formal witness
+collection. Unreported targets retain their existing disposition.

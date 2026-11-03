@@ -212,3 +212,25 @@ Verilog tops remain inconclusive. Time limits include child probes, proofs and r
 The campaign limit starts before discovery; each discovery subprocess also uses `--timeout`.
 Unrun modules stay in the inventory. The command returns 1 with status `inconclusive`:
 it is an inventory, not an acceptance gate. Use the machine's core lock for large designs.
+
+### Bounded witness collection and parent replay
+
+Use `xprop --first-failure` or `x-sweep --first-failure` to stop each solver
+after its first failure trace. Native replay still observes every selected target.
+Targets without evidence stay `not_reported`. This option does not turn a timeout
+into a pass. Increase the module and campaign budgets when required.
+
+Use `rvw formal x-context` to observe hierarchical signals in the parent RTL.
+This native Icarus run starts from reset. It does not inject solver state or free
+module inputs. Give `--verilog`, `--top`, repeatable `--signal instance.port`,
+`--depth`, `--reset-cycles`, a positive `--timeout`, and `--out`.
+Use `--tie PORT=VALUE` for every external input except the clock and reset.
+The inputs stay constant. Select values that form a legal environment for the design.
+
+The result records each signal as `reachable-in-core` only if the complete native
+run observes X/Z after reset. This label describes an unconditional signal value,
+not a valid transaction or an architectural failure. The selected top must be the
+real core to make a core-context claim. Check payload validity separately.
+A signal with no X/Z observation stays `inconclusive`. This run cannot prove
+`unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
+The command returns 1 for all results. It never reports a design pass.
