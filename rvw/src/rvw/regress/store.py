@@ -81,12 +81,23 @@ class Cache:
     def __init__(self, root: Path | None = None):
         self.dir = (root or results_root()) / "cache"
         self._readers = {}
+        self.remote = os.environ.get("RVW_REMOTE_CACHE")
 
     def path(self, key: str) -> Path:
         return self.dir / key[:2] / key
 
     def get(self, key: str) -> Path | None:
         p = self.path(key)
+        if not (p / "current").exists() and self.remote:
+            import tempfile
+            from .remote_cache import transfer
+            with tempfile.TemporaryDirectory(prefix="rvw-cache-fetch-") as temp:
+                stage = Path(temp)
+                try:
+                    if transfer(self.remote, key, stage):
+                        self._put(key, open_current(stage).path)
+                except (OSError, ValueError):
+                    pass  # Transfer failure is a miss, never evidence.
         if not (p / "current").exists():
             return None  # Legacy cache has no generation binding. Re-run it.
         if key not in self._readers:
@@ -101,14 +112,26 @@ class Cache:
         return RunResult.from_dict(json.loads(reader.read_bytes("result.json")), path=reader.path)
 
     def put(self, key: str, test_dir: Path) -> None:
+        self._put(key, test_dir)
+        if self.remote:
+            from .remote_cache import transfer
+            try:
+                transfer(self.remote, key, self.path(key), upload=True)
+            except (OSError, ValueError):
+                pass  # A cache outage does not change the measured result.
+
+    def _put(self, key: str, test_dir: Path) -> None:
         dest = self.path(key)
         if (dest / "current").exists():
             return
         dest.mkdir(parents=True, exist_ok=True)
         (dest / '.rvw-cache-entry').write_text('rvw.regress-cache/1\n')
         def build(directory):
+            (directory / ".rvw-cache-key").write_text(key)
             for path in test_dir.rglob("*"):
                 relative = path.relative_to(test_dir)
+                if relative.as_posix() in ("generation.json", ".rvw-cache-key"):
+                    continue
                 if path.is_symlink():
                     raise ValueError("cache input contains a symlink")
                 if path.is_dir():

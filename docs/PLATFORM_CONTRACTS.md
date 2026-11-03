@@ -1032,3 +1032,15 @@ A locked command-owned counter covers nested launches. CPU reservation is host
 capacity times wall time. Cleanup has a separate grace and remains in the report.
 Missing or exhausted budgets cannot grant a gate accept. Reports are external
 artifacts. See `rvw/src/rvw/common/README.md` for enforcement limits.
+
+### Native shared result cache (first increment, #53)
+
+`RVW_REMOTE_CACHE=HOST:/absolute/path` adds SSH/rsync transfer to the existing
+regression cache. The directory key is the full existing C8 job key. Each new
+cache generation contains `.rvw-cache-key` with that exact key. A fetched entry
+must have a valid generation inventory, all artifact hashes and an equal stored
+key. A missing or partial object is a miss. The existing runner still checks job
+parameters and C1 provenance before reuse. Transfer adds no new admission rule.
+Uploads send generations before `current`. Downloads use a private directory
+and publish a new local generation only after verification. The cache owner
+controls retention. Cross-command download resume is not implemented.

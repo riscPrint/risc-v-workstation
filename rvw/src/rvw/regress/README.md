@@ -348,3 +348,24 @@ The runner still owns locking, cache/resume, provenance and verdict generation. 
 Waivers/signatures: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder and performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Full-tier timing: [#73](https://github.com/riscPrint/risc-v-workstation/issues/73).
 
 Retained limit: Committed revisions and complete captured inputs remain necessary for acceptance. Watchdog expiry and unqualified identity cannot earn a pass.
+
+## Native shared cache
+
+Set `RVW_REMOTE_CACHE=HOST:/absolute/cache/path` to use a shared cache over SSH.
+The selected host needs SSH and rsync. Use a trusted SSH host entry and login key.
+`RVW_CACHE_SSH_OPTIONS` can hold a JSON array of SSH options, for example a port
+and a private known-hosts file. Paths currently use plain path characters.
+
+The runner still computes the full C8 version-10 key. There is no prefix or
+partial-identity lookup. Transfer cannot make an incomplete identity cacheable.
+An imported generation must match its inventory hashes and stored full key.
+A missing, partial, invalid or evicted remote entry is a miss. Upload sends the
+immutable generation before the atomic pointer update. Transfer failure does not
+change a measured result. `--no-cache` disables local and remote cache use.
+
+rsync keeps partial transfer data within a transfer directory. Downloads use
+private temporary directories and verify before local publication. Cross-command
+download resume, retention policy and remote garbage collection remain open.
+The cache owner must provision space and remove entries only between commands.
+
+For gate budgets and cost reports, see [common](../common/README.md#native-job-budgets).
