@@ -1295,3 +1295,27 @@ objective and speed-only Pareto list. Its status is reported only when all
 points produced reports; otherwise it is inconclusive (CLI exit 3).
 SQLite points retain completed and incomplete trials. Null area and power
 and unquantified uncertainty must not be interpreted as zero cost or confidence.
+
+### Linux reference reports
+
+`rvw arch linux firmware|build|prepare|boot` writes `rvw.linux/1` to
+`OUT/manifest.json`. `OUT` must be new. The JSON stdout uses the same object on
+success. Errors return exit 2; an initialized output keeps an inconclusive
+manifest and command log. These reports do not produce a C4 verdict or claim
+C8 completeness. `rtl_boot` is `not_run`; `equivalence` is `not_checked`.
+
+`built` means files were constructed. `prepared_reference` means images and
+QEMU tables were captured and the selected properties matched project data.
+`reference_userspace_observed` additionally requires a clean QEMU exit, the
+fixed userspace marker and power-down message, with no kernel panic.
+Artifacts use absolute paths and SHA-256. The build report binds the source and
+configuration. Reference runs bind kernel, initramfs, firmware, DTB, platform,
+QEMU, command line and console. Selected table checks record expected and
+actual values separately. They are not device-state or timing checks.
+
+The explicit `--platform` JSON uses `rvw.linux-platform/1`: `machine=virt`,
+`harts=1`, `memory_mib=128`, `command_line`, and nonempty `dt_checks`. Each
+check has `node`, `property`, `type` (fdtget format) and `expected` (exact text).
+It is independent of the project's C1 selection. Network, storage devices and
+console input are disabled. RTL loading and device replay remain unsupported.
+See `Arch/README.md` for pinned sources, host limits and the close condition.

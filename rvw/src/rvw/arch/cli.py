@@ -14,6 +14,9 @@ def execute_json(action, **kw):
     if action == "memory-report":
         from .memory import memory_report
         return memory_report(**kw)
+    if action == 'linux':
+        from .linux import execute
+        return execute(action=kw.pop('linux_action'), **kw)
     return getattr(core, action)(**kw)
 
 
@@ -65,3 +68,15 @@ def register(subparsers):
             if action != 'build':
                 p.add_argument('--out', required=True, help='new output directory')
                 p.add_argument('--timeout', type=float, default=3600 if action == 'calibrate' else 600)
+
+    p = sub.add_parser('linux', help='native Linux reference build and QEMU boot')
+    p.set_defaults(func=_run)
+    p.add_argument('linux_action', choices=('firmware', 'build', 'prepare', 'boot'))
+    p.add_argument('--out', required=True, help='new output directory')
+    p.add_argument('--platform', help='project Linux platform JSON')
+    p.add_argument('--images', help='Buildroot images directory')
+    p.add_argument('--timeout', type=float, default=600)
+    p.add_argument('--jobs', type=int, default=2)
+    p.add_argument('--llvm', action='store_true', help='build OpenSBI with native LLVM tools')
+    p.add_argument('--cross-compile', default='riscv64-unknown-elf-')
+    p.add_argument('--json', action='store_true')
