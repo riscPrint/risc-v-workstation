@@ -180,3 +180,17 @@ def test_reference_tool_error_is_inconclusive(tmp_path, monkeypatch):
     monkeypatch.setattr(mmu.shutil, 'which', lambda _: str(elf))
     monkeypatch.setattr(mmu, 'run_group', lambda *a, **kw: SimpleNamespace(returncode=255, timed_out=False, stderr='unsupported extension', stdout=''))
     assert reference(tmp_path, 'spike', 1)['status'] == 'inconclusive'
+
+
+def test_native_checker_detects_a_suppressed_load(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc = shutil.which('riscv64-unknown-elf-gcc')
+    spike = shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    description = tmp_path / 'load.json'
+    description.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[scenario()])))
+    original = mmu.assembly
+    monkeypatch.setattr(mmu, 'assembly', lambda row: original(row).replace('ld a0, 0(t3)', 'nop'))
+    build(description, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'

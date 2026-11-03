@@ -138,7 +138,7 @@ _start:
  csrc mstatus, t0
  li t0, {status}
  csrs mstatus, t0
- li a0, {43 if s['access'] == 'store' else 42}
+ li a0, {43 if s['access'] == 'store' else -1}
 access_site:
  {'ld a0, 0(t3)' if s['access'] == 'load' else 'sd a0, 0(t3)'}
  li t0, 0x20000
