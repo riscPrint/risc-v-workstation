@@ -116,3 +116,8 @@ coverage separately. Random instruction counts do not prove queue, cache or
 exception stress coverage. Reserved and disabled encodings need an explicit
 selected encoding set and expected trap rules. Do not infer those rules from
 the DUT. This suite declaration does not implement those campaigns.
+
+## TestRIG
+
+See the [RVFI-DII design](TESTRIG.md). The current ELF adapters do not provide
+instruction injection. A new simulation-only core hook is required.
