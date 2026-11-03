@@ -154,3 +154,17 @@ def test_native_verilator_backend_bytes_change_identity(native):
     assert before['tools']['verilator_bin']['version'] == after['tools']['verilator_bin']['version']
     assert before['tools']['verilator_bin']['sha256'] != after['tools']['verilator_bin']['sha256']
     assert before['sha256'] != after['sha256']
+
+
+@pytest.mark.parametrize('flags,closed', [
+    ('--threads 2 -O3 --output-split 10000 --output-split-cfuncs 100', True),
+    ('--threads 0', False), ('--threads -1', False),
+    ('--output-split file.v', False), ('--output-split 10 extra.v', False),
+    ('--threads 2 --exe custom.cpp', False), ('--output-split', False),
+])
+def test_numeric_verilator_options_are_closed_inputs(native, monkeypatch, flags, closed):
+    before = native.module.collect()
+    monkeypatch.setenv('SPINAL_VERILATOR_FLAGS', flags)
+    after = native.module.collect()
+    assert after['cache_enabled'] == closed, after['cache_disabled_reasons']
+    assert before['sha256'] != after['sha256']

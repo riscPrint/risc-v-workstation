@@ -807,7 +807,7 @@ waive a new failure. Incomplete results are never cached. Source-based keys stil
 passes. Use `--no-cache` to request fresh simulations.
 RTL identity elaboration still runs. Reuse skips simulation for cached jobs.
 The runner sets `RVW_CAPTURE_SOURCE_ENV` to the configured `source_env` name.
-RiscvSim native identity namespace `native-inputs-v26` excludes that declared checkout selector
+RiscvSim native identity namespace `native-inputs-v27` excludes that declared checkout selector
 from native build environment keys. The RTL hash covers the selected design. Without this
 selector declaration, environment values stay in the native key. Other build environment
 values remain inputs. Source provenance retains the selected checkout path.
@@ -1037,3 +1037,11 @@ completed-run number per model), `reset: "new-native-instance"` and
 metadata. They do not prove reset equivalence. `details.execution_s` measures
 adapter execution after model readiness. Existing RTL, native and source
 identity fields still apply. Source edits require a server restart.
+C1 `details.model_timing`, when present, records `elaboration_s` and
+`native_and_setup_s`. The latter includes native cache lookup, workspace setup
+and loading. Scala compilation and lock waits are outside these measurements.
+
+Native identity namespace `native-inputs-v27` also accepts numeric Verilator
+`--threads`, `--output-split` and `--output-split-cfuncs` options. Threads must be
+positive. Values contain at most nine decimal digits. Unknown options and file
+inputs still refuse capture. All exact option bytes remain identity inputs.

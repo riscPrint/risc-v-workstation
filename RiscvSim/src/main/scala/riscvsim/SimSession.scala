@@ -9,6 +9,9 @@ import spinal.sim.SimFailure
 
 /** Spinal simulation settings shared by adapters. */
 object RiscvSimConfig {
+  private val elaborations = new java.util.concurrent.ConcurrentHashMap[ModelKey, java.lang.Double]()
+  def elaborationSeconds(key: ModelKey): Option[Double] = Option(elaborations.get(key)).map(_.doubleValue)
+
   /** Verilator coverage kinds for coverage models (RISCVSIM_COVERAGE, comma-separated). */
   def coverageTypes: Seq[String] =
     sys.env.getOrElse("RISCVSIM_COVERAGE", "line,user").split(",").map(_.trim).filter(_.nonEmpty).toSeq
@@ -16,6 +19,7 @@ object RiscvSimConfig {
   /** Use Spinal's simulation phases for both identity and native compilation. */
   def elaborate[T <: Component](key: ModelKey, work: File, config: SpinalConfig,
       sourceRoots: Seq[File] = Nil)(rtl: => T): SpinalReport[T] = {
+    val started = System.nanoTime()
     val cfg = config.copy(targetDirectory = new File(work, key.name + "-rtl").getAbsolutePath,
       headerWithRepoHash = false, headerWithDate = false).includeSimulation
     cfg.noAssertAtTimeZero = true
@@ -51,6 +55,7 @@ object RiscvSimConfig {
       "RTL identity does not support external include or memory data files")
     java.nio.file.Files.writeString(file.toPath, text)
     report.blackboxesSourcesPaths.clear()
+    elaborations.put(key, (System.nanoTime() - started) / 1e9)
     report
   }
 

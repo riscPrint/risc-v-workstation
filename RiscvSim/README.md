@@ -298,3 +298,21 @@ another request. JVM exit stops abandoned simulation threads. The launcher owns
 process-group teardown. There is no per-request cancellation that keeps the
 server alive. The server holds the adapter's core lock for its full life.
 
+## Timing measurements
+
+`details.model_compile_s` measures the first model build in this JVM, including
+elaboration and native setup. `details.model_timing.elaboration_s` measures
+`RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
+It includes native compilation or cache lookup, workspace setup and loading.
+It is not a pure C++ compiler measurement. `details.execution_s` measures the
+adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+must be timed separately. Lock waits are not compiler time.
+
+Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example
+`--threads 2`, `-O3` or `--output-split 10000`. Existing native input capture
+includes these flags. A flag change gives a separate native cache identity.
+Keep the seed, ELF and memory latency fixed. Compare C2 bytes and terminal C1
+fields with a baseline. A faster run alone does not establish correctness.
+Compiler wrappers such as ccache can disable native capture. Check the result's
+`inconclusive` field before using it as evidence. Defaults remain unchanged.
+

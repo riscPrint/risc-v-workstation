@@ -369,6 +369,10 @@ class Driver(val adapter: CoreAdapter) {
         "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
         "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
       details("execution_s") = st.wall.elapsedS
+      RiscvSimConfig.elaborationSeconds(job.model).foreach { seconds =>
+        details("model_timing") = ujson.Obj("elaboration_s" -> seconds,
+          "native_and_setup_s" -> math.max(0.0, b.compileS - seconds))
+      }
       details("model_compile_s") = math.round(b.compileS * 10) / 10.0
       b.rtlDir.foreach(d => details("rtl_dir") = d.getPath)
     }
