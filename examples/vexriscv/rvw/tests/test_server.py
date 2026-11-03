@@ -1,10 +1,11 @@
 """Native reset equivalence for the persistent request server."""
 import json
 import os
+import sys
 from pathlib import Path
 
 from rvw.common.proc import run_group
-from test_adapter import EXAMPLE, compile_elf, invoke
+from test_adapter import EXAMPLE, compile_elf
 
 
 def test_server_reset_matches_fresh_process(tmp_path):
@@ -26,8 +27,27 @@ def test_server_reset_matches_fresh_process(tmp_path):
     sessions = [r['details']['simulation_session'] for r in replies]
     assert len({s['id'] for s in sessions}) == 1
     assert [s['model_run'] for s in sessions] == [1, 2, 3, 4]
-    fresh = invoke(['run', '--elf', target, '--out', tmp_path / 'fresh',
-                    '--seed', 317, '--max-cycles', 1000, '--rvfi-trace', '--json'])
+    # The server has compiled Scala. Start a fresh JVM with that exact classpath.
+    # Do not queue another sbt build just to run the same classes.
+    repo = Path(os.environ['RVW_HOME'])
+    classpath = (EXAMPLE / 'target/streams/runtime/fullClasspath/_global/streams/export').read_text().strip()
+    source = run_group([sys.executable, str(repo / 'RiscvSim/scripts/source-identity.py'),
+                        os.environ['VEXRISCV'], str(repo)], capture=True, text=True, timeout=30)
+    assert source.returncode == 0, source.stderr
+    source_path = tmp_path / 'source.json'
+    source_path.write_text(source.stdout)
+    env = dict(os.environ, SPINAL_MAKE_CMD=str(repo / 'RiscvSim/scripts/make-jobs.sh'))
+    native = run_group([sys.executable, str(repo / 'RiscvSim/scripts/native-identity.py')],
+                       env=env, capture=True, text=True, timeout=30)
+    assert native.returncode == 0, native.stderr
+    fresh = run_group([str(repo / 'scripts/with-lock.sh'), 'vex', 'nice', '-n', '10',
+        sys.executable, str(repo / 'RiscvSim/scripts/native-identity.py'), 'launch',
+        native.stdout, str(tmp_path), '-Xmx3g', '-Xss64m',
+        '-Driscvsim.tools=' + str(repo), '-Driscvsim.source=' + str(source_path),
+        '-Driscvsim.script=' + str(EXAMPLE / 'run.sh'),
+        '-cp', classpath, 'rvwvex.Main', 'run', '--elf', str(target),
+        '--out', str(tmp_path / 'fresh'), '--seed', '317', '--max-cycles', '1000',
+        '--rvfi-trace', '--json'], env=env, capture=True, text=True, timeout=600)
     assert fresh.returncode == 0, fresh.stderr
     reference = json.loads(fresh.stdout)
     for result in replies[2:]:
@@ -37,3 +57,12 @@ def test_server_reset_matches_fresh_process(tmp_path):
     assert (tmp_path / 'second/rvfi.jsonl').read_bytes() == expected
     assert (tmp_path / 'third/rvfi.jsonl').read_bytes() == expected
 
+    # A portable checkpoint records a suffix and verifies a fresh replay.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('checkpoint',
+        Path(os.environ['RVW_HOME']) / 'RiscvSim/scripts/replay-checkpoint.py')
+    checkpoint = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(checkpoint)
+    saved = tmp_path / 'checkpoint.json'
+    checkpoint.create(tmp_path / 'second/result.json', 2, saved)
+    assert checkpoint.verify(saved, tmp_path / 'fresh/result.json')['status'] == 'equivalent'

@@ -1045,3 +1045,12 @@ Native identity namespace `native-inputs-v27` also accepts numeric Verilator
 `--threads`, `--output-split` and `--output-split-cfuncs` options. Threads must be
 positive. Values contain at most nine decimal digits. Unknown options and file
 inputs still refuse capture. All exact option bytes remain identity inputs.
+### From-reset replay descriptor
+
+`rvw.replay-checkpoint/1` has `mode: "from-reset"`, a selected cycle, original
+C1 path and SHA-256, C2 SHA-256, input identity, trace suffix and descriptor `id`.
+The ID hashes the sorted compact JSON object without `id`. Verification rereads
+original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
+only that input identity, terminal result and suffix events match. It is not a
+live snapshot or an architectural correctness verdict. External effects are
+unsupported. Missing identity, changed evidence or differences exit 2.

@@ -316,3 +316,24 @@ fields with a baseline. A faster run alone does not establish correctness.
 Compiler wrappers such as ccache can disable native capture. Check the result's
 `inconclusive` field before using it as evidence. Defaults remain unchanged.
 
+## From-reset replay checkpoints
+
+The native DUT and Spinal simulation scheduler cannot yet save live state.
+The first checkpoint increment is a portable replay descriptor:
+
+```sh
+python3 RiscvSim/scripts/replay-checkpoint.py save \
+  --result /tmp/first/result.json --cycle 50 --out /tmp/checkpoint.json
+# Run the same captured ELF from reset with the same options, then:
+python3 RiscvSim/scripts/replay-checkpoint.py verify \
+  --checkpoint /tmp/checkpoint.json --result /tmp/replay/result.json
+```
+
+The descriptor binds the original C1 and C2 bytes, model, native build, source,
+seed, timing inputs, IRQ schedule, terminal counters and selected trace suffix.
+Verification refuses changed original evidence, input identity changes and
+suffix differences. It reports `equivalent` only for the recorded replay suffix.
+It does not establish ISA correctness. Keep external effects disabled. This
+format supports only state derived from the captured ELF and C1 run options.
+It does not restore DUT, device, memory, scheduler or random-generator state.
+A replay still starts from reset. Native mid-run save/restore remains open.
