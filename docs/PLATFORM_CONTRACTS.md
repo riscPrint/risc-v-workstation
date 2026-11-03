@@ -953,3 +953,21 @@ workers have at least 30 seconds. Server shutdown honors that job grace.
 MCP exposes arch_build, arch_run, arch_calibrate
 and arch_compare as cancellable jobs. See Arch/README.md for commands and
 limits. gem5 shows trends; RTL is the truth.
+
+
+## Formal X campaign result extension
+
+`rvw.formal/1` X results can include `backend: "yosys-xprop"`, `inventory`, and `replay`.
+Each inventory target retains its assertion, signal, label and valid condition. Its
+`disposition` is `candidate`, `confirmed`, `inconclusive`, or `not_reported`.
+Only native 4-state replay can set `confirmed`. A formal encoded failure alone cannot.
+`replay.backend: "icarus"` names the source RTL backend. Replay observations preserve
+X/Z binary strings. Existing formal status and exit codes do not change. `unencoded_cells` lists data
+cell types that Yosys could not encode. A nonempty list prevents a pass.
+
+`rvw.formal.x-sweep/1` records `top`, `wall_s` and a `modules` array. Each module has its
+name, disposition, target inventory, and result path or reason for missing evidence.
+Module dispositions are `bounded_clean`, `confirmed`, or `inconclusive`. Bounded clean
+requires a formal pass with reachability evidence. It applies only to this module's
+free boundary inputs and selected bound. Campaign `status` is always `inconclusive`
+and exit is 1. The inventory does not establish distinct bugs or core reachability.

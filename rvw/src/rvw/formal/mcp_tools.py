@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational"}
 
 
 def _argv(command, args):
@@ -82,10 +82,17 @@ def mcp_tools():
                          "memories": {**S, "enum": ["trace", "free", "zero"]}, "first_failure": B},
                         ["out", "trace"]),
                  _runner("from-sim"), long=True),
+        ToolSpec("formal_x_sweep", "Bounded per-module X inventory with native Icarus replay. Not an acceptance gate.",
+                 schema({**COMMON, "module": {"type": "array", "items": S},
+                         "module_timeout": {"type": "number", "exclusiveMinimum": 0},
+                         "campaign_timeout": {"type": "number", "exclusiveMinimum": 0},
+                         "replay": {**S, "enum": ["icarus"]}}, ["out"]),
+                 _runner("x-sweep"), long=True),
         ToolSpec("formal_xprop", "X-propagation: can an uninitialized register or memory make a checked signal "
                  "(outputs, stream valid/ready, payload while valid) X after reset? Runs as a job.",
                  schema({**COMMON, "reset_cycles": I, "settle": I, "outputs": B, "payload": B,
-                         "signal": {"type": "array", "items": S}, "filter": S, "x_inputs": B},
+                         "signal": {"type": "array", "items": S}, "filter": S, "x_inputs": B, "combinational": B,
+                         "replay": {**S, "enum": ["icarus"]}},
                         ["out"]),
                  _runner("xprop"), long=True),
     ]
