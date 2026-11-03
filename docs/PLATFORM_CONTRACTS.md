@@ -330,7 +330,10 @@ used to tell a known failure from a new one (`rvw.results.failure_signature`): e
 `assert:IllegalStateException@Mem.scala:42` (testbench exception), `rvfi_error:105`.
 Assertions use the HDL file and line when there is no Scala location, for example `assert:core.sv:4`.
 Without either location, `assert:sha256:<digest>` binds the full, unnormalized message.
-Compare derives assertion signatures again from saved messages, including older C3 results.
+Uncoded RVFI errors use `rvfi_error:sha256:<digest>` over the full message.
+Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
+Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
+override saved fail signatures. An unchanged failure must also have the same status.
 An assertion without a saved message or a complete location is inconclusive and needs a rerun.
 Test entries and the top level may carry extra keys (e.g. `message`, `fail_code`, `cached`, `perf_metrics`);
 readers ignore keys they do not know. An entry is *inconclusive* (`TestEntry.conclusive` is
@@ -495,6 +498,16 @@ Unknown fields or invalid types are usage errors with a file and line diagnostic
 Imports keep each result's config. `--config` filters imports and never relabels them.
 Only conclusive failures are imported. Empty selections and `--from` with `--signature` are errors.
 An all-config waiver requires a manual entry with no `config` field.
+
+### Regression performance evidence (C4)
+
+Each `perf` item also records `samples: {base, candidate, paired}`,
+`comparison_rule: "relative_mean"` and `confidence: "not_estimated"`.
+The counts refer to the seeds used in that workload's arithmetic means. The means use equal
+seed sets. The relative mean loss must exceed `perf_tolerance` to reject. No confidence
+interval or statistical significance is claimed. A declared performance workload without a
+baseline or without passing results on every seed is inconclusive, even when its failure
+is known or unchanged. A new correctness failure still rejects.
 
 ## C5. Failure bundle (`rvw bundle`)
 
