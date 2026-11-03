@@ -1015,3 +1015,40 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+## Pipeline cause event extension
+
+Kanata 0004 traces can carry version 1 `#rvw` comment records. Fields use literal
+tabs. Records use the current cycle cursor. Standard viewers can ignore the
+comments. Ordinary stage, dependency and terminal records remain valid.
+
+```text
+#rvw<TAB>1<TAB>stall<TAB>scope<TAB>cause<TAB>evidence
+#rvw<TAB>1<TAB>replay<TAB>instruction_id<TAB>cause<TAB>evidence
+#rvw<TAB>1<TAB>commit<TAB>instruction_id<TAB>kind
+```
+
+`scope` and `cause` are nonempty strings without tabs or newlines. Scope names
+are project-defined. Common generic causes are `operand_wait`, `structural`,
+`load_miss`, `rob_full` and `lsq_full`. `evidence` is `measured` or `inferred`.
+A measured cause comes from an explicit sampled reason signal. Inferred adapter
+estimates must use `inferred`. Stage residence and dependency `W` edges do not
+establish a measured cause.
+
+A stall record covers `[cursor, cursor + 1)`. Emit one sample per blocked cycle.
+Several scopes or causes can overlap. Duplicate scope/cause/evidence samples in
+one cycle count once. A replay record is one explicit event for a live instruction.
+The optional standard `W` record supplies consumer/producer dependency edges.
+
+Commit `kind` is `architectural` or `predicated_off`. Both denote physical commit.
+The producer must know the predication flag. The annotation must precede exactly
+one R type 0 for that instruction in the same cycle. It must not annotate a flush
+or an open instruction at EOF. R type 0 without an annotation has unknown commit
+kind. The extension does not change event IPC or C1 counter checks.
+
+`rvw perf/1` adds `stall_causes`, `replays` and `commit_kinds` objects. Counts by
+cause can overlap. Measured samples and inferred samples stay separate. Unknown
+zero-retirement intervals have no measured sample, including idle cycles. Unit
+stalls do not prove that global retirement was blocked. Commit-bubble head states
+remain inferred. Readers refuse malformed `#rvw` records, unknown versions and
+unknown event kinds. Other comments retain their existing behavior.

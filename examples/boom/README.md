@@ -33,3 +33,6 @@ A nine-benchmark native gem5 v25.1.0.1 comparison with BOOM `large`, seed 1 and
 fixed memory latency 20 had a geometric mean model/RTL IPC ratio of 0.906 with
 equal ROI instruction counts. This measures the model gap; it does not establish
 cycle accuracy, hardware behavior or a C8 gate verdict.
+
+The [Konata event mapping](konata-events.md) lists the core-owned probe changes
+needed for measured stall causes and predicated-off commit counts.

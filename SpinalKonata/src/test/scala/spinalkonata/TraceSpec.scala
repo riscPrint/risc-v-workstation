@@ -25,6 +25,20 @@ class TraceSpec extends AnyFunSuite {
     assert(text.contains("R\t8\t0\t1"))
     assert(text.endsWith("C\t3\n"))
   }
+  test("explicit causes, replay and predicated physical commits") {
+    val path = Files.createTempFile("kanata-events", ".log")
+    val w = new KanataWriter(path.toFile)
+    w.record(0, Fetch(0, 0))
+    w.record(1, Stall("issue", StallCause.OperandWait))
+    w.record(1, Stall("memory", StallCause.LoadMiss, "inferred"))
+    w.record(1, Replay(0, "ordering"))
+    w.record(2, Commit(0, predicatedOff = true)); w.close()
+    val text = Files.readString(path)
+    assert(text.contains("#rvw\t1\tstall\tissue\toperand_wait\tmeasured"))
+    assert(text.contains("#rvw\t1\tstall\tmemory\tload_miss\tinferred"))
+    assert(text.contains("#rvw\t1\treplay\t0\tordering\tmeasured"))
+    assert(text.contains("#rvw\t1\tcommit\t0\tpredicated_off\nR\t0\t0\t0"))
+  }
   test("invalid and late events fail closed, while bounded open instructions stay open") {
     val path = Files.createTempFile("kanata-open", ".log")
     val w = new KanataWriter(path.toFile)
@@ -41,8 +55,29 @@ class TraceSpec extends AnyFunSuite {
     val path = Files.createTempFile("kanata-demo", ".log")
     Demo.main(Array(path.toString))
     val lines = Files.readString(path).linesIterator.toSeq
+    assert(lines.count(_.startsWith("#rvw\t1\tstall\tpipeline\tstructural\tmeasured")) == 3)
+    assert(lines.count(_.endsWith("\tpredicated_off")) == 1)
+    assert(lines.count(_.endsWith("\tarchitectural")) == 4)
     assert(lines.count(_.startsWith("I\t")) == 6)
     assert(lines.count(l => l.startsWith("R\t") && l.endsWith("\t0")) == 5)
     assert(lines.count(l => l.startsWith("R\t") && l.endsWith("\t1")) == 1)
+    // Read the actual simulator output with the production Python parser and event reporter.
+    import scala.sys.process._
+    val python = """import sys
+sys.path.insert(0, sys.argv[1])
+from collections import Counter
+from rvw.perf.kanata import read
+from rvw.perf.events import event_report
+t = read(sys.argv[2])
+c = Counter(i.end for i in t.instructions.values() if i.end is not None and not i.flushed)
+r = event_report(t, c)
+assert r['stall_causes']['measured_cycles'] == 3
+assert r['commit_kinds']['architectural_total'] == 4
+assert r['commit_kinds']['predicated_off_observed'] == 1
+assert sum(c.values()) == 5
+print('pipeline events checked')
+"""
+    val source = new java.io.File("../rvw/src").getCanonicalPath
+    assert(Seq("python3", "-c", python, source, path.toString).!!.trim == "pipeline events checked")
   }
 }

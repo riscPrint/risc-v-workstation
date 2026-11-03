@@ -92,3 +92,36 @@ Compare takes `base`, `candidate`, the same analysis options and `tolerance`.
 Both return jobs so large traces can be cancelled without blocking the server. Follow with
 `job_status(wait_s=60)` for the same JSON as the CLI, or use `job_log`/`job_cancel`.
 The shared calculation preserves settings checks, counter warnings and inferred-state limits.
+
+## Explicit causes and commit kinds
+
+Perf reads the optional `#rvw` version 1 comment extension. See
+[the contract](../../../../docs/PLATFORM_CONTRACTS.md#pipeline-cause-event-extension).
+JSON adds `stall_causes`, `replays` and `commit_kinds`. Text shows each cause's
+scope and evidence kind. Existing saved reports without these fields still render.
+
+A stall sample covers one cycle. Repeated samples with the same scope, cause and
+evidence in that cycle count once. `by_cause` keeps measured and inferred counts
+separate. `measured_cycles` is the union across scopes. `overlaps` lists exact
+sets of simultaneous measured causes. Cause counts are not additive. Each cause
+also reports its overlap with global zero R-retirement cycles. A blocked unit
+can coexist with retirement elsewhere. This overlap does not establish a global
+retirement cause or an additive CPI breakdown.
+
+`unknown_zero_retirement_cycles` counts zero R-retirement cycles with no measured
+cause. Inferred causes do not reduce this count. Idle, warmup and uninstrumented
+cycles remain unknown. `unknown_intervals` counts these intervals;
+`longest_unknown` lists at most 20 half-open intervals. No per-cycle expansion is
+needed for a quiet tail. Inferred head states remain separate from measured causes.
+A repeated stage visit or a dependency edge never supplies a cause by itself.
+
+`commit_kinds` counts only explicit commit annotations as observed physical,
+architectural or predicated-off commits. Unannotated R type 0 events remain
+`unknown`. `architectural_total` is null when any commit kind is unknown.
+`summary.instret`, IPC windows and C1 cross-checks still use all R type 0 events.
+The report never silently changes their meaning. `replays` counts explicit
+replay events by cause and evidence; it does not turn replay counts into lost cycles.
+
+Predictor direction/target/return outcomes, recovery latency, predictor aliasing
+and context analysis are not implemented by this extension. A flush alone does
+not establish a prediction outcome. BOOM still needs core-owned probe signals.
