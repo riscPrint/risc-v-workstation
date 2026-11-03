@@ -131,6 +131,35 @@ def fence(xlen, seed):
     return program('\n'.join(bodies), xlen=xlen)
 
 
+def fence_i(xlen, seed):
+    rng = random.Random(seed)
+    bodies, functions = [], []
+    for index, offset in enumerate([0, 60, 124]):
+        bodies.append(f"""la s0, patch{index}
+ jalr ra, s0, 0
+ li t1, 1
+ bne a1, t1, fail
+""")
+        for _ in range(8):
+            value = rng.randrange(2, 2048)
+            instruction = (value << 20) | (11 << 7) | 0x13  # addi a1, zero, imm
+            bodies.append(f"""li t1, {instruction}
+ sw t1, 0(s0)
+ fence.i
+ jalr ra, s0, 0
+ li t1, {value}
+ bne a1, t1, fail
+""")
+        functions.append(f""".balign 128
+ .space {offset}
+patch{index}:
+ addi a1, zero, 1
+ ret
+""")
+    text = program('\n'.join(bodies), xlen=xlen)
+    return text.replace('.section .tohost', '\n'.join(functions) + '\n.section .tohost')
+
+
 def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -149,7 +178,7 @@ def generate(out, xlen=64, seed=1, suites=('lrsc',)):
     return jobs
 
 
-GENERATORS = {'lrsc': lrsc, 'amo': amo, 'fence': fence}
+GENERATORS = {'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
 
 
 def main():

@@ -66,3 +66,13 @@ Missing events, incomplete monitoring and empty edge sets stay inconclusive.
 A reversed or overlapping required edge is a mismatch. Other edges are unchecked.
 The project owns class assignment, completeness and monitor independence.
 The checker cannot certify those declarations. Its tests use synthetic monitors.
+
+## FENCE.I
+
+The program first executes each patch site. It then replaces its `addi` bytes,
+executes FENCE.I, calls the site again and checks the new result. Three sites use
+128-byte alignment with offsets 0, 60 and 124. Each gets eight seeded patches.
+This requires writable executable RAM and a coherent data path for instruction
+stores. It checks same-hart visibility after synchronization. The unsynchronized
+outcome is deliberately unchecked. Cache geometry, pending fetch requests and
+cross-hart publication require project-specific stimulus and remain untested.
