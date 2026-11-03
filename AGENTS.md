@@ -122,8 +122,8 @@ It needs no private core checkout. Missing native tools cause expected skips:
 Spike shim and RISC-V GCC for native co-simulation, Sail, formal tools
 (Yosys, SymbiYosys and solvers), Verilator, Icarus and GTKWave conversion tools.
 Tests that need a second Z3 install or an OSS CAD Suite launcher can also skip.
-The nightly job installs Clang, Verilator, GTKWave tools and JDK 21/sbt for launcher and
-database extraction tests. It warms the Scala classpath before pytest. It does
+The nightly job installs Clang, Verilator, GTKWave tools, Yosys, Icarus and
+JDK 21/sbt for launcher and database extraction tests. It warms the Scala classpath before pytest. It does
 not install the other optional tools. Use `-ra` to read the
 actual skip reasons. A skipped test does not establish native-tool support.
 For local native tests, source `env.sh` and build `Cosim/build.sh` as needed.

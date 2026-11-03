@@ -25,7 +25,7 @@ jobs:
           java-version: '21'
       - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5 # v1.1.9
       - name: Native tools for launcher tests
-        run: sudo apt-get update && sudo apt-get install -y clang verilator gtkwave
+        run: sudo apt-get update && sudo apt-get install -y clang verilator gtkwave yosys iverilog
       - name: Warm the classpath used by Python extraction tests
         working-directory: SpinalDB/spinaldb
         run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
