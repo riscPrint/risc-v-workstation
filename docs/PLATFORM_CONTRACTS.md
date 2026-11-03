@@ -1414,3 +1414,20 @@ completion, expiry, reset cancellation and trace-end pending attempts. Reset
 clears all attempts. Each input starts fresh temporal history. Unsupported
 clocks, reset rules or delay semantics refuse the calculation. See the
 coverage README for the full sequence contract and native example.
+
+## Experimental C reference datapath result
+
+`SpinalChecks/c2rtl/check.py` writes `rvw.c2rtl/1`. It is a standalone experiment,
+not C1 run evidence or a C4 gate verdict. `status` is `proved`, `counterexample`
+or `inconclusive` (exit 0, 1 or 3). `width`, `signed`, `latency_cycles`,
+`handshake`, `depth` and `input_pairs` state the comparison contract and bound.
+The supported domain has two unsigned inputs and one unsigned output, each
+1 to 4 bits, no state, no handshake, no assumptions and depth 1.
+`proved` means all enumerated input pairs match the compiled C truth table.
+`counterexample` requires SBY FAIL and a witness testbench. Missing, timed out,
+unsupported or ambiguous evidence is inconclusive. It never grants gate accept.
+`inputs`, `tool_files`, `tools`, `environment`, `commands` and `artifacts` record
+source identities and reproduction data. `traces` names witness artifacts;
+`reason` explains inconclusive results. A new output directory is required.
+See [the C reference flow](../SpinalChecks/c2rtl/README.md) for the C-model
+review requirement, native runtime trust and FP limits.

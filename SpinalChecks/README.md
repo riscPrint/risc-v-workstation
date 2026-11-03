@@ -429,3 +429,9 @@ opcode and size faults, parameter faults, and AXI address faults.
 Check rules: [#65](https://github.com/riscPrint/risc-v-workstation/issues/65). Protocol coverage: [#66](https://github.com/riscPrint/risc-v-workstation/issues/66). BOOM dispositions: [#5](https://github.com/riscPrint/risc-v-workstation/issues/5). Multi-clock/async formal: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). Shared runners: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67).
 
 Retained limit: The documented TileLink/AXI subsets, queue capacities, free replay state, clock-domain placement and index-check behavior remain bounded restrictions. Reference traffic does not establish complete protocol compliance or coherent ordering.
+
+## C reference datapath checks
+
+See [c2rtl/README.md](c2rtl/README.md) for the native C truth-table and
+SymbiYosys flow. It supports unsigned combinational units with widths 1 to 4.
+It reports proved, counterexample or inconclusive with the checked bound.

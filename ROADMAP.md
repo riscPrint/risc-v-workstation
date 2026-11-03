@@ -88,7 +88,7 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | JasperGold / VC Formal engines | Deep proofs: abstraction, engine portfolios, proof grid | SymbiYosys engines (`rvw formal bmc`, engine portfolio option) | exploring | No cut points or automatic abstraction, no multi-machine runs (FV 1). |
 | Jasper COV / UNR, VC Formal FCA | Proof coverage, unreachability | `rvw cov prove` (proven-unreachable exclusions with a vacuity check), `rvw cov mutate` (mcy) | in progress | Structural cone reports available; solver proof cores and property activation remain open. Bounded BOOM RocketALU mutation reviewed. |
 | Jasper SEC, VC Formal SEQ | Sequential equivalence | none (eqy and ABC available, not wired) | none | FV 2. |
-| Jasper C2RTL, VC Formal DPV | Arithmetic against a C model | none | none | FV 3. |
+| Jasper C2RTL, VC Formal DPV | Arithmetic against a C model | `SpinalChecks/c2rtl/` | small unsigned combinational units | FV 3; sequential and FP models pending. |
 | Jasper SPV, VC Formal FSV | Information flow / security | none | none | FV 4. |
 | SpyGlass, Questa CDC / Lint | Lint and CDC | none | none | Phase 3. |
 | Palladium, Protium, ZeBu | Emulation and prototyping | none | none | Phase 3. |
@@ -119,6 +119,7 @@ is from being usable on other designs.
 | SpinalChecks + rvw formal | `SpinalChecks/`, `rvw/src/rvw/formal/` | FV | 516 generated checks (24 stream firings; source dispositions recorded, runtime triage pending #5); BMC from a riscv-tests state; xprop | Any Spinal design within the supported clock and state model | generic libraries; bounded first-witness X sweep and native parent-context Icarus replay; TileLink/AXI4 protocol checks and reference traffic; BOOM triage pending |
 | Arch + rvw arch | `Arch/`, `rvw/src/rvw/arch/` | ARCH | Project O3 descriptions, native setup, same-ELF C1 calibration and MCP | One RV64 O3 hart with the bare-metal ROI runtime | generic runner; project SoC topology, interval observations and bounded speed-only DSE; RTL topology correlation pending |
 | SpinalKonata + rvw perf | `SpinalKonata/`, `rvw/src/rvw/perf/` | DBG, ARCH | BOOM probe adapter; text reports on `large` benchmarks | Any design that tags pipeline events; any Kanata log | generic cause/replay events and commit kinds; BOOM probe mapping documented, not wired |
+| C model datapath checks | `SpinalChecks/c2rtl/` | FV | No core binding | C references against RTL | unsigned 1–4-bit combinational truth tables; SBY depth 1; sequential and FP pending |
 | rvw CLI + MCP project selection | `rvw/`, `docs/BRING_YOUR_OWN_CORE.md` | PLAT | Explicit `--core boom` compatibility; background MCP jobs | Install once; core-owned `rvw.toml` and adapters; `--project`, `RVW_PROJECT`, upward discovery | project interface documented; external BOOM validated, BOOM and VexRiscv projects validated |
 | Workstation installer | `scripts/install.sh` | PLAT | Core install; optional native tools; check and dry-run modes | Separate core projects on macOS and Linux | package-manager setup; manual native bundle workflow added; host qualification and offline dependencies open (#71) |
 | rvw init | `rvw/src/rvw/init/` | PLAT | Core project scaffolding | Safe core-owned setup files | minimal Spinal/sbt scaffold; automatic build wiring and optional maps pending |
