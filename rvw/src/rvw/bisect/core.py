@@ -306,14 +306,17 @@ class Bisector:
             if self.o.verify:
                 b = self.test(self.badrev, "bad?")
                 if b["verdict"] != "bad":
-                    result = {"error": f"the bad revision does not reproduce {self.sig} (got {b['signature']})"}
+                    result = {"inconclusive": b["verdict"] == "skip",
+                              "error": f"the bad revision does not reproduce {self.sig} (got {b['signature']})"}
                     return self.save(result)
                 g = self.test(self.good, "good?")
                 if g["verdict"] != "good":
                     hint = (f"it reached max cycles {self.max_cycles} ({self.max_cycles_from}); if the program "
                             f"needs more, pass a larger --max-cycles" if g["signature"] == "timeout"
-                            else "pick an older one")
-                    result = {"error": f"the good revision is not good (got {g['signature']}); {hint}"}
+                            else "the endpoint was skipped; use a compatible adapter or revision"
+                            if g["verdict"] == "skip" else "pick an older one")
+                    result = {"inconclusive": g["verdict"] == "skip",
+                              "error": f"the good revision is not good (got {g['signature']}); {hint}"}
                     return self.save(result)
             self.g("bisect", "reset", check=False)
             outp = self.g("bisect", "start", self.badrev, self.good)

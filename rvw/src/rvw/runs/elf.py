@@ -43,7 +43,7 @@ class Elf:
             name, typ, flags, addr, off, size, link, info, align, entsize = struct.unpack_from("<IIQQQQIIQQ", self.data, o)
         else:
             name, typ, flags, addr, off, size, link, info, align, entsize = struct.unpack_from("<IIIIIIIIII", self.data, o)
-        return dict(name=name, type=typ, addr=addr, off=off, size=size, link=link, entsize=entsize)
+        return dict(name=name, type=typ, flags=flags, addr=addr, off=off, size=size, link=link, entsize=entsize)
 
     def _ph(self, i):
         o = self.phoff + i * self.phentsize
