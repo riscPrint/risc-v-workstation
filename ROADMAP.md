@@ -33,7 +33,7 @@ sequential equivalence, IDE views, tool bundle, emulation) has not started.
 | LINT | Lint and clock-domain crossing | Synopsys VC SpyGlass, Siemens Questa CDC | Verible, Verilator lint, Yosys | none | none | Survey open CDC; checks Spinal can emit from clock-domain info |
 | DBG | Debug and waveforms | Synopsys Verdi, Cadence SimVision, Questa Visualizer | GTKWave, Surfer | SpinalWaves, SpinalTrace, SpinalKonata, `rvw wave`, `rvw bundle`/`reduce`/`bisect`, `rvw perf` | usable | SpinalTrace model flag in RiscvSim; formal counterexample debugging; Surfer integration |
 | EMU | Emulation and FPGA prototyping | Cadence Palladium and Protium, Synopsys ZeBu | Verilator (multithreaded), open FPGA flows | none | none | Decide: FPGA prototyping, faster simulation, or both |
-| PLAT | One integrated platform | All of the above, as one product | VS Code | `rvw` CLI and `rvw mcp`; shared formats C1–C8; separate core projects with `rvw.toml` (integration in progress); VS Code extension with SpinalBlocks | in progress | Show regress/cov/perf results in VS Code; native tool bundle |
+| PLAT | One integrated platform | All of the above, as one product | VS Code | `rvw` CLI and `rvw mcp`; shared formats C1–C8; separate core projects with `rvw.toml` (integration in progress); VS Code extension with SpinalBlocks | in progress (root fast/nightly CI in review, #16 and #41) | Show regress/cov/perf results in VS Code; native tool bundle |
 
 ## Release status (2026-10-24)
 
