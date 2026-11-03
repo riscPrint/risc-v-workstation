@@ -1,0 +1,49 @@
+{
+  "schema": "rvw.isa/1",
+  "isa": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs",
+  "extensions": {
+    "i": {
+      "version": null
+    },
+    "m": {
+      "version": null
+    },
+    "a": {
+      "version": null
+    },
+    "f": {
+      "version": null
+    },
+    "d": {
+      "version": null,
+      "requires": [
+        "f"
+      ]
+    },
+    "c": {
+      "version": null
+    },
+    "zicsr": {
+      "version": null
+    },
+    "zifencei": {
+      "version": null
+    },
+    "zba": {
+      "version": null
+    },
+    "zbb": {
+      "version": null
+    },
+    "zbs": {
+      "version": null
+    }
+  },
+  "options": {
+    "version_evidence": "not verified",
+    "misaligned_data_access": "trap"
+  },
+  "consumers": {
+    "adapter_trace": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs"
+  }
+}

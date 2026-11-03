@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.isa/1",
+  "isa": "rv32im_zicsr_zifencei",
+  "extensions": {
+    "i": {
+      "version": null
+    },
+    "m": {
+      "version": null
+    },
+    "zicsr": {
+      "version": null
+    },
+    "zifencei": {
+      "version": null
+    }
+  },
+  "options": {
+    "version_evidence": "not verified",
+    "misaligned_data_access": "trap"
+  },
+  "consumers": {
+    "adapter_trace": "rv32im_zicsr_zifencei"
+  }
+}

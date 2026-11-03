@@ -1015,3 +1015,11 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### Core-owned ISA declarations (optional)
+
+`rvw.isa/1` JSON declares an expanded `isa` string, `extensions` keyed by
+extension name with `version` (string or null) and optional `requires` list,
+`options` object, and optional `consumers` mapping tool names to ISA strings.
+Null means not verified. `rvw cov isa-check` validates these declarations.
+This optional file does not change the project selection contract.

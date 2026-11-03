@@ -656,3 +656,13 @@ machine heavy-job lock: `$RVW_HEAVY_LOCK`, else the platform default (`boom`, se
 value runs without a lock (small designs). Mutation
 requires `run=true` and `baseline` to execute MCY rather than inspect existing outcomes.
 Proof exclusions and mutation survivors retain the evidence limits documented above.
+
+### ISA declarations
+
+`rvw cov isa-check isa.json --json` validates a core-owned `rvw.isa/1`
+manifest. Declare `isa`, `extensions` (each has `version` and optional
+`requires`), `options`, and optional `consumers` (tool name to ISA string).
+Use an expanded unversioned ISA string. Use null for an unverified version.
+The command rejects missing dependencies and contradictory consumer strings.
+Null versions give `inconclusive`. Consumer strings are declarations. This
+increment does not probe compiler, adapter, reference model or ACT settings.
