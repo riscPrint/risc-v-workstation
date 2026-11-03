@@ -287,3 +287,17 @@ code at the model level, separately from coherence.
 
 Run: `sbt -batch 'testOnly riscvsim.CacheScoreboardSpec'` with the `sbt` lock.
 These tests check the scoreboard. They do not establish RTL cache coverage.
+
+## Coherence permissions
+
+`CoherenceMonitor(lineBytes, clients)` checks normalized TileLink-C permissions:
+N (None), B (Branch) and T (Trunk). Project adapters call `grant` only when a
+Grant is accepted and `shrink` when a ProbeAck or Release completes.
+Stalled requests must not change state. A branch grant requires intervention
+of another trunk. A trunk grant requires all other copies to be invalidated.
+Dirty shrink requires data. Use the cache scoreboard to check those bytes.
+The monitor does not parse TileLink beats, track sinks or check GrantAck timing.
+These require project channel adapters. It checks modeled permissions, not a
+full implementation of TileLink-C.
+
+Run: `sbt -batch 'testOnly riscvsim.CoherenceMonitorSpec'` with the `sbt` lock.
