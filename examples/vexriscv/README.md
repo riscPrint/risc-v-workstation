@@ -105,3 +105,10 @@ VEXRISCV=/path/to/VexRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
   examples/vexriscv/rvw/tests -q --basetemp=/tmp/cw-vex-pytest
 rm -rf /tmp/cw-vex-pytest
 ```
+
+## SoC map
+
+`soc.json` describes this example's simulation map and reference policies.
+Run `rvw soc generate soc.json --out /tmp/vexriscv-soc --json` from this folder.
+See the [format and limits](../../rvw/src/rvw/soc/README.md).
+The existing adapter does not yet consume the generated simulation map.

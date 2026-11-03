@@ -33,3 +33,10 @@ A nine-benchmark native gem5 v25.1.0.1 comparison with BOOM `large`, seed 1 and
 fixed memory latency 20 had a geometric mean model/RTL IPC ratio of 0.906 with
 equal ROI instruction counts. This measures the model gap; it does not establish
 cycle accuracy, hardware behavior or a C8 gate verdict.
+
+## SoC map
+
+`soc.json` describes this example's simulation map and reference policies.
+Run `rvw soc generate soc.json --out /tmp/boom-soc --json` from this folder.
+See the [format and limits](../../rvw/src/rvw/soc/README.md).
+The existing adapter does not yet consume the generated simulation map.

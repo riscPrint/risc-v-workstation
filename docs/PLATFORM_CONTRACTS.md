@@ -1015,3 +1015,13 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+## SoC project data
+
+`rvw.soc/1` is an explicit input to `rvw soc generate MAP --out DIR`.
+It does not change `rvw.project/1` selection. See the [SoC map contract](../rvw/src/rvw/soc/README.md)
+for all fields and export limits. `rvw.sim-map/1` contains `address_bits`,
+`regions` and `interrupts` from the validated map. The `schema` identifies the
+consumer format. It does not imply that an adapter loaded the data.
+Generation returns exit 0 with `status=generated`, or exit 2 with `status=error`.
+No generation result is a design consistency verdict.

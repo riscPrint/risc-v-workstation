@@ -25,6 +25,7 @@ keep the issue list in `TODO.md` in step with them.
 
 | Path | What |
 |------|------|
+| `rvw/src/rvw/soc/` | Project-owned SoC map validation, software exports and bounded design checks. See its `README.md`. |
 | `rvw/` | The `rvw` command and `rvw mcp` server. One subpackage per tool under `rvw/src/rvw/<tool>/`; each registers its subcommand (`cli.py`) and its MCP tools (`mcp_tools.py`). Shared code in `rvw/src/rvw/common/` (process groups, the lock, the RISC-V decoder) and `rvw/src/rvw/results/` (C1/C3/C4 formats). |
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
