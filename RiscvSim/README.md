@@ -302,3 +302,9 @@ simulation starts. The outer process limit includes lock wait and compilation.
 The adapters hold their normal core and sbt locks.
 This test does not check physical clock stop, privilege traps, debug wake,
 or local reset. Those need adapter observations and project contracts.
+
+## Atomic and ordering programs
+
+See [the reusable ordering suites](tests/ordering/README.md). They build RV32/RV64
+ELFs, validate assertions on Spike, and produce C1 random-timing manifests.
+Reference and DUT results remain separate from ordering evidence.
