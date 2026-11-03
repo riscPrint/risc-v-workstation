@@ -120,7 +120,7 @@ is from being usable on other designs.
 | Workstation installer | `scripts/install.sh` | PLAT | Core install; optional native tools; check and dry-run modes | Separate core projects on macOS and Linux | package-manager setup; native bundle remains open |
 | SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: needs the Tywaves fork of Surfer |
 | SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic; accuracy status in CLI and GUI |
-| SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: BOOM entry point in the extractor |
+| SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: database export ready; legacy BOOM entry retained pending parity |
 | VS Code extension | `vscode/` | PLAT | Hosts SpinalBlocks | One extension, one feature per tool | generic |
 
 Core-side tools that stay in `spinal-boom` for now: the BoomSim harness, the riscv-formal harness

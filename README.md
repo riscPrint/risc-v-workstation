@@ -111,7 +111,8 @@ Experimental features need manual result checks before use:
 
 [vscode/](vscode/) is one extension for all the tools. Each tool adds a feature under `vscode/features/<tool>/` (SpinalBlocks is the first). See [vscode/README.md](vscode/README.md) to build it or add a feature.
 
-Each tool has its own README with build and usage instructions. SpinalBlocks depends on SpinalWaves through a relative path, so keep them side by side. Its `boom` example also expects a `spinal-boom` checkout two levels up.
+Each tool has its own README with build and usage instructions. SpinalBlocks depends on SpinalWaves through a relative path, so keep them side by side. Read diagrams from SpinalDB with `rvw query export blocks blocks.json.gz`.
+The separate `SpinalDB/boom` example needs a BOOM checkout.
 
 ## Decisions
 
