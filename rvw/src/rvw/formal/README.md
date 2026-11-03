@@ -271,6 +271,53 @@ An abstract failure reports `unknown` with `abstraction_counterexample`.
 It is not a confirmed DUT failure. Interface contracts, dependency checks,
 circular-assumption rejection and RAM abstraction contracts remain open.
 
+## SBY campaigns and property history
+
+The runner is separate from full SVA language support:
+
+```sh
+rvw formal sby-regress campaign.toml --out out/campaign-1 --timeout 60 --json
+rvw formal sby-history out/campaign-1 out/campaign-2
+```
+
+Example manifest:
+
+```toml
+core = "external"
+config = "rtl-v1"
+
+[[property]]
+id = "counter_limit"
+sby = "counter.sby"
+top = "counter"
+config = "rtl-v1-reset-one-cycle"
+requirements = ["REQ-COUNT-1"]
+assumptions = ["reset starts active"]
+```
+
+Each job must have one assertion after preparation. Use one SBY task with
+`[options]`, `[engines]`, `[script]` and `[files]`. Modes are `bmc` and `prove`.
+Engines use plain names without extra options. File targets are unique basenames.
+The runner captures manifests, jobs, listed sources and tools before execution.
+Declare full dependencies in `[files]`. Transitive closure, property attribution,
+assumption activation and vacuity are not checked. Each C3 row records these
+limits as `inconclusive`. Raw engine passes are conditional observations.
+They cannot establish design acceptance or a non-vacuous proof.
+
+Outputs use C3 `results.json` and C4 `verdict.json`. `formal_status` preserves
+`bounded_pass`, `unbounded_engine_pass`, `counterexample`, `timeout`, `unknown`
+and `error`. C4 stays inconclusive. The command returns 1.
+Keep each fresh campaign directory for history. `sby-history` groups C3 samples
+by property id. Each sample retains assumptions, requirements, configuration
+and job hash. A matching name cannot establish proof equivalence or reuse.
+
+The native slang plugin loads on this host. However, it rejects
+`assert property (@(posedge clk) a |=> a)` with `SVA unsupported`.
+Full SVA remains blocked by language support in that plugin.
+Do not use `--ignore-assertions` for proof jobs. Sampling regions, multiple
+clocks, reset semantics and temporal sequences remain unqualified.
+Positive and negative semantic cases on each engine remain required.
+
 Native Avy can crash on a constant-safe AIG. That case returns `error`.
-A portfolio can still use a conclusive answer from another engine.
+A portfolio can still return a conclusive answer from another engine.
 Constant cut bits, repeated aliased bits and clock cuts are refused.

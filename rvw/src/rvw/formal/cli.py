@@ -72,6 +72,19 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    hist = s.add_parser("sby-history", help="read per-property history from retained C3 campaigns")
+    hist.add_argument("paths", nargs="+")
+    from .campaign import history
+    hist.set_defaults(func=history)
+
+    campaign = s.add_parser("sby-regress", help="run SBY jobs and write conditional C3/C4 observations")
+    campaign.add_argument("manifest", help="TOML campaign with [[property]] rows")
+    campaign.add_argument("--out", required=True)
+    campaign.add_argument("--timeout", type=float, default=60)
+    campaign.add_argument("--json", action="store_true")
+    from .campaign import run as run_campaign
+    campaign.set_defaults(func=run_campaign)
+
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")

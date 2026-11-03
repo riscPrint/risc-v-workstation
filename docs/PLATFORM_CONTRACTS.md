@@ -1016,7 +1016,19 @@ absence of X is not an unreachability proof. Overall `status` is always
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
 
-### Formal proof scope and abstraction
+### Formal campaign observations in C3 and C4
+
+`rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.
+Each row names one single-assertion SBY job. Extra fields retain `formal_status`,
+`requirements`, `assumptions`, `configuration` and `job_sha256`.
+`formal_status` is `bounded_pass`, `unbounded_engine_pass`, `counterexample`,
+`timeout`, `unknown` or `error`. C3 maps engine passes to `pass`, counterexamples
+to `fail`, timeouts to `timeout`, and other states to `error`.
+Every row carries an `inconclusive` reason: input closure, property attribution
+and vacuity are not checked. A raw engine pass cannot earn acceptance.
+C4 records `verdict: inconclusive` and `tests: incomplete`.
+Retained standalone C3 directories form the history store. Each sample keeps
+configuration and assumptions. Samples cannot be pooled into one proof.
 
 Formal results add `proof_kind: bounded | unbounded`.
 Only `formal prove` selects unbounded mode. Depth-search summaries use
