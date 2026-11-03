@@ -15,7 +15,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from rvw.common.proc import TIMEOUT_EXIT, run_group
+from rvw.common.proc import TIMEOUT_EXIT
+from rvw.common.sby import TOOL_GRACE_S, execute
 from .tools import ACTIVE
 
 
@@ -341,24 +342,15 @@ def sigterm_raises():
         signal.signal(signal.SIGTERM, old)
 
 
-# SIGTERM to SIGKILL for yosys/sby. Long enough for sby to stop the solver groups it started (their own
-# sessions; a SIGKILLed sby leaves them running), and below the MCP job grace (rvw.mcp.jobs.Job.GRACE_S,
-# 15 s) so the MCP server does not SIGKILL this CLI while it still waits for sby.
-TOOL_GRACE_S = 10.0
-
-
 def run(cmd: list[str], cwd: Path, log: Path, timeout: float | None = None) -> tuple[int, float]:
     """Run `cmd` in its own process group, writing stdout+stderr to `log`. Returns (exit code, seconds);
     124 on timeout. On timeout, error or SIGTERM the whole group is stopped (SIGTERM first: sby then stops
     the solver groups it started; SIGKILL after TOOL_GRACE_S)."""
-    t0 = time.time()
     active = ACTIVE.get()
     env = None
     if active is not None:
         cmd, env = active.command(cmd), active.env
-    with open(log, "w") as fh:
-        r = run_group(cmd, cwd=cwd, env=env, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout, grace=TOOL_GRACE_S)
-    return (TIMEOUT_EXIT if r.timed_out else r.returncode), time.time() - t0
+    return execute(cmd, cwd, log, timeout, env=env)
 
 
 # ---------------------------------------------------------------------------------------------------

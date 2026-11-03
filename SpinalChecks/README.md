@@ -421,5 +421,14 @@ opcode and size faults, parameter faults, and AXI address faults.
   component would need the domain of their signals.
 - from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
   includes registers with an RTL initial value.
-- Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
-  `rvw/src/rvw/cov/proof.py`; merge them into one.
+
+
+### Shared solver execution
+
+Formal probes and coverage exclusion jobs use `rvw.common.sby.execute`.
+The shared runner writes the combined log and stops the process group on timeout
+or cancellation. It gives SBY 10 seconds to stop its solver sessions.
+Each caller keeps its captured environment and tool bindings.
+Formal still checks the DONE line, process exit and assertion count.
+Coverage still checks its captured status, source snapshot and vacuity evidence.
+A timeout cannot earn a proof or an exclusion.
