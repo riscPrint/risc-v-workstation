@@ -117,6 +117,12 @@ def register(sub) -> None:
     search.add_argument("--first-failure", action="store_true")
     from .search import depth_search
     search.set_defaults(func=depth_search)
+    r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
+    r.add_argument("--out", required=True)
+    r.add_argument("--timeout", type=float, default=60, help="seconds per check")
+    r.add_argument("--json", action="store_true")
+    from rvw.formal.riscv import main as riscv_main
+    r.set_defaults(func=riscv_main)
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)

@@ -93,6 +93,7 @@ errors. Tool input paths must exist when the command consumes them.
 | `debug` | `config` | Debug TOML for bundle, reduce and bisect. It must describe the recorded core. |
 | `checks` | `settings`, `waivers` | Project adapter settings and waiver file paths. Their format belongs to the adapter. The launcher must consume them. |
 | `query` | `build`, `db` | Build command list and output database path. `rvw query build` calls `build CONFIG OUT`; `--config` and `--out` override the core default and `db`. Query reads use `db` unless `--db` is explicit. |
+| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
 | `formal` | `verilog`, `top`, `checks`, `clock`, `reset` | Defaults for existing formal arguments. `verilog` is a nonempty path list. Explicit arguments override these fields. No proof limits change. |
 
 The project file and expanded environment are captured before parsing and execution.
@@ -1468,3 +1469,15 @@ Only `formal prove` selects unbounded mode. Depth-search summaries use
 `max_bounded_pass`. Their status is `fail` or `inconclusive`; never proof.
 Cut-point records name the signal, width and `unconstrained_anyseq` semantics.
 An abstract counterexample records `status: unknown`, not a concrete failure.
+
+### Bounded riscv-formal results
+
+`rvw formal riscv` writes standalone C3 `results.json` and C4 `verdict.json`.
+Each requested task is a C3 entry. PASS requires exit 0 and SBY PASS. Missing
+status, unreachable retirement cover, tool errors and wall timeouts are
+inconclusive. Without retirement cover, assertion PASS entries carry an
+`inconclusive` reason. `source.formal_inputs` records input hashes;
+`identity_complete` is false. The suite records `bounded_depth` and settings.
+C4 rejects assertion failures. Other outcomes remain inconclusive, including
+complete bounded tests. These files cannot establish committed gate acceptance.
+C1 is not emitted because these jobs do not execute an ELF.
