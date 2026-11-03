@@ -85,3 +85,34 @@ C1 pass and a nonempty, complete trace match with `end_status = pass`.
 An absent ELF setting skips this expensive test. A selected missing ELF fails.
 The usual Spike synchronization limits still apply. Counter reads in benchmark
 timing code can synchronize. A match does not check FP register state or fflags.
+
+## riscv-dv random programs
+
+Generator ownership stays in [#33](https://github.com/riscPrint/risc-v-workstation/issues/33).
+Use the upstream [riscv-dv](https://github.com/chipsalliance/riscv-dv) `pyflow`
+backend for native Python generation. It needs PyVSC and Boolector. Its pinned
+`pyboolector` source distribution must build on the host. If its build fails
+with a missing `pyboolector_enums.pxd`, generation is blocked. Do not replace
+the generator with an unreviewed random encoder or claim a generated test pass.
+Pre-generated programs need their generator revision, target, options and seed.
+
+After generation, compile for the selected core's ISA, ABI, linker layout and
+termination protocol. Keep these settings in the core project. A bounded ELF
+suite can use:
+
+```toml
+[suites.riscv-dv]
+dir = "tests/riscv-dv/elfs"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+max_cycles = 1000000
+timeout_s = 60
+```
+
+A generator's successful termination is not an independent correctness check.
+For random streams, record C2 and compare against an independent reference
+model. Keep program completion and comparison results separate. Report event
+coverage separately. Random instruction counts do not prove queue, cache or
+exception stress coverage. Reserved and disabled encodings need an explicit
+selected encoding set and expected trap rules. Do not infer those rules from
+the DUT. This suite declaration does not implement those campaigns.
