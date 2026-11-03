@@ -71,6 +71,7 @@ def parse_project(raw, path, environment):
         "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
         "query": {"build", "db"},
+        "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
         "formal": {"verilog", "top", "checks", "clock", "reset"},
     }

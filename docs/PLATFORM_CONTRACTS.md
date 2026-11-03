@@ -1151,3 +1151,22 @@ process group. Remote cancel acknowledgement, scalable streaming and C3 gate
 import remain open. The static dashboard reads existing C3/C4/history. Recorded
 C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.
 It does not establish bin compatibility or verification closure.
+
+## Lint and crossing inventory extension
+
+`rvw lint` reads `rvw.lint-settings/1` from `--settings` or the project
+`[lint] settings` path. Paths resolve against the settings file. See the
+[lint guide](../rvw/src/rvw/lint/README.md) for fields and scope.
+`rvw.lint/1` records settings and RTL hashes, native output, backend states,
+structural inventory, exact waivers and match counts. Each finding has a SHA-256
+`id` of its diagnostic data, backend, top and configuration. Waivers require
+this value as `finding_id`, plus exact rule, endpoint, configuration and reason.
+A different source or message cannot reuse the waiver. Waived findings remain in
+place. Missing backends remain `not_run`. Exit 0 means completed checks without
+findings; 1 means active findings; 2 means input error; 3 means inconclusive.
+Structural analysis cannot produce signoff. Its unrun rule inventory is mandatory.
+No C4 gate acceptance is implied.
+Structural reports also retain `reset_trees` (control cones with unknown-control
+states) and `reset_crossings` (source and destination domain IDs). Different
+reset signatures are candidates even when clock identity matches. Reset release
+and reconvergence remain in the unrun rule inventory.
