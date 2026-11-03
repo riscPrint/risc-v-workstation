@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from rvw.common.proc import run_group
+from rvw.results import load_run
 from suite import generate
 
 
@@ -57,7 +58,11 @@ def main():
         states = []
         for job in jobs:
             result = Path(job['out']) / 'result.json'
-            states.append(json.loads(result.read_text()).get('status') if result.exists() else 'inconclusive')
+            if result.exists():
+                loaded = load_run(result)
+                states.append('inconclusive' if loaded.why_inconclusive else loaded.status)
+            else:
+                states.append('inconclusive')
         report['dut'] = states
         code = (1 if any(s in ('fail', 'assert', 'rvfi_error') for s in states) else
                 0 if run.returncode == 0 and all(s == 'pass' for s in states) else 3)
