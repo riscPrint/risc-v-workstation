@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "open"}
 
 
 def _argv(command, args):
@@ -72,6 +72,12 @@ def _runner(command):
 
 def mcp_tools():
     return [
+        ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
+                 schema({"result": S, "out": S, "trace_index": I,
+                         "edit": {"type": "array", "items": S},
+                         "hgldd": S, "pdg": S, "criterion": S, "at_time": I, "open": B,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["result", "out"]),
+                 _runner("cex"), long=True),
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "
                  "bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.",
                  schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B}, ["out"]),

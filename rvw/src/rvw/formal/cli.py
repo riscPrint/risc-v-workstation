@@ -72,6 +72,21 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
+    c.add_argument("--result", required=True, help="formal result.json or directory")
+    c.add_argument("--trace-index", type=int, default=0)
+    c.add_argument("--edit", action="append", help="PORT@TIME=INTEGER; lasts to the next witness change")
+    c.add_argument("--timeout", type=float, default=60)
+    c.add_argument("--out", required=True)
+    c.add_argument("--json", action="store_true")
+    c.add_argument("--hgldd", help="SpinalWaves HGLDD directory for this captured design")
+    c.add_argument("--pdg", help="SpinalTrace pdg.json for this captured design")
+    c.add_argument("--criterion", help="SpinalTrace failing assertion criterion, e.g. line:Top.scala:20")
+    c.add_argument("--at-time", type=int, help="SpinalTrace sample time in VCD units")
+    c.add_argument("--open", action="store_true", help="open Surfer after typed lookup succeeds")
+    from . import cex
+    c.set_defaults(func=cex.run)
+
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
     b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")

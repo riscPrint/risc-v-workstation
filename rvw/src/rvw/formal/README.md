@@ -234,3 +234,80 @@ real core to make a core-context claim. Check payload validity separately.
 A signal with no X/Z observation stays `inconclusive`. This run cannot prove
 `unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
 The command returns 1 for all results. It never reports a design pass.
+
+## Counterexample what-if replay
+
+Replay a failing `rvw formal bmc` result through native Yosys `sim`:
+
+```sh
+rvw formal cex --result out/bmc --out out/replay --json
+rvw formal cex --result out/bmc --edit bad@0=0 --out out/whatif --json
+```
+
+`--trace-index` selects a witness from `result.json` (default 0). Each repeatable
+`--edit PORT@TIME=INTEGER` changes a top-level input at an existing VCD timestamp.
+Values use decimal, `0x` or `0b`. An edit lasts until the next change to that input
+in the original witness. It does not tie the input for all later cycles. Clock and
+reset are inputs too. Editing them changes the replay environment.
+
+The command first replays the original witness. It then replays the edited witness
+against the same captured model. It uses `sby/model/design.il`, before SBY clock
+conversion. `clk2fflogic` and `chformal -lower` let `sim` evaluate clocked checks.
+VCD input is converted to FST before simulation. Each replay writes `wave.vcd`,
+`wave.fst`, `summary.json`, the Yosys script and log. Initial state comes from the
+original witness where Yosys can map it. Missing state keeps the model's initial
+state. The edited replay does not load later witness state over computed state.
+
+`inputs/` retains the original result, witness, model, copied RTL, checks and
+wrapper. `input_capture` maps source paths to copied bytes and hashes. The result
+keeps the original declared `restrictions`. Assertions and assumptions stay in the
+model. An observed assumption violation makes the disposition `inconclusive`.
+Use a separate output directory. The command refuses output paths that overlap
+the formal run. It does not change that run.
+
+The result uses `rvw.formal.cex/1`. `status` is always `inconclusive`, with exit 1.
+`disposition` is `reproduced` only when the original replay observes a property
+listed in the formal failure report and the edited replay observes that same
+property. `failure_not_observed` means that the original replay observed the
+property and the edited replay did not. A tool error, missing baseline failure or
+assumption violation gives `inconclusive`. No disposition proves correctness.
+Unknown state can hide a failure. Only the selected finite witness is replayed.
+
+For Spinal designs, supply metadata from the same elaboration:
+
+```sh
+rvw formal cex --result out/bmc --out out/debug --edit bad@0=0 \
+  --hgldd build/spinalwaves/hgldd --pdg build/spinaltrace/pdg.json \
+  --criterion line:Top.scala:20 --at-time 9 --open --json
+```
+
+HGLDD and PDG inputs are copied. `spinalwaves-check` checks typed lookup on the
+edited wave. `--open` launches `surfer-tywaves` only after that check completes.
+The result also gives its argument vector. SpinalTrace `dyn-pdg` runs on the
+**original replay wave**, where the assertion fails. Select the failing assertion
+with `--criterion`. Set `--at-time` to its pre-edge sample time in VCD units.
+The wrapper scopes are `rvw_formal_top dut`. The top module is the original design.
+Logs and `dynpdg.json` stay in the output directory. A missing tool or failed
+lookup reports `inconclusive` in `navigation`. A launched GUI is not a verified
+navigation result. Preserve the Scala files at the source paths in the metadata.
+
+MCP exposes the same command as the background tool `formal_cex`. It accepts
+`result`, `out`, `trace_index`, `edit` (array), `timeout`, `hgldd`, `pdg`,
+`criterion`, `at_time`, and `open`. The timeout bounds each native subprocess.
+Cancellation stops each native process group. A GUI explicitly opened by the
+user stays open after the replay job ends.
+
+### Validation and limits
+
+The native regression uses `Top` with `assert(!bad)` and `assume(!guard)` at each
+rising edge. BMC selects `bad=1` at time 0. Original replay reproduces the failure.
+`bad@0=0` removes the observed failure. `guard@0=1` violates the assumption and
+stays inconclusive. Tests also cover preserved inputs, refused output overlap,
+invalid edits, converter failure and the MCP runner.
+
+Optional viewer tests check command wiring with a test executable. They do not
+validate real Surfer or SpinalTrace navigation. A real Spinal elaboration with
+matched HGLDD, PDG and Scala source navigation remains to be checked. This first
+increment supports BMC results only. It does not minimize input changes, shorten
+the failure, remove irrelevant assumptions, or prove that an edited trace is a
+legal counterexample. Those parts of issue #60 remain open.

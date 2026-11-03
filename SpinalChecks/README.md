@@ -423,3 +423,11 @@ opcode and size faults, parameter faults, and AXI address faults.
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
   `rvw/src/rvw/cov/proof.py`; merge them into one.
+
+## Counterexample what-if replay
+
+`rvw formal cex --result OUT/bmc --edit bad@0=0 --out OUT/whatif` replays a
+captured BMC witness with Yosys `sim`. It keeps the original inputs and constraints.
+It writes VCD/FST and can call SpinalWaves, Surfer and SpinalTrace with matching
+metadata. Replay never earns a proof pass. See the [command guide](../rvw/src/rvw/formal/README.md#counterexample-what-if-replay)
+for edit syntax, result meanings and validation limits.
