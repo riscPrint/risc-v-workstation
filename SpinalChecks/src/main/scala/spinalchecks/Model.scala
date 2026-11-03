@@ -105,8 +105,8 @@ case class ChecksConfig(
     }
   }
 
-  def streamReason(path: String): Option[String] =
-    mayDropValid.find(s => Glob(s.pattern).matches(path)).map(_.reason)
+  def streamReason(path: String, kind: String): Option[String] =
+    mayDropValid.find(s => Glob(s.pattern).matches(path) || Glob(s.pattern).matches(s"$kind:$path")).map(_.reason)
 
   def withStreamFile(path: String): ChecksConfig = copy(mayDropValid = mayDropValid ++
     ChecksConfig.readWaivers(path).map(w => StreamSemantics(w.pattern, w.reason)))

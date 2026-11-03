@@ -350,8 +350,12 @@ for a Decoupled producer. The pattern matches the stream identity path without
 its check kind. This setting permits both withdrawal and replacement before
 acceptance. It removes the two strict Stream rules. The report retains both
 records and their reason. A reason is required. Use `SPINALCHECKS_STREAMS` to
-load a file with one `<stream path> <reason>` per line. BOOM data belongs in
-`boom/streams.txt`. Generic code does not identify BOOM streams.
+load a file with one `<pattern> <reason>` per line. An exact check ID, such as
+`stream.valid_hold:path.stream`, changes only that rule. The payload rule stays
+active. Use `stream.payload_stable:path.stream` to permit payload changes only.
+BOOM data belongs in `boom/streams.txt`. Use exact check IDs there. Each reason
+must cite the producer and receiver sources. Generic code does not identify
+BOOM streams. These settings do not change TileLink burst or transaction rules.
 
 TileLink bus channels use protocol semantics automatically. An unaccepted offer
 can change. `tilelink.burst_stable` still checks accepted multibeat messages.

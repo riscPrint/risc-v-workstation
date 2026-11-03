@@ -42,6 +42,7 @@ class TileLinkCoherentSpec extends AnyFunSuite {
       step(); e.valid #= false
       if (fault != "orphanrelease") c.valid #= true
       step(); c.valid #= false; d.valid #= true; d.opcode #= Opcode.D.RELEASE_ACK; d.source #= 0
+      if (fault == "badreleaseparam") d.param #= 1
       step(); d.valid #= false
       dut.clockDomain.waitSampling(3)
       hits = ChecksSim.firings(dut).map(_.check.kind).toSet
@@ -49,6 +50,9 @@ class TileLinkCoherentSpec extends AnyFunSuite {
     hits
   }
   test("Grant/GrantAck and Release/ReleaseAck bookkeeping is separate") { assert(run("clean").isEmpty) }
+  test("ReleaseAck reserved parameter must be zero") {
+    assert(run("badreleaseparam").contains("tilelink.response_legal"))
+  }
   test("sink reuse and orphan GrantAck or ReleaseAck fire") {
     assert(run("sinkreuse").contains("tilelink.sink_busy"))
     assert(run("orphanack").contains("tilelink.sink_match"))

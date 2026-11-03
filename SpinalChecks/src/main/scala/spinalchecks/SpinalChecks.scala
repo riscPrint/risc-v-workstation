@@ -223,7 +223,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           case bf: tilelink.BusFragment if bf.withData && bf.p.beatWidth > 0 => Seq(Kind.TileLinkBurstStable)
           case _ => Nil
         } else Nil)
-      cfg.streamReason(qualify(paths(c), streamNames(c)(s))).isEmpty &&
+      checked.forall(k => cfg.streamReason(qualify(paths(c), streamNames(c)(s)), k).isEmpty) &&
       selected && !(c == top && s.valid.isInput) && driven(s.valid) && driven(s.ready) &&
         s.payload.flatten.forall(driven) &&
         checked.forall(k => cfg.decide(s"$k:${qualify(paths(c), streamNames(c)(s))}").isEmpty)
@@ -426,10 +426,10 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
             val stable = if (payload.nonEmpty) newRecord(Kind.StreamPayloadStable, name, env, loc,
               s"${payload.size} payload signals") else null
             if (stable != null) { stable.signals("valid") = Seq(v); stable.signals("ready") = Seq(r); stable.signals("payload") = payload }
-            val semantics = cfg.streamReason(qualify(path, name)).orElse(
-              if (s.parent.isInstanceOf[tilelink.Bus]) Some("TileLink permits pre-acceptance offer changes; burst checks remain active") else None)
-            semantics.foreach { reason =>
-              Seq(hold, stable).filter(_ != null).filter(_.inserted).foreach { rec =>
+            Seq(hold, stable).filter(_ != null).filter(_.inserted).foreach { rec =>
+              val semantics = cfg.streamReason(qualify(path, name), rec.kind).orElse(
+                if (s.parent.isInstanceOf[tilelink.Bus]) Some("TileLink permits pre-acceptance offer changes; burst checks remain active") else None)
+              semantics.foreach { reason =>
                 rec.status = "waived"; rec.reason = "declared channel semantics: " + reason
               }
             }
