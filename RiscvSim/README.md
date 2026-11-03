@@ -182,3 +182,9 @@ The suite covers the CLI, ELF handling, RVFI records, assertions, replay, output
 watchdogs and concurrent failure attribution. RTL identity tests cover monitor bytes and
 unsupported external data dependencies. Python launcher tests cover native identity,
 compiler invocation names, cache reuse, changed flags and cancellation.
+
+## Additional test sources
+
+See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
+suites. These use the existing ELF run contract. ACT4 expected signatures
+must come from Sail or the suite, never from a DUT run.
