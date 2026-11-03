@@ -1021,3 +1021,15 @@ collection. Unreported targets retain their existing disposition.
 Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.
+
+## Lint and crossing inventory extension
+
+`rvw lint` reads `rvw.lint-settings/1` from `--settings` or the project
+`[lint] settings` path. Paths resolve against the settings file. See the
+[lint guide](../rvw/src/rvw/lint/README.md) for fields and scope.
+`rvw.lint/1` records settings and RTL hashes, native output, backend states,
+structural inventory, exact waivers and match counts. Waived findings remain in
+place. Missing backends remain `not_run`. Exit 0 means completed checks without
+findings; 1 means active findings; 2 means input error; 3 means inconclusive.
+Structural analysis cannot produce signoff. Its unrun rule inventory is mandatory.
+No C4 gate acceptance is implied.
