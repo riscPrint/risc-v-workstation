@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.soc-bindings/1",
+  "signals": [
+    {
+      "path": "io_mem_a_payload_address",
+      "width": "address_bits"
+    },
+    {
+      "path": "io_mem_a_payload_data",
+      "width": 64
+    },
+    {
+      "path": "io_mem_d_payload_data",
+      "width": 64
+    }
+  ],
+  "decoders": [],
+  "bridges": []
+}

@@ -1025,3 +1025,12 @@ for all fields and export limits. `rvw.sim-map/1` contains `address_bits`,
 consumer format. It does not imply that an adapter loaded the data.
 Generation returns exit 0 with `status=generated`, or exit 2 with `status=error`.
 No generation result is a design consistency verdict.
+
+`rvw.soc-bindings/1` selects exact signal paths and decoder assignment keys from
+SpinalDB `/20`, plus translation expectations for paired transaction samples.
+`rvw soc check MAP --bindings FILE --db DB [--transactions JSONL] --json` writes
+`rvw.soc-check/1`: `status`, `checks`, `gaps` and `transactions` (sample count).
+Checks have `name`, `actual`, `expected`, and `status` (`consistent`, `mismatch`,
+`unavailable`). Overall `mismatch` exits 1, `inconclusive` exits 3, and malformed
+input exits 2 with `status=error`. No check result can grant C8 acceptance.
+The [SoC tool README](../rvw/src/rvw/soc/README.md) defines the bounded evidence.

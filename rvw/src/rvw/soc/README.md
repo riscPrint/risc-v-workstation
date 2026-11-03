@@ -59,3 +59,47 @@ Generation does not change RTL or existing harness constants. The two examples
 preserve their current cosim settings. Generated device trees are memory fragments,
 not bootable board descriptions. Bus decoding, bridge behavior, physical hardware
 and reference device models need separate evidence. No export establishes a pass.
+
+## Bounded consistency checks
+
+```sh
+rvw soc check examples/vexriscv/soc.json \
+  --bindings examples/vexriscv/soc-bindings.json --db /path/to/vex.db --json
+rvw soc check examples/boom/soc.json \
+  --bindings examples/boom/soc-bindings.json --db /path/to/design.db --json
+```
+
+The database opens read-only. Schema `rvw.designdb/20` is required.
+`rvw.soc-bindings/1` contains three lists:
+
+- `signals`: `path` and `width`. Width is a positive integer or `address_bits`.
+- `decoders`: `region`, `path` and `key_template`. The template is an exact
+  SpinalDB assignment key. It must contain `{base}` and `{mask}`. The checker
+  inserts hexadecimal literals without `0x`, from the region base and complement
+  of its size minus one within `address_bits`. Only one full, unconditional assignment is supported.
+  Hashed and incomplete expressions give no evidence. This is a comparison of a
+  project-declared expression shape, not a general decoder inference engine.
+- `bridges`: `name`, `region`, `local_base` and `data_bytes` (1/2/4/8/16).
+  These select the expected translation for optional transaction samples.
+
+`--transactions FILE` reads JSONL records with `bridge`, `software_address`,
+`bus_address` and `size` in bytes. Each record must pair the same access at the
+software and bus endpoints. The checker tests software bounds, local address
+translation and beat crossing. The capture adapter must pair transactions.
+The checker does not infer pairs from an RVFI trace. A fixture is not evidence
+that a real bridge performed the access.
+
+Each check returns `consistent`, `mismatch` or `unavailable`. Missing paths,
+multiple assignments and opaque keys give `unavailable`. Any observed mismatch
+sets overall `status=mismatch` (exit 1). Otherwise the result is always
+`inconclusive` (exit 3). Invalid input gives `error` (exit 2).
+There is no pass mode: widths, expression snapshots and finite samples cannot
+establish all bridge behavior. The result lists the missing behavior checks.
+
+Example bindings currently select only external bus widths. The VexRiscv RAM
+map lives in the Scala simulation harness, outside the elaborated RTL. BOOM also
+uses a simulation memory agent. Neither example claims decoder or bridge
+coverage. Rebuild each database through its project query adapter to refresh
+source identity. A cached database check establishes only the listed widths in
+that file. Real paired transaction capture, generated bridge assertions,
+endianness, error responses and side-effect models remain open under #134.

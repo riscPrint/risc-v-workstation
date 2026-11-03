@@ -13,13 +13,25 @@ def register(sub):
     gen.add_argument('--out', required=True)
     gen.add_argument('--json', action='store_true')
     gen.set_defaults(func=run)
+    chk = commands.add_parser('check', help='compare map bindings with a SpinalDB database')
+    chk.add_argument('map')
+    chk.add_argument('--bindings', required=True)
+    chk.add_argument('--db', required=True)
+    chk.add_argument('--transactions')
+    chk.add_argument('--json', action='store_true')
+    chk.set_defaults(func=run)
 
 
 def run(args):
     try:
-        result = {'status': 'generated', 'files': generate(args.map, args.out)}
-        code = 0
-    except (ValueError, OSError, KeyError, TypeError, sqlite3.Error) as exc:
+        if args.soc_command == 'generate':
+            result = {'status': 'generated', 'files': generate(args.map, args.out)}
+            code = 0
+        else:
+            from .check import check
+            result = check(args.map, args.bindings, args.db, args.transactions)
+            code = 1 if result['status'] == 'mismatch' else 3
+    except (ValueError, OSError, KeyError, TypeError, IndexError, sqlite3.Error) as exc:
         result, code = {'status': 'error', 'error': str(exc)}, 2
     print(json.dumps(result) if args.json else str(result))
     return code
