@@ -31,7 +31,9 @@ and clean core/workstation commits. It does not claim a gate verdict.
 
 `--smoke-elf` explicitly permits a native build and one run. It uses the default
 config, seed 1 and 10000 cycles. It validates the written C1 result and requires
-a pass without inconclusive evidence. Temporary run files are removed; the
+a pass without inconclusive evidence. The ELF hash, seed and cycle limit must
+match the request. Synthesized and wall-clock-marked results cannot show readiness.
+Temporary run files are removed; the
 result stays in doctor JSON. Adapter build caches can change. The adapter owns
 native build locks. Without this flag build/run conformance stays inconclusive.
 A smoke check does not test all options, RVFI mapping or replay completeness.

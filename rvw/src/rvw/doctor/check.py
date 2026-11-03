@@ -1,5 +1,6 @@
 """Setup diagnostics. Native version policy stays in scripts/install.sh."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -113,8 +114,9 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             add('adapter.build_run', 'inconclusive', 'Not run. info does not prove C1 build/run conformance.',
                 'Use --smoke-elf ELF to build and run a small program. Review RVFI separately.')
         else:
-            from rvw.results.schema import validate_run
+            from rvw.results.schema import validate_run, RunResult
             try:
+                smoke_hash = hashlib.sha256(Path(smoke_elf).read_bytes()).hexdigest()
                 with tempfile.TemporaryDirectory(prefix='rvw-doctor-smoke-') as directory:
                     build = run_group([*cfg.adapter, 'build', '--config', cfg.default_config, '--json'],
                                       cwd=cfg.path.parent, timeout=cfg.build_timeout_s, capture=True)
@@ -127,8 +129,11 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                     record = json.loads((Path(directory) / 'result.json').read_text())
                     errors = validate_run(record)
                     valid = (run.returncode == 0 and not errors and record.get('status') == 'pass'
-                             and not record.get('inconclusive') and record.get('core') == cfg.name
-                             and record.get('config') == cfg.default_config)
+                             and RunResult.from_dict(record).why_inconclusive is None
+                             and record.get('core') == cfg.name
+                             and record.get('config') == cfg.default_config
+                             and record.get('elf_sha256') == smoke_hash
+                             and record.get('seed') == 1 and record.get('max_cycles') == 10000)
                     add('adapter.build_run', 'ready' if valid else 'error',
                         {'exit_code': run.returncode, 'errors': errors, 'result': record},
                         'Fix C1 build/run and completion mapping. This checks one config and ELF only.')

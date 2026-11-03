@@ -73,3 +73,36 @@ def test_machine_version_policy():
     assert records[0]['installed'] and records[0]['support'] == 'usable'
     assert records[0]['tested_table_match'] is False
     assert records[1]['support'] == 'unsupported'
+
+
+@pytest.mark.parametrize('change,ready', [
+    ({}, True), ({'elf_sha256': 'b' * 64}, False),
+    ({'seed': 2}, False), ({'max_cycles': 20000}, False),
+    ({'synthesized': True}, False), ({'wall_clock_timeout': True}, False),
+])
+def test_smoke_requires_requested_identity_and_conclusive_result(tmp_path, monkeypatch, change, ready):
+    import hashlib
+    elf = tmp_path / 'smoke.elf'
+    elf.write_bytes(b'\x7fELFfixture')
+    cfg = SimpleNamespace(adapter=['fixture'], path=tmp_path / 'rvw.toml', name='fixture',
+                          configs=['default'], default_config='default', build_timeout_s=10,
+                          suites={}, input_complete=False, identity=False, identity_capture=False,
+                          source_repo=tmp_path)
+    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path))
+    monkeypatch.setattr(check, 'load_config', lambda **kw: cfg)
+    def run(cmd, **kwargs):
+        if 'info' in cmd:
+            info = dict(schema='rvw.adapter/1', core='fixture', configs=['default'],
+                        default_config='default', xlen=32, isa={'default': 'rv32im'})
+            return SimpleNamespace(returncode=0, stdout=json.dumps(info), stderr='')
+        if 'run' in cmd:
+            record = dict(schema='rvw.run/1', core='fixture', config='default', status='pass',
+                          seed=1, max_cycles=10000, elf=str(elf), cycles=10, instret=1,
+                          elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest())
+            record.update(change)
+            (Path(cmd[cmd.index('--out') + 1]) / 'result.json').write_text(json.dumps(record))
+        return SimpleNamespace(returncode=0, stdout='', stderr='')
+    monkeypatch.setattr(check, 'run_group', run)
+    result = check.diagnose(project=tmp_path, smoke_elf=elf)
+    smoke = next(c for c in result['checks'] if c['name'] == 'adapter.build_run')
+    assert (smoke['status'] == 'ready') is ready
