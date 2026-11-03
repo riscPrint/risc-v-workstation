@@ -265,7 +265,59 @@ MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
 Unsupported policies must be refused. These settings do not permit arbitrary
 trace values or broad CSR masks. See the exact settings and the
 [C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
-C2 does not carry partial memory effects, FP state or per-hart state.
+### C2 state extension (`rvw.rvfi/2`)
+
+Version 2 retains every version 1 record and adds these required instruction fields:
+`fd_valid` (boolean), `fd` (0..31), `fd_wdata` (64-bit hex), `fflags` (5-bit hex),
+and `fcsr` (8-bit hex). `fd_valid` distinguishes no write from a write to f0.
+`fd_wdata` contains the raw architectural FLEN=64 bits, including NaN boxing.
+Do not canonicalize NaNs or change payload bits. When `fd_valid` is false,
+`fd` and `fd_wdata` are not observations. `fflags` and `fcsr` are full state
+immediately after this instruction, including synchronous trap entry.
+The low five bits of `fcsr` must equal `fflags`. `fcsr` includes `frm`.
+The checker compares these fields exactly. A backend without these observations
+must refuse version 2 comparison. Version 1 keeps its integer-only scope.
+Version 2 does not imply that a DUT adapter exports these fields.
+FLEN above 64, vectors and per-hart state remain unsupported.
+
+C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
+Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
+The key set must equal the declared set. Values are full XLEN state after the
+instruction and synchronous trap entry, before the next reference step.
+These snapshots check effects even if software never reads the CSR. They do
+not assert that every changed CSR was captured. No CSR snapshot uses read
+synchronization or a platform mask. Counters and external pending state can
+differ with timing; include them only when the adapter can supply the same
+architectural observation point. An unavailable backend CSR is an error.
+
+Version 2 trap instructions can include `fault_access` with exactly these fields:
+`addr` (XLEN hex virtual start address, access-relative), `rmask`, `wmask`,
+`completed_rmask`, `completed_wmask` (integer byte masks), `rdata`, `wdata`.
+Attempted masks describe bytes requested by the instruction, not successful
+transfers. Completed masks must be subsets of the respective attempted masks.
+Data is XLEN hex with valid bytes only in completed lanes. With no completed
+lanes, data must be JSON null. Unknown data must never come from the reference.
+Legacy `mem_*` fields still describe completed effects. A missing fault record
+makes no claim about attempted accesses. This extension describes data accesses;
+instruction fetch faults still use trap cause/tval.
+
+Spike checks zero-completion, uncompressed scalar load/store attempts for width
+codes 0..3. It computes address and width from its own instruction and pre-step
+registers, then checks the synchronous cause. Other encodings, partial effects,
+and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Partial records define validity but do not establish checker support.
+
+
+The cosim result's `state_coverage` gives the input `trace_schema`, whether FP
+fields were compared (`fp`), and the declared `csr_snapshot` address list.
+The optional live integration API uses the same C2 fields and synchronization
+rules as offline checking. Its result adds `mode: online`,
+`consumed_trace_prefix_sha256` and `consumed_trace_lines`. This digest covers
+only consumed UTF-8 JSONL lines, including one-cycle lookahead. It is not a
+full trace identity. Input/reference identities stay in `reproduction`.
+An incomplete live stream returns `inconclusive`, with cause
+`live_trace_incomplete`. The API stops the producer on a checked divergence.
+
 
 ## C3. Suite results (`rvw.results/1`)
 

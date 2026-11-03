@@ -20,12 +20,19 @@ def hexnum(value, width=64):
 
 class Trace:
     def __init__(self, path):
-        self.file = open(path)
+        self.file = path if hasattr(path, "readline") else open(path)
         try:
             self.header = json.loads(next(self.file))
             h = self.header
-            if not isinstance(h, dict) or h.get("schema") != "rvw.rvfi/1" or h.get("xlen") not in (32, 64):
+            if not isinstance(h, dict) or h.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2") or h.get("xlen") not in (32, 64):
                 raise ValueError("expected rvw.rvfi/1 header with xlen 32 or 64")
+            csrs = h.get("csr_snapshot", [])
+            if not isinstance(csrs, list) or len(set(csrs)) != len(csrs):
+                raise ValueError("csr_snapshot must be a unique address list")
+            for address in csrs:
+                hexnum(address, 12)
+            if csrs and h["schema"] != "rvw.rvfi/2":
+                raise ValueError("CSR snapshots require rvw.rvfi/2")
             for k in ("isa", "core", "config", "elf"):
                 if not isinstance(h.get(k), str):
                     raise ValueError(f"missing or invalid C2 header {k}")
@@ -80,6 +87,43 @@ class Trace:
                         raise ValueError("register index exceeds 31")
                     if any(obj[k] >= 1 << (xlen//8) for k in ("mem_rmask", "mem_wmask")):
                         raise ValueError("memory mask exceeds XLEN bytes")
+                if "event" not in obj and self.header["schema"] == "rvw.rvfi/2":
+                    if type(obj.get("fd_valid")) is not bool:
+                        raise ValueError("fd_valid must be boolean")
+                    if type(obj.get("fd")) is not int or not 0 <= obj["fd"] < 32:
+                        raise ValueError("invalid FP destination")
+                    obj["fd_wdata"] = hexnum(obj["fd_wdata"], 64)
+                    for key, width in (("fflags", 5), ("fcsr", 8)):
+                        obj[key] = hexnum(obj[key], width)
+                    if obj["fflags"] != obj["fcsr"] & 31:
+                        raise ValueError("fflags and fcsr disagree")
+                elif "event" not in obj and any(k in obj for k in ("fd_valid", "fd_wdata", "fflags", "fcsr")):
+                    raise ValueError("FP fields require rvw.rvfi/2")
+                if "event" not in obj:
+                    snapshots = obj.get("csr_state", {})
+                    if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
+                        raise ValueError("csr_state must contain exactly the declared snapshot addresses")
+                    obj["csr_state"] = {k: hexnum(v, xlen) for k, v in snapshots.items()}
+                if "fault_access" in obj:
+                    if self.header["schema"] != "rvw.rvfi/2" or "event" in obj or not obj["trap"]:
+                        raise ValueError("fault_access requires a version 2 trap instruction")
+                    access = obj["fault_access"]
+                    keys = {"addr", "rmask", "wmask", "completed_rmask", "completed_wmask", "rdata", "wdata"}
+                    if not isinstance(access, dict) or set(access) != keys:
+                        raise ValueError("invalid fault_access fields")
+                    access["addr"] = hexnum(access["addr"], xlen)
+                    for key in ("rmask", "wmask", "completed_rmask", "completed_wmask"):
+                        if type(access[key]) is not int or not 0 <= access[key] < 1 << (xlen//8):
+                            raise ValueError("invalid fault-access mask")
+                    for direction in ("r", "w"):
+                        completed = access[f"completed_{direction}mask"]
+                        if completed & ~access[f"{direction}mask"]:
+                            raise ValueError("completed mask exceeds attempted mask")
+                        data = access[f"{direction}data"]
+                        if completed:
+                            access[f"{direction}data"] = hexnum(data, xlen)
+                        elif data is not None:
+                            raise ValueError("uncompleted access data must be null")
                 yield obj
             except (ValueError, KeyError, TypeError) as exc:
                 raise ValueError(f"C2 line {line}: {exc}") from exc

@@ -20,7 +20,7 @@ INSTRET = {0xb02, 0xc02, 0xb82, 0xc82}
 # per-bit state (last cycle set high, cycle it went low after that), never as a history.
 IRQ_INPUT_MASKS = {0x344: 0xa88, 0x144: 0x200}
 XRET = (0x30200073, 0x10200073)
-HEX_FIELDS = set(HEX) | {"cause", "tval"}
+HEX_FIELDS = set(HEX) | {"cause", "tval", "fd_wdata", "fflags", "fcsr"}
 # C2 lets the records of cycle N come before the irq event of cycle N, so the checker reads one
 # cycle at a time and applies its irq events before its other records. A real core retires a few
 # instructions per cycle; a trace with more records than this in one cycle is refused with an error
@@ -53,7 +53,13 @@ class ReferenceEnded(Exception):
 
 def c2_view(values):
     """A record or effect with C2 value fields as lowercase hex strings, like the trace."""
-    return {k: hex(v) if k in HEX_FIELDS and type(v) is int else v for k, v in values.items()}
+    result = {k: hex(v) if k in HEX_FIELDS and type(v) is int else v for k, v in values.items()}
+    if "csr_state" in result:
+        result["csr_state"] = {k: hex(v) for k, v in result["csr_state"].items()}
+    if "fault_access" in result:
+        result["fault_access"] = {k: hex(v) if k in ("addr", "rdata", "wdata") and v is not None else v
+                                  for k, v in result["fault_access"].items()}
+    return result
 
 
 def counter_read(insn):
@@ -124,6 +130,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     def result(status, **extra):
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
+                "state_coverage": {"trace_schema": trace.header["schema"],
+                                   "fp": trace.header["schema"] == "rvw.rvfi/2" and last_order is not None,
+                                   "csr_snapshot": trace.header.get("csr_snapshot", [])},
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
                 "trace_complete": ended, "end_status": end_status,
                 "last_order": last_order, "last_cycle": last_cycle, "pending_handler": after_trap,
@@ -224,7 +233,37 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
             expected_handler = event_prior_handler if represented_by_event else after_trap
             event_effect = None
             fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
+            if trace.header["schema"] == "rvw.rvfi/2":
+                state_fields = ["fd_valid", "fflags", "fcsr"]
+                if actual["fd_valid"] or expected.get("fd_valid"):
+                    state_fields += ["fd", "fd_wdata"]
+                missing = set(state_fields) - expected.keys()
+                if missing:
+                    raise ValueError(f"reference cannot check C2 state fields: {sorted(missing)}")
+                fields += state_fields
             diff = differences(actual, expected, fields)
+            if actual.get("csr_state"):
+                if not hasattr(model, "csr_snapshot"):
+                    raise ValueError("reference cannot check CSR snapshots")
+                snapshot = model.csr_snapshot(trace.header["csr_snapshot"])
+                expected["csr_state"] = snapshot
+                for address, value in actual["csr_state"].items():
+                    if address not in snapshot:
+                        raise ValueError(f"reference cannot observe CSR {address}")
+                    if value != snapshot[address]:
+                        diff[f"csr[{address}]"] = {"expected": hex(snapshot[address]), "actual": hex(value)}
+            if "fault_access" in actual:
+                from .fault import reference_fault
+                access = actual["fault_access"]
+                if access["completed_rmask"] or access["completed_wmask"]:
+                    raise ValueError("partial fault effects are unsupported by this reference interface")
+                if getattr(model, "name", "spike") != "spike":
+                    raise ValueError("reference cannot check fault-access records")
+                reference_access = reference_fault(expected, platform.xlen)
+                expected["fault_access"] = reference_access
+                for key, value in access.items():
+                    if value != reference_access[key]:
+                        diff[f"fault_access.{key}"] = {"expected": reference_access[key], "actual": value}
             # Trace quirk declared by the platform: mode reported after an xRET or trap took effect.
             # The next instruction's mode is still checked, so a wrong return mode is caught there.
             if ("mode" in diff and platform.mode_after_change
