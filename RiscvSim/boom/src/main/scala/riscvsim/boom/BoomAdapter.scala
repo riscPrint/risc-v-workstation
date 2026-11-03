@@ -58,7 +58,8 @@ object BoomAdapter extends CoreAdapter {
   private def report(key: ModelKey, work: File): SpinalReport[BoomSimTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
     val formal = new File(boomDir, "formal")
-    RiscvSimConfig.elaborate(key, work, SpinalBoomConfig()) {
+    RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
+      Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
