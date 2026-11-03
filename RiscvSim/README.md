@@ -168,7 +168,7 @@ checks cover only the selected tests and configuration. They do not prove the co
 - A concurrent failure can require a serial rerun. A failure that cannot be attributed stays inconclusive.
 - An abandoned simulation thread uses resources until the JVM exits.
 - The current BOOM checks cover `small`. They do not cover `medium`, `large`, `mega` or `giga`.
-- Interrupt stimulus comes from software writes to the CLINT and interrupt generator.
+- Software device stimulus and an inline cycle schedule are supported. See below.
 
 ## Tests
 
@@ -182,3 +182,44 @@ The suite covers the CLI, ELF handling, RVFI records, assertions, replay, output
 watchdogs and concurrent failure attribution. RTL identity tests cover monitor bytes and
 unsupported external data dependencies. Python launcher tests cover native identity,
 compiler invocation names, cache reuse, changed flags and cancellation.
+
+## Interrupt schedules
+
+BOOM and the VexRiscv example accept `--irq-schedule`:
+
+```sh
+RiscvSim/boom/run.sh run --elf RiscvSim/tests/programs/build/interrupt-timer \
+  --out /tmp/irq-timer --seed 1 --mem-latency 0 --rvfi-trace \
+  --irq-schedule '1:0x0,100:0x80,200:0x0,1000:0x80' --max-cycles 20000
+```
+
+Each pair gives a sampled cycle and the full input levels. Bits 3, 7, 9 and 11
+select software, timer, supervisor external and machine external inputs.
+A selected schedule replaces device-generated levels. C1 and replay keep the
+schedule. C2 records each driven change. New levels affect the next clock edge.
+The schedule does not change the RTL or the model cache key.
+
+`tests/programs/interrupt-*.S` keep interrupts masked during a fixed loop.
+They initialize writable status and trap-value CSRs before the loop.
+They then enable machine delivery, or enter S mode with SEIP delegated.
+The handler checks cause, EPC region and the cleared global enable bit.
+The regression also checks these values outside the program and compares the
+whole trace with Spike. The masked pulse and the later pending level are fixed
+before simulation. Trap timing does not select the expected window.
+
+Run the native regression with the core environment and RISC-V GCC on PATH:
+
+```sh
+RVW_INTERRUPT_RUNTIME=1 nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/interrupts/test_runtime.py -q --basetemp=/tmp/irq-regression
+```
+
+This runs eight BOOM jobs in one model. Set `RVW_HOME` to this checkout and
+`VEXRISCV` to its core checkout to also run eight VexRiscv jobs. The VexRiscv
+programs use RV32 instructions and omit PMP setup because that core has no PMP.
+Four masked runs per core end at their cycle limit.
+Their timeout is expected and is not a program pass. Logs, C1, C2 and comparison
+JSON stay in the selected temporary directory. The Python checker reports
+`consistent` only for its schedule and window checks. Spike supplies the separate
+instruction comparison. Missing bounds or trap evidence stays inconclusive.
+Sail cannot synchronize external inputs and refuses this comparison.

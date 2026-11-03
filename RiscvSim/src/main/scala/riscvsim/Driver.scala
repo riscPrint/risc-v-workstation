@@ -205,6 +205,7 @@ class Driver(val adapter: CoreAdapter) {
     val out = new File(job.out.getPath + "-replay")
     val parts = Seq(replayScript, "run", "--elf", job.elf.getPath, "--out", out.getPath, "--config", job.config,
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
+      job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -265,6 +266,7 @@ class Driver(val adapter: CoreAdapter) {
       "elf" -> job.elf.getPath, "elf_sha256" -> elfSha,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
+      "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
       "status" -> status.name,
       "fail_code" -> failCode.map(c => ujson.Num(c.toDouble)).getOrElse(ujson.Null),
       "message" -> message.map(ujson.Str).getOrElse(ujson.Null),

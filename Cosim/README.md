@@ -449,3 +449,13 @@ Both return a job ID. `job_status(wait_s=60)` returns the same JSON as the corre
 and synchronization limits described in the main README ("What match guarantees"): no FP
 registers, `fflags`, unread CSR side effects or unread memory; a matching prefix also returns
 `match`. It is not proof that the program passed: check `trace_complete` and `end_status`.
+
+## Adapter interrupt regression
+
+See [RiscvSim interrupt schedules](../RiscvSim/README.md#interrupt-schedules).
+`rvw/tests/interrupts/window_check.py` checks independently supplied cycle and
+PC bounds, input changes and the test program's trap-entry state. It does not
+replace Spike instruction comparison. Spike injection still uses C2 trap events;
+a Spike match alone does not prove legal interrupt timing. The regression checks
+both results. Missing independent bounds stays inconclusive. Sail still refuses
+external-input synchronization.

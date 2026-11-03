@@ -39,6 +39,7 @@ object BoomAdapter extends CoreAdapter {
   val boomDir: File = new File(sys.props.getOrElse("riscvsim.boom.dir",
     sys.env.getOrElse("SPINAL_BOOM", "."))).getCanonicalFile
 
+  override def irqInputMask: BigInt = 0xA88
   def core = "boom"
   val configs = Seq("small", "medium", "large", "mega", "giga")
   def xlen = 64
@@ -111,6 +112,8 @@ object BoomAdapter extends CoreAdapter {
     var rvfiCode = 0
 
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
+      require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
+        "this configuration has no SEIP input")
       val cd = dut.clockDomain
       cd.forkStimulus(10)
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
@@ -150,10 +153,11 @@ object BoomAdapter extends CoreAdapter {
         val stored = readLong(mtime)
         mtimeValue = (if (stored != mtimeValue) stored else mtimeValue) + 1
         mem.write(mtime, mtimeValue)
-        val mtipLevel = java.lang.Long.compareUnsigned(mtimeValue, readLong(mtimecmp)) >= 0
-        val msipLevel = (mem.readInt(msip) & 1) != 0
-        val meipLevel = (mem.readInt(intGen) & 1) != 0
-        val seipLevel = dut.io.interrupts.seip != null && (mem.readInt(intGen + 4) & 1) != 0
+        val scheduled = job.irqSchedule.map(_.levelsAt(ctl.cycle))
+        val mtipLevel = scheduled.map(_.testBit(7)).getOrElse(java.lang.Long.compareUnsigned(mtimeValue, readLong(mtimecmp)) >= 0)
+        val msipLevel = scheduled.map(_.testBit(3)).getOrElse((mem.readInt(msip) & 1) != 0)
+        val meipLevel = scheduled.map(_.testBit(11)).getOrElse((mem.readInt(intGen) & 1) != 0)
+        val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(intGen + 4) & 1) != 0)
         dut.io.interrupts.mtip #= mtipLevel
         dut.io.interrupts.msip #= msipLevel
         dut.io.interrupts.meip #= meipLevel

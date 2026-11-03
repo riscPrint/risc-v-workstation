@@ -60,7 +60,9 @@ for normal use. The adapter defaults to its own core checkout.
 
 The core is RV32IM with M/S/U CSRs, simple instruction and data buses, 16 MiB of
 RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or debug
-unit. SATP stays bare. Interrupt inputs stay low. Misaligned data access traps.
+unit. SATP stays bare. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP, SEIP
+and MEIP. The adapter records changes in C2. See
+[RiscvSim interrupt schedules](../../RiscvSim/README.md#interrupt-schedules). Misaligned data access traps.
 The only configuration is `rv32im`.
 
 The build compiles core sources and the generic RiscvSim sources in the adapter's

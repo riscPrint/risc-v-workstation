@@ -9,6 +9,7 @@ import scala.collection.mutable
 
 object VexAdapter extends CoreAdapter {
   type Model = SimCompiled[VexTop]
+  override def irqInputMask: BigInt = 0xA88
   def core = "vexriscv"
   val configs = Seq("rv32im")
   def xlen = 32
@@ -119,9 +120,15 @@ object VexAdapter extends CoreAdapter {
             }
           }
         }
+        var irqLevels = BigInt(-1)
         cd.onSamplings {
           ctl.tick()
-          if (ctl.cycle == 1) writer.foreach(_.irq(ctl.cycle, 0))
+          val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(BigInt(0))
+          dut.csr.timerInterrupt #= levels.testBit(7)
+          dut.csr.softwareInterrupt #= levels.testBit(3)
+          dut.csr.externalInterrupt #= levels.testBit(11)
+          dut.csr.externalInterruptS #= levels.testBit(9)
+          if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
           if (dut.traps.valid.toBoolean) {
             traps += 1
             val cause = dut.traps.cause.toBigInt

@@ -30,7 +30,7 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None) {
+                  wallTimeoutS: Option[Double] = None, irqSchedule: Option[InterruptSchedule] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata)
 }
 
@@ -50,6 +50,7 @@ trait CoreAdapter {
   def core: String
   def configs: Seq[String]
   def defaultConfig: String = configs.head
+  def irqInputMask: BigInt = 0
   def defaultMaxCycles: Long = 200000L
   /** ISA string for the RVFI trace header. */
   def isa(config: String): String
