@@ -226,9 +226,14 @@ class SourceMap:
     def location(self, fields):
         file = fields.get('f', fields.get('filename', ''))
         line = int(fields.get('l', fields.get('lineno', 0)))
-        for item in self.mapping:
-            if item['verilog'] == file and item['line_start'] <= line <= item.get('line_end', item['line_start']):
-                return {"file": item['scala'], "line": item['scala_line'], "method": "explicit-range"}
+        spans = [item for item in self.mapping if item['verilog'] == file
+                 and item['line_start'] <= line <= item.get('line_end', item['line_start'])]
+        if spans:
+            locations = {(item['scala'], item['scala_line']) for item in spans}
+            if len(locations) != 1:
+                return None
+            source, source_line = locations.pop()
+            return {"file": source, "line": source_line, "method": "explicit-range"}
         if fields.get('t') == 'toggle':
             signal = re.sub(r'\[\d+\]$', '', fields.get('o', '').split(':')[0])
             location = self.signals.get((fields.get('page', '').removeprefix('v_toggle/'), signal))

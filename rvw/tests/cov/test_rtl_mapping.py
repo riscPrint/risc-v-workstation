@@ -67,3 +67,17 @@ def test_native_fsm_pages_group_by_module():
     result = report({'points': points, 'tests': {}})
     assert result['modules']['Unit']['total'] == 2
     assert set(result['module_types']['Unit']) == {'fsm_arc', 'fsm_state'}
+
+
+def test_conflicting_hdl_spans_do_not_bypass_hgldd_ambiguity(tmp_path):
+    def document(line):
+        return {'HGLDD': {'file_info': ['Unit.scala', 'Unit.v']}, 'objects': [
+            {'module_name': 'Unit', 'port_vars': [
+                {'value': {'sig_name': 'state'},
+                 'hgl_loc': {'file': 1, 'begin_line': line},
+                 'hdl_loc': {'file': 2, 'begin_line': 10}}]}]}
+    path = tmp_path / 'unit.dd'
+    path.write_text(json.dumps([document(9), document(20)]))
+    source = SourceMap(hgldd=[path])
+    assert source.location({'t': 'toggle', 'page': 'v_toggle/Unit',
+                            'o': 'state', 'f': 'Unit.v', 'l': '10'}) is None
