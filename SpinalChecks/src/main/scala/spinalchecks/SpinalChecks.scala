@@ -282,14 +282,12 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         if (n == 0) base else s"${base}_$n"
       }
       // Cycle counter for Monitor mode, created on first use in this component.
-      private var cycleCounter: UInt = null
-      def cycles: UInt = {
-        if (cycleCounter == null) {
-          cycleCounter = Reg(UInt(40 bits)).init(0).setName("chk_cycle")
-          cycleCounter := cycleCounter + 1
-        }
-        cycleCounter
-      }
+      private val cycleCounters = mutable.HashMap[ClockDomain, UInt]()
+      def cycles: UInt = cycleCounters.getOrElseUpdate(ClockDomain.current, {
+        val counter = Reg(UInt(40 bits)).init(0).setName(uniqueName("chk_cycle"))
+        counter := counter + 1
+        counter
+      })
       /** For a register without a reset value: True once it has been written after reset, so the check
         * covers every written value, the first one included, and never the power-up value of a register
         * that was not written (X in hardware; `rvw formal xprop` covers that).
@@ -354,10 +352,18 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         val fail = Bool().setName(base)
         fail := cond
         rec.fail = fail
+        rec.clockDomain = ClockDomain.current
         val loc = rec.location.map(l => new spinal.idslplugin.Location(l.file.stripSuffix(".scala"), l.line, 1)).getOrElse(implicitly[spinal.idslplugin.Location])
         if (cfg.mode != Mode.Monitor) {
-          if (rec.env && result.formal && cfg.envAsAssume) assume(!fail)(loc)
-          else assert(!fail, s"[spinalchecks] ${rec.id} $message" + rec.location.map(l => s" ($l)").getOrElse(""), cfg.severity)(loc)
+          def property(): Unit = {
+            if (rec.env && result.formal && cfg.envAsAssume) assume(!fail)(loc)
+            else assert(!fail, s"[spinalchecks] ${rec.id} $message" + rec.location.map(l => s" ($l)").getOrElse(""), cfg.severity)(loc)
+          }
+          val cd = ClockDomain.current
+          // Checks sample pre-edge values. Async reset changes state, not the check's sampling event.
+          if (result.formal && cd.config.resetKind == ASYNC)
+            cd.copy(config = cd.config.copy(resetKind = SYNC)).on { property() }
+          else property()
         }
         if (cfg.mode != Mode.Assert) {
           val fired = RegInit(False).setName(base + "_fired")
@@ -366,7 +372,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           when(fail && count =/= count.maxValue) { count := count + 1 }
           val first = Reg(UInt(40 bits)).init(0).setName(base + "_first")
           when(fail && !fired) { first := cycles }
-          when(fail && count < cfg.monitorReports) {
+          if (!result.formal) when(fail && count < cfg.monitorReports) {
             report(Seq(s"[spinalchecks] FIRE ${rec.id} at ", REPORT_TIME))(loc)
           }
           Seq(fired, count, first).foreach(s => s.simPublic().addTag(Verilator.public))
@@ -382,6 +388,17 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       val f = found(c)
       val path = paths(c)
       val isTop = c == top
+      val foreignRegisters = f.signals.exists(bt => bt.isReg && (bt.clockDomain ne c.clockDomain.get))
+      require(!foreignRegisters || f.streams.isEmpty,
+        s"SpinalChecks: component ${paths(c)} has streams and registers in another clock domain; " +
+        "put each stream in a component with its own clock domain")
+      val ambiguousIndex = f.muxes.keys.exists { case (sel, _) => sel match {
+        case b: BaseType if b.isReg => false
+        case _ => true
+      }}
+      require(!foreignRegisters || !ambiguousIndex,
+        s"SpinalChecks: component ${paths(c)} has a combinational Vec selector and multiple clock domains; " +
+        "put the index check in a component with its own clock domain")
       val ctx = ctxOf(c)
       import ctx._
       // Object identities, distinct within the component before any id is formed: two unnamed
@@ -611,7 +628,11 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               w
           }
           rec.signals("index") = Seq(idx)
-          emit(rec, active(ClockDomain.current) && armed(sel) && idx >= U(n))
+          val cd = sel match {
+            case b: BaseType if b.isReg => b.clockDomain
+            case _ => ClockDomain.current
+          }
+          cd.on { emit(rec, active(cd) && armed(sel) && idx >= U(n)) }
         }
       }
 
@@ -631,9 +652,11 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
             s"${e.spinalEnum.getClass.getSimpleName.stripSuffix("$")} ${elements.size} states, ${enc.getClass.getSimpleName.stripSuffix("$")} encoding, $width bits${unresetNote(e)}")
           rec.signals("state") = Seq(e)
           if (rec.inserted) todo += { () =>
-            val bits = e.asBits
-            val legal = elements.map(el => bits === B(enc.getValue(el), width bits)).reduce(_ || _)
-            emit(rec, active(ClockDomain.current) && armed(e) && !legal)
+            e.clockDomain.on {
+              val bits = e.asBits
+              val legal = elements.map(el => bits === B(enc.getValue(el), width bits)).reduce(_ || _)
+              emit(rec, active(e.clockDomain) && armed(e) && !legal)
+            }
           }
         }
       }
@@ -650,6 +673,9 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       require(owners.size == 1, s"SpinalChecks progress '${p.name}': matches span components ${owners.map(paths).mkString(", ")}")
       val c = owners.head
       val sigs = matches.map(_._2)
+      require(!found(c).signals.exists(bt => bt.isReg && (bt.clockDomain ne c.clockDomain.get)),
+        s"SpinalChecks progress '${p.name}': component has multiple clock domains; " +
+        "put the progress signal in a component with its own clock domain")
       val allBool = sigs.forall(_.isInstanceOf[Bool])
       require(allBool || sigs.size == 1, s"SpinalChecks progress '${p.name}': several matches must all be Bools")
       val id = s"${Kind.Progress}:${qualify(paths(c), p.name)}"

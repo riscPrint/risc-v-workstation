@@ -4,7 +4,8 @@
 state. `xprop` checks whether unknown state can reach selected signals. See
 [SpinalChecks](../../../../SpinalChecks/README.md) for commands and limits.
 
-Sequential flows require one rising-edge clock and synchronous state controls. Asynchronous
+By default, sequential flows require one rising-edge clock and synchronous state controls.
+BMC also supports the explicit sampled event model below. Asynchronous
 reset/load/set/clear controls and latches are refused. A result applies only to the selected depth,
 input ties, assumptions, and reset settings. Missing replay state starts free and can cause
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
@@ -72,7 +73,7 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
   check those edits.
 - All three flows check state cells in every elaborated module after `hierarchy -check -top`
   and `proc`, before `prep`, flattening, ties or state loading can remove them. The check
-  uses the proof's defines. Async flip-flops, latches and unsupported state cell types,
+  uses the proof's defines. By default, async flip-flops, latches and unsupported state cell types,
   including fine-grained gate cells, cause exit 2 with no `result.json`. A tied inactive
   reset or unused state does not bypass this check. Asynchronous memory reads remain
   supported; memory async reset ports must be tied to zero. `rvw cov prove` uses the same
@@ -234,3 +235,47 @@ real core to make a core-context claim. Check payload validity separately.
 A signal with no X/Z observation stays `inconclusive`. This run cannot prove
 `unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
 The command returns 1 for all results. It never reports a design pass.
+
+## Sampled event BMC
+
+Use `bmc --event-model` for sampled events on `--clock`. Add each extra top input
+with `--event-clock PORT`. This option also enables the event model. Add
+`--async-reset` separately to allow `$adff` and `$adffe` constant-value reset cells.
+These controls remain refused without both options. MCP `formal_bmc` accepts
+`event_model`, `event_clock` and `async_reset`.
+
+SBY runs with `multiclock on` and applies Yosys `clk2fflogic`. One solver step
+is one global input sample. Each declared clock can change independently.
+No rate, phase, fairness or clock relationship is assumed. Simultaneous edges
+and clocks that stop are included. This model covers arbitrary sampled clock
+rates. It does not model analog metastability, propagation delay, or pulses
+that rise and fall entirely between two samples.
+
+An asynchronous reset acts at a sample even when no clock rises. Free reset
+inputs can make inter-edge pulses. The optional reset harness still counts
+`--reset-cycles` rising edges of the primary clock. It then holds reset inactive,
+unless `--free-reset` allows later pulses. Other reset inputs remain free unless
+tied. This sequence does not ensure that every other domain sees a clock edge
+during reset. State without RTL initialization remains free.
+
+The result records `event_model`, declared clocks, relationships, async-reset
+support and the solver-step meaning. Failure `step` is a global sample index.
+Failure `cycle` is null because no common cycle number exists.
+A bounded pass applies only to this sampled model and depth.
+
+Undeclared, derived, gated, constant and falling-edge clocks remain refused.
+Clock ports cannot be tied or used as the harness reset. Async loads, set/clear
+cells, latches, fine-grained state and memory async reset controls remain refused.
+The pre-optimization probes also check unused and tied state.
+`from-sim`, X flows and native replay retain the original one-clock restrictions.
+Related clocks with declared ratios or phase constraints are not yet supported.
+
+Small pass/fail designs and refusal cases are in
+[SpinalChecks/examples/events](../../../../SpinalChecks/examples/events).
+Tests check the independent-clock false-pass case and a pulse that clears an
+async-reset register without clearing a synchronous-reset register.
+
+Formal generated assertions sample on clock edges even when the state has an async
+reset. Reset still gates the check. Formal mode omits monitor text reports.
+Raw assertions with an async reset in their sensitivity list remain refused.
+Their trigger semantics are outside this increment.
