@@ -2,7 +2,9 @@
 
 IDE tools to make RISC-V development easier. SpinalHDL gets first-class treatment, however should be easy to extend to other HDLs. Many features do not rely on SpinalHDL.
 
-The RISC-V core these tools are built alongside lives in [riscPrint/spinal-boom](https://github.com/riscPrint/spinal-boom).
+The BOOM core these tools use is in the private repository
+[riscPrint/spinal-boom](https://github.com/riscPrint/spinal-boom). Access is optional.
+For a public core example, use [examples/vexriscv](examples/vexriscv/).
 
 Start with [AGENTS.md](AGENTS.md) (layout, commands, rules), [ROADMAP.md](ROADMAP.md) (plan, and where each area stands against commercial EDA tools) and [TODO.md](TODO.md) (the open GitHub issues, by area).
 
@@ -116,8 +118,12 @@ Each tool has its own README with build and usage instructions. SpinalBlocks dep
 - Shared formats stay in `docs/PLATFORM_CONTRACTS.md`. Core details stay in adapters.
 - Heavy jobs use the machine-wide lock. Timeout and cancellation stop the process group.
 - [Cosim/README.md](Cosim/README.md) is the canonical co-simulation guide.
-- Current gaps stay in [TODO.md](TODO.md). Git history retains past review records.
+- Current gaps stay in [TODO.md](TODO.md). Review results belong in issues and pull requests.
 
 ## History
 
-SpinalWaves and SpinalTrace were separate repositories; their full histories were merged in with `git subtree`. SpinalBlocks starts with a single import commit.
+SpinalWaves and SpinalTrace started as separate ports. This checkout does not
+retain their full import histories or past review reports. Upstream revisions
+and local patches are listed in
+[SpinalWaves Rust porting notes](SpinalWaves/docs/RUST_PORTING.md) and
+[SpinalTrace porting notes](SpinalTrace/PORTING_NOTES.md).

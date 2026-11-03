@@ -4,7 +4,7 @@
 
 | part | upstream | how it was used |
 |---|---|---|
-| `spinaltrace-rs/`, `cli/`, `gui/` | [jarlb/chiseltrace](https://github.com/jarlb/chiseltrace) `f4bf63ab036181ca9a37d1f4b2779569ab09b5a2` (Apache-2.0, Jarl Brand) | forked; imported verbatim in the first commit, Spinal patches in later commits (listed below, marked `SPINALTRACE:` in the Rust sources) |
+| `spinaltrace-rs/`, `cli/`, `gui/` | [jarlb/chiseltrace](https://github.com/jarlb/chiseltrace) `f4bf63ab036181ca9a37d1f4b2779569ab09b5a2` (Apache-2.0, Jarl Brand) | forked from this upstream revision; local patches are listed below and marked `SPINALTRACE:` in the Rust sources. This checkout does not retain a pristine import commit |
 | Chisel-side PDG builder | [jarlb/chisel](https://github.com/jarlb/chisel) branch `chiseltrace` `8cc6ea6b` (`ChiselTracePDGBuilder.scala`, `ProgramDependencyGraph.scala`, `BuildProgramDependencyGraph.scala`) | **re-implemented** for the Spinal netlist (`spinaltrace/src/main/scala/spinaltrace/`), same output format and naming conventions; no code copied |
 | tywaves-rs | jarlb/tywaves-rs `215ff16` as vendored and patched by SpinalWaves | used from `../SpinalWaves/third_party/tywaves-rs` (no copy here) |
 | naming / locations / HGLDD | SpinalWaves `spinalwaves` library | `HglNaming`, `SourceLocator.fromFrame`, `SpinalWaves.elaborateWithLocations`, `SpinalWavesSim`, `HglddEmitter`, `SimLayout` |

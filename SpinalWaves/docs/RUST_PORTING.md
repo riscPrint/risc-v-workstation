@@ -19,8 +19,9 @@ are in `docs/CONTRACT.md`.
 The submodule commits are the ones pinned by surfer-tywaves `5a8755b`. The `tywaves-rs`
 submodule of surfer-tywaves (also pinned at `215ff16`) is not copied; surfer uses
 `third_party/tywaves-rs` instead. Copies exclude `.git` and build output; nothing else was
-removed. The first two commits of each copy (`Vendor ... (pristine)`) are byte-for-byte
-upstream, so `git diff <pristine commit> -- <dir>` shows every local change.
+removed at import. This checkout does not retain pristine import commits.
+To inspect local changes, compare each directory with its upstream revision in
+the table above. The sections below describe the local patches.
 
 ## Patches
 
