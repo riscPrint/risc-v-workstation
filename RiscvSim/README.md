@@ -282,3 +282,23 @@ to select kinds from `line,user,toggle,expr,fsm`. The C1 model and replay record
 the resolved list. Runs with different lists have different point universes.
 Use the native `-V` version: an installed Perl launcher can report a stale
 version with `--version`.
+
+### WFI wake test
+
+`tests/programs/wfi-timer.S` enables MTIP and executes WFI in a loop.
+It accepts early WFI return. It requires no minimum sleep time.
+The test drives MTIP after cycle 1000 with the schedule from #47.
+It checks the independent trap window, entry CSR state and program completion.
+It also compares the instruction trace with Spike.
+
+```sh
+RVW_WFI_RUNTIME=1 RVW_HOME="$PWD" VEXRISCV=/path/to/VexRiscv \
+  nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices/test_wfi_runtime.py -q
+```
+
+Each core runs at most 20000 cycles. The wall limit is 120 seconds after
+simulation starts. The outer process limit includes lock wait and compilation.
+The adapters hold their normal core and sbt locks.
+This test does not check physical clock stop, privilege traps, debug wake,
+or local reset. Those need adapter observations and project contracts.

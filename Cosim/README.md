@@ -560,3 +560,74 @@ external-input synchronization.
 FP state: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10). Unread CSR effects: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87). Faulting accesses: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Hypervisor state: [#114](https://github.com/riscPrint/risc-v-workstation/issues/114). Debug state: [#136](https://github.com/riscPrint/risc-v-workstation/issues/136). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75). WFI: [#149](https://github.com/riscPrint/risc-v-workstation/issues/149).
 
 Retained limit: The comparison matrix bounds every match. Synchronization is not a timing or device proof. Little-endian scalar C2 evidence, refused unknown input structures and incomplete runtime dependency capture remain explicit restrictions.
+## Reference interrupt devices
+
+`rvw.cosim.devices.Plic` is a deterministic level-triggered PLIC reference.
+`PlicMap` takes absolute register addresses and dimensions from the caller.
+It supports priority, threshold, enable words, pending bits and claim/complete.
+Source zero is reserved. Equal priorities select the lowest source ID.
+Claim ignores the threshold. Completion reopens the level gateway.
+Calls form one ordered sequence. Apply concurrent inputs in a declared order.
+Unmapped or unsupported access widths raise `ValueError`.
+
+Run the directed suite and native Spike oracle:
+
+```sh
+RVW_DEVICE_SPIKE_PREFIX=/path/to/spike nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices -q
+```
+
+The prefix must have matching Spike headers and libraries. The tests compile
+`spike_devices.cc` and use Spike's `plic_t` directly. The oracle uses two harts
+with M/S contexts. Native oracle tests skip when the prefix is absent.
+The Python model has global pending state and level gateways. Spike's device
+has its own context bookkeeping. Oracle tests cover only the common sequence
+in the test. They do not establish equivalence for all context races.
+These models do not connect an RTL bus or establish DUT device coverage.
+The current BOOM and VexRiscv adapters do not implement a PLIC.
+
+### Decisions and limits
+
+Keep addresses and context dimensions in project data or caller data.
+Keep reference-device tests separate from instruction co-simulation.
+Do not use a DUT MMIO read as the expected device state.
+Edge gateways, bus errors, asynchronous CDC and arbitrary PLIC register WARL
+behavior are outside this model. `max_priority` must be a contiguous low-bit mask.
+
+### Timer and software interrupts
+
+`Timer(TimerMap.from_dict(data['timer']))` loads a declared map from JSON.
+See `examples/boom/devices.json` and `examples/vexriscv/devices.json`.
+The examples declare reference maps. They do not install devices in the adapters.
+BOOM's timer addresses match its current memory map. Its `intGen` at
+`0x0c000000` is not a PLIC. Do not replace it with the reference PLIC implicitly.
+VexRiscv has only scheduled interrupt inputs and no MMIO timer device.
+
+`Timer` supports CLINT and relocated ACLINT MTIMER/MSWI registers, one compare
+and software register per declared hart. Call `tick(n)` to advance time.
+Use aligned 32-bit split accesses or aligned 64-bit timer accesses.
+Software registers retain bit zero only. IRQ bit 3 is MSIP; bit 7 is MTIP.
+MTIP asserts at unsigned `mtime >= mtimecmp`. Time wraps at 64 bits.
+Reset values come from project data. They are not architectural reset guarantees.
+The native oracle compares CLINT accesses, split writes and two-hart IRQ state
+with Spike's `clint_t`. Relocated ACLINT accesses have model unit tests only.
+ACLINT SSWI, bus timing and a native ACLINT oracle remain unsupported.
+
+### Reset state observer
+
+`rvw.cosim.reset.check_reset` checks samples against `ResetContract`.
+Supply expected state values and masks from the project's reset contract.
+Supply the valid outputs that must stay low during reset.
+Capture an asserted sample and a released sample from the same DUT instance.
+Select the post-release state-check boundary before the run.
+Check each cold, warm, local or repeated pulse separately. Warm and local
+retention values must come from the project. The observer does not choose them.
+
+The result is `consistent`, `mismatch` or `inconclusive`.
+Missing state, output values, pulse evidence or contract gives `inconclusive`.
+A measured conflicting value gives `mismatch`.
+The observer does not assert reset or prove that an adapter sampled a DUT.
+`test_reset.py` checks observer fixtures and repeated reference-device reset
+while IRQs and a PLIC claim are active. These are not RTL reset results.
+Real core reset during bus, trap and debug activity remains unsupported here.
+Do not use simulator initialization as a reset sample.

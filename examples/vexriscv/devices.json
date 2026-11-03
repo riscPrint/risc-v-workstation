@@ -1,0 +1,25 @@
+{
+  "description": "Reference device map. Not connected to RTL by this file. VexRiscv adapter has no MMIO interrupt device.",
+  "timer": {
+    "mtime": 33603576,
+    "mtimecmp": [
+      33570816
+    ],
+    "msip": [
+      33554432
+    ],
+    "reset_mtime": 0,
+    "reset_mtimecmp": 18446744073709551615
+  },
+  "plic": {
+    "priority": 201326592,
+    "pending": 201330688,
+    "enable": 201334784,
+    "enable_stride": 128,
+    "context": 203423744,
+    "context_stride": 4096,
+    "sources": 63,
+    "contexts": 2,
+    "max_priority": 7
+  }
+}

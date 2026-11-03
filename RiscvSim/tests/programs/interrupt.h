@@ -26,9 +26,11 @@ _start:
   li t0, (1 << IRQ_CODE)
   csrw mie, t0
   /* Input can be pending here, but global enable stays low. */
+#ifndef WFI_TEST
   li t2, 1000
 1: addi t2, t2, -1
   bnez t2, 1b
+#endif
 #ifdef DELEGATED
   la t0, irq_wait
   csrw mepc, t0
@@ -39,6 +41,9 @@ _start:
   csrsi mstatus, 8
 #endif
 irq_wait:
+#ifdef WFI_TEST
+  wfi
+#endif
   addi s0, s0, 1
   j irq_wait
 irq_wait_end:
