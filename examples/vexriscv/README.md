@@ -117,3 +117,10 @@ Retained limit: The documented ISA, adapter and validation subset applies only t
 The [cocotb example](cocotb/README.md) generates a small counter and the upstream
 PMP address unit. It runs both with Icarus and Verilator through `rvw regress
 cocotb`. The test bindings stay outside the generic library.
+
+## SoC map
+
+`soc.json` describes this example's simulation map and reference policies.
+Run `rvw soc generate soc.json --out /tmp/vexriscv-soc --json` from this folder.
+See the [format and limits](../../rvw/src/rvw/soc/README.md).
+The existing adapter does not yet consume the generated simulation map.

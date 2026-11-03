@@ -36,3 +36,10 @@ cycle accuracy, hardware behavior or a C8 gate verdict.
 
 The [Konata event mapping](konata-events.md) lists the core-owned probe changes
 needed for measured stall causes and predicated-off commit counts.
+
+## SoC map
+
+`soc.json` describes this example's simulation map and reference policies.
+Run `rvw soc generate soc.json --out /tmp/boom-soc --json` from this folder.
+See the [format and limits](../../rvw/src/rvw/soc/README.md).
+The existing adapter does not yet consume the generated simulation map.

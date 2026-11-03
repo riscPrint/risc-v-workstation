@@ -1,0 +1,23 @@
+{
+  "schema": "rvw.soc-bindings/1",
+  "signals": [
+    {
+      "path": "iBus_cmd_payload_pc",
+      "width": "address_bits"
+    },
+    {
+      "path": "dBus_cmd_payload_address",
+      "width": "address_bits"
+    },
+    {
+      "path": "dBus_cmd_payload_data",
+      "width": 32
+    },
+    {
+      "path": "dBus_rsp_data",
+      "width": 32
+    }
+  ],
+  "decoders": [],
+  "bridges": []
+}
