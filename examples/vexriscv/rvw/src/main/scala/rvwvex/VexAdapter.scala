@@ -8,6 +8,7 @@ import vexriscv.plugin.RvfiPort
 import scala.collection.mutable
 
 object VexAdapter extends CoreAdapter {
+  override def freshInstancePerRun = true
   type Model = SimCompiled[VexTop]
   override def irqInputMask: BigInt = 0xA88
   def core = "vexriscv"

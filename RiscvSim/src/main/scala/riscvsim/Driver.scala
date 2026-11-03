@@ -84,6 +84,8 @@ class Driver(val adapter: CoreAdapter) {
   // ---------------------------------------------------------------- models
   /** `rtlDir`: a stable copy of the generated Verilog (content-addressed), which coverage files refer to. */
   case class Built(model: adapter.Model, index: AssertIndex, compileS: Double, cached: Boolean, rtlDir: Option[File], rtlSha256: Option[String], pdg: Option[File])
+  private val sessionId = java.util.UUID.randomUUID().toString
+  private val modelRuns = new ConcurrentHashMap[ModelKey, AtomicInteger]()
   private val slots = new ConcurrentHashMap[ModelKey, Object]()
   private val models = new ConcurrentHashMap[ModelKey, Built]()
   private val jvmCompileLock = new Object
@@ -363,6 +365,10 @@ class Driver(val adapter: CoreAdapter) {
     val details = outcome.details
     built.foreach { b =>
       details("model") = job.model.toJson
+      details("simulation_session") = ujson.Obj("id" -> sessionId,
+        "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
+        "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
+      details("execution_s") = st.wall.elapsedS
       details("model_compile_s") = math.round(b.compileS * 10) / 10.0
       b.rtlDir.foreach(d => details("rtl_dir") = d.getPath)
     }
@@ -569,6 +575,7 @@ class Driver(val adapter: CoreAdapter) {
           case "build" => cmdBuild(opts)
           case "run" => cmdRun(opts)
           case "run-many" => cmdRunMany(opts)
+          case "serve" => cmdServe(opts)
           case "info" => cmdInfo(opts)
           case "identity" => cmdIdentity(opts)
           case other => throw new Cli.UsageError(s"unknown command '$other'")
@@ -675,6 +682,36 @@ class Driver(val adapter: CoreAdapter) {
       case "error" => 2
       case _ => 1
     }
+  }
+
+  /** Serial JSONL requests. EOF is teardown. A stuck worker poisons the process. */
+  def serve(o: Map[String, String], lines: Iterator[String], reply: ujson.Obj => Unit): Int = {
+    if (!adapter.freshInstancePerRun) throw new Cli.UsageError("adapter does not declare a fresh instance for each run")
+    for (line <- lines if line.trim.nonEmpty) {
+      try {
+        val request = ujson.read(line)
+        if (request.obj.get("op").contains(ujson.Str("shutdown"))) {
+          reply(ujson.Obj("schema" -> "rvw.sim-server/1", "shutdown" -> true))
+          return 0
+        }
+        val job = Cli.job(o ++ Cli.fromJson(request), adapter, cwd)
+        checkOutputs(Seq(job))
+        val result = runJobs(Seq(job), 1).head
+        reply(ujson.Obj("schema" -> "rvw.sim-server/1", "result" -> result))
+        // The watchdog cannot kill a native simulation thread safely. Do not let
+        // later requests share a process that still has this run alive.
+        if (result("details").obj.get("abandoned").contains(ujson.Bool(true))) return 2
+      } catch {
+        case e: Exception => reply(ujson.Obj("schema" -> "rvw.sim-server/1", "error" -> e.getMessage))
+      }
+    }
+    0
+  }
+
+  def cmdServe(o: Map[String, String]): Int = {
+    val input = scala.io.Source.fromInputStream(System.in)
+    try serve(o, input.getLines(), r => NativeOutput.writeStdout(ujson.write(r) + "\n"))
+    finally input.close()
   }
 
   def cmdRunMany(o: Map[String, String]): Int = {

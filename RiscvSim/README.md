@@ -271,3 +271,30 @@ must come from Sail or the suite, never from a DUT run.
 Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
 
 Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.
+## Persistent request server
+
+`run.sh serve` reads one run-options JSON object per line from stdin. It writes
+one compact `rvw.sim-server/1` response per line to stdout. The response has
+`result` (a C1 result) or `error` (invalid request). CLI run options are defaults.
+Send `{"op":"shutdown"}` or close stdin to stop. Send SIGTERM or SIGINT to the
+launcher to cancel the current run and stop the whole process group.
+
+Adapters must opt in with `CoreAdapter.freshInstancePerRun = true`. They must
+construct a fresh native instance and fresh harness state for every run. The
+server refuses adapters without this declaration. BOOM and VexRiscv opt in.
+Other adapters report `reset: "adapter-defined"` in ordinary run metadata.
+
+The server handles requests in order. It retains compiled models. Each request
+uses a new native DUT instance and new adapter memory, random generator, device
+state and trace writer. The seed is a run input. C1 `details.simulation_session`
+records the process UUID, model run number, `reset: "new-native-instance"` and
+native cache-hit flag. Existing RTL and native hashes bind model identity.
+`details.execution_s` excludes model compilation. Source capture occurs at
+server start. Restart after source edits.
+
+A failed run can be followed by another request. A watchdog-abandoned worker
+poisons the server: it sends the timeout result and exits 2. It does not accept
+another request. JVM exit stops abandoned simulation threads. The launcher owns
+process-group teardown. There is no per-request cancellation that keeps the
+server alive. The server holds the adapter's core lock for its full life.
+

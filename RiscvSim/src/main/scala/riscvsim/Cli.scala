@@ -131,6 +131,7 @@ object Cli {
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
       |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--summary FILE] [--json] [defaults for every job...]
+      |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]
       |  run.sh info     [--json]
       |  Boolean flags accept =true, =false, =1 or =0 (case-insensitive). A bare flag means true.

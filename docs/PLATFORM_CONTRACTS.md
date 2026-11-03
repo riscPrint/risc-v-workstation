@@ -1021,3 +1021,19 @@ collection. Unreported targets retain their existing disposition.
 Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
 
 Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.
+### C1 persistent simulation session extension
+
+`serve` requires `CoreAdapter.freshInstancePerRun = true`. The adapter declares
+fresh DUT and harness state for each run. Other adapters cannot use `serve` and
+record `reset: "adapter-defined"` in ordinary run metadata.
+`serve` accepts JSONL run-option objects on stdin. Each response uses
+`schema: "rvw.sim-server/1"` and contains `result` (C1) or `error` (a string).
+`{"op":"shutdown"}` returns `shutdown: true` and ends the server. EOF also ends
+it. Cancellation ends the whole process group. An abandoned worker ends the
+server with exit 2 after its timeout response. Other run failures do not end it.
+C1 `details.simulation_session` has `id` (process UUID), `model_run` (one-based
+completed-run number per model), `reset: "new-native-instance"` and
+`verilator_cached` (native cache hit at model compilation). These fields are
+metadata. They do not prove reset equivalence. `details.execution_s` measures
+adapter execution after model readiness. Existing RTL, native and source
+identity fields still apply. Source edits require a server restart.
