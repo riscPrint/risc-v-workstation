@@ -315,3 +315,20 @@ evidence. Capacity is the declared outstanding resource limit.
 This is a bounded test, not an unbounded liveness proof.
 
 Run: `sbt -batch 'testOnly riscvsim.ProgressMonitorSpec'` with the `sbt` lock.
+
+## DMA memory agent
+
+`DmaAgent(backing, expected, snoop, capture)` operates on separate memory images.
+The backing image is device-visible storage. Expected bytes come from test
+stimulus. CPU writeback updates backing only after an accepted memory transfer.
+`read` compares backing bytes with expected bytes. `write` applies the device
+stimulus and byte mask to both images. The capture callback receives each accepted
+transaction. Add its sampled cycle with `MultiHartTrace.memory` in the adapter.
+Coherent requests require `DmaSnoop`. Its hooks must complete writeback before
+read and invalidation before write. The agent does not invent those responses.
+For noncoherent requests, the test must clean before device read and invalidate
+a CPU copy after device write. A stale CPU observation fails the cache checker.
+Concurrent CPU atomics need a project arbiter and captured serialization point;
+the agent has no implicit thread synchronization or atomic reference backend.
+
+Run: `sbt -batch 'testOnly riscvsim.DmaAgentSpec'` with the `sbt` lock.
