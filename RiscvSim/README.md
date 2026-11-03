@@ -271,3 +271,22 @@ must come from Sail or the suite, never from a DUT run.
 Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
 
 Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.
+### WFI wake test
+
+`tests/programs/wfi-timer.S` enables MTIP and executes WFI in a loop.
+It accepts early WFI return. It requires no minimum sleep time.
+The test drives MTIP after cycle 1000 with the schedule from #47.
+It checks the independent trap window, entry CSR state and program completion.
+It also compares the instruction trace with Spike.
+
+```sh
+RVW_WFI_RUNTIME=1 RVW_HOME="$PWD" VEXRISCV=/path/to/VexRiscv \
+  nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices/test_wfi_runtime.py -q
+```
+
+Each core runs at most 20000 cycles. The wall limit is 120 seconds after
+simulation starts. The outer process limit includes lock wait and compilation.
+The adapters hold their normal core and sbt locks.
+This test does not check physical clock stop, privilege traps, debug wake,
+or local reset. Those need adapter observations and project contracts.
