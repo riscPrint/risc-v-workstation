@@ -308,3 +308,72 @@ or local reset. Those need adapter observations and project contracts.
 See [the reusable ordering suites](tests/ordering/README.md). They build RV32/RV64
 ELFs, validate assertions on Spike, and produce C1 random-timing manifests.
 Reference and DUT results remain separate from ordering evidence.
+
+## Persistent request server
+
+`run.sh serve` reads one run-options JSON object per line from stdin. It writes
+one compact `rvw.sim-server/1` response per line to stdout. The response has
+`result` (a C1 result) or `error` (invalid request). CLI run options are defaults.
+Send `{"op":"shutdown"}` or close stdin to stop. Send SIGTERM or SIGINT to the
+launcher to cancel the current run and stop the whole process group.
+
+Adapters must opt in with `CoreAdapter.freshInstancePerRun = true`. They must
+construct a fresh native instance and fresh harness state for every run. The
+server refuses adapters without this declaration. BOOM and VexRiscv opt in.
+Other adapters report `reset: "adapter-defined"` in ordinary run metadata.
+
+The server handles requests in order. It retains compiled models. Each request
+uses a new native DUT instance and new adapter memory, random generator, device
+state and trace writer. The seed is a run input. C1 `details.simulation_session`
+records the process UUID, model run number, `reset: "new-native-instance"` and
+native cache-hit flag. Existing RTL and native hashes bind model identity.
+`details.execution_s` excludes model compilation. Source capture occurs at
+server start. Restart after source edits.
+C1 `execution_mode` is `server` for each server request and `process` for
+ordinary runs. Error and abandoned results also record this field.
+
+A failed run can be followed by another request. A watchdog-abandoned worker
+poisons the server: it sends the timeout result and exits 2. It does not accept
+another request. JVM exit stops abandoned simulation threads. The launcher owns
+process-group teardown. There is no per-request cancellation that keeps the
+server alive. The server holds the adapter's core lock for its full life.
+
+## Timing measurements
+
+`details.model_compile_s` measures the first model build in this JVM, including
+elaboration and native setup. `details.model_timing.elaboration_s` measures
+`RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
+It includes native compilation or cache lookup, workspace setup and loading.
+It is not a pure C++ compiler measurement. `details.execution_s` measures the
+adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+must be timed separately. Lock waits are not compiler time.
+
+Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example
+`--threads 2`, `-O3` or `--output-split 10000`. Existing native input capture
+includes these flags. A flag change gives a separate native cache identity.
+Keep the seed, ELF and memory latency fixed. Compare C2 bytes and terminal C1
+fields with a baseline. A faster run alone does not establish correctness.
+Compiler wrappers such as ccache can disable native capture. Check the result's
+`inconclusive` field before using it as evidence. Defaults remain unchanged.
+
+## From-reset replay checkpoints
+
+The native DUT and Spinal simulation scheduler cannot yet save live state.
+The first checkpoint increment is a portable replay descriptor:
+
+```sh
+python3 RiscvSim/scripts/replay-checkpoint.py save \
+  --result /tmp/first/result.json --cycle 50 --out /tmp/checkpoint.json
+# Run the same captured ELF from reset with the same options, then:
+python3 RiscvSim/scripts/replay-checkpoint.py verify \
+  --checkpoint /tmp/checkpoint.json --result /tmp/replay/result.json
+```
+
+The descriptor binds the original C1 and C2 bytes, model, native build, source,
+seed, timing inputs, IRQ schedule, terminal counters and selected trace suffix.
+Verification refuses changed original evidence, input identity changes and
+suffix differences. It reports `equivalent` only for the recorded replay suffix.
+It does not establish ISA correctness. Keep external effects disabled. This
+format supports only state derived from the captured ELF and C1 run options.
+It does not restore DUT, device, memory, scheduler or random-generator state.
+A replay still starts from reset. Native mid-run save/restore remains open.

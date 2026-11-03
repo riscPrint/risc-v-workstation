@@ -900,7 +900,7 @@ waive a new failure. Incomplete results are never cached. Source-based keys stil
 passes. Use `--no-cache` to request fresh simulations.
 RTL identity elaboration still runs. Reuse skips simulation for cached jobs.
 The runner sets `RVW_CAPTURE_SOURCE_ENV` to the configured `source_env` name.
-RiscvSim native identity namespace `native-inputs-v26` excludes that declared checkout selector
+RiscvSim native identity namespace `native-inputs-v27` excludes that declared checkout selector
 from native build environment keys. The RTL hash covers the selected design. Without this
 selector declaration, environment values stay in the native key. Other build environment
 values remain inputs. Source provenance retains the selected checkout path.
@@ -1587,3 +1587,39 @@ Its tool-local formats are `rvw.mmu/1` (scenario description),
 `rvw/src/rvw/regress/README.md`. Scenario bins are architectural-effect coverage.
 A declaration or generated program alone gives no coverage. PMA declarations
 are recorded inputs and do not imply PMA device observations.
+
+### C1 persistent simulation session extension
+
+`serve` requires `CoreAdapter.freshInstancePerRun = true`. The adapter declares
+fresh DUT and harness state for each run. Other adapters cannot use `serve` and
+record `reset: "adapter-defined"` in ordinary run metadata.
+`serve` accepts JSONL run-option objects on stdin. Each response uses
+`schema: "rvw.sim-server/1"` and contains `result` (C1) or `error` (a string).
+`{"op":"shutdown"}` returns `shutdown: true` and ends the server. EOF also ends
+it. Cancellation ends the whole process group. An abandoned worker ends the
+server with exit 2 after its timeout response. Other run failures do not end it.
+C1 `execution_mode` is `server` for server requests and `process` for ordinary
+runs. Error and abandoned results also retain this field.
+C1 `details.simulation_session` has `id` (process UUID), `model_run` (one-based
+completed-run number per model), `reset: "new-native-instance"` and
+`verilator_cached` (native cache hit at model compilation). These fields are
+metadata. They do not prove reset equivalence. `details.execution_s` measures
+adapter execution after model readiness. Existing RTL, native and source
+identity fields still apply. Source edits require a server restart.
+C1 `details.model_timing`, when present, records `elaboration_s` and
+`native_and_setup_s`. The latter includes native cache lookup, workspace setup
+and loading. Scala compilation and lock waits are outside these measurements.
+
+Native identity namespace `native-inputs-v27` also accepts numeric Verilator
+`--threads`, `--output-split` and `--output-split-cfuncs` options. Threads must be
+positive. Values contain at most nine decimal digits. Unknown options and file
+inputs still refuse capture. All exact option bytes remain identity inputs.
+### From-reset replay descriptor
+
+`rvw.replay-checkpoint/1` has `mode: "from-reset"`, a selected cycle, original
+C1 path and SHA-256, C2 SHA-256, input identity, trace suffix and descriptor `id`.
+The ID hashes the sorted compact JSON object without `id`. Verification rereads
+original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
+only that input identity, terminal result and suffix events match. It is not a
+live snapshot or an architectural correctness verdict. External effects are
+unsupported. Missing identity, changed evidence or differences exit 2.
