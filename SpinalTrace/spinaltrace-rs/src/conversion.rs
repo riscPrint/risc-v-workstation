@@ -14,7 +14,7 @@ pub fn dropped_probe_edges() -> usize {
 }
 
 /// Converts a (D)PDG in FIRRTL representation to Chisel representation based on FIRRTL source locator info.
-pub fn pdg_convert_to_source(pdg: ExportablePDG, verbose_name: bool, is_dpdg: bool) -> ExportablePDG {
+pub fn pdg_convert_to_source(mut pdg: ExportablePDG, verbose_name: bool, is_dpdg: bool) -> ExportablePDG {
     // NOTE: This function operates on a two-list representation of the PDG. It might be worthwhile to switch to a linked
     // memory representation in the future, as many of the operations performed here would be easier. Even just a simple
     // adjecency list representation would probably be a lot better than what it is now.
@@ -28,6 +28,7 @@ pub fn pdg_convert_to_source(pdg: ExportablePDG, verbose_name: bool, is_dpdg: bo
     // For example, also signals of type Bundle have the same source mapping to the definition of the entire bundle.
     // This will cause them to get grouped, which may not be desired.
 
+    pdg.accuracy.report("approximate", "Source grouping uses file and line; statements on one line can merge.");
     // First step is to make groups of vertices.
     let mut grouped_nodes: HashMap<(String, u32, i64), Vec<(ExportablePDGNode, usize)>> = HashMap::new();
     for (i, node) in pdg.vertices.iter().enumerate() {
@@ -39,11 +40,6 @@ pub fn pdg_convert_to_source(pdg: ExportablePDG, verbose_name: bool, is_dpdg: bo
         grouped_nodes.entry((node.file.clone(), node.line, group_timestamp)).or_default().push((node.clone(), i));
     }
 
-
-    // TODO: the bug comes from the fact that the timestamp is saturated to 0, so the grouper tries to group the initial value wire
-    // with other t=1 nodes, but there is no vertex reachability on the same timestamp, so it doesn't group properly.
-    // The solution would be to switch to i64 for timestamps (bad idea), or deploy a hotfix that would scan for non-chisel nodes at group time 1,
-    // then put them on group time 0 (also not great)
 
     // Performance optimization: Pre-compute mapping between edge.from and a list of edges.
     // It used to be pdg.edges.iter().filter(|r_e| r_e.from == traversed_edge.to && r_e.kind == PDGSpecEdgeKind::Data).cloned()).
@@ -511,7 +507,9 @@ pub fn pdg_convert_to_source(pdg: ExportablePDG, verbose_name: bool, is_dpdg: bo
         }
     }
 
+    if dropped > 0 { pdg.accuracy.report("incomplete", format!("{} probe edges have no source cause.", dropped)); }
     ExportablePDG {
+        accuracy: pdg.accuracy,
         vertices: new_pruned_verts,
         edges: remapped_edges
     }
@@ -610,7 +608,7 @@ mod tests {
     #[test]
     fn data_use_of_a_probe_is_rewired_to_the_probe_source() {
         // a -data-> probe -data-> b  must become  a -data-> b (it used to be dropped)
-        let pdg = ExportablePDG { vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_x"),
+        let pdg = ExportablePDG { accuracy: Default::default(), vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_x"),
                                                  node("A.scala", 12, "b")],
                                   edges: vec![edge(0, 1, PDGSpecEdgeKind::Data), edge(1, 2, PDGSpecEdgeKind::Data)] };
         let d = pdg_convert_to_source(pdg, false, true);
@@ -622,7 +620,7 @@ mod tests {
     #[test]
     fn probe_chains_and_conditional_uses_are_rewired() {
         // a -cond-> p1 -data-> p2 -data-> b, and p2 -data-> c
-        let pdg = ExportablePDG { vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_1"),
+        let pdg = ExportablePDG { accuracy: Default::default(), vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_1"),
                                                  node("A.scala", 12, "defnode_probe_2"), node("B.scala", 1, "b"),
                                                  node("C.scala", 1, "c")],
                                   edges: vec![edge(0, 1, PDGSpecEdgeKind::Conditional), edge(1, 2, PDGSpecEdgeKind::Data),
@@ -634,7 +632,7 @@ mod tests {
 
     #[test]
     fn edges_into_a_probe_without_sources_are_counted() {
-        let pdg = ExportablePDG { vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_x")],
+        let pdg = ExportablePDG { accuracy: Default::default(), vertices: vec![node("A.scala", 10, "a"), node("A.scala", 11, "defnode_probe_x")],
                                   edges: vec![edge(0, 1, PDGSpecEdgeKind::Data)] };
         let d = pdg_convert_to_source(pdg, false, true);
         assert_eq!(dropped_probe_edges(), 1);
@@ -645,7 +643,7 @@ mod tests {
     fn a_node_marked_by_several_index_edges_is_removed_once() {
         // x1 and x2 (same line as z) both index z through a probe: z is marked for removal twice.
         // Removing it twice deleted an unrelated vertex or panicked (out of bounds).
-        let pdg = ExportablePDG { vertices: vec![node("F.scala", 5, "x1"), node("F.scala", 5, "x2"),
+        let pdg = ExportablePDG { accuracy: Default::default(), vertices: vec![node("F.scala", 5, "x1"), node("F.scala", 5, "x2"),
                                                  node("F.scala", 6, "defnode_probe_i"), node("F.scala", 5, "z"),
                                                  node("G.scala", 1, "w")],
                                   edges: vec![edge(0, 2, PDGSpecEdgeKind::Index), edge(1, 2, PDGSpecEdgeKind::Index),
@@ -659,4 +657,21 @@ mod tests {
             assert!(has(&d, "x1", "w", PDGSpecEdgeKind::Data));
         }
     }
+    #[test]
+    fn signed_initial_timestamp_survives_source_grouping() {
+        let mut initial = node("F.scala", 10, "initial");
+        initial.timestamp = -1;
+        initial.clocked = false;
+        let mut next = node("F.scala", 10, "next");
+        next.timestamp = 0;
+        next.clocked = false;
+        let graph = ExportablePDG { accuracy: crate::pdg_spec::TraceAccuracy::exact(),
+            vertices: vec![initial, next], edges: vec![edge(1, 0, PDGSpecEdgeKind::Data)] };
+        let grouped = pdg_convert_to_source(graph, false, true);
+        assert_eq!(grouped.vertices.len(), 2);
+        assert!(grouped.vertices.iter().any(|v| v.timestamp == -1));
+        assert!(grouped.vertices.iter().any(|v| v.timestamp == 0));
+        assert_eq!(grouped.accuracy.status, "approximate");
+    }
+
 }

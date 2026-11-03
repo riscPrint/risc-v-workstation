@@ -149,3 +149,39 @@ Timestamps (as in ChiselTrace): a statement activated in cycle `t` (cycle 0 = be
 edge, cycle `t` ends at rising edge `t+1`) is labelled `t` if clocked and `t-1` if combinational; both
 labels mean "the value seen during cycle `t+1`". Reset values applied at t=0 are labelled -1. The GUI
 displays `timestamp + 1`.
+
+## Accuracy contract (formatVersion 2)
+
+Extraction writes `accuracy: {status, reasons}` beside `vertices` and `edges`.
+The Rust exports and slice JSON use the same field. The GUI shows it above the graph.
+`exact` means no known extraction or replay limit applies. `approximate` means the
+result can include extra causes or merge source statements. `incomplete` means a
+needed cause or its timing can be missing. Incomplete takes priority over approximate.
+The status covers the whole design. It is not a proof of the selected dependency path.
+
+All extraction warnings make the result incomplete. Legacy extraction metadata,
+missing metadata, missing source locations, unknown sampled values and missing VCD predicates also make it
+incomplete. A missing reset signal is an error. Source conversion always reports
+approximate because file and line do not identify separate statements on one line.
+Dropped probe edges make conversion incomplete. Conversion cannot improve accuracy.
+Low-level dynamic exports without replay metadata default to incomplete.
+
+The supported timing subset has one rising-edge clock, with no clock enable or soft
+reset. Synchronous and asynchronous primary resets use the existing pre-edge replay
+rule. Other domains, falling edges, enables and soft resets report incomplete.
+A clock override does not remove these limits.
+
+Memory attribution supports bounded, equal-width, unmasked synchronous writes and
+asynchronous or synchronous reads. Write masks, mixed-width ports, coarse memories
+(above `maxMemWords`, default 4096), and asynchronous writes report incomplete.
+Dynamic partial writes report incomplete: only 16 providers survive, and signal
+criteria select the latest provider. Fixed partial writes report approximate because
+overlapping ranges retain conservative providers and signal criteria select one.
+
+Unsupported switch keys can omit branches and report incomplete. Anonymous control
+expressions conservatively include branches and report incomplete. Formal expressions
+and analog/inout signals have no supported attribution semantics. They report incomplete
+when found. Unknown source causes remain explicit in the reasons.
+
+Disabling replay of a reset recorded in the design reports incomplete. Data-only
+traces also report incomplete because they omit control and index causes.

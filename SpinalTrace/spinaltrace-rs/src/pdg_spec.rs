@@ -4,6 +4,8 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PDGSpec {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accuracy: Option<TraceAccuracy>,
     pub vertices: Vec<PDGSpecNode>,
     pub edges: Vec<PDGSpecEdge>,
     pub predicates: Vec<PDGSpecNode>,
@@ -15,7 +17,7 @@ pub struct PDGSpec {
 
 impl PDGSpec {
     pub fn _empty() -> Self {
-        PDGSpec { vertices: vec![], edges: vec![], predicates: vec![], cfg: vec![], spinaltrace: None }
+        PDGSpec { accuracy: None, vertices: vec![], edges: vec![], predicates: vec![], cfg: vec![], spinaltrace: None }
     }
 }
 
@@ -172,28 +174,78 @@ pub struct CFGCaseKey {
     pub signal: Option<String>,
 }
 
+/// Accuracy applies to the whole design, including paths outside the selected criterion.
+/// Missing metadata must not imply an exact result.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct TraceAccuracy {
+    pub status: String,
+    pub reasons: Vec<String>,
+}
+
+impl Default for TraceAccuracy {
+    fn default() -> Self {
+        Self { status: "incomplete".into(), reasons: vec!["Accuracy metadata is unavailable.".into()] }
+    }
+}
+
+impl TraceAccuracy {
+    pub fn exact() -> Self { Self { status: "exact".into(), reasons: vec![] } }
+    pub fn report(&mut self, status: &str, reason: impl Into<String>) {
+        if status == "incomplete" || self.status == "exact" { self.status = status.into(); }
+        let reason = reason.into();
+        if !self.reasons.contains(&reason) { self.reasons.push(reason); }
+    }
+    pub fn from_spec(pdg: &PDGSpec) -> Self {
+        let mut out = pdg.accuracy.clone().unwrap_or_else(Self::exact);
+        match &pdg.spinaltrace {
+            Some(m) => {
+                if m.format_version < 2 { out.report("incomplete", "Legacy extraction has no completeness contract."); }
+                for w in &m.warnings { out.report("incomplete", w.clone()); }
+                if m.clock_domains.len() > 1 { out.report("incomplete", "Multiple clock domains are not modeled."); }
+                for cd in &m.clock_domains {
+                    if cd.clock_enable.is_some() { out.report("incomplete", "Clock enables are not modeled."); }
+                    if cd.soft_reset.is_some() { out.report("incomplete", "Soft resets are not modeled."); }
+                }
+            }
+            None => out.report("incomplete", "Extraction metadata is unavailable."),
+        }
+        for v in &pdg.vertices {
+            if let Some(range) = &v.assign_range {
+                if range == "dyn" { out.report("incomplete", "Dynamic partial writes retain at most 16 providers; a signal criterion selects only the latest provider."); }
+                else { out.report("approximate", "Partial writes use conservative range providers; a signal criterion selects only the latest provider."); }
+            }
+            if v.file.is_empty() || v.line == 0 { out.report("incomplete", "Some source causes have no source location."); }
+        }
+        out
+    }
+}
+
 /// A format of the PDG that allows for storage and export of additional information.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExportablePDG {
+    #[serde(default)]
+    pub accuracy: TraceAccuracy,
     pub vertices: Vec<ExportablePDGNode>,
     pub edges: Vec<ExportablePDGEdge>
 }
 
 impl ExportablePDG {
     pub fn empty() -> Self {
-        ExportablePDG { vertices: vec![], edges: vec![] }
+        ExportablePDG { accuracy: TraceAccuracy::default(), vertices: vec![], edges: vec![] }
     }
 }
 
 impl From<PDGSpec> for ExportablePDG {
     fn from(value: PDGSpec) -> Self {
-        ExportablePDG { vertices: value.vertices.into_iter().map(|v| v.into()).collect(),
+        ExportablePDG { accuracy: TraceAccuracy::from_spec(&value), vertices: value.vertices.into_iter().map(|v| v.into()).collect(),
             edges: value.edges.into_iter().map(|e| e.into()).collect() }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExportableSlice {
+    #[serde(default)]
+    pub accuracy: TraceAccuracy,
     pub statements: Vec<ExportableSliceStatement>
 }
 

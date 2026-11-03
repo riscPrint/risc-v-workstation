@@ -4,7 +4,7 @@
 use std::{fs::{read_to_string, File}, io::BufWriter, path::PathBuf};
 use anyhow::Result;
 use clap::{Args as ClapArgs, Parser, Subcommand};
-use spinaltrace_rs::{conversion::pdg_convert_to_source, graphbuilder::{GraphBuilder, GraphProcessingType, ResetKind, StopAt}, pipeline::{self, parse_reset_kind, TraceRequest}, slicing::{pdg_slice, write_dynamic_slice, write_static_slice}, util::parse_criterion};
+use spinaltrace_rs::{conversion::pdg_convert_to_source, graphbuilder::{GraphProcessingType, ResetKind, StopAt}, pipeline::{self, parse_reset_kind, TraceRequest}, slicing::{pdg_slice, write_static_slice}, util::parse_criterion};
 use spinaltrace_rs::graphbuilder::CriterionType;
 use spinaltrace_rs::pdg_spec::PDGSpec;
 use serde::Deserialize;
@@ -169,13 +169,8 @@ fn main() -> Result<()> {
         }
         Commands::DynSlice { trace, output_path } => {
             let req = trace.request(GraphProcessingType::Full);
-            let pdg = pipeline::read_pdg(&req.pdg_path)?;
-            for w in pipeline::design_warnings(&pdg) { eprintln!("warning: {}", w); }
-            let (signals, _) = pipeline::resolve_signals(&pdg, &req);
-            let criterion = pipeline::resolve_criterion(&pdg, &req.criterion);
-            let mut builder = GraphBuilder::with_signals(&req.vcd_path, signals, pdg)?;
-            let dpdg = builder.process(&criterion, req.max_timesteps, GraphProcessingType::Full)?;
-            write_dynamic_slice(&dpdg, output_path)?;
+            let graph = pipeline::trace(&req)?;
+            write_static_slice(&graph, output_path)?;
         }
     }
 

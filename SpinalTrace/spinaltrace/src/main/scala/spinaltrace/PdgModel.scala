@@ -126,6 +126,12 @@ object PdgModel {
   }: _*)
 
   def toJson(pdg: Pdg): ujson.Obj = ujson.Obj(
+    "accuracy" -> ujson.Obj(
+      "status" -> (if (pdg.meta.warnings.nonEmpty || pdg.vertices.exists(_.assignRange.contains("dyn"))) "incomplete"
+        else if (pdg.vertices.exists(_.assignRange.nonEmpty)) "approximate" else "exact"),
+      "reasons" -> ujson.Arr((pdg.meta.warnings ++
+        (if (pdg.vertices.exists(_.assignRange.nonEmpty)) Seq("Partial writes use bounded or conservative providers; signal criteria select the latest provider.") else Nil)).map(ujson.Str(_)): _*)
+    ),
     "vertices" -> ujson.Arr(pdg.vertices.map(vertexJson): _*),
     "edges" -> ujson.Arr(pdg.edges.map(e => ujson.Obj(
       "from" -> e.from, "to" -> e.to, "kind" -> e.kind, "clocked" -> e.clocked, "condition" -> condJson(e.condition))): _*),
@@ -134,7 +140,7 @@ object PdgModel {
       "kind" -> VertexKind.DataDefinition, "clocked" -> false, "isChiselStatement" -> false)): _*),
     "cfg" -> cfgJson(pdg.cfg),
     "spinaltrace" -> ujson.Obj(
-      "formatVersion" -> 1,
+      "formatVersion" -> 2,
       "toplevel" -> pdg.meta.toplevel,
       "extraScopes" -> ujson.Arr(pdg.meta.extraScopes.map(ujson.Str(_)): _*),
       "clockDomains" -> ujson.Arr(pdg.meta.clockDomains.map(cd => ujson.Obj(

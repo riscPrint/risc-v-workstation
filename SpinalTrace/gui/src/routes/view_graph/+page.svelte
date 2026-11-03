@@ -8,6 +8,7 @@
 
   import CodeBlock from '../../lib/components/CodeBlock.svelte';
 
+  let accuracy = { status: "incomplete", reasons: ["Trace accuracy is not loaded."] };
   let networkContainer: HTMLDivElement;
   let scrollWrapper: HTMLDivElement;
   let network: Network;
@@ -187,6 +188,9 @@
   }
 
   onMount(() => {
+    invoke<typeof accuracy>("get_trace_accuracy").then(value => { accuracy = value; }).catch(error => {
+      accuracy = { status: "incomplete", reasons: [String(error)] };
+    });
     invoke<number>("get_n_timeslots").then((num_timestamps) => {
       timestamps = generateReverseIndexTimestamps(num_timestamps);
 
@@ -425,6 +429,10 @@
   </div>
 {/if}
 
+<details class="accuracy" open={accuracy.status !== 'exact'}>
+  <summary>Trace accuracy: {accuracy.status}</summary>
+  <ul>{#each accuracy.reasons as reason}<li>{reason}</li>{/each}</ul>
+</details>
 <div class="graph-container">
   <div class="scroll-wrapper" bind:this={scrollWrapper}>
     <div class="timeline-header">
@@ -490,6 +498,7 @@
 </div>
 
 <style>
+  .accuracy { position: fixed; top: 0; left: 0; max-width: 70%; max-height: 25vh; overflow: auto; z-index: 1000; background: #fff5d6; color: #222; padding: 8px; }
   :global(html, body) {
     height: 100%;
     margin: 0;
