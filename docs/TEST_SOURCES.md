@@ -50,3 +50,17 @@ Keep the ACT4 commit, configuration files, Sail version, compiler version,
 build command, ELF hashes, execution rules and waivers in the external result
 package. Keep C1 results and C3 suite results there too. A suite pass is not a
 certification claim. Missing builds are errors, not skipped passes.
+
+## BOOM preset correctness
+
+The adapter maps `medium` and `large` to their own BOOM parameter sets.
+Use `run.sh run --config medium` or `--config large` for direct C1 execution.
+The bundled `presets` tier selects add, multiply and compressed tests on both:
+
+```sh
+rvw regress run --core boom --tier presets --jobs 1 --out /tmp/preset-run
+```
+
+A build pass proves elaboration and native compilation only. Each preset needs
+its own execution result. A pass on `small` gives no result for another preset.
+The short tier is a smoke check. It does not cover the full configuration matrix.

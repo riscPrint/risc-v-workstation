@@ -140,3 +140,9 @@ runs = [
   { suite = "stress", configs = ["large"] },
   { suite = "elaboration" },
 ]
+
+[tiers.presets]
+description = "bounded integer, multiply and compressed correctness on medium and large"
+runs = [
+  { suite = "riscv-tests", configs = ["medium", "large"], include = ['^rv64(ui-p-add|um-p-mul|uc-p-rvc)$'] },
+]

@@ -52,3 +52,18 @@ timeout_s = 30
     act_result = load_results(out / 'act4/small')
     assert [(t.id, t.status, t.signature) for t in act_result.tests] == [('priv/trap', 'fail', 'fail:9')]
     assert load_results(out / 'vm-tests/small').tests[0].status == 'pass'
+
+
+@pytest.mark.parametrize('config', ['rvw/configs/boom.toml', 'examples/boom/rvw.toml'])
+def test_preset_correctness_tier_selects_real_programs(config, monkeypatch):
+    root = Path(__file__).resolve().parents[2]
+    monkeypatch.setenv('RVW_HOME', str(root))
+    monkeypatch.setenv('SPINAL_BOOM', str(root.parent / 'spinal-boom-eda'))
+    core = load_config(str(root / config))
+    rows = core.tier('presets').runs
+    assert len(rows) == 1 and rows[0].suite == 'riscv-tests'
+    assert rows[0].configs == ['medium', 'large']
+    import re
+    for name in ['rv64ui-p-add', 'rv64um-p-mul', 'rv64uc-p-rvc']:
+        assert all(re.search(pattern, name) for pattern in rows[0].include)
+    assert not all(re.search(pattern, 'rv64ui-v-add') for pattern in rows[0].include)
