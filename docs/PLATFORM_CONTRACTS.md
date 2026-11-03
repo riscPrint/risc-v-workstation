@@ -1015,3 +1015,12 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### Formal proof scope and abstraction
+
+Formal results add `proof_kind: bounded | unbounded`.
+Only `formal prove` selects unbounded mode. Depth-search summaries use
+`rvw.formal-depth-search/1`, retain attempt paths and statuses, and report
+`max_bounded_pass`. Their status is `fail` or `inconclusive`; never proof.
+Cut-point records name the signal, width and `unconstrained_anyseq` semantics.
+An abstract counterexample records `status: unknown`, not a concrete failure.

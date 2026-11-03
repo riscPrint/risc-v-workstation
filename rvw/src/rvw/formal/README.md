@@ -234,3 +234,43 @@ real core to make a core-context claim. Check payload validity separately.
 A signal with no X/Z observation stays `inconclusive`. This run cannot prove
 `unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
 The command returns 1 for all results. It never reports a design pass.
+
+## Proof engines and bounded depth search
+
+Use the source, clock, reset and tie options from `bmc`:
+
+```sh
+rvw formal prove --verilog counter.sv --top counter --out out/proof --timeout 60
+rvw formal bmc --verilog counter.sv --top counter --engine btor:pono,btor:btormc --out out/bmc
+rvw formal depth-search --verilog counter.sv --top counter --depth 4 --max-depth 64 --budget 120 --out out/search --json
+rvw formal prove --verilog counter.sv --top counter --cut count:4 --out out/cut
+```
+
+`prove` defaults to the parallel portfolio `abc:pdr,aiger:avy`.
+BMC supports `btor:pono` and `btor:btormc`. These SBY engines are bounded.
+Do not mix engines that require different modes. Each executable is captured.
+SBY stops the other engines after its first conclusive answer. Conflicting PASS
+and FAIL answers in the log produce an error. An engine stopped before its
+answer cannot be cross-checked. Timeout cannot earn a proof.
+The assertion, clock, state-control and assumption reachability guards remain.
+Results add `proof_kind`: `bounded` or `unbounded`. The reachability guard is
+bounded. It does not establish assumption activation for all time.
+
+Depth search doubles the depth up to `--max-depth`. It stops on failure,
+unknown, error, timeout or budget exhaustion. Each attempt has its own capture
+and result directory. Each attempt checks its current inputs. It does not reuse
+proofs between attempts. The total budget starts before the first attempt.
+Native cleanup and frontend setup can extend elapsed wall time.
+The summary reports the largest bounded pass. It always returns exit 1.
+A bounded search cannot earn an unbounded proof.
+
+`--cut SIGNAL:WIDTH` replaces a DUT signal with unconstrained `$anyseq`.
+The prepared model supplies its checked width. This is an overapproximation.
+No assumption restricts the cut value. A pass applies to all cut values.
+An abstract failure reports `unknown` with `abstraction_counterexample`.
+It is not a confirmed DUT failure. Interface contracts, dependency checks,
+circular-assumption rejection and RAM abstraction contracts remain open.
+
+Native Avy can crash on a constant-safe AIG. That case returns `error`.
+A portfolio can still use a conclusive answer from another engine.
+Constant cut bits, repeated aliased bits and clock cuts are refused.

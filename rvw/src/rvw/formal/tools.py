@@ -14,7 +14,7 @@ ACTIVE = ContextVar('formal_tools', default=None)
 
 # These upstream commands have no successful --version interface. Their adapters
 # report a captured content identity rather than inventing an upstream version.
-_IDENTITY_ONLY = {'yosys-smtbmc', 'yosys-witness', 'yosys-abc', 'iverilog', 'vvp'}
+_IDENTITY_ONLY = {'yosys-smtbmc', 'yosys-witness', 'yosys-abc', 'iverilog', 'vvp', 'pono', 'avy', 'btormc', 'btorsim'}
 _SOLVERS = {'yices': 'yices-smt2', 'z3': 'z3', 'bitwuzla': 'bitwuzla',
             'boolector': 'boolector', 'cvc4': 'cvc4', 'cvc5': 'cvc5',
             'mathsat': 'mathsat', 'abc': 'yosys-abc'}
@@ -64,6 +64,10 @@ class Toolchain:
                     raise CaptureError('input_not_captured:tool:solver', f'unsupported solver {solver}')
                 names.append(_SOLVERS[solver])
                 smtbmc_abc |= solver == 'abc'
+            elif parts[0] == 'btor' and parts[1:] in (['pono'], ['btormc']):
+                names.extend([parts[1], 'btorsim'])
+            elif parts == ['aiger', 'avy']:
+                names.extend(['avy', 'yosys-abc'])
             elif parts[0] == 'abc':
                 names.append('yosys-abc')
             else:
@@ -163,7 +167,8 @@ class Toolchain:
         pinned = [str(self.commands[cmd[0]].path)]
         if cmd[0] == 'sby':
             for option, name in (('yosys', 'yosys'), ('smtbmc', 'yosys-smtbmc'),
-                                 ('witness', 'yosys-witness'), ('abc', 'yosys-abc')):
+                                 ('witness', 'yosys-witness'), ('abc', 'yosys-abc'),
+                                 ('pono', 'pono'), ('avy', 'avy'), ('btormc', 'btormc')):
                 if name in self.commands:
                     pinned += ['--' + option, str(self.commands[name].path)]
         return [*pinned, *cmd[1:]]

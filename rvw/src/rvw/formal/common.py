@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import math
 import os
 import re
 import shutil
@@ -164,6 +165,13 @@ def begin(args) -> Path:
     if args.reset is not None:
         check_ident("--reset", args.reset)
     check_engine(args.engine)
+    mode = getattr(args, 'mode', 'bmc')
+    for engine in args.engine.split(','):
+        engine = engine.strip()
+        if (engine == 'aiger:avy' or engine == 'abc:pdr') and mode != 'prove':
+            die(f'{engine} requires formal prove')
+        if engine.startswith('btor:') and mode != 'bmc':
+            die(f'{engine} requires bounded formal bmc')
     check_count("--depth", args.depth, 1)
     for opt in ("reset_cycles", "settle", "cycle", "time"):
         if getattr(args, opt, None) is not None:
@@ -172,7 +180,7 @@ def begin(args) -> Path:
         check_hier("--scope", args.scope)
     for s in getattr(args, "signal", None) or []:
         check_hier("--signal", s)
-    if args.timeout is not None and not args.timeout > 0:
+    if args.timeout is not None and (not args.timeout > 0 or not math.isfinite(args.timeout)):
         die(f"--timeout must be > 0, got {args.timeout}")
     return out
 
@@ -703,6 +711,9 @@ def final_status(rc: int, sby_text: str, asserts: int | None) -> str:
     """A pass needs matching process/log exit codes and assertions in the prepared model."""
     if rc == TIMEOUT_EXIT:
         return "timeout"
+    answers = set(re.findall(r"Status returned by engine: (PASS|FAIL)\b", sby_text))
+    if answers == {"PASS", "FAIL"}:
+        return "error"
     status, log_rc = sby_result(sby_text)
     if log_rc != rc:
         return "error"

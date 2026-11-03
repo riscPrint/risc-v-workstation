@@ -72,8 +72,28 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    proof = s.add_parser("prove", help="unbounded safety proof from reset")
+    _common(proof, 20)
+    proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
+    proof.add_argument("--reset-cycles", type=int, default=1)
+    proof.add_argument("--free-reset", action="store_true")
+    proof.add_argument("--first-failure", action="store_true")
+    proof.set_defaults(func=lambda a: _flow("bmc", a), mode="prove",
+                       engine="abc:pdr,aiger:avy")
+
+    search = s.add_parser("depth-search", help="bounded search with a total time budget")
+    _common(search, 4)
+    search.add_argument("--max-depth", required=True, type=int)
+    search.add_argument("--budget", required=True, type=float)
+    search.add_argument("--reset-cycles", type=int, default=1)
+    search.add_argument("--free-reset", action="store_true")
+    search.add_argument("--first-failure", action="store_true")
+    from .search import depth_search
+    search.set_defaults(func=depth_search)
+
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
+    b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")
     b.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")
