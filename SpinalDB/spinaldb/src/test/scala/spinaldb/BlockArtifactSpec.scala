@@ -8,6 +8,31 @@ import spinal.core._
 
 /** The database must preserve the extractor's diagram and source-navigation data. */
 class BlockArtifactSpec extends AnyFunSuite {
+  class ClockedTop extends Component {
+    val count = out UInt(8 bits)
+    val state = Reg(UInt(8 bits)) init(0)
+    state := state + 1
+    count := state
+  }
+
+  test("implicit clock source locations retain the elaboration caller") {
+    val dir = Files.createTempDirectory("spinaldb-block-clock-")
+    def config = SpinalConfig(targetDirectory = dir.toString)
+    val direct = spinalblocks.SpinalBlocks.generate(config, dir.resolve("direct.json").toFile)(new ClockedTop)
+    val database = SpinalDB.elaborate(config, traceNaming = false)(new ClockedTop)
+    def clockLocation(top: Component) = {
+      val diagram = spinalblocks.SpinalBlocks.extract(top)
+      diagram("modules")(top.definitionName)("ports").arr.find(_("name").str == "clk").get("loc")
+    }
+    val oldLoc = clockLocation(direct.toplevel)
+    val newLoc = clockLocation(database.toplevel)
+    // The default clock is created before the design's constructor. Do not
+    // relabel either caller as design source to claim diagram parity.
+    assert(oldLoc("file").str.endsWith("BlockArtifactSpec.scala"))
+    assert(newLoc("file").str.endsWith("SpinalDB.scala"))
+    assert(oldLoc != newLoc)
+  }
+
   test("block artifact preserves direct extraction for both RTL backends and analog ports") {
     for (mode <- Seq(Verilog, SystemVerilog)) {
       val dir = Files.createTempDirectory("spinaldb-block-artifact-")

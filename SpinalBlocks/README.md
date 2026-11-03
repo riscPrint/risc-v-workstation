@@ -67,7 +67,16 @@ waveform causes.
 
 SpinalDB calls `SpinalBlocks.extract(report.toplevel, sourceRoots)` on its own
 report. It compiles the extractor sources without loading the legacy BOOM build.
-That legacy build and its BOOM entry remain until BOOM parity is checked.
+That legacy build and its BOOM entry remain while full parity fails.
+
+Implicit clock and reset signals can retain the elaboration caller as their
+source location. The standalone caller and `SpinalDB.elaborate` are different
+Scala statements. These locations describe generated infrastructure. They do
+not describe a statement in the core. Anonymous logic groups can also use that
+file and line in their names and IDs. `BlockArtifactSpec` tests this difference.
+Keep these fields in parity comparisons. Do not replace them with a core source
+line or discard them to claim a match. The old entry must stay until the source
+attribution rule is shared by both paths and full parity passes.
 A project can also
 use `SpinalBlocks.generate` for a standalone diagram. It needs JDK 21, sbt,
 SpinalHDL 1.15.0 and the sibling `SpinalWaves/` directory:

@@ -75,6 +75,13 @@ counts, Konata desyncs) and `metrics` (`roi_cycles`, `roi_instret`, `roi_ipc` wh
 `bench_stats` symbol). `replay` writes to `DIR-replay` so it does not overwrite the original.
 `result.json` is written to a temporary file and renamed, so a reader never sees half of it.
 
+Adapters that call `RiscvSimConfig.elaborate` can pass `sourceRoots` as its
+fourth argument. Use roots from the core project, not the launch directory.
+The PDG extractor uses these roots to resolve Scala source files. The BOOM
+adapter passes both source directories from `sourceDir`. Generated PDGs use
+the existing absolute-path format. Portable fixtures must use project-relative
+paths, and cross-checkout comparisons must remove only the checkout prefix.
+
 ## Artifacts
 
 | File | When | What |

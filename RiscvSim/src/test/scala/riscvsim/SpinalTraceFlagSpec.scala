@@ -54,10 +54,19 @@ class SpinalTraceFlagSpec extends AnyFunSuite {
       RiscvSimConfig.elaborate(plain, work, SpinalConfig())(new Counter)
       assert(!RiscvSimConfig.dependencyGraph(plain, work).exists())
       val traced = plain.copy(spinaltrace = true)
-      RiscvSimConfig.elaborate(traced, work, SpinalConfig())(new Counter)
+      // Resolve a source copy outside the launcher's default roots.
+      val root = new java.io.File(work, "sources")
+      val copied = new java.io.File(root, "riscvsim/SpinalTraceFlagSpec.scala")
+      copied.getParentFile.mkdirs()
+      Files.copy(new java.io.File("src/test/scala/riscvsim/SpinalTraceFlagSpec.scala").toPath, copied.toPath)
+      val roots = Seq(root.getCanonicalFile)
+      RiscvSimConfig.elaborate(traced, work, SpinalConfig(), roots)(new Counter)
       val graph = RiscvSimConfig.dependencyGraph(traced, work)
       assert(graph.isFile)
-      assert(ujson.read(Files.readString(graph.toPath))("vertices").arr.nonEmpty)
+      val vertices = ujson.read(Files.readString(graph.toPath))("vertices").arr
+      assert(vertices.nonEmpty)
+      val source = new java.io.File(roots.head, "riscvsim/SpinalTraceFlagSpec.scala").getCanonicalPath
+      assert(vertices.exists(v => v("file").str == source && v("line").num > 0))
     } finally org.apache.commons.io.FileUtils.deleteDirectory(work)
   }
 }
