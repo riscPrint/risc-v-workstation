@@ -20,7 +20,7 @@ def integer(value, low, high):
 
 
 def validate(plan):
-    exact_keys(plan, ('schema', 'design', 'clock', 'reset', 'signals', 'bins'), ())
+    exact_keys(plan, ('schema', 'design', 'clock', 'reset', 'signals', 'bins'), ('sequences',))
     if plan['schema'] != 'rvw.rtl-plan/1' or not isinstance(plan['design'], str) or not plan['design']:
         raise ValueError('expected rvw.rtl-plan/1 with a design identity')
     exact_keys(plan['clock'], ('signal', 'edge', 'sampling'))
@@ -70,6 +70,22 @@ def validate(plan):
         if not isinstance(item['id'], str) or not item['id'] or item['id'] in ids:
             raise ValueError('bin IDs must be nonempty and unique')
         ids.add(item['id'])
+    for seq in plan.get('sequences', []):
+        exact_keys(seq, ('id', 'domain', 'steps'))
+        if not isinstance(seq['id'], str) or not seq['id'] or seq['id'] in ids:
+            raise ValueError('sequence IDs must be nonempty and unique')
+        ids.add(seq['id'])
+        if seq['domain'] not in ('committed', 'speculative', 'structural') or not 2 <= len(seq['steps']) <= 32:
+            raise ValueError('sequence needs a domain and 2..32 steps')
+        for i, step in enumerate(seq['steps']):
+            exact_keys(step, ('when',) if i == 0 else ('when', 'delay'))
+            predicate(step['when'])
+            if i:
+                if not isinstance(step['delay'], list) or len(step['delay']) != 2:
+                    raise ValueError('delay must be [minimum, maximum]')
+                lo, hi = step['delay']
+                integer(lo, 1, 1000000)
+                integer(hi, lo, 1000000)
 
 
 def matches(predicate, values):
@@ -82,6 +98,8 @@ def sample(plan_path, traces):
     validate(plan)
     plan_id = identity(plan)
     counts = {b['id']: 0 for b in plan['bins']}
+    sequences = {s['id']: dict(activated=0, completed=0, expired=0, reset_cancelled=0, pending=0)
+                 for s in plan.get('sequences', [])}
     inputs, complete = [], True
     seen = set()
     for path in traces:
@@ -96,6 +114,7 @@ def sample(plan_path, traces):
             if header != {'schema': 'rvw.rtl-samples/1', 'plan_id': plan_id, 'design': plan['design']}:
                 raise ValueError('RTL trace identity differs from plan')
             previous, last, ended = None, None, False
+            active = {s['id']: [] for s in plan.get('sequences', [])}
             for line in stream:
                 row = json.loads(line)
                 if ended:
@@ -121,14 +140,40 @@ def sample(plan_path, traces):
                     raise ValueError('pre-edge clock must be low')
                 if values[plan['reset']['signal']] == plan['reset']['active']:
                     previous = None
+                    for name, attempts in active.items():
+                        sequences[name]['reset_cancelled'] += len(attempts)
+                        attempts.clear()
                     continue
                 for b in plan['bins']:
                     if matches(b['when'], values) and (b['kind'] != 'transition' or
                             previous is not None and matches(b['from'], previous)):
                         counts[b['id']] += 1
+                for seq in plan.get('sequences', []):
+                    stats = sequences[seq['id']]
+                    keep = []
+                    for index, since in active[seq['id']]:
+                        step = seq['steps'][index]
+                        age = cycle - since
+                        lo, hi = step['delay']
+                        if age > hi:
+                            stats['expired'] += 1
+                        elif age >= lo and matches(step['when'], values):
+                            # Deterministic first-match advancement; one completion per activation.
+                            if index + 1 == len(seq['steps']):
+                                stats['completed'] += 1
+                            else:
+                                keep.append((index + 1, cycle))
+                        else:
+                            keep.append((index, since))
+                    if matches(seq['steps'][0]['when'], values):
+                        stats['activated'] += 1
+                        keep.append((1, cycle))
+                    active[seq['id']] = keep
                 previous = values
             if not ended or last is None:
                 complete = False
+            for name, attempts in active.items():
+                sequences[name]['pending'] += len(attempts)
     if not inputs:
         raise ValueError('at least one trace is required')
     return {'schema': 'rvw.rtl-coverage/1', 'plan_id': plan_id, 'design': plan['design'],
@@ -136,5 +181,6 @@ def sample(plan_path, traces):
             'sampling_complete': complete, 'bins': [dict(b, count=counts[b['id']],
                 observation='observed' if counts[b['id']] else 'unobserved',
                 reachability='undetermined') for b in plan['bins']],
+            'sequences': [dict(s, **sequences[s['id']]) for s in plan.get('sequences', [])],
             'denominator': len(counts), 'observed_bins': sum(v > 0 for v in counts.values()),
             'proven_unreachable_bins': 0}

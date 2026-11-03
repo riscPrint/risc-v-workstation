@@ -740,3 +740,38 @@ The bin merge key is `(plan_id, id)`. Changing a domain, source link, clock,
 reset rule or bin universe changes the plan hash. `rvw.rtl-coverage/1` reports
 the declared denominator, observed bins, per-bin counts, event domains and
 reachability separately. Input captures retain plan and sample hashes.
+
+
+## Bounded RTL sequences
+
+A plan can add `sequences`. Each sequence has a unique `id`, a `domain` and
+2 to 32 `steps`. The first step has `when`. Each later step has `when` and
+`delay: [minimum, maximum]`. Delays count rising-edge samples from the preceding
+matched step. Both limits are inclusive integers from 1 to 1000000.
+Zero-delay, unbounded, falling-edge and multi-clock semantics are refused.
+
+A first-step match activates one attempt on each matching cycle. Attempts can
+overlap. Each attempt advances on the first match in its delay window and can
+complete once. This is deterministic first-match sequence coverage, not SVA
+assertion semantics or all possible path enumeration. Reset cancels pending
+attempts. Runs never share attempts. An attempt expires on the first sample
+after its last allowed delay. Attempts still open at trace end stay pending.
+The report keeps `activated`, `completed`, `expired`, `reset_cancelled` and
+`pending` separate. Pending attempts are not failures or unreachable bins.
+Their sum satisfies activated = completed + expired + reset_cancelled + pending.
+
+Run the native small example from the repository root:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python \
+  rvw/examples/coverage/rtl/demo.py /tmp/fresh-rtl-coverage
+rvw/.venv/bin/rvw cov rtl /tmp/fresh-rtl-coverage/samples.jsonl \
+  --config /tmp/fresh-rtl-coverage/plan.json --json
+```
+
+The example builds a small FSM with Verilator 5.052 or later. It collects
+pre-edge samples of actual state values and native FSM and line coverage.
+It declares all four state codes and one idle-to-active transition. State 3
+stays unobserved with undetermined reachability. A bounded round trip records
+activations and completions. Its source is SystemVerilog, so Scala links are
+null. The output directory must be new. Build logs and measurements stay there.

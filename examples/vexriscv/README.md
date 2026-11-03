@@ -111,3 +111,9 @@ rm -rf /tmp/cw-vex-pytest
 PMP/ECALL policy: [#11](https://github.com/riscPrint/risc-v-workstation/issues/11). RV32 architecture models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
 
 Retained limit: The documented ISA, adapter and validation subset applies only to this example. It does not qualify other VexRiscv configurations.
+## RTL event coverage
+
+[The coverage example](rvw/coverage/README.md) samples typed fetch-interface
+bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
+matching HGLDD. It also measures Scala attribution of native toggle points.
+This interface exercise is separate from ISA regression coverage.

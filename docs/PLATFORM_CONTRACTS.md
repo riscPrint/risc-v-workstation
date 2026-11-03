@@ -1043,3 +1043,11 @@ values sampled before a rising edge with disable-clear reset are supported.
 Exact instance paths and an explicit bin universe define the denominator.
 Incomplete traces give inconclusive results. Unobserved is not unreachable.
 C2 retirement events and speculative RTL events remain separate domains.
+
+
+The RTL plan can also declare bounded first-match `sequences`. Every later
+step gives an inclusive sample-delay range. Reports separate activation,
+completion, expiry, reset cancellation and trace-end pending attempts. Reset
+clears all attempts. Each input starts fresh temporal history. Unsupported
+clocks, reset rules or delay semantics refuse the calculation. See the
+coverage README for the full sequence contract and native example.
