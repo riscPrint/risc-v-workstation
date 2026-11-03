@@ -234,3 +234,9 @@ real core to make a core-context claim. Check payload validity separately.
 A signal with no X/Z observation stays `inconclusive`. This run cannot prove
 `unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
 The command returns 1 for all results. It never reports a design pass.
+
+## Limit ownership
+
+Multi-clock and asynchronous state: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67). Counterexample debugging: [#60](https://github.com/riscPrint/risc-v-workstation/issues/60). Engine depth: [#21](https://github.com/riscPrint/risc-v-workstation/issues/21). Shared runner: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117).
+
+Retained limit: Only validated engine releases and supported synchronous state qualify. Missing reports, unsupported state, free inputs and replay assumptions retain their documented error or inconclusive outcomes.

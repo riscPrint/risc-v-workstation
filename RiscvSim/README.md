@@ -251,3 +251,9 @@ Sail cannot synchronize external inputs and refuses this comparison.
 See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
 suites. These use the existing ELF run contract. ACT4 expected signatures
 must come from Sail or the suite, never from a DUT run.
+
+## Limit ownership
+
+Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
+
+Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.

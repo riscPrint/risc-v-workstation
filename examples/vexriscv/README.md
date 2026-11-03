@@ -105,3 +105,9 @@ VEXRISCV=/path/to/VexRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
   examples/vexriscv/rvw/tests -q --basetemp=/tmp/cw-vex-pytest
 rm -rf /tmp/cw-vex-pytest
 ```
+
+## Limit ownership
+
+PMP/ECALL policy: [#11](https://github.com/riscPrint/risc-v-workstation/issues/11). RV32 architecture models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
+
+Retained limit: The documented ISA, adapter and validation subset applies only to this example. It does not qualify other VexRiscv configurations.

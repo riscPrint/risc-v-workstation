@@ -220,3 +220,9 @@ Results on 2026-10-19:
   `surfer-tywaves --version` prints `surfer-tywaves 0.3.0-dev` and `--help` lists `--hgldd-dir`,
   `--extra-scopes`, `--top-module`. Both run headless (no window). The GUI was not started here.
 - `scripts/install.sh --prefix /tmp/sw-bin --test` passes end to end (3m38s with a warm cache).
+
+## Limit ownership
+
+Vendored rendering and backend limits: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Interactive qualification: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83).
+
+Retained limit: The documented conversion fallbacks and diagnostic categories remain part of the checker contract. Upstream experimental server, GHW and f128 notes in the vendored tree are upstream scope, not qualified workstation features.

@@ -26,3 +26,8 @@ and checkout paths before comparing source statements and dependency edges.
 Record the measured result in the PR.
 It starts through sbt and compiles the BOOM checkout,
 so run it under `scripts/with-lock.sh boom`.
+
+## Limit ownership
+
+Runtime parity and prototype removal: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68).
+Retained limit: use short wave windows. The recorded resource examples are not current performance guarantees.

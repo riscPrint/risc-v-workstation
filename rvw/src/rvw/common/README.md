@@ -148,3 +148,7 @@ error or `inconclusive`. Never accept a partial result after either error.
   descriptor that a process inherited by mistake can take the lock and keep it until that process
   exits. The window is a few microseconds, and only processes that inherited a lock descriptor are
   affected; ordinary waiters are not.
+
+## Limit ownership
+
+Retained limit: The documented generation, capture, tree-size and subprocess restrictions remain required. Missing, changed or unsupported evidence must refuse publication or remain inconclusive. No separate issue is assigned for widening these bounds.

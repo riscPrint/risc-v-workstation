@@ -136,3 +136,9 @@ scan does not close that task.
 Add `[arch]` paths to the project. See [Arch/README.md](../Arch/README.md) for
 setup, the description fields, exact commands, and report limits. The MCP tools
 are `arch_build`, `arch_run`, `arch_calibrate`, and `arch_compare`.
+
+## Limit ownership
+
+Release checklist: [#78](https://github.com/riscPrint/risc-v-workstation/issues/78). Publication scan: [#79](https://github.com/riscPrint/risc-v-workstation/issues/79). Remote MCP: [#54](https://github.com/riscPrint/risc-v-workstation/issues/54).
+
+Retained limit: The documented release scan and local MCP boundaries remain unchanged. A scan does not prove absence of all secrets or qualify remote authentication.

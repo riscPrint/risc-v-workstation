@@ -505,3 +505,9 @@ riscv-tests benchmarks. `benchmarks` is the native ELF build directory.
 Run `rvw arch build` to locate gem5 and build the benchmarks. Run
 `rvw arch calibrate --out rvw/out/calibration-1` to run both engines and
 write JSON and text reports. See [the architecture guide](../Arch/README.md).
+
+## Limit ownership
+
+Installer qualification: [#17](https://github.com/riscPrint/risc-v-workstation/issues/17) and [#40](https://github.com/riscPrint/risc-v-workstation/issues/40). Native bundle: [#71](https://github.com/riscPrint/risc-v-workstation/issues/71). Waivers: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder/performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Owner integration choice: [#34](https://github.com/riscPrint/risc-v-workstation/issues/34).
+
+Retained limit: Adapters must reject unsupported options. Example validation does not qualify every host, backend or core preset. Owner decisions remain open.

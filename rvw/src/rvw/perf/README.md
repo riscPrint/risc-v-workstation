@@ -92,3 +92,9 @@ Compare takes `base`, `candidate`, the same analysis options and `tolerance`.
 Both return jobs so large traces can be cancelled without blocking the server. Follow with
 `job_status(wait_s=60)` for the same JSON as the CLI, or use `job_log`/`job_cancel`.
 The shared calculation preserves settings checks, counter warnings and inferred-state limits.
+
+## Limit ownership
+
+Additional probe events: [#49](https://github.com/riscPrint/risc-v-workstation/issues/49).
+
+Retained limit: Inferred pipeline states, counter warnings and settings checks remain part of the report. A trace report is not independent execution proof.
