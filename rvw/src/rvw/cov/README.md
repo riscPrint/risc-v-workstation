@@ -586,13 +586,16 @@ for source attribution. The example config disables the runner's nested lock bec
 already owns it. Use `RVW_BOOM_ADAPTER` to choose another checked-out adapter explicitly.
 The shared simulation config enables Spinal assignment line comments when coverage is requested.
 The installed Verilator 5.049 aborts in experimental FSM detection on a BOOM empty reset
-branch (`V3FsmDetect.cpp:641`). The adapter therefore asks Verilator for explicit coverage
-kinds (`RISCVSIM_COVERAGE`, default `line,user`; line coverage includes branches) instead of
-`--coverage`, which would include FSM coverage. The collector sets `RISCVSIM_COVERAGE=line,user`.
+branch (`V3FsmDetect.cpp:641`). The adapter asks Verilator for explicit coverage kinds through `RISCVSIM_COVERAGE`
+instead of `--coverage`. Line coverage includes branches. The collector uses the adapter
+version gate by default. Set `RISCVSIM_COVERAGE=line,user` to reproduce the historical universe.
 Toggle and expression coverage can be added (`line,user,toggle,expr`), at about 230 MB of
 `coverage.dat` per BOOM small run for toggle. Each C1 model records `coverage_types`, and its
 replay preserves the setting. This is a compiler workaround, not an RTL or coverage exclusion;
-native FSM coverage remains a gap on this installed tool version.
+native FSM coverage remains unavailable on 5.049. RiscvSim now enables FSM coverage by default
+when the native `verilator -V` reports 5.052 or later. It refuses an explicit FSM request on
+older or unknown versions. `RISCVSIM_COVERAGE=line,user` still selects the historical point universe.
+Do not merge runs from different coverage-kind sets.
 Merge each generated C3 `results.json` with `cov merge`, then report/rank the merged database;
 feed the runs' `rvfi.jsonl` artifacts to `cov functional`. Keep collection failures visible.
 
@@ -613,7 +616,7 @@ excluded by proof. These measurements do not set an acceptance threshold.
 
 ## Remaining gaps
 
-Native FSM coverage is disabled on this installed compiler. Whole-core Scala attribution needs
+Native FSM coverage needs Verilator >= 5.052. Whole-core Scala attribution needs
 more HGLDD coverage, particularly declarations and memories. Collapsed Verilator hierarchy
 cannot provide exact per-instance counts from these artifacts. Proof exclusions require reviewed
 expression mappings. Structural dependency reports do not provide minimal solver proof cores
@@ -755,3 +758,113 @@ The command never updates a pin or model. Optional `specifications` declarations
 can hold profile, debug and platform document pins. Their metadata is compared;
 their semantic obligations are not parsed. Test presence and changed semantic
 obligations still need review. An unchanged result is not a compliance verdict.
+
+## Scala mapping and denominators
+
+HGLDD signal mapping follows nested struct and vector expressions. A leaf uses
+its own Scala declaration. A container line does not stand in for its fields.
+Conflicting declarations for the same module and signal stay unmapped.
+This mapping applies to toggle points. It does not attribute a branch to a
+signal declaration. Assignment comments and explicit HDL spans still map
+statement points. Memory declarations without HGLDD expressions stay unmapped.
+
+`report.scala_mapping` gives the mapped-point numerator and the complete
+instrumented-point denominator. The small nested-bundle regression target is
+100% of its declared leaf toggle points, with no attribution of its unrelated
+branch point. This is a checkable fixture target, not a whole-core target.
+`instance_scope` gives each hierarchy bucket's instrumented point count.
+A literal hierarchy has an exact denominator for that recorded instance bucket.
+A wildcard hierarchy has aggregate counts and a null exact-instance denominator.
+Missing hierarchy also gives null. These fields cannot recover physical instance
+counts after Verilator merges modules. Scala line groups can overlap because
+one point can link to several source lines. Do not sum their denominators.
+
+FSM compatibility and Scala mapping are separate checks. `--coverage-fsm`
+can compile while some points still lack Scala lines. A compilation check does
+not establish state or transition hits.
+
+
+## Typed RTL event samples
+
+`rvw cov rtl SAMPLES.jsonl --config PLAN.json --json` reads exact-instance
+RTL samples. MCP exposes the same calculation as `cov_rtl`. This path is
+separate from C2 retirement coverage. It samples internal or interface signals.
+Projects supply the plan and sampler. Spinal annotation exporters can emit the
+same plan. No native Spinal annotation exporter is included yet.
+
+The plan uses schema `rvw.rtl-plan/1`. `design` identifies the instrumented RTL
+and configuration. Use a content hash, not a display name. `signals` maps
+exact hierarchical paths to `width`, `type` and `scala`. A Scala link has
+`file` and `line`. Use null when no source link is available. Types are
+source labels, with an unsigned integer sampling representation. Predicates
+map signal names to finite lists of integer values. Their entries form an AND.
+Use multiple bins for OR. No expression evaluation or automatic bins occur.
+
+`clock` has `signal`, `edge: rising` and `sampling: pre-edge`.
+`reset` has `signal`, `active: 0|1` and `rule: disable-clear`.
+The sampler must emit values immediately before every rising edge. The sampled
+clock value must be zero. Reset samples disable bins and clear transition
+history. Asynchronous reset events between samples are not supported. Refuse
+such a sampling model rather than silently treating it as synchronous.
+
+Each bin has a stable `id`, `kind`, `domain` and `when` predicate.
+Kinds are `event`, `occupancy`, `state`, `transition` and `arbitration`.
+Domains are `structural`, `committed` and `speculative`. Transition bins also
+have a `from` predicate for the preceding enabled sample. Ordinary bins count
+matching cycles. Transition bins count matching adjacent sample pairs.
+The plan lists the whole supported bin universe. Zero-hit bins stay unobserved.
+Their reachability is undetermined. This sampler accepts no proof exclusions
+and cannot mark a bin unreachable. A covered bin is an observation, not proof.
+
+The first JSONL record has `schema: rvw.rtl-samples/1`, `plan_id` and `design`.
+Compute `plan_id` with `rvw.cov.rtl.identity(plan)`: SHA-256 of sorted compact
+JSON. Each sample has `cycle` and `values`. Cycles must be consecutive.
+Values must contain every declared signal with an in-range integer value.
+Unknown values, missing signals and gaps refuse the calculation. The last
+record has `event: end` and `complete: true|false`. Missing or false completion
+makes the report inconclusive (exit 3), while preserving observations.
+The sampler owns this completeness assertion. The reader cannot prove that the
+producer sampled the declared edge or observed every cycle.
+
+Supply several sample files to sum independent runs. Each header must match
+the exact plan hash and design. Transition history never crosses runs.
+Duplicate trace bytes refuse counting. Saved reports are not merge inputs.
+The bin merge key is `(plan_id, id)`. Changing a domain, source link, clock,
+reset rule or bin universe changes the plan hash. `rvw.rtl-coverage/1` reports
+the declared denominator, observed bins, per-bin counts, event domains and
+reachability separately. Input captures retain plan and sample hashes.
+
+
+## Bounded RTL sequences
+
+A plan can add `sequences`. Each sequence has a unique `id`, a `domain` and
+2 to 32 `steps`. The first step has `when`. Each later step has `when` and
+`delay: [minimum, maximum]`. Delays count rising-edge samples from the preceding
+matched step. Both limits are inclusive integers from 1 to 1000000.
+Zero-delay, unbounded, falling-edge and multi-clock semantics are refused.
+
+A first-step match activates one attempt on each matching cycle. Attempts can
+overlap. Each attempt advances on the first match in its delay window and can
+complete once. This is deterministic first-match sequence coverage, not SVA
+assertion semantics or all possible path enumeration. Reset cancels pending
+attempts. Runs never share attempts. An attempt expires on the first sample
+after its last allowed delay. Attempts still open at trace end stay pending.
+The report keeps `activated`, `completed`, `expired`, `reset_cancelled` and
+`pending` separate. Pending attempts are not failures or unreachable bins.
+Their sum satisfies activated = completed + expired + reset_cancelled + pending.
+
+Run the native small example from the repository root:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python \
+  rvw/examples/coverage/rtl/demo.py /tmp/fresh-rtl-coverage
+rvw/.venv/bin/rvw cov rtl /tmp/fresh-rtl-coverage/samples.jsonl \
+  --config /tmp/fresh-rtl-coverage/plan.json --json
+```
+
+The example builds a small FSM with Verilator 5.052 or later. It collects
+pre-edge samples of actual state values and native FSM and line coverage.
+It declares all four state codes and one idle-to-active transition. State 3
+stays unobserved with undetermined reachability. A bounded round trip records
+activations and completions. Its source is SystemVerilog, so Scala links are
+null. The output directory must be new. Build logs and measurements stay there.

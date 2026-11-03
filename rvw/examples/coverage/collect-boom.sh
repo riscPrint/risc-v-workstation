@@ -10,7 +10,8 @@ export SPINAL_BOOM
 export RISCVSIM_KEEP_WS=1
 # Verilator 5.049's experimental FSM detector crashes on BOOM's empty reset branches.
 # Keep line/branch/toggle/expression/user coverage, and record this in each C1 model/replay.
-export RISCVSIM_COVERAGE=line,user   # no FSM coverage: it crashes Verilator 5.049 on BOOM
+# RiscvSim selects FSM coverage through its native Verilator version gate.
+# Set RISCVSIM_COVERAGE explicitly to reproduce a historical point universe.
 export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -XX:ActiveProcessorCount=4"
 # Outer lock covers the adapter's sbt bootstrap, compile, Verilator and simulations.
 scripts/with-lock.sh boom rvw/.venv/bin/rvw regress run \

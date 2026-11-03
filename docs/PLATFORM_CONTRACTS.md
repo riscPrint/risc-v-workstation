@@ -1384,3 +1384,33 @@ Logic outside these cones remains unverified by these expressions. It is not
 proven irrelevant. The assumption list does not measure assumption activation,
 necessity or adequacy. A cone is not a minimal solver proof core. Its size is not
 functional coverage. Keep this evidence separate from MCY killed/survived results.
+
+### Coverage mapping denominator fields
+
+`rvw.coverage-report/1` adds `scala_mapping` with `mapped`, `denominator`
+and `unit`. Each instrumented point counts once in that denominator.
+`instance_scope` maps recorded hierarchy strings to `scope`,
+`instrumented_points` and `exact_instance_denominator`. A wildcard gives
+`scope: aggregate` and a null exact denominator. Missing hierarchy gives
+`scope: unknown` and null. Literal hierarchy gives `scope: instance`.
+No report expands aggregate counts into inferred physical instances.
+
+
+### Typed RTL sampling coverage
+
+`rvw.rtl-plan/1`, `rvw.rtl-samples/1` and `rvw.rtl-coverage/1` are the
+project-defined RTL event sampling contract. See the coverage README for all
+fields and refusal rules. Plan identity is SHA-256 over sorted compact JSON.
+Every trace binds that identity and the design identity. Only unsigned integer
+values sampled before a rising edge with disable-clear reset are supported.
+Exact instance paths and an explicit bin universe define the denominator.
+Incomplete traces give inconclusive results. Unobserved is not unreachable.
+C2 retirement events and speculative RTL events remain separate domains.
+
+
+The RTL plan can also declare bounded first-match `sequences`. Every later
+step gives an inclusive sample-delay range. Reports separate activation,
+completion, expiry, reset cancellation and trace-end pending attempts. Reset
+clears all attempts. Each input starts fresh temporal history. Unsupported
+clocks, reset rules or delay semantics refuse the calculation. See the
+coverage README for the full sequence contract and native example.

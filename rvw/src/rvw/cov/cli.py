@@ -91,6 +91,9 @@ def calculate(args):
     elif args.cov_command == 'isa-check':
         from .isa import check_manifest
         result = check_manifest(args.manifest)
+    elif args.cov_command == 'rtl':
+        from .rtl import sample
+        result = sample(args.config, args.traces)
     elif args.cov_command == 'functional':
         from .functional import functional
         result = functional(args.traces, args.config, args.platform, args.manifest, args.source_root)
@@ -198,6 +201,9 @@ def register(subparsers):
     functional.add_argument('--config', help='JSON coverage plan; adds or replaces named default groups')
     functional.add_argument('--platform', help="platform name or JSON (as rvw cosim) for the RVFI address convention; "
                             "default: the bundled platform named by the trace header's core")
+    rtl = sub.add_parser('rtl', help='sample typed RTL bins and bounded sequences')
+    rtl.add_argument('traces', nargs='+')
+    rtl.add_argument('--config', required=True, help='rvw.rtl-plan/1 JSON plan')
     prove = sub.add_parser('prove', help='bounded cover and unbounded proof for chosen coverage points')
     prove.add_argument('database')
     prove.add_argument('--config', required=True)
@@ -211,7 +217,7 @@ def register(subparsers):
     mutate.add_argument('--jobs', type=int, default=1)
     mutate.add_argument('--test', action='append', help='detection test name; repeatable, defaults to saved roles on inspection or all non-equivalence tests on a fresh run')
     mutate.add_argument('--equivalence-test', action='append', help='equivalence test name; repeatable, defaults to saved roles on inspection or none on a fresh run; FAIL is not a kill')
-    for command in (merge, report, rank, select, functional, prove, mutate, isa_check, isa_diff):
+    for command in (merge, report, rank, select, functional, rtl, prove, mutate, isa_check, isa_diff):
         command.add_argument('--json', action='store_true')
         command.add_argument('--out', help='write structured JSON result')
         command.set_defaults(func=execute)

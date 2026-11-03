@@ -129,3 +129,10 @@ The existing adapter does not yet consume the generated simulation map.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`
 and `rvw cov functional --manifest`; see the coverage tool README. It does not
 certify VexRiscv ISA compliance or change the adapter configuration.
+
+## RTL event coverage
+
+[The coverage example](rvw/coverage/README.md) samples typed fetch-interface
+bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
+matching HGLDD. It also measures Scala attribution of native toggle points.
+This interface exercise is separate from ISA regression coverage.
