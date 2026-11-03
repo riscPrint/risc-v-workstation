@@ -6,9 +6,8 @@ behaviour back to SpinalHDL source (ChiselTrace for Spinal). As of 2026-10-19 th
 code or release**. The folders `SpinalWaves/` and `SpinalTrace/` here are our own port, built from the
 open-source Tywaves and ChiselTrace code (Apache-2.0) while we wait.
 
-A T3 scheduled task ("SpinalWaves/SpinalTrace upstream check",
-id `scheduled-task:bcd27775-27ef-470c-9035-8f4a67ff1e8e`) runs **every 14 days** (first run
-2026-11-02) and reports back in the originating thread if upstream code appears.
+Use the checklist below to check for upstream code and releases. Record public
+source links when reporting a change.
 
 ## Checklist for each check
 

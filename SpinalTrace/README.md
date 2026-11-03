@@ -29,8 +29,9 @@ t=0    Gcd.scala:26    Connection connect_x              24 (0x18)   cond->Gcd.s
 ## Install
 
 Tested on macOS arm64 with: JDK 21, sbt 1.10, Scala 2.13.14, SpinalHDL 1.15.0, Verilator 5.x,
-Yosys (only for one test), Rust 1.98 (edition 2024), Node 26 / npm. On this machine
-`source ../../spinal-boom/env.sh` (from a spinal-boom checkout next to this repo) puts JDK, Verilator and Yosys on `PATH`.
+Yosys (only for one test), Rust 1.98 (edition 2024), Node 26 / npm. From the workstation root, run
+`scripts/install.sh --with-sim --with-formal` and source the generated `env.sh`.
+From `SpinalTrace/`, use `source ../env.sh`.
 SpinalTrace expects the sibling checkout `../SpinalWaves` (sbt source dependency and tywaves-rs).
 
 ```bash
@@ -117,7 +118,7 @@ The GUI is the ChiselTrace viewer: timeline, hover for source and typed values, 
 ## Tests
 
 ```bash
-source ../../spinal-boom/env.sh
+source ../env.sh
 cargo build --release -p spinaltrace-cli      # the Scala tests call this binary
 cargo test -p spinaltrace-rs                   # engine unit tests + fixture traces (no JVM needed)
 cd spinaltrace && sbt test                     # 20 tests, Verilator simulations, ~2 min

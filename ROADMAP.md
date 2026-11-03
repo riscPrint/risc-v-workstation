@@ -60,9 +60,10 @@ The supported and experimental features are listed in the "Status" section of
 `README.md`. C8 defines the review rule and threat model. BOOM run identity uses
 the hash of generated Verilog. Missing evidence cannot earn a gate acceptance.
 
-Release cleanup removes machine paths and recorded review output. The path check
-in `rvw/tests/test_release_hygiene.py` checks tracked text files. Current limits
-stay in tool READMEs. Git history retains past reports.
+Release cleanup removes machine paths and recorded review output. The release scan
+in `rvw/tests/test_release_hygiene.py` checks tracked files and commit/tag metadata.
+Its limits are in `rvw/README.md`. Current tool limits stay in tool READMEs.
+Review results belong in issues and pull requests, not repository history.
 
 ## Where we are against commercial tools
 
