@@ -113,7 +113,7 @@ is from being usable on other designs.
 | rvw bundle / reduce / bisect / wave | `rvw/src/rvw/{bundle,reduce,bisect,wave,runs}/`, `RiscvSim/boom/debug.toml` | DBG | Failure report, reduction, bisection; root-caused the `lsu.scala:1241` assertion | Any core with a C1 adapter and a debug config | generic (BOOM in config) |
 | SpinalDB + rvw query | `SpinalDB/`, `rvw/src/rvw/query/` | IDE, PLAT | BOOM design database in ~1 min; queries in under a second | Any Spinal design, built by its project's adapter | generic library; external BOOM project build validated |
 | rvw cov | `rvw/src/rvw/cov/` | SIM, FV | Coverage merge, ranking, RVFI functional coverage, change-based selection, proof exclusions, mcy | Any Verilator design / RISC-V core | generic; partial Scala attribution |
-| SpinalChecks + rvw formal | `SpinalChecks/`, `rvw/src/rvw/formal/` | FV | 516 generated checks (24 fire, untriaged); BMC from a riscv-tests state; xprop | Any Spinal design within the supported clock and state model | generic libraries; bounded first-witness X sweep and native parent-context Icarus replay; TileLink/AXI4 protocol checks and reference traffic; BOOM triage pending |
+| SpinalChecks + rvw formal | `SpinalChecks/`, `rvw/src/rvw/formal/` | FV | 516 generated checks (24 fire, untriaged); BMC from a riscv-tests state; xprop | Any Spinal design within the supported clock and state model | generic libraries; project-driven bounded riscv-formal (NRET 1, conformance pending); bounded first-witness X sweep and native parent-context Icarus replay; TileLink/AXI4 protocol checks and reference traffic; BOOM triage pending |
 | Arch + rvw arch | `Arch/`, `rvw/src/rvw/arch/` | ARCH | Project O3 descriptions, native setup, same-ELF C1 calibration and MCP | One RV64 O3 hart with the bare-metal ROI runtime | generic runner; BOOM preset data in projects |
 | SpinalKonata + rvw perf | `SpinalKonata/`, `rvw/src/rvw/perf/` | DBG, ARCH | BOOM probe adapter; text reports on `large` benchmarks | Any design that tags pipeline events; any Kanata log | generic; BOOM still uses its own probe |
 | rvw CLI + MCP project selection | `rvw/`, `docs/BRING_YOUR_OWN_CORE.md` | PLAT | Explicit `--core boom` compatibility; background MCP jobs | Install once; core-owned `rvw.toml` and adapters; `--project`, `RVW_PROJECT`, upward discovery | project interface documented; external BOOM validated, BOOM and VexRiscv projects validated |
@@ -123,7 +123,7 @@ is from being usable on other designs.
 | SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: database export ready; legacy BOOM entry retained pending parity |
 | VS Code extension | `vscode/` | PLAT | Hosts SpinalBlocks | One extension, one feature per tool | generic |
 
-Core-side tools that stay in `spinal-boom` for now: the BoomSim harness, the riscv-formal harness
+Core-side tools that stay in `spinal-boom` for now: the BoomSim harness
 and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
 
 ## Integration

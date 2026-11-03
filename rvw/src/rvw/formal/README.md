@@ -234,3 +234,75 @@ real core to make a core-context claim. Check payload validity separately.
 A signal with no X/Z observation stays `inconclusive`. This run cannot prove
 `unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
 The command returns 1 for all results. It never reports a design pass.
+
+## riscv-formal
+
+`rvw --project /path/to/rvw.toml formal riscv --out /new/output --timeout 60 --json`
+runs the exact check list in `[riscv_formal]`. The timeout applies to generation
+and to each check. Use the core's machine lock and `nice` for native runs.
+The output directory must be new. The runner copies the checker and design
+inputs there. It does not modify the core or the riscv-formal checkout.
+
+Required project fields:
+
+| Field | Meaning |
+|---|---|
+| `root` | Native riscv-formal checkout with `checks/` and `insns/`. |
+| `wrapper` | Project-owned SystemVerilog wrapper template. |
+| `verilog` | Nonempty list of design source paths. |
+| `isa` | `rv32i`, `rv32im`, `rv32ic`, `rv32imc`, or their `rv64` forms. |
+| `nret` | Must be 1 in this increment. Wider retirement is refused. |
+| `checks` | Exact generated task names. Must include `cover`. |
+| `depth` | Bound from 2 to 200 cycles. |
+| `solver` | `bitwuzla`, `yices`, `z3` or `boolector`. |
+| `defines` | Optional single-line Verilog definitions and assumptions. |
+| `ports` | Table from each RVFI field name to its distinct DUT port name. |
+
+The wrapper declares `rvfi_wrapper`, with `clock`, `reset` and
+`` `RVFI_OUTPUTS ``. Put `@RVFI_CONNECTIONS@` once in the DUT port list.
+The runner replaces it with the project port map. The wrapper must supply the
+memory environment, clock/reset connections and input constraints. Review these
+constraints before using a result. The runner does not certify that they model
+the intended system. It does not check the DUT's port widths before synthesis.
+
+Supported check names are `insn_<instruction>_ch0`, `reg_ch0`, `pc_fwd_ch0`,
+`pc_bwd_ch0`, `causal_ch0`, `unique_ch0` and `cover`. A task that the
+selected ISA does not generate produces an inconclusive error. No task is
+silently skipped. CSR, vector, atomic, floating-point and multi-channel checks
+are not supported by this interface.
+
+`results.json` uses C3. Missing status, tool errors, cover failure and timeouts
+are inconclusive. Assertion FAIL is a failure. PASS needs both an SBY PASS
+status and exit 0. Without retirement cover, assertion PASS records remain
+inconclusive. A reached retirement does not show that each instruction was
+reached. All properties remain bounded. `verdict.json` uses C4: failures reject;
+other results stay inconclusive. Even a complete bounded run cannot earn gate
+acceptance. Adapter conformance and committed gate identity remain work for #63.
+C1 simulation results are not fabricated for formal jobs.
+
+## Examples and provenance
+
+[BOOM](../../../../examples/boom/formal/rvw.toml) and
+[VexRiscv](../../../../examples/vexriscv/formal/rvw.toml) each select ADD, SUB
+and retirement cover at depth 20. Set `RISCV_FORMAL` to a native checkout.
+BOOM also needs `SPINAL_BOOM/formal/BoomFormalTop.v`. Generate that RTL in the
+owner-approved private clone. The runner never elaborates in the source checkout.
+
+The BOOM wrapper and settings are adapted from `riscPrint/spinal-boom`, commit
+`19c6244bca7c9442b34f6b536a63e2013ec36cf4`, `formal/wrapper.sv` and
+`formal/checks.cfg`. The core source stays read-only. The VexRiscv wrapper is
+adapted from `YosysHQ/riscv-formal`, commit
+`c992aa61fdfe0846c5ed90324c596202a1c69b76`, `cores/VexRiscv/wrapper.sv`.
+Its project selects the `FormalSimple` RTL snapshot in that checkout. This is
+not the workstation RV32IM simulation variant. The run records hashes of the
+actual copied RTL, wrapper and checker inputs. No third-party RTL is vendored.
+
+## Decisions and limits
+
+Reuse upstream `genchecks.py` and SBY. Keep all core signal names and memory
+constraints in project data. Require cover to expose shallow reset-only results.
+Do not claim full ISA proof, adapter conformance, privileged-mode correctness,
+or correct memory transactions from this bounded run. Independent transaction
+checks for retire width, order, traps, killed instructions, memory lanes and
+multiple effects remain open. The current tests cover configuration refusal,
+private input copies, missing status, failing cover, timeout and result mapping.

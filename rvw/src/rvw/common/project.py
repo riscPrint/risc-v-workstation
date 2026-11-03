@@ -73,6 +73,7 @@ def parse_project(raw, path, environment):
         "query": {"build", "db"},
         "arch": {"description", "sources", "benchmarks"},
         "formal": {"verilog", "top", "checks", "clock", "reset"},
+        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports"},
     }
     _check_keys(raw, {"core", "suites", "tiers", *tables}, str(path))
     sections = {}
@@ -89,6 +90,16 @@ def parse_project(raw, path, environment):
         raise ProjectError(f"{path}: project needs [core] name")
     for section, table in sections.items():
         for key, value in list(table.items()):
+            if section == "riscv_formal":
+                if key in {"root", "wrapper"}:
+                    if not isinstance(value, str) or not value:
+                        raise ProjectError(f"riscv_formal.{key} must be a nonempty path")
+                    table[key] = _path(value, base, environment)
+                elif key == "verilog":
+                    if not isinstance(value, list) or not value or not all(isinstance(v, str) and v for v in value):
+                        raise ProjectError("riscv_formal.verilog must be a nonempty path list")
+                    table[key] = [_path(v, base, environment) for v in value]
+                continue
             if key in {"schema", "top", "clock", "reset"}:
                 if not isinstance(value, str) or not value:
                     raise ProjectError(f"{section}.{key} must be a non-empty string")

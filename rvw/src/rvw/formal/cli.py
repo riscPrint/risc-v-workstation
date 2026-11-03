@@ -72,6 +72,13 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
+    r.add_argument("--out", required=True)
+    r.add_argument("--timeout", type=float, default=60, help="seconds per check")
+    r.add_argument("--json", action="store_true")
+    from rvw.formal.riscv import main as riscv_main
+    r.set_defaults(func=riscv_main)
+
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
     b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")
