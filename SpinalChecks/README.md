@@ -488,3 +488,11 @@ Formal generated assertions sample on clock edges even when the state has an asy
 reset. Reset still gates the check. Formal mode omits monitor text reports.
 Raw assertions with an async reset in their sensitivity list remain refused.
 Their trigger semantics are outside this increment.
+
+### Sequential equivalence
+
+`rvw formal equiv` compares two exported RTL revisions with eqy and native ABC.
+It supports one clock, aligned synchronous reset, automatic register names and
+manual pairs. Unknown partitions and unmatched state stay inconclusive. See the
+[formal README](../rvw/src/rvw/formal/README.md#sequential-equivalence-first-increment-issue-18)
+for the result contract, tests and limits. Issue #18 remains an epic.

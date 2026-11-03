@@ -125,6 +125,8 @@ def register(sub) -> None:
     r.add_argument("--json", action="store_true")
     from rvw.formal.riscv import main as riscv_main
     r.set_defaults(func=riscv_main)
+    from .equiv import register as register_equiv
+    register_equiv(s)
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)

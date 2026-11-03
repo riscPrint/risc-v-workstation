@@ -6,6 +6,8 @@ state. `xprop` checks whether unknown state can reach selected signals. See
 
 By default, sequential flows require one rising-edge clock and synchronous state controls.
 BMC also supports the explicit sampled event model below. Asynchronous
+
+Assertion flows require one rising-edge clock and synchronous state controls. Asynchronous
 reset/load/set/clear controls and latches are refused. A result applies only to the selected depth,
 input ties, assumptions, and reset settings. Missing replay state starts free and can cause
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
@@ -557,3 +559,78 @@ Formal generated assertions sample on clock edges even when the state has an asy
 reset. Reset still gates the check. Formal mode omits monitor text reports.
 Raw assertions with an async reset in their sensitivity list remain refused.
 Their trigger semantics are outside this increment.
+
+## Sequential equivalence (first increment, issue #18)
+
+```sh
+# Export RTL from each revision before this command. Keep the files separate.
+rvw formal equiv --gold old/Top.v --gate new/Top.v --top Top \
+  --clock clk --reset reset --reset-cycles 2 --timeout 60 --out out/equiv --json
+# Rename a flattened state signal explicitly. This is a mapping, not an assumption.
+rvw formal equiv --gold old/Top.v --gate new/Top.v --top Top \
+  --pair stage.old=stage.new --settle 2 --dsec --out out/equiv
+```
+
+The first design is a four-bit synchronous pipeline. Tests cover an equal arithmetic
+refactor, an equal retiming, renamed state, and a changed arithmetic result.
+The output contract is `rvw.formal.equiv/1`. Exit 0 means `equivalent` (proved).
+Exit 1 means `not_equivalent` with a VCD counterexample, or `inconclusive`.
+An invalid or busy output directory exits 2. Each run owns its output directory
+until it writes the result. A new run removes the old result first.
+
+Each side uses the existing captured RTL frontend and tool bindings. Both designs
+must have the same ordered port interface. One rising-edge clock is supported.
+Async controls, latches, memories, blackboxes, design properties and explicit
+nondeterministic cells are refused. State names must cover every register bit.
+The command pairs register names of equal width automatically. Repeat `--pair`
+for renamed state. An unmatched register always prevents an equivalence result.
+The mapping is an inventory. The solver does not assume that paired values agree.
+
+Eqy creates partitions. The command matches boundary ports and keeps internal
+state inside each output cone. Independent output cones can form separate
+partitions. All must pass. Internal state cutpoints are refused.
+SymbiYosys proves each partition with `yosys-abc`, using `scorr; pdr`.
+The flow uses two-state values, independent initial state on each side, and no
+user assumptions. An unknown or absent partition, a missing witness, a solver
+error, or a timeout cannot produce `equivalent`. A failure describes this initial
+state model. It need not be a reachable hardware difference after a real reset.
+
+`--reset` drives the same synchronous reset sequence into each design. It is active
+for `--reset-cycles` clocks, then inactive. Output checks start after that sequence
+and `--settle` extra clocks. Without `--reset`, checks start at time zero, unless
+`--settle` is set. These unchecked startup clocks are an explicit restriction.
+Only `--latency 0` is supported. There is no output cycle shift or protocol adapter.
+No reset port means no reset sequence is inferred. Inputs other than clock and
+reset remain free. Results list the reset, settle and latency settings.
+
+`--dsec` also exports each wrapped design to AIG and runs native ABC `dsec`.
+Its log is advisory. ABC's initialization and name matching differ from the eqy
+obligations. A dsec message cannot replace the partition proof. A dsec timeout
+still makes the command inconclusive. Native dsec as an authoritative backend,
+state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
+and a scalable partition dependency proof remain part of the epic.
+
+The command takes exported RTL files. It does not check out a source repository,
+run an elaborator, or claim that a supplied revision label produced those files.
+For tracked RTL, use `git show REV:path/to/Top.v > old/Top.v` for each side.
+For Spinal designs, elaborate each committed revision in a separate build area.
+Do not build or change an owner's shared core checkout.
+
+### Validation scope and export gap
+
+The committed equivalence tests use small Verilog designs. Run them from the
+workstation root with the native formal tools on `PATH`:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/formal/test_equiv.py -q
+```
+
+This increment has no committed BOOM leaf export recipe. It does not establish
+BOOM leaf or whole-core equivalence. A source revision label alone does not
+establish the origin of generated RTL.
+
+A reproducible source-revision comparison still needs a tested export flow.
+It must declare the generator dependencies and settings for each revision.
+Module selection must use the project's generated Verilog and project data.
+Core names and settings must stay outside `rvw/src`. Copying a Scala class and
+selected helpers into a temporary harness is not a supported export flow.
