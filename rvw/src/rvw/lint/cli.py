@@ -51,10 +51,12 @@ def load(path):
     if not isinstance(waivers, list):
         raise ValueError('waivers must be a list')
     for w in waivers:
-        if (not isinstance(w, dict) or set(w) != {'rule', 'endpoint', 'reason', 'config'}
+        if (not isinstance(w, dict) or set(w) != {'rule', 'endpoint', 'reason', 'config', 'finding_id'}
                 or not all(isinstance(v, str) and v.strip() for v in w.values())
-                or w['config'] != cfg['config']):
-            raise ValueError('waiver needs exact rule, endpoint, reason and matching config')
+                or w['config'] != cfg['config']
+                or len(w['finding_id']) != 64
+                or any(c not in '0123456789abcdef' for c in w['finding_id'])):
+            raise ValueError('waiver needs exact rule, endpoint, finding_id, reason and matching config')
     cfg['backends'] = backends
     return cfg, dict(path=str(path), sha256=hashlib.sha256(data).hexdigest())
 
@@ -76,11 +78,16 @@ def report(path):
         else:
             runs[backend] = native.run(backend, cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
     waivers = [{**w, 'matches': 0} for w in cfg.get('waivers', [])]
-    for run in runs.values():
+    for backend, run in runs.items():
         for f in run['findings']:
+            # Bind the waiver to all diagnostic data, including source and message.
+            f['id'] = hashlib.sha256(json.dumps(
+                dict(config=cfg['config'], top=cfg['top'], backend=backend, finding=f),
+                sort_keys=True, separators=(',', ':')).encode()).hexdigest()
             f['disposition'] = 'active'
             for w in waivers:
-                if f['rule'] == w['rule'] and f['endpoint'] == w['endpoint']:
+                if (f['rule'] == w['rule'] and f['endpoint'] == w['endpoint']
+                        and f['id'] == w['finding_id']):
                     w['matches'] += 1
                     f['disposition'] = 'waived'
                     f['waiver_reason'] = w['reason']

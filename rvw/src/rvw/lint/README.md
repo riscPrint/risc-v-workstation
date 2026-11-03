@@ -37,6 +37,7 @@ rvw lint --settings lint.json --json
   "timeout_s": 120,
   "waivers": [
     {"config": "reference", "rule": "cdc.unsynchronized", "endpoint": "sample",
+     "finding_id": "<copy the 64-character id from the reported finding>",
      "reason": "Test-only fault injection endpoint."}
   ]
 }
@@ -44,7 +45,11 @@ rvw lint --settings lint.json --json
 
 Paths resolve from the settings file. Native diagnostic endpoints use the exact
 `file:line:column` from the result. Structural endpoints use the destination
-SpinalDB path. Waivers match an exact rule, endpoint and configuration. They do
+SpinalDB path. Each finding has an `id` derived from its diagnostic data, backend, top and
+configuration. Copy this value into the waiver as `finding_id`. A source or
+message change gives a different ID, even at the same endpoint. Waivers need
+the exact ID, rule, endpoint and configuration. Old waivers without an ID are
+input errors. They do
 not remove findings. Unused waivers retain `matches: 0`. A configuration mismatch
 is an error. Backend suppression flags are not accepted. Native inline
 suppressions already in RTL remain a limit; inspect source before signoff.

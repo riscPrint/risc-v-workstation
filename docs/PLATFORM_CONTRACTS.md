@@ -1028,7 +1028,10 @@ Retained limit: All documented unsupported capture structures, size bounds and s
 `[lint] settings` path. Paths resolve against the settings file. See the
 [lint guide](../rvw/src/rvw/lint/README.md) for fields and scope.
 `rvw.lint/1` records settings and RTL hashes, native output, backend states,
-structural inventory, exact waivers and match counts. Waived findings remain in
+structural inventory, exact waivers and match counts. Each finding has a SHA-256
+`id` of its diagnostic data, backend, top and configuration. Waivers require
+this value as `finding_id`, plus exact rule, endpoint, configuration and reason.
+A different source or message cannot reuse the waiver. Waived findings remain in
 place. Missing backends remain `not_run`. Exit 0 means completed checks without
 findings; 1 means active findings; 2 means input error; 3 means inconclusive.
 Structural analysis cannot produce signoff. Its unrun rule inventory is mandatory.

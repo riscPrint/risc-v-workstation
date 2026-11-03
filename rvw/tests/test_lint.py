@@ -53,7 +53,9 @@ def settings(tmp_path, db):
 def test_exact_waiver_retains_finding_and_unused(tmp_path):
     p = settings(tmp_path, fixture_db(tmp_path))
     cfg = json.loads(p.read_text())
-    cfg['waivers'] = [dict(rule='cdc.unsynchronized', endpoint=e, reason='Test fault.', config='reference') for e in ['r2','missing']]
+    finding_id = report(p)['backends']['structural']['findings'][0]['id']
+    cfg['waivers'] = [dict(rule='cdc.unsynchronized', endpoint=e, finding_id=finding_id,
+                           reason='Test fault.', config='reference') for e in ['r2','missing']]
     p.write_text(json.dumps(cfg))
     r = report(p)
     assert r['status'] == 'inconclusive'
@@ -181,3 +183,66 @@ def test_no_reset_has_no_reset_kind(tmp_path):
 def test_verible_adjacent_categories():
     result = native.parse('verible', 'a.sv:1:2: Use always_comb [Style: combinational-logic][always-comb]')
     assert result[0]['rule'] == 'verible.always-comb'
+
+
+def test_waiver_does_not_hide_another_source(tmp_path):
+    db = fixture_db(tmp_path)
+    p = settings(tmp_path, db)
+    first = report(p)['backends']['structural']['findings'][0]
+    cfg = json.loads(p.read_text())
+    cfg['waivers'] = [dict(rule=first['rule'], endpoint=first['endpoint'],
+                           finding_id=first['id'],
+                           config='reference', reason='Only the original crossing.')]
+    p.write_text(json.dumps(cfg))
+    with sqlite3.connect(db) as c:
+        c.execute('UPDATE signals SET clock_domain_id=1 WHERE id=3')
+        c.execute("INSERT INTO edges VALUES(3,2,'data')")
+    result = report(p)
+    findings = result['backends']['structural']['findings']
+    assert [(f['source'], f['disposition']) for f in findings] == [('r1', 'waived'), ('r3', 'active')]
+    assert result['waivers'][0]['matches'] == 1
+
+
+def test_waiver_does_not_hide_changed_native_message(tmp_path, monkeypatch):
+    p = settings(tmp_path, fixture_db(tmp_path))
+    cfg = json.loads(p.read_text())
+    rtl = tmp_path / 'Top.v'
+    rtl.write_text('module Top; endmodule')
+    cfg.update(backends=['verilator'], files=[str(rtl)])
+    p.write_text(json.dumps(cfg))
+    finding = dict(rule='verilator.UNUSEDSIGNAL', endpoint='Top.v:1:1',
+                   message='Signal is not used: original', severity='warning')
+    monkeypatch.setattr(native, 'run', lambda *a: dict(status='completed', findings=[dict(finding)]))
+    original = report(p)['backends']['verilator']['findings'][0]
+    cfg['waivers'] = [dict(rule=original['rule'], endpoint=original['endpoint'],
+                           finding_id=original['id'],
+                           config='reference', reason='Only the original signal.')]
+    p.write_text(json.dumps(cfg))
+    finding['message'] = 'Signal is not used: different'
+    result = report(p)
+    assert result['active_findings'] == 1
+    assert result['waivers'][0]['matches'] == 0
+
+
+def test_missing_verible_cannot_report_clean(tmp_path, monkeypatch, capsys):
+    p = settings(tmp_path, fixture_db(tmp_path, 'same'))
+    rtl = tmp_path / 'Top.v'
+    rtl.write_text('module Top; endmodule')
+    cfg = json.loads(p.read_text())
+    cfg.update(backends=['verible'], files=[str(rtl)])
+    p.write_text(json.dumps(cfg))
+    monkeypatch.setattr(native.shutil, 'which', lambda _: None)
+    assert main(['lint', '--settings', str(p), '--json']) == 3
+    result = json.loads(capsys.readouterr().out)
+    assert result['status'] == 'inconclusive'
+    assert result['backends']['verible']['status'] == 'not_run'
+
+
+def test_waiver_without_finding_id_is_rejected(tmp_path):
+    p = settings(tmp_path, fixture_db(tmp_path))
+    cfg = json.loads(p.read_text())
+    cfg['waivers'] = [dict(rule='cdc.unsynchronized', endpoint='r2',
+                           config='reference', reason='Old broad waiver.')]
+    p.write_text(json.dumps(cfg))
+    with pytest.raises(ValueError, match='finding_id'):
+        report(p)
