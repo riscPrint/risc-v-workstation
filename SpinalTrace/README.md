@@ -166,3 +166,11 @@ Memory writes must be synchronous, equal-width and unmasked. Memory reads can be
 synchronous or asynchronous. Large memories and dynamic partial writes report
 incomplete. See [the accuracy contract](docs/PDG_FORMAT.md#accuracy-contract-formatversion-2)
 for the bounds and source grouping rules.
+
+## Viewer node IDs
+
+The viewer assigns each long-distance pseudo-node the ID `vertex_count + edge_index`.
+This reserves real vertex IDs and gives repeated relations distinct IDs in both
+views. IDs must fit JavaScript's exact integer range. Source navigation follows
+the relation's destination. Test with `cargo test -p spinaltrace --lib viewer_tests`
+and `cargo test -p spinaltrace-rs viewer_ids`.
