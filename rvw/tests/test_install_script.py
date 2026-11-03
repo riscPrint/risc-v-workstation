@@ -43,7 +43,7 @@ def test_dry_run_makes_no_target_or_shell_rc(tmp_path):
     assert not rc.exists()
     assert 'git clone --no-hardlinks' in result.stdout
     assert 'uv venv' in result.stdout
-    assert 'uv pip install' in result.stdout
+    assert 'uv sync --locked' in result.stdout
     assert 'env.sh' in result.stdout
     assert '#put-the-project-files-in-your-core-repository' in result.stdout
 
@@ -234,7 +234,7 @@ def test_gem5_native_build_plan(tmp_path, system, distro, dependencies):
     binaries.mkdir()
     for name, body in {
         'uname': f'echo {system}',
-        'uv': 'echo "uv 0.6.0"',
+        'uv': 'echo "uv 0.13.6"',
         'xcrun': 'exit 0',
         **{name: f'echo called >> "{tmp_path}/mutations"; exit 99'
            for name in ('brew', 'sudo', 'apt-get', 'dnf')},
@@ -284,7 +284,7 @@ def test_gem5_source_checks_and_build_failure(tmp_path, revision, dirty):
         'python3': 'case "$*" in --version) echo "Python 3.11.0";; '
                    f'"-I -c"*) echo {shlex.quote(str(binaries / "base-python3"))};; *) exit 99;; esac',
         'base-python3-config': 'exit 0',
-        'uv': 'echo "uv 0.6.0"',
+        'uv': 'echo "uv 0.13.6"',
         'apt-get': 'exit 0',
         'sudo': 'exec "$@"',
         'git': f'case "$*" in *"rev-parse HEAD") echo {revision};; '
@@ -325,3 +325,63 @@ def test_gem5_source_checks_and_build_failure(tmp_path, revision, dirty):
             str(source / 'build_opts/RISCV'), '--ignore-style',
         ]
     assert not (target / 'env.sh').exists()
+
+
+def test_installer_uses_locked_inputs():
+    script = SCRIPT.read_text()
+    assert 'uv sync --locked' in script
+    assert 'releases/latest' not in script
+    assert 'assets/latest' not in script
+    assert 'submodule update --init --recursive' in script
+    assert 'verify_archive' in script
+    assert (ROOT / 'rvw/uv.lock').is_file()
+
+
+@pytest.mark.parametrize('version', ['5.049', '5.999'])
+def test_untested_verilator_warns(tmp_path, version):
+    binaries = tmp_path / 'bin'
+    binaries.mkdir()
+    tool = binaries / 'verilator'
+    tool.write_text(f'#!/bin/sh\necho "Verilator {version}"\n')
+    tool.chmod(0o755)
+    env = {**os.environ, 'PATH': f'{binaries}:{os.environ["PATH"]}'}
+    result = invoke('--check', '--with-sim', '--prefix', tmp_path / 'absent', env=env)
+    assert f'WARNING Verilator {version}' in result.stdout
+    if version == '5.049':
+        assert 'FSM coverage' in result.stdout
+
+
+def test_waves_installer_requires_lock():
+    script = (ROOT / 'SpinalWaves/scripts/install.sh').read_text()
+    for line in script.splitlines():
+        if line.strip().startswith(('cargo build ', 'cargo test ')):
+            assert '--locked' in line
+
+
+@pytest.mark.parametrize('correct', [False, True])
+def test_archive_checksum_is_enforced(tmp_path, correct):
+    import hashlib
+    import sys
+    archive = tmp_path / 'archive'
+    archive.write_bytes(b'archive input')
+    expected = hashlib.sha256(archive.read_bytes()).hexdigest() if correct else '0' * 64
+    text = SCRIPT.read_text()
+    function = text[text.index('verify_archive() {'):text.index('pinned_source() {')]
+    wrapper = ('set -e\ndry=0\nrun() { "$@"; }\n' + function
+               + '\nverify_archive "$1" "$2"\n')
+    result = run_group(['bash', '-c', wrapper, '_', str(archive), expected],
+                       env={**os.environ, 'RVW_PYTHON': sys.executable}, capture=True, timeout=10)
+    assert (result.returncode == 0) == correct
+    if not correct:
+        assert 'checksum mismatch' in result.stderr
+
+
+def test_pinned_sources_include_recorded_submodules(tmp_path):
+    text = SCRIPT.read_text()
+    function = text[text.index('pinned_source() {'):text.index('# Use this archive')]
+    wrapper = ('dry=1\nrun() { printf "%s " "$@"; printf "\\n"; }\n' + function
+               + '\npinned_source https://example.invalid/repo "$1" deadbeef\n')
+    result = run_group(['bash', '-c', wrapper, '_', str(tmp_path / 'source')],
+                       capture=True, timeout=10)
+    assert result.returncode == 0
+    assert 'submodule update --init --recursive' in result.stdout

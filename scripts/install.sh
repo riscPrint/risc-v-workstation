@@ -67,6 +67,10 @@ if [ -n "$source_dir" ]; then
 fi
 rvw_home="$prefix"
 tools="$rvw_home/.tools"
+# Source identities are immutable. Host package versions can drift.
+spike_revision=75fb7ef0aa89ae1f9ee361eb84d47753bc8349f8
+gcc_revision=a33dac0251d17a7b74d99bd8fd401bfce87d2aed
+oss_version=2026-10-22
 gem5_version=25.1.0.1
 gem5_revision=c8222cc67a399bfc01e8658dd14b30d5bfd634f9
 gem5_source="$tools/src/gem5-v$gem5_version"
@@ -105,7 +109,7 @@ esac
 if [ -z "$pm" ]; then
   printf '%s\n' 'Unsupported OS. Install Python 3.11+, git and uv manually.' \
     'Create rvw/.venv with uv venv --python python3 rvw/.venv.' \
-    "Install with: uv pip install --python rvw/.venv/bin/python -e 'rvw[mcp]'" \
+    "Install with: uv sync --locked --no-dev --extra mcp --project rvw" \
     "Native tools: https://github.com/riscPrint/risc-v-workstation/blob/main/docs/BRING_YOUR_OWN_CORE.md#install-the-workstation"
   exit 1
 fi
@@ -163,12 +167,29 @@ probe() {
   elif ! version_ge "$number" "$minimum"; then
     printf 'TOO OLD %s: %s (need %s+)\n' "$label" "$number" "$minimum"; return 1
   fi
+  tested=''
+  case "$label" in
+    Verilator) tested=5.052 ;;
+    Yosys) tested=0.70 ;;
+    SymbiYosys) tested=0.70 ;;
+    Yices) tested=2.7.0 ;;
+    Spike) tested=1.1.1 ;;
+    Sail) tested=0.15 ;;
+    sbt) tested=1.11.7 ;;
+    JDK|javac) tested=21.0.13 ;;
+  esac
+  if [ -n "$tested" ] && [ "$number" != "$tested" ]; then
+    printf 'WARNING %s %s: outside tested version table (%s); see docs/TOOL_VERSIONS.md\n' "$label" "$number" "$tested"
+  fi
+  if [ "$label" = Verilator ] && [ "$number" = 5.049 ]; then
+    printf 'WARNING Verilator 5.049: known FSM coverage crash; keep FSM coverage disabled\n'
+  fi
   printf 'PRESENT %s: %s\n' "$label" "$number"
 }
 core_check() {
   local failed=0
   probe Python 3.11 "$python_cmd" --version || failed=1
-  probe uv 0.6 uv --version || failed=1
+  probe uv 0.13.6 uv --version || failed=1
   probe git 2 git --version || failed=1
   if [ -x "$rvw_home/rvw/.venv/bin/python" ]; then
     probe 'rvw venv Python' 3.11 "$rvw_home/rvw/.venv/bin/python" --version || failed=1
@@ -264,7 +285,25 @@ PYTHON
       printf 'MISSING Yosys xprop support\n'; failed=1
     fi
   fi
+  if [ -n "${RVW_SAIL:-}" ]; then probe Sail 0.15 "$RVW_SAIL" --version || failed=1; fi
   return "$failed"
+}
+verify_archive() {
+  run "$RVW_PYTHON" -I -c 'import hashlib,pathlib,sys; actual=hashlib.sha256(pathlib.Path(sys.argv[1]).read_bytes()).hexdigest(); sys.exit(0 if actual == sys.argv[2] else "archive checksum mismatch")' "$1" "$2"
+}
+pinned_source() {
+  local url="$1" directory="$2" revision="$3"
+  if [ ! -d "$directory/.git" ]; then
+    run git init "$directory"
+    run git -C "$directory" remote add origin "$url"
+    run git -C "$directory" fetch --depth 1 origin "$revision"
+    run git -C "$directory" checkout --detach FETCH_HEAD
+  fi
+  if [ "$dry" = 0 ]; then
+    [ "$(git -C "$directory" rev-parse HEAD)" = "$revision" ] &&
+      git -C "$directory" diff --quiet HEAD -- || fail "Source must be clean at $revision: $directory"
+  else printf 'Verify source is clean at %s\n' "$revision"; fi
+  run git -C "$directory" submodule update --init --recursive
 }
 # Use this archive where the distro has no JDK 21 package.
 temurin_jdk() {
@@ -273,12 +312,13 @@ temurin_jdk() {
   arch="$(uname -m)"
   case "$arch" in x86_64) arch=x64 ;; aarch64|arm64) arch=aarch64 ;; *) fail "No Temurin JDK for $arch" ;; esac
   run mkdir -p "$tools/downloads" "$tools/jdk21"
-  run curl -fL --retry 3 "https://api.adoptium.net/v3/assets/latest/21/hotspot?architecture=$arch&image_type=jdk&os=linux&vendor=eclipse" -o "$tools/downloads/jdk-release.json"
-  if [ "$dry" = 0 ]; then
-    jdk_url=$("$RVW_PYTHON" -I -c 'import json,sys; print(json.load(open(sys.argv[1]))[0]["binary"]["package"]["link"])' "$tools/downloads/jdk-release.json")
-  else jdk_url="https://github.com/adoptium/temurin21-binaries/releases/download/RELEASE/jdk21-$arch.tar.gz"; fi
+  case "$arch" in
+    x64) checksum=d7f5d5cf865a2902b70ff549b97586a7d3f234e016f041ab447ea740c7d66d1c ;;
+    aarch64) checksum=e3522e707fc7dbe2a72c30746b1e7068301a0213ecd213d4491f35a14eb55578 ;;
+  esac
+  jdk_url="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_${arch}_linux_hotspot_21.0.13_9.tar.gz"
   run curl -fL --retry 3 "$jdk_url" -o "$tools/downloads/jdk.tar.gz"
-  run "$RVW_PYTHON" -I -c 'import hashlib,json,pathlib,sys; p=pathlib.Path(sys.argv[1]); expected=json.loads((p/"jdk-release.json").read_text())[0]["binary"]["package"]["checksum"]; actual=hashlib.sha256((p/"jdk.tar.gz").read_bytes()).hexdigest(); sys.exit(0 if expected == actual else "JDK checksum mismatch")' "$tools/downloads"
+  verify_archive "$tools/downloads/jdk.tar.gz" "$checksum"
   run tar -xzf "$tools/downloads/jdk.tar.gz" --strip-components=1 -C "$tools/jdk21"
   export JAVA_HOME="$tools/jdk21"
 }
@@ -315,7 +355,7 @@ if ! probe Python 3.11 "$python_cmd" --version; then
   [ "$dry" = 1 ] || probe Python 3.11 "$python_cmd" --version || fail 'Install Python 3.11+ on this OS, then retry'
 fi
 local_uv=0
-if ! probe uv 0.6 uv --version; then
+if ! probe uv 0.13.6 uv --version; then
   case "$pm" in
     brew) packages uv ;;
     dnf)
@@ -345,7 +385,7 @@ if [ "$local_uv" = 1 ]; then
   run ln -sf "$HOME/.local/bin/uv" "$tools/bin/uv"
 fi
 run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_home/rvw/.venv"
-run uv pip install --python "$rvw_home/rvw/.venv/bin/python" -e "$rvw_home/rvw[mcp]"
+run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 
@@ -387,8 +427,7 @@ if [ "$sim" = 1 ]; then
       run mkdir -p "$tools/downloads" "$tools/bin"
       url=https://github.com/sbt/sbt/releases/download/v1.10.7/sbt-1.10.7.tgz
       run curl -fL --retry 3 "$url" -o "$tools/downloads/sbt.tgz"
-      run curl -fL --retry 3 "$url.sha256" -o "$tools/downloads/sbt.sha256"
-      run "$RVW_PYTHON" -I -c 'import hashlib,pathlib,sys; p=pathlib.Path(sys.argv[1]); expected=(p/"sbt.sha256").read_text().split()[0]; actual=hashlib.sha256((p/"sbt.tgz").read_bytes()).hexdigest(); sys.exit(0 if expected == actual else "sbt checksum mismatch")' "$tools/downloads"
+      verify_archive "$tools/downloads/sbt.tgz" 32c15233c636c233ee25a2c31879049db7021cfef70807c187515c39b96b0fe6
       run tar -xzf "$tools/downloads/sbt.tgz" -C "$tools"
       run ln -sf ../sbt/bin/sbt "$tools/bin/sbt"
     fi
@@ -401,9 +440,7 @@ if [ "$gcc" = 1 ] && ! probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version; 
     dnf)
       packages autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel make diffutils which
       run mkdir -p "$tools/src"
-      if [ ! -d "$tools/src/riscv-gnu-toolchain/.git" ]; then
-        run git clone https://github.com/riscv-collab/riscv-gnu-toolchain.git "$tools/src/riscv-gnu-toolchain"
-      fi
+      pinned_source https://github.com/riscv-collab/riscv-gnu-toolchain.git "$tools/src/riscv-gnu-toolchain" "$gcc_revision"
       run bash -c 'cd "$1" && ./configure --prefix="$2" --with-arch=rv64gc --with-abi=lp64d' _ "$tools/src/riscv-gnu-toolchain" "$tools/riscv"
       run nice make -C "$tools/src/riscv-gnu-toolchain" -j2 ;;
   esac
@@ -421,9 +458,7 @@ if [ "$cosim" = 1 ]; then
         if [ "$pm" = apt ]; then packages build-essential device-tree-compiler libboost-regex-dev libboost-system-dev;
         else packages make gcc-c++ dtc boost-devel; fi
         run mkdir -p "$tools/src"
-        if [ ! -d "$tools/src/spike/.git" ]; then
-          run git clone --depth 1 https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike"
-        fi
+        pinned_source https://github.com/riscv-software-src/riscv-isa-sim.git "$tools/src/spike" "$spike_revision"
         run mkdir -p "$tools/src/spike/build"
         run bash -c 'cd "$1" && ../configure --prefix="$2"' _ "$tools/src/spike/build" "$SPIKE_PREFIX"
         run nice make -C "$tools/src/spike/build" -j2
@@ -440,11 +475,16 @@ if [ "$formal" = 1 ]; then
     case "$arch" in x86_64) arch=x64 ;; aarch64|arm64) arch=arm64 ;; *) fail "No OSS CAD Suite archive for $arch" ;; esac
     case "$system" in Darwin) os=darwin ;; Linux) os=linux ;; esac
     run mkdir -p "$tools/downloads"
-    run curl -fL --retry 3 https://api.github.com/repos/YosysHQ/oss-cad-suite-build/releases/latest -o "$tools/downloads/oss-release.json"
-    if [ "$dry" = 0 ]; then
-      oss_url=$("$RVW_PYTHON" -I -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next(a["browser_download_url"] for a in d["assets"] if a["name"].startswith("oss-cad-suite-"+sys.argv[2]+"-"+sys.argv[3]+"-")))' "$tools/downloads/oss-release.json" "$os" "$arch")
-    else oss_url="https://github.com/YosysHQ/oss-cad-suite-build/releases/download/RELEASE/oss-cad-suite-$os-$arch-DATE.tgz"; fi
+    case "$os-$arch" in
+      darwin-arm64) checksum=378e87e60db8cb3d077c63613cbed75e52306cf5ebdfeb95596629f343e536c0 ;;
+      darwin-x64) checksum=de02f14693cdd7f1bb9b83f2f77dc8a36eca1c6c552f7934549f4bbb1de4d8f5 ;;
+      linux-arm64) checksum=b113c673c31925d7ac91a8b7a2654339bb6670fd44323c9b350a458c4c043349 ;;
+      linux-x64) checksum=45b7401d677f1e6cffb19dcaafb8e92c95a49dfc05b332ae4d00b84c94f62f6e ;;
+      *) fail "No OSS CAD Suite archive for $os-$arch" ;;
+    esac
+    oss_url="https://github.com/YosysHQ/oss-cad-suite-build/releases/download/$oss_version/oss-cad-suite-$os-$arch-${oss_version//-/}.tgz"
     run curl -fL --retry 3 "$oss_url" -o "$tools/downloads/oss-cad-suite.tgz"
+    verify_archive "$tools/downloads/oss-cad-suite.tgz" "$checksum"
     run tar -xzf "$tools/downloads/oss-cad-suite.tgz" -C "$tools"
   fi
 fi
