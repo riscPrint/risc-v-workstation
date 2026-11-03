@@ -142,3 +142,7 @@ are `arch_build`, `arch_run`, `arch_calibrate`, and `arch_compare`.
 Release checklist: [#78](https://github.com/riscPrint/risc-v-workstation/issues/78). Publication scan: [#79](https://github.com/riscPrint/risc-v-workstation/issues/79). Remote MCP: [#54](https://github.com/riscPrint/risc-v-workstation/issues/54).
 
 Retained limit: The documented release scan and local MCP boundaries remain unchanged. A scan does not prove absence of all secrets or qualify remote authentication.
+
+Setup: use [`rvw doctor`](src/rvw/doctor/README.md) for tool, project and adapter checks. Installation requires `--install FEATURES`.
+
+New Spinal/sbt core: use [`rvw init`](src/rvw/init/README.md) to create a valid project and safe adapter stubs.
