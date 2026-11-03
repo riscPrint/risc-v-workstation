@@ -2,12 +2,20 @@
 name = "rvw"
 version = "0.1.0a1"
 description = "RISC-V Workstation command-line tools: regression, co-simulation, failure bundles, design queries, coverage, performance"
+readme = "README.md"
+maintainers = [{name = "riscPrint"}]
 requires-python = ">=3.11"
 dependencies = ["jsonschema>=4.18"]
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 dev = ["pytest>=8"]
+
+[project.urls]
+Source = "https://github.com/riscPrint/risc-v-workstation"
+Issues = "https://github.com/riscPrint/risc-v-workstation/issues"
+Contact = "https://github.com/riscPrint/risc-v-workstation/issues"
+Security = "https://github.com/riscPrint/risc-v-workstation/security/advisories"
 
 [project.scripts]
 rvw = "rvw.cli:main"
