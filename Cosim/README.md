@@ -612,3 +612,22 @@ Reset values come from project data. They are not architectural reset guarantees
 The native oracle compares CLINT accesses, split writes and two-hart IRQ state
 with Spike's `clint_t`. Relocated ACLINT accesses have model unit tests only.
 ACLINT SSWI, bus timing and a native ACLINT oracle remain unsupported.
+
+### Reset state observer
+
+`rvw.cosim.reset.check_reset` checks samples against `ResetContract`.
+Supply expected state values and masks from the project's reset contract.
+Supply the valid outputs that must stay low during reset.
+Capture an asserted sample and a released sample from the same DUT instance.
+Select the post-release state-check boundary before the run.
+Check each cold, warm, local or repeated pulse separately. Warm and local
+retention values must come from the project. The observer does not choose them.
+
+The result is `consistent`, `mismatch` or `inconclusive`.
+Missing state, output values, pulse evidence or contract gives `inconclusive`.
+A measured conflicting value gives `mismatch`.
+The observer does not assert reset or prove that an adapter sampled a DUT.
+`test_reset.py` checks observer fixtures and repeated reference-device reset
+while IRQs and a PLIC claim are active. These are not RTL reset results.
+Real core reset during bus, trap and debug activity remains unsupported here.
+Do not use simulator initialization as a reset sample.
