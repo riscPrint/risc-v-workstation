@@ -265,9 +265,20 @@ MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
 Unsupported policies must be refused. These settings do not permit arbitrary
 trace values or broad CSR masks. See the exact settings and the
 [C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
-### C2 state extension (`rvw.rvfi/2`)
+### C2 version 2 (`rvw.rvfi/2`)
 
-Version 2 retains every version 1 record and adds these required instruction fields:
+One schema supports `capabilities: ["state", "multihart"]`. Either capability
+can be used alone. `multihart` requires the `harts` header and the per-hart
+records below. `state` requires the FP fields below on each retirement and
+supports CSR snapshots and fault fields. Both capabilities apply together.
+For existing v2 producers, omitted capabilities mean `multihart` when `harts`
+is present, and `state` otherwise. V1 keeps its existing scope. Missing state
+in v1 or multi-hart-only traces is unavailable evidence, never a state match.
+Single-hart Spike/Sail comparison refuses multi-hart traces before comparison.
+
+#### State fields
+
+The state capability retains version 1 instruction fields and adds:
 `fd_valid` (boolean), `fd` (0..31), `fd_wdata` (64-bit hex), `fflags` (5-bit hex),
 and `fcsr` (8-bit hex). `fd_valid` distinguishes no write from a write to f0.
 `fd_wdata` contains the raw architectural FLEN=64 bits, including NaN boxing.
@@ -278,7 +289,7 @@ The low five bits of `fcsr` must equal `fflags`. `fcsr` includes `frm`.
 The checker compares these fields exactly. A backend without these observations
 must refuse version 2 comparison. Version 1 keeps its integer-only scope.
 Version 2 does not imply that a DUT adapter exports these fields.
-FLEN above 64, vectors and per-hart state remain unsupported.
+FLEN above 64 and vectors remain unsupported. Multi-hart reference comparison is unsupported.
 
 C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
 Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.

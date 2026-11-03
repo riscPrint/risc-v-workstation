@@ -15,7 +15,7 @@ final class MultiHartTrace(file: File, header: ujson.Obj, hartIds: Seq[Int]) ext
   private val eventIds = mutable.Set.empty[String]
   private val out = { file.getAbsoluteFile.getParentFile.mkdirs(); new PrintWriter(file, "UTF-8") }
   out.println(ujson.write(ujson.Obj.from(header.value.toSeq ++ Seq(
-    "schema" -> ujson.Str("rvw.rvfi/2"), "harts" -> ujson.Arr.from(hartIds)))))
+    "schema" -> ujson.Str("rvw.rvfi/2"), "capabilities" -> ujson.Arr("multihart"), "harts" -> ujson.Arr.from(hartIds)))))
   private def emit(c: Long, fields: ujson.Obj): Unit = {
     require(c >= 0 && c <= 9007199254740991L && c >= cycle, "capture cycle range/order")
     cycle = c

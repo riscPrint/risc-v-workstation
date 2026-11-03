@@ -92,6 +92,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
         raise ValueError(f"unknown synchronization kinds {sorted(enabled - set(SYNC_KINDS))}")
     xmask = (1 << platform.xlen) - 1
     trace = Trace(trace_path)
+    if trace.multihart:
+        trace.close()
+        raise ValueError("multi-hart reference comparison is unsupported")
     recent = deque(maxlen=history)
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
