@@ -19,7 +19,17 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.11'
-      - run: python -m pip install -e './rvw[dev,mcp]'
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5 # v1.1.9
+      - name: Native tools for launcher tests
+        run: sudo apt-get update && sudo apt-get install -y clang verilator
+      - name: Warm the classpath used by Python extraction tests
+        working-directory: SpinalDB/spinaldb
+        run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
+      - run: python -m pip install -e './rvw[dev,mcp]' 
       - name: Full Python collection (fast and slow; optional native tools can skip)
         run: python -m pytest rvw/tests --strict-markers -q -ra --durations=20 --junitxml=nightly-results.xml
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

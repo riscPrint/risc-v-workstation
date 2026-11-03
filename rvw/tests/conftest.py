@@ -197,9 +197,7 @@ FAST_MODULES = {
     "test_ci.py", "test_project.py", "test_perf.py", "test_perf_capture.py",
     "test_perf_conclusive.py", "test_arch_model.py", "test_debug_wave_values.py",
     "test_query.py", "test_query_round16.py", "test_query_round16_literals.py",
-    "test_query_round17.py", "test_query_round19.py", "test_query_round20.py",
-    "test_query_round21.py", "test_query_round21_path.py", "test_query_round22.py",
-    "test_query_round23.py", "test_query_round24.py",
+    "test_query_round17.py", "test_query_round19.py",
 }
 
 
