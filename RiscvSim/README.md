@@ -188,3 +188,19 @@ The suite covers the CLI, ELF handling, RVFI records, assertions, replay, output
 watchdogs and concurrent failure attribution. RTL identity tests cover monitor bytes and
 unsupported external data dependencies. Python launcher tests cover native identity,
 compiler invocation names, cache reuse, changed flags and cancellation.
+
+## Dependency trace model
+
+`--spinaltrace` selects a separate model for `build`, `run`, `run-many` and
+`identity`. It keeps trace probes and writes a dependency graph from the same
+elaboration as the RTL. `details.model.spinaltrace` records the flag. Replay keeps
+it. Each completed run copies the graph to the `pdg` artifact (`pdg.json`).
+Use `--wave` to record the instrumented wave. Wave windows work as before.
+An adapter must use `RiscvSimConfig.elaborate` to support this flag. A requested
+model without its graph fails with an error. It cannot supply cause evidence.
+
+The `boom-spinaltrace` prototype stays until an old/new BOOM failure bundle has
+the same signature, failure cycle, criterion and dependency trace. Run both with
+the same ELF, seed, model options and wave window under the `boom` lock. Compare
+source statements, cycles and dependency edges after normalizing generated IDs
+and checkout paths. Record the measured result in the PR before removal.
