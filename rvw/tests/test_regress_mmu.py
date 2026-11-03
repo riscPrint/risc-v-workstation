@@ -97,3 +97,21 @@ def test_native_hardware_ad(tmp_path):
     build(DESCRIPTION.with_name('hardware-ad.json'), tmp_path, gcc)
     result = reference(tmp_path, spike, 5)
     assert result['status'] == 'pass', result
+
+
+def test_pma_boundaries_and_conflicts(tmp_path):
+    from rvw.regress.mmu import read_pma
+    path = tmp_path / 'pma.json'
+    region = dict(name='ram', start=0, size=4096, widths=[1,2,4,8], read=True,
+                  write=True, execute=True, idempotent=True, cacheable=True, atomic=True)
+    raw = dict(schema='rvw.mmu-pma/1', regions=[region, dict(region, start=4096)])
+    path.write_text(json.dumps(raw))
+    assert len(read_pma(path)['regions']) == 2
+    raw['regions'][1]['start'] = 4095
+    path.write_text(json.dumps(raw))
+    with pytest.raises(ValueError, match='overlapping'):
+        read_pma(path)
+    raw['regions'] = [dict(region, widths=[3])]
+    path.write_text(json.dumps(raw))
+    with pytest.raises(ValueError, match='widths'):
+        read_pma(path)

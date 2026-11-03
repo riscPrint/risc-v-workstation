@@ -198,8 +198,36 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def build(description, out, gcc):
+def read_pma(path):
+    raw = json.loads(Path(path).read_text())
+    if set(raw) != {'schema', 'regions'} or raw['schema'] != 'rvw.mmu-pma/1':
+        raise ValueError('expected rvw.mmu-pma/1')
+    regions = raw['regions']
+    if not isinstance(regions, list) or not regions:
+        raise ValueError('PMA regions must be nonempty')
+    spans = []
+    fields = {'name', 'start', 'size', 'widths', 'read', 'write', 'execute', 'idempotent', 'cacheable', 'atomic'}
+    for r in regions:
+        if not isinstance(r, dict) or set(r) != fields:
+            raise ValueError('invalid PMA region fields')
+        start, size = number(r['start']), number(r['size'])
+        if start < 0 or size <= 0 or start + size > 2**64:
+            raise ValueError('invalid PMA range')
+        if not isinstance(r['name'], str) or not r['name']:
+            raise ValueError('PMA region needs a name')
+        if not isinstance(r['widths'], list) or not r['widths'] or any(type(w) is not int or w not in (1, 2, 4, 8, 16) for w in r['widths']):
+            raise ValueError('invalid PMA widths')
+        if any(type(r[k]) is not bool for k in ('read', 'write', 'execute', 'idempotent', 'cacheable', 'atomic')):
+            raise ValueError('PMA attributes must be boolean')
+        if any(start < end and begin < start + size for begin, end in spans):
+            raise ValueError('overlapping PMA regions need a resolved platform policy')
+        spans.append((start, start + size))
+    return raw
+
+
+def build(description, out, gcc, pma=None):
     scenarios = load(description)
+    attributes = read_pma(pma) if pma else None
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     # Refuse stale ELFs from an earlier description.
@@ -218,7 +246,7 @@ def build(description, out, gcc):
             raise ValueError(f'compiler failed for {s["id"]}: {result.stderr}')
         rows.append(dict(s, elf=elf.name, elf_sha256=digest(elf), source_sha256=digest(source)))
     manifest = {'schema': 'rvw.mmu-build/1', 'spec': SPEC, 'description_sha256': digest(description),
-                'scenarios': rows}
+                'scenarios': rows, 'pma': attributes, 'pma_sha256': digest(pma) if pma else None}
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     return manifest
 
@@ -249,6 +277,7 @@ def register(sub):
     b = actions.add_parser('build')
     b.add_argument('description', type=Path)
     b.add_argument('--out', required=True, type=Path)
+    b.add_argument('--pma', type=Path, help='core-owned PMA declaration; recorded, not device coverage')
     b.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
     r = actions.add_parser('reference')
     r.add_argument('directory', type=Path)
@@ -264,7 +293,7 @@ def main(args):
     try:
         if args.mmu_action == 'reference' and (not math.isfinite(args.timeout) or args.timeout <= 0):
             raise ValueError('timeout must be finite and positive')
-        result = build(args.description, args.out, args.gcc) if args.mmu_action == 'build' else reference(args.directory, args.spike, args.timeout)
+        result = build(args.description, args.out, args.gcc, args.pma) if args.mmu_action == 'build' else reference(args.directory, args.spike, args.timeout)
         print(json.dumps(result, allow_nan=False))
         return 0 if result.get('status', 'pass') == 'pass' else 3 if result.get('status') == 'inconclusive' else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:

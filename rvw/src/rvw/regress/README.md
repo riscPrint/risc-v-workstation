@@ -396,3 +396,13 @@ It sets `menvcfg.ADUE` and selects Svadu on Spike. Build it in another empty
 directory. Run it on RTL only when the project declares Svadu support. These
 checks verify final PTE bits. They do not prove atomic updates, concurrent
 software changes or faults during page-table accesses.
+
+`build --pma PLATFORM.json` records a core-owned `rvw.mmu-pma/1` declaration.
+It contains `schema` and `regions`. Each region requires `name`, `start`, `size`,
+`widths` (bytes), and boolean `read`, `write`, `execute`, `idempotent`,
+`cacheable` and `atomic` attributes. Ranges use an inclusive start and an
+exclusive end. Overlaps are errors. Resolve conflicts in project data first.
+The manifest binds the declaration hash. This is platform input validation,
+not a device model or PMA test. Spike's RAM backend does not check these
+attributes. No PMA coverage bin earns a pass from this declaration. Boundary
+accesses, attribute conflicts and independent device observations remain open.
