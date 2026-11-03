@@ -41,7 +41,8 @@ def report(netlist, top, mappings, rows, snapshot):
     properties = []
     for mapping, row in zip(mappings, rows):
         job = row.get('jobs', {}).get('prove', {})
-        proven = job.get('status') == 'PASS' and job.get('exit_code') == 0 and job.get('free_wires') == []
+        # Reuse the guarded verdict, including sanity and per-cone activation checks.
+        proven = row.get('unreachable') is True
         names = _identifiers(mapping['expression'])
         problems = []
         if not body:

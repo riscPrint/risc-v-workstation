@@ -19,7 +19,7 @@ def test_known_cone_and_separate_evidence():
         'unused': cell('$not', [4], [5]), 'env': cell('$assume', [4], [])}}
     mapping = {'point_id': 'p', 'property_id': 'range', 'requirement_ids': ['req-range'], 'expression': 'q'}
     r = report({'bound_modules': {'h': body}}, 'h', [mapping],
-               [{'jobs': {'prove': {'status': 'PASS', 'exit_code': 0, 'free_wires': []}}}], {'sha256': 'abc'})
+               [{'unreachable': True, 'jobs': {'prove': {'status': 'PASS', 'exit_code': 0, 'free_wires': []}}}], {'sha256': 'abc'})
     names = {c['id']: c['name'] for c in r['logic']}
     p = r['properties'][0]
     assert {names[x] for x in p['cone']['cells']} == {'first', 'second'}
@@ -60,3 +60,14 @@ def test_native_counter_proof_cone(tmp_path):
     assert '$add' in [names[x] for x in p['cone']['cells']]
     assert any('dff' in names[x] for x in p['cone']['cells'])
     assert not p['cone']['problems']
+
+
+def test_refused_proof_does_not_contribute_a_proven_cone():
+    body = {'ports': {'a': {'direction': 'input', 'bits': [1]}},
+            'netnames': {'q': {'bits': [2]}}, 'cells': {'logic': cell('$not', [1], [2])}}
+    mapping = {'point_id': 'p', 'expression': 'q'}
+    row = {'unreachable': False, 'refused': 'sanity cover failed',
+           'jobs': {'prove': {'status': 'PASS', 'exit_code': 0, 'free_wires': []}}}
+    r = report({'bound_modules': {'h': body}}, 'h', [mapping], [row], {'sha256': 'abc'})
+    assert r['properties'][0]['proof_status'] == 'not_proven'
+    assert len(r['outside_proven_cones']) == 1
