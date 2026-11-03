@@ -88,6 +88,23 @@ Do not change library versions only to use an available cache.
 **Human decision:** agree on the ISA, reset PC, RAM map and supported presets.
 Start with one preset and one small program. Record the intended scope.
 
+For a new Spinal/sbt core, start with the minimal scaffold:
+
+```sh
+cd "$CORE_ROOT"
+rvw init --isa rv32im --dry-run --json
+rvw init --isa rv32im
+rvw doctor --json
+```
+
+Replace `rv32im` with the specified ISA. The generated project file is valid.
+Doctor should report `project: ready`. It returns exit 1 because adapter build/run,
+ELFs and gate inputs are unfinished. Follow the generated `rvw/README.md`.
+The launcher refuses build/run until signal mapping is complete. `--force`
+replaces existing scaffold files, so preserve edited files first.
+See [init limits](../rvw/src/rvw/init/README.md). It does not generate a cosim
+memory map or SpinalDB entry. The steps below still apply.
+
 For the shipped VexRiscv integration, run:
 
 ```sh
