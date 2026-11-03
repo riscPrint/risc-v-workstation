@@ -346,9 +346,10 @@ Earlier measurements on BOOM `small`, seed 1:
   get only the generic stream rules.
 - `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
 - Components without reset: checks there are always active.
-- xprop wrapper needs a clock port: purely combinational modules (e.g. BOOM's `Arbiter_*`) error out.
-- No per-module X sweep command yet (manual runs only); no 4-state replay of xprop
-  counterexamples.
+- `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
+  Use `xprop --combinational` for a clock-free wrapper. See the
+  [formal commands](../rvw/src/rvw/formal/README.md#x-campaigns-and-four-state-replay) for dispositions.
+  Module inputs are free; a confirmed module observation does not establish a core bug.
 - Designs with more than one clock (or a gated clock, or registers on the falling edge) are refused by
   every `rvw formal` flow; there is no multi-clock model yet.
 - Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model

@@ -11,6 +11,7 @@ One clock only: every register, memory port and clocked assertion must be on the
 A design with another clock, a gated clock or a falling edge is refused (exit 2): the flows step every
 clock together (sby multiclock off), which could give a false pass.
 Asynchronous state controls and latches are also refused: events between clock edges are not modelled.
+Use xprop --combinational for a clock-free module. That mode refuses all state.
 
 Exit codes: 0 pass; 1 any other status (fail, unknown, timeout, error, no_checks), with result.json
 written; 2 input error, no result.json (the previous one is removed first, except when another run
@@ -101,4 +102,14 @@ def register(sub) -> None:
     x.add_argument("--signal", action="append", help="flattened signal name to check (repeatable)")
     x.add_argument("--filter", help="regex: keep only targets whose signal matches")
     x.add_argument("--x-inputs", action="store_true", help="do not assume the inputs are defined")
+    x.add_argument("--combinational", action="store_true", help="clock-free module (state is refused)")
+    x.add_argument("--replay", choices=["icarus"], help="replay candidates with native 4-state Icarus")
     x.set_defaults(func=lambda a: _flow("xprop", a))
+
+    sweep = s.add_parser("x-sweep", help="bounded per-module X campaign")
+    _common(sweep, 8)
+    sweep.add_argument("--module", action="append", help="module to sweep (repeatable; default all)")
+    sweep.add_argument("--module-timeout", type=float, default=30, help="seconds per module")
+    sweep.add_argument("--campaign-timeout", type=float, default=300, help="total campaign seconds")
+    sweep.add_argument("--replay", choices=["icarus"], default="icarus")
+    sweep.set_defaults(func=lambda a: _flow("x_sweep", a))
