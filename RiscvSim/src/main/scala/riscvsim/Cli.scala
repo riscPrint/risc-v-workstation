@@ -7,7 +7,7 @@ object Cli {
   class UsageError(msg: String) extends Exception(msg)
 
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
-  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "json", "help")
+  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
     "manifest", "jobs", "summary", "wall-timeout")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
@@ -109,7 +109,7 @@ object Cli {
       maxCycles = maxCycles, memLatency = memLatency,
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
       wave = bool(m, "wave") || waveFrom.isDefined || waveTo.isDefined, waveFrom = waveFrom, waveTo = waveTo,
-      konata = bool(m, "konata"), coverage = bool(m, "coverage"),
+      konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"),
       wallTimeoutS = m.get("wall-timeout").map { v =>
         val d = try v.toDouble catch { case _: NumberFormatException => throw new UsageError(s"--wall-timeout: not a number: $v") }
         if (!java.lang.Double.isFinite(d) || d <= 0)
@@ -120,10 +120,10 @@ object Cli {
 
   val usage: String =
     """usage:
-      |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--json]
+      |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--konata] [--coverage] [--wall-timeout SECONDS] [--json]
+      |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh identity [--config NAME] [--options JSON]
       |  run.sh info     [--json]

@@ -36,7 +36,10 @@ object RiscvSimConfig {
       }
     })
     cfg.addTransformationPhase(new SimVerilatorPhase)
-    val report = cfg.generateVerilog(rtl)
+    val report = if (key.spinaltrace) spinaltrace.SpinalTrace.elaborate(cfg)(rtl) else cfg.generateVerilog(rtl)
+    if (key.spinaltrace) {
+      spinaltrace.PdgExtractor.extractTo(report, dependencyGraph(key, work))
+    }
     // Include blackbox RTL, such as an RVFI monitor, in the exact file Verilator reads.
     require(report.generatedSourcesPaths.size == 1 && report.blackboxesIncludeDir.isEmpty,
       "RTL identity requires one generated file and no external include directories")
@@ -49,6 +52,10 @@ object RiscvSimConfig {
     report.blackboxesSourcesPaths.clear()
     report
   }
+
+  /** Dependency graph emitted by the same elaboration as the model RTL. */
+  def dependencyGraph(key: ModelKey, work: File): File =
+    new File(work, key.name + "-rtl/spinaltrace/pdg.json")
 
   /**
    * A Verilator SimConfig for `key`: workspace under `work` (private to this process),

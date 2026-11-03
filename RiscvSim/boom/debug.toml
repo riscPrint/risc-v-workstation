@@ -102,8 +102,7 @@ d = { valid = 'io_mem_d_valid', ready = 'io_mem_d_ready', id = 'io_mem_d_payload
 e = { valid = 'io_mem_e_valid', ready = 'io_mem_e_ready' }
 
 [spinaltrace]
-# Adapter with a SpinalTrace-instrumented model (prototype); the bundle re-runs the failure through it
-adapter = "RiscvSim/boom-spinaltrace/run.sh"
+# Bundle re-runs the standard adapter with --spinaltrace.
 # A SpinalTrace-instrumented build writes <workspace>/spinaltrace/pdg.json; the adapter records it as
 # the run artifact "pdg". Without it the bundle skips the dependency trace (see README).
 top_module = "BoomSimTop"

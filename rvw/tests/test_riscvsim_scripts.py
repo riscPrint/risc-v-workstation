@@ -402,6 +402,7 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
     project = tmp_path / "generic-project"
     (project / "project").mkdir(parents=True)
     (project / "src").symlink_to(sim / "src", target_is_directory=True)
+    (tmp_path / "SpinalTrace").symlink_to(repo / "SpinalTrace", target_is_directory=True)
     (project / "build.sbt").write_text((sim / "build.sbt").read_text().split("// BOOM's adapter.")[0])
     shutil.copy2(sim / "project/build.properties", project / "project/build.properties")
     env = {**os.environ, "RVW_LOCK_PYTHON": sys.executable, "RVW_PYTHON": sys.executable}

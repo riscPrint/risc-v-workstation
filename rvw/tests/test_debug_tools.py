@@ -1149,3 +1149,32 @@ def test_cli_refuses_nonpositive_hang_threshold(tmp_path, command, extra, thresh
     assert 'hang_cycles must be a positive integer' in out.stderr
     assert not out.stdout
     assert set(tmp_path.iterdir()) == before
+
+
+def test_bundle_requests_shared_spinaltrace_flag_and_skips_missing_model(tmp_path, monkeypatch):
+    from rvw.runs import adapter
+    execute = adapter.execute
+    requested = []
+    def record(cmd, *args, **kw):
+        requested.append(cmd.get('spinaltrace'))
+        return execute(cmd, *args, **kw)
+    monkeypatch.setattr(adapter, 'execute', record)
+    run = fake_run(tmp_path / 'r', '--seed', '9', '--wave', '--rvfi-trace')
+    report = make(str(run), BOpts(out=tmp_path / 'bundle'))
+    assert report['dynpdg'].get('skipped')
+    assert 'digest' not in report['dynpdg']
+    assert 'dynpdg' not in report['files']
+    assert requested == [True]
+    assert report['rerun_spinaltrace']['reproduced'] is True
+
+
+@pytest.mark.parametrize('error', ['model unavailable', 'spinaltrace-cli timed out'])
+def test_bundle_does_not_claim_an_uncomputed_dependency_trace(tmp_path, error):
+    from rvw.bundle.make import render_md, next_commands
+    report = {'signature': 'timeout', 'status': 'timeout', 'run': 'run',
+              'dynpdg': {'criterion': 'signal:head', 'error': error, 'command': 'cli dyn-pdg'}}
+    md = render_md(report, tmp_path)
+    assert 'Dependency trace unavailable' in md
+    assert 'traced over the last cycles' not in md
+    assert 'full graph in' not in md
+    assert not any('spinaltrace -s' in cmd for cmd in next_commands(report, tmp_path, {}))

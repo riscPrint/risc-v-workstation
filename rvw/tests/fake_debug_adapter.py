@@ -31,7 +31,7 @@ def opts(argv):
     o, i = {}, 0
     while i < len(argv):
         a = argv[i]
-        if a in ("--rvfi-trace", "--wave", "--konata", "--coverage", "--json"):
+        if a in ("--rvfi-trace", "--wave", "--konata", "--coverage", "--spinaltrace", "--json"):
             o[a[2:]] = True
         else:
             o[a[2:]] = argv[i + 1]

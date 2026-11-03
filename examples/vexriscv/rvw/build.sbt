@@ -7,6 +7,7 @@ val vex = file(sys.env.getOrElse("VEXRISCV", "..")).getCanonicalFile
 // Compile external core sources in this example's target tree. Loading RiscvSim's
 // build would also load its BOOM ProjectRef. No core checkout is built by this project.
 lazy val root = (project in file("."))
+  .dependsOn(ProjectRef(workstation / "SpinalTrace/spinaltrace", "spinaltrace"))
   .settings(
     name := "rvw-vexriscv",
     Compile / unmanagedSourceDirectories ++= Seq(

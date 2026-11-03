@@ -111,6 +111,12 @@ in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd
 
 ## C1. Run contract (core adapter)
 
+RiscvSim supports the optional `--spinaltrace` model flag on `build`, `run`,
+`run-many` and `identity`. Its model identity includes `spinaltrace` (default
+false), and replay preserves it. A supported traced model emits a `pdg` artifact
+from its RTL elaboration. `--wave` records the instrumented wave. A missing
+requested trace model is an error; it must not yield computed-cause claims.
+
 Each core provides one adapter command. BOOM's is `RiscvSim/boom/run.sh`.
 
 ```

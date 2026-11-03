@@ -83,7 +83,7 @@ class Driver(val adapter: CoreAdapter) {
 
   // ---------------------------------------------------------------- models
   /** `rtlDir`: a stable copy of the generated Verilog (content-addressed), which coverage files refer to. */
-  case class Built(model: adapter.Model, index: AssertIndex, compileS: Double, cached: Boolean, rtlDir: Option[File], rtlSha256: Option[String])
+  case class Built(model: adapter.Model, index: AssertIndex, compileS: Double, cached: Boolean, rtlDir: Option[File], rtlSha256: Option[String], pdg: Option[File])
   private val slots = new ConcurrentHashMap[ModelKey, Object]()
   private val models = new ConcurrentHashMap[ModelKey, Built]()
   private val jvmCompileLock = new Object
@@ -111,7 +111,12 @@ class Driver(val adapter: CoreAdapter) {
             val (rtlDir, rtlSha) = captureRtl(verilog)
             val index = AssertIndex.fromVerilog(rtlDir.toSeq.flatMap(d => Option(d.listFiles()).toSeq.flatten).filter(_.getName.endsWith(".v")))
             log(f"model ${key.name} ready in $s%.1f s (${if (cached) "Verilator cache hit" else "Verilator build"}, ${index.size} assertion messages indexed)")
-            Built(m, index, s, cached, rtlDir, rtlSha)
+            val pdg = if (key.spinaltrace) {
+              val graph = RiscvSimConfig.dependencyGraph(key, workspace)
+              require(graph.isFile, "adapter did not emit the requested SpinalTrace model")
+              Some(graph)
+            } else None
+            Built(m, index, s, cached, rtlDir, rtlSha, pdg)
           })
           models.put(key, b)
           b
@@ -213,7 +218,8 @@ class Driver(val adapter: CoreAdapter) {
       job.waveFrom.toSeq.flatMap(c => Seq("--wave-from", c.toString)) ++
       job.waveTo.toSeq.flatMap(c => Seq("--wave-to", c.toString)) ++
       (if (job.konata) Seq("--konata") else Nil) ++
-      (if (job.coverage) Seq("--coverage") else Nil)
+      (if (job.coverage) Seq("--coverage") else Nil) ++
+      (if (job.spinaltrace) Seq("--spinaltrace") else Nil)
     val coverageEnv = if (job.coverage)
       Seq("RISCVSIM_COVERAGE" -> RiscvSimConfig.coverageTypes.mkString(",")) else Nil
     ((NativeBuild.replayEnv ++ adapter.replayEnv ++ coverageEnv).map { case (k, v) => s"$k=${q(v)}" } ++
@@ -345,6 +351,11 @@ class Driver(val adapter: CoreAdapter) {
 
     val artifacts = ujson.Obj()
     for ((k, f) <- artifactFiles if new File(job.out, f).isFile) artifacts(k) = f
+    for (b <- built; graph <- b.pdg) {
+      java.nio.file.Files.copy(graph.toPath, new File(job.out, "pdg.json").toPath,
+        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+      artifacts("pdg") = "pdg.json"
+    }
     val details = outcome.details
     built.foreach { b =>
       details("model") = job.model.toJson
@@ -588,7 +599,7 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdIdentity(o: Map[String, String]): Int = {
     // Identity accepts run-manifest keys. Only model options affect elaboration.
-    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata")
+    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace")
     val opts = o.get("options").map { text =>
       val values = ujson.read(text).obj.filter { case (name, _) => names(Cli.norm(name)) }
       Cli.fromJson(ujson.Obj.from(values))
@@ -596,9 +607,11 @@ class Driver(val adapter: CoreAdapter) {
     val key = ModelKey(opts.getOrElse("config", adapter.defaultConfig),
       rvfi = Cli.bool(opts, "rvfi") || Cli.bool(opts, "rvfi-trace") || Cli.bool(opts, "rvfi-check"),
       wave = Cli.bool(opts, "wave") || opts.contains("wave-from") || opts.contains("wave-to"),
-      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"))
+      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"))
     if (!adapter.configs.contains(key.config)) throw new Cli.UsageError(s"unknown config '${key.config}'")
     val (_, sha) = captureRtl(adapter.elaborate(key, workspace))
+    if (key.spinaltrace) require(RiscvSimConfig.dependencyGraph(key, workspace).isFile,
+      "adapter did not emit the requested SpinalTrace model")
     val problem = NativeBuild.problem.orElse(if (sha.isEmpty) Some("input_not_captured:rtl") else None)
     val claims = ujson.Obj("rtl_sha256" -> sha.map(ujson.Str).getOrElse(ujson.Null),
       "source.tools_rev" -> source("tools_rev"), "source.tools_dirty" -> source("tools_dirty"),
@@ -618,7 +631,7 @@ class Driver(val adapter: CoreAdapter) {
     for (c <- configs if !adapter.configs.contains(c)) throw new Cli.UsageError(s"unknown config '$c'")
     val results = configs.map { c =>
       val key = ModelKey(c, rvfi = Cli.bool(o, "rvfi") || Cli.bool(o, "rvfi-trace") || Cli.bool(o, "rvfi-check"),
-        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"))
+        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"), spinaltrace = Cli.bool(o, "spinaltrace"))
       try {
         val b = model(key, s => System.err.println(s"[build] $s"))
         ujson.Obj("model" -> key.toJson, "status" -> "ok", "compile_s" -> math.round(b.compileS * 10) / 10.0,
