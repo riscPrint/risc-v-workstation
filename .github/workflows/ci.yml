@@ -1,0 +1,75 @@
+name: CI
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  messages:
+    if: github.event_name != 'workflow_dispatch' && github.event.deleted != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.11'
+      - run: python scripts/check-conventional.py
+  fast:
+    if: github.event.action != 'edited'
+    name: Fast (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.11'
+      - name: Install Python test dependencies
+        run: python -m pip install -e './rvw[dev,mcp]'
+      - name: Fast Python tests (includes release hygiene)
+        run: python -m pytest rvw/tests -m fast --strict-markers -q -ra --durations=10 --junitxml=fast-results.xml
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: fast-python-${{ matrix.os }}
+          path: fast-results.xml
+          retention-days: 7
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: vscode/package-lock.json
+      - name: Extension unit checks (no VS Code download)
+        working-directory: vscode
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+          npm test
+      - name: Rust engine fixture tests (no GUI)
+        working-directory: SpinalTrace
+        run: cargo test --locked -p spinaltrace-rs
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5 # v1.1.9
+      - name: Scala elaboration checks (no simulator)
+        working-directory: SpinalWaves/spinalwaves
+        run: sbt -batch -J-XX:ActiveProcessorCount=2 'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'

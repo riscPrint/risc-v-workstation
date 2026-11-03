@@ -89,10 +89,70 @@ Exit codes and JSON formats are in `docs/PLATFORM_CONTRACTS.md`. A gate verdict 
 
 ## Tests
 
-- Python: source `env.sh`, then build the shim with `Cosim/build.sh` if needed.
-  Run targeted tests with `nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/TEST_FILE.py -q`.
-  Run the full suite with `scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests -q`.
-  Missing optional native tools can cause skips. Report the pass and skip counts.
+Run the public fast Python set from the repository root:
+
+```sh
+cd rvw
+uv venv
+uv pip install -e '.[dev,mcp]'
+cd ..
+rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q -ra --durations=10
+```
+
+The `fast` marker uses the explicit module list in `rvw/tests/conftest.py`.
+It covers result formats, RISC-V decoding, project selection, performance reports,
+database queries from committed SQL fixtures, commit policy and release hygiene.
+It needs Python 3.11 or later, Git and Bash. It needs no BOOM checkout, simulator,
+solver, Spike shim or RISC-V compiler. Expected optional skips: none.
+The target is less than five minutes for the Python test command, after dependency
+installation. CI logs show timing, pass counts and skip counts on Linux and macOS.
+The JUnit artifacts retain the Python results for seven days.
+
+New modules default to `slow`. Review their dependencies and time before adding
+one to `FAST_MODULES`. The marker selection deselects tests; deselection is not a skip.
+Run the slow set with `-m slow`. Run both sets with no `-m` option:
+
+```sh
+scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests -q -ra
+```
+
+The root [nightly workflow](.github/workflows/nightly.yml) runs both Python sets
+on Ubuntu at 03:23 UTC each day. It also supports `workflow_dispatch`.
+It needs no private core checkout. Missing native tools cause expected skips:
+Spike shim and RISC-V GCC for native co-simulation, Sail, formal tools
+(Yosys, SymbiYosys and solvers), Verilator, Icarus and GTKWave conversion tools.
+Tests that need a second Z3 install or an OSS CAD Suite launcher can also skip.
+The workflow does not install these Python optional tools. Use `-ra` to read the
+actual skip reasons. A skipped test does not establish native-tool support.
+For local native tests, source `env.sh` and build `Cosim/build.sh` as needed.
+
+The root [push/PR workflow](.github/workflows/ci.yml) runs the fast Python set,
+including `test_release_hygiene.py`, on `ubuntu-latest` and `macos-latest`.
+It also runs these checks on both systems:
+
+- Rust: `cd SpinalTrace && cargo test --locked -p spinaltrace-rs`.
+- JavaScript: `cd vscode && npm ci && npm run typecheck && npm run build && npm test`.
+- Scala: in `SpinalWaves/spinalwaves`, run `sbt -batch -J-XX:ActiveProcessorCount=2
+  'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'` with JDK 21 and sbt.
+
+These checks need Rust, Node.js 22 and JDK 21/sbt, but no core or native EDA tools.
+The nightly Scala job runs the generic Konata tests with native Verilator. It
+compiles the SpinalDB, SpinalTrace and SpinalChecks test sources. Compilation is
+not a test pass. `RiscvSim` and `SpinalBlocks` sbt builds remain excluded because
+they load BOOM's `ProjectRef` ([#6](https://github.com/riscPrint/risc-v-workstation/issues/6)).
+The full SpinalWaves and SpinalTrace native suites are not part of this minimum
+signal. BOOM gates remain separate and need a private core and native tools.
+Clean-install CI belongs to [#17](https://github.com/riscPrint/risc-v-workstation/issues/17)
+and [#40](https://github.com/riscPrint/risc-v-workstation/issues/40).
+The fast/slow selection is tracked in [#41](https://github.com/riscPrint/risc-v-workstation/issues/41);
+the root CI is tracked in [#16](https://github.com/riscPrint/risc-v-workstation/issues/16).
+
+CI checks PR titles and each new non-merge commit with
+`scripts/check-conventional.py`. It checks the syntax, summary length and issue
+footer rules below. Reviewers check imperative wording and the required docs for
+breaking changes. Generated merge commits are excluded. A new branch push checks
+its tip; a PR checks all commits after its merge base. PR title edits rerun CI.
+
 - Scala: hold the `sbt` lock with `scripts/with-lock.sh sbt nice -n 10 sbt ...`.
   Use `sbt test` in `SpinalWaves/spinalwaves`, `SpinalTrace/spinaltrace`, `SpinalDB/spinaldb`,
   `SpinalChecks`, `SpinalKonata`; `sbt spinalblocks/test` in `SpinalBlocks/spinalblocks`;

@@ -18,3 +18,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rvw"]
+
+[tool.pytest.ini_options]
+markers = [
+    "fast: public CI; no core checkout or optional native EDA tools",
+    "slow: nightly tests; optional native tools can cause skips",
+]
