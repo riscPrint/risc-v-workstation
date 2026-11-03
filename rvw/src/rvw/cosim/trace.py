@@ -20,7 +20,7 @@ def hexnum(value, width=64):
 
 class Trace:
     def __init__(self, path):
-        self.file = open(path)
+        self.file = path if hasattr(path, "readline") else open(path)
         try:
             self.header = json.loads(next(self.file))
             h = self.header

@@ -307,6 +307,17 @@ and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 
+The cosim result's `state_coverage` gives the input `trace_schema`, whether FP
+fields were compared (`fp`), and the declared `csr_snapshot` address list.
+The optional live integration API uses the same C2 fields and synchronization
+rules as offline checking. Its result adds `mode: online`,
+`consumed_trace_prefix_sha256` and `consumed_trace_lines`. This digest covers
+only consumed UTF-8 JSONL lines, including one-cycle lookahead. It is not a
+full trace identity. Input/reference identities stay in `reproduction`.
+An incomplete live stream returns `inconclusive`, with cause
+`live_trace_incomplete`. The API stops the producer on a checked divergence.
+
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

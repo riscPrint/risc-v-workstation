@@ -53,7 +53,13 @@ class ReferenceEnded(Exception):
 
 def c2_view(values):
     """A record or effect with C2 value fields as lowercase hex strings, like the trace."""
-    return {k: hex(v) if k in HEX_FIELDS and type(v) is int else v for k, v in values.items()}
+    result = {k: hex(v) if k in HEX_FIELDS and type(v) is int else v for k, v in values.items()}
+    if "csr_state" in result:
+        result["csr_state"] = {k: hex(v) for k, v in result["csr_state"].items()}
+    if "fault_access" in result:
+        result["fault_access"] = {k: hex(v) if k in ("addr", "rdata", "wdata") and v is not None else v
+                                  for k, v in result["fault_access"].items()}
+    return result
 
 
 def counter_read(insn):
@@ -124,6 +130,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     def result(status, **extra):
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
+                "state_coverage": {"trace_schema": trace.header["schema"],
+                                   "fp": trace.header["schema"] == "rvw.rvfi/2" and last_order is not None,
+                                   "csr_snapshot": trace.header.get("csr_snapshot", [])},
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
                 "trace_complete": ended, "end_status": end_status,
                 "last_order": last_order, "last_cycle": last_cycle, "pending_handler": after_trap,
@@ -237,6 +246,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                 if not hasattr(model, "csr_snapshot"):
                     raise ValueError("reference cannot check CSR snapshots")
                 snapshot = model.csr_snapshot(trace.header["csr_snapshot"])
+                expected["csr_state"] = snapshot
                 for address, value in actual["csr_state"].items():
                     if address not in snapshot:
                         raise ValueError(f"reference cannot observe CSR {address}")
@@ -250,6 +260,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                 if getattr(model, "name", "spike") != "spike":
                     raise ValueError("reference cannot check fault-access records")
                 reference_access = reference_fault(expected, platform.xlen)
+                expected["fault_access"] = reference_access
                 for key, value in access.items():
                     if value != reference_access[key]:
                         diff[f"fault_access.{key}"] = {"expected": reference_access[key], "actual": value}
