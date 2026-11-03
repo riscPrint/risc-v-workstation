@@ -3,11 +3,12 @@ on:
   push:
   pull_request:
     types: [opened, synchronize, reopened, edited]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+
 permissions:
   contents: read
-concurrency:
-  group: messages-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   messages:
     if: github.event_name != 'workflow_dispatch' && github.event.deleted != true

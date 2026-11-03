@@ -12,11 +12,12 @@ on:
         type: choice
         options: [linux-x86_64, macos-arm64, linux-arm64, all]
         default: linux-x86_64
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+
 permissions:
   contents: read
-concurrency:
-  group: native-bundle-${{ inputs.tool }}-${{ inputs.host }}
-  cancel-in-progress: false
 jobs:
   matrix:
     runs-on: ubuntu-24.04
