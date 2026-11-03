@@ -72,7 +72,7 @@ class TileLinkSpec extends AnyFunSuite {
       (true, false, 2, 1, 0x80L, 0L, false), (true, false, 2, 1, 0x80L, 0L, false),
       (true, false, 2, 0, 0x40L, 0L, true), (true, false, 2, 1, 0x80L, 0L, true)))
     assert(!fired.contains("tilelink.burst_stable:bus_a"), fired)
-    assert(fired.contains("stream.payload_stable:bus_a"), fired) // the generic Spinal rule still sees it
+    assert(fired.isEmpty, fired)
   }
 
   test("a clean burst with stalls fires nothing") {
@@ -93,6 +93,6 @@ class TileLinkSpec extends AnyFunSuite {
     val fired = run(Seq(
       (true, true, 4, 2, 0x100L, 1L, true), (true, true, 4, 2, 0x100L, 2L, false), (true, true, 4, 2, 0x100L, 9L, true),
       (true, true, 4, 2, 0x100L, 3L, true), (true, true, 4, 2, 0x100L, 4L, true)))
-    assert(fired == Set("tilelink.burst_stable:bus_a", "stream.payload_stable:bus_a"), fired)
+    assert(fired == Set("tilelink.burst_stable:bus_a"), fired)
   }
 }
