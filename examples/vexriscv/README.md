@@ -105,3 +105,9 @@ VEXRISCV=/path/to/VexRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
   examples/vexriscv/rvw/tests -q --basetemp=/tmp/cw-vex-pytest
 rm -rf /tmp/cw-vex-pytest
 ```
+
+## Cocotb component tests
+
+The [cocotb example](cocotb/README.md) generates a small counter and the upstream
+PMP address unit. It runs both with Icarus and Verilator through `rvw regress
+cocotb`. The test bindings stay outside the generic library.

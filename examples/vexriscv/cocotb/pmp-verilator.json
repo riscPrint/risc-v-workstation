@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.cocotb/1",
+  "name": "pmp",
+  "backend": "verilator",
+  "top": "PmpSetter",
+  "sources": [
+    "rtl/PmpSetter.v"
+  ],
+  "test_module": "test_pmp",
+  "python_paths": [
+    "."
+  ],
+  "requires": [
+    "timer"
+  ]
+}

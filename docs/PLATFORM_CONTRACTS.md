@@ -1024,3 +1024,21 @@ are `values`, `scheduling`, `x_handling`, `languages`, `assertions`, `foreign`,
 component test can require. Unknown backends or requirements are errors.
 Profiles describe the adapter invocation. They do not certify every installed
 simulator version. Two-state runs cannot satisfy four-state or X/Z requirements.
+
+## Cocotb component runs
+
+`rvw regress cocotb MANIFEST --out NEW_DIRECTORY --seed N --timeout SECONDS`
+accepts a JSON `rvw.cocotb/1` manifest. Required fields are `schema`, `name`,
+`backend`, `top`, nonempty `sources` and `test_module`. Optional fields are
+`python_paths`, `requires`, `clock` and `reset`. Paths resolve from the manifest.
+`clock` has `signal` and positive `period_ns`. `reset` needs a clock and has
+`signal`, `active` (0/1), and positive `cycles`. Testbenches call the optional
+`rvw.sim.bench.start` helper for clock/reset setup. The native runner receives
+the recorded seed. Requirements must be in the backend profile's feature set.
+
+The adapter writes standalone C3 with `kind: "cocotb"` entries, seed, semantic
+profile, declared source/Python input hashes, timeout, log/XML/request artifacts,
+and replay arguments. It does not produce C1, C8 completeness or C4 acceptance.
+The output must be new. Missing/empty/invalid XML, skips, timeouts and runner
+errors cannot pass. Exits are 0 for all pass, 1 for test failure, 2 for errors.
+See `rvw/src/rvw/sim/README.md` for exact limits and artifact paths.

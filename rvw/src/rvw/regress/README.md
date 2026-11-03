@@ -348,3 +348,10 @@ The runner still owns locking, cache/resume, provenance and verdict generation. 
 `rvw regress backends --json` lists the supported native semantic profiles.
 See [native simulation](../sim/README.md). Requirements are explicit feature
 names. Unsupported requirements must fail before compilation.
+
+## Cocotb components
+
+`rvw regress cocotb manifest.json --out NEW_DIRECTORY --seed 1 --json` runs a
+native component suite on Icarus or Verilator. It writes standalone C3 results.
+See [manifest, clock/reset, result and artifact contracts](../sim/README.md).
+It is separate from ELF suite scheduling and cannot earn C4 gate acceptance.
