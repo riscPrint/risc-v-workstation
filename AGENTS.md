@@ -32,6 +32,7 @@ keep the issue list in `TODO.md` in step with them.
 | `Cosim/` | The C++ shim that lets `rvw cosim` drive Spike as a library. |
 | `SpinalDB/` | Elaborates a Spinal design and writes a design database (SQLite, `rvw.designdb/20`). Queried with `rvw query`. |
 | `SpinalChecks/` | Assertions generated from the elaborated design, and the formal flows behind `rvw formal`. BOOM settings and waivers in `SpinalChecks/boom/`. |
+| `SpinalChecks/c2rtl/` | Native C truth-table reference against small combinational RTL units. See its `README.md`. |
 | `SpinalKonata/` | Konata pipeline traces for any Spinal design that tags its pipeline events. |
 | `SpinalWaves/` | Spinal types and source locations in Surfer waveforms (port of Tywaves). |
 | `SpinalTrace/` | Traces a signal value back to the Spinal statements that caused it (port of ChiselTrace). |

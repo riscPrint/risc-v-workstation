@@ -423,3 +423,9 @@ opcode and size faults, parameter faults, and AXI address faults.
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
   `rvw/src/rvw/cov/proof.py`; merge them into one.
+
+## C reference datapath checks
+
+See [c2rtl/README.md](c2rtl/README.md) for the native C truth-table and
+SymbiYosys flow. It supports unsigned combinational units with widths 1 to 4.
+It reports proved, counterexample or inconclusive with the checked bound.
