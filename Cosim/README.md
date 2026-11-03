@@ -519,3 +519,13 @@ Related scope: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87),
 [#136](https://github.com/riscPrint/risc-v-workstation/issues/136),
 [#90](https://github.com/riscPrint/risc-v-workstation/issues/90), and
 [#100](https://github.com/riscPrint/risc-v-workstation/issues/100).
+
+## Adapter interrupt regression
+
+See [RiscvSim interrupt schedules](../RiscvSim/README.md#interrupt-schedules).
+`rvw/tests/interrupts/window_check.py` checks independently supplied cycle and
+PC bounds, input changes and the test program's trap-entry state. It does not
+replace Spike instruction comparison. Spike injection still uses C2 trap events;
+a Spike match alone does not prove legal interrupt timing. The regression checks
+both results. Missing independent bounds stays inconclusive. Sail still refuses
+external-input synchronization.

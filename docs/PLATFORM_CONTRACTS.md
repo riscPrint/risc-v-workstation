@@ -131,6 +131,16 @@ Each core provides one adapter command. BOOM's is `RiscvSim/boom/run.sh`.
 `config`, `seed`, ...), written with underscores or dashes (`max_cycles` or `max-cycles`). A missing seed means "pick one and record it". `--mem-latency` absent means
 randomized memory timing; present means fixed latency.
 
+Optional `--irq-schedule '1:0x0,1000:0x80,12000:0x0'` (manifest
+`irq_schedule`, a string) selects full input levels in `mip` bit positions.
+Cycles must strictly increase, start at 1, and finish before `max_cycles`.
+Adapters reject unsupported input bits. A selected schedule replaces software device
+levels. Without a schedule, existing device behavior stays active. At sampled edge N,
+the adapter drives the new levels for the next edge. C2 records the actual driven
+levels at N. Interrupt acceptance at N is not evidence for the new levels.
+C1 `irq_schedule` stores the normalized string, or null. Replay carries the same string.
+The schedule is inline, so replay needs no separate stimulus file.
+
 Optional, declared in the core config of `rvw regress` (`[core] identity = true`, `wall_timeout = true`):
 
 - `identity` prints text that changes whenever anything besides the ELF and the run options can

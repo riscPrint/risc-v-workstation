@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout")
+    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -104,12 +104,18 @@ object Cli {
     val waveFrom = long(m, "wave-from", min = 0)
     val waveTo = long(m, "wave-to", min = 1)
     for (f <- waveFrom; t <- waveTo) if (t <= f) throw new UsageError("--wave-to must be after --wave-from")
+    val schedule = m.get("irq-schedule").map(InterruptSchedule.parse)
+    schedule.foreach(s => {
+      if ((s.mask & ~adapter.irqInputMask) != 0) throw new UsageError("adapter does not support these IRQ inputs")
+      if (s.changes.last._1 >= maxCycles) throw new UsageError("IRQ schedule must finish before --max-cycles")
+    })
     RunJob(
       elf = file(cwd, need("elf")), out = file(cwd, need("out")), config = config, seed = seed, seedPicked = picked,
       maxCycles = maxCycles, memLatency = memLatency,
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
       wave = bool(m, "wave") || waveFrom.isDefined || waveTo.isDefined, waveFrom = waveFrom, waveTo = waveTo,
       konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"),
+      irqSchedule = schedule,
       wallTimeoutS = m.get("wall-timeout").map { v =>
         val d = try v.toDouble catch { case _: NumberFormatException => throw new UsageError(s"--wall-timeout: not a number: $v") }
         if (!java.lang.Double.isFinite(d) || d <= 0)
@@ -123,7 +129,7 @@ object Cli {
       |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--json]
+      |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh identity [--config NAME] [--options JSON]
       |  run.sh info     [--json]
