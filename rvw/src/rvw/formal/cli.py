@@ -72,6 +72,9 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from .equiv import register as register_equiv
+    register_equiv(s)
+
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
     b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")

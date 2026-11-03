@@ -1015,3 +1015,22 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### Sequential equivalence result (`rvw.formal.equiv/1`)
+
+`rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
+`status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
+successful eqy run, at least one partition, PASS for every output partition, and
+complete register matching. A timeout, unknown partition or unmatched register
+cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+output directory exits 2. `not_equivalent` requires a failed output partition and
+a VCD counterexample in `traces`. There are no internal state equality assumptions.
+`state_mapping` records automatic or manual pairs and their widths. `unmatched`
+lists unpaired registers on each side. `partitions` records each partition status.
+`inputs` contains each side's capture and snapshot records. `restrictions` records
+the single-clock, two-state model, reset alignment, unchecked startup clocks and
+zero latency difference. Blackbox obligations are refused. Optional `dsec` evidence
+is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal README
+for the supported subset and initialization limits. This contract is separate from
+bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
+the recorded restrictions. A wall-time budget does not bound the cycles proved.

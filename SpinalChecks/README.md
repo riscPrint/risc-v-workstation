@@ -423,3 +423,11 @@ opcode and size faults, parameter faults, and AXI address faults.
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
   `rvw/src/rvw/cov/proof.py`; merge them into one.
+
+### Sequential equivalence
+
+`rvw formal equiv` compares two exported RTL revisions with eqy and native ABC.
+It supports one clock, aligned synchronous reset, automatic register names and
+manual pairs. Unknown partitions and unmatched state stay inconclusive. See the
+[formal README](../rvw/src/rvw/formal/README.md#sequential-equivalence-first-increment-issue-18)
+for the result contract, tests and limits. Issue #18 remains an epic.
