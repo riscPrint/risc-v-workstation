@@ -82,3 +82,49 @@ and protocol properties are not checked. Their missing evidence stays explicit.
 A single-clock design can report `no_crossings_found` for register paths. This
 is not a multi-clock validation result. Non-Spinal RTL needs a domain-aware
 importer. Yosys is surveyed but is not a backend in this increment.
+
+## Reset-domain crossings
+
+The analyzer also compares reset keys, reset kind, polarity and soft-reset
+controls at each register boundary. `rdc.independent_reset` marks different
+reset signatures, including paths within one clock. Reset trees record each
+reset control's upstream combinational cone and stop at registers. Unknown
+control paths remain `unknown_control`. Missing typed control identity gets
+`rdc.unknown_control`. `rdc.async_release_unproved` marks each used asynchronous
+reset domain. It does not assert that a release synchronizer is absent.
+
+Reset ordering, synchronous release, isolation and reset reconvergence remain
+unproved. Matching reset signatures only remove a structural RDC candidate.
+A reset-tree match does not establish safe deassertion, recovery/removal timing
+or analog behavior. No declared sequencing or clock relationship is trusted as
+a proof in this increment.
+
+## Reference checks
+
+`rvw/tests/test_lint.py` uses small exact-schema graph fixtures for unsafe
+single-bit, multi-bit, two-stage, same-clock and independent-reset paths.
+These tests include both candidate findings and no-crossing cases.
+`SpinalDB/spinaldb/src/test/scala/spinaldb/LintFixtures.scala` emits the clock
+crossing reference designs through the real extractor:
+
+```sh
+cd SpinalDB/spinaldb
+../../scripts/with-lock.sh sbt nice -n 10 sbt 'Test/runMain spinaldb.LintFixtures /tmp/lint-fixtures'
+```
+
+Use each generated `design.db` in a structural-only settings file. The `single`
+design must have no clock crossings. `unsafe` must report an unsynchronized
+crossing. `sync` must report a candidate, and `bus` must report a multi-bit
+crossing. None earns protocol safety. MCP exposes the same report through
+`lint_report` with an explicit settings path.
+
+The same entry emits `reset-shared`, `reset-independent` and `reset-async`.
+The shared synchronous reset has no RDC candidate. Independent reset controls
+must report `rdc.independent_reset`. Asynchronous controls must also report
+`rdc.async_release_unproved`.
+
+Run the extracted-design assertions from the workstation root:
+
+```sh
+RVW_LINT_FIXTURES=/tmp/lint-fixtures rvw/.venv/bin/python -m pytest rvw/tests/test_lint_extracted.py -q
+```

@@ -123,3 +123,61 @@ def test_database_config_mismatch(tmp_path):
         c.execute("INSERT INTO meta VALUES('config','other')")
     with pytest.raises(ValueError, match='config'):
         report(p)
+
+
+@pytest.mark.parametrize('independent', [False, True])
+def test_reset_crossings_same_clock(tmp_path, independent):
+    p = fixture_db(tmp_path)
+    with sqlite3.connect(p) as c:
+        c.execute("UPDATE clock_domains SET clock_key='clk:Bool', reset_kind='SYNC', reset='reset', reset_key='reset:Bool', reset_active_high='true'")
+        if independent:
+            c.execute("UPDATE clock_domains SET reset='other', reset_key='other:Bool' WHERE id=2")
+    r = run_on(p, structural.analyze)
+    assert len(r['reset_crossings']) == int(independent)
+    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset'] if independent else [])
+    assert all(t['status'] == 'unknown_control' for t in r['reset_trees'])
+
+
+def test_async_reset_release_and_unknown(tmp_path):
+    p = fixture_db(tmp_path, 'same')
+    with sqlite3.connect(p) as c:
+        c.execute("UPDATE clock_domains SET reset_kind='ASYNC',reset='r3',reset_key=NULL WHERE id=1")
+    r = run_on(p, structural.analyze)
+    assert {f['rule'] for f in r['findings']} == {'rdc.async_release_unproved','rdc.unknown_control'}
+    assert r['reset_trees'][0]['nodes'] == ['r3']
+    assert r['reset_trees'][0]['status'] == 'structural_cone'
+
+
+@pytest.mark.parametrize('backend', ['verilator','verible'])
+def test_native_reference_lint(backend):
+    import shutil
+    if not shutil.which('verilator' if backend == 'verilator' else 'verible-verilog-lint'):
+        pytest.skip(f'{backend} is not installed')
+    root = Path(__file__).parent / 'data/lint'
+    clean = native.run(backend, [str(root / 'Clean.v')], 'Clean', 30)
+    assert clean['status'] == 'completed'
+    if backend == 'verilator':
+        assert clean['findings'] == []
+        fault = native.run(backend, [str(root / 'Fault.v')], 'Fault', 30)
+        assert fault['status'] == 'completed'
+        assert any('WIDTH' in f['rule'] for f in fault['findings'])
+
+
+def test_malformed_backend_is_input_error(tmp_path, capsys):
+    p = settings(tmp_path, fixture_db(tmp_path))
+    cfg = json.loads(p.read_text()); cfg['backends'] = [{}]
+    p.write_text(json.dumps(cfg))
+    assert main(['lint', '--settings', str(p), '--json']) == 2
+    assert json.loads(capsys.readouterr().out)['status'] == 'error'
+
+
+def test_no_reset_has_no_reset_kind(tmp_path):
+    p = fixture_db(tmp_path, 'same')
+    with sqlite3.connect(p) as c:
+        c.execute('UPDATE clock_domains SET reset_kind=NULL')
+    assert run_on(p, structural.analyze)['findings'] == []
+
+
+def test_verible_adjacent_categories():
+    result = native.parse('verible', 'a.sv:1:2: Use always_comb [Style: combinational-logic][always-comb]')
+    assert result[0]['rule'] == 'verible.always-comb'

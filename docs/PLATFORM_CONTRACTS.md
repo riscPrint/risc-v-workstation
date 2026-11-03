@@ -1033,3 +1033,7 @@ place. Missing backends remain `not_run`. Exit 0 means completed checks without
 findings; 1 means active findings; 2 means input error; 3 means inconclusive.
 Structural analysis cannot produce signoff. Its unrun rule inventory is mandatory.
 No C4 gate acceptance is implied.
+Structural reports also retain `reset_trees` (control cones with unknown-control
+states) and `reset_crossings` (source and destination domain IDs). Different
+reset signatures are candidates even when clock identity matches. Reset release
+and reconvergence remain in the unrun rule inventory.

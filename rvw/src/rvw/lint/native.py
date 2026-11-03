@@ -14,7 +14,7 @@ def parse(tool, output):
                 findings.append(dict(rule=f"verilator.{rule or level.upper()}", severity=level.lower(),
                                      file=file, line=int(row), column=int(col or 1), message=message))
         else:
-            m = re.match(r"(.*?):(\d+):(\d+)(?:-\d+)?: (.*?)\s+\[([^\]]+)\]\s*$", line)
+            m = re.match(r"(.*?):(\d+):(\d+)(?:-\d+)?: (.*?)\s*\[([^\]]+)\]\s*$", line)
             if m:
                 file, row, col, message, rule = m.groups()
                 findings.append(dict(rule=f"verible.{rule}", severity="warning", file=file,

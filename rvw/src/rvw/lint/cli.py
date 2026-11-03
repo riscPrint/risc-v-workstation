@@ -27,7 +27,8 @@ def load(path):
         if not isinstance(cfg.get(key), str) or not cfg[key].strip():
             raise ValueError(f'{key} must be a nonempty string')
     backends = cfg.get('backends', ['verilator', 'verible', 'structural'])
-    if (not isinstance(backends, list) or not backends or len(set(backends)) != len(backends)
+    if (not isinstance(backends, list) or not backends or
+            not all(isinstance(b, str) for b in backends) or len(set(backends)) != len(backends)
             or set(backends) - {'verilator', 'verible', 'structural'}):
         raise ValueError('backends must select verilator, verible or structural')
     files = cfg.get('files', [])
