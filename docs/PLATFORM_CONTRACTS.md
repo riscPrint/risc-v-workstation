@@ -1044,3 +1044,19 @@ parameters and C1 provenance before reuse. Transfer adds no new admission rule.
 Uploads send generations before `current`. Downloads use a private directory
 and publish a new local generation only after verification. The cache owner
 controls retention. Cross-command download resume is not implemented.
+
+### Native farm collection (first increment, #25)
+
+`rvw.farm/1` records the explicit run-many plan, campaign-local cell IDs, options,
+ELF hashes, hosts, per-shard completion, C1 outcomes and missing IDs. `complete`
+means collection is complete. It does not mean tests pass or a gate accepts.
+A shard with a lost connection, wrong identity, missing C1 or invalid artifact
+is inconclusive. Results retain their original failure outcomes. C1 config, seed,
+ELF hash and every declared identity claim must match. Worker identity documents
+must equal the supplied complete `/2` document. SHA-256 binds transferred files.
+
+The first native SSH endpoint buffers transfers and uses a bounded run-many
+process group. Remote cancel acknowledgement, scalable streaming and C3 gate
+import remain open. The static dashboard reads existing C3/C4/history. Recorded
+C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.
+It does not establish bin compatibility or verification closure.

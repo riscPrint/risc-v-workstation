@@ -1,0 +1,110 @@
+import base64
+import json
+import os
+from pathlib import Path
+import sys
+
+import pytest
+
+from rvw.common.budget import Budget, supervise
+from rvw.farm.executor import execute, worker
+from rvw.farm.dashboard import dashboard
+from rvw.regress.store import Cache
+from rvw.results.generation import open_current
+
+
+IDENTITY = {"schema": "rvw.adapter-capture/2", "result_claims": {
+    "tools.native_build.sha256": "a" * 64, "source.tools_dirty": False}}
+
+@pytest.fixture
+def adapter(tmp_path):
+    script = tmp_path / "adapter.py"
+    script.write_text('''import json, sys, pathlib, hashlib
+identity = {"schema": "rvw.adapter-capture/2", "result_claims": {"tools.native_build.sha256": "a" * 64, "source.tools_dirty": False}}
+if sys.argv[1] == "identity":
+    print(json.dumps(identity))
+else:
+    manifest = pathlib.Path(sys.argv[sys.argv.index("--manifest") + 1])
+    for line in manifest.read_text().splitlines():
+        row = json.loads(line)
+        elf = pathlib.Path(row["elf"])
+        if elf.read_text() == "missing": continue
+        out = pathlib.Path(row["out"]); out.mkdir()
+        result = {"schema": "rvw.run/1", "core": "fixture", "config": row["config"], "seed": row["seed"],
+                  "elf": str(elf), "elf_sha256": hashlib.sha256(elf.read_bytes()).hexdigest(),
+                  "status": elf.read_text(), "cycles": 1, "instret": 1,
+                  "source": {"tools_dirty": False}, "tools": {"native_build": {"sha256": "a" * 64}}}
+        (out / "result.json").write_text(json.dumps(result))
+''')
+    return [sys.executable, str(script)]
+
+def request(adapter, data=b"pass"):
+    import hashlib
+    return {"identity_command": [*adapter, "identity"], "identity": IDENTITY, "adapter": adapter,
+            "cells": [{"id": "0", "options": {"config": "test", "seed": 1},
+                       "elf_bytes": base64.b64encode(data).decode(), "elf_sha256": hashlib.sha256(data).hexdigest()}],
+            "jobs": 1, "timeout": 5}
+
+def test_worker_transfer_and_identity(adapter):
+    reply = worker(request(adapter))
+    assert reply["returncode"] == 0
+    result = reply["cells"][0]["files"]["result.json"]
+    assert json.loads(base64.b64decode(result["data"]))["status"] == "pass"
+    bad = request(adapter)
+    bad["identity"] = {**IDENTITY, "wrong": True}
+    with pytest.raises(ValueError, match="identity"):
+        worker(bad)
+    bad = request(adapter)
+    bad["cells"][0]["elf_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="hash"):
+        worker(bad)
+
+@pytest.mark.parametrize("state", ["pass", "fail", "missing"])
+def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
+    options = os.environ.get("RVW_TEST_SSH_OPTIONS")
+    if not options:
+        pytest.skip("set RVW_TEST_SSH_OPTIONS for a native localhost SSH test")
+    hosts = [{"name": name, "address": "localhost", "python": sys.executable,
+              "ssh_options": json.loads(options)} for name in ("host-a", "host-b")]
+    manifest = tmp_path / "manifest.jsonl"
+    rows = []
+    for i in range(4):
+        elf = tmp_path / f"{i}.elf"
+        elf.write_text(state)
+        rows.append({"elf": str(elf), "out": "unused", "config": "test", "seed": i})
+    manifest.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    report = execute(hosts, manifest, adapter, [*adapter, "identity"], IDENTITY, tmp_path / "out", timeout=10)
+    assert report["expected_cells"] == 4
+    assert report["status"] == ("inconclusive" if state == "missing" else "complete"), report
+    if state != "missing":
+        assert [c["status"] for s in report["shards"] for c in s["cells"]] == [state] * 4
+    hosts[1]["ssh_options"] = ["-p", "1"]
+    lost = execute(hosts, manifest, adapter, [*adapter, "identity"], IDENTITY, tmp_path / "lost", timeout=10)
+    assert lost["status"] == "inconclusive"
+    assert lost["shards"][0]["status"] == ("inconclusive" if state == "missing" else "complete")
+    assert lost["shards"][1]["status"] == "inconclusive"
+
+def test_dashboard_missing_escaped_history(tmp_path):
+    (tmp_path / "index.jsonl").write_text(json.dumps({"path": str(tmp_path / "missing"), "run_id": "<script>"}) + "\n")
+    output = tmp_path / "dashboard.html"
+    assert dashboard(tmp_path, output)["runs"] == 1
+    text = output.read_text()
+    assert "&lt;script&gt;" in text
+    assert "inconclusive" in text
+
+
+def test_dashboard_keeps_configuration_trends_separate(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import importlib
+    module = importlib.import_module("rvw.farm.dashboard")
+    monkeypatch.setattr(module, "read_index", lambda root: [{"path": str(tmp_path), "run_id": "one"}])
+    def suite(config, value):
+        return SimpleNamespace(core="fixture", suite="isa", config=config, tests=[
+            SimpleNamespace(status="pass", conclusive=True, metrics={"ipc": value})])
+    monkeypatch.setattr(module, "find_results", lambda path: [suite("a", 1.0), suite("b", 2.0)])
+    output = tmp_path / "dashboard.html"
+    module.dashboard(tmp_path, output)
+    text = output.read_text()
+    assert "fixture / isa / a / ipc" in text
+    assert "fixture / isa / b / ipc" in text
+    assert text.count("<svg") == 2
