@@ -128,3 +128,24 @@ def test_uncaptured_transitive_header_refuses_publication(inputs, race_injector,
         builder.build(source, output, prefix)
     assert race.fired and not output.exists()
     assert not Path(str(output) + '.manifest.json').exists()
+
+
+def test_source_version_is_bound_to_build(inputs):
+    source, _, _, prefix, output = inputs
+    metadata = prefix / 'share/rvw/spike-source.json'
+    metadata.parent.mkdir(parents=True)
+    identity = {'version': '1.1.1-dev', 'revision': 'test-revision', 'origin': 'fixture'}
+    metadata.write_text(json.dumps(identity))
+    manifest = builder.build(source, output, prefix)
+    assert manifest['spike_identity'] == identity
+    assert manifest['build_inputs']['spike_identity'] == identity
+    assert any(row['source'] == str(metadata) for row in manifest['build_inputs']['capture']['files'])
+
+
+def test_runtime_refuses_source_version_label_tampering(inputs):
+    source, _, _, prefix, output = inputs
+    manifest = builder.build(source, output, prefix)
+    manifest['spike_identity']['revision'] = 'wrong-revision'
+    Path(str(output) + '.manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match='build.*binding.*rebuild'):
+        load_shim(output, source)

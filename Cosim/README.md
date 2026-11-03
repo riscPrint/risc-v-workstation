@@ -43,7 +43,32 @@ Use an editable installation from this repository; a standalone Python wheel doe
 not bundle the native library or build script.
 
 Verified installation: Spike `1.1.1-dev`, Homebrew `riscv-isa-sim/main`, arm64.
-The bottle receipt does not identify the upstream source commit. Every check
+The installer pins source builds to `eff659cd43d7eafb7f3559bceed2540eabb31c50`
+(2025-08-11). The tested bottle's SBOM source timestamp matches that commit;
+all 30 installed `riscv` headers present in that source tree match byte for byte.
+The formula uses `version "main"` without a source revision, so the bottle's
+exact source commit is inferred from this evidence, not attested by its receipt.
+Homebrew tap receipt revision: `2434aac00803d570c1b04190c76f647e7d1661e7`.
+Fresh `--with-cosim` installs build this pin on macOS and Linux. Existing matching
+headers/libraries, including an explicit `SPIKE_PREFIX`, remain external inputs;
+they are reused and identified by the build manifest. Do not use a moving
+Homebrew formula as a portable source pin.
+
+The later `5cf8c829d2033c5132158b59860fea8d6c06a94d` pin changes library defaults.
+Upstream commit `1bf835816a6871a4b638d0795054bb726eec5d6c` starts
+`processor_t` with `set_max_vaddr_bits(0)`. Spike's full simulator sets the MMU
+from its device tree; this shim does not use that simulator. With that revision,
+SUM/MXR read as zero and translated data/instruction accesses run without the
+expected MMU. This explains the extra illegal, dirty and icache-alias differences.
+It is not the later `cfg.misaligned` removal or a changed A/D policy.
+Use the qualified pin with this shim. A newer Spike needs explicit MMU setup
+before reset; building the shim alone does not qualify that reference.
+
+Source installs record their version and revision in `share/rvw/spike-source.json`.
+The build captures that file, or the Homebrew receipt and available SBOM, and puts
+`spike_identity` in the manifest and its bound build inputs. External builds without
+this metadata use null version/revision. Package metadata is a label supplied by the
+installation. The actual library hashes remain authoritative. Every check
 records the actual shim/library hashes and embedded shim version; no source-build fallback
 was necessary. Sail `0.15` was also exercised.
 

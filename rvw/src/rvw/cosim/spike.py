@@ -70,6 +70,7 @@ def capture_shim(capture, path, source=None):
                  and bound_source == source.sha256
                  and bound_library == built.get('spike_library_sha256')
                  and built.get('shim_sha256') == library.sha256
+                 and built.get('spike_identity') == inputs.get('spike_identity')
                  and bool(inputs['capture']['tools']) and bool(inputs['flags']))
     except (KeyError, TypeError, ValueError):
         valid = False

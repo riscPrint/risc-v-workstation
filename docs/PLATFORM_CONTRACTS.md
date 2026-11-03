@@ -220,6 +220,14 @@ model compilation. This takes priority over missing-evidence markers such as mis
 Otherwise they exit 3 for an explicit `inconclusive` marker, 0 when all runs pass,
 and 1 for other run failures. Error results remain unsuitable as core evidence.
 
+Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
+installed reference's version, source revision when supplied, and origin. The same
+label is bound into `build_inputs`. Source installs supply `share/rvw/spike-source.json`;
+Homebrew builds capture their receipt and available SBOM. An unlabelled external
+build has null version/revision. These labels are package provenance, not binary
+attestation. The captured library and shim hashes identify the executed bytes.
+C1 from an RTL-only run does not imply that Spike ran.
+
 ## C2. RVFI trace (`rvfi.jsonl`)
 
 First line is a header, then one object per retired instruction in `order`:

@@ -76,6 +76,11 @@ The editable Python install uses this checkout, so keep it in place.
 
 Install the tools needed by your adapter. A Spinal simulation normally needs
 JDK 21, sbt, Verilator, a C++ compiler and make. Test builds need a RISC-V toolchain.
+Fresh `--with-cosim` installs build the same qualified Spike source revision on
+macOS and Linux. Existing headers and libraries are reused, including those under
+`SPIKE_PREFIX`. The cosim build manifest records their identity. See
+[the reference choice](../Cosim/README.md#build-and-run) before selecting a newer Spike.
+
 Spike co-simulation needs Spike with its headers and library, plus
 `"$RVW_HOME/Cosim/build.sh"`. Formal flows need Yosys, SymbiYosys and a supported
 solver. See the [co-simulation guide](../Cosim/README.md) and
