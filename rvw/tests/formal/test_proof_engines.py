@@ -74,3 +74,9 @@ def test_constant_cut_is_refused(tmp_path, monkeypatch):
     import pytest
     with pytest.raises(ValueError, match='constant or aliased'):
         cuts.commands(Namespace(cut=['count:1'], clock='clk', timeout=1), tmp_path, [])
+
+
+def test_observed_disagreement_is_error_even_at_timeout():
+    text = ('engine_0: Status returned by engine: PASS\n'
+            'engine_1: Status returned by engine: FAIL\n')
+    assert final_status(124, text, 1) == 'error'

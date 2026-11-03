@@ -709,11 +709,11 @@ def count_asserts(rtlil: Path, top: str) -> int | None:
 
 def final_status(rc: int, sby_text: str, asserts: int | None) -> str:
     """A pass needs matching process/log exit codes and assertions in the prepared model."""
-    if rc == TIMEOUT_EXIT:
-        return "timeout"
     answers = set(re.findall(r"Status returned by engine: (PASS|FAIL)\b", sby_text))
     if answers == {"PASS", "FAIL"}:
         return "error"
+    if rc == TIMEOUT_EXIT:
+        return "timeout"
     status, log_rc = sby_result(sby_text)
     if log_rc != rc:
         return "error"
