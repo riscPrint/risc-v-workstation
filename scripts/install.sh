@@ -189,7 +189,7 @@ probe() {
 core_check() {
   local failed=0
   probe Python 3.11 "$python_cmd" --version || failed=1
-  probe uv 0.6 uv --version || failed=1
+  probe uv 0.13.6 uv --version || failed=1
   probe git 2 git --version || failed=1
   if [ -x "$rvw_home/rvw/.venv/bin/python" ]; then
     probe 'rvw venv Python' 3.11 "$rvw_home/rvw/.venv/bin/python" --version || failed=1
@@ -354,7 +354,7 @@ if ! probe Python 3.11 "$python_cmd" --version; then
   [ "$dry" = 1 ] || probe Python 3.11 "$python_cmd" --version || fail 'Install Python 3.11+ on this OS, then retry'
 fi
 local_uv=0
-if ! probe uv 0.6 uv --version; then
+if ! probe uv 0.13.6 uv --version; then
   case "$pm" in
     brew) packages uv ;;
     dnf)

@@ -31,7 +31,7 @@ Sail is checked when `RVW_SAIL` is set. It is not part of `--all`.
 The main installer consumes `rvw/uv.lock` with `uv sync --locked`. It does not
 resolve newer Python packages. Use `uv lock` to update the lock in a reviewed
 change. Development setup uses `uv sync --locked --extra dev --extra mcp`.
-The lock contains package hashes. The editable project's build backend is pinned
+Use uv 0.13.6 or later to read this lock format. The lock contains package hashes. The editable project's build backend is pinned
 in `pyproject.toml`.
 
 Linux Spike and Fedora GCC fetch exact commits. Existing source trees must

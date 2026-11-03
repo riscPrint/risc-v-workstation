@@ -234,7 +234,7 @@ def test_gem5_native_build_plan(tmp_path, system, distro, dependencies):
     binaries.mkdir()
     for name, body in {
         'uname': f'echo {system}',
-        'uv': 'echo "uv 0.6.0"',
+        'uv': 'echo "uv 0.13.6"',
         'xcrun': 'exit 0',
         **{name: f'echo called >> "{tmp_path}/mutations"; exit 99'
            for name in ('brew', 'sudo', 'apt-get', 'dnf')},
@@ -284,7 +284,7 @@ def test_gem5_source_checks_and_build_failure(tmp_path, revision, dirty):
         'python3': 'case "$*" in --version) echo "Python 3.11.0";; '
                    f'"-I -c"*) echo {shlex.quote(str(binaries / "base-python3"))};; *) exit 99;; esac',
         'base-python3-config': 'exit 0',
-        'uv': 'echo "uv 0.6.0"',
+        'uv': 'echo "uv 0.13.6"',
         'apt-get': 'exit 0',
         'sudo': 'exec "$@"',
         'git': f'case "$*" in *"rev-parse HEAD") echo {revision};; '
