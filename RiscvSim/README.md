@@ -67,6 +67,7 @@ run.sh info     [--json]
   tool identity. It starts no simulation. Unknown native inputs refuse result reuse.
 - Exit codes: `run` 0 pass, 1 fail/timeout/assert/rvfi_error, 2 harness error or bad usage.
   `run-many` 0 all pass, 1 some did not pass, 2 some harness error.
+  Both commands use 3 for inconclusive evidence unless a harness error requires 2.
 - stdout carries only the result: one summary line, or the JSON with `--json`. Progress goes to stderr.
 
 `run` writes `DIR/result.json` (C1) and `DIR/run.log`, plus the requested artifacts. Extra keys

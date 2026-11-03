@@ -668,6 +668,7 @@ class Driver(val adapter: CoreAdapter) {
     checkOutputs(Seq(job))
     val r = runJobs(Seq(job), 1).head
     emit(Cli.bool(o, "json"), r, summaryLine(r) + s"\n  result: ${new File(job.out, "result.json")}")
+    if (r("status").str == "error") return 2
     if (r.obj.contains("inconclusive")) return 3
     r("status").str match {
       case "pass" => 0
@@ -707,6 +708,6 @@ class Driver(val adapter: CoreAdapter) {
     emit(Cli.bool(o, "json"), summary,
       s"${jobs.size} runs in ${f"$wall%.1f"}s: " + Status.all.map(s => s"${counts(s.name).num.toInt} ${s.name}").mkString(", ") +
         results.filter(_("status").str != "pass").map(r => "\n  " + summaryLine(r)).mkString)
-    if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.exists(_("status").str == "error")) 2 else if (results.forall(_("status").str == "pass")) 0 else 1
+    if (results.exists(_("status").str == "error")) 2 else if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.forall(_("status").str == "pass")) 0 else 1
   }
 }
