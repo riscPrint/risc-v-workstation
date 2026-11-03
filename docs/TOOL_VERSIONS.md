@@ -13,7 +13,7 @@ runner. The shared macOS host is not a clean-install host.
 | Yosys | 0.70 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
 | SymbiYosys | 0.70 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
 | Yices | 2.7.0 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
-| Spike | 1.1.1-dev | Linux source `75fb7ef0aa89ae1f9ee361eb84d47753bc8349f8`; macOS Homebrew | Prior arm64 Homebrew co-simulation; Linux pin pending |
+| Spike | 1.1.1-dev | Linux source `5cf8c829d2033c5132158b59860fea8d6c06a94d`; macOS Homebrew | Prior arm64 Homebrew co-simulation; Linux pin pending |
 | Sail RISC-V model | 0.15 | `549e723031b34b5ffea5bbb56367be15c7a38a9e` | Prior co-simulation; separate archive installer pending |
 | gem5 | 25.1.0.1 | `c8222cc67a399bfc01e8658dd14b30d5bfd634f9` | Existing architecture flow; clean install pending |
 | JDK | 21.0.13 | Host packages; fallback Temurin 21.0.13+9 | Local version probe; fallback flow pending |

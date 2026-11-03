@@ -68,7 +68,7 @@ fi
 rvw_home="$prefix"
 tools="$rvw_home/.tools"
 # Source identities are immutable. Host package versions can drift.
-spike_revision=75fb7ef0aa89ae1f9ee361eb84d47753bc8349f8
+spike_revision=5cf8c829d2033c5132158b59860fea8d6c06a94d
 gcc_revision=a33dac0251d17a7b74d99bd8fd401bfce87d2aed
 oss_version=2026-10-22
 gem5_version=25.1.0.1
