@@ -266,6 +266,87 @@ See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
 suites. These use the existing ELF run contract. ACT4 expected signatures
 must come from Sail or the suite, never from a DUT run.
 
+## Multi-hart trace extension
+
+`MultiHartTrace(file, header, hartIds)` is an adapter API. It writes C2/2.
+Call `reset`, `retire`, `memory` and `complete` from accepted simulation events.
+Call `outcome` for C1 completion aggregation. Close the writer before publishing
+results. Each hart has its own epoch and retirement order. Capture sequence is
+not a global architectural order. See C1/C2 in PLATFORM_CONTRACTS.md.
+The CLI and BOOM adapter remain single-hart. Multi-hart Spike/Sail comparison
+and a native two-core adapter are not supplied by this API.
+
+Run its tests with the `sbt` lock:
+`sbt -batch 'testOnly riscvsim.MultiHartSpec'` from `RiscvSim/`.
+
+`TwoHartNativeSpec` runs two small RV32I-subset RTL fixtures through Verilator.
+They share two words with round-robin backpressure. The producer writes 37.
+The consumer polls it and writes 38. Each hart emits its own retirement order.
+These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings.
+They have no caches and are not full RISC-V cores. The test checks a known shared
+memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
+Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
+
+## Cache content scoreboard
+
+`MemoryImage` holds independent expected bytes from test stimulus.
+`CacheScoreboard` checks accepted fills, hits, stores and writebacks against it.
+Give it line size, set count and associativity from project data.
+Call `MemoryImage.write` with expected program writes before checking observed
+cache stores. Never copy DUT read values into the oracle. Split cross-line
+transactions in the adapter. Replacement requires explicit eviction; the generic
+checker does not assume LRU. A denied fill cannot install a resident line.
+Instruction invalidation is explicit. `CacheScoreboardSpec` tests self-modifying
+code at the model level, separately from coherence.
+
+Run: `sbt -batch 'testOnly riscvsim.CacheScoreboardSpec'` with the `sbt` lock.
+These tests check the scoreboard. They do not establish RTL cache coverage.
+
+## Coherence permissions
+
+`CoherenceMonitor(lineBytes, clients)` checks normalized TileLink-C permissions:
+N (None), B (Branch) and T (Trunk). Project adapters call `grant` only when a
+Grant is accepted and `shrink` when a ProbeAck or Release completes.
+Stalled requests must not change state. A branch grant requires intervention
+of another trunk. A trunk grant requires all other copies to be invalidated.
+Dirty shrink requires data. Use the cache scoreboard to check those bytes.
+The monitor does not parse TileLink beats, track sinks or check GrantAck timing.
+These require project channel adapters. It checks modeled permissions, not a
+full implementation of TileLink-C.
+
+Run: `sbt -batch 'testOnly riscvsim.CoherenceMonitorSpec'` with the `sbt` lock.
+
+## Bounded forward progress
+
+`ProgressMonitor(boundCycles, capacity, fairness)` tracks logical requests from
+presentation through completion. Supply the project's arbitration and response
+fairness assumptions as a nonempty string. Call `check` every sampled cycle.
+Keep the same request ID on retry. Retry and unrelated completions cannot renew
+its deadline. Check `finish` at campaign end; pending requests are not success.
+The bound includes backpressure. A fairness violation can trigger the watchdog;
+the monitor cannot distinguish that from a DUT progress failure without channel
+evidence. Capacity is the declared outstanding resource limit.
+This is a bounded test, not an unbounded liveness proof.
+
+Run: `sbt -batch 'testOnly riscvsim.ProgressMonitorSpec'` with the `sbt` lock.
+
+## DMA memory agent
+
+`DmaAgent(backing, expected, snoop, capture)` operates on separate memory images.
+The backing image is device-visible storage. Expected bytes come from test
+stimulus. CPU writeback updates backing only after an accepted memory transfer.
+`read` compares backing bytes with expected bytes. `write` applies the device
+stimulus and byte mask to both images. The capture callback receives each accepted
+transaction. Add its sampled cycle with `MultiHartTrace.memory` in the adapter.
+Coherent requests require `DmaSnoop`. Its hooks must complete writeback before
+read and invalidation before write. The agent does not invent those responses.
+For noncoherent requests, the test must clean before device read and invalidate
+a CPU copy after device write. A stale CPU observation fails the cache checker.
+Concurrent CPU atomics need a project arbiter and captured serialization point;
+the agent has no implicit thread synchronization or atomic reference backend.
+
+Run: `sbt -batch 'testOnly riscvsim.DmaAgentSpec'` with the `sbt` lock.
+
 ## Limit ownership
 
 Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).

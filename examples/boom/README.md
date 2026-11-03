@@ -48,3 +48,23 @@ The existing adapter does not yet consume the generated simulation map.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`
 and `rvw cov functional --manifest`; see the coverage tool README. It does not
 certify BOOM ISA compliance or change the adapter configuration.
+
+## Bounded single-hart cache program
+
+`cache-behavior.S` writes and checks 32 KiB, repeats a line access, checks byte
+stores, and patches a fetched function with `FENCE.I`. Expected values are
+constants or loop indices. The program reports through `tohost`.
+Build and run from the workstation root:
+
+```sh
+riscv64-unknown-elf-gcc -march=rv64gc -mabi=lp64d -nostdlib -nostartfiles \
+  -static -T RiscvSim/tests/programs/link.ld examples/boom/cache-behavior.S \
+  -o /tmp/boom-cache-behavior
+RiscvSim/boom/run.sh run --elf /tmp/boom-cache-behavior --out /tmp/boom-cache-run \
+  --config small --seed 1 --max-cycles 200000 --mem-latency 0 --wall-timeout 120 --json
+```
+
+The launcher takes the `boom` and `sbt` locks. Do not run it beside another heavy
+job. This is a bounded functional test. It does not observe hit/miss counts,
+prove eviction, or connect the generic cache scoreboard to BOOM internals.
+BOOM remains single-hart. Coherence and DMA RTL campaigns need another adapter.

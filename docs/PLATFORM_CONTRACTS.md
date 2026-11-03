@@ -319,6 +319,46 @@ An incomplete live stream returns `inconclusive`, with cause
 `live_trace_incomplete`. The API stops the producer on a checked divergence.
 
 
+### Optional multi-hart extension (C1 and C2)
+
+C1 stays `rvw.run/1`. An adapter can opt in with `details.multihart`.
+It lists `harts`: objects with unique non-negative `hart`, reset `epoch`, and
+`status`. Each hart starts in reset. Each reset starts a new epoch and restarts
+that hart's retirement order at zero. Shared memory survives a hart reset.
+The adapter must drain or cancel that hart's outstanding transactions before reset.
+Completion applies to one hart. A run can pass only after every declared hart
+completes with pass. An unfinished hart at the cycle bound gives timeout.
+Harness errors must stay errors. Record each hart's reset PC and input ELF hash
+in project metadata. The current single-ELF CLI does not select multiple images.
+
+Multi-hart traces use **`rvw.rvfi/2`**, never `rvw.rvfi/1`. The header adds
+`harts: [0, 1]`. Each retirement adds `hart` and `epoch`; `order` is a decimal
+string with full 64-bit precision. Order is contiguous within one hart and epoch.
+Equal retirement orders on different harts are valid. Reset and completion are
+`event: reset` and `event: hart_end` with `hart`, `epoch`, `cycle` and, for
+completion, `status`. A missing reset or an order gap is an input error.
+All records add `capture_seq`, a contiguous decimal string from zero, and share
+one nondecreasing sampled `cycle` in 0..9007199254740991. These describe capture order only. They do
+not impose a global retirement order or implement RVWMO.
+
+Shared memory initialization is captured once before reset release. Project
+inputs declare its address ranges, bytes, byte order, hashes, arbitration and
+memory type. Capture accepted external transactions as `event: external` with
+unique transaction `id`, `action` (read, write, atomic, irq or maintenance),
+`source`, hex `address`, hex `data`, hex byte `mask`, cycle and capture sequence.
+Retried requests keep their logical transaction ID. Capture interrupt targets,
+DMA coherence mode, read-from/write serialization IDs and maintenance completion
+in the payload when applicable. Request presentation is not acceptance. Record
+all nondeterministic input and arbitration decisions required for replay.
+
+A reference adapter must use per-hart architectural state and an explicitly
+captured memory interleaving or a memory-model checker. It must not feed the
+reference values read from DUT retirement. Ambiguous read-from relations or
+missing external inputs give inconclusive. Current Spike/Sail single-hart
+commands do not implement this extension. Do not split `/2` into `/1` files and
+claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
+completion aggregation. It does not supply a multi-hart reference backend.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
