@@ -565,7 +565,11 @@ def test_generic_build_does_not_load_core_projects():
     from pathlib import Path
     repo = Path(__file__).resolve().parents[2]
     build = (repo / "RiscvSim/build.sbt").read_text()
-    assert "ProjectRef" not in build
+    # The generic trace library is required by --spinaltrace. Permit that exact
+    # reference only; a core ProjectRef must still fail this check.
+    trace_ref = 'ProjectRef(file("../SpinalTrace/spinaltrace").getCanonicalFile, "spinaltrace")'
+    assert build.count(trace_ref) == 1
+    assert "ProjectRef" not in build.replace(trace_ref, "")
     assert "SPINAL_BOOM" not in build
     adapter = (repo / "RiscvSim/boom/build.sbt").read_text()
     assert 'ProjectRef(file("..").getCanonicalFile, "riscvsim")' in adapter
