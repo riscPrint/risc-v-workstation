@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 
-from rvw.common.proc import run_group
+from rvw.common.sby import TOOL_GRACE_S, execute
 from rvw.common.capture import CaptureError
 from rvw.results import write_json
 from rvw.formal.common import async_state_problems, clock_probe_cmds, clock_problems
@@ -29,21 +29,15 @@ from . import source_snapshot
 # /6: refuse asynchronous state controls, including when rechecking the saved netlist on apply.
 # /7: every front end reads one frozen RTL/include snapshot, with verified per-job copies.
 EXCLUSIONS_SCHEMA = 'rvw.coverage-exclusions/7'
-# SIGTERM to SIGKILL for sby: below the MCP job grace (rvw.mcp.jobs.Job.GRACE_S), see formal/common.py.
-TOOL_GRACE_S = 10.0
-
-
 @captured.command
 def run_job(argv, cwd, log, timeout):
     """Runs a solver job in its own process group; a timeout, error or MCP cancel stops the tree."""
     bindings = getattr(captured.current(), '_coverage_proof_tools', None)
     environment = bindings.env if bindings is not None else captured.environment()
-    with Path(log).open('w') as stream:
-        try:
-            return run_group(argv, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, timeout=timeout,
-                             grace=TOOL_GRACE_S, env=environment).returncode
-        except FileNotFoundError as exc:
-            raise ValueError(f'tool not installed: {argv[0]}') from exc
+    try:
+        return execute(argv, cwd, log, timeout, env=environment)[0]
+    except FileNotFoundError as exc:
+        raise ValueError(f'tool not installed: {argv[0]}') from exc
 
 
 # Yosys turns an unknown name (a typo, or a hierarchical reference `dut.q`, which read_verilog does

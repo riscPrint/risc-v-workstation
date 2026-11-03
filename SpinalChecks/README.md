@@ -443,3 +443,15 @@ captured BMC witness with Yosys `sim`. It keeps the original inputs and constrai
 It writes VCD/FST and can call SpinalWaves, Surfer and SpinalTrace with matching
 metadata. Replay never earns a proof pass. See the [command guide](../rvw/src/rvw/formal/README.md#counterexample-what-if-replay)
 for edit syntax, result meanings and validation limits.
+
+
+
+### Shared solver execution
+
+Formal probes and coverage exclusion jobs use `rvw.common.sby.execute`.
+The shared runner writes the combined log and stops the process group on timeout
+or cancellation. It gives SBY 10 seconds to stop its solver sessions.
+Each caller keeps its captured environment and tool bindings.
+Formal still checks the DONE line, process exit and assertion count.
+Coverage still checks its captured status, source snapshot and vacuity evidence.
+A timeout cannot earn a proof or an exclusion.

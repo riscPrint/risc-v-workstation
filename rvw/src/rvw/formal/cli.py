@@ -86,9 +86,41 @@ def register(sub) -> None:
     c.add_argument("--open", action="store_true", help="open Surfer after typed lookup succeeds")
     from . import cex
     c.set_defaults(func=cex.run)
+    hist = s.add_parser("sby-history", help="read per-property history from retained C3 campaigns")
+    hist.add_argument("paths", nargs="+")
+    from .campaign import history
+    hist.set_defaults(func=history)
+
+    campaign = s.add_parser("sby-regress", help="run SBY jobs and write conditional C3/C4 observations")
+    campaign.add_argument("manifest", help="TOML campaign with [[property]] rows")
+    campaign.add_argument("--out", required=True)
+    campaign.add_argument("--timeout", type=float, default=60)
+    campaign.add_argument("--json", action="store_true")
+    from .campaign import run as run_campaign
+    campaign.set_defaults(func=run_campaign)
+
+    proof = s.add_parser("prove", help="unbounded safety proof from reset")
+    _common(proof, 20)
+    proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
+    proof.add_argument("--reset-cycles", type=int, default=1)
+    proof.add_argument("--free-reset", action="store_true")
+    proof.add_argument("--first-failure", action="store_true")
+    proof.set_defaults(func=lambda a: _flow("bmc", a), mode="prove",
+                       engine="abc:pdr,aiger:avy")
+
+    search = s.add_parser("depth-search", help="bounded search with a total time budget")
+    _common(search, 4)
+    search.add_argument("--max-depth", required=True, type=int)
+    search.add_argument("--budget", required=True, type=float)
+    search.add_argument("--reset-cycles", type=int, default=1)
+    search.add_argument("--free-reset", action="store_true")
+    search.add_argument("--first-failure", action="store_true")
+    from .search import depth_search
+    search.set_defaults(func=depth_search)
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
+    b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")
     b.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")

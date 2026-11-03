@@ -1447,3 +1447,24 @@ inputs and environment. `baseline` and `edited` contain the Yosys sim summaries.
 `wave` and `fst` name the edited replay artifacts. Optional `navigation` records
 type-check, cause-trace and viewer launch outcomes. A viewer launch does not
 establish successful source navigation. See the formal command README for limits.
+
+### Formal campaign observations in C3 and C4
+
+`rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.
+Each row names one single-assertion SBY job. Extra fields retain `formal_status`,
+`requirements`, `assumptions`, `configuration` and `job_sha256`.
+`formal_status` is `bounded_pass`, `unbounded_engine_pass`, `counterexample`,
+`timeout`, `unknown` or `error`. C3 maps engine passes to `pass`, counterexamples
+to `fail`, timeouts to `timeout`, and other states to `error`.
+Every row carries an `inconclusive` reason: input closure, property attribution
+and vacuity are not checked. A raw engine pass cannot earn acceptance.
+C4 records `verdict: inconclusive` and `tests: incomplete`.
+Retained standalone C3 directories form the history store. Each sample keeps
+configuration and assumptions. Samples cannot be pooled into one proof.
+
+Formal results add `proof_kind: bounded | unbounded`.
+Only `formal prove` selects unbounded mode. Depth-search summaries use
+`rvw.formal-depth-search/1`, retain attempt paths and statuses, and report
+`max_bounded_pass`. Their status is `fail` or `inconclusive`; never proof.
+Cut-point records name the signal, width and `unconstrained_anyseq` semantics.
+An abstract counterexample records `status: unknown`, not a concrete failure.

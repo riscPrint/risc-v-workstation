@@ -36,6 +36,7 @@ def _header(kind: str, args, status: str, secs: float, asserts: int | None, rese
     return {
         "schema": "rvw.formal/1",
         "flow": kind,
+        "proof_kind": "unbounded" if kind == "prove" else "bounded",
         "top": args.top,
         # pass | fail | unknown | error | timeout | no_checks (the proven design has no assertion)
         "status": status,
@@ -244,9 +245,11 @@ def bmc(args) -> int:
     (out / "rvw_formal_top.sv").write_text(
         wrapper(args.top, ports, args.clock, reset, args.reset_active == "high", args.reset_cycles, args.free_reset, ties))
     snapshot.seal(out / 'rvw_formal_top.sv')
+    from .cuts import commands
+    cut_script, cut_records = commands(args, out, files)
     # multiclock off is sound only for one clock: the clock probe above refused any other design.
     sby = f"""[options]
-mode bmc
+mode {getattr(args, "mode", "bmc")}
 depth {args.depth}
 multiclock off
 
@@ -257,6 +260,7 @@ multiclock off
 {common.read_rtlil(files)}
 read_verilog -formal -sv {out / 'rvw_formal_top.sv'}
 prep -top rvw_formal_top
+{cut_script}
 
 [files]
 """
@@ -264,8 +268,14 @@ prep -top rvw_formal_top
     _sby(out, "bmc.sby", sby)
     rc, secs = common.run(["sby", "-f", "-d", "sby", "bmc.sby"], out, out / "sby.log",
                           _remaining(args.timeout, started))
-    result = _finish(out, "bmc", args, rc, secs, ChecksIndex.load(snapshot.checks), "rvw_formal_top",
+    result = _finish(out, getattr(args, "mode", "bmc"), args, rc, secs, ChecksIndex.load(snapshot.checks), "rvw_formal_top",
                      reset, ties, restrictions, _remaining(args.timeout, started))
+    if cut_records:
+        result['cut_points'] = cut_records
+        if result['status'] == 'fail':
+            result['status'] = 'unknown'
+            result['abstraction_counterexample'] = True
+        common.write_json(out / "result.json", result)
     _print(result, args.json)
     return 0 if result["status"] == "pass" else 1
 

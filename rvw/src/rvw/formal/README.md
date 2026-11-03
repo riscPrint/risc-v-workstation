@@ -317,3 +317,90 @@ matched HGLDD, PDG and Scala source navigation remains to be checked. This first
 increment supports BMC results only. It does not minimize input changes, shorten
 the failure, remove irrelevant assumptions, or prove that an edited trace is a
 legal counterexample. Those parts of issue #60 remain open.
+
+## Proof engines and bounded depth search
+
+Use the source, clock, reset and tie options from `bmc`:
+
+```sh
+rvw formal prove --verilog counter.sv --top counter --out out/proof --timeout 60
+rvw formal bmc --verilog counter.sv --top counter --engine btor:pono,btor:btormc --out out/bmc
+rvw formal depth-search --verilog counter.sv --top counter --depth 4 --max-depth 64 --budget 120 --out out/search --json
+rvw formal prove --verilog counter.sv --top counter --cut count:4 --out out/cut
+```
+
+`prove` defaults to the parallel portfolio `abc:pdr,aiger:avy`.
+BMC supports `btor:pono` and `btor:btormc`. These SBY engines are bounded.
+Do not mix engines that require different modes. Each executable is captured.
+SBY stops the other engines after its first conclusive answer. Conflicting PASS
+and FAIL answers in the log produce an error. An engine stopped before its
+answer cannot be cross-checked. Timeout cannot earn a proof.
+The assertion, clock, state-control and assumption reachability guards remain.
+Results add `proof_kind`: `bounded` or `unbounded`. The reachability guard is
+bounded. It does not establish assumption activation for all time.
+
+Depth search doubles the depth up to `--max-depth`. It stops on failure,
+unknown, error, timeout or budget exhaustion. Each attempt has its own capture
+and result directory. Each attempt checks its current inputs. It does not reuse
+proofs between attempts. The total budget starts before the first attempt.
+Native cleanup and frontend setup can extend elapsed wall time.
+The summary reports the largest bounded pass. It always returns exit 1.
+A bounded search cannot earn an unbounded proof.
+
+`--cut SIGNAL:WIDTH` replaces a DUT signal with unconstrained `$anyseq`.
+The prepared model supplies its checked width. This is an overapproximation.
+No assumption restricts the cut value. A pass applies to all cut values.
+An abstract failure reports `unknown` with `abstraction_counterexample`.
+It is not a confirmed DUT failure. Interface contracts, dependency checks,
+circular-assumption rejection and RAM abstraction contracts remain open.
+
+## SBY campaigns and property history
+
+The runner is separate from full SVA language support:
+
+```sh
+rvw formal sby-regress campaign.toml --out out/campaign-1 --timeout 60 --json
+rvw formal sby-history out/campaign-1 out/campaign-2
+```
+
+Example manifest:
+
+```toml
+core = "external"
+config = "rtl-v1"
+
+[[property]]
+id = "counter_limit"
+sby = "counter.sby"
+top = "counter"
+config = "rtl-v1-reset-one-cycle"
+requirements = ["REQ-COUNT-1"]
+assumptions = ["reset starts active"]
+```
+
+Each job must have one assertion after preparation. Use one SBY task with
+`[options]`, `[engines]`, `[script]` and `[files]`. Modes are `bmc` and `prove`.
+Engines use plain names without extra options. File targets are unique basenames.
+The runner captures manifests, jobs, listed sources and tools before execution.
+Declare full dependencies in `[files]`. Transitive closure, property attribution,
+assumption activation and vacuity are not checked. Each C3 row records these
+limits as `inconclusive`. Raw engine passes are conditional observations.
+They cannot establish design acceptance or a non-vacuous proof.
+
+Outputs use C3 `results.json` and C4 `verdict.json`. `formal_status` preserves
+`bounded_pass`, `unbounded_engine_pass`, `counterexample`, `timeout`, `unknown`
+and `error`. C4 stays inconclusive. The command returns 1.
+Keep each fresh campaign directory for history. `sby-history` groups C3 samples
+by property id. Each sample retains assumptions, requirements, configuration
+and job hash. A matching name cannot establish proof equivalence or reuse.
+
+The native slang plugin loads on this host. However, it rejects
+`assert property (@(posedge clk) a |=> a)` with `SVA unsupported`.
+Full SVA remains blocked by language support in that plugin.
+Do not use `--ignore-assertions` for proof jobs. Sampling regions, multiple
+clocks, reset semantics and temporal sequences remain unqualified.
+Positive and negative semantic cases on each engine remain required.
+
+Native Avy can crash on a constant-safe AIG. That case returns `error`.
+A portfolio can still return a conclusive answer from another engine.
+Constant cut bits, repeated aliased bits and clock cuts are refused.
