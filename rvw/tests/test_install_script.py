@@ -374,3 +374,14 @@ def test_archive_checksum_is_enforced(tmp_path, correct):
     assert (result.returncode == 0) == correct
     if not correct:
         assert 'checksum mismatch' in result.stderr
+
+
+def test_pinned_sources_include_recorded_submodules(tmp_path):
+    text = SCRIPT.read_text()
+    function = text[text.index('pinned_source() {'):text.index('# Use this archive')]
+    wrapper = ('dry=1\nrun() { printf "%s " "$@"; printf "\\n"; }\n' + function
+               + '\npinned_source https://example.invalid/repo "$1" deadbeef\n')
+    result = run_group(['bash', '-c', wrapper, '_', str(tmp_path / 'source')],
+                       capture=True, timeout=10)
+    assert result.returncode == 0
+    assert 'submodule update --init --recursive' in result.stdout

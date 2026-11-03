@@ -303,6 +303,7 @@ pinned_source() {
     [ "$(git -C "$directory" rev-parse HEAD)" = "$revision" ] &&
       git -C "$directory" diff --quiet HEAD -- || fail "Source must be clean at $revision: $directory"
   else printf 'Verify source is clean at %s\n' "$revision"; fi
+  run git -C "$directory" submodule update --init --recursive
 }
 # Use this archive where the distro has no JDK 21 package.
 temurin_jdk() {
@@ -440,7 +441,6 @@ if [ "$gcc" = 1 ] && ! probe 'RISC-V GCC' 10 riscv64-unknown-elf-gcc --version; 
       packages autoconf automake python3 libmpc-devel mpfr-devel gmp-devel gawk bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel make diffutils which
       run mkdir -p "$tools/src"
       pinned_source https://github.com/riscv-collab/riscv-gnu-toolchain.git "$tools/src/riscv-gnu-toolchain" "$gcc_revision"
-      run git -C "$tools/src/riscv-gnu-toolchain" submodule update --init --recursive
       run bash -c 'cd "$1" && ./configure --prefix="$2" --with-arch=rv64gc --with-abi=lp64d' _ "$tools/src/riscv-gnu-toolchain" "$tools/riscv"
       run nice make -C "$tools/src/riscv-gnu-toolchain" -j2 ;;
   esac
