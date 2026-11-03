@@ -177,3 +177,9 @@ PDG extraction. Its extraction test also changes a completed reference netlist t
 exercise the mixed-width warning directly. This is extraction evidence, not a
 mixed-width simulation result. The unsupported switch-key test likewise exposes a
 raw expression after naming. Normal named keys remain supported.
+
+## Limit ownership
+
+Clock semantics: [#89](https://github.com/riscPrint/risc-v-workstation/issues/89). Memory attribution: [#92](https://github.com/riscPrint/risc-v-workstation/issues/92). Extraction and grouping: [#94](https://github.com/riscPrint/risc-v-workstation/issues/94). Viewer identity: [#113](https://github.com/riscPrint/risc-v-workstation/issues/113).
+
+Retained limit: The remaining raw-bit display, static slice representation, opaque BlackBoxes, analog/inout and formal-construct restrictions remain as documented. The grouped GUI graph still copies data; representation cleanup has no demonstrated correctness defect. Signed timestamps are already i64. The -1/0 grouping regression and reset-chain test cover separate bounded cases; no timestamp fix is pending here.

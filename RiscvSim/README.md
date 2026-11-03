@@ -76,6 +76,13 @@ counts, Konata desyncs) and `metrics` (`roi_cycles`, `roi_instret`, `roi_ipc` wh
 `bench_stats` symbol). `replay` writes to `DIR-replay` so it does not overwrite the original.
 `result.json` is written to a temporary file and renamed, so a reader never sees half of it.
 
+Adapters that call `RiscvSimConfig.elaborate` can pass `sourceRoots` as its
+fourth argument. Use roots from the core project, not the launch directory.
+The PDG extractor uses these roots to resolve Scala source files. The BOOM
+adapter passes both source directories from `sourceDir`. Generated PDGs use
+the existing absolute-path format. Portable fixtures must use project-relative
+paths, and cross-checkout comparisons must remove only the checkout prefix.
+
 ## Artifacts
 
 | File | When | What |
@@ -206,6 +213,13 @@ the same ELF, seed, model options and wave window under the `boom` lock. Compare
 source statements, cycles and dependency edges after normalizing generated IDs
 and checkout paths. Record the measured result in the PR before removal.
 
+Some generated statements have no retained core frame. The location filter
+skips library frames and uses the elaboration caller. The prototype and the
+normal helper then give different source files and lines. Statement names can
+contain that file and line too. `CallerLocationSpec` tests this rule. Keep these
+locations and names in the comparison. Keep the prototype while they differ;
+do not map one helper to the other to claim exact parity.
+
 ## Interrupt schedules
 
 BOOM and the VexRiscv example accept `--irq-schedule`:
@@ -332,3 +346,9 @@ Concurrent CPU atomics need a project arbiter and captured serialization point;
 the agent has no implicit thread synchronization or atomic reference backend.
 
 Run: `sbt -batch 'testOnly riscvsim.DmaAgentSpec'` with the `sbt` lock.
+
+## Limit ownership
+
+Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
+
+Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.

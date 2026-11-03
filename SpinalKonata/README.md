@@ -183,3 +183,9 @@ The collector captures the batch before analysis and publishes an immutable
 The harness keeps `cache_key=null` until compiled-model capture is complete.
 Physical commit events can include predicated-off operations. Event IPC cannot
 replace architectural IPC. These trace checks do not establish silicon behavior.
+
+## Limit ownership
+
+Additional probe events and commit semantics: [#49](https://github.com/riscPrint/risc-v-workstation/issues/49).
+
+Retained limit: Standalone compiled-model capture remains incomplete, with no dedicated implementation issue. Keep C1 status=error, input_not_captured:compiled_model and cache_key=null. Trace-only reports cannot earn gate acceptance. Complete capture must precede any wider claim.

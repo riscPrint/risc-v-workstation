@@ -656,3 +656,9 @@ machine heavy-job lock: `$RVW_HEAVY_LOCK`, else the platform default (`boom`, se
 value runs without a lock (small designs). Mutation
 requires `run=true` and `baseline` to execute MCY rather than inspect existing outcomes.
 Proof exclusions and mutation survivors retain the evidence limits documented above.
+
+## Limit ownership
+
+FSM and Scala attribution: [#42](https://github.com/riscPrint/risc-v-workstation/issues/42). Expected ISA bins: [#82](https://github.com/riscPrint/risc-v-workstation/issues/82). Typed RTL events: [#88](https://github.com/riscPrint/risc-v-workstation/issues/88). Temporal coverage: [#115](https://github.com/riscPrint/risc-v-workstation/issues/115). BOOM mutation review: [#3](https://github.com/riscPrint/risc-v-workstation/issues/3). Proof-core reports: [#62](https://github.com/riscPrint/risc-v-workstation/issues/62).
+
+Retained limit: Reviewed expression mappings are not automatic semantic proofs. Capture bounds, unsupported state refusals, reset assumptions and proof/mutation evidence limits remain required. No complete coverage claim follows from observed bins.

@@ -142,3 +142,9 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   alignment, and automated microbenchmarks remain open work.
 - An in-order or RV32 core needs a CPU model selection, a matching runtime and
   ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
+
+## Limit ownership
+
+Fitting: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12). RV32/in-order models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Wide-core features: [#72](https://github.com/riscPrint/risc-v-workstation/issues/72). Experiments: [#160](https://github.com/riscPrint/risc-v-workstation/issues/160).
+
+Retained limit: Complete C8 capture and immutable generations have no dedicated issue. Keep C9 reports local, with absolute paths and status=reported. Parameter generation remains a source-inspection guide, not a verified extractor. Fixed topology and benchmark sensitivity still apply.

@@ -166,3 +166,9 @@ Memory writes must be synchronous, equal-width and unmasked. Memory reads can be
 synchronous or asynchronous. Large memories and dynamic partial writes report
 incomplete. See [the accuracy contract](docs/PDG_FORMAT.md#accuracy-contract-formatversion-2)
 for the bounds and source grouping rules.
+
+## Limit ownership
+
+Clock semantics: [#89](https://github.com/riscPrint/risc-v-workstation/issues/89). Memory attribution: [#92](https://github.com/riscPrint/risc-v-workstation/issues/92). Accuracy and source grouping: [#94](https://github.com/riscPrint/risc-v-workstation/issues/94). Viewer node IDs: [#113](https://github.com/riscPrint/risc-v-workstation/issues/113). Database integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Integrated navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: VCD/Verilator is the validated input. FST and other simulators remain unqualified. Use short trace windows. Source paths require the original source tree. Graph copying and graph-representation cleanup remain performance work without a separate issue; neither establishes a correctness defect.

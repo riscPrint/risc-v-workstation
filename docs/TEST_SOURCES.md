@@ -121,3 +121,9 @@ the DUT. This suite declaration does not implement those campaigns.
 
 See the [RVFI-DII design](TESTRIG.md). The current ELF adapters do not provide
 instruction injection. A new simulation-only core hook is required.
+
+## Limit ownership
+
+Additional sources and TestRIG: [#48](https://github.com/riscPrint/risc-v-workstation/issues/48). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75).
+
+Retained limit: Reference synchronization and signature provenance restrictions still apply. A DUT result cannot supply an expected signature.

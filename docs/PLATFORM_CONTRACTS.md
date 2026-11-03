@@ -1055,3 +1055,9 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+## Limit ownership
+
+Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
+
+Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.

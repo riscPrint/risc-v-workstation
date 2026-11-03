@@ -329,3 +329,9 @@ include mutable `ArrayBuffer` versus immutable `Seq`, removed collection
 operations and changed Spinal APIs. This is a build compatibility gap before
 extraction. No NaxRiscv database or artifact support is claimed. A matching
 Scala/SpinalHDL library build needs a separate integration check.
+
+## Limit ownership
+
+More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Non-Spinal queries: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55). Consumer integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
+
+Retained limit: Best-effort source and parameter capture, incomplete keys, dependency refusals and local source paths remain deliberate restrictions. An incomplete identity cannot support reuse. No general extraction-completeness claim is made.

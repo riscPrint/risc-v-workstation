@@ -185,3 +185,9 @@ when found. Unknown source causes remain explicit in the reasons.
 
 Disabling replay of a reset recorded in the design reports incomplete. Data-only
 traces also report incomplete because they omit control and index causes.
+
+## Limit ownership
+
+Clock semantics: [#89](https://github.com/riscPrint/risc-v-workstation/issues/89). Memory attribution: [#92](https://github.com/riscPrint/risc-v-workstation/issues/92). Accuracy metadata and grouping: [#94](https://github.com/riscPrint/risc-v-workstation/issues/94).
+
+Retained limit: An incomplete or approximate graph cannot supply an exact trace. The listed unsupported constructs remain outside the exact subset.
