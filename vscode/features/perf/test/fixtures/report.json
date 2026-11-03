@@ -1,0 +1,1 @@
+{"schema": "rvw.perf/1", "trace": "fixture.log", "retirement_basis": "Kanata R type 0; event IPC", "summary": {"ipc": 0.5, "cycles": 10, "instret": 5}, "configuration": {"lane": "0"}, "warnings": ["C1 absent: trace-only"], "limits": ["No causal stall attribution"]}

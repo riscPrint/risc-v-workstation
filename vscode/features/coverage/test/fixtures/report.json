@@ -1,0 +1,1 @@
+{"schema": "rvw.coverage-report/1", "summary": {"hit": 1, "total": 2}, "never_hit": [{"id": "hole", "scala": {"file": "Unit.scala", "line": 9, "confidence": "inferred"}}], "exclusions": [{"reason": "waived", "scope": "fixture"}], "unmapped_scala_points": 1, "warnings": ["incompatible configuration bins"], "sources": {"Unit.v": {"status": "stale"}}}
