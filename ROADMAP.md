@@ -106,7 +106,7 @@ is from being usable on other designs.
 
 | Component | Path | Area | For BOOM | Generic goal | Generic status |
 |---|---|---|---|---|---|
-| RiscvSim | `RiscvSim/` | SIM, VER | `RiscvSim/boom/run.sh`: build / run / run-many; result JSON, RVFI trace, waves with cycle windows, Konata, coverage, replay | The run contract (C1) and RVFI trace (C2) for any Spinal RISC-V core | generic build isolated from BOOM; 4/8-byte store helpers; ELF XLEN guard |
+| RiscvSim | `RiscvSim/` | SIM, VER | `RiscvSim/boom/run.sh`: build / run / run-many; result JSON, RVFI trace, waves with cycle windows, Konata, coverage, replay | The run contract (C1) and RVFI trace (C2) for any Spinal RISC-V core | generic build isolated from BOOM; C2/2 multi-hart writer; cache/coherence model tests (native core coverage pending) |
 | VexRiscv example | `examples/vexriscv/` | SIM, VER, IDE | Independent second-core check | External core with C1/C2, regression, Spike and SpinalDB | core-owned project validated; ISA startup cosim mismatch recorded |
 | rvw regress | `rvw/src/rvw/regress/`, `rvw/configs/boom.toml` | SIM, VER | Suites (riscv-tests, ACT4, VM, benchmarks, random-timing stress, elaboration), tiers, verdict, `gate`, known failures; quick tier 173/173 | Regression for any core with a C1 adapter and complete C8 inputs | generic config; external BOOM project validated; C4 /2 dirty outcomes and unchanged-RTL reuse verified |
 | rvw cosim | `rvw/src/rvw/cosim/`, `Cosim/` | VER | Spike lockstep 173/174, Sail 171/174 on riscv-tests | Any core writing C2 traces, platform in project JSON | generic platform config; qualified Spike source pin; MMU policy guards; C2/Spike/Sail scope documented |

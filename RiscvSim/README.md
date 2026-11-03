@@ -251,3 +251,24 @@ Sail cannot synchronize external inputs and refuses this comparison.
 See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
 suites. These use the existing ELF run contract. ACT4 expected signatures
 must come from Sail or the suite, never from a DUT run.
+
+## Multi-hart trace extension
+
+`MultiHartTrace(file, header, hartIds)` is an adapter API. It writes C2/2.
+Call `reset`, `retire`, `memory` and `complete` from accepted simulation events.
+Call `outcome` for C1 completion aggregation. Close the writer before publishing
+results. Each hart has its own epoch and retirement order. Capture sequence is
+not a global architectural order. See C1/C2 in PLATFORM_CONTRACTS.md.
+The CLI and BOOM adapter remain single-hart. Multi-hart Spike/Sail comparison
+and a native two-core adapter are not supplied by this API.
+
+Run its tests with the `sbt` lock:
+`sbt -batch 'testOnly riscvsim.MultiHartSpec'` from `RiscvSim/`.
+
+`TwoHartNativeSpec` runs two small RV32I-subset RTL fixtures through Verilator.
+They share two words with round-robin backpressure. The producer writes 37.
+The consumer polls it and writes 38. Each hart emits its own retirement order.
+These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings.
+They have no caches and are not full RISC-V cores. The test checks a known shared
+memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
+Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
