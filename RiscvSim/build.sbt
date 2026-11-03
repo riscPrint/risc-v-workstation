@@ -8,7 +8,7 @@ val spinalVersion = "1.15.0"
 // the RVFI trace writer, result.json, and the run-contract command line (build / run / run-many).
 // No core-specific code here.
 lazy val riscvsim = (project in file("."))
-  .dependsOn(ProjectRef(file("../SpinalTrace/spinaltrace").getCanonicalFile, "spinaltrace"))
+  .dependsOn(ProjectRef(file("../SpinalTrace/spinaltrace"), "spinaltrace"))
   .settings(
     name := "riscvsim",
     libraryDependencies ++= Seq(
