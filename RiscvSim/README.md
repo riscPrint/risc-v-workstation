@@ -212,6 +212,13 @@ the same ELF, seed, model options and wave window under the `boom` lock. Compare
 source statements, cycles and dependency edges after normalizing generated IDs
 and checkout paths. Record the measured result in the PR before removal.
 
+Some generated statements have no retained core frame. The location filter
+skips library frames and uses the elaboration caller. The prototype and the
+normal helper then give different source files and lines. Statement names can
+contain that file and line too. `CallerLocationSpec` tests this rule. Keep these
+locations and names in the comparison. Keep the prototype while they differ;
+do not map one helper to the other to claim exact parity.
+
 ## Interrupt schedules
 
 BOOM and the VexRiscv example accept `--irq-schedule`:
