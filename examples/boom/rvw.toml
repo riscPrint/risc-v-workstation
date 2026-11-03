@@ -76,7 +76,7 @@ max_cycles = 200000
 timeout_s = 300
 
 [suites.act4]
-description = "ACT4 architectural certification tests (self-checking ELFs)"
+description = "ACT4 self-checking ELFs with independent Sail signatures"
 dir = "${ACT4_ELFS:-../../../ref/act4/work/boom-rv64gc/elfs}"
 glob = "**/*.elf"
 strip_suffix = ".elf"
@@ -86,7 +86,8 @@ timeout_s = 900
 
 [suites.vm-tests]
 description = "directed virtual-memory tests (spinal-boom tests/vm)"
-dir = "${VM_TESTS:-../../../spinal-boom/tests/vm/build}"
+dir = "${VM_TESTS:-../../../spinal-boom-eda/tests/vm/build}"
+exclude = ['\.dump$', '\.log$']
 configs = ["small"]
 max_cycles = 200000
 timeout_s = 300
@@ -138,4 +139,10 @@ runs = [
   { suite = "benchmarks", configs = ["large"] },
   { suite = "stress", configs = ["large"] },
   { suite = "elaboration" },
+]
+
+[tiers.presets]
+description = "bounded integer, multiply and compressed correctness on medium and large"
+runs = [
+  { suite = "riscv-tests", configs = ["medium", "large"], include = ['^rv64(ui-p-add|um-p-mul|uc-p-rvc)$'] },
 ]

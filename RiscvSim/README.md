@@ -245,3 +245,8 @@ JSON stay in the selected temporary directory. The Python checker reports
 `consistent` only for its schedule and window checks. Spike supplies the separate
 instruction comparison. Missing bounds or trap evidence stays inconclusive.
 Sail cannot synchronize external inputs and refuses this comparison.
+## Additional test sources
+
+See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
+suites. These use the existing ELF run contract. ACT4 expected signatures
+must come from Sail or the suite, never from a DUT run.
