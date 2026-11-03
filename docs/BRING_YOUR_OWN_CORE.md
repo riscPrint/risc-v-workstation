@@ -41,6 +41,10 @@ Select native tools with these flags:
 | `--with-gem5` | Native RISC-V gem5 v25.1.0.1. Reuse a build with `RVW_GEM5`. |
 | `--all` | All optional tools |
 
+For private native workflow artifacts, use `--from-bundle --bundle-run RUN_ID`
+with the selected native flags. Use `--bundle-dir DIR` for saved artifacts.
+See the [native bundle guide](../scripts/README.md) for hosts and limits.
+
 Use `scripts/install.sh --with-sim --dry-run` to inspect actions.
 Use `scripts/install.sh --with-sim --check` to inspect installed tools and
 versions. Check mode exits nonzero for a missing, old or unusable requested tool.

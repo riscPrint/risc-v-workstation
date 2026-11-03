@@ -1,0 +1,89 @@
+name: Native tool bundles
+on:
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Tool to build (all starts fifteen native jobs)
+        type: choice
+        options: [verilator, spike, sail, gem5, gcc, all]
+        default: verilator
+      host:
+        description: Native runner
+        type: choice
+        options: [linux-x86_64, macos-arm64, linux-arm64, all]
+        default: linux-x86_64
+permissions:
+  contents: read
+concurrency:
+  group: native-bundle-${{ inputs.tool }}-${{ inputs.host }}
+  cancel-in-progress: false
+jobs:
+  matrix:
+    runs-on: ubuntu-24.04
+    outputs:
+      jobs: ${{ steps.select.outputs.jobs }}
+    steps:
+      - id: select
+        env:
+          TOOL: ${{ inputs.tool }}
+          HOST: ${{ inputs.host }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          runners = {'linux-x86_64': 'ubuntu-24.04', 'macos-arm64': 'macos-14', 'linux-arm64': 'ubuntu-24.04-arm'}
+          tools = ['verilator', 'spike', 'sail', 'gem5', 'gcc']
+          jobs = [{'tool': tool, 'host': host, 'runner': runner}
+                  for tool in tools for host, runner in runners.items()
+                  if os.environ['TOOL'] in (tool, 'all') and os.environ['HOST'] in (host, 'all')]
+          print('jobs=' + json.dumps({'include': jobs}))
+          PY
+  build:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.matrix.outputs.jobs) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Native build dependencies
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install autoconf automake bison flex boost dtc gmp mpfr libmpc gawk texinfo zlib expat python@3.14 protobuf gperftools libpng pkgconf
+            echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+            echo "$(brew --prefix flex)/bin" >> "$GITHUB_PATH"
+          else
+            sudo apt-get update
+            sudo apt-get install -y build-essential autoconf automake bison flex libboost-regex-dev libboost-system-dev device-tree-compiler libgmp-dev libmpfr-dev libmpc-dev gawk texinfo patchutils zlib1g-dev libexpat1-dev python3-dev python3-venv m4 pkg-config libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev libpng-dev
+          fi
+          uv sync --locked --no-dev --extra mcp --project rvw
+      - uses: actions/cache@v4
+        with:
+          path: .tools/src
+          key: native-v1-${{ matrix.host }}-${{ matrix.tool }}-${{ hashFiles('scripts/install.sh', 'scripts/install-sail.sh', 'scripts/build-native-bundle.sh', 'Cosim/spike_shim.cc') }}
+      - name: Build and package one tool
+        run: scripts/build-native-bundle.sh '${{ matrix.tool }}'
+      - name: Check installed bundle in a different prefix
+        shell: bash
+        run: |
+          test_root="$RUNNER_TEMP/rvw-bundle-check"
+          git clone --no-hardlinks . "$test_root"
+          case '${{ matrix.tool }}' in
+            verilator) flags='--with-sim' ;;
+            gcc) flags='--with-riscv-gcc' ;;
+            spike) flags='--with-cosim' ;;
+            sail) flags='--with-sail' ;;
+            gem5) flags='--with-gem5' ;;
+          esac
+          "$test_root/scripts/install.sh" --yes --from-bundle --bundle-dir "$PWD/dist/native" "$flags"
+          source "$test_root/env.sh"
+          "$test_root/scripts/install.sh" --from-bundle --check "$flags"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.tool }}-${{ matrix.host }}
+          path: dist/native/*
+          if-no-files-found: error
+          retention-days: 30
