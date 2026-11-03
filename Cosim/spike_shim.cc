@@ -19,6 +19,7 @@ struct Effect {
   uint64_t pc, pc_next, insn, mode, rd, rd_wdata;
   uint64_t mem_addr, mem_rmask, mem_wmask, mem_rdata, mem_wdata;
   uint64_t trap, intr, cause, tval, mem_fault, halted;
+  uint64_t fd_valid, fd, fd_wdata, fflags, fcsr;
   uint64_t regs[32];
   char disasm[256];
 };
@@ -199,6 +200,11 @@ struct Machine : simif_t {
         e.mem_addr=addr; e.mem_wmask=(1ULL<<size)-1; e.mem_wdata=data;
       }
     }
+    for(auto& [key,value]:s->log_reg_write) if((key&15)==1) {
+      if(e.fd_valid) throw std::runtime_error("multiple FP writes are outside C2");
+      e.fd_valid=1; e.fd=key>>4; e.fd_wdata=value.v[0];
+    }
+    e.fflags=s->fflags->read(); e.fcsr=e.fflags | (s->frm->read()<<5);
     for(size_t i=0;i<32;i++) e.regs[i]=s->XPR[i];
   }
 };
@@ -212,7 +218,7 @@ static thread_local std::string error;
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
 // 3: explicit privilege, misaligned and absent-PMP platform arguments.
-unsigned rvw_shim_version() { return 3; }
+unsigned rvw_shim_version() { return 4; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }

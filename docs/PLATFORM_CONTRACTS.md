@@ -264,7 +264,20 @@ MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
 Unsupported policies must be refused. These settings do not permit arbitrary
 trace values or broad CSR masks. See the exact settings and the
 [C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
-C2 does not carry partial memory effects, FP state or per-hart state.
+### C2 state extension (`rvw.rvfi/2`)
+
+Version 2 retains every version 1 record and adds these required instruction fields:
+`fd_valid` (boolean), `fd` (0..31), `fd_wdata` (64-bit hex), `fflags` (5-bit hex),
+and `fcsr` (8-bit hex). `fd_valid` distinguishes no write from a write to f0.
+`fd_wdata` contains the raw architectural FLEN=64 bits, including NaN boxing.
+Do not canonicalize NaNs or change payload bits. When `fd_valid` is false,
+`fd` and `fd_wdata` are not observations. `fflags` and `fcsr` are full state
+immediately after this instruction, including synchronous trap entry.
+The low five bits of `fcsr` must equal `fflags`. `fcsr` includes `frm`.
+The checker compares these fields exactly. A backend without these observations
+must refuse version 2 comparison. Version 1 keeps its integer-only scope.
+Version 2 does not imply that a DUT adapter exports these fields.
+FLEN above 64, vectors and per-hart state remain unsupported.
 
 ## C3. Suite results (`rvw.results/1`)
 

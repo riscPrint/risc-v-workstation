@@ -85,7 +85,9 @@ termination status. A trace without an end event is explicitly a matching prefix
 
 Exit 0 means: every traced instruction and trap event agrees with the reference in the
 compared fields (see "Comparison and synchronization"), after the listed synchronizations.
-It does not check floating-point registers, `fflags`/`fcsr` state, CSR side effects that
+Version 1 does not check floating-point registers or `fflags`/`fcsr` state.
+Version 2 compares raw FP writes and post-instruction `fflags`/`fcsr` with Spike.
+Sail refuses these fields because its effect interface lacks them. Neither version checks CSR side effects that
 no traced instruction reads, memory that no traced instruction reads, or timing. A matching
 **prefix** (no end event, `trace_complete: false`) also exits 0, and so does a trace that
 ended in `fail` or `timeout`. Agents must check `trace_complete` and `end_status`, and read
@@ -554,3 +556,12 @@ replace Spike instruction comparison. Spike injection still uses C2 trap events;
 a Spike match alone does not prove legal interrupt timing. The regression checks
 both results. Missing independent bounds stays inconclusive. Sail still refuses
 external-input synchronization.
+
+### Version 2 FP state
+
+Use `rvw.rvfi/2` with the required fields defined in C2. Spike shim ABI 4 exports
+raw FP writes, including f0, and post-step `fflags` and `fcsr`. Comparison uses
+all 64 FP data bits. No FP data or flag field permits synchronization. Legacy
+BOOM traces remain version 1 and cannot establish FP register coverage. The
+reference generator still emits version 1. Adapters must capture DUT state;
+they must never fill these fields from Spike.

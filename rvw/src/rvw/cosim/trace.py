@@ -24,7 +24,7 @@ class Trace:
         try:
             self.header = json.loads(next(self.file))
             h = self.header
-            if not isinstance(h, dict) or h.get("schema") != "rvw.rvfi/1" or h.get("xlen") not in (32, 64):
+            if not isinstance(h, dict) or h.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2") or h.get("xlen") not in (32, 64):
                 raise ValueError("expected rvw.rvfi/1 header with xlen 32 or 64")
             for k in ("isa", "core", "config", "elf"):
                 if not isinstance(h.get(k), str):
@@ -80,6 +80,18 @@ class Trace:
                         raise ValueError("register index exceeds 31")
                     if any(obj[k] >= 1 << (xlen//8) for k in ("mem_rmask", "mem_wmask")):
                         raise ValueError("memory mask exceeds XLEN bytes")
+                if "event" not in obj and self.header["schema"] == "rvw.rvfi/2":
+                    if type(obj.get("fd_valid")) is not bool:
+                        raise ValueError("fd_valid must be boolean")
+                    if type(obj.get("fd")) is not int or not 0 <= obj["fd"] < 32:
+                        raise ValueError("invalid FP destination")
+                    obj["fd_wdata"] = hexnum(obj["fd_wdata"], 64)
+                    for key, width in (("fflags", 5), ("fcsr", 8)):
+                        obj[key] = hexnum(obj[key], width)
+                    if obj["fflags"] != obj["fcsr"] & 31:
+                        raise ValueError("fflags and fcsr disagree")
+                elif "event" not in obj and any(k in obj for k in ("fd_valid", "fd_wdata", "fflags", "fcsr")):
+                    raise ValueError("FP fields require rvw.rvfi/2")
                 yield obj
             except (ValueError, KeyError, TypeError) as exc:
                 raise ValueError(f"C2 line {line}: {exc}") from exc

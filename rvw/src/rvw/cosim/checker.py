@@ -20,7 +20,7 @@ INSTRET = {0xb02, 0xc02, 0xb82, 0xc82}
 # per-bit state (last cycle set high, cycle it went low after that), never as a history.
 IRQ_INPUT_MASKS = {0x344: 0xa88, 0x144: 0x200}
 XRET = (0x30200073, 0x10200073)
-HEX_FIELDS = set(HEX) | {"cause", "tval"}
+HEX_FIELDS = set(HEX) | {"cause", "tval", "fd_wdata", "fflags", "fcsr"}
 # C2 lets the records of cycle N come before the irq event of cycle N, so the checker reads one
 # cycle at a time and applies its irq events before its other records. A real core retires a few
 # instructions per cycle; a trace with more records than this in one cycle is refused with an error
@@ -224,6 +224,14 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
             expected_handler = event_prior_handler if represented_by_event else after_trap
             event_effect = None
             fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
+            if trace.header["schema"] == "rvw.rvfi/2":
+                state_fields = ["fd_valid", "fflags", "fcsr"]
+                if actual["fd_valid"] or expected.get("fd_valid"):
+                    state_fields += ["fd", "fd_wdata"]
+                missing = set(state_fields) - expected.keys()
+                if missing:
+                    raise ValueError(f"reference cannot check C2 state fields: {sorted(missing)}")
+                fields += state_fields
             diff = differences(actual, expected, fields)
             # Trace quirk declared by the platform: mode reported after an xRET or trap took effect.
             # The next instruction's mode is still checked, so a wrong return mode is caught there.
