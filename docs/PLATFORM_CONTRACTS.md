@@ -1015,3 +1015,50 @@ absence of X is not an unreachability proof. Overall `status` is always
 `inconclusive`, and exit is 1. Invalid inputs exit 2.
 `xprop` and `x-sweep` accept `--first-failure` to limit formal witness
 collection. Unreported targets retain their existing disposition.
+
+### Proof dependency report: `rvw.proof-cones/1`
+
+`rvw cov prove` writes `proof-cones.json` beside `exclusions.json`. The latter also
+embeds this report in `proof_cones`. This is informational evidence. Applying
+exclusions does not validate this report as a certificate. It changes no coverage
+counts and supplies no mutation results.
+
+| Field | Meaning |
+|---|---|
+| `schema` | `rvw.proof-cones/1` |
+| `source_snapshot` | The parent proof's frozen source snapshot reference |
+| `top` | Flattened Yosys top module |
+| `logic[]` | Cell `id`, elaborated `name`, Yosys `type`, optional `source` |
+| `properties[]` | One row per reviewed plan point, in plan order |
+| `outside_proven_cones[]` | Logic cell IDs outside all resolved, proven structural cones |
+| `untested_assumptions[]` | Assumption cell ID, name, source and `status: not_tested` |
+| `limits` | Explicit evidence limits |
+
+Each property row has `property_id`, `point_id`, `requirement_ids`, `expression`,
+`proof_status`, `proof_job`, `activation`, `proof_core` and `cone`.
+`property_id` defaults to the stable plan `point_id`. Optional `requirement_ids`
+are nonempty strings. Duplicate property IDs refuse the plan. Requirement IDs and
+property IDs are join keys for external requirement obligations and activation
+records. This report does not assert that an obligation is complete.
+
+`proof_status` is `proven_conditional` only for an unbounded proof job with PASS,
+exit 0 and no reported free wires. Otherwise it is `not_proven`. `proof_job`
+retains the parent's local job paths and hashes, or is null. All proof assumptions
+and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`.
+The solver does not export a proof core in this flow. `proof_core` has
+`status: unavailable`, `cells: null` and a reason. Null is not an empty proof core.
+
+`cone` has `status`, `cells` and `problems`. A resolved cone has status
+`structural_overapproximation`. Missing names, netlists or unsupported cells give
+`inconclusive`; such a cone contributes no reached logic to the union.
+Fan-in traverses every input of each driver cell, including sequential feedback,
+clock and reset. Whole buses are traced even for a selected bit. Constants end a
+path. Constraints from assumption cells are not added to the cone.
+Cell IDs are SHA-256 of snapshot hash, NUL, top, NUL and elaborated cell name.
+They join rows within a frozen snapshot. They do not promise stability across
+changed elaborations. Formal cells are excluded from the logic universe.
+
+Logic outside these cones remains unverified by these expressions. It is not
+proven irrelevant. The assumption list does not measure assumption activation,
+necessity or adequacy. A cone is not a minimal solver proof core. Its size is not
+functional coverage. Keep this evidence separate from MCY killed/survived results.

@@ -993,6 +993,7 @@ def prove(config_path, database_path, out, timeout=60):
     config_path, database_path = Path(config_item.resolved), Path(database_item.resolved)
     config_bytes, database_bytes = config_item.copy.read_bytes(), database_item.copy.read_bytes()
     config = json.loads(config_bytes)
+    from .proof_cones import validate_ids
     data = json.loads(database_bytes)
     out = Path(out).resolve()
     written = [config_path.parent / s for s in config['sources']] + [config_path.parent / config['harness']]
@@ -1016,6 +1017,7 @@ def prove(config_path, database_path, out, timeout=60):
     ids = [p['point_id'] for p in config['points']]
     if len(set(ids)) != len(ids):
         raise ValueError('formal plan has duplicate point ids')
+    validate_ids(config['points'])
     for point in config['points']:
         if '`' in point['expression']:
             raise ValueError('source snapshot: point expressions cannot contain preprocessor directives or macros')
@@ -1138,6 +1140,9 @@ def prove(config_path, database_path, out, timeout=60):
               "replay": ['rvw', 'cov', 'prove', str(database_path), '--config', str(config_path),
                          '--work-dir', str(out) + '-replay', '--timeout', str(timeout), '--json'],
               "note": "Exclusions depend on the reviewed point-expression mapping and hashed harness assumptions."}
+    from .proof_cones import report as cone_report
+    result['proof_cones'] = cone_report(netlist, config['top'], config['points'], rows, reference)
+    write_json(out / 'proof-cones.json', result['proof_cones'])
     write_json(out / 'exclusions.json', result)
     return result
 

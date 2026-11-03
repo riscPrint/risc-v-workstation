@@ -367,8 +367,42 @@ Exclusions are local evidence, not portable certificates.
 extraction. Proofs are conditional on the hashed harness's assumptions and reset/initial-state
 model. The guards do not prove that the environment is complete: assumptions can still be too
 strong in ways the covers do not see. Existing source assumptions can be vacuous; review them.
-This tool does not compute proof cores, cone-of-influence coverage or automatic cut points, and
+This tool does not compute solver proof cores, functional cone coverage or automatic cut points, and
 it does not prove physical hardware behavior.
+
+## Proof dependency reports
+
+`cov prove` also writes `proof-cones.json` and embeds the same report under
+`proof_cones` in its result. See `rvw.proof-cones/1` in
+[PLATFORM_CONTRACTS.md](../../../../docs/PLATFORM_CONTRACTS.md).
+The report reads the same frozen, flattened Yosys netlist as the proof guards.
+For each reviewed expression, it follows all driver inputs, including state,
+clock and reset. It includes full named buses. This is a conservative structural
+cone. It does not use solver evidence to minimize the cone.
+
+A plan point can add `property_id` and `requirement_ids`:
+
+```json
+{"point_id":"p1", "property_id":"counter.range", "requirement_ids":["counter.modulo3"],
+ "expression":"s == 2'd3", "reason":"Modulo-3 counter never reaches 3"}
+```
+
+`property_id` defaults to `point_id`. It must be unique in the plan. Keep these IDs
+stable in requirement and activation records that join this report. This flow
+does not measure property activation. It reports `activation.status: not_measured`.
+It does not extract a solver proof core. It reports `proof_core.status: unavailable`
+and `cells: null`. A successful unbounded job is `proven_conditional`; that label
+does not imply that the separate exclusion guards passed.
+
+`outside_proven_cones` lists logic outside all resolved cones of proven properties.
+These are candidates for further verification. They are not proven irrelevant.
+`untested_assumptions` lists elaborated assumptions with `not_tested` status.
+The structural cone excludes assumptions as constraints. It does not establish
+their adequacy. A large cone gives no functional coverage percentage.
+
+The native test proves a modulo-3 counter range property. Its known cone includes
+the counter addition and state cell. A second graph test checks a two-cell cone,
+an unrelated cell, requirement IDs, and an untested assumption.
 
 ## Mutation testing
 
@@ -582,9 +616,9 @@ excluded by proof. These measurements do not set an acceptance threshold.
 Native FSM coverage is disabled on this installed compiler. Whole-core Scala attribution needs
 more HGLDD coverage, particularly declarations and memories. Collapsed Verilator hierarchy
 cannot provide exact per-instance counts from these artifacts. Proof exclusions require reviewed
-expression mappings and do not compute proof cores; the only cone they trace is the combinational
-fan-in of the point for the cone cover. The MCY end-to-end
-demonstration is the small design; BOOM-unit mutation with a riscv-tests subset was not run.
+expression mappings. Structural dependency reports do not provide minimal solver proof cores
+or property activation evidence. The BOOM RocketALU mutation recipe is in
+`examples/boom/mutation-alu/`. It uses a bounded ADD/SUB testbench, not riscv-tests.
 
 ## Decisions
 
