@@ -147,6 +147,30 @@
       "bins": [
         "tlb.remap.global"
       ]
+    },
+    {
+      "id": "accessed-fault",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "page-fault",
+      "ad_expect": 128,
+      "ad_mode": "svade",
+      "bins": [
+        "ad.svade.accessed-fault"
+      ]
+    },
+    {
+      "id": "dirty-fault",
+      "level": 0,
+      "flags": "VRWA",
+      "access": "store",
+      "expect": "page-fault",
+      "ad_expect": 64,
+      "ad_mode": "svade",
+      "bins": [
+        "ad.svade.dirty-fault"
+      ]
     }
   ]
 }

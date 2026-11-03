@@ -82,3 +82,18 @@ def test_scoped_remap_requires_global_invalidation():
     s['flags'] += 'G'
     with pytest.raises(ValueError, match='global'):
         assembly(s)
+
+
+def test_ad_mask_is_checked_in_physical_memory():
+    text = assembly(scenario(ad_expect=192))
+    assert 'andi t0, t0, 192\n li t1, 192' in text
+
+
+def test_native_hardware_ad(tmp_path):
+    gcc = shutil.which('riscv64-unknown-elf-gcc')
+    spike = shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    build(DESCRIPTION.with_name('hardware-ad.json'), tmp_path, gcc)
+    result = reference(tmp_path, spike, 5)
+    assert result['status'] == 'pass', result

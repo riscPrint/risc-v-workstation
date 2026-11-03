@@ -48,7 +48,7 @@ def load(path):
 
 def validate(s):
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -84,6 +84,8 @@ def validate(s):
         raise ValueError('ad_expect must contain only A/D bits')
     if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
         raise ValueError('asid must fit 16 bits')
+    if s.get('ad_mode', 'hardware') not in ('hardware', 'svade'):
+        raise ValueError('ad_mode must be hardware or svade')
     if s.get('fence', 'all') not in ('all', 'va', 'asid', 'va-asid'):
         raise ValueError('unsupported fence scope')
 
@@ -119,6 +121,7 @@ _start:
  csrw pmpcfg0, t0
  li t0, {(8 << 60) | (asid << 44) | (ROOT >> 12)}
  csrw satp, t0
+ {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
  sfence.vma x0, x0
  li t3, {va}
  li t4, {asid}
@@ -228,7 +231,8 @@ def reference(directory, spike, timeout):
         elf = directory / s['elf']
         if digest(elf) != s['elf_sha256']:
             raise ValueError('ELF differs from build manifest')
-        command = [spike, '--isa=rv64im_zicsr_zifencei', '--priv=msu', '-m128', str(elf)]
+        isa = 'rv64im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
+        command = [spike, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
         r = run_group(command, capture=True, timeout=timeout)
         status = 'inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else 'fail'
         rows.append({'id': s['id'], 'status': status, 'elf_sha256': s['elf_sha256'],

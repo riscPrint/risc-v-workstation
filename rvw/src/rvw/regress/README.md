@@ -387,3 +387,12 @@ The fixture uses ASID 7 for ASID scope tests. Global mappings require an
 all-ASID fence. Over-invalidation is legal. This does not prove that unrelated
 entries stay cached. ASID switching, cross-hart shootdowns and software races
 remain unchecked. The test makes no claim about an unfenced stale translation.
+
+Set `ad_mode = "svade"` to require faults for clear A/D bits. The Spike
+reference enables Svade explicitly. `ad_expect` reads the physical leaf PTE
+after the access or trap and checks both bits. The BOOM scenario file selects
+Svade for these cases. `hardware-ad.json` is a separate opt-in Svadu campaign.
+It sets `menvcfg.ADUE` and selects Svadu on Spike. Build it in another empty
+directory. Run it on RTL only when the project declares Svadu support. These
+checks verify final PTE bits. They do not prove atomic updates, concurrent
+software changes or faults during page-table accesses.

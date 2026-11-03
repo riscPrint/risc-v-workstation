@@ -1,0 +1,29 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "accessed-update",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "success",
+      "ad_expect": 192,
+      "ad_mode": "hardware",
+      "bins": [
+        "ad.hardware.accessed-update"
+      ]
+    },
+    {
+      "id": "dirty-update",
+      "level": 0,
+      "flags": "VRWA",
+      "access": "store",
+      "expect": "success",
+      "ad_expect": 192,
+      "ad_mode": "hardware",
+      "bins": [
+        "ad.hardware.dirty-update"
+      ]
+    }
+  ]
+}
