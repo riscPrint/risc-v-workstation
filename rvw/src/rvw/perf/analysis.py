@@ -7,6 +7,7 @@ import math
 from rvw.results import load_run
 
 from .classify import identify
+from .events import event_report
 from .kanata import Trace, read
 
 
@@ -179,6 +180,7 @@ def analyze(inputs, *, window=1000, isa="none", lane="0", queue_stage=None,
                          "Head is inferred per thread from creation order after the configured admission stage; not a hardware ROB-head signal.",
                          "R type 1 means discarded; not every discard proves a branch wrong path.",
                          f"{censored} open stage intervals excluded from latency distributions."]}
+    report.update(event_report(trace, commits))
     if inputs.result is not None:
         result_path = inputs.result.resolved
         run = load_run(inputs.result.copy)
@@ -269,7 +271,7 @@ def render(report, top=10):
     for row in report["by_class"]:
         q = row["queue_to_first_issue"]
         lines.append(f"  {row['key']}: count={row['count']} queue_n={q['n']} queue_mean={q['mean']}")
-    lines.append("Observed/inferred heads during commit bubbles: " + report["commit_bubbles"]["head_basis"])
+    lines.append("Inferred heads during commit bubbles: " + report["commit_bubbles"]["head_basis"])
     for row in report["commit_bubbles"]["head_residency"][:top]:
         lines.append(f"  thread={row['thread']} {row['pc']} in {row['stage']}: {row['cycles']} cycles")
     cost = report["wrong_path"]["flushed_lifetime_instruction_cycles"]
@@ -279,5 +281,17 @@ def render(report, top=10):
         lines.append(f"result.json cross-check: cycles delta={x['cycles_delta']:+d}, instret delta={x['instret_delta']:+d}, "
                      f"IPC delta={x['ipc_delta']:+.6f}; exact match={x['exact_counter_match']}.")
     lines.extend("Warning: " + w for w in report["warnings"])
-    lines.append("No causal stall attribution. Open stage intervals are excluded. Use --json for distributions by PC/class and IPC windows.")
+    if "stall_causes" in report:
+        causes = report["stall_causes"]
+        lines.append(f"Measured stall cycles: {causes['measured_cycles']}; overlap cycles: {causes['overlap_cycles']}; "
+                     f"zero-retirement cycles with unknown cause: {causes['unknown_zero_retirement_cycles']}.")
+        for row in causes["by_cause"]:
+            lines.append(f"  {row['evidence']} {row['scope']} {row['cause']}: {row['cycles']} cycles")
+        for row in report["replays"]:
+            lines.append(f"  {row['evidence']} replay {row['cause']}: {row['events']} events")
+        kinds = report["commit_kinds"]
+        lines.append(f"Observed physical commits: {kinds['physical_observed']}; architectural: "
+                     f"{kinds['architectural_observed']}; predicated off: {kinds['predicated_off_observed']}; "
+                     f"unknown commit kind: {kinds['unknown']}.")
+    lines.append("Only explicit measured samples attribute stall causes. Open stage intervals are excluded. Use --json for full data.")
     return "\n".join(lines)

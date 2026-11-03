@@ -25,7 +25,8 @@ class DemoPipeline extends Component {
   tags.enter(fValid && io.advance, fId, "X")
   tags.enter(xValid && io.advance && xId =/= 2, xId, "W")
   tags.flush(xValid && io.advance && xId === 2, xId)
-  tags.retire(wValid && io.advance, wId)
+  tags.stall(!io.advance && fValid, "pipeline", StallCause.Structural)
+  tags.commit(wValid && io.advance, wId, wId === 4)
 }
 
 object Demo {

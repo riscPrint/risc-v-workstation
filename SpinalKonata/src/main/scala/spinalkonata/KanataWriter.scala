@@ -10,6 +10,18 @@ final case class Enter(id: Long, stage: String, lane: String = "0") extends Even
 final case class Leave(id: Long, stage: String, lane: String = "0") extends Event
 final case class Retire(id: Long) extends Event
 final case class Flush(id: Long) extends Event
+/** One sampled cycle. Scope names the blocked resource/thread, not an instruction. */
+final case class Stall(scope: String, cause: String, evidence: String = "measured") extends Event
+final case class Replay(id: Long, cause: String, evidence: String = "measured") extends Event
+/** Physical completion with an observed predication flag. Retire alone keeps unknown semantics. */
+final case class Commit(id: Long, predicatedOff: Boolean) extends Event
+object StallCause {
+  val OperandWait = "operand_wait"
+  val Structural = "structural"
+  val LoadMiss = "load_miss"
+  val RobFull = "rob_full"
+  val LsqFull = "lsq_full"
+}
 final case class Dependency(consumer: Long, producer: Long) extends Event
 
 /** Buffered event writer. Schedule future events freely, then seal each sampled cycle.
@@ -47,6 +59,14 @@ final class KanataWriter(out: File, startCycle: Long = 0) extends AutoCloseable 
     if (!flush) retired += 1
     alive -= id
   }
+  private def token(value: String): String = {
+    require(value.nonEmpty && !value.exists(c => c == '\t' || c == '\r' || c == '\n'), "invalid event token")
+    value
+  }
+  private def evidence(value: String): String = {
+    require(Set("measured", "inferred")(value), "invalid evidence kind")
+    value
+  }
   private def write(event: Event): Unit = event match {
     case Fetch(id, sim, thread) =>
       require(!seen(id), s"duplicate instruction $id")
@@ -64,6 +84,15 @@ final class KanataWriter(out: File, startCycle: Long = 0) extends AutoCloseable 
       live(id); require(lanes.get((id, lane)).contains(stage), s"stage $stage is not active")
       lanes.remove((id, lane))
       line(s"E\t$id\t${safe(lane)}\t${safe(stage)}")
+    case Stall(scope, cause, basis) =>
+      line(s"#rvw\t1\tstall\t${token(scope)}\t${token(cause)}\t${evidence(basis)}")
+    case Replay(id, cause, basis) =>
+      live(id)
+      line(s"#rvw\t1\treplay\t$id\t${token(cause)}\t${evidence(basis)}")
+    case Commit(id, off) =>
+      live(id)
+      line(s"#rvw\t1\tcommit\t$id\t${if (off) "predicated_off" else "architectural"}")
+      finish(id, flush = false)
     case Retire(id) => finish(id, flush = false)
     case Flush(id) => finish(id, flush = true)
     case Dependency(consumer, producer) =>
