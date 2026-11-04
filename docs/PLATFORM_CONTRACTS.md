@@ -2110,3 +2110,31 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+### Experimental trace-driven OoO timing reports
+
+`rvw ooo CONFIG TRACE --max-cycles N --json` is a separate native timing
+experiment. It does not use gem5 or emit `rvw.arch-run/1`.
+CONFIG is explicit JSON with positive integer `fetch_width`, `fetch_entries`,
+`rename_width`, `rob_entries`, `issue_width`, `issue_entries`, `load_entries`,
+`store_entries`, `commit_width`, and a nonempty `latencies` map. Map keys are
+`alu`, `multiply`, `divide`, `load` and `store`; values are positive integer
+cycles. Unknown or missing fields are errors. Only configured classes can run.
+
+The input is complete single-hart C2. Traps, interrupts, external events,
+branches, jumps, atomics, fences, privileged, FP and vector operations are
+unsupported. End status must be `pass`. C2 cycles do not enter prediction.
+The entire instruction stream defines the region. There is no ROI slicing.
+
+`rvw.ooo-run/1` contains `config`, SHA-256 fields `config_sha256`,
+`trace_sha256`, `engine_sha256`, `cycles`, `instret`, `ipc`, `wall_s`,
+`events`, `max_occupancy`, `cycle_order`, `limits`,
+`accuracy_status="inconclusive"` and `configuration_status="unchecked"`.
+Engine identity hashes the kernel, decoder and C2 parser. It does not claim
+complete C8 identity. Wall time includes file capture, parsing and simulation.
+Cycle order is commit, issue, rename, fetch. Cycles include fill and drain.
+Events count issued instructions and phase-sampled dependency/queue stalls.
+Absent event keys mean zero. See `rvw/ooo/README.md` for exact predicates.
+This is not a C1 run, a C4 verdict, a configuration check or an accuracy result.
+Success exits 0 for a produced report. Bad input or exhausted cycle budget
+exits 2 with a JSON error. No 50x speedup is established by this schema.
