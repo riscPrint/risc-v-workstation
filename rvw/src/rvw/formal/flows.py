@@ -21,6 +21,22 @@ def _inputs(args, out: Path, defines: list[str] = ()) -> tuple[InputSnapshot, li
     args._formal_tools_token = ACTIVE.set(snapshot.tools)
     ports = common.module_ports(snapshot.sources, args.top, out, args.timeout, defines, snapshot=snapshot,
                                 allow_async_reset=getattr(args, "async_reset", False))
+    # App port maps must match the sealed DUT interface. Yosys can otherwise resize
+    # instance connections and leave an omitted port free without rejecting the RTL.
+    for module, expected in getattr(args, "expected_interfaces", {}).items():
+        actual = {p.name: {"direction": p.direction, "width": p.width}
+                  for p in common.ports_from_json(out / "module_ports.json", module)}
+        if actual != expected:
+            raise ValueError(f"declared port map differs from elaborated interface: {module}")
+    if getattr(args, "expected_interfaces", None):
+        modules = json.loads((out / "module_ports.json").read_text())["modules"]
+        for name, module in modules.items():
+            if name == args.top:
+                continue
+            if any(c["type"] == "$assert" or (c["type"] == "$check" and
+                   c.get("parameters", {}).get("FLAVOR") == "assert")
+                   for c in module.get("cells", {}).values()):
+                raise ValueError("app attribution needs DUT RTL without existing assertions")
     # Ports and state controls describe this exact elaboration. Later probes and proofs
     # read it instead of re-reading Verilog or running its preprocessor again.
     model = snapshot.seal(out / 'module_ports.il')
@@ -90,7 +106,9 @@ def _finish(out: Path, kind: str, args, rc: int, secs: float, checks: ChecksInde
             "backend": "yosys clk2fflogic (sby multiclock on)",
             "step": "one global input sample; transitions between samples are not represented",
             "clocks": [args.clock, *(args.event_clock or [])],
-            "relationships": "unrelated; arbitrary rates, phase, simultaneous edges and stalls",
+            "relationships": ("periodic sampled schedules" if getattr(args, "_clock_schedules", {}) else
+                              "unrelated; arbitrary rates, phase, simultaneous edges and stalls"),
+            "schedules": getattr(args, "_clock_schedules", {}),
             "async_reset": bool(args.async_reset),
         }
         for failure in result.get("failures", []):
@@ -247,6 +265,14 @@ def bmc(args) -> int:
     if len(set([args.clock, *(args.event_clock or [])])) != 1 + len(args.event_clock or []):
         common.die("event clocks must be distinct")
 
+    from .schedule import parse, constrain
+    try:
+        schedules = parse(getattr(args, 'clock_schedule', None), [args.clock, *(args.event_clock or [])])
+    except ValueError as exc:
+        common.die(str(exc))
+    if schedules and not args.event_model:
+        common.die('--clock-schedule requires event BMC')
+    args._clock_schedules = schedules
     snapshot, ports, files = _inputs(args, out)
     reset = common.resolve_reset(args, ports)
     if reset is None:
@@ -270,9 +296,11 @@ def bmc(args) -> int:
         restrictions = [r for r in restrictions if not r.startswith("reset ")]
         restrictions.append(f"reset {reset} held active until {args.reset_cycles} primary-clock rising edges"
                             + (", then free" if args.free_reset else ", then inactive"))
+    if schedules:
+        restrictions.append('periodic clock levels in global samples: ' + str(schedules))
     common.clear_outputs(out, 'rvw_formal_top.sv')
     (out / "rvw_formal_top.sv").write_text(
-        wrapper(args.top, ports, args.clock, reset, args.reset_active == "high", args.reset_cycles, args.free_reset, ties))
+        constrain(wrapper(args.top, ports, args.clock, reset, args.reset_active == "high", args.reset_cycles, args.free_reset, ties), schedules))
     snapshot.seal(out / 'rvw_formal_top.sv')
     from .cuts import commands
     cut_script, cut_records = commands(args, out, files)
