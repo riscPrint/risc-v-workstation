@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -487,6 +487,13 @@ usage: rvw lint [-h] [--settings SETTINGS] [--json] [--project PROJECT]
 
 ```text
 usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
+```
+
+### `rvw ooo`
+
+```text
+usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--json] [--project PROJECT]
+    config trace
 ```
 
 ### `rvw perf`
