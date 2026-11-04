@@ -64,6 +64,8 @@ Each seed gets five normal entries and one fault-detection entry.
 A normal pass requires all expected test markers, exactly one completion
 marker, no UVM errors or fatals, and simulator exit 0. The negative test needs
 a nonzero exit and the expected RVFI fatal. A crash alone cannot pass it.
+The test sets the UVM fatal action to `UVM_DISPLAY | UVM_STOP`.
+The default UVM fatal action calls `$finish`, which can return exit 0.
 Timeouts, build errors and incomplete output are errors with inconclusive
 evidence. Logs, compile commands, seed, simulator version, archive hash and
 source hashes stay in the output directory. Verilator also writes
@@ -89,7 +91,8 @@ test. A skip is not evidence of UVM support.
 
 ## Decisions and limits
 
-DPI is disabled. UVM HDL read, deposit, force, release and polling, and the
+DPI is disabled. Component-name regex validation is skipped by upstream UVM.
+UVM HDL read, deposit, force, release and polling, and the
 DPI regex implementation are not qualified. The pinned DPI C++ source needs
 a portable header include on macOS and a Verilator HDL backend. A simulator
 extension is not established as necessary for every disabled feature.

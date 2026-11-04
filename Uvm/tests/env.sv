@@ -170,6 +170,10 @@ package vip;
      a=agent::type_id::create("a",this); sc=scoreboard::type_id::create("sc",this);
    endfunction
    function void connect_phase(uvm_phase phase); a.m.ap.connect(sc.analysis_export); endfunction
+   function void end_of_elaboration_phase(uvm_phase phase);
+     // UVM_EXIT calls $finish, which can return zero. Make fatal exits fail.
+     set_report_severity_action_hier(UVM_FATAL,UVM_DISPLAY|UVM_STOP);
+   endfunction
    task run_phase(uvm_phase phase);
      stimulus s;
      phase.raise_objection(this);
