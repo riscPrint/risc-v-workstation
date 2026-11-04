@@ -26,7 +26,7 @@ def instruction(text):
 
 
 def translate(text):
-    """Strict translation of the four pinned tests, including initial registers."""
+    """Strict translation of the pinned tests, including initial registers."""
     match = re.search(r'\{([^}]+)\}\s*P0\s*\|\s*P1\s*;(.+?)exists', text, re.S)
     if not match:
         raise ValueError('unsupported litmus format')

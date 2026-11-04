@@ -91,7 +91,7 @@ cross-hart publication require project-specific stimulus and remain untested.
 
 ## RVWMO litmus
 
-`litmus-pins.json` pins four tests from the
+`litmus-pins.json` pins six tests from the
 [official RISC-V concurrency collection](https://github.com/litmus-tests/litmus-tests-riscv)
 and the herdtools7 7.58 model library. No third-party sources are copied here.
 The [collection README](https://github.com/litmus-tests/litmus-tests-riscv/blob/08728edcd99c7e1819d2d4c6789df6d5299ccb69/README.md)
@@ -115,7 +115,7 @@ It checks the tool version and records the executable hash. The tool version
 alone cannot certify a custom executable's source. Use the pinned native release.
 The model uses `riscv.cat`. Allowed sets come only from herd, never from the DUT.
 The output contains every allowed final-register state and separate raw logs.
-The smoke set covers SB, MP, LB and SB with full memory fences.
+The smoke set covers SB, MP and LB, each with and without full memory fences.
 It does not cover the whole upstream collection. It does not use isla-axiomatic.
 
 When a multi-hart target exists, add `--dut-adapter /path/to/project-script`.
@@ -214,7 +214,7 @@ The fixture does not establish external aq/rl ordering, RV64 doubleword atomics,
 architectural faults, or production multi-hart core behavior. The existing C1 ELF
 suite supplies separate bounded single-hart checks on BOOM.
 
-The fixture checker requires all four pinned cases. It verifies the full allowed
+The fixture checker requires all six pinned cases. It verifies the full allowed
 outcome set against canonical hashes in `litmus-pins.json`. These hashes pin
 reference-model expectations. They do not come from fixture observations.
 Regenerate the reference report after a pin change. A stale or partial report
