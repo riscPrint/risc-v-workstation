@@ -117,9 +117,11 @@ This profile generates bare integer ALU programs with no random branch, load,
 store, compressed or directed streams. Initialization and termination code
 remain upstream. `rv64imc` selects RV64. This is a bounded bring-up profile,
 not the full riscv-dv campaign. Keep generator ownership in #33. Run with
-`nice` on a shared host. Compile with the selected ISA and ABI, upstream
-`user_extension` include path and `scripts/link.ld`, or a reviewed project
-linker script. The generated `tohost` termination reports completion only.
+`nice` on a shared host. Compile with the selected ISA and ABI, the [register initialization runtime](../scripts/riscv-dv/README.md),
+upstream `user_extension` include path and `scripts/link.ld`, or a reviewed
+project linker script. Put the workstation runtime include path first.
+The upstream base setup can leave a register uninitialized. Both sides need
+defined program inputs; do not synchronize a model to a DUT startup value. The generated `tohost` termination reports completion only.
 
 After generation, compile for the selected core's ISA, ABI, linker layout and
 termination protocol. Keep these settings in the core project. A bounded ELF

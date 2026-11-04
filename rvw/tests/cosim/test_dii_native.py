@@ -11,7 +11,8 @@ from rvw.common.proc import kill_group
 from rvw.cosim.dii import Token, exchange
 
 
-def test_sail_dii_reset_and_register_dependency(tmp_path):
+@pytest.fixture
+def sail_connection(tmp_path):
     executable = os.environ.get('RVW_TEST_DII_SAIL')
     if not executable:
         pytest.skip('set RVW_TEST_DII_SAIL to a native Sail with --rvfi-dii')
@@ -34,13 +35,42 @@ def test_sail_dii_reset_and_register_dependency(tmp_path):
                         pytest.fail('Sail did not open its DII port')
                     time.sleep(.1)
             with connection:
-                # addi x1,x0,5; addi x2,x1,3
-                packets = exchange(connection, [Token(0x00500093), Token(0x00308113)], timeout=5)
-                assert [p.rd_wdata for p in packets] == [5, 8]
-                assert [p.pc_rdata for p in packets] == [0x80000000, 0x80000004]
-                # New stream must see x1 reset: addi x2,x1,3.
-                packets = exchange(connection, [Token(0x00308113)], timeout=5)
-                assert len(packets) == 1 and packets[0].rd_wdata == 3
-                assert packets[0].order == 0 and packets[0].pc_rdata == 0x80000000
+                yield connection
         finally:
             kill_group(process)
+
+
+def test_sail_dii_reset_and_register_dependency(sail_connection):
+    connection = sail_connection
+    packets = exchange(connection, [Token(0x00500093), Token(0x00308113)], timeout=5)
+    assert [p.rd_wdata for p in packets] == [5, 8]
+    assert [p.pc_rdata for p in packets] == [0x80000000, 0x80000004]
+    packets = exchange(connection, [Token(0x00308113)], timeout=5)
+    assert len(packets) == 1 and packets[0].rd_wdata == 3
+    assert packets[0].order == 0 and packets[0].pc_rdata == 0x80000000
+
+
+def test_pygen_runtime_overwrites_nonzero_inputs(sail_connection, tmp_path):
+    import shutil
+    from rvw.common.proc import run_group
+    compiler = os.environ.get('RVW_TEST_DII_GCC') or shutil.which('riscv64-unknown-elf-gcc')
+    if not compiler:
+        pytest.skip('set RVW_TEST_DII_GCC to a RISC-V GCC')
+    runtime = Path(__file__).resolve().parents[3]/'scripts/riscv-dv/user_init.s'
+    obj, binary = tmp_path/'runtime.o', tmp_path/'runtime.bin'
+    result = run_group([compiler, '-march=rv64i', '-mabi=lp64', '-c',
+                        '-x', 'assembler', str(runtime), '-o', str(obj)], timeout=30, capture=True)
+    assert result.returncode == 0, result.stderr
+    result = run_group([compiler.removesuffix('gcc')+'objcopy', '-O', 'binary',
+                        '--only-section=.text', str(obj), str(binary)], timeout=30, capture=True)
+    assert result.returncode == 0, result.stderr
+    raw = binary.read_bytes()
+    assert raw and len(raw) % 4 == 0
+    setup = [Token((7<<20)|(reg<<7)|0x13) for reg in range(1,32)]
+    initialization = [Token(int.from_bytes(raw[i:i+4], 'little')) for i in range(0,len(raw),4)]
+    # Probe x31 first, then read each other register through x31. A missing
+    # initialization (including x30) leaves the probe value at seven.
+    probes = [Token((reg<<15)|(31<<7)|0x13) for reg in [31,*range(1,31)]]
+    packets = exchange(sail_connection, setup+initialization+probes, timeout=5)
+    assert len(packets) == len(setup+initialization+probes)
+    assert [p.rd_wdata for p in packets[-31:]] == [0]*31
