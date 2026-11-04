@@ -247,3 +247,14 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
 Database migration and legacy entry removal: [#44](https://github.com/riscPrint/risc-v-workstation/issues/44). More-design checks: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Cross-navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
 
 Retained limit: Database export is available. Legacy entry removal still needs parity evidence. Missing source files and extraction approximations do not become verified navigation.
+
+### Compare caller locations
+
+Use `rvw.debug.parity.compare(..., kind='blocks')` for an explicit caller-location
+comparison. It ignores only the extraction timestamp by default. A declared
+caller mapping can replace a file/line pair and the exact generated identifier
+that contains that pair. All port, node, instance and net fields remain checked.
+Check both source destinations before treating a changed elaboration caller as
+equivalent information. This comparison does not relabel stored source locations.
+See the source-root and caller rules in [RiscvSim](../RiscvSim/README.md).
+The legacy BOOM entry remains until the cross-core parity checks are complete.

@@ -458,3 +458,33 @@ It does not establish ISA correctness. Keep external effects disabled. This
 format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
+
+### Source roots and caller equivalence
+
+Core adapters must pass the core's Scala source roots to
+`RiscvSimConfig.elaborate`. The VexRiscv example supplies its selected core root.
+Without this argument, source files outside the adapter tree can remain bare
+names. A bare name can be ambiguous when two packages use the same file name.
+Run the Vex source regression with JDK 21 and `VEXRISCV` set to its checkout:
+
+```sh
+cd examples/vexriscv/rvw
+sbt 'Test/runMain rvwvex.SourceRootsCheck'
+```
+
+Hold the workstation's `vex` and `sbt` locks around that command.
+
+`rvw.debug.parity.compare` compares saved diagrams or computed traces. Supply
+`kind='blocks'` or `kind='trace'`. Supply checkout prefixes as `left_roots` and
+`right_roots`. An optional `callers` list contains tuples of
+`(old_file, old_line, new_file, new_line)`. Use a mapping only after checking that
+both frames identify the same elaboration operation. The function retains every
+other source field. It checks generated caller names and diagram references too.
+For traces, it retains edge kinds, edge multiplicity and accuracy metadata.
+Duplicate vertex labels require an explicit identity mapping and are refused.
+
+Caller equivalence does not mean identical source navigation. Each artifact
+keeps its actual caller location. The old and new callers must both be available
+for the source-navigation check. Do not map design-source statements to make a
+comparison pass. Empty traces cannot establish parity. Keep the old entry points
+until both BOOM small and VexRiscv have the required independent comparisons.
