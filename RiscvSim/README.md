@@ -17,6 +17,10 @@ The adapters require Verilator on `PATH`. Source the core environment script or
 add the installed tools to `PATH` before use. `tests/programs/build.sh` uses
 `riscv64-unknown-elf-gcc` on `PATH`; `RISCV_GCC` selects another executable.
 
+The optional [medium thread profile](boom/benchmarks/README.md#opt-in-medium-launcher)
+selects two runtime threads through the normal captured launcher. Use its
+qualification limits before selecting it.
+
 ## Quick start
 
 ```sh

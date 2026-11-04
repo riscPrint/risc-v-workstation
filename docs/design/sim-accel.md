@@ -3,8 +3,9 @@
 ## Goal and first slice
 
 Epic: [#295](https://github.com/riscPrint/risc-v-workstation/issues/295).
-Measure BOOM medium with the existing C1 adapter. Compare one, two and four
-Verilator runtime threads on a long deterministic ELF. Keep the current default.
+Measure BOOM medium with the existing C1 adapter. Compare one and two
+Verilator runtime threads on a long deterministic ELF. Start with one and two
+threads. Keep the four-thread trial in the follow-up matrix. Keep the current default.
 Offer a measured winner only as an explicit opt-in. A candidate must have
 bit-identical complete C2 files, equal terminal results, and a paired speedup
 95% confidence interval whose lower bound exceeds one. If no candidate meets
