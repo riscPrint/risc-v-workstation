@@ -6,7 +6,7 @@ from statistics import mean
 
 from . import core
 from .dse import canonical, points
-from .fitting import fit, number, roi_stats, validate_plan
+from .fitting import fit, number, roi_stats, validate_plan, event_role, objective
 from .statistics import interval
 from rvw.results import write_json
 
@@ -117,10 +117,12 @@ def search(plan, out, project=None):
                 raise ValueError('ROI instruction count differs')
             metrics = core.read_json(Path(actual['evidence']).read_bytes())['metrics']
             stats, _ = roi_stats(Path(row['evidence']).with_name('stats.txt'))
+            values = []
             for event in fit_spec['events']:
                 x = number(metrics.get(event['rtl_metric']), event['rtl_metric'])
                 y = number(float(stats[event['gem5_stat']]), event['gem5_stat'])
-                errors.append(number(abs(y-x) / max(1, x), 'error'))
+                values.append({'error': number(abs(y-x) / max(1, x), 'error'), 'role': event_role(event)})
+            errors.append(objective(actual, row, values))
         return mean(errors), report, directory / 'gem5.json'
     for _ in range(budget):
         index = propose(vectors, observations)
@@ -146,7 +148,12 @@ def search(plan, out, project=None):
         reports.append(fit(plan_path))
     if core.checked_report(rtl_path)[2] != rtl_sha:
         raise ValueError('RTL report changed during search')
-    result = {'schema': 'rvw.arch-search-result/1', 'status': 'reported', 'selected': winner,
+    degenerate = (len(set(observations.values())) == 1
+                  or any(r['status'] == 'inconclusive' for r in reports))
+    result = {'schema': 'rvw.arch-search-result/1', 'status': 'inconclusive' if degenerate else 'reported',
+              'reason': 'Degenerate or insufficient training targets/candidate variation.' if degenerate else '',
+              'headline': reports[0]['headline'], 'objective': 'mean relative cycle and non-fixed event error',
+              'selected': winner,
               'method': 'discrete RBF Gaussian process expected improvement',
               'plan_sha256': core.digest(raw), 'trials': trials,
               'held_out': interval(held_scores), 'reports': reports,

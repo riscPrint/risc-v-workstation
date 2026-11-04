@@ -1377,18 +1377,26 @@ The [SoC tool README](../rvw/src/rvw/soc/README.md) defines the bounded evidence
 The exact fields are `schema`, `rtl`, `candidates` (name to gem5 report path),
 `train`, `held_out`, `events`, `scope`, `uncertainty`, and `unsupported`.
 Paths resolve against PLAN. Each event has `name`, `rtl_metric`, `gem5_stat`,
-`unit`, and `semantics`. Events map raw C1 `metrics` to the first ROI stats
+`unit`, and `semantics`, plus optional `role` (`fit` or `consistency`). Events map raw C1 `metrics` to the first ROI stats
 block in gem5 `stats.txt` beside `bare.json`. Event semantics are a project
 assertion. All mapped values must be finite and nonnegative. Missing values
 are errors. Existing C9 comparison evidence checks apply to every candidate.
 Train and held-out IDs must be distinct, nonempty and cover all report IDs.
 Their ELF hash sets must also be disjoint. Renamed ELF copies cannot be held out.
 
-`rvw.arch-fit/1` records status `reported`, the selected candidate, training
+`rvw.arch-fit/1` records status `reported` or `inconclusive`, the selected candidate, training
 scores, the winner's held-out score, winner event errors, split IDs, mappings,
 scope, uncertainty, unsupported structures, plan/RTL/candidate report hashes,
 and raw stats paths and hashes. Error is `abs(model-RTL)/max(1,RTL)`.
-Scores use equal weights across events and workloads. Only training scores
+Instruction units, retired totals, instruction-class totals and commitStats
+are consistency checks, even with role `fit`. They do not enter the objective.
+Other events default to `fit`; role `consistency` excludes a project-owned fixed event.
+The objective averages relative cycle error and eligible event errors per
+workload, then averages workloads. `selected_errors` includes each event's
+resolved role. `headline` includes `metric=cycle_relative_error`, per-workload
+comparison rows (cycle gap and IPC ratio), and mean absolute cycle error per split.
+Fewer than three training workloads, constant training cycle targets, or equal
+scores across multiple candidates give status `inconclusive` with a reason. Only training scores
 select the winner. Lexical candidate names break ties. No acceptance or
 confidence claim follows from this report. The caller must keep held-out
 workloads separate when creating candidates. This offline command runs no parameter search.
@@ -1869,11 +1877,13 @@ report must stay within the copied inputs. See
 RTL paths resolve against PLAN. Parameter rules follow `rvw.arch-sweep/1`.
 The space is at most 32 points. Budget is 1..32. Repeats are 2..10.
 At most 256 model processes run, serially under the gem5 lock.
-Latency changes and SoC fitting are refused. Training mean event errors drive
+Latency changes and SoC fitting are refused. Training mean cycle and eligible event errors drive
 an RBF Gaussian process with expected improvement. Held-out workloads run only
 after selection. `rvw.arch-search-result/1` stores method, plan hash, trials
 with descriptions, report paths and training statistics, selected point,
 held-out statistics and checked fit reports. Partial progress is inconclusive.
+Search adds `headline`, `objective` and `reason`. A flat search objective or
+inconclusive selected fit gives status `inconclusive` (CLI exit 3).
 No search result is a fidelity verdict.
 
 `arch measure --out DIR [--repeats N]` and MCP `arch_measure` repeat calibration
@@ -1883,7 +1893,8 @@ and cycle gap. The tool checks stable core, preset, latency, ELF, instruction
 counts, description, model and gem5 binary across repeats. Intervals in these
 reports use a 95% percentile bootstrap mean, 4000 resamples, seed 0. They
 measure observed repeat variation only. Fixed seed 1 and deterministic runs
-can give zero width. They do not quantify model bias or generalization error.
+can give zero width. Constant repeats have interval status `inconclusive`
+and a reason; the numerical interval remains visible. They do not quantify model bias or generalization error.
 
 `rvw.arch-fit/1` adds `event_correlations`, keyed by `train` and `held_out`, then
 event name. Values have `n`, `pearson_r`, `status` and `reason`. Less than three

@@ -16,22 +16,22 @@ def plan(reports, tmp_path):
     for row in report['benchmarks']:
         path = Path(row['evidence'])
         data = read_json(path)
-        data['metrics']['branches'] = 10
+        data['metrics']['branch_misses'] = 10
         write_json(path, data)
         row['evidence_sha256'] = core.digest(path.read_bytes())
     write_json(rtl, report)
     for row in read_json(model)['benchmarks']:
         Path(row['evidence']).with_name('stats.txt').write_text(
             '---------- Begin Simulation Statistics ----------\n'
-            'system.cpu.branches 12 # ROI event\n'
+            'system.cpu.branch_misses 12 # ROI event\n'
             'unused nan\n'
             '---------- End Simulation Statistics   ----------\n')
     names = [row['id'] for row in read_json(rtl)['benchmarks']]
     data = {'schema': 'rvw.arch-fit-plan/1', 'rtl': str(rtl),
             'candidates': {'synthetic': str(model)}, 'train': names[:1], 'held_out': names[1:],
-            'events': [{'name': 'branches', 'rtl_metric': 'branches',
-                        'gem5_stat': 'system.cpu.branches', 'unit': 'count',
-                        'semantics': 'Synthetic retired branches in the ROI.'}],
+            'events': [{'name': 'branch_misses', 'rtl_metric': 'branch_misses',
+                        'gem5_stat': 'system.cpu.branch_misses', 'unit': 'count',
+                        'semantics': 'Synthetic branch mispredictions in the ROI.'}],
             'scope': 'Synthetic counter test.', 'uncertainty': 'No hardware measured.',
             'unsupported': ['No predictor timing model.']}
     path = tmp_path / 'plan.json'
@@ -41,9 +41,9 @@ def plan(reports, tmp_path):
 
 def test_fit_and_cli(plan, rvw):
     report = fit(plan)
-    assert report['status'] == 'reported'
-    assert report['training_scores'] == {'synthetic': 0.2}
-    assert report['held_out_score'] == 0.2
+    assert report['status'] == 'inconclusive'
+    assert report['training_scores'] == {'synthetic': 0.35}
+    assert report['held_out_score'] == 0.475
     assert rvw('arch', 'fit', plan, '--json')[2] == report
 
 
@@ -60,14 +60,14 @@ def test_holdout_does_not_select_candidate(plan):
         row['evidence'] = str(new)
         new.with_name('stats.txt').write_text(
             '---------- Begin Simulation Statistics ----------\n'
-            f'system.cpu.branches {10 if index == 0 else 100}\n'
+            f'system.cpu.branch_misses {10 if index == 0 else 100}\n'
             '---------- End Simulation Statistics   ----------\n')
     write_json(plan.parent / 'second.json', clone)
     spec['candidates']['better-training'] = 'second.json'
     write_json(plan, spec)
     result = fit(plan)
     assert result['selected'] == 'better-training'
-    assert result['held_out_score'] == 9
+    assert result['held_out_score'] == 4.875
 
 
 @pytest.mark.parametrize('mutation', ['overlap', 'missing', 'unknown', 'uncertainty', 'duplicate'])
@@ -86,7 +86,7 @@ def test_invalid_plan(plan, mutation):
 def test_invalid_event(plan, value):
     model = read_json(Path(read_json(plan)['candidates']['synthetic']))
     path = Path(model['benchmarks'][0]['evidence']).with_name('stats.txt')
-    path.write_text(path.read_text().replace('branches 12', 'branches ' + value))
+    path.write_text(path.read_text().replace('branch_misses 12', 'branch_misses ' + value))
     with pytest.raises(ValueError): fit(plan)
 
 
@@ -121,3 +121,19 @@ def test_holdout_rejects_renamed_training_elf(plan):
         write_json(report_path, report)
     with pytest.raises(ValueError, match='ELF.*disjoint'):
         fit(plan)
+
+
+def test_fixed_instruction_counts_cannot_hide_timing_gap(plan):
+    spec = read_json(plan)
+    spec['events'][0]['unit'] = 'instructions'
+    write_json(plan, spec)
+    result = fit(plan)
+    assert result['status'] == 'inconclusive'
+    assert result['training_scores']['synthetic'] > 0
+    assert result['selected_errors'][spec['train'][0]][0]['role'] == 'consistency'
+    assert result['headline']['metric'] == 'cycle_relative_error'
+    assert result['headline']['benchmarks'][0]['cycle_gap_percent'] != 0
+
+
+def test_constant_training_targets_are_inconclusive(plan):
+    assert fit(plan)['status'] == 'inconclusive'

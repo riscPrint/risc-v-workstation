@@ -11,7 +11,8 @@ def interval(values):
     rng = random.Random(0)
     samples = sorted(mean(rng.choices(values, k=len(values))) for _ in range(4000))
     return {'n': len(values), 'mean': mean(values),
-            'ci95': [samples[99], samples[3899]], 'status': 'reported',
+            'ci95': [samples[99], samples[3899]], 'status': 'inconclusive' if len(set(values)) == 1 else 'reported',
+            'reason': 'Zero repeat variance; interval does not establish accuracy.' if len(set(values)) == 1 else '',
             'method': 'percentile bootstrap mean, 4000 resamples, seed 0'}
 
 

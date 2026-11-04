@@ -18,6 +18,7 @@ from rvw.arch.statistics import interval, correlation
 def test_statistics():
     assert interval([1])['status'] == 'inconclusive'
     assert interval([2, 2])['ci95'] == [2, 2]
+    assert interval([0, 0])['status'] == 'inconclusive'
     assert interval([1, 2, 3])['ci95'][0] <= 2 <= interval([1, 2, 3])['ci95'][1]
     assert correlation([(1, 2), (2, 4), (3, 6)])['pearson_r'] == 1
     assert correlation([(1, 3)] * 3)['status'] == 'inconclusive'
@@ -26,7 +27,7 @@ def test_statistics():
 
 def test_correlations_split(plan):
     result = fit(plan)
-    assert result['event_correlations']['held_out']['branches']['status'] == 'inconclusive'
+    assert result['event_correlations']['held_out']['branch_misses']['status'] == 'inconclusive'
 
 
 def test_bayesian_acquisition():
@@ -103,7 +104,9 @@ def test_search_serial_training_then_held_out(search_plan, rvw):
     plan_path, project = search_plan
     out = plan_path.parent / 'search'
     code, _, result = rvw('--project', project, 'arch', 'search', plan_path, '--out', out, '--json')
-    assert code == 0, result
+    assert code == 3, result
+    assert result['status'] == 'inconclusive'
+    assert result['headline']['splits']['held_out'] > 0
     assert len(result['trials']) == 2
     best = min(result['trials'], key=lambda t: t['training']['mean'])
     assert result['selected'] == best['point']

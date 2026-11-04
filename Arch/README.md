@@ -199,12 +199,21 @@ entry and writes that block at ROI exit. Use reports from this model only.
 It hashes the stats files in the fit report. It does not certify the mappings.
 
 Error is `abs(model - RTL) / max(1, RTL)` per event and workload.
-The training score is the arithmetic mean of these errors, with equal weights.
+The objective includes relative cycle error for every workload.
+Instruction totals are consistency checks. They do not enter the objective.
+This includes instruction units, retired totals and instruction-class counts.
+Other events default to role `fit`. Use optional role `consistency` to exclude
+another fixed event. Role `fit` cannot override a known instruction total.
+The score averages cycle error and eligible event errors within each workload.
+Then it averages workloads. `headline` reports cycle error, cycle gap and IPC
+ratios. Matching instruction totals cannot hide a timing gap.
 The lowest training score wins. Names break ties in lexical order.
 Only the winner gets a held-out score. Splits must be nonempty, disjoint and
 cover exactly the report workloads. Training and held-out ELF hashes must also
 be disjoint. Renaming the same ELF does not make an unseen workload.
-The report has status `reported`.
+The report is `inconclusive` for fewer than three training workloads,
+constant training cycle targets, or tied scores across multiple candidates.
+A selected candidate in this report does not establish a useful fit.
 It gives no fidelity threshold, confidence interval or correctness verdict.
 A single workload cannot establish general model fidelity.
 Use `arch search` below for parameter generation. Keep plans and fitted values in the core project.
@@ -477,7 +486,7 @@ as `sweep`. There are at most 32 space points and 256 model processes.
 The search uses an RBF Gaussian process with fixed noise variance `1e-6` and
 expected improvement. Numeric ranges use unit scaling. Categories use one-hot
 encoding. The first point and ties use the declared space order.
-Each point runs on training workloads only. Repeated training event errors
+Each point runs on training workloads only. Repeated training cycle and eligible event errors
 select the point. Only then does the selected point run on held-out workloads.
 The saved RTL report supplies observations. It does not run RTL again.
 Memory latency cannot change because RTL observations must stay comparable.
@@ -494,6 +503,8 @@ bootstrap intervals. Search also reports bootstrap intervals for repeated
 model scores. Both use 4000 resamples and bootstrap seed 0. These intervals
 describe repeat variation only. Calibration keeps RTL seed 1. Deterministic
 runs can give zero-width intervals even when a model has a large bias.
+A constant repeat series has interval status `inconclusive`. The numerical
+interval remains visible as a description of repeat variation.
 Use enough independent measurements for the intended decision. These reports
 do not measure generalization uncertainty or establish a fidelity threshold.
 
