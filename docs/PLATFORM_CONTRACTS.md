@@ -1859,3 +1859,18 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### Passive bus observations
+
+An adapter can name `memory-bus.jsonl` in C1 `details.bus_observations`.
+The JSONL header uses `rvw.bus-observations/1`. It gives C2 `identity`,
+`bus_bytes`, `boundary: accepted-external-tilelink` and `independent: true`.
+Each row records an accepted handshake with `channel`, decimal-string `cycle`
+and `sequence`. A rows give `source`, `address`, `opcode`, `size_log2`, `mask`
+and `data`. D rows give `source`, `opcode`, `size_log2`, `denied` and `data`.
+Hex values use strings. Opcode and size use JSON integers. Same-cycle rows keep
+capture order; this order does not imply an order between hardware effects.
+An end row gives `kind: end`, `cycle` and the terminal C1 `status`.
+Missing end rows mean incomplete capture. A terminal pass does not prove ordering.
+The boundary excludes cache hits, buffered stores and device-side completion.
+Adapters must not infer those events from retirement or from these handshakes.

@@ -115,6 +115,7 @@ object BoomAdapter extends CoreAdapter {
     val observations = if (job.rvfiTrace) Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl"))) else None
     observations.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
       "identity" -> ctx.rvfiHeader, "elf_sha256" -> elf.sha256))))
+    var busObservations = Option.empty[BusObservationWriter]
     var tracer: Option[KonataTracer] = None
     var retired = 0L
     var traps = 0L
@@ -124,6 +125,8 @@ object BoomAdapter extends CoreAdapter {
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
       require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
         "this configuration has no SEIP input")
+      if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
+        new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
       val cd = dut.clockDomain
       cd.forkStimulus(10)
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
@@ -204,6 +207,20 @@ object BoomAdapter extends CoreAdapter {
 
       cd.onSamplings {
         ctl.tick()
+        busObservations.foreach { w =>
+          val a = dut.io.mem.a
+          val d = dut.io.mem.d
+          if (a.valid.toBoolean && a.ready.toBoolean) w.sample("a", ctl.cycle,
+            "source" -> Hex(a.payload.source.toBigInt), "address" -> Hex(a.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(a.payload.opcode).toInt),
+            "size_log2" -> ujson.Num(a.payload.size.toInt), "mask" -> Hex(a.payload.mask.toBigInt),
+            "data" -> Hex(a.payload.data.toBigInt))
+          if (d.valid.toBoolean && d.ready.toBoolean) w.sample("d", ctl.cycle,
+            "source" -> Hex(d.payload.source.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(d.payload.opcode).toInt),
+            "size_log2" -> ujson.Num(d.payload.size.toInt), "denied" -> ujson.Bool(d.payload.denied.toBoolean),
+            "data" -> Hex(d.payload.data.toBigInt))
+        }
         if (dut.io.mem.a.valid.toBoolean && dut.io.mem.a.ready.toBoolean) {
           val a = dut.io.mem.a.payload
           val address = a.address.toBigInt
@@ -282,6 +299,8 @@ object BoomAdapter extends CoreAdapter {
         }
       }
       while (true) cd.waitSampling(100000)
+    } catch {
+      case e: Throwable => busObservations.foreach(_.close()); throw e
     } finally {
       for (t <- tracer) t.close()
       observations.foreach(_.close())
@@ -289,11 +308,15 @@ object BoomAdapter extends CoreAdapter {
       capture.foreach(_.close())
     }
 
+    busObservations.foreach { w => w.end(cycles, status.name); w.close() }
     for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),
       "mem_timing" -> ujson.Str(job.memLatency.map(l => s"fixed $l").getOrElse("random")),
       "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(simCtl.timeOfCycle1))
-    if (job.rvfiTrace) details("mmu_observations") = "mmu-observations.jsonl"
+    if (job.rvfiTrace) {
+      details("mmu_observations") = "mmu-observations.jsonl"
+      details("bus_observations") = "memory-bus.jsonl"
+    }
     for (w <- rvfi) {
       details("rvfi_records") = RvwJson.num(w.records)
       details("rvfi_trap_records") = RvwJson.num(w.trapRecords)

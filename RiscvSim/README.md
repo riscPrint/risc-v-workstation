@@ -554,3 +554,28 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+### Independent bus capture
+
+BOOM `--rvfi-trace` also writes `memory-bus.jsonl`. It samples accepted A and D
+handshakes at the external TileLink port. Source IDs, data, masks, response errors
+and cycles come from bus wires. They do not come from retirement records.
+See the [bus format](../docs/PLATFORM_CONTRACTS.md#passive-bus-observations).
+The port is outside the caches. A cache hit has no external request. A D response
+is not a device-side completion promise. FENCE checks must declare that boundary
+and match requests from an independent test plan. This capture alone is not a
+FENCE verdict. Device campaigns and cache-internal observers remain required.
+
+Run the bounded native MMIO FENCE campaign with the core environment and GCC:
+
+```sh
+nice -n 10 rvw/.venv/bin/python RiscvSim/boom/tests/fence-device.py --out /tmp/fence-device-1
+```
+
+It runs I/I, I/O, O/I and O/O pairs with unique addresses in BOOM's uncached
+interrupt-generator window. The sparse memory agent serves these extra offsets.
+The plan comes from stimulus and matches actual accepted A/D handshakes.
+Random memory timing uses the selected seed. The boundary ends at D acceptance;
+there is no separate device execution queue. The program's tohost pass only
+establishes completion. The separate comparison checks the four order edges.
+R/W classes, device-side execution and concurrent target campaigns remain open.
