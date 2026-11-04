@@ -1956,3 +1956,15 @@ Nominal cycles equal summed ROI cycles. Bounds are producer declarations.
 no greater than the other point's lower bounds and at least one strict gain.
 Null objectives exclude a point and make status inconclusive (CLI exit 3).
 No point is RTL-confirmed by this command.
+
+### Architecture topology channels and agents
+
+The optional `rvw.arch-core/1` `soc.memory.kind: multi` uses `interleave_bytes`
+and 2, 4 or 8 `controllers` (simple or DRAM memory objects). Channels stripe
+across RAM at a power-of-two byte size of at least 64. Optional `soc.agents`
+contains up to eight read-only linear generators. Fields are `start`, `size`,
+`block_bytes`, `period_ticks`, `duration_ticks`, `max_outstanding` and `attach`
+(`memory` or an existing cache level). Addresses and blocks must align and fit
+RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
+the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
+SoC topologies. Native model execution alone is not RTL correlation.

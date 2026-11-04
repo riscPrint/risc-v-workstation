@@ -295,9 +295,7 @@ All values above are examples, not tuned core data. The captured description
 and gem5 `config.json` retain the declared and effective settings.
 
 Use `arch run` for SoC descriptions. `calibrate` refuses them because C1's
-fixed memory latency cannot describe this topology. Multiple traffic agents,
-multiple controllers, Ruby, and matching RTL interference comparisons remain
-unsupported. `memory_latency` remains required metadata for old report readers;
+fixed memory latency cannot describe this topology. Ruby and matching RTL interference comparisons remain unsupported. `memory_latency` remains required metadata for old report readers;
 it does not set the SoC memory timing.
 
 ## Memory observations
@@ -560,3 +558,22 @@ Overlapping bounds can therefore retain a nominally dominated point. Costs
 files and reports are hash-bound in the output. All points remain model-only.
 Matching RTL performance and physical area/power evidence remain required
 before claims about hardware gains.
+
+### Traffic agents and memory channels
+
+`soc.memory` also accepts `{"kind":"multi", "interleave_bytes":64,
+"controllers":[MEMORY, MEMORY]}`. Each MEMORY is a simple or DRAM object
+as above. Use 2, 4 or 8 controllers. The interleave size is a power of two,
+at least 64 bytes. Each channel uses an interleaved range across the full RAM.
+The ranges share one backing store, including on macOS. This is channel
+interleaving, not a model of arbitrary address windows or a NoC.
+
+Optional `soc.agents` holds at most eight read-only linear traffic agents.
+Each object declares `start` (physical byte address), `size`, `block_bytes`
+(power of two up to 64), `period_ticks`, `duration_ticks`, `max_outstanding`
+and `attach` (`memory` or an existing `level2`/`level3`). Bounds must fit RAM.
+The period and duration use 1 ps ticks. Agents start after model instantiation.
+After the selected duration they remain idle. They do not write guest memory.
+Their raw counters and effective ports remain in gem5 stats and config files.
+CPU ROI markers still select the reporting interval. A background agent is
+not a hart. These observations do not establish matching RTL interference.
