@@ -1,0 +1,22 @@
+ELK / elkjs 0.12.0
+
+The packages include elk-worker.js, copied without changes from
+elkjs/lib/elk-worker.min.js, and bundled elkjs API code.
+The npm manifest declares: EPL-2.0 OR GPL-3.0-or-later.
+The upstream license text is retained in LICENSE.md beside this notice.
+This notice does not select the workstation project license.
+
+Source and build instructions:
+https://github.com/kieler/elkjs/tree/ff5771d7165445c42c408bb8a090c8035272218c
+This is the gitHead reported by npm for elkjs 0.12.0.
+License source (copied without changes):
+https://github.com/kieler/elkjs/blob/ff5771d7165445c42c408bb8a090c8035272218c/LICENSE.md
+ELK Java sources used by the upstream build:
+https://github.com/eclipse/elk
+See the pinned elkjs build.gradle and upstream build instructions for source inputs.
+The upstream CI at this elkjs revision selects ELK master. The npm gitHead
+identifies elkjs, not the exact ELK Java source commit. Exact Java source
+provenance remains a release-review item in issue #37.
+
+Retain this notice and LICENSE.md when you distribute the worker or bundles.
+Other dependencies can have separate terms. This notice does not clear a release.

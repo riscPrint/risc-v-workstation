@@ -1,6 +1,7 @@
 name: CI
 on:
   push:
+    branches: [main, p1/integration, p2/integration]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:

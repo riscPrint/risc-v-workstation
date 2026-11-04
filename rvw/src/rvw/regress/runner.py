@@ -225,7 +225,10 @@ class Runner:
         self.inputs = Inputs(core, source, capture=capture)
         self.env = dict(self.inputs.child_env)
         self.adapter = self.inputs.adapter
-        self.jobs = opts.jobs or core.jobs
+        self.jobs = 1 if core.persistent else (opts.jobs or core.jobs)
+        # The server builds its first model inside run-many. Preserve the build
+        # budget that the skipped pre-build process would have had.
+        self.startup_s = core.startup_s + (core.build_timeout_s if core.persistent and core.build_first else 0)
         def values(value):
             if isinstance(value, Path):
                 return str(value)
@@ -755,7 +758,7 @@ class Runner:
                           "test": t.id, "elf": str(t.elf) if t.elf else None,
                           "execution": {"cwd": str(self.inputs.cwd), "jobs": self.jobs,
                                         "timeout_s": self.opts.timeout_s or suite.timeout_s,
-                                        "startup_s": self.core.startup_s, "wall_timeout": self.core.wall_timeout,
+                                        "startup_s": self.startup_s, "wall_timeout": self.core.wall_timeout,
                                         "build_first": self.core.build_first,
                                         "build_timeout_s": self.core.build_timeout_s},
                           "seed": s if suite.kind != "build" else None, "options": options,
@@ -1046,11 +1049,11 @@ os.execvpe(command[0], command, os.environ)
             shutil.rmtree(j.dir, ignore_errors=True)
             j.dir.mkdir(parents=True)
         per_test = self.opts.timeout_s or suite.timeout_s
-        timeout = finite_number(self.core.startup_s + per_test * math.ceil(len(pending) / self.jobs),
+        timeout = finite_number(self.startup_s + per_test * math.ceil(len(pending) / self.jobs),
                                 "batch timeout", positive=True)
-        finite_number(per_test + watchdog_margin(per_test) + self.core.startup_s,
+        finite_number(per_test + watchdog_margin(per_test) + self.startup_s,
                       "watchdog timeout", positive=True)
-        if self.core.build_first:
+        if self.core.build_first and not self.core.persistent:
             cmd = [*self.adapter, "build", "--config", config]
             if self.opts.rvfi_trace:
                 cmd.append("--rvfi")
@@ -1069,7 +1072,7 @@ os.execvpe(command[0], command, os.environ)
             _say(self.opts, f"rvw: {suite.name}/{config}: {len(missing)} without a result after the batch "
                             f"({'timeout' if timed_out else f'exit {rc}'}); rerunning them one at a time")
             for j in missing:
-                rc1, t1 = self._run_many([j], rdir, config, self.core.startup_s + per_test, j.test.id)
+                rc1, t1 = self._run_many([j], rdir, config, self.startup_s + per_test, j.test.id)
                 if not (j.dir / "result.json").is_file():
                     if t1:
                         self._synth(j, "timeout", f"wall-clock timeout after {per_test:.0f}s (rvw regress)")
@@ -1094,6 +1097,8 @@ os.execvpe(command[0], command, os.environ)
                     line["wall_timeout"] = per_test
                 f.write(json.dumps(line) + "\n")
         cmd = [*self.adapter, "run-many", "--manifest", str(manifest), "--jobs", str(min(self.jobs, len(jobs)))]
+        if self.core.persistent:
+            cmd.append("--persistent")
         margin = watchdog_margin(per_test)
         t0 = time.monotonic()
         state = {"n": 0, "progress": t0}
@@ -1105,7 +1110,7 @@ os.execvpe(command[0], command, os.environ)
                 state["n"], state["progress"] = n, now
                 if len(jobs) > 1:
                     _say(self.opts, f"rvw: {jobs[0].suite.name}/{config}: {n}/{len(jobs)} done")
-            limit = per_test + margin + (self.core.startup_s if n == 0 else 0)
+            limit = per_test + margin + (self.startup_s if n == 0 else 0)
             if n < len(jobs) and now - state["progress"] > limit:
                 return f"no new result for {now - state['progress']:.0f}s ({n}/{len(jobs)} done)"
             return None
@@ -1180,9 +1185,13 @@ os.execvpe(command[0], command, os.environ)
             extra["adapter_identity"] = j.params["identity"]
         if r.status != "pass":
             if r.message:
-                extra["message"] = r.message[:MESSAGE_MAX]
+                # Compare rebuilds failure identity from this evidence. Do not truncate it.
+                extra["message"] = r.message
+                extra["message_complete"] = True
             if r.fail_code is not None:
                 extra["fail_code"] = r.fail_code
+        if r.status == "rvfi_error" and "rvfi_errcode" in r.details:
+            extra["details"] = {"rvfi_errcode": r.details["rvfi_errcode"]}
         if r.extra.get("synthesized"):
             extra["synthesized"] = True
         if r.extra.get("wall_clock_timeout"):

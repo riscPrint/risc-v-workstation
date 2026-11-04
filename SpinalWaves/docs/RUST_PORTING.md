@@ -10,7 +10,7 @@ are in `docs/CONTRACT.md`.
 |---|---|---|---|
 | `third_party/tywaves-rs/` | github.com/jarlb/tywaves-rs (copy of `ref/tracing/jarlb_tywaves-rs`) | `215ff16f41742bffa8185cc5996741b13f498bb4` | Apache-2.0 (`LICENSE`) |
 | `surfer-tywaves/` | github.com/jarlb/surfer-tywaves (copy of `ref/tracing/jarlb_surfer-tywaves`) | `5a8755b5e06f37884b166e0302547f07a51e1106` | EUPL-1.2 (`LICENSE-EUPL-1.2.txt`) |
-| `surfer-tywaves/f128/` | github.com/jkarns275/f128 (git submodule, flattened) | `7f971c34568dd6ae4e97a602bf15c23137b2cad5` | MIT (Cargo.toml; no licence file upstream) |
+| `surfer-tywaves/f128/` | github.com/jkarns275/f128 (git submodule, flattened) | `7f971c34568dd6ae4e97a602bf15c23137b2cad5` | MIT label only; permission evidence unresolved (see below) |
 | `surfer-tywaves/ftr_parser/` | github.com/christiandattinger/ftr_parser (submodule) | `34715f0744f06e27a5740eb6aef2f3b244b828fa` | EUPL-1.2 |
 | `surfer-tywaves/fzcmd/` | gitlab.com/TheZoq2/fzcmd (submodule) | `1ae2b2c2e50ce7b99809dc7e2dd64749a51fd4f2` | MIT OR Apache-2.0 |
 | `surfer-tywaves/instruction-decoder/` | github.com/ics-jku/instruction-decoder (submodule) | `f016312216a88157d7594fabb6bc53d3d08c0999` | MIT |
@@ -22,6 +22,45 @@ submodule of surfer-tywaves (also pinned at `215ff16`) is not copied; surfer use
 removed at import. This checkout does not retain pristine import commits.
 To inspect local changes, compare each directory with its upstream revision in
 the table above. The sections below describe the local patches.
+
+## f128 permission boundary
+
+Source: [jkarns275/f128 at the pinned revision](https://github.com/jkarns275/f128/tree/7f971c34568dd6ae4e97a602bf15c23137b2cad5).
+The root `Cargo.toml:5`, `f128_input/Cargo.toml:5` and
+`f128_internal/Cargo.toml:6` declare `license = "MIT"`.
+The manifests name Joshua Karns as author. This is author metadata, not a
+recovered copyright notice or license text.
+
+The root label first appears in
+[7713424cd196ed305ffc254a9d864b07da024621](https://github.com/jkarns275/f128/commit/7713424cd196ed305ffc254a9d864b07da024621)
+("Added description and license", 2017-05-10). That commit adds the label to
+`Cargo.toml`. It does not add the MIT text. The two child crate labels appear
+in [a93bc8d54ea208c3d676ddc1b38a273811c08a2b](https://github.com/jkarns275/f128/commit/a93bc8d54ea208c3d676ddc1b38a273811c08a2b)
+and [7be2a060499db2565977b3f9248862238f9551da](https://github.com/jkarns275/f128/commit/7be2a060499db2565977b3f9248862238f9551da).
+
+To reproduce the boundary check in an upstream clone:
+
+```sh
+rev=7f971c34568dd6ae4e97a602bf15c23137b2cad5
+git ls-tree -r --name-only "$rev"
+git log --reverse -p -S 'license = "MIT"' "$rev" -- '*Cargo.toml'
+git rev-list "$rev" | while read -r commit; do
+  git ls-tree -r --name-only "$commit"
+done | sort -u
+git grep -inE 'copyright|permission|license|licence' "$rev"
+```
+
+All 125 commits reachable from this pin were checked. Their trees contain no
+path named for LICENSE, LICENCE, COPYING or NOTICE (case-insensitive).
+At the pin, the text search finds the three manifest labels, but no license
+grant text. No applicable MIT notice or other sufficient grant was recovered
+from this history. This does not prove that no grant exists elsewhere.
+Do not insert a guessed MIT copyright line or treat the label as clearance.
+Public redistribution remains blocked on permission evidence or an approved
+replacement under [#37](https://github.com/riscPrint/risc-v-workstation/issues/37).
+The `quadmath` link in `f128_internal/build.rs` also needs a separate binary
+terms review. This check does not clear that dependency or choose the project
+license.
 
 ## Patches
 

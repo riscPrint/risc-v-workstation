@@ -42,7 +42,10 @@ needed for measured stall causes and predicated-off commit counts.
 `soc.json` describes this example's simulation map and reference policies.
 Run `rvw soc generate soc.json --out /tmp/boom-soc --json` from this folder.
 See the [format and limits](../../rvw/src/rvw/soc/README.md).
-The existing adapter does not yet consume the generated simulation map.
+Pass `--soc-map DIR/sim-map.json` to the launcher to use the generated map.
+The adapter reads device addresses and reset values from that map. It captures
+accepted TileLink A requests with a map monitor. This does not observe RTL
+decoder selects. See the SoC guide for fixed RTL limits.
 
 `isa.json` declares the adapter trace ISA and pins the opcode coverage source.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`
@@ -68,3 +71,9 @@ The launcher takes the `boom` and `sbt` locks. Do not run it beside another heav
 job. This is a bounded functional test. It does not observe hit/miss counts,
 prove eviction, or connect the generic cache scoreboard to BOOM internals.
 BOOM remains single-hart. Coherence and DMA RTL campaigns need another adapter.
+
+`coverage-candidates.json` supplies test suggestions for semantic coverage holes.
+Run `rvw cov closure REPORT --candidates examples/boom/coverage-candidates.json`.
+The rules cover add operand boundaries, CSR accesses, and environment-call
+privilege cases. A suggestion does not establish that the test hits the bin.
+Other holes can have no candidate. Extend the project rules after test review.

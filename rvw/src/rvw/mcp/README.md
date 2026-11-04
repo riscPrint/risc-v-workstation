@@ -99,3 +99,6 @@ the registry directly and a real client session over stdio (including a plugin's
 
 Native worker budgets use `RVW_JOB_BUDGET`. See [common](../common/README.md#native-job-budgets).
 A budget stop fails the worker call and retains its cost report in job status.
+
+See the complete [CLI and MCP reference](../../../../docs/COMMAND_REFERENCE.md) for command paths,
+options and built-in tool arguments. The reference is checked against the code.

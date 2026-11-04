@@ -1,6 +1,7 @@
 """SoC map commands."""
 import json
 import sqlite3
+from xml.etree.ElementTree import ParseError
 
 from .model import generate
 
@@ -13,6 +14,18 @@ def register(sub):
     gen.add_argument('--out', required=True)
     gen.add_argument('--json', action='store_true')
     gen.set_defaults(func=run)
+    imp = commands.add_parser('import-ipxact', help='import a strict register memoryMap subset')
+    imp.add_argument('source')
+    imp.add_argument('--template', required=True)
+    imp.add_argument('--out', required=True)
+    imp.add_argument('--json', action='store_true')
+    imp.set_defaults(func=run)
+    cap = commands.add_parser('capture-check', help='check captured harness bus requests')
+    cap.add_argument('map')
+    cap.add_argument('--capture', required=True)
+    cap.add_argument('--result', required=True)
+    cap.add_argument('--json', action='store_true')
+    cap.set_defaults(func=run)
     chk = commands.add_parser('check', help='compare map bindings with a SpinalDB database')
     chk.add_argument('map')
     chk.add_argument('--bindings', required=True)
@@ -27,11 +40,19 @@ def run(args):
         if args.soc_command == 'generate':
             result = {'status': 'generated', 'files': generate(args.map, args.out)}
             code = 0
+        elif args.soc_command == 'import-ipxact':
+            from .importer import import_ipxact
+            result = {'status': 'imported', 'regions': import_ipxact(args.source, args.template, args.out)}
+            code = 0
+        elif args.soc_command == 'capture-check':
+            from .capture import check_capture
+            result = check_capture(args.map, args.capture, args.result)
+            code = 1 if result['status'] == 'mismatch' else 3
         else:
             from .check import check
             result = check(args.map, args.bindings, args.db, args.transactions)
             code = 1 if result['status'] == 'mismatch' else 3
-    except (ValueError, OSError, KeyError, TypeError, IndexError, sqlite3.Error) as exc:
+    except (ParseError, StopIteration, ValueError, OSError, KeyError, TypeError, IndexError, sqlite3.Error) as exc:
         result, code = {'status': 'error', 'error': str(exc)}, 2
     print(json.dumps(result) if args.json else str(result))
     return code

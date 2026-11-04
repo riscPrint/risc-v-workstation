@@ -1,0 +1,76 @@
+{
+  "schema": "rvw.coverage-candidates/1",
+  "tests": [
+    {
+      "id": "rv64ui-p-add",
+      "targets": [
+        "sem_add_*",
+        "isa_add_*"
+      ],
+      "priority": 20,
+      "reason": "The riscv-tests add program exercises integer operand boundaries."
+    },
+    {
+      "id": "rv64mi-p-scall",
+      "targets": [
+        "sem_ecall_exception:*",
+        "sem_privilege_transition:*"
+      ],
+      "priority": 10,
+      "reason": "Machine environment-call tests can exercise trap entry. Check the trace mode and cause."
+    },
+    {
+      "id": "rv64si-p-scall",
+      "targets": [
+        "sem_ecall_exception:*",
+        "sem_privilege_transition:*"
+      ],
+      "priority": 10,
+      "reason": "Supervisor environment-call tests can exercise privilege changes. Check platform support."
+    },
+    {
+      "id": "rv64mi-p-csr",
+      "targets": [
+        "sem_csrr*"
+      ],
+      "priority": 10,
+      "reason": "CSR tests can exercise read, write and read/write requests."
+    },
+    {
+      "id": "rv64mi-p-ma_addr",
+      "targets": [
+        "sem_l*_exception:[[]4[]]",
+        "sem_s*_exception:[[]6[]]"
+      ],
+      "priority": 10,
+      "reason": "Misaligned-address tests can exercise load and store exception cases. Check the emitted cause."
+    },
+    {
+      "id": "rv64ui-p-addi",
+      "targets": [
+        "sem_addi_*",
+        "isa_addi_*"
+      ],
+      "priority": 20,
+      "reason": "The addi program exercises this instruction and its operand boundaries."
+    },
+    {
+      "id": "rv64ui-p-addw",
+      "targets": [
+        "sem_addw_*",
+        "isa_addw_*"
+      ],
+      "priority": 20,
+      "reason": "The addw program exercises this instruction and its operand boundaries."
+    },
+    {
+      "id": "rv64ui-p-addiw",
+      "targets": [
+        "sem_addiw_*",
+        "isa_addiw_*"
+      ],
+      "priority": 20,
+      "reason": "The addiw program exercises this instruction and its operand boundaries."
+    }
+  ]
+}

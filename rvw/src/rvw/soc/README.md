@@ -47,15 +47,14 @@ JSON is the primary format. It fits the existing cosim reader, requires no new
 runtime package and can carry simulation and reference policies in one file.
 SystemRDL and IP-XACT import/export were considered. A full importer needs
 register elaboration and bus/interrupt semantics beyond this increment. It must
-reject unsupported constructs before it can replace project data. Neither
-format is claimed as supported here. CMSIS-SVD export covers the simple register
+reject unsupported constructs before it can replace project data. The strict IP-XACT import subset below now covers simple register blocks. CMSIS-SVD export covers the simple register
 subset, including [access and reset](https://arm-software.github.io/CMSIS_5/SVD/html/elem_special.html)
 and [read/write side effects](https://arm-software.github.io/CMSIS_5/5.8.0/SVD/html/elem_registers.html).
-No import or lossless round trip is claimed.
+No lossless round trip is claimed.
 
 ## Limits
 
-Generation does not change RTL or existing harness constants. The two examples
+Generation does not change RTL. Adapters can load the runtime map as described below. The two examples
 preserve their current cosim settings. Generated device trees are memory fragments,
 not bootable board descriptions. Bus decoding, bridge behavior, physical hardware
 and reference device models need separate evidence. No export establishes a pass.
@@ -103,3 +102,69 @@ coverage. Rebuild each database through its project query adapter to refresh
 source identity. A cached database check establishes only the listed widths in
 that file. Real paired transaction capture, generated bridge assertions,
 endianness, error responses and side-effect models remain open under #134.
+
+## Runtime maps and live capture
+
+Generate a map, then give `sim-map.json` to the adapter:
+
+```sh
+rvw soc generate examples/boom/soc.json --out /tmp/boom-soc
+RiscvSim/boom/run.sh run --elf ELF --out OUT --max-cycles 20000 \
+  --soc-map /tmp/boom-soc/sim-map.json --rvfi-trace --json
+rvw soc capture-check examples/boom/soc.json \
+  --capture OUT/soc-transactions.jsonl --result OUT/result.json --json
+```
+
+The VexRiscv launcher accepts the same `--soc-map` option. Its RAM agents use
+map bounds and permissions for fetches, loads and stores. It refuses MMIO regions.
+Its reset vector stays fixed in RTL. BOOM checks ELF segments and accepted
+TileLink A requests against the map. BOOM takes device addresses and initial
+values from `clint` and `intgen` registers. Device placements must stay in the
+existing RTL device windows. This option does not change the core's cacheability
+or RTL decoder. BOOM refuses different cacheability, RAM permissions or interrupt
+wiring. Its RAM regions must stay within the fixed RTL RAM window. A missing map keeps the legacy adapter behavior.
+
+The driver captures map bytes when it parses the job. It saves those bytes as
+`OUT/sim-map.json`. Results include `soc_map_sha256`. Replay names the original
+map path; keep that input unchanged, or use the saved map. The capture header
+records map, source and RTL identity. Each record observes an accepted request
+and the selected map region. VexRiscv uses `observation=harness_decoder` and
+records full memory-service words at its RAM decoder. BOOM uses
+`observation=map_monitor` and records TileLink request sizes, including cache-line
+acquisitions. BOOM classifies requests with the map; it does not observe RTL
+decoder selects. Its capture cannot establish actual RTL decoder selection.
+The checker compares the saved map with project data and checks each selection.
+It rejects different map, source or RTL identities. A missing end record stays
+inconclusive. The checker has no pass verdict.
+
+These records do not pair retirement accesses with bus requests. They do not
+check bridge width conversion, byte ordering, response errors, register side
+effects or all decode inputs. BOOM cache hits need no external request.
+These limits keep issue #134 open.
+
+Cosim also accepts `rvw.soc/1` directly as `--platform MAP`. The command captures
+that file before it derives RAM, MMIO and Spike policy. Generated `platform.json`
+remains supported. No new Spike device model is inferred from a region.
+
+## IP-XACT register import
+
+```sh
+rvw soc import-ipxact registers.xml --template soc.json --out imported.json
+```
+
+The importer accepts a standalone `memoryMap` in the IP-XACT 1685-2014 namespace.
+It requires `name`, `addressUnitBits=8` and at least one `addressBlock`.
+Each block requires `name`, `baseAddress`, `range`, `width`, and `usage=register`.
+Its name and bounds must equal a template MMIO region. Registers require `name`,
+`addressOffset`, `size` and `access`. The supported access values are `read-only`,
+`write-only` and `read-write`. Each register requires one field at `bitOffset=0` with `bitWidth` equal to `size`.
+The field can have one `resets/reset` with `value` and a full `mask`.
+Optional `readAction=clear` and `modifiedWriteValue=oneToClear` map to JSON side
+effects. Unknown elements and attributes are errors. Partial or multiple fields, arrays, aliases,
+expressions, component wrappers and bus interfaces are refused. No unsupported
+semantics are silently removed. Template regions and interrupts remain explicit.
+The complete resulting map must validate before the output is written.
+This is a register subset import, not a lossless IP-XACT round trip.
+
+The subset follows the [Accellera 1685-2014 memory map schema](https://www.accellera.org/XMLSchema/IPXACT/1685-2014/memoryMap.xsd).
+The importer checks its subset; it does not run full XSD validation.

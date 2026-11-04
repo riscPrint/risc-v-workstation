@@ -72,7 +72,7 @@ runs can still be measured. CLI and MCP use the same check.
   and retirement per thread. It infers the oldest live admitted instruction.
   It does not observe a hardware ROB head or identify which thread blocked shared
   retirement. Report head-state cycles only during global zero-retirement intervals.
-- Compare identical settings. A significant difference exceeds relative tolerance
+- Compare identical settings. Tolerance must be finite and nonnegative. A significant difference exceeds relative tolerance
   and the absolute threshold: one cycle/count or 0.01 IPC/flush fraction.
   This is a practical threshold, not statistical confidence from one run.
 - Warn on unknown extension records. Refuse malformed known records, duplicate IDs,

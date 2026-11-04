@@ -5,7 +5,8 @@ BARE_CC ?= riscv64-unknown-elf-gcc
 BENCHES ?= median qsort rsort towers vvadd memcpy multiply dhrystone spmv
 BUILD ?= build/bare
 MARCH ?= rv64gc
-CFLAGS ?= -march=$(MARCH) -mabi=lp64d -mcmodel=medany -O2 -std=gnu99 -ffast-math -fno-common \
+ABI ?= lp64d
+CFLAGS ?= -march=$(MARCH)_zicsr_zifencei -mabi=$(ABI) -mcmodel=medany -O2 -std=gnu99 -ffast-math -fno-common \
           -fno-builtin-printf -fno-tree-loop-distribute-patterns \
           -Wno-implicit-int -Wno-implicit-function-declaration -U_FORTIFY_SOURCE -DPREALLOCATE=1
 BARE_FLAGS = -static -nostdlib -nostartfiles -T $(SRC)/common/test.ld

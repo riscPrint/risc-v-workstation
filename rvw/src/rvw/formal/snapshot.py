@@ -29,6 +29,7 @@ def digest(path: Path) -> str:
 
 class InputSnapshot:
     def __init__(self, args, out: Path):
+        self.frontend = getattr(args, "frontend", "verilog")
         self.project_capture = getattr(args, "_project_capture", None)
         self.out = out
         self.directory = out / 'inputs'
@@ -44,6 +45,13 @@ class InputSnapshot:
         self._copies: dict[Path, Path] = {}
         self._pending: set[Path] = set()
         self.sources = [self._copy(Path(f), 'source') for f in args.verilog]
+        if self.frontend == 'slang':
+            from .sva import validate_sources
+            if getattr(args, 'event_model', False):
+                raise ValueError('slang SVA supports single-clock BMC only')
+            if args.engine not in ('smtbmc:yices', 'abc:bmc3'):
+                raise ValueError('slang SVA is qualified only for smtbmc:yices and abc:bmc3')
+            validate_sources(self.sources, args.clock)
         self.checks = self._copy(Path(args.checks), 'checks') if args.checks else None
         trace = getattr(args, 'trace', None)
         self.trace = self._copy(Path(trace), 'trace') if trace else None
@@ -108,6 +116,12 @@ class InputSnapshot:
         allowed = {str(self.out / r['frontend']) for r in self.files if 'frontend' in r}
         script = str(self.out / 'module_ports.ys')
         try:
+            if self.frontend == 'slang':
+                read = {str((self.out / line).absolute()) if not Path(line).is_absolute() else line
+                        for line in (self.out / 'slang.d').read_text().splitlines()}
+                if not set(map(str, self.sources)) <= read or read - allowed:
+                    raise ValueError('slang read files outside the input snapshot')
+                return
             deps = (self.out / 'module_ports.d').read_text().strip()
             left, separator, right = deps.partition(': ')
             expected = {str(self.out / 'module_ports.json'), str(self.out / 'module_ports.il')}

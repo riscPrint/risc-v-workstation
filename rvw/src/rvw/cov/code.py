@@ -154,10 +154,45 @@ def _require_conclusive(data):
 class SourceMap:
     """Explicit range mappings first; same-line Spinal location comments second."""
     @captured.command
-    def __init__(self, root='.', mapping=None, hgldd=(), scala_root=None):
+    def __init__(self, root='.', mapping=None, hgldd=(), scala_root=None, design_db=None):
         self.root = Path(root).absolute()
         self.mapping = json.loads(captured.read_text(mapping)).get('mappings', []) if mapping else []
         self.cache = {}
+        self.db_signals = {}
+        self.db_rtl = {}
+        self.db_top = None
+        if design_db:
+            import sqlite3
+            db = captured.file(design_db)
+            with sqlite3.connect(f'file:{db.copy}?mode=ro', uri=True) as conn:
+                if conn.execute("SELECT value FROM meta WHERE key='schema'").fetchone()[0] != 'rvw.designdb/20':
+                    raise ValueError('expected rvw.designdb/20')
+                self.db_top = conn.execute("SELECT module FROM components WHERE path=''").fetchone()[0]
+                capture = json.loads(conn.execute("SELECT value FROM meta WHERE key='input_capture'").fetchone()[0])
+                self.db_rtl = {str(Path(f['resolved']).resolve()): f['sha256'] for f in capture['files']
+                               if Path(f['resolved']).suffix in ('.v', '.sv')}
+                rows = conn.execute("""SELECT c.path,s.name,f.path,s.line
+                    FROM signals s JOIN components c ON c.id=s.component_id
+                    JOIN files f ON f.id=s.file_id WHERE s.pruned=0 AND s.line>0""")
+                for path, name, file, line in rows:
+                    self.db_signals[(path, name)] = {'file': file, 'line': line}
+                # /20 memory keys retain the exact MemSymbolesTag emitted names.
+                # Read these names; do not guess aliases from a suffix or array index.
+                if conn.execute("SELECT 1 FROM sqlite_master WHERE name='memories'").fetchone():
+                    rows = conn.execute("""SELECT c.path,m.key,f.path,m.line FROM memories m
+                        JOIN components c ON c.id=m.component_id JOIN files f ON f.id=m.file_id
+                        WHERE m.line>0""")
+                    for path, key, file, line in rows:
+                        tag = re.search(r'tag spinal\.core\.MemSymbolesTag:(\[[^]]*\])', key or '')
+                        if tag:
+                            for name in re.findall(r'("(?:\\.|[^"\\])*"):Range\(', tag[1]):
+                                name = json.loads(name)
+                                loc = {'file': file, 'line': line}
+                                if (path, name) in self.db_signals and self.db_signals[(path, name)] != loc:
+                                    raise ValueError('conflicting memory symbol declaration')
+                                self.db_signals[(path, name)] = loc
+
+
         self.scala_files = defaultdict(list)
         if scala_root:
             tree = captured.current().tree(Path(scala_root), git=False)
@@ -165,6 +200,7 @@ class SourceMap:
                 if Path(item.source).suffix == '.scala':
                     self.scala_files[Path(item.source).name].append(Path(item.source).absolute())
         self.signals = {}
+        self.instance_signals = {}
         candidates = defaultdict(list)
         for filename in hgldd:
             documents = json.loads(captured.read_text(filename))
@@ -186,6 +222,9 @@ class SourceMap:
                     operands = value.get('operands', [])
                     if var.get('unpacked_range'):
                         element = {k: v for k, v in var.items() if k != 'unpacked_range'}
+                        remaining = var['unpacked_range'][2:]
+                        if remaining:
+                            element['unpacked_range'] = remaining
                         for operand in operands:
                             yield from leaves(element, operand, parents)
                     elif name in structs:
@@ -195,6 +234,27 @@ class SourceMap:
                         for field, operand in zip(fields, operands):
                             yield from leaves(field, operand, (*parents, name))
 
+                # Instance overrides can retain different Scala source locations
+                # even when RTL module definitions are deduplicated.
+                def instance(obj, path):
+                    for root_var in obj.get('port_vars', []):
+                        for var, signal in leaves(root_var, root_var.get('value', {})):
+                            loc = var.get('hgl_loc')
+                            if loc and loc.get('begin_line'):
+                                key = (path, signal)
+                                value = {'file': files[loc['file'] - 1], 'line': loc['begin_line'],
+                                         'method': 'hgldd-instance-declaration'}
+                                if key in self.instance_signals and self.instance_signals[key] != value:
+                                    self.instance_signals[key] = None
+                                else:
+                                    self.instance_signals[key] = value
+                    for child in obj.get('children', []):
+                        instance(child, path + '.' + child.get('hdl_obj_name', child.get('name', '')))
+                modules = [o for o in doc['objects'] if o.get('kind') == 'module']
+                referenced = {c.get('module_name') for o in modules for c in o.get('children', [])}
+                for obj in modules:
+                    if obj.get('module_name') not in referenced:
+                        instance(obj, 'TOP.' + obj['module_name'])
                 objects = list(doc['objects'])
                 for obj in objects:
                     # Instance overrides can differ after RTL module deduplication.
@@ -222,10 +282,22 @@ class SourceMap:
             if all(loc == locations[0] for loc in locations):
                 self.signals[key] = locations[0]
 
+    def db_instance(self, fields):
+        hierarchy = fields.get('h', '').split('.')
+        if self.db_top and hierarchy.count(self.db_top) == 1 and '*' not in fields.get('h', ''):
+            return '.'.join(hierarchy[hierarchy.index(self.db_top) + 1:])
+        return None
+
     @captured.command
     def location(self, fields):
         file = fields.get('f', fields.get('filename', ''))
         line = int(fields.get('l', fields.get('lineno', 0)))
+        if self.db_signals:
+            path = str((self.root / file).resolve())
+            digest = captured.sha256(path)
+            expected = self.db_rtl.get(path)
+            if (expected and digest != expected) or (not expected and digest not in self.db_rtl.values()):
+                raise ValueError('design database RTL differs from coverage RTL')
         spans = [item for item in self.mapping if item['verilog'] == file
                  and item['line_start'] <= line <= item.get('line_end', item['line_start'])]
         if spans:
@@ -236,6 +308,15 @@ class SourceMap:
             return {"file": source, "line": source_line, "method": "explicit-range"}
         if fields.get('t') == 'toggle':
             signal = re.sub(r'\[\d+\]$', '', fields.get('o', '').split(':')[0])
+            instance = self.db_instance(fields)
+            if instance is not None:
+                name = re.sub(r'\[\d+\]', '', signal)
+                declared = self.db_signals.get((instance, name))
+                if declared:
+                    return dict(declared, method='designdb-instance-declaration')
+            exact = self.instance_signals.get((fields.get('h'), signal))
+            if exact:
+                return exact
             location = self.signals.get((fields.get('page', '').removeprefix('v_toggle/'), signal))
             if location:
                 return location
@@ -245,6 +326,7 @@ class SourceMap:
         lines = self.cache[path]
         # Do not guess from the nearest comment: it can cross unrelated assignments.
         locations = []
+        declaration_used, comment_used = False, False
         ranges = [(line, line)]
         # Verilator records the exact statements covered by a point in S. The
         # instrumented branch/header line often precedes its assignment comment.
@@ -258,6 +340,20 @@ class SourceMap:
             for n in range(max(begin, 1), min(end, len(lines)) + 1):
                 match = re.search(r'(\S+\.scala)(?::|\s+l)(\d+)', lines[n - 1])
                 if not match:
+                    instance = self.db_instance(fields)
+                    if instance is not None:
+                        text = lines[n - 1]
+                        # Exact declared targets and branch operands, never a nearest-line guess.
+                        targets = re.findall(r'^\s*(?:assign\s+)?([A-Za-z_]\w*)(?:\[[^;=]*?\])*\s*(?:<=|=(?!=))', text)
+                        condition = re.match(r'\s*(?:end\s+else\s+)?if\s*\((.*)\)\s*(?:begin\b|$)', text.split('//', 1)[0])
+                        if condition:
+                            targets += re.findall(r'\b[A-Za-z_]\w*\b', condition[1])
+                        targets += re.findall(r'\b(?:reg|wire)\s+(?:\[[^]]+\]\s*)?([A-Za-z_]\w*)', text)
+                        for target in targets:
+                            loc = self.db_signals.get((instance, target))
+                            if loc:
+                                declaration_used = True
+                                locations.append((loc['file'], loc['line']))
                     continue
                 source = match[1].lstrip('(')
                 if '/' not in source and '\\' not in source:
@@ -266,6 +362,7 @@ class SourceMap:
                         return None  # An ambiguous comment cannot justify attribution of this point.
                     if len(candidates) == 1:
                         source = str(candidates[0])
+                comment_used = True
                 locations.append((source, int(match[2])))
         if locations:
             # Multiple locations in one point are retained explicitly, rather
@@ -273,16 +370,17 @@ class SourceMap:
             locations = sorted(set(locations))
             source, scala_line = locations[0]
             return {"file": source, "line": scala_line,
-                    "method": "covered-span-comments" if fields.get('S') else "same-line-comment",
+                    "method": ("covered-span-comments-and-declarations" if comment_used else "covered-span-declarations")
+                    if declaration_used else "covered-span-comments" if fields.get('S') else "same-line-comment",
                     "locations": [{"file": f, "line": n} for f, n in locations]}
         return None
 
 
 @captured.command
-def merge(specs, root='.', mapping=None, hgldd=(), revision=None, scala_root=None):
+def merge(specs, root='.', mapping=None, hgldd=(), revision=None, scala_root=None, design_db=None):
     merged, tests, universe, contexts = {}, {}, None, set()
     collected = inputs(specs)
-    smap = SourceMap(root, mapping, hgldd, scala_root)
+    smap = SourceMap(root, mapping, hgldd, scala_root, design_db)
     if revision is not None:
         revision = captured.current().git_ref(Path(root), revision)
     for name, path, run in collected:
@@ -373,6 +471,8 @@ def report(data, exclusions=None):
     instance_scope = {
         name: {"scope": "aggregate" if '*' in name else "unknown" if name == 'unknown' else "instance",
                "instrumented_points": len(points),
+               "mapped_scala_points": sum(bool(p.get("scala")) for p in points),
+               "unmapped_scala_points": sum(not p.get("scala") for p in points),
                "exact_instance_denominator": None if '*' in name or name == 'unknown' else len(points)}
         for name, points in groups['instances'].items()}
     return {"schema": "rvw.coverage-report/1", "instance_scope": instance_scope,

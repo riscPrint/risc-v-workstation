@@ -41,17 +41,49 @@ identity mismatch, aborted shard or missing result makes the campaign
 inconclusive (exit 3). A complete campaign can contain DUT failures. Exit 0 means
 collection is complete. It does not mean pass or gate accept.
 
+Use `rvw farm cancel --out /tmp/campaign` or MCP `farm_cancel` with `out` to
+cancel a campaign. Each shard has a random control token. A separate SSH request
+signals its worker. The worker unwinds `run_group`, stops all owned process
+groups, and stores an acknowledgement on the host. The cancel endpoint uses
+`ps` on the host to confirm that those groups have no live members. Zombies do
+not count as live members. A lost host or missing acknowledgement is inconclusive.
+`control.json` and `cancellation.json` retain the requests and replies. Keep the
+campaign directory until cancellation finishes. This endpoint also works from
+a later command after the dispatch process stops.
+
+A host can set `resources`, for example:
+
+```json
+{"cpu": 2, "memory_bytes": 4294967296, "locks": ["native-build"]}
+```
+
+CPU slots must cover `--jobs`. Workers reserve these values under one host file
+lock before they run the identity command or adapter. All aliases on the same
+OS share capacity. Set `~/.config/rvw/farm-capacity.json` on each host to an object
+with `cpu` and `memory_bytes`. Defaults reserve at most logical CPU count minus
+one (minimum one), and half physical memory. Omitted memory means zero requested
+bytes. Omitted locks means no named lock. A request waits up to the shard timeout
+for capacity. The reply records reserved values and `queued_s`. Each request owns
+its reservation. Normal completion, timeout and handled cancel release it.
+These are cooperative reservations. They do not cap actual RSS or CPU use.
+Adapters and unrelated processes can exceed them. Dead worker records require
+owner cleanup after process groups are checked. No capacity is reclaimed blindly.
+
 The dashboard reads C3, C4 and history. Missing evidence is inconclusive. It
 shows per-status counts and plots recorded C3 `ipc` and `coverage` metrics by
-core, suite and config. Missing samples are not zero. It does not merge bins or
+core, suite and config. It also plots pass rate (conclusive passes divided by
+all recorded tests) and run time (sum of all test `wall_s` values). Missing wall
+times prevent a run-time sample. Charts and tables use oldest-first history and
+retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
 
 ## Decisions and limits
 
 - Workers own temporary directories and bounded process groups. Normal completion
   removes temporary data. SIGTERM and SIGHUP unwind group cleanup. SSH loss can
-  leave the worker running until its declared timeout. Immediate remote cancel
-  acknowledgement and crash recovery remain open. SIGKILL can leave temporary data.
+  leave the worker running until its declared timeout. Use the separate cancel
+  endpoint to request acknowledged cleanup. Crash recovery remains open. SIGKILL
+  can leave temporary data, control records and capacity reservations.
 - Every run checks tool identity. This is a C1 execution interface, separate from
   `regress gate`. C8 cache admission and gate verdicts stay in the existing runner.
   Farm artifacts are not automatically imported as accepted C3 generations.
@@ -62,3 +94,6 @@ establish coverage compatibility or verification closure.
 - Test native SSH with two localhost entries. Set `RVW_TEST_SSH_OPTIONS` to a JSON
   option array for a test server. Run `pytest rvw/tests/test_native_farm.py`.
   These are protocol fixtures. They are not RTL verification results.
+
+Collection checks explicitly requested `max_cycles` and `mem_latency` in each C1 result.
+Missing or different values make collection inconclusive.

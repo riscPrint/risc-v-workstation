@@ -44,6 +44,9 @@ def source_adapter(run, tmp_path):
         "data={'schema':'rvw.run/1','core':'fake','status':'assert' if failed else 'pass',"
         "'cycles':700 if failed else 80,'message':'Assertion failed (lsu.scala:1241)',"
         "'elf':elf,'elf_sha256':hashlib.sha256(Path(elf).read_bytes()).hexdigest()}\n"
+        "data.update(config=opts.get('--config','small'),seed=int(opts.get('--seed',1)),"
+        "max_cycles=int(opts.get('--max-cycles',200000)),"
+        "mem_latency=int(opts['--mem-latency']) if '--mem-latency' in opts else None)\n"
         "(out/'result.json').write_text(json.dumps(data))\n")
     import shlex
     import sys

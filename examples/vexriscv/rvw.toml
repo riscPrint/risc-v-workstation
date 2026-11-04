@@ -83,3 +83,8 @@ platform = "rvw/platform.json"
 [query]
 build = ["./rvw/build-db.sh"]
 db = "rvw/out/vex.db"
+
+[arch]
+description = "rvw/arch/minor.json"
+sources = "../../../ref/riscv-tests/benchmarks"
+benchmarks = "rvw/out/arch/bench"
