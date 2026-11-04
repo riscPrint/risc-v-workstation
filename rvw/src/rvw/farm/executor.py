@@ -123,10 +123,11 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                 if run.config != sent["options"].get("config") or run.seed != sent["options"].get("seed"):
                     raise ValueError("result config or seed differs")
                 for name in ("max_cycles", "mem_latency"):
-                    if name in sent["options"]:
-                        actual, wanted = getattr(run, name, None), sent["options"][name]
-                        if type(actual) is not type(wanted) or actual != wanted:
-                            raise ValueError(f"result {name} differs from requested value")
+                    for key in (name, name.replace("_", "-")):
+                        if key in sent["options"]:
+                            actual, wanted = getattr(run, name, None), sent["options"][key]
+                            if type(actual) is not type(wanted) or actual != wanted:
+                                raise ValueError(f"result {name} differs from requested value")
                 if run.elf_sha256 != sent["elf_sha256"]:
                     raise ValueError("result ELF identity differs")
                 raw = run.to_dict()
