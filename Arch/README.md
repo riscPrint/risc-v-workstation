@@ -145,7 +145,7 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
 - Require exactly two ROI markers and a passing tohost value. A tick limit or
   incomplete exit must not produce successful evidence.
 - Report the gap before adding a fitter. Offline held-out candidate selection and measurement microbenchmarks are available.
-  Live RTL event integration and parameter search remain open work.
+  Bayesian parameter search is available. Live RTL event mappings remain project work.
 - RV32IM uses Minor or TimingSimple, with explicit RV32 ISA configuration.
   In-order descriptions require `queues=[]` and `predictor=null`.
   Their CPU defaults apply unless scalar CPU parameters override them.
@@ -207,7 +207,7 @@ be disjoint. Renaming the same ELF does not make an unseen workload.
 The report has status `reported`.
 It gives no fidelity threshold, confidence interval or correctness verdict.
 A single workload cannot establish general model fidelity.
-Candidate generation and parameter search remain project-owned work.
+Use `arch search` below for parameter generation. Keep plans and fitted values in the core project.
 The test target uses synthetic event evidence. It does not validate RTL counters.
 
 ## Measurement microbenchmarks

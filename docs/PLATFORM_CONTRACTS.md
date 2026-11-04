@@ -1391,7 +1391,8 @@ and raw stats paths and hashes. Error is `abs(model-RTL)/max(1,RTL)`.
 Scores use equal weights across events and workloads. Only training scores
 select the winner. Lexical candidate names break ties. No acceptance or
 confidence claim follows from this report. The caller must keep held-out
-workloads separate when creating candidates. No parameter search runs here.
+workloads separate when creating candidates. This offline command runs no parameter search.
+Use the search extension below to generate parameter candidates.
 
 ### C9 static compatibility preflight
 

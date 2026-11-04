@@ -66,8 +66,15 @@ def test_measure_both_engines(native_fixture, rvw):
     assert len((native_fixture.parent / 'calls.jsonl').read_text().splitlines()) == 8
 
 
-@pytest.fixture
-def search_plan(native_fixture, tmp_path):
+@pytest.fixture(params=['synthetic', 'vexriscv-description'])
+def search_plan(native_fixture, tmp_path, request):
+    if request.param == 'vexriscv-description':
+        root = Path(__file__).resolve().parents[2]
+        description = read_json(root / 'examples/vexriscv/rvw/arch/minor.json')
+        write_json(tmp_path / 'description.json', description)
+        native_fixture.write_text(native_fixture.read_text().replace('fixture-o3', 'rv32im').replace('arch-fixture', 'vexriscv'))
+        adapter = tmp_path / 'fake-c1-adapter.py'
+        adapter.write_text(adapter.read_text().replace('arch-fixture', 'vexriscv'))
     core.calibrate(native_fixture, 'fixture-0,fixture-1', tmp_path / 'baseline', 30)
     # The fixture emits explicit ROI stats, with parameter-dependent training error.
     gem5 = tmp_path / 'fake-native-gem5'
@@ -129,3 +136,35 @@ def test_vexriscv_parameter_space():
     candidates = points(description, {'schema': 'rvw.arch-sweep/1', 'parameters': {'bus_bytes': [4, 8]},
                                       'max_points': 2, 'timeout_s': 30})
     assert all(c['kind'] == 'minor' and c['isa'] == 'rv32im' for c in candidates)
+
+
+def test_mcp_search(search_plan):
+    from rvw.mcp.registry import Registry
+    from test_arch import mcp_finished
+    plan_path, project = search_plan
+    registry, problems = Registry.discover({'arch'})
+    assert not problems
+    assert {'arch_search', 'arch_measure', 'arch_predict', 'arch_score_prediction'} <= registry.tools.keys()
+    try:
+        result = mcp_finished(registry, 'arch_search', {'plan': str(plan_path),
+                              'project': str(project), 'out': str(plan_path.parent / 'mcp-search')})
+        assert result['status'] == 'done', result
+        assert result['result']['held_out']['n'] == 2
+    finally:
+        registry.jobs.shutdown(grace=.2)
+
+
+def test_measure_rejects_changed_inputs(native_fixture, monkeypatch):
+    original = core.calibrate
+    def changing(*args):
+        report = original(*args)
+        description = native_fixture.parent / 'description.json'
+        data = read_json(description)
+        data['bus_bytes'] *= 2
+        write_json(description, data)
+        return report
+    monkeypatch.setattr(core, 'calibrate', changing)
+    out = native_fixture.parent / 'changed-measurement'
+    with pytest.raises(ValueError, match='changed'):
+        measure(out, native_fixture, 'fixture-0,fixture-1', 30, 2)
+    assert not (out / 'measure.json').exists()
