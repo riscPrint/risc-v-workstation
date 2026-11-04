@@ -141,6 +141,9 @@ def test_build_captures_config_and_images(tmp_path, monkeypatch):
     import tarfile
     source = tmp_path / f'buildroot-{linux.BUILDROOT}'
     source.mkdir()
+    link = source / 'package/skeleton-init-openrc/skeleton/etc/runlevels/default/sysv-rcs'
+    link.parent.mkdir(parents=True)
+    link.symlink_to('/etc/init.d/sysv-rcs')
     archive = tmp_path / 'fixture.tar.xz'
     with tarfile.open(archive, 'w:xz') as tar:
         tar.add(source, arcname=source.name)
@@ -162,6 +165,9 @@ def test_build_captures_config_and_images(tmp_path, monkeypatch):
     monkeypatch.setattr(linux, 'command', command)
     result = linux.execute('build', tmp_path / 'out')
     assert result['status'] == 'built'
+    extracted = tmp_path / 'out' / source.name / link.relative_to(source)
+    assert extracted.is_symlink()
+    assert extracted.readlink() == Path('/etc/init.d/sysv-rcs')
     assert len(result['artifacts']) == 4
     assert result['source']['sha256'] == linux.BUILDROOT_SHA256
     assert '@OVERLAY@' not in (tmp_path / 'out/defconfig').read_text()
@@ -173,3 +179,24 @@ def test_bad_source_hash_blocks_build(tmp_path, monkeypatch):
     monkeypatch.setattr(linux, 'command', lambda argv, out, timeout: (out / 'buildroot.tar.xz').write_bytes(b'bad source'))
     with pytest.raises(ValueError, match='SHA-256 mismatch'):
         linux.execute('build', tmp_path / 'out')
+
+
+def test_archive_error_records_inconclusive(tmp_path, monkeypatch):
+    monkeypatch.setattr(linux.host, 'system', lambda: 'Linux')
+    monkeypatch.setattr(linux, 'tool', lambda name: name)
+    monkeypatch.setattr(linux, 'command', lambda argv, out, timeout: (out / 'buildroot.tar.xz').write_bytes(b'bad archive'))
+    monkeypatch.setattr(linux, 'BUILDROOT_SHA256', linux.hashlib.sha256(b'bad archive').hexdigest())
+    with pytest.raises(linux.tarfile.TarError):
+        linux.execute('build', tmp_path / 'out')
+    report = json.loads((tmp_path / 'out/manifest.json').read_text())
+    assert report['status'] == 'inconclusive'
+    assert report['error']
+
+
+def test_archive_member_cannot_escape(tmp_path):
+    archive = tmp_path / 'escape.tar'
+    with linux.tarfile.open(archive, 'w') as tar:
+        tar.addfile(linux.tarfile.TarInfo('../escape'))
+    with pytest.raises(linux.tarfile.TarError):
+        linux.extract_buildroot(archive, tmp_path / 'out')
+    assert not (tmp_path / 'escape').exists()

@@ -60,3 +60,51 @@ def test_runner_refuses_stale_dut_results(tmp_path):
                         '--adapter', '/missing/adapter'], timeout=10, capture=True)
     assert result.returncode == 2
     assert 'DUT output directories exist' in result.stderr
+
+
+@pytest.mark.parametrize('xlen', [32, 64])
+@pytest.mark.parametrize('granule', [4, 64])
+@pytest.mark.parametrize('effect', ['legal', 'success_without_write', 'failure_with_write', 'source_write', 'reuse'])
+def test_lrsc_reservation_shapes_and_effects(tmp_path, xlen, granule, effect):
+    """Synthetic SC outcomes executed on Spike; not a DUT reservation model.
+
+    At an operand-sized reservation, `other` is outside the set. At 64 bytes it is
+    inside. Inject the allowed outcomes and broken memory effects into the
+    generated checker. Keep the other SC instructions native.
+    """
+    if not shutil.which('spike') or not shutil.which('riscv64-unknown-elf-gcc'):
+        pytest.skip('native Spike and RISC-V GCC required')
+    text = suite.lrsc(xlen, 7)
+    for width in (['w', 'd'] if xlen == 64 else ['w']):
+        # Consume the real reservation without changing cell. Then supply a
+        # synthetic result for SC to other. Cover spurious failure in both sets.
+        outcomes = [False] if granule == 4 else [True, False]
+        for index in range(4):
+            success = outcomes[index % len(outcomes)]
+            if effect == 'success_without_write':
+                status, write = 0, False
+            elif effect == 'failure_with_write':
+                status, write = 1, True
+            else:
+                status, write = int(not success), success
+            injection = f'sc.{width} t2, t5, (t0)\n'
+            if effect == 'reuse':
+                injection = ''  # Leave the real reservation live.
+            if write:
+                injection += f' s{width} t1, 0(t4)\n'
+            if effect == 'source_write':
+                injection += f' li t3, 99\n s{width} t3, 0(t0)\n'
+            injection += f' li t2, {status}'
+            text = text.replace(f'sc.{width} t2, t1, (t4)', injection, 1)
+    source = tmp_path / 'effects.S'
+    source.write_text(text)
+    (tmp_path / 'link.ld').write_text(suite.LINK)
+    isa = f'rv{xlen}ima_zicsr_zifencei'
+    build = run_group(['riscv64-unknown-elf-gcc', f'-march={isa}',
+                       '-mabi=' + ('lp64' if xlen == 64 else 'ilp32'), '-nostdlib',
+                       '-Wl,--no-relax', '-T', str(tmp_path / 'link.ld'), str(source),
+                       '-o', str(tmp_path / 'effects')], timeout=30, capture=True)
+    assert build.returncode == 0, build.stderr
+    result = run_group(['spike', '--isa=' + isa, str(tmp_path / 'effects')], timeout=10, capture=True)
+    assert not result.timed_out
+    assert (result.returncode == 0) == (effect == 'legal'), result.stderr

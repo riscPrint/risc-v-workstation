@@ -3,6 +3,11 @@ name: Native installer
 # GitHub-hosted Ubuntu requires paid minutes for this private repository.
 on:
   workflow_dispatch:
+    inputs:
+      cosim_only:
+        description: Run only the cosim installer and shim capture tests
+        type: boolean
+        default: false
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
@@ -16,13 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flags:
-          - ''
-          - '--with-sim'
-          - '--with-riscv-gcc'
-          - '--with-cosim'
-          - '--with-formal'
-          - '--with-sim --with-riscv-gcc --with-cosim'
+        flags: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.cosim_only && '["--with-cosim"]' || '["", "--with-sim", "--with-riscv-gcc", "--with-cosim", "--with-formal", "--with-sim --with-riscv-gcc --with-cosim"]') }}
     steps:
       - uses: actions/checkout@v4
       - name: Install on the native host
@@ -38,12 +37,19 @@ jobs:
           source env.sh
           read -r -a flags <<< "$FLAGS"
           scripts/install.sh --check "${flags[@]}"
+      - name: Check shim input capture
+        if: contains(matrix.flags, '--with-cosim')
+        run: |
+          source env.sh
+          uv sync --locked --no-dev --extra dev --extra mcp --no-managed-python --project rvw
+          rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_build_capture.py -q
       - name: Check the pinned reference policies
         if: contains(matrix.flags, '--with-cosim') && contains(matrix.flags, '--with-riscv-gcc')
         run: |
           source env.sh
           rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
   long-install:
+    if: github.event_name != 'workflow_dispatch' || !inputs.cosim_only
     runs-on: [self-hosted, Linux, X64, rvw-linux]
     timeout-minutes: 360
     strategy:

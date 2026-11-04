@@ -1,5 +1,6 @@
 """Check the repository's commit policy with accepted and rejected messages."""
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -53,7 +54,7 @@ def test_linux_workflows_need_manual_dispatch_and_linux_runner():
     for name in ('installer.yml', 'linux-boot.yml'):
         text = (REPO / '.github/workflows' / name).read_text()
         triggers = text.split('\non:', 1)[1].split('\nconcurrency:', 1)[0]
-        assert triggers.strip() == 'workflow_dispatch:', name
+        assert re.findall(r'^  (\w+):', triggers, re.M) == ['workflow_dispatch'], name
         assert 'runs-on: [self-hosted, Linux, X64, rvw-linux]' in text
         assert 'ubuntu-latest' not in text
         assert 'ubuntu-24.04' not in text
