@@ -1912,3 +1912,13 @@ C9 comparison and status `reported`. Model report and raw evidence are rechecked
 Every RTL evidence mtime must follow the prediction time. This is a local
 ordering check, not trusted chronology. The ledger requires original local
 paths and stable evidence. No file races or hostile timestamp claims are covered.
+
+## SpinalChecks normalized register map (version 1)
+
+`SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
+required. `registers` lists unique comma-separated register names. Each name has
+`address`, `width`, `reset`, `writeMask`, `w1cMask` and `readClearMask` properties.
+Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
+must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
+must not overlap. Missing required fields fail loading. This format declares
+register intent. It does not provide independent bus observations or a verdict.
