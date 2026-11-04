@@ -136,3 +136,22 @@ certify VexRiscv ISA compliance or change the adapter configuration.
 bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
 matching HGLDD. It also measures Scala attribution of native toggle points.
 This interface exercise is separate from ISA regression coverage.
+
+## Bounded RVFI checks
+
+`formal/rvw.toml` selects the upstream riscv-formal `FormalSimple` RTL snapshot.
+It runs the 37 RV32I instruction checks and reg, pc_fwd, pc_bwd, liveness,
+unique and causal. This snapshot is separate from the RV32IM simulation core.
+Run it with native tools and a new output directory:
+
+```sh
+RISCV_FORMAL=/path/to/riscv-formal scripts/with-lock.sh vex nice -n 10 \
+  rvw/.venv/bin/rvw --project examples/vexriscv/formal/rvw.toml \
+  formal riscv --out /tmp/vex-formal --timeout 120 --json
+```
+
+Read each C3 row in `results.json`. A timeout is inconclusive. A bounded PASS
+is not a full ISA proof. The C4 verdict cannot accept a core revision.
+Liveness uses the upstream fairness assumptions, including no traps.
+See the [formal guide](../../rvw/src/rvw/formal/README.md) for scope and Sail
+arithmetic model generation. Measured results belong in issue #63.

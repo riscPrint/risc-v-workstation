@@ -93,7 +93,7 @@ errors. Tool input paths must exist when the command consumes them.
 | `debug` | `config` | Debug TOML for bundle, reduce and bisect. It must describe the recorded core. |
 | `checks` | `settings`, `waivers` | Project adapter settings and waiver file paths. Their format belongs to the adapter. The launcher must consume them. |
 | `query` | `build`, `db` | Build command list and output database path. `rvw query build` calls `build CONFIG OUT`; `--config` and `--out` override the core default and `db`. Query reads use `db` unless `--db` is explicit. |
-| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
+| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports`, `check_options`, `instruction_models` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
 | `formal` | `verilog`, `top`, `checks`, `clock`, `reset` | Defaults for existing formal arguments. `verilog` is a nonempty path list. Explicit arguments override these fields. No proof limits change. |
 
 The project file and expanded environment are captured before parsing and execution.
@@ -1580,10 +1580,20 @@ Each requested task is a C3 entry. PASS requires exit 0 and SBY PASS. Missing
 status, unreachable retirement cover, tool errors and wall timeouts are
 inconclusive. Without retirement cover, assertion PASS entries carry an
 `inconclusive` reason. `source.formal_inputs` records input hashes;
-`identity_complete` is false. The suite records `bounded_depth` and settings.
+`identity_complete` is false. The suite records the maximum selected check depth as `bounded_depth` and the settings.
 C4 rejects assertion failures. Other outcomes remain inconclusive, including
 complete bounded tests. These files cannot establish committed gate acceptance.
 C1 is not emitted because these jobs do not execute an ELF.
+
+`check_options.<exact check name>` can set `cycles`, `engine` and `defines`.
+Cycles are `[check]` for instruction checks, `[start, check]` for consistency
+and cover checks, and `[start, trigger, check]` for liveness and unique.
+Each C3 entry retains these values in `formal_settings`. Engines are
+`abc bmc3`, `btor btormc` or `smtbmc` with a supported solver. Cover needs SMTBMC.
+ABC jobs omit the unsupported SBY `skip` option. The checker cycle still
+controls when each assertion fires. `instruction_models` maps instruction
+names to model files. The runner copies these over the private checker tree
+and hashes them. It does not modify the upstream models.
 
 ## Formal event model extension
 

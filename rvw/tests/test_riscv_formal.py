@@ -85,11 +85,13 @@ def test_success_stays_bounded(cfg,tmp_path,monkeypatch):
 
 
 @pytest.mark.parametrize('wrong', [False, True])
-def test_native_add_oracle(tmp_path, wrong):
+@pytest.mark.parametrize('instruction,word,equation', [('add',"32'h002081b3",'a + b'), ('sub',"32'h402081b3",'a - b'), ('addi',"32'hfff08193","a - 1")])
+@pytest.mark.parametrize('engine', ['smtbmc bitwuzla','btor btormc'])
+def test_native_add_oracle(tmp_path, wrong, instruction, word, equation, engine):
     """Independent ADD equation, arbitrary operands, and a deliberately wrong unit."""
     import os
     root=os.environ.get('RISCV_FORMAL')
-    if not root or not shutil.which('sby') or not shutil.which('bitwuzla'):
+    if not root or not shutil.which('sby') or not shutil.which('bitwuzla') or (engine == 'btor btormc' and not shutil.which('btormc')):
         pytest.skip('native riscv-formal checkout and solver required')
     widths={f:32 for f in FIELDS}
     widths.update(valid=1,order=64,trap=1,halt=1,intr=1,mode=2,ixl=2,
@@ -97,9 +99,9 @@ def test_native_add_oracle(tmp_path, wrong):
     declarations=',\n'.join(f'output wire [{widths[f]-1}:0] io_{f}' for f in FIELDS)
     rtl=tmp_path/'unit.sv'
     values={f:"0" for f in FIELDS}
-    values.update(valid='!reset',order='order_counter',insn="32'h002081b3",mode='3',ixl='1',
+    values.update(valid='!reset',order='order_counter',insn=word,mode='3',ixl='1',
                   rs1_addr='1',rs2_addr='2',rd_addr='3',rs1_rdata='a',rs2_rdata='b',
-                  rd_wdata='a + b' + (' + 1' if wrong else ''),
+                  rd_wdata=equation + (' + 1' if wrong else ''),
                   pc_rdata='32\'h80000000 + 4*order_counter',
                   pc_wdata='32\'h80000004 + 4*order_counter')
     rtl.write_text('module unit(input clock, reset,\n'+declarations+');\n'
@@ -110,7 +112,10 @@ def test_native_add_oracle(tmp_path, wrong):
     wrapper.write_text('module rvfi_wrapper(input clock, reset, `RVFI_OUTPUTS);\n'
                        'unit uut(.clock(clock), .reset(reset), @RVFI_CONNECTIONS@);\nendmodule\n')
     cfg=dict(root=root,wrapper=str(wrapper),verilog=[str(rtl)],isa='rv32i',nret=1,depth=6,
-             solver='bitwuzla',checks=['insn_add_ch0','cover'],ports={f:'io_'+f for f in FIELDS})
+             solver='bitwuzla',checks=[f'insn_{instruction}_ch0','cover'],ports={f:'io_'+f for f in FIELDS})
+    cfg['check_options']={f'insn_{instruction}_ch0':{'engine':engine}}
+    if os.environ.get('SAIL_MODELS'):
+        cfg['instruction_models']={instruction:str(Path(os.environ['SAIL_MODELS'])/f'insn_{instruction}.v')}
     verdict=run(cfg,tmp_path/'out',30,'add-fixture')
     assert verdict.tests == ('fail' if wrong else 'pass')
     assert verdict.verdict == ('reject' if wrong else 'inconclusive')
@@ -131,3 +136,73 @@ def test_project_paths_serialize(cfg,tmp_path,monkeypatch):
     def missing(*args,**kwargs): raise FileNotFoundError('missing tool')
     monkeypatch.setattr('rvw.formal.riscv.run_group',missing)
     assert run(cfg,tmp_path/'out',1,'fixture').verdict=='inconclusive'
+
+@pytest.mark.parametrize('name,cycles', [('insn_add_ch0',[9]), ('reg_ch0',[3,9]), ('pc_fwd_ch0',[3,9]), ('pc_bwd_ch0',[3,9]), ('causal_ch0',[3,9]), ('unique_ch0',[1,4,9]), ('liveness_ch0',[1,4,9])])
+def test_check_cycles(cfg,tmp_path,name,cycles):
+    cfg['checks']=[name,'cover']
+    cfg['check_options']={name:dict(cycles=cycles,engine='abc bmc3',defines=['`define FAIR'])}
+    core,_=prepare(cfg,tmp_path/'out')
+    text=(core/'checks.cfg').read_text()
+    assert name+' '+' '.join(map(str,cycles)) in text
+    assert cfg['check_options'][name]['defines']==['`define FAIR']
+
+@pytest.mark.parametrize('options', [
+    {'absent':{}}, {'cover':{'engine':'abc bmc3'}},
+    {'cover':{'cycles':[9]}}, {'cover':{'cycles':[9,1]}},
+    {'cover':{'cycles':[1,1]}}, {'cover':{'cycles':[True,9]}},
+    {'cover':{'engine':'shell bad'}}, {'cover':{'engine':[]}}, {'cover':{'defines':['a\nb']}},
+    {'cover':{'unknown':1}}, {'cover':{'cycles':[1,201]}}])
+def test_refuse_check_options(cfg,options):
+    cfg['check_options']=options
+    with pytest.raises(ValueError): validate(cfg)
+
+
+def test_abc_removes_unsupported_skip(cfg,tmp_path,monkeypatch):
+    cfg['check_options']={'insn_add_ch0':{'engine':'abc bmc3','cycles':[10],'defines':['`define FAIR']}}
+    def fake(argv,cwd,**kwargs):
+        if argv[0]=='sby':
+            name=Path(argv[-1]).stem
+            text=(Path(cwd)/argv[-1]).read_text()
+            if name.startswith('insn'):
+                assert '[engines]\nabc bmc3' in text
+                assert 'skip ' not in text
+                assert '[file defines.sv]\n`define FAIR' in text
+            else:
+                assert 'skip 20' in text
+            dest=Path(cwd)/name;dest.mkdir();(dest/'status').write_text('PASS')
+        else:
+            work=Path(cwd)/'checks';work.mkdir()
+            for name in cfg['checks']:
+                (work/f'{name}.sby').write_text('[options]\nskip 20\n[engines]\nsmtbmc bitwuzla\n[file defines.sv]\n')
+        return Result(0)
+    monkeypatch.setattr('rvw.formal.riscv.run_group',fake)
+    run(cfg,tmp_path/'out',1,'fixture')
+    entries=load_results(tmp_path/'out').tests
+    assert entries[0].extra['formal_settings']['cycles']==[10]
+    assert load_results(tmp_path/'out').extra['bounded_depth']==20
+
+
+def test_instruction_model_copy(cfg,tmp_path):
+    model=tmp_path/'model.v';model.write_text('module generated; endmodule')
+    (Path(cfg['root'])/'insns/insn_add.v').write_text('original')
+    cfg['instruction_models']={'add':str(model)}
+    core,identity=prepare(cfg,tmp_path/'out')
+    assert (core.parents[1]/'insns/insn_add.v').read_text()==model.read_text()
+    assert (Path(cfg['root'])/'insns/insn_add.v').read_text()=='original'
+    assert str(model) in identity
+
+@pytest.mark.parametrize('models', [{'../escape':'/tmp/x'}, {'add':'/does/not/exist'}, {'add':None}, []])
+def test_refuse_instruction_models(cfg,models):
+    cfg['instruction_models']=models
+    with pytest.raises(ValueError): validate(cfg)
+
+
+def test_retirement_depth_cannot_equal_start(cfg):
+    cfg['depth']=2
+    cfg['checks']=['unique_ch0','cover']
+    with pytest.raises(ValueError,match='cycles'): validate(cfg)
+
+
+def test_btor_setting(cfg,tmp_path):
+    cfg['check_options']={'insn_add_ch0':{'engine':'btor btormc'}}
+    validate(cfg)
