@@ -303,7 +303,7 @@ The low five bits of `fcsr` must equal `fflags`. `fcsr` includes `frm`.
 The checker compares these fields exactly. A backend without these observations
 must refuse version 2 comparison. Version 1 keeps its integer-only scope.
 Version 2 does not imply that a DUT adapter exports these fields.
-FLEN above 64 and vectors remain unsupported. Multi-hart reference comparison is unsupported.
+FLEN above 64 remains unsupported. Multi-hart reference comparison is unsupported.
 
 C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
 Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
@@ -2452,6 +2452,38 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 ### C1 native semantic requirements
+
+
+### C2/2 V and H observations
+
+An ISA declaring V requires a `vector: {"vlen": 128, "elen": 64}` header.
+An ISA declaring H requires a `hypervisor: true` header. V1 traces for these
+ISAs are refused. Each retirement carries the declared extension state.
+Vector state has XLEN hex `vstart`, `vl`, `vtype`, 3-bit hex `vcsr`, 2-bit hex
+`vs`, and `regs`: all 32 VLEN-bit hex register values after the step.
+The complete snapshot checks register writes and mask v0, including unchanged
+lanes. It does not identify writes that store an unchanged value. VLEN must
+be a power of two from 128 to 65536. ELEN must be a power of two from 8 to 64.
+The reference must have exactly the declared dimensions. No agnostic-bit
+relaxation is implied.
+
+Hypervisor state has boolean `virtual` (before), `virtual_after`, integer
+`mode_after` (0, 1 or 3), `csrs`, and `translations`. Together with `mode`,
+these distinguish M, HS, U, VS and VU entry and exit. `csrs` holds XLEN hex
+values for 0x100, 0x105, 0x141, 0x142, 0x143, 0x300, 0x302, 0x303,
+0x341, 0x342, 0x343, 0x600, 0x602, 0x603, 0x643, 0x64a, 0x680, 0x200, 0x205, 0x241,
+0x242, 0x243, 0x280, 0x34a and 0x34b after the step. Translation records
+have XLEN hex `va`, `gpa`, `pa` and `access` (fetch, load or store), in access
+order. Missing intermediate translations are unavailable evidence. A backend
+without translation observations must refuse nonempty records. An empty list
+checks no translation. State comparison alone does not prove page walks.
+
+The Spike walker checks successful RV64 guest fetch and scalar load mappings
+with Bare/Sv39/Sv39x4. It refuses stores, faults and unsupported PTEs. HS
+CSR addresses above always mean nonvirtual host state, including while in VS.
+
+`state_coverage.two_stage_translations` counts matched translation records.
+A zero count makes no translation comparison claim.
 
 A regression config can set `[core] backend = "riscvsim-verilator"`.
 Each suite can set `requires = ["two_state", "clock", "immediate_assertions"]`.

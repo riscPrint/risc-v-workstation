@@ -21,11 +21,28 @@ def generate(elf, out, platform, limit=1000000, *, shim, verify=lambda: None,
         with os.fdopen(fd, "w") as stream:
             def emit(obj):
                 stream.write(json.dumps(obj, separators=(",", ":")) + "\n")
-            emit({"schema": "rvw.rvfi/1", "xlen": platform.xlen, "isa": platform.isa,
-                  "core": platform.name, "config": "reference", "elf": elf_source or str(Path(elf).resolve())})
+            from .extensions import has_extension, serialize
+            extensions = has_extension(platform.isa, "v") or has_extension(platform.isa, "h")
+            header = {"schema": "rvw.rvfi/2" if extensions else "rvw.rvfi/1", "xlen": platform.xlen, "isa": platform.isa,
+                  "core": platform.name, "config": "reference", "elf": elf_source or str(Path(elf).resolve())}
             for i in range(limit):
                 e = model.step()
-                emit(record(e, i, intr=after_trap, xlen=platform.xlen))
+                if i == 0:
+                    if "vector" in e:
+                        header["vector"] = model.vector_config
+                    if "hypervisor" in e:
+                        header["hypervisor"] = True
+                    emit(header)
+                row = record(e, i, intr=after_trap, xlen=platform.xlen)
+                if extensions:
+                    row.update(fd_valid=bool(e["fd_valid"]), fd=e["fd"], fd_wdata=hex(e["fd_wdata"]),
+                               fflags=hex(e["fflags"]), fcsr=hex(e["fcsr"]))
+                    for name in ("vector", "hypervisor"):
+                        if name in e:
+                            row[name] = serialize(e[name])
+                    if "hypervisor" in row:
+                        row["hypervisor"]["mode_after"] = e["hypervisor"]["mode_after"]
+                emit(row)
                 after_trap = bool(e["trap"])
                 count += 1
                 if e["trap"]:

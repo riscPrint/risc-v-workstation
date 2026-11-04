@@ -733,7 +733,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,mmu,run,compare,gate,known,history,list}
+    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,mmu,vector,run,compare,gate,known,history,list}
     ...
 ```
 
@@ -833,6 +833,13 @@ usage: rvw regress mmu check [-h] --results RESULTS --platform PLATFORM
 ```text
 usage: rvw regress mmu report [-h] --results RESULTS [--checked CHECKED]
     [--json] [--project PROJECT] directory
+```
+
+### `rvw regress vector`
+
+```text
+usage: rvw regress vector [-h] --elf-dir ELF_DIR --results RESULTS [--platform
+    PLATFORM] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress run`

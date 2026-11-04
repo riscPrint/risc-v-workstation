@@ -175,6 +175,10 @@ def load_shim(shim):
 
 class Spike:
     def __init__(self, platform, elf, *, shim):
+        from .extensions import has_extension
+        for letter in ("v", "h"):
+            if has_extension(platform.reference_isa or platform.isa, letter) != has_extension(platform.isa, letter):
+                raise ValueError("reference ISA must preserve V/H state requirements")
         self.platform = platform
         self.regs = [0] * 32
         self.elf = Elf(elf)
@@ -194,8 +198,13 @@ class Spike:
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_set_mscratch.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
+        lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
+        lib.rvw_vector.argtypes = [C.c_void_p, C.POINTER(C.c_uint64), C.POINTER(C.c_uint8), C.c_size_t]
+        lib.rvw_virtual.argtypes = [C.c_void_p, C.c_int]
+        lib.rvw_virtual.restype = C.c_uint
+        lib.rvw_read_physical.argtypes = [C.c_void_p, C.c_uint64, C.POINTER(C.c_uint64)]
         self.lib = lib = _Serialized(lib)
         def array(rs):
             return (C.c_uint64 * (len(rs)*2))(*(v for r in rs for v in r))
@@ -235,6 +244,10 @@ class Spike:
         return self._step_raw(interrupt, mmio)
 
     def _step_raw(self, interrupt=0, mmio=None):
+        from .extensions import has_extension
+        if has_extension(self.platform.isa, "h"):
+            roots = self.csr_snapshot(["0x280", "0x680"])
+            self.translation_context = (bool(self.lib.rvw_virtual(self.handle, 0)), roots["0x280"], roots["0x680"])
         e = Effect()
         if self.lib.rvw_step(self.handle, C.byref(e), interrupt, *(mmio or (0, 0)), int(mmio is not None)):
             raise ValueError(self.error())
@@ -248,8 +261,32 @@ class Spike:
             if result["tval"] != wanted:
                 self.set_trap_tval(wanted)
                 result["tval"] = wanted
+        from .extensions import has_extension, H_CSRS
+        if has_extension(self.platform.isa, "v"):
+            meta = (C.c_uint64 * 7)()
+            data = (C.c_uint8 * (32*65536//8))()
+            if self.lib.rvw_vector(self.handle, meta, data, len(data)):
+                raise ValueError(self.error())
+            self.vector_config = dict(vlen=int(meta[0]), elen=int(meta[1]))
+            width = int(meta[0])//8
+            result["vector"] = dict(zip(("vstart", "vl", "vtype", "vcsr", "vs"), map(int, meta[2:])))
+            result["vector"]["regs"] = [int.from_bytes(bytes(data[r*width:(r+1)*width]), "little") for r in range(32)]
+        if has_extension(self.platform.isa, "h"):
+            result["hypervisor"] = dict(virtual=bool(self.lib.rvw_virtual(self.handle, 1)),
+                virtual_after=bool(self.lib.rvw_virtual(self.handle, 0)), mode_after=self.mode(),
+                csrs=self.csr_snapshot([hex(a) for a in H_CSRS], host=True), translations=[])
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
+
+    def translations(self, effect):
+        from .translation import observations
+        return observations(effect, self.translation_context, self.read_physical)
+
+    def read_physical(self, address):
+        value = C.c_uint64()
+        if self.lib.rvw_read_physical(self.handle, address, C.byref(value)):
+            raise ValueError(self.error())
+        return value.value
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
@@ -257,11 +294,12 @@ class Spike:
     def set_mscratch(self, value):
         self.lib.rvw_set_mscratch(self.handle, value)
 
-    def csr_snapshot(self, addresses):
+    def csr_snapshot(self, addresses, *, host=False):
         values = {}
         for address in addresses:
             value = C.c_uint64()
-            if self.lib.rvw_read_csr(self.handle, int(address, 16), C.byref(value)):
+            read = self.lib.rvw_read_host_csr if host else self.lib.rvw_read_csr
+            if read(self.handle, int(address, 16), C.byref(value)):
                 raise ValueError(self.error())
             values[address] = value.value
         return values

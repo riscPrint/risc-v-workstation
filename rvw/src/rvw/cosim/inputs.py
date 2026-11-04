@@ -80,7 +80,7 @@ class Inputs:
                 header = json.loads(first)
             except ValueError:
                 header = None
-            if not isinstance(header, dict) or header.get("schema") != "rvw.rvfi/1":
+            if not isinstance(header, dict) or header.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2"):
                 raise ValueError(f"refusing to overwrite {args.out}: it exists and is not a C2 trace")
             if header.get("config") != "reference":
                 raise ValueError(f"refusing to overwrite {args.out}: it is a recorded core trace "
