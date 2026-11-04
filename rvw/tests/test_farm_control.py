@@ -1,0 +1,102 @@
+"""Native protocol fixtures. These tests do not claim RTL verification."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import threading
+import time
+
+import pytest
+
+from rvw.farm.executor import cancel, execute
+from rvw.farm.resources import reserve
+from test_native_farm import IDENTITY, adapter
+
+
+def test_reservations_limits_locks_and_release(tmp_path, monkeypatch):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    config = tmp_path / '.config/rvw'
+    config.mkdir(parents=True)
+    (config / 'farm-capacity.json').write_text(json.dumps({'cpu': 2, 'memory_bytes': 100}))
+    root = tmp_path / 'reservations'
+    with reserve({'cpu': 1, 'memory_bytes': 70, 'locks': ['native-build']}, .2, root) as report:
+        assert report['memory_bytes'] == 70
+        for resources in ({'cpu': 2}, {'memory_bytes': 40}, {'locks': ['native-build']}):
+            with pytest.raises(ValueError, match='wait timeout'):
+                with reserve(resources, .1, root):
+                    pytest.fail('reservation conflict was admitted')
+    assert json.loads((root / 'reservations.json').read_text()) == []
+    with pytest.raises(ValueError, match='exceeds'):
+        with reserve({'cpu': 3}, .1, root):
+            pass
+    with pytest.raises(RuntimeError):
+        with reserve({'cpu': 2, 'memory_bytes': 100}, .1, root):
+            raise RuntimeError('cancel fixture')
+    assert json.loads((root / 'reservations.json').read_text()) == []
+
+
+def test_two_hosts_cancel_acknowledges_child_kill(tmp_path, adapter):
+    options = os.environ.get('RVW_TEST_SSH_OPTIONS')
+    if not options:
+        pytest.skip('native localhost SSH required')
+    script = Path(adapter[1])
+    text = script.read_text().replace('    manifest = pathlib.Path', '''    import subprocess, time, signal
+    child = subprocess.Popen([sys.executable, '-c', 'import signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(120)'])
+    pathlib.Path(__file__ + '.started-' + str(__import__('os').getpid())).write_text(str(child.pid))
+    time.sleep(120)
+    manifest = pathlib.Path''')
+    script.write_text(text)
+    hosts = [{'name': name, 'address': 'localhost', 'python': sys.executable,
+              'ssh_options': json.loads(options), 'resources': {'cpu': 1, 'memory_bytes': 1024, 'locks': [name]}}
+             for name in ('host-a', 'host-b')]
+    elf = tmp_path / 'test.elf'; elf.write_bytes(b'pass')
+    manifest = tmp_path / 'manifest.jsonl'
+    manifest.write_text(''.join(json.dumps({'elf': str(elf), 'config': 'test', 'seed': i}) + '\n' for i in range(2)))
+    output = tmp_path / 'out'
+    result = []
+    thread = threading.Thread(target=lambda: result.append(execute(hosts, manifest, adapter, [*adapter, 'identity'], IDENTITY, output, timeout=30)))
+    thread.start()
+    try:
+        deadline = time.monotonic() + 15
+        while len(list(tmp_path.glob('adapter.py.started-*'))) < 2 and time.monotonic() < deadline:
+            time.sleep(.1)
+        assert len(list(tmp_path.glob('adapter.py.started-*'))) == 2
+        report = cancel(output)
+        assert report['status'] == 'cancelled', report
+        assert all(r['process_groups_gone'] and r['groups'] for r in report['shards'])
+        from rvw.farm.worker import groups_gone
+        assert all(groups_gone(r['groups']) for r in report['shards'])
+        root = Path.home() / '.cache/rvw/farm'
+        workers = [json.loads((root / 'shards' / r['token'] / 'state.json').read_text())['pid'] for r in report['shards']]
+        assert not any(r['pid'] in workers for r in json.loads((root / 'reservations.json').read_text()))
+    finally:
+        if thread.is_alive():
+            cancel(output)
+        thread.join(40)
+    assert not thread.is_alive()
+    assert result[0]['status'] == 'inconclusive'
+    assert all(s['cancellation']['acknowledged'] for s in result[0]['shards'])
+
+
+def test_separate_process_waits_for_host_capacity(tmp_path, monkeypatch):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    config = tmp_path / '.config/rvw'; config.mkdir(parents=True)
+    (config / 'farm-capacity.json').write_text(json.dumps({'cpu': 1, 'memory_bytes': 100}))
+    code = '''from rvw.farm.resources import reserve
+import pathlib,sys,json
+pathlib.Path(sys.argv[1]).write_text('waiting')
+with reserve({'cpu':1,'memory_bytes':80,'locks':['build']}, 5) as report:
+    pathlib.Path(sys.argv[2]).write_text(json.dumps(report))
+'''
+    waiting, acquired = tmp_path / 'waiting', tmp_path / 'acquired'
+    with reserve({'cpu': 1, 'memory_bytes': 80, 'locks': ['build']}, 1):
+        process = subprocess.Popen([sys.executable, '-c', code, str(waiting), str(acquired)])
+        deadline = time.monotonic() + 3
+        while not waiting.exists() and time.monotonic() < deadline:
+            time.sleep(.05)
+        assert waiting.exists()
+        time.sleep(.2)
+        assert not acquired.exists()
+    assert process.wait(timeout=6) == 0
+    assert json.loads(acquired.read_text())['queued_s'] >= .1

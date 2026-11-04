@@ -1260,9 +1260,14 @@ cache generation contains `.rvw-cache-key` with that exact key. A fetched entry
 must have a valid generation inventory, all artifact hashes and an equal stored
 key. A missing or partial object is a miss. The existing runner still checks job
 parameters and C1 provenance before reuse. Transfer adds no new admission rule.
-Uploads send generations before `current`. Downloads use a private directory
-and publish a new local generation only after verification. The cache owner
-controls retention. Cross-command download resume is not implemented.
+Uploads send generations before `current`. Downloads use persistent private,
+locked staging keyed by remote location and full C8 key. rsync checks checksums
+on resume. Only fully verified generations can be published locally. Upload
+ownership metadata (`rvw.cache-owner/1`) in `owners/<generation-id>.json` records host, user, key, generation and
+upload time. It is not evidence. Explicit native maintenance verifies managed
+entries and removes invalid entries, expired entries, then oldest publications
+to meet an owner-supplied byte limit. Transfers must be idle during maintenance.
+Unmarked directories are not deleted. Evicted or partial entries are misses.
 
 ### Native farm collection (first increment, #25)
 
@@ -1275,9 +1280,17 @@ ELF hash and every declared identity claim must match. Worker identity documents
 must equal the supplied complete `/2` document. SHA-256 binds transferred files.
 
 The first native SSH endpoint buffers transfers and uses a bounded run-many
-process group. Remote cancel acknowledgement, scalable streaming and C3 gate
-import remain open. The static dashboard reads existing C3/C4/history. Recorded
+process group. Separate SSH cancellation uses campaign control tokens. A host
+acknowledges only after group cleanup and a host process-table check. Missing
+acknowledgement is inconclusive. Host reservations share CPU slots, declared
+memory bytes and named locks across workers. They report queue time and release
+on handled exit. They are cooperative, not OS CPU/RSS limits. SIGKILL can leave
+stale reservations; owner cleanup is required. Scalable streaming, crash recovery
+and C3 gate import remain open. The static dashboard reads existing C3/C4/history. Recorded
 C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.
+Pass rate divides conclusive passes by all recorded C3 tests. Run time sums all
+recorded test `wall_s` values only when every value is present and valid. History
+charts retain missing runs as gaps. These metrics do not prove plan completeness.
 It does not establish bin compatibility or verification closure.
 
 ## Lint and crossing inventory extension
@@ -1690,3 +1703,6 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+Native farm collection also checks explicitly requested `max_cycles` and `mem_latency`
+against C1 results. Missing or different values make collection inconclusive.
