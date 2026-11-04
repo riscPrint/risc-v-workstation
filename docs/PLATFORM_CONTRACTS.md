@@ -2213,17 +2213,25 @@ register intent. It does not provide independent bus observations or a verdict.
 
 ### Architecture Pareto intervals
 
-`rvw.arch-pareto-plan/1` has `points` with unique `id`, `report` and `costs`
-paths, relative to the plan. Reports are checked `rvw.arch-run/1` gem5 runs
-with identical ELF hashes and ROI instruction counts. `rvw.arch-costs/1`
-has `report_sha256`, nonempty `method`, and `cycles`, `area_mm2`, `power_w`.
-Objectives are null or positive ordered `[lower, nominal, upper]` values.
-Nominal cycles equal summed ROI cycles. Bounds are producer declarations.
-`rvw.arch-pareto/1` records plan/report/cost hashes, objective intervals,
-`eligible`, `evidence_class: model-only`, `nominal_frontier` and
-`conservative_frontier`. Conservative dominance requires all upper bounds
-no greater than the other point's lower bounds and at least one strict gain.
-Null objectives exclude a point and make status inconclusive (CLI exit 3).
+`rvw.arch-pareto-plan/1` has `points` with unique `id` and `report` paths.
+Optional `objectives` defaults to `["cycles"]`. Optional point `costs` paths
+select user input files. Paths are relative to the plan. Reports are checked
+`rvw.arch-run/1` gem5 runs with identical ELF hashes and ROI instruction counts.
+Without costs, cycles use summed ROI cycles for all three interval bounds.
+`rvw.arch-costs/1` has `report_sha256`, nonempty source/method text in `method`,
+and `cycles`. Optional `area_mm2` and `power_w` are user-supplied inputs only.
+The workstation does not estimate or validate area or power. PPA estimation
+and hardware gain claims are out of scope.
+
+Intervals are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are user declarations.
+`rvw.arch-pareto/1` records selected `objectives`, plan/report/cost hashes,
+`cost_origin` (`user-supplied` or `absent`), intervals, `eligible`,
+`evidence_class: model-only`, `nominal_frontier` and `conservative_frontier`.
+Conservative dominance compares only selected objectives. It requires all
+upper bounds no greater than the other point's lower bounds and one strict gain.
+Missing selected objectives exclude a point and make status inconclusive
+(CLI exit 3). Unselected missing inputs do not affect eligibility.
 No point is RTL-confirmed by this command.
 
 ### Architecture topology channels and agents

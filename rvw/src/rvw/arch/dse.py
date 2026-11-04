@@ -134,14 +134,20 @@ def pareto(plan, project=None):
     path = Path(plan).resolve()
     raw = path.read_bytes()
     data = core.read_json(raw)
-    if set(data) != {'schema', 'points'} or data['schema'] != 'rvw.arch-pareto-plan/1':
+    if (not {'schema', 'points'} <= set(data) or set(data) - {'schema', 'points', 'objectives'}
+            or data['schema'] != 'rvw.arch-pareto-plan/1'):
         raise core.ArchError('expected rvw.arch-pareto-plan/1')
     if not isinstance(data['points'], list) or not data['points']:
         raise core.ArchError('points must be nonempty')
+    selected = data.get('objectives', ['cycles'])
+    if (not isinstance(selected, list) or not selected or len(set(selected)) != len(selected)
+            or any(k not in ('cycles', 'area_mm2', 'power_w') for k in selected)):
+        raise core.ArchError('objectives must select cycles, area_mm2 or power_w')
     rows, seen, workload = [], set(), None
     for item in data['points']:
-        if not isinstance(item, dict) or set(item) != {'id', 'report', 'costs'}:
-            raise core.ArchError('each point needs id, report and costs')
+        if (not isinstance(item, dict) or not {'id', 'report'} <= set(item)
+                or set(item) - {'id', 'report', 'costs'}):
+            raise core.ArchError('each point needs id and report; costs are optional user inputs')
         identity = item['id']
         if not isinstance(identity, str) or not identity.strip() or identity in seen:
             raise core.ArchError('point IDs must be nonempty and unique')
@@ -154,16 +160,22 @@ def pareto(plan, project=None):
         if workload is not None and current != workload:
             raise core.ArchError('Pareto points need identical ELFs and ROI instruction counts')
         workload = current
-        costs_raw = (path.parent / item['costs']).read_bytes()
-        costs = core.read_json(costs_raw)
-        if (set(costs) != {'schema', 'report_sha256', 'method', 'cycles', 'area_mm2', 'power_w'}
-                or costs['schema'] != 'rvw.arch-costs/1' or costs['report_sha256'] != report_hash):
-            raise core.ArchError('costs must bind the exact model report')
-        if not isinstance(costs['method'], str) or not costs['method'].strip():
-            raise core.ArchError('costs need a measurement or estimation method')
+        cycles = sum(row['cycles'] for row in benchmarks.values())
+        costs_raw = None
+        costs = dict(cycles=[cycles, cycles, cycles], area_mm2=None, power_w=None,
+                     method='model ROI cycles; no user cost inputs')
+        if 'costs' in item:
+            costs_raw = (path.parent / item['costs']).read_bytes()
+            costs = core.read_json(costs_raw)
+            if (not {'schema', 'report_sha256', 'method', 'cycles'} <= set(costs)
+                    or set(costs) - {'schema', 'report_sha256', 'method', 'cycles', 'area_mm2', 'power_w'}
+                    or costs['schema'] != 'rvw.arch-costs/1' or costs['report_sha256'] != report_hash):
+                raise core.ArchError('costs must bind the exact model report')
+            if not isinstance(costs['method'], str) or not costs['method'].strip():
+                raise core.ArchError('user costs need a source and method')
         objectives = {}
         for key in ('cycles', 'area_mm2', 'power_w'):
-            interval = costs[key]
+            interval = costs.get(key)
             if interval is None:
                 objectives[key] = None
                 continue
@@ -176,19 +188,21 @@ def pareto(plan, project=None):
         if objectives['cycles'] is not None and objectives['cycles'][1] != cycles:
             raise core.ArchError('nominal cycles differ from model report')
         rows.append(dict(id=identity, report_sha256=report_hash,
-                         costs_sha256=core.digest(costs_raw), method=costs['method'],
+                         costs_sha256=core.digest(costs_raw) if costs_raw is not None else None, method=costs['method'],
+                         cost_origin='user-supplied' if costs_raw is not None else 'absent',
                          objectives=objectives, evidence_class='model-only',
-                         eligible=all(v is not None for v in objectives.values())))
+                         eligible=all(objectives[k] is not None for k in selected)))
     valid = [r for r in rows if r['eligible']]
 
     def dominates(a, b, conservative):
         pairs = [(a['objectives'][k][2 if conservative else 1],
-                  b['objectives'][k][0 if conservative else 1]) for k in a['objectives']]
+                  b['objectives'][k][0 if conservative else 1]) for k in selected]
         return all(x <= y for x, y in pairs) and any(x < y for x, y in pairs)
 
     return dict(schema='rvw.arch-pareto/1', plan_sha256=core.digest(raw),
-                status='reported' if len(valid) == len(rows) else 'inconclusive', points=rows,
+                status='reported' if len(valid) == len(rows) else 'inconclusive', objectives=selected, points=rows,
                 nominal_frontier=[r['id'] for r in valid if not any(dominates(a, r, False) for a in valid)],
                 conservative_frontier=[r['id'] for r in valid if not any(dominates(a, r, True) for a in valid)],
-                limits='Minimize summed ROI cycles, area_mm2 and power_w. Bounds are producer declarations, '
-                       'not inferred confidence intervals. All points remain model-only. No RTL confirmation.')
+                limits='Compare selected objectives only. Area and power are optional user-supplied inputs. '
+                       'The tool does not estimate or validate area or power. Bounds are user declarations, '
+                       'not inferred confidence intervals. Model performance needs RTL confirmation.')

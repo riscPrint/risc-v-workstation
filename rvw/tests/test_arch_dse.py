@@ -71,7 +71,8 @@ def pareto_fixture(native_fixture, tmp_path):
             area_mm2=[area * .9, area, area * 1.1], power_w=[power * .9, power, power * 1.1])))
         rows.append(dict(id=str(i), report=str(report), costs=str(costs)))
     plan = tmp_path / 'pareto.json'
-    plan.write_text(json.dumps(dict(schema='rvw.arch-pareto-plan/1', points=rows)))
+    plan.write_text(json.dumps(dict(schema='rvw.arch-pareto-plan/1', points=rows,
+                                     objectives=['cycles', 'area_mm2', 'power_w'])))
     return plan, costs
 
 
@@ -103,3 +104,28 @@ def test_pareto_invalid_costs(native_fixture, tmp_path, field, value):
     costs.write_text(json.dumps(data))
     with pytest.raises(ValueError):
         dse.pareto(plan)
+
+
+def test_pareto_defaults_to_cycles_without_cost_inputs(native_fixture, tmp_path):
+    plan, _ = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(plan.read_text())
+    del data['objectives']
+    for point in data['points']:
+        del point['costs']
+    plan.write_text(json.dumps(data))
+    result = dse.pareto(plan)
+    assert result['status'] == 'reported'
+    assert result['objectives'] == ['cycles']
+    assert all(p['objectives']['area_mm2'] is None and p['objectives']['power_w'] is None
+               for p in result['points'])
+    assert result['nominal_frontier'] == ['0', '1', '2']
+
+
+def test_pareto_unselected_costs_can_be_missing(native_fixture, tmp_path):
+    plan, costs = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(plan.read_text()); data['objectives'] = ['cycles']
+    plan.write_text(json.dumps(data))
+    inputs = json.loads(costs.read_text())
+    del inputs['area_mm2']; del inputs['power_w']
+    costs.write_text(json.dumps(inputs))
+    assert dse.pareto(plan)['status'] == 'reported'

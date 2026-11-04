@@ -29,7 +29,7 @@ def mcp_tools():
         ToolSpec('arch_memory_extract', 'Extract exact project counter mappings from native gem5 ROI stats.',
                  schema({'mapping': {'type': 'string'}, 'project': {'type': 'string'}}, ['mapping']),
                  handler('rvw.arch.cli', 'memory-extract'), long=True),
-        ToolSpec('arch_pareto', 'Compare model-only speed, area and power intervals from saved evidence.',
+        ToolSpec('arch_pareto', 'Compare model cycles with optional user-supplied area and power inputs.',
                  schema({'plan': {'type': 'string'}, 'project': {'type': 'string'}}, ['plan']),
                  handler('rvw.arch.cli', 'pareto'), long=True),
         ToolSpec('arch_inspect', 'Check ELF layout and report CPU/ISA compatibility. Static only; unsupported combinations stay blocked.',

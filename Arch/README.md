@@ -367,9 +367,9 @@ run. Failed points retain their error and cannot enter the frontier. `dse.json`
 contains all point records and a Pareto list for the single objective: minimize
 the sum of selected ROI cycles. Each workload has equal weight. Ties remain.
 This is a speed-only frontier. Area, power and uncertainty are unknown. All
-points are model-only and need RTL confirmation. Multi-objective area/power
-trade-offs and declared uncertainty intervals use `arch pareto` below. RTL
-confirmation remains open work.
+points are model-only and need RTL confirmation. Use `arch pareto` below for optional user-supplied cost comparisons.
+The workstation does not estimate area or power. RTL performance confirmation
+remains open work.
 A partial sweep reports inconclusive and exits 3. Input errors exit 2.
 
 ## Linux reference flow
@@ -540,24 +540,30 @@ fidelity. No BOOM fitted parameters belong in this repository.
 
 `rvw arch pareto plan.json --json` (MCP `arch_pareto`) compares saved model
 reports. The plan has schema `rvw.arch-pareto-plan/1` and a `points` array.
-Each point has a unique `id`, a `report` path and a `costs` path. Paths are
-relative to the plan. All reports must use the same ELFs and ROI instruction
-counts. Raw model evidence and ELF hashes are checked again.
+Each point has a unique `id` and a `report` path. Paths are relative to the
+plan. All reports must use the same ELFs and ROI instruction counts. Raw model
+evidence and ELF hashes are checked again.
 
-Each costs file has schema `rvw.arch-costs/1`, `report_sha256`, a nonempty
-`method`, and `cycles`, `area_mm2`, `power_w`. Each objective is either null
-or `[lower, nominal, upper]`, with positive ordered values. Nominal cycles
-must equal summed model ROI cycles. State the source and method for each
-cost estimate. These bounds are declarations, not inferred confidence levels.
-Missing objectives exclude a point and make the result inconclusive.
+The optional plan `objectives` list defaults to `["cycles"]`. Model cycles
+supply exact bounds when no `costs` file is given. Area and power are optional
+user-supplied inputs. To compare them, explicitly select `area_mm2` or `power_w`
+and supply a `costs` path for each point. The tool does not estimate or validate
+area or power. PPA estimation and hardware gain claims are out of scope.
 
-All three objectives are minimized. The nominal frontier uses central values.
+Each optional costs file has schema `rvw.arch-costs/1`, `report_sha256`, a
+nonempty `method` that states the source and method, and `cycles`. `area_mm2` and `power_w`
+can be absent. Each interval is null or positive ordered `[lower, nominal, upper]`.
+Nominal cycles must equal summed model ROI cycles. Bounds are user declarations,
+not inferred confidence levels. A missing selected objective excludes that
+point and makes the result inconclusive. Unselected missing costs do not block
+the default performance comparison.
+
+Selected objectives are minimized. The nominal frontier uses central values.
 The conservative frontier removes a point only when another point's upper
 bounds are no greater than its lower bounds, with at least one strict gain.
-Overlapping bounds can therefore retain a nominally dominated point. Costs
-files and reports are hash-bound in the output. All points remain model-only.
-Matching RTL performance and physical area/power evidence remain required
-before claims about hardware gains.
+Reports and supplied costs are hash-bound. Output labels supplied costs as
+`user-supplied`. These labels and bounds do not establish physical measurements.
+Model performance still needs RTL confirmation.
 
 ### Traffic agents and memory channels
 
