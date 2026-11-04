@@ -39,6 +39,7 @@ Select native tools with these flags:
 | `--with-cosim` | Spike with headers and libraries, then the Cosim shim |
 | `--with-formal` | Yosys, SymbiYosys and Yices from OSS CAD Suite |
 | `--with-gem5` | Native RISC-V gem5 v25.1.0.1. Reuse a build with `RVW_GEM5`. |
+| `--with-typed-waves` | Pinned SpinalWaves checker and Surfer fork; requires Rust/Cargo |
 | `--all` | All optional tools |
 
 For private native workflow artifacts, use `--from-bundle --bundle-run RUN_ID`

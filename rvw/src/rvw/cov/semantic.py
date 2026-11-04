@@ -18,7 +18,7 @@ def groups(manifest, instructions):
     settings = manifest.get('semantics')
     if settings is None:
         return []
-    if settings.get('version') != 1 or set(settings) - {'version', 'exceptions', 'privilege_modes'}:
+    if settings.get('version') != 1 or set(settings) - {'version', 'exceptions', 'privilege_modes', 'forms', 'crosses'}:
         raise ValueError('unsupported semantic plan')
     modes = settings.get('privilege_modes', MODES)
     if not modes or len(set(modes)) != len(modes) or set(modes) - set(MODES):
@@ -27,14 +27,17 @@ def groups(manifest, instructions):
     exceptions = settings.get('exceptions', {})
     if set(exceptions) - names:
         raise ValueError('exception instruction not in pinned opcode plan')
-    result = []
+    from .semantic_forms import groups as form_groups
+    result = form_groups(settings, instructions)
     for item in instructions:
         name = item['name']
         for arg in ('rs1', 'rs2'):
             # FP fields cannot use integer RVFI data. The opcode table alone does
             # not identify register banks. Only explicitly integer source files.
-            if arg in item['args'] and item['source'].split('/')[-1] in (
-                    'rv_i', 'rv32_i', 'rv64_i', 'rv_m', 'rv32_m', 'rv64_m', 'rv_zicsr'):
+            form = settings.get('forms', {}).get(name, {}).get(arg, {})
+            integer_form = form.get('bank') == 'integer'
+            if integer_form or (arg in item['args'] and item['source'].split('/')[-1] in (
+                    'rv_i', 'rv32_i', 'rv64_i', 'rv_m', 'rv32_m', 'rv64_m', 'rv_zicsr')):
                 result.append({'name': f'sem_{name}_{arg}', 'fields': [f'{arg}_class'],
                                'when': {'isa_instruction': name}, 'bins': [[v] for v in VALUE_CLASSES]})
         if 'imm12' in item['args']:
@@ -98,7 +101,7 @@ class Observer:
         if obs.get('trap'):
             return extra
         for arg in ('rs1', 'rs2'):
-            if f'isa_{arg}' in obs and f'{arg}_rdata' in row:
+            if (f'isa_{arg}' in obs or f'form_{arg}' in obs) and f'{arg}_rdata' in row:
                 obs[f'{arg}_class'] = value_class(row[f'{arg}_rdata'], xlen)
         if 'isa_imm12' in obs:
             v = obs['isa_imm12']
