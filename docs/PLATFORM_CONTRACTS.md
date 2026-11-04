@@ -2110,3 +2110,19 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+## Native branch component reports
+
+`ComponentSims/` defines `rvw.branch-trace/1`. The first line is schema plus
+positive total instruction count. Each following `B ORDINAL PC TAKEN` row gives
+a conditional branch, its one-based all-instruction ordinal, hexadecimal PC and
+0/1 outcome. Ordinals strictly increase and cannot exceed the total. A final
+`END` line is mandatory. No lines follow it. Nonbranches are represented by gaps.
+
+The native engine emits `rvw.branch-sim/1` with `status=reported`, `model`,
+`entries`, `history_bits`, `pc_shift`, `warmup_instructions`, `instructions`,
+`branches`, `direction_misses`, `mpki`, `oracle_mpki=0`,
+`training=sequential-actual-path`, and `rtl_comparison=inconclusive`.
+`instructions` excludes warmup. `mpki` is 1000 times measured direction misses
+divided by measured instructions. No C1 pass or C4 verdict is issued. Exit 0
+means report completion; exit 2 means error without a stdout report.
