@@ -83,3 +83,56 @@ Include pass and skip counts, failures and checks not run.
 Use `Closes #N` only when all acceptance items are complete.
 Otherwise use `Refs #N` and list what remains. Keep task status in GitHub issues.
 Report security problems through [SECURITY.md](SECURITY.md).
+
+## Local CI
+
+This private repository uses one repo-level macOS ARM64 runner. GitHub-hosted
+Actions need paid minutes. The runner has labels `self-hosted`, `macOS`, `ARM64`
+and `rvw-local`. It accepts one job at a time. CI and Conventional Commits run
+on pushes and pull requests. Nightly runs at 03:23 UTC (03:23 GMT or 04:23 BST).
+Schedules use the default branch, so workflow changes must reach that branch
+before the new schedule takes effect. Keep Nightly disabled until then.
+
+The runner is installed in `~/opt/actions-runner`. It runs as a per-user
+launchd agent. It starts when the user logs in after a restart. It does not
+run before login. Use these commands as the runner's user:
+
+```sh
+cd ~/opt/actions-runner
+./svc.sh status
+./svc.sh stop
+./svc.sh start
+```
+
+Use `./svc.sh uninstall` to remove the launchd agent. Do not register a second
+runner on this Mac. Do not save registration tokens in files or shell history.
+The runner stores its own service credentials; these are not registration tokens.
+
+Run the same fast checks without Actions from the repository root:
+
+```sh
+scripts/ci-local.sh
+```
+
+The command needs `python3.11`, Git, Node 22, npm, Rust/Cargo, JDK 21 and sbt.
+Use `CI_PYTHON` to select another Python 3.11+ executable.
+It copies tracked files, including local edits, into a temporary work directory.
+It creates a new Python venv and removes the work directory on exit. Add new
+files to Git before you run it. It does not use another checkout or its venv.
+It uses the machine-wide `suite` and `sbt` locks and `nice -n 10`. It keeps
+normal package download caches. The fast set runs Python `-m fast`, extension
+checks, Rust fixture tests and the SpinalWaves naming and emitter tests.
+Failures stop the command. Counts and timings appear in the job log.
+The Actions timeout allows 90 minutes, including waits for shared locks.
+
+Nightly uses `scripts/ci-local.sh nightly-python` and
+`scripts/ci-local.sh nightly-scala`. Optional native tools must already be on
+the runner's PATH. Missing optional tools can cause skips. Nightly does not
+install system packages or use a BOOM checkout.
+
+Native installer and Native Linux reference boot are manual-only and remain
+disabled. They target `[self-hosted, Linux, X64, rvw-linux]`. They need a
+separate Linux self-hosted runner. To use paid GitHub-hosted minutes instead,
+change their runner labels to Ubuntu and get owner approval before enabling
+them. Native tool bundles also remains disabled. Its host matrix still needs
+separate runner and cost decisions. Do not enable a hosted workflow on this Mac.

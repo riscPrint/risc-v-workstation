@@ -1,12 +1,8 @@
 name: Native Linux reference boot
+# Keep disabled until a Linux self-hosted runner is available.
+# GitHub-hosted Ubuntu requires paid minutes for this private repository.
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/linux-boot.yml'
-      - 'Arch/linux/**'
-      - 'examples/qemu-linux/**'
-      - 'rvw/src/rvw/arch/linux.py'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
@@ -15,7 +11,7 @@ permissions:
   contents: read
 jobs:
   linux-reference:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, Linux, X64, rvw-linux]
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
