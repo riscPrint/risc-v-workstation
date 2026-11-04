@@ -218,7 +218,7 @@ static thread_local std::string error;
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
 // 3: explicit privilege, misaligned and absent-PMP platform arguments.
-unsigned rvw_shim_version() { return 4; }
+unsigned rvw_shim_version() { return 5; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
@@ -254,6 +254,9 @@ void rvw_sync_instret(void* m,uint64_t actual,uint64_t expected) {
 void rvw_set_trap_tval(void* m,uint64_t value) {
   auto* s=static_cast<Machine*>(m)->cpu->get_state();
   if(s->prv==PRV_M) s->mtval->write(value); else s->stval->write(value);
+}
+void rvw_set_mscratch(void* m,uint64_t value) {
+  static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
 }
 int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
   try { *value=static_cast<Machine*>(m)->cpu->get_csr(address); return 0; }
