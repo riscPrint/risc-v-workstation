@@ -1677,3 +1677,15 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+The optional lint settings `intent` object contains `protocols` and `reset_order`.
+The lint guide defines their exact fields. Structural `depth` records matched or
+invalid protocol declarations, direct two-stage structures and declared reset
+ordering. Protocol declarations and reset-order pairs are assumptions. They do
+not earn protocol or release proof. New rule IDs are `cdc.handshake_candidate`,
+`cdc.handshake_invalid`, `cdc.async_fifo_candidate`, `cdc.async_fifo_invalid`,
+`cdc.reconvergence`, `rdc.reconvergence` and `rdc.release_order_unproved`.
+Functional reconvergence and async FIFO rules retain `not_run` status as
+`cdc.reconvergence_protocol`, `rdc.reconvergence_protocol` and
+`cdc.async_fifo_protocol`. Structural findings retain the domain-bound waiver
+identity. Protocol findings also bind their exact declaration in the message.

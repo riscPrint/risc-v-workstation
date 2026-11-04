@@ -9,8 +9,8 @@ from rvw.lint.structural import analyze
 @pytest.mark.parametrize('name,expected', [
     ('single', set()), ('unsafe', {'cdc.unsynchronized'}),
     ('sync', {'cdc.sync_candidate'}), ('bus', {'cdc.multi_bit'}),
-    ('reset-shared', set()), ('reset-independent', {'rdc.independent_reset'}),
-    ('reset-async', {'rdc.independent_reset', 'rdc.async_release_unproved'}),
+    ('reset-shared', set()), ('reset-independent', {'rdc.independent_reset', 'rdc.release_order_unproved'}),
+    ('reset-async', {'rdc.independent_reset', 'rdc.async_release_unproved', 'rdc.release_order_unproved'}),
 ])
 def test_extracted_reference(name, expected):
     root = os.environ.get('RVW_LINT_FIXTURES')

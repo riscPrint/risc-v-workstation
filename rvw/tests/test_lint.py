@@ -136,7 +136,7 @@ def test_reset_crossings_same_clock(tmp_path, independent):
             c.execute("UPDATE clock_domains SET reset='other', reset_key='other:Bool' WHERE id=2")
     r = run_on(p, structural.analyze)
     assert len(r['reset_crossings']) == int(independent)
-    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset'] if independent else [])
+    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset', 'rdc.release_order_unproved'] if independent else [])
     assert all(t['status'] == 'unknown_control' for t in r['reset_trees'])
 
 
