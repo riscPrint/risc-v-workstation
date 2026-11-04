@@ -519,6 +519,11 @@ request and response signals and accepted physical TileLink A handshakes.
 It changes no core source. See the [MMU format](../rvw/src/rvw/regress/README.md#privilege-controls-and-observation-reports).
 Capture presence and event counts are observations, not protocol or PMA verdicts.
 
+MMU capture also records changes to MSIP backing state as `device_state`.
+The event states whether an IRQ schedule overrides device-driven interrupts.
+This samples the harness device model separately from C2 memory effects. It
+makes no device implementation or interrupt delivery claim.
+
 ## Firmware and Linux payload loading
 
 `--elf-load-bias BYTES` adds a nonnegative decimal byte offset to ET_DYN
