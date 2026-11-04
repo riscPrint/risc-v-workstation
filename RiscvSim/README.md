@@ -579,3 +579,22 @@ Random memory timing uses the selected seed. The boundary ends at D acceptance;
 there is no separate device execution queue. The program's tohost pass only
 establishes completion. The separate comparison checks the four order edges.
 R/W classes, device-side execution and concurrent target campaigns remain open.
+
+### Instruction visibility observations
+
+BOOM's optional `mmu-observations.jsonl` also records `icache_response` with
+physical address, raw fetch data and byte width. It records `icache_invalidate`
+with `refill_pending`, and accepted `icache_refill_request` addresses.
+These are cache-stage observations. A response can be speculative or discarded.
+It does not prove that the fetch buffer consumed those bytes after a fence.
+
+`InstructionVisibility` checks consumed bytes against independent stimulus.
+Use a unique publication ID for each patch. The adapter must observe data
+visibility and the reader's local FENCE.I before `synchronize`. A writer's fence
+cannot synchronize another hart. The project owns the release/acquire or
+platform publication protocol. The checker refuses missing required observations.
+BOOM also captures `fetch_consumed` at each decode-slot handshake, with its PC
+and original instruction bits from the fetch buffer. These can still be on a
+wrong path. Publication epochs must exclude entries killed by the fence redirect.
+The byte checker is not yet connected to that epoch mapping. Pending-request
+campaigns and cross-hart RTL publication remain open under #103.

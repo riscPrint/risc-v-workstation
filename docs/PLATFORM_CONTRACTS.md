@@ -1874,3 +1874,14 @@ An end row gives `kind: end`, `cycle` and the terminal C1 `status`.
 Missing end rows mean incomplete capture. A terminal pass does not prove ordering.
 The boundary excludes cache hits, buffered stores and device-side completion.
 Adapters must not infer those events from retirement or from these handshakes.
+
+The optional `rvw.mmu-observations/1` stream can also contain BOOM cache-stage
+rows. `icache_response` gives hex `physical_address`, hex raw `data` and integer
+`bytes`. `icache_invalidate` gives Boolean `refill_pending`.
+`icache_refill_request` gives hex `address`. These share the stream's cycle clock.
+They include speculative responses. They are not consumed-instruction evidence.
+`fetch_consumed` rows in the optional observation stream give hex `pc` and
+`instruction` from each accepted decode slot. These original instruction bits
+come from the fetch buffer, independently of retirement. Wrong-path entries can
+still occur. The project must map publication epochs and fence redirects before
+using them as synchronized-byte checks.

@@ -63,6 +63,11 @@ object BoomAdapter extends CoreAdapter {
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
+        top.tile.core.dec_fire.foreach(_.simPublic())
+        top.tile.core.dec_uops.foreach { u => u.debug_pc.simPublic(); u.debug_inst.simPublic() }
+        top.tile.frontend.icache.io.flatten.foreach(_.simPublic())
+        top.tile.frontend.s2_ppc.simPublic()
+        top.tile.frontend.icache.refill_valid.simPublic()
         top.tile.ptw.io.mem.req.flatten.foreach(_.simPublic())
         top.tile.ptw.io.mem.resp.flatten.foreach(_.simPublic())
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
@@ -147,6 +152,16 @@ object BoomAdapter extends CoreAdapter {
             fields.foreach { case (key, value) => row(key) = value }
             observations.foreach(_.println(ujson.write(row)))
           }
+          for ((fire,uop) <- dut.tile.core.dec_fire.zip(dut.tile.core.dec_uops) if fire.toBoolean)
+            event("fetch_consumed", "pc" -> Hex(uop.debug_pc.toBigInt), "instruction" -> Hex(uop.debug_inst.toBigInt))
+          val ic = dut.tile.frontend.icache
+          if (ic.io.invalidate.toBoolean)
+            event("icache_invalidate", "refill_pending" -> ujson.Bool(ic.refill_valid.toBoolean))
+          if (ic.io.resp.valid.toBoolean)
+            event("icache_response", "physical_address" -> Hex(dut.tile.frontend.s2_ppc.toBigInt),
+              "data" -> Hex(ic.io.resp.payload.data.toBigInt), "bytes" -> ujson.Num(ic.io.resp.payload.data.getBitsWidth / 8))
+          if (ic.io.mem.a.valid.toBoolean && ic.io.mem.a.ready.toBoolean)
+            event("icache_refill_request", "address" -> Hex(ic.io.mem.a.payload.address.toBigInt))
           if (ptw.req.valid.toBoolean && ptw.req.ready.toBoolean)
             event("walk_request", "address" -> Hex(ptw.req.payload.addr.toBigInt),
               "command" -> ujson.Num(ptw.req.payload.cmd.toInt))
