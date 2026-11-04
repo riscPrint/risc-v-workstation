@@ -118,10 +118,11 @@ def register(subparsers):
 
     p = sub.add_parser('linux', help='native Linux reference build and QEMU boot')
     p.set_defaults(func=_run)
-    p.add_argument('linux_action', choices=('firmware', 'build', 'prepare', 'boot'))
+    p.add_argument('linux_action', choices=('firmware', 'build', 'prebuilt', 'prepare', 'boot'))
     p.add_argument('--out', required=True, help='new output directory')
     p.add_argument('--platform', help='project Linux platform JSON')
-    p.add_argument('--images', help='Buildroot images directory')
+    p.add_argument('--images', help='images directory; firmware directory for prebuilt')
+    p.add_argument('--source', help='project prebuilt image lock JSON')
     p.add_argument('--timeout', type=float, default=600)
     p.add_argument('--jobs', type=int, default=2)
     p.add_argument('--llvm', action='store_true', help='build OpenSBI with native LLVM tools')

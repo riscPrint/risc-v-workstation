@@ -135,8 +135,9 @@ usage: rvw arch measure [-h] [--json] [--repeats REPEATS] [--bench BENCH]
 
 ```text
 usage: rvw arch linux [-h] --out OUT [--platform PLATFORM] [--images IMAGES]
-    [--timeout TIMEOUT] [--jobs JOBS] [--llvm] [--cross-compile CROSS_COMPILE]
-    [--json] [--project PROJECT] {firmware,build,prepare,boot}
+    [--source SOURCE] [--timeout TIMEOUT] [--jobs JOBS] [--llvm]
+    [--cross-compile CROSS_COMPILE] [--json] [--project PROJECT]
+    {firmware,build,prebuilt,prepare,boot}
 ```
 
 ### `rvw bisect`
@@ -557,7 +558,10 @@ usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
 ### `rvw lint`
 
 ```text
-usage: rvw lint [-h] [--settings SETTINGS] [--json] [--project PROJECT]
+usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
+    PROTOCOL] [--out OUT] [--depth DEPTH] [--engine ENGINE] [--timeout
+    TIMEOUT] [--simulate SAMPLES] [--seed SEED] [--mode {bmc,prove}] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw mcp`
@@ -586,7 +590,7 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-    {build,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
     ...
 ```
 
@@ -595,6 +599,13 @@ usage: rvw query [-h] [--project PROJECT]
 ```text
 usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
     PROJECT]
+```
+
+### `rvw query build-hdl`
+
+```text
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--yosys YOSYS] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
 ```
 
 ### `rvw query info`

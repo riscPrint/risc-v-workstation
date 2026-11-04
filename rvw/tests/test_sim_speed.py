@@ -198,3 +198,45 @@ def test_sweep_accepts_project_owned_lock_name(tmp_path):
         '--elf', str(tmp_path / 'test.elf'), '--config', 'preset',
         '--lock', 'custom-core', '--out', str(tmp_path / 'out')])
     assert args.lock == 'custom-core'
+
+
+def test_byte_different_trace_cannot_be_retained(tmp_path):
+    data = pairs(tmp_path)
+    for _, candidate in data:
+        trace = candidate.parent / 'rvfi.jsonl'
+        # Same parsed events. Raw bytes differ only in JSON whitespace.
+        events = [json.loads(line) for line in trace.read_text().splitlines()]
+        trace.write_text(''.join(json.dumps(e, separators=(',', ':')) + '\n' for e in events))
+    report = compare(data, resamples=1000)
+    assert report['trace_bit_identical'] is False
+    assert report['retain'] is False
+
+
+def test_absolute_rate_confidence_intervals(tmp_path):
+    report = compare(pairs(tmp_path), resamples=1000)
+    assert report['trace_bit_identical'] is True
+    for side, rate in [('baseline', 500), ('candidate', 1000)]:
+        assert report['sim_khz'][side]['geomean'] == pytest.approx(rate)
+        assert report['sim_khz'][side]['ci95'] == pytest.approx([rate, rate])
+
+
+def test_raw_trace_must_match_across_pairs_too(tmp_path):
+    data = pairs(tmp_path)
+    for path in data[-1]:
+        trace = path.parent / 'rvfi.jsonl'
+        trace.write_text(trace.read_text().replace(': ', ':'))
+    report = compare(data, resamples=1000)
+    assert report['trace_bit_identical'] is False
+    assert report['retain'] is False
+
+
+def test_absolute_rate_intervals_use_variable_samples(tmp_path):
+    data = [(result(tmp_path / f'a{i}', seconds),
+             result(tmp_path / f'b{i}', seconds / 2, 'd'))
+            for i, seconds in enumerate([2, 4, 8, 4, 2])]
+    report = compare(data, resamples=1000)
+    baseline, candidate = report['sim_khz']['baseline'], report['sim_khz']['candidate']
+    assert baseline['ci95'][0] < baseline['geomean'] < baseline['ci95'][1]
+    assert candidate['geomean'] == pytest.approx(2 * baseline['geomean'])
+    assert candidate['ci95'] == pytest.approx([2 * n for n in baseline['ci95']])
+    assert report['speedup_ci95'] == [2, 2]

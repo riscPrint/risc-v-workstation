@@ -121,7 +121,9 @@ Run the reference-model checks separately before adopting an option.
 The report records every C1 path and hash, C2 hash and native build identity.
 `speedup` is the geometric mean of paired baseline/candidate execution times.
 `speedup_ci95` is a percentile bootstrap interval over pairs (10000 resamples;
-fixed seed 1). `retain` requires its lower bound to exceed 1. This threshold
+fixed seed 1). `retain` requires its lower bound to exceed 1 and raw C2 byte identity.
+`trace_bit_identical` reports that check. `sim_khz` reports each treatment's
+geometric mean rate and marginal bootstrap 95% interval. This threshold
 checks timing noise only. The interval assumes independent pairs. Shared-host
 load, order bias and autocorrelation can invalidate that assumption. Do not
 use five short samples to claim precise speedups. Report host load and run

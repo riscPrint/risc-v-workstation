@@ -404,6 +404,10 @@ It runs a separate shell process to check the kernel type. It prints a marker
 and calls poweroff. This is a minimal userspace check. It is not a Linux selftest
 suite or a test of signals, page faults or scheduling correctness.
 
+For pinned prebuilt images on macOS, see [the reference platform](../examples/qemu-linux/README.md#native-prebuilt-reference-images).
+The prebuilt flow selects a small userspace from a hash-checked Debian initramfs.
+It runs natively and does not require a Linux compiler.
+
 macOS cannot build Buildroot. Use `.github/workflows/linux-boot.yml` for that
 step on native Ubuntu 24.04. The workflow uses no container. It builds images,
 boots QEMU and uploads images, configuration, console and reports. A workflow

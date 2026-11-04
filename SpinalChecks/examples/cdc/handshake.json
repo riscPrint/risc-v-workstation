@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.cdc-protocol/1",
+  "kind": "handshake",
+  "top": "cdc_handshake",
+  "verilog": [
+    "sampling.sv",
+    "handshake.sv"
+  ]
+}

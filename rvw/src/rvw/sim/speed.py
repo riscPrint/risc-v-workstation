@@ -112,11 +112,25 @@ def compare(pairs, *, min_seconds=1.0, resamples=10000, seed=1):
     rng = random.Random(seed)
     samples = sorted(math.exp(statistics.mean(rng.choices(logs, k=len(logs)))) for _ in range(resamples))
     interval = [samples[int(.025 * (resamples - 1))], samples[int(.975 * (resamples - 1))]]
+    # Use the same pair resamples for both absolute rates. Keep the paired
+    # ratio interval above: a ratio of marginal intervals loses pairing.
+    rates = {}
+    rate_rng = random.Random(seed)
+    indices = [rate_rng.choices(range(len(rows)), k=len(rows)) for _ in range(resamples)]
+    for side in ('baseline', 'candidate'):
+        values = [math.log(row[side]['sim_khz']) for row in rows]
+        distribution = sorted(math.exp(statistics.mean(values[i] for i in sample)) for sample in indices)
+        rates[side] = dict(geomean=math.exp(statistics.mean(values)),
+                          ci95=[distribution[int(.025 * (resamples - 1))],
+                                distribution[int(.975 * (resamples - 1))]])
+    bit_identical = len({row[side]['trace_sha256'] for row in rows
+                         for side in ('baseline', 'candidate')}) == 1
     return dict(schema='rvw.sim-speed/1', status='equivalent', core=reference['core'],
                 config=reference['config'], pairs=rows, speedup=math.exp(statistics.mean(logs)),
                 speedup_ci95=interval, method='paired geometric mean; percentile bootstrap',
                 resamples=resamples, bootstrap_seed=seed,
-                retain=interval[0] > 1,
+                retain=bit_identical and interval[0] > 1,
+                trace_bit_identical=bit_identical, sim_khz=rates,
                 scope='complete trace and terminal equivalence; no ISA oracle claim')
 
 

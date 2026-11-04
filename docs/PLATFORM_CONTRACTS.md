@@ -881,6 +881,25 @@ This records compiled code and instance state. Arbitrary generator reads of file
 variables or mutable global state are not a captured input contract.
 
 
+### C6 native HDL navigation subset
+
+`rvw query build-hdl --top MODULE --out DB FILE...` writes `rvw.designdb/20`
+with `meta.frontend=yosys-verilog`. Root component path is empty. `spinal_path`
+equals the HDL signal path. `meta.graph_semantics` declares conservative signal
+and whole-cell dependencies. Query JSON repeats `frontend` and `graph_semantics`.
+Named vectors can join disjoint bit slices. These are navigation paths, not
+bit-exact functional cones. `data` edges represent value reads. `sel` edges
+represent selects and enable/reset inputs. Flip-flop and latch outputs have
+kind `reg`; clock inputs are excluded from value edges. Register stage counts
+can include multiple aliases of the same state. Clock domains and reset
+values are unknown. Empty memory and artifact tables do not imply completeness.
+
+Sources and executable identity use C8 capture. Include directives, file input,
+source remapping and token concatenation are refused. Source locations bind to
+captured HDL files in `input_files`. Input errors do not publish a partial DB.
+Semantic keys and emission configuration are `$incomplete:`. Diff must remain
+inconclusive. This subset adds no C1 runtime or formal model claim.
+
 ### C6 debug metadata export
 
 `SpinalDB/debug.sh` reads one C8 capture of a design database. It writes stored
@@ -1511,7 +1530,7 @@ and unquantified uncertainty must not be interpreted as zero cost or confidence.
 
 ### Linux reference reports
 
-`rvw arch linux firmware|build|prepare|boot` writes `rvw.linux/1` to
+`rvw arch linux firmware|build|prebuilt|prepare|boot` writes `rvw.linux/1` to
 `OUT/manifest.json`. `OUT` must be new. The JSON stdout uses the same object on
 success. Errors return exit 2; an initialized output keeps an inconclusive
 manifest and command log. These reports do not produce a C4 verdict or claim
@@ -1525,6 +1544,16 @@ Artifacts use absolute paths and SHA-256. The build report binds the source and
 configuration. Reference runs bind kernel, initramfs, firmware, DTB, platform,
 QEMU, command line and console. Selected table checks record expected and
 actual values separately. They are not device-state or timing checks.
+
+The `prebuilt` action takes `--source` (`rvw.linux-prebuilt/1`) and `--images`
+(the native firmware directory). The source declares HTTPS URLs and SHA-256
+for `Image` and `rootfs.cpio.gz`. `initramfs_selection` declares directories,
+source-to-target regular files and symbolic links. The action selects these
+bytes from the checked newc archive and adds `/rvw-init`. The report records
+upstream hashes, source-lock hash, init-script hash and transformed artifacts.
+It does not verify an upstream package signature. Device compositions and
+bounded startup reports in `examples/qemu-linux` are project data. They do not
+extend C1 or certify a connected RTL device bus.
 
 The explicit `--platform` JSON uses `rvw.linux-platform/1`: `machine=virt`,
 `harts=1`, `memory_mib=128`, `command_line`, and nonempty `dt_checks`. Each
@@ -1709,6 +1738,46 @@ model), and `semantics`. Explicit array mode requires an SMTBMC-only portfolio.
 Map mode uses Yosys `memory_map -formal`. Both model the supplied RTL memory.
 Neither adds a RAM/blackbox refinement contract or resolves undefined RTL
 behavior by choosing a value. The retained-cell count is not a refinement proof.
+
+### CDC sequential reconvergence depth
+
+Lint intent accepts `reconvergence_depth` (integer 1..64, default 1). It bounds
+register boundaries between synchronizer outputs and each sink. Findings retain
+each synchronized endpoint and its minimum register depth in `reconvergence`.
+Combinational edges do not consume this bound. Cycles are bounded. Memory and
+blackbox internals remain outside scope. This is structural evidence only.
+
+Lint settings can select optional backend `yosys`. Native `check` warnings use
+`yosys.combinational_feedback`, `yosys.conflicting_drivers`, `yosys.undriven`,
+or fallback `yosys.warning`. Findings retain elaborated bit IDs and available
+source attributes. Backend output includes `elaborated_modules` and `script`.
+Blackbox modules cannot earn a completed connectivity check.
+
+### Selected CDC protocol and simulation results
+
+`rvw lint --protocol MANIFEST --out NEW_DIRECTORY` accepts
+`rvw.cdc-protocol/1` with exactly `schema`, `kind`, `top` and `verilog`.
+The selected kinds, fixed port interfaces and digital sampling abstraction are
+specified in the lint guide. Sources are frozen before native elaboration.
+`rvw.cdc-protocol-result/1` records `status`, `proof_kind`, `kind`, source hashes,
+the native child `result`, model, limits and `activation: not_measured`.
+A pass only applies to the selected monitor and environment. It is not a
+structural waiver or whole-design CDC verdict. No C4 acceptance is emitted.
+`--simulate SAMPLES --seed SEED` instead emits `rvw.cdc-simulation/1` with
+status, kind, seed, requested sample count, input hashes and limits. Missing
+tools and incomplete execution are inconclusive. A simulation pass needs the
+completion marker and no failed monitor assertion. It is not a proof.
+
+Selected CDC protocol kinds also include `pulse_capture` (single injected pulse,
+four destination-event response bound) and `coherent_bus` (equal-coded two-bit
+output). The lint guide defines their exact interfaces and assumptions.
+`rvw lint --benchmark MANIFEST --out NEW_DIRECTORY` accepts `rvw.cdc-bench/1`.
+Cases pin source hashes and independent expected results. Optional commercial
+adapters receive the same frozen spec and monitor, but not the expected verdict.
+`rvw.cdc-adapter-response/1` must bind the exact request hash, mode, tool version
+and verdict. BMC passes must reach the requested depth. All observations and
+per-tool qualifications stay in `rvw.cdc-bench-result/1`. Missing commercial
+adapters are `not_run`. Suite agreement is not signoff or commercial parity.
 
 ### Formal campaign observations in C3 and C4
 
@@ -2052,6 +2121,39 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Passive bus observations
+
+An adapter can name `memory-bus.jsonl` in C1 `details.bus_observations`.
+The JSONL header uses `rvw.bus-observations/1`. It gives C2 `identity`,
+`bus_bytes`, `boundary: accepted-external-tilelink` and `independent: true`.
+Each row records an accepted handshake with `channel`, decimal-string `cycle`
+and `sequence`. A rows give `source`, `address`, `opcode`, `size_log2`, `mask`
+and `data`. D rows give `source`, `opcode`, `size_log2`, `denied` and `data`.
+Hex values use strings. Opcode and size use JSON integers. Same-cycle rows keep
+capture order; this order does not imply an order between hardware effects.
+An end row gives `kind: end`, `cycle` and the terminal C1 `status`.
+Missing end rows mean incomplete capture. A terminal pass does not prove ordering.
+The boundary excludes cache hits, buffered stores and device-side completion.
+Adapters must not infer those events from retirement or from these handshakes.
+
+The optional `rvw.mmu-observations/1` stream can also contain BOOM cache-stage
+rows. `icache_response` gives hex `physical_address`, hex raw `data` and integer
+`bytes`. `icache_invalidate` gives Boolean `refill_pending`.
+`icache_refill_request` gives hex `address`. These share the stream's cycle clock.
+They include speculative responses. They are not consumed-instruction evidence.
+
+`fetch_consumed` rows in the optional observation stream give hex `pc` and
+`instruction` from each accepted decode slot. These original instruction bits
+come from the fetch buffer, independently of retirement. Wrong-path entries can
+still occur. The project must map publication epochs and fence redirects before
+using them as synchronized-byte checks.
+
+Bus capture can include B, C and E rows. B gives `source`, `address`, `opcode`,
+`param` and `size_log2`. C adds `data`. E gives `sink`. A and D rows also give
+`param`; D gives `sink`. These accepted-channel observations do not identify
+internal hits or replacement ways. Do not infer cache residency from capture
+alone: clean evictions can be silent.
+
 ## TestRIG socket transport (`rvw.dii/1`)
 
 `rvw cosim dii serve` and `replay` use RVFI-DII v1, separate from C1/C2.
@@ -2188,7 +2290,13 @@ match. Each side must keep one native build identity. Default minimum sample
 time is one second. Missing evidence or a difference gives exit 3.
 `status: equivalent` is trace/result equivalence only. It is not ISA correctness,
 C8 capture completeness or C4 acceptance. `retain` is a diagnostic timing filter:
-the 95% interval lower bound must exceed one. It does not change any options.
+the 95% interval lower bound must exceed one and all complete C2 files must
+have the same raw SHA-256. `trace_bit_identical` reports this byte check.
+Parsed equality alone can still report `equivalent`, but cannot retain an option.
+`sim_khz.baseline` and `sim_khz.candidate` each record `geomean` and `ci95`.
+These marginal percentile bootstrap intervals use the same pair resamples.
+They include adapter and trace cost. They exclude model compilation.
+The report does not change any options.
 
 `rvw.sim-speed-sweep/1` records an explicit adapter, ELF hash, preset, host,
 logical CPU count, seed, repeat count, thread counts, minimum sample seconds,
@@ -2498,6 +2606,30 @@ not a generator-origin or adapter-conformance claim. `source.identity_complete`
 remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
 
+## Native branch component reports
+
+`ComponentSims/` defines `rvw.branch-trace/1`. The first line is schema plus
+positive total instruction count. Each following `B ORDINAL PC TAKEN` row gives
+a conditional branch, its one-based all-instruction ordinal, hexadecimal PC and
+0/1 outcome. Ordinals strictly increase and cannot exceed the total. A final
+`END` line is mandatory. No lines follow it. Nonbranches are represented by gaps.
+
+The native engine emits `rvw.branch-sim/1` with `status=reported`, `model`,
+`entries`, `history_bits`, `pc_shift`, `warmup_instructions`, `instructions`,
+`branches`, `direction_misses`, `mpki`, `oracle_mpki=0`,
+`training=sequential-actual-path`, and `rtl_comparison=inconclusive`.
+`instructions` excludes warmup. `mpki` is 1000 times measured direction misses
+divided by measured instructions. No C1 pass or C4 verdict is issued. Exit 0
+means report completion; exit 2 means error without a stdout report.
+
+The standalone Spike adapter selects one successful traced row from
+`rvw.workload-verify/1`. It checks the retained stderr hash and instruction count.
+It rejects multi-hart logs, exceptions and ambiguous branch successors.
+Its `rvw.branch-sim/1` report adds `workload`, `elf_sha256`, `scope`, `oracle`,
+`verify`, `source`, `trace`, `engine`, and `adapter_sha256`. The four file objects
+contain absolute `path` and `sha256`. Scope includes startup and checker code.
+A supplied verification report remains local trusted evidence, not an immutable
+C8 generation. The adapter does not independently rerun workload correctness.
 ## C9 compiler scheduling extension
 
 `rvw arch sched-generate` reads `rvw.sched-core/1`. Required fields are `name`,
