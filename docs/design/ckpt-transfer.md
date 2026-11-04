@@ -16,6 +16,11 @@ Use one hart, little-endian RAM, M mode, bare addressing and no asynchronous
 inputs. Capture after K retired instructions, before the next instruction.
 Require K > 0 and N > 0 for the native acceptance test. Reject enabled FP,
 vector, virtual memory, debug, LR/SC reservation and unmodelled devices.
+Require all interrupt enables and pending inputs to be inactive. The first suffix
+must not read cycle/time CSRs, since Spike instructions and RTL cycles do not
+advance those counters at the same rate. Preserve counter state at restore,
+but do not synchronize its later values from DUT observations. Deterministic
+CSR reads and writes remain in the native acceptance program.
 Keep explicit unsupported-state fields in the format so later producers cannot
 silently discard state. Do not change either BOOM core checkout.
 
@@ -263,4 +268,11 @@ or issue comments, not in repository evidence files.
    and memory-order contract.
 
 The first native increment is still required. A design commit alone does not
-complete the hard research-and-build task. Follow-up issue links are added below.
+complete the hard research-and-build task.
+
+| Phase | Follow-up |
+|---|---|
+| First native Spike/VexRiscv slice | [#347](https://github.com/riscPrint/risc-v-workstation/issues/347) |
+| Warm-up bias and fixed-window reporting | [#348](https://github.com/riscPrint/risc-v-workstation/issues/348) |
+| FP, translation, devices and later QEMU profiles | [#350](https://github.com/riscPrint/risc-v-workstation/issues/350) |
+| BOOM core-side hook proposal | [spinal-boom#16](https://github.com/riscPrint/spinal-boom/issues/16) |
