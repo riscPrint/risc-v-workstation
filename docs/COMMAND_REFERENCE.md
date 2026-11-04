@@ -254,8 +254,23 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal apps`
+
+```text
+usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
+    [--timeout TIMEOUT] [--mode {bmc,prove}] [--event-model] [--async-reset]
+    [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal bench`
+
+```text
+usage: rvw formal bench [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
+    PROJECT] manifest
 ```
 
 ### `rvw formal cex`
