@@ -183,6 +183,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                                              "inconclusive": run.why_inconclusive})
                     save_json(checkpoint, result)
                 except (OSError, ValueError, KeyError, TypeError) as exc:
+                    result.setdefault("cause", str(exc))
                     result.setdefault("cell_errors", []).append({"id": sent["id"], "cause": str(exc)})
             result["status"] = "complete" if (not result.get("cause") and not result.get("cell_errors")
                 and all(not c["inconclusive"] for c in result["cells"])) else "inconclusive"
