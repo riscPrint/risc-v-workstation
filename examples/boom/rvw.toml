@@ -157,7 +157,7 @@ max_cycles = 30000
 timeout_s = 120
 
 [query]
-build = ["${RVW_HOME}/SpinalDB/build-db.sh", "boom"]
+build = ["${RVW_HOME}/scripts/with-lock.sh", "sbt", "${RVW_HOME}/SpinalDB/build-db.sh", "boom"]
 
 [formal]
 # The generator sbt builds declare SpinalDB, BOOM and SpinalHDL dependencies.
