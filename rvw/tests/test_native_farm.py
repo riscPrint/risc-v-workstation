@@ -134,3 +134,29 @@ def test_dashboard_pass_rate_time_and_missing_history(tmp_path, monkeypatch):
     assert 'old: 0.5' in text and 'new: 5' in text
     assert '<td>gap</td><td>not recorded</td>' in text
     assert '<line ' not in text  # Do not draw through a missing run.
+
+
+@pytest.mark.parametrize('option', ['max_cycles', 'mem_latency'])
+@pytest.mark.parametrize('reported', [None, 19, 20])
+def test_farm_refuses_result_for_other_requested_options(tmp_path, adapter, monkeypatch, option, reported):
+    from rvw.farm import executor
+    from rvw.common.proc import Result
+    elf = tmp_path / 'test.elf'
+    elf.write_bytes(b'pass')
+    manifest = tmp_path / 'manifest.jsonl'
+    manifest.write_text(json.dumps({'elf': str(elf), 'config': 'test', 'seed': 1, option: 20}) + '\n')
+    # The fixture adapter returns a fresh result, but omits the requested option.
+    reply = worker({**request(adapter), 'cells': [{**request(adapter)['cells'][0],
+                     'options': {'config': 'test', 'seed': 1, option: 20}}]})
+    if reported is not None:
+        artifact = reply['cells'][0]['files']['result.json']
+        data = json.loads(base64.b64decode(artifact['data']))
+        data[option] = reported
+        raw = json.dumps(data).encode()
+        artifact.update(data=base64.b64encode(raw).decode(), sha256=executor.digest(raw))
+    monkeypatch.setattr(executor, 'run_group', lambda *a, **kw: Result(0, stdout=json.dumps(reply)))
+    report = execute([{'name': 'fixture', 'address': 'localhost'}], manifest,
+                     adapter, [*adapter, 'identity'], IDENTITY, tmp_path / 'out')
+    assert report['status'] == ('complete' if reported == 20 else 'inconclusive')
+    if reported != 20:
+        assert option in report['shards'][0]['cause']

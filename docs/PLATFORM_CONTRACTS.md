@@ -1687,3 +1687,6 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+Native farm collection also checks explicitly requested `max_cycles` and `mem_latency`
+against C1 results. Missing or different values make collection inconclusive.

@@ -94,3 +94,6 @@ establish coverage compatibility or verification closure.
 - Test native SSH with two localhost entries. Set `RVW_TEST_SSH_OPTIONS` to a JSON
   option array for a test server. Run `pytest rvw/tests/test_native_farm.py`.
   These are protocol fixtures. They are not RTL verification results.
+
+Collection checks explicitly requested `max_cycles` and `mem_latency` in each C1 result.
+Missing or different values make collection inconclusive.
