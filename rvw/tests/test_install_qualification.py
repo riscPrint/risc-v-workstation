@@ -56,3 +56,22 @@ def test_invalid_run_stops_before_creating_output(tmp_path, args):
                           '--out', out, *args], capture_output=True, text=True, timeout=10)
     assert run.returncode == 2
     assert not out.exists()
+
+
+@pytest.mark.parametrize('body', ['<skipped/>', '<failure/>', '<error/>', 'EMPTY'])
+def test_native_skips_and_empty_suites_cannot_pass(tmp_path, body):
+    runner = qualify.Runner(tmp_path, 'cosim', 10, False)
+    junit = tmp_path / 'junit.xml'
+    case = '' if body == 'EMPTY' else f'<testcase>{body}</testcase>'
+    junit.write_text(f'<testsuites><testsuite>{case}</testsuite></testsuites>')
+    with pytest.raises(RuntimeError, match='did not all run'):
+        runner.check_junit(junit)
+
+
+def test_native_test_count_is_measured(tmp_path):
+    runner = qualify.Runner(tmp_path, 'cosim', 10, False)
+    junit = tmp_path / 'junit.xml'
+    junit.write_text('<testsuites><testsuite><testcase/><testcase/></testsuite></testsuites>')
+    runner.check_junit(junit)
+    assert runner.report['native_tests'] == {'passed': 2, 'skipped': 0}
+    assert runner.report['status'] == 'inconclusive'

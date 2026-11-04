@@ -53,7 +53,7 @@ export RVW_RESULTS="$job/results" RVW_SRC_CACHE="$job/src-cache"
 export PATH="$PWD/rvw/.venv/bin:$PATH"
 export RVW_LOCK_PYTHON="$PWD/rvw/.venv/bin/python"
 lock() { scripts/with-lock.sh "$1" nice -n 10 "${@:2}"; }
-lock suite python -m pip install -e './rvw[dev,mcp]'
+lock suite uv sync --locked --extra dev --extra mcp --project rvw --no-managed-python --python "$PWD/rvw/.venv/bin/python"
 export CARGO_BUILD_JOBS=2
 export SBT_OPTS="${SBT_OPTS:-} -Dsbt.task.cpus=2"
 scala() { (cd "$1"; "$RVW_CI_WORK/scripts/with-lock.sh" sbt nice -n 10 sbt -batch -J-XX:ActiveProcessorCount=2 "${@:2}"); }

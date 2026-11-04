@@ -115,6 +115,9 @@ Supported scope under contract C8:
 
 Experimental features need manual result checks before use:
 
+- Packaged typed viewer GUI rendering and source navigation remain unverified
+  under [#83](https://github.com/riscPrint/risc-v-workstation/issues/83).
+
 - Native SSH farm execution, static dashboards, remote caches and job budgets.
   Farm completion is collection status. It is not a gate verdict. See
   [farm limits](rvw/src/rvw/farm/README.md), [cache limits](rvw/src/rvw/regress/README.md)

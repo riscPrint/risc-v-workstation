@@ -138,7 +138,9 @@ The command clones the committed workstation into the output directory. It
 runs the exact case's install and `--check` first. It then adds the GCC and
 simulation tools needed by the runtime harness as a separate step. GCC builds
 an actual pinned riscv-tests ELF. Simulation runs the pinned public VexRiscv
-smoke program offline. Cosim compares that complete passing trace with Spike.
+smoke program offline. Cosim compares that complete passing trace with Spike. It also runs the native
+reference policy tests from a locked development environment. Any skipped native
+test stops qualification.
 Formal runs an eight-cycle counter BMC. gem5 builds and runs the median
 benchmark with `rvw arch`. These are bounded smoke checks. They do not establish
 whole-core correctness or a release verdict. The gem5 case uses the BOOM model

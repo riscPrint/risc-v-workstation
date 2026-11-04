@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'rvw/src'))
@@ -91,6 +92,15 @@ class Runner:
         if not predicate(json.loads(path.read_text())):
             raise RuntimeError(f'Incomplete or unsuccessful runtime evidence: {path}')
 
+    def check_junit(self, path):
+        suites = ET.parse(path).getroot()
+        cases = list(suites.iter('testcase'))
+        if not cases or any(c.find(tag) is not None for c in cases
+                            for tag in ('skipped', 'failure', 'error')):
+            raise RuntimeError(f'Native tests did not all run and pass: {path}')
+        self.report['native_tests'] = dict(passed=len(cases), skipped=0)
+        self.save()
+
     def execute(self, case, cold_scala):
         revision = subprocess.check_output(['git', '-C', ROOT, 'rev-parse', 'HEAD'], text=True).strip()
         self.report['revision'] = revision
@@ -143,6 +153,15 @@ class Runner:
                     '--trace', run / 'rvfi.jsonl', '--json'], cwd=vex)
                 self.check_json(log, lambda r: r.get('status') == 'match'
                                 and r.get('trace_complete') is True and r.get('end_status') == 'pass')
+        if case in ('cosim', 'quickstart', 'all'):
+            self.run('reference-test-setup', ['uv', 'sync', '--locked', '--extra', 'dev',
+                     '--extra', 'mcp', '--project', self.repo / 'rvw'], lock='suite')
+            junit = self.out / 'reference-tests.xml'
+            self.run('reference-tests', [self.repo / 'rvw/.venv/bin/python', '-m', 'pytest',
+                     self.repo / 'rvw/tests/cosim' / 'test_reference_mmu.py',
+                     self.repo / 'rvw/tests/cosim' / 'test_platform_policy.py',
+                     '-q', f'--junitxml={junit}'], lock='suite')
+            self.check_junit(junit)
         if case in ('formal', 'all'):
             design = self.out / 'counter.v'
             design.write_text('module counter(input clk, input reset);\n'
