@@ -49,6 +49,8 @@ def register(sub):
     register_uvm(sub)
     from rvw.sim.ral import register as register_ral
     register_ral(sub)
+    from rvw.sim.uvm_cpu import register as register_cpu
+    register_cpu(sub)
 
     from rvw.sim.hdl import PROFILES
     h = sub.add_parser('hdl', help='run a native HDL semantic component test')
