@@ -53,7 +53,7 @@ VS Code window.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_debug_session.py -q` at the root.
 The committed fixture is a SQL dump of the VexRiscv VexTop database at
-`/Users/mahir/fun/saviour/vexriscv/rvw/out/vex.db`. It has 1160 signals and no
+`rvw/out/vex.db` in the selected VexRiscv checkout. It has 1160 signals and no
 PDG, HGLDD or blocks artifacts. The test wave is synthetic. These tests do not
 establish live VexRiscv trace parity. Missing source files are valid fixture use.
 
