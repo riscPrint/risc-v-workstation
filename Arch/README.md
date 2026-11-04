@@ -536,6 +536,26 @@ Native VexRiscv fitting still needs independently checked ROI event mappings.
 Description tests and synthetic subprocess tests do not establish native model
 fidelity. No BOOM fitted parameters belong in this repository.
 
+## RISC-V decoupled front end
+
+The pinned gem5 already contains BAC and FTQ. Select them in project-owned
+`cpu` data with `decoupledFrontEnd: true`, `minInstSize: 2`, a positive
+`numFTQEntries`, and `fetchTargetWidth >= fetchBufferSize`. The default target
+width is 32 bytes and the default fetch buffer is 64 bytes. Set compatible
+values explicitly. `maxFTPerCycle` and `maxTakenPredPerCycle` must be positive.
+The model uses one hart. The coupled default stays unchanged.
+
+Run `rvw arch build --bench ftq-branches` and `rvw arch run` with that project.
+The microbenchmark checks a mix of compressed and 32-bit conditional branches.
+Compare identical ELFs with coupled and decoupled descriptions. Expect FTQ
+inserts only in decoupled mode. A deeper FTQ need not improve IPC. This slice
+adds no instruction prefetch requests or multi-level BTB.
+
+The pinned BAC has a mixed-width not-taken fallthrough defect. See the
+[optional source patch and native regression](patches/README.md) before using
+that path. The design and later phases are in
+[the design note](../docs/design/gem5-wide.md). The native binary hash in C9
+reports distinguishes patched builds. A version string alone does not.
 ### Multi-objective interval comparison
 
 `rvw arch pareto plan.json --json` (MCP `arch_pareto`) compares saved model
