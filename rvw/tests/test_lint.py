@@ -286,6 +286,14 @@ def test_native_verible_style_and_syntax(tmp_path):
     result = native.run('verible', [str(style)], 'bad', 30)
     assert result['status'] == 'completed'
     assert result['findings']
+    config = tmp_path / 'native.json'
+    config.write_text(json.dumps(dict(schema='rvw.lint-settings/1', config='reference',
+                                     top='bad', files=[str(style)], backends=['verible'])))
+    actual = report(config)
+    assert actual['status'] == 'findings'
+    assert actual['backends']['verible']['status'] == 'completed'
+    assert actual['backends']['verible']['version']
+    assert actual['backends']['verible']['raw_output']
     broken = tmp_path / 'broken.sv'
     broken.write_text('module broken;\nassign x = ;\nendmodule\n')
     result = native.run('verible', [str(style), str(broken)], 'bad', 30)
