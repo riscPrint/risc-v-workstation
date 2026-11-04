@@ -42,6 +42,7 @@ jobs:
           path: |
             ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/report.json
             ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.xml
   long-install:
     if: github.event_name == 'workflow_dispatch' && inputs.long_builds && !inputs.cosim_only
     runs-on: [self-hosted, Linux, X64, rvw-linux]
@@ -66,3 +67,4 @@ jobs:
           path: |
             ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/report.json
             ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.xml
