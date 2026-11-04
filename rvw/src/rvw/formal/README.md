@@ -712,3 +712,95 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+## Table-driven apps
+
+```sh
+rvw formal apps SpinalChecks/examples/apps/apps.json --depth 10 --out /tmp/apps
+rvw formal bench SpinalChecks/examples/bench/suite.json --timeout 30 --out /tmp/bench
+```
+
+The app manifest uses `rvw.formal-apps/1`. It lists self-contained `verilog`
+files relative to the manifest, `top`, `clock`, an active-high synchronous
+`reset`, an exact `ports` table, and `properties`. Each port declares `direction`
+(`input` or `output`) and `width`. The captured native elaboration must match
+this table. Each property has a unique plain `id`, `kind`, and optional
+`requirement_ids`. These IDs stay in the report and identify its child result.
+Use a fresh output directory. The runner freezes the sources and spec before
+it starts a property. Each child uses the existing captured RTL and tool flow.
+
+| Kind | Required fields | Contract |
+|---|---|---|
+| `connectivity` | `source`, `destination` | Equal values at the declared ports. Optional `latency` (0..64), `enable` and `mode`. The condition samples with the source. Startup history is gated. |
+| `csr` | `state`, `write_enable`, `write_data`, `reset_value` | Independent reference register. Optional `access` (`rw`, `ro`, `w1c`) and integer `write_mask`. |
+| `deadlock`, `livelock` | `pending`, `progress`, `bound` | A continuously pending request must make progress within the declared bound. The counter saturates. |
+| `unr` | `target` | Assert that the target is false outside reset. |
+
+Expressions accept ports, decimal integers and basic Boolean/arithmetic
+operators. Calls, hierarchical names, includes and macros in expressions are
+not supported. CSR fields must fit their port widths. A CSR map expresses one
+register per row. It does not implement address decoding, aliases, read side
+effects, bus protocols or privilege checks. Map bus decode to `write_enable`
+in a reviewed project wrapper when needed.
+
+The default mode is BMC. `--mode prove` requests an unbounded safety proof.
+Use a suitable engine, such as `--engine abc:pdr`. A progress proof establishes
+the finite response contract. It does not establish general liveness or fairness.
+All results depend on the supplied environment and spec. Requirement IDs are
+links, not proof of requirement completeness. Activation is `not_measured`.
+Forbidden connectivity needs structural or noninterference evidence. This app
+refuses it. SpinalDB endpoint resolution and opaque blackbox contracts remain open.
+
+For coverage exclusion export, use the existing guarded UNR flow:
+`rvw cov prove DATABASE --config PLAN --work-dir OUT`. Apply its `exclusions.json`
+with `rvw cov report DATABASE --exclusions OUT/exclusions.json`. That flow checks
+sanity, point reachability and cone activation before export. App UNR results
+cannot replace this evidence. `proof-cones.json` joins stable property and
+requirement IDs, lists structural fan-in, outside-cone logic and untested
+assumptions. See [coverage](../cov/README.md#structural-proof-cones).
+Solver proof cores remain `unavailable`. A structural cone is not a proof core
+or a functional coverage percentage.
+
+## Engine benchmark protocol
+
+The manifest uses `rvw.formal-bench/1`, with nonempty `cases` and an optional
+`baseline` engine. Each case declares `id`, `top`, `clock`, `reset`, `mode`
+(`bmc` or `prove`), `depth`, and `sources` rows with `path` and `sha256`.
+Paths are relative to the manifest. All hashes must match before execution.
+Only self-contained exported RTL is supported. The committed suite has a
+handwritten HWMCC-style finite-state counter and a handwritten RV32 arithmetic
+fixture. These are small protocol fixtures. They are not HWMCC competition
+entries or results on a processor.
+
+The runner executes each installed supported engine separately and serially.
+It tries SMTBMC with Yices, Z3, Bitwuzla, Boolector, CVC4, CVC5 and MathSAT;
+ABC BMC/PDR; Avy; and BTOR with pono/btormc. An incompatible mode is explicit.
+Other engine adapters, including rIC3 and EBMC, remain open. Tool identities
+and native logs stay in each run directory. Engine errors remain errors.
+
+Wall time measures the complete CLI command, including capture, elaboration
+and reachability checks. Peak RSS comes from native `/usr/bin/time` (bytes on
+macOS; KiB converted to bytes on Linux). It is the operating system's process
+measurement, not a sum of simultaneous solver memory. Missing measurements
+are null. Reached depth is the largest assertion-check step explicitly logged
+by SMTBMC. Other engines currently report null. Requested depth is separate.
+
+Agreement requires at least two decisive results and no unresolved installed
+run in that mode. A disagreement overrides unknown results. Pair comparisons
+require a decisive matching verdict for every case. They use the worst candidate
+wall-time ratio against the baseline. The 5% margin is a descriptive threshold.
+`noninferior_on_suite` and `superior_on_suite` apply only to this run. They are
+not statistical claims, commercial parity claims or correctness oracles.
+
+An optional `adapters` array selects a licensed engine. Each row has a unique
+plain `id` and an absolute executable `command`. It must support `--version`.
+The runner calls `COMMAND REQUEST.json RESPONSE.json` with a timeout. The request
+has schema `rvw.formal-adapter-request/1`, the case, and frozen source paths.
+The adapter must write `rvw.formal-adapter-response/1`, `request_sha256` (SHA-256
+of the exact request bytes), `mode`, `status` (`pass`, `fail`, `inconclusive`),
+`engine_version`, `wall_s`, `peak_memory_bytes` and `reached_depth`. Measurements
+must be finite and nonnegative. Missing fields or a request mismatch stay
+inconclusive. The adapter owns licence setup and source translation. These are
+trusted adapter observations, not independently replayed proofs. No licensed
+engine is bundled. Published-result normalization and repeated statistical
+experiments remain open.

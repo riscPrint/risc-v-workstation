@@ -1859,3 +1859,31 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## Formal app and benchmark reports
+
+`rvw formal apps` reads `rvw.formal-apps/1` and writes
+`rvw.formal-app-results/1`. Each row retains `property_id`, `requirement_ids`,
+app kind, native status, proof kind and child result path. Status is `pass`
+only when every child passes. Any failure gives `fail`; other cases give
+`inconclusive`. Exit codes are 0 for pass and 1 for a written nonpass report.
+Each child retains the existing `rvw.formal/1` evidence. A bounded app pass
+cannot authorize an UNR coverage exclusion. The existing `cov prove` contract
+still controls exclusion export. Activation and solver cores are not inferred.
+
+`rvw formal bench` reads `rvw.formal-bench/1` and writes
+`rvw.formal-bench-results/1`. Rows retain the case, engine, mode, requested
+depth, explicitly observed depth or null, elapsed wall seconds, native peak
+RSS bytes or null, native status, tool identity and result path. Absent engines
+use `not_installed`; incompatible modes use `unsupported_mode`. Agreement is
+`agree`, `disagree` or `inconclusive`. Exit 0 requires agreement for every case;
+exit 1 means at least one disagreement or incomplete comparison. Agreement
+is not a correctness or gate verdict. Pair comparisons require decisive,
+matching verdicts on every case. Time ratios describe only the supplied suite.
+
+Licensed adapters use `rvw.formal-adapter-request/1` and
+`rvw.formal-adapter-response/1`. A response must bind to the SHA-256 of its
+exact request bytes, retain the mode and engine version, and report finite
+nonnegative measurements. Adapter verdicts are trusted observations. Invalid,
+missing or timed-out responses stay inconclusive. See the formal README for
+input fields and limits. Neither command emits gate acceptance.
