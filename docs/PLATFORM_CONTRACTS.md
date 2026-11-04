@@ -1891,3 +1891,12 @@ observation clock and normalized control levels. These findings do not discharge
 the structural lint report's unrun release or reconvergence proofs. Missing
 bindings provide no reset protocol evidence. Between-sample pulses and physical
 timing are outside this sampled contract.
+
+### Optional HPM control checks
+
+`hpm.selector`, `hpm.overflow_pending` and `hpm.counter_interrupt` identify
+optional project monitor rules. The selector policy is a declared WARL mask.
+The interrupt policy is sticky modular overflow with clear priority and a
+separate interrupt enable. Counts and event multiplicity come from independent
+observations. These rules do not establish architectural CSR access compliance,
+selector event meaning, or real-core coverage without explicit project bindings.

@@ -655,3 +655,19 @@ validity. Two-state simulation cannot discover X values by itself. A pulse
 between observation samples can be missed. Physical asynchronous assertion,
 recovery/removal, metastability, static synchronous-release recognition and
 functional reconvergence proof remain open. Structural lint findings stay active.
+
+### Optional HPM selector and interrupt bindings
+
+`HpmControlChecks.selector` models accepted selector writes with a project WARL
+mask and reset value. It does not derive selector meaning from the DUT.
+`HpmControlChecks.interrupt` uses an independently derived expected count and
+event multiplicity to check sticky overflow pending state and its enable-gated
+interrupt. Inhibit, filtering and counter writes suppress overflow. Pending
+clear has priority. The project must select this policy explicitly; it is not
+a universal Zihpm interrupt specification. Bind count checks separately with
+`HpmChecks.bind`. Do not use the observed DUT count as `expectedCount`.
+
+Native reference tests cover legal controls and injected selector, pending and
+interrupt faults. Real-core event bindings, architectural access and RV32 half
+checks, and a complete Zihpm compliance campaign need separate evidence. The
+access and RV32 work in PR #303 remains compatible with these optional bindings.
