@@ -140,7 +140,8 @@ This interface exercise is separate from ISA regression coverage.
 ## Bounded RVFI checks
 
 `formal/rvw.toml` selects the upstream riscv-formal `FormalSimple` RTL snapshot.
-It runs the 37 RV32I instruction checks and reg, pc_fwd, pc_bwd, liveness,
+The snapshot has compressed instructions enabled. The checker uses RV32IC
+for 2-byte PC alignment. It selects the 37 RV32I instruction checks and reg, pc_fwd, pc_bwd, liveness,
 unique and causal. This snapshot is separate from the RV32IM simulation core.
 Run it with native tools and a new output directory:
 

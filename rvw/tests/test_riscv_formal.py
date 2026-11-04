@@ -206,3 +206,11 @@ def test_retirement_depth_cannot_equal_start(cfg):
 def test_btor_setting(cfg,tmp_path):
     cfg['check_options']={'insn_add_ch0':{'engine':'btor btormc'}}
     validate(cfg)
+
+
+def test_vex_formal_snapshot_uses_compressed_alignment():
+    """FormalSimple has a decompressor, so its checker must use IALIGN=16."""
+    import tomllib
+    example = Path(__file__).resolve().parents[2] / 'examples/vexriscv/formal/rvw.toml'
+    settings = tomllib.loads(example.read_text())['riscv_formal']
+    assert settings['isa'] == 'rv32ic'
