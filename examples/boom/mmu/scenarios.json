@@ -506,6 +506,84 @@
       "bins": [
         "priv.tw-clear-wakeup"
       ]
+    },
+    {
+      "id": "fetch-s",
+      "level": 0,
+      "flags": "VRXAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "success",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-s"
+      ]
+    },
+    {
+      "id": "fetch-u",
+      "level": 0,
+      "flags": "VRXUAD",
+      "access": "fetch",
+      "privilege": "U",
+      "expect": "success",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-u"
+      ]
+    },
+    {
+      "id": "fetch-no-x",
+      "level": 0,
+      "flags": "VRAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-no-x"
+      ]
+    },
+    {
+      "id": "fetch-s-user-sum",
+      "level": 0,
+      "flags": "VRXUAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": true,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-s-user-sum"
+      ]
+    },
+    {
+      "id": "fetch-u-supervisor",
+      "level": 0,
+      "flags": "VRXAD",
+      "access": "fetch",
+      "privilege": "U",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-u-supervisor"
+      ]
+    },
+    {
+      "id": "fetch-a-clear",
+      "level": 0,
+      "flags": "VRXD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-a-clear"
+      ]
     }
   ]
 }

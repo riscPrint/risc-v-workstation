@@ -2067,3 +2067,7 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+MMU observation inventories can add `walk_check` with `status` of `consistent`,
+`mismatch` or `inconclusive`. This bounded check compares immutable PTE read
+addresses and values with scenario data and observes the physical target range.
+It does not change architectural bins or C1-C4 verdicts. See the regress README.

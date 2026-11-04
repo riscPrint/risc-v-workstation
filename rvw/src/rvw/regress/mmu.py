@@ -60,8 +60,10 @@ def validate(s):
         raise ValueError('level must be 0, 1 or 2')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
         raise ValueError('invalid PTE flags')
-    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
+    if s['access'] not in ('load', 'store', 'fetch') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
         raise ValueError('unsupported access or expectation')
+    if s['access'] == 'fetch' and (s['expect'] not in ('success', 'page-fault', 'access-fault') or any(k in s for k in ('remap', 'unfenced', 'switch_asid', 'offset', 'access_width', 'register_width', 'mprv', 'satp_mode', 'ad_expect')) or number(s.get('pa', DATA)) != DATA):
+        raise ValueError('fetch requires a fixed payload at DATA and no data-only options')
     width = s.get('access_width', 8)
     if type(width) is not int or width not in (1, 2, 4, 8):
         raise ValueError('access_width must be 1, 2, 4 or 8 bytes')
@@ -250,6 +252,24 @@ fromhost: .dword 0
     for table in tables:
         code += '\n'.join(f' .dword {v}' for v in table) + '\n'
     code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
+    if s['access'] == 'fetch':
+        # MRET changes real fetch privilege. MPRV cannot test instruction access.
+        begin = code.index(' li a0,')
+        end = code.index('check_ad:')
+        expected = 9 if not fault and s.get('privilege', 'S') == 'S' else 8 if not fault else 12 if s['expect'] == 'page-fault' else 1
+        code = code[:begin] + f''' csrw mepc, t3
+ mret
+trap:
+ li t0, 0x20000
+ csrc mstatus, t0
+ csrr t0, mcause
+ li t1, {expected}
+ bne t0, t1, fail
+ csrr t0, mepc
+ li t1, {va}
+ bne t0, t1, fail
+''' + (f' csrr t0, mtval\n li t1, {va}\n bne t0, t1, fail\n' if fault else '') + code[end:]
+        code = code.replace('.section .data\n .dword 42\n .zero 4088\n .dword 43\n', '.section .data\n .word 0x00000073\n .word 0x0000006f\n')
     return code
 
 
@@ -551,9 +571,11 @@ def report(directory, results, checked=None):
                 if (not events or events[0].get('schema') != 'rvw.mmu-observations/1'
                         or events[0].get('elf_sha256') != s['elf_sha256']):
                     raise ValueError('invalid observation header')
-                # Capture presence is not a walk correctness verdict or device coverage.
+                from .mmu_observe import check_walk
+                # Keep bounded walk consistency separate from architectural coverage.
                 observed = dict(status='recorded', path=str(path), sha256=digest(path),
                     c1_sha256=digest(run.path / 'result.json'),
+                    walk_check=check_walk(s, events[1:]),
                     counts={k: sum(e.get('kind') == k for e in events[1:])
                             for k in ('walk_request', 'walk_response', 'bus_a')})
         rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,

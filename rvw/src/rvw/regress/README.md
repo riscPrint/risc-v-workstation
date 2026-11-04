@@ -607,3 +607,18 @@ enables stay clear. WFI must resume and reach the checked ECALL exit. This
 checks wakeup with an already pending interrupt. It does not measure wakeup
 latency or test an interrupt that arrives after WFI starts. The rule comes from
 the pinned privileged ISA, Machine-Level ISA, Wait for Interrupt section.
+
+Fetch scenarios use `access: "fetch"`, real S/U entry through MRET and a fixed
+ECALL payload at `DATA`. They check the exact fetch fault cause, PC and address,
+or the ECALL cause and virtual PC after a successful fetch. Data-only options
+are refused. The suite includes X permission, S/U permission, SUM and A-bit
+fault cases. SUM does not permit S-mode fetch from a user page.
+
+Observation inventories now include `walk_check`. For successful immutable
+mappings with preset A/D bits, it computes expected PTE addresses and values
+from the scenario. It checks each captured request and returned PTE. It also
+requires an external transaction that contains the translated physical target.
+`consistent` applies only to these sampled values. Missing responses or a
+cache-satisfied target remain inconclusive. Remaps, faults, hardware A/D updates
+and Bare mode remain unsupported. This field cannot pass architectural bins,
+prove ordering, bind a cache transaction to one instruction or close #84.

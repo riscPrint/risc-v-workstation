@@ -362,3 +362,62 @@ def test_tw_clear_pending_ssip_wakes_with_global_interrupts_disabled():
     row['privilege'] = 'U'
     with pytest.raises(ValueError, match='wakeup'):
         assembly(row)
+
+
+def test_fetch_uses_real_privilege_and_exact_fault_pc():
+    row = dict(id='fetch', level=0, flags='VRAD', access='fetch',
+               expect='page-fault', bins=['fetch'])
+    text = assembly(row)
+    assert 'csrw mepc, t3\n mret' in text
+    assert 'li t1, 12' in text and 'csrr t0, mtval' in text
+    assert '.word 0x00000073' in text
+    row['remap'] = True
+    with pytest.raises(ValueError, match='fetch'):
+        assembly(row)
+
+
+def test_native_fetch_checker_rejects_wrong_execute_permission(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = dict(id='fetch', level=0, flags='VRXAD', access='fetch',
+               expect='success', bins=['fetch'], ad_mode='svade')
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    original = mmu.assembly
+    def wrong_permission(s):
+        # Change only the generated leaf, while retaining the success oracle.
+        old = ((mmu.DATA >> 12) << 10) | 0xcb
+        return original(s).replace(f'.dword {old}', f'.dword {old & ~8}')
+    monkeypatch.setattr(mmu, 'assembly', wrong_permission)
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_walk_checker_uses_pte_values_and_physical_target():
+    from rvw.regress.mmu_observe import check_walk
+    events = []
+    for i, (address, value) in enumerate([(0x80010008, 0x20004401),
+             (0x80011000, 0x20004801), (0x80012000, 0x200800c7)]):
+        events += [dict(kind='walk_request', cycle=2*i, address=hex(address), command=0),
+                   dict(kind='walk_response', cycle=2*i+1, address=hex(address), data=hex(value))]
+    assert check_walk(scenario(), events)['status'] == 'inconclusive'
+    events.append(dict(kind='bus_a', cycle=7, address='0x80200000', opcode=6, size_log2=6))
+    assert check_walk(scenario(), events)['status'] == 'consistent'
+    events[3]['data'] = '0xdeadbeef'
+    assert check_walk(scenario(), events)['status'] == 'mismatch'
+    events[3]['data'] = '0x20004801'
+    events[0]['address'] = '0x80010010'
+    assert check_walk(scenario(), events)['status'] == 'mismatch'
+    assert check_walk(scenario(remap=True), events)['status'] == 'inconclusive'
+
+
+def test_walk_checker_superpage_target_uses_low_virtual_bits():
+    from rvw.regress.mmu_observe import check_walk
+    row = scenario(); row.update(level=2, pa='0x80000000', va='0x40200000')
+    result = check_walk(row, [])
+    assert result['physical_target'] == '0x80200000'
+    with pytest.raises(ValueError, match='ordered'):
+        check_walk(scenario(), [dict(kind='bus_a', cycle=c, address='0x0', opcode=4,
+                                    size_log2=3) for c in (5, 4)])
