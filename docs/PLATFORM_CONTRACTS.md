@@ -1890,6 +1890,27 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+
+
+## Standalone HDL semantic tests
+
+`rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
+This standalone format is not C1, C3 or C4 acceptance evidence.
+The manifest fields are `schema`, `backend`, `top`, `sources`, optional
+`requires`, and optional `vhdl_sources` plus `vhdl_top` for mixed synthesis.
+A per-run `--backend` override must meet every declared requirement.
+The [simulation guide](../rvw/src/rvw/sim/README.md#native-hdl-testbenches)
+defines supported profiles and testbench completion rules.
+
+The result records `status` (`pass` or `error`), `reason`, the selected `backend`,
+`capabilities`, source-file SHA-256 `inputs`, resolved `tools`, `versions`,
+`jobs`, `wall_s`, `timeout_s` and `replay`. Each job records its argument vector,
+exit code, timeout flag, and paths to stdout/stderr logs. Exit zero plus exactly
+one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
+A failed compile, failed run, timeout or missing completion marker gives error.
+Requirements and missing-tool errors occur before output creation (CLI exit 2).
+This format does not capture transitive file inputs or establish C8 reuse.
+
 ## Workload reference flow
 
 `rvw workloads list|build|verify` uses `rvw.workloads/1` manifests.
@@ -1909,6 +1930,7 @@ whole-program instruction category counts and observed conditional-branch
 transitions. Compressed instructions are decoded as RV64. FP and memory
 categories overlap. Cache misses and branch mispredictions stay null.
 The retained stderr file is the hashed instruction-log evidence.
+
 
 ### C9 search, repeats and prediction ledger
 
@@ -1951,6 +1973,7 @@ C9 comparison and status `reported`. Model report and raw evidence are rechecked
 Every RTL evidence mtime must follow the prediction time. This is a local
 ordering check, not trusted chronology. The ledger requires original local
 paths and stable evidence. No file races or hostile timestamp claims are covered.
+
 
 ## SpinalChecks normalized register map (version 1)
 
