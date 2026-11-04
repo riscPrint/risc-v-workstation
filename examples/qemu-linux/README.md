@@ -66,8 +66,8 @@ those values from the DUT into the reference to force a match.
 ## Native prebuilt reference images
 
 On macOS or Linux, use the pinned Debian trixie installer images in
-`prebuilt.json`. SHA-256 checks run before image preparation. The flow appends
-an initramfs member with `/rvw-init`. It runs the same small user process check
+`prebuilt.json`. SHA-256 checks run before image preparation. The flow selects the BusyBox, loader and libc files declared in the lock.
+It writes a small initramfs with `/rvw-init`. It runs the same small user process check
 as the Buildroot flow. It does not run the Debian installer. Use the separate
 `platform-prebuilt.json` to select that entry point.
 
@@ -84,3 +84,33 @@ Build firmware first with the pinned `firmware --llvm` command. The manifest
 binds the supplied firmware bytes, downloaded image bytes and final initramfs.
 The prebuilt source lock records the upstream checksum URL. Hash checks detect
 changed downloads. They do not verify a Debian signature.
+
+
+## Bounded Linux startup payloads
+
+Run `rvw/.venv/bin/python examples/qemu-linux/prepare-rtl.py --prepared
+/tmp/linux-boot --out /tmp/linux-startup` after a reference preparation or boot.
+The script checks the captured artifact hashes. It patches `/chosen` with the
+command line and initramfs bounds. It adds a firmware reservation. The final
+DTB hash is in the startup manifest. It generates these inputs:
+
+- `reset.elf`: 36 instructions that clear GPRs, set a0/a1 and enter OpenSBI.
+- `payloads.json`: captured firmware at `0x80002000`, kernel at `0x80200000`,
+  initramfs at `0x86000000` and final DTB at `0x87e00000`.
+- `reference.elf`: the same reset and payload bytes in one ELF for Spike.
+
+Run BOOM small with `--elf /tmp/linux-startup/reset.elf --boot-payloads
+/tmp/linux-startup/payloads.json --max-cycles 4000 --wall-timeout 20
+--rvfi-trace --seed 1 --mem-latency 0`. Use the `boom` lock and `nice`.
+Compare only 164 instruction rows with Spike and `reference.elf`. Keep the C2
+header. Remove the end row. This prefix covers the reset and the first 128
+OpenSBI instructions. It does not enter the kernel or check devices.
+
+`devices.json` and `devices.py` compose a project UART, CLINT and PLIC reference
+adapter. UART supports output polling, divisor registers, scratch and TX
+interrupts. RX, FIFO, modem input and device timing are unsupported and fail
+explicitly. CLINT time advances only through `Timer.tick`. No RTL-cycle ratio
+is declared. The adapter updates the UART source before and after bus accesses.
+Independent register tests check claim/complete, reset and timer thresholds.
+The adapter does not connect an RTL bus. BOOM still uses its interrupt generator.
+A full Linux bus adapter needs a separate integration step.

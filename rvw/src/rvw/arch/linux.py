@@ -61,16 +61,52 @@ def extract_buildroot(archive, out):
                 tar.extract(checked.replace(linkname=member.linkname), out, filter='tar')
 
 
+def cpio_entry(name, content, mode, ino):
+    name = name.encode() + b'\0'
+    fields = (ino, mode, 0, 0, 1, 0, len(content), 0, 0, 0, 0, len(name), 0)
+    prefix = b'070701' + ''.join(f'{v:08x}' for v in fields).encode() + name
+    prefix += b'\0' * (-len(prefix) % 4)
+    return prefix + content + b'\0' * (-len(content) % 4)
+
+
 def init_overlay(script):
-    """A deterministic newc archive. Linux unpacks it after the upstream archive."""
-    def entry(name, content, mode, ino):
-        name = name.encode() + b'\0'
-        fields = (ino, mode, 0, 0, 1, 0, len(content), 0, 0, 0, 0, len(name), 0)
-        header = b'070701' + ''.join(f'{v:08x}' for v in fields).encode()
-        prefix = header + name
-        prefix += b'\0' * (-len(prefix) % 4)
-        return prefix + content + b'\0' * (-len(content) % 4)
-    return entry('rvw-init', script, 0o100755, 1) + entry('TRAILER!!!', b'', 0, 2)
+    """A deterministic newc archive with an executable check entry."""
+    return cpio_entry('rvw-init', script, 0o100755, 1) + cpio_entry('TRAILER!!!', b'', 0, 2)
+
+
+def minimal_initramfs(archive, selection, script):
+    """Select pinned archive bytes without extracting host paths or links."""
+    raw = gzip.decompress(archive)
+    offset, members = 0, {}
+    while raw[offset:offset + 6] == b'070701':
+        fields = [int(raw[offset + 6 + i*8:offset + 14 + i*8], 16) for i in range(13)]
+        start = offset + 110
+        name = raw[start:start + fields[11] - 1].decode()
+        offset = (start + fields[11] + 3) & ~3
+        content = raw[offset:offset + fields[6]]
+        if len(content) != fields[6]:
+            raise ValueError('truncated initramfs member')
+        offset = (offset + fields[6] + 3) & ~3
+        if name == 'TRAILER!!!':
+            break
+        members[name] = (content, fields[1])
+    else:
+        raise ValueError('initramfs requires a complete newc archive')
+    entries = []
+    def add(name, data, mode):
+        entries.append(cpio_entry(name, data, mode, len(entries) + 1))
+    for name in selection['directories']:
+        add(name, b'', 0o40755)
+    for source, target in selection['files'].items():
+        content, mode = members[source]
+        if mode & 0o170000 != 0o100000:
+            raise ValueError(f'initramfs selection is not a regular file: {source}')
+        add(target, content, mode)
+    for name, target in selection['links'].items():
+        add(name, target.encode(), 0o120777)
+    add('rvw-init', script, 0o100755)
+    add('TRAILER!!!', b'', 0)
+    return gzip.compress(b''.join(entries), mtime=0)
 
 
 def prebuilt_images(source, firmware, out, timeout):
@@ -97,18 +133,17 @@ def prebuilt_images(source, firmware, out, timeout):
             raise ValueError(f'prebuilt SHA-256 mismatch: {name}')
         upstream[name] = dict(record, url=item['url'])
         shutil.copyfile(target, images / name)
-    # Keep the upstream installer archive unchanged. Add a new gzip member that
-    # selects our explicit rdinit path. This needs no cross compiler or cpio tool.
+    # The installer rootfs is too large for a small platform. Select only the
+    # project-declared shell, loader and libc bytes. No target code runs on host.
     assets = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4])) / 'Arch/linux'
     script = (assets / 'overlay/init').read_bytes()
-    overlay = init_overlay(script)
-    with (images / 'rootfs.cpio.gz').open('ab') as stream:
-        stream.write(gzip.compress(overlay, mtime=0))
+    (images / 'rootfs.cpio.gz').write_bytes(minimal_initramfs(
+        (downloaded / 'rootfs.cpio.gz').read_bytes(), lock['initramfs_selection'], script))
     for name in ('fw_jump.bin', 'fw_jump.elf'):
         shutil.copyfile(Path(firmware) / name, images / name)
     return dict(status='built', source=identity(out / 'source.json'), upstream=upstream,
                 init_script_sha256=hashlib.sha256(script).hexdigest(),
-                initramfs_transform='append newc gzip member with /rvw-init; rdinit=/rvw-init',
+                initramfs_transform='select declared newc files and links plus /rvw-init; rdinit=/rvw-init',
                 artifacts={name: identity(images / name) for name in
                            ('Image', 'rootfs.cpio.gz', 'fw_jump.bin', 'fw_jump.elf')})
 

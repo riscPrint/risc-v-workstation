@@ -226,3 +226,21 @@ def test_prebuilt_checksum_failure_blocks_publication(tmp_path, monkeypatch):
         linux.execute('prebuilt', out, source=lock, images=tmp_path)
     assert json.loads((out / 'manifest.json').read_text())['status'] == 'inconclusive'
     assert not (out / 'build/images/Image').exists()
+
+
+def test_minimal_initramfs_selects_bytes_and_links():
+    import gzip
+    selected = {'directories': ['bin'], 'files': {'upstream/tool': 'bin/tool'},
+                'links': {'bin/sh': 'tool'}}
+    archive = (linux.cpio_entry('upstream/tool', b'ELF fixture', 0o100755, 1)
+               + linux.cpio_entry('unneeded', b'large installer', 0o100644, 2)
+               + linux.cpio_entry('TRAILER!!!', b'', 0, 3))
+    output = linux.minimal_initramfs(gzip.compress(archive), selected, b'#!/bin/sh\n')
+    raw = gzip.decompress(output)
+    assert b'ELF fixture' in raw and b'rvw-init\0' in raw and b'bin/sh\0' in raw
+    assert b'large installer' not in raw
+    assert output == linux.minimal_initramfs(gzip.compress(archive), selected, b'#!/bin/sh\n')
+    with pytest.raises(KeyError):
+        linux.minimal_initramfs(gzip.compress(archive), dict(selected, files={'missing': 'bin/tool'}), b'')
+    with pytest.raises(ValueError, match='complete newc'):
+        linux.minimal_initramfs(gzip.compress(b'incomplete'), selected, b'')

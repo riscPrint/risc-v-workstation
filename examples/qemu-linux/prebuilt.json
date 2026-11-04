@@ -11,5 +11,26 @@
       "url": "https://deb.debian.org/debian/dists/trixie/main/installer-riscv64/20250803/images/netboot/debian-installer/riscv64/initrd.gz",
       "sha256": "9a4af9dc47287c8c0792e2ac49f760574ccdb561b9b50a7ebc7944bf13dbd3ca"
     }
+  },
+  "initramfs_selection": {
+    "directories": [
+      "bin",
+      "lib",
+      "dev",
+      "proc",
+      "sys"
+    ],
+    "files": {
+      "usr/bin/busybox": "bin/busybox",
+      "usr/lib/riscv64-linux-gnu/libc.so.6": "lib/libc.so.6",
+      "usr/lib/riscv64-linux-gnu/ld-linux-riscv64-lp64d.so.1": "lib/ld-linux-riscv64-lp64d.so.1"
+    },
+    "links": {
+      "bin/sh": "busybox",
+      "bin/mount": "busybox",
+      "bin/cat": "busybox",
+      "bin/sync": "busybox",
+      "bin/poweroff": "busybox"
+    }
   }
 }

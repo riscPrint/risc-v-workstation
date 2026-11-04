@@ -194,3 +194,68 @@ class Timer:
                 self.mtime = new
             else:
                 self.compare[hart] = new
+
+
+class Ns16550:
+    """Single-byte, output-only ns16550a register subset for boot polling.
+
+    No RX, modem input or baud timing is modeled. Unsupported requests fail.
+    THRE interrupts use a latched source cleared by IIR reads or TX writes.
+    """
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.ier = self.lcr = self.scr = self.dll = self.dlm = 0
+        self.thre = False
+        self.output = bytearray()
+
+    def irq(self):
+        return bool(self.ier & 2 and self.thre)
+
+    def read(self, register):
+        if register == 0:
+            if self.lcr & 0x80:
+                return self.dll
+            raise ValueError('UART RX input is not supported')
+        if register == 1:
+            return self.dlm if self.lcr & 0x80 else self.ier
+        if register == 2:
+            value = 2 if self.irq() else 1
+            self.thre = False
+            return value
+        if register == 3:
+            return self.lcr
+        if register == 5:
+            return 0x60  # TX holding and shift registers are empty.
+        if register == 7:
+            return self.scr
+        raise ValueError('unsupported UART register')
+
+    def write(self, register, value):
+        if not 0 <= value <= 255:
+            raise ValueError('UART requires byte values')
+        if register == 0:
+            if self.lcr & 0x80:
+                self.dll = value
+            else:
+                self.output.append(value)
+                self.thre = True
+        elif register == 1:
+            if self.lcr & 0x80:
+                self.dlm = value
+            else:
+                if value & ~2:
+                    raise ValueError('only UART TX interrupts are supported')
+                if value & 2 and not self.ier & 2:
+                    self.thre = True
+                self.ier = value
+        elif register == 2:
+            if value & ~6:
+                raise ValueError('UART FIFO mode is not supported')
+        elif register == 3:
+            self.lcr = value
+        elif register == 7:
+            self.scr = value
+        else:
+            raise ValueError('unsupported UART register')

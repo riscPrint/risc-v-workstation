@@ -698,3 +698,7 @@ establish Linux device support.
 `--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
+
+The [Linux project](../examples/qemu-linux/README.md) composes the reference
+Timer and Plic with an output-only Ns16550 register subset. Device-state tests
+do not certify an RTL bus connection or a device timing match.
