@@ -282,8 +282,29 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal template`
+
+```text
+usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
+    [--project PROJECT] {rob,freelist,rename,issue,lsq,credit}
+```
+
+### `rvw formal contracts`
+
+```text
+usage: rvw formal contracts [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
+    [--engine ENGINE] [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal strengthen`
+
+```text
+usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
+    [--engine ENGINE] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw formal apps`
@@ -328,8 +349,9 @@ usage: rvw formal sby-regress [-h] --out OUT [--timeout TIMEOUT] [--json]
 usage: rvw formal prove [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--cut CUT] [--reset-cycles RESET_CYCLES]
-    [--free-reset] [--first-failure] [--project PROJECT]
+    [--json] [--tie PORT=VALUE] [--abstraction ABSTRACTION] [--cut CUT]
+    [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
+    PROJECT]
 ```
 
 ### `rvw formal depth-search`
@@ -367,9 +389,10 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
 usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--cut CUT]
-    [--event-clock PORT] [--event-model] [--async-reset] [--reset-cycles
-    RESET_CYCLES] [--free-reset] [--first-failure] [--project PROJECT]
+    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--abstraction
+    ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
+    [--async-reset] [--reset-cycles RESET_CYCLES] [--free-reset]
+    [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal from-sim`
