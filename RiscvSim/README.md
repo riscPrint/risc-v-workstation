@@ -588,3 +588,19 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+### Serialized multi-hart reference
+
+`SerializedMemoryReference` checks accepted memory actions at a project-declared
+serialized boundary. Initialize it from captured input bytes. Supply expected
+write bytes from independent program or device state. Its read method checks
+observed bytes and returns the last write ID for each byte. It rejects missing
+serialization IDs, duplicate action IDs and wrong data. Failed checks do not
+advance the reference.
+
+`TwoHartNativeSpec` uses this reference with independent register state for its
+producer/consumer programs. It records memory serialization and read-from IDs
+beside C2 hart retirement order. This fixture check does not add a full ISA
+reference or production multi-image adapter. Use herd or another memory-model
+checker for weak-memory outcomes. Do not impose this serialized model on a
+boundary that permits other legal interleavings.

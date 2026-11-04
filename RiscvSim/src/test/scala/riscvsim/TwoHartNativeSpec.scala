@@ -98,6 +98,10 @@ class TwoHartNativeSpec extends AnyFunSuite {
         dut.clockDomain.waitSampling(5)
         trace.reset(0, 0); trace.reset(1, 0)
         dut.io.start #= true
+        val reference = new SerializedMemoryReference(Seq.fill[Byte](8)(0))
+        val registers = Array(0L, 0L)
+        var serial = 0L
+        def bytes(value: BigInt) = (0 until 4).map(i => ((value >> (8*i)) & 255).toByte)
         val orders = Array(0, 0); val ended = Array(false, false)
         var cycle = 0L
         while (!ended.forall(identity) && cycle < 100) {
@@ -113,6 +117,24 @@ class TwoHartNativeSpec extends AnyFunSuite {
               val result = if (load) h.io.rdata.toBigInt else if ((insn & 127) == 19)
                 (if (((insn >> 15) & 31) == 0) BigInt(0) else value) + (insn >> 20) else BigInt(0)
               val pc = h.io.pc.toBigInt
+              val idKey = s"hart-$id-${orders(id)}"
+              var readFrom = Vector.empty[String]
+              if (load || store) {
+                val address = h.io.address.toBigInt.toInt
+                if (store) reference.write(serial, idKey, address,
+                  bytes(BigInt(registers(id))), bytes(h.io.wdata.toBigInt), 15)
+                else {
+                  readFrom = reference.read(serial, idKey, address, bytes(result))
+                  registers(id) = reference.expected(address,4).zipWithIndex.map {
+                    case (b,i) => (b.toLong & 255) << (i*8)
+                  }.sum
+                }
+                serial += 1
+              } else if ((insn & 127) == 19) {
+                val source = if (((insn >> 15)&31) == 0) 0L else registers(id)
+                registers(id) = source + (insn.toInt >> 20)
+                assert(result == registers(id), "independent register result")
+              }
               trace.retire(id, RvfiRecord(orders(id), cycle, insn, false, false, false, 3, 1,
                 ((insn >> 15) & 31).toInt, if (((insn >> 15) & 31) == 0) BigInt(0) else value, if (store) 1 else 0, if (store) value else BigInt(0),
                 if (load || (insn & 127) == 19) 1 else 0, result, pc,
@@ -122,7 +144,9 @@ class TwoHartNativeSpec extends AnyFunSuite {
               if (load || store) trace.memory(cycle, s"hart-$id-${orders(id)}",
                 if (store) "write" else "read", ujson.Obj("source" -> s"hart-$id",
                   "address" -> Hex(h.io.address.toBigInt), "data" -> Hex(if (store) value else result),
-                  "mask" -> "0xf", "hart" -> id, "order" -> orders(id).toString))
+                  "mask" -> "0xf", "hart" -> id, "order" -> orders(id).toString,
+                  "serialization" -> (serial-1).toString, "boundary" -> "fixture-serialized-ram",
+                  "read_from" -> ujson.Arr.from(readFrom)))
               orders(id) += 1
             }
           }
