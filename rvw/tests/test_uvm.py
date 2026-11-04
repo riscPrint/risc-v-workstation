@@ -19,7 +19,8 @@ def test_positive_requires_complete_unique_evidence():
     assert uvm.evidence(log, 0, False)
     for bad in (log.replace("RVW_UVM_DONE", ""), log.replace("RVW_UVM_PASS rvfi\n", ""),
                 log + "RVW_UVM_PASS rvfi\n", log + "UVM_ERROR : 1\n",
-                log + "UVM_FATAL @ 10: test [FAIL] mismatch\n"):
+                log + "UVM_FATAL @ 10: test [FAIL] mismatch\n",
+                log + "UVM_ERROR source.sv(2) @ 1: test [ERROR] bad\n"):
         assert not uvm.evidence(bad, 0, False)
     assert not uvm.evidence(log, 1, False)
     assert not uvm.evidence(log, 0, True)
