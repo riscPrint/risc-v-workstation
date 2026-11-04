@@ -135,7 +135,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate} ...
+usage: rvw cosim [-h] [--project PROJECT] {check,generate,live} ...
 ```
 
 ### `rvw cosim check`
@@ -153,6 +153,15 @@ usage: rvw cosim check [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
     [--json] --out OUT [--max-instructions MAX_INSTRUCTIONS] [--project
     PROJECT]
+```
+
+### `rvw cosim live`
+
+```text
+usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
+    [--json] --out OUT --simulator ... [--model {spike,sail}] [--history
+    HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config
+    SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cov`

@@ -326,10 +326,10 @@ Legacy `mem_*` fields still describe completed effects. A missing fault record
 makes no claim about attempted accesses. This extension describes data accesses;
 instruction fetch faults still use trap cause/tval.
 
-Spike checks zero-completion, uncompressed scalar load/store attempts for width
-codes 0..3. It computes address and width from its own instruction and pre-step
-registers, then checks the synchronous cause. Other encodings, partial effects,
-and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Spike checks zero-completion scalar load/store attempts, compressed accesses
+and LR/SC/AMOs. It computes address and width from its own instruction and
+pre-step registers, then checks the synchronous cause. Reserved encodings,
+partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 
@@ -383,6 +383,24 @@ missing external inputs give inconclusive. Current Spike/Sail single-hart
 commands do not implement this extension. Do not split `/2` into `/1` files and
 claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
 completion aggregation. It does not supply a multi-hart reference backend.
+
+
+### C2 online launch
+
+`rvw cosim live --elf ELF --core CORE --out DIR --simulator COMMAND ...`
+launches a C1 adapter. DIR must be new. COMMAND must contain `{elf}` and `{out}`
+placeholders. The command receives the captured ELF and writes C2 to
+`DIR/rvfi.jsonl`. `RVW_RVFI_FLUSH=1` requests line flushes in RiscvSim.
+The existing offline comparison and synchronization rules apply. The wall
+timeout covers the whole launch, including builds and lock waits. A checked
+mismatch stops the process group and returns exit 1. A timeout, incomplete
+stream or nonzero exit cannot produce a match; it returns exit 3 when usable
+trace evidence exists. A timeout before any C2 output is also inconclusive.
+Other input and trace errors return exit 2. `simulator` records command,
+returncode, timed_out and trace path. The consumed prefix digest is not a
+complete file identity. Launch metadata captures the executable identity and
+argument list; adapter build dependencies still require C1 provenance.
+
 
 ## C3. Suite results (`rvw.results/1`)
 
