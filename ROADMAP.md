@@ -6,6 +6,9 @@ covers the EDA platform only.
 
 - **Goal:** one integrated platform that replaces the commercial EDA stack for architecture, RTL
   design and verification, built on open-source tools and extended where they fall short.
+  We extend the open engines themselves (formal, simulation, UVM, debug) until they match or
+  beat the commercial ones: JasperGold and VC Formal (#294), VCS and Xcelium (#295), UVM
+  (#296), Verdi (#297). Changes go upstream where possible.
   Synthesis, physical implementation and signoff are out of scope for now.
 - **First user:** the BOOM port (`riscPrint/spinal-boom`). Tools start with BOOM and become generic:
   BOOM-specific parts stay in adapters and config.
@@ -28,11 +31,11 @@ Native host qualification and core runtime checks remain open. Emulation has not
 |---|---|---|---|---|---|---|
 | ARCH | Architecture exploration and virtual platforms | Arm Fast Models, Synopsys Platform Architect | gem5, QEMU, Spike, Sail | `Arch/` and `rvw arch`: native gem5 setup, project O3 descriptions, C1 ROI calibration and MCP; native Linux reference image flow (RTL blocked); `rvw perf` | exploring; Buildroot target links supported | Event counters, measurement microbenchmarks, held-out fitting and drift checks |
 | IDE | Design entry and IDE | Sigasi Studio, DVT IDE | VS Code, Verible, Metals (Scala) | SpinalBlocks; SpinalDB + `rvw query` | in progress | Cross-navigation in VS Code backed by the design database |
-| SIM | Simulation and regression | Synopsys VCS, Cadence Xcelium, Siemens Questa; vManager | Verilator, Icarus Verilog, GHDL | RiscvSim (run contract, BOOM adapter); `rvw regress`; `rvw cov` | usable; serial server and firmware payload loading; portable LR/SC outcomes; Linux devices pending | Persistent simulation server (no per-run elaboration); other presets and ACT4 through RiscvSim |
+| SIM | Simulation and regression | Synopsys VCS, Cadence Xcelium, Siemens Questa; vManager | Verilator, Icarus Verilog, GHDL | RiscvSim (run contract, BOOM adapter); `rvw regress`; `rvw cov` | usable; serial server and firmware payload loading; portable LR/SC outcomes; Linux devices pending | Persistent simulation server (no per-run elaboration); other presets and ACT4 through RiscvSim; extend open simulation to VCS/Xcelium class (#295); full open UVM (#296) |
 | VER | Testbenches, VIP, co-simulation | UVM, Questa VIP, Synopsys VIP, Imperas ImperasDV | riscv-tests, ACT4, riscv-dv, TestRIG, Spike, Sail, cocotb | `rvw cosim` (Spike lockstep, Sail offline); riscv-tests/ACT4/VM suites in `rvw regress` | in progress (interrupt schedules; directed Sv39 generator; BOOM runtime pending) | Cosim on ACT4, benchmarks and random programs (riscv-dv); interrupt stimulus; TestRIG |
-| FV | Formal verification | Cadence JasperGold, Synopsys VC Formal, Siemens Questa Formal | SymbiYosys, Yosys, ABC, pono, avy, eqy, mcy, riscv-formal | SpinalChecks (FV 5); `rvw formal` (FV 7, xprop); proof exclusions and mcy in `rvw cov` (part of FV 6) | in progress (shared SBY runner; conditional campaigns; restricted native SVA BMC; RVFI checks and Sail arithmetic slice) | BOOM X candidates; TileLink rules; FV 2 (sequential equivalence), rest of FV 6 |
+| FV | Formal verification | Cadence JasperGold, Synopsys VC Formal, Siemens Questa Formal | SymbiYosys, Yosys, ABC, pono, avy, eqy, mcy, riscv-formal | SpinalChecks (FV 5); `rvw formal` (FV 7, xprop); proof exclusions and mcy in `rvw cov` (part of FV 6) | in progress (shared SBY runner; conditional campaigns; restricted native SVA BMC; RVFI checks and Sail arithmetic slice) | BOOM X candidates; TileLink rules; FV 2 (sequential equivalence), rest of FV 6; extend open engines to JasperGold/VC Formal class (#294) |
 | LINT | Lint and clock-domain crossing | Synopsys VC SpyGlass, Siemens Questa CDC | Verible, Verilator lint, Yosys | `rvw lint`: native diagnostics and structural crossing inventory | in progress | Survey open CDC; checks Spinal can emit from clock-domain info |
-| DBG | Debug and waveforms | Synopsys Verdi, Cadence SimVision, Questa Visualizer | GTKWave, Surfer | SpinalWaves, SpinalTrace, SpinalKonata, `rvw wave`, `rvw bundle`/`reduce`/`bisect`, `rvw perf` | usable ([#68](https://github.com/riscPrint/risc-v-workstation/issues/68) runtime parity pending) | Validate old/new SpinalTrace runtime parity (#68); formal counterexample debugging; Surfer integration |
+| DBG | Debug and waveforms | Synopsys Verdi, Cadence SimVision, Questa Visualizer | GTKWave, Surfer | SpinalWaves, SpinalTrace, SpinalKonata, `rvw wave`, `rvw bundle`/`reduce`/`bisect`, `rvw perf` | usable ([#68](https://github.com/riscPrint/risc-v-workstation/issues/68) runtime parity pending) | Validate old/new SpinalTrace runtime parity (#68); formal counterexample debugging; Surfer integration; extend open debug to Verdi class (#297) |
 | EMU | Emulation and FPGA prototyping | Cadence Palladium and Protium, Synopsys ZeBu | Verilator (multithreaded), open FPGA flows | none | none | Decide: FPGA prototyping, faster simulation, or both |
 | PLAT | One integrated platform | All of the above, as one product | VS Code | `rvw` CLI and `rvw mcp`; shared formats C1–C8; separate core projects with `rvw.toml` (integration in progress); VS Code extension with SpinalBlocks | in progress (saved regress/cov/perf VS Code views added; local macOS CI in progress; native qualification pending, #16 and #41) | Qualify native bundles and remote execution; extend saved result navigation |
 
@@ -160,7 +163,9 @@ and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
 - One machine-wide OS file lock (`scripts/with-lock.sh`, `rvw.common.lock`) for heavy
   jobs; process trees are stopped as a group on timeout or cancel.
 - Build open replacements for all commercial formal features (FV), not only what BOOM
-  needs today.
+  needs today. Extend the open engines (Yosys/SBY, ABC, pono, rIC3, avy, EBMC, Verilator and
+  others) until they match or beat JasperGold, VC Formal, VCS, Xcelium and Verdi; build a full
+  open UVM flow (#294–#297). Measure this with head-to-head benchmarks.
 - Deterministic work is code; agents reach it through MCP.
 - Private native bundle definitions pin source revisions and archives per host.
   Native qualification and full offline dependency packaging remain open. No Docker requirement.
