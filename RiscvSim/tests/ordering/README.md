@@ -21,7 +21,10 @@ Reference-only success is not a DUT pass. Ordering stays `inconclusive`.
 
 The suite checks `.w` and, on RV64, `.d`, with all aq/rl encodings.
 It checks SC without a reservation, SC to a different address and the bytes after
-both legal SC outcomes. A successful SC must write. A failed SC must not write.
+both legal SC outcomes. The reservation set can include both addresses. The test
+accepts success or failure at the second address. It checks the target bytes and
+checks that the source bytes stay unchanged. It also checks that each SC consumes
+the reservation. It clears both operands at full width before each case. A successful SC must write. A failed SC must not write.
 It accepts spurious failure. It does not require success within a fixed time.
 Do not use exact Spike lockstep for an unconstrained LR/SC run: two legal runs
 can take different SC branches. The program checks each branch's required effects.
@@ -135,3 +138,6 @@ The second command compares Spike-generated traces with Sail for one RV64 seed.
 It is a reference cross-check. It is not a DUT comparison.
 The first command runs assertions on Spike for both XLENs and three seeds.
 Observer and outcome tests include forbidden and missing-evidence cases.
+Synthetic SC tests run the generated checker on Spike. They cover operand-sized
+and 64-byte reservation sets, legal outcomes, wrong memory effects and reuse of
+a consumed reservation. These are checker tests, not DUT geometry evidence.

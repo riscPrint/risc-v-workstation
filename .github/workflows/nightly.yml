@@ -1,68 +1,40 @@
 name: Nightly (no BOOM)
 on:
   schedule:
+    # 03:23 GMT / 04:23 BST, both at night in Europe/London.
     - cron: '23 3 * * *'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
-
 permissions:
   contents: read
 jobs:
   python:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: [self-hosted, macOS, rvw-local]
+    timeout-minutes: 90
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: '3.11'
-      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
         with:
           distribution: temurin
           java-version: '21'
-      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5 # v1.1.9
-      - name: Native tools for launcher tests
-        run: sudo apt-get update && sudo apt-get install -y clang verilator gtkwave yosys iverilog
-      - name: Warm the classpath used by Python extraction tests
-        working-directory: SpinalDB/spinaldb
-        run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
-      - name: Create the Python environment used by launcher scripts
-        run: |
-          python -m venv rvw/.venv
-          echo "$GITHUB_WORKSPACE/rvw/.venv/bin" >> "$GITHUB_PATH"
-      - run: python -m pip install -e './rvw[dev,mcp]' 
-      - name: Full Python collection (fast and slow; optional native tools can skip)
-        run: python -m pytest rvw/tests --strict-markers -q -ra --durations=20 --junitxml=nightly-results.xml
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: nightly-python
-          path: nightly-results.xml
-          retention-days: 7
+      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5
+      - name: Run isolated local checks
+        run: scripts/ci-local.sh nightly-python
   scala:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: [self-hosted, macOS, rvw-local]
+    timeout-minutes: 90
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
         with:
           distribution: temurin
           java-version: '21'
-      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5 # v1.1.9
-      - name: Native simulator for the small generic demo
-        run: sudo apt-get update && sudo apt-get install -y verilator
-      - name: Generic Konata suite and adapter input tests
-        working-directory: SpinalKonata
-        run: sbt -batch -J-XX:ActiveProcessorCount=2 test inputs/test
-      - name: Compile database and trace suites without a core checkout
-        working-directory: SpinalDB/spinaldb
-        run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
-      - name: Compile generated-check suites without a core checkout
-        working-directory: SpinalChecks
-        run: sbt -batch -J-XX:ActiveProcessorCount=2 Test/compile
+      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5
+      - name: Run isolated local checks
+        run: scripts/ci-local.sh nightly-scala

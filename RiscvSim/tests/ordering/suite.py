@@ -49,7 +49,9 @@ def lrsc(xlen, seed):
     for width in (['w', 'd'] if xlen == 64 else ['w']):
         for suffix in ['', '.aq', '.rl', '.aqrl']:
             bodies.append(f"""la t0, cell
- sw zero, 0(t0)
+ s{width} zero, 0(t0)
+ la t4, other
+ s{width} zero, 0(t4)
  li t1, 37
  sc.{width}{suffix} t2, t1, (t0)
  beqz t2, fail
@@ -63,12 +65,22 @@ def lrsc(xlen, seed):
  j 3f
 2: bnez t3, fail
 3:
- lr.{width} t2, (t0)
+ lr.{width} t5, (t0)
  la t4, other
  sc.{width} t2, t1, (t4)
- beqz t2, fail
  l{width} t3, 0(t4)
- bnez t3, fail
+ bnez t2, 4f
+ bne t3, t1, fail
+ j 5f
+4: bnez t3, fail
+5:
+ l{width} t3, 0(t0)
+ bne t3, t5, fail
+ # Every SC consumes the reservation, including a failed SC.
+ sc.{width} t2, t1, (t0)
+ beqz t2, fail
+ l{width} t3, 0(t0)
+ bne t3, t5, fail
 """)
     return program('\n'.join(bodies), xlen=xlen)
 

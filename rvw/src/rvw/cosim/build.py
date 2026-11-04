@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import shlex
+import re
 import tempfile
 
 from rvw.common.capture import Capture, CaptureError
@@ -55,12 +56,29 @@ def build(source, output, prefix=None, compiler=None):
                                            'SDKROOT', 'DEVELOPER_DIR', 'MACOSX_DEPLOYMENT_TARGET',
                                            'SYSTEMROOT').items() if v is not None}
         cxx = capture.tool(compiler or os.environ.get('CXX', 'c++'))
+        # ELF libraries without a SONAME inherit the link argument as DT_NEEDED.
+        # Use a library search name, never the temporary capture's absolute path.
+        with libraries['riscv'].copy.open('rb') as stream:
+            elf = stream.read(4) == b'\x7fELF'
+        load_name = None
+        if elf:
+            readelf = capture.tool('readelf')
+            dynamic = run_group([str(readelf.path), '-d', str(libraries['riscv'].copy)],
+                                capture=True, timeout=30, env=env)
+            if dynamic.timed_out or dynamic.returncode:
+                raise ValueError('cannot read Spike ELF dynamic section')
+            soname = re.search(r'\(SONAME\).*?\[([^\]]+)\]', dynamic.stdout)
+            load_name = soname.group(1) if soname else library.name
+        rpaths = ['-Wl,-rpath,' + str(library.parent)]
+        if elf:
+            rpaths.insert(0, '-Wl,-rpath,$ORIGIN')
         flags = [*FLAGS, '-MMD', '-MF', '@dependencies', '-I@headers', '-DRVW_SHIM_SOURCE_SHA256=@source_sha256',
-                 '-DRVW_SHIM_BUILD_SHA256=@build_id', '@source', '@riscv', '@disasm', '@fesvr',
-                 '-Wl,-rpath,' + str(library.parent), '-o', '@output']
+                 '-DRVW_SHIM_BUILD_SHA256=@build_id', '@source',
+                 *(['-L@riscv_dir', '-l:@riscv_name'] if elf else ['@riscv']), '@disasm', '@fesvr',
+                 *rpaths, '-o', '@output']
         inputs = {'schema': 'rvw.spike-build-inputs/1', 'capture': capture.record(),
                   'source': shim.source, 'libraries': {name: item.source for name, item in libraries.items()},
-                  'flags': flags, 'spike_identity': spike_identity}
+                  'flags': flags, 'spike_identity': spike_identity, 'spike_load_name': load_name}
         identity = build_id(inputs)
         include = work / 'include'
         for name, tree in headers.items():
@@ -69,8 +87,10 @@ def build(source, output, prefix=None, compiler=None):
         args = [str(cxx.path), *FLAGS, '-MMD', '-MF', str(work / 'dependencies.d'), '-I' + str(include),
                 '-DRVW_SHIM_SOURCE_SHA256="' + shim.sha256 + '"',
                 '-DRVW_SHIM_BUILD_SHA256="' + identity + '"', str(shim.copy),
-                *(str(item.copy) for item in libraries.values()),
-                '-Wl,-rpath,' + str(library.parent), '-o', str(binary)]
+                *(['-L' + str(libraries['riscv'].copy.parent), '-l:' + libraries['riscv'].copy.name]
+                  if elf else [str(libraries['riscv'].copy)]),
+                *(str(libraries[name].copy) for name in ('disasm', 'fesvr')),
+                *rpaths, '-o', str(binary)]
         result = run_group(args, capture=True, timeout=120, env=env)
         if result.timed_out or result.returncode:
             raise ValueError(f'shim compiler failed ({result.returncode}): {result.stderr}')
