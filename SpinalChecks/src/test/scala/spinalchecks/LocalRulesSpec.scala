@@ -39,6 +39,27 @@ class LocalRulesSpec extends AnyFunSuite {
       }
     }
   }
+  class Indirect extends Component {
+    val use = in Bool()
+    val idx = in UInt(2 bits)
+    val bits = in Bits(3 bits)
+    val bit = out Bool()
+    val value = out UInt(8 bits)
+    val selected = bits(idx)
+    val selectedValue = Vec(U(1,8 bits), U(2,8 bits), U(3,8 bits))(idx)
+    bit := Mux(use, selected, False)
+    value := Mux(use, selectedValue, U(0,8 bits))
+  }
+  test("intermediate wires and expression muxes use-gate illegal indices") {
+    val (cfg, _) = SpinalChecks.install(SpinalConfig(targetDirectory = "generated/indirect"), ChecksConfig(mode = Mode.Monitor))
+    val sim = SimConfig.withConfig(cfg).withVerilator.workspacePath("simWorkspace").workspaceName("indirect").compile(new Indirect)
+    for ((use, idx, expected) <- Seq((false,3,Set.empty[String]), (true,2,Set.empty[String]),
+      (true,3,Set("bits.index", "vec.index")))) sim.doSim { d =>
+      d.use #= use; d.idx #= idx; d.bits #= 5
+      d.clockDomain.forkStimulus(10); d.clockDomain.waitSampling(8); d.clockDomain.waitFallingEdge()
+      assert(ChecksSim.firings(d).map(_.check.kind).toSet == expected)
+    }
+  }
   class Domains extends Component {
     val bad = in Bool()
     val a = ClockDomain.external("a")

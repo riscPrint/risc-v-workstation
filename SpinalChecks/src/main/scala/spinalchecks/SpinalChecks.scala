@@ -423,6 +423,14 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         rec
       }
 
+      // Snapshot original consumers before inserting monitor logic. Unknown sinks remain active.
+      val originalStatements = ArrayBuffer[Statement]()
+      c.dslBody.walkStatements(st => originalStatements += st)
+      val consumers = mutable.HashMap[Expression, ArrayBuffer[Statement]]()
+      originalStatements.foreach { st => st.foreachDrivingExpression { root =>
+        consumers.getOrElseUpdate(root, ArrayBuffer()) += st
+        root.walkExpression(e => consumers.getOrElseUpdate(e, ArrayBuffer()) += st)
+      } }
       val todo = ArrayBuffer[() => Unit]()
       // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
       def useGuard(st: Statement): Bool = {
@@ -440,6 +448,45 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         }
         walk(st.parentScope)
       }
+      def expressionUse(root: Expression, sought: Expression): Bool = {
+        if (root eq sought) True
+        else root match {
+          case _: BaseType => False
+          case m: BinaryMultiplexer =>
+            val cond = m.cond match {
+              case b: Bool => b
+              case e => val b = Bool(); b.assignFrom(e); m.cond = b; b
+            }
+            expressionUse(m.cond, sought) ||
+              (cond && expressionUse(m.whenTrue, sought)) || (!cond && expressionUse(m.whenFalse, sought))
+          case e =>
+            val terms = ArrayBuffer[Bool]()
+            e.foreachExpression(x => terms += expressionUse(x, sought))
+            terms.foldLeft(False: Bool)(_ || _)
+        }
+      }
+      def valueUse(value: Expression, seen: Set[Expression] = Set.empty): Bool = {
+        if (seen(value)) True // a cycle or unknown use must not suppress a check
+        else value match {
+          case b: BaseType if b.isReg || b.isOutput || b.component != c => True
+          case _ =>
+            consumers.get(value).map(_.toSeq.distinct.map { st =>
+              val sink = st match {
+                case a: AssignmentStatement => valueUse(a.finalTarget, seen + value)
+                case _ => True
+              }
+              val roots = ArrayBuffer[Bool]()
+              st.foreachDrivingExpression(e => roots += expressionUse(e, value))
+              useGuard(st) && roots.foldLeft(False: Bool)(_ || _) && sink
+            }.foldLeft(False: Bool)(_ || _)).getOrElse(True)
+        }
+      }
+      def selectedUse(st: Statement, selected: Expression): Bool = {
+        val roots = ArrayBuffer[Bool]()
+        st.foreachDrivingExpression(e => roots += expressionUse(e, selected))
+        val sink = st match { case a: AssignmentStatement => valueUse(a.finalTarget); case _ => True }
+        useGuard(st) && roots.foldLeft(False: Bool)(_ || _) && sink
+      }
       for (d <- c.getTags().collect { case d: DeclaredRule => d }) {
         val rec = newRecord(d.kind, d.name, false, None, d.detail)
         if (rec.inserted) todo += { () => d.cd.on { emit(rec, active(d.cd) && d.fail) } }
@@ -453,7 +500,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           }
           cd.on {
             val idx = UInt(); idx.assignFrom(bit.bitId); bit.bitId = idx
-            emit(rec, active(cd) && useGuard(st) && idx >= U(bit.source.getWidth))
+            emit(rec, active(cd) && selectedUse(st, bit) && idx >= U(bit.source.getWidth))
           }
         }
       }
@@ -668,7 +715,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           }
           rec.signals("index") = Seq(idx)
           val cd = sel match { case b: BaseType if b.isReg => b.clockDomain; case _ => ClockDomain.current }
-          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => useGuard(x._2)).reduce(_ || _) && idx >= U(n)) }
+          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => selectedUse(x._2, x._1)).reduce(_ || _) && idx >= U(n)) }
         }
       }
 
