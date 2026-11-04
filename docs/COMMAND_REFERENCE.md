@@ -257,6 +257,7 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
+    [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
     [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
 ```
 
@@ -427,8 +428,10 @@ usage: rvw formal x-sweep [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
 ### `rvw init`
 
 ```text
-usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--dry-run]
-    [--force] [--json] [--project PROJECT] [path]
+usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
+    [--sbt-project SBT_PROJECT] [--linker-script LINKER_SCRIPT] [--ram-region
+    RAM_REGION] [--reset-pc RESET_PC] [--db-top DB_TOP] [--dry-run] [--force]
+    [--json] [--project PROJECT] [path]
 ```
 
 ### `rvw lint`
