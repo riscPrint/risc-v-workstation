@@ -768,3 +768,10 @@ checks do not qualify whole-core CDC or analog metastability behavior.
 It adds value-sensitive data and control taint to mapped Boolean gates and
 rising-edge registers. It is optional. It does not change core source files.
 See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
+
+## Finite coherence model
+
+[coherence/](coherence/README.md) explores a finite two-agent TileLink-C permission
+abstraction. It generates a permission relation for RTL and simulation monitors.
+The two-hart fixture binding checks permission safety only. Channel refinement,
+RTL data invariants and general fair liveness remain open.
