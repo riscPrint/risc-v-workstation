@@ -199,6 +199,34 @@ Reused C1 results record the original source in `reused_from_source`; their `sou
 source fields name the current selection. Every claimed model value must still match.
 The verdict goes to `<candidate run>/verdict.json`.
 
+### Cold native gate timing
+
+Select an older and a candidate commit that the chosen adapter can build.
+Build the tier's ELF inputs first. Keep the tool checkout at one clean commit until the gate
+finishes. A changed tool revision can invalidate C1 identity claims.
+
+For the BOOM example, set `older_rev` and `candidate_rev` to the full core commits, then run:
+
+```sh
+cold_root="$(mktemp -d /tmp/rvw-cold.XXXXXX)"
+export RISCVSIM_WORK="$cold_root/native"
+export RVW_RESULTS="$cold_root/results"
+export RVW_SRC_CACHE="$cold_root/source"
+/usr/bin/time -p scripts/with-lock.sh boom nice -n 10 rvw/.venv/bin/rvw regress gate \
+  --core boom --tier quick --base-rev "$older_rev" --cand-rev "$candidate_rev" \
+  --jobs 1 --no-cache --json
+```
+
+The three child directories must be new. `--no-cache` alone does not clear the adapter's
+compiled-model cache. Installed tools, dependency downloads and sbt outputs remain warm.
+This measures cold native-model, result and source-export caches. It is not a clean-machine
+installation test. Record total wall time and lock acquisition time separately.
+
+Check both source identities and all requested workloads before calling the comparison complete.
+A build failure, an incomplete identity or a wall timeout is inconclusive. A timed attempt alone
+does not qualify an older revision. An accepted comparison can retain an unchanged failure;
+report each side's pass and failure counts with the timing. A quick gate qualifies only that tier.
+
 ## Core config reference
 
 ```toml
