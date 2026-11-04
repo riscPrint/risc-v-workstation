@@ -555,3 +555,12 @@ returns inconclusive. Two models can select different permitted translations.
 No mismatch in that scenario earns coverage. The C1 self-check still fails
 wrong values and a wrong result after the required fence. Other scenarios keep
 the normal strict mismatch failure rule. Raw `c1_status` remains in check rows.
+
+For a Spike-to-Sail reference cross-check, use a separate platform file with
+`illegal_insn_tval: "insn"`. Spike-generated traces contain the instruction bits
+for illegal-instruction traps. BOOM's `"zero"` setting describes BOOM and makes
+Sail expect zero. It is not the platform setting for those Spike traces. Keep
+this reference-only file separate from the DUT platform. Do not waive the
+strict comparison or change the DUT contract to make two oracles agree.
+An unfenced translation can still differ under the correct reference platform.
+Keep that comparison inconclusive and retain both values.
