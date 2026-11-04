@@ -27,7 +27,7 @@ Reuse these modules. Do not create a second coverage engine or a second runner.
 |---|---|---|
 | `rvw/src/rvw/cov/closure.py:closure` | Reads functional, RTL and code holes. Attaches declared candidates. | Keep this suggestion-only interface stable. Add a separate execution command. |
 | `rvw/src/rvw/cov/semantic.py:groups,Observer` | Observes seven operand classes, five imm12 classes, CSR access, exceptions and mode transitions. | Lower supported goals to constraints. Keep observers independent of generator code. |
-| `rvw/src/rvw/cov/functional.py:functional` | Captures traces, binds plan hashes and counts observed bins. | Add optional captured payload PC regions to plan identity. Apply them before semantic sampling. |
+| `rvw/src/rvw/cov/functional.py:functional` | Captures traces, binds plan hashes and counts observed bins. | Add a stable payload sampling policy and per-ELF region manifests. Apply them before semantic sampling. |
 | `rvw/src/rvw/cov/isa.py:plan` | Uses a core-owned ISA manifest and pinned opcode files. | Reuse legal encodings and source hashes for generation. |
 | `rvw/src/rvw/cov/sequence.py` | Measures retirement-order pairs. | Later synthesize bounded pairs. Do not call these measured pipeline hazards. |
 | `rvw/src/rvw/cov/rtl.py` and `closure.py` | Typed RTL observations and uncompleted RTL sequences. | Later use project-owned stimulus recipes and matching sample identity. |
@@ -108,8 +108,13 @@ Use `.word` for the solved payload when needed. Operand setup can use `li`.
 
 Mark each payload instruction with start/end symbols. Credit only those byte
 ranges. Setup and termination can otherwise close visible `addi` bins without
-exercising the requested operation. Capture the ELF-derived ranges in the plan.
-Use full C2 for lockstep and filtered C2 observations only for campaign coverage.
+exercising the requested operation. Bind the ELF-derived ranges to that ELF in
+a captured region manifest. Include the stable sampling policy in plan identity;
+keep per-ELF addresses in attempt evidence. Addresses can differ across programs
+without changing the semantic bin universe. Do not merge these filtered reports
+with ordinary full-trace coverage. Use full C2 for lockstep and filtered C2
+observations only for campaign coverage. Initial evidence must use this same
+policy and bound region manifests. Re-run legacy seed tests if these are absent.
 Baseline and targeted programs use identical runtime and filtering rules.
 
 CSR, exceptions, privilege transitions, memory, FP, compressed encodings and
@@ -239,6 +244,15 @@ need separate event evidence. Core hooks remain outside this repository's scope.
 4. Add pinned riscv-dv/CTG backends and agent-proposed source through the same
    verifier. Propose CGF import/export upstream in the PR text; do not post it.
 
-Follow-up issue links are added after this first design commit. No core edits,
+Implementation follow-ups:
+
+- [#349: ISA loop and measured random comparison](https://github.com/riscPrint/risc-v-workstation/issues/349).
+- [#352: bounded sequence actions](https://github.com/riscPrint/risc-v-workstation/issues/352).
+- [#353: measured RTL event goals](https://github.com/riscPrint/risc-v-workstation/issues/353).
+- [#33: shared external random generator](https://github.com/riscPrint/risc-v-workstation/issues/33)
+  and [#48: suite integration](https://github.com/riscPrint/risc-v-workstation/issues/48)
+  retain phase 4 ownership.
+
+No core edits,
 license decision, integration-model decision or complete #30 claim is authorized
 by this design.
