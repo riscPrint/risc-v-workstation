@@ -12,6 +12,15 @@ def capabilities(a):
 
 
 def register(sub):
+    from pathlib import Path
+    from rvw.sim.speed import command
+    speed = sub.add_parser('speed-compare', help='compare paired C1 speed after complete C2 equivalence')
+    speed.add_argument('--pair', nargs=2, action='append', required=True, metavar=('BASELINE', 'CANDIDATE'))
+    speed.add_argument('--out', type=Path, required=True)
+    speed.add_argument('--min-seconds', type=float, default=1.0)
+    speed.add_argument('--resamples', type=int, default=10000)
+    speed.add_argument('--seed', type=int, default=1)
+    speed.set_defaults(func=command)
     p = sub.add_parser('backends', help='show native backend semantic capabilities')
     p.add_argument('--backend', choices=BACKENDS)
     p.add_argument('--json', action='store_true')

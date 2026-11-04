@@ -1859,3 +1859,15 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### C1 simulation throughput extension
+
+Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.
+`metrics.sim_instructions_per_s` is `instret / details.execution_s`.
+The denominator includes adapter execution and artifact handling after model
+readiness. It excludes model compilation and elaboration. The rates are absent
+if seconds are missing, non-finite or non-positive, or counters are invalid.
+These are throughput measurements, not architectural IPC or correctness claims.
+C3 keeps the metrics. The history dashboard groups them by core, suite and preset.
+Short workloads and concurrent jobs can give noisy samples. Use repeated long
+workloads with fixed stimulus and equivalent complete C2 traces for comparisons.
