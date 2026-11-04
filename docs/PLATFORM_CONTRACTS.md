@@ -384,6 +384,19 @@ commands do not implement this extension. Do not split `/2` into `/1` files and
 claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
 completion aggregation. It does not supply a multi-hart reference backend.
 
+A serialized project boundary can use `SerializedMemoryReference` for byte data
+and read-from checks. The project assigns contiguous `serialization` IDs only
+when memory actions are accepted. This order is separate from `capture_seq`
+and each hart's `order`. An event names its `boundary`. Reads add `read_from`,
+one write ID per observed byte; `initial` names the captured initial image.
+External writes consume serialization IDs too. Initialize the reference from
+captured input bytes. Derive expected writes from stimulus or independent
+architectural state. Compare observed writes before updating the reference.
+This stricter serialized model is valid only for a declared serialized boundary.
+It must not reject legal weak-memory core behavior by imposing retirement order.
+The native two-hart subset fixture uses this model. Production multi-image
+loading and a full multi-hart architectural reference remain unavailable.
+
 
 ### C2 online launch
 
