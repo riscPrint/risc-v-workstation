@@ -396,8 +396,8 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
     [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
     [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
-    GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
-    [--project PROJECT]
+    GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -408,8 +408,8 @@ usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
     [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--abstraction
     ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
-    [--async-reset] [--reset-cycles RESET_CYCLES] [--free-reset]
-    [--first-failure] [--project PROJECT]
+    [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
+    [--free-reset] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal from-sim`
@@ -1154,7 +1154,7 @@ Starts a background job: yes.
 
 Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.
 
-Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `event_model`, `event_clock`, `async_reset`.
+Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `clock_schedule`, `event_model`, `event_clock`, `async_reset`.
 
 Starts a background job: yes.
 

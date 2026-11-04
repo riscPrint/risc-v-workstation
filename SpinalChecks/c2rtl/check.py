@@ -100,6 +100,8 @@ def run(args):
         (out / 'driver.c').write_text('''#include <stdint.h>
 #include <stdio.h>
 #include "model.c"
+_Static_assert(_Generic(&reference, uint32_t (*)(uint32_t, uint32_t): 1, default: 0),
+               "reference must have the exact unsigned integer interface");
 int main(void) {
   for (uint32_t a=0; a<LIMIT; ++a)
     for (uint32_t b=0; b<LIMIT; ++b)

@@ -603,7 +603,7 @@ Clock ports cannot be tied or used as the harness reset. Async loads, set/clear
 cells, latches, fine-grained state and memory async reset controls remain refused.
 The pre-optimization probes also check unused and tied state.
 `from-sim`, X flows and native replay retain the original one-clock restrictions.
-Related clocks with declared ratios or phase constraints are not yet supported.
+Related clocks can use the periodic sampled schedules specified below.
 
 Small pass/fail designs and refusal cases are in
 [SpinalChecks/examples/events](../../../../SpinalChecks/examples/events).
@@ -638,7 +638,9 @@ must have the same ordered port interface. One rising-edge clock is supported.
 Async controls, latches, memories, blackboxes, design properties and explicit
 nondeterministic cells are refused. State names must cover every register bit.
 The command pairs register names of equal width automatically. Repeat `--pair`
-for renamed state. An unmatched register always prevents an equivalence result.
+for renamed state. By default, an unmatched register prevents an equivalence result.
+`--unmatched-state prove` retains the inventory but lets the solver check every
+internal state bit without name pairing. It adds no state equality assumptions.
 The mapping is an inventory. The solver does not assume that paired values agree.
 
 Eqy creates partitions. The command matches boundary ports and keeps internal
@@ -654,7 +656,11 @@ state model. It need not be a reachable hardware difference after a real reset.
 for `--reset-cycles` clocks, then inactive. Output checks start after that sequence
 and `--settle` extra clocks. Without `--reset`, checks start at time zero, unless
 `--settle` is set. These unchecked startup clocks are an explicit restriction.
-Only `--latency 0` is supported. There is no output cycle shift or protocol adapter.
+`--latency N` means the candidate output lags the reference by N clocks (0..64).
+The reference wrapper delays every output by N clocks. Both wrappers suppress
+output checks through reset, settle and these N extra startup clocks. The output
+shift applies to all outputs, including status ports. There is no handshake adapter.
+Use it only when this fixed-cycle interface contract is intended.
 No reset port means no reset sequence is inferred. Inputs other than clock and
 reset remain free. Results list the reset, settle and latency settings.
 
@@ -662,7 +668,7 @@ reset remain free. Results list the reset, settle and latency settings.
 Its log is advisory. ABC's initialization and name matching differ from the eqy
 obligations. A dsec message cannot replace the partition proof. A dsec timeout
 still makes the command inconclusive. Native dsec as an authoritative backend,
-state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
+state encoding maps, blackbox contracts, multiple clocks,
 and a scalable partition dependency proof remain part of the epic.
 
 The command accepts exported RTL files with `--gold` and `--gate`.
@@ -718,7 +724,7 @@ and the separate bounded reachability check still apply. A pass is bounded by de
 
 Qualified engines are `smtbmc:yices` and `abc:bmc3`. Other engines, event BMC,
 macros/includes, named properties, sequences, clocking blocks, action blocks,
-cover/restrict, temporal implication, delay, repetition and multi-argument sampled
+cover/restrict, nonoverlapped or nested implication, delay, repetition and multi-argument sampled
 functions are refused before SBY starts. There is no full temporal SVA claim.
 The native frontend checks syntax and types. The input guard checks the supported
 subset even in unused text. A frontend failure cannot produce a passing result.
@@ -727,6 +733,61 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+
+### Related clocks as periodic sampled schedules
+
+Event BMC accepts repeated `--clock-schedule PORT=BITS` options. Declare every
+clock, including `--clock`, or declare none. `clk=01` and `other=0011` describe
+a 2:1 rate ratio. Rotate the bit strings to declare a phase. The leftmost bit is
+sample zero. Each pattern repeats forever. Each must contain both levels and
+2..256 samples. The joint period must not exceed 4096 samples. These are explicit
+proof restrictions, not measured hardware clock relationships.
+
+One solver step advances one global sample. The wrapper constrains clock levels
+at that sample. The event backend samples property data before its triggering
+edge; data that changes with a clock uses its previous sample at that edge.
+Clock schedules do not add analog timing, delta cycles, jitter or events between
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
+The existing reset harness still counts primary-clock edges. Async reset state
+requires the separate `--async-reset` option. Unsupported state controls and raw
+async-triggered properties remain refused. Replay and X flows remain unchanged.
+`event_model.schedules` records the exact patterns; `relationships` states whether
+the run used periodic schedules or unrelated clocks. Native phase tests require
+both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Nonzero latency example
+
+`--latency 1 --unmatched-state prove --reset reset --settle 2` checks a
+one-cycle candidate pipeline extension. Inputs remain identical on both sides at
+every cycle. Eqy matches only boundary ports. Every output partition must pass
+without internal state cutpoints. Native tests compare an independent one-stage
+reference and two-stage candidate. They require proof at latency one and
+counterexamples for latency zero, latency two and a changed arithmetic result.
+The new option does not add memory maps, blackbox contracts or source-revision
+export. Those parts of issue #18 remain open.
+
+
+### Single-sample implication in native slang
+
+The pinned native slang build applies `scripts/patches/slang-overlap.patch`.
+It lowers `Boolean |-> Boolean` to `!antecedent || consequent` using the existing
+SVA expression evaluator. Both sides use the same sample. The existing
+`disable iff` condition gates the check. Inline assert and assume forms are
+supported. There are no pending sequence threads in this subset.
+
+The local import guard permits one top-level implication with Boolean operands.
+It continues to reject `|=>`, delays, repetitions, nested or chained implications,
+named properties and sequences before SBY starts. The frontend also rejects
+unsupported AST forms, even without this guard. Use the source-built plugin;
+the older OSS CAD Suite bundled plugin does not provide this extension.
+
+Native positive and negative cases cover assertion, assumption and disable forms
+on both qualified engines. The installer applies the patch after extraction of
+checksum-pinned source archives. A failed patch stops the build. This extends
+upstream lowering but does not provide full temporal SVA support or qualify
+additional engines. Issue #61 remains open.
 
 ## Declared connectivity (#107)
 
