@@ -37,7 +37,7 @@ def _campaign(args):
 
 def _ingress(args):
     try:
-        rows, complete = etrace.retirement(args.rvfi)
+        rows, complete = etrace.retirement(args.rvfi, require_rv64=True)
         if not complete:
             raise ValueError('complete passing C2 end required')
         etrace.ingress(rows, args.out)

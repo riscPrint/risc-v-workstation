@@ -15,6 +15,7 @@ proc abstract {reg write value} {
     if {($cs & 0x1700) != 0} { error "abstract command failed: $cs" }
     return [riscv dmi_read 0x04]
 }
+proc rvw_campaign {} {
 halt
 wait_halt 2000
 require_mask halted 0x11 0xf00 0x300
@@ -56,3 +57,7 @@ echo "RVW_CHECK:execute_trigger"
 # Restore trigger slot before returning.
 abstract 0x7a1 1 0
 echo "RVW_COMPLETE:debug-0.13.2-rv64"
+}
+if {[catch {rvw_campaign} rvw_error]} {
+    echo "RVW_FAILURE:$rvw_error"
+}

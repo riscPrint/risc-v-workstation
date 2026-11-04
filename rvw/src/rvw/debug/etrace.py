@@ -3,6 +3,7 @@ import configparser
 import csv
 import hashlib
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -27,9 +28,11 @@ def verify_reference(root):
     return root
 
 
-def retirement(path):
+def retirement(path, *, require_rv64=False):
     trace = Trace(path)
     try:
+        if require_rv64 and trace.header['xlen'] != 64:
+            raise ValueError('encoder ingress profile requires RV64')
         if trace.multihart:
             raise ValueError('select one hart before E-Trace comparison')
         rows = list(trace)
@@ -46,6 +49,8 @@ def ingress(rows, path, *, xlen=64):
     This does not encode packets. The core encoder, or upstream reference encoder,
     consumes this CSV. Trap/context ingress requires an adapter with explicit causes.
     """
+    if not rows:
+        raise ValueError('empty retirement stream')
     with Path(path).open('w') as output:
         writer = csv.writer(output)
         writer.writerow(INGRESS)
@@ -69,7 +74,7 @@ def read_pcs(path):
     values = []
     for line in Path(path).read_text().splitlines():
         fields = line.split()
-        if len(fields) != 1:
+        if len(fields) != 1 or not re.fullmatch(r'[0-9a-fA-F]+', fields[0]):
             raise ValueError('decoded trace requires one hexadecimal PC per line')
         value = int(fields[0], 16)
         if value < 0 or value >= 1 << 64 or value & 1:
@@ -109,8 +114,29 @@ def decode(root, packets, static_config, user_config, *, toolchain, timeout=30):
     objdump = Path(toolchain).resolve() / 'bin/riscv64-unknown-elf-objdump'
     if not objdump.is_file():
         raise ValueError('missing native RISC-V objdump')
-    env = {**os.environ, 'RISCV_TOOLCHAIN': str(Path(toolchain).resolve())}
+    env = {**os.environ, 'RISCV_TOOLCHAIN': str(Path(toolchain).resolve()), 'PYTHONDONTWRITEBYTECODE': '1'}
+    env.pop('PYTHONOPTIMIZE', None)  # The reference uses assertions for packet validation.
     with tempfile.TemporaryDirectory(prefix='rvw-etrace-') as tmp:
+        csv_packets = packets
+        if packets.suffix == '.te_inst_raw':
+            unpack = run_group([sys.executable, str(root / 'referenceFlow/scripts/te_inst_deserialiser.py'),
+                                '-c', str(static_config), '-u', str(user_config), str(packets)],
+                               cwd=tmp, env=env, timeout=timeout, capture=True)
+            if unpack.returncode or unpack.timed_out:
+                raise ValueError('raw E-Trace packet validation failed')
+            csv_packets = Path(tmp) / (packets.stem + '.te_inst_csv')
+        with csv_packets.open() as packet_file:
+            packet_rows = list(csv.DictReader(packet_file))
+        if not packet_rows:
+            raise ValueError('empty packet stream')
+        # Report the whole window as unknown after explicit encoder trace loss.
+        # Recovery is not certified by this baseline adapter.
+        if any(p.get('qual_status') == '2' for p in packet_rows):
+            raise ValueError('encoder trace loss: reconstruction window is unknown')
+        last = packet_rows[-1]
+        if not (last.get('format') == '3' and last.get('subformat') == '3'
+                and last.get('ienable') == '0' and last.get('qual_status') in ('1', '3')):
+            raise ValueError('missing final trace-disabled support packet')
         result = run_group([sys.executable, str(root / 'referenceFlow/scripts/decoder_model.py'),
                             '-c', str(static_config), '-u', str(user_config), '-i', str(packets)],
                            cwd=tmp, env=env, timeout=timeout, capture=True)

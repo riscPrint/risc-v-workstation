@@ -11,7 +11,9 @@ CHECKS = {'halted', 'debug_version', 'abstract_gpr', 'debug_cause', 'running',
 def assess(returncode, output, timed_out=False):
     checks = set(re.findall(r'^RVW_CHECK:(\w+)\s*$', output, re.M))
     complete = 'RVW_COMPLETE:debug-0.13.2-rv64' in output
-    if timed_out or not complete:
+    if re.search(r'^RVW_FAILURE:', output, re.M):
+        status = 'fail'
+    elif timed_out or not complete:
         status = 'inconclusive'
     elif returncode or checks != CHECKS:
         status = 'fail'
