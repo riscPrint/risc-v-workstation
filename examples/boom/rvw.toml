@@ -155,3 +155,10 @@ strip_suffix = ".elf"
 configs = ["small"]
 max_cycles = 30000
 timeout_s = 120
+
+[query]
+build = ["${RVW_HOME}/SpinalDB/build-db.sh", "boom"]
+
+[formal]
+# The generator sbt builds declare SpinalDB, BOOM and SpinalHDL dependencies.
+export_dependencies = ["${RVW_HOME}"]

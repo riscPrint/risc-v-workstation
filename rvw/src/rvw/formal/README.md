@@ -610,27 +610,26 @@ still makes the command inconclusive. Native dsec as an authoritative backend,
 state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
 and a scalable partition dependency proof remain part of the epic.
 
-The command takes exported RTL files. It does not check out a source repository,
-run an elaborator, or claim that a supplied revision label produced those files.
-For tracked RTL, use `git show REV:path/to/Top.v > old/Top.v` for each side.
-For Spinal designs, elaborate each committed revision in a separate build area.
-Do not build or change an owner's shared core checkout.
-
-### Validation scope and export gap
-
-The committed equivalence tests use small Verilog designs. Run them from the
-workstation root with the native formal tools on `PATH`:
+The command accepts exported RTL files with `--gold` and `--gate`.
+It can also build both source revisions through project data:
 
 ```sh
-nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/formal/test_equiv.py -q
+rvw --project examples/boom/rvw.toml formal equiv \
+  --gold-rev a1c9b87ada7b2472a025cfd3e8c39a3dd717b27c \
+  --gate-rev 0cb0b694413c6eba5837560536cde80dad62ca00 \
+  --config small --top ForwardingAgeLogic --settle 1 --timeout 1200 --out /tmp/leaf-proof
 ```
 
-This increment has no committed BOOM leaf export recipe. It does not establish
-BOOM leaf or whole-core equivalence. A source revision label alone does not
-establish the origin of generated RTL.
+Set `RVW_HOME`, `SPINAL_BOOM`, JDK 21 and the native tool path first.
+Declare `formal.export_dependencies` as the generator repository paths.
+Each must be clean and committed. `query.build` owns the elaboration command
+and declared sbt dependencies. Export uses an archived source revision and a new
+build directory. It does not copy Scala classes into a custom harness or reuse a
+cached dependency classpath. Yosys selects the requested module and its children
+from project-generated RTL. Missing modules fail closed.
 
-A reproducible source-revision comparison still needs a tested export flow.
-It must declare the generator dependencies and settings for each revision.
-Module selection must use the project's generated Verilog and project data.
-Core names and settings must stay outside `rvw/src`. Copying a Scala class and
-selected helpers into a temporary harness is not a supported export flow.
+Each export retains `export.json`, source files, generated RTL, selected RTL and
+build logs. The proof result records source commits, generator commits, settings
+and hashes. Use a new output directory for each revision comparison.
+See C6 in `docs/PLATFORM_CONTRACTS.md` for export limits. A leaf proof makes no
+whole-core claim. Issue #18 remains an epic.
