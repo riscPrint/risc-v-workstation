@@ -224,3 +224,16 @@ The IPC ratio is model IPC divided by RTL IPC. It is a measured model gap.
 It is not a correctness or gate verdict. gem5 shows trends; RTL is the truth.
 Use the project's lock for RTL. gem5 runs under the `gem5` lock, one process
 at a time. Core presets and calibration targets belong in project data.
+
+## Local CI
+
+CI, Conventional Commits and Nightly use the single repo-level runner with
+labels `self-hosted`, `macOS`, `ARM64`, `rvw-local`. Use `scripts/ci-local.sh`
+for the same fast checks as CI. The script creates a clean temporary workdir
+and venv. It uses `scripts/with-lock.sh suite|sbt` and `nice -n 10`. Never point
+CI at another contributor's checkout. Nightly runs at 03:23 UTC.
+
+The per-user launchd agent is in `~/opt/actions-runner`. Run `./svc.sh status`,
+`./svc.sh stop` or `./svc.sh start` there. It starts after login. Keep one
+runner only. Keep Linux workflows and Native tool bundles disabled. See
+[Local CI](CONTRIBUTING.md#local-ci) for prerequisites and Linux runner limits.

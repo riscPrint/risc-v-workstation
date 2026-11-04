@@ -1,16 +1,8 @@
 name: Native installer
+# Keep disabled until a Linux self-hosted runner is available.
+# GitHub-hosted Ubuntu requires paid minutes for this private repository.
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'scripts/install.sh'
-      - 'rvw/uv.lock'
-      - '.github/workflows/installer.yml'
-      - 'Cosim/build.sh'
-      - 'docs/TOOL_VERSIONS.md'
-      - 'docs/INSTALL_TESTED.md'
-  schedule:
-    - cron: '23 4 * * 1'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
@@ -19,7 +11,7 @@ permissions:
   contents: read
 jobs:
   install:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, rvw-linux]
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -52,7 +44,7 @@ jobs:
           source env.sh
           rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
   long-install:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, rvw-linux]
     timeout-minutes: 360
     strategy:
       fail-fast: false
