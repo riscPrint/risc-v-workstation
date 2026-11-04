@@ -426,9 +426,43 @@ endpoint. The result marks it `inconclusive: true`. It does not identify a guilt
 commit. Use a compatible adapter before repeating the comparison. Do not use
 `--no-verify` to turn an untested endpoint into evidence.
 
+Before a native history bisect, run the same ELF at both proposed endpoints with the
+selected adapter. Keep the ELF hash, seed, config, memory latency and cycle limit equal.
+The good endpoint must complete with `pass`. The bad endpoint must reproduce the requested
+signature. Check the C1 source and native identities on both sides. An endpoint before the
+simulation harness or required memory system exists cannot establish a passing boundary.
+A source-level introduction or fix is only a candidate boundary until these runs complete.
+
+For an adapter API mismatch, provide a core-owned compatibility adapter through the debug
+configuration. It must preserve memory timing and reject unsupported trace or timing options.
+It must not silently drop constructor arguments to make an old revision compile.
+If no executable passing ancestor exists, keep the historical regression unqualified.
+Do not substitute a later passing fix, a fixture or a synthesized core edit for that ancestor.
+
 Debug reruns refuse conclusive evidence when the returned C1 seed, config,
 max_cycles or mem_latency differs from an explicitly requested value.
 This rule applies to bundle, reduce and bisect, including run-many batches.
 
 Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
 A missing or different hash makes the attempt inconclusive.
+
+
+### Concurrent stimulus reduction
+
+`rvw reduce RUN --modes stimulus` reads the original replay's `--stimulus-file`.
+The C1 result must record `stimulus_sha256`. A different input hash is refused.
+The adapter must support this option and execute the supplied events. The bundled
+BOOM and VexRiscv adapters do not yet implement it.
+
+The JSON input is `{"schema":"rvw.stimulus/1","events":[...]}`.
+Each event has `id`, `kind` (`instruction`, `irq`, `transaction`, or `device`),
+`hart` (nonnegative integer), `after` (IDs of earlier events), `group` (nonempty
+string), `required` (boolean), and `payload` (project-defined object).
+Groups are indivisible. Required events cannot be removed. A retained event must
+retain all its dependencies. Event order and payload bytes as JSON values stay
+fixed. Each admissible candidate gets a fresh adapter run. Invalid candidates
+are refused before execution. New timeouts do not match an assertion failure.
+A `one_minimal` result means no single group can be removed within these
+constraints. It does not establish a global minimum or verify the adapter's
+implementation of event semantics. Tests use fixture oracles. Real-core and
+arbitrary device schedule support remain open under #152.

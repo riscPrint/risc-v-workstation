@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -22,8 +22,23 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {search,predict,score-prediction,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch sched-generate`
+
+```text
+usage: rvw arch sched-generate [-h] --out OUT [--json] [--project PROJECT]
+    description_path
+```
+
+### `rvw arch sched-measure`
+
+```text
+usage: rvw arch sched-measure [-h] --out OUT [--json] [--count COUNT]
+    [--timeout TIMEOUT] [--cc CC] [--mca MCA] [--project PROJECT]
+    description_path
 ```
 
 ### `rvw arch search`
@@ -43,6 +58,18 @@ usage: rvw arch predict [-h] --out OUT [--json] [--project PROJECT] candidate
 ```text
 usage: rvw arch score-prediction [-h] --out OUT [--json] [--project PROJECT]
     prediction rtl
+```
+
+### `rvw arch memory-extract`
+
+```text
+usage: rvw arch memory-extract [-h] [--json] [--project PROJECT] mapping
+```
+
+### `rvw arch pareto`
+
+```text
+usage: rvw arch pareto [-h] [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch memory-report`
@@ -108,8 +135,9 @@ usage: rvw arch measure [-h] [--json] [--repeats REPEATS] [--bench BENCH]
 
 ```text
 usage: rvw arch linux [-h] --out OUT [--platform PLATFORM] [--images IMAGES]
-    [--timeout TIMEOUT] [--jobs JOBS] [--llvm] [--cross-compile CROSS_COMPILE]
-    [--json] [--project PROJECT] {firmware,build,prepare,boot}
+    [--source SOURCE] [--timeout TIMEOUT] [--jobs JOBS] [--llvm]
+    [--cross-compile CROSS_COMPILE] [--json] [--project PROJECT]
+    {firmware,build,prebuilt,prepare,boot}
 ```
 
 ### `rvw bisect`
@@ -135,7 +163,28 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate} ...
+usage: rvw cosim [-h] [--project PROJECT] {dii,check,generate,live} ...
+```
+
+### `rvw cosim dii`
+
+```text
+usage: rvw cosim dii [-h] [--project PROJECT] {replay,serve} ...
+```
+
+### `rvw cosim dii replay`
+
+```text
+usage: rvw cosim dii replay [-h] --tokens TOKENS --core-endpoint CORE_ENDPOINT
+    --sail-endpoint SAIL_ENDPOINT [--timeout TIMEOUT] [--json] [--project
+    PROJECT]
+```
+
+### `rvw cosim dii serve`
+
+```text
+usage: rvw cosim dii serve [-h] [--listen LISTEN] --hook HOOK [--max-streams
+    MAX_STREAMS] [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -153,6 +202,15 @@ usage: rvw cosim check [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
     [--json] --out OUT [--max-instructions MAX_INSTRUCTIONS] [--project
     PROJECT]
+```
+
+### `rvw cosim live`
+
+```text
+usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
+    [--json] --out OUT --simulator ... [--model {spike,sail}] [--history
+    HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config
+    SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cov`
@@ -244,10 +302,39 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
     [--out OUT] [--project PROJECT] project
 ```
 
+### `rvw debug`
+
+```text
+usage: rvw debug [-h] [--project PROJECT] {openocd,ingress,etrace} ...
+```
+
+### `rvw debug openocd`
+
+```text
+usage: rvw debug openocd [-h] --config CONFIG [--openocd OPENOCD] --log LOG
+    [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw debug ingress`
+
+```text
+usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
+```
+
+### `rvw debug etrace`
+
+```text
+usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
+    --static-config STATIC_CONFIG --user-config USER_CONFIG --toolchain
+    TOOLCHAIN --rvfi RVFI --out OUT [--loss] [--timeout TIMEOUT] [--project
+    PROJECT]
+```
+
 ### `rvw doctor`
 
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
+    [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
     [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
 ```
 
@@ -281,8 +368,49 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {security,template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal security`
+
+```text
+usage: rvw formal security [-h] [--project PROJECT] {ift,contract} ...
+```
+
+### `rvw formal security ift`
+
+```text
+usage: rvw formal security ift [-h] --top TOP --out OUT [--project PROJECT]
+    netlist
+```
+
+### `rvw formal security contract`
+
+```text
+usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
+    manifest
+```
+
+### `rvw formal template`
+
+```text
+usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
+    [--project PROJECT] {rob,freelist,rename,issue,lsq,credit}
+```
+
+### `rvw formal contracts`
+
+```text
+usage: rvw formal contracts [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
+    [--engine ENGINE] [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal strengthen`
+
+```text
+usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
+    [--engine ENGINE] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw formal apps`
@@ -327,8 +455,10 @@ usage: rvw formal sby-regress [-h] --out OUT [--timeout TIMEOUT] [--json]
 usage: rvw formal prove [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--cut CUT] [--reset-cycles RESET_CYCLES]
-    [--free-reset] [--first-failure] [--project PROJECT]
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--abstraction ABSTRACTION] [--cut CUT]
+    [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
+    PROJECT]
 ```
 
 ### `rvw formal depth-search`
@@ -349,6 +479,14 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
     PROJECT]
 ```
 
+### `rvw formal connectivity`
+
+```text
+usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
+    [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
+    ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
+```
+
 ### `rvw formal equiv`
 
 ```text
@@ -356,8 +494,8 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
     [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
     [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
-    GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
-    [--project PROJECT]
+    GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -366,9 +504,11 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
 usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--cut CUT]
-    [--event-clock PORT] [--event-model] [--async-reset] [--reset-cycles
-    RESET_CYCLES] [--free-reset] [--first-failure] [--project PROJECT]
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--frontend {verilog,slang}] [--abstraction
+    ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
+    [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
+    [--free-reset] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal from-sim`
@@ -380,6 +520,17 @@ usage: rvw formal from-sim [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--json] [--tie PORT=VALUE] --trace TRACE (--cycle CYCLE | --time TIME)
     [--scope SCOPE] [--memories {trace,free,zero}] [--first-failure]
     [--project PROJECT]
+```
+
+### `rvw formal swarm`
+
+```text
+usage: rvw formal swarm [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] --trace TRACE [--start-cycle START_CYCLE]
+    --end-cycle END_CYCLE [--samples SAMPLES] --budget BUDGET [--scope SCOPE]
+    [--memories {trace,free}] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal xprop`
@@ -418,20 +569,32 @@ usage: rvw formal x-sweep [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
 ### `rvw init`
 
 ```text
-usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--dry-run]
-    [--force] [--json] [--project PROJECT] [path]
+usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
+    [--sbt-project SBT_PROJECT] [--linker-script LINKER_SCRIPT] [--ram-region
+    RAM_REGION] [--reset-pc RESET_PC] [--db-top DB_TOP] [--dry-run] [--force]
+    [--json] [--project PROJECT] [path]
 ```
 
 ### `rvw lint`
 
 ```text
-usage: rvw lint [-h] [--settings SETTINGS] [--json] [--project PROJECT]
+usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
+    PROTOCOL] [--out OUT] [--depth DEPTH] [--engine ENGINE] [--timeout
+    TIMEOUT] [--simulate SAMPLES] [--seed SEED] [--mode {bmc,prove}] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw mcp`
 
 ```text
 usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
+```
+
+### `rvw ooo`
+
+```text
+usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--json] [--project PROJECT]
+    config trace
 ```
 
 ### `rvw perf`
@@ -447,7 +610,7 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-    {build,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
     ...
 ```
 
@@ -456,6 +619,13 @@ usage: rvw query [-h] [--project PROJECT]
 ```text
 usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
     PROJECT]
+```
+
+### `rvw query build-hdl`
+
+```text
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--yosys YOSYS] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
 ```
 
 ### `rvw query info`
@@ -884,7 +1054,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 68 built-in tools, including the four job tools.
+The default server exposes 70 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -939,11 +1109,27 @@ Arguments: `project`, `bench`, `out` (required), `timeout`, `repeats`.
 
 Starts a background job: yes.
 
+### `arch_memory_extract`
+
+Extract exact project counter mappings from native gem5 ROI stats.
+
+Arguments: `mapping` (required), `project`.
+
+Starts a background job: yes.
+
 ### `arch_memory_report`
 
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_pareto`
+
+Compare model cycles with optional user-supplied area and power inputs.
+
+Arguments: `plan` (required), `project`.
 
 Starts a background job: yes.
 
@@ -1111,7 +1297,7 @@ Starts a background job: yes.
 
 Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.
 
-Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `event_model`, `event_clock`, `async_reset`.
+Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `clock_schedule`, `event_model`, `event_clock`, `async_reset`.
 
 Starts a background job: yes.
 

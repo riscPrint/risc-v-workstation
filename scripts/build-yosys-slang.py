@@ -49,6 +49,8 @@ def main():
     if text.count(marker) != 1:
         raise SystemExit('unexpected pinned slang driver layout')
     driver.write_text(text.replace(marker, '\t\t\tdriver.optionallyWriteDepFiles();\n' + marker))
+    patch = Path(__file__).with_name('patches') / 'slang-overlap.patch'
+    subprocess.run(['patch', '-p1', '--input', str(patch.resolve())], cwd=source, check=True)
     build = prefix / 'build/yosys-slang'
     if build.exists():
         shutil.rmtree(build)

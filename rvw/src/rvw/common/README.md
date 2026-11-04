@@ -177,5 +177,7 @@ report path with limits is `./gate-cost.json`. Store reports outside source cont
 
 Set `RVW_JOB_BUDGET='{"cpu_seconds":600,"wall_seconds":120,"job_count":40}'`
 to apply limits to MCP process workers. `job_status` includes `cost`. Python-only
-plugin handlers need cooperative limits. Memory, disk, project reservations,
-license tokens and shared capacity scheduling remain open under #57.
+plugin handlers need cooperative limits. The native farm provides cooperative
+CPU, memory, disk, job and project reservations. See `../farm/README.md`.
+Measured memory and disk enforcement, direct-plugin enforcement, license tokens
+and cumulative project costs remain open under #57.

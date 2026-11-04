@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 4
+SHIM_VERSION = 5
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -192,6 +192,7 @@ class Spike:
         lib.rvw_sync_instret.argtypes = [C.c_void_p, C.c_uint64, C.c_uint64]
         lib.rvw_set_reg.argtypes = [C.c_void_p, C.c_uint, C.c_uint64]
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
+        lib.rvw_set_mscratch.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
@@ -252,6 +253,9 @@ class Spike:
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
+
+    def set_mscratch(self, value):
+        self.lib.rvw_set_mscratch(self.handle, value)
 
     def csr_snapshot(self, addresses):
         values = {}
