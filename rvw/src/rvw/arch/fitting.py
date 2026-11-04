@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 
 from .core import checked_report, compare, digest, read_json
+from .statistics import correlation
 
 
 def number(value, where):
@@ -32,6 +33,24 @@ def roi_stats(path):
     return stats, digest(raw)
 
 
+def event_role(event):
+    """Instruction totals check semantics. They cannot establish timing accuracy."""
+    fixed = (event['unit'].lower() in {'instructions', 'instruction'}
+             or event['rtl_metric'] in {'instret', 'roi_instret', 'roi_retired',
+                                         'roi_loads', 'roi_stores', 'roi_branches'}
+             or event['name'].lower() in {'instret', 'retired', 'instructions', 'loads', 'stores', 'branches'}
+             or event['gem5_stat'].split('.')[-1] in {'simInsts', 'numInsts', 'numLoadInsts', 'numStoreInsts', 'numBranches'}
+             or '.commitStats' in event['gem5_stat'])
+    return 'consistency' if fixed else event.get('role', 'fit')
+
+
+def objective(actual, predicted, values):
+    """Always include timing, even when all mapped events are fixed totals."""
+    errors = [abs(predicted['cycles'] - actual['cycles']) / actual['cycles']]
+    errors.extend(v['error'] for v in values if v['role'] == 'fit')
+    return sum(errors) / len(errors)
+
+
 def fit(plan, project=None):
     """Select by training error only. Score the winner on a disjoint holdout."""
     if project is not None:
@@ -40,6 +59,84 @@ def fit(plan, project=None):
     path = Path(plan).resolve()
     raw = path.read_bytes()
     spec = read_json(raw)
+    validate_plan(spec)
+    events = spec['events']
+    candidates = spec['candidates']
+    def resolve(value):
+        return path.parent / value
+    rtl_path = resolve(spec['rtl'])
+    rtl, rows, rtl_hash = checked_report(rtl_path)
+    if rtl['engine'] != 'rtl':
+        raise ValueError('rtl must name an RTL report')
+    selected = set(spec['train'] + spec['held_out'])
+    if selected != set(rows):
+        raise ValueError('split must cover exactly the report workloads')
+    training_elfs = {rows[name]['elf_sha256'] for name in spec['train']}
+    held_out_elfs = {rows[name]['elf_sha256'] for name in spec['held_out']}
+    if training_elfs & held_out_elfs:
+        raise ValueError('train and held_out ELF hashes must be disjoint')
+    evidence = []
+    errors = {}
+    timings = {}
+    for name, candidate in candidates.items():
+        candidate_path = resolve(candidate)
+        # Reuse strict ELF, instruction count and run evidence checks.
+        timings[name] = compare(rtl_path, candidate_path)['benchmarks']
+        model, model_rows, model_hash = checked_report(candidate_path)
+        if model['engine'] != 'gem5':
+            raise ValueError('candidate must name a gem5 report')
+        per_workload = {}
+        captures = []
+        for workload in sorted(selected):
+            measured = read_json(Path(rows[workload]['evidence']).read_bytes())['metrics']
+            stats_path = Path(model_rows[workload]['evidence']).with_name('stats.txt')
+            stats, stats_hash = roi_stats(stats_path)
+            values = []
+            for event in events:
+                actual = number(measured.get(event['rtl_metric']), event['rtl_metric'])
+                predicted = number(float(stats[event['gem5_stat']]), event['gem5_stat'])
+                values.append({'event': event['name'], 'rtl': actual, 'gem5': predicted,
+                               'role': event_role(event),
+                               'error': number(abs(predicted - actual) / max(1, actual), 'event error')})
+            per_workload[workload] = values
+            captures.append({'workload': workload, 'stats': str(stats_path), 'sha256': stats_hash})
+        errors[name] = per_workload
+        evidence.append({'name': name, 'report': str(candidate_path), 'sha256': model_hash, 'stats': captures})
+    def score(name, split):
+        timing = {r['id']: r for r in timings[name]}
+        return sum(objective({'cycles': timing[w]['base_cycles']},
+                             {'cycles': timing[w]['candidate_cycles']}, errors[name][w])
+                   for w in split) / len(split)
+    training = {name: score(name, spec['train']) for name in candidates}
+    winner = min(training, key=lambda name: (training[name], name))
+    targets = [rows[w]['cycles'] for w in spec['train']]
+    fit_targets = {event['name']: [v['rtl'] for w in spec['train']
+                   for v in errors[winner][w] if v['event'] == event['name']]
+                   for event in events if event_role(event) == 'fit'}
+    constant_events = [name for name, values in fit_targets.items() if len(set(values)) < 2]
+    degenerate = bool(constant_events) or len(targets) < 3 or len(set(targets)) == 1 or (len(training) > 1 and len(set(training.values())) == 1)
+    return {'schema': 'rvw.arch-fit/1', 'status': 'inconclusive' if degenerate else 'reported',
+            'reason': 'Degenerate or insufficient training targets/candidate variation.' if degenerate else '',
+            'event_fit': {'status': 'inconclusive' if not fit_targets or constant_events or len(targets) < 3 else 'reported',
+                          'constant_targets': constant_events, 'eligible_events': list(fit_targets)},
+            'headline': {'metric': 'cycle_relative_error', 'benchmarks': timings[winner],
+                         'splits': {split: sum(abs(r['cycle_gap_percent']) / 100
+                             for r in timings[winner] if r['id'] in names) / len(names)
+                             for split, names in (('train', spec['train']), ('held_out', spec['held_out']))}},
+            'selected': winner,
+            'training_scores': training, 'held_out_score': score(winner, spec['held_out']),
+            'selected_errors': errors[winner],
+            'event_correlations': {split: {event['name']: correlation([
+                (v['rtl'], v['gem5']) for w in names for v in errors[winner][w]
+                if v['event'] == event['name']]) for event in events}
+                for split, names in (('train', spec['train']), ('held_out', spec['held_out']))}, 'train': spec['train'], 'held_out': spec['held_out'],
+            'events': events, 'scope': spec['scope'], 'uncertainty': spec['uncertainty'],
+            'unsupported': spec['unsupported'], 'plan_sha256': digest(raw),
+            'rtl_sha256': rtl_hash, 'candidates': evidence,
+            'limits': 'Offline candidate selection. No fidelity verdict or confidence interval. Holdout must not guide candidate creation. gem5 shows trends; RTL is the truth.'}
+
+
+def validate_plan(spec):
     required = {'schema', 'rtl', 'candidates', 'train', 'held_out', 'events',
                 'scope', 'uncertainty', 'unsupported'}
     if set(spec) != required or spec['schema'] != 'rvw.arch-fit-plan/1':
@@ -59,59 +156,12 @@ def fit(plan, project=None):
     if not isinstance(events, list) or not events:
         raise ValueError('events must be nonempty')
     for event in events:
-        if not isinstance(event, dict) or set(event) != {'name', 'rtl_metric', 'gem5_stat', 'unit', 'semantics'} or any(not isinstance(v, str) or not v.strip() for v in event.values()):
+        if not isinstance(event, dict) or set(event) not in ({'name', 'rtl_metric', 'gem5_stat', 'unit', 'semantics'}, {'name', 'rtl_metric', 'gem5_stat', 'unit', 'semantics', 'role'}) or any(not isinstance(v, str) or not v.strip() for v in event.values()):
             raise ValueError('each event needs name, rtl_metric, gem5_stat, unit and semantics')
+        if event.get('role', 'fit') not in {'fit', 'consistency'}:
+            raise ValueError('event role must be fit or consistency')
     if len({e['name'] for e in events}) != len(events):
         raise ValueError('duplicate event names')
     candidates = spec['candidates']
     if not isinstance(candidates, dict) or not candidates or any(not isinstance(k, str) or not k or not isinstance(v, str) for k, v in candidates.items()):
         raise ValueError('candidates must map distinct names to report paths')
-    def resolve(value):
-        return path.parent / value
-    rtl_path = resolve(spec['rtl'])
-    rtl, rows, rtl_hash = checked_report(rtl_path)
-    if rtl['engine'] != 'rtl':
-        raise ValueError('rtl must name an RTL report')
-    selected = set(spec['train'] + spec['held_out'])
-    if selected != set(rows):
-        raise ValueError('split must cover exactly the report workloads')
-    training_elfs = {rows[name]['elf_sha256'] for name in spec['train']}
-    held_out_elfs = {rows[name]['elf_sha256'] for name in spec['held_out']}
-    if training_elfs & held_out_elfs:
-        raise ValueError('train and held_out ELF hashes must be disjoint')
-    evidence = []
-    errors = {}
-    for name, candidate in candidates.items():
-        candidate_path = resolve(candidate)
-        # Reuse strict ELF, instruction count and run evidence checks.
-        compare(rtl_path, candidate_path)
-        model, model_rows, model_hash = checked_report(candidate_path)
-        if model['engine'] != 'gem5':
-            raise ValueError('candidate must name a gem5 report')
-        per_workload = {}
-        captures = []
-        for workload in sorted(selected):
-            measured = read_json(Path(rows[workload]['evidence']).read_bytes())['metrics']
-            stats_path = Path(model_rows[workload]['evidence']).with_name('stats.txt')
-            stats, stats_hash = roi_stats(stats_path)
-            values = []
-            for event in events:
-                actual = number(measured.get(event['rtl_metric']), event['rtl_metric'])
-                predicted = number(float(stats[event['gem5_stat']]), event['gem5_stat'])
-                values.append({'event': event['name'], 'rtl': actual, 'gem5': predicted,
-                               'error': number(abs(predicted - actual) / max(1, actual), 'event error')})
-            per_workload[workload] = values
-            captures.append({'workload': workload, 'stats': str(stats_path), 'sha256': stats_hash})
-        errors[name] = per_workload
-        evidence.append({'name': name, 'report': str(candidate_path), 'sha256': model_hash, 'stats': captures})
-    def score(name, split):
-        return sum(v['error'] for w in split for v in errors[name][w]) / (len(split) * len(events))
-    training = {name: score(name, spec['train']) for name in candidates}
-    winner = min(training, key=lambda name: (training[name], name))
-    return {'schema': 'rvw.arch-fit/1', 'status': 'reported', 'selected': winner,
-            'training_scores': training, 'held_out_score': score(winner, spec['held_out']),
-            'selected_errors': errors[winner], 'train': spec['train'], 'held_out': spec['held_out'],
-            'events': events, 'scope': spec['scope'], 'uncertainty': spec['uncertainty'],
-            'unsupported': spec['unsupported'], 'plan_sha256': digest(raw),
-            'rtl_sha256': rtl_hash, 'candidates': evidence,
-            'limits': 'Offline candidate selection. No fidelity verdict or confidence interval. Holdout must not guide candidate creation. gem5 shows trends; RTL is the truth.'}

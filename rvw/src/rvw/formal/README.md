@@ -649,30 +649,29 @@ still makes the command inconclusive. Native dsec as an authoritative backend,
 state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
 and a scalable partition dependency proof remain part of the epic.
 
-The command takes exported RTL files. It does not check out a source repository,
-run an elaborator, or claim that a supplied revision label produced those files.
-For tracked RTL, use `git show REV:path/to/Top.v > old/Top.v` for each side.
-For Spinal designs, elaborate each committed revision in a separate build area.
-Do not build or change an owner's shared core checkout.
-
-### Validation scope and export gap
-
-The committed equivalence tests use small Verilog designs. Run them from the
-workstation root with the native formal tools on `PATH`:
+The command accepts exported RTL files with `--gold` and `--gate`.
+It can also build both source revisions through project data:
 
 ```sh
-nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/formal/test_equiv.py -q
+rvw --project examples/boom/rvw.toml formal equiv \
+  --gold-rev a1c9b87ada7b2472a025cfd3e8c39a3dd717b27c \
+  --gate-rev 0cb0b694413c6eba5837560536cde80dad62ca00 \
+  --config small --top ForwardingAgeLogic --settle 1 --timeout 1200 --out /tmp/leaf-proof
 ```
 
-This increment has no committed BOOM leaf export recipe. It does not establish
-BOOM leaf or whole-core equivalence. A source revision label alone does not
-establish the origin of generated RTL.
+Set `RVW_HOME`, `SPINAL_BOOM`, JDK 21 and the native tool path first.
+Declare `formal.export_dependencies` as the generator repository paths.
+Each must be clean and committed. `query.build` owns the elaboration command
+and declared sbt dependencies. Export uses an archived source revision and a new
+build directory. It does not copy Scala classes into a custom harness or reuse a
+cached dependency classpath. Yosys selects the requested module and its children
+from project-generated RTL. Missing modules fail closed.
 
-A reproducible source-revision comparison still needs a tested export flow.
-It must declare the generator dependencies and settings for each revision.
-Module selection must use the project's generated Verilog and project data.
-Core names and settings must stay outside `rvw/src`. Copying a Scala class and
-selected helpers into a temporary harness is not a supported export flow.
+Each export retains `export.json`, source files, generated RTL, selected RTL and
+build logs. The proof result records source commits, generator commits, settings
+and hashes. Use a new output directory for each revision comparison.
+See C6 in `docs/PLATFORM_CONTRACTS.md` for export limits. A leaf proof makes no
+whole-core claim. Issue #18 remains an epic.
 
 ## Imported SVA through slang
 
@@ -712,3 +711,113 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+## Table-driven apps
+
+```sh
+rvw formal apps SpinalChecks/examples/apps/apps.json --depth 10 --out /tmp/apps
+rvw formal bench SpinalChecks/examples/bench/suite.json --timeout 30 --out /tmp/bench
+```
+
+The app manifest uses `rvw.formal-apps/1`. It lists self-contained `verilog`
+files relative to the manifest, `top`, `clock`, an active-high synchronous
+`reset`, an exact `ports` table, and `properties`. Each port declares `direction`
+(`input` or `output`) and `width`. The captured native elaboration must match
+this table. Each property has a unique plain `id`, `kind`, and optional
+`requirement_ids`. These IDs stay in the report and identify its child result.
+Use a fresh output directory. The runner freezes the sources and spec before
+it starts a property. Each child uses the existing captured RTL and tool flow.
+
+| Kind | Required fields | Contract |
+|---|---|---|
+| `connectivity` | `source`, `destination` | Equal values at the declared ports. A reviewed `source_expression` plus `source_width` can replace `source`. Optional `latency` (0..64), `enable` and `mode`. The condition samples with the source. Startup history is gated. |
+| `csr` | `state`, `write_enable`, `write_data`, `reset_value` | Independent reference register. Optional `access` (`rw`, `ro`, `w1c`) and integer `write_mask`. |
+| `deadlock`, `livelock` | `pending`, `progress`, `bound` | A continuously pending request must make progress within the declared bound. The counter saturates. |
+| `unr` | `target` | Assert that the target is false outside reset. |
+
+Expressions accept ports, decimal integers and basic Boolean/arithmetic
+operators. Calls, hierarchical names, includes and macros in expressions are
+not supported. CSR fields must fit their port widths. A CSR map expresses one
+register per row. It does not implement address decoding, aliases, read side
+effects, bus protocols or privilege checks. Map bus decode to `write_enable`
+in a reviewed project wrapper when needed.
+
+The default mode is BMC. `--mode prove` requests an unbounded safety proof.
+Use a suitable engine, such as `--engine abc:pdr`. A progress proof establishes
+the finite response contract. It does not establish general liveness or fairness.
+All results depend on the supplied environment and spec. Requirement IDs are
+links, not proof of requirement completeness. Activation is `not_measured`.
+Forbidden connectivity needs structural or noninterference evidence. This app
+refuses it. SpinalDB endpoint resolution and opaque blackbox contracts remain open.
+
+For coverage exclusion export, use the existing guarded UNR flow:
+`rvw cov prove DATABASE --config PLAN --work-dir OUT`. Apply its `exclusions.json`
+with `rvw cov report DATABASE --exclusions OUT/exclusions.json`. That flow checks
+sanity, point reachability and cone activation before export. App UNR results
+cannot replace this evidence. `proof-cones.json` joins stable property and
+requirement IDs, lists structural fan-in, outside-cone logic and untested
+assumptions. See [coverage](../cov/README.md).
+Solver proof cores remain `unavailable`. A structural cone is not a proof core
+or a functional coverage percentage.
+
+## Engine benchmark protocol
+
+The manifest uses `rvw.formal-bench/1`, with nonempty `cases` and an optional
+`baseline` engine. Each case declares `id`, `top`, `clock`, `reset`, `mode`
+(`bmc` or `prove`), `depth`, and `sources` rows with `path` and `sha256`.
+Paths are relative to the manifest. All hashes must match before execution.
+Only self-contained exported RTL is supported. The committed suite has a
+handwritten HWMCC-style finite-state counter, its seeded property fault,
+and a handwritten RV32 arithmetic fixture. These are small protocol fixtures. They are not HWMCC competition
+entries or results on a processor.
+
+The runner executes each installed supported engine separately and serially.
+It tries SMTBMC with Yices, Z3, Bitwuzla, Boolector, CVC4, CVC5 and MathSAT;
+ABC BMC/PDR; Avy; and BTOR with pono/btormc. An incompatible mode is explicit.
+Other engine adapters, including rIC3 and EBMC, remain open. Tool identities
+and native logs stay in each run directory. Engine errors remain errors.
+
+Wall time measures the complete CLI command, including capture, elaboration
+and reachability checks. Peak RSS comes from native `/usr/bin/time` (bytes on
+macOS; KiB converted to bytes on Linux). It is the operating system's process
+measurement, not a sum of simultaneous solver memory. Missing measurements
+are null. Reached depth is the largest assertion-check step explicitly logged
+by SMTBMC. Other engines currently report null. Requested depth is separate.
+
+Agreement requires at least two decisive results and no unresolved installed
+run in that mode. A disagreement overrides unknown results. Pair comparisons
+require a decisive matching verdict for every case. They use the worst candidate
+wall-time ratio against the baseline. The 5% margin is a descriptive threshold.
+`noninferior_on_suite` and `superior_on_suite` apply only to this run. They are
+not statistical claims, commercial parity claims or correctness oracles.
+
+An optional `adapters` array selects a licensed engine. Each row has a unique
+plain `id` and an absolute executable `command`. It must support `--version`.
+The runner calls `COMMAND REQUEST.json RESPONSE.json` with a timeout. The request
+has schema `rvw.formal-adapter-request/1`, the case, and frozen source paths.
+The adapter must write `rvw.formal-adapter-response/1`, `request_sha256` (SHA-256
+of the exact request bytes), `mode`, `status` (`pass`, `fail`, `inconclusive`),
+`engine_version`, `wall_s`, `peak_memory_bytes` and `reached_depth`. Measurements
+must be finite and nonnegative. For a BMC pass, `reached_depth` must be an
+integer at least `depth - 1`, the last requested zero-based assertion step.
+A shorter successful prefix remains inconclusive. Missing fields or a request mismatch stay
+inconclusive. The adapter owns licence setup and source translation. These are
+trusted adapter observations, not independently replayed proofs. No licensed
+engine is bundled. Published-result normalization and repeated statistical
+experiments remain open.
+
+### Exported core leaf checks
+
+`SpinalChecks/examples/apps/export_leaves.py` takes `--vex-rtl VexRiscv.v`,
+`--boom-rtl BoomSimTop.v` and a fresh `--out DIR`. It copies the generated
+`StreamFifo` and `ForwardingAgeLogic` modules without changing their equations.
+It prints SHA-256 identities for the full inputs and leaf files. It does not
+elaborate either core or certify the source revision of supplied RTL.
+
+Run `rvw formal apps DIR/vex.json --depth 10 --event-model --async-reset --out VEX_OUT` under the `vex`
+lock. Run `rvw formal apps DIR/boom.json --depth 10 --out BOOM_OUT` under the
+`boom` lock. The properties check that FIFO occupancy and availability cannot
+both be one, and that forwarding `found` agrees with the prior cycle's nonzero match vector.
+The VexRiscv FIFO needs the sampled-event model because its reset is asynchronous.
+These are small exported leaf invariants. They are not whole-core verification,
+full CSR or connectivity checks on these processors, or a performance benchmark.

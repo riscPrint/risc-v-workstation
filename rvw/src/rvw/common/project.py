@@ -73,8 +73,9 @@ def parse_project(raw, path, environment):
         "query": {"build", "db"},
         "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
-        "formal": {"verilog", "top", "checks", "clock", "reset"},
+        "formal": {"verilog", "top", "checks", "clock", "reset", "export_dependencies"},
         "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports", "check_options", "instruction_models"},
+
     }
     _check_keys(raw, {"core", "suites", "tiers", *tables}, str(path))
     sections = {}
@@ -114,7 +115,7 @@ def parse_project(raw, path, environment):
             if key in {"schema", "rvw_version", "top", "clock", "reset"}:
                 if not isinstance(value, str) or not value:
                     raise ProjectError(f"{section}.{key} must be a non-empty string")
-            elif key in {"build", "verilog"}:
+            elif key in {"build", "verilog", "export_dependencies"}:
                 if not isinstance(value, list) or not value or not all(isinstance(v, str) and v for v in value):
                     raise ProjectError(f"{section}.{key} must be a non-empty list of strings")
                 table[key] = (_cmd(value, base, environment) if key == "build"

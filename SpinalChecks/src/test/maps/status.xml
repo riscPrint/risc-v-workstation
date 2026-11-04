@@ -1,0 +1,8 @@
+<component xmlns="http://www.accellera.org/XMLSchema/IPXACT/1685-2014">
+<memoryMaps><memoryMap><name>device</name><addressBlock><name>regs</name>
+<baseAddress>0</baseAddress><range>256</range><width>32</width><usage>register</usage>
+<register><name>status</name><addressOffset>16</addressOffset><size>32</size>
+<field><name>control</name><bitOffset>0</bitOffset><bitWidth>2</bitWidth><access>read-write</access><resets><reset><value>0</value></reset></resets></field>
+<field><name>pending</name><bitOffset>2</bitOffset><bitWidth>1</bitWidth><access>read-write</access><modifiedWriteValue>oneToClear</modifiedWriteValue><resets><reset><value>1</value></reset></resets></field>
+<field><name>event</name><bitOffset>3</bitOffset><bitWidth>1</bitWidth><access>read-only</access><readAction>clear</readAction><resets><reset><value>1</value></reset></resets></field>
+</register></addressBlock></memoryMap></memoryMaps></component>
