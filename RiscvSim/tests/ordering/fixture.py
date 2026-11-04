@@ -65,12 +65,15 @@ def prepare(tests, reference, out):
             raise ValueError('test bytes differ from pins')
         rows.append({'test': case['test'], 'programs': translate(path.read_text()),
                      'projection': sorted(case['allowed'][0])})
-    if {r['test'] for r in rows} != set(pins['cases']):
+    if {r['test'] for r in rows} != set(pins['cases']) or len(rows) != len(pins['cases']):
         raise ValueError('missing pinned case')
     out.write_text(json.dumps(rows, indent=2) + '\n')
 
 
 def check(reference, samples):
+    cases = reference['cases']
+    if not cases or len({r['test'] for r in cases}) != len(cases):
+        raise ValueError('nonempty reference with distinct cases required')
     if {s['test'] for s in samples} != {r['test'] for r in reference['cases']} or len(samples) != len(reference['cases']):
         raise ValueError('missing or duplicate fixture case')
     rows = []

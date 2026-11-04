@@ -42,3 +42,13 @@ def test_checker_rejects_forbidden_and_incomplete_samples():
         fixture.check(reference, samples * 2)
     with pytest.raises(ValueError):
         fixture.check(reference, [])
+
+
+def test_empty_or_duplicate_reference_cannot_pass():
+    with pytest.raises(ValueError):
+        fixture.check({'cases': []}, [])
+    case = {'test': 'SB', 'allowed': [{'0:x7': 0}]}
+    sample = {'test': 'SB', 'harts': 2, 'complete': True,
+              'observations': [{'state': {'0:x7': 0}, 'count': 1}]}
+    with pytest.raises(ValueError):
+        fixture.check({'cases': [case, case]}, [sample, sample])
