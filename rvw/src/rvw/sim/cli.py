@@ -25,7 +25,7 @@ def register(sub):
     tune.add_argument('--adapter', type=Path, required=True)
     tune.add_argument('--elf', type=Path, required=True)
     tune.add_argument('--config', required=True)
-    tune.add_argument('--lock', required=True, choices=('boom', 'vex'))
+    tune.add_argument('--lock', required=True, help='project-owned machine lock name')
     tune.add_argument('--threads', type=int, nargs='+', default=[2, 4])
     tune.add_argument('--repeats', type=int, default=5)
     tune.add_argument('--max-cycles', type=int, default=2000000)

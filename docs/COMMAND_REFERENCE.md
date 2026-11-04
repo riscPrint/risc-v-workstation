@@ -564,9 +564,9 @@ usage: rvw regress speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
 
 ```text
 usage: rvw regress speed-sweep [-h] --adapter ADAPTER --elf ELF --config
-    CONFIG --lock {boom,vex} [--threads THREADS [THREADS ...]] [--repeats
-    REPEATS] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds
-    MIN_SECONDS] [--seed SEED] --out OUT [--project PROJECT]
+    CONFIG --lock LOCK [--threads THREADS [THREADS ...]] [--repeats REPEATS]
+    [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS]
+    [--seed SEED] --out OUT [--project PROJECT]
 ```
 
 ### `rvw regress backends`
@@ -707,9 +707,9 @@ usage: rvw speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
 
 ```text
 usage: rvw speed-sweep [-h] --adapter ADAPTER --elf ELF --config CONFIG --lock
-    {boom,vex} [--threads THREADS [THREADS ...]] [--repeats REPEATS]
-    [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS]
-    [--seed SEED] --out OUT [--project PROJECT]
+    LOCK [--threads THREADS [THREADS ...]] [--repeats REPEATS] [--max-cycles
+    MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS] [--seed SEED]
+    --out OUT [--project PROJECT]
 ```
 
 ### `rvw backends`

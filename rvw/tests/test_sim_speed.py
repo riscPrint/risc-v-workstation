@@ -189,3 +189,12 @@ def test_different_boot_payloads_cannot_earn_speedup(tmp_path):
             path.write_text(json.dumps(obj))
     with pytest.raises(ValueError, match='differ'):
         compare(data, resamples=1000)
+
+
+def test_sweep_accepts_project_owned_lock_name(tmp_path):
+    from rvw.cli import build_parser
+    args = build_parser().parse_args([
+        'regress', 'speed-sweep', '--adapter', str(tmp_path / 'adapter'),
+        '--elf', str(tmp_path / 'test.elf'), '--config', 'preset',
+        '--lock', 'custom-core', '--out', str(tmp_path / 'out')])
+    assert args.lock == 'custom-core'
