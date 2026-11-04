@@ -2221,6 +2221,94 @@ IRQ schedule override flag. `pma_check` uses declared PMA data plus these events
 and accepted bus requests. Its `consistent` result has the same bounded scope
 as `walk_check`; neither changes architectural coverage or gate verdicts.
 
+### Architecture Pareto intervals
+
+`rvw.arch-pareto-plan/1` has `points` with unique `id` and `report` paths.
+Optional `objectives` defaults to `["cycles"]`. Optional point `costs` paths
+select user input files. Paths are relative to the plan. Reports are checked
+`rvw.arch-run/1` gem5 runs with identical ELF hashes and ROI instruction counts.
+Without costs, cycles use summed ROI cycles for all three interval bounds.
+`rvw.arch-costs/1` has `report_sha256`, nonempty source/method text in `method`,
+and `cycles`. Optional `area_mm2` and `power_w` are user-supplied inputs only.
+The workstation does not estimate or validate area or power. PPA estimation
+and hardware gain claims are out of scope.
+
+Intervals are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are user declarations.
+`rvw.arch-pareto/1` records selected `objectives`, plan/report/cost hashes,
+`cost_origin` (`user-supplied` or `absent`), intervals, `eligible`,
+`evidence_class: model-only`, `nominal_frontier` and `conservative_frontier`.
+Conservative dominance compares only selected objectives. It requires all
+upper bounds no greater than the other point's lower bounds and one strict gain.
+Missing selected objectives exclude a point and make status inconclusive
+(CLI exit 3). Unselected missing inputs do not affect eligibility.
+No point is RTL-confirmed by this command.
+
+### Architecture topology channels and agents
+
+The optional `rvw.arch-core/1` `soc.memory.kind: multi` uses `interleave_bytes`
+and 2, 4 or 8 `controllers` (simple or DRAM memory objects). Channels stripe
+across RAM at a power-of-two byte size of at least 64. Optional `soc.agents`
+contains up to eight read-only linear generators. Fields are `start`, `size`,
+`block_bytes`, `period_ticks`, `duration_ticks`, `max_outstanding` and `attach`
+(`memory` or an existing cache level). Addresses and blocks must align and fit
+RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
+the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
+SoC topologies. Native model execution alone is not RTL correlation.
+
+### Native memory mappings
+
+`rvw.memory-mapping/1` has `inputs` (`stats`, `config`, `bare`, each with path
+and SHA-256) and `observations`. Each observation has `point`, `region`, `hart`,
+`workload` and `counters`. Counter keys use `rvw.memory-observations/1`; each
+value has distinct `stats` names and positive `scale`. Names must start with
+the native config object's point plus a dot. The first complete stats block
+must have simFreq=1e12, simTicks equal to the difference of the two bare ROI
+markers, and finalTick equal to the exit marker. Bare execution must pass.
+`arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
+`native_inputs` hashes. It checks names and interval identity. The project
+owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
+## Reviewed specification obligation catalogs
+
+The optional `rvw.isa/1` `specifications` entries can bind a document and a
+reviewed `rvw.spec-obligations/1` catalog. Each entry has `kind`
+(`isa|profile|debug|platform`), `revision`, `path`, `sha256` and
+`obligations` (`path`, `sha256`). Paths use the corresponding opcode source
+root. Catalog rows in `obligations` have unique `id`, exact document excerpt
+`text`, `checkers` and `tests` arrays. Diff verifies both hashes and document
+excerpt membership. `rvw.isa-diff/1.obligations` reports added, removed and
+changed rows, affected checkers, missing tests and present test hashes.
+It reports metadata-only pins as unchecked. A changed catalog requires adoption.
+Catalog completeness needs review. Test presence does not establish execution.
+
+`rvw.isa/1.probes` can configure `compiler|dut|reference|act|coverage` probes.
+Kinds are `gcc` (native target macros), `command` (native JSON capability
+output), and `json|toml` (captured settings file with optional `key` path).
+Command probes return `rvw.isa-consumer/1` with `xlen`, `extensions` (versions
+or null), and `options`. File probes select the same fields. Paths use the
+manifest directory. `rvw.isa-check/1` includes observed `probes` and
+`unchecked_consumers`. `consistent` requires all five inputs with known,
+matching versions and options. Missing evidence gives `inconclusive`.
+Contradictions are errors. These statuses describe configuration consistency.
+They do not certify ISA implementation or compliance.
+
+`rvw.isa/1.semantics` can include `forms` and `crosses`. Forms map instruction
+names to fields with `bits` (`[hi,lo,destination_lo]` slices), `width`, `bins`
+(explicit values or `boundaries`), optional `signed`, `offset` and register
+`bank`. Crosses declare `id`, `instruction`, `fields`, and exhaustive
+`combinations` (`bin`, `status`, `reason`) within those finite field domains.
+Statuses are `legal|illegal|unavailable`. Functional plans retain the catalog.
+Cross reports retain every bin in the denominator and add `classifications`
+with observed `count`. No catalog declaration is a proof exclusion.
+
+`rvw.coverage-report/1.scala_mapping.methods` counts source mapping methods.
+The `covered-span-assignment-links` method navigates to a unique local full
+SpinalDB data assignment for an exact covered RTL target. Multiple, partial,
+init/reset and nonlocal assignments refuse that inference. Mixed links have a
+separate method. These links do not prove individual Scala statement hits;
+`scala_mapping.statement_hit_status` remains `undetermined`.
+
+
 ### Cooperative farm capacity extensions (#57)
 
 Host capacity and request resources support `disk_bytes` and `jobs` in addition
