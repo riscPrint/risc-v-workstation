@@ -660,7 +660,11 @@ An empty `rows` list with unknown entries does not prove that the table is empty
 
 ### Reduction and bisect reports
 
-`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL` or `irq`.
+`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL`, `irq`, or `stimulus`.
+For `stimulus`, `kept` contains group names, and counts refer to groups.
+The replay must include `--stimulus-file`; C1 must record its `stimulus_sha256`.
+The `rvw.stimulus/1` event format and dependency rules are defined in
+`rvw/src/rvw/bundle/README.md`. Minimality applies to admissible group removals.
 Each entry has `original`, `remaining`, `kept` (zero-based input indices),
 `completion`, `one_minimal`, and `global_minimum` (always false).
 IRQ indices exclude the fixed initial event from the search, but still refer to
