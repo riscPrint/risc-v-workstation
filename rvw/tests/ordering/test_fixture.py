@@ -32,9 +32,11 @@ def test_unsupported_instruction_refused(asm):
 
 
 def test_checker_rejects_forbidden_and_incomplete_samples():
-    reference = {'cases': [{'test': 'SB', 'allowed': [{'0:x7': 0, '1:x7': 1}]}]}
-    samples = [{'test': 'SB', 'harts': 2, 'complete': True,
-                'observations': [{'state': {'0:x7': 0, '1:x7': 0}, 'count': 1}]}]
+    reference = pinned_reference()
+    case = reference['cases'][0]['test']
+    samples = [{'test': case, 'harts': 2, 'complete': True,
+                'observations': [{'state': {'0:x7': 2, '1:x7': 0}, 'count': 1}]}]
+    samples += [sample_for(c) for c in reference['cases'][1:]]
     assert fixture.check(reference, samples)[0]['status'] == 'mismatch'
     samples[0]['complete'] = False
     assert fixture.check(reference, samples)[0]['status'] == 'inconclusive'
@@ -52,3 +54,42 @@ def test_empty_or_duplicate_reference_cannot_pass():
               'observations': [{'state': {'0:x7': 0}, 'count': 1}]}
     with pytest.raises(ValueError):
         fixture.check({'cases': [case, case]}, [sample, sample])
+
+
+def test_fixture_comparison_requires_pinned_complete_reference():
+    import json
+    pins = json.loads(fixture.PINS.read_text())
+    case = next(iter(pins['cases']))
+    sample = {'test': case, 'harts': 2, 'complete': True,
+              'observations': [{'state': {'0:x7': 0, '1:x7': 0}, 'count': 1}]}
+    reference = {'pins': pins, 'dut': 'not_run', 'cases': [
+        {'test': case, 'allowed': [{'0:x7': 0, '1:x7': 0}]}]}
+    with pytest.raises(ValueError, match='pinned'):
+        fixture.check(reference, [sample])
+
+
+def pinned_reference():
+    import json
+    from itertools import product
+    pins = json.loads(fixture.PINS.read_text())
+    cases = []
+    for name in pins['cases']:
+        keys = ['1:x5', '1:x7'] if name.endswith('/MP.litmus') else ['0:x5', '1:x5'] if name.endswith('/LB.litmus') else ['0:x7', '1:x7']
+        states = [dict(zip(keys, v)) for v in product((0, 1), repeat=2)
+                  if 'fence' not in name or v != (0, 0)]
+        cases.append({'test': name, 'allowed': states})
+    return {'pins': pins, 'dut': 'not_run', 'cases': cases}
+
+
+def sample_for(case):
+    return {'test': case['test'], 'harts': 2, 'complete': True,
+            'observations': [{'state': case['allowed'][0], 'count': 1}]}
+
+
+def test_pinned_reference_rejects_changed_allowed_sets():
+    reference = pinned_reference()
+    samples = [sample_for(c) for c in reference['cases']]
+    assert all(r['status'] == 'consistent' for r in fixture.check(reference, samples))
+    reference['cases'][0]['allowed'].pop()
+    with pytest.raises(ValueError, match='allowed states'):
+        fixture.check(reference, samples)

@@ -206,3 +206,9 @@ lists permitted states not observed. Serial memory can miss legal RVWMO outcomes
 The fixture does not establish external aq/rl ordering, RV64 doubleword atomics,
 architectural faults, or production multi-hart core behavior. The existing C1 ELF
 suite supplies separate bounded single-hart checks on BOOM.
+
+The fixture checker requires all four pinned cases. It verifies the full allowed
+outcome set against canonical hashes in `litmus-pins.json`. These hashes pin
+reference-model expectations. They do not come from fixture observations.
+Regenerate the reference report after a pin change. A stale or partial report
+cannot earn consistency.

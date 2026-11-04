@@ -54,7 +54,22 @@ def translate(text):
     return programs
 
 
+def validate_reference(reference):
+    pins = json.loads(PINS.read_text())
+    cases = reference.get('cases', [])
+    if (reference.get('pins') != pins or reference.get('dut') != 'not_run'
+            or len(cases) != len(pins['cases'])
+            or {c['test'] for c in cases} != set(pins['cases'])):
+        raise ValueError('complete pinned reference required')
+    for case in cases:
+        states = sorted(canonical(s) for s in case['allowed'])
+        digest = hashlib.sha256(json.dumps(states, separators=(',', ':')).encode()).hexdigest()
+        if digest != pins['allowed_sha256'][case['test']]:
+            raise ValueError('allowed states differ from complete pinned model outcomes')
+
+
 def prepare(tests, reference, out):
+    validate_reference(reference)
     pins = json.loads(PINS.read_text())
     if reference['pins'] != pins or reference['dut'] != 'not_run':
         raise ValueError('expected fresh pinned reference-only report')
@@ -71,6 +86,7 @@ def prepare(tests, reference, out):
 
 
 def check(reference, samples):
+    validate_reference(reference)
     cases = reference['cases']
     if not cases or len({r['test'] for r in cases}) != len(cases):
         raise ValueError('nonempty reference with distinct cases required')
