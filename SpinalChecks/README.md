@@ -386,8 +386,8 @@ opcode and size faults, parameter faults, and AXI address faults.
 ## Gaps
 
 - Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
-- Vec use through intermediate wires and switch scopes remains conservative. Asynchronous memory
-  read indexes remain ungated.
+- Index use inference supports local wires, mux branches, literal switch scopes and asynchronous
+  memory reads. Unknown and cross-component uses remain conservative.
 - TileLink: probe tracking, negotiated transfer capabilities,
   B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
   end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
@@ -402,7 +402,7 @@ opcode and size faults, parameter faults, and AXI address faults.
   bursts and a DMA copy with response delays and interruptions. The helper serializes
   memory operations. Concurrent overlapping memory traffic needs an ordering model.
   AXI4-Lite needs its own explicit rules and reference designs.
-- Dynamic bit reads have range checks; intermediate-wire use remains conservative.
+- Dynamic bit reads have range checks; unknown consumer uses remain conservative.
 - Components without reset: checks there are always active.
 - `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
   Use `xprop --combinational` for a clock-free wrapper. See the
@@ -517,9 +517,9 @@ valid or payload between beats. Each call captures its current clock domain.
 
 Dynamic bit reads on non-power-of-two widths produce `bits.index` checks.
 Vec and bit-read checks use the enclosing `when` conditions. An unused read in
-an inactive direct assignment does not fire. Uses through intermediate wires,
-expression multiplexers and `switch` scopes remain conservative. Asynchronous
-memory reads remain ungated. A register select or bit source supplies the clock
+an inactive direct assignment does not fire. Local uses through intermediate wires,
+expression multiplexers, literal `switch` scopes and asynchronous memory reads
+are gated. Unknown uses remain conservative. A register select or bit source supplies the clock
 domain; otherwise the component domain is used. Each domain has its own monitor
 cycle counter. Existing `NamingSpec` tests keep loop-built IDs distinct.
 
@@ -562,10 +562,11 @@ wraps at the declared width. Each project must state the event meaning and bind
 an independent observation. A DUT event output alone does not supply an oracle.
 
 Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
-covers count transitions, inhibit, filtering, writes and modular wrap. It does
+covers count transitions, inhibit, filtering, writes and modular wrap. It does not
 check event selector CSRs or counter interrupts. `bindAccess` checks denied
 responses from privilege and independently observed counter-enable bits. Requests
-include denied attempts. Gate the count model's software writes with its returned
+include denied attempts. The read-only alias denies writes at every privilege.
+The machine alias permits writes only in machine mode. Gate the count model's software writes with its returned
 permission. `bindHalfRead` checks a selected RV32 half against an independent
 64-bit expected counter. Bind accepted responses at the same sample. It does not establish full Zihpm compliance. No core binding is supplied.
 

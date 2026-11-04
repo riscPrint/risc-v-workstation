@@ -25,8 +25,8 @@ object HpmChecks {
                  machineEnable: Bool, supervisorEnable: Bool, hasSupervisor: Boolean,
                  machineAlias: Bool, denied: Bool): Bool = {
     val userAllowed = machineEnable && (if (hasSupervisor) supervisorEnable else True)
-    val allowed = privilege === 3 || (!machineAlias && !write &&
-      ((privilege === 1 && machineEnable) || (privilege === 0 && userAllowed)))
+    val allowed = (!write || machineAlias) && (privilege === 3 || (!machineAlias &&
+      ((privilege === 1 && machineEnable) || (privilege === 0 && userAllowed))))
     DeclaredChecks.rule("hpm.access", name, "Zihpm privilege, read-only alias and counter enables")(
       (read || write) && (denied === allowed))
     allowed

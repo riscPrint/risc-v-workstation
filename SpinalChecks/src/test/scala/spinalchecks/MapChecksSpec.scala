@@ -36,7 +36,7 @@ class MapChecksSpec extends AnyFunSuite with ApplicationTest {
     exercise("csr_map_ro", Set("csr.state", "csr.access", "csr.read"))(new CsrRef(ro = true))
   }
   class AccessRef(machineAlias: Boolean = false) extends ApplicationRef {
-    val ok = privilege === 3 || (Bool(!machineAlias) && !write && permitted && (privilege === 1 || (privilege === 0 && !inhibit)))
+    val ok = (!write || Bool(machineAlias)) && (privilege === 3 || (Bool(!machineAlias) && !write && permitted && (privilege === 1 || (privilege === 0 && !inhibit))))
     val allowed = HpmChecks.bindAccess("counter", read, write, privilege, permitted, !inhibit,
       true, Bool(machineAlias), !ok ^ corrupt)
     val count = Reg(UInt(4 bits)).init(0)
