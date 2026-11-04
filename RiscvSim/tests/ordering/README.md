@@ -83,8 +83,9 @@ values and order. RAM loads check local visibility. No device accesses occur.
 This exercises encodings; it does not check the ordering of device accesses.
 
 `observer.py PLAN.json OBSERVATION.json` checks required edges from a test plan.
-The project must supply an independent bus or device monitor. No current adapter
-supplies this monitor. Do not use retirement records as its input.
+The project must supply an independent bus or device monitor. The BOOM adapter
+supplies an external TileLink capture. See the bus checker below. Do not use
+retirement records as monitor input.
 
 A plan declares `boundary` (a platform-defined string) and `edges`, for example
 `{"boundary":"device-visible","edges":[["write","read"]]}`.
@@ -195,7 +196,8 @@ fixture permission transitions. They are not accepted TileLink-C channel events.
 There are no caches, resource dependency graphs or full RISC-V implementations.
 The separate `CoherentCacheNativeSpec` checks real cache writeback and accepted
 TileLink channel backpressure. See the RiscvSim README. Cyclic resource waits
-and independent fairness measurement remain outside these checks under #128.
+remain outside these checks under #128. The fixture measures bounded enable
+and grant fairness with `FairnessMonitor`.
 
 Fault controls omit reservation invalidation, expose a partial AMO write, corrupt
 an AMO return, retain a conflicting permission, omit dirty transfer, starve one
@@ -239,3 +241,17 @@ outcome set against canonical hashes in `litmus-pins.json`. These hashes pin
 reference-model expectations. They do not come from fixture observations.
 Regenerate the reference report after a pin change. A stale or partial report
 cannot earn consistency.
+
+### External bus order plans
+
+`bus_observer.py PLAN.json memory-bus.jsonl` converts BOOM's independent bus
+capture to ordering intervals. It checks the existing plan `edges`.
+Add `accesses` with unique `id`, unique hex `address`, `class`, TileLink A `opcode`
+and `size_log2`. Optional `data`, `mask` and `expected_read_data` are hex strings
+from stimulus. Only single-beat Get and Put requests are supported. The plan
+boundary must be `accepted-external-tilelink`. Each address must occur once.
+The checker matches source IDs and D responses. A denied response, changed data,
+missing request or incomplete capture stays inconclusive. A cache hit cannot
+satisfy an external-access plan. Device-side completion needs another observer.
+The project must classify accesses from its PMA map. No real-device campaign
+is supplied by this converter. #102 remains open for those target checks.

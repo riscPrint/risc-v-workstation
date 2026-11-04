@@ -2121,6 +2121,39 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Passive bus observations
+
+An adapter can name `memory-bus.jsonl` in C1 `details.bus_observations`.
+The JSONL header uses `rvw.bus-observations/1`. It gives C2 `identity`,
+`bus_bytes`, `boundary: accepted-external-tilelink` and `independent: true`.
+Each row records an accepted handshake with `channel`, decimal-string `cycle`
+and `sequence`. A rows give `source`, `address`, `opcode`, `size_log2`, `mask`
+and `data`. D rows give `source`, `opcode`, `size_log2`, `denied` and `data`.
+Hex values use strings. Opcode and size use JSON integers. Same-cycle rows keep
+capture order; this order does not imply an order between hardware effects.
+An end row gives `kind: end`, `cycle` and the terminal C1 `status`.
+Missing end rows mean incomplete capture. A terminal pass does not prove ordering.
+The boundary excludes cache hits, buffered stores and device-side completion.
+Adapters must not infer those events from retirement or from these handshakes.
+
+The optional `rvw.mmu-observations/1` stream can also contain BOOM cache-stage
+rows. `icache_response` gives hex `physical_address`, hex raw `data` and integer
+`bytes`. `icache_invalidate` gives Boolean `refill_pending`.
+`icache_refill_request` gives hex `address`. These share the stream's cycle clock.
+They include speculative responses. They are not consumed-instruction evidence.
+
+`fetch_consumed` rows in the optional observation stream give hex `pc` and
+`instruction` from each accepted decode slot. These original instruction bits
+come from the fetch buffer, independently of retirement. Wrong-path entries can
+still occur. The project must map publication epochs and fence redirects before
+using them as synchronized-byte checks.
+
+Bus capture can include B, C and E rows. B gives `source`, `address`, `opcode`,
+`param` and `size_log2`. C adds `data`. E gives `sink`. A and D rows also give
+`param`; D gives `sink`. These accepted-channel observations do not identify
+internal hits or replacement ways. Do not infer cache residency from capture
+alone: clean evictions can be silent.
+
 ## TestRIG socket transport (`rvw.dii/1`)
 
 `rvw cosim dii serve` and `replay` use RVFI-DII v1, separate from C1/C2.

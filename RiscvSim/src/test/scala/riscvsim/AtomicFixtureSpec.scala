@@ -37,6 +37,7 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
       val succeeded = Array(false, false)
       val pending = Array.fill[Option[String]](2)(None)
       val progress = new ProgressMonitor(32, 2, "round-robin slot every 8 cycles; enable within 3 cycles; immediate memory response")
+      val fairness = new FairnessMonitor(Set("0","1"), 2, 32)
       val coherence = new CoherenceMonitor(4, Set(0, 1))
       val rng = new scala.util.Random(seed)
       var cycle = 0L
@@ -99,6 +100,17 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
             pcs(i) += 1
           }
         }
+        if (fault == 0) {
+          val offered = (0 until 2).filter { i =>
+            val h = dut.harts(i)
+            val op = (h.io.insn.toLong & 127).toInt
+            !h.io.done.toBoolean && Set(3,35,47)(op) &&
+              (!invalidate || (if (i == 1) pcs(0) > 0 else pcs(0) < programs(0).size-1 || pcs(1) >= programs(1).size-1))
+          }.map(_.toString).toSet
+          val enabled = (0 until 2).filter(i => (dut.io.enable.toInt & (1 << i)) != 0).map(_.toString).toSet
+          val granted = (0 until 2).filter(i => dut.harts(i).io.request.toBoolean && dut.harts(i).io.ready.toBoolean).map(_.toString).toSet
+          fairness.sample(cycle, offered, enabled, granted)
+        }
         progress.check(cycle)
         dut.clockDomain.waitRisingEdge(); sleep(1)
         // Independent continuous memory observer catches partial or missing writes.
@@ -120,6 +132,8 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
       for (i <- 0 until 2; r <- 0 until 32) actual(i)(r) = dut.harts(i).io.registers(r).toLong
       if (scBound > 0) assert(succeeded(0), "constrained loop did not complete SC")
       progress.finish(cycle)
+      if (fault == 0) fairness.finish(programs.indices.filter(i =>
+        programs(i).exists(insn => Set(3,35,47)((insn & 127).toInt))).map(_.toString).toSet)
       dut.io.enable #= 0; dut.io.evict #= true
       dut.clockDomain.waitSampling(); sleep(1)
       for (i <- 0 until 2; w <- 0 until 2) {
