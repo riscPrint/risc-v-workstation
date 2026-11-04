@@ -712,3 +712,25 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+
+### Related clocks as periodic sampled schedules
+
+Event BMC accepts repeated `--clock-schedule PORT=BITS` options. Declare every
+clock, including `--clock`, or declare none. `clk=01` and `other=0011` describe
+a 2:1 rate ratio. Rotate the bit strings to declare a phase. The leftmost bit is
+sample zero. Each pattern repeats forever. Each must contain both levels and
+2..256 samples. The joint period must not exceed 4096 samples. These are explicit
+proof restrictions, not measured hardware clock relationships.
+
+One solver step advances one global sample. The wrapper constrains clock levels
+at that sample. The event backend samples property data before its triggering
+edge; data that changes with a clock uses its previous sample at that edge.
+Clock schedules do not add analog timing, delta cycles, jitter or events between
+samples. No schedule keeps the independent arbitrary-rate event model.
+The existing reset harness still counts primary-clock edges. Async reset state
+requires the separate `--async-reset` option. Unsupported state controls and raw
+async-triggered properties remain refused. Replay and X flows remain unchanged.
+`event_model.schedules` records the exact patterns; `relationships` states whether
+the run used periodic schedules or unrelated clocks. Native phase tests require
+both a passing same-phase reference and a failing opposite-phase reference.
