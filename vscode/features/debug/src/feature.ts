@@ -1,0 +1,32 @@
+import * as vscode from 'vscode';
+import { spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
+import { randomBytes } from 'node:crypto';
+import { body, isRequest } from './protocol';
+import type { Feature } from '../../../src/api';
+const feature:Feature = { id:'debug', activate(ctx) {
+  ctx.subscriptions.push(vscode.commands.registerCommand('debug.open', async () => {
+    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace to start the debug backend.');
+    const pick=async (label:string, extension:string) => (await vscode.window.showOpenDialog({title:label,canSelectMany:false,filters:{[label]:[extension]}}))?.[0];
+    const db=await pick('Design database','db'); if (!db) return;
+    const wave=await pick('Indexed wave','rvwi'); if (!wave) return;
+    const config=vscode.workspace.getConfiguration('debug');
+    const root=config.get<string>('rvwSource') || vscode.Uri.joinPath(ctx.extension.extensionUri,'..','rvw','src').fsPath;
+    const child=spawn(config.get<string>('python','python3'),['-m','rvw.query.session','--db',db.fsPath,'--wave',wave.fsPath],{env:{...process.env,PYTHONPATH:root}});
+    const panel=vscode.window.createWebviewPanel('debug.session','Integrated debug',vscode.ViewColumn.Active,{enableScripts:true,localResourceRoots:[ctx.dist]});
+    const uri=(file:string)=>panel.webview.asWebviewUri(vscode.Uri.joinPath(ctx.dist,file)).toString();
+    const nonce=randomBytes(24).toString('hex');
+    panel.webview.html=`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${panel.webview.cspSource} blob:; style-src ${panel.webview.cspSource} 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; connect-src ${panel.webview.cspSource}; worker-src blob:;"><link rel="stylesheet" href="${uri('style.css')}"></head><body data-worker="${uri('elk-worker.js')}">${body}<script nonce="${nonce}" src="${uri('webview.js')}"></script></body></html>`;
+    const lines=createInterface({input:child.stdout});
+    lines.on('line',line=> {try { void panel.webview.postMessage(JSON.parse(line)); } catch {ctx.log.error('Invalid debug backend response');}});
+    child.stderr.on('data',data=>ctx.log.error(String(data)));
+    const fail=(message:string)=>void panel.webview.postMessage({id:-1,error:message});
+    child.on('error',e=>{ctx.log.error(e.message);fail(e.message);void vscode.window.showErrorMessage(`Debug backend: ${e.message}`);});
+    child.on('exit',code=>{if(code) {ctx.log.error(`Debug backend exited: ${code}`);void vscode.window.showErrorMessage(`Debug backend exited: ${code}. See the Workstation output.`);}});
+    const messages=panel.webview.onDidReceiveMessage(a=>{if(Number.isSafeInteger(a?.id) && isRequest(a) && child.stdin.writable) child.stdin.write(JSON.stringify(a)+'\n');});
+    const source=vscode.window.onDidChangeTextEditorSelection(e=>{if(e.textEditor.document.languageId==='scala') void panel.webview.postMessage({type:'source',file:e.textEditor.document.uri.fsPath,line:e.selections[0].active.line+1});});
+    panel.onDidDispose(()=>{messages.dispose();source.dispose();lines.close();child.kill('SIGTERM');});
+    ctx.subscriptions.push(panel);
+  }));
+}};
+export default feature;

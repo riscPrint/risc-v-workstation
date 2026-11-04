@@ -21,6 +21,7 @@
   "activationEvents": [
     "onCommand:coverage.open",
     "onView:coverage.results",
+    "onCommand:debug.open",
     "onCommand:perf.open",
     "onView:perf.results",
     "onCommand:regress.open",
@@ -55,6 +56,10 @@
       {
         "command": "coverage.trace",
         "title": "Coverage: Open SpinalTrace"
+      },
+      {
+        "command": "debug.open",
+        "title": "Debug: Open Integrated Session"
       },
       {
         "command": "perf.open",
@@ -333,6 +338,23 @@
             "type": "string",
             "default": "spinaltrace",
             "description": "Path to the SpinalTrace GUI.",
+            "restricted": true
+          }
+        }
+      },
+      {
+        "title": "Integrated debug",
+        "properties": {
+          "debug.python": {
+            "type": "string",
+            "default": "python3",
+            "description": "Python executable for the local debug backend.",
+            "restricted": true
+          },
+          "debug.rvwSource": {
+            "type": "string",
+            "default": "",
+            "description": "Path to rvw/src for the local debug backend.",
             "restricted": true
           }
         }
