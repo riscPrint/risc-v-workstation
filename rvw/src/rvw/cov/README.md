@@ -1004,3 +1004,34 @@ five consistent inputs give `consistent`. This is a configuration check, not
 an ISA compliance result. A capability command is a consumer report, not an
 independent proof that the consumer implements that version. Existing adapters
 without capability commands still need an integration or a settings-file probe.
+
+### Reviewed semantic forms and crosses
+
+`semantics.forms` can declare bit layouts for each pinned instruction name.
+This supports compressed forms and split immediate layouts without guessing
+from mnemonic spelling. Each form maps field names to `bits`, `width`, `bins`,
+and optional `signed`, `offset` and `bank` (`integer|float`). A bit slice is
+`[instruction_high_bit, instruction_low_bit, result_low_bit]`. The reader joins
+slices, applies sign extension, then adds the offset. For example:
+
+```json
+{"c.addi": {"imm": {"bits": [[12,12,5], [6,2,0]], "width": 6,
+                       "signed": true, "bins": "boundaries"},
+             "rd": {"bits": [[11,7,0]], "width": 5,
+                    "bins": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+                             16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}}}
+```
+
+`boundaries` creates zero, positive, negative, minimum and maximum classes.
+A zero bit omitted from a slice stays zero. Compact registers can use offset 8.
+Fields named `rs1|rs2` with `bank: "integer"` also generate operand-value bins.
+Missing RVFI operand values earn no hit. Floating fields do not use integer data.
+
+`semantics.crosses` is an array of `id`, `instruction`, `fields` and
+`combinations`. Each combination has `bin`, `status` (`legal|illegal|unavailable`)
+and `reason`. Every Cartesian combination of the declared field domains must
+have exactly one classification. The reader refuses incomplete catalogs.
+Reports retain all combinations in the denominator and report observations per
+classification. A declared illegal or unavailable bin is not a proof exclusion.
+These declarations require spec review. The tool does not claim that a finite
+catalog covers every semantic obligation of the selected ISA version.

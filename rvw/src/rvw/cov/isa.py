@@ -141,6 +141,8 @@ def observe_encoding(obs, isa_plan):
         obs['fault_instruction'] = item['name']
         return
     obs['isa_instruction'] = item['name']
+    from .semantic_forms import observe
+    observe(obs, isa_plan, insn, item['name'])
     for arg in item['args']:
         hi, lo = isa_plan['args'][arg]
         obs[f'isa_{arg}'] = (insn >> lo) & ((1 << (hi - lo + 1)) - 1)

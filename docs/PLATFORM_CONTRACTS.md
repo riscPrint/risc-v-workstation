@@ -1912,3 +1912,12 @@ manifest directory. `rvw.isa-check/1` includes observed `probes` and
 matching versions and options. Missing evidence gives `inconclusive`.
 Contradictions are errors. These statuses describe configuration consistency.
 They do not certify ISA implementation or compliance.
+
+`rvw.isa/1.semantics` can include `forms` and `crosses`. Forms map instruction
+names to fields with `bits` (`[hi,lo,destination_lo]` slices), `width`, `bins`
+(explicit values or `boundaries`), optional `signed`, `offset` and register
+`bank`. Crosses declare `id`, `instruction`, `fields`, and exhaustive
+`combinations` (`bin`, `status`, `reason`) within those finite field domains.
+Statuses are `legal|illegal|unavailable`. Functional plans retain the catalog.
+Cross reports retain every bin in the denominator and add `classifications`
+with observed `count`. No catalog declaration is a proof exclusion.
