@@ -28,7 +28,8 @@ def test_source_archive(tmp_path):
         pkg.verify(root)
 
 
-def test_installer(tmp_path):
+@pytest.mark.parametrize("platform", ["Linux", "Darwin"])
+def test_installer(tmp_path, platform):
     import os
     # Use the archive as the standalone build input. Stub Cargo creates only
     # the expected executable, so this does not claim a native build.
@@ -51,10 +52,48 @@ p.write_text('#!/bin/sh\\nexit 0\\n')
 p.chmod(0o755)
 ''')
     cargo.chmod(0o755)
+    for name, body in [('uname', f'echo {platform}'), ('codesign', 'exit 0')]:
+        tool = stub / name
+        tool.write_text('#!/bin/sh\n' + body + '\n')
+        tool.chmod(0o755)
     log = tmp_path / 'cargo.log'
     subprocess.run(['bash', str(root / 'scripts/install.sh'), '--only', 'surfer', '--copy', '--prefix', str(tmp_path / 'bin')], check=True,
                    env={**os.environ, 'PATH': str(stub)+os.pathsep+os.environ['PATH'], 'CARGO_LOG': str(log)}, capture_output=True)
+    assert (tmp_path / 'bin/SpinalWaves.app/Contents/Info.plist').exists() == (platform == 'Darwin')
     assert '--locked' in log.read_text()
     assert '-p surfer-tywaves' in log.read_text()
     assert (tmp_path / 'share/spinalwaves/LICENSE-EUPL-1.2.txt').exists()
     assert (tmp_path / 'share/spinalwaves/source.tar.gz').exists()
+
+
+def test_macos_app(tmp_path, monkeypatch):
+    import plistlib
+    app_spec = importlib.util.spec_from_file_location('waves_app', ROOT / 'scripts/package-app.py')
+    app_pkg = importlib.util.module_from_spec(app_spec)
+    app_spec.loader.exec_module(app_pkg)
+    binary = tmp_path / 'viewer'
+    binary.write_bytes(b'native viewer fixture')
+    notices = tmp_path / 'notices'
+    notices.mkdir()
+    for name in ('LICENSE-EUPL-1.2.txt', 'vendor-lock.json', 'source.tar.gz'):
+        (notices / name).write_text(name)
+    calls = []
+    monkeypatch.setattr(app_pkg.subprocess, 'run', lambda args, **kw: calls.append((args, kw)))
+    app = tmp_path / 'prefix with spaces/SpinalWaves.app'
+    app_pkg.package(binary, notices, app, ROOT / 'surfer-tywaves/Cargo.toml')
+    contents = app / 'Contents'
+    info = plistlib.loads((contents / 'Info.plist').read_bytes())
+    assert info['CFBundleIdentifier'] == 'org.riscprint.spinalwaves'
+    assert info['CFBundleName'] == 'SpinalWaves'
+    assert info['CFBundlePackageType'] == 'APPL'
+    assert info['CFBundleShortVersionString'] == '0.3.0'
+    assert info['CFBundleVersion'] == '0.3.0'
+    assert info['SpinalWavesForkVersion'] == '0.3.0-dev'
+    executable = contents / 'MacOS' / info['CFBundleExecutable']
+    assert b'mktemp -d' in executable.read_bytes()
+    assert (contents / 'MacOS/surfer-tywaves').read_bytes() == binary.read_bytes()
+    assert executable.stat().st_mode & 0o111
+    assert not executable.is_symlink()
+    for notice in notices.iterdir():
+        assert (contents / 'Resources' / notice.name).read_bytes() == notice.read_bytes()
+    assert calls == [(['codesign', '--force', '--sign', '-', str(app)], {'check': True})]
