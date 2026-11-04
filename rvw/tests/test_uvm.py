@@ -83,3 +83,30 @@ def test_regress_cli():
     with pytest.raises(SystemExit) as result:
         main(["regress", "uvm", "--help"])
     assert result.value.code == 0
+
+
+@pytest.mark.parametrize('fault,diagnostic', [
+    ('ral','[RAL] read or prediction mismatch'),
+    ('pins','[PINS] interrupt/debug pin mismatch')])
+def test_control_and_ral_faults_need_expected_failure(fault,diagnostic):
+    assert uvm.evidence(diagnostic,1,False,negative=fault)
+    assert not uvm.evidence(diagnostic,0,False,negative=fault)
+    assert not uvm.evidence(diagnostic,1,True,negative=fault)
+    assert not uvm.evidence('unrelated crash',1,False,negative=fault)
+    assert not uvm.evidence(diagnostic+'\nRVW_UVM_DONE',1,False,negative=fault)
+
+
+def test_changed_sources_produce_valid_inconclusive_c3(tmp_path,monkeypatch):
+    calls={}
+    def changed(path):
+        path=str(path)
+        calls[path]=calls.get(path,0)+1
+        return 'a' if calls[path]==1 else 'b'
+    monkeypatch.setattr(uvm,'sha',changed)
+    monkeypatch.setattr(uvm.shutil,'which',lambda _: '/bin/false')
+    monkeypatch.setattr(uvm,'run_group',lambda *a,**k: Result(0,stdout='fake'))
+    out=tmp_path/'out'
+    uvm.run(out,archive=tmp_path/'missing')
+    loaded=load_results(out)
+    assert loaded.tests[0].signature=='uvm:source-changed'
+    assert not loaded.tests[0].conclusive

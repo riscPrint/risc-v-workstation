@@ -29,9 +29,18 @@ def register(subparsers) -> None:
     build.add_argument("--json", action="store_true")
     build.set_defaults(func=_build)
 
+    hdl = sub.add_parser("build-hdl", help="build a navigation database from Verilog or the Yosys SV subset")
+    hdl.add_argument("sources", nargs="+")
+    hdl.add_argument("--top", required=True)
+    hdl.add_argument("--out", required=True)
+    hdl.add_argument("--yosys", default="yosys")
+    hdl.add_argument("--timeout", type=int, default=120)
+    hdl.add_argument("--json", action="store_true")
+    hdl.set_defaults(func=lambda a: _run(a, lambda d, a: _build_hdl(a)))
+
     c = cmd("info", "what the database holds", lambda d, a: ops.info(d))
 
-    c = cmd("where", "Scala source, Verilog name and waveform path of a signal", lambda d, a: ops.where(d, a.signal))
+    c = cmd("where", "source location, Verilog name and waveform path of a signal", lambda d, a: ops.where(d, a.signal))
     c.add_argument("signal")
 
     c = cmd("drivers", "what drives a signal: assignments, conditions, enables, reset", lambda d, a: ops.drivers(d, a.signal))
@@ -146,6 +155,8 @@ def _sig_line(s: dict) -> str:
 def render(command: str, r: dict) -> str:
     out: list[str] = []
     w = out.append
+    if r.get("graph_semantics"):
+        w(f"graph: {r['graph_semantics']}")
     if r.get("status") == "inconclusive":
         w(f"inconclusive: {r.get('cause', 'input_not_captured')}")
     if command in ("where", "drivers", "loads") and "signal" in r:
@@ -160,13 +171,13 @@ def render(command: str, r: dict) -> str:
                 w(f"  wave     {s['wave']}")
             if s.get("origin"):
                 w(f"  origin   {s['origin']}")
-            w(f"  scala    {s.get('loc')}")
+            w(f"  source   {s.get('loc')}")
             if s.get("area"):
                 w(f"  area     {s['area']}")
             if s.get("clock_domain"):
                 w(f"  clock    {s['clock_domain']}  reset value {s.get('reset_value')}")
         else:
-            w(f"  scala {s.get('loc')}")
+            w(f"  source {s.get('loc')}")
     if command == "where" and r.get("group"):
         b = r.get("bundle")
         if b:
@@ -333,3 +344,8 @@ def _build(args):
         return 2
     print(json.dumps(result, default=str) if args.json else render("info", result))
     return 0
+
+
+def _build_hdl(args):
+    from .hdl import build_hdl
+    return build_hdl(args.sources, args.top, args.out, yosys=args.yosys, timeout=args.timeout)

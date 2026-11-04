@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.cdc-protocol/1",
+  "kind": "coherent_bus",
+  "top": "cdc_reconverge",
+  "verilog": [
+    "sampling.sv",
+    "reconverge.sv"
+  ]
+}

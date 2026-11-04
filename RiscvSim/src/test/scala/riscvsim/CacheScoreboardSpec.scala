@@ -39,3 +39,30 @@ class CacheScoreboardSpec extends AnyFunSuite {
     i.invalidate(0); i.fill(0, mem.read(0, 4)); i.read(0, Vector[Byte](0x73))
   }
 }
+
+class CacheReplacementSpec extends org.scalatest.funsuite.AnyFunSuite {
+  test("LRU and FIFO distinguish hit updates at a set replacement boundary") {
+    for (policy <- Seq("lru", "fifo")) {
+      val memory = new MemoryImage(64)
+      val m = new CacheScoreboard(memory, 4, 2, 2, policy)
+      m.fill(0, memory.read(0,4)); m.fill(8, memory.read(8,4))
+      m.fill(4, memory.read(4,4)) // unrelated set cannot change the victim
+      m.read(0, memory.read(0,4))
+      val victim = if (policy == "lru") 8 else 0
+      val wrong = if (victim == 8) 0 else 8
+      intercept[IllegalArgumentException](m.evict(wrong,None,replacementEviction=true))
+      m.evict(victim,None,replacementEviction=true)
+      m.fill(16,memory.read(16,4))
+      assert(m.contains(wrong) && m.contains(16) && m.contains(4))
+    }
+  }
+  test("maintenance does not enforce replacement choice and dirty data still needs writeback") {
+    val memory = new MemoryImage(32)
+    val m = new CacheScoreboard(memory,4,1,2,"lru")
+    m.fill(0,memory.read(0,4)); m.fill(4,memory.read(4,4))
+    memory.write(4,Vector[Byte](7),1); m.store(4,Vector[Byte](7),1)
+    intercept[IllegalArgumentException](m.evict(4,None))
+    m.evict(4,Some(memory.read(4,4)))
+    assert(m.contains(0) && !m.contains(4))
+  }
+}

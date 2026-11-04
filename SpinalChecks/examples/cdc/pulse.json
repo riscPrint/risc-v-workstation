@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.cdc-protocol/1",
+  "kind": "pulse_capture",
+  "top": "cdc_pulse",
+  "verilog": [
+    "sampling.sv",
+    "pulse.sv"
+  ]
+}

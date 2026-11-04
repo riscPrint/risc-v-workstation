@@ -81,6 +81,7 @@ def mcp_tools():
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "
                  "bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.",
                  schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B,
+                         "clock_schedule": {"type": "array", "items": S},
                          "event_model": B, "event_clock": {"type": "array", "items": S}, "async_reset": B}, ["out"]),
                  _runner("bmc"), long=True),
         ToolSpec("formal_from_sim", "Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the "
