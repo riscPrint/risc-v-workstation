@@ -474,6 +474,8 @@
     },
     {
       "id": "clint-msip-read",
+      "access_width": 4,
+      "register_width": 32,
       "level": 0,
       "flags": "VRWAD",
       "access": "load",

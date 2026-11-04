@@ -586,3 +586,10 @@ this reference-only file separate from the DUT platform. Do not waive the
 strict comparison or change the DUT contract to make two oracles agree.
 An unfenced translation can still differ under the correct reference platform.
 Keep that comparison inconclusive and retain both values.
+
+Scenario `access_width` selects 1, 2, 4 or 8 bytes (default 8). Loads use
+`lb`, `lh`, `lw` or `ld`. Stores use the matching width. Optional
+`register_width` declares 8, 16, 32 or 64 bits. Generation refuses an
+access wider than that declaration. The project owns the declaration.
+The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
+Remap scenarios require the default 8-byte access.

@@ -51,7 +51,7 @@ def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -62,6 +62,17 @@ def validate(s):
         raise ValueError('invalid PTE flags')
     if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
         raise ValueError('unsupported access or expectation')
+    width = s.get('access_width', 8)
+    if type(width) is not int or width not in (1, 2, 4, 8):
+        raise ValueError('access_width must be 1, 2, 4 or 8 bytes')
+    if 'register_width' in s:
+        bits = s['register_width']
+        if type(bits) is not int or bits not in (8, 16, 32, 64):
+            raise ValueError('register width must be 8, 16, 32 or 64 bits')
+        if width * 8 > bits:
+            raise ValueError('access exceeds declared register width')
+    if width != 8 and s.get('remap'):
+        raise ValueError('remap requires an 8-byte access')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
     for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid'):
@@ -109,6 +120,8 @@ def assembly(s):
     validate(s)
     va = number(s.get('va', 0x40000000))
     pa = number(s.get('pa', DATA))
+    load_op = {1: 'lb', 2: 'lh', 4: 'lw', 8: 'ld'}[s.get('access_width', 8)]
+    store_op = {1: 'sb', 2: 'sh', 4: 'sw', 8: 'sd'}[s.get('access_width', 8)]
     level = s['level']
     indexes = [(va >> (12 + 9 * i)) & 511 for i in range(3)]
     tables = [[0] * 512 for _ in range(3 - level)]
@@ -152,7 +165,7 @@ _start:
  csrs mstatus, t0
  li a0, {43 if s['access'] == 'store' else -1}
 access_site:
- {'ld a0, 0(t3)' if s['access'] == 'load' else 'sd a0, 0(t3)'}
+ {load_op if s['access'] == 'load' else store_op} a0, 0(t3)
  li t0, 0x20000
  csrc mstatus, t0
  {'j fail' if fault else 'j check_data'}
@@ -174,7 +187,7 @@ check_trap:
 check_data:
 '''
     if s['access'] == 'store':
-        code += f' li t0, {pa + s.get("offset", 0)}\n ld a0, 0(t0)\n'
+        code += f' li t0, {pa + s.get("offset", 0)}\n {load_op} a0, 0(t0)\n'
     code += f" li t1, {43 if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))

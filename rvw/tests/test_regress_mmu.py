@@ -294,3 +294,38 @@ def test_unfenced_oracle_divergence_cannot_earn_a_pass(tmp_path, monkeypatch):
     assert result['status'] == 'inconclusive'
     assert result['scenarios'][0]['comparison']['status'] == 'mismatch'
     assert result['scenarios'][0]['c1_status'] == 'pass'
+
+
+def test_clint_msip_uses_declared_register_width():
+    row = next(s for s in load(DESCRIPTION) if s['id'] == 'clint-msip-read')
+    soc = json.loads((DESCRIPTION.parents[1] / 'soc.json').read_text())
+    clint = next(r for r in soc['regions'] if r['name'] == 'clint')
+    msip = next(r for r in clint['registers'] if r['name'] == 'msip')
+    assert row['register_width'] == msip['width'] == 32
+    assert 'access_site:\n lw a0, 0(t3)' in assembly(row)
+
+
+@pytest.mark.parametrize('access', ['load', 'store'])
+def test_generation_refuses_access_wider_than_register(access):
+    row = scenario(access_width=8, register_width=32)
+    row['access'] = access
+    with pytest.raises(ValueError, match='register width'):
+        assembly(row)
+
+
+@pytest.mark.parametrize('width,load_op,store_op', [(1, 'lb', 'sb'), (2, 'lh', 'sh'), (4, 'lw', 'sw'), (8, 'ld', 'sd')])
+def test_access_width_selects_load_store_and_readback(width, load_op, store_op):
+    row = scenario(access_width=width, register_width=width * 8)
+    assert f'access_site:\n {load_op} a0, 0(t3)' in assembly(row)
+    row['access'] = 'store'
+    text = assembly(row)
+    assert f'access_site:\n {store_op} a0, 0(t3)' in text
+    assert f'{load_op} a0, 0(t0)' in text
+
+
+@pytest.mark.parametrize('changes', [dict(access_width=True), dict(access_width=3),
+    dict(register_width=True), dict(register_width=4), dict(register_width=32),
+    dict(access_width=4, remap=True)])
+def test_invalid_access_width(changes):
+    with pytest.raises(ValueError):
+        assembly(scenario(**changes))
