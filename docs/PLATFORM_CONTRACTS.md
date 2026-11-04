@@ -1925,6 +1925,45 @@ Status stays `inconclusive` until all requested comparisons are equivalent.
 A failed run stops the sweep. Cancellation stops the active process group.
 Build costs, peak RSS, PGO and checkpoints are outside this report.
 
+
+## Local integrated debug session
+
+`python -m rvw.query.session --db DESIGN --wave SNAPSHOT.rvwi` holds one C6
+database capture until exit. Stdio carries one JSON object per line. Requests
+have integer `id` and `op`: `open`, `select`, `source` or `trace`. Responses echo
+`id`. Success includes `result`, `database` (the capture record) and
+`elapsed_ms` (backend time). Failure includes `error` and `status: inconclusive`.
+`select` uses `signal`, decimal string `time` and optional decimal string `end`.
+It returns the preceding value and at most 500 changes, with a truncation flag.
+Change times are decimal strings. `source` uses `file` and integer `line` and
+returns all candidates, without choosing among ambiguous mappings. `trace` uses
+`signal` and `time`. It exports database PDG/HGLDD, checks the original VCD hash
+and invokes SpinalTrace. Static drivers remain distinct from dynamic evidence.
+The selected database and wave identities do not establish a shared C1 run.
+The loopback web host exposes the same requests at `POST /api`. These are local
+UI transport operations. They issue no simulation or acceptance verdict.
+
+
+
+## Standalone HDL semantic tests
+
+`rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
+This standalone format is not C1, C3 or C4 acceptance evidence.
+The manifest fields are `schema`, `backend`, `top`, `sources`, optional
+`requires`, and optional `vhdl_sources` plus `vhdl_top` for mixed synthesis.
+A per-run `--backend` override must meet every declared requirement.
+The [simulation guide](../rvw/src/rvw/sim/README.md#native-hdl-testbenches)
+defines supported profiles and testbench completion rules.
+
+The result records `status` (`pass` or `error`), `reason`, the selected `backend`,
+`capabilities`, source-file SHA-256 `inputs`, resolved `tools`, `versions`,
+`jobs`, `wall_s`, `timeout_s` and `replay`. Each job records its argument vector,
+exit code, timeout flag, and paths to stdout/stderr logs. Exit zero plus exactly
+one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
+A failed compile, failed run, timeout or missing completion marker gives error.
+Requirements and missing-tool errors occur before output creation (CLI exit 2).
+This format does not capture transitive file inputs or establish C8 reuse.
+
 ## Workload reference flow
 
 `rvw workloads list|build|verify` uses `rvw.workloads/1` manifests.
@@ -1944,6 +1983,7 @@ whole-program instruction category counts and observed conditional-branch
 transitions. Compressed instructions are decoded as RV64. FP and memory
 categories overlap. Cache misses and branch mispredictions stay null.
 The retained stderr file is the hashed instruction-log evidence.
+
 
 ### C9 search, repeats and prediction ledger
 
@@ -1987,6 +2027,7 @@ Every RTL evidence mtime must follow the prediction time. This is a local
 ordering check, not trusted chronology. The ledger requires original local
 paths and stable evidence. No file races or hostile timestamp claims are covered.
 
+
 ## SpinalChecks normalized register map (version 1)
 
 `SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
@@ -1996,3 +2037,4 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+

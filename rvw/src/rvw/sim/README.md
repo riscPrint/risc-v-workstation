@@ -169,3 +169,63 @@ host, CPU count, file hashes and completed comparisons. Its status stays
 inconclusive until every requested comparison passes. It does not change
 simulator defaults. The sweep covers run throughput only. Build phase timing,
 peak RSS, partitioning, PGO and ccache require separate experiments.
+
+## Native HDL testbenches
+
+Use `rvw regress backends --hdl --json` to list HDL invocation profiles.
+Use `rvw regress hdl MANIFEST --out NEW_DIRECTORY --json` to run one testbench.
+`--backend NAME` selects a profile per run. Requirements still apply after an
+override. These profiles are separate from the cocotb profiles.
+
+| Profile | Values and scheduling | Supported subset |
+|---|---|---|
+| `icarus` | Four-state HDL events | X/Z values, delays, immediate assertions |
+| `verilator-timing` | Two-state HDL events with `--timing --assert` | Delays, edge controls, nonblocking assignments, fork/join, immediate assertions |
+| `ghdl-yosys-icarus` | Icarus events on a synthesized VHDL netlist | Synthesizable VHDL-2008 components in a Verilog/SystemVerilog testbench |
+
+No profile enables coverage or foreign interfaces. Concurrent SVA, full
+SystemVerilog, pessimistic X propagation, VHDL event semantics and VHDL
+nine-value logic are unsupported requirements. The mixed path converts VHDL
+with `ghdl --synth --std=08 --out=verilog`. Yosys checks the hierarchy and lowers
+processes. Icarus compiles the resulting netlist with the HDL testbench. This
+path needs native GHDL synthesis support and Yosys. It does not use a VPI bridge.
+Synthesis can change unknown values. The mixed profile thus refuses
+`four_state` and `xz_values` even though Icarus runs the final netlist.
+
+Example `rvw.hdl/1` manifest:
+
+```json
+{
+  "schema": "rvw.hdl/1",
+  "backend": "icarus",
+  "top": "tb",
+  "sources": ["xreset.sv"],
+  "requires": ["four_state", "xz_values", "hdl_delays"]
+}
+```
+
+For mixed synthesis, also set `vhdl_sources` to an ordered list of VHDL files
+and `vhdl_top` to their component entity name. Use `requires: ["mixed_synth"]`.
+The testbench `top` and `vhdl_top` must be simple HDL identifiers. Paths resolve
+from the manifest directory. Unknown fields and requirements are errors before
+output creation or tool launch. Missing tools also cause a preflight error.
+The compiler checks language support on the installed version before simulation.
+Profiles state adapter limits; they do not certify arbitrary language constructs.
+
+The testbench must use `$fatal(1, ...)` on a failed check. It must print one
+exact `RVW_PASS` line only after all checks finish. Then it must call `$finish`.
+Exit zero alone cannot pass. Native error diagnostics, a missing or duplicate
+marker, a failed tool or a timeout produce `error` and CLI exit 2. A pass gives
+exit 0. `--timeout` bounds version probes, synthesis, compilation and simulation
+together. Cancellation stops the process group. Builds use one compiler job.
+The output directory must be new. It contains `results.json`, the resolved
+request, separate stdout/stderr logs for each command, and generated files.
+
+See [the examples](../../../../examples/sim-semantics/README.md) for commands
+and conformance cases. Four-state accuracy here means Icarus language X/Z
+semantics, including X optimism in conditional statements. It does not mean
+pessimistic X propagation. The comparison case checks four settled values in
+one X-free counter, not equivalence of arbitrary designs. This runner does not
+execute C1 ELF runs, change the RiscvSim backend, or earn C4 gate acceptance.
+Hashes cover listed source files, not transitive includes, memory images,
+libraries or all environment inputs. Replay is not hermetic under C8.
