@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 export type Kind = 'regress' | 'coverage' | 'perf';
 export type RecordValue = Record<string, unknown>;
@@ -60,4 +61,15 @@ export function sourceTargets(result: unknown): SourceTarget[] {
 }
 export function sourceMatches(target: SourceTarget, bytes: Uint8Array): boolean {
   return createHash('sha256').update(bytes).digest('hex') === target.sha256;
+}
+
+/** Use explicit producer fields only. A generic `path` can be an artifact, not a signal. */
+export function rowSignal(row: Row | undefined): string | undefined {
+  const value = object(row?.value);
+  const signal = value.signal ?? (row?.key === 'signal' ? row.value : undefined);
+  return typeof signal === 'string' && signal.trim() ? signal : undefined;
+}
+export function runResultPath(reportFile: string, row: Row | undefined): string | undefined {
+  const run = object(row?.value).run;
+  return typeof run === 'string' && run.trim() ? resolve(reportFile, '..', run, 'result.json') : undefined;
 }
