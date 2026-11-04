@@ -734,6 +734,25 @@ publication. The frontend reports RTL dependencies. Reads outside the copied inp
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
 
+### Input commit records
+
+The C3 `source.formal_inputs` object includes `settings_sha256` and
+`committed_inputs`. The settings hash covers the full selected configuration,
+including port mapping, check options, assumptions and instruction overrides.
+The input list covers the copied wrapper template, RTL, checker files and active
+instruction overrides. Each row records its copied SHA-256. The runner compares
+those bytes with the file at its repository's captured HEAD commit. A row is
+`committed`, `modified`, `untracked_or_unavailable`, or `unavailable`.
+Repository and revision fields are present when Git can resolve them.
+`all_committed` requires a nonempty list with every row committed.
+
+The original wrapper hash and the expanded wrapper hash remain separate.
+An unused upstream instruction model is omitted when an override replaces it.
+Generated settings are bound by the settings hash. Generated RTL that is absent
+from Git remains untracked. These records do not establish the generator inputs,
+toolchain identity or adapter semantics. `source.identity_complete` stays false.
+C4 never accepts bounded evidence, including when every copied input is committed.
+Independent BOOM and VexRiscv adapter observations remain open under #63.
 
 ### Related clocks as periodic sampled schedules
 
