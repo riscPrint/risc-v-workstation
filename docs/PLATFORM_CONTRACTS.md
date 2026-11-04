@@ -1880,6 +1880,35 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
 
+## Formal app and benchmark reports
+
+`rvw formal apps` reads `rvw.formal-apps/1` and writes
+`rvw.formal-app-results/1`. Each row retains `property_id`, `requirement_ids`,
+app kind, native status, proof kind and child result path. Status is `pass`
+only when every child passes. Any failure gives `fail`; other cases give
+`inconclusive`. Exit codes are 0 for pass and 1 for a written nonpass report.
+Each child retains the existing `rvw.formal/1` evidence. A bounded app pass
+cannot authorize an UNR coverage exclusion. The existing `cov prove` contract
+still controls exclusion export. Activation and solver cores are not inferred.
+
+`rvw formal bench` reads `rvw.formal-bench/1` and writes
+`rvw.formal-bench-results/1`. Rows retain the case, engine, mode, requested
+depth, explicitly observed depth or null, elapsed wall seconds, native peak
+RSS bytes or null, native status, tool identity and result path. Absent engines
+use `not_installed`; incompatible modes use `unsupported_mode`. Agreement is
+`agree`, `disagree` or `inconclusive`. Exit 0 requires agreement for every case;
+exit 1 means at least one disagreement or incomplete comparison. Agreement
+is not a correctness or gate verdict. Pair comparisons require decisive,
+matching verdicts on every case. Time ratios describe only the supplied suite.
+
+Licensed adapters use `rvw.formal-adapter-request/1` and
+`rvw.formal-adapter-response/1`. A response must bind to the SHA-256 of its
+exact request bytes, retain the mode and engine version, and report finite
+nonnegative measurements. A BMC pass requires an integer `reached_depth` at
+least `depth - 1` (zero-based assertion step). Adapter verdicts are trusted observations. Invalid,
+missing or timed-out responses stay inconclusive. See the formal README for
+input fields and limits. Neither command emits gate acceptance.
+
 ### SVA frontend selection
 
 `rvw.formal/1` results can add `frontend`, with value `verilog` or `slang`.
@@ -1889,6 +1918,41 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### C1 simulation throughput extension
+
+Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.
+`metrics.sim_instructions_per_s` is `instret / details.execution_s`.
+The denominator includes adapter execution and artifact handling after model
+readiness. It excludes model compilation and elaboration. The rates are absent
+if seconds are missing, non-finite or non-positive, or counters are invalid.
+These are throughput measurements, not architectural IPC or correctness claims.
+C3 keeps the metrics. The history dashboard groups them by core, suite and preset.
+Short workloads and concurrent jobs can give noisy samples. Use repeated long
+workloads with fixed stimulus and equivalent complete C2 traces for comparisons.
+
+`rvw.sim-speed/1` is a diagnostic report from `rvw regress speed-compare`.
+It records `core`, `config`, `pairs`, geometric mean `speedup`, bootstrap
+`speedup_ci95`, `resamples`, `bootstrap_seed` and `retain`. Each pair records
+baseline/candidate C1 paths and hashes, native build hashes, complete C2 hashes,
+execution run IDs, seconds and derived rates. A sample cannot be used twice.
+At least five pairs of conclusive serial passing runs are required. Complete
+validated C2 events, terminal counters, ELF, seed, preset and run inputs must
+match. Each side must keep one native build identity. Default minimum sample
+time is one second. Missing evidence or a difference gives exit 3.
+`status: equivalent` is trace/result equivalence only. It is not ISA correctness,
+C8 capture completeness or C4 acceptance. `retain` is a diagnostic timing filter:
+the 95% interval lower bound must exceed one. It does not change any options.
+
+`rvw.sim-speed-sweep/1` records an explicit adapter, ELF hash, preset, host,
+logical CPU count, seed, repeat count, thread counts, minimum sample seconds,
+launch timeout, actual `order` of commands and completed `comparisons`.
+Warmups are excluded from comparisons. Baseline/candidate order alternates
+between pairs. Each process holds the selected core lock and uses `nice`.
+The launch timeout includes the lock wait and is at most 1800 seconds.
+Status stays `inconclusive` until all requested comparisons are equivalent.
+A failed run stops the sweep. Cancellation stops the active process group.
+Build costs, peak RSS, PGO and checkpoints are outside this report.
 
 
 ### UVM component results in C3

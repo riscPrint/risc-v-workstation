@@ -22,7 +22,7 @@ def dashboard(root, output):
                 wall = [getattr(t, "wall_s", None) for t in suite.tests]
                 valid = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v >= 0
                 samples["run_time_s"] = sum(wall) if wall and all(valid(v) for v in wall) else None
-                for metric in ("ipc", "coverage"):
+                for metric in ("ipc", "coverage", "sim_khz", "sim_instructions_per_s"):
                     values = [test.metrics.get(metric) for test in suite.tests if test.conclusive and test.status == "pass"]
                     samples[metric] = sum(values) / len(values) if values and all(valid(v) for v in values) else None
                 for metric, value in samples.items():
@@ -37,7 +37,7 @@ def dashboard(root, output):
             verdict, state = "inconclusive", "missing or invalid evidence"
         rows.append("<tr>" + "".join("<td>" + html.escape(str(v)) + "</td>" for v in
                     (entry.get("run_id", "unknown"), entry.get("core", "unknown"), verdict, state)) + "</tr>")
-    page = '<!doctype html><meta charset="utf-8"><title>Regression history</title><h1>Regression history</h1><p>Gate acceptance is separate from verification closure. Pass rate uses all recorded C3 tests as its denominator, including inconclusive tests. Run time is the sum of all recorded test wall_s values. IPC and coverage use recorded C3 metrics. Missing metrics are not zero. Coverage compatibility and verification closure are not established by this report.</p><table><thead><tr><th>Run</th><th>Core</th><th>Gate</th><th>C3 results</th></tr></thead><tbody>' + "".join(rows) + '</tbody></table>'
+    page = '<!doctype html><meta charset="utf-8"><title>Regression history</title><h1>Regression history</h1><p>Gate acceptance is separate from verification closure. Pass rate uses all recorded C3 tests as its denominator, including inconclusive tests. Run time is the sum of all recorded test wall_s values. IPC, coverage and simulation speed use recorded C3 metrics. Speed is grouped by preset and includes adapter execution and artifact handling. Missing metrics are not zero. Coverage compatibility and verification closure are not established by this report.</p><table><thead><tr><th>Run</th><th>Core</th><th>Gate</th><th>C3 results</th></tr></thead><tbody>' + "".join(rows) + '</tbody></table>'
     for key, samples in sorted(trends.items()):
         high = max(samples.values()) or 1
         page += '<h2>' + html.escape(" / ".join(key)) + '</h2><svg role="img" aria-label="Recorded metric samples, oldest first" viewBox="0 0 400 100" width="400">'
