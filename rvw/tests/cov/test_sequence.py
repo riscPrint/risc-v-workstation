@@ -38,3 +38,13 @@ def test_memory_branch_and_boundaries(tmp_path):
 def test_invalid_distances(tmp_path):
     with pytest.raises(ValueError, match='distances'):
         run(tmp_path, [], [0])
+
+
+def test_control_flow_and_selected_kinds(tmp_path):
+    config = tmp_path / 'selected.json'
+    config.write_text(json.dumps({'groups': [], 'sequences': {
+        'distances': [1], 'kinds': ['jump-after-branch']}}))
+    rows = [row(0, 0x00008063, rd=0), row(1, 0x0000006f, rd=0)]
+    r = functional([trace(tmp_path / 'selected.jsonl', rows)], config)
+    assert bins(r, 'sequence') == {('jump-after-branch', 1): 1}
+    assert r['groups']['sequence']['expected_bins'] == 1

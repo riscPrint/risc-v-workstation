@@ -71,3 +71,9 @@ The launcher takes the `boom` and `sbt` locks. Do not run it beside another heav
 job. This is a bounded functional test. It does not observe hit/miss counts,
 prove eviction, or connect the generic cache scoreboard to BOOM internals.
 BOOM remains single-hart. Coherence and DMA RTL campaigns need another adapter.
+
+`coverage-candidates.json` supplies test suggestions for semantic coverage holes.
+Run `rvw cov closure REPORT --candidates examples/boom/coverage-candidates.json`.
+The rules cover add operand boundaries, CSR accesses, and environment-call
+privilege cases. A suggestion does not establish that the test hits the bin.
+Other holes can have no candidate. Extend the project rules after test review.

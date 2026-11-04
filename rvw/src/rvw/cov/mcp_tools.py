@@ -33,6 +33,9 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_closure", "List unhit bins with project-declared candidate tests. Suggestions are not hits.",
+                 schema({"database": S, "candidates": S, "exclusions": S, **OUT}, ["database", "candidates"]),
+                 handler("rvw.cov.cli", "closure"), long=True, annotations={"readOnlyHint": True}),
         ToolSpec("cov_rtl", "Sample typed RTL bins and bounded sequences from exact-instance samples. "
                  "Incomplete traces stay inconclusive. Unobserved bins are not unreachable.",
                  schema({"traces": ARRAY, "config": S, **OUT}, ["traces", "config"]),
@@ -40,7 +43,7 @@ def mcp_tools():
         ToolSpec("cov_merge", "Merge per-test coverage.dat or C1/C3 results into a coverage database before reporting/ranking. "
                  "Retains source attribution and rejects incompatible point universes; large inputs run as a job.",
                  schema({"inputs": ARRAY, "source_root": {**S, "default": "."}, "scala_root": S,
-                         "revision": S, "source_map": S, "hgldd": {"type": "array", "items": S},
+                         "revision": S, "source_map": S, "design_db": S, "hgldd": {"type": "array", "items": S},
                          "dat": {**S, "description": "also write merged Verilator .dat and cross-check counts"}, **OUT}, ["inputs"]),
                  handler("rvw.cov.cli", "merge"), long=True),
         ToolSpec("cov_report", "Inspect hit rates, source attribution and never-hit coverage points; optionally apply proof exclusions "

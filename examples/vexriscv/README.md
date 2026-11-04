@@ -144,3 +144,18 @@ This interface exercise is separate from ISA regression coverage.
 uncached physical RAM and the RV32 benchmark runtime. The C1 adapter publishes
 live retirement events for a project-owned fitting plan. These models show
 trends. They do not reproduce the core's exact timing.
+
+### Tagged fetch coverage example
+
+From `rvw/`, run the following command with `RVW_HOME` and `VEXRISCV` set:
+
+```sh
+../../../scripts/with-lock.sh vex nice -n 10 sbt 'runMain rvwvex.CoverageExample /tmp/vex-tagged /tmp/vex-plan.json'
+```
+
+`CoverageExample` adds a tagged fetch-accept signal without changing VexRiscv
+sources. It emits an exact-instance `rvw.rtl-plan/1`. Its event domain is
+speculative. Fetch acceptance does not establish instruction retirement.
+The example binds the design identity to the emitted RTL SHA-256.
+Sample the declared signals before each rising edge. Run `rvw cov rtl` on the
+plan and those samples. The exporter does not collect samples by itself.

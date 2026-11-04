@@ -869,3 +869,95 @@ It declares all four state codes and one idle-to-active transition. State 3
 stays unobserved with undetermined reachability. A bounded round trip records
 activations and completions. Its source is SystemVerilog, so Scala links are
 null. The output directory must be new. Build logs and measurements stay there.
+
+### Semantic bins and closure candidates
+
+A pinned `rvw.isa/1` manifest can enable semantic bins:
+
+```json
+"semantics": {
+  "version": 1,
+  "privilege_modes": ["M", "S", "U"],
+  "exceptions": {"ecall": [8, 9, 11], "lw": [4, 5, 13]}
+}
+```
+
+The exception list is a project declaration of expected crosses. Review it
+against the pinned specification and implementation options. The tool does not
+infer that every listed cross is reachable. An omitted cross is outside this
+plan. It is not proven unreachable. The manifest is part of the plan hash.
+
+Integer `rs1` and `rs2` value classes are zero, one, all ones, signed minimum,
+signed maximum, other positive, and other negative. These bins use RVFI operand
+data. Missing data earns no hit. FP source files do not use integer RVFI data.
+The first semantic version supports base I, M and Zicsr source files. It also
+covers encoded `imm12` boundary classes and legal CSR read/write access kinds.
+Other immediate formats and compressed semantic forms remain outside this plan.
+CSR access bins describe the encoded access request. They do not prove a CSR
+side effect. Trapping instructions earn no successful instruction or access hit.
+
+Per-instruction exception hits require a decoded `trap=true` instruction followed
+by a synchronous C2 trap event at the same cycle. Missing or late cause evidence
+earns no per-instruction exception hit. Privilege transitions use adjacent RVFI
+instruction modes. Order gaps reset the window. They do not measure pipeline
+speculation or the exact trap-entry cycle.
+
+`sequences.kinds` can select RAW, WAW, WAR, branch-after-load, the four load/store
+pairs, and branch/jump control-flow pairs. `sequences.distances` selects retirement
+distances. Traps, handler entry, order gaps and unknown instructions reset the
+window. These pairs do not establish timing hazards or memory visibility.
+
+Create a project-owned candidate file:
+
+```json
+{"schema":"rvw.coverage-candidates/1","tests":[
+  {"id":"integer-boundaries","targets":["sem_add*"],"priority":10,
+   "reason":"Exercises zero, sign boundaries and all ones"}
+]}
+```
+
+Run `rvw cov closure coverage.json --candidates candidates.json --json`.
+The input can be a functional report, an RTL report, or a code coverage database.
+The report lists each unhit bin. It ranks matching test suggestions by descending
+project priority and then test ID. Targets use shell glob syntax over bin IDs.
+Functional IDs use `GROUP:JSON_ARRAY`, without spaces in the array.
+The report hashes both input files. Suggestions are not measured hits. A bin with
+no matching candidate keeps an empty list. Exclusion and reachability remain
+separate fields. Code exclusions retain their input envelope and do not gain a
+new reachability claim from this command.
+
+### Exact instance collection and declaration attribution
+
+RiscvSim coverage builds use `--coverage-per-instance` with the checked native
+Verilator version 5.052 or newer. Older or unknown tools retain collapsed coverage. Recollect old
+collapsed data to get exact instance denominators. A wildcard hierarchy still
+has no exact denominator. Denominators count instrumented native points, not
+all possible hardware events or all Scala source lines.
+
+`rvw cov merge TEST=coverage.dat --hgldd design.dd --design-db design.db --json`
+can add declarations from the same SpinalDB elaboration. The database must use
+`rvw.designdb/20`. Each covered RTL file must match its captured hash. Assignment
+and declaration targets within a native covered span map to exact-instance
+signal and memory declaration locations. This is declaration attribution. It
+is not a claim that the Scala declaration is the source of each RTL branch.
+HGLDD exact-instance overrides resolve deduplicated signal declarations.
+Conflicting module-only declarations remain unmapped. The tool does not choose
+a nearby comment or expand a collapsed hierarchy.
+
+Use `closure --exclusions proof.json` to validate code-point proof evidence with
+the existing proof guard. Only this validated input earns `proven-unreachable`.
+An embedded exclusion envelope alone stays `reachability: undetermined`.
+
+For schema `/20`, declaration mapping also reads exact memory symbol names from
+`MemSymbolesTag` in captured memory keys. This covers split memory arrays that
+have no HGLDD signal expression. Unknown symbol names stay unmapped. The mapper
+does not construct a symbol name from a memory-name suffix.
+
+Branch operands can link to their exact-instance declarations within the covered
+span. These links do not claim that a declaration is the source statement of the
+branch. `method` separates comment links, declaration links, and mixed links.
+HGLDD multidimensional Vecs retain each dimension during leaf traversal.
+Each instance report includes mapped and unmapped point counts with its denominator.
+
+RTL sequence goals with no completion also appear in the closure report.
+Their pending activation count stays separate from reachability.

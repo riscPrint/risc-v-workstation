@@ -1783,3 +1783,36 @@ request in a persistent session. Captures without a request ID are refused.
 Request and process UUIDs belong to `RunContext.captureIdentity`. They do not
 appear in the C2 header (`RunContext.rvfiHeader`). Equal simulation inputs keep
 stable trace header bytes across fresh and persistent runs.
+
+### Coverage semantic plans and closure suggestions
+
+`rvw.isa/1` may include `semantics` with `version: 1`, `privilege_modes` and
+an `exceptions` map from pinned instruction names to expected synchronous cause
+numbers. These declarations participate in functional plan identity. They are
+coverage targets, not reference outcomes or reachability proofs. Semantic operand
+classes use C2 operand values. A per-instruction exception hit requires adjacent,
+same-cycle trapped-instruction and synchronous trap records. Incomplete cause
+correlation earns no hit. Sequence plans may select `kinds` as well as `distances`.
+
+`rvw.coverage-candidates/1` has a `tests` array. Each item has `id`, `targets`
+(nonempty glob patterns over bin IDs), integer `priority`, and `reason`.
+`rvw.coverage-closure/1` hashes the report and candidates. It lists `unhit` bins
+with separate `observation`, `reachability`, and `excluded` fields. Each bin has
+ranked `candidate_tests`. Candidate rank is declared priority, not a measured
+probability. No candidate changes a hit count or a reachability result.
+
+RiscvSim exports native Spinal event tags as the existing `rvw.rtl-plan/1`.
+IDs include physical instance paths. The complete plan hash supplies merge
+identity. The exporter rejects pruned signals and conflicting source/type links.
+Code coverage collection uses native `--coverage-per-instance` on checked
+Verilator 5.052 or newer. Older or unknown tools keep collapsed coverage. Existing wildcard
+hierarchies retain unknown exact instance denominators. Optional SpinalDB
+attribution verifies the captured RTL hash and maps covered assignment targets
+to Scala declarations. This attribution does not prove Scala statement coverage.
+Schema `/20` memory-key `MemSymbolesTag` names can supply exact emitted memory
+aliases for declaration attribution. Unknown or conflicting aliases are not guessed.
+Coverage source links record comment, declaration, or mixed attribution methods.
+Branch-operand declaration links are navigation evidence, not Scala statement hits.
+Instance scope records include mapped and unmapped point counts.
+Uncompleted RTL sequence goals can appear in `unhit` with `kind: sequence` and
+`pending`. Pending activations do not establish unreachability.
