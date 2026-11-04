@@ -24,6 +24,32 @@
       "bins": [
         "ad.hardware.dirty-update"
       ]
+    },
+    {
+      "id": "accessed-update-software-rsw",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "success",
+      "ad_expect": 192,
+      "ad_mode": "hardware",
+      "bins": [
+        "ad.accessed-update.software-rsw"
+      ],
+      "software_rsw": 3
+    },
+    {
+      "id": "dirty-update-software-rsw",
+      "level": 0,
+      "flags": "VRWA",
+      "access": "store",
+      "expect": "success",
+      "ad_expect": 192,
+      "ad_mode": "hardware",
+      "bins": [
+        "ad.dirty-update.software-rsw"
+      ],
+      "software_rsw": 3
     }
   ]
 }

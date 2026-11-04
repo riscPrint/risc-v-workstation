@@ -83,3 +83,22 @@ def test_partial_opaque_decoder_is_unavailable(setup, mutation):
     result = check(MAP,binding,db)
     assert result['status'] == 'inconclusive'
     assert result['checks'][1]['status'] == 'unavailable'
+
+
+def test_paired_beats_check_and_negative(setup, tmp_path):
+    db, binding = setup
+    spec = json.loads(binding.read_text())
+    spec['bridges'][0].update(data_bytes=2, byteorder='big')
+    binding.write_text(json.dumps(spec))
+    trace = tmp_path / 'tx.jsonl'
+    t = dict(bridge='ram_bridge', software_address='0x80000000', bus_address=0, size=4,
+             write=False, data=0x12345678, error=False,
+             beats=[dict(address=0, data=0x7856, mask=3, error=False, write=False),
+                    dict(address=2, data=0x3412, mask=3, error=False, write=False)])
+    trace.write_text(json.dumps(t) + '\n')
+    result = check(MAP, binding, db, trace)
+    assert result['status'] == 'inconclusive'
+    assert all(c['status'] == 'consistent' for c in result['checks'])
+    t['beats'][1]['data'] ^= 1
+    trace.write_text(json.dumps(t) + '\n')
+    assert check(MAP, binding, db, trace)['status'] == 'mismatch'

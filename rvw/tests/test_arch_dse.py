@@ -53,3 +53,79 @@ def test_sweep_database_and_failures(native_fixture, tmp_path, monkeypatch):
     failed = dse.sweep(path, tmp_path / 'failed', native_fixture, 'fixture-0')
     assert failed['status'] == 'inconclusive' and failed['pareto'] == []
     assert all(p['cycles'] is None for p in failed['points'])
+
+
+def pareto_fixture(native_fixture, tmp_path):
+    from rvw.arch import core
+    rows = []
+    for i, (area, power) in enumerate([(2, 1), (1, 2), (3, 3)]):
+        out = tmp_path / f'model-{i}'
+        core.run(native_fixture, 'fixture-0', out)
+        report = out / 'gem5.json'
+        data, benches, digest = core.checked_report(report)
+        cycles = sum(b['cycles'] for b in benches.values())
+        costs = tmp_path / f'costs-{i}.json'
+        costs.write_text(json.dumps(dict(schema='rvw.arch-costs/1', report_sha256=digest,
+            method='synthetic cost fixture, not measured hardware',
+            cycles=[cycles * .9, cycles, cycles * 1.1],
+            area_mm2=[area * .9, area, area * 1.1], power_w=[power * .9, power, power * 1.1])))
+        rows.append(dict(id=str(i), report=str(report), costs=str(costs)))
+    plan = tmp_path / 'pareto.json'
+    plan.write_text(json.dumps(dict(schema='rvw.arch-pareto-plan/1', points=rows,
+                                     objectives=['cycles', 'area_mm2', 'power_w'])))
+    return plan, costs
+
+
+def test_pareto_tradeoffs(native_fixture, tmp_path):
+    plan, _ = pareto_fixture(native_fixture, tmp_path)
+    result = dse.pareto(plan)
+    assert result['nominal_frontier'] == ['0', '1']
+    # Cycle uncertainty overlaps, so nominal cost dominance is not certain.
+    assert result['conservative_frontier'] == ['0', '1', '2']
+    assert all(p['evidence_class'] == 'model-only' for p in result['points'])
+
+
+@pytest.mark.parametrize('field,value', [('power_w', None), ('cycles', None)])
+def test_pareto_missing_objective(native_fixture, tmp_path, field, value):
+    plan, costs = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(costs.read_text()); data[field] = value
+    costs.write_text(json.dumps(data))
+    result = dse.pareto(plan)
+    assert result['status'] == 'inconclusive'
+    assert not result['points'][-1]['eligible']
+    assert '2' not in result['conservative_frontier']
+
+
+@pytest.mark.parametrize('field,value', [('report_sha256', 'wrong'), ('method', ''),
+    ('area_mm2', [3, 2, 1]), ('power_w', [False, 1, 2]), ('cycles', [1, 2, 3])])
+def test_pareto_invalid_costs(native_fixture, tmp_path, field, value):
+    plan, costs = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(costs.read_text()); data[field] = value
+    costs.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        dse.pareto(plan)
+
+
+def test_pareto_defaults_to_cycles_without_cost_inputs(native_fixture, tmp_path):
+    plan, _ = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(plan.read_text())
+    del data['objectives']
+    for point in data['points']:
+        del point['costs']
+    plan.write_text(json.dumps(data))
+    result = dse.pareto(plan)
+    assert result['status'] == 'reported'
+    assert result['objectives'] == ['cycles']
+    assert all(p['objectives']['area_mm2'] is None and p['objectives']['power_w'] is None
+               for p in result['points'])
+    assert result['nominal_frontier'] == ['0', '1', '2']
+
+
+def test_pareto_unselected_costs_can_be_missing(native_fixture, tmp_path):
+    plan, costs = pareto_fixture(native_fixture, tmp_path)
+    data = json.loads(plan.read_text()); data['objectives'] = ['cycles']
+    plan.write_text(json.dumps(data))
+    inputs = json.loads(costs.read_text())
+    del inputs['area_mm2']; del inputs['power_w']
+    costs.write_text(json.dumps(inputs))
+    assert dse.pareto(plan)['status'] == 'reported'

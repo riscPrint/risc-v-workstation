@@ -73,3 +73,36 @@ def irq_entries(text):
             raise ValueError('irq schedule must start at 1 with increasing cycles and 64-bit levels')
         last = cycle
     return entries
+
+
+class Stimulus:
+    """Project-owned events. The adapter must implement --stimulus-file."""
+    def __init__(self, data):
+        if (not isinstance(data, dict) or set(data) != {'schema', 'events'}
+                or data['schema'] != 'rvw.stimulus/1' or not isinstance(data['events'], list)):
+            raise ValueError('expected rvw.stimulus/1 events')
+        self.data = data
+        self.groups = {}
+        seen = set()
+        for event in data['events']:
+            if (not isinstance(event, dict) or set(event) != {'id', 'kind', 'hart', 'after', 'group', 'required', 'payload'}
+                    or any(not isinstance(event[k], str) or not event[k] for k in ('id', 'group'))
+                    or event['id'] in seen or event['kind'] not in ('instruction', 'irq', 'transaction', 'device')
+                    or type(event['hart']) is not int or event['hart'] < 0
+                    or type(event['required']) is not bool or not isinstance(event['payload'], dict)
+                    or not isinstance(event['after'], list)
+                    or any(not isinstance(x, str) or x not in seen for x in event['after'])
+                    or len(set(event['after'])) != len(event['after'])):
+                raise ValueError('invalid stimulus event or forward dependency')
+            seen.add(event['id'])
+            self.groups.setdefault(event['group'], []).append(event)
+
+    def candidate(self, kept):
+        groups = set(kept)
+        events = [e for e in self.data['events'] if e['group'] in groups]
+        ids = {e['id'] for e in events}
+        if any(e['required'] and e['id'] not in ids for e in self.data['events']):
+            return None
+        if any(set(e['after']) - ids for e in events):
+            return None
+        return dict(schema='rvw.stimulus/1', events=events)

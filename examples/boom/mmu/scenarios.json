@@ -485,6 +485,216 @@
       "bins": [
         "pma.clint-read"
       ]
+    },
+    {
+      "id": "satp-reserved-mode",
+      "control": "satp-mode",
+      "instruction": "reserved-mode-write",
+      "enabled": false,
+      "privilege": "M",
+      "bins": [
+        "priv.satp-reserved-mode"
+      ]
+    },
+    {
+      "id": "tw-wfi-s-clear-wakeup",
+      "control": "tw",
+      "enabled": false,
+      "instruction": "wfi",
+      "privilege": "S",
+      "wakeup": "pending-ssip",
+      "bins": [
+        "priv.tw-clear-wakeup"
+      ]
+    },
+    {
+      "id": "fetch-s",
+      "level": 0,
+      "flags": "VRXAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "success",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-s"
+      ]
+    },
+    {
+      "id": "fetch-u",
+      "level": 0,
+      "flags": "VRXUAD",
+      "access": "fetch",
+      "privilege": "U",
+      "expect": "success",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-u"
+      ]
+    },
+    {
+      "id": "fetch-no-x",
+      "level": 0,
+      "flags": "VRAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-no-x"
+      ]
+    },
+    {
+      "id": "fetch-s-user-sum",
+      "level": 0,
+      "flags": "VRXUAD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": true,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-s-user-sum"
+      ]
+    },
+    {
+      "id": "fetch-u-supervisor",
+      "level": 0,
+      "flags": "VRXAD",
+      "access": "fetch",
+      "privilege": "U",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-u-supervisor"
+      ]
+    },
+    {
+      "id": "fetch-a-clear",
+      "level": 0,
+      "flags": "VRXD",
+      "access": "fetch",
+      "privilege": "S",
+      "expect": "page-fault",
+      "sum": false,
+      "ad_mode": "svade",
+      "bins": [
+        "sv39.fetch-a-clear"
+      ]
+    },
+    {
+      "id": "root-switch-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "all",
+      "bins": [
+        "tlb.root-switch-all"
+      ]
+    },
+    {
+      "id": "root-switch-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "va",
+      "bins": [
+        "tlb.root-switch-va"
+      ]
+    },
+    {
+      "id": "root-switch-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "asid",
+      "bins": [
+        "tlb.root-switch-asid"
+      ]
+    },
+    {
+      "id": "root-switch-va-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "va-asid",
+      "bins": [
+        "tlb.root-switch-va-asid"
+      ]
+    },
+    {
+      "id": "nonleaf-global-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "nonleaf_global": true,
+      "asid": 7,
+      "fence": "all",
+      "bins": [
+        "tlb.nonleaf-global-all"
+      ]
+    },
+    {
+      "id": "nonleaf-global-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "nonleaf_global": true,
+      "asid": 7,
+      "fence": "va",
+      "bins": [
+        "tlb.nonleaf-global-va"
+      ]
+    },
+    {
+      "id": "svade-software-rsw",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "page-fault",
+      "ad_expect": 128,
+      "ad_mode": "svade",
+      "software_rsw": 3,
+      "bins": [
+        "ad.svade-software-rsw"
+      ]
+    },
+    {
+      "id": "clint-msip-store",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "success",
+      "pa": "0x02000000",
+      "access_width": 4,
+      "register_width": 32,
+      "bins": [
+        "pma.clint-msip-store"
+      ],
+      "store_value": 1
     }
   ]
 }

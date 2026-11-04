@@ -37,6 +37,7 @@ class Trace:
     warnings: list[str]
     stalls: list[tuple[int, str, str, str]] = field(default_factory=list)
     replays: list[tuple[int, str, str, str]] = field(default_factory=list)
+    predictions: list[dict] = field(default_factory=list)
 
 
 def read(path: str | Path) -> Trace:
@@ -49,6 +50,8 @@ def read(path: str | Path) -> Trace:
     warnings: list[str] = []
     stalls = []
     replays = []
+    predictions = []
+    prediction_seen = set()
     with opener(path, "rt", encoding="utf-8-sig") as stream:
         if stream.readline().rstrip("\r\n") != "Kanata\t0004":
             raise ValueError(f"{path}: expected Kanata 0004 header")
@@ -82,6 +85,9 @@ def read(path: str | Path) -> Trace:
                             if ins.end is not None:
                                 raise ValueError("replay after terminal R")
                         (stalls if kind == "stall" else replays).append((cycle, *fields[3:]))
+                    elif kind == "prediction":
+                        from .prediction import parse
+                        predictions.append(parse(fields, cycle, instructions, prediction_seen))
                     elif kind == "commit":
                         if len(fields) != 5 or fields[4] not in ("architectural", "predicated_off"):
                             raise ValueError("invalid commit kind")
@@ -144,4 +150,4 @@ def read(path: str | Path) -> Trace:
     if any(i.commit_kind is not None and i.end is None for i in instructions.values()):
         raise ValueError(f"{path}: commit annotation without terminal R")
     return Trace(instructions, first_cycle or 0, cycle, dependencies,
-                 [f"unknown command ignored: {cmd}" for cmd in warnings], stalls, replays)
+                 [f"unknown command ignored: {cmd}" for cmd in warnings], stalls, replays, predictions)

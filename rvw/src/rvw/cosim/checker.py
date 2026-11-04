@@ -91,6 +91,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     if enabled - set(SYNC_KINDS):
         raise ValueError(f"unknown synchronization kinds {sorted(enabled - set(SYNC_KINDS))}")
     xmask = (1 << platform.xlen) - 1
+    from .reset_scratch import ResetScratch
+    scratch = ResetScratch(xmask if "csr" in enabled and platform.trace_from_reset else 0)
     trace = Trace(trace_path)
     if trace.multihart:
         trace.close()
@@ -245,6 +247,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError(f"reference cannot check C2 state fields: {sorted(missing)}")
                 fields += state_fields
             diff = differences(actual, expected, fields)
+            reset_mask, reset_entries = scratch.observe(expected, actual, model)
             if actual.get("csr_state"):
                 if not hasattr(model, "csr_snapshot"):
                     raise ValueError("reference cannot check CSR snapshots")
@@ -291,7 +294,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
             initial_instret = False
             csr = csr_access(expected["insn"])
             if not expected["trap"] and expected["rd"]:
-                if counter_read(expected["insn"]):
+                if reset_mask:
+                    sync_reason, sync_mask = "csr_reset_unknown", reset_mask
+                elif counter_read(expected["insn"]):
                     # A trace from reset has a deterministic instret: compare it strictly.
                     if csr in INSTRET and platform.trace_from_reset:
                         pass
@@ -317,7 +322,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     diff["rd_wdata"] = {"expected": expected["rd_wdata"], "actual": actual["rd_wdata"]}
             if diff:
                 return mismatch(actual, expected, diff, count)
-            if sync_mask is not None and actual["rd_wdata"] == expected["rd_wdata"]:
+            if sync_mask is not None and sync_reason != "csr_reset_unknown" and actual["rd_wdata"] == expected["rd_wdata"]:
                 sync_reason = None   # the masked bits agree: nothing to take from the core
             if sync_reason and not hasattr(model, "set_reg"):
                 raise ValueError(f"the model cannot take the core's value at order {actual['order']} "
@@ -333,7 +338,11 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                          "reference": hex(expected["rd_wdata"]), "core": hex(actual["rd_wdata"])}
                 if sync_mask is not None:
                     entry.update(csr=hex(csr), mask=hex(sync_mask))
+                if sync_reason == "csr_reset_unknown":
+                    entry["source"] = "rd_wdata"
                 sync_recent.append(entry)
+            sync_count += len(reset_entries)
+            sync_recent.extend(reset_entries)
             if actual["rd"]:
                 core_regs[actual["rd"]] = actual["rd_wdata"]
             if not expected["trap"] and expected["insn"] in XRET:

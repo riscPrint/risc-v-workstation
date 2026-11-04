@@ -20,9 +20,14 @@ final class MemoryImage(val size: Int) {
 
 /** Passive cache content checker. Project adapters map accepted bus events into this API.
   * The oracle receives expected program/device writes independently of DUT read data.
-  * Replacement policy is project-defined; only set/way capacity is enforced here. */
-final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: Int, ways: Int) {
+  * Replacement policy is project-defined; the default checks only set/way capacity. */
+final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: Int, ways: Int, replacement: String = "any") {
   require(lineBytes > 0 && (lineBytes & (lineBytes - 1)) == 0 && sets > 0 && ways > 0)
+  require(Set("any", "lru", "fifo")(replacement), "replacement policy")
+  private val order = mutable.ArrayBuffer.empty[Int]
+  private def touch(address: Int): Unit = if (replacement == "lru") {
+    order -= address; order += address
+  }
   private val resident = mutable.Map.empty[Int, Vector[Byte]]
   private val dirty = mutable.Set.empty[Int]
   private def base(a: Int): Int = { require(a >= 0); a - a % lineBytes }
@@ -36,6 +41,7 @@ final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: I
       require(resident.keys.count(a => set(a) == set(address)) < ways, "replacement needs eviction")
       require(observed == oracle.read(address, lineBytes), "fill data mismatch")
       resident(address) = observed.toVector
+      order += address
     }
   }
   /** Actual accepted cache write; oracle must already contain the independent expected write. */
@@ -48,7 +54,7 @@ final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: I
     data.indices.filter(mask.testBit).foreach(i => updated(address - b + i) = data(i))
     require(updated.toVector == oracle.read(b, lineBytes), "stored data mismatch")
     resident(b) = updated.toVector
-    if (mask != 0) dirty += b
+    if (mask != 0) { dirty += b; touch(b) }
   }
   def read(address: Int, observed: Seq[Byte]): Unit = {
     val b = base(address)
@@ -56,19 +62,23 @@ final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: I
     val data = resident.getOrElse(b, throw new IllegalArgumentException("read miss needs fill"))
     require(observed == data.slice(address - b, address - b + observed.size), "cache read mismatch")
     require(observed == oracle.read(address, observed.size), "stale data")
+    touch(b)
   }
-  def evict(address: Int, writeback: Option[Seq[Byte]]): Unit = {
+  /** replacementEviction distinguishes a demand replacement from maintenance. */
+  def evict(address: Int, writeback: Option[Seq[Byte]], replacementEviction: Boolean = false): Unit = {
     require(address == base(address) && resident.contains(address))
+    if (replacementEviction && replacement != "any")
+      require(order.find(a => set(a) == set(address)).contains(address), "wrong replacement victim")
     require(!dirty(address) || writeback.nonEmpty, "dirty eviction lost writeback")
     writeback.foreach { data =>
       require(data == resident(address) && data == oracle.read(address, lineBytes), "writeback mismatch")
     }
-    resident.remove(address); dirty -= address
+    resident.remove(address); dirty -= address; order -= address
   }
   /** Call only after observed invalidation/maintenance completion. */
   def invalidate(address: Int): Unit = {
     val b = base(address)
     require(!dirty(b), "dirty invalidation needs writeback")
-    resident.remove(b)
+    resident.remove(b); order -= b
   }
 }

@@ -620,9 +620,12 @@ The reference has zero-cycle and one-cycle paths with injected transfer faults.
 
 This emits `connectivity.value` assertions for simulation or a formal backend.
 Simulation checks exercised transfers only. It is not a structural proof.
-SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
-formal qualification remain open under #107. No proof result is inferred from
-successful elaboration or simulation.
+`rvw formal connectivity` resolves required and forbidden endpoints through
+SpinalDB. Its optional native campaign checks bounded top-port transfers and
+forbidden influence. It retains unresolved endpoints, opaque cones and limits
+as incomplete. See [the formal command guide](../rvw/src/rvw/formal/README.md#declared-connectivity-107).
+General internal RTL binding and core qualification remain open under #107.
+No proof result is inferred from successful elaboration or simulation.
 
 ### Device register transactions
 
@@ -689,3 +692,79 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+### Sampled reset protocol bindings
+
+`ResetChecks.bind` takes independent reset request, normalized reset level,
+destination-edge and controls-known observations. Bind it in a separate
+observation clock domain. It checks sampled assertion, a minimum number of
+settling edges, and release only on a destination edge. The settling count
+uses edges completed before the release sample. `order` checks a declared
+source-before-destination release relation. `crossing` checks isolation while
+an independently reset source feeds an active consumer. `reconvergence` checks
+isolation when two reset states differ. Unknown controls produce a finding.
+
+These are executable project bindings. They do not infer a reset synchronizer
+from a graph. The project must supply the independent observations and control
+validity. Two-state simulation cannot discover X values by itself. A pulse
+between observation samples can be missed. Physical asynchronous assertion,
+recovery/removal, metastability, static synchronous-release recognition and
+functional reconvergence proof remain open. Structural lint findings stay active.
+
+### Optional HPM selector and interrupt bindings
+
+`HpmControlChecks.selector` models accepted selector writes with a project WARL
+mask and reset value. It does not derive selector meaning from the DUT.
+`HpmControlChecks.interrupt` uses an independently derived expected count and
+event multiplicity to check sticky overflow pending state and its enable-gated
+interrupt. Inhibit, filtering and counter writes suppress overflow. Pending
+clear has priority. The project must select this policy explicitly; it is not
+a universal Zihpm interrupt specification. Bind count checks separately with
+`HpmChecks.bind`. Do not use the observed DUT count as `expectedCount`.
+
+Native reference tests cover legal controls and injected selector, pending and
+interrupt faults. Real-core event bindings, architectural access and RV32 half
+checks, and a complete Zihpm compliance campaign need separate evidence. The
+access and RV32 work in PR #303 remains compatible with these optional bindings.
+
+### Independent device-bus bindings
+
+`DeviceBusChecks.bind` takes a project-owned `Seq[DeviceRegister]`. Each entry
+pairs a byte address with the existing version-1 `RegisterModel`. Feed accepted
+request observations and response observations from an independent bus monitor.
+Do not drive the model from DUT register contents or internal address selects.
+It checks address decoding through the error response, pre-side-effect read data,
+response order and a project latency bound. It supports zero-cycle responses and
+bounded variable latency. It allows one outstanding request. A simultaneous
+response and new request while busy is refused as an order finding.
+
+The bus model applies read-clear, normal write masks, bit strobes and W1C from
+the accepted request. It supports no independent hardware updates; use
+`RegisterChecks.bind` for those register-state checks. Write response payloads
+are not checked. A response at the declared maximum latency is legal. Missing
+responses produce a finding. An unmapped address must return an error.
+`DeviceBusChecks.accesses` generates reads and masked writes for a bus driver.
+The reference test binds two concrete address entries and checks independent
+response captures against a software oracle. It is not a real device binding.
+
+`DeviceRegister.load(file)` binds the normalized map importer from PR #303.
+The native bus test exercises both imported SystemRDL and IP-XACT maps.
+These checks remain separate from architectural CSR checks. Multiple outstanding
+requests, back-to-back replacement and real device campaigns remain open.
+
+## Selected CDC protocol references
+
+`examples/cdc/` contains event-enable handshake, depth-four FIFO and reset
+release references, plus a digital old/new sampling model. `rvw lint --protocol`
+checks an independent queue or release-order monitor through the native formal
+flow. `--simulate` runs the same monitor with seeded Icarus perturbation.
+See the [lint guide](../rvw/src/rvw/lint/README.md#selected-protocol-safety-checks)
+for the fixed port contract, assumptions, commands and limits. These reference
+checks do not qualify whole-core CDC or analog metastability behavior.
+
+## Hardware information flow
+
+[security/](security/README.md) contains the native `rvw_ift` Yosys pass.
+It adds value-sensitive data and control taint to mapped Boolean gates and
+rising-edge registers. It is optional. It does not change core source files.
+See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
