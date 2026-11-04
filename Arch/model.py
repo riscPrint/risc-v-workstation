@@ -67,6 +67,21 @@ def validate_description(d):
         if d["kind"] != "o3" and ((name != "cpu" and d[name] is None) or (name == "cpu" and d[name] == {})):
             continue
         _scalars(d[name], name)
+    enabled = d["cpu"].get("decoupledFrontEnd", False)
+    if type(enabled) is not bool:
+        raise ValueError("cpu.decoupledFrontEnd must be a boolean")
+    if enabled:
+        if d["kind"] != "o3":
+            raise ValueError("cpu.decoupledFrontEnd requires O3")
+        # RVC uses two-byte instruction alignment, including 32-bit branches.
+        if type(d["cpu"].get("minInstSize")) is not int or d["cpu"]["minInstSize"] != 2:
+            raise ValueError("cpu.minInstSize must be 2 for the RISC-V decoupled front end")
+        for key, default in (("numFTQEntries", 8), ("fetchTargetWidth", 32),
+                             ("fetchBufferSize", 64), ("maxFTPerCycle", 4),
+                             ("maxTakenPredPerCycle", 1)):
+            _integer(d["cpu"].get(key, default), "cpu." + key)
+        if d["cpu"].get("fetchTargetWidth", 32) < d["cpu"].get("fetchBufferSize", 64):
+            raise ValueError("cpu.fetchTargetWidth must be >= cpu.fetchBufferSize")
     # These select execution modes or limits owned by this runner.
     forbidden = {"numThreads", "switched_out", "checker", "max_insts_any_thread",
                  "max_insts_all_threads", "max_insts_any_thread_warmup"}
