@@ -22,7 +22,27 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {memory-report,sweep,build,run,calibrate,compare,fit,inspect,linux} ...
+    {search,predict,score-prediction,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    ...
+```
+
+### `rvw arch search`
+
+```text
+usage: rvw arch search [-h] --out OUT [--json] [--project PROJECT] plan
+```
+
+### `rvw arch predict`
+
+```text
+usage: rvw arch predict [-h] --out OUT [--json] [--project PROJECT] candidate
+```
+
+### `rvw arch score-prediction`
+
+```text
+usage: rvw arch score-prediction [-h] --out OUT [--json] [--project PROJECT]
+    prediction rtl
 ```
 
 ### `rvw arch memory-report`
@@ -75,6 +95,13 @@ usage: rvw arch fit [-h] [--json] [--project PROJECT] plan
 ```text
 usage: rvw arch inspect [-h] [--json] --elf ELF --isa ISA --kind KIND
     [--project PROJECT]
+```
+
+### `rvw arch measure`
+
+```text
+usage: rvw arch measure [-h] [--json] [--repeats REPEATS] [--bench BENCH]
+    --out OUT [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw arch linux`
@@ -749,7 +776,7 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ## MCP tools
 
-The default server exposes 64 built-in tools, including the four job tools.
+The default server exposes 68 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -796,6 +823,14 @@ Arguments: `elf` (required), `isa` (required), `kind` (required), `project`.
 
 Starts a background job: yes.
 
+### `arch_measure`
+
+Repeat RTL and gem5 measurements and report confidence intervals.
+
+Arguments: `project`, `bench`, `out` (required), `timeout`, `repeats`.
+
+Starts a background job: yes.
+
 ### `arch_memory_report`
 
 Report declared memory observations. Missing metrics stay unobserved.
@@ -804,11 +839,35 @@ Arguments: `observations` (required), `project`.
 
 Starts a background job: yes.
 
+### `arch_predict`
+
+Store a timestamped model prediction before RTL measurement.
+
+Arguments: `candidate` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
 ### `arch_run`
 
 Run native gem5 with the selected project description. The output directory must be new.
 
 Arguments: `project`, `bench`, `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `arch_score_prediction`
+
+Score a stored prediction against later RTL evidence.
+
+Arguments: `prediction` (required), `rtl` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_search`
+
+Run bounded Bayesian fitting and score the selected point on held-out workloads.
+
+Arguments: `plan` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 
