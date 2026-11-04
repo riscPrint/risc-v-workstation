@@ -22,6 +22,9 @@ def test_accellera_subset_and_rvfi_fault(tmp_path):
     assert code == 0, report
     assert len(report["tests"]) == 18
     assert all(row["status"] == "pass" for row in report["tests"]), report
+    for row in report["tests"]:
+        assert not row["wall_clock_timeout"]
+        assert (row["simulator_exit"] != 0) == (row["id"] == "rvfi_fault_detection")
     loaded = load_results(out)
     assert len(loaded.tests) == 18
     assert all(row.conclusive for row in loaded.tests)

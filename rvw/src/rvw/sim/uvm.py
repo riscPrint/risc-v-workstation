@@ -121,6 +121,8 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
                 for feature in (("rvfi_fault_detection",) if negative else FEATURES):
                     rows.append({"id": feature, "seed": current, "kind": "uvm",
                                  "status": "pass" if good else "error",
+                                 "simulator_exit": result.returncode,
+                                 "wall_clock_timeout": result.timed_out,
                                  "signature": None if good else "uvm:incomplete",
                                  **({} if good else {"inconclusive": "missing conformance evidence"}),
                                  "artifacts": {"log": f"{name}.log"}})
