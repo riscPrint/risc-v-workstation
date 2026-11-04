@@ -55,7 +55,7 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
   user to rerun with `--engine smtbmc:yices`. No proof or pass is inferred from
   that ABC error. A portfolio can still earn a pass through another engine.
   Other engines refuse capture because their executable dependencies are not defined here.
-  No formal result is cached.
+  Optional exact proof reuse is described below.
 - Replay converts its sealed state VCD to FST with the pinned converter before Yosys
   loads it. This prevents an internal converter lookup from changing the selected tool.
 - The first frontend run reports its file dependencies with Yosys `-E`. Every file it reads
@@ -1100,3 +1100,75 @@ both be one, and that forwarding `found` agrees with the prior cycle's nonzero m
 The VexRiscv FIFO needs the sampled-event model because its reset is asynchronous.
 These are small exported leaf invariants. They are not whole-core verification,
 full CSR or connectivity checks on these processors, or a performance benchmark.
+
+
+Depth search records its engine selection and termination reason. It doubles
+`--depth` up to `--max-depth` under `--budget`. It stops at the first result
+other than pass. The largest passing bound remains a bounded observation.
+
+
+## Simulation-state swarm
+
+```
+rvw formal swarm --verilog top.sv --top top --trace wave.vcd \
+  --start-cycle 1 --end-cycle 100 --samples 4 --depth 12 \
+  --budget 120 --timeout 25 --out /tmp/swarm
+```
+
+The command needs explicit RTL and top arguments. It captures RTL, includes,
+checks and trace once. It selects distinct cycles at uniform intervals, including
+both endpoints when samples exceed one. Tasks run in sequence to bound machine
+load. Each uses the existing from-sim guards and a separate reachability check.
+The budget starts after input capture. Each timeout is capped by the remaining
+budget. Capture and frontend overhead can exceed the budget.
+
+The aggregate always exits 1 with `inconclusive`. Per-state passes apply only to
+that state and depth. Trace states have no checked reset reachability or design
+identity. Failures are conditional counterexamples. Missing state stays free.
+Every attempt retains restrictions and loaded-state coverage. Remaining cycles
+are explicit if the budget expires. This selection does not establish coverage,
+property activation, typed-cone selection or an unbounded proof. `--memories free`
+keeps all initial memory words free; trace mode loads available words. Zero fill
+is excluded from this command.
+
+
+## Exact proof reuse
+
+`bmc` and `prove` accept `--proof-cache DIR`. The cache shares retained successful
+SBY evidence through a local or mounted directory. It skips only the main engine
+job. Each invocation still captures inputs and tools, elaborates the design,
+checks clocks and state controls, runs fresh reachability, and verifies tools.
+
+The dependency rule requires identical complete prepared input artifacts,
+property and environment restrictions, proof script and depth, captured file
+hashes, tool payloads and versions, captured environment, Python executable and
+version, and formal/common runner code. Only the owned output path prefix is
+normalized. Other source paths and locations remain significant. A changed cone,
+assumption, property, relevant design input or tool therefore misses. An unrelated
+file outside these dependencies can change without invalidating the entry.
+This is conservative whole-model reuse. It does not infer per-property cone
+independence or reuse across a design change.
+
+Only pass results with assertions and successful reachability enter the cache.
+Entry hashes protect retained artifacts against accidental changes. Corrupt or
+incomplete entries miss. Entries are published by directory rename. Share only
+trusted directories under C8. This is not an authenticated remote cache. There
+is no automatic eviction or repair of a corrupt entry; remove it to republish.
+Cache-hit wall time describes current work. It does not measure original proof
+cost or establish a speedup.
+
+
+## Memory encoding
+
+`bmc` and `prove` accept `--memory-model auto|array|map`. Auto keeps the SBY
+backend choice. Array requires an SMTBMC-only portfolio and retains RTL memories
+for the SMT array backend. Map inserts `memory_map -formal` before the engine.
+`memory_model.retained_memory_cells` reports remaining `$mem_v2` cells in the
+prepared design. Optimization can remove a memory completely. This count does
+not establish RAM refinement.
+
+Both modes preserve the frontend's RTL initialization, ports and collision
+semantics. They add no memory abstraction assumptions. Undefined contents and
+read-under-write behavior stay under Yosys semantics. Blackbox memories need a
+separate refinement contract; this option cannot prove that contract. Native
+legal and faulty RAM tests check both encodings. No capacity gain is claimed.

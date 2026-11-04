@@ -415,6 +415,18 @@ complete file identity. Launch metadata captures the executable identity and
 argument list; adapter build dependencies still require C1 provenance.
 
 
+### Unspecified mscratch reset bits in C2 comparison
+
+For a declared trace from reset, CSR synchronization can resolve the unknown
+reset bits of `mscratch` (0x340) from its first read or C2 CSR snapshot.
+`rvw.cosim/1.recent_synchronizations` records `reason: csr_reset_unknown`,
+`csr`, `mask`, `reference`, `core`, `order` and `source` (`rd_wdata|csr_state`).
+The reference takes only unknown bits. Full writes clear the unknown mask;
+set/clear writes clear their written bits from that mask. Subsequent observations
+remain strict. The rule is disabled by strict CSR synchronization or by
+`trace_from_reset=false`. Unsupported reference synchronization is an error.
+No other CSR reset state is inferred by this rule. C1/C2 formats do not change.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
@@ -1650,6 +1662,54 @@ inputs and environment. `baseline` and `edited` contain the Yosys sim summaries.
 type-check, cause-trace and viewer launch outcomes. A viewer launch does not
 establish successful source navigation. See the formal command README for limits.
 
+### Formal bounded depth-search termination
+
+`rvw.formal-depth-search/1` records `stop_reason`: `max_depth_reached`,
+`budget_exhausted`, or `attempt_<status>`. `support` records the doubling
+schedule, initial and maximum depths, total budget, per-attempt timeout and
+engine selection. Engine portfolios and depth search are separate choices.
+Every attempt uses at most the remaining budget as its timeout. Frontend and
+capture overhead can exceed this budget. No new attempt starts after expiry.
+A bounded pass at the maximum depth remains `inconclusive`. Only a concrete
+failed attempt gives aggregate `fail`. Search never claims an unbounded proof.
+
+
+### Formal simulation-state swarm
+
+`rvw.formal-swarm/1` has aggregate `status: inconclusive` and exit 1. `selection`
+records the uniform cycle interval selection. `attempts` retains each cycle,
+status, relative result path, restrictions and loaded-state coverage. A refused
+state has `status: error` and a reason. `missing_cycles` lists tasks not started.
+`bounded_passes` and `conditional_failures` count observations only. They cannot
+earn reset reachability, gate acceptance or unbounded proof. Sources, includes,
+checks and waveform are copied once in the parent `input_snapshot`. Child
+results retain their own full tool/input captures and solver evidence.
+
+
+### Formal exact proof reuse
+
+`rvw.formal/1` results can include `proof_cache` with `key`, `hit` and the checked
+`rule`. The optional `bmc`/`prove` cache stores complete successful SBY evidence
+under a SHA-256 input key. `rvw.formal-proof-key/1` binds complete prepared input
+artifacts, script, captured files, tool payloads/versions, captured environment,
+Python identity and formal/common runner code. Only the owned output prefix is
+normalized. Whole-model identity is required; no inferred cone independence is
+accepted. Entry manifests hash all retained evidence and provenance. Fresh input
+capture, frontend checks, tool verification and bounded reachability remain
+mandatory on hits. An invalid entry is a miss. Only successful results with
+assertions and reachable guards enter this cache. Mounted directory sharing
+requires C8 trust; no remote authentication or gate acceptance is supplied.
+
+
+### Formal memory encoding
+
+`rvw.formal/1` BMC/prove results record `memory_model.requested` (`auto`, `array`,
+`map`), `retained_memory_cells` (prepared `$mem_v2` count, or null without a
+model), and `semantics`. Explicit array mode requires an SMTBMC-only portfolio.
+Map mode uses Yosys `memory_map -formal`. Both model the supplied RTL memory.
+Neither adds a RAM/blackbox refinement contract or resolves undefined RTL
+behavior by choosing a value. The retained-cell count is not a refinement proof.
+
 ### Formal campaign observations in C3 and C4
 
 `rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.
@@ -1991,6 +2051,24 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## TestRIG socket transport (`rvw.dii/1`)
+
+`rvw cosim dii serve` and `replay` use RVFI-DII v1, separate from C1/C2.
+See [the hook contract](TESTRIG.md) for wire pins, reset, timing and memory.
+The server accepts at most 65,536 tokens per stream and a finite stream count.
+Socket operations share a per-stream deadline. Replay accepts exactly one
+nonempty stream terminated by EndOfTrace. It records the token SHA-256 and
+both endpoints. These labels do not verify the remote model or its ISA config.
+The caller must supply an independent Sail model. Each endpoint returns ordered
+88-byte retirement packets and a halt delimiter. Empty, short, truncated,
+unsupported or timed-out streams cannot earn a match. Exit codes: match or
+served 0, mismatch 1, error 2, inconclusive 3. `served` is not equivalence.
+The result has `schema`, `protocol` and `status`. Mismatch adds `index` and
+`differences`; match adds `instructions` and `trace_complete`. Short streams add
+`cause`, `core_retired` and `sail_retired`. Errors add `message`. All results
+print one JSON document. This CLI mode has no MCP endpoint yet.
+
 
 ### Observed prediction outcome extension
 

@@ -38,6 +38,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/ooo/` | Generic trace-driven OoO timing experiment. See its `README.md` and `docs/design/own-core-model.md`. |
 | `Uvm/` | Pinned Accellera UVM conformance suite and bounded TileLink-UL/load observation example. See its `README.md`. |
 | `Cosim/` | The C++ shim that lets `rvw cosim` drive Spike as a library. |
+| `rvw/src/rvw/debug/` | Simulated DMI/JTAG transport, OpenOCD reference campaign and baseline E-Trace checks. See its `README.md`. |
 | `rvw/src/rvw/lint/` | Native lint adapters and structural CDC/RDC inventory. See its `README.md`. |
 | `SpinalDB/` | Elaborates a Spinal design and writes a design database (SQLite, `rvw.designdb/20`). Queried with `rvw query`. |
 | `SpinalChecks/` | Assertions generated from the elaborated design, and the formal flows behind `rvw formal`. BOOM settings and waivers in `SpinalChecks/boom/`. |

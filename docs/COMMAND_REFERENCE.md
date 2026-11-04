@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -162,7 +162,28 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate,live} ...
+usage: rvw cosim [-h] [--project PROJECT] {dii,check,generate,live} ...
+```
+
+### `rvw cosim dii`
+
+```text
+usage: rvw cosim dii [-h] [--project PROJECT] {replay,serve} ...
+```
+
+### `rvw cosim dii replay`
+
+```text
+usage: rvw cosim dii replay [-h] --tokens TOKENS --core-endpoint CORE_ENDPOINT
+    --sail-endpoint SAIL_ENDPOINT [--timeout TIMEOUT] [--json] [--project
+    PROJECT]
+```
+
+### `rvw cosim dii serve`
+
+```text
+usage: rvw cosim dii serve [-h] [--listen LISTEN] --hook HOOK [--max-streams
+    MAX_STREAMS] [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -280,6 +301,34 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
     [--out OUT] [--project PROJECT] project
 ```
 
+### `rvw debug`
+
+```text
+usage: rvw debug [-h] [--project PROJECT] {openocd,ingress,etrace} ...
+```
+
+### `rvw debug openocd`
+
+```text
+usage: rvw debug openocd [-h] --config CONFIG [--openocd OPENOCD] --log LOG
+    [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw debug ingress`
+
+```text
+usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
+```
+
+### `rvw debug etrace`
+
+```text
+usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
+    --static-config STATIC_CONFIG --user-config USER_CONFIG --toolchain
+    TOOLCHAIN --rvfi RVFI --out OUT [--loss] [--timeout TIMEOUT] [--project
+    PROJECT]
+```
+
 ### `rvw doctor`
 
 ```text
@@ -318,7 +367,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -385,7 +434,8 @@ usage: rvw formal sby-regress [-h] --out OUT [--timeout TIMEOUT] [--json]
 usage: rvw formal prove [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--abstraction ABSTRACTION] [--cut CUT]
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--abstraction ABSTRACTION] [--cut CUT]
     [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
     PROJECT]
 ```
@@ -433,7 +483,8 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
 usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--abstraction
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--frontend {verilog,slang}] [--abstraction
     ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
     [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
     [--free-reset] [--first-failure] [--project PROJECT]
@@ -448,6 +499,17 @@ usage: rvw formal from-sim [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--json] [--tie PORT=VALUE] --trace TRACE (--cycle CYCLE | --time TIME)
     [--scope SCOPE] [--memories {trace,free,zero}] [--first-failure]
     [--project PROJECT]
+```
+
+### `rvw formal swarm`
+
+```text
+usage: rvw formal swarm [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] --trace TRACE [--start-cycle START_CYCLE]
+    --end-cycle END_CYCLE [--samples SAMPLES] --budget BUDGET [--scope SCOPE]
+    [--memories {trace,free}] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal xprop`
