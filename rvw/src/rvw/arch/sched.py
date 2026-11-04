@@ -204,6 +204,10 @@ def measure(description_path, out, project=None, count=32, timeout=600,
     nm = executable(str(Path(cc).with_name(Path(cc).name.replace('gcc', 'nm'))))
     tools = {'cc': tool_identity(cc), 'mca': tool_identity(mca)}
     write_json(out / 'description.json', d)
+    linker = out / 'link.ld'
+    linker.write_text(f'ENTRY(_start)\nSECTIONS {{ . = {d["entry"]}; '
+                      '.text : { *(.text.init) *(.text*) } '
+                      '. = ALIGN(8); .tohost : { *(.tohost) } }\n')
     jobs, cases = [], []
     for c in d['classes']:
         for mode in ('dependent', 'independent'):
@@ -214,7 +218,7 @@ def measure(description_path, out, project=None, count=32, timeout=600,
                 elf = base.with_suffix('.elf')
                 command([cc, '-nostdlib', '-nostartfiles', f'-march={d["isa"]}',
                          '-mabi=' + ('ilp32' if d['isa'].startswith('rv32') else 'lp64'),
-                         '-Wl,--no-relax', f'-Wl,-Ttext={d["entry"]}', '-o', elf, src],
+                         '-Wl,--no-relax', f'-Wl,-T,{linker}', '-o', elf, src],
                         base.with_suffix('.build.log'), 60)
                 symbols = run_group([nm, str(elf)], capture=True, timeout=30)
                 if symbols.returncode:

@@ -95,3 +95,8 @@ Next: register generated models in a pinned LLVM source build; test held-out
 mixed kernels; compile GCC DFA integration; add loads, branches, bypasses and
 variable-latency instructions; add repeat intervals and MCP. Use separate issues
 with acceptance checklists. Follow-up issue links will be added before delivery.
+
+## Follow-up issues
+
+- [#367: native compiler integration](https://github.com/riscPrint/risc-v-workstation/issues/367)
+- [#369: held-out kernels and repeated measurements](https://github.com/riscPrint/risc-v-workstation/issues/369)

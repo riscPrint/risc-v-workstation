@@ -130,3 +130,18 @@ def test_cli_json(tmp_path, capsys):
     assert json.loads(capsys.readouterr().out)['status'] == 'reported'
     assert main(['arch', 'sched-generate', '/missing', '--out', str(tmp_path/'other'), '--json']) == 2
     assert 'error' in json.loads(capsys.readouterr().out)
+
+
+def test_native_elf_entry(tmp_path):
+    tool = shutil.which('riscv64-unknown-elf-gcc')
+    if not tool: pytest.skip('native RISC-V GCC absent')
+    source, _ = sched.assembly(desc()['classes'][0], 16, 'dependent')
+    (tmp_path/'test.S').write_text(source)
+    (tmp_path/'link.ld').write_text('ENTRY(_start)\nSECTIONS { . = 0x80000000; '
+        '.text : { *(.text.init) *(.text*) } . = ALIGN(8); .tohost : { *(.tohost) } }\n')
+    r = subprocess.run([tool, '-nostdlib', '-nostartfiles', '-march=rv32im', '-mabi=ilp32',
+        '-Wl,--no-relax', '-Wl,-T,'+str(tmp_path/'link.ld'), '-o', str(tmp_path/'test.elf'),
+        str(tmp_path/'test.S')], capture_output=True, timeout=30)
+    assert r.returncode == 0, r.stderr
+    data = (tmp_path/'test.elf').read_bytes()
+    assert int.from_bytes(data[24:28], 'little') == 0x80000000
