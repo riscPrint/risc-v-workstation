@@ -383,6 +383,45 @@ The small reference designs are in the protocol and reference `*Spec` files. Run
 They inject legal offer changes, source reuse, unmatched responses, response
 opcode and size faults, parameter faults, and AXI address faults.
 
+## Explicit safety intent
+
+Project adapters can call these helpers in the signal sampling clock domain.
+They use `DeclaredChecks.rule`, so selection, waivers, monitor counters and
+stable check IDs apply. No core signal names occur in the helpers.
+
+| Helper | Rules and contract |
+|---|---|
+| `QueueChecks.fifo` | `queue.capacity`, `queue.occupancy`, `queue.order`. Bind accepted push/pop events, flush, payload or unique token, and the pre-edge occupancy. The independent FIFO checks data order and count. Flush discards all entries and dominates transfers. Full replacement is legal. Empty bypass is not supported. |
+| `QueueChecks.arbiter` | `arbiter.exclusive`, `arbiter.requested`. At most one grant is permitted. Every grant needs its request. No fairness or progress is inferred. |
+| `StateChecks.machine` | `state.encoding`, `state.transition`. Declare all legal codes and edges, including self loops. The first initialized sample checks encoding. Consecutive initialized samples check transitions. |
+| `StateChecks.branches` | `state.exclusive`, optional `state.required`. Declare the branch selection vector and its active condition. |
+| `ExecutionChecks.bind` | `execution.allocate`, `execution.wakeup`, `execution.issue`, `execution.operands`, `execution.replay`, `execution.writeback`. Bind accepted token events, operand readiness and a cancellation mask. Missing signals and resetless domains are refused. |
+| `ValueChecks.range` | `value.underflow`, `value.overflow`. Bind a full precision signed expression and mathematical bounds. Unsigned intent uses a zero-extended value converted to `SInt`. |
+| `ValueChecks.unsignedInterpretation` | `value.signedness`. Declare an unsigned magnitude at a wider signed consumer. Zero extension is required. Sign extension is an error. |
+| `ValueChecks.narrowing` | `value.truncation`. Declare signed value preservation or modular low-bit behavior. Modular behavior permits lost high bits but still checks the low bits. |
+
+FIFO reference state starts empty at reset. Resetless FIFO bindings are refused;
+a separate startup contract is still required. State initialization
+and value activation come from the adapter. An inactive value does not delay a
+later violation. Do not derive initialization from a fixed cycle delay.
+The library does not infer reset values or unreachable-state assumptions.
+
+The execution reference starts with no live tokens. Allocate only free tokens.
+Wakeup updates readiness for the next cycle. Issue needs all operands ready
+before the edge. Replay reopens an issued token. Writeback completes it.
+Cancellation forbids issue and writeback in the same cycle and all later cycles
+until a new allocation. State priority is cancellation, writeback, replay,
+issue, then allocation. Same-cycle allocation reuse and wakeup bypass are not
+supported. Tokens must include a generation if late events can outlive reuse.
+Readiness supplied by the adapter must come from independent accepted events.
+This helper does not compare result data or architectural retirement.
+
+These are bounded local safety checks. Queue tokens must include all identity or
+data fields that the adapter needs to compare. They do not establish whole-core
+retirement, LSQ ordering, speculation recovery or eventual progress. No BOOM
+bindings for these helpers are installed by default. Tests are in
+`IntentChecksSpec` and `ExecutionChecksSpec`; each rule has legal and illegal stimulus.
+
 ## Gaps
 
 - Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
