@@ -1,3 +1,4 @@
+.file "rvw-workload-start.S"
 .section .text.init
 .globl _start
 _start:

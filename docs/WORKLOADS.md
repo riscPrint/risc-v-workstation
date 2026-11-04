@@ -42,7 +42,8 @@ The manifest selects Embench-IoT commit
 It pins `riscv64-unknown-elf-gcc (g1b306039a) 15.1.0` and each full argv.
 Common flags include `-O2 -march=rv64gc -mabi=lp64d -mcmodel=medany`,
 `-fno-common -fno-builtin -ffp-contract=off -DCPU_MHZ=1`.
-No LTO, fast math, profile feedback or vector extension is enabled.
+Fixed `-ffile-prefix-map` values remove absolute source and runtime paths
+from assertion strings. No LTO, fast math, profile feedback or vector extension is enabled.
 The startup, linker script and checker wrapper are versioned with the runner.
 Keep the complete GCC/newlib distribution for repeat experiments. A version line
 and executable hash alone do not freeze GCC's linker and sysroot.

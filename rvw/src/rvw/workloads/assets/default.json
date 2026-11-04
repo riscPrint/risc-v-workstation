@@ -15,6 +15,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
@@ -51,6 +53,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
@@ -87,6 +91,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
@@ -123,6 +129,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
@@ -159,6 +167,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
@@ -195,6 +205,8 @@
       "args": [],
       "build": [
         "{cc}",
+        "-ffile-prefix-map={source}=embench",
+        "-ffile-prefix-map={assets}=rvw-workload-runtime",
         "-O2",
         "-g0",
         "-march=rv64gc",
