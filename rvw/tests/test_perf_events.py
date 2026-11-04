@@ -97,3 +97,52 @@ def test_fully_classified_commits(tmp_path):
 def test_bad_extensions_refuse(tmp_path, body):
     with pytest.raises(ValueError):
         read(log(tmp_path, body))
+
+
+def test_prediction_outcomes_keep_contexts_and_unknown_costs_separate(tmp_path):
+    path = log(tmp_path, '''I|0|0|0
+I|1|1|0
+#rvw|1|prediction|0|p|direction|taken|not_taken|4|3|true|true|user
+#rvw|1|prediction|0|p|target|0x10|0x20|4|3|true|true|user
+#rvw|1|prediction|0|ras|return|0x30|0x30|?|?|?|?|?
+#rvw|1|prediction|1|p|direction|taken|taken|0|0|false|false|kernel
+R|0|0|1
+R|1|0|0''')
+    report = analyze(path)
+    rows = report['predictions']['by_context']
+    assert report['predictions']['outcomes'] == 4
+    warm = next(r for r in rows if r['kind'] == 'direction' and r['warmup'] == 'true')
+    assert warm['incorrect'] == 1
+    assert warm['recovery_cycles'] == dict(samples=1, unknown=0, sum=4, max=4)
+    unknown = next(r for r in rows if r['predictor'] == 'ras')
+    assert unknown['correct'] == 1
+    assert unknown['wrong_path_instructions'] == dict(samples=0, unknown=1, sum=None, max=None)
+    assert 'Observed prediction outcomes: 4' in render(report)
+    assert analyze(log(tmp_path, 'I|0|0|0'))['predictions']['outcomes'] == 0
+
+
+@pytest.mark.parametrize('record', [
+    'prediction|missing|p|direction|taken|taken|0|0|false|false|ctx',
+    'prediction|0|p|direction|1|0|0|0|false|false|ctx',
+    'prediction|0|p|target|-1|0|0|0|false|false|ctx',
+    'prediction|0|p|return|x|0|0|0|false|false|ctx',
+    'prediction|0|p|unknown|taken|taken|0|0|false|false|ctx',
+    'prediction|0|p|direction|taken|taken|-1|0|false|false|ctx',
+    'prediction|0|p|direction|taken|taken|0|nan|false|false|ctx',
+    'prediction|0|p|direction|taken|taken|0|0|guess|false|ctx',
+    'prediction|0|p|direction|taken|taken|0|0|false|guess|ctx',
+    'prediction|0||direction|taken|taken|0|0|false|false|ctx',
+    'prediction|0|p|direction|taken|taken|0|0|false|false|',
+    'prediction|0|p|direction|taken|taken|0|0|false|false',
+])
+def test_prediction_refuses_invalid_observations(tmp_path, record):
+    with pytest.raises(ValueError):
+        read(log(tmp_path, 'I|0|0|0\n#rvw|1|' + record))
+
+
+def test_prediction_refuses_duplicates_and_ended_ids(tmp_path):
+    event = '#rvw|1|prediction|0|p|direction|taken|taken|?|?|?|?|?'
+    for body in ('I|0|0|0\n' + event + '\n' + event,
+                 'I|0|0|0\nR|0|0|0\n' + event):
+        with pytest.raises(ValueError):
+            read(log(tmp_path, body))

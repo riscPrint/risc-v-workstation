@@ -52,3 +52,10 @@ sides after a compiler change. gem5 shows trends; RTL is the truth.
 RV32/in-order runtime: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Fitting and measurement work: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12).
 
 Retained limit: The bare-metal ROI runtime and documented compiler/runtime assumptions remain required. Benchmarks do not prove cycle accuracy.
+
+`ftq-branches` is an RV64 RVC microbenchmark for BAC/FTQ experiments. It uses
+compressed and full-width conditional branches and checks the path sum. It
+requires a RISC-V compiler. It has no host C timing substitute. Its ROI uses
+the same two `setStats` markers as the other benchmarks. Compare the same ELF
+with coupled and decoupled descriptions. FTQ activity is the required behavior
+change. There is no required IPC gain.
