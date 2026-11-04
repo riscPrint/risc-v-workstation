@@ -1,5 +1,6 @@
 """Regression entry points for native component tests."""
 import json
+from pathlib import Path
 
 from rvw.sim.backends import BACKENDS, require
 
@@ -16,19 +17,19 @@ def capabilities(a):
 
 def register(sub):
     p = sub.add_parser('backends', help='show native backend semantic capabilities')
-    p.add_argument('--backend', choices=BACKENDS)
-    p.add_argument('--hdl', action='store_true', help='show HDL invocation profiles')
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--backend', choices=BACKENDS)
+    group.add_argument('--hdl', action='store_true', help='show HDL invocation profiles')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=capabilities)
     from rvw.sim.hdl import PROFILES
     h = sub.add_parser('hdl', help='run a native HDL semantic component test')
-    h.add_argument('manifest', type=__import__('pathlib').Path)
+    h.add_argument('manifest', type=Path)
     h.add_argument('--backend', choices=PROFILES)
-    h.add_argument('--out', type=__import__('pathlib').Path, required=True)
+    h.add_argument('--out', type=Path, required=True)
     h.add_argument('--timeout', type=float, default=120)
     h.add_argument('--json', action='store_true')
     h.set_defaults(func=hdl)
-    from pathlib import Path
     c = sub.add_parser('cocotb', help='run a native cocotb component suite')
     c.add_argument('manifest', type=Path)
     c.add_argument('--out', type=Path, required=True)

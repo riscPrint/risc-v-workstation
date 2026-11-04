@@ -1859,3 +1859,22 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### Standalone HDL semantic tests
+
+`rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
+This standalone format is not C1, C3 or C4 acceptance evidence.
+The manifest fields are `schema`, `backend`, `top`, `sources`, optional
+`requires`, and optional `vhdl_sources` plus `vhdl_top` for mixed synthesis.
+A per-run `--backend` override must meet every declared requirement.
+The [simulation guide](../rvw/src/rvw/sim/README.md#native-hdl-testbenches)
+defines supported profiles and testbench completion rules.
+
+The result records `status` (`pass` or `error`), `reason`, the selected `backend`,
+`capabilities`, source-file SHA-256 `inputs`, resolved `tools`, `versions`,
+`jobs`, `wall_s`, `timeout_s` and `replay`. Each job records its argument vector,
+exit code, timeout flag, and paths to stdout/stderr logs. Exit zero plus exactly
+one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
+A failed compile, failed run, timeout or missing completion marker gives error.
+Requirements and missing-tool errors occur before output creation (CLI exit 2).
+This format does not capture transitive file inputs or establish C8 reuse.

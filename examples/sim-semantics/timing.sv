@@ -2,7 +2,7 @@
 module tb;
   reg clk = 0;
   integer value = 0;
-  integer branch_a = 0, branch_b = 0;
+  bit branch_a = 0, branch_b = 0;
   always #5 clk = ~clk;
   always @(posedge clk) value <= value + 1;
   initial begin

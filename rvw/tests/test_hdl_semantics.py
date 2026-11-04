@@ -65,7 +65,7 @@ def test_mixed_has_no_four_state_claim():
         require('ghdl-yosys-icarus', ['four_state'])
 
 
-@pytest.mark.parametrize('body', ['', '$display("RVW_PASS"); $fatal(1, "failure after marker");', '$display("RVW_PASS"); forever #1;'])
+@pytest.mark.parametrize('body', ['', 'assert (0) else $error("assertion failure"); $display("RVW_PASS"); $finish;', '$display("RVW_PASS"); $fatal(1, "failure after marker");', '$display("RVW_PASS"); forever #1;'])
 def test_no_false_pass(tmp_path, body):
     available('icarus')
     (tmp_path / 'tb.sv').write_text('module tb; initial begin ' + body + ' end endmodule')
@@ -90,3 +90,31 @@ def test_bad_manifest(tmp_path, change):
     p.write_text(json.dumps(d))
     with pytest.raises(ValueError):
         load(p)
+
+
+def test_cli_profiles_and_refusal(tmp_path, capsys):
+    from rvw.cli import main
+    assert main(['regress', 'backends', '--hdl', '--json']) == 0
+    profiles = json.loads(capsys.readouterr().out)
+    assert profiles['verilator-timing']['values'] == '2-state'
+    assert main(['regress', 'hdl', str(EXAMPLES / 'xreset.json'),
+                 '--backend', 'verilator-timing', '--out', str(tmp_path / 'out'), '--json']) == 2
+    assert 'four_state' in json.loads(capsys.readouterr().out)['error']
+    assert not (tmp_path / 'out').exists()
+
+
+@pytest.mark.parametrize('timeout', [0, -1, float('nan'), float('inf')])
+def test_invalid_timeout(tmp_path, timeout):
+    with pytest.raises(ValueError, match='timeout'):
+        run(EXAMPLES / 'xfree.json', tmp_path / 'out', timeout=timeout)
+    assert not (tmp_path / 'out').exists()
+
+
+def test_existing_output_refused(tmp_path):
+    available('icarus')
+    out = tmp_path / 'out'
+    out.mkdir()
+    (out / 'results.json').write_text('old results')
+    with pytest.raises(FileExistsError):
+        run(EXAMPLES / 'xfree.json', out)
+    assert (out / 'results.json').read_text() == 'old results'

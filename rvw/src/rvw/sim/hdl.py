@@ -16,10 +16,10 @@ from rvw.sim.backends import BACKENDS
 
 PROFILES = {
     'icarus': replace(BACKENDS['icarus'], scheduling='event-driven HDL testbench',
-                      features=BACKENDS['icarus'].features + ('hdl_delays',)),
+                      foreign=(), features=('four_state', 'xz_values', 'hdl_delays', 'immediate_assertions')),
     'verilator-timing': replace(
         BACKENDS['verilator'], scheduling='compiled HDL events with --timing',
-        features=BACKENDS['verilator'].features + ('hdl_delays', 'fork_join')),
+        foreign=(), features=('two_state', 'hdl_delays', 'fork_join', 'immediate_assertions')),
     'ghdl-yosys-icarus': replace(
         BACKENDS['icarus'], languages=('synthesizable VHDL-2008', 'SystemVerilog subset'),
         x_handling='VHDL synthesis can change unknowns; no VHDL X guarantee',
@@ -130,7 +130,10 @@ def run(manifest: Path, out: Path, *, backend=None, timeout=120):
             step([paths['iverilog'], '-g2012', '-s', data['top'], '-o', str(out / 'sim.vvp'), *sources])
             output = step([paths['vvp'], str(out / 'sim.vvp')])
         # An exit code alone is not evidence that the test reached its checks.
-        if output.splitlines().count('RVW_PASS') != 1:
+        diagnostics = output + (out / jobs[-1]['stderr']).read_text()
+        if re.search(r'(?m)^(ERROR:|FATAL:|%Error)', diagnostics):
+            reason = 'native simulation reported an error'
+        elif output.splitlines().count('RVW_PASS') != 1:
             reason = 'missing or duplicate RVW_PASS completion marker'
         else:
             status = 'pass'
