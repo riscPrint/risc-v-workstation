@@ -1662,6 +1662,54 @@ inputs and environment. `baseline` and `edited` contain the Yosys sim summaries.
 type-check, cause-trace and viewer launch outcomes. A viewer launch does not
 establish successful source navigation. See the formal command README for limits.
 
+### Formal bounded depth-search termination
+
+`rvw.formal-depth-search/1` records `stop_reason`: `max_depth_reached`,
+`budget_exhausted`, or `attempt_<status>`. `support` records the doubling
+schedule, initial and maximum depths, total budget, per-attempt timeout and
+engine selection. Engine portfolios and depth search are separate choices.
+Every attempt uses at most the remaining budget as its timeout. Frontend and
+capture overhead can exceed this budget. No new attempt starts after expiry.
+A bounded pass at the maximum depth remains `inconclusive`. Only a concrete
+failed attempt gives aggregate `fail`. Search never claims an unbounded proof.
+
+
+### Formal simulation-state swarm
+
+`rvw.formal-swarm/1` has aggregate `status: inconclusive` and exit 1. `selection`
+records the uniform cycle interval selection. `attempts` retains each cycle,
+status, relative result path, restrictions and loaded-state coverage. A refused
+state has `status: error` and a reason. `missing_cycles` lists tasks not started.
+`bounded_passes` and `conditional_failures` count observations only. They cannot
+earn reset reachability, gate acceptance or unbounded proof. Sources, includes,
+checks and waveform are copied once in the parent `input_snapshot`. Child
+results retain their own full tool/input captures and solver evidence.
+
+
+### Formal exact proof reuse
+
+`rvw.formal/1` results can include `proof_cache` with `key`, `hit` and the checked
+`rule`. The optional `bmc`/`prove` cache stores complete successful SBY evidence
+under a SHA-256 input key. `rvw.formal-proof-key/1` binds complete prepared input
+artifacts, script, captured files, tool payloads/versions, captured environment,
+Python identity and formal/common runner code. Only the owned output prefix is
+normalized. Whole-model identity is required; no inferred cone independence is
+accepted. Entry manifests hash all retained evidence and provenance. Fresh input
+capture, frontend checks, tool verification and bounded reachability remain
+mandatory on hits. An invalid entry is a miss. Only successful results with
+assertions and reachable guards enter this cache. Mounted directory sharing
+requires C8 trust; no remote authentication or gate acceptance is supplied.
+
+
+### Formal memory encoding
+
+`rvw.formal/1` BMC/prove results record `memory_model.requested` (`auto`, `array`,
+`map`), `retained_memory_cells` (prepared `$mem_v2` count, or null without a
+model), and `semantics`. Explicit array mode requires an SMTBMC-only portfolio.
+Map mode uses Yosys `memory_map -formal`. Both model the supplied RTL memory.
+Neither adds a RAM/blackbox refinement contract or resolves undefined RTL
+behavior by choosing a value. The retained-cell count is not a refinement proof.
+
 ### Formal campaign observations in C3 and C4
 
 `rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.

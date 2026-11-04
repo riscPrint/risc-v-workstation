@@ -21,6 +21,7 @@ def depth_search(args):
     out.mkdir(parents=True, exist_ok=False)
     deadline = time.monotonic() + args.budget
     depth, attempts = args.depth, []
+    stop = "budget_exhausted"
     while True:
         left = deadline - time.monotonic()
         if left <= 0:
@@ -35,12 +36,22 @@ def depth_search(args):
         path = Path(child.out) / "result.json"
         result = json.loads(path.read_text())
         attempts.append({"depth": depth, "status": result["status"], "result": str(path)})
-        if result["status"] != "pass" or depth == args.max_depth:
+        if result["status"] != "pass":
+            stop = "attempt_" + result["status"]
+            break
+        if depth == args.max_depth:
+            stop = "max_depth_reached"
             break
         depth = min(args.max_depth, depth * 2)
     result = {"schema": "rvw.formal-depth-search/1",
               "status": "fail" if attempts and attempts[-1]["status"] == "fail" else "inconclusive",
               "reason": "bounded search cannot establish an unbounded proof",
+              "stop_reason": stop,
+              "support": {"mode": "bmc", "schedule": "doubling",
+                          "initial_depth": args.depth, "max_depth": args.max_depth,
+                          "budget_s": args.budget, "attempt_timeout_s": args.timeout,
+                          "engine": getattr(args, "engine", "smtbmc:yices"),
+                          "unbounded_proof": False},
               "attempts": attempts,
               "max_bounded_pass": max((a["depth"] for a in attempts if a["status"] == "pass"), default=None)}
     common.write_json(out / "result.json", result)

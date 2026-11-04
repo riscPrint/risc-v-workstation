@@ -367,7 +367,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -434,7 +434,8 @@ usage: rvw formal sby-regress [-h] --out OUT [--timeout TIMEOUT] [--json]
 usage: rvw formal prove [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--abstraction ABSTRACTION] [--cut CUT]
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--abstraction ABSTRACTION] [--cut CUT]
     [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
     PROJECT]
 ```
@@ -482,7 +483,8 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
 usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--abstraction
+    [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
+    [--proof-cache PROOF_CACHE] [--frontend {verilog,slang}] [--abstraction
     ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
     [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
     [--free-reset] [--first-failure] [--project PROJECT]
@@ -497,6 +499,17 @@ usage: rvw formal from-sim [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--json] [--tie PORT=VALUE] --trace TRACE (--cycle CYCLE | --time TIME)
     [--scope SCOPE] [--memories {trace,free,zero}] [--first-failure]
     [--project PROJECT]
+```
+
+### `rvw formal swarm`
+
+```text
+usage: rvw formal swarm [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] --trace TRACE [--start-cycle START_CYCLE]
+    --end-cycle END_CYCLE [--samples SAMPLES] --budget BUDGET [--scope SCOPE]
+    [--memories {trace,free}] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal xprop`
