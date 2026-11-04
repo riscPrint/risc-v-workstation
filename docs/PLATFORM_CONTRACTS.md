@@ -326,10 +326,10 @@ Legacy `mem_*` fields still describe completed effects. A missing fault record
 makes no claim about attempted accesses. This extension describes data accesses;
 instruction fetch faults still use trap cause/tval.
 
-Spike checks zero-completion, uncompressed scalar load/store attempts for width
-codes 0..3. It computes address and width from its own instruction and pre-step
-registers, then checks the synchronous cause. Other encodings, partial effects,
-and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Spike checks zero-completion scalar load/store attempts, compressed accesses
+and LR/SC/AMOs. It computes address and width from its own instruction and
+pre-step registers, then checks the synchronous cause. Reserved encodings,
+partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 
@@ -383,6 +383,37 @@ missing external inputs give inconclusive. Current Spike/Sail single-hart
 commands do not implement this extension. Do not split `/2` into `/1` files and
 claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
 completion aggregation. It does not supply a multi-hart reference backend.
+
+A serialized project boundary can use `SerializedMemoryReference` for byte data
+and read-from checks. The project assigns contiguous `serialization` IDs only
+when memory actions are accepted. This order is separate from `capture_seq`
+and each hart's `order`. An event names its `boundary`. Reads add `read_from`,
+one write ID per observed byte; `initial` names the captured initial image.
+External writes consume serialization IDs too. Initialize the reference from
+captured input bytes. Derive expected writes from stimulus or independent
+architectural state. Compare observed writes before updating the reference.
+This stricter serialized model is valid only for a declared serialized boundary.
+It must not reject legal weak-memory core behavior by imposing retirement order.
+The native two-hart subset fixture uses this model. Production multi-image
+loading and a full multi-hart architectural reference remain unavailable.
+
+
+### C2 online launch
+
+`rvw cosim live --elf ELF --core CORE --out DIR --simulator COMMAND ...`
+launches a C1 adapter. DIR must be new. COMMAND must contain `{elf}` and `{out}`
+placeholders. The command receives the captured ELF and writes C2 to
+`DIR/rvfi.jsonl`. `RVW_RVFI_FLUSH=1` requests line flushes in RiscvSim.
+The existing offline comparison and synchronization rules apply. The wall
+timeout covers the whole launch, including builds and lock waits. A checked
+mismatch stops the process group and returns exit 1. A timeout, incomplete
+stream or nonzero exit cannot produce a match; it returns exit 3 when usable
+trace evidence exists. A timeout before any C2 output is also inconclusive.
+Other input and trace errors return exit 2. `simulator` records command,
+returncode, timed_out and trace path. The consumed prefix digest is not a
+complete file identity. Launch metadata captures the executable identity and
+argument list; adapter build dependencies still require C1 provenance.
+
 
 ## C3. Suite results (`rvw.results/1`)
 
@@ -660,7 +691,11 @@ An empty `rows` list with unknown entries does not prove that the table is empty
 
 ### Reduction and bisect reports
 
-`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL` or `irq`.
+`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL`, `irq`, or `stimulus`.
+For `stimulus`, `kept` contains group names, and counts refer to groups.
+The replay must include `--stimulus-file`; C1 must record its `stimulus_sha256`.
+The `rvw.stimulus/1` event format and dependency rules are defined in
+`rvw/src/rvw/bundle/README.md`. Minimality applies to admissible group removals.
 Each entry has `original`, `remaining`, `kept` (zero-based input indices),
 `completion`, `one_minimal`, and `global_minimum` (always false).
 IRQ indices exclude the fixed initial event from the search, but still refer to
@@ -1520,7 +1555,8 @@ records. This report does not assert that an obligation is complete.
 `proof_status` is `proven_conditional` only for an unbounded proof job with PASS,
 exit 0 and no reported free wires. Otherwise it is `not_proven`. `proof_job`
 retains the parent's local job paths and hashes, or is null. All proof assumptions
-and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`.
+and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`
+unless a separate declared activation cover runs, as specified below.
 The solver does not export a proof core in this flow. `proof_core` has
 `status: unavailable`, `cells: null` and a reason. Null is not an empty proof core.
 
@@ -1648,11 +1684,12 @@ and hashes them. It does not modify the upstream models.
 ## Formal event model extension
 
 BMC can explicitly select a sampled event model with `--event-model` and repeatable
-`--event-clock PORT`. Extra clocks must be independent rising-edge top inputs.
+`--event-clock PORT`. Extra clocks must be rising-edge top inputs.
 `--async-reset` separately enables constant-value reset FFs (`$adff`, `$adffe`).
 SBY `multiclock on` applies Yosys `clk2fflogic`. Each step is a global input
 sample, with arbitrary clock rates, phases, simultaneous edges and stalls.
-There are no declared ratio constraints or fairness assumptions.
+Optional periodic schedules constrain sampled clock ratios and phases, as specified
+below. Unscheduled clocks have no ratio constraints. No fairness is inferred.
 Async reset pulses visible for a sample are represented without a clock edge.
 Pulses wholly between samples and analog timing are outside the model.
 
@@ -1674,15 +1711,16 @@ Older reports without this field remain readable.
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
 `status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
 successful eqy run, at least one partition, PASS for every output partition, and
-complete register matching. A timeout, unknown partition or unmatched register
-cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+complete register matching by default. `--unmatched-state prove` instead checks
+closed output cones without name pairing, as specified below. A timeout or unknown
+partition cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
 output directory exits 2. `not_equivalent` requires a failed output partition and
 a VCD counterexample in `traces`. There are no internal state equality assumptions.
 `state_mapping` records automatic or manual pairs and their widths. `unmatched`
 lists unpaired registers on each side. `partitions` records each partition status.
 `inputs` contains each side's capture and snapshot records. `restrictions` records
 the single-clock, two-state model, reset alignment, unchecked startup clocks and
-zero latency difference. Blackbox obligations are refused. Optional `dsec` evidence
+the declared fixed output latency difference. Blackbox obligations are refused. Optional `dsec` evidence
 is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal README
 for the supported subset and initialization limits. This contract is separate from
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
@@ -1880,6 +1918,29 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
 
+## Formal capacity reports
+
+`rvw formal contracts` writes `rvw.formal-contracts/1` in a fresh output directory.
+Fields are `status`, `plan_sha256`, `obligations`, `restrictions` and `input_capture`.
+Each obligation has an `id`, `status`, and either a child `result` with `proof_kind`
+or a reason that it was not run. Run obligations also list assumption cells and
+their source locations. `conditional_proved` requires fresh unbounded
+passes for every component and the closed composition. Other outcomes give
+`inconclusive`. The command returns 0 only for `conditional_proved`. Input errors
+return 2. This report is not a C4 acceptance gate or a reusable proof certificate.
+The copied plan and child input captures bind the report to its inputs.
+
+`rvw formal strengthen` writes `rvw.formal-strengthen/1`. It records `status`,
+`candidates`, `certified`, `obligations` and `semantics`. Only fresh unbounded passes
+can add a candidate to `certified`. The final target proof supplies `status`.
+Certified candidates remain assertions in the final target. Source assumptions
+remain environment restrictions. Neither observations nor bounded passes can
+certify an invariant. Missing evidence gives an inconclusive result.
+
+BMC/prove abstraction entries extend `cut_points` with `kind` and `plan_sha256`.
+The semantics remain `unconstrained_anyseq`. No abstraction assumption is implicit.
+See the [formal capacity interface](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
 ## Formal app and benchmark reports
 
 `rvw formal apps` reads `rvw.formal-apps/1` and writes
@@ -1919,6 +1980,77 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+
+### Property activation and requirement links
+
+A `cov prove` point can declare an `activation` SystemVerilog expression. The
+runner creates a separate cover job with the same captured inputs and assumptions.
+The expression must be one statement-free expression. A successful cover needs
+exit 0, PASS, no free wires and the existing sanity guard. Only then does
+`proof_cones.properties[].activation.status` become `reached`. Other evidence is
+`inconclusive`; an absent predicate is `not_measured`. This is a user-declared
+activation predicate. It does not establish full property non-vacuity.
+
+The additive `rvw.proof-cones/1` `requirements` array joins each declared
+`requirement_id` to sorted `property_ids`. Property records join activation,
+structural cones and the unavailable solver core through `property_id`. Every
+requirement status stays `inconclusive`. A list of linked properties is not a
+complete set of functional obligations. A structural cone is not a solver core.
+These fields do not change exclusion or gate verdicts.
+
+
+### Related clocks as periodic sampled schedules
+
+Event BMC accepts repeated `--clock-schedule PORT=BITS` options. Declare every
+clock, including `--clock`, or declare none. `clk=01` and `other=0011` describe
+a 2:1 rate ratio. Rotate the bit strings to declare a phase. The leftmost bit is
+sample zero. Each pattern repeats forever. Each must contain both levels and
+2..256 samples. The joint period must not exceed 4096 samples. These are explicit
+proof restrictions, not measured hardware clock relationships.
+
+One solver step advances one global sample. The wrapper constrains clock levels
+at that sample. The event backend samples property data before its triggering
+edge; data that changes with a clock uses its previous sample at that edge.
+Clock schedules do not add analog timing, delta cycles, jitter or events between
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
+The existing reset harness still counts primary-clock edges. Async reset state
+requires the separate `--async-reset` option. Unsupported state controls and raw
+async-triggered properties remain refused. Replay and X flows remain unchanged.
+`event_model.schedules` records the exact patterns; `relationships` states whether
+the run used periodic schedules or unrelated clocks. Native phase tests require
+both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Sequential equivalence latency restrictions
+
+The additive `rvw.formal.equiv/1` `restrictions.latency` is the nonnegative
+candidate lag in clocks (0..64). The reference wrapper delays all output ports by
+that amount. Both wrappers mask outputs until reset cycles plus settle cycles
+plus latency cycles have elapsed. There is no input shift or protocol adapter.
+`restrictions.unmatched_state` is `refuse` by default. With `prove`, unmatched
+register names remain in the inventory but do not block a complete closed-output
+proof. State equality is never assumed. Every partition must still have no
+internal crossbits. Missing partitions, unknown results and tool failures remain
+inconclusive. No named state relation or blackbox obligation is inferred.
+
+
+### Imported single-sample implication
+
+The slang import subset also accepts one top-level `Boolean |-> Boolean` in an
+inline clocked assert or assume property. The pinned frontend patch evaluates
+both operands at the same pre-update sample and checks `!antecedent || consequent`.
+The existing `disable iff` condition gates the check. There are no pending threads.
+`|=>`, delays, repetition, chained and nested implication remain refused before
+a proof job. Qualified engines remain SMTBMC/Yices and ABC BMC3. The captured
+plugin bytes identify the applied lowering. This is not full temporal SVA support.
+
+### Init platform review marker
+
+An optional `rvw init --linker-script` platform template carries
+`review_required: true`. The cosim platform loader refuses it. The owner must
+check the RAM, reset PC, MMIO, PMP, interrupt, privilege and fault policies
+against the core specification before removing the marker. A linker map alone
+does not establish these policies.
 ### C1 simulation throughput extension
 
 Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.
@@ -1953,6 +2085,18 @@ The launch timeout includes the lock wait and is at most 1800 seconds.
 Status stays `inconclusive` until all requested comparisons are equivalent.
 A failed run stops the sweep. Cancellation stops the active process group.
 Build costs, peak RSS, PGO and checkpoints are outside this report.
+
+
+### UVM component results in C3
+
+`rvw regress uvm` writes standalone `rvw.results/1` for the pinned
+Accellera library and the bounded component suite in `Uvm/README.md`.
+Entries use `kind: "uvm"` and the runtime seed. Normal passes require
+successful exit, all expected test markers, one completion marker and no
+UVM errors or fatals. The fault-detection entry requires the specific
+RVFI mismatch and a failed simulation. A timeout, missing evidence or a
+build failure is inconclusive with status `error`. These files have no
+C1 ELF or complete C8 identity. They cannot establish C4 gate acceptance.
 
 
 ## Local integrated debug session
@@ -2076,3 +2220,37 @@ Optional MMU `device_state` events retain sampled harness register state and an
 IRQ schedule override flag. `pma_check` uses declared PMA data plus these events
 and accepted bus requests. Its `consistent` result has the same bounded scope
 as `walk_check`; neither changes architectural coverage or gate verdicts.
+
+### Cooperative farm capacity extensions (#57)
+
+Host capacity and request resources support `disk_bytes` and `jobs` in addition
+to CPU slots, memory bytes and named locks. A host can set `projects` with
+per-project limits for those four dimensions. Requests then require a configured
+`project`. All active requests for that project share its quota. Host aliases
+share the same host state. An oversized request is refused; a capacity conflict
+waits within the request timeout. Disk admission also checks current free space.
+Reports include effective `limits`, `queued_s`, `held_s`, `released` and `outcome`.
+Handled cancellation releases all reservations. These fields describe reservations,
+not actual consumption. OS resource limits and cumulative project accounting are
+not provided. See `rvw/src/rvw/farm/README.md` for defaults and remaining limits.
+
+### Paired SoC bridge observations (#134)
+
+The optional extended `soc check --transactions` JSONL record includes `write`,
+`data`, `error`, `beats`, and optional `register`, in addition to the original
+address fields. Bindings can declare `byteorder` and `software_byteorder`.
+Beat masks index lanes by ascending address. The format and bounded comparison
+rules are defined in `rvw/src/rvw/soc/README.md`. Matching samples never produce
+a pass. Endpoint pairing and observation provenance remain the capture
+producer's responsibility. The bundled captures do not emit extended records.
+
+### riscv-formal input provenance (#63)
+
+C3 `source.formal_inputs.settings_sha256` binds the selected formal settings.
+`source.formal_inputs.committed_inputs.files` lists copied input hashes and their
+comparison with repository HEAD bytes. Rows report `committed`, `modified`,
+`untracked_or_unavailable`, or `unavailable`. The nonempty list has
+`all_committed=true` only when every row matches a commit. This is file provenance,
+not a generator-origin or adapter-conformance claim. `source.identity_complete`
+remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
+

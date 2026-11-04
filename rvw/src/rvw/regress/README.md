@@ -664,3 +664,11 @@ returns zero for MMIO loads. The native Spike executable has a CLINT device,
 but the shim does not model MSIP write/readback state. Keep strict comparison
 mismatches separate from bounded harness state observations. A device-state
 observation must not waive a strict mismatch or grant architectural coverage.
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json` runs a
+bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
+See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
+licence checks, supported test scope and limits. It writes standalone C3.
+It does not schedule ELF suites or earn C4 acceptance.

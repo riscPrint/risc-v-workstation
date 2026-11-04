@@ -44,6 +44,10 @@ def register(sub):
     group.add_argument('--hdl', action='store_true', help='show HDL invocation profiles')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=capabilities)
+
+    from rvw.sim.uvm import register as register_uvm
+    register_uvm(sub)
+
     from rvw.sim.hdl import PROFILES
     h = sub.add_parser('hdl', help='run a native HDL semantic component test')
     h.add_argument('manifest', type=Path)
@@ -52,6 +56,7 @@ def register(sub):
     h.add_argument('--timeout', type=float, default=120)
     h.add_argument('--json', action='store_true')
     h.set_defaults(func=hdl)
+
     c = sub.add_parser('cocotb', help='run a native cocotb component suite')
     c.add_argument('manifest', type=Path)
     c.add_argument('--out', type=Path, required=True)
