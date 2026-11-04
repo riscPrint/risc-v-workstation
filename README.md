@@ -61,6 +61,7 @@ The setup tasks are [integration model #34](https://github.com/riscPrint/risc-v-
 | [`rvw query`](rvw/src/rvw/query/) | Design questions over a SpinalDB database: drivers, loads, fan-in/out, paths, search, hierarchy, diff between two builds. |
 | [`rvw cov`](rvw/src/rvw/cov/) | Code coverage merge and ranking, RVFI functional coverage, change-based test selection, proof exclusions, mutation testing. |
 | [`rvw formal`](SpinalChecks/) | BMC from reset, BMC from a simulation state, X-propagation. |
+| [`rvw workloads`](rvw/src/rvw/workloads/) | Build pinned open kernels and check outputs with Spike or QEMU; local licensed workload hook. |
 | [`rvw arch`](Arch/) | Build and run native gem5 models. Compare the same ELFs with C1 RTL ROI counters. |
 | [`rvw perf`](rvw/src/rvw/perf/) | Text performance reports from Konata logs. |
 | [`rvw doctor`](rvw/src/rvw/doctor/) | Check native tools, project inputs and adapter readiness. |

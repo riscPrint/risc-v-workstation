@@ -13,8 +13,11 @@ from .flows import _inputs
 
 def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
-    p.add_argument('--gold', nargs='+', required=True, help='reference RTL files')
-    p.add_argument('--gate', nargs='+', required=True, help='changed RTL files')
+    p.add_argument('--gold', nargs='+', help='reference RTL files')
+    p.add_argument('--gate', nargs='+', help='changed RTL files')
+    p.add_argument('--gold-rev')
+    p.add_argument('--gate-rev')
+    p.add_argument('--config', help='project generator configuration')
     p.add_argument('--top', required=True)
     p.add_argument('--clock', default='clk')
     p.add_argument('--reset', help='shared synchronous reset port, driven by the harness')
@@ -159,8 +162,21 @@ def _run(args):
                 raise ValueError('clock and reset must be different inputs')
         if not math.isfinite(args.timeout) or args.timeout <= 0 or args.reset_cycles < 1 or args.settle < 0:
             common.die('timeout must be finite and positive; reset-cycles must be positive')
+        revisions = (args.gold_rev, args.gate_rev)
+        if any(revisions):
+            if not all(revisions) or args.gold or args.gate:
+                raise ValueError('give both revisions, without --gold or --gate RTL')
+            from .export import export_revision
+            # Export directories must be new. Retain failed exports for diagnosis.
+            for side, revision in zip(('gold', 'gate'), revisions):
+                rtl, record = export_revision(getattr(args, 'project', None), revision,
+                    args.config, args.top, out / (side + '-export'), budget())
+                setattr(args, side, [str(rtl)])
+                result.setdefault('exports', {})[side] = record
+        if not args.gold or not args.gate:
+            raise ValueError('give --gold/--gate RTL or --gold-rev/--gate-rev')
         for source in args.gold + args.gate:
-            if Path(source).resolve().is_relative_to(out):
+            if not any(revisions) and Path(source).resolve().is_relative_to(out):
                 raise ValueError('RTL inputs must be outside --out')
         common.clear_outputs(out, 'gold', 'gate', 'eqy', 'equiv.eqy', 'eqy.log')
         bodies, portsets = [], []

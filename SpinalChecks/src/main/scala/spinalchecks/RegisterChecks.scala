@@ -14,7 +14,10 @@ object RegisterChecks {
     * Order: read clear, masked write/W1C, hardware clear, hardware set.
     */
   def bind(name: String, m: RegisterModel, observed: Bits, read: Bool, write: Bool,
-           data: Bits, strobes: Bits, hwSet: Bits, hwClear: Bits): Unit = {
+           data: Bits, strobes: Bits, hwSet: Bits, hwClear: Bits,
+           response: Bits = null, responseValid: Bool = null, latency: Int = 0): Unit = {
+    require(latency >= 0)
+    require((response == null) == (responseValid == null))
     val w = m.width
     require(Seq(observed, data, strobes, hwSet, hwClear).forall(_.getWidth == w))
     val expected = Reg(Bits(w bits)).init(m.reset)
@@ -22,6 +25,17 @@ object RegisterChecks {
     val mask = B(m.writeMask, w bits) & strobes
     val written = ((afterRead & ~mask) | (data & mask)) & ~(data & strobes & B(m.w1cMask, w bits))
     expected := (Mux(write, written, afterRead) & ~hwClear) | hwSet
+    if (response != null) {
+      require(response.getWidth == w)
+      var due = read
+      var value = expected
+      for (_ <- 0 until latency) {
+        due = RegNext(due).init(False)
+        value = RegNext(value).init(0)
+      }
+      DeclaredChecks.rule("register.response", name, "accepted read, pre-side-effect data and fixed response latency")(
+        (responseValid =/= due) || (due && response =/= value))
+    }
     DeclaredChecks.rule("register.state", name, "v1 independent device transactions; read-clear, masks, W1C, set priority")(
       observed =/= expected)
   }
