@@ -113,7 +113,9 @@ def observations(row, xlen, previous, aligned_mem=None):
         csr = insn >> 20
         operand = (insn >> 15) & 31
         f3 = (insn >> 12) & 7
-        read = not (f3 in (1, 5) and rd == 0)
+        # Access intent comes from the encoding, not the DUT writeback index.
+        encoded_rd = (insn >> 7) & 31
+        read = not (f3 in (1, 5) and encoded_rd == 0)
         write = f3 in (1, 5) or operand != 0
         obs.update(csr=f'0x{csr:03x}', csr_access='read_write' if read and write else 'write' if write else 'read')
     if info['class'] == 'branch' and not row.get('trap'):
@@ -246,6 +248,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                                  "address_convention": {True: "aligned_mem", False: "byte", None: "unknown"}[aligned_mem]}
             previous, order = None, -1
             history = []
+            from .semantic import Observer
+            semantic = Observer()
             for line_no, line in enumerate(stream, 2):
                 row = json.loads(line)
                 if 'event' not in row:
@@ -258,13 +262,16 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                     from .sequence import observe as observe_sequence
                     if 'event' not in row:
                         observed += observe_sequence(history, row, decode(number(row['insn']), first['xlen']),
-                                                     previous, sequence_settings.get('distances', [1, 2, 4]))
+                                                     previous, sequence_settings.get('distances', [1, 2, 4]),
+                                                     sequence_settings.get('kinds'))
                     elif row['event'] not in ('irq', 'end'):
                         history.clear()
-                for obs in observed:
-                    if 'isa_plan' in config:
-                        from .isa import observe_encoding
+                if 'isa_plan' in config:
+                    from .isa import observe_encoding
+                    for obs in observed:
                         observe_encoding(obs, config['isa_plan'])
+                    observed += semantic.observe(row, observed, config['isa_plan'], first['xlen'])
+                for obs in observed:
                     if obs['event'] == 'retire' and obs['mnemonic'] == 'unknown':
                         unknown[row['insn']] += 1
                     for group in groups:

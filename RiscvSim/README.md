@@ -458,3 +458,28 @@ It does not establish ISA correctness. Keep external effects disabled. This
 format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
+
+### RTL coverage tags
+
+`riscvsim.RtlCoverage.tag(signal, Bin(...))` attaches a native Spinal tag.
+A bin declares its ID, kind, domain, values, Scala source, and type name.
+Kinds are `event`, `occupancy`, `state`, `transition`, and `arbitration`.
+Domains are `committed`, `speculative`, and `structural`. A transition also
+declares its `from` values. Multiple tags can describe one signal.
+
+After emission, call `RtlCoverage.plan(report, designIdentity, clock, reset)`.
+Write it with `RtlCoverage.write(plan, file)`. The result is `rvw.rtl-plan/1`.
+The exporter prefixes IDs with exact instance paths. The sampler binds them to
+the complete plan hash. Use a stable design revision or RTL hash as the design
+identity. Tagged values use exact JSON integers with at most 52 signal bits.
+Duplicate IDs, conflicting metadata and pruned signals fail export.
+
+The exporter records annotations. It does not collect simulator samples.
+An adapter must sample every declared signal before each rising edge and write
+`rvw.rtl-samples/1`. See the coverage README. Unobserved bins do not become
+unreachable. Native code coverage builds use `--coverage-per-instance` with Verilator 5.052
+or newer. Older or unknown tools keep collapsed coverage.
+
+The make wrapper checks the generated compiler metadata before it enables the
+per-instance writer. It leaves shared-counter models under the native collapse
+rule. Forcing a writer cannot recover instance observations from shared counters.

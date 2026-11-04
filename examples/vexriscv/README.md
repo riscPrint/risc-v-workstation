@@ -136,3 +136,18 @@ certify VexRiscv ISA compliance or change the adapter configuration.
 bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
 matching HGLDD. It also measures Scala attribution of native toggle points.
 This interface exercise is separate from ISA regression coverage.
+
+### Tagged fetch coverage example
+
+From `rvw/`, run the following command with `RVW_HOME` and `VEXRISCV` set:
+
+```sh
+../../../scripts/with-lock.sh vex nice -n 10 sbt 'runMain rvwvex.CoverageExample /tmp/vex-tagged /tmp/vex-plan.json'
+```
+
+`CoverageExample` adds a tagged fetch-accept signal without changing VexRiscv
+sources. It emits an exact-instance `rvw.rtl-plan/1`. Its event domain is
+speculative. Fetch acceptance does not establish instruction retirement.
+The example binds the design identity to the emitted RTL SHA-256.
+Sample the declared signals before each rising edge. Run `rvw cov rtl` on the
+plan and those samples. The exporter does not collect samples by itself.
