@@ -195,3 +195,137 @@ def test_native_checker_detects_a_suppressed_load(tmp_path, monkeypatch):
     monkeypatch.setattr(mmu, 'assembly', lambda row: original(row).replace('ld a0, 0(t3)', 'nop'))
     build(description, tmp_path/'build', gcc)
     assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+@pytest.mark.parametrize('control,instruction', [('tvm','satp-read'), ('tvm','satp-write'),
+    ('tvm','sfence'), ('tw','wfi'), ('tsr','sret')])
+def test_control_fault_campaign(control, instruction):
+    text = assembly(dict(id='control', control=control, instruction=instruction,
+                         enabled=True, privilege='S', bins=['control']))
+    assert 'mret' in text and 'csrr t0, mepc' in text
+    assert 'li t1, 2' in text and 'la t1, access_site' in text
+
+
+def test_wfi_clear_requires_a_wakeup_schedule():
+    with pytest.raises(ValueError, match='interrupt schedule'):
+        validate(dict(id='control', control='tw', instruction='wfi', enabled=False,
+                      privilege='S', bins=['control']))
+
+
+@pytest.mark.parametrize('changes', [dict(offset=-1), dict(offset=4096), dict(value=-1),
+    dict(unfenced=True), dict(switch_asid=True), dict(walk_deny=1)])
+def test_corner_case_validation(changes):
+    s = scenario(); s.update(changes)
+    with pytest.raises(ValueError):
+        validate(s)
+
+
+def test_native_checker_rejects_suppressed_sret(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    s = dict(id='sret', control='tsr', instruction='sret', enabled=False, privilege='S', bins=['sret'])
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[s])))
+    original = mmu.assembly
+    monkeypatch.setattr(mmu, 'assembly', lambda row: original(row).replace('\n sret\n', '\n nop\n'))
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_report_needs_bound_check_and_unique_c1(tmp_path):
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'elf')
+    manifest = tmp_path/'manifest.json'
+    manifest.write_text(json.dumps({'scenarios': [dict(scenario(), elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir()
+    c1 = run/'result.json'
+    c1.write_text(json.dumps(dict(schema='rvw.run/1', status='pass', elf_sha256=mmu.digest(elf))))
+    result = mmu.report(tmp_path, run)
+    assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
+    checked = tmp_path/'checked.json'
+    checked.write_text(json.dumps(dict(schema='rvw.mmu-check/1', manifest_sha256=mmu.digest(manifest),
+        scenarios=[dict(id='load', elf_sha256=mmu.digest(elf), c1_sha256=mmu.digest(c1), status='pass')])))
+    assert mmu.report(tmp_path, run, checked)['counts']['pass'] == 1
+    assert mmu.report(tmp_path, run, checked)['scenarios'][0]['observations']['status'] == 'inconclusive'
+    c1.write_text(c1.read_text()+'\n')
+    assert mmu.report(tmp_path, run, checked)['counts']['pass'] == 0
+    manifest.write_text(manifest.read_text()+'\n')
+    with pytest.raises(ValueError, match='coverage needs'):
+        mmu.report(tmp_path, run, checked)
+
+
+def test_report_keeps_observations_separate_from_architectural_bins(tmp_path):
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'elf')
+    (tmp_path/'manifest.json').write_text(json.dumps({'scenarios': [dict(scenario(), elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir()
+    observations = run/'observed.jsonl'
+    observations.write_text('\n'.join(map(json.dumps, [
+        dict(schema='rvw.mmu-observations/1', elf_sha256=mmu.digest(elf)),
+        dict(kind='walk_request', cycle=1, address='0x80010008', command=0),
+        dict(kind='bus_a', cycle=2, address='0x2000000', opcode=4, size_log2=3)])))
+    (run/'result.json').write_text(json.dumps(dict(schema='rvw.run/1', status='pass',
+        elf_sha256=mmu.digest(elf), details=dict(mmu_observations=observations.name))))
+    result = mmu.report(tmp_path, run)
+    assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
+    observed = result['scenarios'][0]['observations']
+    assert observed['status'] == 'recorded'
+    assert observed['counts'] == dict(walk_request=1, walk_response=0, bus_a=1)
+    assert observed['sha256'] == mmu.digest(observations)
+    observations.write_text(json.dumps(dict(schema='rvw.mmu-observations/1', elf_sha256='wrong')))
+    with pytest.raises(ValueError, match='header'):
+        mmu.report(tmp_path, run)
+
+
+def test_unfenced_oracle_divergence_cannot_earn_a_pass(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'ELF')
+    s = scenario(remap=True, unfenced=True)
+    (tmp_path/'manifest.json').write_text(json.dumps({'scenarios': [dict(s, elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir(); (run/'rvfi.jsonl').write_text('fixture')
+    (run/'result.json').write_text(json.dumps(dict(schema='rvw.run/1', status='pass',
+        elf_sha256=mmu.digest(elf), artifacts={'rvfi_trace': 'rvfi.jsonl'})))
+    monkeypatch.setattr(mmu, 'run_group', lambda *a, **k: SimpleNamespace(
+        stdout=json.dumps({'status': 'mismatch'}), returncode=1, timed_out=False))
+    result = mmu.check(tmp_path, run, tmp_path/'platform.json', 'sail', 1)
+    assert result['status'] == 'inconclusive'
+    assert result['scenarios'][0]['comparison']['status'] == 'mismatch'
+    assert result['scenarios'][0]['c1_status'] == 'pass'
+
+
+def test_clint_msip_uses_declared_register_width():
+    row = next(s for s in load(DESCRIPTION) if s['id'] == 'clint-msip-read')
+    soc = json.loads((DESCRIPTION.parents[1] / 'soc.json').read_text())
+    clint = next(r for r in soc['regions'] if r['name'] == 'clint')
+    msip = next(r for r in clint['registers'] if r['name'] == 'msip')
+    assert row['register_width'] == msip['width'] == 32
+    assert 'access_site:\n lw a0, 0(t3)' in assembly(row)
+
+
+@pytest.mark.parametrize('access', ['load', 'store'])
+def test_generation_refuses_access_wider_than_register(access):
+    row = scenario(access_width=8, register_width=32)
+    row['access'] = access
+    with pytest.raises(ValueError, match='register width'):
+        assembly(row)
+
+
+@pytest.mark.parametrize('width,load_op,store_op', [(1, 'lb', 'sb'), (2, 'lh', 'sh'), (4, 'lw', 'sw'), (8, 'ld', 'sd')])
+def test_access_width_selects_load_store_and_readback(width, load_op, store_op):
+    row = scenario(access_width=width, register_width=width * 8)
+    assert f'access_site:\n {load_op} a0, 0(t3)' in assembly(row)
+    row['access'] = 'store'
+    text = assembly(row)
+    assert f'access_site:\n {store_op} a0, 0(t3)' in text
+    assert f'{load_op} a0, 0(t0)' in text
+
+
+@pytest.mark.parametrize('changes', [dict(access_width=True), dict(access_width=3),
+    dict(register_width=True), dict(register_width=4), dict(register_width=32),
+    dict(access_width=4, remap=True)])
+def test_invalid_access_width(changes):
+    with pytest.raises(ValueError):
+        assembly(scenario(**changes))

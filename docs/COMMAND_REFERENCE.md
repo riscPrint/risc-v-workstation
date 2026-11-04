@@ -540,7 +540,8 @@ usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
 ### `rvw regress mmu`
 
 ```text
-usage: rvw regress mmu [-h] [--project PROJECT] {build,reference,check} ...
+usage: rvw regress mmu [-h] [--project PROJECT] {build,reference,check,report}
+    ...
 ```
 
 ### `rvw regress mmu build`
@@ -563,6 +564,13 @@ usage: rvw regress mmu reference [-h] [--spike SPIKE] [--timeout TIMEOUT]
 usage: rvw regress mmu check [-h] --results RESULTS --platform PLATFORM
     [--model {spike,sail}] [--timeout TIMEOUT] [--sail SAIL] [--json]
     [--project PROJECT] directory
+```
+
+### `rvw regress mmu report`
+
+```text
+usage: rvw regress mmu report [-h] --results RESULTS [--checked CHECKED]
+    [--json] [--project PROJECT] directory
 ```
 
 ### `rvw regress run`

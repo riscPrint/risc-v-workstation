@@ -259,6 +259,232 @@
       ],
       "va": "0x80200000",
       "satp_mode": "bare"
+    },
+    {
+      "id": "tvm-satp-read-s-set",
+      "control": "tvm",
+      "enabled": true,
+      "instruction": "satp-read",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-satp-read-s-set"
+      ]
+    },
+    {
+      "id": "tvm-satp-read-s-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "satp-read",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-satp-read-s-clear"
+      ]
+    },
+    {
+      "id": "tvm-satp-read-u-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "satp-read",
+      "privilege": "U",
+      "bins": [
+        "priv.tvm-satp-read-u-clear"
+      ]
+    },
+    {
+      "id": "tvm-satp-write-s-set",
+      "control": "tvm",
+      "enabled": true,
+      "instruction": "satp-write",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-satp-write-s-set"
+      ]
+    },
+    {
+      "id": "tvm-satp-write-s-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "satp-write",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-satp-write-s-clear"
+      ]
+    },
+    {
+      "id": "tvm-satp-write-u-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "satp-write",
+      "privilege": "U",
+      "bins": [
+        "priv.tvm-satp-write-u-clear"
+      ]
+    },
+    {
+      "id": "tvm-sfence-s-set",
+      "control": "tvm",
+      "enabled": true,
+      "instruction": "sfence",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-sfence-s-set"
+      ]
+    },
+    {
+      "id": "tvm-sfence-s-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "sfence",
+      "privilege": "S",
+      "bins": [
+        "priv.tvm-sfence-s-clear"
+      ]
+    },
+    {
+      "id": "tvm-sfence-u-clear",
+      "control": "tvm",
+      "enabled": false,
+      "instruction": "sfence",
+      "privilege": "U",
+      "bins": [
+        "priv.tvm-sfence-u-clear"
+      ]
+    },
+    {
+      "id": "tw-wfi-s-set",
+      "control": "tw",
+      "enabled": true,
+      "instruction": "wfi",
+      "privilege": "S",
+      "bins": [
+        "priv.tw-wfi-s-set"
+      ]
+    },
+    {
+      "id": "tsr-sret-s-set",
+      "control": "tsr",
+      "enabled": true,
+      "instruction": "sret",
+      "privilege": "S",
+      "bins": [
+        "priv.tsr-sret-s-set"
+      ]
+    },
+    {
+      "id": "tsr-sret-s-clear",
+      "control": "tsr",
+      "enabled": false,
+      "instruction": "sret",
+      "privilege": "S",
+      "bins": [
+        "priv.tsr-sret-s-clear"
+      ]
+    },
+    {
+      "id": "tsr-sret-u-clear",
+      "control": "tsr",
+      "enabled": false,
+      "instruction": "sret",
+      "privilege": "U",
+      "bins": [
+        "priv.tsr-sret-u-clear"
+      ]
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "id": "unfenced-then-fenced",
+      "bins": [
+        "mmu.unfenced-then-fenced"
+      ],
+      "remap": true,
+      "unfenced": true
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "id": "asid-switch-reuse",
+      "bins": [
+        "mmu.asid-switch-reuse"
+      ],
+      "remap": true,
+      "switch_asid": true,
+      "asid": 7
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "id": "asid-zero-register",
+      "bins": [
+        "mmu.asid-zero-register"
+      ],
+      "remap": true,
+      "asid": 0,
+      "fence": "va-asid"
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "access-fault",
+      "id": "walk-read-denied",
+      "bins": [
+        "mmu.walk-read-denied"
+      ],
+      "walk_deny": true
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "access-fault",
+      "id": "walk-store-denied",
+      "bins": [
+        "mmu.walk-store-denied"
+      ],
+      "walk_deny": true
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "misaligned",
+      "id": "misaligned-load",
+      "bins": [
+        "mmu.misaligned-load"
+      ],
+      "offset": 1
+    },
+    {
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "misaligned",
+      "id": "misaligned-store",
+      "bins": [
+        "mmu.misaligned-store"
+      ],
+      "offset": 1
+    },
+    {
+      "id": "clint-msip-read",
+      "access_width": 4,
+      "register_width": 32,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pa": "0x02000000",
+      "value": 0,
+      "bins": [
+        "pma.clint-read"
+      ]
     }
   ]
 }
