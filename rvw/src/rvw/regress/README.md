@@ -57,7 +57,9 @@ DIR/<suite>/<config>/tests/<id>/seed-<n>/  instead, when a test runs with severa
 DIR/<suite>/<config>/tests/<id>/.rvw-job.json   the job's identity, for resume
 ```
 
-C3 test entries carry the contract's fields plus `message`, `fail_code` (failures), `elf`,
+C3 test entries keep the complete failure `message` for signature comparison.
+Monitor failures also retain `details.rvfi_errcode` when C1 supplies it.
+They carry the contract's fields plus `message`, `fail_code` (failures), `elf`,
 `cached` (served from the cache), `synthesized` (rvw wrote the result because the adapter did not),
 `wall_clock_timeout`, `inconclusive` (the reason, for a failure the adapter could not trust, any status;
 C1) and `multi_seed`. `results.json` carries `seeds` (mode and base), `filter`

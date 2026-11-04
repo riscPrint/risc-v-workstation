@@ -1180,9 +1180,13 @@ os.execvpe(command[0], command, os.environ)
             extra["adapter_identity"] = j.params["identity"]
         if r.status != "pass":
             if r.message:
-                extra["message"] = r.message[:MESSAGE_MAX]
+                # Compare rebuilds failure identity from this evidence. Do not truncate it.
+                extra["message"] = r.message
+                extra["message_complete"] = True
             if r.fail_code is not None:
                 extra["fail_code"] = r.fail_code
+        if r.status == "rvfi_error" and "rvfi_errcode" in r.details:
+            extra["details"] = {"rvfi_errcode": r.details["rvfi_errcode"]}
         if r.extra.get("synthesized"):
             extra["synthesized"] = True
         if r.extra.get("wall_clock_timeout"):

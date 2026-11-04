@@ -201,6 +201,11 @@ Optional `"inconclusive": "<reason>"` marks a result the adapter cannot vouch fo
 it could not attribute to this run (RiscvSim: an `assert` printed while other simulations ran,
 pending or failing its serial rerun; RiscvSim's `details.serial_rerun.attributed: false` and a
 `details.concurrent` `assert`/`rvfi_error` without `serial_rerun` are read the same way).
+Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
+A missing or different hash makes the attempt inconclusive.
+Debug reruns check each explicitly requested C1 seed, config, max_cycles and mem_latency
+against the returned result. A missing or different value marks the attempt inconclusive.
+It cannot reproduce or rule out the requested failure.
 A C1 result is evidence about the core only when `rvw.results.inconclusive_cause` finds nothing:
 not `inconclusive`, not status `error` (the harness could not run the test), not `synthesized`
 (rvw wrote it), not a wall-clock timeout. Every reader uses that one rule (regress resume, cache
@@ -435,7 +440,12 @@ used to tell a known failure from a new one (`rvw.results.failure_signature`): e
 Assertions use the HDL file and line when there is no Scala location, for example `assert:core.sv:4`.
 Without either location, `assert:sha256:<digest>` binds the full, unnormalized message.
 Uncoded RVFI errors use `rvfi_error:sha256:<digest>` over the full message.
+Runner C3 entries retain complete failure messages with `message_complete: true`.
+Display limits must not truncate this evidence. Legacy 400-character messages without
+this marker may be cut previews. Compare treats these entries as inconclusive and requires a rerun.
 Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
+C3 retains C1 `details.rvfi_errcode` when present. Compare uses this code before parsing
+the message, as C1 signature generation does.
 Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
 override saved fail signatures. An unchanged failure must also have the same status.
 An assertion without a saved message or a complete location is inconclusive and needs a rerun.
