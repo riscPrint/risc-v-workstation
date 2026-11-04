@@ -1,0 +1,16 @@
+{
+ "schema": "rvw.formal-apps/1", "top": "Contracts", "clock": "clk", "reset": "reset",
+ "verilog": ["Contracts.sv"],
+ "ports": {"clk":{"direction":"input","width":1}, "reset":{"direction":"input","width":1},
+ "source":{"direction":"input","width":8}, "write_enable":{"direction":"input","width":1},
+ "write_data":{"direction":"input","width":8}, "pending":{"direction":"input","width":1},
+ "destination":{"direction":"output","width":8}, "state":{"direction":"output","width":8},
+ "progress":{"direction":"output","width":1}},
+ "properties": [
+ {"id":"wire_connection","kind":"connectivity","source":"source","destination":"destination","requirement_ids":["wire_identity"]},
+ {"id":"register_rw","kind":"csr","state":"state","write_enable":"write_enable","write_data":"write_data","reset_value":18,"requirement_ids":["register_spec"]},
+ {"id":"deadlock_response","kind":"deadlock","pending":"pending","progress":"progress","bound":3},
+ {"id":"livelock_response","kind":"livelock","pending":"pending","progress":"progress","bound":3},
+ {"id":"unreachable_mismatch","kind":"unr","target":"destination != source"}
+ ]
+}

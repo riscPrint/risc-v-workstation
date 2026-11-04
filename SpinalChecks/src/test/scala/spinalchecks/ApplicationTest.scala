@@ -23,11 +23,11 @@ trait ApplicationTest { self: AnyFunSuite =>
       for (i <- 0 until 32) {
         d.clockDomain.waitFallingEdge()
         d.corrupt #= (broken && i >= 20)
-        d.read #= (i % 2 == 0); d.write #= (i % 3 == 0)
+        d.read #= (i % 3 != 1); d.write #= (i % 3 == 0)
         d.inhibit #= (i % 4 == 0); d.permitted #= (i % 5 != 0)
         d.data #= (i % 16); d.strobes #= (if (i % 2 == 0) 15 else 3)
         d.hwSet #= (if (i % 7 == 0) 8 else 0); d.hwClear #= (if (i % 6 == 0) 8 else 0)
-        d.privilege #= (if (i % 4 == 0) 0 else 3)
+        d.privilege #= (i % 4)
         d.clockDomain.waitSampling()
       }
       d.clockDomain.waitFallingEdge()

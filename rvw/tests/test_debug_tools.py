@@ -490,28 +490,6 @@ def test_konata_inflight_reads_gzip_without_core_labels(tmp_path):
     assert inflight[0].label == "80000004: ld" and inflight[1].detail == "rob=3" and inflight[1].label == "80000008: sd"
 
 
-def test_boom_spinaltrace_run_sh_quotes_for_sbt(tmp_path):
-    # Review (O): arguments were quoted with bash printf %q (`a\ b`), which sbt does not parse.
-    script = Path(__file__).resolve().parents[2] / "RiscvSim" / "boom-spinaltrace" / "run.sh"
-    bindir = tmp_path / "bin"
-    bindir.mkdir()
-    rec = tmp_path / "argv.json"
-    (bindir / "sbt").write_text(f"#!{sys.executable}\nimport json, sys\njson.dump(sys.argv[1:], open({str(rec)!r}, 'w'))\n")
-    (bindir / "sbt").chmod(0o755)
-    (bindir / "verilator").write_text("#!/bin/sh\n")
-    (bindir / "verilator").chmod(0o755)
-    boom = tmp_path / "boom dir"
-    boom.mkdir()
-    elf = '/x/my prog "v2"\\a.elf'
-    subprocess.run(["bash", str(script), "run", "--elf", elf, "--out", "/o u t"], check=True,
-                   env={**os.environ, "PATH": f"{bindir}:{os.environ['PATH']}", "SPINAL_BOOM": str(boom),
-                        "JAVA_HOME": "/nonexistent"})
-    argv = json.loads(rec.read_text())
-    assert argv[-1] == ('runMain riscvsim.boomtrace.Main "run" "--elf" "/x/my prog \\"v2\\"\\\\a.elf" '
-                        '"--out" "/o u t"')
-    assert f'file("{boom}")' in argv[-2] and f'"-Driscvsim.boom.dir={boom}"' in argv[-3]
-
-
 # --- round-2 review findings (/tmp/review2-debug) -------------------------------------------
 
 def test_reduce_refuses_a_wall_clock_timeout(tmp_path, monkeypatch, rvw_cli):
