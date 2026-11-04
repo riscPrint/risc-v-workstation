@@ -46,7 +46,9 @@ rvw lint --settings lint.json --json
 Paths resolve from the settings file. Native diagnostic endpoints use the exact
 `file:line:column` from the result. Structural endpoints use the destination
 SpinalDB path. Each finding has an `id` derived from its diagnostic data, backend, top and
-configuration. Copy this value into the waiver as `finding_id`. A source or
+configuration. Structural findings also bind the source and destination clock/reset
+domain records and signal widths. A domain change invalidates an old waiver.
+Copy this value into the waiver as `finding_id`. A source or
 message change gives a different ID, even at the same endpoint. Waivers need
 the exact ID, rule, endpoint and configuration. Old waivers without an ID are
 input errors. They do

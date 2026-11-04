@@ -258,3 +258,20 @@ def test_verible_syntax_error_is_not_hidden_by_a_style_diagnostic(monkeypatch):
     assert result['status'] == 'inconclusive'
     assert result['raw_output'] == output
     assert len(result['findings']) == 1
+
+
+def test_waiver_expires_when_clock_domain_changes(tmp_path):
+    db = fixture_db(tmp_path)
+    path = settings(tmp_path, db)
+    original = report(path)['backends']['structural']['findings'][0]
+    cfg = json.loads(path.read_text())
+    cfg['waivers'] = [dict(rule=original['rule'], endpoint=original['endpoint'],
+                           finding_id=original['id'], config='reference',
+                           reason='Reviewed crossing between a and b only.')]
+    path.write_text(json.dumps(cfg))
+    assert report(path)['waivers'][0]['matches'] == 1
+    with sqlite3.connect(db) as c:
+        c.execute("UPDATE clock_domains SET clock='c', clock_key='c:Bool' WHERE id=2")
+    result = report(path)
+    assert result['waivers'][0]['matches'] == 0
+    assert result['backends']['structural']['findings'][0]['disposition'] == 'active'
