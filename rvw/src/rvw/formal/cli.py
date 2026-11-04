@@ -75,6 +75,9 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from .security.cli import register as security_register
+    security_register(s)
+
     from . import apps, bench
     app = s.add_parser("apps", help="table-driven connectivity, CSR, progress and UNR checks")
     app.add_argument("manifest")

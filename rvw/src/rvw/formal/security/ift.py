@@ -10,6 +10,10 @@ def instrument(design, top):
     Clock is public. State starts unknown; the caller must apply a public reset.
     """
     mod = design['modules'][top]
+    if mod.get('memories') or mod.get('attributes', {}).get('blackbox'):
+        raise ValueError('memories and blackboxes are unmodeled')
+    if any('init' in d.get('attributes', {}) for d in mod['netnames'].values()):
+        raise ValueError('initial state attributes are unmodeled; use public reset')
     ports = mod['ports']
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', top):
         raise ValueError('simple top identifier required')

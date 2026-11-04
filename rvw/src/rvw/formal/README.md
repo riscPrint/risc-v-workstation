@@ -821,3 +821,9 @@ both be one, and that forwarding `found` agrees with the prior cycle's nonzero m
 The VexRiscv FIFO needs the sampled-event model because its reset is asynchronous.
 These are small exported leaf invariants. They are not whole-core verification,
 full CSR or connectivity checks on these processors, or a performance benchmark.
+
+## Hardware leakage checks
+
+`rvw formal security` runs bounded Spike contract comparisons and emits mapped-gate
+IFT instrumentation. See [security/README.md](security/README.md) for the hardware
+threat model, adapter contract, sampled ADD timing scope and explicit limits.
