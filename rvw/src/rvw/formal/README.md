@@ -757,7 +757,7 @@ with `rvw cov report DATABASE --exclusions OUT/exclusions.json`. That flow check
 sanity, point reachability and cone activation before export. App UNR results
 cannot replace this evidence. `proof-cones.json` joins stable property and
 requirement IDs, lists structural fan-in, outside-cone logic and untested
-assumptions. See [coverage](../cov/README.md#structural-proof-cones).
+assumptions. See [coverage](../cov/README.md).
 Solver proof cores remain `unavailable`. A structural cone is not a proof core
 or a functional coverage percentage.
 

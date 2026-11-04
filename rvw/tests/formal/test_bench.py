@@ -60,3 +60,37 @@ def test_licensed_adapter_bound_to_request(tmp_path):
     row = licensed_adapter({'id':'licensed', 'command':str(script)}, [],
                            {'id':'case', 'mode':'bmc'}, directory, 5)
     assert row['status'] == 'inconclusive'
+
+
+def test_missing_licensed_response_is_inconclusive(tmp_path):
+    import sys
+    from rvw.formal.bench import licensed_adapter
+    script = tmp_path / 'adapter'
+    script.write_text('#!' + sys.executable + '\nimport sys\n'
+                      'if sys.argv[1] == "--version": print("test 1")\n')
+    script.chmod(0o755)
+    row = licensed_adapter({'id':'licensed', 'command':str(script)}, [],
+                           {'id':'case', 'mode':'bmc'}, tmp_path, 5)
+    assert row['status'] == 'inconclusive'
+
+
+def test_benchmark_records_disagreement_and_unknown(tmp_path, monkeypatch):
+    import json
+    from argparse import Namespace
+    from hashlib import sha256
+    from rvw.formal import bench
+    rtl = b'module dut(input clk,reset); endmodule'
+    (tmp_path / 'dut.sv').write_bytes(rtl)
+    manifest = tmp_path / 'suite.json'
+    manifest.write_text(json.dumps({'schema':'rvw.formal-bench/1', 'baseline':'a', 'cases':[
+        {'id':'one', 'top':'dut','clock':'clk','reset':'reset','depth':5,'mode':'bmc',
+         'sources':[{'path':'dut.sv','sha256':sha256(rtl).hexdigest()}]}]}))
+    monkeypatch.setattr(bench, 'ENGINES', {'a':'a', 'b':'b', 'c':'c'})
+    monkeypatch.setattr(bench.shutil, 'which', lambda s: '/bin/'+s)
+    monkeypatch.setattr(bench, 'measure', lambda sources,case,engine,target,timeout:
+                        {'status':{'a':'pass','b':'fail','c':'timeout'}[engine], 'wall_s':1})
+    out = tmp_path / 'out'
+    assert bench.run(Namespace(manifest=manifest, out=out, timeout=5,json=False)) == 1
+    result = json.loads((out / 'result.json').read_text())
+    assert result['agreement'] == [{'case':'one', 'status':'disagree'}]
+    assert result['comparisons']['b']['status'] == 'inconclusive'

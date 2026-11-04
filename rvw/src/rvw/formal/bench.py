@@ -99,7 +99,12 @@ def licensed_adapter(adapter, sources, case, directory, timeout):
     (directory / 'adapter.log').write_text((process.stdout or '') + (process.stderr or ''))
     if process.returncode or process.timed_out or not response_path.exists():
         return row
-    response = json.loads(response_path.read_text())
+    try:
+        response = json.loads(response_path.read_text())
+    except (ValueError, OSError):
+        return row
+    if not isinstance(response, dict):
+        return row
     if (response.get('schema') != 'rvw.formal-adapter-response/1'
             or response.get('request_sha256') != digest
             or response.get('status') not in ('pass', 'fail', 'inconclusive')
@@ -186,7 +191,11 @@ def run(args):
         for adapter in adapters:
             adapter_dir = directory / adapter['id']
             adapter_dir.mkdir()
-            rows.append(licensed_adapter(adapter, sources, case, adapter_dir, args.timeout))
+            try:
+                rows.append(licensed_adapter(adapter, sources, case, adapter_dir, args.timeout))
+            except (ValueError, OSError) as exc:
+                rows.append({'case': case['id'], 'engine': adapter['id'], 'status': 'inconclusive',
+                             'mode': case['mode'], 'wall_s': None, 'reason': str(exc)})
     agreement = []
     for case, _ in cases:
         samples = [r for r in rows if r['case'] == case['id'] and r['status'] not in ('not_installed', 'unsupported_mode')]
