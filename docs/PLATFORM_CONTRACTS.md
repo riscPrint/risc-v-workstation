@@ -1998,6 +1998,31 @@ The result has `schema`, `protocol` and `status`. Mismatch adds `index` and
 print one JSON document. This CLI mode has no MCP endpoint yet.
 
 
+### Observed prediction outcome extension
+
+Kanata comments can contain one measured outcome per live instruction, predictor
+and kind. Emit it before terminal R. Fields are tab separated:
+
+```text
+#rvw  1  prediction  ID  PREDICTOR  KIND  PREDICTED  ACTUAL  RECOVERY  WORK  WARMUP  ALIAS  CONTEXT
+```
+
+`KIND` is `direction`, `target` or `return`. Direction values are `taken` or
+`not_taken`. Target and return values are nonnegative decimal or `0x` addresses.
+`RECOVERY` counts cycles from resolution to resumed correct-path fetch.
+`WORK` counts admitted wrong-path instructions attributed to this resolution.
+Both are nonnegative integers, or `?` for unknown. The producer must observe
+these quantities. R type 1 and stage residence cannot supply them.
+`WARMUP` and `ALIAS` are observed `true`, `false` or `?`. `CONTEXT` is a project
+context token, or `?`. Tokens cannot contain tabs or newlines. A predictor name
+is required. Duplicate outcomes, ended IDs and malformed known records fail.
+
+Reports separate predictor, kind, warmup, alias and context groups. Unknown
+costs stay unknown. Shared recovery costs can occur in multiple kinds. Do not
+sum these groups as global lost cycles. Context differences and alias flags
+do not establish causal effects. Project probes own the event bindings; the
+generic reader does not simulate a predictor or infer missing observations.
+
 ### Property activation and requirement links
 
 A `cov prove` point can declare an `activation` SystemVerilog expression. The
@@ -2228,6 +2253,63 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+MMU observation inventories can add `walk_check` with `status` of `consistent`,
+`mismatch` or `inconclusive`. This bounded check compares immutable PTE read
+addresses and values with scenario data and observes the physical target range.
+It does not change architectural bins or C1-C4 verdicts. See the regress README.
+
+Optional MMU `device_state` events retain sampled harness register state and an
+IRQ schedule override flag. `pma_check` uses declared PMA data plus these events
+and accepted bus requests. Its `consistent` result has the same bounded scope
+as `walk_check`; neither changes architectural coverage or gate verdicts.
+
+### Architecture Pareto intervals
+
+`rvw.arch-pareto-plan/1` has `points` with unique `id` and `report` paths.
+Optional `objectives` defaults to `["cycles"]`. Optional point `costs` paths
+select user input files. Paths are relative to the plan. Reports are checked
+`rvw.arch-run/1` gem5 runs with identical ELF hashes and ROI instruction counts.
+Without costs, cycles use summed ROI cycles for all three interval bounds.
+`rvw.arch-costs/1` has `report_sha256`, nonempty source/method text in `method`,
+and `cycles`. Optional `area_mm2` and `power_w` are user-supplied inputs only.
+The workstation does not estimate or validate area or power. PPA estimation
+and hardware gain claims are out of scope.
+
+Intervals are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are user declarations.
+`rvw.arch-pareto/1` records selected `objectives`, plan/report/cost hashes,
+`cost_origin` (`user-supplied` or `absent`), intervals, `eligible`,
+`evidence_class: model-only`, `nominal_frontier` and `conservative_frontier`.
+Conservative dominance compares only selected objectives. It requires all
+upper bounds no greater than the other point's lower bounds and one strict gain.
+Missing selected objectives exclude a point and make status inconclusive
+(CLI exit 3). Unselected missing inputs do not affect eligibility.
+No point is RTL-confirmed by this command.
+
+### Architecture topology channels and agents
+
+The optional `rvw.arch-core/1` `soc.memory.kind: multi` uses `interleave_bytes`
+and 2, 4 or 8 `controllers` (simple or DRAM memory objects). Channels stripe
+across RAM at a power-of-two byte size of at least 64. Optional `soc.agents`
+contains up to eight read-only linear generators. Fields are `start`, `size`,
+`block_bytes`, `period_ticks`, `duration_ticks`, `max_outstanding` and `attach`
+(`memory` or an existing cache level). Addresses and blocks must align and fit
+RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
+the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
+SoC topologies. Native model execution alone is not RTL correlation.
+
+### Native memory mappings
+
+`rvw.memory-mapping/1` has `inputs` (`stats`, `config`, `bare`, each with path
+and SHA-256) and `observations`. Each observation has `point`, `region`, `hart`,
+`workload` and `counters`. Counter keys use `rvw.memory-observations/1`; each
+value has distinct `stats` names and positive `scale`. Names must start with
+the native config object's point plus a dot. The first complete stats block
+must have simFreq=1e12, simTicks equal to the difference of the two bare ROI
+markers, and finalTick equal to the exit marker. Bare execution must pass.
+`arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
+`native_inputs` hashes. It checks names and interval identity. The project
+owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
 ## Reviewed specification obligation catalogs
 
 The optional `rvw.isa/1` `specifications` entries can bind a document and a
