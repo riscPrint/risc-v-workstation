@@ -70,3 +70,7 @@ open -a "$HOME/.local/bin/SpinalWaves.app" --args /absolute/wave.vcd \
 
 The bundle makes the viewer available to macOS application discovery.
 It does not establish interactive rendering support. Issue #83 remains open.
+
+The macOS launcher uses a temporary work directory for rewritten typed VCD
+files. Use absolute input paths. The viewer leaves this directory in the
+system temporary directory after exit.

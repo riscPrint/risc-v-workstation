@@ -17,6 +17,15 @@ def package(binary, notices, app, manifest):
     executable = contents / "MacOS/surfer-tywaves"
     shutil.copy2(binary, executable)
     executable.chmod(0o755)
+    launcher = contents / "MacOS/SpinalWaves"
+    launcher.write_text(
+        '#!/bin/sh\n'
+        'set -eu\n'
+        'binary="$(cd "$(dirname "$0")" && pwd)/surfer-tywaves"\n'
+        'cd "$(mktemp -d "${TMPDIR:-/tmp}/spinalwaves.XXXXXX")"\n'
+        'exec "$binary" "$@"\n'
+    )
+    launcher.chmod(0o755)
     for name in ("LICENSE-EUPL-1.2.txt", "vendor-lock.json", "source.tar.gz"):
         shutil.copy2(notices / name, resources / name)
     with (contents / "Info.plist").open("wb") as stream:
@@ -24,7 +33,7 @@ def package(binary, notices, app, manifest):
             "CFBundleIdentifier": "org.riscprint.spinalwaves",
             "CFBundleName": "SpinalWaves",
             "CFBundleDisplayName": "SpinalWaves",
-            "CFBundleExecutable": "surfer-tywaves",
+            "CFBundleExecutable": "SpinalWaves",
             "CFBundlePackageType": "APPL",
             "CFBundleInfoDictionaryVersion": "6.0",
             "CFBundleShortVersionString": version.split("-")[0],

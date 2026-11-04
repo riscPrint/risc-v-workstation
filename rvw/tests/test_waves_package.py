@@ -90,7 +90,8 @@ def test_macos_app(tmp_path, monkeypatch):
     assert info['CFBundleVersion'] == '0.3.0'
     assert info['SpinalWavesForkVersion'] == '0.3.0-dev'
     executable = contents / 'MacOS' / info['CFBundleExecutable']
-    assert executable.read_bytes() == binary.read_bytes()
+    assert b'mktemp -d' in executable.read_bytes()
+    assert (contents / 'MacOS/surfer-tywaves').read_bytes() == binary.read_bytes()
     assert executable.stat().st_mode & 0o111
     assert not executable.is_symlink()
     for notice in notices.iterdir():
