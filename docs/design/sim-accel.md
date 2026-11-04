@@ -147,5 +147,10 @@ A missing local tool or missing Spinal bridge feature is not a Verilator/CIRCT b
 - Phase 3: native circt-verilog to Arcilator adapter and complete C2 comparison.
 - Phase 4: live snapshot bridge, full harness envelope and restore validation.
 
-Follow-up issue links are added when the draft PR is open. Measurement output
-belongs in the PR or issue comments. It must not be committed as a run ledger.
+Follow-up tasks:
+- [#344: captured PGO and hierarchy](https://github.com/riscPrint/risc-v-workstation/issues/344).
+- [#345: native Arcilator](https://github.com/riscPrint/risc-v-workstation/issues/345).
+- [#346: live native and harness snapshots](https://github.com/riscPrint/risc-v-workstation/issues/346).
+
+Measurement output belongs in the PR or issue comments. It must not be
+committed as a run ledger.

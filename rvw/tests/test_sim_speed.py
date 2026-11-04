@@ -218,3 +218,25 @@ def test_absolute_rate_confidence_intervals(tmp_path):
     for side, rate in [('baseline', 500), ('candidate', 1000)]:
         assert report['sim_khz'][side]['geomean'] == pytest.approx(rate)
         assert report['sim_khz'][side]['ci95'] == pytest.approx([rate, rate])
+
+
+def test_raw_trace_must_match_across_pairs_too(tmp_path):
+    data = pairs(tmp_path)
+    for path in data[-1]:
+        trace = path.parent / 'rvfi.jsonl'
+        trace.write_text(trace.read_text().replace(': ', ':'))
+    report = compare(data, resamples=1000)
+    assert report['trace_bit_identical'] is False
+    assert report['retain'] is False
+
+
+def test_absolute_rate_intervals_use_variable_samples(tmp_path):
+    data = [(result(tmp_path / f'a{i}', seconds),
+             result(tmp_path / f'b{i}', seconds / 2, 'd'))
+            for i, seconds in enumerate([2, 4, 8, 4, 2])]
+    report = compare(data, resamples=1000)
+    baseline, candidate = report['sim_khz']['baseline'], report['sim_khz']['candidate']
+    assert baseline['ci95'][0] < baseline['geomean'] < baseline['ci95'][1]
+    assert candidate['geomean'] == pytest.approx(2 * baseline['geomean'])
+    assert candidate['ci95'] == pytest.approx([2 * n for n in baseline['ci95']])
+    assert report['speedup_ci95'] == [2, 2]
