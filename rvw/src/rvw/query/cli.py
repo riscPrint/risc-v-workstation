@@ -29,6 +29,15 @@ def register(subparsers) -> None:
     build.add_argument("--json", action="store_true")
     build.set_defaults(func=_build)
 
+    hdl = sub.add_parser("build-hdl", help="build a navigation database from Verilog or the Yosys SV subset")
+    hdl.add_argument("sources", nargs="+")
+    hdl.add_argument("--top", required=True)
+    hdl.add_argument("--out", required=True)
+    hdl.add_argument("--yosys", default="yosys")
+    hdl.add_argument("--timeout", type=int, default=120)
+    hdl.add_argument("--json", action="store_true")
+    hdl.set_defaults(func=lambda a: _run(a, lambda d, a: _build_hdl(a)))
+
     c = cmd("info", "what the database holds", lambda d, a: ops.info(d))
 
     c = cmd("where", "Scala source, Verilog name and waveform path of a signal", lambda d, a: ops.where(d, a.signal))
@@ -333,3 +342,8 @@ def _build(args):
         return 2
     print(json.dumps(result, default=str) if args.json else render("info", result))
     return 0
+
+
+def _build_hdl(args):
+    from .hdl import build_hdl
+    return build_hdl(args.sources, args.top, args.out, yosys=args.yosys, timeout=args.timeout)
