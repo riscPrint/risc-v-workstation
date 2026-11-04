@@ -29,6 +29,20 @@
           "sha256": "8b7644325b5dc84c96c1276e15d6133ce5ad884c7899b5551b3c5326cdd1181a"
         }
       ]
+    },
+    {
+      "id": "counter_fail",
+      "top": "counter_fail",
+      "clock": "clk",
+      "reset": "reset",
+      "mode": "bmc",
+      "depth": 10,
+      "sources": [
+        {
+          "path": "counter_fail.sv",
+          "sha256": "f04c5f1dcb69684dd88a149c8d193f3aea976658a6af7da1e96e2c2da62192c9"
+        }
+      ]
     }
   ]
 }

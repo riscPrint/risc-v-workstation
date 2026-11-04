@@ -768,8 +768,8 @@ The manifest uses `rvw.formal-bench/1`, with nonempty `cases` and an optional
 (`bmc` or `prove`), `depth`, and `sources` rows with `path` and `sha256`.
 Paths are relative to the manifest. All hashes must match before execution.
 Only self-contained exported RTL is supported. The committed suite has a
-handwritten HWMCC-style finite-state counter and a handwritten RV32 arithmetic
-fixture. These are small protocol fixtures. They are not HWMCC competition
+handwritten HWMCC-style finite-state counter, its seeded property fault,
+and a handwritten RV32 arithmetic fixture. These are small protocol fixtures. They are not HWMCC competition
 entries or results on a processor.
 
 The runner executes each installed supported engine separately and serially.
