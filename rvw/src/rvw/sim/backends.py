@@ -39,10 +39,28 @@ BACKENDS = {
 }
 
 
-def require(backend: str, features=()) -> Backend:
-    if not isinstance(backend, str) or backend not in BACKENDS:
-        raise ValueError(f"unsupported backend: {backend}; supported: {', '.join(BACKENDS)}")
-    profile = BACKENDS[backend]
+NATIVE_BACKENDS = {
+    "riscvsim-verilator": Backend(
+        "2-state", "Spinal compiled simulation; clock and cycle sampling",
+        "X/Z collapse; no unknown propagation guarantee",
+        ("generated Verilog", "synthesizable SystemVerilog subset"),
+        "generated immediate assertions; concurrent SVA not guaranteed",
+        ("Spinal native interface",), "version-dependent; requested separately",
+        ("two_state", "clock", "immediate_assertions")),
+}
+
+
+def require_native(backend: str, features=()) -> Backend:
+    return require(backend, features, profiles=NATIVE_BACKENDS)
+
+
+def require(backend: str, features=(), *, profiles=None) -> Backend:
+    profiles = BACKENDS if profiles is None else profiles
+    if not isinstance(features, (list, tuple)) or not all(isinstance(f, str) and f for f in features):
+        raise ValueError("required features must be a list of non-empty strings")
+    if not isinstance(backend, str) or backend not in profiles:
+        raise ValueError(f"unsupported backend: {backend}; supported: {', '.join(profiles)}")
+    profile = profiles[backend]
     missing = sorted(set(features) - set(profile.features))
     if missing:
         raise ValueError(f"{backend} cannot provide required features: {', '.join(missing)}")

@@ -43,3 +43,15 @@ handshakes when RVFI tracing is enabled. The report inventories the capture
 separately. A/D atomicity, concurrent PTE changes, cross-hart shootdowns, full
 PMA boundary/width/atomic behavior and independent device-state checks remain
 open. A PMP access-fault test does not verify PMA attributes.
+
+The added fetch cases enter real S/U privilege with Sv39 enabled. Root-switch
+cases select distinct page tables with one ASID. Non-leaf global mappings use
+all-ASID fences. The TW-clear case supplies pending delegated SSIP with global
+interrupts disabled. The software RSW cases check the whole final PTE; their
+software write is sequential, not a concurrent page-table race.
+
+Use `--pma examples/boom/mmu/pma.json` on `mmu build` to retain the focused RAM
+and MSIP declarations. This file does not describe every device. The MSIP
+store uses the legal value 1 and a 4-byte access. The report compares accepted
+transfers with independent harness MSIP state. Missing capture remains
+inconclusive. PMA boundary fault and conflicting-attribute campaigns remain open.

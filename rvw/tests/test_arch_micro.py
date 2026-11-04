@@ -6,7 +6,7 @@ import subprocess
 import pytest
 
 
-@pytest.mark.parametrize('name', ['pointer-chase', 'branch-loop', 'dependent-chain', 'independent-misses'])
+@pytest.mark.parametrize('name', ['pointer-chase', 'branch-loop', 'dependent-chain', 'independent-misses', 'sequential-bandwidth'])
 def test_micro_work_and_roi(name, tmp_path):
     cc = shutil.which('cc')
     if not cc:
