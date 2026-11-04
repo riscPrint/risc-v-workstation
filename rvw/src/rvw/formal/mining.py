@@ -1,5 +1,6 @@
 """Mine unsigned port bounds from observations; only fresh proofs certify candidates."""
 from argparse import Namespace
+import hashlib
 import contextlib
 import json
 from pathlib import Path
@@ -7,7 +8,7 @@ import sys
 import time
 import math
 
-from .contracts import harness, validate
+from .contracts import harness, validate, check_ports
 
 
 def candidates(signals, samples):
@@ -63,6 +64,7 @@ def run(args):
                           tie=None, out=str(out / name), json=False, project=None)
         with contextlib.redirect_stdout(sys.stderr):
             _flow('bmc', child)
+        check_ports(plan, json.loads((out / name / 'module_ports.json').read_text()))
         result = json.loads((out / name / 'result.json').read_text())
         rows.append({'id': name, 'status': result['status'], 'proof_kind': result['proof_kind']})
         if name != 'target' and result['status'] == 'pass' and result['proof_kind'] == 'unbounded':
@@ -70,6 +72,7 @@ def run(args):
     target = rows[-1]
     result = {'schema': 'rvw.formal-strengthen/1', 'status': target['status'],
               'candidates': mined, 'certified': proven, 'obligations': rows,
+              'plan_sha256': hashlib.sha256(raw).hexdigest(), 'input_capture': snap.capture.record(),
               'semantics': 'Unsigned observed bounds are candidates only. Certified bounds remain assertions, never assumptions.'}
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     if args.json:

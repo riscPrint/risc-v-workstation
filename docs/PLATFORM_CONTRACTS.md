@@ -1859,3 +1859,25 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## Formal capacity reports
+
+`rvw formal contracts` writes `rvw.formal-contracts/1` in a fresh output directory.
+Fields are `status`, `plan_sha256`, `obligations`, `restrictions` and `input_capture`.
+Each obligation has an `id`, `status`, and either a child `result` with `proof_kind`
+or a reason that it was not run. `conditional_proved` requires fresh unbounded
+passes for every component and the closed composition. Other outcomes give
+`inconclusive`. The command returns 0 only for `conditional_proved`. Input errors
+return 2. This report is not a C4 acceptance gate or a reusable proof certificate.
+The copied plan and child input captures bind the report to its inputs.
+
+`rvw formal strengthen` writes `rvw.formal-strengthen/1`. It records `status`,
+`candidates`, `certified`, `obligations` and `semantics`. Only fresh unbounded passes
+can add a candidate to `certified`. The final target proof supplies `status`.
+Certified candidates remain assertions in the final target. Source assumptions
+remain environment restrictions. Neither observations nor bounded passes can
+certify an invariant. Missing evidence gives an inconclusive result.
+
+BMC/prove abstraction entries extend `cut_points` with `kind` and `plan_sha256`.
+The semantics remain `unconstrained_anyseq`. No abstraction assumption is implicit.
+See the [formal capacity interface](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).

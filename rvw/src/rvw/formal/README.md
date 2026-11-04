@@ -712,3 +712,115 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+## Capacity templates and contracts
+
+`rvw formal template KIND --entries 4 --width 3 --out monitor.sv` writes a
+SystemVerilog monitor. Instantiate it next to the DUT. The monitor adds assertions.
+It adds no assumptions. `entries` and `width` come from the reference specification.
+
+| Kind | Interface and property |
+|---|---|
+| `rob`, `credit` | `count`, accepted `push` and `pop`: capacity, legal events and exact count conservation. Simultaneous events have zero net change. |
+| `freelist` | `free_bits`, `allocated`: the bit sets do not overlap. |
+| `rename` | `valid`, packed `tags`: valid entries have distinct physical tags. Use for allocation lanes or a map that requires injectivity. Aliases in a move-elimination map need another specification. |
+| `issue` | `issued`, `valid`, `ready`: at most one grant; each grant has a valid, ready entry. |
+| `lsq` | `load_fire`, `older_store`, `address_match`, `forwarded`, `load_data`, `store_data`: a load that matches the selected older store forwards its data. The harness must select the youngest matching older store. |
+
+These are local safety templates. They do not specify a complete ROB or LSQ.
+They do not prove retirement order, flush recovery, fairness or eventual progress.
+The native tests give each monitor a small reference design and a separate seeded fault.
+
+`rvw formal contracts plan.json --budget 60 --engine abc:pdr --out proof`
+runs fresh unbounded jobs. A plan declares shared unsigned signals, predicates
+and component ports. All components have one `clk` and one active-high `reset`.
+The runner checks exact port widths and directions against the elaborated RTL.
+It connects ports with the same signal name in the closed composition.
+
+```json
+{
+  "verilog": ["units.sv"],
+  "signals": {"token": 1, "accepted": 1},
+  "predicates": {"token_ok": "token == 1", "accept_ok": "accepted == 1"},
+  "components": [
+    {"id": "producer", "top": "Producer", "inputs": [], "outputs": ["token"],
+     "assumes": [], "guarantees": ["token_ok"]},
+    {"id": "consumer", "top": "Consumer", "inputs": ["token"], "outputs": ["accepted"],
+     "assumes": ["token_ok"], "guarantees": ["accept_ok"]}
+  ]
+}
+```
+
+Each assumption names the exact predicate that a neighbour guarantees.
+An assumption can use only the consumer's inputs. Missing providers, multiple
+drivers and circular dependencies are errors. Each local proof assumes only its
+listed predicates. The closed proof removes all generated assumptions and checks
+all guarantees together. This last check is mandatory. It also checks the actual
+wiring. A local proof alone cannot earn composed success.
+
+Exit 0 means `conditional_proved`. Every component and the closed composition
+must have an unbounded pass with the existing bounded reachability guard.
+Source RTL assumptions remain environment restrictions. This flow does not prove
+that every assertion activation is reachable. It does not certify a supplied RTL
+export's generator revision. The budget limits each solver to the remaining time
+and stops new jobs after expiry. Frontend probes can add time beyond this budget.
+Use an outer process deadline when a strict total wall time is required.
+Fresh output directories are required. No cached proof is reused.
+
+## Explicit abstraction
+
+BMC and prove accept `--abstraction plan.json`. The file contains only `cuts`:
+
+```json
+{"cuts": [{"signal": "ram_read_data", "width": 32, "kind": "memory-read"}]}
+```
+
+Kinds are `cut`, `blackbox-output`, `data` and `memory-read`. Each cut replaces the
+selected signal with an unconstrained value at each step. Width checks and clock
+cut guards remain active. For a black box, list each output. This does not remove
+the instance or bypass clock and state checks. For a memory, cut each read-data
+signal. This loses address, collision, initialization and inter-port correlation.
+It keeps all concrete read values possible. Undefined read-under-write behavior
+stays free. This is an overapproximation, not a typed RAM refinement proof.
+Data abstraction frees the declared bits; it does not reduce an arithmetic width.
+
+Abstraction plans cannot add assumptions. Use a checked interface contract when
+an output restriction is needed. An abstract counterexample is `unknown`, not a
+concrete bug. An abstract proof applies to the larger unconstrained behavior set.
+The result records each cut, its semantics, kind and captured plan hash.
+
+## Invariant mining and strengthening
+
+`rvw formal strengthen plan.json --budget 60 --out proof` accepts a single
+component contract without generated assumptions. Add `samples`, an array of
+observed unsigned output values, for example `[{"token": 1}]`.
+The command mines minimum and maximum bounds for each output. It proves each
+candidate with a fresh unbounded job. An observed bound is never an assumption.
+A failed or incomplete candidate is excluded from the final strengthening set.
+The final job asserts the target guarantees and the certified bounds together.
+Use `smtbmc:yices` for k-induction or `abc:pdr` for IC3/PDR. This supplies joint
+assertions to the existing engine. It does not modify an engine's lemma database.
+Original RTL assertions remain checked in every job.
+
+Limits: unsigned interval mining only; no relational, memory or predicate mining.
+There is no measured capacity gain or commercial parity claim. A final pass is
+unbounded under the source RTL assumptions and the declared reset protocol.
+
+### BOOM free-list export recipe
+
+`SpinalChecks/boom/freelist-capacity.py` prepares the `RenameFreeList` module from
+an existing BOOM Verilog export. It leaves core sources unchanged. Run:
+
+```sh
+rvw/.venv/bin/python SpinalChecks/boom/freelist-capacity.py \
+  --verilog /path/to/BoomSimTop.v --out /tmp/freelist-plan
+scripts/with-lock.sh boom nice -n 10 rvw/.venv/bin/rvw formal contracts \
+  /tmp/freelist-plan/plan.json --engine abc:pdr --depth 8 --budget 60 \
+  --out /tmp/freelist-proof
+```
+
+The named properties check allocation payload range and membership in the debug
+free set. Inputs stay free. The recipe disables native assertions in the copied
+module because their environment protocol needs a separate harness. It records
+the input export hash. It does not certify the export's source revision. These
+local properties do not establish free-list protocol correctness or whole-core safety.

@@ -52,7 +52,7 @@ else count <= count + (push ? 1 : 0) - (pop ? 1 : 0);'''
         assert data['traces']
 
 
-@pytest.mark.parametrize('command', ['contracts', 'strengthen'])
+@pytest.mark.parametrize('command', ['contracts', 'strengthen', 'strengthen_bad_sample'])
 def test_contract_and_mining_native(tmp_path, command):
     if not all(shutil.which(t) for t in ('sby', 'yosys', 'yices-smt2')):
         pytest.skip('native formal tools missing')
@@ -75,17 +75,19 @@ endmodule
                  'assumes': [], 'guarantees': ['token_ok']},
                 {'id': 'consumer', 'top': 'Consumer', 'inputs': ['token'], 'outputs': ['accepted'],
                  'assumes': ['token_ok'], 'guarantees': ['accepted_ok']} ]}
-    if command == 'strengthen':
+    if command.startswith('strengthen'):
         plan['components'] = plan['components'][:1]
-        plan['samples'] = [{'token': 1}]
+        plan['samples'] = [{'token': 0 if command.endswith('bad_sample') else 1}]
     manifest = tmp_path / 'plan.json'
     manifest.write_text(json.dumps(plan))
     out = tmp_path / 'out'
-    result = run_group([sys.executable, '-m', 'rvw', 'formal', command, str(manifest),
+    result = run_group([sys.executable, '-m', 'rvw', 'formal', command.split('_bad_sample')[0], str(manifest),
                         '--engine', 'smtbmc:yices', '--budget', '30', '--out', str(out), '--json'],
                        capture=True, timeout=60)
     assert result.returncode == 0, (result.stdout, result.stderr)
     data = json.loads(result.stdout)
     assert data['status'] == ('conditional_proved' if command == 'contracts' else 'pass')
-    if command == 'strengthen':
-        assert data['certified'] == ['bound_token']
+    if command.startswith('strengthen'):
+        assert data['certified'] == ([] if command.endswith('bad_sample') else ['bound_token'])
+        if command.endswith('bad_sample'):
+            assert data['obligations'][0]['status'] == 'fail'

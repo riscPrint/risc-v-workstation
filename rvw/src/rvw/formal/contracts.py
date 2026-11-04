@@ -41,7 +41,7 @@ def validate(plan):
     for node in nodes:
         name = ident(node['id'])
         ident(node['top'])
-        if name == 'closed' or name in ids:
+        if name in ('closed', 'source') or name in ids:
             raise ValueError('duplicate component')
         ids[name] = node
         for direction in ('inputs', 'outputs'):
