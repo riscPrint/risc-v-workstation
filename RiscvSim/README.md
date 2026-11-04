@@ -615,6 +615,9 @@ The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
 
+Direct native launches can set `RISCVSIM_REQUIRES=two_state,clock`. The shared
+profile checker rejects unsupported needs before locks and native tools start.
+See `rvw/src/rvw/sim/README.md` for regression suite declarations and limits.
 ### Serialized multi-hart reference
 
 `SerializedMemoryReference` checks accepted memory actions at a project-declared

@@ -96,6 +96,9 @@ The separate VexRiscv project passed 41 aligned RV32UI tests, a four-test commit
 gate with equal RTL hashes, a 17-instruction Spike smoke comparison and database
 queries. See the [VexRiscv limits](examples/vexriscv/README.md#design-and-limits).
 
+See the [public release procedure](docs/RELEASING.md) for release gates.
+Source setup support does not establish clean-host qualification.
+
 ## Status (P1+P2 integration branch, 2026-11-04)
 
 Supported scope under contract C8:
@@ -111,6 +114,9 @@ Supported scope under contract C8:
   Neither command qualifies a core or earns gate acceptance.
 
 Experimental features need manual result checks before use:
+
+- Packaged typed viewer GUI rendering and source navigation remain unverified
+  under [#83](https://github.com/riscPrint/risc-v-workstation/issues/83).
 
 - Native SSH farm execution, static dashboards, remote caches and job budgets.
   Farm completion is collection status. It is not a gate verdict. See
