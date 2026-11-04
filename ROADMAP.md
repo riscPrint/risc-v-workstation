@@ -16,10 +16,11 @@ covers the EDA platform only.
 beats the commercial tools). **Generic status:** BOOM-only, partly generic, generic (documented, works
 on other designs), released.
 
-State on 2026-10-24: phase 1 (regression, co-simulation, failure reports) and phase 2 (design
-queries, coverage, generated checks, sim-to-formal, performance reports) are merged into `main` after
-review and simplification; open items are in `TODO.md`. Phase 3 (lint/CDC,
-sequential equivalence, IDE views, tool bundle, emulation) has not started.
+State on 2026-11-04: the P1+P2 integration branch includes first increments for
+lint/CDC, sequential equivalence, saved IDE views, native tool bundles, SSH farms,
+remote caches and budgets. These extend the earlier regression, co-simulation,
+query, coverage and formal tools. They do not establish commercial parity.
+Native host qualification and core runtime checks remain open. Emulation has not started.
 
 ## Areas
 
@@ -33,9 +34,9 @@ sequential equivalence, IDE views, tool bundle, emulation) has not started.
 | LINT | Lint and clock-domain crossing | Synopsys VC SpyGlass, Siemens Questa CDC | Verible, Verilator lint, Yosys | `rvw lint`: native diagnostics and structural crossing inventory | in progress | Survey open CDC; checks Spinal can emit from clock-domain info |
 | DBG | Debug and waveforms | Synopsys Verdi, Cadence SimVision, Questa Visualizer | GTKWave, Surfer | SpinalWaves, SpinalTrace, SpinalKonata, `rvw wave`, `rvw bundle`/`reduce`/`bisect`, `rvw perf` | usable ([#68](https://github.com/riscPrint/risc-v-workstation/issues/68) runtime parity pending) | Validate old/new SpinalTrace runtime parity (#68); formal counterexample debugging; Surfer integration |
 | EMU | Emulation and FPGA prototyping | Cadence Palladium and Protium, Synopsys ZeBu | Verilator (multithreaded), open FPGA flows | none | none | Decide: FPGA prototyping, faster simulation, or both |
-| PLAT | One integrated platform | All of the above, as one product | VS Code | `rvw` CLI and `rvw mcp`; shared formats C1–C8; separate core projects with `rvw.toml` (integration in progress); VS Code extension with SpinalBlocks | in progress (saved regress/cov/perf VS Code views added; local macOS CI in progress, #16 and #41) | Show regress/cov/perf results in VS Code; native tool bundle |
+| PLAT | One integrated platform | All of the above, as one product | VS Code | `rvw` CLI and `rvw mcp`; shared formats C1–C8; separate core projects with `rvw.toml` (integration in progress); VS Code extension with SpinalBlocks | in progress (saved regress/cov/perf VS Code views added; local macOS CI in progress; native qualification pending, #16 and #41) | Qualify native bundles and remote execution; extend saved result navigation |
 
-## Release status (integration branch, 2026-11-03)
+## Release status (P1+P2 integration branch, 2026-11-04)
 
 Project mode is implemented: install the workstation once, and keep each core's adapters and
 settings in its own repository with a root `rvw.toml` (`--project`, `RVW_PROJECT` or upward
@@ -74,8 +75,8 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | Commercial product | Feature | Our equivalent | Level | Main gaps |
 |---|---|---|---|---|
 | Imperas ImperasDV | Lockstep co-simulation against a reference model | `rvw cosim` (Spike as a library, trace-driven; Sail as a second model) | usable | Compares integer state, memory, traps and privilege; C2 v2 adds Spike FP/flag and declared CSR snapshots. BOOM still exports v1. No vector, hypervisor, debug mode or multi-hart. BOOM: 173/174 riscv-tests match Spike (the other is a real core bug), 171/174 match Sail. |
-| VCS / Xcelium / Questa (simulation) | Fast compiled simulation, waves, coverage | Verilator through RiscvSim | usable; native cocotb component adapter and semantic profiles added | Single machine; each process re-elaborates BOOM (15–25 s); no 4-state simulation; no SystemVerilog testbench language. |
-| Cadence vManager, Synopsys VC Execution Manager | Regression management, verdicts, history | `rvw regress` (suites, tiers, cache, known failures, `gate`, history, JUnit) | usable | One machine; no farm/cluster dispatch; no web dashboard or trend charts. |
+| VCS / Xcelium / Questa (simulation) | Fast compiled simulation, waves, coverage | Verilator through RiscvSim | usable; experimental serial server and cocotb component adapter | Serial server is opt-in; standalone runs still elaborate per process. Icarus supports bounded four-state component tests; Verilator remains two-state. No full SystemVerilog testbench language. |
+| Cadence vManager, Synopsys VC Execution Manager | Regression management, verdicts, history | `rvw regress` (suites, tiers, cache, known failures, `gate`, history, JUnit) | usable | Native SSH shards and static C3/C4 trend dashboards are first increments. No cluster scheduler, remote cancel acknowledgement, crash recovery or verification closure planner. |
 | URG / IMC (coverage) | Code coverage merge, ranking, exclusions | `rvw cov merge/report/rank/select` | usable | FSM coverage gated at Verilator 5.052; nested HGLDD leaf mapping and explicit denominator scopes; whole-core Scala mapping remains partial. |
 | Functional coverage (SV covergroups) | Cover groups and holes | `rvw cov functional` over RVFI traces (declarative groups) | in progress | Typed project-defined RTL bins and bounded sequences; native Spinal tags and automatic event extraction remain open. |
 | Synopsys Verdi, Cadence SimVision | Waveform debug, active driver tracing | Surfer + SpinalWaves (typed waves), SpinalTrace (dynamic dependency trace), `rvw wave` (CLI) | in progress | No integrated GUI with tracing across waves, source and schematic; no what-if editing of a trace. |
@@ -90,14 +91,14 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | Jasper SEC, VC Formal SEQ | Sequential equivalence | `rvw formal equiv` (eqy, ABC scorr/PDR; advisory dsec) | first increment | Exported RTL only; no BOOM equivalence claim. FV 2 epic: tested project-driven module export, nonzero latency, state encoding and blackbox contracts remain. |
 | Jasper C2RTL, VC Formal DPV | Arithmetic against a C model | `SpinalChecks/c2rtl/` | small unsigned combinational units | FV 3; sequential and FP models pending. |
 | Jasper SPV, VC Formal FSV | Information flow / security | none | none | FV 4. |
-| SpyGlass, Questa CDC / Lint | Lint and CDC | none | none | Phase 3. |
+| SpyGlass, Questa CDC / Lint | Lint and CDC | `rvw lint` (Verilator, Verible, SpinalDB structural CDC/RDC) | first increment | No protocol proof, metastability analysis or signoff. Structural results remain findings or inconclusive. |
 | Palladium, Protium, ZeBu | Emulation and prototyping | none | none | Phase 3. |
-| Arm Fast Models, Platform Architect | Virtual platforms, architecture exploration | `rvw arch` (native gem5, calibrated against the RTL), Spike, `rvw perf` | exploring | Out-of-order RV64 cores only; IPC comparison, no fitting yet. Next: event counters, microbenchmarks, fitting. |
-| (no commercial equivalent) | Agent interface over the whole flow | `rvw mcp`: 48 MCP tools, background jobs, cancel | usable | — |
+| Arm Fast Models, Platform Architect | Virtual platforms, architecture exploration | `rvw arch` (native gem5, calibrated against the RTL), Spike, `rvw perf` | exploring | RV64 O3 bare-metal calibration; interval counters, held-out event fitting, SoC topology and bounded speed-only sweeps are first increments. RTL correlation and broader core models remain open. |
+| (no commercial equivalent) | Agent interface over the whole flow | `rvw mcp`: 62 built-in MCP tools (see [reference](docs/COMMAND_REFERENCE.md)), background jobs, cancel | usable | — |
 
 Summary: for the daily loop an agent needs (run, judge, compare with a reference, triage, query the
 design, measure coverage, simple formal checks) the open tools are usable today. Deep formal (FV 1–4),
-lint/CDC, emulation and an integrated debug GUI are not yet built.
+protocol-level CDC signoff, emulation and an integrated debug GUI remain open.
 
 ## Components
 
@@ -127,7 +128,7 @@ is from being usable on other designs.
 | SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: database reader and pinned fork package; WASM migration and interactive checks pending |
 | SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic; database reader; accuracy status in CLI and GUI |
 | SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | partly generic: database export ready; legacy BOOM entry retained for caller-dependent clock locations |
-| VS Code extension | `vscode/` | PLAT | Hosts SpinalBlocks | One extension, one feature per tool | generic |
+| VS Code extension | `vscode/` | PLAT | SpinalBlocks and saved regress/cov/perf views; manual source/wave/trace navigation | One extension, one feature per tool | generic saved-data views; no run identity validation or verdict generation |
 
 Core-side tools that stay in `spinal-boom` for now: the BoomSim harness
 and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
@@ -142,7 +143,7 @@ and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
 - **Cross-navigation:** waveform signal ↔ block diagram ↔ Scala source ↔ dependency trace (not built).
 - **One host:** the VS Code extension hosts SpinalBlocks; waves (Surfer), Konata and SpinalTrace's
   GUI are separate apps.
-- **Agent interface:** every tool through `rvw mcp`.
+- **Agent interface:** built-in MCP tools are listed in [the command reference](docs/COMMAND_REFERENCE.md). Init, SoC commands and some CLI actions have no MCP tool.
 - **Core projects:** installed workstation and separate core repository; project
   paths resolve against `rvw.toml`; core-owned adapters use workstation Scala
   libraries through `RVW_HOME` and offline sbt. Existing bundled BOOM paths stay
@@ -161,7 +162,8 @@ and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
 - Build open replacements for all commercial formal features (FV), not only what BOOM
   needs today.
 - Deterministic work is code; agents reach it through MCP.
-- The platform ships as pinned native binaries per OS, with no Docker requirement.
+- Private native bundle definitions pin source revisions and archives per host.
+  Native qualification and full offline dependency packaging remain open. No Docker requirement.
 - SpinalHDL first; other HDLs later.
 
 ## Limit ownership
