@@ -4,9 +4,11 @@ from pathlib import Path
 import re
 
 import rvw
+from .optional import build_files, linker_platform, db_script, sim_script
 
 
-def scaffold(path='.', *, isa=None, xlen=None, name=None, force=False, dry_run=False):
+def scaffold(path='.', *, isa=None, xlen=None, name=None, force=False, dry_run=False, wire_build=False, sbt_project=None,
+             linker_script=None, ram_region=None, reset_pc=None, db_top=None):
     root = Path(path).resolve()
     if not root.is_dir() or not (root / 'build.sbt').is_file():
         raise ValueError('Minimal supported path: an existing Spinal/sbt core repository with build.sbt.')
@@ -85,6 +87,7 @@ object Adapter extends CoreAdapter {{
   def isa(config: String): String = {q(isa)}
   def xlen: Int = {width}
   def sourceDir: File = new File(sys.env("RVW_CORE_SOURCE"))
+  override def replayEnv: Seq[(String, String)] = Seq("RVW_CORE_SOURCE" -> sourceDir.getCanonicalPath)
   def compile(key: ModelKey, work: File, cache: File): Model =
     throw new UnsupportedOperationException("Map the core and compile its simulation model")
   override def elaborate(key: ModelKey, work: File): Seq[File] =
@@ -119,9 +122,30 @@ No program pass, RVFI mapping or input-completeness claim is supplied.
 11. Review all result-changing inputs before enabling input_complete and identity.
 12. Commit reviewed project files before a gate check.
 
-Optional cosim platform and SpinalDB files need actual memory and elaboration
-interfaces. They are not generated. No integration-model policy is selected.
+Optional cosim platform and SpinalDB files need explicit memory and elaboration
+inputs. Use --linker-script and --db-top only after the minimum setup checks.
+No integration-model policy is selected.
 '''}
+    if sbt_project or db_top:
+        wire_build = True
+    if wire_build:
+        if versions != ['1.15.0']:
+            raise ValueError('Build wiring requires one literal Spinal version 1.15.0, matching RiscvSim. Review other builds manually.')
+        files.update(build_files(build, sbt_project=sbt_project, db_top=db_top))
+        files['rvw/run.sh'] = sim_script(name, launcher)
+        files['rvw.toml'] = files['rvw.toml'].replace('source_repo = "."', 'source_repo = "."\nsource_env = "RVW_CORE_SOURCE"')
+        files['rvw/README.md'] += "\nThe generated sbt build uses the core project and generic RiscvSim library.\nSet RVW_HOME. Run sbt compile from rvw/ to check dependencies. The launcher\nuses generic supervision and identity capture. The adapter throws until mapped.\n"
+    if (ram_region or reset_pc) and linker_script is None:
+        raise ValueError('--ram-region and --reset-pc need --linker-script.')
+    if linker_script:
+        files['rvw/cosim.json'] = linker_platform(linker_script, region=ram_region, reset_pc=reset_pc,
+                                                name=name, isa=isa, xlen=width)
+        files['rvw.toml'] += '\n[cosim]\nplatform = "rvw/cosim.json"\n'
+        files['rvw/README.md'] += "\nReview rvw/cosim.json against the core specification. The linker supplies\nonly the selected RAM region. Check MMIO, PMP, IRQ, privilege and fault policies.\nRemove review_required only after this review. The cosim loader refuses it.\n"
+    if db_top:
+        files['rvw/build-db.sh'] = db_script(db_top, name)
+        files['rvw.toml'] += '\n[query]\nbuild = ["./rvw/build-db.sh"]\ndb = "rvw/out/design.db"\n'
+        files['rvw/README.md'] += "\nThe query entry requires a no-argument Component class. Check --db-top against\nthe actual source. Run rvw query build --config default after dependency setup.\n"
     conflicts = [key for key in files if (root / key).exists() or (root / key).is_symlink()]
     if conflicts and not force:
         raise ValueError('Refusing to overwrite: ' + ', '.join(conflicts) + '. Use --force only for intended replacement.')
@@ -140,9 +164,11 @@ interfaces. They are not generated. No integration-model policy is selected.
             target = root / key
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content)
-        (root / 'rvw/run.sh').chmod(0o755)
+        for key in files:
+            if key.endswith('.sh'):
+                (root / key).chmod(0o755)
     return dict(schema='rvw.init/1', status='planned' if dry_run else 'created', exit_code=0,
-                root=str(root), isa=isa, xlen=width, spinal_versions=versions, candidate_tops=tops,
+                root=str(root), isa=isa, xlen=width, spinal_versions=versions, candidate_tops=tops, build_wired=wire_build,
                 files=files, overwritten=conflicts if force else [],
                 next=['Run rvw doctor --json. Project parsing should be ready; adapter, tests and gate remain not ready.',
                       'Map the adapter signals and RVFI. Follow rvw/README.md.'])
