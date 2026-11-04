@@ -1,0 +1,13 @@
+{
+  "schema": "rvw.hdl/1",
+  "backend": "icarus",
+  "top": "tb",
+  "sources": [
+    "xreset.sv"
+  ],
+  "requires": [
+    "four_state",
+    "xz_values",
+    "hdl_delays"
+  ]
+}

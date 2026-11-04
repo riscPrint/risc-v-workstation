@@ -388,6 +388,12 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
     val ctxs = mutable.HashMap[Component, Ctx]()
     def ctxOf(c: Component) = ctxs.getOrElseUpdate(c, new Ctx(c))
 
+    // Cross-component consumers cannot be gated by a local use cone.
+    val externalUses = mutable.HashSet[BaseType]()
+    comps.foreach { owner => owner.dslBody.walkStatements { st => st.walkExpression {
+      case b: BaseType if b.component != owner => externalUses += b
+      case _ =>
+    } } }
     // ---- insertion ----
     for (c <- comps) {
       val f = found(c)
@@ -423,8 +429,21 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         rec
       }
 
+      // Snapshot original consumers before inserting monitor logic. Unknown sinks remain active.
+      val originalStatements = ArrayBuffer[Statement]()
+      c.dslBody.walkStatements(st => originalStatements += st)
+      val consumers = mutable.HashMap[Expression, ArrayBuffer[Statement]]()
+      originalStatements.foreach { st => st.foreachDrivingExpression { root =>
+        consumers.getOrElseUpdate(root, ArrayBuffer()) += st
+        root.walkExpression(e => consumers.getOrElseUpdate(e, ArrayBuffer()) += st)
+      } }
       val todo = ArrayBuffer[() => Unit]()
       // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
+      def keyValue(e: Expression): Option[BigInt] = e match {
+        case l: Literal if !l.hasPoison() => Some(l.getValue())
+        case b: BaseType => try { Some(Literal(b)) } catch { case scala.util.control.NonFatal(_) => None }
+        case _ => None
+      }
       def useGuard(st: Statement): Bool = {
         def walk(scope: ScopeStatement): Bool = {
           if (scope == null || scope.parentStatement == null) True
@@ -435,10 +454,60 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
                 case e => val b = Bool(); b.assignFrom(e); w.cond = b; b
               }
               walk(w.parentScope) && (if (scope eq w.whenTrue) cond else !cond)
+            case sw: SwitchStatement if (sw.value.isInstanceOf[BaseType] || sw.value.getTypeObject == TypeUInt) &&
+                sw.elements.forall(_.keys.forall(k => keyValue(k).isDefined)) =>
+              val value = sw.value match {
+                case b: BaseType => b.asBits
+                case e => val u = UInt(); u.assignFrom(e); sw.value = u; u.asBits
+              }
+              def matches(keys: Seq[Expression]): Bool = keys.map(k =>
+                value === B(keyValue(k).get, value.getWidth bits)).foldLeft(False: Bool)(_ || _)
+              val hit = sw.elements.find(e => e.scopeStatement eq scope).map(e => matches(e.keys.toSeq))
+                .getOrElse(!matches(sw.elements.flatMap(_.keys).toSeq))
+              walk(sw.parentScope) && hit
             case other => walk(other.parentScope)
           }
         }
         walk(st.parentScope)
+      }
+      def expressionUse(root: Expression, sought: Expression): Bool = {
+        if (root eq sought) True
+        else root match {
+          case _: BaseType => False
+          case m: BinaryMultiplexer =>
+            val cond = m.cond match {
+              case b: Bool => b
+              case e => val b = Bool(); b.assignFrom(e); m.cond = b; b
+            }
+            expressionUse(m.cond, sought) ||
+              (cond && expressionUse(m.whenTrue, sought)) || (!cond && expressionUse(m.whenFalse, sought))
+          case e =>
+            val terms = ArrayBuffer[Bool]()
+            e.foreachExpression(x => terms += expressionUse(x, sought))
+            terms.foldLeft(False: Bool)(_ || _)
+        }
+      }
+      def valueUse(value: Expression, seen: Set[Expression] = Set.empty): Bool = {
+        if (seen(value)) True // a cycle or unknown use must not suppress a check
+        else value match {
+          case b: BaseType if b.isReg || b.isOutput || b.component != c || externalUses(b) => True
+          case _ =>
+            consumers.get(value).map(_.toSeq.distinct.map { st =>
+              val sink = st match {
+                case a: AssignmentStatement => valueUse(a.finalTarget, seen + value)
+                case _ => True
+              }
+              val roots = ArrayBuffer[Bool]()
+              st.foreachDrivingExpression(e => roots += expressionUse(e, value))
+              useGuard(st) && roots.foldLeft(False: Bool)(_ || _) && sink
+            }.foldLeft(False: Bool)(_ || _)).getOrElse(value match { case _: BaseType => False; case _ => True })
+        }
+      }
+      def selectedUse(st: Statement, selected: Expression): Bool = {
+        val roots = ArrayBuffer[Bool]()
+        st.foreachDrivingExpression(e => roots += expressionUse(e, selected))
+        val sink = st match { case a: AssignmentStatement => valueUse(a.finalTarget); case _ => True }
+        useGuard(st) && roots.foldLeft(False: Bool)(_ || _) && sink
       }
       for (d <- c.getTags().collect { case d: DeclaredRule => d }) {
         val rec = newRecord(d.kind, d.name, false, None, d.detail)
@@ -453,7 +522,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           }
           cd.on {
             val idx = UInt(); idx.assignFrom(bit.bitId); bit.bitId = idx
-            emit(rec, active(cd) && useGuard(st) && idx >= U(bit.source.getWidth))
+            emit(rec, active(cd) && selectedUse(st, bit) && idx >= U(bit.source.getWidth))
           }
         }
       }
@@ -634,7 +703,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
                 case e => val w = UInt().setName(uniqueName(s"chk_${sanitize(obj)}_addr")); w.assignFrom(e); setAddr(w); w
               }
               val e: Bool = en match {
-                case null => True
+                case null => port match { case p: MemReadAsync => valueUse(p); case _ => True }
                 case b: Bool => b
                 case x => val w = Bool().setName(uniqueName(s"chk_${sanitize(obj)}_en")); w.assignFrom(x); setEn(w); w
               }
@@ -668,7 +737,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           }
           rec.signals("index") = Seq(idx)
           val cd = sel match { case b: BaseType if b.isReg => b.clockDomain; case _ => ClockDomain.current }
-          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => useGuard(x._2)).reduce(_ || _) && idx >= U(n)) }
+          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => selectedUse(x._2, x._1)).reduce(_ || _) && idx >= U(n)) }
         }
       }
 

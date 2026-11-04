@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,cocotb,soc,wave}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -22,7 +22,27 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {memory-report,sweep,build,run,calibrate,compare,fit,inspect,linux} ...
+    {search,predict,score-prediction,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    ...
+```
+
+### `rvw arch search`
+
+```text
+usage: rvw arch search [-h] --out OUT [--json] [--project PROJECT] plan
+```
+
+### `rvw arch predict`
+
+```text
+usage: rvw arch predict [-h] --out OUT [--json] [--project PROJECT] candidate
+```
+
+### `rvw arch score-prediction`
+
+```text
+usage: rvw arch score-prediction [-h] --out OUT [--json] [--project PROJECT]
+    prediction rtl
 ```
 
 ### `rvw arch memory-report`
@@ -75,6 +95,13 @@ usage: rvw arch fit [-h] [--json] [--project PROJECT] plan
 ```text
 usage: rvw arch inspect [-h] [--json] --elf ELF --isa ISA --kind KIND
     [--project PROJECT]
+```
+
+### `rvw arch measure`
+
+```text
+usage: rvw arch measure [-h] [--json] [--repeats REPEATS] [--bench BENCH]
+    --out OUT [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw arch linux`
@@ -254,7 +281,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -277,6 +304,21 @@ usage: rvw formal contracts [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
 ```text
 usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
     [--engine ENGINE] [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal apps`
+
+```text
+usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
+    [--timeout TIMEOUT] [--mode {bmc,prove}] [--event-model] [--async-reset]
+    [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal bench`
+
+```text
+usage: rvw formal bench [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
+    PROJECT] manifest
 ```
 
 ### `rvw formal cex`
@@ -332,8 +374,9 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] --gold GOLD [GOLD ...] --gate GATE [GATE ...]
-    --top TOP [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
+usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
+    [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
     [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
     GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
     [--project PROJECT]
@@ -543,14 +586,22 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {backends,cocotb,mmu,run,compare,gate,known,history,list} ...
+    {backends,hdl,cocotb,mmu,run,compare,gate,known,history,list} ...
 ```
 
 ### `rvw regress backends`
 
 ```text
-usage: rvw regress backends [-h] [--backend {verilator,icarus}] [--json]
-    [--project PROJECT]
+usage: rvw regress backends [-h] [--backend {verilator,icarus} | --hdl]
+    [--json] [--project PROJECT]
+```
+
+### `rvw regress hdl`
+
+```text
+usage: rvw regress hdl [-h] [--backend
+    {icarus,verilator-timing,ghdl-yosys-icarus}] --out OUT [--timeout TIMEOUT]
+    [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw regress cocotb`
@@ -675,8 +726,15 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 ### `rvw backends`
 
 ```text
-usage: rvw backends [-h] [--backend {verilator,icarus}] [--json] [--project
-    PROJECT]
+usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
+    [--project PROJECT]
+```
+
+### `rvw hdl`
+
+```text
+usage: rvw hdl [-h] [--backend {icarus,verilator-timing,ghdl-yosys-icarus}]
+    --out OUT [--timeout TIMEOUT] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw cocotb`
@@ -769,9 +827,36 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--project PROJECT] wave
 ```
 
+### `rvw workloads`
+
+```text
+usage: rvw workloads [-h] [--project PROJECT] {list,build,verify} ...
+```
+
+### `rvw workloads list`
+
+```text
+usage: rvw workloads list [-h] [--json] [--manifest MANIFEST] [--project
+    PROJECT]
+```
+
+### `rvw workloads build`
+
+```text
+usage: rvw workloads build [-h] [--json] [--manifest MANIFEST] --source SOURCE
+    --out OUT [--cc CC] [--bench BENCH] [--project PROJECT]
+```
+
+### `rvw workloads verify`
+
+```text
+usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
+    ORACLE] [--trace] [--timeout TIMEOUT] [--project PROJECT]
+```
+
 ## MCP tools
 
-The default server exposes 64 built-in tools, including the four job tools.
+The default server exposes 68 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -818,6 +903,14 @@ Arguments: `elf` (required), `isa` (required), `kind` (required), `project`.
 
 Starts a background job: yes.
 
+### `arch_measure`
+
+Repeat RTL and gem5 measurements and report confidence intervals.
+
+Arguments: `project`, `bench`, `out` (required), `timeout`, `repeats`.
+
+Starts a background job: yes.
+
 ### `arch_memory_report`
 
 Report declared memory observations. Missing metrics stay unobserved.
@@ -826,11 +919,35 @@ Arguments: `observations` (required), `project`.
 
 Starts a background job: yes.
 
+### `arch_predict`
+
+Store a timestamped model prediction before RTL measurement.
+
+Arguments: `candidate` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
 ### `arch_run`
 
 Run native gem5 with the selected project description. The output directory must be new.
 
 Arguments: `project`, `bench`, `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `arch_score_prediction`
+
+Score a stored prediction against later RTL evidence.
+
+Arguments: `prediction` (required), `rtl` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_search`
+
+Run bounded Bayesian fitting and score the selected point on held-out workloads.
+
+Arguments: `plan` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 

@@ -1377,21 +1377,32 @@ The [SoC tool README](../rvw/src/rvw/soc/README.md) defines the bounded evidence
 The exact fields are `schema`, `rtl`, `candidates` (name to gem5 report path),
 `train`, `held_out`, `events`, `scope`, `uncertainty`, and `unsupported`.
 Paths resolve against PLAN. Each event has `name`, `rtl_metric`, `gem5_stat`,
-`unit`, and `semantics`. Events map raw C1 `metrics` to the first ROI stats
+`unit`, and `semantics`, plus optional `role` (`fit` or `consistency`). Events map raw C1 `metrics` to the first ROI stats
 block in gem5 `stats.txt` beside `bare.json`. Event semantics are a project
 assertion. All mapped values must be finite and nonnegative. Missing values
 are errors. Existing C9 comparison evidence checks apply to every candidate.
 Train and held-out IDs must be distinct, nonempty and cover all report IDs.
 Their ELF hash sets must also be disjoint. Renamed ELF copies cannot be held out.
 
-`rvw.arch-fit/1` records status `reported`, the selected candidate, training
+`rvw.arch-fit/1` records status `reported` or `inconclusive`, the selected candidate, training
 scores, the winner's held-out score, winner event errors, split IDs, mappings,
 scope, uncertainty, unsupported structures, plan/RTL/candidate report hashes,
 and raw stats paths and hashes. Error is `abs(model-RTL)/max(1,RTL)`.
-Scores use equal weights across events and workloads. Only training scores
+Instruction units, retired totals, instruction-class totals and commitStats
+are consistency checks, even with role `fit`. They do not enter the objective.
+Other events default to `fit`; role `consistency` excludes a project-owned fixed event.
+The objective averages relative cycle error and eligible event errors per
+workload, then averages workloads. `selected_errors` includes each event's
+resolved role. `headline` includes `metric=cycle_relative_error`, per-workload
+comparison rows (cycle gap and IPC ratio), and mean absolute cycle error per split.
+Fewer than three training workloads, constant training cycle or eligible event targets, or equal
+scores across multiple candidates give status `inconclusive` with a reason.
+`event_fit` lists eligible events and constant targets. No eligible events or
+insufficient target variation gives event-fit status `inconclusive`. Only training scores
 select the winner. Lexical candidate names break ties. No acceptance or
 confidence claim follows from this report. The caller must keep held-out
-workloads separate when creating candidates. No parameter search runs here.
+workloads separate when creating candidates. This offline command runs no parameter search.
+Use the search extension below to generate parameter candidates.
 
 ### C9 static compatibility preflight
 
@@ -1724,6 +1735,25 @@ only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
 
+### Source-revision equivalence export
+
+`rvw formal equiv --gold-rev REV --gate-rev REV --top MODULE` selects
+committed revisions from the selected project's `core.source_repo`. It requires
+`core.source_env`, `query.build` and `formal.export_dependencies` (a nonempty
+list of generator repository paths). Each generator repository must be clean.
+The export records its commit. The build runs on a `git archive` source copy,
+with `core.source_env` set to that copy, under the project's lock.
+`query.build CONFIG DB --rtl DIR --no-pdg --no-blocks --no-hgldd` must generate
+Verilog in DIR. Yosys selects MODULE and its child modules with `hierarchy -check`.
+Missing modules or build failures cannot earn an equivalence verdict.
+
+The result's `exports` records source commits, generator commits, configuration,
+commands and RTL hashes. Each side retains source, generated RTL, selected module,
+logs and `export.json`. Export directories must be new. This supports declared
+sbt dependencies. It does not capture arbitrary external generator file reads,
+network services or environment effects. Project authors must declare all generator
+repositories. Submodule source content is not exported by `git archive`.
+
 Directed MMU extensions retain the existing C1-C4 verdict rules. Control rows,
 data corner fields, the optional adapter `rvw.mmu-observations/1` capture and
 `rvw.mmu-coverage/1` inventory follow the regress README. `mmu check` additionally
@@ -1850,6 +1880,35 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
 
+## Formal app and benchmark reports
+
+`rvw formal apps` reads `rvw.formal-apps/1` and writes
+`rvw.formal-app-results/1`. Each row retains `property_id`, `requirement_ids`,
+app kind, native status, proof kind and child result path. Status is `pass`
+only when every child passes. Any failure gives `fail`; other cases give
+`inconclusive`. Exit codes are 0 for pass and 1 for a written nonpass report.
+Each child retains the existing `rvw.formal/1` evidence. A bounded app pass
+cannot authorize an UNR coverage exclusion. The existing `cov prove` contract
+still controls exclusion export. Activation and solver cores are not inferred.
+
+`rvw formal bench` reads `rvw.formal-bench/1` and writes
+`rvw.formal-bench-results/1`. Rows retain the case, engine, mode, requested
+depth, explicitly observed depth or null, elapsed wall seconds, native peak
+RSS bytes or null, native status, tool identity and result path. Absent engines
+use `not_installed`; incompatible modes use `unsupported_mode`. Agreement is
+`agree`, `disagree` or `inconclusive`. Exit 0 requires agreement for every case;
+exit 1 means at least one disagreement or incomplete comparison. Agreement
+is not a correctness or gate verdict. Pair comparisons require decisive,
+matching verdicts on every case. Time ratios describe only the supplied suite.
+
+Licensed adapters use `rvw.formal-adapter-request/1` and
+`rvw.formal-adapter-response/1`. A response must bind to the SHA-256 of its
+exact request bytes, retain the mode and engine version, and report finite
+nonnegative measurements. A BMC pass requires an integer `reached_depth` at
+least `depth - 1` (zero-based assertion step). Adapter verdicts are trusted observations. Invalid,
+missing or timed-out responses stay inconclusive. See the formal README for
+input fields and limits. Neither command emits gate acceptance.
+
 ### SVA frontend selection
 
 `rvw.formal/1` results can add `frontend`, with value `verilog` or `slang`.
@@ -1882,3 +1941,116 @@ certify an invariant. Missing evidence gives an inconclusive result.
 BMC/prove abstraction entries extend `cut_points` with `kind` and `plan_sha256`.
 The semantics remain `unconstrained_anyseq`. No abstraction assumption is implicit.
 See the [formal capacity interface](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
+## Local integrated debug session
+
+`python -m rvw.query.session --db DESIGN --wave SNAPSHOT.rvwi` holds one C6
+database capture until exit. Stdio carries one JSON object per line. Requests
+have integer `id` and `op`: `open`, `select`, `source` or `trace`. Responses echo
+`id`. Success includes `result`, `database` (the capture record) and
+`elapsed_ms` (backend time). Failure includes `error` and `status: inconclusive`.
+`select` uses `signal`, decimal string `time` and optional decimal string `end`.
+It returns the preceding value and at most 500 changes, with a truncation flag.
+Change times are decimal strings. `source` uses `file` and integer `line` and
+returns all candidates, without choosing among ambiguous mappings. `trace` uses
+`signal` and `time`. It exports database PDG/HGLDD, checks the original VCD hash
+and invokes SpinalTrace. Static drivers remain distinct from dynamic evidence.
+The selected database and wave identities do not establish a shared C1 run.
+The loopback web host exposes the same requests at `POST /api`. These are local
+UI transport operations. They issue no simulation or acceptance verdict.
+
+
+
+## Standalone HDL semantic tests
+
+`rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
+This standalone format is not C1, C3 or C4 acceptance evidence.
+The manifest fields are `schema`, `backend`, `top`, `sources`, optional
+`requires`, and optional `vhdl_sources` plus `vhdl_top` for mixed synthesis.
+A per-run `--backend` override must meet every declared requirement.
+The [simulation guide](../rvw/src/rvw/sim/README.md#native-hdl-testbenches)
+defines supported profiles and testbench completion rules.
+
+The result records `status` (`pass` or `error`), `reason`, the selected `backend`,
+`capabilities`, source-file SHA-256 `inputs`, resolved `tools`, `versions`,
+`jobs`, `wall_s`, `timeout_s` and `replay`. Each job records its argument vector,
+exit code, timeout flag, and paths to stdout/stderr logs. Exit zero plus exactly
+one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
+A failed compile, failed run, timeout or missing completion marker gives error.
+Requirements and missing-tool errors occur before output creation (CLI exit 2).
+This format does not capture transitive file inputs or establish C8 reuse.
+
+## Workload reference flow
+
+`rvw workloads list|build|verify` uses `rvw.workloads/1` manifests.
+See [the workload README](../rvw/src/rvw/workloads/README.md) for fields.
+`rvw.workload-build/1` records the manifest, captured source/runtime hashes,
+compiler identity and per-workload commands, ELF hashes and sizes.
+It means build completion, not output correctness.
+`rvw.workload-verify/1` binds the build report SHA-256, oracle identity,
+executed commands, ELF hashes, exits, timeout flags and stdout/stderr hashes.
+`pass` requires a nonempty set, exit 0, no timeout and exact expected stdout
+for every row. A timeout, nonzero exit or mismatch is `fail` (exit 2).
+Invalid input or missing tools give an error (exit 2). No C4 verdict is issued.
+The flow requires stable tools and inputs. Local external scripts and compiler
+sysroots are not a complete C8 capture. Reports must not grant gate acceptance.
+With `verify --trace`, successful Spike rows also contain `profile` with
+whole-program instruction category counts and observed conditional-branch
+transitions. Compressed instructions are decoded as RV64. FP and memory
+categories overlap. Cache misses and branch mispredictions stay null.
+The retained stderr file is the hashed instruction-log evidence.
+
+
+### C9 search, repeats and prediction ledger
+
+`arch search PLAN --out DIR` and MCP `arch_search` consume
+`rvw.arch-search/1`. Exact fields: `schema`, `fit`, `parameters`, `budget`,
+`repeats`, `timeout_s`. `fit` is `rvw.arch-fit-plan/1` with empty `candidates`.
+RTL paths resolve against PLAN. Parameter rules follow `rvw.arch-sweep/1`.
+The space is at most 32 points. Budget is 1..32. Repeats are 2..10.
+At most 256 model processes run, serially under the gem5 lock.
+Latency changes and SoC fitting are refused. Training mean cycle and eligible event errors drive
+an RBF Gaussian process with expected improvement. Held-out workloads run only
+after selection. `rvw.arch-search-result/1` stores method, plan hash, trials
+with descriptions, report paths and training statistics, selected point,
+held-out statistics and checked fit reports. Partial progress is inconclusive.
+Search adds `headline`, `objective` and `reason`. A flat search objective or
+inconclusive selected fit gives status `inconclusive` (CLI exit 3).
+No search result is a fidelity verdict.
+
+`arch measure --out DIR [--repeats N]` and MCP `arch_measure` repeat calibration
+(default 3, range 2..10). `rvw.arch-measure/1` stores individual comparison
+reports and per-workload statistics for RTL cycles, model cycles, IPC ratio
+and cycle gap. The tool checks stable core, preset, latency, ELF, instruction
+counts, description, model and gem5 binary across repeats. Intervals in these
+reports use a 95% percentile bootstrap mean, 4000 resamples, seed 0. They
+measure observed repeat variation only. Fixed seed 1 and deterministic runs
+can give zero width. Constant repeats have interval status `inconclusive`
+and a reason; the numerical interval remains visible. They do not quantify model bias or generalization error.
+
+`rvw.arch-fit/1` adds `event_correlations`, keyed by `train` and `held_out`, then
+event name. Values have `n`, `pearson_r`, `status` and `reason`. Less than three
+workloads or a constant counter gives null and `inconclusive`. Otherwise the
+coefficient describes the checked event pairs. No semantic match is implied.
+
+`arch predict CANDIDATE --out FILE` / MCP `arch_predict` exclusively create
+`rvw.arch-prediction/1`: UTC `created_at`, candidate path/hash, full checked
+model report and status `predicted`. `arch score-prediction PREDICTION RTL
+--out FILE` / MCP `arch_score_prediction` exclusively create
+`rvw.arch-prediction-score/1`: UTC `scored_at`, prediction path/hash, checked
+C9 comparison and status `reported`. Model report and raw evidence are rechecked.
+Every RTL evidence mtime must follow the prediction time. This is a local
+ordering check, not trusted chronology. The ledger requires original local
+paths and stable evidence. No file races or hostile timestamp claims are covered.
+
+
+## SpinalChecks normalized register map (version 1)
+
+`SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
+required. `registers` lists unique comma-separated register names. Each name has
+`address`, `width`, `reset`, `writeMask`, `w1cMask` and `readClearMask` properties.
+Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
+must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
+must not overlap. Missing required fields fail loading. This format declares
+register intent. It does not provide independent bus observations or a verdict.
+
