@@ -48,3 +48,11 @@ def test_flat_symbol_collision_is_rejected(tmp_path):
     path.write_text(json.dumps(obj))
     with pytest.raises(ValueError,match='duplicate SystemVerilog'):
         generate(path)
+
+
+def test_cli_refuses_overwrite(tmp_path):
+    from rvw.cli import main
+    output=tmp_path/'ral.sv'
+    output.write_text('keep')
+    assert main(['regress','uvm-ral','--map',str(ROOT/'examples/boom/soc.json'),'--out',str(output)])==2
+    assert output.read_text()=='keep'

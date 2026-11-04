@@ -43,10 +43,14 @@ does not select a licence for the workstation project (#37).
 | `functional_coverage` | SV covergroup sample; opcode and address coverpoints; cross; `get_inst_coverage()` must return 100%; independent eight-bin bitmap must also be full |
 | `tlul` | Four-word RAM; Get and PutFullData; aligned 32-bit transfers; one outstanding request; source echo and D opcode/data checks |
 | `rvfi` | Synthetic load observation: valid, order, instruction, memory address/data and destination data checked against an independent memory model |
+| `ral_frontdoor` | Generated 32-bit RW registers; TL-UL frontdoor write/read, automatic prediction and checked mirror |
+| `interrupt_debug_pins` | Four interrupt level bits; halt/resume requests; acknowledgement and halted state on a timed pin fixture |
+| `ral_fault_detection`, `pins_fault_detection` | Separate corruption runs must stop with their expected diagnostic |
 | `rvfi_fault_detection` | A separate run corrupts destination data. It must fail with the specific RVFI mismatch and must not reach the completion marker |
 
 The sequence starts with four writes and four reads to cover each address.
-It then sends 32 constrained random transactions. The passive monitor samples
+It then sends 32 constrained random transactions. Four RAL transfers follow.
+The passive monitor samples
 the accepted request and its registered response. The scoreboard owns a
 separate, zero-initialized memory model. Expected values never come from DUT
 responses.
@@ -91,7 +95,7 @@ test. A skip is not evidence of UVM support.
 
 ## Decisions and limits
 
-DPI is disabled. Component-name regex validation is skipped by upstream UVM.
+Accellera DPI is disabled. Component-name regex validation is skipped by upstream UVM.
 UVM HDL read, deposit, force, release and polling, and the
 DPI regex implementation are not qualified. The pinned DPI C++ source needs
 a portable header include on macOS and a Verilator HDL backend. A simulator

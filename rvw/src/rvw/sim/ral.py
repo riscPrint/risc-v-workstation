@@ -56,7 +56,13 @@ def register(sub):
 
 
 def command(args):
-    text = generate(args.map)
-    with args.out.open('x') as dst:
-        dst.write(text)
+    import json
+    import sys
+    try:
+        text = generate(args.map)
+        with args.out.open('x') as dst:
+            dst.write(text)
+    except (OSError, ValueError) as exc:
+        print(json.dumps({'error': str(exc)}), file=sys.stderr)
+        return 2
     return 0
