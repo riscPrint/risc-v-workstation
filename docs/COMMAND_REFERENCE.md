@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -548,13 +548,21 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {backends,hdl,cocotb,mmu,run,compare,gate,known,history,list} ...
+    {backends,uvm,hdl,cocotb,mmu,run,compare,gate,known,history,list} ...
 ```
 
 ### `rvw regress backends`
 
 ```text
 usage: rvw regress backends [-h] [--backend {verilator,icarus} | --hdl]
+    [--json] [--project PROJECT]
+```
+
+### `rvw regress uvm`
+
+```text
+usage: rvw regress uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE]
+    [--verilator VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT]
     [--json] [--project PROJECT]
 ```
 
@@ -689,6 +697,14 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 
 ```text
 usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
+    [--project PROJECT]
+```
+
+### `rvw uvm`
+
+```text
+usage: rvw uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE] [--verilator
+    VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT] [--json]
     [--project PROJECT]
 ```
 
