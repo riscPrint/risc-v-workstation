@@ -2092,3 +2092,15 @@ Every attempt uses at most the remaining budget as its timeout. Frontend and
 capture overhead can exceed this budget. No new attempt starts after expiry.
 A bounded pass at the maximum depth remains `inconclusive`. Only a concrete
 failed attempt gives aggregate `fail`. Search never claims an unbounded proof.
+
+
+### Formal simulation-state swarm
+
+`rvw.formal-swarm/1` has aggregate `status: inconclusive` and exit 1. `selection`
+records the uniform cycle interval selection. `attempts` retains each cycle,
+status, relative result path, restrictions and loaded-state coverage. A refused
+state has `status: error` and a reason. `missing_cycles` lists tasks not started.
+`bounded_passes` and `conditional_failures` count observations only. They cannot
+earn reset reachability, gate acceptance or unbounded proof. Sources, includes,
+checks and waveform are copied once in the parent `input_snapshot`. Child
+results retain their own full tool/input captures and solver evidence.

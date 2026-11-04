@@ -826,3 +826,28 @@ full CSR or connectivity checks on these processors, or a performance benchmark.
 Depth search records its engine selection and termination reason. It doubles
 `--depth` up to `--max-depth` under `--budget`. It stops at the first result
 other than pass. The largest passing bound remains a bounded observation.
+
+
+## Simulation-state swarm
+
+```
+rvw formal swarm --verilog top.sv --top top --trace wave.vcd \
+  --start-cycle 1 --end-cycle 100 --samples 4 --depth 12 \
+  --budget 120 --timeout 25 --out /tmp/swarm
+```
+
+The command needs explicit RTL and top arguments. It captures RTL, includes,
+checks and trace once. It selects distinct cycles at uniform intervals, including
+both endpoints when samples exceed one. Tasks run in sequence to bound machine
+load. Each uses the existing from-sim guards and a separate reachability check.
+The budget starts after input capture. Each timeout is capped by the remaining
+budget. Capture and frontend overhead can exceed the budget.
+
+The aggregate always exits 1 with `inconclusive`. Per-state passes apply only to
+that state and depth. Trace states have no checked reset reachability or design
+identity. Failures are conditional counterexamples. Missing state stays free.
+Every attempt retains restrictions and loaded-state coverage. Remaining cycles
+are explicit if the budget expires. This selection does not establish coverage,
+property activation, typed-cone selection or an unbounded proof. `--memories free`
+keeps all initial memory words free; trace mode loads available words. Zero fill
+is excluded from this command.

@@ -175,6 +175,19 @@ def register(sub) -> None:
     f.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")
     f.set_defaults(func=lambda a: _flow("from_sim", a))
 
+    swarm = s.add_parser("swarm", help="bounded checks from uniformly selected simulation cycles")
+    _common(swarm, 20)
+    swarm.add_argument("--trace", required=True)
+    swarm.add_argument("--start-cycle", type=int, default=1)
+    swarm.add_argument("--end-cycle", type=int, required=True)
+    swarm.add_argument("--samples", type=int, default=4)
+    swarm.add_argument("--budget", type=float, required=True)
+    swarm.add_argument("--scope")
+    swarm.add_argument("--memories", choices=["trace", "free"], default="trace")
+    swarm.add_argument("--first-failure", action="store_true")
+    from .swarm import run as run_swarm
+    swarm.set_defaults(func=run_swarm)
+
     x = s.add_parser("xprop", help="X-propagation: can an X reach a checked signal after reset?")
     _common(x, 10)
     x.add_argument("--reset-cycles", type=int, default=2, help="steps the reset is held active (default 2)")
