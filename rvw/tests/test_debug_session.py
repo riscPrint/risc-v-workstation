@@ -140,3 +140,59 @@ def test_unresolved_wave_is_explicit(session):
     result = session.request(dict(op='select',signal='execute_PC',time='0'))['result']
     assert result['mapping'] == 'unresolved wave'
     assert result['values'] == []
+
+
+def test_adjacent_c1_binding_keeps_inconclusive_run_and_database_limit(session):
+    import hashlib
+    path = Path(session.wave).parent / 'result.json'
+    run = dict(schema='rvw.run/1', status='error', inconclusive='missing retirement evidence',
+               artifacts={'wave': 'wave.vcd'}, config='fixture')
+    path.write_text(json.dumps(run))
+    binding = session.request(dict(op='open'))['result']['run_binding']
+    assert binding['status'] == 'bound'
+    assert binding['run'] == run
+    assert binding['result_sha256'] == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert 'unverified' in binding['database']
+    # A session retains its captured evidence, not a later producer rewrite.
+    path.write_text('{}')
+    assert session.request(dict(op='open'))['result']['run_binding'] == binding
+
+
+@pytest.mark.parametrize('change,cause', [
+    ('missing', 'no adjacent'), ('invalid', 'schema'), ('undeclared', 'no declared'),
+    ('other', 'different wave'), ('stale', 'differ'), ('deleted', 'No such file'),
+])
+def test_c1_binding_never_accepts_missing_or_mismatched_evidence(session, change, cause):
+    path = Path(session.wave).parent / 'result.json'
+    run = dict(schema='rvw.run/1', status='pass', artifacts={'wave': 'wave.vcd'})
+    if change == 'invalid':
+        run['schema'] = 'other/1'
+    if change == 'undeclared':
+        run['artifacts'] = {}
+    if change == 'other':
+        run['artifacts']['wave'] = 'other.vcd'
+    if change != 'missing':
+        path.write_text(json.dumps(run))
+    wave = path.parent / 'wave.vcd'
+    if change == 'stale':
+        wave.write_text(wave.read_text() + '#30\n')
+    if change == 'deleted':
+        wave.unlink()
+    binding = session.request(dict(op='open'))['result']['run_binding']
+    assert binding['status'] == 'inconclusive'
+    assert cause in binding['cause']
+    assert 'run' not in binding
+
+
+@pytest.mark.parametrize('payload', [
+    None, {}, {'op':'source','file':'Unit.scala','line':True},
+    {'op':'source','file':'Unit.scala','line':1.5},
+    {'op':'select','signal':'','time':'0'},
+    {'op':'select','signal':'execute_PC','time':'0','end':1},
+    {'op':'select','signal':'execute_PC','time':'10','end':'9'},
+    *[dict(op='trace', signal='execute_PC', time=value)
+      for value in ['-1', '1.5', '9223372036854775808', 10, '9'*200]],
+])
+def test_native_and_web_requests_reject_invalid_navigation(session, payload):
+    with pytest.raises((QueryError, KeyError)):
+        session.request(payload)

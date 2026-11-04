@@ -89,6 +89,10 @@ def run(o):
             fc = 700 if f.read(4) != bytes.fromhex('13000000') else None
     if os.environ.get('FAKE_IRQ'):
         fc = 700 if '100:0x80' in o.get('irq-schedule', '').split(',') else None
+    if os.environ.get('FAKE_STIMULUS'):
+        data = json.load(open(o['stimulus-file']))
+        ids = {e['id'] for e in data['events']}
+        fc = 700 if {'write', 'read'} <= ids else None
     hang = int(os.environ["FAKE_HANG"]) if os.environ.get("FAKE_HANG") else None
     end = 8000 if hang is None else maxc + 1
     status, msg = "pass", None
@@ -142,12 +146,15 @@ def run(o):
     replay = " ".join([os.path.abspath(__file__), "run", "--elf", o["elf"], "--seed", str(seed),
                        "--max-cycles", str(maxc)] + (["--mem-latency", str(lat)] if lat is not None else [])
                       + (["--irq-schedule", o["irq-schedule"]] if "irq-schedule" in o else [])
+                      + (["--stimulus-file", o["stimulus-file"]] if "stimulus-file" in o else [])
                       + ["--out", out])
     res = {"schema": "rvw.run/1", "core": "fake", "config": o.get("config", "small"), "elf": o["elf"],
            "elf_sha256": hashlib.sha256(open(o["elf"], "rb").read()).hexdigest(), "seed": seed, "max_cycles": maxc, "mem_latency": lat, "status": status,
            "fail_code": None, "message": msg, "cycles": end, "instret": retired_until // 2, "wall_s": 0.01,
            "source": {"core_repo": os.environ.get("FAKE_CORE"), "core_rev": core_rev()},
            "artifacts": arts, "replay": replay, "details": details}
+    if 'stimulus-file' in o:
+        res['stimulus_sha256'] = hashlib.sha256(open(o['stimulus-file'], 'rb').read()).hexdigest()
     if wall:
         res["wall_clock_timeout"] = True
     if os.environ.get("FAKE_SYNTH"):

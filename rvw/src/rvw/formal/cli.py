@@ -75,6 +75,10 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from .security.cli import register as security_register
+    security_register(s)
+
+
     template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
     from . import invariants, contracts
     template.add_argument("kind", choices=invariants.NAMES)
@@ -148,6 +152,8 @@ def register(sub) -> None:
 
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
+    proof.add_argument("--memory-model", choices=["auto", "array", "map"], default="auto")
+    proof.add_argument("--proof-cache", help="shared directory for exact proof input reuse")
     proof.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     proof.add_argument("--reset-cycles", type=int, default=1)
@@ -171,11 +177,15 @@ def register(sub) -> None:
     r.add_argument("--json", action="store_true")
     from rvw.formal.riscv import main as riscv_main
     r.set_defaults(func=riscv_main)
+    from .connectivity import register as register_connectivity
+    register_connectivity(s)
     from .equiv import register as register_equiv
     register_equiv(s)
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
+    b.add_argument("--memory-model", choices=["auto", "array", "map"], default="auto")
+    b.add_argument("--proof-cache", help="shared directory for exact proof input reuse")
     b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
     b.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
@@ -183,6 +193,8 @@ def register(sub) -> None:
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
     b.add_argument("--event-model", action="store_true", help="use sampled events and sby multiclock on")
+    b.add_argument("--clock-schedule", action="append", metavar="PORT=BITS",
+                   help="periodic clock levels, sample zero first; declare every event clock")
     b.add_argument("--async-reset", action="store_true", help="allow constant-value async reset FFs in event BMC")
     b.add_argument("--reset-cycles", type=int, default=1, help="primary-clock cycles the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")
@@ -201,6 +213,19 @@ def register(sub) -> None:
                         "free (any value: sound, may give spurious failures), zero")
     f.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")
     f.set_defaults(func=lambda a: _flow("from_sim", a))
+
+    swarm = s.add_parser("swarm", help="bounded checks from uniformly selected simulation cycles")
+    _common(swarm, 20)
+    swarm.add_argument("--trace", required=True)
+    swarm.add_argument("--start-cycle", type=int, default=1)
+    swarm.add_argument("--end-cycle", type=int, required=True)
+    swarm.add_argument("--samples", type=int, default=4)
+    swarm.add_argument("--budget", type=float, required=True)
+    swarm.add_argument("--scope")
+    swarm.add_argument("--memories", choices=["trace", "free"], default="trace")
+    swarm.add_argument("--first-failure", action="store_true")
+    from .swarm import run as run_swarm
+    swarm.set_defaults(func=run_swarm)
 
     x = s.add_parser("xprop", help="X-propagation: can an X reach a checked signal after reset?")
     _common(x, 10)

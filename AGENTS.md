@@ -33,9 +33,13 @@ keep the issue list in `TODO.md` in step with them.
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
 | `rvw/src/rvw/workloads/` | Pinned open workload builds and Spike/QEMU output checks; local Linux and licensed SPEC manifests. |
+| `ComponentSims/` | Native trace-driven component models. Bimodal/gshare direction studies and a perfect-direction bound. See its `README.md`. |
+| `rvw/src/rvw/arch/sched.py` | Compiler scheduling fragments and bounded C1/C2 instruction-stream timing. See `Arch/SCHED_MODELS.md`. |
 | `Arch/` | Native gem5 O3 model and bare-metal benchmark runtime. `rvw arch` builds, runs, and compares it with C1 RTL results. Core parameters live in project data. |
+| `rvw/src/rvw/ooo/` | Generic trace-driven OoO timing experiment. See its `README.md` and `docs/design/own-core-model.md`. |
 | `Uvm/` | Pinned Accellera UVM conformance suite and bounded TileLink-UL/load observation example. See its `README.md`. |
 | `Cosim/` | The C++ shim that lets `rvw cosim` drive Spike as a library. |
+| `rvw/src/rvw/debug/` | Simulated DMI/JTAG transport, OpenOCD reference campaign and baseline E-Trace checks. See its `README.md`. |
 | `rvw/src/rvw/lint/` | Native lint adapters and structural CDC/RDC inventory. See its `README.md`. |
 | `SpinalDB/` | Elaborates a Spinal design and writes a design database (SQLite, `rvw.designdb/20`). Queried with `rvw query`. |
 | `SpinalChecks/` | Assertions generated from the elaborated design, and the formal flows behind `rvw formal`. BOOM settings and waivers in `SpinalChecks/boom/`. |

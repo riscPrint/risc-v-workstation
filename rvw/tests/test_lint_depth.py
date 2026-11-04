@@ -170,3 +170,24 @@ def test_fifo_rejects_unestablished_gray(tmp_path, fault):
         else:
             c.execute("INSERT INTO assignments(id,target_id,component_id,kind,key,seq) VALUES(20,1,1,'data','other',1)")
     assert 'cdc.async_fifo_invalid' in rules(result(db, intent))
+
+
+def test_sequential_reconvergence_depth(tmp_path):
+    db = fixture_db(tmp_path, 'sync')
+    with sqlite3.connect(db) as c:
+        for i, d in [(4,1),(5,2),(6,2),(7,2),(8,2),(9,2)]:
+            add_reg(c, i, d)
+        edges(c, [(4,5),(5,6),(3,7),(6,8),(7,9),(8,9)])
+    assert 'cdc.reconvergence' not in rules(result(db))
+    r = result(db, {'reconvergence_depth': 2})
+    finding = next(f for f in r['findings'] if f['rule'] == 'cdc.reconvergence')
+    assert finding['endpoint'] == 'r9'
+    assert finding['reconvergence'] == [dict(endpoint='r3', register_depth=2),
+                                        dict(endpoint='r6', register_depth=2)]
+    assert r['depth']['reconvergence_depth'] == 2
+
+
+@pytest.mark.parametrize('value', [0, 65, True, '2'])
+def test_invalid_reconvergence_depth(tmp_path, value):
+    with pytest.raises(ValueError, match='reconvergence_depth'):
+        result(fixture_db(tmp_path), {'reconvergence_depth': value})

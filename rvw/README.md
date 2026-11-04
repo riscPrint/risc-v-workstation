@@ -6,7 +6,7 @@ repository README for the list and [docs/PLATFORM_CONTRACTS.md](../docs/PLATFORM
 for the shared formats (C1–C8).
 
 ```sh
-cd rvw && uv venv && uv pip install -e '.[dev,mcp]'
+cd rvw && uv sync --locked --extra dev --extra mcp
 .venv/bin/rvw --help
 .venv/bin/rvw mcp --list          # every MCP tool
 .venv/bin/rvw mcp                 # stdio MCP server
@@ -82,7 +82,7 @@ Install the development dependencies, then run tests from the workstation root:
 
 ```sh
 source env.sh
-uv pip install --python rvw/.venv/bin/python -e './rvw[dev,mcp]'
+uv sync --locked --extra dev --extra mcp --project rvw
 scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests -q
 ```
 
