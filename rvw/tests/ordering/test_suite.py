@@ -19,7 +19,7 @@ def test_manifest_uses_random_timing(tmp_path):
     text = (tmp_path / 'manifest-1.jsonl').read_text()
     assert 'mem_latency' not in text and 'mem-latency' not in text
     assert jobs[0]['seed'] == 1 and jobs[0]['rvfi_trace']
-    assert {j['name'] for j in jobs} == set(suite.GENERATORS)
+    assert {j['name'] for j in jobs} == set(suite.DEFAULT_SUITES)
 
 
 @pytest.mark.parametrize('xlen', [32, 64])
@@ -32,7 +32,7 @@ def test_spike_assertions(tmp_path, xlen, seed):
                   timeout=120, capture=True)
     assert r.returncode == 0, (r.stdout, r.stderr)
     summary = json.loads((tmp_path / 'summary.json').read_text())
-    assert len(summary['reference']) == len(suite.GENERATORS)
+    assert len(summary['reference']) == len(suite.DEFAULT_SUITES)
     assert all(r['status'] == 'pass' for r in summary['reference'])
 
 
@@ -108,3 +108,37 @@ def test_lrsc_reservation_shapes_and_effects(tmp_path, xlen, granule, effect):
     result = run_group(['spike', '--isa=' + isa, str(tmp_path / 'effects')], timeout=10, capture=True)
     assert not result.timed_out
     assert (result.returncode == 0) == (effect == 'legal'), result.stderr
+
+
+@pytest.mark.parametrize('xlen', [32, 64])
+def test_native_amo_access_faults(tmp_path, xlen):
+    if not shutil.which('spike') or not shutil.which('riscv64-unknown-elf-gcc'):
+        pytest.skip('native Spike and RISC-V GCC required')
+    r = run_group([str(ROOT / 'rvw/.venv/bin/python'), str(ROOT / 'RiscvSim/tests/ordering/run.py'),
+                   '--out', str(tmp_path), '--xlen', str(xlen), '--seeds', '7', '--suite', 'amo-fault'],
+                  timeout=120, capture=True)
+    assert r.returncode == 0, (r.stdout, r.stderr)
+    assert json.loads((tmp_path / 'summary.json').read_text())['reference'][0]['status'] == 'pass'
+
+
+@pytest.mark.parametrize('mutation', ['no_trap', 'wrong_cause', 'wrong_pc', 'changed_rd'])
+def test_amo_fault_checker_rejects_wrong_effect(tmp_path, mutation):
+    if not shutil.which('spike') or not shutil.which('riscv64-unknown-elf-gcc'):
+        pytest.skip('native Spike and RISC-V GCC required')
+    text = suite.amo_fault(64, 7)
+    if mutation == 'no_trap':
+        text = text.replace(' amoadd.w t2, t1, (t0)', ' nop')
+    elif mutation == 'wrong_cause':
+        text = text.replace(' li t5, 7', ' li t5, 6')
+    elif mutation == 'wrong_pc':
+        text = text.replace(' bne t4, s0, fail', ' addi t4, t4, 4\n bne t4, s0, fail')
+    else:
+        text = text.replace(' addi s1, s1, 1', ' li t2, 0\n addi s1, s1, 1')
+    source = tmp_path / 'fault.S'; source.write_text(text)
+    (tmp_path / 'link.ld').write_text(suite.LINK)
+    build = run_group(['riscv64-unknown-elf-gcc', '-march=rv64ima_zicsr_zifencei', '-mabi=lp64',
+                       '-nostdlib', '-T', str(tmp_path / 'link.ld'), str(source), '-o', str(tmp_path / 'fault')],
+                      timeout=30, capture=True)
+    assert build.returncode == 0, build.stderr
+    run = run_group(['spike', '--isa=rv64ima_zicsr_zifencei', str(tmp_path / 'fault')], timeout=10, capture=True)
+    assert run.returncode != 0 and not run.timed_out

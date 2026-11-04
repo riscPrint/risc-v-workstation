@@ -13,12 +13,16 @@
     "tests/non-mixed-size/BASIC_2_THREAD/SB.litmus": "a993c65cb218cac51d303d8b992026446e448dde05d5347b071dce4c1a2e5c3c",
     "tests/non-mixed-size/BASIC_2_THREAD/MP.litmus": "2db21dd1757739502eeb3af1c5d09117888da2386175e1b969da0107ad2f4a45",
     "tests/non-mixed-size/BASIC_2_THREAD/LB.litmus": "a5eecd1d9a35804add3a8bbf686b5b09370676b17a865d00ee3f35759c9ad42a",
-    "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c976fff9616a213538496ccae93380e1f2af0e861ca05f2e833926914103ee57"
+    "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c976fff9616a213538496ccae93380e1f2af0e861ca05f2e833926914103ee57",
+    "tests/non-mixed-size/BASIC_2_THREAD/MP+fence.rw.rws.litmus": "74c0f0683d6789803cdc30894eca579509c04a8a76987e2731129c60531287ee",
+    "tests/non-mixed-size/BASIC_2_THREAD/LB+fence.rw.rws.litmus": "5c719b1ef367aab5ae45e0cc12f200d58d746d92e1e3b4ea7e6600b2886f8f3a"
   },
   "allowed_sha256": {
     "tests/non-mixed-size/BASIC_2_THREAD/SB.litmus": "0e84247bd6d64aa6f78e46e64872a919f20ed11091fd8115faaa341df2177cee",
     "tests/non-mixed-size/BASIC_2_THREAD/MP.litmus": "582b7b33bbac6beaddbcd28aabadcf29ae625da98e902b76e7d9d9a902979c0a",
     "tests/non-mixed-size/BASIC_2_THREAD/LB.litmus": "71c810d0bed73400b17e99efae3f12e8e0fc590f3b2adcad08c661153bad0af4",
-    "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c568dc70a2548dc4065fe4764e130ad569f6b1cf5928369fbb8959de22058659"
+    "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c568dc70a2548dc4065fe4764e130ad569f6b1cf5928369fbb8959de22058659",
+    "tests/non-mixed-size/BASIC_2_THREAD/MP+fence.rw.rws.litmus": "a6078c47d2ff863768fc9426cf40687af3353ff9dc0210a4c352b7bf765d13f8",
+    "tests/non-mixed-size/BASIC_2_THREAD/LB+fence.rw.rws.litmus": "87d0d7a1949533168071e86dc5022e9f6d37c5c18325312f8b919367cbb1e250"
   }
 }
