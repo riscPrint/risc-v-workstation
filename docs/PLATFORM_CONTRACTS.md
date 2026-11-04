@@ -995,7 +995,9 @@ Existing and interrupted projects still require a fresh run directory.
 Raw databases and all saved `rvw.mutation/1` results provide observations only. This includes
 `/1` records with `dependency_complete: true`. A fresh `/2` writer must attach and validate
 its declaration, capture and tool evidence before it classifies outcomes. Saved-result role,
-failed-run and mutation-control checks still apply.
+failed-run and mutation-control checks still apply. All selected equivalence
+checks must return PASS before a mutation can be equivalent. Missing checks
+stay pending. Conflicting equivalence PASS and FAIL results are errors.
 
 ### Result generation layout
 
@@ -1277,6 +1279,9 @@ It does not establish bin compatibility or verification closure.
 structural inventory, exact waivers and match counts. Each finding has a SHA-256
 `id` of its diagnostic data, backend, top and configuration. Waivers require
 this value as `finding_id`, plus exact rule, endpoint, configuration and reason.
+Structural diagnostic data includes `source_domain` and `destination_domain`
+(the full domain records), `source_width` and `destination_width`. Changed clock
+or reset records and changed widths invalidate the waiver.
 A different source or message cannot reuse the waiver. Waived findings remain in
 place. Missing backends remain `not_run`. Exit 0 means completed checks without
 findings; 1 means active findings; 2 means input error; 3 means inconclusive.

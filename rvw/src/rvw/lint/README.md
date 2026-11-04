@@ -46,7 +46,9 @@ rvw lint --settings lint.json --json
 Paths resolve from the settings file. Native diagnostic endpoints use the exact
 `file:line:column` from the result. Structural endpoints use the destination
 SpinalDB path. Each finding has an `id` derived from its diagnostic data, backend, top and
-configuration. Copy this value into the waiver as `finding_id`. A source or
+configuration. Structural findings also bind the source and destination clock/reset
+domain records and signal widths. A domain change invalidates an old waiver.
+Copy this value into the waiver as `finding_id`. A source or
 message change gives a different ID, even at the same endpoint. Waivers need
 the exact ID, rule, endpoint and configuration. Old waivers without an ID are
 input errors. They do
@@ -59,7 +61,9 @@ records, extractor warnings, source locations and the SpinalDB input capture.
 Rule IDs use `verilator.<native-code>`, `verible.<native-rule>` and `cdc.*`.
 Verible rules have warning severity. Verilator preserves warning/error severity.
 Unparsed native text stays in `raw_output`. An execution failure or timeout is
-inconclusive. Missing tools and unselected backends stay visible as `not_run`.
+inconclusive. An unparsed Verible source diagnostic also makes the backend
+inconclusive, even when it also reports style warnings. A waiver cannot remove
+that incomplete-check status. Missing tools and unselected backends stay visible as `not_run`.
 
 Exit 1 means active findings. Exit 3 means incomplete evidence with no active
 findings. Exit 2 means invalid input. Exit 0 requires completed selected native

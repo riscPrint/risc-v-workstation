@@ -27,7 +27,10 @@ def analyze(db):
     def emit(rule, src, dst, message, severity='warning'):
         findings.append(dict(rule=rule, severity=severity, source=src['path'] if src else None,
                              endpoint=dst['path'], file=dst['file'], line=dst['line'], message=message,
-                             source_file=src['file'] if src else None, source_line=src['line'] if src else None))
+                             source_file=src['file'] if src else None, source_line=src['line'] if src else None,
+                             source_domain=domains.get(src['clock_domain_id']) if src else None,
+                             destination_domain=domains.get(dst['clock_domain_id']),
+                             source_width=src['width'] if src else None, destination_width=dst['width']))
 
     def clock(d):
         return (d.get('clock_key'), d.get('clock_edge'))

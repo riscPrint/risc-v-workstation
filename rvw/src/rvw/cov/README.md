@@ -489,7 +489,8 @@ A live SQLite WAL or journal refuses capture; stop the writer and checkpoint fir
 
 The observed `mutate -mode none` control is counted separately from actual mutations. With an MCY
 equivalence test, pass its name through `--equivalence-test eq` and choose detection tests via
-`--test sim` (repeatable). A PASS from equivalence records an observed equivalent survivor; equivalence
+`--test sim` (repeatable). All selected equivalence checks must return PASS to record an observed equivalent survivor.
+Missing checks stay pending. Conflicting PASS and FAIL results are errors; equivalence
 FAIL is never treated as detection. On a fresh run, omitted options select all tests for detection.
 On inspection, each omitted option uses its saved campaign role. An explicit option changes only
 that role. The Python API and MCP accept an empty equivalence list to clear that role.

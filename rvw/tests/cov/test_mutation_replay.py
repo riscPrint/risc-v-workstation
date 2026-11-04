@@ -68,7 +68,7 @@ def test_replay_preserves_selected_tests_and_classifications(fresh_project, rvw,
     original = mutation.mutate(project, run=True, baseline=project / 'baseline.sh',
                                detection_tests=tests, equivalence_tests=equivalence)
     if tests and equivalence:
-        assert [m['observed_state'] for m in original['mutants']] == ['survived', 'equivalent', 'killed', 'pending']
+        assert [m['observed_state'] for m in original['mutants']] == ['survived', 'error', 'killed', 'pending']
         assert original['counts']['killed'] == 0 and original['status'] == 'inconclusive'
     # Execution replay needs fresh MCY state. Preserve the exact selection flags.
     fresh = project / 'replay'
