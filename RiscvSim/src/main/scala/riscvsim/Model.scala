@@ -30,7 +30,7 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None) {
+                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, socMap: Option[SimMap] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace)
 }
 

@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule")
+    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "soc-map")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -115,7 +115,7 @@ object Cli {
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
       wave = bool(m, "wave") || waveFrom.isDefined || waveTo.isDefined, waveFrom = waveFrom, waveTo = waveTo,
       konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"),
-      irqSchedule = schedule,
+      irqSchedule = schedule, socMap = m.get("soc-map").map(p => SimMap.load(file(cwd, p))),
       wallTimeoutS = m.get("wall-timeout").map { v =>
         val d = try v.toDouble catch { case _: NumberFormatException => throw new UsageError(s"--wall-timeout: not a number: $v") }
         if (!java.lang.Double.isFinite(d) || d <= 0)
@@ -129,7 +129,7 @@ object Cli {
       |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
+      |                  [--konata] [--coverage] [--spinaltrace] [--soc-map PATH] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]

@@ -189,7 +189,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- one run
-  val artifactFiles: Seq[(String, String)] = Seq("log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
+  val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
     "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile)
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
@@ -213,6 +213,7 @@ class Driver(val adapter: CoreAdapter) {
     val out = new File(job.out.getPath + "-replay")
     val parts = Seq(replayScript, "run", "--elf", job.elf.getPath, "--out", out.getPath, "--config", job.config,
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
+      job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
@@ -276,6 +277,7 @@ class Driver(val adapter: CoreAdapter) {
       "elf" -> job.elf.getPath, "elf_sha256" -> elfSha,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
+      "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
       "status" -> status.name,
       "fail_code" -> failCode.map(c => ujson.Num(c.toDouble)).getOrElse(ujson.Null),
@@ -342,7 +344,8 @@ class Driver(val adapter: CoreAdapter) {
       st.wall.start()
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
-        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath), b.index, mark, st.wall)
+        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
+        "source" -> source, "session_id" -> sessionId, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall)
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>

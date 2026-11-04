@@ -123,7 +123,8 @@ cocotb`. The test bindings stay outside the generic library.
 `soc.json` describes this example's simulation map and reference policies.
 Run `rvw soc generate soc.json --out /tmp/vexriscv-soc --json` from this folder.
 See the [format and limits](../../rvw/src/rvw/soc/README.md).
-The existing adapter does not yet consume the generated simulation map.
+Pass `--soc-map DIR/sim-map.json` to `rvw/run.sh run` to use the generated RAM map.
+The adapter saves the map and captures accepted instruction and data bus requests.
 
 `isa.json` declares the adapter trace ISA and pins the opcode coverage source.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`

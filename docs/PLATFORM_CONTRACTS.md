@@ -1674,3 +1674,16 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+### Generated SoC runtime input
+
+C1 jobs can set `soc_map` / `--soc-map` to generated `rvw.sim-map/1`.
+The parser captures the map bytes. C1 records `soc_map_sha256` and lists the
+saved `sim-map.json` and `soc-transactions.jsonl` in `artifacts`.
+`rvw.soc-capture/1` starts with `map_sha256` and `identity` (source and RTL hash).
+Request lines have `cycle` (integer string), `bus`, `address` (hex string),
+`size` (byte count string), `write` (boolean) and `selected` (region name or null).
+`{"event":"end"}` ends capture. These are harness request/endpoint observations.
+They are not software-to-bus pairs. An incomplete stream cannot establish coverage.
+`rvw soc capture-check` gives mismatch (1), inconclusive (3), or input error (2).
+It has no pass verdict. `--platform` in cosim can also read `rvw.soc/1` directly.

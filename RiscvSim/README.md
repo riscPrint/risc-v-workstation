@@ -458,3 +458,9 @@ It does not establish ISA correctness. Keep external effects disabled. This
 format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
+
+## Generated SoC maps
+
+`run` and `run-many` accept `--soc-map PATH` (`soc_map` in manifests).
+See the [SoC guide](../rvw/src/rvw/soc/README.md#runtime-maps-and-live-capture)
+for region checks, device placement, captured bus requests and limits.

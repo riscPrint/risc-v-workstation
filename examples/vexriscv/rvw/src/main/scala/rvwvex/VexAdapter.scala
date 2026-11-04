@@ -43,15 +43,20 @@ object VexAdapter extends CoreAdapter {
     require(ctx.elf.entry == 0x80000000L, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
       throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
+    job.socMap.foreach(m => require(m.regions.forall(_.kind == "ram"), "VexRiscv adapter supports RAM only"))
     val memory = mutable.LongMap.empty[Int]
-    def inRam(a: Long, n: Long): Boolean = a >= 0x80000000L && n >= 0 && a + n <= 0x81000000L
+    def inRam(a: Long, n: Long, permission: Char = 'r'): Boolean = job.socMap match {
+      case Some(m) => m.region(BigInt(a), BigInt(n), permission).exists(_.kind == "ram")
+      case None => a >= 0x80000000L && n >= 0 && a + n <= 0x81000000L
+    }
     ctx.elf.load { (addr, bytes) =>
-      require(inRam(addr, bytes.length), "ELF segment outside 16 MiB RAM")
+      require(inRam(addr, bytes.length), "ELF segment outside mapped RAM")
       bytes.indices.foreach(i => memory(addr + i) = bytes(i) & 255)
     }
     def readWord(addr: Long): BigInt = (0 until 4).foldLeft(BigInt(0)) { (v, i) =>
       v | (BigInt(memory.getOrElse((addr & ~3L) + i, 0)) << (8 * i))
     }
+    val capture = job.socMap.map(m => new MapCapture(m, job, ctx))
     val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
     var retired = 0L
     var traps = 0L
@@ -91,7 +96,9 @@ object VexAdapter extends CoreAdapter {
             if (respond) pending = None
             if (dut.ibus.cmd.valid.toBoolean && dut.ibus.cmd.ready.toBoolean) {
               val addr = dut.ibus.cmd.pc.toLong
-              pending = Some((cycle + delay(), readWord(addr), !inRam(addr & ~3L, 4)))
+              val selected = job.socMap.flatMap(_.region(BigInt(addr & ~3L), 4, 'x'))
+              capture.foreach(_.request(cycle, "ibus", BigInt(addr & ~3L), 4, false, selected))
+              pending = Some((cycle + delay(), readWord(addr), !inRam(addr & ~3L, 4, 'x')))
             }
           }
         }
@@ -110,7 +117,10 @@ object VexAdapter extends CoreAdapter {
             if (dut.dbus.cmd.valid.toBoolean && dut.dbus.cmd.ready.toBoolean) {
               val cmd = dut.dbus.cmd
               val addr = cmd.address.toLong & ~3L
-              val valid = inRam(addr, 4)
+              val permission = if (cmd.wr.toBoolean) 'w' else 'r'
+              val selected = job.socMap.flatMap(_.region(BigInt(addr), 4, permission))
+              capture.foreach(_.request(cycle, "dbus", BigInt(addr), 4, cmd.wr.toBoolean, selected))
+              val valid = inRam(addr, 4, permission)
               if (cmd.wr.toBoolean) {
                 require(valid, f"store outside RAM at 0x$addr%x")
                 val data = cmd.data.toBigInt
@@ -158,10 +168,10 @@ object VexAdapter extends CoreAdapter {
       }
       writer.foreach(_.end(result._4, result._1.name))
       result
-    } finally { writer.foreach(_.close()) }
+    } finally { writer.foreach(_.close()); capture.foreach(_.close()) }
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
-        "rvfi_monitor" -> false, "memory_bytes" -> 16777216))
+        "rvfi_monitor" -> false, "memory_bytes" -> job.socMap.map(m => ujson.Str(m.regions.map(_.size).sum.toString)).getOrElse(ujson.Num(16777216))))
   }
 }
 

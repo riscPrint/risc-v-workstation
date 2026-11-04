@@ -680,3 +680,7 @@ including lookahead. It never calls that digest a complete input trace hash.
 EOF before an end event is inconclusive. Save the complete stream for offline
 replay. The CLI and the BOOM adapter do not yet launch this API. This increment
 provides the generic integration point, not BOOM online runtime evidence.
+
+`--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
+and MMIO ranges from its regions. It preserves the explicit reference policy.
+The command captures the source map before it starts Spike.
