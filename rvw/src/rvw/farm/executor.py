@@ -12,6 +12,7 @@ import time
 
 from rvw.common.proc import run_group
 from rvw.results import RunResult
+from .limits import command, validate
 
 
 def save_json(path, value):
@@ -44,8 +45,9 @@ def digest(data):
 
 def worker(request, on_start=None):
     """Remote endpoint. Requires rvw installed in the host's selected Python."""
+    limits = validate(request.get("limits", {}))
     deadline = time.monotonic() + request["timeout"]
-    identity = run_group(request["identity_command"], capture=True, timeout=min(60, request["timeout"]), on_start=on_start)
+    identity = run_group(command(request["identity_command"], limits), capture=True, timeout=min(60, request["timeout"]), on_start=on_start)
     if identity.returncode or json.loads(identity.stdout) != request["identity"]:
         raise ValueError("remote tool identity differs")
     with tempfile.TemporaryDirectory(prefix="rvw-shard-") as temp:
@@ -60,8 +62,8 @@ def worker(request, on_start=None):
             rows.append({**cell["options"], "elf": str(elf), "out": str(root / str(i))})
         manifest = root / "manifest.jsonl"
         manifest.write_text("".join(json.dumps(row) + "\n" for row in rows))
-        r = run_group([*request["adapter"], "run-many", "--manifest", str(manifest),
-                       "--jobs", str(request["jobs"])], timeout=max(.001, deadline - time.monotonic()), capture=True, on_start=on_start)
+        r = run_group(command([*request["adapter"], "run-many", "--manifest", str(manifest),
+                       "--jobs", str(request["jobs"])], limits), timeout=max(.001, deadline - time.monotonic()), capture=True, on_start=on_start)
         cells = []
         for i, row in enumerate(rows):
             out = Path(row["out"])
@@ -75,7 +77,7 @@ def worker(request, on_start=None):
                         files[p.relative_to(out).as_posix()] = {"data": base64.b64encode(data).decode(), "sha256": digest(data)}
             cells.append({"id": request["cells"][i]["id"], "files": files})
         return {"identity": request["identity"], "returncode": r.returncode,
-                "timed_out": r.timed_out, "cells": cells, "log": (r.stdout or "") + (r.stderr or "")}
+                "limits": limits, "timed_out": r.timed_out, "cells": cells, "log": (r.stdout or "") + (r.stderr or "")}
 
 
 def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1, timeout=600):
@@ -121,7 +123,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
             return result
         request = dict(cells=selected, adapter=adapter, identity_command=identity_command,
                        identity=identity, jobs=jobs, timeout=timeout, token=controls[index]["token"],
-                       resources={"cpu": jobs, **host.get("resources", {})})
+                       resources={"cpu": jobs, **host.get("resources", {})}, limits=host.get("limits", {}))
         try:
             address = host["address"]
             if address.startswith("-"):
@@ -134,6 +136,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                 raise ValueError(f"SSH shard lost or aborted: exit {r.returncode}: {r.stderr}")
             reply = json.loads(r.stdout)
             result["reservation"] = reply.get("reservation")
+            result["limits"] = reply.get("limits", {})
             (out / f"shard-{index}.json").write_text(json.dumps(reply))
             if reply["identity"] != identity or reply["returncode"] or reply["timed_out"]:
                 raise ValueError("shard identity or completion differs")

@@ -172,3 +172,35 @@ def test_controller_checkpoint_survives_dispatch_crash(tmp_path, adapter, monkey
     assert report['status'] == 'inconclusive'
     assert report['plan'][0]['options']['seed'] == 4
     assert report['shards'][0]['missing_cells'] == ['0']
+
+
+def test_native_limit_is_inherited_by_adapter_children(tmp_path):
+    from rvw.farm.limits import command
+    from rvw.common.proc import run_group
+    code = 'import resource,json; print(json.dumps(resource.getrlimit(resource.RLIMIT_FSIZE)))'
+    result = run_group(command([sys.executable, '-c',
+        'import subprocess,sys; subprocess.run([sys.executable,"-c",sys.argv[1]],check=True)', code],
+        {'file_bytes': 4096}), capture=True, timeout=5)
+    assert result.returncode == 0
+    assert json.loads(result.stdout) == [4096, 4096]
+
+
+def test_native_file_limit_stops_oversize_write(tmp_path):
+    from rvw.farm.limits import command
+    from rvw.common.proc import run_group
+    output = tmp_path / 'large'
+    result = run_group(command([sys.executable, '-c',
+        'import pathlib,sys; pathlib.Path(sys.argv[1]).write_bytes(b"x"*8192)', str(output)],
+        {'file_bytes': 1024}), capture=True, timeout=5)
+    assert result.returncode != 0
+    assert output.stat().st_size <= 1024
+
+
+def test_native_limits_refuse_unsupported_or_bad_values(monkeypatch):
+    from rvw.farm import limits
+    for value in ({'cpu_seconds': True}, {'open_files': 0}, {'rss': 100}):
+        with pytest.raises(ValueError):
+            limits.validate(value)
+    monkeypatch.setattr(limits.sys, 'platform', 'darwin')
+    with pytest.raises(ValueError, match='unsupported'):
+        limits.validate({'address_space_bytes': 1000000000})

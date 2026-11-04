@@ -80,6 +80,19 @@ times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
 
+## Native OS limits
+
+A host can set `limits`, for example `{"cpu_seconds": 120,
+"file_bytes": 1073741824, "open_files": 256}`. Linux also supports
+`address_space_bytes`. Other OSes refuse that field. Unknown fields, nonpositive
+values and unsupported limits are errors before identity or adapter execution.
+The worker applies hard `setrlimit` limits in a fresh Python process, then calls
+`exec`. Identity commands, adapters and their children inherit these limits.
+An existing lower OS hard limit takes precedence. Values apply per process,
+not to the campaign total. CPU time is not a CPU slot count. Address space is
+not RSS. Exceeding a limit cannot earn collection completeness from missing C1
+files. Limits are opt-in and do not replace cooperative host reservations.
+
 ## Controller recovery
 
 `rvw farm recover --out /tmp/campaign` (MCP `farm_recover`) reads the saved
