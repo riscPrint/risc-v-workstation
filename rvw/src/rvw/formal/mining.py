@@ -8,7 +8,7 @@ import sys
 import time
 import math
 
-from .contracts import harness, validate, check_ports
+from .contracts import harness, validate, check_ports, assumption_inventory
 
 
 def candidates(signals, samples):
@@ -64,9 +64,11 @@ def run(args):
                           tie=None, out=str(out / name), json=False, project=None)
         with contextlib.redirect_stdout(sys.stderr):
             _flow('bmc', child)
-        check_ports(plan, json.loads((out / name / 'module_ports.json').read_text()))
+        model = json.loads((out / name / 'module_ports.json').read_text())
+        check_ports(plan, model)
         result = json.loads((out / name / 'result.json').read_text())
-        rows.append({'id': name, 'status': result['status'], 'proof_kind': result['proof_kind']})
+        rows.append({'id': name, 'status': result['status'], 'proof_kind': result['proof_kind'],
+                     'assumptions': assumption_inventory(model)})
         if name != 'target' and result['status'] == 'pass' and result['proof_kind'] == 'unbounded':
             proven.append(name)
     target = rows[-1]
@@ -77,4 +79,6 @@ def run(args):
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     if args.json:
         print(json.dumps(result))
+    else:
+        print(result['status'])
     return 0 if target['status'] == 'pass' else 1

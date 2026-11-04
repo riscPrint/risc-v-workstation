@@ -120,6 +120,19 @@ def check_ports(plan, model):
             raise ValueError(f"{node['id']}: RTL interface differs from typed contract")
 
 
+def assumption_inventory(model):
+    """Keep source locations for environment restrictions in every obligation."""
+    rows = []
+    for module, contents in model['modules'].items():
+        for name, cell in contents.get('cells', {}).items():
+            if cell['type'] == '$assume' or (cell['type'] == '$check' and
+                    cell.get('parameters', {}).get('FLAVOR') == 'assume'):
+                rows.append({'module': module, 'cell': name,
+                             'source': cell.get('attributes', {}).get('src'),
+                             'type': cell['type']})
+    return rows
+
+
 def run(args):
     from .cli import _flow
     from .snapshot import InputSnapshot
@@ -152,11 +165,13 @@ def run(args):
                           tie=None, out=str(out / name), json=False, project=None)
         with contextlib.redirect_stdout(sys.stderr):
             _flow('bmc', child)
+        model = json.loads((out / name / 'module_ports.json').read_text())
         if name == 'closed':
-            check_ports(plan, json.loads((out / name / 'module_ports.json').read_text()))
+            check_ports(plan, model)
         result = json.loads((out / name / 'result.json').read_text())
         rows.append({'id': name, 'status': result['status'], 'proof_kind': result['proof_kind'],
-                     'result': str(out / name / 'result.json')})
+                     'result': str(out / name / 'result.json'),
+                     'assumptions': assumption_inventory(model)})
     passed = all(r['status'] == 'pass' and r.get('proof_kind') == 'unbounded' for r in rows)
     result = {'schema': 'rvw.formal-contracts/1', 'status': 'conditional_proved' if passed else 'inconclusive',
               'plan_sha256': hashlib.sha256(raw).hexdigest(), 'obligations': rows,
@@ -167,4 +182,6 @@ def run(args):
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     if args.json:
         print(json.dumps(result))
+    else:
+        print(result['status'])
     return 0 if passed else 1

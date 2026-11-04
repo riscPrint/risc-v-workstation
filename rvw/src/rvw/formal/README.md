@@ -760,7 +760,8 @@ wiring. A local proof alone cannot earn composed success.
 
 Exit 0 means `conditional_proved`. Every component and the closed composition
 must have an unbounded pass with the existing bounded reachability guard.
-Source RTL assumptions remain environment restrictions. This flow does not prove
+Source RTL assumptions remain environment restrictions. Each obligation records
+the assumption cells and their source locations. This flow does not prove
 that every assertion activation is reachable. It does not certify a supplied RTL
 export's generator revision. The budget limits each solver to the remaining time
 and stops new jobs after expiry. Frontend probes can add time beyond this budget.

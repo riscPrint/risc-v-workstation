@@ -125,3 +125,35 @@ def test_abstraction_metadata_and_refused_assumptions(tmp_path, monkeypatch):
     args._input_snapshot = Namespace(capture=Capture(tmp_path / 'other'))
     with pytest.raises(ValueError, match='assumptions need contracts'):
         cuts.commands(args, tmp_path, [])
+
+
+def test_environment_assumptions_keep_source_locations():
+    from rvw.formal.contracts import assumption_inventory
+    model = {'modules': {'Unit': {'cells': {
+        'environment': {'type': '$check', 'parameters': {'FLAVOR': 'assume'}, 'attributes': {'src': 'unit.sv:4'}},
+        'guarantee': {'type': '$assert'}}}}}
+    assert assumption_inventory(model) == [
+        {'module': 'Unit', 'cell': 'environment', 'source': 'unit.sv:4', 'type': '$check'}]
+
+
+def test_freelist_export_recipe_rejects_wrong_capacity(tmp_path):
+    from pathlib import Path
+    import subprocess
+    import sys
+    script = Path(__file__).resolve().parents[3] / 'SpinalChecks/boom/freelist-capacity.py'
+    source = tmp_path / 'Wrong.v'
+    source.write_text('''module RenameFreeList (
+ input wire clk,
+ input wire reset,
+ output wire io_alloc_pregs_0_valid,
+ output wire [5:0] io_alloc_pregs_0_payload,
+ output wire [52:0] io_debug_freelist
+);
+endmodule
+''')
+    out = tmp_path / 'prepared'
+    run = subprocess.run([sys.executable, str(script), '--verilog', str(source), '--out', str(out)],
+                         capture_output=True, text=True)
+    assert run.returncode != 0
+    assert '52-entry' in run.stderr
+    assert not out.exists()

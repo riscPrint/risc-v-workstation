@@ -1865,7 +1865,8 @@ report must stay within the copied inputs. See
 `rvw formal contracts` writes `rvw.formal-contracts/1` in a fresh output directory.
 Fields are `status`, `plan_sha256`, `obligations`, `restrictions` and `input_capture`.
 Each obligation has an `id`, `status`, and either a child `result` with `proof_kind`
-or a reason that it was not run. `conditional_proved` requires fresh unbounded
+or a reason that it was not run. Run obligations also list assumption cells and
+their source locations. `conditional_proved` requires fresh unbounded
 passes for every component and the closed composition. Other outcomes give
 `inconclusive`. The command returns 0 only for `conditional_proved`. Input errors
 return 2. This report is not a C4 acceptance gate or a reusable proof certificate.
