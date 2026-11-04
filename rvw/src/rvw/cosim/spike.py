@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 4
+SHIM_VERSION = 5
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -195,6 +195,10 @@ class Spike:
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
+        lib.rvw_vector.argtypes = [C.c_void_p, C.POINTER(C.c_uint64), C.POINTER(C.c_uint8), C.c_size_t]
+        lib.rvw_virtual.argtypes = [C.c_void_p, C.c_int]
+        lib.rvw_virtual.restype = C.c_uint
+        lib.rvw_read_physical.argtypes = [C.c_void_p, C.c_uint64, C.POINTER(C.c_uint64)]
         self.lib = lib = _Serialized(lib)
         def array(rs):
             return (C.c_uint64 * (len(rs)*2))(*(v for r in rs for v in r))
@@ -247,8 +251,28 @@ class Spike:
             if result["tval"] != wanted:
                 self.set_trap_tval(wanted)
                 result["tval"] = wanted
+        from .extensions import has_extension, H_CSRS
+        if has_extension(self.platform.isa, "v"):
+            meta = (C.c_uint64 * 7)()
+            data = (C.c_uint8 * (32*65536//8))()
+            if self.lib.rvw_vector(self.handle, meta, data, len(data)):
+                raise ValueError(self.error())
+            self.vector_config = dict(vlen=int(meta[0]), elen=int(meta[1]))
+            width = int(meta[0])//8
+            result["vector"] = dict(zip(("vstart", "vl", "vtype", "vcsr", "vs"), map(int, meta[2:])))
+            result["vector"]["regs"] = [int.from_bytes(bytes(data[r*width:(r+1)*width]), "little") for r in range(32)]
+        if has_extension(self.platform.isa, "h"):
+            result["hypervisor"] = dict(virtual=bool(self.lib.rvw_virtual(self.handle, 1)),
+                virtual_after=bool(self.lib.rvw_virtual(self.handle, 0)), mode_after=self.mode(),
+                csrs=self.csr_snapshot([hex(a) for a in H_CSRS]), translations=[])
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
+
+    def read_physical(self, address):
+        value = C.c_uint64()
+        if self.lib.rvw_read_physical(self.handle, address, C.byref(value)):
+            raise ValueError(self.error())
+        return value.value
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)

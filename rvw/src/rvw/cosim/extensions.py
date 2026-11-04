@@ -89,3 +89,18 @@ def serialize(value):
     if isinstance(value, list):
         return [serialize(v) for v in value]
     return value
+
+
+def vector_sources(insn):
+    """Integer sources for OP-V and vector memory major opcodes."""
+    op, f3 = insn & 127, (insn >> 12) & 7
+    rs1, rs2 = (insn >> 15) & 31, (insn >> 20) & 31
+    if op == 0x57:
+        if f3 == 7:
+            if insn >> 30 == 3:  # vsetivli uses an immediate AVL
+                return 0, 0
+            return rs1, rs2 if insn >> 25 == 0x40 else 0
+        return (rs1 if f3 in (4, 6) else 0), 0
+    if op in (7, 0x27) and f3 in (0, 5, 6, 7):
+        return rs1, rs2 if (insn >> 26) & 3 == 2 else 0
+    return None

@@ -241,6 +241,12 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                 break
             expected_handler = event_prior_handler if represented_by_event else after_trap
             event_effect = None
+            if "vector" in trace.header and getattr(model, "vector_config", None) != trace.header["vector"]:
+                raise ValueError("reference VLEN/ELEN differs from trace or is unavailable")
+            if actual.get("hypervisor", {}).get("translations"):
+                if not hasattr(model, "translations"):
+                    raise ValueError("reference cannot check two-stage translation records")
+                expected["hypervisor"]["translations"] = model.translations(expected)
             fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
             if trace.header["schema"] == "rvw.rvfi/2":
                 state_fields = ["fd_valid", "fflags", "fcsr"]
