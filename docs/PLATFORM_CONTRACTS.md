@@ -2567,6 +2567,30 @@ not a generator-origin or adapter-conformance claim. `source.identity_complete`
 remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
 
+## Native branch component reports
+
+`ComponentSims/` defines `rvw.branch-trace/1`. The first line is schema plus
+positive total instruction count. Each following `B ORDINAL PC TAKEN` row gives
+a conditional branch, its one-based all-instruction ordinal, hexadecimal PC and
+0/1 outcome. Ordinals strictly increase and cannot exceed the total. A final
+`END` line is mandatory. No lines follow it. Nonbranches are represented by gaps.
+
+The native engine emits `rvw.branch-sim/1` with `status=reported`, `model`,
+`entries`, `history_bits`, `pc_shift`, `warmup_instructions`, `instructions`,
+`branches`, `direction_misses`, `mpki`, `oracle_mpki=0`,
+`training=sequential-actual-path`, and `rtl_comparison=inconclusive`.
+`instructions` excludes warmup. `mpki` is 1000 times measured direction misses
+divided by measured instructions. No C1 pass or C4 verdict is issued. Exit 0
+means report completion; exit 2 means error without a stdout report.
+
+The standalone Spike adapter selects one successful traced row from
+`rvw.workload-verify/1`. It checks the retained stderr hash and instruction count.
+It rejects multi-hart logs, exceptions and ambiguous branch successors.
+Its `rvw.branch-sim/1` report adds `workload`, `elf_sha256`, `scope`, `oracle`,
+`verify`, `source`, `trace`, `engine`, and `adapter_sha256`. The four file objects
+contain absolute `path` and `sha256`. Scope includes startup and checker code.
+A supplied verification report remains local trusted evidence, not an immutable
+C8 generation. The adapter does not independently rerun workload correctness.
 ## C9 compiler scheduling extension
 
 `rvw arch sched-generate` reads `rvw.sched-core/1`. Required fields are `name`,
