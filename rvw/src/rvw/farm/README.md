@@ -58,8 +58,8 @@ A host can set `resources`, for example:
 ```
 
 CPU slots must cover `--jobs`. Workers reserve these values under one host file
-lock before they run the identity command or adapter. All aliases on the same
-OS share capacity. Set `~/.config/rvw/farm-capacity.json` on each host to an object
+lock before they run the identity command or adapter. All aliases for the same
+OS user share capacity. Different OS users do not share this reservation store. Set `~/.config/rvw/farm-capacity.json` on each host to an object
 with `cpu` and `memory_bytes`. Defaults reserve at most logical CPU count minus
 one (minimum one), and half physical memory. Omitted memory means zero requested
 bytes. Omitted locks means no named lock. A request waits up to the shard timeout
@@ -79,6 +79,23 @@ all recorded tests) and run time (sum of all test `wall_s` values). Missing wall
 times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
+
+## Notification export and access
+
+`rvw farm notifications --out /tmp/campaign` (MCP `farm_notifications`) emits
+`rvw.farm-notifications/1` JSON. Events separate DUT failures, infrastructure
+faults, incomplete shards and collection status. Event IDs are deterministic
+for the same captured event. Consumers can use them to suppress duplicate
+notifications. The command reads checkpoints after a controller crash. It does
+not send messages, store delivery state or retry external services. External
+email, chat and webhook delivery remain open. Collection complete is not pass.
+
+SSH access uses OS accounts and trusted keys. Capacity files are per OS user.
+The static dashboard has no server, login, roles or write API. Use OS file
+permissions or an existing authenticated web host to share its HTML. Do not
+assume that separate SSH users share capacity or that generated HTML supplies
+access control. A shared multi-user scheduler and authenticated dashboard
+service remain open.
 
 ## Recorded repeats
 

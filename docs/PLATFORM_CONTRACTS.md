@@ -1284,6 +1284,12 @@ Unmarked directories are not deleted. Evicted or partial entries are misses.
 `rvw.farm/1` records the explicit run-many plan, campaign-local cell IDs, options,
 ELF hashes, hosts, per-shard completion, C1 outcomes and missing IDs. `complete`
 means collection is complete. It does not mean tests pass or a gate accepts.
+`rvw.farm-notifications/1` exports deterministic event IDs, campaign ID, event
+kind, subject and details. DUT failures and infrastructure faults are distinct.
+Collection-complete events do not claim pass. Delivery is `not_attempted`.
+The export is read-only; external consumers own delivery and deduplication.
+Host reservation stores are per OS user, not a cross-user admission service.
+The static dashboard has no authentication layer.
 New reports also carry `campaign_id` and the captured adapter `identity`.
 `rvw.farm-classification/1` groups recorded executions by tool identity, ELF
 hash and complete options. Every attempt retains its original outcome, source

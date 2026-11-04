@@ -16,6 +16,9 @@ def register(sub):
     stop = commands.add_parser("cancel")
     stop.add_argument("--out", required=True)
     stop.set_defaults(func=cancel_command)
+    notify = commands.add_parser("notifications")
+    notify.add_argument("--out", required=True)
+    notify.set_defaults(func=notifications_command)
     classification = commands.add_parser("classify")
     classification.add_argument("reports", nargs='+')
     classification.set_defaults(func=classify_command)
@@ -58,3 +61,8 @@ def recover_command(args):
 def classify_command(args):
     from .classify import classify
     print(json.dumps(classify(args.reports)))
+
+
+def notifications_command(args):
+    from .notifications import notifications
+    print(json.dumps(notifications(args.out)))
