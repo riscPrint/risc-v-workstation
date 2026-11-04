@@ -92,3 +92,18 @@ nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/test_c2rtl.py -q
   declare rounding mode, NaNs, subnormals, signed zero, flags and latency first.
 - This is the first increment of epic #19. There is no BOOM binding, sequential
   datapath support, signed model support, `rvw formal` subcommand or MCP endpoint.
+
+### Oracle type and FP boundary
+
+The driver requires the exact C function pointer type with a C11 static assertion.
+It refuses signed, wider and floating-point results and different argument types
+before it runs the model. Division by zero, signed overflow and a negative signed
+left shift have independent negative tests. Each must stop before SBY starts.
+An output mask does not make an undefined intermediate operation valid.
+
+FP arithmetic remains unsupported. A future SoftFloat adapter must declare the
+format and operation, a rounding mode for each call, tininess detection before or
+after rounding, subnormal handling, signed zero, NaN payload and signaling NaN
+rules, and the five exception flags. The RTL must return both result bits and
+flags. It must use the same declared latency and handshake contract. Host C
+floating-point types cannot supply this oracle. No FP rounding result is claimed.
