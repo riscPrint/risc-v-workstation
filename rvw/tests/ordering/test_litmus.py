@@ -82,8 +82,9 @@ def test_native_official_model(tmp_path):
     adapter.write_text(f'#!{sys.executable}\n' + '''import json, sys
 from pathlib import Path
 name = Path(sys.argv[1]).stem
-keys = ['1:x5', '1:x7'] if name == 'MP' else ['0:x5', '1:x5'] if name == 'LB' else ['0:x7', '1:x7']
+keys = ['1:x5', '1:x7'] if name.startswith('MP') else ['0:x5', '1:x5'] if name.startswith('LB') else ['0:x7', '1:x7']
 state = dict.fromkeys(keys, 1)
+if name.startswith('LB+'): state = dict.fromkeys(keys, 0)
 print(json.dumps({'harts': 2, 'complete': True, 'observations': [{'state': state, 'count': 1}]}))
 ''')
     adapter.chmod(0o755)

@@ -51,20 +51,23 @@ def check(source, bindings, database, transactions=None):
             record('decode:' + d['path'], actual, expected)
     bridges = {}
     for b in spec['bridges']:
-        keys(b, {'name', 'region', 'local_base', 'data_bytes'}, {'name', 'region', 'local_base', 'data_bytes'})
+        keys(b, {'name', 'region', 'local_base', 'data_bytes', 'byteorder', 'software_byteorder'}, {'name', 'region', 'local_base', 'data_bytes'})
         name = ident(b['name'])
         if name in bridges or b['region'] not in regions:
             raise ValueError('duplicate bridge or unknown region')
         b['local_base'] = number(b['local_base'])
         if b['local_base'] < 0 or type(b['data_bytes']) is not int or b['data_bytes'] not in (1, 2, 4, 8, 16):
             raise ValueError('invalid bridge base or data width')
+        if any(b.get(k, 'little') not in ('little', 'big') for k in ('byteorder', 'software_byteorder')):
+            raise ValueError('unsupported bridge byte order')
         bridges[name] = b
     count = 0
     if transactions:
         with Path(transactions).open() as stream:
             for line in stream:
                 t = json.loads(line)
-                keys(t, {'bridge', 'software_address', 'bus_address', 'size'}, {'bridge', 'software_address', 'bus_address', 'size'})
+                if 'beats' not in t:
+                    keys(t, {'bridge', 'software_address', 'bus_address', 'size'}, {'bridge', 'software_address', 'bus_address', 'size'})
                 b = bridges[t['bridge']]
                 r = regions[b['region']]
                 sw, bus, size = number(t['software_address']), number(t['bus_address']), number(t['size'])
@@ -73,7 +76,11 @@ def check(source, bindings, database, transactions=None):
                 count += 1
                 record(f'transaction:{count}:bounds', r['base'] <= sw and sw + size <= r['base'] + r['size'], True)
                 record(f'transaction:{count}:translation', bus, sw - r['base'] + b['local_base'])
-                record(f'transaction:{count}:width', size <= b['data_bytes'] and bus % b['data_bytes'] + size <= b['data_bytes'], True)
+                if 'beats' in t:
+                    from .bridge import compare
+                    compare(t, b, r, record, f'transaction:{count}')
+                else:
+                    record(f'transaction:{count}:width', size <= b['data_bytes'] and bus % b['data_bytes'] + size <= b['data_bytes'], True)
     if not count:
         gaps.append('sampled transactions')
     if not spec['decoders']:

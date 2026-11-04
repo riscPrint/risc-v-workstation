@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import pytest
-from rvw.formal.sail_subset import slice_source, generate, INSTRUCTIONS
+from rvw.formal.sail_subset import slice_source, generate, INSTRUCTIONS, property_trace, MODEL_COMMIT, RULE_HASH
 
 
 def test_refuse_changed_rules(tmp_path):
@@ -29,10 +29,15 @@ def test_native_generation(tmp_path):
         pytest.skip('native Sail compiler, pinned source and riscv-formal required')
     result=generate(model,compiler,upstream,tmp_path/'generated')
     assert result['subset']==list(INSTRUCTIONS)
+    assert result['implementation_options']['xlen'] == 32
+    assert result['implementation_options']['nret'] == 1
     for insn in INSTRUCTIONS:
         text=(tmp_path/'generated'/f'insn_{insn}.v').read_text()
         assert 'module sail_'+insn in text
         assert 'sail_model' in text
+        trace = result['files'][insn]['property_trace']
+        assert trace == property_trace(model, insn)
+        assert trace['id'] == f'sail.rv32i.{insn}.result'
 
 @pytest.mark.parametrize('insn',INSTRUCTIONS)
 @pytest.mark.parametrize('wrong',[False,True])
@@ -66,3 +71,32 @@ def test_native_independent_model(tmp_path,insn,wrong):
         result=run_group(['sby','-f','test.sby'],cwd=tmp_path,timeout=30,stdout=log,stderr=log)
     assert not result.timed_out
     assert (tmp_path/'test/status').read_text().split()[0]==('FAIL' if wrong else 'PASS')
+
+
+@pytest.mark.parametrize('xlen,nret', [(64, 1), (32, 2), (True, 1), (32, True)])
+def test_refuse_unsupported_options(tmp_path, xlen, nret):
+    with pytest.raises(ValueError, match='XLEN=32 and NRET=1'):
+        generate(tmp_path, 'missing', tmp_path, tmp_path/'out', xlen=xlen, nret=nret)
+    assert not (tmp_path/'out').exists()
+
+
+@pytest.mark.parametrize('instruction,line', [('add', 239), ('sub', 247), ('addi', 161)])
+def test_trace_rule(instruction, line):
+    model = os.environ.get('SAIL_RISCV_SOURCE')
+    if not model:
+        pytest.skip('pinned Sail model source required')
+    trace = property_trace(model, instruction)
+    assert trace['sail']['line'] == line
+    assert trace['sail']['commit'] == MODEL_COMMIT
+    assert trace['sail']['sha256'] == RULE_HASH
+    assert trace['scope'] == 'arithmetic expression'
+    assert 'decode' in trace['upstream_shell']
+    assert 'full architectural transition' in trace['excluded']
+
+
+def test_trace_rejects_changed_rules(tmp_path):
+    rule = tmp_path/'model/extensions/I/base_insts.sail'
+    rule.parent.mkdir(parents=True)
+    rule.write_text('    ADD  => X(rs1) - X(rs2),')
+    with pytest.raises(ValueError, match='hash'):
+        property_trace(tmp_path, 'add')
