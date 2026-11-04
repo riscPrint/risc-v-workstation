@@ -496,3 +496,13 @@ hardware behavior.
 Fitting: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12). RV32/in-order support: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Wide-core structures: [#72](https://github.com/riscPrint/risc-v-workstation/issues/72). Experiment management: [#160](https://github.com/riscPrint/risc-v-workstation/issues/160).
 
 Retained limit: Source-to-model parameter mapping remains manual and reviewed. Complete capture, portable report paths and immutable generations have no dedicated issue. C9 remains measured model evidence, with no calibration acceptance or hardware proof.
+
+For generic automatic fitting, use the search plan in
+[Arch/README.md](../Arch/README.md#bayesian-fitting-repeats-and-predictions).
+Keep plans, descriptions and results in the core project. Search uses saved
+RTL observations, selects settings on training events, and scores the selected
+settings on held-out workloads. Do not use the held-out score for more tuning
+without a new independent held-out set. Use `arch measure` to repeat both
+engines. Use `arch predict` before a later RTL experiment, then use
+`arch score-prediction` to record its model gap. Report intervals and event
+correlations with their limits. Neither supplies a fidelity verdict.
