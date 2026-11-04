@@ -57,16 +57,34 @@ lock suite python -m pip install -e './rvw[dev,mcp]'
 export CARGO_BUILD_JOBS=2
 export SBT_OPTS="${SBT_OPTS:-} -Dsbt.task.cpus=2"
 scala() { (cd "$1"; "$RVW_CI_WORK/scripts/with-lock.sh" sbt nice -n 10 sbt -batch -J-XX:ActiveProcessorCount=2 "${@:2}"); }
+pytest_report() {
+  local report="$1" budget="$2" status=0 summary_status=0
+  shift 2
+  lock suite python -m pytest rvw/tests "$@" --junitxml="$report" || status=$?
+  # Publish counts even when pytest fails. Never hide the original test exit.
+  if [ -f "$report" ]; then
+    if [ -n "$budget" ]; then
+      python scripts/ci-test-summary.py "$report" --max-seconds "$budget" || summary_status=$?
+    else
+      python scripts/ci-test-summary.py "$report" || summary_status=$?
+    fi
+  else
+    echo "Python JUnit report missing; counts unavailable." >&2
+    summary_status=1
+  fi
+  if [ "$status" -ne 0 ]; then return "$status"; fi
+  return "$summary_status"
+}
 case "$mode" in
   fast)
-    lock suite python -m pytest rvw/tests -m fast --strict-markers -q -ra --durations=10 --junitxml=fast-results.xml
+    pytest_report fast-results.xml 300 -m fast --strict-markers -q -ra --durations=10
     (cd vscode; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 bash -e -c 'npm ci; npm run typecheck; npm run build; npm test')
     (cd SpinalTrace; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 cargo test --locked -p spinaltrace-rs)
     scala SpinalWaves/spinalwaves 'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'
     ;;
   nightly-python)
     scala SpinalDB/spinaldb Test/compile
-    lock suite python -m pytest rvw/tests --strict-markers -q -ra --durations=20 --junitxml=nightly-results.xml
+    pytest_report nightly-results.xml "" --strict-markers -q -ra --durations=20
     ;;
   nightly-scala)
     scala SpinalKonata test inputs/test

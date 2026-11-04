@@ -1880,6 +1880,29 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
 
+## Formal capacity reports
+
+`rvw formal contracts` writes `rvw.formal-contracts/1` in a fresh output directory.
+Fields are `status`, `plan_sha256`, `obligations`, `restrictions` and `input_capture`.
+Each obligation has an `id`, `status`, and either a child `result` with `proof_kind`
+or a reason that it was not run. Run obligations also list assumption cells and
+their source locations. `conditional_proved` requires fresh unbounded
+passes for every component and the closed composition. Other outcomes give
+`inconclusive`. The command returns 0 only for `conditional_proved`. Input errors
+return 2. This report is not a C4 acceptance gate or a reusable proof certificate.
+The copied plan and child input captures bind the report to its inputs.
+
+`rvw formal strengthen` writes `rvw.formal-strengthen/1`. It records `status`,
+`candidates`, `certified`, `obligations` and `semantics`. Only fresh unbounded passes
+can add a candidate to `certified`. The final target proof supplies `status`.
+Certified candidates remain assertions in the final target. Source assumptions
+remain environment restrictions. Neither observations nor bounded passes can
+certify an invariant. Missing evidence gives an inconclusive result.
+
+BMC/prove abstraction entries extend `cut_points` with `kind` and `plan_sha256`.
+The semantics remain `unconstrained_anyseq`. No abstraction assumption is implicit.
+See the [formal capacity interface](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
 ## Formal app and benchmark reports
 
 `rvw formal apps` reads `rvw.formal-apps/1` and writes
@@ -1919,6 +1942,13 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Init platform review marker
+
+An optional `rvw init --linker-script` platform template carries
+`review_required: true`. The cosim platform loader refuses it. The owner must
+check the RAM, reset PC, MMIO, PMP, interrupt, privilege and fault policies
+against the core specification before removing the marker. A linker map alone
+does not establish these policies.
 ### C1 simulation throughput extension
 
 Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.
