@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 import subprocess
 import tarfile
-from contextlib import nullcontext
 import time
+import sys
 
-from rvw.common.lock import held
+from rvw.common import lock
 from rvw.common.proc import run_group
 from rvw.common.project import load_project
 from rvw.regress.config import load_config
@@ -68,9 +68,14 @@ def export_revision(project_path, revision, config, top, out, timeout):
     env[core.source_env] = str(source)
     command = [*project.get('query', 'build'), config or core.default_config,
                str(out / 'design.db'), '--rtl', str(rtl), '--no-pdg', '--no-blocks', '--no-hgldd']
-    with held(core.lock, directory=core.lock_dir) if core.lock else nullcontext():
-        with (out / 'build.log').open('w') as log:
-            process = run_group(command, cwd=project.root, env=env, stdout=log, stderr=log, timeout=budget())
+    launch = command
+    if core.lock:
+        # Keep lock acquisition inside the cancellable process-group budget.
+        launch = [sys.executable, '-I', lock.__file__, core.lock, *command]
+        if core.lock_dir:
+            env['RVW_LOCK_DIR'] = str(core.lock_dir)
+    with (out / 'build.log').open('w') as log:
+        process = run_group(launch, cwd=project.root, env=env, stdout=log, stderr=log, timeout=budget())
     if process.returncode:
         raise ValueError(f'revision build failed ({process.returncode}); see {out}/build.log')
     files = sorted([*rtl.rglob('*.v'), *rtl.rglob('*.sv')])
@@ -89,6 +94,6 @@ def export_revision(project_path, revision, config, top, out, timeout):
     record = {'revision': commit, 'module': top, 'config': config or core.default_config,
               'generator_dependencies': records, 'command': command,
               'rtl': [{'path': str(p.relative_to(out)), 'sha256': digest(p)} for p in files],
-              'module_sha256': digest(out / 'module.v')}
+              'module_sha256': digest(out / 'module.v'), 'lock': core.lock}
     (out / 'export.json').write_text(json.dumps(record, indent=2) + '\n')
     return out / 'module.v', record
