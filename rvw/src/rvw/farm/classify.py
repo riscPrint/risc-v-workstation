@@ -44,7 +44,7 @@ def classify(paths):
                 category = 'infrastructure'
             elif cell['status'] == 'pass':
                 category = 'pass'
-            elif cell['status'] in ('fail', 'timeout'):
+            elif cell['status'] in ('fail', 'timeout', 'assert', 'rvfi_error'):
                 category = 'dut_failure'
             else:
                 category = 'incomplete'

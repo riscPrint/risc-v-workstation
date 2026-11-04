@@ -18,7 +18,7 @@ def notifications(out):
         for cell in shard['cells']:
             if cell.get('inconclusive') or cell['status'] == 'error':
                 add('infrastructure_fault', cell['id'], cell)
-            elif cell['status'] in ('fail', 'timeout'):
+            elif cell['status'] in ('fail', 'timeout', 'assert', 'rvfi_error'):
                 add('dut_failure', cell['id'], cell)
         if shard['status'] not in ('complete', 'empty'):
             add('incomplete_shard', shard['host'], {

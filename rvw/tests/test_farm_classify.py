@@ -53,3 +53,11 @@ def test_old_uncaptured_report_is_refused(tmp_path):
     path = tmp_path / 'old.json'; path.write_text('{"schema":"rvw.farm/1"}')
     with pytest.raises(ValueError, match='identities'):
         classify([path])
+
+
+@pytest.mark.parametrize('status', ['assert', 'rvfi_error'])
+def test_checker_failure_survives_later_pass(tmp_path, status):
+    group = classify([report(tmp_path, 'first', status),
+                      report(tmp_path, 'second', 'pass')])['groups'][0]
+    assert group['status'] == 'fail'
+    assert group['unstable']

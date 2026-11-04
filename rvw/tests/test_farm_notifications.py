@@ -24,3 +24,12 @@ def test_complete_collection_with_failure_does_not_notify_pass(tmp_path):
             'cells': [{'id': '0', 'status': 'fail', 'inconclusive': None}]}]}))
     kinds = [e['kind'] for e in notifications(tmp_path)['events']]
     assert kinds == ['dut_failure', 'collection_complete']
+
+
+def test_checker_failures_emit_dut_notifications(tmp_path):
+    (tmp_path / 'farm.json').write_text(json.dumps({'campaign_id': 'fixture', 'expected_cells': 2,
+        'status': 'complete', 'shards': [{'host': 'a', 'status': 'complete',
+            'cells': [{'id': str(i), 'status': status, 'inconclusive': None}
+                      for i, status in enumerate(['assert', 'rvfi_error'])]}]}))
+    assert [e['kind'] for e in notifications(tmp_path)['events']] == [
+        'dut_failure', 'dut_failure', 'collection_complete']
