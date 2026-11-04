@@ -19,9 +19,11 @@ PROFILES = {
                       foreign=(), features=('four_state', 'xz_values', 'hdl_delays', 'immediate_assertions')),
     'verilator-timing': replace(
         BACKENDS['verilator'], scheduling='compiled HDL events with --timing',
+        languages=('Verilog', 'SystemVerilog timing testbench subset'),
         foreign=(), features=('two_state', 'hdl_delays', 'fork_join', 'immediate_assertions')),
     'ghdl-yosys-icarus': replace(
-        BACKENDS['icarus'], languages=('synthesizable VHDL-2008', 'SystemVerilog subset'),
+        BACKENDS['icarus'], values='4-state netlist only',
+        languages=('synthesizable VHDL-2008', 'SystemVerilog subset'),
         x_handling='VHDL synthesis can change unknowns; no VHDL X guarantee',
         scheduling='Icarus events on GHDL/Yosys synthesized VHDL netlist',
         foreign=(), features=('mixed_synth', 'hdl_delays', 'immediate_assertions')),
