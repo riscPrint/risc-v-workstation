@@ -591,7 +591,14 @@ with M/S contexts. Native oracle tests skip when the prefix is absent.
 The Python model has global pending state and level gateways. Spike's device
 has its own context bookkeeping. Oracle tests cover only the common sequence
 in the test. They do not establish equivalence for all context races.
-These models do not connect an RTL bus or establish DUT device coverage.
+The [PLIC component adapter](../examples/vexriscv/cocotb/README.md#plic-controller-adapter)
+connects this reference to the unmodified SpinalHDL PLIC through APB3.
+Its threshold conformance test remains a failure. The installed native Spike
+device also returns zero for the same masked-threshold claim. Agreement with
+that device is not sufficient for conformance. The ratified
+[PLIC claim rule](https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc#interrupt-claim-process)
+requires claim selection to ignore the threshold. Keep that rule in the oracle.
+These reference models alone do not establish DUT device coverage.
 The current BOOM and VexRiscv adapters do not implement a PLIC.
 
 ### Decisions and limits
@@ -700,6 +707,12 @@ establish Linux device support.
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
 
+## TestRIG sockets
+
+`rvw cosim dii` adds bounded v1 transport for core-owned injection hooks and
+strict replay against a Sail DII server. See [the hook guide](../docs/TESTRIG.md).
+This mode does not use the ELF shim or change the C2 comparison contract.
+
 Directed reference tests in `test_fp_rounding.py` check halfway additions in
 RNE, RTZ, RDN, RUP, RMM and dynamic RUP, for both signs. They also check a
 signaling NaN, an unboxed single operand and FS Initial/Clean to Dirty changes.
@@ -752,3 +765,19 @@ identity is inferred from that prefix. Reproduction metadata captures the
 launch executable identity and original argument list. Adapter scripts and
 build dependencies need their own C1 provenance. A complete trace match is
 not a C1 program-pass or clean-revision acceptance claim.
+
+### Unspecified mscratch reset state
+
+For a trace from reset, the checker treats only the reset bits of `mscratch`
+(CSR 0x340) as unknown. The first read or CSR snapshot supplies those bits from
+DUT evidence. The checker records `reason: csr_reset_unknown`, CSR, bit mask,
+reference value, DUT value and observation source in `recent_synchronizations`.
+It also updates the reference CSR so later reads and read-modify-write effects
+remain checked. A full write before observation removes the unknown state.
+A set/clear write makes its written bits known. Those bits stay strict.
+
+This rule uses the existing `csr` synchronization kind. `--strict` or
+`--strict-sync csr` disables it. Traces with `trace_from_reset=false` remain
+strict for this rule. Missing reference support gives an error. No other CSR,
+software-written bit, trap, instruction, PC or memory effect is masked.
+The Spike shim uses ABI version 5 and must be rebuilt with `Cosim/build.sh`.

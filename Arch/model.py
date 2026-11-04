@@ -67,6 +67,21 @@ def validate_description(d):
         if d["kind"] != "o3" and ((name != "cpu" and d[name] is None) or (name == "cpu" and d[name] == {})):
             continue
         _scalars(d[name], name)
+    enabled = d["cpu"].get("decoupledFrontEnd", False)
+    if type(enabled) is not bool:
+        raise ValueError("cpu.decoupledFrontEnd must be a boolean")
+    if enabled:
+        if d["kind"] != "o3":
+            raise ValueError("cpu.decoupledFrontEnd requires O3")
+        # RVC uses two-byte instruction alignment, including 32-bit branches.
+        if type(d["cpu"].get("minInstSize")) is not int or d["cpu"]["minInstSize"] != 2:
+            raise ValueError("cpu.minInstSize must be 2 for the RISC-V decoupled front end")
+        for key, default in (("numFTQEntries", 8), ("fetchTargetWidth", 32),
+                             ("fetchBufferSize", 64), ("maxFTPerCycle", 4),
+                             ("maxTakenPredPerCycle", 1)):
+            _integer(d["cpu"].get(key, default), "cpu." + key)
+        if d["cpu"].get("fetchTargetWidth", 32) < d["cpu"].get("fetchBufferSize", 64):
+            raise ValueError("cpu.fetchTargetWidth must be >= cpu.fetchBufferSize")
     # These select execution modes or limits owned by this runner.
     forbidden = {"numThreads", "switched_out", "checker", "max_insts_any_thread",
                  "max_insts_all_threads", "max_insts_any_thread_warmup"}
@@ -133,13 +148,14 @@ def validate_description(d):
     if p["btb"]["numEntries"] % p["btb"]["associativity"]:
         raise ValueError("btb.numEntries must be divisible by associativity")
     if "soc" in d:
-        validate_soc(d["soc"])
+        validate_soc(d["soc"], ram_bytes)
     return d
 
 
-def validate_soc(soc):
-    """A serial classic-cache hierarchy with one memory controller."""
-    _keys(soc, ("levels", "interconnect", "memory"), "soc")
+def validate_soc(soc, ram_bytes=RAM_SIZE):
+    """Validate serial caches, disjoint controllers and read-only agents."""
+    _keys({k: v for k, v in soc.items() if k != 'agents'},
+          ("levels", "interconnect", "memory"), "soc")
     if not isinstance(soc["levels"], list) or len(soc["levels"]) > 2:
         raise ValueError("soc.levels must be an array with at most L2 and LLC")
     for cache in soc["levels"]:
@@ -149,7 +165,40 @@ def validate_soc(soc):
                 "snoop_response_latency"), "soc.interconnect")
     for key, value in bus.items():
         _integer(value, "interconnect." + key, 1 if key == "width" else 0)
-    mem = soc["memory"]
+    mem = soc['memory']
+    if not isinstance(mem, dict):
+        raise ValueError('soc.memory must be an object')
+    if mem.get('kind') == 'multi':
+        _keys(mem, ('kind', 'controllers', 'interleave_bytes'), 'multi memory')
+        controllers = mem['controllers']
+        if not isinstance(controllers, list) or len(controllers) not in (2, 4, 8):
+            raise ValueError('multi memory needs 2, 4 or 8 controllers')
+        stripe = mem['interleave_bytes']
+        _integer(stripe, 'interleave_bytes')
+        if stripe < 64 or stripe & (stripe - 1) or stripe * len(controllers) > ram_bytes:
+            raise ValueError('interleave_bytes must be a power of two, at least 64 and fit RAM')
+        for controller in controllers:
+            validate_memory(controller)
+    else:
+        validate_memory(mem)
+    agents = soc.get('agents', [])
+    if not isinstance(agents, list) or len(agents) > 8:
+        raise ValueError('agents must be an array with at most 8 entries')
+    for agent in agents:
+        _keys(agent, ('start', 'size', 'block_bytes', 'period_ticks',
+                      'duration_ticks', 'max_outstanding', 'attach'), 'agent')
+        for key in ('start', 'size', 'block_bytes', 'period_ticks', 'duration_ticks', 'max_outstanding'):
+            _integer(agent[key], 'agent.' + key)
+        block = agent['block_bytes']
+        if (block & (block - 1) or block > 64 or agent['start'] % block
+                or agent['size'] % block or not RAM_BASE <= agent['start']
+                < agent['start'] + agent['size'] <= RAM_BASE + ram_bytes):
+            raise ValueError('agent needs aligned RAM bounds and power-of-two blocks up to 64 bytes')
+        if agent['attach'] not in ['memory'] + [f'level{i+2}' for i in range(len(soc['levels']))]:
+            raise ValueError('agent attach must name memory or an existing cache level')
+
+
+def validate_memory(mem):
     if not isinstance(mem, dict):
         raise ValueError("soc.memory must be an object")
     if mem.get("kind") == "simple":
@@ -192,16 +241,43 @@ def connect_memory(system, cpu, d, g, scalar_kwargs):
     system.system_port = system.membus.cpu_side_ports
     mem = soc["memory"] if soc else dict(kind="simple", latency=f'{d["memory_latency"]}ns',
                                        bandwidth=f'{d["bus_bytes"]}GiB/s')
-    if mem["kind"] == "simple":
-        system.mem = g.SimpleMemory(range=system.mem_ranges[0], latency=mem["latency"],
-                                    latency_var="0ns", bandwidth=mem["bandwidth"])
-    else:
-        cls = getattr(g, mem["model"])
-        interface = cls(**scalar_kwargs(cls, mem["interface"]))
-        interface.range = system.mem_ranges[0]
-        system.mem = g.MemCtrl(**scalar_kwargs(g.MemCtrl, mem["controller"]))
-        system.mem.dram = interface
-    system.mem.port = system.membus.mem_side_ports
+    controllers = mem['controllers'] if mem['kind'] == 'multi' else [mem]
+    for i, params in enumerate(controllers):
+        if mem['kind'] == 'multi':
+            bits = len(controllers).bit_length() - 1
+            high = mem['interleave_bytes'].bit_length() - 2 + bits
+            region = g.AddrRange(RAM_BASE, size=d.get('ram_bytes', RAM_SIZE),
+                                 intlvHighBit=high, intlvBits=bits, intlvMatch=i)
+        else:
+            region = system.mem_ranges[0]
+        if params['kind'] == 'simple':
+            device = g.SimpleMemory(range=region, latency=params['latency'],
+                                    latency_var='0ns', bandwidth=params['bandwidth'])
+        else:
+            cls = getattr(g, params['model'])
+            interface = cls(**scalar_kwargs(cls, params['interface']))
+            interface.range = region
+            device = g.MemCtrl(**scalar_kwargs(g.MemCtrl, params['controller']))
+            device.dram = interface
+        setattr(system, 'mem' if len(controllers) == 1 else f'mem{i}', device)
+        device.port = system.membus.mem_side_ports
+    for i, agent in enumerate(soc.get('agents', []) if soc else []):
+        device = g.PyTrafficGen(max_outstanding_reqs=agent['max_outstanding'])
+        setattr(system, f'traffic{i}', device)
+        bus = system.membus if agent['attach'] == 'memory' else getattr(system, agent['attach'] + 'bus')
+        device.port = bus.cpu_side_ports
+
+
+def start_traffic(system, d):
+    def states(device, agent):
+        yield device.createLinear(agent['duration_ticks'], agent['start'],
+            agent['start'] + agent['size'], agent['block_bytes'],
+            agent['period_ticks'], agent['period_ticks'], 100, 0)
+        while True:
+            yield device.createIdle(2**60)
+    for i, agent in enumerate(d.get('soc', {}).get('agents', [])):
+        device = getattr(system, f'traffic{i}')
+        device.start(states(device, agent))
 
 
 def _unique_object(pairs):
@@ -476,6 +552,7 @@ def main():
         root = Root(full_system=True, system=system)
         m5.ticks.setGlobalFrequency("1ps")
         m5.instantiate()
+        start_traffic(system, description)
         result = run_bare(system, syms, args.max_ticks)
     except (ValueError, OSError, TypeError, AttributeError, UnicodeError) as error:
         write_result(output, {"exit_code": None, "error": str(error)})

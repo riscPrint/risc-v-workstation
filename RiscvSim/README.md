@@ -83,6 +83,27 @@ adapter passes both source directories from `sourceDir`. Generated PDGs use
 the existing absolute-path format. Portable fixtures must use project-relative
 paths, and cross-checkout comparisons must remove only the checkout prefix.
 
+## Benchmark ROI definition
+
+The BOOM benchmark adapter reads two 64-bit words at `bench_stats`.
+The benchmark runtime stores the `mcycle` and `minstret` deltas when `setStats(0)` follows
+`setStats(1)`. These markers enclose the measured benchmark call. Input setup, optional
+warmup calls, result checks and exit stay outside this interval. Counter reads and marker
+call overhead remain part of this implementation's measurement. The ROI is not an exact
+count of instructions in the benchmark function alone.
+
+Use the same ELF hash, runtime, marker placement and adapter on both sides. Equal counter
+names alone do not establish equal ROI boundaries. `metrics.roi_cycles` and
+`metrics.roi_instret` identify these deltas. Whole-program `cycles` and `instret` identify
+a different interval. Never combine the two origins in a performance comparison.
+A failed run without both ROI words supplies no usable ROI sample.
+
+Repeat a declared seed set with the same memory mode on both sides. Random-memory seeds
+can change cycle counts even when ROI instruction counts stay equal. Fixed-latency seeds
+need not sample that variation. C4 checks the largest paired relative loss. Means are
+only descriptive. This rule estimates no population confidence. Keep failed seeds and
+required workloads visible; they cannot be replaced by faster passing workloads.
+
 ## Artifacts
 
 | File | When | What |
@@ -519,6 +540,11 @@ request and response signals and accepted physical TileLink A handshakes.
 It changes no core source. See the [MMU format](../rvw/src/rvw/regress/README.md#privilege-controls-and-observation-reports).
 Capture presence and event counts are observations, not protocol or PMA verdicts.
 
+MMU capture also records changes to MSIP backing state as `device_state`.
+The event states whether an IRQ schedule overrides device-driven interrupts.
+This samples the harness device model separately from C2 memory effects. It
+makes no device implementation or interrupt delivery claim.
+
 ## Firmware and Linux payload loading
 
 `--elf-load-bias BYTES` adds a nonnegative decimal byte offset to ET_DYN
@@ -588,6 +614,61 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+Direct native launches can set `RISCVSIM_REQUIRES=two_state,clock`. The shared
+profile checker rejects unsupported needs before locks and native tools start.
+See `rvw/src/rvw/sim/README.md` for regression suite declarations and limits.
+### Serialized multi-hart reference
+
+`SerializedMemoryReference` checks accepted memory actions at a project-declared
+serialized boundary. Initialize it from captured input bytes. Supply expected
+write bytes from independent program or device state. Its read method checks
+observed bytes and returns the last write ID for each byte. It rejects missing
+serialization IDs, duplicate action IDs and wrong data. Failed checks do not
+advance the reference.
+
+`TwoHartNativeSpec` uses this reference with independent register state for its
+producer/consumer programs. It records memory serialization and read-from IDs
+beside C2 hart retirement order. This fixture check does not add a full ISA
+reference or production multi-image adapter. Use herd or another memory-model
+checker for weak-memory outcomes. Do not impose this serialized model on a
+boundary that permits other legal interleavings.
+
+### Native coherent cache checks
+
+`CoherentCacheNativeSpec` runs SpinalHDL's `CacheFiber` writeback cache in native
+Verilator. The cache has one way, 1024 bytes and 64-byte lines. Two simulated
+TileLink coherent clients share its 64-bit port. The clients are test agents,
+not CPU implementations.
+
+Spinal's TileLink monitors aggregate accepted A/C/D beats. The test connects
+completed permission changes to `CoherenceMonitor`. It compares response,
+intervention and writeback bytes with a separate stimulus-owned `MemoryImage`.
+It initializes both reference and backing RAM from the same input bytes.
+Expected data never comes from DUT reads.
+
+The directed test dirties a client line and requests shared ownership from the
+other client. It releases both clients, then overlaps two exclusive requests.
+It holds D acceptance for 80 cycles and requires both A requests to be accepted
+before release. Random channel stalls add backpressure. A same-set alias must
+evict dirty cache data that has not yet reached backing RAM. The test requires
+an observed writeback and checks final backing bytes. Missing interventions,
+releases, writebacks, stalls or request overlap fail the test.
+
+A second run corrupts an untouched backing byte while retaining the correct
+reference image. It must fail with `cache response byte mismatch`. The wrapper
+checks `TilelinkTester.checkErrors()` because that helper records simulation
+exceptions instead of immediately throwing them.
+
+Run with the `sbt` lock:
+
+```sh
+(cd RiscvSim && ../scripts/with-lock.sh sbt nice -n 10 sbt -batch \
+  -J-XX:ActiveProcessorCount=2 'testOnly riscvsim.CoherentCacheNativeSpec')
+```
+
+These are bounded cache-module checks for the declared configuration and seed.
+They are not a proof of all interleavings or coherence in a CPU integration.
 
 
 ## Online co-simulation
