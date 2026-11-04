@@ -227,3 +227,17 @@ at a time. Core presets and calibration targets belong in project data.
 
 See the complete [CLI and MCP reference](docs/COMMAND_REFERENCE.md) for command paths,
 options and built-in tool arguments. The reference is checked against the code.
+
+## Local CI
+
+The CI, Conventional Commits and Nightly definitions target the repo-level runner with
+labels `self-hosted`, `macOS`, `ARM64`, `rvw-local`. Use `scripts/ci-local.sh`
+for the same fast checks as CI. The script creates a clean temporary workdir
+and venv. It uses `scripts/with-lock.sh suite|sbt` and `nice -n 10`. Never point
+CI at another contributor's checkout. Nightly runs at 03:23 UTC.
+
+The per-user launchd agent is in `~/opt/actions-runner`. Run `./svc.sh status`,
+`./svc.sh stop` or `./svc.sh start` there. It starts after login. Keep one
+runner only. Keep Nightly disabled until its local definition reaches the default
+branch. Keep Linux workflows and Native tool bundles disabled. See
+[Local CI](CONTRIBUTING.md#local-ci) for prerequisites and Linux runner limits.
