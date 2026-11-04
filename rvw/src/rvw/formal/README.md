@@ -804,3 +804,18 @@ inconclusive. The adapter owns licence setup and source translation. These are
 trusted adapter observations, not independently replayed proofs. No licensed
 engine is bundled. Published-result normalization and repeated statistical
 experiments remain open.
+
+### Exported core leaf checks
+
+`SpinalChecks/examples/apps/export_leaves.py` takes `--vex-rtl VexRiscv.v`,
+`--boom-rtl BoomSimTop.v` and a fresh `--out DIR`. It copies the generated
+`StreamFifo` and `ForwardingAgeLogic` modules without changing their equations.
+It prints SHA-256 identities for the full inputs and leaf files. It does not
+elaborate either core or certify the source revision of supplied RTL.
+
+Run `rvw formal apps DIR/vex.json --depth 10 --out VEX_OUT` under the `vex`
+lock. Run `rvw formal apps DIR/boom.json --depth 10 --out BOOM_OUT` under the
+`boom` lock. The properties check that FIFO occupancy and availability cannot
+both be one, and that forwarding `found` agrees with a nonzero match vector.
+These are small exported leaf invariants. They are not whole-core verification,
+full CSR or connectivity checks on these processors, or a performance benchmark.

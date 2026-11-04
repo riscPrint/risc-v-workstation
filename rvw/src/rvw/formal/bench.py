@@ -168,7 +168,7 @@ def run(args):
             row = {'case': case['id'], 'engine': engine, 'mode': case['mode'],
                    'requested_depth': case['depth'], 'reached_depth': None,
                    'peak_memory_bytes': None, 'wall_s': None, 'status': 'not_installed'}
-            incompatible = (case['mode'] == 'prove' and engine in ('abc:bmc3', 'btor:btormc') or
+            incompatible = (case['mode'] == 'prove' and engine in ('abc:bmc3', 'btor:btormc', 'btor:pono') or
                             case['mode'] == 'bmc' and engine in ('abc:pdr', 'aiger:avy'))
             if executable and incompatible:
                 row['status'] = 'unsupported_mode'
