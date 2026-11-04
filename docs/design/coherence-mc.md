@@ -10,7 +10,8 @@ It is not a proof that a TileLink-C cache implements the specification.
 The first model has one line, two data values, one request per agent,
 and one active home transaction. Each agent can request Branch or Trunk.
 The home accepts A requests, sends B probes, consumes C acknowledgments,
-sends D grants, and consumes E acknowledgments. A Trunk holder can write.
+sends D grants, and consumes E acknowledgments. A Trunk recipient writes once at E completion. This merges a local write
+with GrantAck in the abstraction; E carries no data.
 A completed agent can release its copy. Dirty data must reach the home before
 it grants a copy to another agent. Whole messages are atomic model steps.
 The model omits multibeat transfers, source/sink reuse, errors, channel buffers,
@@ -106,4 +107,6 @@ be deterministic. Tests compare generated source with fresh graph output.
    Check accepted last beats and dirty data against an independent write oracle.
    Prove a refinement contract before making a protocol implementation claim.
 
-Follow-up issue links will be added before handoff. No core source changes are needed.
+Follow-up work: [fair progress and directory profiles #361](https://github.com/riscPrint/risc-v-workstation/issues/361)
+and [TileLink-C RTL refinement #363](https://github.com/riscPrint/risc-v-workstation/issues/363).
+No core source changes are needed.
