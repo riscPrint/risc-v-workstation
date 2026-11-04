@@ -123,6 +123,7 @@ It uses the machine-wide `suite` and `sbt` locks and `nice -n 10`. It keeps
 normal package download caches. The fast set runs Python `-m fast`, extension
 checks, Rust fixture tests and the SpinalWaves naming and emitter tests.
 Failures stop the command. Counts and timings appear in the job log.
+The Actions timeout allows 90 minutes, including waits for shared locks.
 
 Nightly uses `scripts/ci-local.sh nightly-python` and
 `scripts/ci-local.sh nightly-scala`. Optional native tools must already be on
