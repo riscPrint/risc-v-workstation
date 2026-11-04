@@ -75,6 +75,22 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
+    from . import invariants, contracts
+    template.add_argument("kind", choices=invariants.NAMES)
+    template.add_argument("--entries", type=int, default=4)
+    template.add_argument("--width", type=int, default=3)
+    template.add_argument("--out", required=True)
+    template.set_defaults(func=invariants.run)
+    contract = s.add_parser("contracts", help="check neighbour guarantees and closed composition")
+    contract.add_argument("manifest")
+    contract.add_argument("--out", required=True)
+    contract.add_argument("--budget", type=float, default=60)
+    contract.add_argument("--depth", type=int, default=12)
+    contract.add_argument("--engine", default="abc:pdr")
+    contract.add_argument("--json", action="store_true")
+    contract.set_defaults(func=contracts.run)
+
     c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
     c.add_argument("--result", required=True, help="formal result.json or directory")
     c.add_argument("--trace-index", type=int, default=0)
