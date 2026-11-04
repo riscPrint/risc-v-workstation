@@ -5,11 +5,16 @@ import org.scalatest.funsuite.AnyFunSuite
 import spinal.core._
 import spinal.core.sim._
 
-/** Two tiny RV32I-subset interpreters in RTL. Only x0/x1 and the fixture's
-  * ADDI/LW/SW/BEQ encodings are implemented. Not a general RISC-V core. */
-class FixtureHart(program: Seq[Long]) extends Component {
+/** Small RTL interpreter shared by the round 2 and atomic fixtures.
+  * ADDI/LW/SW, word atomics, serialized FENCE and the original polling branch.
+  * Not a general RISC-V core. */
+class FixtureHart(program: Seq[Long], programmable: Boolean = false) extends Component {
   val io = new Bundle {
     val enable = in Bool()
+    val instruction = in Bits(32 bits)
+    val atomic = out Bool()
+    val operation = out UInt(5 bits)
+    val registers = out Vec(Bits(32 bits), 32)
     val request = out Bool()
     val write = out Bool()
     val address = out UInt(32 bits)
@@ -23,27 +28,38 @@ class FixtureHart(program: Seq[Long]) extends Component {
     val done = out Bool()
   }
   val pc = Reg(UInt(32 bits)) init 0
-  val x1 = Reg(Bits(32 bits)) init 0
+  val regs = Vec(Reg(Bits(32 bits)) init 0, 32)
+  val x1 = regs(1)
+  io.registers := regs
   val rom = Vec(program.map(i => B(BigInt(i), 32 bits)))
-  val done = pc >= program.size * 4
-  val insn = rom((pc >> 2).resize(log2Up(program.size)))
+  val done = if (programmable) io.instruction === 0 else pc >= program.size * 4
+  val insn = if (programmable) io.instruction else rom((pc >> 2).resize(log2Up(program.size)))
   val op = insn(6 downto 0)
   val load = op === B(0x03, 7 bits)
   val store = op === B(0x23, 7 bits)
+  val atomic = op === B(0x2f, 7 bits)
+  val rs1 = regs(insn(19 downto 15).asUInt)
+  val rs2 = regs(insn(24 downto 20).asUInt)
+  io.atomic := atomic
+  io.operation := insn(31 downto 27).asUInt
   val immediate = insn(31 downto 20).asSInt.resize(32).asBits
-  io.request := io.enable && !done && (load || store)
-  io.write := store
-  io.address := Mux(store, (insn(31 downto 25) ## insn(11 downto 7)).asUInt.resize(32), immediate.asUInt)
-  io.wdata := x1
-  io.retired := io.enable && !done && (!(load || store) || io.ready)
+  io.request := io.enable && !done && (load || store || atomic)
+  io.write := store || (atomic && io.operation =/= 2)
+  io.address := rs1.asUInt + Mux(atomic, U(0, 32 bits), Mux(store, (insn(31 downto 25) ## insn(11 downto 7)).asUInt.resize(32), immediate.asUInt))
+  io.wdata := rs2
+  io.retired := io.enable && !done && (!(load || store || atomic) || io.ready)
   io.pc := pc; io.insn := insn; io.value := x1; io.done := done
   when(io.retired) {
     pc := pc + 4
     switch(op) {
       is(B(0x13, 7 bits)) {
-        x1 := (Mux(insn(19 downto 15) === 0, B(0, 32 bits), x1).asUInt + immediate.asUInt).asBits
+        when(insn(11 downto 7) =/= 0) {
+          regs(insn(11 downto 7).asUInt) := (rs1.asUInt + immediate.asUInt).asBits
+        }
       }
-      is(B(0x03, 7 bits)) { x1 := io.rdata }
+      is(B(0x03, 7 bits), B(0x2f, 7 bits)) {
+        when(insn(11 downto 7) =/= 0) { regs(insn(11 downto 7).asUInt) := io.rdata }
+      }
       is(B(0x63, 7 bits)) { when(x1 === 0) { pc := pc - 4 } }
     }
   }
@@ -59,6 +75,7 @@ class TwoHartFixture extends Component {
   io.result := memory(1)
   for ((h, id) <- harts.zipWithIndex) {
     h.io.enable := io.start
+    h.io.instruction := 0
     h.io.ready := (if (id == 0) !turn else turn)
     h.io.rdata := memory(h.io.address(2).asUInt)
     when(h.io.request && h.io.ready && h.io.write) { memory(h.io.address(2).asUInt) := h.io.wdata }

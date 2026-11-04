@@ -282,7 +282,10 @@ Run its tests with the `sbt` lock:
 `TwoHartNativeSpec` runs two small RV32I-subset RTL fixtures through Verilator.
 They share two words with round-robin backpressure. The producer writes 37.
 The consumer polls it and writes 38. Each hart emits its own retirement order.
-These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings.
+The original test uses x0/x1 and ADDI/LW/SW/BEQ encodings.
+The shared fixture now also supports programmable word-atomic tests.
+See [the ordering suite](tests/ordering/README.md#bounded-two-hart-rtl-fixture)
+for concurrent observers, pinned herd comparison and injected faults.
 They have no caches and are not full RISC-V cores. The test checks a known shared
 memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
 Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
