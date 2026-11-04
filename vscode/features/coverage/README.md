@@ -80,3 +80,11 @@ database, enter the associated signal path. File/line-only coverage points have 
 reverse lookup. Reports without signal paths require the user to supply one.
 Bidirectional navigation, run alignment, bus decoding, proof panels, software debugging
 and portable sessions remain in #24. This feature does not decide #77.
+
+## Selected evidence
+
+Use **Open Selected Evidence** in a result row's context menu to read its full
+JSON in an editor. Use **Jump to Source via Design Database** on a row with an
+explicit `signal` field. It uses that signal without another text entry. The
+database choice and captured source hash checks still apply. A generic `path`
+field is not treated as a signal.

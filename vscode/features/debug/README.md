@@ -72,6 +72,26 @@ test to measure web navigation through wave rendering. This uses a synthetic
 single-block diagram and a warm filesystem cache. Neither test establishes
 real RTL trace performance or the latency of a live VS Code window.
 
-What-if editing, automatic run identity joins, persisted sessions, bus and
+## C1 wave binding
+
+At open, the backend looks for `result.json` beside the original indexed wave.
+It captures this file and validates C1. It requires an explicit `artifacts.wave`.
+That path must resolve to the indexed wave source. It hashes the current wave
+and compares its size and SHA-256 with the index. This reads the full wave once
+when an adjacent C1 file declares it. It can delay opening a large capture.
+The binding is retained for this session. Reopen the session to capture new results.
+
+The fixed binding note and expandable C1 evidence stay visible during navigation.
+Missing, invalid, stale or conflicting evidence gives `inconclusive`.
+`bound` means only that the declared artifact bytes match the index. It does
+not validate the simulation claim, run-set generation or database association.
+The database-to-run association stays `unverified`. A C1 error or incomplete
+result retains its status and cause even when its wave bytes match.
+
+What-if editing, full database/run identity joins, persisted sessions, bus and
 coverage overlays, and a Verdi task comparison remain open in #297 and #24.
 Surfer's separate database-consumption checks remain open in #69.
+
+Failed jumps clear old wave, source and dependency evidence. Late responses cannot
+replace a newer selection. Press Enter in Signal or Time to jump. Pane regions
+have accessible names. Keyboard focus remains visible in both hosts.

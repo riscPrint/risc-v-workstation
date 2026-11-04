@@ -1,7 +1,7 @@
 import { createEngine } from '../../../../SpinalBlocks/engine/src/index';
 import { workerLayout } from '../../../../SpinalBlocks/engine/src/elk';
 import {lane} from './wave';
-import type { Request } from './protocol';
+import { isTime, type Request } from './protocol';
 
 declare function acquireVsCodeApi(): {postMessage(v:unknown):void};
 async function main():Promise<void> {
@@ -9,10 +9,18 @@ const api = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
 const $ = (id:string) => document.getElementById(id)!;
 const signal = $('signal') as HTMLInputElement, time = $('time') as HTMLInputElement;
 let serial = 0, generation = 0, highlighting = false;
+function clearEvidence(): void {
+  for (const id of ['wave', 'source', 'dependencies']) $(id).replaceChildren();
+}
+function begin(): number {
+  clearEvidence();
+  $('status').textContent = 'Loading; previous evidence cleared.';
+  return ++generation;
+}
 const pending = new Map<number, {resolve:(v:any)=>void; reject:(e:Error)=>void}>();
 window.addEventListener('message', e => {
   if (e.data?.type === 'source') { run(() => fromSource(e.data.file, e.data.line)); return; }
-  if(e.data?.id===-1 && e.data.error) {for(const p of pending.values()) p.reject(new Error(e.data.error));pending.clear();$('status').textContent=e.data.error;return;}
+  if(e.data?.id===-1 && e.data.error) {for(const p of pending.values()) p.reject(new Error(e.data.error));pending.clear();++generation;clearEvidence();$('status').textContent=e.data.error;return;}
   const p = pending.get(e.data?.id); if (!p) return;
   pending.delete(e.data.id);
   e.data.error ? p.reject(new Error(e.data.error)) : p.resolve(e.data);
@@ -27,7 +35,10 @@ async function request(a:Request):Promise<any> {
 function button(label:string, action:()=>void):HTMLButtonElement {
   const b = document.createElement('button'); b.textContent = label; b.onclick = action; return b;
 }
-function run(action:()=>Promise<void>):void { void action().catch(e => { $('status').textContent = String(e); }); }
+function run(action:()=>Promise<void>):void {
+  const work = action(), ticket = generation;
+  void work.catch(e => { if (ticket === generation) $('status').textContent = `inconclusive: ${String(e)}`; });
+}
 // Fetch the packaged worker before making its blob. VS Code serves resource URLs
 // through a service worker that a worker cannot import directly.
 const workerResponse=await fetch(document.body.dataset.worker ?? new URL('elk-worker.js',location.href).href);
@@ -42,10 +53,12 @@ const engine = createEngine($('diagram'), {
   error: e => { $('status').textContent = e.message; },
 }, {layout:workerLayout(workerUrl)});
 async function fromSource(file:string, line:number):Promise<void> {
+  const ticket = begin();
   const data = await request({op:'source', file, line});
+  if (ticket !== generation) return;
   const candidates = data.result.candidates as string[];
   $('source').replaceChildren(...candidates.map(s => button(s, () => { signal.value=s; run(select); })));
-  if (candidates.length === 1) { signal.value=candidates[0]; await select(); }
+  if (candidates.length === 1) { signal.value=candidates[0]; await select(ticket); }
   else $('status').textContent = candidates.length ? 'Select a signal for this source line.' : 'Unresolved source mapping.';
 }
 function links(value:any, container:HTMLElement):void {
@@ -57,9 +70,10 @@ function links(value:any, container:HTMLElement):void {
   if (typeof value.file === 'string' && Number.isInteger(value.line)) container.append(button(`${value.file}:${value.line}`, () => run(() => fromSource(value.file,value.line))));
   for (const item of Object.values(value)) if (item && typeof item === 'object') links(item, container);
 }
-async function select():Promise<void> {
-  const ticket = ++generation;
-  const start=time.value, end=String(BigInt(start)+100n);
+async function select(ticket = begin()):Promise<void> {
+  const start=time.value;
+  if (!isTime(start)) throw new Error('Time must be an integer from 0 to 9223372036854775807.');
+  const end=String(BigInt(start)+100n > 2n**63n-1n ? 2n**63n-1n : BigInt(start)+100n);
   const response = await request({op:'select', signal:signal.value, time:start, end});
   if (ticket !== generation) return;
   const r = response.result, loc = r.location;
@@ -86,8 +100,12 @@ async function select():Promise<void> {
   }
 }
 $('jump').onclick = () => run(select);
+for (const input of [signal, time]) input.addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); run(select); }
+});
 $('trace').onclick = () => run(async () => {
-  const ticket = ++generation;
+  const ticket = begin();
+  if (!isTime(time.value)) throw new Error('Time must be an integer from 0 to 9223372036854775807.');
   $('status').textContent='Tracing. The engine reads the complete VCD. This can take up to 60 seconds.';
   const r = await request({op:'trace',signal:signal.value,time:time.value});
   if (ticket !== generation) return;
@@ -97,6 +115,9 @@ $('trace').onclick = () => run(async () => {
 });
 run(async () => {
   const r = await request({op:'open'});
+  const binding = r.result.run_binding;
+  $('binding').textContent = binding ? `Wave to C1 run: ${binding.status}; ${binding.cause}. Database to run: ${binding.database}` : r.result.binding;
+  $('run-evidence').textContent = JSON.stringify(binding ?? {status:'inconclusive',cause:'No C1 binding evidence'}, null, 2);
   $('status').textContent = `${r.result.binding}; ${JSON.stringify(r.result.warnings)}; ${r.elapsed_ms.toFixed(1)} ms backend`;
   $('signals').replaceChildren(...r.result.signals.map((s:any) => {const o=document.createElement('option');o.value=s.name;return o;}));
   if (r.result.blocks) await engine.setDesign(r.result.blocks);
