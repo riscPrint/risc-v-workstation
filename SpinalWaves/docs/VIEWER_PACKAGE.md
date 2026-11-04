@@ -20,6 +20,14 @@ the whole workstation remains an owner decision (#37). No license was changed.
 The archive is reproducible. Native binaries can differ with the Rust compiler,
 SDK and target. This does not claim byte-identical native builds.
 
+The root installer accepts `--with-typed-waves`. It calls the dedicated installer
+with `--copy --prefix .tools/bin` under the machine build lock, with two Cargo
+jobs. Source `env.sh` to use the binaries. `--check --with-typed-waves` checks both
+executables and the source/notices directory. This is an availability check.
+It does not qualify interactive rendering (#83) or vendored limits (#120).
+The fork package remains the selected path. The WASM option below is a future
+alternative, not a condition for shipping this package.
+
 ## Upstream plugin assessment
 
 Surfer 0.7.0 documents native WASM plugins through Extism:
