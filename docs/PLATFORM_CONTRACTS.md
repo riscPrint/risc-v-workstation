@@ -652,14 +652,26 @@ Unknown fields or invalid types are usage errors with a file and line diagnostic
 Imports keep each result's config. `--config` filters imports and never relabels them.
 Only conclusive failures are imported. Empty selections and `--from` with `--signature` are errors.
 An all-config waiver requires a manual entry with no `config` field.
+A matching all-config or wildcard-signature waiver makes comparison inconclusive.
+Only an exact signature with an explicit config can waive a failure for acceptance.
+An exact waiver covers its diagnostic class, including changed messages within that class.
+It does not prove equal root causes. Without a waiver, unchanged failures also require
+identical saved messages (including two absent messages for legacy diagnostic-only evidence).
+Changed messages cannot be hidden by equal timeout, fail-code, monitor-code or source-line signatures.
 
 ### Regression performance evidence (C4)
 
 Each `perf` item also records `samples: {base, candidate, paired}`,
-`comparison_rule: "relative_mean"` and `confidence: "not_estimated"`.
+`comparison_rule: "max_paired_relative_loss"` and `confidence: "not_estimated"`.
 The counts refer to the seeds used in that workload's arithmetic means. The means use equal
-seed sets. The relative mean loss must exceed `perf_tolerance` to reject. No confidence
-interval or statistical significance is claimed. A declared performance workload without a
+seed sets. Means and `change` are descriptive. Acceptance checks every paired seed separately.
+For a lower-is-better metric, loss is `(candidate - base) / base`.
+For a higher-is-better metric, loss is `(base - candidate) / base`.
+`max_paired_loss` records the greatest loss. `worst_seed` identifies its seed.
+A loss greater than `perf_tolerance` on any seed rejects. Equality does not reject.
+A faster seed cannot cancel a slower seed. Non-finite paired losses are inconclusive.
+This is a bounded deterministic acceptance rule. It makes no population estimate.
+No confidence interval, noise distribution or statistical significance is claimed. A declared performance workload without a
 baseline or without passing results on every seed is inconclusive, even when its failure
 is known or unchanged. A new correctness failure still rejects.
 
@@ -2408,6 +2420,55 @@ not a generator-origin or adapter-conformance claim. `source.identity_complete`
 remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
 
+## C9 compiler scheduling extension
+
+`rvw arch sched-generate` reads `rvw.sched-core/1`. Required fields are `name`,
+`config`, `isa` (rv32im or rv64im), `entry`, `issue_width`, `buffer_size`,
+`resources` (identifier to instance count), `classes` and `mca_cpu`.
+Each class requires `name`, `resource`, `latency`, `occupancy`, `llvm_opcodes`,
+`gcc_type`, `mnemonic` and `encoding` (base RISC-V instruction word).
+Cycles and counts are integers. Unknown fields, duplicate class/type/opcode
+mappings and unsupported instructions fail. Occupancy is per unit instance.
+The command writes partial `model.td` and `model.md` target fragments.
+
+`rvw arch sched-measure` selects an existing project and C1 config. It builds
+paired unrolled ELFs per class and mode. It requires passing C1 evidence with
+matching ELF hash, core, config, seed 1 and fixed memory latency 0. C2 must end
+with pass and contain every expected instruction at the exact PC and encoding.
+Traps, order gaps and decreasing cycles are errors. Measurement output is
+`rvw.sched-measure/1`, with `status=reported`, `model_kind=builtin-baseline`,
+`generated_model_accuracy=inconclusive`, tool identities, raw evidence hashes,
+per-size cycles and per-class signed slope errors. Missing evidence exits 2.
+The report is local timing evidence, not a C4 verdict or complete C8 capture.
+Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
+validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Experimental trace-driven OoO timing reports
+
+`rvw ooo CONFIG TRACE --max-cycles N --json` is a separate native timing
+experiment. It does not use gem5 or emit `rvw.arch-run/1`.
+CONFIG is explicit JSON with positive integer `fetch_width`, `fetch_entries`,
+`rename_width`, `rob_entries`, `issue_width`, `issue_entries`, `load_entries`,
+`store_entries`, `commit_width`, and a nonempty `latencies` map. Map keys are
+`alu`, `multiply`, `divide`, `load` and `store`; values are positive integer
+cycles. Unknown or missing fields are errors. Only configured classes can run.
+
+The input is complete single-hart C2. Traps, interrupts, external events,
+branches, jumps, atomics, fences, privileged, FP and vector operations are
+unsupported. End status must be `pass`. C2 cycles do not enter prediction.
+The entire instruction stream defines the region. There is no ROI slicing.
+
+`rvw.ooo-run/1` contains `config`, SHA-256 fields `config_sha256`,
+`trace_sha256`, `engine_sha256`, `cycles`, `instret`, `ipc`, `wall_s`,
+`events`, `max_occupancy`, `cycle_order`, `limits`,
+`accuracy_status="inconclusive"` and `configuration_status="unchecked"`.
+Engine identity hashes the kernel, decoder and C2 parser. It does not claim
+complete C8 identity. Wall time includes file capture, parsing and simulation.
+Cycle order is commit, issue, rename, fetch. Cycles include fill and drain.
+Events count issued instructions and phase-sampled dependency/queue stalls.
+Absent event keys mean zero. See `rvw/ooo/README.md` for exact predicates.
+This is not a C1 run, a C4 verdict, a configuration check or an accuracy result.
+Success exits 0 for a produced report. Bad input or exhausted cycle budget
+exits 2 with a JSON error. No 50x speedup is established by this schema.
 ### C9 decoupled RISC-V O3 settings
 
 The existing `cpu` scalar fields can enable gem5's BAC and FTQ.

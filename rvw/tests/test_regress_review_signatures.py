@@ -40,3 +40,32 @@ def test_legacy_uncoded_rvfi_without_message_needs_rerun():
     verdict = compare([_res([t])], [_res([t])], [Known('isa', 'a', 'rvfi_error:*')])
     assert verdict.verdict == 'inconclusive'
     assert not verdict.known_failures
+
+
+@pytest.mark.parametrize('signature,config', [('fail:*', 'small'), ('fail:?', 'small'),
+    ('fail:[37]', 'small'), ('fail:3', None)])
+@pytest.mark.parametrize('baseline_failed', [False, True])
+def test_broad_waiver_cannot_earn_accept(signature, config, baseline_failed):
+    b = T('a', 'fail', 'fail:3') if baseline_failed else T('a')
+    c = T('a', 'fail', 'fail:3')
+    v = compare([_res([b])], [_res([c])], [Known('isa', 'a', signature, config=config)])
+    assert v.verdict == 'inconclusive'
+    assert not v.known_failures
+    assert any('waiver' in i['why'] for i in v.inconclusive)
+
+
+@pytest.mark.parametrize('status,signature,left,right', [
+    ('fail', 'fail:3', 'register check failed', 'memory check failed'),
+    ('timeout', 'timeout', 'waiting for load', 'waiting for branch'),
+    ('rvfi_error', 'rvfi_error:105', 'monitor error 105: register', 'monitor error 105: memory'),
+    ('assert', 'assert:lsu.scala:1241', 'lsu.scala:1241 load', 'lsu.scala:1241 store'),
+])
+def test_coarse_unchanged_signature_cannot_hide_changed_message(status, signature, left, right):
+    b, c = T('a', status, signature), T('a', status, signature)
+    b.extra.update(message=left, message_complete=True)
+    c.extra.update(message=right, message_complete=True)
+    assert compare([_res([b])], [_res([c])]).verdict == 'reject'
+    # An exact waiver deliberately covers the declared diagnostic class.
+    v = compare([_res([b])], [_res([c])], [Known('isa', 'a', signature, config='small')])
+    assert v.verdict == 'accept'
+    assert v.known_failures
