@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.cocotb/1",
+  "name": "wfi-clock",
+  "backend": "icarus",
+  "top": "LifecycleUnit",
+  "sources": [
+    "rtl/LifecycleUnit.v"
+  ],
+  "test_module": "test_wfi",
+  "python_paths": [
+    "."
+  ],
+  "requires": [
+    "timer"
+  ],
+  "clock": {
+    "signal": "clk",
+    "period_ns": 10
+  },
+  "reset": {
+    "signal": "reset",
+    "active": 1,
+    "cycles": 2
+  }
+}

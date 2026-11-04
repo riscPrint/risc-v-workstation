@@ -196,6 +196,7 @@ class Spike:
         lib.rvw_sync_instret.argtypes = [C.c_void_p, C.c_uint64, C.c_uint64]
         lib.rvw_set_reg.argtypes = [C.c_void_p, C.c_uint, C.c_uint64]
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
+        lib.rvw_set_mscratch.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
@@ -289,6 +290,9 @@ class Spike:
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
+
+    def set_mscratch(self, value):
+        self.lib.rvw_set_mscratch(self.handle, value)
 
     def csr_snapshot(self, addresses, *, host=False):
         values = {}

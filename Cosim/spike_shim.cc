@@ -259,6 +259,9 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
   auto* s=static_cast<Machine*>(m)->cpu->get_state();
   if(s->prv==PRV_M) s->mtval->write(value); else s->stval->write(value);
 }
+void rvw_set_mscratch(void* m,uint64_t value) {
+  static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
+}
 int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
   try { *value=static_cast<Machine*>(m)->cpu->get_csr(address); return 0; }
   catch(...) { error="reference cannot observe requested CSR"; return -1; }

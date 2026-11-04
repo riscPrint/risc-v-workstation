@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import re
 
 from rvw.common.project import load_project, ProjectError
 from rvw.query.db import run_on, QueryError
@@ -12,6 +13,15 @@ from . import native, structural
 def register(sub):
     p = sub.add_parser('lint', help='native lint and structural CDC/RDC inventory')
     p.add_argument('--settings', help='lint settings JSON; else project lint.settings')
+    p.add_argument('--benchmark', help='same-input CDC qualification manifest')
+    p.add_argument('--protocol', help='selected event-enable CDC safety manifest')
+    p.add_argument('--out', help='fresh protocol result directory')
+    p.add_argument('--depth', type=int, default=24)
+    p.add_argument('--engine', default='smtbmc:yices')
+    p.add_argument('--timeout', type=float, default=60)
+    p.add_argument('--simulate', type=int, default=0, metavar='SAMPLES')
+    p.add_argument('--seed', type=int, default=1)
+    p.add_argument('--mode', choices=['bmc', 'prove'], default='bmc')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=run)
 
@@ -29,8 +39,8 @@ def load(path):
     backends = cfg.get('backends', ['verilator', 'verible', 'structural'])
     if (not isinstance(backends, list) or not backends or
             not all(isinstance(b, str) for b in backends) or len(set(backends)) != len(backends)
-            or set(backends) - {'verilator', 'verible', 'structural'}):
-        raise ValueError('backends must select verilator, verible or structural')
+            or set(backends) - {'verilator', 'verible', 'yosys', 'structural'}):
+        raise ValueError('backends must select verilator, verible, yosys or structural')
     files = cfg.get('files', [])
     if not isinstance(files, list) or not all(isinstance(f, str) and f for f in files):
         raise ValueError('files must be a list of paths')
@@ -38,7 +48,7 @@ def load(path):
     for file in cfg['files']:
         if not Path(file).is_file():
             raise ValueError(f'RTL file not found: {file}')
-    if set(backends) & {'verilator', 'verible'} and not files:
+    if set(backends) & {'verilator', 'verible', 'yosys'} and not files:
         raise ValueError('native lint needs files')
     if 'structural' in backends and not isinstance(cfg.get('db'), str):
         raise ValueError('structural analysis needs db')
@@ -64,7 +74,7 @@ def load(path):
 def report(path):
     cfg, identity = load(path)
     runs = {}
-    for backend in ('verilator', 'verible', 'structural'):
+    for backend in ('verilator', 'verible', 'yosys', 'structural'):
         if backend not in cfg['backends']:
             runs[backend] = dict(status='not_run', reason='not selected', findings=[])
         elif backend == 'structural':
@@ -75,6 +85,11 @@ def report(path):
                     raise ValueError('settings top does not match database toplevel')
                 return structural.analyze(db, cfg.get('intent', {}))
             runs[backend] = run_on(cfg['db'], checked)
+        elif backend == 'yosys':
+            from . import yosys
+            if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', cfg['top']):
+                raise ValueError('yosys top must be a plain identifier')
+            runs[backend] = yosys.run(cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
         else:
             runs[backend] = native.run(backend, cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
     waivers = [{**w, 'matches': 0} for w in cfg.get('waivers', [])]
@@ -101,6 +116,20 @@ def report(path):
 
 def run(args):
     try:
+        if (args.protocol or args.benchmark) and getattr(args, 'project', None):
+            load_project(args.project)
+        if not (args.protocol or args.benchmark) and (args.out or args.simulate):
+            raise ValueError('--out and --simulate need --protocol or --benchmark')
+        if args.benchmark:
+            if args.settings or args.protocol or not args.out or args.simulate:
+                raise ValueError('--benchmark needs --out and cannot use --settings, --protocol or --simulate')
+            from . import compare
+            return compare.run(args)
+        if args.protocol:
+            if args.settings or not args.out:
+                raise ValueError('--protocol needs --out and cannot use --settings')
+            from . import protocol
+            return protocol.run(args)
         path = args.settings
         if not path:
             selected = load_project(getattr(args, 'project', None))

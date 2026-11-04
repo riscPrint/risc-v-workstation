@@ -23,7 +23,7 @@ LICENSES = {
     "NOTICE.txt": "b89f85d3f14ae457890c932bd543124e6521f74b3b01ab208932ef72488748c2",
 }
 FEATURES = ("constrained_random", "functional_coverage", "tlul", "rvfi",
-            "phases_config_factory_tlm")
+            "phases_config_factory_tlm", "ral_frontdoor", "interrupt_debug_pins")
 DEFAULT_SUITE = Path(__file__).resolve().parents[4] / "Uvm" / "tests"
 
 
@@ -63,7 +63,10 @@ def evidence(log: str, returncode: int, timed_out: bool, *, negative=False) -> b
     if timed_out:
         return False
     if negative:
-        return (returncode != 0 and "[RVFI] load observation mismatch" in log
+        diagnostic = {True: "[RVFI] load observation mismatch",
+                      "ral": "[RAL] read or prediction mismatch",
+                      "pins": "[PINS] interrupt/debug pin mismatch"}[negative]
+        return (returncode != 0 and diagnostic in log
                 and "RVW_UVM_DONE" not in log)
     markers = re.findall(r"^RVW_UVM_PASS (\w+)$", log, re.M)
     return (returncode == 0 and log.count("RVW_UVM_DONE") == 1
@@ -81,7 +84,7 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
     if executable is None:
         raise ValueError("Verilator is not installed")
     suite = Path(suite).resolve(strict=True)
-    sources = [suite / name for name in ("tlul.sv", "env.sv")]
+    sources = [suite / name for name in ("tlul.sv", "env.sv", "controls.sv", "registers.json")]
     inputs = {str(p): sha(p) for p in sources}
     out = out.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -97,10 +100,13 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
             with urllib.request.urlopen(URL, timeout=30) as response, archive.open("wb") as dst:
                 shutil.copyfileobj(response, dst)
         library = unpack(Path(archive), out / "library")
+        from rvw.sim.ral import generate
+        (out / "ral.sv").write_text(generate(suite / "registers.json"))
         command = [executable, "--binary", "--timing", "--assert", "--coverage",
                    "-Wno-fatal", "-j", "2", "--top-module", "top",
                    "+define+UVM_NO_DPI", f"+incdir+{library / 'src'}",
-                   str(library / "src/uvm_pkg.sv"), *map(str, sources),
+                   str(library / "src/uvm_pkg.sv"), str(out / "ral.sv"),
+                   str(suite / "tlul.sv"), str(suite / "controls.sv"), str(suite / "env.sv"),
                    "--Mdir", str(out / "build")]
         commands.append(command)
         with (out / "build.log").open("w") as log:
@@ -108,17 +114,18 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
         if built.returncode or built.timed_out:
             raise ValueError("UVM compile failed or timed out; see build.log")
         for current in range(seed, seed+seeds):
-            for negative in (False, True):
-                name = f"{current}-{'fault' if negative else 'normal'}"
+            for negative in (False, True, "ral", "pins"):
+                name = f"{current}-{str(negative) if negative else 'normal'}"
                 command = [str(out / "build/Vtop"), f"+verilator+seed+{current}"]
                 if negative:
-                    command.append("+corrupt")
+                    command.append({True: "+corrupt", "ral": "+ral_corrupt", "pins": "+pins_corrupt"}[negative])
                 commands.append(command)
                 with (out / f"{name}.log").open("w") as log:
                     result = run_group(command, cwd=out, timeout=timeout, stdout=log, stderr=log)
                 good = evidence((out / f"{name}.log").read_text(), result.returncode,
                                 result.timed_out, negative=negative)
-                for feature in (("rvfi_fault_detection",) if negative else FEATURES):
+                fault_id = {True: "rvfi_fault_detection", "ral": "ral_fault_detection", "pins": "pins_fault_detection"}
+                for feature in ((fault_id[negative],) if negative else FEATURES):
                     rows.append({"id": feature, "seed": current, "kind": "uvm",
                                  "status": "pass" if good else "error",
                                  "simulator_exit": result.returncode,
@@ -132,7 +139,8 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
     changed = any(not Path(p).is_file() or sha(p) != digest for p, digest in inputs.items())
     if changed:
         for row in rows:
-            row.update(status="error", inconclusive="suite sources changed during run")
+            row.update(status="error", signature="uvm:source-changed",
+                       inconclusive="suite sources changed during run")
     report = {"schema": "rvw.results/1", "suite": "uvm-subset", "core": "tiny-ram",
               "config": "verilator-timing-no-dpi", "run_id": out.name,
               "created": dt.datetime.now(dt.timezone.utc).isoformat(),

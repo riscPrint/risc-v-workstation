@@ -342,12 +342,17 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                 continue
             seen.add(t.signature)
             hit = next((kn for kn in known if kn.matches(suite, tid, t.signature, config)), None)
+            if hit and (hit.config is None or any(ch in hit.signature for ch in "*?[")):
+                inconclusive.append({**item, "why": "broad waiver needs an exact signature and config; "
+                                     "review the failure and narrow the waiver"})
+                continue
             if hit:
                 if ("known", t.signature) not in classified:
                     known_hits.append({**item, "reason": hit.reason, "recorded_at_rev": hit.recorded_at_rev})
                     classified.add(("known", t.signature))
             elif (t.seed in bs and bs[t.seed].conclusive and bs[t.seed].failed
-                  and t.status == bs[t.seed].status and t.signature == bs[t.seed].signature):
+                  and t.status == bs[t.seed].status and t.signature == bs[t.seed].signature
+                  and t.extra.get("message") == bs[t.seed].extra.get("message")):
                 if ("still", t.signature) not in classified:
                     still.append(item)
                     classified.add(("still", t.signature))
@@ -426,13 +431,22 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                     inconclusive.append({"suite": suite, "config": config, "id": tid, "metric": name,
                                          "why": "relative performance change is not finite"})
                     continue
-                worse = -change if higher_better else change
+                losses = {seed: ((_metric(cs[seed], name) - _metric(bs[seed], name)) /
+                                  _metric(bs[seed], name)) * (-1 if higher_better else 1)
+                          for seed in bs}
+                if any(not math.isfinite(loss) for loss in losses.values()):
+                    inconclusive.append({"suite": suite, "config": config, "id": tid, "metric": name,
+                                         "why": "paired relative performance loss is not finite"})
+                    continue
+                worst_seed = max(losses, key=losses.get)
+                worse = losses[worst_seed]
                 perf.append({"suite": suite, "config": config, "id": tid, "metric": name,
                              "base": round(bv, 4) if isinstance(bv, float) and not bv.is_integer() else int(bv),
                              "candidate": round(cv, 4) if isinstance(cv, float) and not cv.is_integer() else int(cv),
                              "change": round(change, 5), "regression": worse > perf_tolerance,
                              "samples": {"base": len(b), "candidate": len(c), "paired": len(bs)},
-                             "comparison_rule": "relative_mean", "confidence": "not_estimated"})
+                             "comparison_rule": "max_paired_relative_loss", "confidence": "not_estimated",
+                             "max_paired_loss": worse, "worst_seed": worst_seed})
 
     reasons = []
     if new:
@@ -443,7 +457,8 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                        else f"{_plural(len(missing), 'test or seed')} missing from the candidate")
     for p in perf:
         if p["regression"]:
-            reasons.append(f"{p['id']} {p['metric']} {p['change']:+.1%} > {perf_tolerance:.1%}"
+            reasons.append(f"{p['id']} {p['metric']} paired loss {p['max_paired_loss']:+.1%} "
+                           f"on seed {p['worst_seed']} > {perf_tolerance:.1%}"
                            + (f" ({p['suite']}/{p['config']})" if len({(q['suite'], q['config']) for q in perf}) > 1 else ""))
     unsure = []
     if inconclusive:
@@ -528,8 +543,9 @@ def format_verdict(v: Verdict) -> str:
             lambda i: f"{loc(i)}  {i['signature']}")
     regress = [p for p in v.perf if p["regression"]]
     section("perf regressions", regress,
-            lambda p: f"{loc(p)}  {p['metric']} {p['base']} -> {p['candidate']} ({p['change']:+.2%})")
+            lambda p: f"{loc(p)}  {p['metric']} {p['base']} -> {p['candidate']} (worst paired loss {p['max_paired_loss']:+.2%}, seed {p['worst_seed']})")
     if v.perf and not regress:
-        worst = max(v.perf, key=lambda p: p["change"])
-        out.append(f"perf: {len(v.perf)} compared, worst {worst['id']} {worst['metric']} {worst['change']:+.2%}")
+        worst = max(v.perf, key=lambda p: p["max_paired_loss"])
+        out.append(f"perf: {len(v.perf)} compared, worst {worst['id']} {worst['metric']} "
+                   f"paired loss {worst['max_paired_loss']:+.2%} on seed {worst['worst_seed']}")
     return "\n".join(out)

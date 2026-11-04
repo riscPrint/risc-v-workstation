@@ -63,6 +63,7 @@ package vip;
        do @(posedge b.clk); while(!b.a_ready);
        @(negedge b.clk); b.a_valid=0;
        do @(posedge b.clk); while(!b.d_valid);
+       t.response_data=b.d_data;
        seq_item_port.item_done();
      end
    endtask
@@ -141,7 +142,7 @@ package vip;
      count++;
    endfunction
    function void check_phase(uvm_phase phase);
-     if(count!=40 || loads<4 || seen_bins!=8'hff)
+     if(count!=44 || loads<4 || seen_bins!=8'hff)
        `uvm_fatal("CHECK","missing transactions or coverage bins")
      if(traffic.get_inst_coverage()!=100.0)
        `uvm_fatal("COVERAGE","covergroup did not reach 100 percent")
@@ -162,11 +163,28 @@ package vip;
    endfunction
    function void connect_phase(uvm_phase phase); d.seq_item_port.connect(s.seq_item_export); endfunction
  endclass
+ class reg_adapter extends uvm_reg_adapter;
+   `uvm_object_utils(reg_adapter)
+   function new(string name="reg_adapter"); super.new(name); endfunction
+   virtual function uvm_sequence_item reg2bus(const ref uvm_reg_bus_op rw);
+     item t=new("ral_bus");
+     t.opcode=rw.kind==UVM_READ ? 4 : 0; t.address=32'(rw.addr); t.data=32'(rw.data);
+     if($test$plusargs("ral_corrupt") && rw.kind==UVM_WRITE) t.data^=1;
+     return t;
+   endfunction
+   virtual function void bus2reg(uvm_sequence_item bus_item, ref uvm_reg_bus_op rw);
+     item t;
+     if(!$cast(t,bus_item)) `uvm_fatal("RAL","invalid bus item")
+     rw.kind=t.opcode==4 ? UVM_READ : UVM_WRITE;
+     rw.addr=t.address; rw.data=t.response_data; rw.status=UVM_IS_OK;
+   endfunction
+ endclass
  class test_env extends uvm_test;
    `uvm_component_utils(test_env)
-   agent a; scoreboard sc;
+   agent a; scoreboard sc; control_vip::pin_agent pins;
    function new(string name="test_env",uvm_component parent=null); super.new(name,parent); endfunction
    function void build_phase(uvm_phase phase);
+     pins=new("pins",this);
      a=agent::type_id::create("a",this); sc=scoreboard::type_id::create("sc",this);
    endfunction
    function void connect_phase(uvm_phase phase); a.m.ap.connect(sc.analysis_export); endfunction
@@ -176,8 +194,24 @@ package vip;
    endfunction
    task run_phase(uvm_phase phase);
      stimulus s;
+     rvw_ral::register_block regs;
+     reg_adapter adapter;
+     uvm_status_e status;
+     uvm_reg_data_t value;
      phase.raise_objection(this);
      s=stimulus::type_id::create("stimulus"); s.start(a.s);
+     regs=new(); regs.build(); regs.reset(); adapter=new();
+     regs.default_map.set_sequencer(a.s,adapter);
+     regs.default_map.set_auto_predict(1);
+     regs.reg_csr_word0_h.write(status,32'h12345678,UVM_FRONTDOOR);
+     if(status!=UVM_IS_OK) `uvm_fatal("RAL","write failed")
+     regs.reg_csr_word0_h.read(status,value,UVM_FRONTDOOR);
+     if(status!=UVM_IS_OK || value!=32'h12345678 || regs.reg_csr_word0_h.get_mirrored_value()!=value)
+       `uvm_fatal("RAL","read or prediction mismatch")
+     regs.reg_csr_word3_h.write(status,32'hfeedbeef,UVM_FRONTDOOR);
+     regs.reg_csr_word3_h.mirror(status,UVM_CHECK,UVM_FRONTDOOR);
+     if(status!=UVM_IS_OK) `uvm_fatal("RAL","mirror failed")
+     $display("RVW_UVM_PASS ral_frontdoor");
      #20;
      phase.drop_objection(this);
    endtask
@@ -197,9 +231,12 @@ module top;
  always #5 clk=~clk;
  tl_if bus(clk);
  tiny_ram dut(bus);
+ control_if pins(clk);
+ control_fixture control_dut(pins);
  initial begin #20; bus.reset=0; end
  initial begin
    uvm_config_db#(virtual tl_if)::set(null,"*","bus",bus);
+   uvm_config_db#(virtual control_if)::set(null,"*","pins",pins);
    run_test("test_env");
  end
  initial begin #10000; $fatal(1,"watchdog"); end

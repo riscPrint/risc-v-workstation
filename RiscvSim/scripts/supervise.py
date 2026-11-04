@@ -18,6 +18,13 @@ def cancelled(signum, frame):
 
 
 def supervise(bash, script, arguments):
+    from rvw.sim.backends import require_native
+    try:
+        needs = os.environ.get('RISCVSIM_REQUIRES', '')
+        require_native('riscvsim-verilator', needs.split(',') if needs else [])
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 2
     owner = None
     try:
         with _defer_cancellation():

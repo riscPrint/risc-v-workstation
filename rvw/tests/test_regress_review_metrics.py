@@ -32,7 +32,7 @@ def test_repeated_seed_report_states_counts_and_confidence_limit():
     metric = verdict.perf[0]
     assert metric['samples'] == {'base': 3, 'candidate': 3, 'paired': 3}
     assert metric['confidence'] == 'not_estimated'
-    assert metric['comparison_rule'] == 'relative_mean'
+    assert metric['comparison_rule'] == 'max_paired_relative_loss'
 
 
 def test_stored_failed_metric_workload_does_not_earn_accept(fake, rvw, tmp_path):
@@ -49,3 +49,28 @@ def test_stored_failed_metric_workload_does_not_earn_accept(fake, rvw, tmp_path)
     assert verdict['verdict'] == 'inconclusive'
     assert verdict['still_failing']
     assert any('performance' in i['why'] for i in verdict['inconclusive'])
+
+
+@pytest.mark.parametrize('direction,base,candidate', [
+    ('cycles', [100, 100], [130, 70]),
+    ('ipc:max', [1.0, 1.0], [0.7, 1.3]),
+])
+def test_fast_seed_cannot_cancel_slow_seed(direction, base, candidate):
+    name = direction.split(':')[0]
+    def samples(values):
+        return _res([T('bench', seed=i, **{name: v}) for i, v in enumerate(values, 1)], perf=[direction])
+    v = compare([samples(base)], [samples(candidate)], perf_tolerance=0.01)
+    assert v.verdict == 'reject'
+    assert v.perf[0]['regression']
+    assert v.perf[0]['comparison_rule'] == 'max_paired_relative_loss'
+    assert v.perf[0]['worst_seed'] == 1
+    assert v.perf[0]['max_paired_loss'] == pytest.approx(0.3)
+
+
+@pytest.mark.parametrize('direction,base,candidate', [('cycles', 100, 125), ('ipc:max', 4, 3)])
+def test_paired_loss_threshold_equality_does_not_reject(direction, base, candidate):
+    name = direction.split(':')[0]
+    b = _res([T('bench', **{name: base})], perf=[direction])
+    c = _res([T('bench', **{name: candidate})], perf=[direction])
+    assert compare([b], [c], perf_tolerance=0.25).verdict == 'accept'
+    assert compare([b], [c], perf_tolerance=0.24).verdict == 'reject'

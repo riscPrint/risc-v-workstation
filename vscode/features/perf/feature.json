@@ -31,6 +31,10 @@
       {
         "command": "perf.trace",
         "title": "Performance: Open SpinalTrace"
+      },
+      {
+        "command": "perf.evidence",
+        "title": "Performance: Open Selected Evidence"
       }
     ],
     "views": {
@@ -72,6 +76,18 @@
           "command": "perf.trace",
           "when": "view == perf.results",
           "group": "results"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "perf.evidence",
+          "when": "view == perf.results",
+          "group": "evidence"
+        },
+        {
+          "command": "perf.source",
+          "when": "view == perf.results && viewItem == rvw.signal",
+          "group": "navigation"
         }
       ]
     },

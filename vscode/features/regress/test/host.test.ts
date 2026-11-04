@@ -6,7 +6,7 @@ import suite from './fixtures/suite.json';
 import verdict from './fixtures/verdict.json';
 
 test('result host loads fixtures, clears failed loads and launches native tools', async () => {
-  const commands = new Map<string, () => Promise<void>>();
+  const commands = new Map<string, (row?: any) => Promise<void>>();
   const dialogs: string[] = [];
   const errors: string[] = [];
   const tasks: any[] = [];
@@ -45,7 +45,7 @@ test('result host loads fixtures, clears failed loads and launches native tools'
     // esbuild keeps the host initialization lazy until the mock is installed.
     const {resultsFeature} = require('../../../src/results/feature');
     const api=resultsFeature('regress','Regression').activate({subscriptions:[],log:{info(){}}});
-    assert.equal(commands.size,6);
+    assert.equal(commands.size,8);
     await api.load(uri('/tmp/verdict.json'));
     let rows=provider.getChildren();
     assert.match(rows[0].key,/inconclusive; tests: pass/);
@@ -81,5 +81,23 @@ test('result host loads fixtures, clears failed loads and launches native tools'
     dialogs.push('/tmp/wave.vcd'); await commands.get('regress.wave')!();
     assert.equal(tasks.length,2);
     assert.match(errors.at(-1)!,/Trust the workspace/);
+    vscode.workspace.isTrusted=true;
+    const row={key:'job',value:{run:'jobs/one/result.json',status:'error',inconclusive:'missing evidence'}};
+    assert.equal(provider.getTreeItem(row).contextValue,'rvw.run');
+    await commands.get('regress.runResult')!(row);
+    assert.equal(opened.at(-1).document.fsPath,'/tmp/jobs/one/result.json');
+    await commands.get('regress.evidence')!(row);
+    assert.equal(JSON.parse(opened.at(-1).document.uri.content).inconclusive,'missing evidence');
+    const count=opened.length;
+    await commands.get('regress.runResult')!({key:'missing',value:{}});
+    assert.equal(opened.length,count);
+    assert.match(errors.at(-1)!,/No declared C1 run path/);
+    content='// captured source';
+    queryResult={signal:{loc:'/tmp/Unit.scala:9',source:{source:'/tmp/Unit.scala',sha256:createHash('sha256').update(content).digest('hex')}}};
+    const signalRow={key:'point',value:{signal:'top.io.result'}};
+    assert.equal(provider.getTreeItem(signalRow).contextValue,'rvw.signal');
+    dialogs.push('/tmp/design.db'); await commands.get('regress.source')!(signalRow);
+    assert.equal(queries.at(-1).args.at(-1),'top.io.result');
+
   } finally { loader._load=original; }
 });

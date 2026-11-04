@@ -31,6 +31,14 @@
       {
         "command": "regress.trace",
         "title": "Regression: Open SpinalTrace"
+      },
+      {
+        "command": "regress.evidence",
+        "title": "Regression: Open Selected Evidence"
+      },
+      {
+        "command": "regress.runResult",
+        "title": "Regression: Open Declared C1 Run Result"
       }
     ],
     "views": {
@@ -72,6 +80,23 @@
           "command": "regress.trace",
           "when": "view == regress.results",
           "group": "results"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "regress.evidence",
+          "when": "view == regress.results",
+          "group": "evidence"
+        },
+        {
+          "command": "regress.source",
+          "when": "view == regress.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "regress.runResult",
+          "when": "view == regress.results && viewItem == rvw.run",
+          "group": "navigation"
         }
       ]
     },

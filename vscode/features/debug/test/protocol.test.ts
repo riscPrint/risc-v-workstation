@@ -13,3 +13,12 @@ test('reject malformed requests',()=>{
 
 import {position} from '../src/wave';
 test('wave time positions retain precision above 2^53',()=>{assert.equal(position('9007199254740994','9007199254740993','9007199254741003'),80);});
+
+test('reject invalid time windows and empty signals before transport',()=>{
+  for (const time of ['9223372036854775808','9'.repeat(200),'1.5','',0])
+    assert.equal(isRequest({op:'select',signal:'x',time}),false);
+  for (const end of ['9',10,'9223372036854775808'])
+    assert.equal(isRequest({op:'select',signal:'x',time:'10',end}),false);
+  assert.equal(isRequest({op:'select',signal:' ',time:'0'}),false);
+  assert.ok(isRequest({op:'select',signal:'x',time:'9223372036854775807'}));
+});

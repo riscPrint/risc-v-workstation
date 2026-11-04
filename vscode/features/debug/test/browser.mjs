@@ -27,6 +27,7 @@ with sqlite3.connect(temp/'vex.db') as c:
 vcd=temp/'wave.vcd'
 vcd.write_text('$timescale 1ns $end\n$scope module TOP $end\n$scope module VexTop $end\n$var wire 32 ! execute_PC $end\n$upscope $end\n$upscope $end\n$enddefinitions $end\n#0\nb0 !\n#10\nb100 !\n')
 build(str(vcd),str(temp/'wave.rvwi'))
+(temp/'result.json').write_text(json.dumps(dict(schema='rvw.run/1',status='error',inconclusive='fixture missing retirement evidence',artifacts={'wave':'wave.vcd'})))
 `;
 let server,browser;
 try {
@@ -48,6 +49,9 @@ try {
    const jumpMs=performance.now()-jumpStart;assert.deepEqual(errors,[]);
    console.log(JSON.stringify({scope:'headless Chromium; dense synthetic indexed wave; warm filesystem cache; synthetic single-block fixture',open_ms:openedMs,jump_ms:jumpMs,under_1s:openedMs<1000&&jumpMs<1000}));
  } else {
+ assert.match(await page.locator('#binding').innerText(),/Wave to C1 run: bound/);
+ assert.match(await page.locator('#binding').innerText(),/Database to run: unverified/);
+ assert.match(await page.locator('#run-evidence').textContent(),/fixture missing retirement evidence/);
  await page.locator('#signal').fill('execute_PC');await page.locator('#jump').click();await page.locator('#wave svg').waitFor();
  assert.match(await page.locator('#source').innerText(),/execute_PC/);
  await page.locator('#wave button').filter({hasText:'10: 0x4'}).click();
@@ -55,6 +59,42 @@ try {
  await page.locator('#source button').first().click();await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
  await page.locator('#diagram .sb-box').first().click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
+ // An older reverse-source response must not clear a newer signal selection.
+ let releaseSource;
+ const intercepted = new Promise(resolve => { releaseSource=resolve; });
+ const holdSource=async route => {
+   if(route.request().postDataJSON().op==='source') releaseSource(route);
+   else await route.continue();
+ };
+ await page.route('**/api',holdSource);
+ await page.locator('#source button').first().click();
+ const held=await intercepted;
+ await page.locator('#time').fill('20');await page.locator('#time').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#wave').textContent.includes('@ 20 ='));
+ const current=await page.locator('#wave').innerText();
+ await held.fulfill({json:{result:{candidates:[]}}});
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ assert.equal(await page.locator('#wave').innerText(),current);
+ assert.match(await page.locator('#status').innerText(),/^resolved/);
+ await page.unroute('**/api',holdSource);
+ const unresolvedSource=async route => {
+   if(route.request().postDataJSON().op==='source') await route.fulfill({json:{result:{candidates:['missing_signal']}}});
+   else await route.continue();
+ };
+ await page.route('**/api',unresolvedSource);
+ await page.locator('#source button').first().click();
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('inconclusive'));
+ await page.unroute('**/api',unresolvedSource);
+ // Failed navigation must remove the previous wave, source and trace evidence.
+ await page.locator('#signal').fill('missing_signal');await page.locator('#signal').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('inconclusive'));
+ for (const id of ['wave','source','dependencies']) assert.equal(await page.locator('#'+id).innerText(),'');
+ await page.locator('#signal').fill('execute_PC');await page.locator('#time').fill('9223372036854775808');
+ await page.locator('#time').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('Time must be an integer'));
+ await page.locator('#time').fill('10');await page.locator('#time').press('Enter');
+ await page.locator('#wave svg').waitFor();
+ assert.equal(await page.getByRole('region',{name:'Indexed wave',exact:true}).count(),1);
  await page.locator('#trace').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('no pdg.json'));
  assert.deepEqual(errors,[]);
  console.log('PASS: block and wave SVG, source and wave links, missing trace metadata; 0 page errors');
