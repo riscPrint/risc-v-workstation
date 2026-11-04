@@ -175,10 +175,12 @@ def run(out, *, run_dir=None, elf, platform, archive, verilator='verilator', tim
             rows.append(dict(id='spike_fault_detection' if negative else 'spike_retirements',
                              seed=c1.get('seed', 1), kind='uvm', status='pass' if good else 'error',
                              simulator_exit=result.returncode, wall_clock_timeout=result.timed_out,
+                             signature=None if good else 'uvm:cpu-incomplete',
                              **({} if good else {'inconclusive': 'missing CPU conformance evidence'}),
                              artifacts={'log': f'{name}.log'}))
     except (OSError, ValueError) as exc:
-        rows.append(dict(id='build', seed=1, kind='uvm',status='error',inconclusive=str(exc)))
+        rows.append(dict(id='build', seed=1, kind='uvm',status='error',
+                         signature='uvm:cpu-build', inconclusive=str(exc)))
     if any(uvm.sha(Path(p)) != digest for p, digest in hashes.items()):
         for row in rows:
             row.update(status='error', inconclusive='DPI sources changed during run')
