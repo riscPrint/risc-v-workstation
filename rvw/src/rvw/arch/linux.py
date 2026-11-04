@@ -45,6 +45,21 @@ def save(out, data):
     return data
 
 
+def extract_buildroot(archive, out):
+    """Extract the hash-checked release, with target-root symlinks last."""
+    with tarfile.open(archive) as tar:
+        members = tar.getmembers()
+        # Skeletons contain absolute links for the target root filesystem.
+        # Extract regular content first so no writes can follow those links.
+        tar.extractall(out, members=[m for m in members if not m.issym()], filter='data')
+        for member in members:
+            if member.issym():
+                # Keep data_filter's member path and type checks. Only the link
+                # target is exempt, after the pinned archive hash was checked.
+                checked = tarfile.data_filter(member.replace(linkname='.'), str(out))
+                tar.extract(checked.replace(linkname=member.linkname), out, filter='tar')
+
+
 def execute(action, out, platform=None, images=None, timeout=600, jobs=2,
             cross_compile='riscv64-unknown-elf-', llvm=False, **unused):
     if not math.isfinite(timeout) or timeout <= 0 or not 1 <= jobs <= 4:
@@ -86,9 +101,7 @@ def execute(action, out, platform=None, images=None, timeout=600, jobs=2,
                      '-o', str(archive)], out, timeout)
             if identity(archive)['sha256'] != BUILDROOT_SHA256:
                 raise ValueError('Buildroot archive SHA-256 mismatch')
-            with tarfile.open(archive) as tar:
-                # Python 3.11 also has the extraction filter in supported patch releases.
-                tar.extractall(out, filter='data')
+            extract_buildroot(archive, out)
             source = out / f'buildroot-{BUILDROOT}'
             assets = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4])) / 'Arch/linux'
             shutil.copytree(assets / 'overlay', out / 'overlay')
@@ -176,7 +189,7 @@ def execute(action, out, platform=None, images=None, timeout=600, jobs=2,
             else:
                 raise ValueError(f'unknown Linux action: {action}')
         return save(out, data)
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, tarfile.TarError) as exc:
         data.update(status='inconclusive', error=str(exc))
         save(out, data)
         raise
