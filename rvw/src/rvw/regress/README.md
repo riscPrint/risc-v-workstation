@@ -630,3 +630,11 @@ match that root after each fence. `nonleaf_global: true` sets G on the non-leaf
 PTEs. Remaps then require an all-ASID fence (`all` or `va`). These cases check
 single-hart effects only. They do not test concurrent races, shootdown messages
 or cross-hart completion. Speculation and extra invalidation remain permitted.
+
+With `ad_expect`, the program now compares the complete leaf PTE. It checks
+PPN, permissions, RSW and A/D together. `software_rsw` selects a software RSW
+write (0..3) before the access and requires `ad_expect`. This write is sequential.
+The Svade case requires the complete faulting PTE to stay unchanged. The opt-in
+Svadu cases require A/D updates to preserve software RSW and all other fields.
+A correct final PTE does not prove atomicity. Concurrent PTE writes and bus-level
+atomic observations remain open. The project's unsupported Svadu stays reference-only.

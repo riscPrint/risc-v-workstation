@@ -51,7 +51,7 @@ def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -110,6 +110,8 @@ def validate(s):
         raise ValueError('va must be canonical Sv39')
     if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
         raise ValueError('bins must be nonempty strings')
+    if 'software_rsw' in s and (type(s['software_rsw']) is not int or not 0 <= s['software_rsw'] <= 3 or 'ad_expect' not in s or s.get('remap') or s['access'] == 'fetch'):
+        raise ValueError('software_rsw requires 0..3 and ad_expect, without remap/fetch')
     if 'ad_expect' in s and (type(s['ad_expect']) is not int or s['ad_expect'] & ~192):
         raise ValueError('ad_expect must contain only A/D bits')
     if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
@@ -170,6 +172,7 @@ _start:
  {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + 12288) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
  li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
  csrw satp, t0
+ {('li t0, ' + str(leaf) + chr(10) + ' ld t1, 0(t0)' + chr(10) + ' li t2, ' + str(s.get('software_rsw', 0) << 8) + chr(10) + ' or t1, t1, t2' + chr(10) + ' sd t1, 0(t0)') if 'software_rsw' in s else ''}
  {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
  sfence.vma x0, x0
  li t3, {va}
@@ -262,7 +265,9 @@ stale_allowed:
 '''
     code += 'check_ad:\n'
     if 'ad_expect' in s:
-        code += f' li t0, {leaf}\n ld t0, 0(t0)\n andi t0, t0, 192\n li t1, {s["ad_expect"]}\n bne t0, t1, fail\n'
+        expected_pa = DATA + 4096 if s.get('remap') and not s.get('root_switch') else pa
+        expected_pte = (((expected_pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags'])) | (s.get('software_rsw', 0) << 8)) & ~192 | s['ad_expect']
+        code += f' li t0, {leaf}\n ld t0, 0(t0)\n li t1, {expected_pte}\n bne t0, t1, fail\n'
     code += ''' li t1, 1
  j finish
 fail:

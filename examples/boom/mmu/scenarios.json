@@ -668,6 +668,19 @@
       "bins": [
         "tlb.nonleaf-global-va"
       ]
+    },
+    {
+      "id": "svade-software-rsw",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "page-fault",
+      "ad_expect": 128,
+      "ad_mode": "svade",
+      "software_rsw": 3,
+      "bins": [
+        "ad.svade-software-rsw"
+      ]
     }
   ]
 }

@@ -87,7 +87,7 @@ def test_scoped_remap_requires_global_invalidation():
 
 def test_ad_mask_is_checked_in_physical_memory():
     text = assembly(scenario(ad_expect=192))
-    assert 'andi t0, t0, 192\n li t1, 192' in text
+    assert 'li t1, 537395399\n bne t0, t1, fail' in text
 
 
 def test_native_hardware_ad(tmp_path):
@@ -431,3 +431,28 @@ def test_root_switch_uses_distinct_tables_and_reuses_original_asid():
     row = scenario(remap=True, nonleaf_global=True, fence='asid')
     with pytest.raises(ValueError, match='global'):
         assembly(row)
+
+
+def test_native_ad_checker_detects_corruption_outside_ad_bits(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = scenario(ad_expect=192, ad_mode='svade')
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    original = mmu.assembly
+    def corrupt(s):
+        # Flip software-owned RSW after the access. A/D bits remain correct.
+        return original(s).replace('check_ad:\n', 'check_ad:\n li t0, 0x80012000\n ld t1, 0(t0)\n xori t1, t1, 256\n sd t1, 0(t0)\n')
+    monkeypatch.setattr(mmu, 'assembly', corrupt)
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_software_rsw_change_requires_full_pte_check():
+    text = assembly(scenario(ad_expect=192, software_rsw=3))
+    assert 'li t1, 537396167' in text  # PPN, flags and software RSW together.
+    assert 'andi t0, t0, 192' not in text
+    with pytest.raises(ValueError, match='software_rsw'):
+        assembly(scenario(software_rsw=3))
