@@ -47,6 +47,8 @@ def register(sub):
 
     from rvw.sim.uvm import register as register_uvm
     register_uvm(sub)
+    from rvw.sim.ral import register as register_ral
+    register_ral(sub)
 
     from rvw.sim.hdl import PROFILES
     h = sub.add_parser('hdl', help='run a native HDL semantic component test')
