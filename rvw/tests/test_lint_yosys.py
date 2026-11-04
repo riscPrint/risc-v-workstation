@@ -21,6 +21,10 @@ def test_native_faults(tmp_path, body, rule):
         assert rule in {f['rule'] for f in r['findings']}
     else:
         assert not r['findings']
+    if rule == 'yosys.combinational_feedback':
+        f = next(f for f in r['findings'] if f['rule'] == rule)
+        assert f['related_endpoints']
+        assert all(e['source'] and e['bits'] for e in f['related_endpoints'])
     if rule == 'yosys.undriven':
         f = next(f for f in r['findings'] if f['rule'] == rule)
         assert f['endpoint'] == 'Design.missing'
@@ -33,3 +37,9 @@ def test_unconnected_required_output(tmp_path):
     p.write_text('module Design(input a, output y,z); assign z = ~a; endmodule')
     r = yosys.run([str(p)], 'Design', 20)
     assert any(f['endpoint'] == 'Design.y' and f['rule'] == 'yosys.undriven' for f in r['findings'])
+
+
+def test_opaque_module_cannot_earn_clean(tmp_path):
+    p = tmp_path / 'Design.v'
+    p.write_text('module Design(input a, output y); endmodule')
+    assert yosys.run([str(p)], 'Design', 20)['status'] == 'inconclusive'

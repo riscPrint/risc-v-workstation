@@ -2109,3 +2109,14 @@ structural waiver or whole-design CDC verdict. No C4 acceptance is emitted.
 status, kind, seed, requested sample count, input hashes and limits. Missing
 tools and incomplete execution are inconclusive. A simulation pass needs the
 completion marker and no failed monitor assertion. It is not a proof.
+
+Selected CDC protocol kinds also include `pulse_capture` (single injected pulse,
+four destination-event response bound) and `coherent_bus` (equal-coded two-bit
+output). The lint guide defines their exact interfaces and assumptions.
+`rvw lint --benchmark MANIFEST --out NEW_DIRECTORY` accepts `rvw.cdc-bench/1`.
+Cases pin source hashes and independent expected results. Optional commercial
+adapters receive the same frozen spec and monitor, but not the expected verdict.
+`rvw.cdc-adapter-response/1` must bind the exact request hash, mode, tool version
+and verdict. BMC passes must reach the requested depth. All observations and
+per-tool qualifications stay in `rvw.cdc-bench-result/1`. Missing commercial
+adapters are `not_run`. Suite agreement is not signoff or commercial parity.

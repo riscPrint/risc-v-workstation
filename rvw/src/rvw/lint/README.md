@@ -268,3 +268,52 @@ assertion is fatal. Success needs the completion marker and a zero exit code.
 Missing simulators, timeouts and compile errors remain inconclusive. This is a
 seeded simulation result, not a proof. Tests exercise all three correct designs
 and faults in held data, FIFO full control and reset release order.
+
+The additional `pulse_capture` monitor drives at most one source pulse after a
+free `launch` input. It checks that capture occurs within four destination
+events while pending, and rejects duplicate captures. It assumes no clock
+fairness; no destination events means no response deadline expires. The DUT
+ports are `clk`, `reset`, `source_tick`, `destination_tick`, `pulse`, three-bit
+`forward_choice`, and one-bit output `captured`. The wrapper supplies `pulse`.
+The correct reference retains a toggle. The fault directly synchronizes a pulse
+and loses it when destination events stop during the pulse.
+
+`coherent_bus` uses the four clock/reset/event inputs, one-bit `launch`,
+three-bit `forward_choice`, and two-bit output `pair`. Its contract requires
+`pair` to equal 00 or 11. The correct reference replicates one synchronized bit.
+The fault independently synchronizes both bits and can produce an incoherent
+combination under old/new perturbation. This is a selected equal-coded bus
+contract, not a general reconvergence proof.
+
+## Same-input comparison harness
+
+Run the pinned ten-case reference suite:
+
+```sh
+scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/rvw lint \
+  --benchmark SpinalChecks/examples/cdc/suite.json --out /tmp/cdc-suite \
+  --mode prove --engine abc:pdr --timeout 60 --json
+```
+
+`rvw.cdc-bench/1` contains nonempty `cases`: unique `id`, `manifest`, independent
+`expected` (`pass` or `fail`), and an ordered `source_sha256` list. Hash mismatch
+is an input error. Each correct reference has a paired seeded fault. Suite
+expectations are the oracle. Neither native nor commercial observations define
+the expected result. The runner freezes all sources before execution.
+
+Optional `adapters` rows have a unique `id` (other than `native`) and absolute
+executable `command`. Each trusted adapter receives `REQUEST.json RESPONSE.json`.
+The request uses `rvw.cdc-adapter-request/1`, with case ID, frozen spec/source
+paths, source hashes, monitor path, mode and depth. It omits the expected verdict.
+The response must use `rvw.cdc-adapter-response/1`, echo `request_sha256` for the
+exact request bytes and `mode`, and report `status` (`pass`, `fail`,
+`inconclusive`) plus a nonempty `tool_version`. BMC passes need integer
+`reached_depth >= depth - 1`. Timeout, absent output, wrong identity, short BMC
+prefixes and malformed responses stay inconclusive. Adapter stdout/stderr stays
+in `adapter.log`. The adapter owns tool setup and the translation of this
+selected monitor. Inspect its constraints before trusting its observation.
+
+Results use `rvw.cdc-bench-result/1`. Qualification is `matches_on_suite`,
+`mismatch` or `inconclusive` per tool. No adapters gives commercial comparison
+`not_run`. No licensed tool is bundled. A suite match does not establish
+commercial CDC feature parity, general correctness, physical timing or signoff.

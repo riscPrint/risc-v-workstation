@@ -27,7 +27,8 @@ def run(files, top, timeout):
         modules = json.loads(netlist.read_text()).get('modules', {}) if netlist.exists() else {}
     findings = []
     current_module = top
-    for line in output.splitlines():
+    lines = output.splitlines()
+    for index, line in enumerate(lines):
         match = re.search(r'Checking module (\S+)\.\.\.', line)
         if match:
             current_module = match[1]
@@ -44,7 +45,23 @@ def run(files, top, timeout):
         info = modules.get(current_module, {}).get('netnames', {}).get(name, {})
         source = info.get('attributes', {}).get('src', '')
         loc = re.match(r'(.*?):(\d+)', source)
-        findings.append(dict(rule='yosys.' + rule, severity='warning',
+        related = []
+        context = []
+        for continuation in lines[index + 1:]:
+            if not continuation.startswith('    '):
+                break
+            context.append(continuation)
+            cell = re.match(r'    cell (\S+) ', continuation)
+            if cell:
+                info_cell = modules.get(current_module, {}).get('cells', {}).get(cell[1], {})
+                related.append(dict(endpoint=current_module + '.' + cell[1],
+                    source=info_cell.get('attributes', {}).get('src'),
+                    bits=sorted({b for values in info_cell.get('connections', {}).values() for b in values}, key=str)))
+            for match in re.finditer(r'wire \\([^\s]+)', continuation):
+                net = modules.get(current_module, {}).get('netnames', {}).get(match[1], {})
+                related.append(dict(endpoint=current_module + '.' + match[1],
+                                    source=net.get('attributes', {}).get('src'), bits=net.get('bits', [])))
+        findings.append(dict(context=context, related_endpoints=related, rule='yosys.' + rule, severity='warning',
                              endpoint=f'{current_module}.{name}' if name else current_module,
                              file=loc[1] if loc else None, line=int(loc[2]) if loc else None,
                              source=source or None, elaborated_bits=info.get('bits', []), message=line))

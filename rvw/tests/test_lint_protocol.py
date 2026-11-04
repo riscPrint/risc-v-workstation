@@ -11,11 +11,11 @@ REFERENCES = Path(__file__).resolve().parents[2] / 'SpinalChecks' / 'examples' /
 
 def plan(kind):
     return dict(schema='rvw.cdc-protocol/1', kind=kind,
-                top={'handshake':'cdc_handshake', 'async_fifo':'cdc_fifo', 'reset_release':'cdc_reset'}[kind],
-                verilog=['sampling.sv', {'handshake':'handshake', 'async_fifo':'fifo', 'reset_release':'reset'}[kind] + '.sv'])
+                top={'handshake':'cdc_handshake', 'async_fifo':'cdc_fifo', 'reset_release':'cdc_reset', 'pulse_capture':'cdc_pulse', 'coherent_bus':'cdc_reconverge'}[kind],
+                verilog=['sampling.sv', {'handshake':'handshake', 'async_fifo':'fifo', 'reset_release':'reset', 'pulse_capture':'pulse', 'coherent_bus':'reconverge'}[kind] + '.sv'])
 
 
-@pytest.mark.parametrize('kind', ['handshake', 'async_fifo', 'reset_release'])
+@pytest.mark.parametrize('kind', ['handshake', 'async_fifo', 'reset_release', 'pulse_capture', 'coherent_bus'])
 @pytest.mark.parametrize('fault', [False, True])
 @pytest.mark.skipif(not all(shutil.which(t) for t in ['yosys','sby','yices-smt2']), reason='needs native formal tools')
 def test_native_protocol(tmp_path, kind, fault):
@@ -47,7 +47,7 @@ def test_unknown_protocol():
         protocol.generate({'kind':'unknown'})
 
 
-@pytest.mark.parametrize('kind', ['handshake', 'async_fifo', 'reset_release'])
+@pytest.mark.parametrize('kind', ['handshake', 'async_fifo', 'reset_release', 'pulse_capture', 'coherent_bus'])
 @pytest.mark.parametrize('fault', [False, True])
 @pytest.mark.skipif(not all(shutil.which(t) for t in ['iverilog','vvp']), reason='needs Icarus')
 def test_perturbed_native_simulation(tmp_path, kind, fault):

@@ -12,6 +12,7 @@ from . import native, structural
 def register(sub):
     p = sub.add_parser('lint', help='native lint and structural CDC/RDC inventory')
     p.add_argument('--settings', help='lint settings JSON; else project lint.settings')
+    p.add_argument('--benchmark', help='same-input CDC qualification manifest')
     p.add_argument('--protocol', help='selected event-enable CDC safety manifest')
     p.add_argument('--out', help='fresh protocol result directory')
     p.add_argument('--depth', type=int, default=24)
@@ -114,6 +115,11 @@ def report(path):
 
 def run(args):
     try:
+        if args.benchmark:
+            if args.settings or args.protocol or not args.out or args.simulate:
+                raise ValueError('--benchmark needs --out and cannot use --settings, --protocol or --simulate')
+            from . import compare
+            return compare.run(args)
         if args.protocol:
             if args.settings or not args.out:
                 raise ValueError('--protocol needs --out and cannot use --settings')

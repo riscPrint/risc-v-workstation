@@ -7,6 +7,8 @@ from rvw.formal import apps, common
 
 def generate(plan):
     kind = plan.get('kind')
+    if kind in ('pulse_capture', 'coherent_bus'):
+        return generate_signal(plan)
     if kind not in ('handshake', 'async_fifo', 'reset_release'):
         raise ValueError('kind must be handshake, async_fifo or reset_release')
     top = apps.ident(plan['top'])
@@ -85,7 +87,7 @@ def run(args):
                   proof_kind=result['proof_kind'], result='proof/result.json',
                   inputs=[dict(path=str(p), sha256=hashlib.sha256(d).hexdigest()) for p,d in zip(sources,data)],
                   activation='not_measured', model='global clock with independent event enables; old/new sampling choices are DUT inputs',
-                  limits='Selected 8-bit, capacity-one handshake or depth-four FIFO. Safety only. No fairness, pulse capture, analog metastability or CDC signoff. Reset checks use synchronous active-high global reset.')
+                  limits='Selected fixed-port CDC monitor. Safety or bounded destination-event response only. No fairness, pulse capture, analog metastability or CDC signoff. Reset checks use synchronous active-high global reset.')
     common.write_json(out / 'result.json', report)
     print(json.dumps(report, indent=2) if args.json else report['status'])
     return 0 if result['status'] == 'pass' else 1
@@ -101,6 +103,9 @@ def simulate(args, plan, ports, files, monitor, sources, data, out):
     text = re.sub(r'assert \((.*?)\);', r'assert (\1) else $fatal(1, "CDC protocol assertion");', monitor.read_text())
     monitor.write_text(text)
     inputs = {n:p for n,p in ports.items() if p['direction'] == 'input'}
+    if plan['kind'] == 'pulse_capture':
+        del inputs['pulse']
+        inputs['launch'] = dict(direction='input', width=1)
     declarations = '\n'.join(f"reg [{p['width']-1}:0] {n} = 0;" for n,p in inputs.items())
     randomize = '\n'.join(f'{n} = $random(seed);' for n in inputs if n not in ('clk','reset'))
     tb = out / 'testbench.sv'
@@ -134,3 +139,36 @@ def simulate(args, plan, ports, files, monitor, sources, data, out):
     common.write_json(out / 'result.json', report)
     print(json.dumps(report, indent=2) if args.json else status)
     return 0 if status == 'pass' else 1
+
+
+def generate_signal(plan):
+    top = apps.ident(plan['top'])
+    pulse = plan['kind'] == 'pulse_capture'
+    inputs = dict(clk=1, reset=1, source_tick=1, destination_tick=1, forward_choice=3)
+    inputs['pulse' if pulse else 'launch'] = 1
+    outputs = dict(captured=1) if pulse else dict(pair=2)
+    ports = {n:dict(direction=d, width=w) for d,p in [('input',inputs),('output',outputs)] for n,w in p.items()}
+    wrapper_inputs = {n:w for n,w in inputs.items() if n != 'pulse'}
+    if pulse:
+        wrapper_inputs['launch'] = 1
+    header = 'module rvwcdc_top(' + ','.join(f'input [{w-1}:0] {n}' for n,w in wrapper_inputs.items()) + ');\n'
+    header += '\n'.join(f'wire [{w-1}:0] {n};' for n,w in outputs.items())
+    if pulse:
+        header += '\nreg fired, pending; reg [2:0] age;\nwire pulse = source_tick && launch && !fired;\n'
+    header += f'\n{top} dut(' + ','.join(f'.{n}({n})' for n in ports) + ');\n'
+    if pulse:
+        body = """always @(posedge clk) begin
+ if (reset) begin fired <= 0; pending <= 0; age <= 0; end
+ else begin
+   if (pulse) begin fired <= 1; pending <= 1; end
+   if (captured) begin assert (pending); pending <= 0; end
+   if (pending && destination_tick && !captured) begin
+     assert (age < 4);
+     if (age < 5) age <= age + 1;
+   end
+ end
+end
+"""
+    else:
+        body = 'always @(posedge clk) if (!reset) assert (pair == 0 || pair == 3);\n'
+    return header + body + 'endmodule\n', ports
