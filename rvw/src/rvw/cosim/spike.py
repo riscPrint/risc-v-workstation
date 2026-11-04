@@ -83,8 +83,22 @@ def capture_shim(capture, path, source=None):
     def row(item):
         return next(dict(r, copy=str(item.copy)) for r in record["files"]
                     if r["copy"] == item.copy.relative_to(capture.root).as_posix())
+    dependency_row = row(dependency)
+    load_name = inputs.get('spike_load_name')
+    if load_name and not Path(load_name).is_absolute():
+        if Path(load_name).name != load_name or load_name in ('.', '..'):
+            raise ValueError(f"unsupported Spike load name; {REBUILD}")
+        # $ORIGIN resolves beside the captured shim. Hard-link only captured bytes.
+        adjacent = library.copy.parent / load_name
+        if adjacent == library.copy:
+            raise ValueError(f"Spike load name conflicts with shim; {REBUILD}")
+        if not adjacent.exists():
+            os.link(dependency.copy, adjacent)
+        elif not adjacent.samefile(dependency.copy):
+            raise CaptureError('input_not_captured:spike_loader', 'conflicting captured dependency')
+        dependency_row['copy'] = str(adjacent)
     return {"library": row(library), "manifest": row(manifest), "source": row(source),
-            "dependency": row(dependency), "manifest_data": built}
+            "dependency": dependency_row, "manifest_data": built}
 
 
 # Keep handles to captured dependencies. A loader may reuse an earlier mapping with the
