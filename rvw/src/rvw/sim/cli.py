@@ -16,6 +16,28 @@ def capabilities(a):
 
 
 def register(sub):
+    from pathlib import Path
+    from rvw.sim.speed import command, sweep_command
+    speed = sub.add_parser('speed-compare', help='compare paired C1 speed after complete C2 equivalence')
+    speed.add_argument('--pair', nargs=2, action='append', required=True, metavar=('BASELINE', 'CANDIDATE'))
+    speed.add_argument('--out', type=Path, required=True)
+    speed.add_argument('--min-seconds', type=float, default=1.0)
+    speed.add_argument('--resamples', type=int, default=10000)
+    speed.add_argument('--seed', type=int, default=1)
+    speed.set_defaults(func=command)
+    tune = sub.add_parser('speed-sweep', help='run bounded serial Verilator thread experiments')
+    tune.add_argument('--adapter', type=Path, required=True)
+    tune.add_argument('--elf', type=Path, required=True)
+    tune.add_argument('--config', required=True)
+    tune.add_argument('--lock', required=True, help='project-owned machine lock name')
+    tune.add_argument('--threads', type=int, nargs='+', default=[2, 4])
+    tune.add_argument('--repeats', type=int, default=5)
+    tune.add_argument('--max-cycles', type=int, default=2000000)
+    tune.add_argument('--timeout', type=float, default=1200)
+    tune.add_argument('--min-seconds', type=float, default=1)
+    tune.add_argument('--seed', type=int, default=1)
+    tune.add_argument('--out', type=Path, required=True)
+    tune.set_defaults(func=sweep_command)
     p = sub.add_parser('backends', help='show native backend semantic capabilities')
     group = p.add_mutually_exclusive_group()
     group.add_argument('--backend', choices=BACKENDS)
