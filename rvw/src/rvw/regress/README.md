@@ -153,8 +153,8 @@ to `inconclusive`, never to known or still failing, and is neither cached nor re
 Base failures that pass in the candidate with the same inputs and seeds are `fixed`.
 Tests or seeds in the base but not the candidate are `missing` and reject
 unless `--allow-missing`. For suites with `perf_metrics` (BOOM: benchmark ROI
-`cycles`), tests that pass on both sides are compared on the mean over seeds; a loss above the
-tolerance rejects. `name` and `name:min` mean lower is better. `name:max` means higher is better,
+`cycles`), tests that pass on both sides are compared for each paired seed. A loss above the
+tolerance on any seed rejects. `name` and `name:min` mean lower is better. `name:max` means higher is better,
 as in `ipc:max`. `lower` and `higher` are aliases for `min` and `max`. Other directions and
 duplicate metric names are config errors. Metric names match `[A-Za-z_][A-Za-z0-9_.-]*`.
 The same finite, non-negative `perf_tolerance` applies to each declared metric separately.
@@ -166,9 +166,12 @@ evidence inconclusive. A metric is never silently left out. A declared performan
 baseline and candidate on every seed. An added workload without a baseline, or a failed
 workload (including a known or unchanged failure), makes performance evidence inconclusive.
 Each C4 performance item reports base, candidate and paired sample counts. Its
-`comparison_rule` is `relative_mean`. Its `confidence` is `not_estimated`. The threshold
-applies to the relative change in arithmetic means. Equality with the threshold does not reject.
-This rule supplies no statistical confidence and does not bound per-seed losses.
+`comparison_rule` is `max_paired_relative_loss`. Its `confidence` is `not_estimated`.
+Means and mean `change` are descriptive. For each seed, loss is `(candidate - base) / base`
+for a lower-is-better metric, and `(base - candidate) / base` for higher-is-better.
+The report gives `max_paired_loss` and `worst_seed`. Equality with the threshold does not reject.
+A fast seed cannot cancel a slow seed. This bounded deterministic rule makes no claim about
+unmeasured seeds, noise distributions or statistical significance.
 
 Verdict: `reject` if anything rejects; else `inconclusive` if any candidate result is
 inconclusive, no test ran on both sides, or either source lacks a clean committed identity;
@@ -195,6 +198,34 @@ Without that complete RTL identity, source-based cache rules still apply.
 Reused C1 results record the original source in `reused_from_source`; their `source` and C3
 source fields name the current selection. Every claimed model value must still match.
 The verdict goes to `<candidate run>/verdict.json`.
+
+### Cold native gate timing
+
+Select an older and a candidate commit that the chosen adapter can build.
+Build the tier's ELF inputs first. Keep the tool checkout at one clean commit until the gate
+finishes. A changed tool revision can invalidate C1 identity claims.
+
+For the BOOM example, set `older_rev` and `candidate_rev` to the full core commits, then run:
+
+```sh
+cold_root="$(mktemp -d /tmp/rvw-cold.XXXXXX)"
+export RISCVSIM_WORK="$cold_root/native"
+export RVW_RESULTS="$cold_root/results"
+export RVW_SRC_CACHE="$cold_root/source"
+/usr/bin/time -p scripts/with-lock.sh boom nice -n 10 rvw/.venv/bin/rvw regress gate \
+  --core boom --tier quick --base-rev "$older_rev" --cand-rev "$candidate_rev" \
+  --jobs 1 --no-cache --json
+```
+
+The three child directories must be new. `--no-cache` alone does not clear the adapter's
+compiled-model cache. Installed tools, dependency downloads and sbt outputs remain warm.
+This measures cold native-model, result and source-export caches. It is not a clean-machine
+installation test. Record total wall time and lock acquisition time separately.
+
+Check both source identities and all requested workloads before calling the comparison complete.
+A build failure, an incomplete identity or a wall timeout is inconclusive. A timed attempt alone
+does not qualify an older revision. An accepted comparison can retain an unchanged failure;
+report each side's pass and failure counts with the timing. A quick gate qualifies only that tier.
 
 ## Core config reference
 
@@ -361,30 +392,43 @@ Retained limit: Committed revisions and complete captured inputs remain necessar
 
 ## Review status and close rules
 
-Waivers and failure signatures remain experimental (#2). The review covers changed RVFI
-messages, stale saved fail codes and status changes. Compare derives RVFI identity from the
-full saved message. Without a monitor code or message, old RVFI evidence needs a rerun.
-A saved fail code overrides its saved signature. Unchanged failures must also have the same status.
+The #2 close rule is a completed case matrix and an explicit diagnostic-class policy.
+The negative cases cover changed messages, status, fail code, monitor code, assertion line,
+legacy truncation, wildcard signatures and all-config waivers.
 
-The close rule requires negative tests for changed failures, legacy evidence and waiver scope.
-It also requires a policy for wildcard waivers, config-wide waivers and coarse identities
-(cycle timeout, fail code, monitor code or source line). These identities can group different
-root causes. A wildcard can deliberately cover a changed failure. This review does not prove
-that such a waiver is safe. Check each waiver and its full failure evidence before use.
+Only an exact signature with an explicit config can waive a failure for acceptance.
+A matching wildcard (`*`, `?`, `[...]`) or all-config entry makes the result inconclusive.
+It cannot fall back to unchanged-failure acceptance. Narrow the entry after review.
+Files can retain broad entries for migration, but those entries cannot earn acceptance.
 
-Stored-folder gates and performance metrics remain experimental (#4). Keep these reviews separate:
+An exact waiver accepts a diagnostic class, not a root cause. For a cycle timeout this
+class is the cycle limit with the captured inputs. For a fail code or monitor code it is
+that producer's code. For an assertion it is the recorded source location. These classes
+can contain several causes. Review the full evidence before adding an exact waiver.
+An exact waiver deliberately covers changed messages within its declared class.
+Without a waiver, unchanged failures require equal status, signature and full saved message.
+A changed or missing message on one side is a new failure. Two absent messages establish
+only diagnostic-class equality. They do not establish equal root causes.
+Legacy ambiguous 400-character previews and uncoded RVFI errors without full messages
+remain inconclusive. No class identity can override an inconclusive C1 result.
+
+Stored-folder identity and performance policy have separate close rules (#4):
 
 - Stored identity: negative tests must cover wrong core, mixed source or model, changed ELF,
   options, metric selectors, stimulus bytes, missing seeds and missing required workloads.
   Existing plan tests include quick folders requested as full, even with `allow_missing`.
-  This round reruns those fixtures. It does not establish native historical-folder compatibility.
+  The review also requires a native historical-folder check. An old folder must still match
+  the current requested ELF hashes and options. A passing narrow plan cannot qualify a larger plan.
 - Performance: use the same workload, seeds, options and measurement origins on both sides.
   Declare ROI counters through `cycles_key` and `instret_key`. A selector name alone does not
   define semantic ROI boundaries. The adapter must keep those boundaries stable and identify
-  changes in its inputs. The tests use repeated fixed-seed fixtures, not native noise experiments.
-  A mean can cancel a slow seed with a fast seed. Sample counts are visible, but confidence is
-  not estimated. The close rule requires native repeated-seed experiments, stable ROI boundaries
-  and a reviewed statistical acceptance rule. Do not treat this increment as that evidence.
+  changes in its inputs. Fixture seeds test the rule. Native experiments must state their seed
+  range, ROI markers and workload list. Fixed-latency repeats do not measure random-memory noise.
+  Each paired seed must meet the tolerance. Sample counts are visible, but confidence is
+  not estimated. The close rule requires native repeated-seed experiments and stable ROI boundaries.
+  The reviewed acceptance rule is the maximum paired relative loss, without population inference.
+  An experiment qualifies only its declared workloads, configs, seeds, memory mode and ROI.
+  New projects must establish their own marker semantics and native evidence before relying on it.
 
 A quick gate covers only its requested tier. It must not substitute for required performance
 workloads in a full tier. Request that tier explicitly. A stored gate checks the requested plan;
@@ -533,14 +577,14 @@ It checks architectural effects; page-walk transactions need a separate observer
 ### Privilege controls and observation reports
 
 Control scenarios use a separate row shape in `rvw.mmu/1`: `id`, `control`
-(`tvm`, `tw`, `tsr`), boolean `enabled`, `instruction`, `privilege` (`S`, `U`),
-and `bins`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
+(`tvm`, `tw`, `tsr`, `satp-mode`), boolean `enabled`, `instruction`, `privilege`,
+and `bins`. TVM, TW and TSR use privilege `S` or `U`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
 TSR selects `sret`. These programs use Bare mode and MRET to enter S/U mode.
 They check illegal-instruction cause 2 and the exact fault PC. Allowed S-mode
 operations exit through a checked cause-9 ECALL. Successful SRET must branch
 to its declared return PC. U-mode checks keep supervisor instructions illegal
-when the machine control is clear. TW-clear WFI is refused because it needs
-an interrupt wakeup schedule. These rules use the pinned Machine ISA 1.13
+when the machine control is clear. TW-clear WFI requires the explicit
+`wakeup` input described below. These rules use the pinned Machine ISA 1.13
 (20260120), Machine Status register, TVM, TW and TSR sections.
 
 Data scenarios also accept `offset` (0..4088), `value` (expected load value),
@@ -594,6 +638,77 @@ access wider than that declaration. The project owns the declaration.
 The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
 Remap scenarios require the default 8-byte access.
 
+`satp-mode` control rows select `reserved-mode-write` in M-mode with
+`enabled: false`. The program first writes a supported Sv39 value. It then
+writes reserved MODE 1 with changed ASID and PPN fields. Every satp field must
+stay unchanged. A supported-mode mutation must fail the check. This follows
+the pinned Supervisor ISA, Supervisor Address Translation and Protection
+register section. Other disabled-feature combinations remain open.
+
+TW-clear S-mode WFI can select `wakeup: "pending-ssip"`. The program delegates
+SSIP to S-mode, enables SSIE and sets SSIP before entry. Both global interrupt
+enables stay clear. WFI must resume and reach the checked ECALL exit. This
+checks wakeup with an already pending interrupt. It does not measure wakeup
+latency or test an interrupt that arrives after WFI starts. The rule comes from
+the pinned privileged ISA, Machine-Level ISA, Wait for Interrupt section.
+
+Fetch scenarios use `access: "fetch"`, real S/U entry through MRET and a fixed
+ECALL payload at `DATA`. They check the exact fetch fault cause, PC and address,
+or the ECALL cause and virtual PC after a successful fetch. Data-only options
+are refused. The suite includes X permission, S/U permission, SUM and A-bit
+fault cases. SUM does not permit S-mode fetch from a user page.
+
+Observation inventories now include `walk_check`. For successful immutable
+mappings with preset A/D bits, it computes expected PTE addresses and values
+from the scenario. It checks each captured request and returned PTE. It also
+requires an external transaction that contains the translated physical target.
+`consistent` applies only to these sampled values. Missing responses or a
+cache-satisfied target remain inconclusive. Remaps, faults, hardware A/D updates
+and Bare mode remain unsupported. This field cannot pass architectural bins,
+prove ordering, bind a cache transaction to one instruction or close #84.
+
+`root_switch: true` requires `remap`. It allocates a second root and two child
+tables. It switches to the second root, back to the first, and to the second
+again with the same ASID. Each switch uses the selected fence scope. Data must
+match that root after each fence. `nonleaf_global: true` sets G on the non-leaf
+PTEs. Remaps then require an all-ASID fence (`all` or `va`). These cases check
+single-hart effects only. They do not test concurrent races, shootdown messages
+or cross-hart completion. Speculation and extra invalidation remain permitted.
+
+With `ad_expect`, the program now compares the complete leaf PTE. It checks
+PPN, permissions, RSW and A/D together. `software_rsw` selects a software RSW
+write (0..3) before the access and requires `ad_expect`. This write is sequential.
+The Svade case requires the complete faulting PTE to stay unchanged. The opt-in
+Svadu cases require A/D updates to preserve software RSW and all other fields.
+A correct final PTE does not prove atomicity. Concurrent PTE writes and bus-level
+atomic observations remain open. The project's unsupported Svadu stays reference-only.
+
+The BOOM observation stream can include `device_state` when MSIP backing state
+changes. It records `address`, `value`, `cycle` and `scheduled` (whether an IRQ
+schedule overrides device-driven interrupts). This is a harness device-state
+observation. It is independent of C2 load/store results. It does not observe a
+physical device or prove interrupt delivery.
+
+The report can add `pma_check` for a successful, non-cacheable device scenario
+when the build manifest includes PMA data. It checks accepted transfer count,
+width, direction and containment in one declared region. It also checks the
+independent device state. A store has one write and one program readback.
+Missing device observations or scheduled IRQ overrides stay inconclusive.
+`consistent` is a bounded observation result and cannot pass coverage bins.
+Boundary faults, conflicting cache attributes, atomic access and side effects
+on other devices remain open. `store_value` can select a nonnegative signed
+32-bit store operand. The default is 43. The MSIP case writes 1.
+
+Bounded observation checks also require the capture header's core, config, ELF,
+RTL, source and seed to match C1. Older captures without this identity remain
+recorded inventories. Their walk and PMA checks stay inconclusive.
+
+The strict Spike shim currently treats configured MMIO stores as inert and
+returns zero for MMIO loads. The native Spike executable has a CLINT device,
+but the shim does not model MSIP write/readback state. Keep strict comparison
+mismatches separate from bounded harness state observations. A device-state
+observation must not waive a strict mismatch or grant architectural coverage.
+
 ## Accellera UVM components
 
 `rvw regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json` runs a
@@ -601,3 +716,45 @@ bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
 See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
 licence checks, supported test scope and limits. It writes standalone C3.
 It does not schedule ELF suites or earn C4 acceptance.
+
+## riscv-vector-tests
+
+The complete comparison instruction count must equal the C1 retirement count.
+
+Use the [CHIPS Alliance generator](https://github.com/chipsalliance/riscv-vector-tests)
+in a separate checkout. Build machine-mode tests for the project's XLEN, VLEN,
+ELEN and extensions. Use its `make help` for generation options. Its normal
+self-checking output is `out/v<VLEN>x<XLEN>machine/bin/stage2/`.
+Do not use stage1 binaries with the stock Spike shim. They contain generator
+instructions that the stock reference does not implement.
+
+Any project whose `cosim.platform` ISA declares V can select these built ELFs:
+
+```toml
+[suites.vector]
+kind = "elf-dir"
+dir = "/path/to/riscv-vector-tests/out/v128x64machine/bin/stage2"
+glob = "*"
+max_cycles = 1000000
+```
+
+Run `rvw regress run --suite vector --rvfi-trace` with the project's adapter.
+Then run `rvw regress vector --elf-dir PATH --results RUN_DIR --json` in the
+same project. `--platform FILE` can select an explicit platform instead.
+The check requires exactly one conclusive C1 result for each ELF, a passing
+self-check, a complete strict Spike match, matching VLEN/ELEN and full C2/2
+vector snapshots. Integer-only comparison cannot pass this check. Missing
+reference support gives inconclusive suite evidence. A mismatch fails it.
+No V-capable RTL adapter or full upstream suite run is claimed here.
+
+The upstream suite has no coverage guarantees. It documents gaps for tails,
+masks, fault-only-first, vstart and register overlap. Our bounded native tests
+check mask v0, arithmetic, an explicit vstart clear and guest transitions separately.
+Vector memory operations with multiple accesses remain outside the scalar
+memory effect interface and are refused by Spike. These limits can make a
+full vector suite inconclusive. They must not be converted to passes.
+
+`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
+`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
+for the strict profile and the offline replay boundary.

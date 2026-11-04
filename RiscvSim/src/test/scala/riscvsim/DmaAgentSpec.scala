@@ -41,3 +41,39 @@ class DmaAgentSpec extends AnyFunSuite {
     c.fill(0, backing.read(0, 4)); c.read(0, Vector[Byte](1, 6))
   }
 }
+
+class DmaTransportSpec extends org.scalatest.funsuite.AnyFunSuite {
+  test("read expectation uses the captured serialization point after a concurrent CPU update") {
+    val expected = new MemoryImage(16); val backing = new MemoryImage(16)
+    val transport = new DmaTransport {
+      def read(a: Int, n: Int, coherent: Boolean, accepted: () => Unit): Vector[Byte] = {
+        // Independent CPU AMOADD stimulus wins arbitration before the DMA read.
+        expected.write(a,Vector[Byte](1),1)
+        accepted(); Vector[Byte](1)
+      }
+      def write(a: Int, d: Seq[Byte], m: BigInt, coherent: Boolean, accepted: () => Unit): Unit = accepted()
+    }
+    val dma = new DmaAgent(backing,expected,None,_ => (),Some(transport))
+    assert(dma.read(0,1,false) == Vector[Byte](1))
+  }
+  test("transport must acknowledge exactly once and failed reads do not get capture events") {
+    for (mode <- Seq("missing","duplicate","stale")) {
+      val expected = new MemoryImage(16); val backing = new MemoryImage(16)
+      expected.write(0,Vector[Byte](7),1)
+      var captured = 0
+      val t = new DmaTransport {
+        def read(a: Int,n: Int,c: Boolean,accepted: () => Unit): Vector[Byte] = {
+          if (mode != "missing") accepted()
+          if (mode == "duplicate") accepted()
+          Vector[Byte](0)
+        }
+        def write(a: Int,d: Seq[Byte],m: BigInt,c: Boolean,accepted: () => Unit): Unit = ()
+      }
+      val dma = new DmaAgent(backing,expected,None,_ => captured += 1,Some(t))
+      intercept[IllegalArgumentException](dma.read(0,1,false))
+      assert(captured == 0)
+      intercept[IllegalArgumentException](dma.write(0,Vector[Byte](9),1,false))
+      assert(expected.read(0,1) == Vector[Byte](7) && captured == 0)
+    }
+  }
+}

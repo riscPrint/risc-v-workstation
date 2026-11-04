@@ -70,6 +70,8 @@ def register(sub) -> None:
     register_sim(rs)
     from . import mmu
     mmu.register(rs)
+    from . import vector
+    vector.register(rs)
 
     r = rs.add_parser("run", help="run suites or a tier; writes C3 results")
     _core_arg(r)

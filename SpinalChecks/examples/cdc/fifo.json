@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.cdc-protocol/1",
+  "kind": "async_fifo",
+  "top": "cdc_fifo",
+  "verilog": [
+    "sampling.sv",
+    "fifo.sv"
+  ]
+}

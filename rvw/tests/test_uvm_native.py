@@ -7,6 +7,7 @@ import pytest
 
 from rvw.results import load_results
 from rvw.cli import main
+from rvw.sim.uvm import FEATURES
 
 pytestmark = pytest.mark.skipif(not os.environ.get("RVW_UVM_ARCHIVE"),
                                 reason="set RVW_UVM_ARCHIVE to the pinned source archive")
@@ -20,11 +21,11 @@ def test_accellera_subset_and_rvfi_fault(tmp_path):
                  "--seeds", "3", "--timeout", "600", "--json"])
     report = json.loads((out / "results.json").read_text())
     assert code == 0, report
-    assert len(report["tests"]) == 18
+    assert len(report["tests"]) == 3 * (len(FEATURES) + 3)
     assert all(row["status"] == "pass" for row in report["tests"]), report
     for row in report["tests"]:
         assert not row["wall_clock_timeout"]
-        assert (row["simulator_exit"] != 0) == (row["id"] == "rvfi_fault_detection")
+        assert (row["simulator_exit"] != 0) == row["id"].endswith("fault_detection")
     loaded = load_results(out)
-    assert len(loaded.tests) == 18
+    assert len(loaded.tests) == 3 * (len(FEATURES) + 3)
     assert all(row.conclusive for row in loaded.tests)

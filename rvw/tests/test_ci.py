@@ -34,12 +34,22 @@ def test_title_needs_no_footer():
     assert policy.errors("ci(tests): add checks", title=True) == []
 
 
-def test_installer_reference_tests_install_pytest():
+def test_installer_workflow_runs_local_runtime_qualification():
     root = Path(__file__).resolve().parents[2]
     text = (root / '.github/workflows/installer.yml').read_text()
-    step = text.split('- name: Check the pinned reference policies')[1]
-    assert 'uv sync --locked --extra dev --extra mcp --project rvw' in step
-    assert step.index('uv sync') < step.index('python -m pytest')
+    assert text.count('python3 scripts/qualify-install.py --case "$CASE"') == 2
+    assert text.count('if: always()') == 2
+    assert text.count('actions/upload-artifact@') == 2
+    runner = (root / 'scripts/qualify-install.py').read_text()
+    assert "'test_reference_mmu.py'" in runner
+    assert "'test_platform_policy.py'" in runner
+    assert "'--locked'" in runner and "'--extra', 'dev'" in runner
+
+
+def test_local_ci_uses_committed_python_lock():
+    text = (Path(__file__).resolve().parents[2] / 'scripts/ci-local.sh').read_text()
+    assert 'lock suite uv sync --locked' in text
+    assert "pip install -e" not in text
 
 
 def test_push_checks_do_not_duplicate_pull_request_checks():

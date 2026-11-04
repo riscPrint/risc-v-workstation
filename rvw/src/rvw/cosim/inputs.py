@@ -50,7 +50,7 @@ class Inputs:
             if self.env[name]:
                 raise CaptureError(f"input_not_captured:{name}", "loader overrides are unsupported")
         self.args = Namespace(**vars(args))
-        if args.cosim_action == "generate":
+        if args.cosim_action in ("generate", "live"):
             output = Path(args.out)
             self.args.out = output.parent.resolve() / output.name
             self.options["out"] = self.args.out
@@ -80,7 +80,7 @@ class Inputs:
                 header = json.loads(first)
             except ValueError:
                 header = None
-            if not isinstance(header, dict) or header.get("schema") != "rvw.rvfi/1":
+            if not isinstance(header, dict) or header.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2"):
                 raise ValueError(f"refusing to overwrite {args.out}: it exists and is not a C2 trace")
             if header.get("config") != "reference":
                 raise ValueError(f"refusing to overwrite {args.out}: it is a recorded core trace "
@@ -89,7 +89,7 @@ class Inputs:
         self.shim = None
         self.pythonpath = None
         self.default_sail_config = None
-        model = getattr(args, "model", "spike") if args.cosim_action == "check" else "spike"
+        model = getattr(args, "model", "spike") if args.cosim_action in ("check", "live") else "spike"
         if model == "sail":
             self.tool = c.tool(args.sail)
             self.args.sail = str(self.tool.path)
@@ -103,6 +103,11 @@ class Inputs:
             # executable for the CLI probe before Capture pins and verifies it.
             self.tool = c.tool(os.path.realpath(sys.executable))
             self.pythonpath = c.tree(ROOT / "rvw/src").copy
+        if args.cosim_action == "live":
+            if not args.simulator or not any("{elf}" in part for part in args.simulator) or not any("{out}" in part for part in args.simulator):
+                raise ValueError("--simulator requires {elf} and {out} placeholders")
+            simulator = c.tool(args.simulator[0], identity_only=True)
+            self.args.simulator = [str(simulator.path), *args.simulator[1:]]
         self.record = c.record()
 
     def identity(self, name):
@@ -112,7 +117,7 @@ class Inputs:
     def metadata(self):
         option_names = ("cosim_action", "core") + (
             ("model", "history", "strict", "strict_sync", "timeout")
-            if self.options["cosim_action"] == "check" else ("max_instructions",))
+            if self.options["cosim_action"] in ("check", "live") else ("max_instructions",))
         info = {"platform": self.platform.describe(), "tools_rev": self.revision,
                 "capture": _public_record(self.record), "cache_key": None,
                 "options": {name: self.options[name] for name in option_names}}
@@ -137,8 +142,13 @@ class Inputs:
         a = self.options
         command = ["rvw", "cosim", a["cosim_action"], "--elf", info["elf"], "--core", a["core"],
                    "--platform", info["platform_file"]]
-        if a["cosim_action"] == "check":
-            command += ["--trace", info["trace"], "--model", a["model"], "--history", str(a["history"]), "--timeout", str(a["timeout"])]
+        if a["cosim_action"] in ("check", "live"):
+            if a["cosim_action"] == "check":
+                command += ["--trace", info["trace"]]
+            else:
+                command += ["--out", str(a["out"])]
+                info["simulator_command"] = list(a["simulator"])
+            command += ["--model", a["model"], "--history", str(a["history"]), "--timeout", str(a["timeout"])]
             if a["strict"]:
                 command += ["--strict"]
             if a["strict_sync"]:
@@ -149,5 +159,8 @@ class Inputs:
                     command += ["--sail-config", info["sail_config"]]
         else:
             command += ["--out", os.path.abspath(a["out"]), "--max-instructions", str(a["max_instructions"])]
-        info["replay"] = shlex.join(command + ["--json"])
+        command += ["--json"]
+        if a["cosim_action"] == "live":
+            command += ["--simulator", *a["simulator"]]
+        info["replay"] = shlex.join(command)
         return info

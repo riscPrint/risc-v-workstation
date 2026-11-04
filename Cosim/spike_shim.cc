@@ -36,6 +36,7 @@ struct Machine : simif_t {
   FILE* log = nullptr;
   uint64_t io_addr = 0, io_value = 0;
   bool inject = false;
+  bool step_virtual = false;
   Machine(const char* instruction_set, const uint64_t* regions, size_t nr,
           const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp,
           const char* modes, bool misaligned, bool absent_pmp_zero)
@@ -87,7 +88,7 @@ struct Machine : simif_t {
   const char* get_symbol(uint64_t) override { return nullptr; }
   void step(Effect& e, uint64_t interrupt) {
     memset(&e,0,sizeof(e)); auto* s=cpu->get_state();
-    e.pc=s->pc; e.mode=s->prv;
+    e.pc=s->pc; e.mode=s->prv; step_virtual=s->v;
     try {
       auto fetch=cpu->get_mmu()->load_insn(s->pc);
       e.insn=fetch.insn.bits();
@@ -96,6 +97,9 @@ struct Machine : simif_t {
       auto dis=cpu->get_disassembler()->disassemble(fetch.insn);
       snprintf(e.disasm,sizeof(e.disasm),"%s",dis.c_str());
     } catch(...) { snprintf(e.disasm,sizeof(e.disasm),"<instruction fetch fault>"); }
+    if(cpu->extension_enabled('V') && ((e.insn&0x7f)==7 || (e.insn&0x7f)==0x27)
+        && (((e.insn>>12)&7)==0 || ((e.insn>>12)&7)>=5))
+      throw std::runtime_error("vector memory requires ordered per-access reference observations");
     // Refuse emulated split accesses before execution. A fault on the second
     // part could leave partial stores that scalar C2 cannot report.
     if(cfg.misaligned) {
@@ -164,7 +168,7 @@ struct Machine : simif_t {
       e.tval=(s->prv==1 ? s->stval : s->mtval)->read();
       e.intr=e.cause>>(cpu->get_xlen()-1);
       auto c=e.cause & 0xff;
-      e.mem_fault=!e.intr && (c==1||c==5||c==7||c==12||c==13||c==15);
+      e.mem_fault=!e.intr && (c==1||c==5||c==7||c==12||c==13||c==15||c==20||c==21||c==23);
     } else {
       for(auto& [key,value]:s->log_reg_write) if((key&15)==0 && (key>>4)!=0) {
         if(e.rd) throw std::runtime_error("multiple integer writes cannot be represented by C2");
@@ -218,7 +222,7 @@ static thread_local std::string error;
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
 // 3: explicit privilege, misaligned and absent-PMP platform arguments.
-unsigned rvw_shim_version() { return 4; }
+unsigned rvw_shim_version() { return 5; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
@@ -255,9 +259,50 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
   auto* s=static_cast<Machine*>(m)->cpu->get_state();
   if(s->prv==PRV_M) s->mtval->write(value); else s->stval->write(value);
 }
+void rvw_set_mscratch(void* m,uint64_t value) {
+  static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
+}
 int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
   try { *value=static_cast<Machine*>(m)->cpu->get_csr(address); return 0; }
   catch(...) { error="reference cannot observe requested CSR"; return -1; }
+}
+// Snapshot bytes use architectural byte order, independent of host endian.
+int rvw_vector(void* m, uint64_t* meta, uint8_t* data, size_t capacity) {
+  try {
+    auto* cpu=static_cast<Machine*>(m)->cpu.get(); auto& v=cpu->VU;
+    if(!v.VLEN || capacity < 32*v.VLEN/8) throw std::runtime_error("vector snapshot unavailable or too large");
+    meta[0]=v.VLEN; meta[1]=v.ELEN;
+    meta[2]=v.vstart->read(); meta[3]=v.vl->read(); meta[4]=v.vtype->read();
+    meta[5]=v.vxsat->read() | (v.vxrm->read()<<1);
+    meta[6]=(cpu->get_state()->mstatus->read()>>9)&3;
+    for(size_t r=0;r<32;r++) for(size_t b=0;b<v.VLEN/8;b++)
+      data[r*v.VLEN/8+b]=v.elt<uint8_t>(r,b);
+    return 0;
+  } catch(const std::exception& ex) { error=ex.what(); return -1; }
+}
+unsigned rvw_virtual(void* m, int before) {
+  auto* machine=static_cast<Machine*>(m);
+  return before ? machine->step_virtual : machine->cpu->get_state()->v;
+}
+int rvw_read_physical(void* m, uint64_t addr, uint64_t* value) {
+  auto* machine=static_cast<Machine*>(m); *value=0;
+  for(unsigned i=0;i<8;i++) {
+    auto* p=machine->addr_to_mem(addr+i);
+    if(!p) { error="page table outside reference RAM"; return -1; }
+    *value |= uint64_t(uint8_t(*p)) << (8*i);
+  }
+  return 0;
+}
+int rvw_read_host_csr(void* m,unsigned address,uint64_t* value) {
+  auto* s=static_cast<Machine*>(m)->cpu->get_state();
+  switch(address) {
+    case 0x100: *value=s->nonvirtual_sstatus->read(); return 0;
+    case 0x105: *value=s->nonvirtual_stvec->read(); return 0;
+    case 0x141: *value=s->nonvirtual_sepc->read(); return 0;
+    case 0x142: *value=s->nonvirtual_scause->read(); return 0;
+    case 0x143: *value=s->nonvirtual_stval->read(); return 0;
+    default: return rvw_read_csr(m,address,value);
+  }
 }
 unsigned rvw_prv(void* m) { return static_cast<Machine*>(m)->cpu->get_state()->prv; }
 void rvw_set_reg(void* m,unsigned rd,uint64_t value) {

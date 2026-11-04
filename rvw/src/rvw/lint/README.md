@@ -9,7 +9,7 @@ CDC analysis from SpinalDB. It does not establish CDC signoff.
 |---|---|---|
 | [Verilator lint](https://verilator.org/guide/latest/warnings.html) | Elaborated RTL warnings, including UNOPTFLAT, MULTIDRIVEN and PINMISSING | No metastability or transfer protocol proof |
 | [Verible](https://chipsalliance.github.io/verible/verilog_lint.html) | SystemVerilog syntax and style rules | No elaborated clock relationships |
-| [Yosys check](https://yosyshq.readthedocs.io/projects/yosys/en/latest/cmd/check.html) | Combinational loops, conflicting drivers and undriven wires after synthesis | Not a CDC protocol checker; adapter not implemented here |
+| [Yosys check](https://yosyshq.readthedocs.io/projects/yosys/en/latest/cmd/check.html) | Combinational loops, conflicting drivers and undriven wires after synthesis | Native connectivity adapter; not a CDC protocol checker |
 | [VC SpyGlass CDC](https://www.synopsys.com/verification/static-and-formal-verification/vc-spyglass/vc-spyglass-cdc.html) | Structural and functional CDC, protocol assumptions, formal analysis | Commercial reference target |
 | [Questa RDC](https://www.siemens.com/en-us/products/ic/questa-one/design-solutions/reset-domain-crossing/) | Functional reset crossing paths with formal analysis | Commercial reference target |
 
@@ -90,7 +90,7 @@ paths, pulse loss, metastability perturbation and protocol properties remain
 unproved. Bounded FIFO topology and reconvergence checks are described below.
 A single-clock design can report `no_crossings_found` for register paths. This
 is not a multi-clock validation result. Non-Spinal RTL needs a domain-aware
-importer. Yosys is surveyed but is not a backend in this increment.
+importer. The optional Yosys backend checks native connectivity. It does not infer clock domains.
 
 ## Reset-domain crossings
 
@@ -200,3 +200,120 @@ they are not full handshake or FIFO implementations. The FIFO topology uses a
 4-word dual-clock memory and registered Gray encoders. The broken cases add a
 second input at the reverse first stage. Extracted tests also use the independent
 reset design with and without a source-before-destination declaration.
+
+Set `intent.reconvergence_depth` to 1..64 to inspect sequential reconvergence.
+The default is 1. Each finding lists synchronized endpoints and minimum register
+depths. A larger bound can find merges after independent pipeline registers.
+This does not establish functional correlation or safe relative latency.
+
+## Native connectivity lint
+
+Select `yosys` in `backends` to run `read_verilog -sv`, `hierarchy -check`,
+`proc`, and `check`. Rules are `yosys.combinational_feedback`,
+`yosys.conflicting_drivers`, and `yosys.undriven`. Other warnings retain
+`yosys.warning`. The report keeps the elaborated netlist, native output, script,
+wire bits and source attributes. Required outputs are output ports in the RTL.
+Undriven outputs and floating used wires are findings. Unused input ports do
+not imply a fault. Opaque blackboxes keep the backend inconclusive. Intentional
+wired logic needs an explicit RTL resolution model; waivers do not supply it.
+
+## Selected protocol safety checks
+
+Use `rvw lint --protocol protocol.json --out NEW_DIRECTORY --mode prove
+--engine abc:pdr --timeout 60 --json`. The manifest is:
+
+```json
+{"schema":"rvw.cdc-protocol/1", "kind":"async_fifo", "top":"cdc_fifo",
+ "verilog":["sampling.sv","fifo.sv"]}
+```
+
+Kinds are `handshake`, `async_fifo` and `reset_release`. Sources must be
+self-contained exported RTL. Paths resolve from the manifest. The runner freezes
+the sources and checks the exact DUT interface with the native formal flow.
+It keeps input hashes, the monitor, native logs and the proof result. BMC is the
+default. Select `--mode prove` for an unbounded safety proof. Missing or failed
+engines cannot earn a pass. These results do not clear structural findings.
+
+The selected interface uses one global `clk`, active-high synchronous `reset`,
+and independent one-bit `source_tick` and `destination_tick` enables. This
+explicit event-enable interface is required; a wrapper for real clocks needs
+separate review. No clock ratio, fairness or minimum tick rate is assumed.
+Transfer designs have one-bit `push`, `pop`, `ready`, `valid`, eight-bit
+`data_in` and `data_out`, and three-bit `forward_choice` and `reverse_choice`.
+All except ready, valid and data_out are inputs. The handshake monitor permits
+one outstanding transfer. The FIFO monitor permits four. An independent queue
+checks overflow, underflow, accepted data order and data integrity. Concurrent
+send and receive use the old queue state. Empty fall-through is outside scope.
+A safety pass does not prove eventual delivery. Activation is `not_measured`;
+a DUT that never accepts traffic needs a separate progress/activation check.
+
+Reset designs have the four clock/reset/event inputs and one-bit `source_up`
+and `destination_up` outputs. The monitor proves that destination release
+follows source release and two destination events. It does not prove physical
+recovery/removal or behavior under independent mid-transfer resets.
+
+`SpinalChecks/examples/cdc/` supplies selected implementations. `sampling.sv`
+uses per-bit choices between the previous and current digital sample at the
+first stage, followed by a second destination stage. Proof leaves all choice
+inputs unconstrained. This model can delay a transition and split a multi-bit
+transition. It cannot establish analog metastability, voltage, resolution time,
+setup/hold, MTBF, placement, or capture of pulses between global samples.
+The supplied FIFO uses registered binary state and combinational Gray encoding;
+it is not a replacement for the elaborated topology recognizer's registered
+Gray encoder requirement. Formal checks inspect the selected RTL directly.
+
+Use `--simulate 1000 --seed 42` instead of formal options to run Icarus with
+controlled digital perturbation and independent event enables. Every monitor
+assertion is fatal. Success needs the completion marker and a zero exit code.
+Missing simulators, timeouts and compile errors remain inconclusive. This is a
+seeded simulation result, not a proof. Tests exercise all three correct designs
+and faults in held data, FIFO full control and reset release order.
+
+The additional `pulse_capture` monitor drives at most one source pulse after a
+free `launch` input. It checks that capture occurs within four destination
+events while pending, and rejects duplicate captures. It assumes no clock
+fairness; no destination events means no response deadline expires. The DUT
+ports are `clk`, `reset`, `source_tick`, `destination_tick`, `pulse`, three-bit
+`forward_choice`, and one-bit output `captured`. The wrapper supplies `pulse`.
+The correct reference retains a toggle. The fault directly synchronizes a pulse
+and loses it when destination events stop during the pulse.
+
+`coherent_bus` uses the four clock/reset/event inputs, one-bit `launch`,
+three-bit `forward_choice`, and two-bit output `pair`. Its contract requires
+`pair` to equal 00 or 11. The correct reference replicates one synchronized bit.
+The fault independently synchronizes both bits and can produce an incoherent
+combination under old/new perturbation. This is a selected equal-coded bus
+contract, not a general reconvergence proof.
+
+## Same-input comparison harness
+
+Run the pinned ten-case reference suite:
+
+```sh
+scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/rvw lint \
+  --benchmark SpinalChecks/examples/cdc/suite.json --out /tmp/cdc-suite \
+  --mode prove --engine abc:pdr --timeout 60 --json
+```
+
+`rvw.cdc-bench/1` contains nonempty `cases`: unique `id`, `manifest`, independent
+`expected` (`pass` or `fail`), and an ordered `source_sha256` list. Hash mismatch
+is an input error. Each correct reference has a paired seeded fault. Suite
+expectations are the oracle. Neither native nor commercial observations define
+the expected result. The runner freezes all sources before execution.
+
+Optional `adapters` rows have a unique `id` (other than `native`) and absolute
+executable `command`. Each trusted adapter receives `REQUEST.json RESPONSE.json`.
+The request uses `rvw.cdc-adapter-request/1`, with case ID, frozen spec/source
+paths, source hashes, monitor path, mode and depth. It omits the expected verdict.
+The response must use `rvw.cdc-adapter-response/1`, echo `request_sha256` for the
+exact request bytes and `mode`, and report `status` (`pass`, `fail`,
+`inconclusive`) plus a nonempty `tool_version`. BMC passes need integer
+`reached_depth >= depth - 1`. Timeout, absent output, wrong identity, short BMC
+prefixes and malformed responses stay inconclusive. Adapter stdout/stderr stays
+in `adapter.log`. The adapter owns tool setup and the translation of this
+selected monitor. Inspect its constraints before trusting its observation.
+
+Results use `rvw.cdc-bench-result/1`. Qualification is `matches_on_suite`,
+`mismatch` or `inconclusive` per tool. No adapters gives commercial comparison
+`not_run`. No licensed tool is bundled. A suite match does not establish
+commercial CDC feature parity, general correctness, physical timing or signoff.

@@ -82,3 +82,61 @@ def test_invalid_irq(text):
 def test_data_is_not_instructions():
     with pytest.raises(ValueError):
         instruction_slots(Elf(SYMS_ELF), 'count')
+
+
+def stimulus_data():
+    def event(name, kind, hart=0, after=(), group=None, required=False):
+        return dict(id=name, kind=kind, hart=hart, after=list(after), group=group or name,
+                    required=required, payload={'cycle': 100})
+    return dict(schema='rvw.stimulus/1', events=[
+        event('reset', 'device', required=True),
+        event('setup', 'instruction', after=['reset'], group='pair'),
+        event('write', 'transaction', after=['setup'], group='pair'),
+        event('irq', 'irq', after=['write']),
+        event('read', 'transaction', hart=1, after=['write']),
+        event('noise', 'instruction', hart=1)])
+
+
+def test_stimulus_constraints():
+    from rvw.reduce.streams import Stimulus
+    s = Stimulus(stimulus_data())
+    assert s.candidate(['pair', 'read']) is None  # required reset
+    assert s.candidate(['reset', 'read']) is None  # dependency
+    data = s.candidate(['reset', 'pair', 'read'])
+    assert [e['id'] for e in data['events']] == ['reset', 'setup', 'write', 'read']
+    data['events'][1]['after'] = ['read']
+    with pytest.raises(ValueError, match='dependency'):
+        Stimulus(data)
+
+
+@pytest.mark.parametrize('budget', [1, 100])
+def test_stimulus_reduce(tmp_path, monkeypatch, budget):
+    import json
+    monkeypatch.setenv('FAKE_STIMULUS', '1')
+    path = tmp_path / 'stimulus.json'
+    path.write_text(json.dumps(stimulus_data()))
+    run = fake_run(tmp_path / 'r', '--stimulus-file', str(path))
+    rep = Reducer(str(run), Options(out=tmp_path / 'red', modes=['stimulus'], budget=budget)).reduce()
+    stream = rep['streams']['stimulus']
+    assert rep['reproduced']
+    assert stream['one_minimal'] is (budget == 100)
+    if budget == 100:
+        assert stream['kept'] == ['reset', 'pair', 'read']
+        assert all(t['match'] for t in rep['trials'] if t.get('stimulus_groups') == stream['kept'])
+    else:
+        assert stream['completion'] == 'budget_exhausted'
+    path.write_text('{}')
+    with pytest.raises(ValueError, match='sha256 mismatch'):
+        Reducer(str(run), Options(out=tmp_path / 'bad', modes=['stimulus'])).reduce()
+
+
+@pytest.mark.parametrize('cause', ['FAKE_ERROR', 'FAKE_WALL_CLOCK', 'FAKE_SYNTH', 'FAKE_INCONCLUSIVE'])
+def test_stimulus_rejects_new_timeout(tmp_path, monkeypatch, cause):
+    import json
+    monkeypatch.setenv('FAKE_STIMULUS', '1')
+    path = tmp_path / 'stimulus.json'
+    path.write_text(json.dumps(stimulus_data()))
+    run = fake_run(tmp_path / 'r', '--stimulus-file', str(path))
+    monkeypatch.setenv(cause, '1')
+    rep = Reducer(str(run), Options(out=tmp_path / 'red', modes=['stimulus'])).reduce()
+    assert not rep['reproduced'] and not rep['streams']['stimulus']['one_minimal']

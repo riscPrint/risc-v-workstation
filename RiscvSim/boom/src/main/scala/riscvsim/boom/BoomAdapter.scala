@@ -63,6 +63,11 @@ object BoomAdapter extends CoreAdapter {
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
+        top.tile.core.dec_fire.foreach(_.simPublic())
+        top.tile.core.dec_uops.foreach { u => u.debug_pc.simPublic(); u.debug_inst.simPublic() }
+        top.tile.frontend.icache.io.flatten.foreach(_.simPublic())
+        top.tile.frontend.s2_ppc.simPublic()
+        top.tile.frontend.icache.refill_valid.simPublic()
         top.tile.ptw.io.mem.req.flatten.foreach(_.simPublic())
         top.tile.ptw.io.mem.resp.flatten.foreach(_.simPublic())
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
@@ -115,6 +120,7 @@ object BoomAdapter extends CoreAdapter {
     val observations = if (job.rvfiTrace) Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl"))) else None
     observations.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
       "identity" -> ctx.rvfiHeader, "elf_sha256" -> elf.sha256))))
+    var busObservations = Option.empty[BusObservationWriter]
     var tracer: Option[KonataTracer] = None
     var retired = 0L
     var traps = 0L
@@ -124,6 +130,8 @@ object BoomAdapter extends CoreAdapter {
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
       require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
         "this configuration has no SEIP input")
+      if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
+        new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
       val cd = dut.clockDomain
       cd.forkStimulus(10)
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
@@ -144,6 +152,16 @@ object BoomAdapter extends CoreAdapter {
             fields.foreach { case (key, value) => row(key) = value }
             observations.foreach(_.println(ujson.write(row)))
           }
+          for ((fire,uop) <- dut.tile.core.dec_fire.zip(dut.tile.core.dec_uops) if fire.toBoolean)
+            event("fetch_consumed", "pc" -> Hex(uop.debug_pc.toBigInt), "instruction" -> Hex(uop.debug_inst.toBigInt))
+          val ic = dut.tile.frontend.icache
+          if (ic.io.invalidate.toBoolean)
+            event("icache_invalidate", "refill_pending" -> ujson.Bool(ic.refill_valid.toBoolean))
+          if (ic.io.resp.valid.toBoolean)
+            event("icache_response", "physical_address" -> Hex(dut.tile.frontend.s2_ppc.toBigInt),
+              "data" -> Hex(ic.io.resp.payload.data.toBigInt), "bytes" -> ujson.Num(ic.io.resp.payload.data.getBitsWidth / 8))
+          if (ic.io.mem.a.valid.toBoolean && ic.io.mem.a.ready.toBoolean)
+            event("icache_refill_request", "address" -> Hex(ic.io.mem.a.payload.address.toBigInt))
           if (ptw.req.valid.toBoolean && ptw.req.ready.toBoolean)
             event("walk_request", "address" -> Hex(ptw.req.payload.addr.toBigInt),
               "command" -> ujson.Num(ptw.req.payload.cmd.toInt))
@@ -201,9 +219,40 @@ object BoomAdapter extends CoreAdapter {
       val csrs = rvfi.map(_ => trapCsrs(dut))
       val epcs = rvfi.map(_ => trapEpcs(dut))
       var levels = BigInt(-1)
+      var observedMsip = Option.empty[Int]
 
       cd.onSamplings {
         ctl.tick()
+        busObservations.foreach { w =>
+          val a = dut.io.mem.a
+          val d = dut.io.mem.d
+          if (a.valid.toBoolean && a.ready.toBoolean) w.sample("a", ctl.cycle,
+            "param" -> ujson.Num(a.payload.param.toInt),
+            "source" -> Hex(a.payload.source.toBigInt), "address" -> Hex(a.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(a.payload.opcode).toInt),
+            "size_log2" -> ujson.Num(a.payload.size.toInt), "mask" -> Hex(a.payload.mask.toBigInt),
+            "data" -> Hex(a.payload.data.toBigInt))
+          val b = dut.io.mem.b
+          val c = dut.io.mem.c
+          val e = dut.io.mem.e
+          if (b != null && b.valid.toBoolean && b.ready.toBoolean) w.sample("b", ctl.cycle,
+            "source" -> Hex(b.payload.source.toBigInt), "address" -> Hex(b.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(b.payload.opcode).toInt),
+            "param" -> ujson.Num(b.payload.param.toInt), "size_log2" -> ujson.Num(b.payload.size.toInt))
+          if (c != null && c.valid.toBoolean && c.ready.toBoolean) w.sample("c", ctl.cycle,
+            "source" -> Hex(c.payload.source.toBigInt), "address" -> Hex(c.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(c.payload.opcode).toInt),
+            "param" -> ujson.Num(c.payload.param.toInt), "size_log2" -> ujson.Num(c.payload.size.toInt),
+            "data" -> Hex(c.payload.data.toBigInt))
+          if (e != null && e.valid.toBoolean && e.ready.toBoolean) w.sample("e", ctl.cycle,
+            "sink" -> Hex(e.payload.sink.toBigInt))
+          if (d.valid.toBoolean && d.ready.toBoolean) w.sample("d", ctl.cycle,
+            "source" -> Hex(d.payload.source.toBigInt), "sink" -> Hex(d.payload.sink.toBigInt),
+            "param" -> ujson.Num(d.payload.param.toInt),
+            "opcode" -> ujson.Num(SimEncoding.value(d.payload.opcode).toInt),
+            "size_log2" -> ujson.Num(d.payload.size.toInt), "denied" -> ujson.Bool(d.payload.denied.toBoolean),
+            "data" -> Hex(d.payload.data.toBigInt))
+        }
         if (dut.io.mem.a.valid.toBoolean && dut.io.mem.a.ready.toBoolean) {
           val a = dut.io.mem.a.payload
           val address = a.address.toBigInt
@@ -227,6 +276,17 @@ object BoomAdapter extends CoreAdapter {
         val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(seipAddr) & 1) != 0)
         dut.io.interrupts.mtip #= mtipLevel
         dut.io.interrupts.msip #= msipLevel
+        // Observe device backing state independently of retired load/store values.
+        if (observations.nonEmpty) {
+          val msipState = mem.readInt(msip)
+          if (!observedMsip.contains(msipState)) {
+            observedMsip = Some(msipState)
+            observations.foreach(_.println(ujson.write(ujson.Obj(
+              "kind" -> "device_state", "cycle" -> RvwJson.num(ctl.cycle),
+              "address" -> Hex(BigInt(msip)), "value" -> Hex(BigInt(msipState & 0xffffffffL)),
+              "scheduled" -> ujson.Bool(job.irqSchedule.isDefined)))))
+          }
+        }
         dut.io.interrupts.meip #= meipLevel
         if (dut.io.interrupts.seip != null) dut.io.interrupts.seip #= seipLevel
 
@@ -282,6 +342,8 @@ object BoomAdapter extends CoreAdapter {
         }
       }
       while (true) cd.waitSampling(100000)
+    } catch {
+      case e: Throwable => busObservations.foreach(_.close()); throw e
     } finally {
       for (t <- tracer) t.close()
       observations.foreach(_.close())
@@ -289,11 +351,15 @@ object BoomAdapter extends CoreAdapter {
       capture.foreach(_.close())
     }
 
+    busObservations.foreach { w => w.end(cycles, status.name); w.close() }
     for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),
       "mem_timing" -> ujson.Str(job.memLatency.map(l => s"fixed $l").getOrElse("random")),
       "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(simCtl.timeOfCycle1))
-    if (job.rvfiTrace) details("mmu_observations") = "mmu-observations.jsonl"
+    if (job.rvfiTrace) {
+      details("mmu_observations") = "mmu-observations.jsonl"
+      details("bus_observations") = "memory-bus.jsonl"
+    }
     for (w <- rvfi) {
       details("rvfi_records") = RvwJson.num(w.records)
       details("rvfi_trap_records") = RvwJson.num(w.trapRecords)

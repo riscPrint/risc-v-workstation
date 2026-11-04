@@ -58,6 +58,10 @@
         "title": "Coverage: Open SpinalTrace"
       },
       {
+        "command": "coverage.evidence",
+        "title": "Coverage: Open Selected Evidence"
+      },
+      {
         "command": "debug.open",
         "title": "Debug: Open Integrated Session"
       },
@@ -86,6 +90,10 @@
         "title": "Performance: Open SpinalTrace"
       },
       {
+        "command": "perf.evidence",
+        "title": "Performance: Open Selected Evidence"
+      },
+      {
         "command": "regress.open",
         "title": "Regression: Open Report"
       },
@@ -108,6 +116,14 @@
       {
         "command": "regress.trace",
         "title": "Regression: Open SpinalTrace"
+      },
+      {
+        "command": "regress.evidence",
+        "title": "Regression: Open Selected Evidence"
+      },
+      {
+        "command": "regress.runResult",
+        "title": "Regression: Open Declared C1 Run Result"
       },
       {
         "command": "spinalblocks.open",
@@ -251,6 +267,43 @@
           "command": "regress.trace",
           "when": "view == regress.results",
           "group": "results"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "coverage.evidence",
+          "when": "view == coverage.results",
+          "group": "evidence"
+        },
+        {
+          "command": "coverage.source",
+          "when": "view == coverage.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "perf.evidence",
+          "when": "view == perf.results",
+          "group": "evidence"
+        },
+        {
+          "command": "perf.source",
+          "when": "view == perf.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "regress.evidence",
+          "when": "view == regress.results",
+          "group": "evidence"
+        },
+        {
+          "command": "regress.source",
+          "when": "view == regress.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "regress.runResult",
+          "when": "view == regress.results && viewItem == rvw.run",
+          "group": "navigation"
         }
       ],
       "explorer/context": [

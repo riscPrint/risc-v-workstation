@@ -80,3 +80,37 @@ def test_observed_disagreement_is_error_even_at_timeout():
     text = ('engine_0: Status returned by engine: PASS\n'
             'engine_1: Status returned by engine: FAIL\n')
     assert final_status(124, text, 1) == 'error'
+
+
+def test_depth_search_records_termination_and_support(tmp_path, monkeypatch):
+    from rvw.formal import cli
+    from pathlib import Path
+    def run(name, args):
+        assert name == 'bmc'
+        assert 0 < args.timeout <= 2
+        out = Path(args.out)
+        out.mkdir()
+        (out / 'result.json').write_text(json.dumps({'status': 'timeout'}))
+    monkeypatch.setattr(cli, '_flow', run)
+    args = Namespace(out=tmp_path / 'search', depth=4, max_depth=16, budget=10,
+                     timeout=2, engine='smtbmc:yices,abc:bmc3', json=False)
+    depth_search(args)
+    result = json.loads((args.out / 'result.json').read_text())
+    assert result['stop_reason'] == 'attempt_timeout'
+    assert result['support']['engine'] == args.engine
+    assert result['support']['unbounded_proof'] is False
+    assert result['max_bounded_pass'] is None
+
+
+def test_depth_search_budget_exhaustion_starts_no_attempt(tmp_path, monkeypatch):
+    from rvw.formal import search, cli
+    ticks = iter([0, 11])
+    monkeypatch.setattr(search.time, 'monotonic', lambda: next(ticks))
+    monkeypatch.setattr(cli, '_flow', lambda *a: __import__('pytest').fail('budget exhausted'))
+    args = Namespace(out=tmp_path / 'search', depth=4, max_depth=8, budget=10,
+                     timeout=None, json=False)
+    depth_search(args)
+    result = json.loads((args.out / 'result.json').read_text())
+    assert result['stop_reason'] == 'budget_exhausted'
+    assert result['attempts'] == []
+    assert result['status'] == 'inconclusive'

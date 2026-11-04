@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import verdict from './fixtures/verdict.json';
 import suite from './fixtures/suite.json';
-import { children, headline, parseReport, queryArgs, sourceMatches, sourceTargets } from '../../../src/results/model';
+import { rowSignal, runResultPath, children, headline, parseReport, queryArgs, sourceMatches, sourceTargets } from '../../../src/results/model';
 import { createHash } from 'node:crypto';
 test('C4 keeps inconclusive verdict, passing tests, unchanged failures and causes', () => {
   const report = parseReport('regress', JSON.stringify(verdict));
@@ -28,4 +28,14 @@ test('where requires current captured non-pruned source and keeps arguments lite
   for (const result of [{status:'inconclusive',signal},{signal:{...signal,pruned:true}},{db_warnings:['stale'],signal},{signal:{stored_loc:signal.loc}},{signal:{...signal,source:{}}},{error:'unresolved'}]) assert.deepEqual(sourceTargets(result),[]);
   assert.deepEqual(sourceTargets({signals:[signal]}),targets);
   assert.deepEqual(queryArgs('/tmp/a b.db','x; echo bad'),['query','where','--db','/tmp/a b.db','--json','--','x; echo bad']);
+});
+
+test('row navigation uses explicit signal and run fields only',()=>{
+  assert.equal(rowSignal({key:'point',value:{signal:'top.io.data'}}),'top.io.data');
+  assert.equal(rowSignal({key:'signal',value:'top.io.data'}),'top.io.data');
+  for (const value of [{path:'result.json'}, {signal:42}, {signal:' '}])
+    assert.equal(rowSignal({key:'point',value}),undefined);
+  assert.equal(runResultPath('/tmp/suite/results.json',{key:'job',value:{run:'jobs/a/result.json'}}),'/tmp/suite/jobs/a/result.json');
+  assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:'/other/a/result.json'}}),'/other/a/result.json');
+  assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:null}}),undefined);
 });

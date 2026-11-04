@@ -460,3 +460,20 @@ def test_slang_checksum_error_precedes_build(tmp_path):
     assert 'archive checksum mismatch' in result.stderr
     assert not (tmp_path / 'src').exists()
     assert not (tmp_path / 'build').exists()
+
+
+def test_typed_waves_dry_run_uses_dedicated_package(tmp_path):
+    target = tmp_path / 'typed install'
+    result = invoke('--with-typed-waves', '--dry-run', '--prefix', target)
+    assert result.returncode == 0, result.stderr
+    assert 'SpinalWaves/scripts/install.sh' in result.stdout
+    assert '--copy' in result.stdout
+    assert str(target).replace(' ', r'\ ') + '/.tools/bin' in result.stdout
+    assert not target.exists()
+
+
+def test_typed_waves_check_refuses_missing_viewer(tmp_path):
+    result = invoke('--with-typed-waves', '--check', '--prefix', tmp_path / 'absent')
+    assert result.returncode == 1
+    assert 'MISSING typed viewer' in result.stdout
+    assert not (tmp_path / 'absent').exists()

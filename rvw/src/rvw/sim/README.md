@@ -81,6 +81,15 @@ Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
 
+C1 native adapters use a separate `riscvsim-verilator` invocation profile. It
+supports two-state values, clocks and generated immediate assertions. It does
+not promise cocotb callbacks, four-state values, SVA or coverage semantics.
+Set `[core] backend = "riscvsim-verilator"` and a suite's `requires = ["clock"]`.
+The runner checks all suite requirements before input capture or adapter launch.
+A suite with requirements must select a known profile. Old projects without
+requirements can omit the profile. Direct RiscvSim shell entry points also check
+comma-separated `RISCVSIM_REQUIRES` before launch output, locks or native tools.
+Requirements are author declarations. They are not inferred from RTL.
 
 
 ## Accellera UVM components
@@ -112,7 +121,9 @@ Run the reference-model checks separately before adopting an option.
 The report records every C1 path and hash, C2 hash and native build identity.
 `speedup` is the geometric mean of paired baseline/candidate execution times.
 `speedup_ci95` is a percentile bootstrap interval over pairs (10000 resamples;
-fixed seed 1). `retain` requires its lower bound to exceed 1. This threshold
+fixed seed 1). `retain` requires its lower bound to exceed 1 and raw C2 byte identity.
+`trace_bit_identical` reports that check. `sim_khz` reports each treatment's
+geometric mean rate and marginal bootstrap 95% interval. This threshold
 checks timing noise only. The interval assumes independent pairs. Shared-host
 load, order bias and autocorrelation can invalidate that assumption. Do not
 use five short samples to claim precise speedups. Report host load and run
@@ -241,3 +252,8 @@ execute C1 ELF runs, change the RiscvSim backend, or earn C4 gate acceptance.
 Hashes cover listed source files, not transitive includes, memory images,
 libraries or all environment inputs. Replay is not hermetic under C8.
 
+
+`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
+`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
+for the strict profile and the offline replay boundary.
