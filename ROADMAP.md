@@ -87,7 +87,7 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | Jasper state swarm, VC Formal sim-based init | Proof started from a simulation state | `rvw formal from-sim` | in progress | Works on BOOM to depth 16 in ~3 min; no swarm of start points, no automatic depth search. |
 | JasperGold / VC Formal engines | Deep proofs: abstraction, engine portfolios, proof grid | SymbiYosys engines (`rvw formal bmc`, engine portfolio option) | exploring | No cut points or automatic abstraction, no multi-machine runs (FV 1). |
 | Jasper COV / UNR, VC Formal FCA | Proof coverage, unreachability | `rvw cov prove` (proven-unreachable exclusions with a vacuity check), `rvw cov mutate` (mcy) | in progress | Structural cone reports available; solver proof cores and property activation remain open. Bounded BOOM RocketALU mutation reviewed. |
-| Jasper SEC, VC Formal SEQ | Sequential equivalence | `rvw formal equiv` (eqy, ABC scorr/PDR; advisory dsec) | first increment | Project-driven revision/module export added; BOOM reproduction pending. FV 2 epic: nonzero latency, state encoding and blackbox contracts remain. |
+| Jasper SEC, VC Formal SEQ | Sequential equivalence | `rvw formal equiv` (eqy, ABC scorr/PDR; advisory dsec) | first increment; revision export in review | Exported RTL only; no BOOM equivalence claim. FV 2 epic: tested project-driven module export, nonzero latency, state encoding and blackbox contracts remain. |
 | Jasper C2RTL, VC Formal DPV | Arithmetic against a C model | `SpinalChecks/c2rtl/` | small unsigned combinational units | FV 3; sequential and FP models pending. |
 | Jasper SPV, VC Formal FSV | Information flow / security | none | none | FV 4. |
 | SpyGlass, Questa CDC / Lint | Lint and CDC | none | none | Phase 3. |
