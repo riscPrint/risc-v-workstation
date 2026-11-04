@@ -138,3 +138,10 @@ directory must be empty. `--consumer trace|gui|surfer|check` launches a native
 consumer. Pass its arguments after `--`. Use `--timeout SECONDS` for bounded checks.
 See the SpinalTrace and SpinalWaves READMEs for commands and waveform limits.
 The launcher does not elaborate or build the design.
+
+
+`rvw query build-hdl --top MODULE --out DB FILE...` builds a C6 navigation
+database from Verilog and the native Yosys SV subset. `--yosys PATH` selects the
+native tool. `--timeout SECONDS` bounds elaboration. Drivers, loads and paths use
+the same reader. HDL graphs are conservative and semantic diff is inconclusive.
+See [the frontend limits](../../../../../SpinalDB/README.md#verilog-and-systemverilog-navigation).

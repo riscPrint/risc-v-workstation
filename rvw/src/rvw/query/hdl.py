@@ -44,7 +44,7 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120):
         # Refuse file access whose dependency set this subset cannot capture.
         for item in inputs:
             text = item.copy.read_text()
-            if re.search(r'`include\b|\$(?:readmem\w*|fopen)\b|`line\b', text):
+            if re.search(r'`include\b|\$(?:readmem\w*|fopen)\b|`line\b|``', text):
                 raise ValueError('unsupported include, file input or source remapping')
         tool = capture.tool(yosys)
         netlist = private / 'design.json'
@@ -68,7 +68,8 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120):
                         'frontend': 'yosys-verilog', 'extra_scopes': f'TOP {top}',
                         'emission_config': '$incomplete:hdl-navigation-only',
                         'input_capture': json.dumps(capture.record()),
-                        'graph_semantics': 'conservative signal and whole-cell dependencies'}
+                        'graph_semantics': 'conservative signal and whole-cell dependencies; register stage counts can include state aliases',
+                        'yosys_version': tool.version.strip()}
                 conn.executemany('INSERT INTO meta VALUES (?,?)', meta.items())
                 for item in inputs:
                     conn.execute('INSERT INTO input_files VALUES (?,?,?,?,?)',

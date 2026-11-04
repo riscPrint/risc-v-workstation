@@ -822,6 +822,25 @@ This records compiled code and instance state. Arbitrary generator reads of file
 variables or mutable global state are not a captured input contract.
 
 
+### C6 native HDL navigation subset
+
+`rvw query build-hdl --top MODULE --out DB FILE...` writes `rvw.designdb/20`
+with `meta.frontend=yosys-verilog`. Root component path is empty. `spinal_path`
+equals the HDL signal path. `meta.graph_semantics` declares conservative signal
+and whole-cell dependencies. Query JSON repeats `frontend` and `graph_semantics`.
+Named vectors can join disjoint bit slices. These are navigation paths, not
+bit-exact functional cones. `data` edges represent value reads. `sel` edges
+represent selects and enable/reset inputs. Flip-flop and latch outputs have
+kind `reg`; clock inputs are excluded from value edges. Register stage counts
+can include multiple aliases of the same state. Clock domains and reset
+values are unknown. Empty memory and artifact tables do not imply completeness.
+
+Sources and executable identity use C8 capture. Include directives, file input,
+source remapping and token concatenation are refused. Source locations bind to
+captured HDL files in `input_files`. Input errors do not publish a partial DB.
+Semantic keys and emission configuration are `$incomplete:`. Diff must remain
+inconclusive. This subset adds no C1 runtime or formal model claim.
+
 ### C6 debug metadata export
 
 `SpinalDB/debug.sh` reads one C8 capture of a design database. It writes stored

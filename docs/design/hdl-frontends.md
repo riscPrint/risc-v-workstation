@@ -30,7 +30,8 @@ Add `rvw query build-hdl --top MODULE --out DB FILE...`. Use the existing query
 reader and schema tables. Keep the importer under `rvw.query`. No core names
 belong in it. Each module instance gets a component row. Each named net gets a
 signal row. Preserve aliases with directed edges through shared bit identities.
-Create internal bit signals to avoid connecting disjoint slices through an alias.
+Create internal bit signals for lowered cell ports. Named vector nodes can join
+disjoint bit slices. Treat these paths as conservative signal-level reachability.
 Module ports connect parent bits to child bits in the declared direction.
 Lowered builtin cells connect every input bit to each output bit. This is a
 conservative whole-cell dependency graph, not a bit-exact functional cone.
@@ -64,8 +65,8 @@ existing query tools on the same file; a new MCP build entry is a later phase.
    aliases, slices, muxes and registers. Check drivers, loads, path and locations.
 3. Compare query reachability with an independent traversal of Yosys JSON bits.
    This checks translation fidelity, not independent synthesis correctness.
-4. Build a pinned open core from a read-only `ref/` checkout. Use PicoRV32 for
-   the native Verilog subset. Also use an Ibex SV block. Record full-core Ibex
+4. Build a pinned open core from a read-only `ref/` checkout. Use SERV `serv_top` for
+   the native Verilog subset. Its register-file interface remains external. Also use an Ibex SV block. Record full-core Ibex
    support as pending until slang integration and all dependencies are tested.
 5. Refuse unsupported cells, unresolved modules, inouts, memories and includes.
    A failed rebuild must leave an existing database intact.
@@ -76,6 +77,7 @@ existing query tools on the same file; a new MCP build entry is a later phase.
 Yosys lowers procedural syntax. Assignment locations can describe a whole
 process. Aliases can lose declaration locations. Whole-cell edges can overstate
 arithmetic dependencies. They must not become proof or CDC signoff evidence.
+Register stage counts can include multiple aliases of the same state.
 Named constant nets have no variable drivers. Synthesis can remove unobservable
 logic; avoid optimization passes. No source text reconstruction is promised.
 
@@ -90,4 +92,6 @@ logic; avoid optimization passes. No source text reconstruction is promised.
    Specify scheduling and foreign interfaces separately from static queries.
 5. Source debug and generated checks remain separate deliverables under #26.
 
-Follow-up issue links will be added after the first increment.
+Follow-ups: [full SV and slang](https://github.com/riscPrint/risc-v-workstation/issues/370),
+[VHDL and GHDL](https://github.com/riscPrint/risc-v-workstation/issues/371).
+[Chisel and CIRCT](https://github.com/riscPrint/risc-v-workstation/issues/372).

@@ -76,6 +76,9 @@ def run_on(path, fn):
         result = fn(db)
         if isinstance(result, dict):
             result["input_capture"] = db.capture.record()
+            if db.meta.get("frontend"):
+                result["frontend"] = db.meta["frontend"]
+                result["graph_semantics"] = db.meta.get("graph_semantics")
             stale = db.staleness()
             if stale:
                 result["db_warnings"] = stale

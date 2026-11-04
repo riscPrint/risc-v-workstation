@@ -40,7 +40,7 @@ def register(subparsers) -> None:
 
     c = cmd("info", "what the database holds", lambda d, a: ops.info(d))
 
-    c = cmd("where", "Scala source, Verilog name and waveform path of a signal", lambda d, a: ops.where(d, a.signal))
+    c = cmd("where", "source location, Verilog name and waveform path of a signal", lambda d, a: ops.where(d, a.signal))
     c.add_argument("signal")
 
     c = cmd("drivers", "what drives a signal: assignments, conditions, enables, reset", lambda d, a: ops.drivers(d, a.signal))
@@ -155,6 +155,8 @@ def _sig_line(s: dict) -> str:
 def render(command: str, r: dict) -> str:
     out: list[str] = []
     w = out.append
+    if r.get("graph_semantics"):
+        w(f"graph: {r['graph_semantics']}")
     if r.get("status") == "inconclusive":
         w(f"inconclusive: {r.get('cause', 'input_not_captured')}")
     if command in ("where", "drivers", "loads") and "signal" in r:
@@ -169,13 +171,13 @@ def render(command: str, r: dict) -> str:
                 w(f"  wave     {s['wave']}")
             if s.get("origin"):
                 w(f"  origin   {s['origin']}")
-            w(f"  scala    {s.get('loc')}")
+            w(f"  source   {s.get('loc')}")
             if s.get("area"):
                 w(f"  area     {s['area']}")
             if s.get("clock_domain"):
                 w(f"  clock    {s['clock_domain']}  reset value {s.get('reset_value')}")
         else:
-            w(f"  scala {s.get('loc')}")
+            w(f"  source {s.get('loc')}")
     if command == "where" and r.get("group"):
         b = r.get("bundle")
         if b:
