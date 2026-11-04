@@ -116,6 +116,9 @@ $('trace').onclick = () => run(async () => {
 });
 run(async () => {
   const r = await request({op:'open'});
+  const binding = r.result.run_binding;
+  $('binding').textContent = binding ? `Wave to C1 run: ${binding.status}; ${binding.cause}. Database to run: ${binding.database}` : r.result.binding;
+  $('run-evidence').textContent = JSON.stringify(binding ?? {status:'inconclusive',cause:'No C1 binding evidence'}, null, 2);
   $('status').textContent = `${r.result.binding}; ${JSON.stringify(r.result.warnings)}; ${r.elapsed_ms.toFixed(1)} ms backend`;
   $('signals').replaceChildren(...r.result.signals.map((s:any) => {const o=document.createElement('option');o.value=s.name;return o;}));
   if (r.result.blocks) await engine.setDesign(r.result.blocks);

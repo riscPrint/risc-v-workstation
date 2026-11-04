@@ -27,6 +27,7 @@ with sqlite3.connect(temp/'vex.db') as c:
 vcd=temp/'wave.vcd'
 vcd.write_text('$timescale 1ns $end\n$scope module TOP $end\n$scope module VexTop $end\n$var wire 32 ! execute_PC $end\n$upscope $end\n$upscope $end\n$enddefinitions $end\n#0\nb0 !\n#10\nb100 !\n')
 build(str(vcd),str(temp/'wave.rvwi'))
+(temp/'result.json').write_text(json.dumps(dict(schema='rvw.run/1',status='error',inconclusive='fixture missing retirement evidence',artifacts={'wave':'wave.vcd'})))
 `;
 let server,browser;
 try {
@@ -48,6 +49,9 @@ try {
    const jumpMs=performance.now()-jumpStart;assert.deepEqual(errors,[]);
    console.log(JSON.stringify({scope:'headless Chromium; dense synthetic indexed wave; warm filesystem cache; synthetic single-block fixture',open_ms:openedMs,jump_ms:jumpMs,under_1s:openedMs<1000&&jumpMs<1000}));
  } else {
+ assert.match(await page.locator('#binding').innerText(),/Wave to C1 run: bound/);
+ assert.match(await page.locator('#binding').innerText(),/Database to run: unverified/);
+ assert.match(await page.locator('#run-evidence').textContent(),/fixture missing retirement evidence/);
  await page.locator('#signal').fill('execute_PC');await page.locator('#jump').click();await page.locator('#wave svg').waitFor();
  assert.match(await page.locator('#source').innerText(),/execute_PC/);
  await page.locator('#wave button').filter({hasText:'10: 0x4'}).click();

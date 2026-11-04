@@ -15,6 +15,8 @@ import subprocess
 from time import perf_counter
 
 from .db import DesignDB, QueryError
+from ..common.capture import CaptureError, read_stable
+from ..results.schema import RunResult, SchemaError
 from . import ops
 from ..wave.index import reader
 from ..wave.vcd import WaveError, fmt_value
@@ -24,6 +26,43 @@ class Session:
     def __init__(self, database, wave):
         self.db = DesignDB(database)
         self.wave = wave
+        self.run_binding = None
+
+    def bind_run(self, meta):
+        """Bind declared C1 wave bytes, never infer a database/run association."""
+        if self.run_binding is not None:
+            return self.run_binding
+        result = dict(status='inconclusive', cause='no adjacent C1 result.json',
+                      database='unverified: C1 does not bind this database')
+        source = Path(meta['source'])
+        path = source.parent / 'result.json'
+        try:
+            if path.exists():
+                captured = self.db.capture.file(path)
+                data = json.loads(captured.copy.read_bytes())
+                run = RunResult.from_dict(data,
+                                          path=Path(captured.resolved).parent)
+                declared = run.artifacts.get('wave')
+                if not isinstance(declared, str) or not declared:
+                    raise ValueError('C1 has no declared wave artifact')
+                artifact = Path(declared)
+                if not artifact.is_absolute():
+                    artifact = run.path / artifact
+                # A conventional filename alone is not binding evidence.
+                if artifact.resolve() != source.resolve():
+                    raise ValueError('C1 declares a different wave artifact')
+                digest, size, _, _ = read_stable(artifact.resolve(strict=True))
+                if digest != meta['sha256'] or size != meta['size']:
+                    raise ValueError('C1 wave bytes differ from the indexed capture')
+                result.update(status='bound', cause='declared C1 wave hash matches indexed capture',
+                              result=str(path), result_sha256=captured.sha256,
+                              wave_sha256=digest, run=data,
+                              evidence_limit=run.why_inconclusive,
+                              scope='wave bytes only; no run-set generation or hardware verdict validation')
+        except (CaptureError, SchemaError, OSError, ValueError, TypeError) as error:
+            result.update(status='inconclusive', cause=str(error))
+        self.run_binding = result
+        return result
 
     def close(self):
         self.db.close()
@@ -44,7 +83,7 @@ class Session:
             with reader(self.wave) as (conn, header):
                 meta = json.loads(conn.execute('SELECT value FROM metadata').fetchone()[0])
             result = dict(signals=[dict(name=v.name, width=v.width) for v in header.vars],
-                          wave=meta, blocks=self.artifact('blocks.json'),
+                          wave=meta, blocks=self.artifact('blocks.json'), run_binding=self.bind_run(meta),
                           warnings=self.db.staleness(),
                           binding='unverified: wave and design selected by user; no run identity join')
         elif op == 'source':

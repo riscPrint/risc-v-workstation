@@ -13,6 +13,7 @@ export function isRequest(v: unknown): v is Request {
 }
 export const body = `<header><label>Signal <input id="signal" list="signals"></label><datalist id="signals"></datalist>
 <label>Time <input id="time" value="0" inputmode="numeric"></label><button id="jump">Jump</button><button id="trace">Trace active driver</button></header>
+<p id="binding" role="note"></p><details><summary>Captured C1 run evidence</summary><pre id="run-evidence"></pre></details>
 <p id="status" role="status"></p><main><section aria-labelledby="wave-heading"><h2 id="wave-heading">Indexed wave</h2><div id="wave"></div></section>
 <section aria-labelledby="source-heading"><h2 id="source-heading">Scala source</h2><div id="source"></div></section><section aria-labelledby="diagram-heading"><h2 id="diagram-heading">SpinalBlocks</h2><div id="diagram"></div></section>
 <section aria-labelledby="dependencies-heading"><h2 id="dependencies-heading">Dependency trace</h2><div id="dependencies"></div></section></main>`;
