@@ -30,7 +30,7 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None) {
+                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace)
 }
 
@@ -50,6 +50,7 @@ trait CoreAdapter {
   /** True only when run constructs a fresh native instance and fresh harness state.
     * Persistent serve refuses adapters that do not make this declaration. */
   def freshInstancePerRun: Boolean = false
+  def supportsBootPayloads: Boolean = false
   def core: String
   def configs: Seq[String]
   def defaultConfig: String = configs.head
@@ -97,6 +98,7 @@ trait RunContext {
   /** The ELF captured before compilation. Use it for loading, symbols and disassembly.
     * `job.elf` is the original path for metadata only; never reopen it during this run. */
   def elf: ElfFile
+  def loadMemory(write: (Long, Array[Byte]) => Unit): Unit = elf.load(write)
   /** A line for this run's run.log (also echoed to stderr). */
   def log(line: String): Unit
   /** RVFI trace header fields (core, config, elf, isa, xlen); the writer adds the schema. */

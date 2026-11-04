@@ -100,6 +100,8 @@ object BoomAdapter extends CoreAdapter {
   def isEnvTrap(insn: Long): Boolean =
     insn == 0x00000073L || insn == 0x00100073L || (insn & 0xffffL) == 0x9002L && (insn & 3) != 3
 
+  override def supportsBootPayloads: Boolean = true
+
   def run(compiled: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     val elf = ctx.elf
     val tohostAddr = ToHost.find(elf).getOrElse(throw new IllegalArgumentException(s"${job.elf} has no tohost symbol"))
@@ -121,7 +123,7 @@ object BoomAdapter extends CoreAdapter {
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
 
       val mem = SparseMemory(seed = 0)
-      elf.load((a, d) => mem.write(a, d))
+      ctx.loadMemory((a, d) => mem.write(a, d))
       new BoomMemoryAgent(dut.io.mem, cd, mem, job.memLatency)
       import BoomSim.Platform._
       mem.write(msip, 0)

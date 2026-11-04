@@ -476,3 +476,42 @@ It does not establish ISA correctness. Keep external effects disabled. This
 format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
+
+## Firmware and Linux payload loading
+
+`--elf-load-bias BYTES` adds a nonnegative decimal byte offset to ET_DYN
+load addresses, entry and defined symbols. The default is zero. Use this only
+for firmware that relocates itself, such as OpenSBI. The loader does not apply
+ELF relocations or run a dynamic linker. It rejects ET_REL, PT_INTERP and a
+nonzero bias for ET_EXEC. An ET_DYN file is not proof that it can relocate itself.
+The adapter still owns reset PC and register state. Loading does not set them.
+
+BOOM accepts `--boot-payloads loads.json` to load raw kernel, DTB and initramfs
+bytes beside the firmware ELF. Other adapters must declare
+`supportsBootPayloads` and call `ctx.loadMemory` before they can accept this
+option. Paths below are relative to the manifest. Addresses and sizes are
+strings. Use decimal or `0x` notation.
+
+```json
+{
+  "schema": "rvw.boot-payloads/1",
+  "ram": [{"base": "0x80000000", "size": "0x08000000"}],
+  "payloads": [
+    {"file": "Image", "address": "0x80200000"},
+    {"file": "platform.dtb", "address": "0x87e00000"},
+    {"file": "rootfs.cpio.gz", "address": "0x86000000"}
+  ]
+}
+```
+
+The driver captures all bytes before model compilation. `BootImage` rejects
+out-of-RAM loads, overflow and overlap, including ELF BSS. It zero-fills BSS.
+C1 `details.boot_payloads` records each captured file hash.
+`details.boot_loads` records the effective addresses and memory sizes.
+The manifest's RAM declaration is a placement check. The adapter must expose
+that RAM. It does not change the RTL memory map.
+
+This is a memory loader. BOOM still requires a `tohost` symbol and its existing
+reset state. It has no Linux UART/PLIC adapter. See the project-owned
+[Linux adapter plan](../examples/qemu-linux/rtl-adapter-plan.json).
+No RTL Linux boot support follows from successful payload loading.
