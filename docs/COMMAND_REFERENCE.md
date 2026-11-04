@@ -502,7 +502,7 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-    {build,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
     ...
 ```
 
@@ -511,6 +511,13 @@ usage: rvw query [-h] [--project PROJECT]
 ```text
 usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
     PROJECT]
+```
+
+### `rvw query build-hdl`
+
+```text
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--yosys YOSYS] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
 ```
 
 ### `rvw query info`
