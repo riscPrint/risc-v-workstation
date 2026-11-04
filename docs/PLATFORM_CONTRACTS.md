@@ -1068,24 +1068,25 @@ one error object with `--json`. Success exits 0 and means a report was produced.
 and `benchmarks`. Each path resolves against the project file. An absent or
 invalid selected section is an error. No core preset is selected implicitly.
 
-`rvw.arch-core/1` describes one RV64 O3 hart. Required fields are `schema`,
-`config` (C1 preset), `isa`, `kind="o3"`, `cpu`, `queues`, `predictor`, `icache`,
+`rvw.arch-core/1` describes one hart. O3 uses RV64; Minor and TimingSimple use
+RV32IM (see the RV32 in-order extension below). Required fields are `schema`,
+`config` (C1 preset), `isa`, `kind`, `cpu`, `queues`, `predictor`, `icache`,
 `dcache`, `itlb_entries`, `dtlb_entries`, `line_bytes`, `bus_bytes`, and
 `memory_latency`. Unknown top-level fields are errors. `cpu` contains scalar
-gem5 RiscvO3CPU parameters. The cache tables contain scalar Cache parameters.
+gem5 parameters for the selected CPU. The cache tables contain scalar Cache parameters.
 Unknown gem5 parameters and object references are errors. Omitted scalar
 parameters use gem5 defaults. Each queue has `entries` and `units`. Each unit
 has `ops` (gem5 opclass names), `count`, `latency`, and `pipelined`.
 `predictor` has `tage`, `loop`, `btb`, and `ras_entries`. TAGE has
 `nHistoryTables`, `minHist`, `maxHist`, `tagTableTagWidths`, `logTagTableSizes`,
 and `logUResetPeriod`. Loop has `logSizeLoopPred` and `logLoopTableAssoc`.
-BTB has `numEntries` and `associativity`. Clock is 1 GHz. Memory is 512 MiB
+BTB has `numEntries` and `associativity`. Clock is 1 GHz. Memory defaults to 512 MiB
 at 0x80000000. `memory_latency` is a positive whole number of cycles.
 
 `rvw.arch-build/1` records config, ISA, source path, gem5 and compiler identity (path, SHA-256,
 version), and benchmark IDs, paths and SHA-256 hashes. Builds use native
-newlib GCC and the description's ISA. Only RV64GC with optional Zba/Zbb/Zbs
-is supported in this version. The source path points to riscv-tests.
+newlib GCC and the description's ISA. RV64GC with optional Zba/Zbb/Zbs
+and RV32IM are supported. The source path points to riscv-tests.
 
 `rvw.arch-run/1` records `engine` (`rtl` or `gem5`), core, config, memory
 latency, project capture, description/model hashes and a nonempty `benchmarks`
@@ -1363,11 +1364,11 @@ RAM base/bytes, required symbol addresses/sizes, blockers and limits.
 Supported input labels are `rv32im`, `rv64gc`, `rv64gc_zba_zbb_zbs` and CPU
 kinds `o3`, `minor`, `timing`. ELF class must match XLEN. Required runtime
 symbols and the fixed RAM layout are checked in ELF32 and ELF64.
-Only RV64 O3 returns `compatible` (CLI exit 0). Other known combinations
-return `unsupported` (CLI exit 2) with runtime and CPU blockers. Unknown
+RV64 O3 and RV32IM Minor/TimingSimple return `compatible` (CLI exit 0).
+Other known combinations return `unsupported` (CLI exit 2) with a CPU/ISA blocker. Unknown
 labels or invalid files give the normal error object and exit 2.
 Compatibility does not establish instruction behavior, ISA extensions,
-ROI counter validity or model fidelity. It does not enable a new runner.
+ROI counter validity or model fidelity.
 MCP returns the same status in the result of its background job.
 
 ### C9 SoC description extension
@@ -1674,3 +1675,25 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+### C9 RV32 in-order extension
+
+Descriptions accept `kind="minor"` or `kind="timing"` only with `isa="rv32im"`.
+O3 keeps its RV64 ISA choices. The CPU classes are RiscvMinorCPU and
+RiscvTimingSimpleCPU. In-order descriptions require `queues=[]` and
+`predictor=null`; CPU defaults apply. `cpu={}` selects all defaults.
+Both caches can be null to bypass them. In-order SoC extensions are refused.
+Optional `ram_bytes` selects page-aligned RAM capacity up to 512 MiB at the
+existing base. The default remains 512 MiB. ELF segments must fit that range.
+RV32 builds use ilp32 and stable high/low/high reads of 64-bit mcycle/minstret.
+The guest still exports two 64-bit bench_stats words.
+Static compatibility does not certify native execution or cycle fidelity.
+
+C1 adapters can publish project-defined live ROI event numbers in `metrics`.
+The project owns event names, observation points and mappings to gem5 stats.
+They must not be inferred from model statistics. The VexRiscv example observes
+RVFI retirement, excludes the first retired setStats entry and includes the
+second. It publishes roi_retired, roi_loads, roi_stores and roi_branches only
+with two markers and complete bench_stats stores. The CSR delta window stays
+separate. Missing events remain missing; fitting refuses them. See the example
+architecture README for opcodes, limitations and the saved-candidate fit plan.

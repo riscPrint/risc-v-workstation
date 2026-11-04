@@ -53,6 +53,11 @@ object VexAdapter extends CoreAdapter {
       v | (BigInt(memory.getOrElse((addr & ~3L) + i, 0)) << (8 * i))
     }
     val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
+    val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
+    val marker = ctx.elf.symbol("setStats")
+    var markers = 0
+    var roiActive = false
+    var roiLoads, roiStores, roiBranches, roiRetired = 0L
     var retired = 0L
     var traps = 0L
     var nextOrder = BigInt(0)
@@ -141,11 +146,27 @@ object VexAdapter extends CoreAdapter {
             require(r.order == nextOrder, s"RVFI order ${r.order}, expected $nextOrder")
             nextOrder += 1
             retired += 1
+            // Match gem5's retired-PC window: exclude entry and include exit.
+            if (roiActive && !r.trap) {
+              roiRetired += 1
+              (r.insn.toInt & 0x7f) match {
+                case 0x03 => roiLoads += 1
+                case 0x23 => roiStores += 1
+                case 0x63 | 0x67 | 0x6f => roiBranches += 1
+                case _ =>
+              }
+            }
+            if (!r.trap && marker.contains(r.pc.toLong)) {
+              markers += 1
+              require(markers <= 2, "more than two ROI markers")
+              roiActive = markers == 1
+            }
             writer.foreach(_.write(r))
             if (r.memWmask != 0) {
               val lane = Integer.numberOfTrailingZeros(r.memWmask)
               val count = Integer.bitCount(r.memWmask)
               require(Set(1, 2, 4)(count), "unsupported RVFI store mask")
+              bench.foreach(_.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata))
               tohost.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata) match {
                 case Some(ToHost.Pass) => ctl.finish(Status.Pass)
                 case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
@@ -159,9 +180,18 @@ object VexAdapter extends CoreAdapter {
       writer.foreach(_.end(result._4, result._1.name))
       result
     } finally { writer.foreach(_.close()) }
+    val metrics = ujson.Obj()
+    bench.filter(_.complete).filter(_ => markers == 2).foreach { b =>
+      metrics("roi_cycles") = RvwJson.num(b.words(0).toLong)
+      metrics("roi_instret") = RvwJson.num(b.words(1).toLong)
+      metrics("roi_retired") = RvwJson.num(roiRetired)
+      metrics("roi_loads") = RvwJson.num(roiLoads)
+      metrics("roi_stores") = RvwJson.num(roiStores)
+      metrics("roi_branches") = RvwJson.num(roiBranches)
+    }
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
-        "rvfi_monitor" -> false, "memory_bytes" -> 16777216))
+        "rvfi_monitor" -> false, "memory_bytes" -> 16777216, "roi_markers" -> markers), metrics)
   }
 }
 
