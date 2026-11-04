@@ -154,13 +154,17 @@ def spec_diff(before, after, old_root, new_root):
     declarations = {k: {'before': old.get(k), 'after': new.get(k)} for k in
                     ('isa', 'extensions', 'options', 'consumers', 'source', 'specifications', 'unavailable', 'semantics')
                     if old.get(k) != new.get(k)}
-    needs_review = bool(declarations or added or removed or changed)
+    from .specifications import compare
+    obligations = compare(old, new, old_root, new_root)
+    needs_review = bool(declarations or added or removed or changed or obligations['added']
+                        or obligations['removed'] or obligations['changed'])
     return {'schema': 'rvw.isa-diff/1', 'status': 'inconclusive' if needs_review else 'unchanged',
             'adoption_required': needs_review, 'declarations': declarations,
             'instructions': {'added': added, 'removed': removed, 'changed': changed},
             'affected_checkers': ['ISA manifest validation', 'functional opcode coverage',
-                                  *sorted(set(old.get('consumers', {})) | set(new.get('consumers', {})))] if needs_review else [],
+                                  *sorted(set(old.get('consumers', {})) | set(new.get('consumers', {}))),
+                                  *obligations['affected_checkers']] if needs_review else [],
             'tests_to_review': sorted(set(added + removed + changed)),
-            'obligations': 'Semantic obligations and test presence are not determined by opcode diffs.',
+            'obligations': obligations,
             'notes': ['Read-only comparison. No pin, model or project file is updated.',
-                      'specifications can pin profile, debug and platform documents; this command compares their declarations only.']}
+                      'Specification catalogs bind reviewed excerpts; catalog completeness still needs review.']}

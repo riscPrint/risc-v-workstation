@@ -757,8 +757,8 @@ versions and options, affected declared consumers, and instruction tests to
 review. Changed pins require adoption and return `inconclusive` (exit 3).
 The command never updates a pin or model. Optional `specifications` declarations
 can hold profile, debug and platform document pins. Their metadata is compared;
-their semantic obligations are not parsed. Test presence and changed semantic
-obligations still need review. An unchanged result is not a compliance verdict.
+their semantic obligations are parsed only when a reviewed catalog is supplied
+as described below. Catalog completeness still needs review. An unchanged result is not a compliance verdict.
 
 ## Scala mapping and denominators
 
@@ -961,3 +961,22 @@ Each instance report includes mapped and unmapped point counts with its denomina
 
 RTL sequence goals with no completion also appear in the closure report.
 Their pending activation count stays separate from reachability.
+
+### Reviewed specification obligations
+
+`isa-diff` can compare semantic obligations for ISA, profile, debug and platform
+pins. Each `specifications` entry can declare `kind`, `revision`, `path`,
+`sha256`, and `obligations: {"path": "rules.json", "sha256": "..."}`.
+Paths use the corresponding source root. The document hash binds the exact
+specification bytes. The catalog uses `rvw.spec-obligations/1` with an
+`obligations` array. Each row has a unique `id`, exact document excerpt `text`,
+`checkers` (names), and `tests` (source-root-relative file paths).
+
+The command checks both hashes and checks each excerpt against its document.
+It compares obligations by ID, reports both sides of changed obligations, and
+lists added and removed obligations. It checks test file presence and captures
+present files by hash. An empty test list is a missing-test entry. Presence is
+not a test result. Changes require explicit adoption. No model or pin changes.
+Catalogs need human review for completeness. Metadata-only pins appear in
+`unchecked_specifications`. This path does not extract every normative rule
+from arbitrary prose. It does not establish compliance.

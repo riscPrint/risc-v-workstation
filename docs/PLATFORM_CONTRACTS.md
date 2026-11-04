@@ -1888,3 +1888,16 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+
+## Reviewed specification obligation catalogs
+
+The optional `rvw.isa/1` `specifications` entries can bind a document and a
+reviewed `rvw.spec-obligations/1` catalog. Each entry has `kind`
+(`isa|profile|debug|platform`), `revision`, `path`, `sha256` and
+`obligations` (`path`, `sha256`). Paths use the corresponding opcode source
+root. Catalog rows in `obligations` have unique `id`, exact document excerpt
+`text`, `checkers` and `tests` arrays. Diff verifies both hashes and document
+excerpt membership. `rvw.isa-diff/1.obligations` reports added, removed and
+changed rows, affected checkers, missing tests and present test hashes.
+It reports metadata-only pins as unchecked. A changed catalog requires adoption.
+Catalog completeness needs review. Test presence does not establish execution.
