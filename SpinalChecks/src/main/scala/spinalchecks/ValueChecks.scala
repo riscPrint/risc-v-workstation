@@ -3,6 +3,13 @@ package spinalchecks
 import spinal.core._
 
 object ValueChecks {
+  /** Check an explicitly unsigned quantity interpreted by a signed consumer. */
+  def unsignedInterpretation(name: String, active: Bool, original: UInt, interpreted: SInt): Unit = {
+    require(interpreted.getWidth > original.getWidth, "signed consumer must represent the unsigned range")
+    DeclaredChecks.rule("value.signedness", name, "declared unsigned magnitude at a signed consumer")(
+      active && interpreted =/= original.resize(interpreted.getWidth).asSInt)
+  }
+
   /** Supply a full precision signed result. Bounds are mathematical values, including unsigned intent. */
   def range(name: String, active: Bool, value: SInt, minimum: BigInt, maximum: BigInt): Unit = {
     require(minimum <= maximum)

@@ -19,7 +19,7 @@ class IntentChecksSpec extends AnyFunSuite {
   }
   test("queue rules: legal wraparound, simultaneous transfers, flush; each illegal transfer fires") {
     val sim = config("intent_queue").compile(new QueueRef)
-    for (fault <- Seq("none", "underflow", "overflow", "occupancy", "order")) sim.doSim(seed = 1) { d =>
+    for (fault <- Seq("none", "underflow", "overflow", "occupancy", "order", "loss", "duplication")) sim.doSim(seed = 1) { d =>
       d.push #= false; d.pop #= false; d.flush #= false
       d.pushed #= 0; d.popped #= 0; d.occupancy #= 0
       d.clockDomain.forkStimulus(10); d.clockDomain.waitSampling(5)
@@ -28,7 +28,11 @@ class IntentChecksSpec extends AnyFunSuite {
         d.clockDomain.waitFallingEdge()
         d.push #= push.nonEmpty; d.pop #= pop; d.flush #= flush
         d.pushed #= push.getOrElse(0).toLong
-        d.popped #= (if (bad && fault == "order") 255 else q.headOption.getOrElse(0)).toLong
+        val observed = if (bad && fault == "order") 255
+          else if (bad && fault == "loss") q(1)
+          else if (bad && fault == "duplication") q.head - 1
+          else q.headOption.getOrElse(0)
+        d.popped #= observed.toLong
         d.occupancy #= (if (bad && fault == "occupancy") (q.size + 1) % 4 else q.size)
         d.clockDomain.waitSampling()
         if (flush) q = Vector.empty
@@ -40,7 +44,7 @@ class IntentChecksSpec extends AnyFunSuite {
       step(Some(1)); step(Some(2)); step(Some(3))
       if (fault == "overflow") step(Some(4), bad = true)
       for (i <- 4 to 12) step(Some(i), pop = true)
-      step(pop = true, bad = fault == "order")
+      step(pop = true, bad = Set("order", "loss", "duplication")(fault))
       step(pop = true); step(pop = true)
       if (fault == "underflow") step(pop = true)
       step(Some(20)); step(bad = fault == "occupancy")
@@ -50,6 +54,7 @@ class IntentChecksSpec extends AnyFunSuite {
       val expected = fault match {
         case "none" => Set.empty[String]
         case "underflow" | "overflow" => Set("queue.capacity")
+        case "loss" | "duplication" => Set("queue.order")
         case x => Set(s"queue.$x")
       }
       assert(fired(d) == expected, s"$fault: ${fired(d)}")
@@ -102,7 +107,7 @@ class IntentChecksSpec extends AnyFunSuite {
     val active = in Bool()
     val value = in SInt(6 bits)
     val narrowed = in SInt(4 bits)
-    ValueChecks.range("range", active, value, -8, 7)
+    ValueChecks.range("range", active, value, if (modular) -32 else -8, if (modular) 31 else 7)
     ValueChecks.narrowing("cast", active, value, narrowed, modular)
   }
   test("value rules: signed boundaries, inactive values, overflow, underflow and truncation") {
@@ -118,10 +123,33 @@ class IntentChecksSpec extends AnyFunSuite {
   }
   test("declared modular arithmetic permits lost high bits but checks the low bits") {
     val sim = config("intent_modular").compile(new ValueRef(true))
-    for ((narrow, expected) <- Seq((-8,Set("value.overflow")), (-7,Set("value.overflow","value.truncation")))) sim.doSim { d =>
+    for ((narrow, expected) <- Seq((-8,Set.empty[String]), (-7,Set("value.truncation")))) sim.doSim { d =>
       d.active #= true; d.value #= 8; d.narrowed #= narrow
       d.clockDomain.forkStimulus(10); d.clockDomain.waitSampling(8); d.clockDomain.waitFallingEdge()
       assert(fired(d) == expected)
     }
   }
+  class UnsignedRef extends Component {
+    val active = in Bool()
+    val original = in UInt(4 bits)
+    val interpreted = in SInt(5 bits)
+    ValueChecks.unsignedInterpretation("unsigned", active, original, interpreted)
+  }
+  test("explicit unsigned intent: zero extension passes; sign extension fires only when active") {
+    val sim = config("intent_unsigned").compile(new UnsignedRef)
+    for ((original, interpreted, active, bad) <- Seq((0,0,true,false), (7,7,true,false),
+      (8,8,true,false), (15,15,true,false), (8,-8,true,true), (15,-1,true,true), (15,-1,false,false))) sim.doSim { d =>
+      d.active #= active; d.original #= original; d.interpreted #= interpreted
+      d.clockDomain.forkStimulus(10); d.clockDomain.waitSampling(8); d.clockDomain.waitFallingEdge()
+      assert(fired(d) == (if (bad) Set("value.signedness") else Set.empty[String]))
+    }
+  }
+  test("resetless FIFO reference state refuses elaboration") {
+    val error = intercept[Throwable] {
+      SpinalConfig(targetDirectory = "generated/queue_resetless",
+        defaultConfigForClockDomains = ClockDomainConfig(resetKind = BOOT)).generateVerilog(new QueueRef)
+    }
+    assert(error.toString.contains("FIFO reference state needs a reset domain"))
+  }
+
 }
