@@ -128,8 +128,11 @@ The driver captures map bytes when it parses the job. It saves those bytes as
 `OUT/sim-map.json`. Results include `soc_map_sha256`. Replay names the original
 map path; keep that input unchanged, or use the saved map. The capture header
 records map, source and RTL identity. Each record observes an accepted request
-and the selected harness endpoint. VexRiscv records full memory-service words.
-BOOM records TileLink request sizes, including cache-line acquisitions.
+and the selected map region. VexRiscv uses `observation=harness_decoder` and
+records full memory-service words at its RAM decoder. BOOM uses
+`observation=map_monitor` and records TileLink request sizes, including cache-line
+acquisitions. BOOM classifies requests with the map; it does not observe RTL
+decoder selects. Its capture cannot establish actual RTL decoder selection.
 The checker compares the saved map with project data and checks each selection.
 It rejects different map, source or RTL identities. A missing end record stays
 inconclusive. The checker has no pass verdict.

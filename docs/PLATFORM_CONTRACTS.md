@@ -1680,7 +1680,9 @@ unsupported. Missing identity, changed evidence or differences exit 2.
 C1 jobs can set `soc_map` / `--soc-map` to generated `rvw.sim-map/1`.
 The parser captures the map bytes. C1 records `soc_map_sha256` and lists the
 saved `sim-map.json` and `soc-transactions.jsonl` in `artifacts`.
-`rvw.soc-capture/1` starts with `map_sha256` and `identity` (source and RTL hash).
+`rvw.soc-capture/1` starts with `map_sha256`, `identity` (source and RTL hash), and
+`observation` (`harness_decoder` or `map_monitor`). A map monitor classifies
+accepted requests. It does not observe an actual RTL decoder select.
 Request lines have `cycle` (integer string), `bus`, `address` (hex string),
 `size` (byte count string), `write` (boolean) and `selected` (region name or null).
 `{"event":"end"}` ends capture. These are harness request/endpoint observations.

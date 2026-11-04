@@ -75,11 +75,11 @@ object SimMap {
 
 /** Captures accepted bus requests and the endpoint selected by the harness.
   * These are harness endpoint observations, not retirement-to-bus pairs. */
-class MapCapture(map: SimMap, job: RunJob, ctx: RunContext) extends AutoCloseable {
+class MapCapture(map: SimMap, job: RunJob, ctx: RunContext, observation: String = "harness_decoder") extends AutoCloseable {
   map.save(job.out)
   private val writer = new PrintWriter(new File(job.out, "soc-transactions.jsonl"))
   private def emit(v: ujson.Value): Unit = { writer.println(v.render()); writer.flush() }
-  emit(ujson.Obj("schema" -> "rvw.soc-capture/1", "map_sha256" -> map.sha256, "identity" -> ctx.rvfiHeader))
+  emit(ujson.Obj("schema" -> "rvw.soc-capture/1", "map_sha256" -> map.sha256, "identity" -> ctx.rvfiHeader, "observation" -> observation))
   def request(cycle: Long, bus: String, address: BigInt, size: BigInt, write: Boolean,
               selected: Option[SimRegion]): Unit = emit(ujson.Obj("cycle" -> cycle.toString, "bus" -> bus,
     "address" -> Hex(address), "size" -> size.toString, "write" -> write,

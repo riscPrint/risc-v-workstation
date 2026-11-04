@@ -113,7 +113,7 @@ object BoomAdapter extends CoreAdapter {
     var traps = 0L
     var rvfiCode = 0
 
-    val capture = job.socMap.map(m => new MapCapture(m, job, ctx))
+    val capture = job.socMap.map(m => new MapCapture(m, job, ctx, "map_monitor"))
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
       require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
         "this configuration has no SEIP input")

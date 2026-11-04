@@ -48,6 +48,8 @@ def check_capture(source, capture, result):
                                status='consistent' if t['selected'] == expected else 'mismatch'))
         gaps = ['retirement-to-bus pairing', 'bridge width conversion', 'endianness',
                 'error response propagation', 'register side effects', 'complete decode coverage']
+        if header.get('observation') != 'harness_decoder':
+            gaps.append('actual decoder selection')
         if not ended:
             gaps.append('capture end')
         if not checks:
