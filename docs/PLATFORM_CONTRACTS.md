@@ -1859,3 +1859,28 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### Observed prediction outcome extension
+
+Kanata comments can contain one measured outcome per live instruction, predictor
+and kind. Emit it before terminal R. Fields are tab separated:
+
+```text
+#rvw  1  prediction  ID  PREDICTOR  KIND  PREDICTED  ACTUAL  RECOVERY  WORK  WARMUP  ALIAS  CONTEXT
+```
+
+`KIND` is `direction`, `target` or `return`. Direction values are `taken` or
+`not_taken`. Target and return values are nonnegative decimal or `0x` addresses.
+`RECOVERY` counts cycles from resolution to resumed correct-path fetch.
+`WORK` counts admitted wrong-path instructions attributed to this resolution.
+Both are nonnegative integers, or `?` for unknown. The producer must observe
+these quantities. R type 1 and stage residence cannot supply them.
+`WARMUP` and `ALIAS` are observed `true`, `false` or `?`. `CONTEXT` is a project
+context token, or `?`. Tokens cannot contain tabs or newlines. A predictor name
+is required. Duplicate outcomes, ended IDs and malformed known records fail.
+
+Reports separate predictor, kind, warmup, alias and context groups. Unknown
+costs stay unknown. Shared recovery costs can occur in multiple kinds. Do not
+sum these groups as global lost cycles. Context differences and alias flags
+do not establish causal effects. Project probes own the event bindings; the
+generic reader does not simulate a predictor or infer missing observations.
