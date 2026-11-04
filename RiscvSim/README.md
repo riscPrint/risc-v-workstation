@@ -439,8 +439,9 @@ separate regression commands or suites.
 elaboration and native setup. `details.model_timing.elaboration_s` measures
 `RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
 It includes native compilation or cache lookup, workspace setup and loading.
-It is not a pure C++ compiler measurement. `details.execution_s` measures the
-adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+It is not a pure C++ compiler measurement. `details.execution_s` measures elapsed time after model readiness through result
+preparation. It includes the adapter call, native-output draining and artifact
+handling. It is not isolated adapter execution time. The launcher's sbt Scala compilation occurs before the JVM and
 must be timed separately. Lock waits are not compiler time.
 
 Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example
