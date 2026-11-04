@@ -228,6 +228,7 @@ class CoreConfig:
     wall_timeout: bool = False  # the adapter honours a per-job `wall_timeout` manifest key (C1)
     known_failures: Path | None = None
     jobs: int = 4
+    persistent: bool = False  # serial fresh-instance server in run-many
     build_first: bool = True
     build_timeout_s: float = 3600.0
     startup_s: float = 120.0
@@ -248,6 +249,8 @@ class CoreConfig:
         for key in ("input_env", "input_tools", "input_commands"):
             if not isinstance(getattr(self, key), list) or not all(isinstance(v, str) and v for v in getattr(self, key)):
                 raise ConfigError(f"core.{key} must be a list of non-empty strings")
+        if not isinstance(self.persistent, bool):
+            raise ConfigError("core.persistent must be a boolean")
         positive_int(self.jobs, "core.jobs")
         for key in ("identity_timeout_s", "build_timeout_s", "startup_s"):
             finite_number(getattr(self, key), f"core.{key}", positive=True)
@@ -338,7 +341,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
     if not isinstance(c, dict):
         raise ConfigError(f"{path}: missing [core] table")
     _check_keys(c, {"name", "adapter", "configs", "default_config", "lock", "lock_dir", "source_repo",
-                    "source_env", "cache_paths", "input_complete", "input_env", "input_tools", "input_verilator_toolchain", "input_commands", "input_commands_by_platform", "identity_capture", "identity", "identity_timeout_s", "wall_timeout", "known_failures", "jobs", "build_first", "build_timeout_s",
+                    "source_env", "cache_paths", "input_complete", "input_env", "input_tools", "input_verilator_toolchain", "input_commands", "input_commands_by_platform", "identity_capture", "identity", "identity_timeout_s", "wall_timeout", "known_failures", "jobs", "persistent", "build_first", "build_timeout_s",
                     "startup_s", "perf_tolerance"}, f"{path} [core]")
     if "adapter" not in c:
         raise ConfigError(f"{path}: [core] needs adapter")
@@ -367,6 +370,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
         wall_timeout=bool(c.get("wall_timeout", False)),
         known_failures=_path(c["known_failures"], base, environment) if c.get("known_failures") else None,
         jobs=c.get("jobs", 4),
+        persistent=c.get("persistent", False),
         build_first=bool(c.get("build_first", True)),
         build_timeout_s=c.get("build_timeout_s", 3600),
         startup_s=c.get("startup_s", 120),

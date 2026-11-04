@@ -1,0 +1,4 @@
+self-hosted-runner:
+  labels:
+    - rvw-local
+    - rvw-linux

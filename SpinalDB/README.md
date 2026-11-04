@@ -345,3 +345,10 @@ Use `--consumer trace|gui|surfer|check` to launch a native consumer with these
 files. Pass consumer arguments after `--`. See the SpinalTrace and SpinalWaves
 READMEs for commands and waveform compatibility limits. SpinalBlocks is the third
 database consumer; its integration is tracked in #44.
+
+`Test/runMain spinaldb.LintFixtures DIR` also emits paired handshake/FIFO
+clock-crossing topologies with a broken reverse path, and separate/merging
+synchronizer paths. FIFO topology uses registered Gray encoders and a 4-word
+memory. These are small structural references, not complete transfer protocols.
+Run `RVW_LINT_FIXTURES=DIR python -m pytest rvw/tests/test_lint_extracted.py -q`
+from the workstation root to check their extracted graphs.

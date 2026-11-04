@@ -237,3 +237,10 @@ def test_every_decoder_mnemonic_has_a_deliberate_perf_class():
                   for mnemonic, cls in sorted(observed)
                   if identify({'0': f'80000000: {mnemonic}'}, 'riscv')[1] != classes[cls]]
     assert not mismatches
+
+
+@pytest.mark.parametrize("tolerance", [float("nan"), float("inf"), -float("inf")])
+def test_compare_refuses_nonfinite_tolerance(trace, tolerance):
+    report = analyze(trace)
+    with pytest.raises(ValueError, match="finite and nonnegative"):
+        compare(report, report, tolerance=tolerance)

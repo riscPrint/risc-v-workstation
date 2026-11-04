@@ -14,7 +14,7 @@ reusing open-source tools and extending them where they fall short.
 
 - `ROADMAP.md`: the plan for every area, and where each area stands against commercial tools.
 - GitHub issues: the tasks. `TODO.md` lists them under the roadmap areas.
-- `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C8).
+- `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C9).
 - [docs/BRING_YOUR_OWN_CORE.md](docs/BRING_YOUR_OWN_CORE.md): install once, then use a
   separate core repository with `rvw.toml`, core adapters and project selection.
 
@@ -224,6 +224,9 @@ The IPC ratio is model IPC divided by RTL IPC. It is a measured model gap.
 It is not a correctness or gate verdict. gem5 shows trends; RTL is the truth.
 Use the project's lock for RTL. gem5 runs under the `gem5` lock, one process
 at a time. Core presets and calibration targets belong in project data.
+
+See the complete [CLI and MCP reference](docs/COMMAND_REFERENCE.md) for command paths,
+options and built-in tool arguments. The reference is checked against the code.
 
 ## Local CI
 

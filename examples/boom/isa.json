@@ -73,6 +73,95 @@
   },
   "unavailable": [
     "Compressed encodings are outside this first generated plan.",
-    "Semantic immediates, operand values, CSR legality, privilege and exceptions need a semantic spec source."
-  ]
+    "Semantic rules cover integer I/M/Zicsr operands, imm12, CSR access kinds and declared exception crosses. Other semantic crosses are not specified.",
+    "Byte-access misalignment crosses are unavailable: lb/lbu cause 4 and sb cause 6. Byte addresses are always aligned. This is not a formal unreachability proof."
+  ],
+  "semantics": {
+    "version": 1,
+    "privilege_modes": [
+      "M",
+      "S",
+      "U"
+    ],
+    "exceptions": {
+      "ecall": [
+        8,
+        9,
+        11
+      ],
+      "ebreak": [
+        3
+      ],
+      "lb": [
+        5,
+        13
+      ],
+      "lh": [
+        4,
+        5,
+        13
+      ],
+      "lw": [
+        4,
+        5,
+        13
+      ],
+      "lbu": [
+        5,
+        13
+      ],
+      "lhu": [
+        4,
+        5,
+        13
+      ],
+      "sb": [
+        7,
+        15
+      ],
+      "sh": [
+        6,
+        7,
+        15
+      ],
+      "sw": [
+        6,
+        7,
+        15
+      ],
+      "csrrw": [
+        2
+      ],
+      "csrrs": [
+        2
+      ],
+      "csrrc": [
+        2
+      ],
+      "csrrwi": [
+        2
+      ],
+      "csrrsi": [
+        2
+      ],
+      "csrrci": [
+        2
+      ],
+      "ld": [
+        4,
+        5,
+        13
+      ],
+      "lwu": [
+        4,
+        5,
+        13
+      ],
+      "sd": [
+        6,
+        7,
+        15
+      ]
+    }
+  }
 }

@@ -1,10 +1,10 @@
-"""Native RISC-V O3 bare-metal model for gem5 v25.1.
+"""Native RISC-V bare-metal model for gem5 v25.1.
 
 Usage: gem5.opt --outdir=OUT Arch/model.py --description PARAMS.json ELF
 
-The description requires schema="rvw.arch-core/1", config, isa and kind="o3".
-config is the project's C1 configuration name. isa is descriptive metadata.
-The model currently loads RV64 executables. It uses gem5 scalar CPU parameters,
+The description requires schema="rvw.arch-core/1", config, isa and kind.
+config is the project's C1 configuration name. RV64 O3 and RV32 Minor/TimingSimple
+are supported. It uses gem5 scalar CPU parameters,
 explicit issue queues, LTAGE/loop/BTB parameters, Cache keyword arguments,
 and TLB entry counts.
 memory_latency is a number of cycles at 1 GHz. RAM is 512 MiB at 0x80000000.
@@ -48,17 +48,24 @@ def _scalars(value, where):
 
 
 def validate_description(d):
-    _keys({k: v for k, v in d.items() if k != "soc"}, ("schema", "config", "isa", "kind", "cpu", "queues", "predictor",
+    _keys({k: v for k, v in d.items() if k not in ("soc", "ram_bytes")}, ("schema", "config", "isa", "kind", "cpu", "queues", "predictor",
               "icache", "dcache", "itlb_entries", "dtlb_entries", "line_bytes",
               "bus_bytes", "memory_latency"), "description")
-    if d["schema"] != "rvw.arch-core/1" or d["kind"] != "o3":
-        raise ValueError('description requires schema="rvw.arch-core/1" and kind="o3"')
+    ram_bytes = d.get("ram_bytes", RAM_SIZE)
+    _integer(ram_bytes, "ram_bytes")
+    if ram_bytes > RAM_SIZE or ram_bytes % 4096:
+        raise ValueError("ram_bytes must be page aligned and at most 512 MiB")
+    if d["schema"] != "rvw.arch-core/1" or d["kind"] not in ("o3", "minor", "timing"):
+        raise ValueError('description requires schema="rvw.arch-core/1" and kind=o3, minor or timing')
     for key in ("config", "isa"):
         if not isinstance(d[key], str) or not d[key].strip() or d[key] != d[key].strip():
             raise ValueError(f"description.{key} must be a nonempty string without outer whitespace")
-    if not d["isa"].startswith("rv64"):
-        raise ValueError("description.isa must describe an RV64 core")
+    if (d["kind"], d["isa"]) not in (("o3", "rv64gc"), ("o3", "rv64gc_zba_zbb_zbs"),
+                                             ("minor", "rv32im"), ("timing", "rv32im")):
+        raise ValueError("unsupported CPU/ISA combination")
     for name in ("cpu", "icache", "dcache"):
+        if d["kind"] != "o3" and ((name != "cpu" and d[name] is None) or (name == "cpu" and d[name] == {})):
+            continue
         _scalars(d[name], name)
     # These select execution modes or limits owned by this runner.
     forbidden = {"numThreads", "switched_out", "checker", "max_insts_any_thread",
@@ -72,6 +79,14 @@ def validate_description(d):
     latency = d["memory_latency"]
     if type(latency) not in (int, float) or not math.isfinite(latency) or latency <= 0:
         raise ValueError("memory_latency must be a positive finite number of cycles")
+    if d["kind"] != "o3":
+        if d["queues"] != [] or d["predictor"] is not None:
+            raise ValueError("in-order models require queues=[] and predictor=null; CPU defaults apply")
+        if (d["icache"] is None) != (d["dcache"] is None):
+            raise ValueError("both caches must be null for an uncached model")
+        if "soc" in d:
+            raise ValueError("in-order SoC models are not supported")
+        return d
     if not isinstance(d["queues"], list) or not d["queues"]:
         raise ValueError("queues must be a nonempty array")
     for i, q in enumerate(d["queues"]):
@@ -203,8 +218,8 @@ def load_description(path):
         return validate_description(json.load(f, object_pairs_hook=_unique_object))
 
 
-def elf_symbols(path, xlen=64):
-    """Read an ELF32/ELF64 image. Simulation still requires RV64."""
+def elf_symbols(path, xlen=64, ram_size=RAM_SIZE):
+    """Read an ELF32/ELF64 image and check the model RAM range."""
     elf = Path(path).read_bytes()
 
     def unpack(fmt, offset):
@@ -237,7 +252,7 @@ def elf_symbols(path, xlen=64):
             typ, flags, off, va, pa, filesz, memsz, _ = unpack("<IIQQQQQQ", phoff + i * phentsize)
         if typ == 1:
             span(off, filesz)
-            if filesz > memsz or va != pa or not RAM_BASE <= pa < pa + memsz <= RAM_BASE + RAM_SIZE:
+            if filesz > memsz or va != pa or not RAM_BASE <= pa < pa + memsz <= RAM_BASE + ram_size:
                 raise ValueError("ELF load segments must fit in bare-metal RAM")
             loaded.append((pa, pa + memsz))
     # Some bare-metal linker scripts omit ELF segment permission flags.
@@ -293,31 +308,35 @@ def make_system(d, binary, syms):
     system = g.System()
     system.clk_domain = g.SrcClockDomain(clock="1GHz", voltage_domain=g.VoltageDomain())
     system.mem_mode = "timing"
-    system.mem_ranges = [g.AddrRange(RAM_BASE, size="512MiB")]
+    system.mem_ranges = [g.AddrRange(RAM_BASE, size=d.get("ram_bytes", RAM_SIZE))]
     system.cache_line_size = d["line_bytes"]
-    system.cpu = cpu = g.RiscvO3CPU(**scalar_kwargs(g.RiscvO3CPU, d["cpu"]))
-    queues = []
-    for q in d["queues"]:
-        units = []
-        for u in q["units"]:
-            if any(op not in g.OpClass.vals or op == "No_OpClass" for op in u["ops"]):
-                raise ValueError("unit ops contains an unknown or empty gem5 opclass")
-            units.append(g.FUDesc(count=u["count"], opList=[
-                g.OpDesc(opClass=op, opLat=u["latency"], pipelined=u["pipelined"])
-                for op in u["ops"]]))
-        queues.append(g.IQUnit(numEntries=q["entries"], fuPool=g.FUPool(FUList=units)))
-    cpu.instQueues = queues
-    p = d["predictor"]
-    cpu.branchPred = g.BranchPredictor(
-        conditionalBranchPred=g.LTAGE(tage=g.LTAGE_TAGE(**p["tage"]),
-                                     loop_predictor=g.LoopPredictor(**p["loop"])),
-        btb=g.SimpleBTB(**p["btb"]), ras=g.ReturnAddrStack(numEntries=p["ras_entries"]),
-        indirectBranchPred=g.SimpleIndirectPredictor())
+    cls = {"o3": g.RiscvO3CPU, "minor": g.RiscvMinorCPU,
+           "timing": g.RiscvTimingSimpleCPU}[d["kind"]]
+    system.cpu = cpu = cls(**scalar_kwargs(cls, d["cpu"]))
+    if d["kind"] == "o3":
+        queues = []
+        for q in d["queues"]:
+            units = []
+            for u in q["units"]:
+                if any(op not in g.OpClass.vals or op == "No_OpClass" for op in u["ops"]):
+                    raise ValueError("unit ops contains an unknown or empty gem5 opclass")
+                units.append(g.FUDesc(count=u["count"], opList=[
+                    g.OpDesc(opClass=op, opLat=u["latency"], pipelined=u["pipelined"])
+                    for op in u["ops"]]))
+            queues.append(g.IQUnit(numEntries=q["entries"], fuPool=g.FUPool(FUList=units)))
+        cpu.instQueues = queues
+        p = d["predictor"]
+        cpu.branchPred = g.BranchPredictor(
+            conditionalBranchPred=g.LTAGE(tage=g.LTAGE_TAGE(**p["tage"]),
+                                         loop_predictor=g.LoopPredictor(**p["loop"])),
+            btb=g.SimpleBTB(**p["btb"]), ras=g.ReturnAddrStack(numEntries=p["ras_entries"]),
+            indirectBranchPred=g.SimpleIndirectPredictor())
     cpu.mmu.itb.size = d["itlb_entries"]
     cpu.mmu.dtb.size = d["dtlb_entries"]
-    cpu.addPrivateSplitL1Caches(
-        g.Cache(**scalar_kwargs(g.Cache, d["icache"])),
-        g.Cache(**scalar_kwargs(g.Cache, d["dcache"])))
+    if d["icache"] is not None:
+        cpu.addPrivateSplitL1Caches(
+            g.Cache(**scalar_kwargs(g.Cache, d["icache"])),
+            g.Cache(**scalar_kwargs(g.Cache, d["dcache"])))
     connect_memory(system, cpu, d, g, scalar_kwargs)
     system.workload = g.RiscvBareMetal(bootloader=str(binary))
     system.membus.badaddr_responder = g.BadAddr()
@@ -328,9 +347,17 @@ def make_system(d, binary, syms):
     targets = [g.PcCountPair(syms["tohost_exit"][0], 1),
                g.PcCountPair(syms["setStats"][0], 1), g.PcCountPair(syms["setStats"][0], 2),
                g.PcCountPair(syms["setStats"][0], 3)]
+    if d["isa"].startswith("rv32"):
+        # gem5 can retain sign-extended RV32 PCs after a control transfer.
+        targets += [g.PcCountPair(syms[name][0] | 0xffffffff00000000, count)
+                    for name, count in (("tohost_exit", 1), ("setStats", 1),
+                                        ("setStats", 2), ("setStats", 3))]
     system.pc_tracker = g.PcCountTrackerManager(targets=targets)
     cpu.probeListener = g.PcCountTracker(targets=targets, core=cpu, ptmanager=system.pc_tracker)
     cpu.createThreads()
+    if d["isa"].startswith("rv32"):
+        for isa in cpu.isa:
+            isa.riscv_type = "RV32"
     return system
 
 
@@ -385,6 +412,8 @@ def run_bare(system, syms, max_ticks):
         if event.getCause() != "simpoint starting point found":
             raise ValueError(f"simulation stopped before tohost_exit: {event.getCause()}")
         pc = system.pc_tracker.getCurrentPcCountPair().get_pc()
+        if syms["setStats"][0] < 2**32:
+            pc &= 0xffffffff
         if pc == syms["setStats"][0]:
             roi_ticks.append(int(m5.curTick()))
             if len(roi_ticks) == 1:
@@ -441,7 +470,8 @@ def main():
         if not 0 < args.max_ticks < 2**64:
             raise ValueError("max-ticks must be between 1 and 2**64 - 1")
         description = load_description(args.description)
-        syms = elf_symbols(args.binary)
+        syms = elf_symbols(args.binary, xlen=32 if description["isa"].startswith("rv32") else 64,
+                           ram_size=description.get("ram_bytes", RAM_SIZE))
         system = make_system(description, args.binary, syms)
         root = Root(full_system=True, system=system)
         m5.ticks.setGlobalFrequency("1ps")

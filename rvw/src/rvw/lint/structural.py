@@ -1,13 +1,14 @@
 """Register-to-register paths. This is a structural inventory, not a proof."""
 from collections import defaultdict
 import sqlite3
+from . import depth
 
 
-UNRUN = ["cdc.protocol", "cdc.metastability", "cdc.pulse_loss", "cdc.reconvergence",
-         "cdc.async_fifo", "rdc.release", "rdc.reconvergence"]
+UNRUN = ["cdc.protocol", "cdc.metastability", "cdc.pulse_loss", "cdc.reconvergence_protocol",
+         "cdc.async_fifo_protocol", "rdc.release", "rdc.reconvergence_protocol"]
 
 
-def analyze(db):
+def analyze(db, intent=None):
     c = db.conn
     c.row_factory = sqlite3.Row
     domains = {r['id']: dict(r) for r in c.execute('SELECT * FROM clock_domains')}
@@ -27,7 +28,12 @@ def analyze(db):
     def emit(rule, src, dst, message, severity='warning'):
         findings.append(dict(rule=rule, severity=severity, source=src['path'] if src else None,
                              endpoint=dst['path'], file=dst['file'], line=dst['line'], message=message,
-                             source_file=src['file'] if src else None, source_line=src['line'] if src else None))
+                             source_file=src['file'] if src else None, source_line=src['line'] if src else None,
+                             source_domain=domains.get(src['clock_domain_id']) if src else None,
+                             destination_domain=domains.get(dst['clock_domain_id']),
+                             source_width=src['width'] if src else None, destination_width=dst['width']))
+
+        return findings[-1]
 
     def clock(d):
         return (d.get('clock_key'), d.get('clock_edge'))
@@ -104,7 +110,7 @@ def analyze(db):
                 next_regs = outgoing[dst_id]
                 chain = (src['width'] == dst['width'] == 1 and incoming[dst_id] == {src_id}
                          and len(next_regs) == 1 and all(n in regs and
-                         regs[n]['clock_domain_id'] == dst['clock_domain_id'] and
+                         regs[n]['clock_domain_id'] == dst['clock_domain_id'] and regs[n]['width'] == 1 and
                          incoming[n] == {dst_id} for n in next_regs))
                 kind = 'sync_candidate' if chain else ('multi_bit' if max(src['width'], dst['width']) > 1 else 'unsynchronized')
                 crossings.append(dict(source=src['path'], destination=dst['path'], kind=kind,
@@ -113,6 +119,8 @@ def analyze(db):
                 emit('cdc.' + kind, src, dst,
                      'Structural synchronizer candidate; protocol unproved.' if chain else
                      'Crossing needs synchronization or a verified gray/handshake protocol.')
+    details = depth.analyze(c, regs, signals, domains, incoming, outgoing, crossings,
+                            reset_crossings, emit, {} if intent is None else intent)
     warnings = [dict(r) for r in c.execute('SELECT * FROM warnings')]
     unknown_inputs = [s['path'] for s in signals.values() if s['direction'] == 'in' and not s['clock_role']]
     limitations = ['Primary input domains are not inferred.', 'Clock relationships between different keys are unknown.',
@@ -121,7 +129,7 @@ def analyze(db):
         limitations.append('Incomplete structural evidence: blackbox edges, extractor warnings or no registers.')
     return dict(status='inconclusive', scope='register-boundary structural inventory',
                 registers=len(regs), domains=list(domains.values()), clock_count=len({clock(domains[i]) for i in used if i in domains}),
-                crossings=crossings, reset_crossings=reset_crossings, reset_trees=reset_trees,
+                depth=details, crossings=crossings, reset_crossings=reset_crossings, reset_trees=reset_trees,
                 findings=findings, extractor_warnings=warnings,
                 unclassified_inputs=unknown_inputs, limitations=limitations,
                 rules=[{'id': rule, 'status': 'not_run'} for rule in UNRUN],

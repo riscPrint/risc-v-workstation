@@ -15,12 +15,16 @@ object RiscvSimConfig {
     scala.util.Try(Process(Seq("verilator", "-V")).!!).getOrElse("")
   }
 
-  private[riscvsim] def fsmSupported(version: String): Boolean = {
+  private def checkedCoverageVersion(version: String): Boolean = {
     val pattern = "Verilator ([0-9]+)\\.([0-9]+)".r
     pattern.findFirstMatchIn(version).exists { m =>
       m.group(1).toInt > 5 || (m.group(1).toInt == 5 && m.group(2).toInt >= 52)
     }
   }
+
+  private[riscvsim] def fsmSupported(version: String): Boolean = checkedCoverageVersion(version)
+  private[riscvsim] def perInstanceSupported(version: String): Boolean = checkedCoverageVersion(version)
+  def perInstanceCoverage: Boolean = perInstanceSupported(verilatorVersion)
 
   /** FSM detection was checked on 5.052; 5.049 crashes on an empty reset branch. */
   def coverageTypes: Seq[String] = {
@@ -106,6 +110,7 @@ object RiscvSimConfig {
     if (key.coverage) {
       // Select explicit kinds through the version gate. -DCOVERAGE enables the wrapper writer.
       cfg.addSimulatorFlag("-CFLAGS -DCOVERAGE")
+      if (perInstanceCoverage) cfg.addSimulatorFlag("--coverage-per-instance")
       for (t <- coverageTypes) cfg.addSimulatorFlag(s"--coverage-$t")
     }
     cfg

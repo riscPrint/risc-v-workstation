@@ -146,3 +146,6 @@ Retained limit: The documented release scan and local MCP boundaries remain unch
 Setup: use [`rvw doctor`](src/rvw/doctor/README.md) for tool, project and adapter checks. Installation requires `--install FEATURES`.
 
 New Spinal/sbt core: use [`rvw init`](src/rvw/init/README.md) to create a valid project and safe adapter stubs.
+
+See the complete [CLI and MCP reference](../docs/COMMAND_REFERENCE.md) for command paths,
+options and built-in tool arguments. The reference is checked against the code.

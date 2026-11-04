@@ -282,7 +282,10 @@ Run its tests with the `sbt` lock:
 `TwoHartNativeSpec` runs two small RV32I-subset RTL fixtures through Verilator.
 They share two words with round-robin backpressure. The producer writes 37.
 The consumer polls it and writes 38. Each hart emits its own retirement order.
-These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings.
+The original test uses x0/x1 and ADDI/LW/SW/BEQ encodings.
+The shared fixture now also supports programmable word-atomic tests.
+See [the ordering suite](tests/ordering/README.md#bounded-two-hart-rtl-fixture)
+for concurrent observers, pinned herd comparison and injected faults.
 They have no caches and are not full RISC-V cores. The test checks a known shared
 memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
 Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
@@ -419,14 +422,29 @@ another request. JVM exit stops abandoned simulation threads. The launcher owns
 process-group teardown. There is no per-request cancellation that keeps the
 server alive. The server holds the adapter's core lock for its full life.
 
+For a manifest, use `run.sh run-many --persistent --jobs 1 --manifest jobs.jsonl`.
+This calls the same serial server path. It records `execution_mode: "server"`.
+It validates all output paths before starting. An abandoned worker stops the
+batch. Later jobs have no result and the command exits 2.
+
+In regression TOML, set `[core] persistent = true` to select this path.
+The runner selects one worker, including when `--jobs` is set. It skips the
+separate `build` process. The server compiles each model once in the batch.
+This avoids the extra elaboration in `build` followed by `run-many`.
+The runner adds the skipped pre-build budget to the first-result startup budget.
+Defaults stay unchanged. This option requires an adapter with `--persistent`
+support and a fresh-instance declaration. It does not retain a JVM across
+separate regression commands or suites.
+
 ## Timing measurements
 
 `details.model_compile_s` measures the first model build in this JVM, including
 elaboration and native setup. `details.model_timing.elaboration_s` measures
 `RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
 It includes native compilation or cache lookup, workspace setup and loading.
-It is not a pure C++ compiler measurement. `details.execution_s` measures the
-adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+It is not a pure C++ compiler measurement. `details.execution_s` measures elapsed time after model readiness through result
+preparation. It includes the adapter call, native-output draining and artifact
+handling. It is not isolated adapter execution time. The launcher's sbt Scala compilation occurs before the JVM and
 must be timed separately. Lock waits are not compiler time.
 
 Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example
@@ -466,3 +484,73 @@ With `--rvfi-trace`, BOOM also records `mmu-observations.jsonl`, named by
 request and response signals and accepted physical TileLink A handshakes.
 It changes no core source. See the [MMU format](../rvw/src/rvw/regress/README.md#privilege-controls-and-observation-reports).
 Capture presence and event counts are observations, not protocol or PMA verdicts.
+
+## Firmware and Linux payload loading
+
+`--elf-load-bias BYTES` adds a nonnegative decimal byte offset to ET_DYN
+load addresses, entry and defined symbols. The default is zero. Use this only
+for firmware that relocates itself, such as OpenSBI. The loader does not apply
+ELF relocations or run a dynamic linker. It rejects ET_REL, PT_INTERP and a
+nonzero bias for ET_EXEC. An ET_DYN file is not proof that it can relocate itself.
+The adapter still owns reset PC and register state. Loading does not set them.
+
+BOOM accepts `--boot-payloads loads.json` to load raw kernel, DTB and initramfs
+bytes beside the firmware ELF. Other adapters must declare
+`supportsBootPayloads` and call `ctx.loadMemory` before they can accept this
+option. Paths below are relative to the manifest. Addresses and sizes are
+strings. Use decimal or `0x` notation.
+
+```json
+{
+  "schema": "rvw.boot-payloads/1",
+  "ram": [{"base": "0x80000000", "size": "0x08000000"}],
+  "payloads": [
+    {"file": "Image", "address": "0x80200000"},
+    {"file": "platform.dtb", "address": "0x87e00000"},
+    {"file": "rootfs.cpio.gz", "address": "0x86000000"}
+  ]
+}
+```
+
+The driver captures all bytes before model compilation. `BootImage` rejects
+out-of-RAM loads, overflow and overlap, including ELF BSS. It zero-fills BSS.
+C1 `details.boot_payloads` records each captured file hash.
+`details.boot_loads` records the effective addresses and memory sizes.
+The manifest's RAM declaration is a placement check. The adapter must expose
+that RAM. It does not change the RTL memory map.
+
+This is a memory loader. BOOM still requires a `tohost` symbol and its existing
+reset state. It has no Linux UART/PLIC adapter. See the project-owned
+[Linux adapter plan](../examples/qemu-linux/rtl-adapter-plan.json).
+No RTL Linux boot support follows from successful payload loading.
+
+## Generated SoC maps
+
+`run` and `run-many` accept `--soc-map PATH` (`soc_map` in manifests).
+See the [SoC guide](../rvw/src/rvw/soc/README.md#runtime-maps-and-live-capture)
+for region checks, device placement, captured bus requests and limits.
+
+### RTL coverage tags
+
+`riscvsim.RtlCoverage.tag(signal, Bin(...))` attaches a native Spinal tag.
+A bin declares its ID, kind, domain, values, Scala source, and type name.
+Kinds are `event`, `occupancy`, `state`, `transition`, and `arbitration`.
+Domains are `committed`, `speculative`, and `structural`. A transition also
+declares its `from` values. Multiple tags can describe one signal.
+
+After emission, call `RtlCoverage.plan(report, designIdentity, clock, reset)`.
+Write it with `RtlCoverage.write(plan, file)`. The result is `rvw.rtl-plan/1`.
+The exporter prefixes IDs with exact instance paths. The sampler binds them to
+the complete plan hash. Use a stable design revision or RTL hash as the design
+identity. Tagged values use exact JSON integers with at most 52 signal bits.
+Duplicate IDs, conflicting metadata and pruned signals fail export.
+
+The exporter records annotations. It does not collect simulator samples.
+An adapter must sample every declared signal before each rising edge and write
+`rvw.rtl-samples/1`. See the coverage README. Unobserved bins do not become
+unreachable. Native code coverage builds use `--coverage-per-instance` with Verilator 5.052
+or newer. Older or unknown tools keep collapsed coverage.
+
+The make wrapper checks the generated compiler metadata before it enables the
+per-instance writer. It leaves shared-counter models under the native collapse
+rule. Forcing a writer cannot recover instance observations from shared counters.

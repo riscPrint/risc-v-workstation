@@ -246,9 +246,14 @@ def module_ports(verilog_files: list[Path], top: str, out: Path,
     """
     need("yosys")
     out.mkdir(parents=True, exist_ok=True)
-    clear_outputs(out, "module_ports.json", "module_ports.ys", "module_ports.log", "module_ports.il", "module_ports.d")
+    clear_outputs(out, "module_ports.json", "module_ports.ys", "module_ports.log", "module_ports.il", "module_ports.d", "slang.d")
     d = " ".join(f"-D{x}" for x in defines)
     reads = "\n".join(f"read_verilog -formal -sv {d} {check_path('--verilog', f)}" for f in verilog_files)
+    if snapshot.frontend == 'slang':
+        plugin = snapshot.tools.slang
+        files = ' '.join(str(check_path('--verilog', f)) for f in verilog_files)
+        reads = (f'plugin -i {plugin}\nread_slang --top {top} {d} '
+                 f'--all-deps {out / "slang.d"} {files}')
     check_ident("--top", top)
     (out / "module_ports.ys").write_text(
         f"{reads}\nhierarchy -check -top {top}\nproc\nwrite_json -noscopeinfo {out / 'module_ports.json'}\n"

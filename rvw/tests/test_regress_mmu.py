@@ -136,6 +136,7 @@ def test_check_requires_complete_strict_match(tmp_path, monkeypatch, comparison,
     (run / 'result.json').write_text(json.dumps(result))
     def execute(command, **kwargs):
         assert '--strict' in command and '--model' in command
+        assert '--core' in command and command[command.index('--core') + 1] == 'reference'
         return SimpleNamespace(stdout=json.dumps(comparison), returncode=0, timed_out=False)
     monkeypatch.setattr(mmu, 'run_group', execute)
     assert mmu.check(tmp_path, tmp_path, tmp_path/'platform.json', 'sail', 1)['status'] == status
