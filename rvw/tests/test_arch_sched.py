@@ -188,3 +188,10 @@ def test_measure_orchestration_with_synthetic_tools(tmp_path, monkeypatch):
     assert report['model_kind'] == 'builtin-baseline'
     assert len(report['samples']) == 8 and len(report['classes']) == 4
     assert all(row['error_percent'] == -50 for row in report['classes'])
+
+
+def test_trace_refuses_memory_fault():
+    raw, header, records, words = fixture_trace()
+    records[2]['mem_fault'] = True
+    with pytest.raises(ValueError):
+        sched.trace_span(raw, header, records, 4096, words, 'rv32im', 'a'*64)

@@ -157,7 +157,7 @@ def trace_span(raw, header, records, start, words, config, elf_hash):
             if r['event'] in ('trap', 'end') and r is not records[-1]:
                 raise ValueError('trap or early end in trace')
             continue
-        if r.get('order') != order or any(r.get(k) for k in ('trap', 'intr', 'halt')):
+        if r.get('order') != order or any(r.get(k) for k in ('trap', 'intr', 'halt', 'mem_fault')):
             raise ValueError('incomplete or trapped retirement trace')
         order += 1
         pc = int(r['pc'], 16)
