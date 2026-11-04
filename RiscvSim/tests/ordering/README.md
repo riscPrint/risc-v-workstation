@@ -83,8 +83,9 @@ values and order. RAM loads check local visibility. No device accesses occur.
 This exercises encodings; it does not check the ordering of device accesses.
 
 `observer.py PLAN.json OBSERVATION.json` checks required edges from a test plan.
-The project must supply an independent bus or device monitor. No current adapter
-supplies this monitor. Do not use retirement records as its input.
+The project must supply an independent bus or device monitor. The BOOM adapter
+supplies an external TileLink capture. See the bus checker below. Do not use
+retirement records as monitor input.
 
 A plan declares `boundary` (a platform-defined string) and `edges`, for example
 `{"boundary":"device-visible","edges":[["write","read"]]}`.
@@ -195,7 +196,8 @@ fixture permission transitions. They are not accepted TileLink-C channel events.
 There are no caches, resource dependency graphs or full RISC-V implementations.
 The separate `CoherentCacheNativeSpec` checks real cache writeback and accepted
 TileLink channel backpressure. See the RiscvSim README. Cyclic resource waits
-and independent fairness measurement remain outside these checks under #128.
+remain outside these checks under #128. The fixture measures bounded enable
+and grant fairness with `FairnessMonitor`.
 
 Fault controls omit reservation invalidation, expose a partial AMO write, corrupt
 an AMO return, retain a conflicting permission, omit dirty transfer, starve one
