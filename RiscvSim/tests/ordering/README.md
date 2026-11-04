@@ -193,8 +193,9 @@ The fixture has per-word N/B/T permissions. Tests connect observed changes to
 racing requests under port backpressure and explicit final eviction. These are
 fixture permission transitions. They are not accepted TileLink-C channel events.
 There are no caches, resource dependency graphs or full RISC-V implementations.
-Real cache writeback, channel backpressure, cyclic resource waits and independent
-fairness measurement remain open under #108 and #128.
+The separate `CoherentCacheNativeSpec` checks real cache writeback and accepted
+TileLink channel backpressure. See the RiscvSim README. Cyclic resource waits
+and independent fairness measurement remain outside these checks under #128.
 
 Fault controls omit reservation invalidation, expose a partial AMO write, corrupt
 an AMO return, retain a conflicting permission, omit dirty transfer, starve one

@@ -604,3 +604,39 @@ beside C2 hart retirement order. This fixture check does not add a full ISA
 reference or production multi-image adapter. Use herd or another memory-model
 checker for weak-memory outcomes. Do not impose this serialized model on a
 boundary that permits other legal interleavings.
+
+### Native coherent cache checks
+
+`CoherentCacheNativeSpec` runs SpinalHDL's `CacheFiber` writeback cache in native
+Verilator. The cache has one way, 1024 bytes and 64-byte lines. Two simulated
+TileLink coherent clients share its 64-bit port. The clients are test agents,
+not CPU implementations.
+
+Spinal's TileLink monitors aggregate accepted A/C/D beats. The test connects
+completed permission changes to `CoherenceMonitor`. It compares response,
+intervention and writeback bytes with a separate stimulus-owned `MemoryImage`.
+It initializes both reference and backing RAM from the same input bytes.
+Expected data never comes from DUT reads.
+
+The directed test dirties a client line and requests shared ownership from the
+other client. It releases both clients, then overlaps two exclusive requests.
+It holds D acceptance for 80 cycles and requires both A requests to be accepted
+before release. Random channel stalls add backpressure. A same-set alias must
+evict dirty cache data that has not yet reached backing RAM. The test requires
+an observed writeback and checks final backing bytes. Missing interventions,
+releases, writebacks, stalls or request overlap fail the test.
+
+A second run corrupts an untouched backing byte while retaining the correct
+reference image. It must fail with `cache response byte mismatch`. The wrapper
+checks `TilelinkTester.checkErrors()` because that helper records simulation
+exceptions instead of immediately throwing them.
+
+Run with the `sbt` lock:
+
+```sh
+(cd RiscvSim && ../scripts/with-lock.sh sbt nice -n 10 sbt -batch \
+  -J-XX:ActiveProcessorCount=2 'testOnly riscvsim.CoherentCacheNativeSpec')
+```
+
+These are bounded cache-module checks for the declared configuration and seed.
+They are not a proof of all interleavings or coherence in a CPU integration.
