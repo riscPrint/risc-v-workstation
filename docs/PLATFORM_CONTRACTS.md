@@ -1832,3 +1832,13 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 `protocol_evidence` retains these keys and the selected memory/port records in
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
+
+### SVA frontend selection
+
+`rvw.formal/1` results can add `frontend`, with value `verilog` or `slang`.
+Absent means the default Verilog frontend. `slang` selects the restricted native
+SVA subset for single-clock BMC. It preserves the existing bounded status and
+reachability rules. It does not establish an unbounded proof or gate acceptance.
+The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
+report must stay within the copied inputs. See
+[the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).

@@ -85,6 +85,28 @@ Native builds and relocated native checks must run in GitHub Actions. Local
 fixture tests cover packing, checksums, pin checks and installation paths. They
 do not establish that these native builds pass on the three hosts.
 
+## Native yosys-slang
+
+`install.sh --with-formal` builds yosys-slang against the selected `yosys-config`.
+It sets `RVW_SLANG` in `env.sh`. An explicit `RVW_SLANG` selects an existing plugin.
+The build needs Python 3.11.8+, CMake, make and a C++20 compiler. It uses two jobs.
+`scripts/yosys-slang-sources.json` pins the frontend, slang, fmt and regex archives
+by commit and SHA-256. CMake network fetching is disabled. A checksum error stops
+before compilation. The helper extracts fresh sources on each build.
+
+The frontend is now named [sv-elab](https://github.com/povik/sv-elab).
+The local build adds one call to `driver.optionallyWriteDepFiles()` after parsing.
+The pinned upstream entry point accepts `--all-deps` but does not call it.
+This patch lets `rvw formal` check the frontend's file closure. It adds no SVA lowering.
+Run a separate build with:
+
+```sh
+python3 scripts/build-yosys-slang.py --prefix /absolute/native-prefix \
+  --yosys-config /absolute/oss-cad-suite/bin/yosys-config
+```
+
+This is a native source build. Existing formal bundles do not contain this plugin.
+
 ## Local checks
 
 `ci-local.sh` runs the same fast checks as the macOS self-hosted CI job.

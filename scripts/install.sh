@@ -12,7 +12,7 @@ Usage: scripts/install.sh [OPTIONS]
   --with-sim         JDK 21, sbt 1.10.7+, Verilator 5+, make and C++ compiler.
   --with-riscv-gcc   Bare-metal RISC-V GCC and binutils.
   --with-cosim       Spike headers/libraries and the workstation shim.
-  --with-formal      OSS CAD Suite: Yosys, SymbiYosys and Yices.
+  --with-formal      OSS CAD Suite plus a pinned native yosys-slang build.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
   --with-lint        Pinned native Verible syntax and style lint.
   --with-sail        Pinned Sail model (bundle mode only).
@@ -96,6 +96,7 @@ if [ -x "$tools/gem5/bin/gem5.opt" ] && [ "$gem5_external" = 0 ]; then RVW_GEM5=
 if [ -d "$tools/verilator" ]; then export VERILATOR_ROOT="$tools/verilator/share/verilator"; fi
 if [ -x "$tools/sail/bin/sail_riscv_sim" ]; then export RVW_SAIL="$tools/sail/bin/sail_riscv_sim"; fi
 export RVW_GEM5
+export RVW_SLANG="${RVW_SLANG:-$tools/lib/slang.so}"
 export PATH="$tools/verible/bin:$tools/verilator/bin:$tools/sail/bin:$PATH"
 export PATH="$rvw_home/rvw/.venv/bin:$tools/bin:$tools/oss-cad-suite/bin:$PATH:$HOME/.local/bin"
 # Reuse installer-managed tools on a second run without sourcing env.sh first.
@@ -300,6 +301,9 @@ PYTHON
     probe Yosys 0.46 yosys -V || failed=1
     probe SymbiYosys 0 sby --version || failed=1
     probe Yices 2 yices-smt2 --version || failed=1
+    if [ ! -f "$RVW_SLANG" ] || ! yosys -Q -T -m "$RVW_SLANG" -p 'help read_slang' >/dev/null 2>&1; then
+      printf 'MISSING native yosys-slang: %s\n' "$RVW_SLANG"; failed=1
+    else printf 'PRESENT native yosys-slang: %s\n' "$RVW_SLANG"; fi
     if command -v yosys >/dev/null && yosys -Q -T -p 'help xprop' 2>&1 | grep -q 'No such command'; then
       printf 'MISSING Yosys xprop support\n'; failed=1
     fi
@@ -534,6 +538,13 @@ if [ "$formal" = 1 ]; then
     verify_archive "$tools/downloads/oss-cad-suite.tgz" "$checksum"
     run tar -xzf "$tools/downloads/oss-cad-suite.tgz" -C "$tools"
   fi
+  if [ ! -f "$RVW_SLANG" ] || ! yosys -Q -T -m "$RVW_SLANG" -p 'help read_slang' >/dev/null 2>&1; then
+    command -v cmake >/dev/null || packages cmake
+    command -v make >/dev/null || packages make
+    command -v c++ >/dev/null || fail 'Install a C++20 compiler, then retry --with-formal'
+    run "$RVW_PYTHON" "$rvw_home/scripts/build-yosys-slang.py" --prefix "$tools" --yosys-config "$(command -v yosys-config || printf yosys-config)"
+    export RVW_SLANG="$tools/lib/slang.so"
+  fi
 fi
 if [ "$gem5" = 1 ] && [ "$gem5_external" = 0 ] && ! gem5_check; then
   # Match Python headers and python-config to the interpreter used by SCons.
@@ -605,6 +616,7 @@ if [ "$dry" = 0 ]; then
     fi
     if [ -n "${VERILATOR_ROOT:-}" ]; then printf 'export VERILATOR_ROOT=%q\n' "$VERILATOR_ROOT"; fi
     if [ -n "${RVW_SAIL:-}" ]; then printf 'export RVW_SAIL=%q\n' "$RVW_SAIL"; fi
+    if [ "$formal" = 1 ]; then printf 'export RVW_SLANG=%q\n' "$RVW_SLANG"; fi
     printf 'export PATH="$RVW_HOME/.tools/verible/bin:$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'
     printf 'export SPIKE_PREFIX=%q\nexport PATH="$SPIKE_PREFIX/bin:$PATH"\n' "$SPIKE_PREFIX"
     printf 'export PATH="$RVW_HOME/rvw/.venv/bin:$RVW_HOME/.tools/bin:$RVW_HOME/.tools/oss-cad-suite/bin:$RVW_HOME/.tools/riscv/bin:$PATH"\n'
