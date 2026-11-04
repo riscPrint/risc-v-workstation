@@ -97,3 +97,9 @@ establish coverage compatibility or verification closure.
 
 Collection checks explicitly requested `max_cycles` and `mem_latency` in each C1 result.
 Missing or different values make collection inconclusive.
+
+
+The dashboard also plots recorded C3 `sim_khz` and
+`sim_instructions_per_s` per core, suite and preset. Missing values stay absent.
+The denominator includes adapter execution and artifact handling. It excludes
+model setup. These plots do not establish equivalent results or speedups.

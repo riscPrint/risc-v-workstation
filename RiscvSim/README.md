@@ -640,3 +640,22 @@ Run with the `sbt` lock:
 
 These are bounded cache-module checks for the declared configuration and seed.
 They are not a proof of all interleavings or coherence in a CPU integration.
+
+
+## Online co-simulation
+
+`rvw cosim live` can launch a C1 adapter and check its C2 file during the run.
+See [the cosim launch command](../Cosim/README.md#launch-a-simulator-with-online-checking).
+The launcher sets `RVW_RVFI_FLUSH=1`. `RvfiTraceWriter` then flushes its header,
+retirement records and events before returning. The default stays buffered.
+This option changes output delivery. It does not add C2 v2 state observations.
+The writer constructor also accepts `flushEachRecord` for adapter tests.
+
+## Simulation speed metrics
+
+C1 records `metrics.sim_khz` and `metrics.sim_instructions_per_s` from the
+unrounded `details.execution_s`. Model setup is excluded. Adapter execution,
+trace writes and artifact handling are included. The dashboard plots recorded
+C3 rates per preset. These rates do not prove correctness. Use long workloads,
+fixed seed and memory latency, and serial runs. Keep tracing options equal.
+See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.
