@@ -1881,3 +1881,13 @@ The direct RiscvSim shell launch checks `RISCVSIM_REQUIRES`, a comma-separated
 feature list, before it creates temporary launch state. This profile describes
 the Spinal native interface, not the cocotb Verilator invocation. Coverage flags
 retain their existing version checks and do not imply a coverage guarantee.
+
+### Sampled reset checks
+
+Optional project bindings can emit `rdc.assertion`, `rdc.release`,
+`rdc.unknown_control`, `rdc.release_order`, `rdc.isolation` and
+`rdc.reconvergence_protocol` monitor findings. Each binding uses an independent
+observation clock and normalized control levels. These findings do not discharge
+the structural lint report's unrun release or reconvergence proofs. Missing
+bindings provide no reset protocol evidence. Between-sample pulses and physical
+timing are outside this sampled contract.

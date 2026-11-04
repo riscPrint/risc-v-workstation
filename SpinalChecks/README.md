@@ -637,3 +637,21 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+### Sampled reset protocol bindings
+
+`ResetChecks.bind` takes independent reset request, normalized reset level,
+destination-edge and controls-known observations. Bind it in a separate
+observation clock domain. It checks sampled assertion, a minimum number of
+settling edges, and release only on a destination edge. The settling count
+uses edges completed before the release sample. `order` checks a declared
+source-before-destination release relation. `crossing` checks isolation while
+an independently reset source feeds an active consumer. `reconvergence` checks
+isolation when two reset states differ. Unknown controls produce a finding.
+
+These are executable project bindings. They do not infer a reset synchronizer
+from a graph. The project must supply the independent observations and control
+validity. Two-state simulation cannot discover X values by itself. A pulse
+between observation samples can be missed. Physical asynchronous assertion,
+recovery/removal, metastability, static synchronous-release recognition and
+functional reconvergence proof remain open. Structural lint findings stay active.
