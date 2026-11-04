@@ -31,8 +31,15 @@ can take different SC branches. The program checks each branch's required effect
 
 These single-hart ELF tests do not check external reservation invalidation or
 independent memory observation. The fixture below adds those bounded checks.
-Constrained-loop eventual progress remains untested. A finite cycle limit cannot
-establish eventuality without environment and fairness assumptions.
+The fixture also runs a constrained LR/SC retry loop with no conflicting writer.
+It has LR, SC and a backward BNE within 16 consecutive instructions. The retry
+path has no other memory access, fence or system instruction. Test mode 10
+permits three legal spurious failures, then services SC. Each hart has a port
+slot every eight cycles and the environment enables it within three cycles.
+The independent memory observer checks that failed SC has no write effect.
+Mode 11 never services SC successfully. The test must reject that mode at the
+fourth failed attempt. This is a bounded service test under explicit fixture
+conditions. It does not prove general ISA eventuality or production-core progress.
 
 ## Decisions and limits
 

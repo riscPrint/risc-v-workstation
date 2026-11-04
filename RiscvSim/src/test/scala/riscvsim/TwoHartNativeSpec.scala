@@ -60,7 +60,11 @@ class FixtureHart(program: Seq[Long], programmable: Boolean = false) extends Com
       is(B(0x03, 7 bits), B(0x2f, 7 bits)) {
         when(insn(11 downto 7) =/= 0) { regs(insn(11 downto 7).asUInt) := io.rdata }
       }
-      is(B(0x63, 7 bits)) { when(x1 === 0) { pc := pc - 4 } }
+      is(B(0x63, 7 bits)) {
+        val offset = (insn(31) ## insn(7) ## insn(30 downto 25) ## insn(11 downto 8) ## B"0").asSInt.resize(32).asUInt
+        val equal = rs1 === rs2
+        when(Mux(insn(12), !equal, equal)) { pc := pc + offset }
+      }
     }
   }
 }
