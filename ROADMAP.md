@@ -94,7 +94,7 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | SpyGlass, Questa CDC / Lint | Lint and CDC | `rvw lint` (Verilator, Verible, SpinalDB structural CDC/RDC) | first increment | No protocol proof, metastability analysis or signoff. Structural results remain findings or inconclusive. |
 | Palladium, Protium, ZeBu | Emulation and prototyping | none | none | Phase 3. |
 | Arm Fast Models, Platform Architect | Virtual platforms, architecture exploration | `rvw arch` (native gem5, calibrated against the RTL), Spike, `rvw perf` | exploring | RV64 O3 and RV32IM Minor/TimingSimple; C1 ROI comparison and held-out event fitting. Next: repeated measurements and broader counter mappings. |
-| (no commercial equivalent) | Agent interface over the whole flow | `rvw mcp`: 62 built-in MCP tools (see [reference](docs/COMMAND_REFERENCE.md)), background jobs, cancel | usable | — |
+| (no commercial equivalent) | Agent interface over the whole flow | `rvw mcp`: 64 built-in MCP tools (see [reference](docs/COMMAND_REFERENCE.md)), background jobs, cancel | usable | — |
 
 Summary: for the daily loop an agent needs (run, judge, compare with a reference, triage, query the
 design, measure coverage, simple formal checks) the open tools are usable today. Deep formal (FV 1–4),

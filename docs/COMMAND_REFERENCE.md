@@ -140,13 +140,13 @@ usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-               {merge,report,rank,select,isa-diff,isa-check,functional,rtl,prove,mutate} ...
+               {merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate} ...
 ```
 
 ### `rvw cov merge`
 
 ```text
-usage: rvw cov merge [-h] [--source-root SOURCE_ROOT]
+usage: rvw cov merge [-h] [--source-root SOURCE_ROOT] [--design-db DESIGN_DB]
                      [--scala-root SCALA_ROOT] [--revision REVISION]
                      [--source-map SOURCE_MAP] [--hgldd HGLDD] [--dat DAT]
                      [--json] [--out OUT] [--project PROJECT]
@@ -174,6 +174,14 @@ usage: rvw cov rank [-h] [--exact] [--json] [--out OUT] [--project PROJECT]
 usage: rvw cov select [-h] --diff DIFF [--repo REPO] [--json] [--out OUT]
                       [--project PROJECT]
                       database
+```
+
+### `rvw cov closure`
+
+```text
+usage: rvw cov closure [-h] --candidates CANDIDATES [--exclusions EXCLUSIONS]
+                       [--json] [--out OUT] [--project PROJECT]
+                       database
 ```
 
 ### `rvw cov isa-diff`
@@ -240,7 +248,7 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 ### `rvw farm`
 
 ```text
-usage: rvw farm [-h] [--project PROJECT] {run,dashboard} ...
+usage: rvw farm [-h] [--project PROJECT] {run,cancel,dashboard} ...
 ```
 
 ### `rvw farm run`
@@ -250,6 +258,12 @@ usage: rvw farm run [-h] --hosts HOSTS --manifest MANIFEST --adapter ADAPTER
                     --identity-command IDENTITY_COMMAND --identity IDENTITY
                     --out OUT [--jobs JOBS] [--timeout TIMEOUT]
                     [--project PROJECT]
+```
+
+### `rvw farm cancel`
+
+```text
+usage: rvw farm cancel [-h] --out OUT [--project PROJECT]
 ```
 
 ### `rvw farm dashboard`
@@ -340,7 +354,8 @@ usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
                       [--clock CLOCK] [--reset RESET]
                       [--reset-active {high,low}] [--checks CHECKS]
                       [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT]
-                      --out OUT [--json] [--tie PORT=VALUE] [--cut CUT]
+                      --out OUT [--json] [--tie PORT=VALUE]
+                      [--frontend {verilog,slang}] [--cut CUT]
                       [--event-clock PORT] [--event-model] [--async-reset]
                       [--reset-cycles RESET_CYCLES] [--free-reset]
                       [--first-failure] [--project PROJECT]
@@ -717,13 +732,30 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 ### `rvw soc`
 
 ```text
-usage: rvw soc [-h] [--project PROJECT] {generate,check} ...
+usage: rvw soc [-h] [--project PROJECT]
+               {generate,import-ipxact,capture-check,check} ...
 ```
 
 ### `rvw soc generate`
 
 ```text
 usage: rvw soc generate [-h] --out OUT [--json] [--project PROJECT] map
+```
+
+### `rvw soc import-ipxact`
+
+```text
+usage: rvw soc import-ipxact [-h] --template TEMPLATE --out OUT [--json]
+                             [--project PROJECT]
+                             source
+```
+
+### `rvw soc capture-check`
+
+```text
+usage: rvw soc capture-check [-h] --capture CAPTURE --result RESULT [--json]
+                             [--project PROJECT]
+                             map
 ```
 
 ### `rvw soc check`
@@ -792,7 +824,7 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ## MCP tools
 
-The default server exposes 62 built-in tools, including the four job tools.
+The default server exposes 64 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -895,6 +927,14 @@ Arguments: `project`, `elf` (required), `core`, `platform`, `out` (required), `m
 
 Starts a background job: yes.
 
+### `cov_closure`
+
+List unhit bins with project-declared candidate tests. Suggestions are not hits.
+
+Arguments: `database` (required), `candidates` (required), `exclusions`, `out`.
+
+Starts a background job: yes.
+
 ### `cov_functional`
 
 Report RVFI functional coverage bins and holes from C2 traces or saved functional reports. Use config for a declarative coverage plan; large traces run as a job.
@@ -907,7 +947,7 @@ Starts a background job: yes.
 
 Merge per-test coverage.dat or C1/C3 results into a coverage database before reporting/ranking. Retains source attribution and rejects incompatible point universes; large inputs run as a job.
 
-Arguments: `inputs` (required), `source_root`, `scala_root`, `revision`, `source_map`, `hgldd`, `dat`, `out`.
+Arguments: `inputs` (required), `source_root`, `scala_root`, `revision`, `source_map`, `design_db`, `hgldd`, `dat`, `out`.
 
 Starts a background job: yes.
 
@@ -956,6 +996,14 @@ Starts a background job: yes.
 Select regression tests covering Scala changes in BASE..HEAD. Uses BASE-side mappings and falls back to all tests when coverage cannot justify omissions. Runs as a job.
 
 Arguments: `database` (required), `diff` (required), `repo`.
+
+Starts a background job: yes.
+
+### `farm_cancel`
+
+Cancel shards and confirm host process-group cleanup.
+
+Arguments: `out` (required).
 
 Starts a background job: yes.
 
