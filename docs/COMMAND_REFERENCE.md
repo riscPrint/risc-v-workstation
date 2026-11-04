@@ -22,8 +22,23 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch sched-generate`
+
+```text
+usage: rvw arch sched-generate [-h] --out OUT [--json] [--project PROJECT]
+    description_path
+```
+
+### `rvw arch sched-measure`
+
+```text
+usage: rvw arch sched-measure [-h] --out OUT [--json] [--count COUNT]
+    [--timeout TIMEOUT] [--cc CC] [--mca MCA] [--project PROJECT]
+    description_path
 ```
 
 ### `rvw arch search`

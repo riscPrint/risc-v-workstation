@@ -540,6 +540,10 @@ Native VexRiscv fitting still needs independently checked ROI event mappings.
 Description tests and synthetic subprocess tests do not establish native model
 fidelity. No BOOM fitted parameters belong in this repository.
 
+## Compiler scheduling models
+
+See [compiler scheduling models](SCHED_MODELS.md) for partial LLVM/GCC generation
+and bounded RTL instruction-stream measurements with built-in llvm-mca baselines.
 ## RISC-V decoupled front end
 
 The pinned gem5 already contains BAC and FTQ. Select them in project-owned
