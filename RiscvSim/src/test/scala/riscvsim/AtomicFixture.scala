@@ -21,6 +21,7 @@ class AtomicFixture extends Component {
   val permissions = Vec(Reg(UInt(2 bits)) init 0, 4)
   val reserved = Vec(Reg(Bool()) init False, 2)
   val reservation = Vec(Reg(UInt(1 bits)) init 0, 2)
+  val scFailures = Vec(Reg(UInt(2 bits)) init 0, 2)
   val phase = Reg(UInt(3 bits)) init 0
   phase := phase + 1
   io.memory := memory; io.permissions := permissions
@@ -36,7 +37,10 @@ class AtomicFixture extends Component {
     val op = h.io.operation
     val sc = h.io.atomic && op === 3
     val lr = h.io.atomic && op === 2
-    val success = reserved(id) && reservation(id) === word
+    // Mode 10 models three legal spurious failures, then a fair SC service.
+    // Mode 11 violates that explicit fixture service bound.
+    val spurious = io.fault === 11 || (io.fault === 10 && scFailures(id) =/= 3)
+    val success = reserved(id) && reservation(id) === word && !spurious
     val updated = Bits(32 bits)
     updated := h.io.wdata
     switch(op) {
@@ -55,7 +59,7 @@ class AtomicFixture extends Component {
     when(io.fault === 3 && h.io.atomic && !sc && !lr) { h.io.rdata := old ^ B(1,32 bits) }
     when(h.io.request && h.io.ready) {
       when(lr) { reserved(id) := True; reservation(id) := word }
-      when(sc) { reserved(id) := False }
+      when(sc) { reserved(id) := False; when(scFailures(id) =/= 3) { scFailures(id) := scFailures(id) + 1 } }
       when(write) {
         val data = Mux(h.io.atomic && !sc, updated, h.io.wdata)
         memory(word) := data

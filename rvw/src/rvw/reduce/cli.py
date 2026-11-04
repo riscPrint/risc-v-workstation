@@ -18,7 +18,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--out", help="output directory (default RUN_DIR/reduce)")
     p.add_argument("--signature", help="signature to preserve (default: the run's; 're:REGEX' for a family)")
     p.add_argument("--modes", default="cycles,seeds,latency",
-                   help="comma list of cycles, seeds, latency, symbols, instructions, irq (default cycles,seeds,latency)")
+                   help="comma list of cycles, seeds, latency, symbols, instructions, irq, stimulus (default cycles,seeds,latency)")
     p.add_argument("--seeds", type=int, default=12, help="number of seeds to try (12)")
     p.add_argument("--seed-start", type=int, default=1, help="first seed to try (1)")
     p.add_argument("--latencies", default="1,2,5,10,20,50", help="fixed memory latencies to try")
@@ -53,7 +53,7 @@ def execute_json(run_dir: str, *, out=None, signature=None, modes="cycles,seeds,
         modes.append("symbols")
     if instruction_symbol and "instructions" not in modes:
         modes.append("instructions")
-    bad = [m for m in modes if m not in ("cycles", "seeds", "latency", "symbols", "instructions", "irq")]
+    bad = [m for m in modes if m not in ("cycles", "seeds", "latency", "symbols", "instructions", "irq", "stimulus")]
     if bad:
         raise ValueError(f"unknown mode(s) {bad}")
     o = Options(project=project, out=out, signature=signature, modes=modes, seeds=seeds, seed_start=seed_start,

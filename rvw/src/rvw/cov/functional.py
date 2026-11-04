@@ -292,6 +292,9 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             "holes": [json.loads(k) for k in sorted(expected - counter.keys())],
             "expected_bins": len(expected), "observed_bins": len(counter),
             "expected_hit": len(expected & counter.keys())}
+        if 'classifications' in group:
+            result[group['name']]['classifications'] = [dict(row, count=counter.get(
+                json.dumps(row['bin'], separators=(',', ':')), 0)) for row in group['classifications']]
     return {"schema": "rvw.functional-coverage/1", "config": config, "config_sha256": fingerprint,
             "traces": traces, "retired": records, "groups": result,
             "unknown_encodings": dict(unknown),
