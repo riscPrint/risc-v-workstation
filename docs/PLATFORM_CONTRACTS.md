@@ -1891,6 +1891,24 @@ report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
 
+## Local integrated debug session
+
+`python -m rvw.query.session --db DESIGN --wave SNAPSHOT.rvwi` holds one C6
+database capture until exit. Stdio carries one JSON object per line. Requests
+have integer `id` and `op`: `open`, `select`, `source` or `trace`. Responses echo
+`id`. Success includes `result`, `database` (the capture record) and
+`elapsed_ms` (backend time). Failure includes `error` and `status: inconclusive`.
+`select` uses `signal`, decimal string `time` and optional decimal string `end`.
+It returns the preceding value and at most 500 changes, with a truncation flag.
+Change times are decimal strings. `source` uses `file` and integer `line` and
+returns all candidates, without choosing among ambiguous mappings. `trace` uses
+`signal` and `time`. It exports database PDG/HGLDD, checks the original VCD hash
+and invokes SpinalTrace. Static drivers remain distinct from dynamic evidence.
+The selected database and wave identities do not establish a shared C1 run.
+The loopback web host exposes the same requests at `POST /api`. These are local
+UI transport operations. They issue no simulation or acceptance verdict.
+
+
 
 ## Standalone HDL semantic tests
 
@@ -1984,3 +2002,4 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+

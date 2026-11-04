@@ -132,7 +132,7 @@ is from being usable on other designs.
 | SpinalWaves | `SpinalWaves/` | DBG | Spinal types and source locations in Surfer (port of Tywaves) | Any Spinal design | partly generic: database reader and pinned fork package; WASM migration and interactive checks pending |
 | SpinalTrace | `SpinalTrace/` | DBG | Traces a value back to Spinal statements; CLI and GUI (port of ChiselTrace) | Any Spinal design | partly generic; database reader; accuracy status in CLI and GUI |
 | SpinalBlocks | `SpinalBlocks/` | IDE | Block diagrams; web host and VS Code feature | Any Spinal design | generic extractor; database export; legacy BOOM entry removed after cross-core caller parity |
-| VS Code extension | `vscode/` | PLAT | SpinalBlocks and saved regress/cov/perf views; manual source/wave/trace navigation | One extension, one feature per tool | generic saved-data views; no run identity validation or verdict generation |
+| VS Code extension | `vscode/` | PLAT | SpinalBlocks, saved result views and integrated indexed debug session; GUI performance and trace parity pending | One extension, one feature per tool | generic saved-data views; no run identity validation or verdict generation |
 
 Core-side tools that stay in `spinal-boom` for now: the BoomSim harness
 and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
