@@ -3,6 +3,7 @@
 import argparse
 from functools import partial
 import os
+import textwrap
 from pathlib import Path
 
 from rvw.cli import build_parser
@@ -10,6 +11,13 @@ from rvw.mcp.registry import Registry
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / 'docs/COMMAND_REFERENCE.md'
+
+
+def usage_text(parser):
+    # argparse changes line breaks between supported Python versions.
+    return textwrap.fill(' '.join(parser.format_usage().split()), width=78,
+                         subsequent_indent='    ', break_long_words=False,
+                         break_on_hyphens=False)
 
 
 def render():
@@ -36,7 +44,7 @@ def render():
             # argparse otherwise wraps usage at the caller's terminal width.
             parser.formatter_class = partial(parser.formatter_class, width=78)
             lines.extend(['### `' + parser.prog + '`', '', '```text',
-                          parser.format_usage().strip(), '```', ''])
+                          usage_text(parser), '```', ''])
             for action in parser._actions:
                 if isinstance(action, argparse._SubParsersAction):
                     for child in action.choices.values():

@@ -14,14 +14,15 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-           {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,cocotb,soc,wave} ...
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,cocotb,soc,wave}
+    ...
 ```
 
 ### `rvw arch`
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-                {memory-report,sweep,build,run,calibrate,compare,fit,inspect,linux} ...
+    {memory-report,sweep,build,run,calibrate,compare,fit,inspect,linux} ...
 ```
 
 ### `rvw arch memory-report`
@@ -33,9 +34,8 @@ usage: rvw arch memory-report [-h] [--json] [--project PROJECT] observations
 ### `rvw arch sweep`
 
 ```text
-usage: rvw arch sweep [-h] --out OUT [--bench BENCH] [--json]
-                      [--project PROJECT]
-                      spec
+usage: rvw arch sweep [-h] --out OUT [--bench BENCH] [--json] [--project
+    PROJECT] spec
 ```
 
 ### `rvw arch build`
@@ -47,15 +47,15 @@ usage: rvw arch build [-h] [--json] [--bench BENCH] [--project PROJECT]
 ### `rvw arch run`
 
 ```text
-usage: rvw arch run [-h] [--json] [--bench BENCH] --out OUT
-                    [--timeout TIMEOUT] [--project PROJECT]
+usage: rvw arch run [-h] [--json] [--bench BENCH] --out OUT [--timeout
+    TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw arch calibrate`
 
 ```text
-usage: rvw arch calibrate [-h] [--json] [--bench BENCH] --out OUT
-                          [--timeout TIMEOUT] [--project PROJECT]
+usage: rvw arch calibrate [-h] [--json] [--bench BENCH] --out OUT [--timeout
+    TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw arch compare`
@@ -74,41 +74,35 @@ usage: rvw arch fit [-h] [--json] [--project PROJECT] plan
 
 ```text
 usage: rvw arch inspect [-h] [--json] --elf ELF --isa ISA --kind KIND
-                        [--project PROJECT]
+    [--project PROJECT]
 ```
 
 ### `rvw arch linux`
 
 ```text
 usage: rvw arch linux [-h] --out OUT [--platform PLATFORM] [--images IMAGES]
-                      [--timeout TIMEOUT] [--jobs JOBS] [--llvm]
-                      [--cross-compile CROSS_COMPILE] [--json]
-                      [--project PROJECT]
-                      {firmware,build,prepare,boot}
+    [--timeout TIMEOUT] [--jobs JOBS] [--llvm] [--cross-compile CROSS_COMPILE]
+    [--json] [--project PROJECT] {firmware,build,prepare,boot}
 ```
 
 ### `rvw bisect`
 
 ```text
 usage: rvw bisect [-h] --good GOOD [--bad BAD] [--core-repo CORE_REPO]
-                  [--core-env CORE_ENV] [--workdir WORKDIR]
-                  [--signature SIGNATURE] [--other {skip,good,bad}]
-                  [--max-cycles MAX_CYCLES] [--hang-cycles HANG_CYCLES]
-                  [--no-verify] [--remove-clone] [--timeout TIMEOUT] [--json]
-                  [--project PROJECT]
-                  run_dir
+    [--core-env CORE_ENV] [--workdir WORKDIR] [--signature SIGNATURE] [--other
+    {skip,good,bad}] [--max-cycles MAX_CYCLES] [--hang-cycles HANG_CYCLES]
+    [--no-verify] [--remove-clone] [--timeout TIMEOUT] [--json] [--project
+    PROJECT] run_dir
 ```
 
 ### `rvw bundle`
 
 ```text
 usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
-                  [--no-rerun] [--rerun-window RERUN_WINDOW] [--konata]
-                  [--core-config CORE_CONFIG] [--pdg PDG]
-                  [--trace-wave TRACE_WAVE] [--trace-cycles TRACE_CYCLES]
-                  [--no-spinaltrace] [--timeout TIMEOUT] [--json]
-                  [--project PROJECT]
-                  run_dir
+    [--no-rerun] [--rerun-window RERUN_WINDOW] [--konata] [--core-config
+    CORE_CONFIG] [--pdg PDG] [--trace-wave TRACE_WAVE] [--trace-cycles
+    TRACE_CYCLES] [--no-spinaltrace] [--timeout TIMEOUT] [--json] [--project
+    PROJECT] run_dir
 ```
 
 ### `rvw cosim`
@@ -121,128 +115,113 @@ usage: rvw cosim [-h] [--project PROJECT] {check,generate} ...
 
 ```text
 usage: rvw cosim check [-h] --elf ELF [--core CORE] [--platform PLATFORM]
-                       [--json] --trace TRACE [--model {spike,sail}]
-                       [--history HISTORY] [--strict] [--strict-sync KINDS]
-                       [--sail SAIL] [--sail-config SAIL_CONFIG]
-                       [--timeout TIMEOUT] [--project PROJECT]
+    [--json] --trace TRACE [--model {spike,sail}] [--history HISTORY]
+    [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config SAIL_CONFIG]
+    [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cosim generate`
 
 ```text
 usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
-                          [--json] --out OUT
-                          [--max-instructions MAX_INSTRUCTIONS]
-                          [--project PROJECT]
+    [--json] --out OUT [--max-instructions MAX_INSTRUCTIONS] [--project
+    PROJECT]
 ```
 
 ### `rvw cov`
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-               {merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate} ...
+    {merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    ...
 ```
 
 ### `rvw cov merge`
 
 ```text
 usage: rvw cov merge [-h] [--source-root SOURCE_ROOT] [--design-db DESIGN_DB]
-                     [--scala-root SCALA_ROOT] [--revision REVISION]
-                     [--source-map SOURCE_MAP] [--hgldd HGLDD] [--dat DAT]
-                     [--json] [--out OUT] [--project PROJECT]
-                     inputs [inputs ...]
+    [--scala-root SCALA_ROOT] [--revision REVISION] [--source-map SOURCE_MAP]
+    [--hgldd HGLDD] [--dat DAT] [--json] [--out OUT] [--project PROJECT]
+    inputs [inputs ...]
 ```
 
 ### `rvw cov report`
 
 ```text
 usage: rvw cov report [-h] [--exclusions EXCLUSIONS] [--annotate ANNOTATE]
-                      [--json] [--out OUT] [--project PROJECT]
-                      database
+    [--json] [--out OUT] [--project PROJECT] database
 ```
 
 ### `rvw cov rank`
 
 ```text
 usage: rvw cov rank [-h] [--exact] [--json] [--out OUT] [--project PROJECT]
-                    database
+    database
 ```
 
 ### `rvw cov select`
 
 ```text
 usage: rvw cov select [-h] --diff DIFF [--repo REPO] [--json] [--out OUT]
-                      [--project PROJECT]
-                      database
+    [--project PROJECT] database
 ```
 
 ### `rvw cov closure`
 
 ```text
 usage: rvw cov closure [-h] --candidates CANDIDATES [--exclusions EXCLUSIONS]
-                       [--json] [--out OUT] [--project PROJECT]
-                       database
+    [--json] [--out OUT] [--project PROJECT] database
 ```
 
 ### `rvw cov isa-diff`
 
 ```text
-usage: rvw cov isa-diff [-h] --old-source-root OLD_SOURCE_ROOT
-                        --source-root SOURCE_ROOT [--json] [--out OUT]
-                        [--project PROJECT]
-                        before after
+usage: rvw cov isa-diff [-h] --old-source-root OLD_SOURCE_ROOT --source-root
+    SOURCE_ROOT [--json] [--out OUT] [--project PROJECT] before after
 ```
 
 ### `rvw cov isa-check`
 
 ```text
 usage: rvw cov isa-check [-h] [--json] [--out OUT] [--project PROJECT]
-                         manifest
+    manifest
 ```
 
 ### `rvw cov functional`
 
 ```text
-usage: rvw cov functional [-h] [--manifest MANIFEST]
-                          [--source-root SOURCE_ROOT] [--config CONFIG]
-                          [--platform PLATFORM] [--json] [--out OUT]
-                          [--project PROJECT]
-                          traces [traces ...]
+usage: rvw cov functional [-h] [--manifest MANIFEST] [--source-root
+    SOURCE_ROOT] [--config CONFIG] [--platform PLATFORM] [--json] [--out OUT]
+    [--project PROJECT] traces [traces ...]
 ```
 
 ### `rvw cov rtl`
 
 ```text
-usage: rvw cov rtl [-h] --config CONFIG [--json] [--out OUT]
-                   [--project PROJECT]
-                   traces [traces ...]
+usage: rvw cov rtl [-h] --config CONFIG [--json] [--out OUT] [--project
+    PROJECT] traces [traces ...]
 ```
 
 ### `rvw cov prove`
 
 ```text
-usage: rvw cov prove [-h] --config CONFIG --work-dir WORK_DIR
-                     [--timeout TIMEOUT] [--json] [--out OUT]
-                     [--project PROJECT]
-                     database
+usage: rvw cov prove [-h] --config CONFIG --work-dir WORK_DIR [--timeout
+    TIMEOUT] [--json] [--out OUT] [--project PROJECT] database
 ```
 
 ### `rvw cov mutate`
 
 ```text
 usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
-                      [--jobs JOBS] [--test TEST]
-                      [--equivalence-test EQUIVALENCE_TEST] [--json]
-                      [--out OUT] [--project PROJECT]
-                      project
+    [--jobs JOBS] [--test TEST] [--equivalence-test EQUIVALENCE_TEST] [--json]
+    [--out OUT] [--project PROJECT] project
 ```
 
 ### `rvw doctor`
 
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
-                  [--install FEATURES] [--yes] [--dry-run] [--json]
-                  [--project PROJECT]
+    [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
 ```
 
 ### `rvw farm`
@@ -255,9 +234,8 @@ usage: rvw farm [-h] [--project PROJECT] {run,cancel,dashboard} ...
 
 ```text
 usage: rvw farm run [-h] --hosts HOSTS --manifest MANIFEST --adapter ADAPTER
-                    --identity-command IDENTITY_COMMAND --identity IDENTITY
-                    --out OUT [--jobs JOBS] [--timeout TIMEOUT]
-                    [--project PROJECT]
+    --identity-command IDENTITY_COMMAND --identity IDENTITY --out OUT [--jobs
+    JOBS] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw farm cancel`
@@ -276,16 +254,16 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-                  {cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep} ...
+    {cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    ...
 ```
 
 ### `rvw formal cex`
 
 ```text
-usage: rvw formal cex [-h] --result RESULT [--trace-index TRACE_INDEX]
-                      [--edit EDIT] [--timeout TIMEOUT] --out OUT [--json]
-                      [--hgldd HGLDD] [--pdg PDG] [--criterion CRITERION]
-                      [--at-time AT_TIME] [--open] [--project PROJECT]
+usage: rvw formal cex [-h] --result RESULT [--trace-index TRACE_INDEX] [--edit
+    EDIT] [--timeout TIMEOUT] --out OUT [--json] [--hgldd HGLDD] [--pdg PDG]
+    [--criterion CRITERION] [--at-time AT_TIME] [--open] [--project PROJECT]
 ```
 
 ### `rvw formal sby-history`
@@ -298,131 +276,107 @@ usage: rvw formal sby-history [-h] [--project PROJECT] paths [paths ...]
 
 ```text
 usage: rvw formal sby-regress [-h] --out OUT [--timeout TIMEOUT] [--json]
-                              [--project PROJECT]
-                              manifest
+    [--project PROJECT] manifest
 ```
 
 ### `rvw formal prove`
 
 ```text
 usage: rvw formal prove [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                        [--clock CLOCK] [--reset RESET]
-                        [--reset-active {high,low}] [--checks CHECKS]
-                        [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT]
-                        --out OUT [--json] [--tie PORT=VALUE] [--cut CUT]
-                        [--reset-cycles RESET_CYCLES] [--free-reset]
-                        [--first-failure] [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] [--cut CUT] [--reset-cycles RESET_CYCLES]
+    [--free-reset] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal depth-search`
 
 ```text
-usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]]
-                               [--top TOP] [--clock CLOCK] [--reset RESET]
-                               [--reset-active {high,low}] [--checks CHECKS]
-                               [--depth DEPTH] [--engine ENGINE]
-                               [--timeout TIMEOUT] --out OUT [--json]
-                               [--tie PORT=VALUE] --max-depth MAX_DEPTH
-                               --budget BUDGET [--reset-cycles RESET_CYCLES]
-                               [--free-reset] [--first-failure]
-                               [--project PROJECT]
+usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
+    TOP] [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] --max-depth MAX_DEPTH --budget BUDGET
+    [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
+    PROJECT]
 ```
 
 ### `rvw formal riscv`
 
 ```text
-usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json]
-                        [--project PROJECT]
+usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal equiv`
 
 ```text
 usage: rvw formal equiv [-h] --gold GOLD [GOLD ...] --gate GATE [GATE ...]
-                        --top TOP [--clock CLOCK] [--reset RESET]
-                        [--reset-active {high,low}]
-                        [--reset-cycles RESET_CYCLES] [--settle SETTLE]
-                        [--dsec] [--pair GOLD=GATE] [--latency {0}]
-                        [--timeout TIMEOUT] --out OUT [--json]
-                        [--project PROJECT]
+    --top TOP [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
+    [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
+    GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
 
 ```text
 usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                      [--clock CLOCK] [--reset RESET]
-                      [--reset-active {high,low}] [--checks CHECKS]
-                      [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT]
-                      --out OUT [--json] [--tie PORT=VALUE]
-                      [--frontend {verilog,slang}] [--cut CUT]
-                      [--event-clock PORT] [--event-model] [--async-reset]
-                      [--reset-cycles RESET_CYCLES] [--free-reset]
-                      [--first-failure] [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--cut CUT]
+    [--event-clock PORT] [--event-model] [--async-reset] [--reset-cycles
+    RESET_CYCLES] [--free-reset] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal from-sim`
 
 ```text
 usage: rvw formal from-sim [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                           [--clock CLOCK] [--reset RESET]
-                           [--reset-active {high,low}] [--checks CHECKS]
-                           [--depth DEPTH] [--engine ENGINE]
-                           [--timeout TIMEOUT] --out OUT [--json]
-                           [--tie PORT=VALUE] --trace TRACE (--cycle CYCLE |
-                           --time TIME) [--scope SCOPE]
-                           [--memories {trace,free,zero}] [--first-failure]
-                           [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] --trace TRACE (--cycle CYCLE | --time TIME)
+    [--scope SCOPE] [--memories {trace,free,zero}] [--first-failure]
+    [--project PROJECT]
 ```
 
 ### `rvw formal xprop`
 
 ```text
 usage: rvw formal xprop [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                        [--clock CLOCK] [--reset RESET]
-                        [--reset-active {high,low}] [--checks CHECKS]
-                        [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT]
-                        --out OUT [--json] [--tie PORT=VALUE]
-                        [--reset-cycles RESET_CYCLES] [--settle SETTLE]
-                        [--outputs] [--payload] [--signal SIGNAL]
-                        [--filter FILTER] [--x-inputs] [--combinational]
-                        [--replay {icarus}] [--first-failure]
-                        [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] [--reset-cycles RESET_CYCLES] [--settle
+    SETTLE] [--outputs] [--payload] [--signal SIGNAL] [--filter FILTER]
+    [--x-inputs] [--combinational] [--replay {icarus}] [--first-failure]
+    [--project PROJECT]
 ```
 
 ### `rvw formal x-context`
 
 ```text
 usage: rvw formal x-context [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                            [--clock CLOCK] [--reset RESET]
-                            [--reset-active {high,low}] [--checks CHECKS]
-                            [--depth DEPTH] [--engine ENGINE]
-                            [--timeout TIMEOUT] --out OUT [--json]
-                            [--tie PORT=VALUE] [--reset-cycles RESET_CYCLES]
-                            --signal SIGNAL [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] [--reset-cycles RESET_CYCLES] --signal SIGNAL
+    [--project PROJECT]
 ```
 
 ### `rvw formal x-sweep`
 
 ```text
 usage: rvw formal x-sweep [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
-                          [--clock CLOCK] [--reset RESET]
-                          [--reset-active {high,low}] [--checks CHECKS]
-                          [--depth DEPTH] [--engine ENGINE]
-                          [--timeout TIMEOUT] --out OUT [--json]
-                          [--tie PORT=VALUE] [--module MODULE]
-                          [--module-timeout MODULE_TIMEOUT]
-                          [--campaign-timeout CAMPAIGN_TIMEOUT]
-                          [--replay {icarus}] [--first-failure]
-                          [--project PROJECT]
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
+    CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
+    [--json] [--tie PORT=VALUE] [--module MODULE] [--module-timeout
+    MODULE_TIMEOUT] [--campaign-timeout CAMPAIGN_TIMEOUT] [--replay {icarus}]
+    [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw init`
 
 ```text
 usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--dry-run]
-                [--force] [--json] [--project PROJECT]
-                [path]
+    [--force] [--json] [--project PROJECT] [path]
 ```
 
 ### `rvw lint`
@@ -440,26 +394,25 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 ### `rvw perf`
 
 ```text
-usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}]
-                [--lane LANE] [--queue-stage QUEUE_STAGE]
-                [--issue-stage ISSUE_STAGE] [--head-stage HEAD_STAGE]
-                [--in-order-retirement] [--result RESULT]
-                [--tolerance TOLERANCE] [--top TOP] [--project PROJECT]
-                paths [paths ...]
+usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
+    LANE] [--queue-stage QUEUE_STAGE] [--issue-stage ISSUE_STAGE]
+    [--head-stage HEAD_STAGE] [--in-order-retirement] [--result RESULT]
+    [--tolerance TOLERANCE] [--top TOP] [--project PROJECT] paths [paths ...]
 ```
 
 ### `rvw query`
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-                 {build,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff} ...
+    {build,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
+    ...
 ```
 
 ### `rvw query build`
 
 ```text
-usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json]
-                       [--project PROJECT]
+usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw query info`
@@ -483,54 +436,46 @@ usage: rvw query drivers [-h] [--db DB] [--json] [--project PROJECT] signal
 ### `rvw query loads`
 
 ```text
-usage: rvw query loads [-h] [--db DB] [--json] [--limit LIMIT]
-                       [--project PROJECT]
-                       signal
+usage: rvw query loads [-h] [--db DB] [--json] [--limit LIMIT] [--project
+    PROJECT] signal
 ```
 
 ### `rvw query fanin`
 
 ```text
 usage: rvw query fanin [-h] [--db DB] [--json] [--depth DEPTH]
-                       [--stop-at-regs] [--kind {blackbox,cond,data,init,sel}]
-                       [--limit LIMIT] [--include-clock] [--project PROJECT]
-                       signal
+    [--stop-at-regs] [--kind {blackbox,cond,data,init,sel}] [--limit LIMIT]
+    [--include-clock] [--project PROJECT] signal
 ```
 
 ### `rvw query fanout`
 
 ```text
 usage: rvw query fanout [-h] [--db DB] [--json] [--depth DEPTH]
-                        [--stop-at-regs]
-                        [--kind {blackbox,cond,data,init,sel}] [--limit LIMIT]
-                        [--include-clock] [--project PROJECT]
-                        signal
+    [--stop-at-regs] [--kind {blackbox,cond,data,init,sel}] [--limit LIMIT]
+    [--include-clock] [--project PROJECT] signal
 ```
 
 ### `rvw query path`
 
 ```text
 usage: rvw query path [-h] [--db DB] [--json] [--comb-only] [--data-only]
-                      [--max-paths MAX_PATHS] [--project PROJECT]
-                      a b
+    [--max-paths MAX_PATHS] [--project PROJECT] a b
 ```
 
 ### `rvw query search`
 
 ```text
-usage: rvw query search [-h] [--db DB] [--json]
-                        [--kind {reg,wire,port,mem,component}] [--regex]
-                        [--scope SCOPE] [--include-generated] [--limit LIMIT]
-                        [--project PROJECT]
-                        pattern
+usage: rvw query search [-h] [--db DB] [--json] [--kind
+    {reg,wire,port,mem,component}] [--regex] [--scope SCOPE]
+    [--include-generated] [--limit LIMIT] [--project PROJECT] pattern
 ```
 
 ### `rvw query hierarchy`
 
 ```text
-usage: rvw query hierarchy [-h] [--db DB] [--json] [--depth DEPTH]
-                           [--project PROJECT]
-                           [path]
+usage: rvw query hierarchy [-h] [--db DB] [--json] [--depth DEPTH] [--project
+    PROJECT] [path]
 ```
 
 ### `rvw query component`
@@ -543,58 +488,53 @@ usage: rvw query component [-h] [--db DB] [--json] [--project PROJECT] [path]
 
 ```text
 usage: rvw query regs [-h] [--db DB] [--json] [-r] [--include-generated]
-                      [--project PROJECT]
-                      [path]
+    [--project PROJECT] [path]
 ```
 
 ### `rvw query export`
 
 ```text
-usage: rvw query export [-h] [--db DB] [--json] [--project PROJECT]
-                        artifact out
+usage: rvw query export [-h] [--db DB] [--json] [--project PROJECT] artifact
+    out
 ```
 
 ### `rvw query diff`
 
 ```text
 usage: rvw query diff [-h] [--json] [--scope SCOPE] [--limit LIMIT]
-                      [--no-connections] [--project PROJECT]
-                      old new
+    [--no-connections] [--project PROJECT] old new
 ```
 
 ### `rvw reduce`
 
 ```text
 usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
-                  [--seeds SEEDS] [--seed-start SEED_START]
-                  [--latencies LATENCIES] [--symbol SYMBOL]
-                  [--instruction-symbol INSTRUCTION_SYMBOL] [--monotone]
-                  [--exhaustive] [--margin MARGIN] [--hang-cycles HANG_CYCLES]
-                  [--jobs JOBS] [--batch BATCH] [--budget BUDGET]
-                  [--timeout TIMEOUT] [--json] [--project PROJECT]
-                  run_dir
+    [--seeds SEEDS] [--seed-start SEED_START] [--latencies LATENCIES]
+    [--symbol SYMBOL] [--instruction-symbol INSTRUCTION_SYMBOL] [--monotone]
+    [--exhaustive] [--margin MARGIN] [--hang-cycles HANG_CYCLES] [--jobs JOBS]
+    [--batch BATCH] [--budget BUDGET] [--timeout TIMEOUT] [--json] [--project
+    PROJECT] run_dir
 ```
 
 ### `rvw regress`
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-                   {backends,cocotb,mmu,run,compare,gate,known,history,list} ...
+    {backends,cocotb,mmu,run,compare,gate,known,history,list} ...
 ```
 
 ### `rvw regress backends`
 
 ```text
 usage: rvw regress backends [-h] [--backend {verilator,icarus}] [--json]
-                            [--project PROJECT]
+    [--project PROJECT]
 ```
 
 ### `rvw regress cocotb`
 
 ```text
 usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
-                          [--json] [--project PROJECT]
-                          manifest
+    [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw regress mmu`
@@ -607,67 +547,56 @@ usage: rvw regress mmu [-h] [--project PROJECT] {build,reference,check} ...
 
 ```text
 usage: rvw regress mmu build [-h] --out OUT [--pma PMA] [--gcc GCC] [--json]
-                             [--project PROJECT]
-                             description
+    [--project PROJECT] description
 ```
 
 ### `rvw regress mmu reference`
 
 ```text
 usage: rvw regress mmu reference [-h] [--spike SPIKE] [--timeout TIMEOUT]
-                                 [--json] [--project PROJECT]
-                                 directory
+    [--json] [--project PROJECT] directory
 ```
 
 ### `rvw regress mmu check`
 
 ```text
 usage: rvw regress mmu check [-h] --results RESULTS --platform PLATFORM
-                             [--model {spike,sail}] [--timeout TIMEOUT]
-                             [--sail SAIL] [--json] [--project PROJECT]
-                             directory
+    [--model {spike,sail}] [--timeout TIMEOUT] [--sail SAIL] [--json]
+    [--project PROJECT] directory
 ```
 
 ### `rvw regress run`
 
 ```text
 usage: rvw regress run [-h] [--core CORE] (--suite SUITE | --tier TIER)
-                       [--config CONFIG] [--out OUT] [--rev REV]
-                       [--source SOURCE] [--fresh] [--no-index] [--dry-run]
-                       [--jobs JOBS] [--seeds SEEDS] [--seed-base SEED_BASE]
-                       [--random-seeds] [--filter FILTER]
-                       [--max-cycles MAX_CYCLES] [--timeout TIMEOUT]
-                       [--replay-max-bytes REPLAY_MAX_BYTES] [--rvfi-trace]
-                       [--no-cache] [--json] [--project PROJECT]
+    [--config CONFIG] [--out OUT] [--rev REV] [--source SOURCE] [--fresh]
+    [--no-index] [--dry-run] [--jobs JOBS] [--seeds SEEDS] [--seed-base
+    SEED_BASE] [--random-seeds] [--filter FILTER] [--max-cycles MAX_CYCLES]
+    [--timeout TIMEOUT] [--replay-max-bytes REPLAY_MAX_BYTES] [--rvfi-trace]
+    [--no-cache] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress compare`
 
 ```text
 usage: rvw regress compare [-h] [--core CORE] [--known KNOWN]
-                           [--perf-tolerance PERF_TOLERANCE] [--allow-missing]
-                           [--seed-policy {auto,exact,count}] [--out OUT]
-                           [--json] [--project PROJECT]
-                           base candidate
+    [--perf-tolerance PERF_TOLERANCE] [--allow-missing] [--seed-policy
+    {auto,exact,count}] [--out OUT] [--json] [--project PROJECT] base
+    candidate
 ```
 
 ### `rvw regress gate`
 
 ```text
 usage: rvw regress gate [-h] [--core CORE] [--tier TIER] [--base-rev BASE_REV]
-                        [--base BASE] [--cand-rev CAND_REV] [--cand CAND]
-                        [--config CONFIG] [--known KNOWN]
-                        [--perf-tolerance PERF_TOLERANCE] [--allow-missing]
-                        [--seed-policy {auto,exact,count}]
-                        [--budget-cpu-seconds BUDGET_CPU_SECONDS]
-                        [--budget-wall-seconds BUDGET_WALL_SECONDS]
-                        [--budget-job-count BUDGET_JOB_COUNT]
-                        [--cost-report COST_REPORT] [--jobs JOBS]
-                        [--seeds SEEDS] [--seed-base SEED_BASE]
-                        [--random-seeds] [--filter FILTER]
-                        [--max-cycles MAX_CYCLES] [--timeout TIMEOUT]
-                        [--replay-max-bytes REPLAY_MAX_BYTES] [--rvfi-trace]
-                        [--no-cache] [--json] [--project PROJECT]
+    [--base BASE] [--cand-rev CAND_REV] [--cand CAND] [--config CONFIG]
+    [--known KNOWN] [--perf-tolerance PERF_TOLERANCE] [--allow-missing]
+    [--seed-policy {auto,exact,count}] [--budget-cpu-seconds
+    BUDGET_CPU_SECONDS] [--budget-wall-seconds BUDGET_WALL_SECONDS]
+    [--budget-job-count BUDGET_JOB_COUNT] [--cost-report COST_REPORT] [--jobs
+    JOBS] [--seeds SEEDS] [--seed-base SEED_BASE] [--random-seeds] [--filter
+    FILTER] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--replay-max-bytes
+    REPLAY_MAX_BYTES] [--rvfi-trace] [--no-cache] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress known`
@@ -680,60 +609,57 @@ usage: rvw regress known [-h] [--project PROJECT] {add,list,remove} ...
 
 ```text
 usage: rvw regress known add [-h] [--core CORE] [--file FILE] [--from FROM_]
-                             [--suite SUITE] [--id ID] [--signature SIGNATURE]
-                             [--config CONFIG] --reason REASON [--rev REV]
-                             [--json] [--project PROJECT]
+    [--suite SUITE] [--id ID] [--signature SIGNATURE] [--config CONFIG]
+    --reason REASON [--rev REV] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress known list`
 
 ```text
 usage: rvw regress known list [-h] [--core CORE] [--file FILE] [--json]
-                              [--project PROJECT]
+    [--project PROJECT]
 ```
 
 ### `rvw regress known remove`
 
 ```text
 usage: rvw regress known remove [-h] [--core CORE] [--file FILE] --suite SUITE
-                                --id ID [--signature SIGNATURE] [--json]
-                                [--project PROJECT]
+    --id ID [--signature SIGNATURE] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress history`
 
 ```text
 usage: rvw regress history [-h] [--core CORE] [--rev REV] [--tier TIER]
-                           [--limit LIMIT] [--json] [--project PROJECT]
+    [--limit LIMIT] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress list`
 
 ```text
-usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json]
-                        [--project PROJECT]
+usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw backends`
 
 ```text
-usage: rvw backends [-h] [--backend {verilator,icarus}] [--json]
-                    [--project PROJECT]
+usage: rvw backends [-h] [--backend {verilator,icarus}] [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw cocotb`
 
 ```text
 usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
-                  [--project PROJECT]
-                  manifest
+    [--project PROJECT] manifest
 ```
 
 ### `rvw soc`
 
 ```text
 usage: rvw soc [-h] [--project PROJECT]
-               {generate,import-ipxact,capture-check,check} ...
+    {generate,import-ipxact,capture-check,check} ...
 ```
 
 ### `rvw soc generate`
@@ -746,32 +672,28 @@ usage: rvw soc generate [-h] --out OUT [--json] [--project PROJECT] map
 
 ```text
 usage: rvw soc import-ipxact [-h] --template TEMPLATE --out OUT [--json]
-                             [--project PROJECT]
-                             source
+    [--project PROJECT] source
 ```
 
 ### `rvw soc capture-check`
 
 ```text
 usage: rvw soc capture-check [-h] --capture CAPTURE --result RESULT [--json]
-                             [--project PROJECT]
-                             map
+    [--project PROJECT] map
 ```
 
 ### `rvw soc check`
 
 ```text
-usage: rvw soc check [-h] --bindings BINDINGS --db DB
-                     [--transactions TRANSACTIONS] [--json]
-                     [--project PROJECT]
-                     map
+usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
+    TRANSACTIONS] [--json] [--project PROJECT] map
 ```
 
 ### `rvw wave`
 
 ```text
-usage: rvw wave [-h] [--project PROJECT]
-                {index,list,changes,sample,cut,info} ...
+usage: rvw wave [-h] [--project PROJECT] {index,list,changes,sample,cut,info}
+    ...
 ```
 
 ### `rvw wave index`
@@ -784,42 +706,36 @@ usage: rvw wave index [-h] -o OUT [--json] [--project PROJECT] wave
 
 ```text
 usage: rvw wave list [-h] [--json] [--period PERIOD] [--clock CLOCK]
-                     [--project PROJECT]
-                     wave [regex]
+    [--project PROJECT] wave [regex]
 ```
 
 ### `rvw wave changes`
 
 ```text
 usage: rvw wave changes [-h] [--json] [--period PERIOD] [--clock CLOCK]
-                        [--from T0] [--to T1] [--limit LIMIT] [--dec]
-                        [--project PROJECT]
-                        wave regex
+    [--from T0] [--to T1] [--limit LIMIT] [--dec] [--project PROJECT] wave
+    regex
 ```
 
 ### `rvw wave sample`
 
 ```text
 usage: rvw wave sample [-h] [--json] [--period PERIOD] [--clock CLOCK] --at AT
-                       [--dec] [--project PROJECT]
-                       wave regex
+    [--dec] [--project PROJECT] wave regex
 ```
 
 ### `rvw wave cut`
 
 ```text
 usage: rvw wave cut [-h] [--json] [--period PERIOD] [--clock CLOCK] --from T0
-                    [--to T1] [--signals SIGNALS] [--rebase] -o OUT
-                    [--project PROJECT]
-                    wave
+    [--to T1] [--signals SIGNALS] [--rebase] -o OUT [--project PROJECT] wave
 ```
 
 ### `rvw wave info`
 
 ```text
 usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
-                     [--project PROJECT]
-                     wave
+    [--project PROJECT] wave
 ```
 
 ## MCP tools
