@@ -94,3 +94,25 @@ def test_benchmark_records_disagreement_and_unknown(tmp_path, monkeypatch):
     result = json.loads((out / 'result.json').read_text())
     assert result['agreement'] == [{'case':'one', 'status':'disagree'}]
     assert result['comparisons']['b']['status'] == 'inconclusive'
+
+
+def test_proof_mode_does_not_launch_bounded_btor_engines(tmp_path, monkeypatch):
+    import json
+    from argparse import Namespace
+    from hashlib import sha256
+    from rvw.formal import bench
+    data = b'module dut(input clk, reset); endmodule'
+    (tmp_path / 'dut.sv').write_bytes(data)
+    manifest = tmp_path / 'suite.json'
+    manifest.write_text(json.dumps({'schema':'rvw.formal-bench/1', 'cases':[
+        {'id':'one','top':'dut','clock':'clk','reset':'reset','depth':5,'mode':'prove',
+         'sources':[{'path':'dut.sv','sha256':sha256(data).hexdigest()}]}]}))
+    monkeypatch.setattr(bench, 'ENGINES', {'btor:pono':'pono','btor:btormc':'btormc'})
+    monkeypatch.setattr(bench.shutil, 'which', lambda s: '/bin/'+s)
+    def unexpected(*args):
+        raise AssertionError('incompatible engine was launched')
+    monkeypatch.setattr(bench, 'measure', unexpected)
+    out = tmp_path / 'out'
+    bench.run(Namespace(manifest=manifest, out=out, timeout=5,json=False))
+    result = json.loads((out / 'result.json').read_text())
+    assert all(row['status'] == 'unsupported_mode' for row in result['rows'])
