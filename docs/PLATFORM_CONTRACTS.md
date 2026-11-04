@@ -1899,3 +1899,16 @@ async-triggered properties remain refused. Replay and X flows remain unchanged.
 `event_model.schedules` records the exact patterns; `relationships` states whether
 the run used periodic schedules or unrelated clocks. Native phase tests require
 both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Sequential equivalence latency restrictions
+
+The additive `rvw.formal.equiv/1` `restrictions.latency` is the nonnegative
+candidate lag in clocks (0..64). The reference wrapper delays all output ports by
+that amount. Both wrappers mask outputs until reset cycles plus settle cycles
+plus latency cycles have elapsed. There is no input shift or protocol adapter.
+`restrictions.unmatched_state` is `refuse` by default. With `prove`, unmatched
+register names remain in the inventory but do not block a complete closed-output
+proof. State equality is never assumed. Every partition must still have no
+internal crossbits. Missing partitions, unknown results and tool failures remain
+inconclusive. No named state relation or blackbox obligation is inferred.

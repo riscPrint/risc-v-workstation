@@ -24,8 +24,10 @@ def register(sub):
     p.add_argument('--dsec', action='store_true', help='also run ABC dsec as an advisory check')
     p.add_argument('--pair', action='append', default=[], metavar='GOLD=GATE',
                    help='pair flattened register names; widths must agree')
-    p.add_argument('--latency', type=int, choices=[0], default=0,
-                   help='output latency difference (only zero is supported)')
+    p.add_argument('--latency', type=int, default=0,
+                   help='candidate output lags reference by this many clocks (0..64)')
+    p.add_argument('--unmatched-state', choices=['refuse', 'prove'], default='refuse',
+                   help='prove all internal state without name pairing; no state equality assumptions')
     p.add_argument('--timeout', type=float, default=60, help='total proof budget in seconds')
     p.add_argument('--out', required=True)
     p.add_argument('--json', action='store_true')
@@ -84,7 +86,7 @@ def mapping(gold, gate, pairs):
     return result, missing
 
 
-def harness(args, ports):
+def harness(args, ports, *, delay=0):
     decl, connect, assigns = [], [], []
     for p in ports:
         if p.name == args.reset:
@@ -93,11 +95,17 @@ def harness(args, ports):
         decl.append(f'{p.direction} {p.decl()}')
         if p.direction == 'output':
             assigns.append(f'wire [{p.width-1}:0] rvw_raw_{p.name};')
-            assigns.append(f'assign {p.name} = rvw_ready ? rvw_raw_{p.name} : {p.width}\'b0;')
+            observed = f'rvw_raw_{p.name}'
+            for index in range(delay):
+                stage = f'rvw_delay_{p.name}_{index}'
+                assigns.append(f'reg [{p.width-1}:0] {stage};')
+                assigns.append(f'always @(posedge {args.clock}) {stage} <= {observed};')
+                observed = stage
+            assigns.append(f'assign {p.name} = rvw_ready ? {observed} : {p.width}\'b0;')
             connect.append(f'.{p.name}(rvw_raw_{p.name})')
         else:
             connect.append(f'.{p.name}({p.name})')
-    limit = (args.reset_cycles if args.reset else 0) + args.settle
+    limit = (args.reset_cycles if args.reset else 0) + args.settle + args.latency
     if limit:
         width = max(1, limit.bit_length())
         control = (f'reg [{width-1}:0] rvw_count = 0;\n'
@@ -142,7 +150,7 @@ def _run(args):
               'partitions': [], 'traces': [], 'state_mapping': [], 'unmatched': {},
               'restrictions': {'clock': args.clock, 'reset': args.reset,
                                'reset_active': args.reset_active, 'reset_cycles': args.reset_cycles, 'settle': args.settle,
-                               'latency': 0, 'blackboxes': 'refused', 'state_model': 'two-state'}}
+                               'latency': args.latency, 'unmatched_state': args.unmatched_state, 'blackboxes': 'refused', 'state_model': 'two-state'}}
     def budget():
         left = args.timeout - (time.monotonic() - started)
         if left <= 0:
@@ -159,6 +167,8 @@ def _run(args):
                 raise ValueError('clock and reset must be different inputs')
         if not math.isfinite(args.timeout) or args.timeout <= 0 or args.reset_cycles < 1 or args.settle < 0:
             common.die('timeout must be finite and positive; reset-cycles must be positive')
+        if not 0 <= args.latency <= 64:
+            raise ValueError('latency must be in 0..64')
         for source in args.gold + args.gate:
             if Path(source).resolve().is_relative_to(out):
                 raise ValueError('RTL inputs must be outside --out')
@@ -195,7 +205,7 @@ def _run(args):
             if args.reset and not any(p.name == args.reset and p.direction == 'input' and p.width == 1 for p in ports):
                 raise ValueError('reset must be a one-bit input on both designs')
             portsets.append(ports)
-            (directory / 'wrapper.v').write_text(harness(args, ports))
+            (directory / 'wrapper.v').write_text(harness(args, ports, delay=args.latency if side == 'gold' else 0))
             snapshot.seal(directory / 'wrapper.v')
         if portsets[0] != portsets[1]:
             raise ValueError('design port interfaces differ')
@@ -235,7 +245,8 @@ def _run(args):
                     'status': status.read_text().strip() if status.exists() and cuts == {} else 'UNKNOWN'})
         result['traces'] = sorted(str(p.relative_to(out)) for p in (out / 'eqy').glob('strategies/**/trace*.vcd'))
         proof_complete = rc == 0 and (out / 'eqy/PASS').is_file()
-        result['status'] = verdict(0 if proof_complete else (rc or 1), rc == 124, result['partitions'], result['unmatched'], result['traces'])
+        result['status'] = verdict(0 if proof_complete else (rc or 1), rc == 124, result['partitions'],
+                                   result['unmatched'] if args.unmatched_state == 'refuse' else {}, result['traces'])
         result['solver_exit'] = rc
     except SystemExit as exc:
         result['reason'] = f'input or elaboration refused (exit {exc.code}); see logs'

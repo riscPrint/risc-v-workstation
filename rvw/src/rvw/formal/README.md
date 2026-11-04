@@ -622,7 +622,9 @@ must have the same ordered port interface. One rising-edge clock is supported.
 Async controls, latches, memories, blackboxes, design properties and explicit
 nondeterministic cells are refused. State names must cover every register bit.
 The command pairs register names of equal width automatically. Repeat `--pair`
-for renamed state. An unmatched register always prevents an equivalence result.
+for renamed state. By default, an unmatched register prevents an equivalence result.
+`--unmatched-state prove` retains the inventory but lets the solver check every
+internal state bit without name pairing. It adds no state equality assumptions.
 The mapping is an inventory. The solver does not assume that paired values agree.
 
 Eqy creates partitions. The command matches boundary ports and keeps internal
@@ -638,7 +640,11 @@ state model. It need not be a reachable hardware difference after a real reset.
 for `--reset-cycles` clocks, then inactive. Output checks start after that sequence
 and `--settle` extra clocks. Without `--reset`, checks start at time zero, unless
 `--settle` is set. These unchecked startup clocks are an explicit restriction.
-Only `--latency 0` is supported. There is no output cycle shift or protocol adapter.
+`--latency N` means the candidate output lags the reference by N clocks (0..64).
+The reference wrapper delays every output by N clocks. Both wrappers suppress
+output checks through reset, settle and these N extra startup clocks. The output
+shift applies to all outputs, including status ports. There is no handshake adapter.
+Use it only when this fixed-cycle interface contract is intended.
 No reset port means no reset sequence is inferred. Inputs other than clock and
 reset remain free. Results list the reset, settle and latency settings.
 
@@ -646,7 +652,7 @@ reset remain free. Results list the reset, settle and latency settings.
 Its log is advisory. ABC's initialization and name matching differ from the eqy
 obligations. A dsec message cannot replace the partition proof. A dsec timeout
 still makes the command inconclusive. Native dsec as an authoritative backend,
-state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
+state encoding maps, blackbox contracts, multiple clocks,
 and a scalable partition dependency proof remain part of the epic.
 
 The command takes exported RTL files. It does not check out a source repository,
@@ -734,3 +740,15 @@ async-triggered properties remain refused. Replay and X flows remain unchanged.
 `event_model.schedules` records the exact patterns; `relationships` states whether
 the run used periodic schedules or unrelated clocks. Native phase tests require
 both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Nonzero latency example
+
+`--latency 1 --unmatched-state prove --reset reset --settle 2` checks a
+one-cycle candidate pipeline extension. Inputs remain identical on both sides at
+every cycle. Eqy matches only boundary ports. Every output partition must pass
+without internal state cutpoints. Native tests compare an independent one-stage
+reference and two-stage candidate. They require proof at latency one and
+counterexamples for latency zero, latency two and a changed arithmetic result.
+The new option does not add memory maps, blackbox contracts or source-revision
+export. Those parts of issue #18 remain open.

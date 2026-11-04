@@ -118,3 +118,34 @@ def test_dsec_unknown_is_not_a_completed_comparison(tmp_path, monkeypatch):
     monkeypatch.setattr(common, 'run', fake_run)
     with pytest.raises(ValueError, match='did not complete'):
         dsec(tmp_path, lambda: 1)
+
+
+@pytest.mark.skipif(not TOOLS, reason='needs native formal tools')
+@pytest.mark.parametrize('latency,mutant,expected', [(1, False, 'equivalent'),
+    (0, False, 'not_equivalent'), (1, True, 'not_equivalent'), (2, False, 'not_equivalent')])
+def test_explicit_candidate_latency(tmp_path, latency, mutant, expected):
+    gold, gate = tmp_path / 'gold.v', tmp_path / 'gate.v'
+    gold.write_text('module top(input clk, reset, input [3:0] a, output reg [3:0] q); '
+                    'always @(posedge clk) q <= reset ? 0 : a+1; endmodule')
+    gate.write_text('module top(input clk, reset, input [3:0] a, output reg [3:0] q); '
+                    'reg [3:0] stage; always @(posedge clk) begin '
+                    f'stage <= reset ? 0 : a+{2 if mutant else 1}; '
+                    'q <= reset ? 0 : stage; end endmodule')
+    out = tmp_path / 'out'
+    rc = main(['formal', 'equiv', '--gold', str(gold), '--gate', str(gate), '--top', 'top',
+               '--reset', 'reset', '--settle', '2', '--latency', str(latency),
+               '--unmatched-state', 'prove', '--timeout', '30', '--out', str(out)])
+    result = json.loads((out / 'result.json').read_text())
+    assert result['status'] == expected, result
+    assert rc == (0 if expected == 'equivalent' else 1)
+    assert result['unmatched']['gate'] == ['stage']
+    assert result['restrictions']['latency'] == latency
+    assert all(p['crossbits'] == {} for p in result['partitions'])
+
+
+@pytest.mark.parametrize('latency', [-1, 65])
+def test_invalid_latency_cannot_publish_equivalence(tmp_path, latency):
+    out = tmp_path / 'out'
+    assert main(['formal', 'equiv', '--gold', 'missing.v', '--gate', 'missing.v', '--top', 'top',
+                 '--latency', str(latency), '--out', str(out)]) == 1
+    assert json.loads((out / 'result.json').read_text())['status'] == 'inconclusive'
