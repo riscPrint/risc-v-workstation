@@ -14,7 +14,7 @@ scripts/install.sh
 source env.sh
 scripts/install.sh --check
 cd rvw
-uv pip install -e '.[dev,mcp]'
+uv sync --locked --extra dev --extra mcp
 cd ..
 ```
 
@@ -114,7 +114,8 @@ Run the same fast checks without Actions from the repository root:
 scripts/ci-local.sh
 ```
 
-The command needs `python3.11`, Git, Node 22, npm, Rust/Cargo, JDK 21 and sbt.
+The command needs `python3.11`, uv 0.13.6+, Git, Node 22, npm, Rust/Cargo,
+JDK 21 and sbt.
 Use `CI_PYTHON` to select another Python 3.11+ executable.
 It copies tracked files, including local edits, into a temporary work directory.
 It creates a new Python venv and removes the work directory on exit. Add new

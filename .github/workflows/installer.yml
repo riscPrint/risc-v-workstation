@@ -25,34 +25,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flags: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.cosim_only && '["--with-cosim"]' || '["", "--with-sim", "--with-riscv-gcc", "--with-cosim", "--with-formal", "--with-sim --with-riscv-gcc --with-cosim"]') }}
+        case: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.cosim_only && '["cosim"]' || '["core", "sim", "gcc", "cosim", "formal", "quickstart"]') }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install on the native host
+      - name: Check install and native runtime
         env:
-          FLAGS: ${{ matrix.flags }}
+          CASE: ${{ matrix.case }}
         run: |
-          read -r -a flags <<< "$FLAGS"
-          scripts/install.sh --yes "${flags[@]}"
-      - name: Check requested tools
-        env:
-          FLAGS: ${{ matrix.flags }}
-        run: |
-          source env.sh
-          read -r -a flags <<< "$FLAGS"
-          scripts/install.sh --check "${flags[@]}"
-      - name: Check shim input capture
-        if: contains(matrix.flags, '--with-cosim')
-        run: |
-          source env.sh
-          uv sync --locked --no-dev --extra dev --extra mcp --no-managed-python --project rvw
-          rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_build_capture.py -q
-      - name: Check the pinned reference policies
-        if: contains(matrix.flags, '--with-cosim') && contains(matrix.flags, '--with-riscv-gcc')
-        run: |
-          source env.sh
-          uv sync --locked --extra dev --extra mcp --project rvw
-          rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
+          python3 scripts/qualify-install.py --case "$CASE" \
+            --timeout 3000 --out "$RUNNER_TEMP/install-$CASE-$GITHUB_RUN_ATTEMPT"
+      - name: Retain case report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-${{ matrix.case }}
+          path: |
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/report.json
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.xml
   long-install:
     if: github.event_name == 'workflow_dispatch' && inputs.long_builds && !inputs.cosim_only
     runs-on: [self-hosted, Linux, X64, rvw-linux]
@@ -60,19 +50,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flags: ['--with-gem5', '--all']
+        case: ['gem5', 'all']
     steps:
       - uses: actions/checkout@v4
-      - name: Install on the native host
+      - name: Check install and native runtime
         env:
-          FLAGS: ${{ matrix.flags }}
+          CASE: ${{ matrix.case }}
         run: |
-          read -r -a flags <<< "$FLAGS"
-          scripts/install.sh --yes "${flags[@]}"
-      - name: Check requested tools
-        env:
-          FLAGS: ${{ matrix.flags }}
-        run: |
-          source env.sh
-          read -r -a flags <<< "$FLAGS"
-          scripts/install.sh --check "${flags[@]}"
+          python3 scripts/qualify-install.py --case "$CASE" \
+            --timeout 18000 --out "$RUNNER_TEMP/install-$CASE-$GITHUB_RUN_ATTEMPT"
+      - name: Retain case report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-${{ matrix.case }}
+          path: |
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/report.json
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.log
+            ${{ runner.temp }}/install-${{ matrix.case }}-${{ github.run_attempt }}/*.xml

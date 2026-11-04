@@ -159,6 +159,7 @@ class SourceMap:
         self.mapping = json.loads(captured.read_text(mapping)).get('mappings', []) if mapping else []
         self.cache = {}
         self.db_signals = {}
+        self.db_assignments = {}
         self.db_rtl = {}
         self.db_top = None
         if design_db:
@@ -176,6 +177,20 @@ class SourceMap:
                     JOIN files f ON f.id=s.file_id WHERE s.pruned=0 AND s.line>0""")
                 for path, name, file, line in rows:
                     self.db_signals[(path, name)] = {'file': file, 'line': line}
+                if conn.execute("SELECT 1 FROM sqlite_master WHERE name='assignments'").fetchone():
+                    rows = conn.execute("""SELECT c.path,s.name,a.kind,a.component_id=s.component_id,
+                        a."range",f.path,a.line FROM assignments a
+                        JOIN signals s ON s.id=a.target_id JOIN components c ON c.id=s.component_id
+                        LEFT JOIN files f ON f.id=a.file_id""")
+                    assignments = defaultdict(list)
+                    for path, name, kind, local, span, file, line in rows:
+                        assignments[(path, name)].append((kind, local, span, file, line))
+                    for key, items in assignments.items():
+                        # Reset, partial and multiple assignments cannot identify one statement.
+                        if len(items) == 1:
+                            kind, local, span, file, line = items[0]
+                            if kind == 'data' and local and not span and file and line and line > 0:
+                                self.db_assignments[key] = {'file': file, 'line': line}
                 # /20 memory keys retain the exact MemSymbolesTag emitted names.
                 # Read these names; do not guess aliases from a suffix or array index.
                 if conn.execute("SELECT 1 FROM sqlite_master WHERE name='memories'").fetchone():
@@ -326,7 +341,7 @@ class SourceMap:
         lines = self.cache[path]
         # Do not guess from the nearest comment: it can cross unrelated assignments.
         locations = []
-        declaration_used, comment_used = False, False
+        declaration_used, comment_used, assignment_used = False, False, False
         ranges = [(line, line)]
         # Verilator records the exact statements covered by a point in S. The
         # instrumented branch/header line often precedes its assignment comment.
@@ -343,13 +358,26 @@ class SourceMap:
                     instance = self.db_instance(fields)
                     if instance is not None:
                         text = lines[n - 1]
+                        # Spinal also emits a complete assignment on an always header line.
+                        text = re.sub(r'^\s*(?:always\s*@\s*\(\s*\*\s*\)|always_comb)\s+', '', text)
                         # Exact declared targets and branch operands, never a nearest-line guess.
                         targets = re.findall(r'^\s*(?:assign\s+)?([A-Za-z_]\w*)(?:\[[^;=]*?\])*\s*(?:<=|=(?!=))', text)
                         condition = re.match(r'\s*(?:end\s+else\s+)?if\s*\((.*)\)\s*(?:begin\b|$)', text.split('//', 1)[0])
                         if condition:
                             targets += re.findall(r'\b[A-Za-z_]\w*\b', condition[1])
                         targets += re.findall(r'\b(?:reg|wire)\s+(?:\[[^]]+\]\s*)?([A-Za-z_]\w*)', text)
+                        assignment_targets = re.findall(r'^\s*(?:assign\s+)?([A-Za-z_]\w*)(?:\[[^;=]*?\])*\s*(?:<=|=(?!=))', text)
+                        linked = set()
+                        if fields.get('S') and fields.get('t') in ('line', 'branch'):
+                            for target in assignment_targets:
+                                loc = self.db_assignments.get((instance, target))
+                                if loc:
+                                    assignment_used = True
+                                    linked.add(target)
+                                    locations.append((loc['file'], loc['line']))
                         for target in targets:
+                            if target in linked:
+                                continue
                             loc = self.db_signals.get((instance, target))
                             if loc:
                                 declaration_used = True
@@ -370,7 +398,8 @@ class SourceMap:
             locations = sorted(set(locations))
             source, scala_line = locations[0]
             return {"file": source, "line": scala_line,
-                    "method": ("covered-span-comments-and-declarations" if comment_used else "covered-span-declarations")
+                    "method": ("covered-span-assignment-links-mixed" if declaration_used or comment_used
+                               else "covered-span-assignment-links") if assignment_used else ("covered-span-comments-and-declarations" if comment_used else "covered-span-declarations")
                     if declaration_used else "covered-span-comments" if fields.get('S') else "same-line-comment",
                     "locations": [{"file": f, "line": n} for f, n in locations]}
         return None
@@ -475,9 +504,16 @@ def report(data, exclusions=None):
                "unmapped_scala_points": sum(not p.get("scala") for p in points),
                "exact_instance_denominator": None if '*' in name or name == 'unknown' else len(points)}
         for name, points in groups['instances'].items()}
+    mapping_methods = defaultdict(int)
+    for point in data['points']:
+        if point.get('scala'):
+            mapping_methods[point['scala'].get('method', 'unspecified')] += 1
     return {"schema": "rvw.coverage-report/1", "instance_scope": instance_scope,
             "scala_mapping": {"denominator": len(data['points']),
                               "mapped": sum(bool(p.get('scala')) for p in data['points']),
+                              "methods": dict(sorted(mapping_methods.items())),
+                              "statement_hit_status": "undetermined",
+                              "note": "Source links navigate to declarations or assignments. Point hits do not establish individual Scala statement hits.",
                               "unit": "instrumented points; a point can link to several Scala lines"}, "summary": summary(data['points']),
             **{kind: {k: summary(v) for k, v in sorted(items.items())} for kind, items in groups.items()},
             "module_types": {module: {kind: summary(points) for kind, points in sorted(kinds.items())}

@@ -308,6 +308,11 @@ with SQL; the BlackBox dependency test needs `yosys` on `PATH`, `source ../spina
   simulation build does not contain; for Surfer on a plain build's VCD, build the database with
   `--no-pdg`, or simulate the RTL in `rtl_dir`.
 
+`CrossDesignSpec` checks coarse BlackBox dependencies and analog/inout edges
+with Verilog and SystemVerilog. It also checks database HGLDD against a VCD
+from a separate plain Verilator build with PDG naming disabled. These are
+bounded library fixtures. They do not qualify a complete core or dynamic causes.
+
 ### Other core builds
 
 The [VexRiscv example](../examples/vexriscv/) enables PDG, block and HGLDD
