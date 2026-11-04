@@ -498,6 +498,11 @@ Hold the workstation's `vex` and `sbt` locks around that command.
 `(old_file, old_line, new_file, new_line)`. Use a mapping only after checking that
 both frames identify the same elaboration operation. The function retains every
 other source field. It checks generated caller names and diagram references too.
+Use `source_files=[(old_file, new_file)]` for an audited file identity, such as
+an unresolved basename and its absolute path. This changes no line or column.
+Check the source package and the statement before declaring that identity.
+If two packages contain the same basename, do not select the first search result.
+Use the retained stack frame or audit the caller's imports and called method.
 For traces, it retains edge kinds, edge multiplicity and accuracy metadata.
 Duplicate vertex labels require an explicit identity mapping and are refused.
 

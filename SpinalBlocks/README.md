@@ -257,7 +257,17 @@ that contains that pair. All port, node, instance and net fields remain checked.
 Check both source destinations before treating a changed elaboration caller as
 equivalent information. This comparison does not relabel stored source locations.
 See the source-root and caller rules in [RiscvSim](../RiscvSim/README.md).
-The legacy BOOM entry remains until the cross-core parity checks are complete.
+The comparison cases are BOOM `small` and VexRiscv `rv32im`.
+Compare legacy diagrams with a database built with `--no-pdg`.
+Check every module, port, instance, node, net, FSM and source location.
+Audit caller differences on clock/reset ports separately. The caller must perform
+the same top-level construction. Keep both actual destinations in the artifacts.
+PDG naming is a separate opt-in transformation; do not compare a plain diagram
+against an instrumented diagram and drop the changed names.
+The Vex example exports independent cases with
+`db/Test/runMain rvwvex.DebugParity OUT` from `examples/vexriscv/rvw`.
+Hold the `vex` and `sbt` locks for this command. Set `RVW_HOME`, `RVW_ADAPTER`
+and `VEXRISCV` to the selected checkouts. OUT must not exist.
 
 ## Viewer package notices
 
