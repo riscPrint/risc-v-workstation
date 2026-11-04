@@ -148,3 +148,24 @@ the lowered design and the same memory, reset and retirement observations.
 Parsing or compiling generated Verilog is not result equivalence. An absent
 tool or unsupported lowering must be reported as inconclusive. Backend capability
 profiles remain separate from this comparison command.
+
+### Run a thread sweep
+
+Use `rvw regress speed-sweep --adapter /path/to/run.sh --elf /path/to/long.elf
+--config PRESET --lock vex --threads 2 4 --repeats 5 --min-seconds 10 --out NEW_DIR`.
+Choose the core's machine lock. The command warms each native model, then runs
+serial baseline/candidate pairs in alternating order. Each run uses a fresh
+process, seed 1, fixed memory latency zero and C2 tracing. Use `--seed` and
+`--max-cycles` to set the workload bounds. The baseline uses one thread.
+The command appends `--threads N` to inherited `SPINAL_VERILATOR_FLAGS`.
+Remove any inherited thread option first. Other inherited build settings stay
+fixed and remain subject to native input capture.
+
+Each launch holds the selected lock and uses `nice -n 10`. `--timeout` bounds
+the entire launch, including the lock wait and compilation (default 1200 s,
+maximum 1800 s). Timeout or cancellation stops its process group. A failure
+stops the sweep. `sweep.json` retains run order, commands, flags, launch times,
+host, CPU count, file hashes and completed comparisons. Its status stays
+inconclusive until every requested comparison passes. It does not change
+simulator defaults. The sweep covers run throughput only. Build phase timing,
+peak RSS, partitioning, PGO and ccache require separate experiments.

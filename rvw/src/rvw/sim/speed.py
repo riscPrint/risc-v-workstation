@@ -65,7 +65,7 @@ def evidence(path, min_seconds=1.0):
     if (end is None or end.get('status') != obj['status'] or end.get('cycle') != obj['cycles']
             or retirements != obj['instret']):
         raise ValueError('C2 is incomplete or differs from C1 terminal counters')
-    for key in ('seed', 'elf_sha256'):
+    for key in ('seed', 'elf_sha256', 'core', 'config'):
         if trace.header.get(key) != obj.get(key):
             raise ValueError('C2 header differs from C1: ' + key)
     identity = {k: obj.get(k) for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'seed',
@@ -124,3 +124,79 @@ def command(args):
         return 3
     print(json.dumps(report, allow_nan=False))
     return 0
+
+
+def sweep(args):
+    """Run bounded serial thread experiments through the existing native adapter."""
+    import os
+    import platform
+    import time
+    from rvw.common.proc import run_group
+    if (args.repeats < 5 or not positive(args.timeout) or args.timeout > 1800
+            or not positive(args.min_seconds) or not args.threads or any(n < 1 for n in args.threads)
+            or len(set(args.threads)) != len(args.threads)):
+        raise ValueError('use >=5 repeats, unique positive threads, and timeout in (0, 1800]')
+    adapter = args.adapter.resolve(strict=True)
+    elf = args.elf.resolve(strict=True)
+    home = Path(__file__).resolve().parents[4]
+    locker = home / 'scripts/with-lock.sh'
+    args.out.mkdir(parents=True, exist_ok=False)
+    plan = dict(schema='rvw.sim-speed-sweep/1', status='inconclusive',
+                host=platform.platform(), logical_cpus=os.cpu_count(),
+                adapter=str(adapter), elf=str(elf), elf_sha256=sha(elf.read_bytes()),
+                config=args.config, seed=args.seed, repeats=args.repeats,
+                threads=args.threads, min_seconds=args.min_seconds,
+                timeout_s=args.timeout, order=[], comparisons=[])
+    output = args.out / 'sweep.json'
+
+    def publish():
+        temporary = output.with_suffix('.tmp')
+        temporary.write_text(json.dumps(plan, indent=2, allow_nan=False) + '\n')
+        temporary.replace(output)
+
+    def run(threads, name):
+        out = (args.out / name).resolve()
+        env = dict(os.environ)
+        # Append one controlled thread option. Refuse an inherited override.
+        flags = env.get('SPINAL_VERILATOR_FLAGS', '')
+        if '--threads' in flags:
+            raise ValueError('remove --threads from inherited SPINAL_VERILATOR_FLAGS')
+        env['SPINAL_VERILATOR_FLAGS'] = (flags + f' --threads {threads}').strip()
+        record = dict(name=name, threads=threads, flags=env['SPINAL_VERILATOR_FLAGS'], started_unix_s=time.time())
+        plan['order'].append(record)
+        publish()
+        command = [str(locker), args.lock, 'nice', '-n', '10', str(adapter), 'run',
+                   '--elf', str(elf), '--out', str(out), '--config', args.config,
+                   '--seed', str(args.seed), '--max-cycles', str(args.max_cycles),
+                   '--mem-latency', '0', '--rvfi-trace', '--json']
+        record['command'] = command
+        with (args.out / (name + '.log')).open('w') as log:
+            child = run_group(command, env=env, timeout=args.timeout, stdout=log, stderr=log)
+        record.update(returncode=child.returncode, timed_out=child.timed_out, ended_unix_s=time.time())
+        publish()
+        if child.returncode != 0 or child.timed_out:
+            raise ValueError('adapter failed or timed out: ' + name)
+        return out / 'result.json'
+
+    publish()
+    try:
+        # Each invocation starts a fresh process. Warm native caches before sampling.
+        for n in sorted(set([1, *args.threads])):
+            run(n, f'warmup-{n}')
+        for n in args.threads:
+            paired = []
+            for i in range(args.repeats):
+                names = [(1, f't{n}-pair{i}-base'), (n, f't{n}-pair{i}-candidate')]
+                if i % 2:
+                    names.reverse()
+                paths = {name: run(t, name) for t, name in names}
+                paired.append((paths[f't{n}-pair{i}-base'], paths[f't{n}-pair{i}-candidate']))
+            plan['comparisons'].append(compare(paired, min_seconds=args.min_seconds, seed=args.seed))
+            publish()
+        plan['status'] = 'equivalent'
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        plan['error'] = str(exc)
+    finally:
+        publish()
+    print(json.dumps(dict(status=plan['status'], report=str(output))))
+    return 0 if plan['status'] == 'equivalent' else 3

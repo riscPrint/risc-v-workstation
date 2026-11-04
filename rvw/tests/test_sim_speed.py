@@ -113,3 +113,57 @@ def test_dashboard_plots_speed_per_preset(tmp_path, monkeypatch):
     for p in ('small', 'large'):
         for m in ('sim_khz', 'sim_instructions_per_s'):
             assert f'fixture / long / {p} / {m}' in out.read_text()
+
+
+def sweep_args(tmp_path, **overrides):
+    from types import SimpleNamespace
+    adapter = tmp_path / 'adapter'; adapter.write_text('fixture')
+    elf = tmp_path / 'elf'; elf.write_bytes(b'fixture')
+    values = dict(adapter=adapter, elf=elf, config='preset', lock='vex', threads=[2],
+                  repeats=5, seed=1, max_cycles=100, timeout=10, min_seconds=1,
+                  out=tmp_path / 'out')
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def test_sweep_runs_serial_alternating_pairs_under_lock(tmp_path, monkeypatch, capsys):
+    from rvw.sim.speed import sweep
+    from rvw.common.proc import Result
+    args = sweep_args(tmp_path)
+    calls = []
+    def fake(command, **kwargs):
+        assert command[1:5] == ['vex', 'nice', '-n', '10']
+        assert kwargs['timeout'] == 10
+        flags = kwargs['env']['SPINAL_VERILATOR_FLAGS']
+        threads = int(flags.split()[-1])
+        out = Path(command[command.index('--out') + 1])
+        result(out, seconds=2 if threads == 1 else 1, native='c' if threads == 1 else 'd')
+        calls.append(threads)
+        return Result(0)
+    monkeypatch.setattr('rvw.common.proc.run_group', fake)
+    monkeypatch.delenv('SPINAL_VERILATOR_FLAGS', raising=False)
+    assert sweep(args) == 0
+    assert calls == [1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2]
+    report = json.loads((args.out / 'sweep.json').read_text())
+    assert report['status'] == 'equivalent'
+    assert report['comparisons'][0]['speedup'] == 2
+    assert len(report['order']) == 12
+    assert all('ended_unix_s' in row for row in report['order'])
+
+
+def test_sweep_timeout_stops_and_keeps_inconclusive_report(tmp_path, monkeypatch, capsys):
+    from rvw.sim.speed import sweep
+    from rvw.common.proc import Result
+    args = sweep_args(tmp_path)
+    calls = []
+    def fake(*a, **k):
+        calls.append(a)
+        return Result(124, timed_out=True)
+    monkeypatch.setattr('rvw.common.proc.run_group', fake)
+    monkeypatch.delenv('SPINAL_VERILATOR_FLAGS', raising=False)
+    assert sweep(args) == 3
+    assert len(calls) == 1
+    report = json.loads((args.out / 'sweep.json').read_text())
+    assert report['status'] == 'inconclusive'
+    assert not report['comparisons']
+    assert report['order'][0]['timed_out'] is True
