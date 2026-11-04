@@ -1,0 +1,12 @@
+{
+  "add": "(io.a + io.b).resize(32)",
+  "sub": "(io.a - io.b).resize(32)",
+  "and": "io.a & io.b",
+  "or": "io.a | io.b",
+  "xor": "io.a ^ io.b",
+  "sll": "(io.a |<< io.b(4 downto 0)).resize(32)",
+  "srl": "io.a |>> io.b(4 downto 0)",
+  "sltu": "(io.a < io.b).asUInt.resize(32)",
+  "slt": "(io.a.asSInt < io.b.asSInt).asUInt.resize(32)",
+  "eq": "(io.a === io.b).asUInt.resize(32)"
+}
