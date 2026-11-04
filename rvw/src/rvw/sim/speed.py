@@ -73,7 +73,8 @@ def evidence(path, min_seconds=1.0):
             raise ValueError('C2 header differs from C1: ' + key)
     identity = {k: obj.get(k) for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'seed',
                 'max_cycles', 'mem_latency', 'irq_schedule', 'elf_load_bias', 'boot_payloads', 'soc_map_sha256')}
-    identity.update(model=details.get('model'), header=header, trace=digest.hexdigest(),
+    identity.update(model=details.get('model'), boot_payloads=details.get('boot_payloads'),
+                    header=header, trace=digest.hexdigest(),
                     terminal={k: obj.get(k) for k in ('status', 'cycles', 'instret', 'fail_code')})
     return dict(path=str(path), run_id=run_id, sha256=sha(raw), trace_sha256=sha(trace_path.read_bytes()),
                 native_sha256=native, identity=identity, seconds=seconds,

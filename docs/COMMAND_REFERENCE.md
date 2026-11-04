@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -548,7 +548,25 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {backends,cocotb,mmu,run,compare,gate,known,history,list} ...
+    {speed-compare,speed-sweep,backends,cocotb,mmu,run,compare,gate,known,history,list}
+    ...
+```
+
+### `rvw regress speed-compare`
+
+```text
+usage: rvw regress speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
+    [--min-seconds MIN_SECONDS] [--resamples RESAMPLES] [--seed SEED]
+    [--project PROJECT]
+```
+
+### `rvw regress speed-sweep`
+
+```text
+usage: rvw regress speed-sweep [-h] --adapter ADAPTER --elf ELF --config
+    CONFIG --lock {boom,vex} [--threads THREADS [THREADS ...]] [--repeats
+    REPEATS] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds
+    MIN_SECONDS] [--seed SEED] --out OUT [--project PROJECT]
 ```
 
 ### `rvw regress backends`
@@ -675,6 +693,23 @@ usage: rvw regress history [-h] [--core CORE] [--rev REV] [--tier TIER]
 ```text
 usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
     PROJECT]
+```
+
+### `rvw speed-compare`
+
+```text
+usage: rvw speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
+    [--min-seconds MIN_SECONDS] [--resamples RESAMPLES] [--seed SEED]
+    [--project PROJECT]
+```
+
+### `rvw speed-sweep`
+
+```text
+usage: rvw speed-sweep [-h] --adapter ADAPTER --elf ELF --config CONFIG --lock
+    {boom,vex} [--threads THREADS [THREADS ...]] [--repeats REPEATS]
+    [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS]
+    [--seed SEED] --out OUT [--project PROJECT]
 ```
 
 ### `rvw backends`

@@ -178,3 +178,14 @@ def test_copied_execution_cannot_count_as_an_independent_sample(tmp_path):
     data[1][0].write_text(json.dumps(duplicate))
     with pytest.raises(ValueError, match='reused'):
         compare(data)
+
+
+def test_different_boot_payloads_cannot_earn_speedup(tmp_path):
+    data = pairs(tmp_path)
+    for baseline, candidate in data:
+        for path, payload_hash in ((baseline, 'e' * 64), (candidate, 'f' * 64)):
+            obj = json.loads(path.read_text())
+            obj['details']['boot_payloads'] = [{'path': 'boot.bin', 'sha256': payload_hash}]
+            path.write_text(json.dumps(obj))
+    with pytest.raises(ValueError, match='differ'):
+        compare(data, resamples=1000)
