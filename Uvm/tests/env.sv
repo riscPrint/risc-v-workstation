@@ -8,6 +8,8 @@ package vip;
    rand bit [3:0] source;
    constraint legal { opcode inside {0,4}; address inside {0,4,8,12}; }
    bit [2:0] response;
+   bit [1:0] response_param, response_size;
+   bit response_denied, response_corrupt, response_sink;
    bit [3:0] response_source;
    bit [31:0] response_data;
    bit rvfi_valid;
@@ -76,10 +78,15 @@ package vip;
        @(posedge b.clk);
        if(!b.reset && b.a_valid && b.a_ready) begin
          t=item::type_id::create("observed");
+         if(b.a_param!=0 || b.a_size!=2 || b.a_mask!=15 || b.a_corrupt)
+           `uvm_fatal("BUS","invalid fixed TL-UL request fields")
          t.opcode=b.a_opcode; t.address=b.a_address; t.data=b.a_data;
          t.source=b.a_source;
          #1;
          if(!b.d_valid) `uvm_fatal("BUS","missing response")
+         t.response_param=b.d_param; t.response_size=b.d_size;
+         t.response_denied=b.d_denied; t.response_corrupt=b.d_corrupt;
+         t.response_sink=b.d_sink;
          t.response=b.d_opcode; t.response_data=b.d_data;
          t.response_source=b.d_source; t.rvfi_valid=b.rvfi_valid;
          t.order=b.rvfi_order; t.insn=b.rvfi_insn;
@@ -106,7 +113,9 @@ package vip;
    function void write(item t);
      int idx;
      idx=t.address>>2;
-     if(idx>3 || t.response_source!=t.source ||
+     if(t.response_param!=0 || t.response_size!=2 || t.response_denied ||
+        t.response_corrupt || t.response_sink ||
+        idx>3 || t.response_source!=t.source ||
         t.response!=(t.opcode==4 ? 1 : 0))
        `uvm_fatal("TL","response mismatch")
      if(t.opcode==0) begin

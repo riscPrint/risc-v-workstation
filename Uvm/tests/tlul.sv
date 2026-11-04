@@ -1,7 +1,9 @@
 interface tl_if(input bit clk);
   bit reset=1;
   bit a_valid, a_ready, d_valid, d_ready=1;
-  bit [2:0] a_opcode, d_opcode;
+  bit [2:0] a_opcode, d_opcode, a_param;
+  bit [1:0] d_param, d_size;
+  bit a_corrupt, d_corrupt, d_denied, d_sink;
   bit [3:0] a_mask=15;
   bit [1:0] a_size=2;
   bit [31:0] a_address, a_data, d_data;
@@ -26,6 +28,8 @@ module tiny_ram(tl_if b);
       if (b.a_valid && b.a_ready) begin
         b.d_valid <= 1;
         b.d_source <= b.a_source;
+        b.d_param <= 0; b.d_size <= b.a_size;
+        b.d_denied <= 0; b.d_corrupt <= 0; b.d_sink <= 0;
         b.d_opcode <= b.a_opcode == 4 ? 1 : 0;
         b.d_data <= b.a_opcode == 4 ? mem[b.a_address >> 2] : 0;
         if (b.a_opcode == 0) mem[b.a_address >> 2] <= b.a_data;
