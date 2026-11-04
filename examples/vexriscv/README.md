@@ -138,6 +138,41 @@ bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
 matching HGLDD. It also measures Scala attribution of native toggle points.
 This interface exercise is separate from ISA regression coverage.
 
+## Bounded RVFI checks
+
+`formal/rvw.toml` selects the upstream riscv-formal `FormalSimple` RTL snapshot.
+The snapshot has compressed instructions enabled. The checker uses RV32IC
+for 2-byte PC alignment. It selects the 37 RV32I instruction checks and reg, pc_fwd, pc_bwd, liveness,
+unique and causal. This snapshot is separate from the RV32IM simulation core.
+Run it with native tools and a new output directory:
+
+```sh
+RISCV_FORMAL=/path/to/riscv-formal scripts/with-lock.sh vex nice -n 10 \
+  rvw/.venv/bin/rvw --project examples/vexriscv/formal/rvw.toml \
+  formal riscv --out /tmp/vex-formal --timeout 120 --json
+```
+
+Read each C3 row in `results.json`. A timeout is inconclusive. A bounded PASS
+is not a full ISA proof. The C4 verdict cannot accept a core revision.
+Liveness uses a bounded simple-bus environment, including no traps.
+It counts accepted fetches and loads. Stores need no response. Responses must
+consume an outstanding request and arrive at least one cycle after acceptance.
+A response and a new request can occur in the same cycle. Overlapping fetches
+remain legal. Each command stall and each gap between owed responses has at
+most four cycles. Responses return in request order because neither bus has
+transaction IDs. Response data stays arbitrary. These assumptions apply only
+to liveness. They do not model coherent memory or prove adapter conformance.
+The counters cover the runner's maximum 200-cycle bound. The native environment
+regression checks response legality and wait bounds. It also covers overlap,
+simultaneous acceptance and response, stores, and queue drain:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python -m pytest \
+  examples/vexriscv/formal/tests/test_environment.py -q
+```
+See the [formal guide](../../rvw/src/rvw/formal/README.md) for scope and Sail
+arithmetic model generation. Measured results belong in issue #63.
+
 ## Architecture models
 
 [Minor and TimingSimple descriptions](rvw/arch/README.md) select RV32IM,

@@ -233,3 +233,11 @@ def test_project_history_scopes_core_cli_and_mcp(fake, monkeypatch, rvw):
     registry, problems = Registry.discover({'regress'})
     _, data, error = registry.call_json('regress_history', {'project': str(path)})
     assert not problems and not error and [row['run_id'] for row in data['runs']] == ['ours']
+
+
+def test_riscv_instruction_model_paths(tmp_path,monkeypatch):
+    monkeypatch.setenv('MODELS','generated')
+    project=tmp_path/'rvw.toml'
+    project.write_text('[core]\nname="formal"\n[riscv_formal.instruction_models]\nadd="${MODELS}/insn_add.v"\n')
+    selected=load_project(project)
+    assert selected.sections['riscv_formal']['instruction_models']['add']==tmp_path/'generated/insn_add.v'
