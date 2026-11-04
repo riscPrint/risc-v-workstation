@@ -205,3 +205,14 @@ Set `intent.reconvergence_depth` to 1..64 to inspect sequential reconvergence.
 The default is 1. Each finding lists synchronized endpoints and minimum register
 depths. A larger bound can find merges after independent pipeline registers.
 This does not establish functional correlation or safe relative latency.
+
+## Native connectivity lint
+
+Select `yosys` in `backends` to run `read_verilog -sv`, `hierarchy -check`,
+`proc`, and `check`. Rules are `yosys.combinational_feedback`,
+`yosys.conflicting_drivers`, and `yosys.undriven`. Other warnings retain
+`yosys.warning`. The report keeps the elaborated netlist, native output, script,
+wire bits and source attributes. Required outputs are output ports in the RTL.
+Undriven outputs and floating used wires are findings. Unused input ports do
+not imply a fault. Opaque blackboxes keep the backend inconclusive. Intentional
+wired logic needs an explicit RTL resolution model; waivers do not supply it.

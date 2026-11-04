@@ -2088,3 +2088,9 @@ register boundaries between synchronizer outputs and each sink. Findings retain
 each synchronized endpoint and its minimum register depth in `reconvergence`.
 Combinational edges do not consume this bound. Cycles are bounded. Memory and
 blackbox internals remain outside scope. This is structural evidence only.
+
+Lint settings can select optional backend `yosys`. Native `check` warnings use
+`yosys.combinational_feedback`, `yosys.conflicting_drivers`, `yosys.undriven`,
+or fallback `yosys.warning`. Findings retain elaborated bit IDs and available
+source attributes. Backend output includes `elaborated_modules` and `script`.
+Blackbox modules cannot earn a completed connectivity check.
