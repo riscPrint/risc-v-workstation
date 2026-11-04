@@ -416,9 +416,11 @@ def check(directory, results, platform, model, timeout, sail=None):
             raise ValueError('ELF differs from build manifest')
         candidates = [r for r in runs if r.elf_sha256 == s['elf_sha256']]
         c1_sha256 = None
+        c1_status = None
         status, reason, comparison = 'inconclusive', 'need exactly one C1 result for this ELF', None
         if len(candidates) == 1:
             run = candidates[0]
+            c1_status = run.status
             c1_sha256 = digest(run.path / 'result.json')
             reason = run.why_inconclusive
             if not reason and run.status != 'pass':
@@ -449,7 +451,7 @@ def check(directory, results, platform, model, timeout, sail=None):
                           and comparison.get('synchronized') == 0):
                         status, reason = 'pass', None
         rows.append({'id': s['id'], 'elf_sha256': s['elf_sha256'], 'status': status,
-                     'reason': reason, 'comparison': comparison, 'c1_sha256': c1_sha256, 'bins': {b: status for b in s['bins']}})
+                     'reason': reason, 'comparison': comparison, 'c1_sha256': c1_sha256, 'c1_status': c1_status, 'bins': {b: status for b in s['bins']}})
     return {'schema': 'rvw.mmu-check/1', 'model': model, 'manifest_sha256': digest(directory / 'manifest.json'),
             'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
             'scenarios': rows}
