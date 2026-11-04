@@ -123,6 +123,7 @@ def register(sub) -> None:
 
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
+    proof.add_argument("--memory-model", choices=["auto", "array", "map"], default="auto")
     proof.add_argument("--proof-cache", help="shared directory for exact proof input reuse")
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     proof.add_argument("--reset-cycles", type=int, default=1)
@@ -151,6 +152,7 @@ def register(sub) -> None:
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
+    b.add_argument("--memory-model", choices=["auto", "array", "map"], default="auto")
     b.add_argument("--proof-cache", help="shared directory for exact proof input reuse")
     b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")

@@ -877,3 +877,19 @@ trusted directories under C8. This is not an authenticated remote cache. There
 is no automatic eviction or repair of a corrupt entry; remove it to republish.
 Cache-hit wall time describes current work. It does not measure original proof
 cost or establish a speedup.
+
+
+## Memory encoding
+
+`bmc` and `prove` accept `--memory-model auto|array|map`. Auto keeps the SBY
+backend choice. Array requires an SMTBMC-only portfolio and retains RTL memories
+for the SMT array backend. Map inserts `memory_map -formal` before the engine.
+`memory_model.retained_memory_cells` reports remaining `$mem_v2` cells in the
+prepared design. Optimization can remove a memory completely. This count does
+not establish RAM refinement.
+
+Both modes preserve the frontend's RTL initialization, ports and collision
+semantics. They add no memory abstraction assumptions. Undefined contents and
+read-under-write behavior stay under Yosys semantics. Blackbox memories need a
+separate refinement contract; this option cannot prove that contract. Native
+legal and faulty RAM tests check both encodings. No capacity gain is claimed.

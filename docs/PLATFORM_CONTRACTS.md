@@ -2119,3 +2119,13 @@ capture, frontend checks, tool verification and bounded reachability remain
 mandatory on hits. An invalid entry is a miss. Only successful results with
 assertions and reachable guards enter this cache. Mounted directory sharing
 requires C8 trust; no remote authentication or gate acceptance is supplied.
+
+
+### Formal memory encoding
+
+`rvw.formal/1` BMC/prove results record `memory_model.requested` (`auto`, `array`,
+`map`), `retained_memory_cells` (prepared `$mem_v2` count, or null without a
+model), and `semantics`. Explicit array mode requires an SMTBMC-only portfolio.
+Map mode uses Yosys `memory_map -formal`. Both model the supplied RTL memory.
+Neither adds a RAM/blackbox refinement contract or resolves undefined RTL
+behavior by choosing a value. The retained-cell count is not a refinement proof.

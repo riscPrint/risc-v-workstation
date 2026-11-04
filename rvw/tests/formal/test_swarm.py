@@ -106,3 +106,21 @@ b0011 "
         assert detail['proof_kind'] == 'bounded'
         assert detail['reachability']['status'] == 'reachable'
         assert attempt['state_coverage']['ff_bits_from_trace'] >= 4
+
+
+def test_swarm_budget_keeps_unstarted_cycles(tmp_path, monkeypatch):
+    source = tmp_path / 'top.sv'
+    source.write_text('module top; endmodule')
+    trace = tmp_path / 'trace.vcd'
+    trace.write_text('trace')
+    ticks = iter([0, 31])
+    monkeypatch.setattr(swarm.time, 'monotonic', lambda: next(ticks))
+    monkeypatch.setattr(cli, '_flow', lambda *a: pytest.fail('expired budget'))
+    args = Namespace(out=tmp_path / 'out', start_cycle=1, end_cycle=3, samples=2,
+                     top='top', depth=4, budget=30, timeout=None, json=False,
+                     verilog=[str(source)], trace=str(trace), checks=None, engine='smtbmc:yices')
+    swarm.run(args)
+    result = json.loads((args.out / 'result.json').read_text())
+    assert result['stop_reason'] == 'budget_exhausted'
+    assert result['missing_cycles'] == [1, 3]
+    assert result['attempts'] == []

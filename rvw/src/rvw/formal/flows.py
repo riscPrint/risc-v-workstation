@@ -48,6 +48,13 @@ def _engine_block(engine: str, keep_going: bool) -> str:
     return "\n".join(common.engine_line(e.strip(), keep_going) for e in engine.split(",") if e.strip())
 
 
+def memory_commands(args):
+    mode = getattr(args, "memory_model", "auto")
+    if mode == "array" and any(e.strip().split(":")[0] != "smtbmc" for e in args.engine.split(",")):
+        raise ValueError("--memory-model array requires an smtbmc-only portfolio")
+    return "memory_map -formal" if mode == "map" else ""
+
+
 def _header(kind: str, args, status: str, secs: float, asserts: int | None, reset: str | None,
             ties: dict, restrictions: list[str]) -> dict:
     return {
@@ -255,6 +262,7 @@ def wrapper(top: str, ports: list[Port], clock: str, reset: str | None, active_h
 
 def bmc(args) -> int:
     out = common.begin(args)
+    memory_script = memory_commands(args)
     args.event_model = bool(args.event_model or args.event_clock)
     if args.async_reset and not args.event_model:
         common.die("--async-reset requires --event-model or --event-clock")
@@ -306,6 +314,7 @@ multiclock {'on' if args.event_model else 'off'}
 read_verilog -formal -sv {out / 'rvw_formal_top.sv'}
 prep -top rvw_formal_top
 {cut_script}
+{memory_script}
 
 [files]
 """
@@ -330,6 +339,13 @@ prep -top rvw_formal_top
             result['status'] = 'unknown'
             result['abstraction_counterexample'] = True
         common.write_json(out / "result.json", result)
+    prep_model = out / "sby" / "model" / "design_prep.il"
+    result['memory_model'] = {
+        'requested': getattr(args, "memory_model", "auto"),
+        'retained_memory_cells': sum(line.strip().startswith('cell $mem_v2 ')
+                                     for line in prep_model.read_text().splitlines()) if prep_model.exists() else None,
+        'semantics': 'RTL memory semantics; no additional abstraction or refinement contract'}
+    common.write_json(out / "result.json", result)
     if cache_root:
         result['proof_cache'] = {'key': proof_cache.key_for(cache_identity), 'hit': cache_hit,
                                  'rule': 'exact prepared inputs, tools, environment and runner code'}
