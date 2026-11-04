@@ -38,7 +38,7 @@ def run(args):
     mined = candidates({s: plan['signals'][s] for s in node['outputs']}, plan['samples'])
     if set(mined) & set(plan['predicates']):
         raise ValueError('mined predicate name collides with a declared predicate')
-    out = Path(args.out).absolute()
+    out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     (out / 'plan.json').write_bytes(raw)
     (out / 'source').mkdir()

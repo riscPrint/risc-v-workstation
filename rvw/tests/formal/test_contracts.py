@@ -157,3 +157,25 @@ endmodule
     assert run.returncode != 0
     assert '52-entry' in run.stderr
     assert not out.exists()
+
+
+def test_contract_output_symlink_is_resolved(tmp_path, monkeypatch):
+    from rvw.formal import cli
+    from pathlib import Path
+    root = tmp_path / 'real'
+    root.mkdir()
+    link = tmp_path / 'link'
+    link.symlink_to(root, target_is_directory=True)
+    source = tmp_path / 'unit.sv'
+    source.write_text('module Unit(input clk); endmodule\n')
+    p = plan()
+    p['verilog'] = ['unit.sv']
+    manifest = tmp_path / 'plan.json'
+    manifest.write_text(json.dumps(p))
+    def flow(_, args):
+        # Capture must finish before the first job. The old absolute path failed there.
+        assert Path(args.out).is_relative_to(root)
+        raise RuntimeError('capture completed')
+    monkeypatch.setattr(cli, '_flow', flow)
+    with pytest.raises(RuntimeError, match='capture completed'):
+        run(Namespace(manifest=manifest, out=link / 'out', budget=10, depth=8, engine='abc:pdr', json=False))

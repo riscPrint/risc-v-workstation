@@ -138,7 +138,7 @@ def run(args):
     from .snapshot import InputSnapshot
     if not math.isfinite(args.budget) or args.budget <= 0:
         raise ValueError('budget must be finite and positive')
-    out = Path(args.out).absolute()
+    out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     raw = Path(args.manifest).read_bytes()
     plan = json.loads(raw)
