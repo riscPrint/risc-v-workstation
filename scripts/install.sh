@@ -14,6 +14,7 @@ Usage: scripts/install.sh [OPTIONS]
   --with-cosim       Spike headers/libraries and the workstation shim.
   --with-formal      OSS CAD Suite: Yosys, SymbiYosys and Yices.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
+  --with-lint        Pinned native Verible syntax and style lint.
   --with-sail        Pinned Sail model (bundle mode only).
   --from-bundle      Use native workflow artifacts for selected tools.
   --bundle-run ID    Download artifacts from this private Actions run (needs gh).
@@ -37,7 +38,7 @@ value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a
 
 sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
-bundle=0 sail=0 bundle_run='' bundle_dir=''
+lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --prefix) value "$@"; prefix="$2"; shift 2 ;;
@@ -46,13 +47,14 @@ while [ "$#" -gt 0 ]; do
     --from-bundle) bundle=1; shift ;;
     --bundle-run) value "$@"; bundle_run="$2"; shift 2 ;;
     --bundle-dir) value "$@"; bundle_dir="$2"; shift 2 ;;
+    --with-lint) lint=1; shift ;;
     --with-sail) sail=1; shift ;;
     --with-sim) sim=1; shift ;;
     --with-riscv-gcc) gcc=1; shift ;;
     --with-cosim) cosim=1; shift ;;
     --with-formal) formal=1; shift ;;
     --with-gem5) gem5=1; shift ;;
-    --all) sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
+    --all) lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
     --yes) yes=1; shift ;;
     --dry-run) dry=1; shift ;;
     --check) check=1; shift ;;
@@ -94,7 +96,7 @@ if [ -x "$tools/gem5/bin/gem5.opt" ] && [ "$gem5_external" = 0 ]; then RVW_GEM5=
 if [ -d "$tools/verilator" ]; then export VERILATOR_ROOT="$tools/verilator/share/verilator"; fi
 if [ -x "$tools/sail/bin/sail_riscv_sim" ]; then export RVW_SAIL="$tools/sail/bin/sail_riscv_sim"; fi
 export RVW_GEM5
-export PATH="$tools/verilator/bin:$tools/sail/bin:$PATH"
+export PATH="$tools/verible/bin:$tools/verilator/bin:$tools/sail/bin:$PATH"
 export PATH="$rvw_home/rvw/.venv/bin:$tools/bin:$tools/oss-cad-suite/bin:$PATH:$HOME/.local/bin"
 # Reuse installer-managed tools on a second run without sourcing env.sh first.
 if [ -d "$tools/jdk" ]; then export JAVA_HOME="$tools/jdk"; fi
@@ -253,6 +255,7 @@ spike_inputs() {
 }
 optional_check() {
   local failed=0
+  if [ "$lint" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-verible.py" --home "$rvw_home" --check || failed=1; fi
   if [ "$gem5" = 1 ]; then gem5_check || failed=1; fi
   if [ "$sim" = 1 ]; then sim_check || failed=1; fi
   if [ "$gcc" = 1 ]; then
@@ -409,6 +412,12 @@ run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_ho
 run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
+
+if [ "$lint" = 1 ]; then
+  lint_args=(--home "$rvw_home")
+  [ "$dry" = 0 ] || lint_args+=(--dry-run)
+  run "$python_cmd" "$script_root/scripts/install-verible.py" "${lint_args[@]}"
+fi
 
 if [ "$bundle" = 1 ]; then
   bundle_args=(--home "$rvw_home")
@@ -596,7 +605,7 @@ if [ "$dry" = 0 ]; then
     fi
     if [ -n "${VERILATOR_ROOT:-}" ]; then printf 'export VERILATOR_ROOT=%q\n' "$VERILATOR_ROOT"; fi
     if [ -n "${RVW_SAIL:-}" ]; then printf 'export RVW_SAIL=%q\n' "$RVW_SAIL"; fi
-    printf 'export PATH="$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'
+    printf 'export PATH="$RVW_HOME/.tools/verible/bin:$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'
     printf 'export SPIKE_PREFIX=%q\nexport PATH="$SPIKE_PREFIX/bin:$PATH"\n' "$SPIKE_PREFIX"
     printf 'export PATH="$RVW_HOME/rvw/.venv/bin:$RVW_HOME/.tools/bin:$RVW_HOME/.tools/oss-cad-suite/bin:$RVW_HOME/.tools/riscv/bin:$PATH"\n'
   } > "$rvw_home/env.sh"

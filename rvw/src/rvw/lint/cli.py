@@ -20,7 +20,7 @@ def load(path):
     path = Path(path).resolve()
     data = path.read_bytes()
     cfg = json.loads(data)
-    allowed = {'schema', 'config', 'top', 'files', 'db', 'backends', 'waivers', 'timeout_s'}
+    allowed = {'schema', 'config', 'top', 'files', 'db', 'backends', 'waivers', 'timeout_s', 'intent'}
     if not isinstance(cfg, dict) or set(cfg) - allowed or cfg.get('schema') != 'rvw.lint-settings/1':
         raise ValueError('invalid lint settings schema or keys')
     for key in ('config', 'top'):
@@ -73,7 +73,7 @@ def report(path):
                     raise ValueError('settings config does not match database config')
                 if db.meta.get('toplevel') and db.meta['toplevel'] != cfg['top']:
                     raise ValueError('settings top does not match database toplevel')
-                return structural.analyze(db)
+                return structural.analyze(db, cfg.get('intent', {}))
             runs[backend] = run_on(cfg['db'], checked)
         else:
             runs[backend] = native.run(backend, cfg['files'], cfg['top'], cfg.get('timeout_s', 120))

@@ -136,7 +136,7 @@ def test_reset_crossings_same_clock(tmp_path, independent):
             c.execute("UPDATE clock_domains SET reset='other', reset_key='other:Bool' WHERE id=2")
     r = run_on(p, structural.analyze)
     assert len(r['reset_crossings']) == int(independent)
-    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset'] if independent else [])
+    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset', 'rdc.release_order_unproved'] if independent else [])
     assert all(t['status'] == 'unknown_control' for t in r['reset_trees'])
 
 
@@ -275,3 +275,28 @@ def test_waiver_expires_when_clock_domain_changes(tmp_path):
     result = report(path)
     assert result['waivers'][0]['matches'] == 0
     assert result['backends']['structural']['findings'][0]['disposition'] == 'active'
+
+
+
+def test_native_verible_style_and_syntax(tmp_path):
+    import shutil
+    if not shutil.which('verible-verilog-lint'):
+        pytest.skip('Verible is not installed')
+    style = tmp_path / 'bad.sv'
+    style.write_text('module bad(input logic a, output logic b);\nalways @* b = a;\nendmodule\n')
+    result = native.run('verible', [str(style)], 'bad', 30)
+    assert result['status'] == 'completed'
+    assert result['findings']
+    config = tmp_path / 'native.json'
+    config.write_text(json.dumps(dict(schema='rvw.lint-settings/1', config='reference',
+                                     top='bad', files=[str(style)], backends=['verible'])))
+    actual = report(config)
+    assert actual['status'] == 'findings'
+    assert actual['backends']['verible']['status'] == 'completed'
+    assert actual['backends']['verible']['version']
+    assert actual['backends']['verible']['raw_output']
+    broken = tmp_path / 'broken.sv'
+    broken.write_text('module broken;\nassign x = ;\nendmodule\n')
+    result = native.run('verible', [str(style), str(broken)], 'bad', 30)
+    assert result['status'] == 'inconclusive'
+    assert result['findings'] and result['raw_output']
