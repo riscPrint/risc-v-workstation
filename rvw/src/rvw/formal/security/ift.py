@@ -31,14 +31,18 @@ def instrument(design, top):
     if clocks and len(clock_ports) != 1:
         raise ValueError('clock must be a scalar public input port')
     bits = {b for d in mod['netnames'].values() for b in d['bits'] if isinstance(b, int)}
+    port_names = {name for p in ports for name in (p, p + '__t')}
+    prefix = ''
+    while any(f'{prefix}{kind}{b}' in port_names for kind in ('n', 't') for b in bits):
+        prefix += '_'
     def v(b):
         if isinstance(b, int):
-            return f'n{b}'
+            return f'{prefix}n{b}'
         if b not in ('0', '1'):
             raise ValueError('X/Z constants are unmodeled')
         return f"1'b{b}"
     def t(b):
-        return f't{b}' if isinstance(b, int) else "1'b0"
+        return f'{prefix}t{b}' if isinstance(b, int) else "1'b0"
     names = [n for p in ports for n in ([p] if p in clock_ports else [p, p+'__t'])]
     lines = [f'module {top}__ift({", ".join(names)});']
     for p, d in ports.items():
@@ -48,7 +52,7 @@ def instrument(design, top):
             lines.append(f'{d["direction"]} [{len(d["bits"])-1}:0] {n};')
     state = {c['connections']['Q'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}
     for b in sorted(bits):
-        lines.append(f'{"reg" if b in state else "wire"} n{b}, t{b};')
+        lines.append(f'{"reg" if b in state else "wire"} {prefix}n{b}, {prefix}t{b};')
     driven = set()
     for p, d in ports.items():
         for i, b in enumerate(d['bits']):

@@ -83,6 +83,9 @@ def run_contract(args):
         report['adapter_command'] = command
         report['adapter_binding'] = 'Adapter must bind its simulator and dependencies; no tool qualification claim.'
     except (OSError, KeyError, TypeError, ValueError) as exc:
+        report['verdict'] = 'inconclusive'
+        if 'zkt_verdict' in report:
+            report['zkt_verdict'] = 'inconclusive'
         report['cause'] = str(exc)
     (out/'result.json').write_text(json.dumps(report, indent=2)+'\n')
     print(json.dumps(report))

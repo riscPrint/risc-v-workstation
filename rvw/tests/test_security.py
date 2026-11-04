@@ -185,7 +185,7 @@ def test_zkt_scope_excludes_hint_and_other_instructions():
         assert not eligible_zkt(insn)
 
 
-@pytest.mark.parametrize('case', ['incomplete','mismatch','missing-channel','nonmonotonic','timeout'])
+@pytest.mark.parametrize('case', ['incomplete','mismatch','missing-channel','nonmonotonic','timeout','missing-limits'])
 def test_native_bad_adapter_never_earns_clean_verdict(tmp_path,monkeypatch,case):
     from rvw.formal.security import cli
     from rvw.cosim.platform import Platform
@@ -212,6 +212,10 @@ def test_native_bad_adapter_never_earns_clean_verdict(tmp_path,monkeypatch,case)
     manifest.write_text(json.dumps(dict(elf=str(elf),platform=str(platform),shim='unused',adapter_tree=str(tree),
         adapter_command=[sys.executable,'{out}'],secret_registers=[1],unmodeled_channels=['all other'],
         stop_pc=4,max_steps=1,observations=['cache'],cases=[dict(public_key=[],registers={'1':s}) for s in (0,1)])))
+    if case == 'missing-limits':
+        cfg = json.loads(manifest.read_text())
+        del cfg['unmodeled_channels']
+        manifest.write_text(json.dumps(cfg))
     assert cli.run_contract(SimpleNamespace(out=str(tmp_path/'run'),manifest=str(manifest)))==3
     report=json.loads((tmp_path/'run/result.json').read_text())
     assert report['verdict']=='inconclusive'
@@ -232,3 +236,30 @@ def test_native_ift_refuses_unmodeled_state_and_channels(source,tmp_path,native_
     with pytest.raises(ValueError): instrument(json.loads(net.read_text()),'dut')
     result=run_group(['yosys','-Q','-T','-m',str(ift_plugin),'-p',f'read_json {net}; rvw_ift'],env=native_env,capture=True,timeout=30)
     assert result.returncode!=0 and not result.timed_out
+
+
+@pytest.mark.parametrize('port', ['n3', 't3'])
+def test_json_ift_keeps_ports_distinct_from_internal_bits(tmp_path, native_env, port):
+    source = tmp_path / 'source.v'
+    source.write_text(f'module dut(input {port}, output y); assign y = ~{port}; endmodule')
+    net = tmp_path / 'net.json'
+    native(['yosys', '-Q', '-T', '-p',
+            f'read_verilog {source}; hierarchy -top dut; proc; flatten; techmap; simplemap; write_json {net}'],
+           env=native_env)
+    output = tmp_path / 'ift.v'
+    output.write_text(instrument(json.loads(net.read_text()), 'dut'))
+    tb = tmp_path / 'tb.v'
+    tb.write_text(f'''module tb;
+reg value=0, taint=0; wire y, yt;
+dut__ift d(.{port}(value), .{port}__t(taint), .y(y), .y__t(yt));
+initial begin
+ #1; if (y !== 1 || yt !== 0) $fatal(1, "public value changed");
+ value=1; taint=1;
+ #1; if (y !== 0 || yt !== 1) $fatal(1, "secret value or taint changed");
+ $finish;
+end
+endmodule
+''')
+    executable = tmp_path / 'sim'
+    native(['iverilog', '-g2012', '-s', 'tb', '-o', executable, output, tb], env=native_env)
+    native(['vvp', executable], env=native_env)
