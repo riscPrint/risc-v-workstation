@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import fcntl
 import json
 import os
+import math
 from pathlib import Path
 import subprocess
 import time
@@ -17,6 +18,8 @@ def host_memory():
 
 @contextmanager
 def reserve(resources, timeout, root=None):
+    if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError('positive finite capacity wait timeout required')
     root = Path(root or Path.home() / '.cache/rvw/farm')
     root.mkdir(parents=True, exist_ok=True)
     config = Path.home() / '.config/rvw/farm-capacity.json'
@@ -38,16 +41,32 @@ def reserve(resources, timeout, root=None):
             fcntl.flock(lock, fcntl.LOCK_EX)
             path = root / 'reservations.json'
             records = json.loads(path.read_text()) if path.exists() else []
+            queue_path = root / 'queue.json'
+            queue = json.loads(queue_path.read_text()) if queue_path.exists() else []
+            def alive(pid):
+                try:
+                    os.kill(pid, 0)
+                    return True
+                except ProcessLookupError:
+                    return False
+            # Only waiting tickets can be reclaimed without process-group evidence.
+            queue = [q for q in queue if alive(q['pid'])]
             # Dead reservations are not reclaimed without group cleanup evidence.
             if release:
                 records = [r for r in records if r['token'] != token]
+                queue = [q for q in queue if q['token'] != token]
                 accepted = True
             else:
-                accepted = (sum(r['cpu'] for r in records) + cpu <= capacity['cpu']
+                if not any(q['token'] == token for q in queue):
+                    queue.append(dict(token=token, pid=os.getpid()))
+                accepted = (queue[0]['token'] == token and sum(r['cpu'] for r in records) + cpu <= capacity['cpu']
                             and sum(r['memory_bytes'] for r in records) + memory <= capacity['memory_bytes']
                             and not set(locks).intersection(x for r in records for x in r['locks']))
                 if accepted:
+                    queue.pop(0)
                     records.append(dict(token=token, pid=os.getpid(), cpu=cpu, memory_bytes=memory, locks=locks))
+            queue_temp = root / 'queue.tmp'
+            queue_temp.write_text(json.dumps(queue)); queue_temp.replace(queue_path)
             temp = root / 'reservations.tmp'
             temp.write_text(json.dumps(records)); temp.replace(path)
             return accepted
@@ -58,7 +77,6 @@ def reserve(resources, timeout, root=None):
             time.sleep(.1)
         acquired = True
         yield dict(cpu=cpu, memory_bytes=memory, locks=locks, queued_s=time.monotonic()-start,
-                   enforcement='cooperative reservation')
+                   enforcement='cooperative reservation', scheduling='fifo')
     finally:
-        if acquired:
-            update(release=True)
+        update(release=True)

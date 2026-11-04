@@ -1294,7 +1294,9 @@ process group. Separate SSH cancellation uses campaign control tokens. A host
 acknowledges only after group cleanup and a host process-table check. Missing
 acknowledgement is inconclusive. Host reservations share CPU slots, declared
 memory bytes and named locks across workers. They report queue time and release
-on handled exit. They are cooperative, not OS CPU/RSS limits. SIGKILL can leave
+on handled exit. A persistent FIFO queue prevents newer requests from bypassing
+older requests. Dead waiting tickets can be removed; active reservations cannot.
+They are cooperative, not OS CPU/RSS limits. SIGKILL can leave
 stale reservations; owner cleanup is required. Scalable streaming, crash recovery
 and C3 gate import remain open. The static dashboard reads existing C3/C4/history. Recorded
 C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.

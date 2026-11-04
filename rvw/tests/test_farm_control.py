@@ -100,3 +100,39 @@ with reserve({'cpu':1,'memory_bytes':80,'locks':['build']}, 5) as report:
         assert not acquired.exists()
     assert process.wait(timeout=6) == 0
     assert json.loads(acquired.read_text())['queued_s'] >= .1
+
+
+def test_fifo_prevents_small_request_bypassing_large_waiter(tmp_path, monkeypatch):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    config = tmp_path / '.config/rvw'; config.mkdir(parents=True)
+    (config / 'farm-capacity.json').write_text(json.dumps({'cpu': 2, 'memory_bytes': 100}))
+    root = tmp_path / 'reservations'
+    order, errors = [], []
+    def run(cpu):
+        try:
+            with reserve({'cpu': cpu}, 3, root):
+                order.append(cpu)
+                time.sleep(.1)
+        except Exception as exc:
+            errors.append(exc)
+    with reserve({'cpu': 1}, 1, root):
+        large = threading.Thread(target=run, args=(2,)); large.start()
+        deadline = time.monotonic() + 2
+        while not json.loads((root / 'queue.json').read_text()) and time.monotonic() < deadline:
+            time.sleep(.02)
+        assert json.loads((root / 'queue.json').read_text())
+        small = threading.Thread(target=run, args=(1,)); small.start()
+        time.sleep(.2)
+        assert order == []
+    large.join(4); small.join(4)
+    assert not errors
+    assert order == [2, 1]
+    assert json.loads((root / 'queue.json').read_text()) == []
+
+
+def test_wait_timeout_removes_ticket(tmp_path):
+    with reserve({'locks': ['build']}, 1, tmp_path):
+        with pytest.raises(ValueError, match='wait timeout'):
+            with reserve({'locks': ['build']}, .1, tmp_path):
+                pass
+        assert json.loads((tmp_path / 'queue.json').read_text()) == []

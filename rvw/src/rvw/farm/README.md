@@ -63,7 +63,10 @@ OS share capacity. Set `~/.config/rvw/farm-capacity.json` on each host to an obj
 with `cpu` and `memory_bytes`. Defaults reserve at most logical CPU count minus
 one (minimum one), and half physical memory. Omitted memory means zero requested
 bytes. Omitted locks means no named lock. A request waits up to the shard timeout
-for capacity. The reply records reserved values and `queued_s`. Each request owns
+for capacity. Requests use a persistent first-in, first-out queue per OS user.
+Small requests cannot bypass an older large request. This can leave slots idle
+while that request waits. Timed-out tickets and dead waiting processes leave the
+queue. Dead active reservations still need checked cleanup. The reply records reserved values and `queued_s`. Each request owns
 its reservation. Normal completion, timeout and handled cancel release it.
 These are cooperative reservations. They do not cap actual RSS or CPU use.
 Adapters and unrelated processes can exceed them. Dead worker records require
