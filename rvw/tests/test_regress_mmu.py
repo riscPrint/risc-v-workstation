@@ -253,3 +253,26 @@ def test_report_needs_bound_check_and_unique_c1(tmp_path):
     manifest.write_text(manifest.read_text()+'\n')
     with pytest.raises(ValueError, match='coverage needs'):
         mmu.report(tmp_path, run, checked)
+
+
+def test_report_keeps_observations_separate_from_architectural_bins(tmp_path):
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'elf')
+    (tmp_path/'manifest.json').write_text(json.dumps({'scenarios': [dict(scenario(), elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir()
+    observations = run/'observed.jsonl'
+    observations.write_text('\n'.join(map(json.dumps, [
+        dict(schema='rvw.mmu-observations/1', elf_sha256=mmu.digest(elf)),
+        dict(kind='walk_request', cycle=1, address='0x80010008', command=0),
+        dict(kind='bus_a', cycle=2, address='0x2000000', opcode=4, size_log2=3)])))
+    (run/'result.json').write_text(json.dumps(dict(schema='rvw.run/1', status='pass',
+        elf_sha256=mmu.digest(elf), details=dict(mmu_observations=observations.name))))
+    result = mmu.report(tmp_path, run)
+    assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
+    observed = result['scenarios'][0]['observations']
+    assert observed['status'] == 'recorded'
+    assert observed['counts'] == dict(walk_request=1, walk_response=0, bus_a=1)
+    assert observed['sha256'] == mmu.digest(observations)
+    observations.write_text(json.dumps(dict(schema='rvw.mmu-observations/1', elf_sha256='wrong')))
+    with pytest.raises(ValueError, match='header'):
+        mmu.report(tmp_path, run)
