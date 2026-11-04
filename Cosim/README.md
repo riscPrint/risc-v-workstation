@@ -708,3 +708,12 @@ captures. DUT FP state remains blocked by
 Sail's public text trace does not supply full post-instruction FP flags or
 register state. Do not infer unreported flags from a write log or copy them
 from Spike. Sail state comparison remains unsupported.
+
+`test_unread_csr.py` checks native Spike snapshots after two unread `mscratch`
+writes and synchronous ECALL entry. A reference-generated fixture puts these
+instructions in one cycle. Mutations detect use of the final cycle state in
+an earlier retire slot and a wrong unread `mepc`. This tests the checker, not
+a DUT producer. BOOM per-slot capture remains blocked by
+[spinal-boom #10](https://github.com/riscPrint/spinal-boom/issues/10).
+Sail's public write log is not a full CSR snapshot. Missing writes cannot
+establish full state. Sail snapshot support remains unavailable.
