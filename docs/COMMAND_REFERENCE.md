@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -22,8 +22,23 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch sched-generate`
+
+```text
+usage: rvw arch sched-generate [-h] --out OUT [--json] [--project PROJECT]
+    description_path
+```
+
+### `rvw arch sched-measure`
+
+```text
+usage: rvw arch sched-measure [-h] --out OUT [--json] [--count COUNT]
+    [--timeout TIMEOUT] [--cc CC] [--mca MCA] [--project PROJECT]
+    description_path
 ```
 
 ### `rvw arch search`
@@ -487,6 +502,13 @@ usage: rvw lint [-h] [--settings SETTINGS] [--json] [--project PROJECT]
 
 ```text
 usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
+```
+
+### `rvw ooo`
+
+```text
+usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--json] [--project PROJECT]
+    config trace
 ```
 
 ### `rvw perf`

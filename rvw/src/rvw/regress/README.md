@@ -153,8 +153,8 @@ to `inconclusive`, never to known or still failing, and is neither cached nor re
 Base failures that pass in the candidate with the same inputs and seeds are `fixed`.
 Tests or seeds in the base but not the candidate are `missing` and reject
 unless `--allow-missing`. For suites with `perf_metrics` (BOOM: benchmark ROI
-`cycles`), tests that pass on both sides are compared on the mean over seeds; a loss above the
-tolerance rejects. `name` and `name:min` mean lower is better. `name:max` means higher is better,
+`cycles`), tests that pass on both sides are compared for each paired seed. A loss above the
+tolerance on any seed rejects. `name` and `name:min` mean lower is better. `name:max` means higher is better,
 as in `ipc:max`. `lower` and `higher` are aliases for `min` and `max`. Other directions and
 duplicate metric names are config errors. Metric names match `[A-Za-z_][A-Za-z0-9_.-]*`.
 The same finite, non-negative `perf_tolerance` applies to each declared metric separately.
@@ -166,9 +166,12 @@ evidence inconclusive. A metric is never silently left out. A declared performan
 baseline and candidate on every seed. An added workload without a baseline, or a failed
 workload (including a known or unchanged failure), makes performance evidence inconclusive.
 Each C4 performance item reports base, candidate and paired sample counts. Its
-`comparison_rule` is `relative_mean`. Its `confidence` is `not_estimated`. The threshold
-applies to the relative change in arithmetic means. Equality with the threshold does not reject.
-This rule supplies no statistical confidence and does not bound per-seed losses.
+`comparison_rule` is `max_paired_relative_loss`. Its `confidence` is `not_estimated`.
+Means and mean `change` are descriptive. For each seed, loss is `(candidate - base) / base`
+for a lower-is-better metric, and `(base - candidate) / base` for higher-is-better.
+The report gives `max_paired_loss` and `worst_seed`. Equality with the threshold does not reject.
+A fast seed cannot cancel a slow seed. This bounded deterministic rule makes no claim about
+unmeasured seeds, noise distributions or statistical significance.
 
 Verdict: `reject` if anything rejects; else `inconclusive` if any candidate result is
 inconclusive, no test ran on both sides, or either source lacks a clean committed identity;
@@ -195,6 +198,34 @@ Without that complete RTL identity, source-based cache rules still apply.
 Reused C1 results record the original source in `reused_from_source`; their `source` and C3
 source fields name the current selection. Every claimed model value must still match.
 The verdict goes to `<candidate run>/verdict.json`.
+
+### Cold native gate timing
+
+Select an older and a candidate commit that the chosen adapter can build.
+Build the tier's ELF inputs first. Keep the tool checkout at one clean commit until the gate
+finishes. A changed tool revision can invalidate C1 identity claims.
+
+For the BOOM example, set `older_rev` and `candidate_rev` to the full core commits, then run:
+
+```sh
+cold_root="$(mktemp -d /tmp/rvw-cold.XXXXXX)"
+export RISCVSIM_WORK="$cold_root/native"
+export RVW_RESULTS="$cold_root/results"
+export RVW_SRC_CACHE="$cold_root/source"
+/usr/bin/time -p scripts/with-lock.sh boom nice -n 10 rvw/.venv/bin/rvw regress gate \
+  --core boom --tier quick --base-rev "$older_rev" --cand-rev "$candidate_rev" \
+  --jobs 1 --no-cache --json
+```
+
+The three child directories must be new. `--no-cache` alone does not clear the adapter's
+compiled-model cache. Installed tools, dependency downloads and sbt outputs remain warm.
+This measures cold native-model, result and source-export caches. It is not a clean-machine
+installation test. Record total wall time and lock acquisition time separately.
+
+Check both source identities and all requested workloads before calling the comparison complete.
+A build failure, an incomplete identity or a wall timeout is inconclusive. A timed attempt alone
+does not qualify an older revision. An accepted comparison can retain an unchanged failure;
+report each side's pass and failure counts with the timing. A quick gate qualifies only that tier.
 
 ## Core config reference
 
@@ -361,30 +392,43 @@ Retained limit: Committed revisions and complete captured inputs remain necessar
 
 ## Review status and close rules
 
-Waivers and failure signatures remain experimental (#2). The review covers changed RVFI
-messages, stale saved fail codes and status changes. Compare derives RVFI identity from the
-full saved message. Without a monitor code or message, old RVFI evidence needs a rerun.
-A saved fail code overrides its saved signature. Unchanged failures must also have the same status.
+The #2 close rule is a completed case matrix and an explicit diagnostic-class policy.
+The negative cases cover changed messages, status, fail code, monitor code, assertion line,
+legacy truncation, wildcard signatures and all-config waivers.
 
-The close rule requires negative tests for changed failures, legacy evidence and waiver scope.
-It also requires a policy for wildcard waivers, config-wide waivers and coarse identities
-(cycle timeout, fail code, monitor code or source line). These identities can group different
-root causes. A wildcard can deliberately cover a changed failure. This review does not prove
-that such a waiver is safe. Check each waiver and its full failure evidence before use.
+Only an exact signature with an explicit config can waive a failure for acceptance.
+A matching wildcard (`*`, `?`, `[...]`) or all-config entry makes the result inconclusive.
+It cannot fall back to unchanged-failure acceptance. Narrow the entry after review.
+Files can retain broad entries for migration, but those entries cannot earn acceptance.
 
-Stored-folder gates and performance metrics remain experimental (#4). Keep these reviews separate:
+An exact waiver accepts a diagnostic class, not a root cause. For a cycle timeout this
+class is the cycle limit with the captured inputs. For a fail code or monitor code it is
+that producer's code. For an assertion it is the recorded source location. These classes
+can contain several causes. Review the full evidence before adding an exact waiver.
+An exact waiver deliberately covers changed messages within its declared class.
+Without a waiver, unchanged failures require equal status, signature and full saved message.
+A changed or missing message on one side is a new failure. Two absent messages establish
+only diagnostic-class equality. They do not establish equal root causes.
+Legacy ambiguous 400-character previews and uncoded RVFI errors without full messages
+remain inconclusive. No class identity can override an inconclusive C1 result.
+
+Stored-folder identity and performance policy have separate close rules (#4):
 
 - Stored identity: negative tests must cover wrong core, mixed source or model, changed ELF,
   options, metric selectors, stimulus bytes, missing seeds and missing required workloads.
   Existing plan tests include quick folders requested as full, even with `allow_missing`.
-  This round reruns those fixtures. It does not establish native historical-folder compatibility.
+  The review also requires a native historical-folder check. An old folder must still match
+  the current requested ELF hashes and options. A passing narrow plan cannot qualify a larger plan.
 - Performance: use the same workload, seeds, options and measurement origins on both sides.
   Declare ROI counters through `cycles_key` and `instret_key`. A selector name alone does not
   define semantic ROI boundaries. The adapter must keep those boundaries stable and identify
-  changes in its inputs. The tests use repeated fixed-seed fixtures, not native noise experiments.
-  A mean can cancel a slow seed with a fast seed. Sample counts are visible, but confidence is
-  not estimated. The close rule requires native repeated-seed experiments, stable ROI boundaries
-  and a reviewed statistical acceptance rule. Do not treat this increment as that evidence.
+  changes in its inputs. Fixture seeds test the rule. Native experiments must state their seed
+  range, ROI markers and workload list. Fixed-latency repeats do not measure random-memory noise.
+  Each paired seed must meet the tolerance. Sample counts are visible, but confidence is
+  not estimated. The close rule requires native repeated-seed experiments and stable ROI boundaries.
+  The reviewed acceptance rule is the maximum paired relative loss, without population inference.
+  An experiment qualifies only its declared workloads, configs, seeds, memory mode and ROI.
+  New projects must establish their own marker semantics and native evidence before relying on it.
 
 A quick gate covers only its requested tier. It must not substitute for required performance
 workloads in a full tier. Request that tier explicitly. A stored gate checks the requested plan;
