@@ -23,16 +23,3 @@ lazy val spinalblocks = (project in file("."))
     Test / parallelExecution := false
   )
 
-// Diagrams of the spinal-boom cores: `sbt "boom/run small"`. Needs a spinal-boom checkout, by default
-// next to this repository; set SPINAL_BOOM to use another one.
-val spinalBoomDir = file(sys.env.getOrElse("SPINAL_BOOM", "../../../spinal-boom"))
-lazy val boom = (project in file("boom"))
-  .dependsOn(spinalblocks, ProjectRef(spinalBoomDir, "root") % "compile->compile;compile->test")
-  .settings(
-    name := "spinalblocks-boom",
-    libraryDependencies += compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion),
-    scalacOptions ++= Seq("-deprecation", "-feature", "-language:reflectiveCalls"),
-    fork := true,
-    run / baseDirectory := spinalBoomDir.getAbsoluteFile,
-    javaOptions ++= Seq("-Xss64m", "-Xmx8g")
-  )

@@ -225,9 +225,10 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
 ## Decisions and limits
 
 - Read stored block artifacts through `rvw query`. New core entry points belong
-  in project data or separate example builds. The legacy extractor build still
-  loads BOOM. Its removal is deferred until BOOM diagram and source-link parity
-  is checked. The old command remains `cd spinalblocks && sbt "boom/run small"`.
+  in project data or separate example builds. The extractor library has no BOOM
+  dependency. Build BOOM databases with `SpinalDB/build-db.sh boom small OUT`.
+  Export diagrams with `rvw query export blocks blocks.json.gz --db OUT`.
+  The core project owns the top-level construction; the viewer reads the database.
 - Diagram nets and database edges show possible structural influence. They do
   not select the active driver at a waveform time. Use SpinalTrace for that.
 - A BlackBox diagram shows ports only. The database uses coarse dependencies:
@@ -246,7 +247,7 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
 
 Database migration and legacy entry removal: [#44](https://github.com/riscPrint/risc-v-workstation/issues/44). More-design checks: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Cross-navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
 
-Retained limit: Database export is available. Legacy entry removal still needs parity evidence. Missing source files and extraction approximations do not become verified navigation.
+Retained limit: Diagrams read the database. Missing source files and extraction approximations do not become verified navigation.
 
 ### Compare caller locations
 
