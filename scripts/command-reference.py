@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the CLI and MCP reference from the installed rvw declarations."""
 import argparse
+from functools import partial
 import os
 from pathlib import Path
 
@@ -32,6 +33,8 @@ def render():
                  '## CLI commands', '']
 
         def visit(parser):
+            # argparse otherwise wraps usage at the caller's terminal width.
+            parser.formatter_class = partial(parser.formatter_class, width=78)
             lines.extend(['### `' + parser.prog + '`', '', '```text',
                           parser.format_usage().strip(), '```', ''])
             for action in parser._actions:

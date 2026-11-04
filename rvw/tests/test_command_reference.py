@@ -10,3 +10,10 @@ def test_command_reference_matches_declarations(monkeypatch):
     target = generator['TARGET']
     assert target.exists(), 'Missing CLI and MCP reference'
     assert target.read_text() == generator['render']()
+
+
+def test_command_reference_does_not_depend_on_terminal_width(monkeypatch):
+    monkeypatch.setenv('COLUMNS', '120')
+    root = Path(__file__).resolve().parents[2]
+    generator = runpy.run_path(str(root / 'scripts/command-reference.py'))
+    assert generator['TARGET'].read_text() == generator['render']()
