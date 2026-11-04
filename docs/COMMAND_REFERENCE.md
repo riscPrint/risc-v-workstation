@@ -1434,3 +1434,13 @@ Read matching signal values at a wave time, cycle Nc, or end.
 Arguments: `wave` (required), `regex` (required), `period`, `clock`, `at` (required), `dec`.
 
 Starts a background job: no.
+
+`rvw regress uvm-ral --map MAP.json --out NEW.sv` generates a register model.
+`rvw regress uvm-cpu --run-dir C1_DIR --elf ELF --platform MAP.json
+--archive UVM.tar.gz --out NEW_DIR [--verilator EXE] [--timeout SECONDS]
+[--json]` runs strict, offline CPU capture replay through UVM and Spike DPI.
+See [UVM](../Uvm/README.md) for the supported profile.
+
+For a fresh C1 run, replace `--run-dir` with `--adapter RUN.sh --config NAME
+--lock NAME`. Optional `--seed` and `--max-cycles` apply to that run. The
+adapter owns its lock. The DPI compiler and replay use the named lock.

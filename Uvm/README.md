@@ -60,7 +60,7 @@ multiple outstanding requests and multi-hart behavior are outside this suite.
 ## Results
 
 The runner writes standalone C3 `rvw.results/1` through `rvw regress uvm`.
-Each seed gets five normal entries and one fault-detection entry.
+Each seed gets seven normal entries and three fault-detection entries.
 A normal pass requires all expected test markers, exactly one completion
 marker, no UVM errors or fatals, and simulator exit 0. The negative test needs
 a nonzero exit and the expected RVFI fatal. A crash alone cannot pass it.
@@ -99,10 +99,92 @@ extension is not established as necessary for every disabled feature.
 A backend implementation and passing tests must determine the remaining
 VPI gaps. No substitute backend or silent backdoor success is supplied.
 
-RAL frontdoor and backdoor, factory overrides, field automation, UVM
-callbacks, phase jumps, register prediction, AXI, interrupt/debug agents,
-and full CPU VIP are not tested. Advanced constraints and coverage
+RAL backdoor, factory overrides, field automation, UVM callbacks, phase jumps,
+AXI and full CPU VIP are not tested. The additions below define the bounded
+RAL, pin-agent and CPU replay checks. Advanced constraints and coverage
 constructs are not qualified by the simple expressions in this suite.
 Only the installed version and the exact tests that pass can establish
 support. Simulator versions are recorded at runtime. The upstream
 `DEVIATIONS.md` still applies.
+
+## Register models and pin agents
+
+`rvw regress uvm-ral --map MAP.json --out ral.sv` generates a UVM register
+block from a validated `rvw.soc/1` map. It preserves absolute addresses,
+register widths, access rights and declared resets. Each register has one
+full-width field. The supported field policies are RO, WO, RW, RC and W1C.
+RC requires read-only access. W1C requires read-write access. The generator
+refuses combined side effects. Unknown reset values have no reset prediction.
+The map uses little-endian byte addressing and a four-byte frontdoor bus.
+A wider register uses multiple bus beats. Field slices and backdoor paths
+are not generated.
+
+The component suite now generates its RAL from `tests/registers.json`.
+It connects a `uvm_reg_adapter` to the TL-UL sequencer. It checks frontdoor
+write/read, automatic prediction and a checked mirror on the RAM fixture.
+Only 32-bit RW frontdoor operation is qualified by this native fixture.
+RO, WO, RC, W1C and other widths have generator tests; these tests do not
+qualify a physical register implementation.
+
+`tests/controls.sv` provides a sequencer, driver and monitor for interrupt
+levels and halt/resume request pins. Its sequence drives bits 3, 7, 9 and 11,
+then halt and resume. The monitor checks level propagation, acknowledgement
+and halted state on a timed fixture. These are pin-agent conformance tests.
+They do not establish CPU interrupt acceptance, RISC-V Debug Module support,
+JTAG DMI, abstract commands or debug-mode architectural comparison.
+
+The runner also performs RAL and pin corruption runs. Each must stop on its
+own diagnostic with a nonzero exit. These runs must not reach completion.
+Each seed produces seven normal C3 entries and three fault-detection entries.
+
+## CPU retirement scoreboard through Spike DPI
+
+Use an existing C1 run from a core adapter. Enable `--rvfi-trace` when you
+run its ELF. Then run:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/rvw regress uvm-cpu \
+  --run-dir /path/to/c1-run --elf /path/to/program.elf \
+  --platform examples/vexriscv/rvw/platform.json \
+  --archive /path/to/pinned.tar.gz --verilator /path/to/verilator \
+  --out /tmp/uvm-cpu-new --json
+```
+
+To run the adapter and check its capture in one command, replace
+`--run-dir` with `--adapter /path/to/run.sh --config NAME --lock LOCK`.
+Set the adapter's environment as its project requires. `--seed` and
+`--max-cycles` control that C1 run. The adapter owns its simulation lock.
+The runner uses `--lock` for DPI compilation and replay. Do not hold that
+same lock around the full adapter command. An adapter failure or timeout
+cannot produce a passing scoreboard result.
+
+Build the current Spike shim with `Cosim/build.sh` first. Use
+`RVW_SPIKE_SHIM` to select another matched build. The runner reuses the
+cosim input capture and manifest checks. The native bridge checks the
+embedded ABI, source hash and build identity before it creates Spike.
+Accellera's own DPI remains disabled. The scoreboard uses a separate DPI
+bridge. It does not require an Accellera HDL/VPI backend.
+
+The UVM monitor publishes captured C2 retirements to an analysis subscriber.
+The subscriber calls Spike through DPI once per retirement. The bridge checks
+instruction and next PC, instruction bits, privilege, integer destination,
+source values, memory address, byte masks, masked memory data, trap flag and
+memory-fault flag. Reference operands and effects come from Spike. A second
+run corrupts next PC. It must stop on `SPIKE_MISMATCH` with nonzero exit.
+
+This is offline capture replay through `rvw regress uvm-cpu`. It does not
+place UVM inside the core's RTL simulation. It does not add UVM jobs to
+`rvw regress run` tiers or establish C4 gate acceptance. C1 status must be
+pass. Its ELF hash and retirement count must agree with the captured ELF
+and C2. C2 must start at order zero, have no gaps, and end with pass.
+A matching prefix cannot pass. Source identity stays incomplete in C3.
+
+The initial CPU profile supports scalar C2 version 1, one RAM region,
+trap misalignment policy, and pre-step privilege reporting. It uses strict
+comparison without counter, MMIO or CSR synchronization. It refuses MMIO,
+nonzero IRQ events, trap side records, handler/halt observations, FP writes,
+C2 version 2, multi-hart and extended CSR/fault observations. Instruction
+classes that Spike can execute and C2 can represent use the same comparison;
+there is no load-only or opcode allowlist. This does not establish complete
+ISA coverage. CPU interrupt/debug execution and a full ISA campaign remain
+open under #296.

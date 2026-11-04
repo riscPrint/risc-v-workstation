@@ -241,3 +241,8 @@ execute C1 ELF runs, change the RiscvSim backend, or earn C4 gate acceptance.
 Hashes cover listed source files, not transitive includes, memory images,
 libraries or all environment inputs. Replay is not hermetic under C8.
 
+
+`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
+`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
+for the strict profile and the offline replay boundary.

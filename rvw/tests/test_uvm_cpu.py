@@ -71,3 +71,50 @@ def test_bad_timeout(tmp_path):
         uvm_cpu.run(tmp_path/'out',run_dir=tmp_path,elf=tmp_path/'e',platform=tmp_path/'p',
                     archive=tmp_path/'a',timeout=float('nan'))
     assert not (tmp_path/'out').exists()
+
+
+@pytest.mark.parametrize('kwargs',[{}, {'run_dir':'x','adapter':'y'},
+    {'adapter':'x'}, {'adapter':'x','config':'rv32','lock':'vex','seed':0},
+    {'adapter':'x','config':'rv32','lock':'vex','max_cycles':0}])
+def test_adapter_requires_explicit_inputs(tmp_path,kwargs):
+    with pytest.raises(ValueError):
+        uvm_cpu.run(tmp_path/'out',elf=tmp_path/'e',platform=tmp_path/'p',archive=tmp_path/'a',**kwargs)
+    assert not (tmp_path/'out').exists()
+
+
+def test_adapter_failure_cannot_pass(tmp_path,monkeypatch):
+    from rvw.common.proc import Result
+    commands=[]
+    monkeypatch.setattr(uvm_cpu.shutil,'which',lambda _: '/bin/true')
+    def failed(command,**kwargs):
+        commands.append(command)
+        return Result(1)
+    monkeypatch.setattr(uvm_cpu,'run_group',failed)
+    with pytest.raises(ValueError,match='C1 adapter failed'):
+        uvm_cpu.run(tmp_path/'out',adapter=tmp_path/'adapter',config='chosen',lock='vex',
+                    elf=tmp_path/'e',platform=tmp_path/'p',archive=tmp_path/'a',seed=9,max_cycles=123)
+    assert commands[0][1]=='run'
+    assert commands[0][-1]=='--json'
+    assert '--rvfi-trace' in commands[0]
+    assert commands[0][commands[0].index('--seed')+1]=='9'
+    assert not (tmp_path/'out/results.json').exists()
+
+
+def test_cpu_build_error_is_valid_c3(capture,tmp_path,monkeypatch):
+    from rvw.common.proc import Result
+    from rvw.results import load_results
+    inputs,_,_,_,_ = capture
+    (tmp_path/'result.json').write_text(json.dumps(dict(inputs.core_run,artifacts={'rvfi_trace':'rvfi.jsonl'})))
+    inputs.core_run['artifacts']={'rvfi_trace':'rvfi.jsonl'}
+    inputs.capture=NS(verify_tools=lambda: None)
+    inputs.metadata=lambda: {}
+    monkeypatch.setattr(uvm_cpu,'Inputs',lambda *a: inputs)
+    monkeypatch.setattr(uvm_cpu.shutil,'which',lambda _: '/bin/true')
+    monkeypatch.setattr(uvm_cpu,'run_group',lambda *a,**k: Result(0,stdout='fake version'))
+    out=tmp_path/'out'
+    # Missing archive causes a build error, which must still obey C3.
+    report=uvm_cpu.run(out,run_dir=tmp_path,elf=inputs.args.elf,
+        platform=tmp_path/'map',archive=tmp_path/'missing')
+    assert report['tests'][0]['status']=='error'
+    assert isinstance(report['created'],str)
+    assert not load_results(out).tests[0].conclusive

@@ -2080,3 +2080,15 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+### UVM CPU capture replay in C3
+
+`rvw regress uvm-cpu` consumes a completed C1 run and its C2 artifact. It
+can also launch a selected adapter with `run --rvfi-trace` before replay.
+It checks the C1 ELF SHA-256, status and retirement count before replay. It
+requires complete, passing, contiguous scalar C2 version 1 evidence. A
+UVM analysis subscriber checks each retirement with a native Spike DPI bridge.
+The standalone C3 report marks `mode=offline-c1-replay` and records the
+profile, captured reference inputs, source hashes, commands and logs. It
+does not modify C1 or establish C4 acceptance. Unsupported profiles and
+incomplete observations are errors. Source identity remains incomplete.

@@ -1,6 +1,6 @@
 """Strict native UVM/Spike replay of completed C1 captures."""
 from argparse import Namespace
-import hashlib
+import datetime as dt
 import json
 import math
 import os
@@ -98,14 +98,30 @@ endmodule
     return records
 
 
-def run(out, *, run_dir, elf, platform, archive, verilator='verilator', timeout=600):
+def run(out, *, run_dir=None, elf, platform, archive, verilator='verilator', timeout=600,
+        adapter=None, config=None, lock=None, seed=1, max_cycles=200000):
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
+    if bool(run_dir) == bool(adapter):
+        raise ValueError('select exactly one of run_dir or adapter')
+    if adapter and (not config or not lock or type(seed) is not int or seed < 1
+                    or type(max_cycles) is not int or max_cycles < 1):
+        raise ValueError('adapter requires config, lock, positive seed and max_cycles')
     executable = shutil.which(verilator)
     if not executable:
         raise ValueError('Verilator is not installed')
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
+    adapter_command = None
+    if adapter:
+        run_dir = out / 'c1'
+        adapter_command = [str(Path(adapter).resolve()), 'run', '--elf', str(Path(elf).resolve()),
+                           '--out', str(run_dir), '--config', config, '--seed', str(seed),
+                           '--max-cycles', str(max_cycles), '--rvfi-trace', '--json']
+        with (out / 'adapter.log').open('w') as log:
+            result = run_group(adapter_command, timeout=timeout, stdout=log, stderr=log)
+        if result.returncode or result.timed_out:
+            raise ValueError('C1 adapter failed or timed out; see adapter.log')
     c1 = json.loads((Path(run_dir) / 'result.json').read_text())
     trace_name = c1.get('artifacts', {}).get('rvfi_trace')
     if not isinstance(trace_name, str):
@@ -123,7 +139,14 @@ def run(out, *, run_dir, elf, platform, archive, verilator='verilator', timeout=
     records = prepare(inputs, out)
     sources = [ROOT / 'Uvm/tests/cpu.sv', ROOT / 'Uvm/spike_bridge.cpp']
     hashes = {str(path): uvm.sha(path) for path in sources}
-    rows, commands = [], []
+    rows, commands = [], [adapter_command] if adapter_command else []
+    version = run_group([executable, '--version'],capture=True,timeout=10)
+    if version.returncode or version.timed_out:
+        raise ValueError('cannot identify Verilator')
+    def execute(command, **kwargs):
+        if lock:
+            command = [str(ROOT/'scripts/with-lock.sh'),lock,'nice','-n','10',*command]
+        return run_group(command, **kwargs)
     try:
         library = uvm.unpack(Path(archive), out / 'library')
         command = [executable, '--binary', '--timing', '--assert', '-Wno-fatal', '-j', '2',
@@ -132,7 +155,7 @@ def run(out, *, run_dir, elf, platform, archive, verilator='verilator', timeout=
                    '-CFLAGS', f'-I{out}', '--Mdir', str(out / 'build')]
         commands.append(command)
         with (out / 'build.log').open('w') as log:
-            result = run_group(command, timeout=timeout, stdout=log, stderr=log)
+            result = execute(command, timeout=timeout, stdout=log, stderr=log)
         if result.returncode or result.timed_out:
             raise ValueError('DPI build failed; see build.log')
         for negative in (False, True):
@@ -142,7 +165,7 @@ def run(out, *, run_dir, elf, platform, archive, verilator='verilator', timeout=
                 command.append('+corrupt')
             commands.append(command)
             with (out / f'{name}.log').open('w') as log:
-                result = run_group(command, timeout=timeout, stdout=log, stderr=log, cwd=out)
+                result = execute(command, timeout=timeout, stdout=log, stderr=log, cwd=out)
             text = (out / f'{name}.log').read_text()
             good = not result.timed_out and (
                 result.returncode != 0 and '[SPIKE_MISMATCH]' in text and 'RVW_CPU_DONE' not in text
@@ -162,17 +185,27 @@ def run(out, *, run_dir, elf, platform, archive, verilator='verilator', timeout=
     inputs.capture.verify_tools()
     report = dict(schema='rvw.results/1', suite='uvm-cpu-replay', core=c1['core'],
                   config=c1['config'], run_id=out.name, tests=rows, commands=commands,
+                  created=dt.datetime.now(dt.timezone.utc).isoformat(),
                   checked_instructions=len(records), source={'identity_complete': False,
                   'input_sha256': hashes}, reproduction=inputs.metadata(),
-                  profile='scalar-c2-v1-strict-no-irq', mode='offline-c1-replay')
+                  profile='scalar-c2-v1-strict-no-irq', mode='offline-c1-replay',
+                  verilator=version.stdout.strip(), uvm_commit=uvm.COMMIT,
+                  uvm_archive_sha256=uvm.ARCHIVE_SHA256)
     write_json(out / 'results.json', report)
     return report
 
 
 def register(sub):
     parser = sub.add_parser('uvm-cpu', help='check a complete C1 capture with native UVM and Spike DPI')
-    for name in ('out','run-dir','elf','platform','archive'):
+    for name in ('out','elf','platform','archive'):
         parser.add_argument('--'+name,type=Path,required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--run-dir',type=Path)
+    source.add_argument('--adapter',type=Path)
+    parser.add_argument('--config')
+    parser.add_argument('--lock',help='machine lock for native DPI compilation and replay')
+    parser.add_argument('--seed',type=int,default=1)
+    parser.add_argument('--max-cycles',type=int,default=200000)
     parser.add_argument('--verilator',default='verilator')
     parser.add_argument('--timeout',type=float,default=600)
     parser.add_argument('--json',action='store_true')
@@ -183,7 +216,9 @@ def command(args):
     import sys
     try:
         report = run(args.out, run_dir=args.run_dir, elf=args.elf, platform=args.platform,
-                     archive=args.archive, verilator=args.verilator, timeout=args.timeout)
+                     archive=args.archive, verilator=args.verilator, timeout=args.timeout,
+                     adapter=args.adapter, config=args.config, lock=args.lock,
+                     seed=args.seed, max_cycles=args.max_cycles)
     except (OSError, ValueError) as exc:
         print(json.dumps({'error': str(exc)}), file=sys.stderr)
         return 2
