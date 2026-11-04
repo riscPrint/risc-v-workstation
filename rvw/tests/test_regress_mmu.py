@@ -87,7 +87,7 @@ def test_scoped_remap_requires_global_invalidation():
 
 def test_ad_mask_is_checked_in_physical_memory():
     text = assembly(scenario(ad_expect=192))
-    assert 'andi t0, t0, 192\n li t1, 192' in text
+    assert 'li t1, 537395399\n bne t0, t1, fail' in text
 
 
 def test_native_hardware_ad(tmp_path):
@@ -272,6 +272,8 @@ def test_report_keeps_observations_separate_from_architectural_bins(tmp_path):
     assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
     observed = result['scenarios'][0]['observations']
     assert observed['status'] == 'recorded'
+    assert observed['walk_check']['status'] == 'inconclusive'
+    assert 'identity' in observed['walk_check']['reason']
     assert observed['counts'] == dict(walk_request=1, walk_response=0, bus_a=1)
     assert observed['sha256'] == mmu.digest(observations)
     observations.write_text(json.dumps(dict(schema='rvw.mmu-observations/1', elf_sha256='wrong')))
@@ -329,3 +331,172 @@ def test_access_width_selects_load_store_and_readback(width, load_op, store_op):
 def test_invalid_access_width(changes):
     with pytest.raises(ValueError):
         assembly(scenario(**changes))
+
+
+def test_native_reserved_satp_mode_write_is_ignored(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = dict(id='satp-warl', control='satp-mode', instruction='reserved-mode-write',
+               enabled=False, privilege='M', bins=['satp-warl'])
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    build(path, tmp_path/'good', gcc)
+    assert reference(tmp_path/'good', spike, 5)['status'] == 'pass'
+    original = mmu.assembly
+    def supported_mode(s):
+        # A supported mode must not have the ignored-write behavior.
+        return original(s).replace(str((1 << 60) | (7 << 44) | ((mmu.ROOT + 4096) >> 12)),
+                                   str((8 << 60) | (7 << 44) | ((mmu.ROOT + 4096) >> 12)))
+    monkeypatch.setattr(mmu, 'assembly', supported_mode)
+    build(path, tmp_path/'bad', gcc)
+    assert reference(tmp_path/'bad', spike, 5)['status'] == 'fail'
+
+
+def test_tw_clear_pending_ssip_wakes_with_global_interrupts_disabled():
+    row = dict(id='wakeup', control='tw', instruction='wfi', enabled=False,
+               privilege='S', wakeup='pending-ssip', bins=['wakeup'])
+    text = assembly(row)
+    assert 'csrw mideleg, t0\n csrw mie, t0\n csrs mip, t0' in text
+    assert 'li t0, 0x7e190a' in text  # Clear both global enables before mret.
+    assert 'li t1, 9' in text and 'la t1, done' in text
+    row['privilege'] = 'U'
+    with pytest.raises(ValueError, match='wakeup'):
+        assembly(row)
+
+
+def test_fetch_uses_real_privilege_and_exact_fault_pc():
+    row = dict(id='fetch', level=0, flags='VRAD', access='fetch',
+               expect='page-fault', bins=['fetch'])
+    text = assembly(row)
+    assert 'csrw mepc, t3\n mret' in text
+    assert 'li t1, 12' in text and 'csrr t0, mtval' in text
+    assert '.word 0x00000073' in text
+    row['remap'] = True
+    with pytest.raises(ValueError, match='fetch'):
+        assembly(row)
+
+
+def test_native_fetch_checker_rejects_wrong_execute_permission(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = dict(id='fetch', level=0, flags='VRXAD', access='fetch',
+               expect='success', bins=['fetch'], ad_mode='svade')
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    original = mmu.assembly
+    def wrong_permission(s):
+        # Change only the generated leaf, while retaining the success oracle.
+        old = ((mmu.DATA >> 12) << 10) | 0xcb
+        return original(s).replace(f'.dword {old}', f'.dword {old & ~8}')
+    monkeypatch.setattr(mmu, 'assembly', wrong_permission)
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_walk_checker_uses_pte_values_and_physical_target():
+    from rvw.regress.mmu_observe import check_walk
+    events = []
+    for i, (address, value) in enumerate([(0x80010008, 0x20004401),
+             (0x80011000, 0x20004801), (0x80012000, 0x200800c7)]):
+        events += [dict(kind='walk_request', cycle=2*i, address=hex(address), command=0),
+                   dict(kind='walk_response', cycle=2*i+1, address=hex(address), data=hex(value))]
+    assert check_walk(scenario(), events)['status'] == 'inconclusive'
+    events.append(dict(kind='bus_a', cycle=7, address='0x80200000', opcode=6, size_log2=6))
+    assert check_walk(scenario(), events)['status'] == 'consistent'
+    events[3]['data'] = '0xdeadbeef'
+    assert check_walk(scenario(), events)['status'] == 'mismatch'
+    events[3]['data'] = '0x20004801'
+    events[0]['address'] = '0x80010010'
+    assert check_walk(scenario(), events)['status'] == 'mismatch'
+    assert check_walk(scenario(remap=True), events)['status'] == 'inconclusive'
+
+
+def test_walk_checker_superpage_target_uses_low_virtual_bits():
+    from rvw.regress.mmu_observe import check_walk
+    row = scenario(); row.update(level=2, pa='0x80000000', va='0x40200000')
+    result = check_walk(row, [])
+    assert result['physical_target'] == '0x80200000'
+    with pytest.raises(ValueError, match='ordered'):
+        check_walk(scenario(), [dict(kind='bus_a', cycle=c, address='0x0', opcode=4,
+                                    size_log2=3) for c in (5, 4)])
+
+
+def test_root_switch_uses_distinct_tables_and_reuses_original_asid():
+    text = assembly(scenario(remap=True, root_switch=True, asid=7, fence='va-asid'))
+    assert text.count('csrw satp, t0') == 4
+    assert 'li t0, ' + str((8 << 60) | (7 << 44) | (0x80013000 >> 12)) in text
+    assert text.count('.dword') == 3076
+    row = scenario(remap=True, nonleaf_global=True, fence='asid')
+    with pytest.raises(ValueError, match='global'):
+        assembly(row)
+
+
+def test_native_ad_checker_detects_corruption_outside_ad_bits(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = scenario(ad_expect=192, ad_mode='svade')
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    original = mmu.assembly
+    def corrupt(s):
+        # Flip software-owned RSW after the access. A/D bits remain correct.
+        return original(s).replace('check_ad:\n', 'check_ad:\n li t0, 0x80012000\n ld t1, 0(t0)\n xori t1, t1, 256\n sd t1, 0(t0)\n')
+    monkeypatch.setattr(mmu, 'assembly', corrupt)
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_software_rsw_change_requires_full_pte_check():
+    text = assembly(scenario(ad_expect=192, software_rsw=3))
+    assert 'li t1, 537396167' in text  # PPN, flags and software RSW together.
+    assert 'andi t0, t0, 192' not in text
+    with pytest.raises(ValueError, match='software_rsw'):
+        assembly(scenario(software_rsw=3))
+
+
+def test_pma_check_needs_independent_device_state_and_correct_width():
+    from rvw.regress.mmu_observe import check_pma
+    region = dict(name='device', start='0x2000000', size=4, widths=[4], read=True,
+                  write=True, execute=False, idempotent=False, cacheable=False, atomic=False)
+    row = scenario(pa='0x2000000', value=0, access_width=4, register_width=32)
+    bus = dict(kind='bus_a', cycle=1, address='0x2000000', opcode=4, size_log2=2)
+    state = dict(kind='device_state', cycle=2, address='0x2000000', value='0x0', scheduled=False)
+    assert check_pma(row, [bus], [region])['status'] == 'inconclusive'
+    assert check_pma(row, [bus, state], [region])['status'] == 'consistent'
+    assert check_pma(row, [dict(bus, size_log2=3), state], [region])['status'] == 'mismatch'
+    assert check_pma(row, [bus, dict(state, value='0x1')], [region])['status'] == 'mismatch'
+    assert check_pma(row, [bus, dict(state, scheduled=True)], [region])['status'] == 'inconclusive'
+    assert check_pma(row, [bus, bus, state], [region])['status'] == 'mismatch'
+
+
+def test_pma_store_has_one_write_one_readback_and_updated_state():
+    from rvw.regress.mmu_observe import check_pma
+    region = dict(name='msip', start='0x2000000', size=4, widths=[4], read=True,
+                  write=True, execute=False, idempotent=False, cacheable=False, atomic=False)
+    row = scenario(pa='0x2000000', access_width=4, register_width=32, store_value=1)
+    row['access'] = 'store'
+    events = [dict(kind='bus_a', cycle=i, address='0x2000000', opcode=op, size_log2=2)
+              for i, op in ((1, 0), (3, 4))]
+    events.append(dict(kind='device_state', cycle=2, address='0x2000000', value='0x1', scheduled=False))
+    assert check_pma(row, events, [region])['status'] == 'consistent'
+    events[-1]['cycle'] = 0
+    assert check_pma(row, events, [region])['status'] == 'inconclusive'
+
+
+def test_focused_msip_pma_matches_platform_register():
+    from rvw.regress.mmu import read_pma, number
+    pma = read_pma(DESCRIPTION.with_name('pma.json'))
+    msip = next(r for r in pma['regions'] if r['name'] == 'msip')
+    soc = json.loads((DESCRIPTION.parents[1] / 'soc.json').read_text())
+    clint = next(r for r in soc['regions'] if r['name'] == 'clint')
+    register = next(r for r in clint['registers'] if r['name'] == 'msip')
+    assert number(msip['start']) == number(clint['base']) + number(register['offset'])
+    assert msip['size'] * 8 == register['width']
+    assert msip['widths'] == [register['width'] // 8]
+    assert msip['cacheable'] == clint['cacheable']

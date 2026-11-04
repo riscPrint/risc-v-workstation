@@ -171,6 +171,8 @@ def register(sub) -> None:
     r.add_argument("--json", action="store_true")
     from rvw.formal.riscv import main as riscv_main
     r.set_defaults(func=riscv_main)
+    from .connectivity import register as register_connectivity
+    register_connectivity(s)
     from .equiv import register as register_equiv
     register_equiv(s)
 
@@ -183,6 +185,8 @@ def register(sub) -> None:
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
     b.add_argument("--event-model", action="store_true", help="use sampled events and sby multiclock on")
+    b.add_argument("--clock-schedule", action="append", metavar="PORT=BITS",
+                   help="periodic clock levels, sample zero first; declare every event clock")
     b.add_argument("--async-reset", action="store_true", help="allow constant-value async reset FFs in event BMC")
     b.add_argument("--reset-cycles", type=int, default=1, help="primary-clock cycles the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")

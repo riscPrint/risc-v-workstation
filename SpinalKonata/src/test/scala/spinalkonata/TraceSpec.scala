@@ -39,6 +39,45 @@ class TraceSpec extends AnyFunSuite {
     assert(text.contains("#rvw\t1\treplay\t0\tordering\tmeasured"))
     assert(text.contains("#rvw\t1\tcommit\t0\tpredicated_off\nR\t0\t0\t0"))
   }
+  test("observed predictions round-trip through the production reader") {
+    val path = Files.createTempFile("kanata-prediction", ".log")
+    val w = new KanataWriter(path.toFile)
+    w.record(0, Fetch(0, 0))
+    w.record(1, PredictionOutcome(0, "p", "direction", "taken", "not_taken",
+      Some(4), Some(3), Some(true), Some(false), Some("user")))
+    w.record(1, PredictionOutcome(0, "ras", "return", "0x10", "0x10"))
+    w.record(2, Flush(0)); w.close()
+    import scala.sys.process._
+    val python = """import sys
+sys.path.insert(0, sys.argv[1])
+from collections import Counter
+from rvw.perf.kanata import read
+from rvw.perf.events import event_report
+r = event_report(read(sys.argv[2]), Counter())['predictions']
+assert r['outcomes'] == 2
+assert r['by_context'][0]['incorrect'] == 1
+assert r['by_context'][0]['recovery_cycles']['sum'] == 4
+assert r['by_context'][1]['recovery_cycles']['unknown'] == 1
+print('prediction events checked')
+"""
+    assert(Seq("python3", "-c", python, new java.io.File("../rvw/src").getCanonicalPath,
+      path.toString).!!.trim == "prediction events checked")
+  }
+  test("prediction writer refuses malformed and duplicate observations") {
+    for (event <- Seq(
+      PredictionOutcome(0, "p", "direction", "true", "false"),
+      PredictionOutcome(0, "p", "target", "-1", "0"),
+      PredictionOutcome(0, "p", "return", "0", "0", Some(-1)),
+      PredictionOutcome(0, "p", "direction", "taken", "taken", context = Some("bad\tcontext")))) {
+      val w = new KanataWriter(Files.createTempFile("kanata-invalid-prediction", ".log").toFile)
+      w.record(0, Fetch(0, 0)); w.record(1, event)
+      intercept[IllegalArgumentException](w.seal(1)); w.close()
+    }
+    val w = new KanataWriter(Files.createTempFile("kanata-duplicate-prediction", ".log").toFile)
+    val event = PredictionOutcome(0, "p", "direction", "taken", "taken")
+    w.record(0, Fetch(0, 0)); w.record(1, event); w.record(1, event)
+    intercept[IllegalArgumentException](w.seal(1)); w.close()
+  }
   test("invalid and late events fail closed, while bounded open instructions stay open") {
     val path = Files.createTempFile("kanata-open", ".log")
     val w = new KanataWriter(path.toFile)
