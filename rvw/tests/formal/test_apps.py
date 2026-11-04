@@ -90,3 +90,22 @@ def test_wrong_declared_dut_port_map_is_refused(tmp_path):
     with pytest.raises(SystemExit):
         run(args)
     assert not (tmp_path / 'out/result.json').exists()
+
+
+@pytest.mark.parametrize('access', ['ro', 'w1c'])
+@pytest.mark.parametrize('fault', [False, True])
+def test_native_register_access(tmp_path, access, fault):
+    if not all(shutil.which(t) for t in ('yosys', 'sby', 'yices-smt2')):
+        pytest.skip('native tools required')
+    spec = plan()
+    prop = dict(spec['properties'][1], access=access, write_mask=15)
+    spec['properties'] = [prop]
+    rtl = (FIXTURE / 'Contracts.sv').read_text()
+    update = 'state' if access == 'ro' else "state & ~(write_data & 8'd15)"
+    rtl = rtl.replace('state <= write_data', 'state <= ' + ('write_data' if fault else update))
+    (tmp_path / 'Contracts.sv').write_text(rtl)
+    path = tmp_path / 'apps.json'
+    path.write_text(json.dumps(spec))
+    args = Namespace(manifest=str(path), out=str(tmp_path / 'out'), depth=8,
+                     engine='smtbmc:yices', timeout=20, mode='bmc', json=False)
+    assert run(args) == int(fault)

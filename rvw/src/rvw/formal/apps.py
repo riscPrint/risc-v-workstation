@@ -71,7 +71,9 @@ def generate(plan, prop):
     elif kind == 'csr':
         state, write, data = (signal(prop[k]) for k in ('state', 'write_enable', 'write_data'))
         width = ports[state]['width']
-        if ports[state]['direction'] != 'output' or ports[data]['width'] != width or ports[write]['width'] != 1:
+        if (ports[state]['direction'] != 'output' or ports[data]['direction'] != 'input'
+                or ports[write]['direction'] != 'input' or ports[data]['width'] != width
+                or ports[write]['width'] != 1):
             raise ValueError('CSR needs output state, equal-width write data and one-bit write enable')
         initial = prop['reset_value']
         mask = prop.get('write_mask', (1 << width)-1)
