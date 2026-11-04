@@ -28,7 +28,8 @@ def test_source_archive(tmp_path):
         pkg.verify(root)
 
 
-def test_installer(tmp_path):
+@pytest.mark.parametrize("platform", ["Linux", "Darwin"])
+def test_installer(tmp_path, platform):
     import os
     # Use the archive as the standalone build input. Stub Cargo creates only
     # the expected executable, so this does not claim a native build.
@@ -51,9 +52,14 @@ p.write_text('#!/bin/sh\\nexit 0\\n')
 p.chmod(0o755)
 ''')
     cargo.chmod(0o755)
+    for name, body in [('uname', f'echo {platform}'), ('codesign', 'exit 0')]:
+        tool = stub / name
+        tool.write_text('#!/bin/sh\n' + body + '\n')
+        tool.chmod(0o755)
     log = tmp_path / 'cargo.log'
     subprocess.run(['bash', str(root / 'scripts/install.sh'), '--only', 'surfer', '--copy', '--prefix', str(tmp_path / 'bin')], check=True,
                    env={**os.environ, 'PATH': str(stub)+os.pathsep+os.environ['PATH'], 'CARGO_LOG': str(log)}, capture_output=True)
+    assert (tmp_path / 'bin/SpinalWaves.app/Contents/Info.plist').exists() == (platform == 'Darwin')
     assert '--locked' in log.read_text()
     assert '-p surfer-tywaves' in log.read_text()
     assert (tmp_path / 'share/spinalwaves/LICENSE-EUPL-1.2.txt').exists()
