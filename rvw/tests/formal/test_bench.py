@@ -51,14 +51,14 @@ def test_licensed_adapter_bound_to_request(tmp_path):
     directory = tmp_path / 'run'
     directory.mkdir()
     row = licensed_adapter({'id':'licensed', 'command':str(script)}, [],
-                           {'id':'case', 'mode':'bmc'}, directory, 5)
+                           {'id':'case', 'mode':'bmc', 'depth':6}, directory, 5)
     assert row['status'] == 'pass'
     assert row['evidence_kind'] == 'trusted_adapter_observation'
     script.write_text(script.read_text().replace('hashlib.sha256(p).hexdigest()', '"wrong"'))
     directory = tmp_path / 'bad'
     directory.mkdir()
     row = licensed_adapter({'id':'licensed', 'command':str(script)}, [],
-                           {'id':'case', 'mode':'bmc'}, directory, 5)
+                           {'id':'case', 'mode':'bmc', 'depth':6}, directory, 5)
     assert row['status'] == 'inconclusive'
 
 
@@ -129,3 +129,21 @@ def test_error_measurement_retains_native_memory_and_log(tmp_path, monkeypatch):
     assert result['status'] == 'error'
     assert result['peak_memory_bytes'] == 4096
     assert (tmp_path / 'job.measurement.log').exists()
+
+
+def test_adapter_bounded_pass_requires_requested_depth(tmp_path):
+    import sys
+    from rvw.formal.bench import licensed_adapter
+    script = tmp_path / 'adapter'
+    script.write_text('#!' + sys.executable + '\n'
+        'import sys,json,hashlib\n'
+        'if sys.argv[1] == "--version": print("test adapter 1"); sys.exit(0)\n'
+        'p=open(sys.argv[1],"rb").read()\n'
+        'r={"schema":"rvw.formal-adapter-response/1","request_sha256":hashlib.sha256(p).hexdigest(),'
+        '"status":"pass","mode":"bmc","wall_s":1,"peak_memory_bytes":1024,'
+        '"reached_depth":2,"engine_version":"test 1"}\n'
+        'open(sys.argv[2],"w").write(json.dumps(r))\n')
+    script.chmod(0o755)
+    row = licensed_adapter({'id':'licensed', 'command':str(script)}, [],
+                           {'id':'case', 'mode':'bmc', 'depth':10}, tmp_path / 'run', 5)
+    assert row['status'] == 'inconclusive'

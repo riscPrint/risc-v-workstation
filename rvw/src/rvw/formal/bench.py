@@ -115,6 +115,11 @@ def licensed_adapter(adapter, sources, case, directory, timeout):
         value = response.get(key)
         if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
             return row
+    # BMC depth is the largest checked zero-based assertion step.
+    # A shorter successful prefix cannot agree with the requested complete bound.
+    if response['status'] == 'pass' and case['mode'] == 'bmc':
+        if type(response['reached_depth']) is not int or response['reached_depth'] < case['depth'] - 1:
+            return row
     if not isinstance(response.get('engine_version'), str) or not response['engine_version']:
         return row
     row.update({k: response[k] for k in ('status', 'wall_s', 'peak_memory_bytes',

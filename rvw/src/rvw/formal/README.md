@@ -799,7 +799,9 @@ has schema `rvw.formal-adapter-request/1`, the case, and frozen source paths.
 The adapter must write `rvw.formal-adapter-response/1`, `request_sha256` (SHA-256
 of the exact request bytes), `mode`, `status` (`pass`, `fail`, `inconclusive`),
 `engine_version`, `wall_s`, `peak_memory_bytes` and `reached_depth`. Measurements
-must be finite and nonnegative. Missing fields or a request mismatch stay
+must be finite and nonnegative. For a BMC pass, `reached_depth` must be an
+integer at least `depth - 1`, the last requested zero-based assertion step.
+A shorter successful prefix remains inconclusive. Missing fields or a request mismatch stay
 inconclusive. The adapter owns licence setup and source translation. These are
 trusted adapter observations, not independently replayed proofs. No licensed
 engine is bundled. Published-result normalization and repeated statistical

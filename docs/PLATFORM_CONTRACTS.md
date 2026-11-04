@@ -1884,7 +1884,8 @@ matching verdicts on every case. Time ratios describe only the supplied suite.
 Licensed adapters use `rvw.formal-adapter-request/1` and
 `rvw.formal-adapter-response/1`. A response must bind to the SHA-256 of its
 exact request bytes, retain the mode and engine version, and report finite
-nonnegative measurements. Adapter verdicts are trusted observations. Invalid,
+nonnegative measurements. A BMC pass requires an integer `reached_depth` at
+least `depth - 1` (zero-based assertion step). Adapter verdicts are trusted observations. Invalid,
 missing or timed-out responses stay inconclusive. See the formal README for
 input fields and limits. Neither command emits gate acceptance.
 ## SpinalChecks normalized register map (version 1)
