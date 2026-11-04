@@ -2211,6 +2211,47 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+## Reviewed specification obligation catalogs
+
+The optional `rvw.isa/1` `specifications` entries can bind a document and a
+reviewed `rvw.spec-obligations/1` catalog. Each entry has `kind`
+(`isa|profile|debug|platform`), `revision`, `path`, `sha256` and
+`obligations` (`path`, `sha256`). Paths use the corresponding opcode source
+root. Catalog rows in `obligations` have unique `id`, exact document excerpt
+`text`, `checkers` and `tests` arrays. Diff verifies both hashes and document
+excerpt membership. `rvw.isa-diff/1.obligations` reports added, removed and
+changed rows, affected checkers, missing tests and present test hashes.
+It reports metadata-only pins as unchecked. A changed catalog requires adoption.
+Catalog completeness needs review. Test presence does not establish execution.
+
+`rvw.isa/1.probes` can configure `compiler|dut|reference|act|coverage` probes.
+Kinds are `gcc` (native target macros), `command` (native JSON capability
+output), and `json|toml` (captured settings file with optional `key` path).
+Command probes return `rvw.isa-consumer/1` with `xlen`, `extensions` (versions
+or null), and `options`. File probes select the same fields. Paths use the
+manifest directory. `rvw.isa-check/1` includes observed `probes` and
+`unchecked_consumers`. `consistent` requires all five inputs with known,
+matching versions and options. Missing evidence gives `inconclusive`.
+Contradictions are errors. These statuses describe configuration consistency.
+They do not certify ISA implementation or compliance.
+
+`rvw.isa/1.semantics` can include `forms` and `crosses`. Forms map instruction
+names to fields with `bits` (`[hi,lo,destination_lo]` slices), `width`, `bins`
+(explicit values or `boundaries`), optional `signed`, `offset` and register
+`bank`. Crosses declare `id`, `instruction`, `fields`, and exhaustive
+`combinations` (`bin`, `status`, `reason`) within those finite field domains.
+Statuses are `legal|illegal|unavailable`. Functional plans retain the catalog.
+Cross reports retain every bin in the denominator and add `classifications`
+with observed `count`. No catalog declaration is a proof exclusion.
+
+`rvw.coverage-report/1.scala_mapping.methods` counts source mapping methods.
+The `covered-span-assignment-links` method navigates to a unique local full
+SpinalDB data assignment for an exact covered RTL target. Multiple, partial,
+init/reset and nonlocal assignments refuse that inference. Mixed links have a
+separate method. These links do not prove individual Scala statement hits;
+`scala_mapping.statement_hit_status` remains `undetermined`.
+
+
 ### Cooperative farm capacity extensions (#57)
 
 Host capacity and request resources support `disk_bytes` and `jobs` in addition
