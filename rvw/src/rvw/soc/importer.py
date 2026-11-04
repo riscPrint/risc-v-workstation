@@ -77,7 +77,7 @@ def import_ipxact(source, template, out):
                     raise ValueError('partial reset masks are unsupported')
             read = one(f, 'readAction') if 'readAction' in f else 'none'
             write = one(f, 'modifiedWriteValue') if 'modifiedWriteValue' in f else 'normal'
-            if read not in ('none', 'clear') or write not in ('normal', 'oneToClear'):
+            if ('readAction' in f and read != 'clear') or ('modifiedWriteValue' in f and write != 'oneToClear'):
                 raise ValueError('unsupported register side effect')
             regs.append(dict(name=one(g, 'name'), offset=number(one(g, 'addressOffset')),
                              width=number(one(g, 'size')), access={'read-only':'r', 'write-only':'w', 'read-write':'rw'}[access],
