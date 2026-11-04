@@ -1871,3 +1871,26 @@ These are throughput measurements, not architectural IPC or correctness claims.
 C3 keeps the metrics. The history dashboard groups them by core, suite and preset.
 Short workloads and concurrent jobs can give noisy samples. Use repeated long
 workloads with fixed stimulus and equivalent complete C2 traces for comparisons.
+
+`rvw.sim-speed/1` is a diagnostic report from `rvw regress speed-compare`.
+It records `core`, `config`, `pairs`, geometric mean `speedup`, bootstrap
+`speedup_ci95`, `resamples`, `bootstrap_seed` and `retain`. Each pair records
+baseline/candidate C1 paths and hashes, native build hashes, complete C2 hashes,
+execution run IDs, seconds and derived rates. A sample cannot be used twice.
+At least five pairs of conclusive serial passing runs are required. Complete
+validated C2 events, terminal counters, ELF, seed, preset and run inputs must
+match. Each side must keep one native build identity. Default minimum sample
+time is one second. Missing evidence or a difference gives exit 3.
+`status: equivalent` is trace/result equivalence only. It is not ISA correctness,
+C8 capture completeness or C4 acceptance. `retain` is a diagnostic timing filter:
+the 95% interval lower bound must exceed one. It does not change any options.
+
+`rvw.sim-speed-sweep/1` records an explicit adapter, ELF hash, preset, host,
+logical CPU count, seed, repeat count, thread counts, minimum sample seconds,
+launch timeout, actual `order` of commands and completed `comparisons`.
+Warmups are excluded from comparisons. Baseline/candidate order alternates
+between pairs. Each process holds the selected core lock and uses `nice`.
+The launch timeout includes the lock wait and is at most 1800 seconds.
+Status stays `inconclusive` until all requested comparisons are equivalent.
+A failed run stops the sweep. Cancellation stops the active process group.
+Build costs, peak RSS, PGO and checkpoints are outside this report.
