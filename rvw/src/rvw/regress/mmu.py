@@ -255,25 +255,70 @@ fromhost: .dword 0
 
 def control_validate(s):
     required = {'id', 'control', 'enabled', 'instruction', 'privilege', 'bins'}
-    if set(s) != required or not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
+    if not required <= s.keys() or s.keys() - required - {'wakeup'} or not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
         raise ValueError('invalid control scenario fields')
-    choices = {'tvm': ('satp-read', 'satp-write', 'sfence'), 'tw': ('wfi',), 'tsr': ('sret',)}
+    choices = {'tvm': ('satp-read', 'satp-write', 'sfence'), 'tw': ('wfi',), 'tsr': ('sret',), 'satp-mode': ('reserved-mode-write',)}
     if s['control'] not in choices or s['instruction'] not in choices[s['control']]:
         raise ValueError('unsupported control instruction')
-    if type(s['enabled']) is not bool or s['privilege'] not in ('S', 'U'):
+    if type(s['enabled']) is not bool or s['privilege'] not in (('M',) if s['control'] == 'satp-mode' else ('S', 'U')):
         raise ValueError('invalid control state or privilege')
-    if s['control'] == 'tw' and not s['enabled']:
+    if s['control'] == 'satp-mode' and s['enabled']:
+        raise ValueError('satp-mode does not use an mstatus control bit')
+    if s.get('wakeup') is not None and (s['control'] != 'tw' or s['enabled'] or s['privilege'] != 'S' or s['wakeup'] != 'pending-ssip'):
+        raise ValueError('wakeup requires TW-clear S-mode WFI with pending-ssip')
+    if s['control'] == 'tw' and not s['enabled'] and s.get('wakeup') != 'pending-ssip':
         raise ValueError('TW-clear WFI needs an interrupt schedule')
     if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
         raise ValueError('bins must be nonempty strings')
 
 
+def satp_warl_assembly():
+    """Unsupported MODE writes must leave every satp field unchanged."""
+    initial = (8 << 60) | (ROOT >> 12)
+    reserved = (1 << 60) | (7 << 44) | ((ROOT + 4096) >> 12)
+    return f''' .option norvc
+.section .text
+.globl _start
+_start:
+ la t0, fail
+ csrw mtvec, t0
+ csrw mie, zero
+ li t0, {initial}
+ csrw satp, t0
+ csrr t2, satp
+ li t1, {initial}
+ bne t2, t1, fail
+ li t0, {reserved}
+ csrw satp, t0
+ csrr t0, satp
+ bne t0, t2, fail
+ li t1, 1
+ j finish
+fail:
+ li t1, 3
+finish:
+ csrw satp, zero
+ sfence.vma x0, x0
+ la t0, tohost
+ sd t1, 0(t0)
+1: j 1b
+.section .tohost,"aw"
+.balign 64
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0
+'''
+
+
 def control_assembly(s):
     control_validate(s)
+    if s['control'] == 'satp-mode':
+        return satp_warl_assembly()
     bit = {'tvm': 20, 'tw': 21, 'tsr': 22}[s['control']]
     denied = s['enabled'] or s['privilege'] == 'U'
     instruction = {'satp-read': 'csrr a0, satp', 'satp-write': 'csrw satp, zero',
                    'sfence': 'sfence.vma x0, x0', 'wfi': 'wfi', 'sret': 'sret'}[s['instruction']]
+    wakeup = 'li t0, 2\n csrw mideleg, t0\n csrw mie, t0\n csrs mip, t0' if s.get('wakeup') else ''
     # Successful SRET returns to S. ECALL then gives a checked M-mode exit.
     return f'''.option norvc
 .section .text
@@ -289,8 +334,9 @@ _start:
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
- li t0, 0x7e1900
+ li t0, 0x7e190a
  csrc mstatus, t0
+ {wakeup}
  li t0, {(int(s['enabled']) << bit) | (int(s['privilege'] == 'S') << 11) | 256}
  csrs mstatus, t0
  la t0, done

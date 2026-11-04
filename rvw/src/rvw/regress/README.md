@@ -533,14 +533,14 @@ It checks architectural effects; page-walk transactions need a separate observer
 ### Privilege controls and observation reports
 
 Control scenarios use a separate row shape in `rvw.mmu/1`: `id`, `control`
-(`tvm`, `tw`, `tsr`), boolean `enabled`, `instruction`, `privilege` (`S`, `U`),
-and `bins`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
+(`tvm`, `tw`, `tsr`, `satp-mode`), boolean `enabled`, `instruction`, `privilege`,
+and `bins`. TVM, TW and TSR use privilege `S` or `U`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
 TSR selects `sret`. These programs use Bare mode and MRET to enter S/U mode.
 They check illegal-instruction cause 2 and the exact fault PC. Allowed S-mode
 operations exit through a checked cause-9 ECALL. Successful SRET must branch
 to its declared return PC. U-mode checks keep supervisor instructions illegal
-when the machine control is clear. TW-clear WFI is refused because it needs
-an interrupt wakeup schedule. These rules use the pinned Machine ISA 1.13
+when the machine control is clear. TW-clear WFI requires the explicit
+`wakeup` input described below. These rules use the pinned Machine ISA 1.13
 (20260120), Machine Status register, TVM, TW and TSR sections.
 
 Data scenarios also accept `offset` (0..4088), `value` (expected load value),
@@ -593,3 +593,17 @@ Scenario `access_width` selects 1, 2, 4 or 8 bytes (default 8). Loads use
 access wider than that declaration. The project owns the declaration.
 The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
 Remap scenarios require the default 8-byte access.
+
+`satp-mode` control rows select `reserved-mode-write` in M-mode with
+`enabled: false`. The program first writes a supported Sv39 value. It then
+writes reserved MODE 1 with changed ASID and PPN fields. Every satp field must
+stay unchanged. A supported-mode mutation must fail the check. This follows
+the pinned Supervisor ISA, Supervisor Address Translation and Protection
+register section. Other disabled-feature combinations remain open.
+
+TW-clear S-mode WFI can select `wakeup: "pending-ssip"`. The program delegates
+SSIP to S-mode, enables SSIE and sets SSIP before entry. Both global interrupt
+enables stay clear. WFI must resume and reach the checked ECALL exit. This
+checks wakeup with an already pending interrupt. It does not measure wakeup
+latency or test an interrupt that arrives after WFI starts. The rule comes from
+the pinned privileged ISA, Machine-Level ISA, Wait for Interrupt section.

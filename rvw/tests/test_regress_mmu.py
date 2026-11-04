@@ -329,3 +329,36 @@ def test_access_width_selects_load_store_and_readback(width, load_op, store_op):
 def test_invalid_access_width(changes):
     with pytest.raises(ValueError):
         assembly(scenario(**changes))
+
+
+def test_native_reserved_satp_mode_write_is_ignored(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    row = dict(id='satp-warl', control='satp-mode', instruction='reserved-mode-write',
+               enabled=False, privilege='M', bins=['satp-warl'])
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[row])))
+    build(path, tmp_path/'good', gcc)
+    assert reference(tmp_path/'good', spike, 5)['status'] == 'pass'
+    original = mmu.assembly
+    def supported_mode(s):
+        # A supported mode must not have the ignored-write behavior.
+        return original(s).replace(str((1 << 60) | (7 << 44) | ((mmu.ROOT + 4096) >> 12)),
+                                   str((8 << 60) | (7 << 44) | ((mmu.ROOT + 4096) >> 12)))
+    monkeypatch.setattr(mmu, 'assembly', supported_mode)
+    build(path, tmp_path/'bad', gcc)
+    assert reference(tmp_path/'bad', spike, 5)['status'] == 'fail'
+
+
+def test_tw_clear_pending_ssip_wakes_with_global_interrupts_disabled():
+    row = dict(id='wakeup', control='tw', instruction='wfi', enabled=False,
+               privilege='S', wakeup='pending-ssip', bins=['wakeup'])
+    text = assembly(row)
+    assert 'csrw mideleg, t0\n csrw mie, t0\n csrs mip, t0' in text
+    assert 'li t0, 0x7e190a' in text  # Clear both global enables before mret.
+    assert 'li t1, 9' in text and 'la t1, done' in text
+    row['privilege'] = 'U'
+    with pytest.raises(ValueError, match='wakeup'):
+        assembly(row)

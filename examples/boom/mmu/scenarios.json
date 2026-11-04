@@ -485,6 +485,27 @@
       "bins": [
         "pma.clint-read"
       ]
+    },
+    {
+      "id": "satp-reserved-mode",
+      "control": "satp-mode",
+      "instruction": "reserved-mode-write",
+      "enabled": false,
+      "privilege": "M",
+      "bins": [
+        "priv.satp-reserved-mode"
+      ]
+    },
+    {
+      "id": "tw-wfi-s-clear-wakeup",
+      "control": "tw",
+      "enabled": false,
+      "instruction": "wfi",
+      "privilege": "S",
+      "wakeup": "pending-ssip",
+      "bins": [
+        "priv.tw-clear-wakeup"
+      ]
     }
   ]
 }
