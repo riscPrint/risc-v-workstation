@@ -1720,6 +1720,46 @@ Map mode uses Yosys `memory_map -formal`. Both model the supplied RTL memory.
 Neither adds a RAM/blackbox refinement contract or resolves undefined RTL
 behavior by choosing a value. The retained-cell count is not a refinement proof.
 
+### CDC sequential reconvergence depth
+
+Lint intent accepts `reconvergence_depth` (integer 1..64, default 1). It bounds
+register boundaries between synchronizer outputs and each sink. Findings retain
+each synchronized endpoint and its minimum register depth in `reconvergence`.
+Combinational edges do not consume this bound. Cycles are bounded. Memory and
+blackbox internals remain outside scope. This is structural evidence only.
+
+Lint settings can select optional backend `yosys`. Native `check` warnings use
+`yosys.combinational_feedback`, `yosys.conflicting_drivers`, `yosys.undriven`,
+or fallback `yosys.warning`. Findings retain elaborated bit IDs and available
+source attributes. Backend output includes `elaborated_modules` and `script`.
+Blackbox modules cannot earn a completed connectivity check.
+
+### Selected CDC protocol and simulation results
+
+`rvw lint --protocol MANIFEST --out NEW_DIRECTORY` accepts
+`rvw.cdc-protocol/1` with exactly `schema`, `kind`, `top` and `verilog`.
+The selected kinds, fixed port interfaces and digital sampling abstraction are
+specified in the lint guide. Sources are frozen before native elaboration.
+`rvw.cdc-protocol-result/1` records `status`, `proof_kind`, `kind`, source hashes,
+the native child `result`, model, limits and `activation: not_measured`.
+A pass only applies to the selected monitor and environment. It is not a
+structural waiver or whole-design CDC verdict. No C4 acceptance is emitted.
+`--simulate SAMPLES --seed SEED` instead emits `rvw.cdc-simulation/1` with
+status, kind, seed, requested sample count, input hashes and limits. Missing
+tools and incomplete execution are inconclusive. A simulation pass needs the
+completion marker and no failed monitor assertion. It is not a proof.
+
+Selected CDC protocol kinds also include `pulse_capture` (single injected pulse,
+four destination-event response bound) and `coherent_bus` (equal-coded two-bit
+output). The lint guide defines their exact interfaces and assumptions.
+`rvw lint --benchmark MANIFEST --out NEW_DIRECTORY` accepts `rvw.cdc-bench/1`.
+Cases pin source hashes and independent expected results. Optional commercial
+adapters receive the same frozen spec and monitor, but not the expected verdict.
+`rvw.cdc-adapter-response/1` must bind the exact request hash, mode, tool version
+and verdict. BMC passes must reach the requested depth. All observations and
+per-tool qualifications stay in `rvw.cdc-bench-result/1`. Missing commercial
+adapters are `not_run`. Suite agreement is not signoff or commercial parity.
+
 ### Formal campaign observations in C3 and C4
 
 `rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.

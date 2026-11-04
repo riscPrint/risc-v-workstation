@@ -712,3 +712,13 @@ response captures against a software oracle. It is not a real device binding.
 The native bus test exercises both imported SystemRDL and IP-XACT maps.
 These checks remain separate from architectural CSR checks. Multiple outstanding
 requests, back-to-back replacement and real device campaigns remain open.
+
+## Selected CDC protocol references
+
+`examples/cdc/` contains event-enable handshake, depth-four FIFO and reset
+release references, plus a digital old/new sampling model. `rvw lint --protocol`
+checks an independent queue or release-order monitor through the native formal
+flow. `--simulate` runs the same monitor with seeded Icarus perturbation.
+See the [lint guide](../rvw/src/rvw/lint/README.md#selected-protocol-safety-checks)
+for the fixed port contract, assumptions, commands and limits. These reference
+checks do not qualify whole-core CDC or analog metastability behavior.

@@ -4,6 +4,11 @@ import re
 
 
 def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_crossings, emit, intent):
+    if not isinstance(intent, dict) or set(intent) - {'protocols', 'reset_order', 'reconvergence_depth'}:
+        raise ValueError('intent must contain only protocols, reset_order and reconvergence_depth')
+    limit = intent.get('reconvergence_depth', 1)
+    if type(limit) is not int or not 1 <= limit <= 64:
+        raise ValueError('reconvergence_depth must be 1..64 register boundaries')
     by_path = {s['path']: i for i, s in signals.items()}
 
     def domain(i):
@@ -65,16 +70,32 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
                 pending.extend(incoming[n])
         return found
 
-    # Stop at the next state boundary. This catches independent chains that merge
-    # immediately after their second stages, including a combinational merge.
+    # Search each sequential layer separately. Cycles cannot exceed the declared bound.
+    def synchronized_ancestors(node, ends):
+        pending, seen, found = [(node, 0)], set(), {}
+        while pending:
+            current, distance = pending.pop()
+            if (current, distance) in seen or distance >= limit:
+                continue
+            seen.add((current, distance))
+            for source in upstream_registers(current):
+                if source in ends:
+                    found[source] = min(found.get(source, limit + 1), distance + 1)
+                else:
+                    pending.append((source, distance + 1))
+        return found
+
     ends = {by_path[s['last']]: s for s in structures}
     for dst, signal in regs.items():
         sources = upstream_registers(dst)
-        syncs = [ends[i] for i in sorted(sources) if i in ends]
+        ancestors = synchronized_ancestors(dst, ends)
+        syncs = [ends[i] for i in sorted(ancestors)]
         if len(syncs) > 1:
             for s in syncs[1:]:
-                emit('cdc.reconvergence', regs[by_path[s['source']]], signal,
-                     'Independent synchronized paths merge at this register. Relative latency is unproved.')
+                finding = emit('cdc.reconvergence', regs[by_path[s['source']]], signal,
+                     'Independent synchronized paths merge within the declared register depth. Relative latency is unproved.')
+                finding['reconvergence'] = [dict(endpoint=signals[i]['path'], register_depth=d)
+                                             for i, d in sorted(ancestors.items())]
         signatures = {tuple(domain(i).get(k) for k in
                       ('reset_key', 'reset_kind', 'reset_active_high', 'soft_reset_key', 'soft_reset_active_high'))
                       for i in sources}
@@ -82,8 +103,6 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
             emit('rdc.reconvergence', regs[min(sources)], signal,
                  'State with different reset signatures merges here. Reset isolation is unproved.')
 
-    if not isinstance(intent, dict) or set(intent) - {'protocols', 'reset_order'}:
-        raise ValueError('intent must contain only protocols and reset_order')
     protocols = intent.get('protocols', [])
     if not isinstance(protocols, list):
         raise ValueError('intent.protocols must be a list')
@@ -165,5 +184,5 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
         if status == 'unproved':
             emit('rdc.release_order_unproved', regs[src], regs[dst],
                  'No source-before-destination release order is declared. Isolation and release remain unproved.')
-    return dict(structures=structures, reset_ordering=ordering,
+    return dict(reconvergence_depth=limit, structures=structures, reset_ordering=ordering,
                 intent=intent, scope='bounded topology and declared ordering; no protocol or timing proof')

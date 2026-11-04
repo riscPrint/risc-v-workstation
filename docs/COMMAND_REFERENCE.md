@@ -558,7 +558,10 @@ usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
 ### `rvw lint`
 
 ```text
-usage: rvw lint [-h] [--settings SETTINGS] [--json] [--project PROJECT]
+usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
+    PROTOCOL] [--out OUT] [--depth DEPTH] [--engine ENGINE] [--timeout
+    TIMEOUT] [--simulate SAMPLES] [--seed SEED] [--mode {bmc,prove}] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw mcp`
