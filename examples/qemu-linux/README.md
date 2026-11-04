@@ -36,7 +36,7 @@ comparison and RTL boot results separate.
 `opensbi-smoke.S` and `opensbi-smoke.ld` build a reset prelude and an unchanged
 raw firmware payload. The prelude sets all 31 writable GPRs to zero, then jumps
 to firmware at `0x80200000` through t0. Both models execute the same prelude.
-It uses 33 instructions. Compare a 161-instruction prefix to check the first
+It uses 34 instructions. Compare a 162-instruction prefix to check the first
 128 OpenSBI instructions. This fixture supplies no DTB and no Linux kernel.
 It does not check SBI services or device state.
 
@@ -56,9 +56,9 @@ scripts/with-lock.sh boom nice -n 10 RiscvSim/boom/run.sh run \
 
 The linker marks the firmware segment RWX because the raw image contains code
 and writable data. A bounded simulation timeout is expected. It is not a boot
-pass. Keep the C2 header and the first 161 instruction rows from `rvfi.jsonl`.
+pass. Keep the C2 header and the first 162 instruction rows from `rvfi.jsonl`.
 Do not add an end/pass row. Compare that prefix with `rvw cosim check --core
-boom --elf /tmp/opensbi-smoke.elf --trace PREFIX --json`. Require 161 compared
+boom --elf /tmp/opensbi-smoke.elf --trace PREFIX --json`. Require 162 compared
 instructions and `scope=trace prefix`. Keep `trace_complete=false` explicit.
 A direct firmware entry can read unspecified reset GPR values. Do not copy
 those values from the DUT into the reference to force a match.
