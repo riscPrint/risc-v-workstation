@@ -94,7 +94,7 @@ package vip;
    `uvm_component_utils(scoreboard)
    bit [31:0] model[4];
    int count, loads;
-   bit [7:0] bins;
+   bit [7:0] seen_bins;
    covergroup traffic with function sample(bit op, bit [1:0] addr);
      cp_op: coverpoint op { bins put={0}; bins get={1}; }
      cp_addr: coverpoint addr { bins words[]={[0:3]}; }
@@ -121,11 +121,11 @@ package vip;
        loads++;
      end
      traffic.sample(t.opcode==4,2'(idx));
-     bins[(t.opcode==4 ? 4 : 0)+idx]=1;
+     seen_bins[(t.opcode==4 ? 4 : 0)+idx]=1;
      count++;
    endfunction
    function void check_phase(uvm_phase phase);
-     if(count!=40 || loads<4 || bins!=8'hff)
+     if(count!=40 || loads<4 || seen_bins!=8'hff)
        `uvm_fatal("CHECK","missing transactions or coverage bins")
      if(traffic.get_inst_coverage()!=100.0)
        `uvm_fatal("COVERAGE","covergroup did not reach 100 percent")

@@ -16,6 +16,8 @@ def register(sub):
     p.add_argument('--backend', choices=BACKENDS)
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=capabilities)
+    from rvw.sim.uvm import register as register_uvm
+    register_uvm(sub)
     from pathlib import Path
     c = sub.add_parser('cocotb', help='run a native cocotb component suite')
     c.add_argument('manifest', type=Path)
