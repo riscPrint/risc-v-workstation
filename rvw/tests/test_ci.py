@@ -57,3 +57,23 @@ def test_linux_workflows_need_manual_dispatch_and_linux_runner():
         assert 'runs-on: [self-hosted, Linux, X64, rvw-linux]' in text
         assert 'ubuntu-latest' not in text
         assert 'ubuntu-24.04' not in text
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_ci_cleanup_removes_readonly_results_and_keeps_status(tmp_path, exit_code):
+    import os
+    import subprocess
+
+    prefix = (REPO / 'scripts/ci-local.sh').read_text().split(
+        'export RVW_CI_SOURCE=', 1)[0]
+    command = prefix + f"""
+mkdir -p "$job/results/generation"
+printf result > "$job/results/generation/result.json"
+chmod 555 "$job/results/generation"
+exit {exit_code}
+"""
+    result = subprocess.run(['bash', '-c', command],
+                            env={**os.environ, 'TMPDIR': str(tmp_path)},
+                            capture_output=True, text=True)
+    assert result.returncode == exit_code, result.stderr
+    assert list(tmp_path.iterdir()) == [], result.stderr

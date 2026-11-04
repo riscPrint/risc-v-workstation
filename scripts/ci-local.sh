@@ -5,7 +5,16 @@ mode="${1:-fast}"
 case "$mode" in fast|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 job="$(mktemp -d "${TMPDIR:-/tmp}/rvw-ci.XXXXXXXX")"
-trap 'rm -rf "$job"' EXIT
+cleanup() {
+  status=$?
+  trap - EXIT
+  # Tests publish read-only result generations. Restore owner access in this
+  # job's private directory before removal. Do not follow directory symlinks.
+  chmod -R -P u+rwX "$job"
+  rm -rf "$job"
+  exit "$status"
+}
+trap cleanup EXIT
 export RVW_CI_SOURCE="$root" RVW_CI_WORK="$job/work"
 echo "Local CI mode: $mode"
 # Copy tracked files, including local edits. Exclude all old build output and venvs.
