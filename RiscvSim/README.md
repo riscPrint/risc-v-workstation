@@ -419,14 +419,29 @@ another request. JVM exit stops abandoned simulation threads. The launcher owns
 process-group teardown. There is no per-request cancellation that keeps the
 server alive. The server holds the adapter's core lock for its full life.
 
+For a manifest, use `run.sh run-many --persistent --jobs 1 --manifest jobs.jsonl`.
+This calls the same serial server path. It records `execution_mode: "server"`.
+It validates all output paths before starting. An abandoned worker stops the
+batch. Later jobs have no result and the command exits 2.
+
+In regression TOML, set `[core] persistent = true` to select this path.
+The runner selects one worker, including when `--jobs` is set. It skips the
+separate `build` process. The server compiles each model once in the batch.
+This avoids the extra elaboration in `build` followed by `run-many`.
+The runner adds the skipped pre-build budget to the first-result startup budget.
+Defaults stay unchanged. This option requires an adapter with `--persistent`
+support and a fresh-instance declaration. It does not retain a JVM across
+separate regression commands or suites.
+
 ## Timing measurements
 
 `details.model_compile_s` measures the first model build in this JVM, including
 elaboration and native setup. `details.model_timing.elaboration_s` measures
 `RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
 It includes native compilation or cache lookup, workspace setup and loading.
-It is not a pure C++ compiler measurement. `details.execution_s` measures the
-adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+It is not a pure C++ compiler measurement. `details.execution_s` measures elapsed time after model readiness through result
+preparation. It includes the adapter call, native-output draining and artifact
+handling. It is not isolated adapter execution time. The launcher's sbt Scala compilation occurs before the JVM and
 must be timed separately. Lock waits are not compiler time.
 
 Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example

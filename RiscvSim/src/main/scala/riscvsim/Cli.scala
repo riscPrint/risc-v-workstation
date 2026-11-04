@@ -7,7 +7,7 @@ object Cli {
   class UsageError(msg: String) extends Exception(msg)
 
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
-  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help")
+  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
     "manifest", "jobs", "summary", "wall-timeout", "irq-schedule")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
@@ -130,7 +130,7 @@ object Cli {
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
       |                  [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
-      |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--summary FILE] [--json] [defaults for every job...]
+      |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--persistent] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]
       |  run.sh info     [--json]

@@ -226,6 +226,15 @@ model compilation. This takes priority over missing-evidence markers such as mis
 Otherwise they exit 3 for an explicit `inconclusive` marker, 0 when all runs pass,
 and 1 for other run failures. Error results remain unsuitable as core evidence.
 
+Optional `run-many --persistent --jobs 1` uses the serial fresh-instance server.
+Adapters must declare fresh native and harness state for each request. C1
+`execution_mode` is `server`; `details.simulation_session` records session UUID,
+model run number and reset policy. RTL and native hashes still identify the model.
+An abandoned worker stops the batch before later requests and forces exit 2,
+including when no result exists for those requests. This is model reuse, not
+result reuse. Regression `[core] persistent = true` selects this mode and skips
+the separate pre-build process. It sets one worker for serial timeout budgets.
+
 Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
 installed reference's version, source revision when supplied, and origin. The same
 label is bound into `build_inputs`. Source installs supply `share/rvw/spike-source.json`;

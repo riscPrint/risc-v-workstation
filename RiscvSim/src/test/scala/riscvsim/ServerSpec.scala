@@ -82,6 +82,66 @@ class ServerSpec extends AnyFunSuite {
     }
   }
 
+  test("persistent run-many uses the server and compiles only once") {
+    fixture { (dir, elf) =>
+      val adapter = new Adapter(false)
+      val driver = new Driver(adapter)
+      val manifest = new File(dir, "jobs.jsonl")
+      Files.writeString(manifest.toPath, request(dir, elf, "one") + "\n" + request(dir, elf, "two") + "\n")
+      assert(driver.cmdRunMany(Map("manifest" -> manifest.getPath, "persistent" -> "true")) != 0)
+      assert(adapter.compiled == 1 && adapter.executed == 2)
+      val results = Seq("one", "two").map(n => ujson.read(Files.readString(new File(dir, n + "/result.json").toPath)))
+      assert(results.forall(_("execution_mode").str == "server"))
+      assert(results.map(_("details")("simulation_session")("model_run").num) == Seq(1.0, 2.0))
+      driver.cleanWorkspace()
+    }
+  }
+
+  test("persistent run-many rejects parallel jobs and undeclared adapters before build") {
+    for ((parallel, fresh) <- Seq((true, true), (false, false))) {
+      val adapter = new Adapter(false) { override def freshInstancePerRun = fresh }
+      intercept[Cli.UsageError] {
+        new Driver(adapter).cmdRunMany(Map("persistent" -> "true", "jobs" -> (if (parallel) "2" else "1")))
+      }
+      assert(adapter.compiled == 0 && adapter.executed == 0)
+    }
+  }
+
+  test("persistent batch binds each model and seed without leaking run counts") {
+    fixture { (dir, elf) =>
+      val adapter = new Adapter(false)
+      val driver = new Driver(adapter)
+      val manifest = new File(dir, "jobs.jsonl")
+      val requests = Seq(("one", false, 17), ("two", true, 29), ("three", false, 31)).map {
+        case (name, wave, seed) =>
+          val r = ujson.read(request(dir, elf, name))
+          r("wave") = wave
+          r("seed") = seed
+          ujson.write(r)
+      }
+      Files.writeString(manifest.toPath, requests.mkString("\n"))
+      driver.cmdRunMany(Map("manifest" -> manifest.getPath, "persistent" -> "true"))
+      assert(adapter.compiled == 2 && adapter.executed == 3)
+      val results = Seq("one", "two", "three").map(n => ujson.read(Files.readString(new File(dir, n + "/result.json").toPath)))
+      assert(results.map(_("seed").num) == Seq(17.0, 29.0, 31.0))
+      assert(results.map(_("details")("simulation_session")("model_run").num) == Seq(1.0, 1.0, 2.0))
+      driver.cleanWorkspace()
+    }
+  }
+
+  test("persistent run-many stops before the next job after an abandoned worker") {
+    fixture { (dir, elf) =>
+      val adapter = new Adapter(true)
+      val driver = new Driver(adapter)
+      val manifest = new File(dir, "jobs.jsonl")
+      Files.writeString(manifest.toPath, request(dir, elf, "one") + "\n" + request(dir, elf, "two") + "\n")
+      assert(driver.cmdRunMany(Map("manifest" -> manifest.getPath, "persistent" -> "true", "wall-timeout" -> "0.01")) == 2)
+      assert(adapter.executed == 1)
+      assert(!new File(dir, "two/result.json").exists())
+      driver.cleanWorkspace()
+    }
+  }
+
   test("server exits on abandoned worker before it reads another request") {
     fixture { (dir, elf) =>
       val adapter = new Adapter(true)

@@ -452,11 +452,16 @@ class Driver(val adapter: CoreAdapter) {
    * Native output carries no run identity: an `assert` or `rvfi_error` of a run that overlapped
    * another run is rerun alone afterwards, and a message is kept only from a run that was alone.
    */
-  def runJobs(jobs: Seq[RunJob], n: Int, progress: (Int, ujson.Obj) => Unit = (_, _) => ()): Array[ujson.Obj] = {
+  private def captureJobs(jobs: Seq[RunJob]): Unit = {
     // Freeze every batch ELF before any worker can compile a model. Reruns use these bytes.
     capturedElfs.clear()
     for (job <- jobs) try capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
       catch { case _: Exception => () } // runOne reports an invalid ELF as a harness error
+  }
+
+  def runJobs(jobs: Seq[RunJob], n: Int, progress: (Int, ujson.Obj) => Unit = (_, _) => (),
+      captureInputs: Boolean = true): Array[ujson.Obj] = {
+    if (captureInputs) captureJobs(jobs)
     val results = new Array[ujson.Obj](jobs.size)
     val states = jobs.map(newState).toArray
     val latch = new java.util.concurrent.CountDownLatch(jobs.size)
@@ -691,7 +696,8 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   /** Serial JSONL requests. EOF is teardown. A stuck worker poisons the process. */
-  def serve(o: Map[String, String], lines: Iterator[String], reply: ujson.Obj => Unit): Int = {
+  def serve(o: Map[String, String], lines: Iterator[String], reply: ujson.Obj => Unit,
+      capturedBatch: Boolean = false): Int = {
     if (!adapter.freshInstancePerRun) throw new Cli.UsageError("adapter does not declare a fresh instance for each run")
     val previousMode = serverMode
     serverMode = true
@@ -705,7 +711,7 @@ class Driver(val adapter: CoreAdapter) {
           }
           val job = Cli.job(o ++ Cli.fromJson(request), adapter, cwd)
           checkOutputs(Seq(job))
-          val result = runJobs(Seq(job), 1).head
+          val result = runJobs(Seq(job), 1, captureInputs = !capturedBatch).head
           reply(ujson.Obj("schema" -> "rvw.sim-server/1", "result" -> result))
           // The watchdog cannot kill a native simulation thread safely. Do not let
           // later requests share a process that still has this run alive.
@@ -726,8 +732,12 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdRunMany(o: Map[String, String]): Int = {
     val n = Cli.int(o, "jobs", min = 1).getOrElse(1)
+    val persistent = Cli.bool(o, "persistent")
+    if (persistent && n != 1) throw new Cli.UsageError("--persistent requires --jobs 1")
+    if (persistent && !adapter.freshInstancePerRun)
+      throw new Cli.UsageError("adapter does not declare a fresh instance for each run")
     val manifest = Cli.file(cwd, o.getOrElse("manifest", throw new Cli.UsageError("--manifest is required")))
-    val defaults = o -- Seq("manifest", "jobs", "summary", "json")
+    val defaults = o -- Seq("manifest", "jobs", "summary", "json", "persistent")
     val input = scala.io.Source.fromFile(manifest)
     val lines = try input.getLines().map(_.trim).zipWithIndex
       .filter { case (l, _) => l.nonEmpty && !l.startsWith("#") && !l.startsWith("//") }.toVector
@@ -740,7 +750,22 @@ class Driver(val adapter: CoreAdapter) {
     checkOutputs(jobs)
     System.err.println(s"[run-many] ${jobs.size} jobs, $n workers")
     val t0 = System.nanoTime()
-    val results = runJobs(jobs, n, (k, r) => System.err.println(s"[run-many] $k/${jobs.size} ${summaryLine(r)}"))
+    val results = if (persistent) {
+      val collected = scala.collection.mutable.ArrayBuffer.empty[ujson.Obj]
+      // Use the server path, including its poisoned-worker stop rule. Do not
+      // submit later jobs after a native worker failed to stop.
+      captureJobs(jobs)
+      serve(defaults, lines.iterator.zip(jobs.iterator).map { case ((line, _), job) =>
+        val request = ujson.read(line)
+        request("seed") = job.seed
+        ujson.write(request)
+      }, reply => {
+        if (reply.obj.contains("error")) throw new Cli.UsageError(reply("error").str)
+        collected += ujson.Obj.from(reply("result").obj)
+        System.err.println(s"[run-many] ${collected.size}/${jobs.size} ${summaryLine(collected.last)}")
+      }, capturedBatch = true)
+      collected.toArray
+    } else runJobs(jobs, n, (k, r) => System.err.println(s"[run-many] $k/${jobs.size} ${summaryLine(r)}"))
     val wall = (System.nanoTime() - t0) / 1e9
     val counts = ujson.Obj.from(Status.all.map(s => s.name -> ujson.Num(results.count(_("status").str == s.name))))
     val summary = ujson.Obj("schema" -> "rvw.run-many/1", "core" -> adapter.core, "manifest" -> manifest.getPath,
@@ -755,6 +780,6 @@ class Driver(val adapter: CoreAdapter) {
     emit(Cli.bool(o, "json"), summary,
       s"${jobs.size} runs in ${f"$wall%.1f"}s: " + Status.all.map(s => s"${counts(s.name).num.toInt} ${s.name}").mkString(", ") +
         results.filter(_("status").str != "pass").map(r => "\n  " + summaryLine(r)).mkString)
-    if (results.exists(_("status").str == "error")) 2 else if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.forall(_("status").str == "pass")) 0 else 1
+    if (results.length != jobs.length || results.exists(_("status").str == "error")) 2 else if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.forall(_("status").str == "pass")) 0 else 1
   }
 }
