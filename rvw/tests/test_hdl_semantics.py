@@ -21,6 +21,7 @@ def native(tmp_path, name, backend=None):
     result = run(EXAMPLES / f'{name}.json', out, backend=backend)
     assert result['status'] == 'pass', (result, [p.read_text() for p in out.glob('*.stderr')])
     assert result['inputs'] and result['versions']
+    assert all(value.strip() for value in result['versions'].values())
     return (out / result['jobs'][-1]['stdout']).read_text()
 
 

@@ -114,6 +114,7 @@ def run(manifest: Path, out: Path, *, backend=None, timeout=120):
             flag = '-V' if tool in ('yosys', 'iverilog', 'vvp') else '--version'
             # Icarus -V can print parts of its version on stderr.
             versions[tool] = step([executable, flag])
+            versions[tool] += (out / jobs[-1]['stderr']).read_text()
         sources = data['sources'][:]
         if data['backend'] == 'ghdl-yosys-icarus':
             step([paths['ghdl'], '--synth', '--std=08', '--out=verilog',
