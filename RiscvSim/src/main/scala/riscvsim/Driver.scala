@@ -310,6 +310,7 @@ class Driver(val adapter: CoreAdapter) {
    */
   def runOne(job: RunJob, st: Driver.RunState, keepResult: Boolean = false): ujson.Obj = {
     val t0 = System.nanoTime()
+    val runId = java.util.UUID.randomUUID().toString
     job.out.mkdirs()
     for ((_, f) <- artifactFiles ++ (if (keepResult) Nil else Seq("result" -> "result.json"))) new File(job.out, f).delete()
     val logW = new PrintWriter(new java.io.FileWriter(new File(job.out, "run.log")))
@@ -345,7 +346,7 @@ class Driver(val adapter: CoreAdapter) {
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
         "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
-        "source" -> source, "session_id" -> sessionId, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall)
+        "source" -> source, "session_id" -> sessionId, "run_id" -> runId, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall)
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>
@@ -370,7 +371,7 @@ class Driver(val adapter: CoreAdapter) {
     val details = outcome.details
     built.foreach { b =>
       details("model") = job.model.toJson
-      details("simulation_session") = ujson.Obj("id" -> sessionId,
+      details("simulation_session") = ujson.Obj("id" -> sessionId, "run_id" -> runId,
         "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
         "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
       details("execution_s") = st.wall.elapsedS

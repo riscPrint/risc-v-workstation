@@ -1689,3 +1689,9 @@ Request lines have `cycle` (integer string), `bus`, `address` (hex string),
 They are not software-to-bus pairs. An incomplete stream cannot establish coverage.
 `rvw soc capture-check` gives mismatch (1), inconclusive (3), or input error (2).
 It has no pass verdict. `--platform` in cosim can also read `rvw.soc/1` directly.
+
+SoC capture request identity: `rvw.soc-capture/1` headers carry a nonempty
+`identity.run_id`. It is a fresh UUID for each simulation request. C1 records the
+same value in `details.simulation_session.run_id`. `soc capture-check` requires
+both values to match. A session UUID, ELF hash and seed alone do not identify one
+request in a persistent session. Captures without a request ID are refused.

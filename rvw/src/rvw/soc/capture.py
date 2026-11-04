@@ -26,7 +26,8 @@ def check_capture(source, capture, result):
         identity = header.get('identity', {})
         if not identity.get('source') or not run.get('rtl_sha256') or identity.get('rtl_sha256') != run['rtl_sha256'] or identity.get('source') != run.get('source'):
             raise ValueError('missing or different source/RTL identity')
-        if (not identity.get('session_id') or identity['session_id'] != run.get('details', {}).get('simulation_session', {}).get('id')
+        if (not identity.get('run_id') or identity['run_id'] != run.get('details', {}).get('simulation_session', {}).get('run_id')
+                or not identity.get('session_id') or identity['session_id'] != run.get('details', {}).get('simulation_session', {}).get('id')
                 or not identity.get('elf_sha256') or identity['elf_sha256'] != run.get('elf_sha256')
                 or identity.get('seed') != run.get('seed')):
             raise ValueError('capture belongs to a different run')

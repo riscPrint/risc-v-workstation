@@ -23,11 +23,11 @@ def capture(tmp_path):
     source = ROOT / 'examples/vexriscv/soc.json'
     generate(source, tmp_path)
     digest = hashlib.sha256((tmp_path / 'sim-map.json').read_bytes()).hexdigest()
-    identity = {'rtl_sha256':'abc', 'source':{'core_rev':'def'}, 'session_id':'123', 'elf_sha256':'456', 'seed':1}
+    identity = {'rtl_sha256':'abc', 'source':{'core_rev':'def'}, 'session_id':'123', 'run_id':'request-one', 'elf_sha256':'456', 'seed':1}
     header = dict(schema='rvw.soc-capture/1', map_sha256=digest, identity=identity)
     rows = [header, dict(cycle='1', bus='ibus', address='0x80000000', size='4', write=False, selected='ram'), dict(event='end')]
     result = tmp_path / 'result.json'
-    result.write_text(dumps(dict(identity, soc_map_sha256=digest, details={'simulation_session':{'id':'123'}})))
+    result.write_text(dumps(dict(identity, soc_map_sha256=digest, details={'simulation_session':{'id':'123', 'run_id':'request-one'}})))
     path = tmp_path / 'soc-transactions.jsonl'
     path.write_text(''.join(json.dumps(r)+'\n' for r in rows))
     return source, path, result, rows
@@ -92,7 +92,7 @@ def test_capture_bounds_mutations(capture, address, selected):
     path.write_text(''.join(json.dumps(r)+'\n' for r in rows))
     assert check_capture(source, path, result)['status'] == 'mismatch'
 
-@pytest.mark.parametrize('field', ['session_id', 'elf_sha256', 'seed'])
+@pytest.mark.parametrize('field', ['session_id', 'run_id', 'elf_sha256', 'seed'])
 def test_capture_run_identity_mutation(capture, field):
     source, path, result, rows = capture
     rows[0]['identity'].pop(field)
@@ -116,3 +116,14 @@ def test_import_cli_rejects_bad_xml(tmp_path, capsys):
     code = run(Namespace(soc_command='import-ipxact', source=source, template=ROOT / 'examples/boom/soc.json', out=tmp_path/'out.json', json=True))
     assert code == 2
     assert json.loads(capsys.readouterr().out)['status'] == 'error'
+
+
+def test_capture_rejects_other_request_in_same_session(capture):
+    source, path, result, rows = capture
+    rows[0]['identity']['run_id'] = 'request-one'
+    path.write_text(''.join(json.dumps(r)+'\n' for r in rows))
+    obj = json.loads(result.read_text())
+    obj['details']['simulation_session']['run_id'] = 'request-two'
+    result.write_text(dumps(obj))
+    with pytest.raises(ValueError, match='different run'):
+        check_capture(source, path, result)
