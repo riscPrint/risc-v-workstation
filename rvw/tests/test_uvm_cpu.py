@@ -118,3 +118,12 @@ def test_cpu_build_error_is_valid_c3(capture,tmp_path,monkeypatch):
     assert report['tests'][0]['status']=='error'
     assert isinstance(report['created'],str)
     assert not load_results(out).tests[0].conclusive
+
+
+@pytest.mark.parametrize('key,bad',[('config','other'),('seed',2),('max_cycles',999),('seed',True)])
+def test_adapter_result_must_match_requested_options(key,bad):
+    c1=dict(config='chosen',seed=1,max_cycles=200)
+    uvm_cpu.validate_request(c1,config='chosen',seed=1,max_cycles=200)
+    c1[key]=bad
+    with pytest.raises(ValueError,match=key):
+        uvm_cpu.validate_request(c1,config='chosen',seed=1,max_cycles=200)

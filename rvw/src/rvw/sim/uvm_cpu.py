@@ -3,7 +3,6 @@ from argparse import Namespace
 import datetime as dt
 import json
 import math
-import os
 from pathlib import Path
 import re
 import shutil
@@ -98,6 +97,13 @@ endmodule
     return records
 
 
+def validate_request(c1, *, config, seed, max_cycles):
+    for name, expected in (('config',config),('seed',seed),('max_cycles',max_cycles)):
+        actual = c1.get(name)
+        if type(actual) is not type(expected) or actual != expected:
+            raise ValueError(f'C1 {name} does not match the requested option')
+
+
 def run(out, *, run_dir=None, elf, platform, archive, verilator='verilator', timeout=600,
         adapter=None, config=None, lock=None, seed=1, max_cycles=200000):
     if not math.isfinite(timeout) or timeout <= 0:
@@ -123,6 +129,8 @@ def run(out, *, run_dir=None, elf, platform, archive, verilator='verilator', tim
         if result.returncode or result.timed_out:
             raise ValueError('C1 adapter failed or timed out; see adapter.log')
     c1 = json.loads((Path(run_dir) / 'result.json').read_text())
+    if adapter:
+        validate_request(c1, config=config, seed=seed, max_cycles=max_cycles)
     trace_name = c1.get('artifacts', {}).get('rvfi_trace')
     if not isinstance(trace_name, str):
         raise ValueError('C1 has no RVFI artifact')
@@ -183,7 +191,8 @@ def run(out, *, run_dir=None, elf, platform, archive, verilator='verilator', tim
                          signature='uvm:cpu-build', inconclusive=str(exc)))
     if any(uvm.sha(Path(p)) != digest for p, digest in hashes.items()):
         for row in rows:
-            row.update(status='error', inconclusive='DPI sources changed during run')
+            row.update(status='error', signature='uvm:source-changed',
+                       inconclusive='DPI sources changed during run')
     inputs.capture.verify_tools()
     report = dict(schema='rvw.results/1', suite='uvm-cpu-replay', core=c1['core'],
                   config=c1['config'], run_id=out.name, tests=rows, commands=commands,

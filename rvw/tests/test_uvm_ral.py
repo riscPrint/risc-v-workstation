@@ -36,3 +36,15 @@ def test_refuse_unrepresented_side_effect(tmp_path):
     path.write_text(json.dumps(obj))
     with pytest.raises(ValueError, match='combined'):
         generate(path)
+
+
+def test_flat_symbol_collision_is_rejected(tmp_path):
+    obj=json.loads((ROOT/'examples/vexriscv/soc.json').read_text())
+    for name,register,base in [('a_b','c',0),('a','b_c',16)]:
+        obj['regions'].append(dict(name=name,kind='mmio',base=base,size=16,permissions='rw',
+            cacheable=False,registers=[dict(name=register,offset=0,width=32,access='rw',reset=0,
+                                          read_action='none',write_action='normal')]))
+    path=tmp_path/'map.json'
+    path.write_text(json.dumps(obj))
+    with pytest.raises(ValueError,match='duplicate SystemVerilog'):
+        generate(path)

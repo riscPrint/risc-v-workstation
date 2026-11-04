@@ -139,7 +139,8 @@ def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
     changed = any(not Path(p).is_file() or sha(p) != digest for p, digest in inputs.items())
     if changed:
         for row in rows:
-            row.update(status="error", inconclusive="suite sources changed during run")
+            row.update(status="error", signature="uvm:source-changed",
+                       inconclusive="suite sources changed during run")
     report = {"schema": "rvw.results/1", "suite": "uvm-subset", "core": "tiny-ram",
               "config": "verilator-timing-no-dpi", "run_id": out.name,
               "created": dt.datetime.now(dt.timezone.utc).isoformat(),

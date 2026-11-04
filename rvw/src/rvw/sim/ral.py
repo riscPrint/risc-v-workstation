@@ -6,9 +6,13 @@ def generate(path):
     obj = load(path)
     lines = ['package rvw_ral;', ' import uvm_pkg::*;', ' `include "uvm_macros.svh"']
     regs = []
+    symbols = set()
     for region in obj['regions']:
         for reg in region['registers']:
             name = 'reg_' + region['name'] + '_' + reg['name']
+            if name in symbols:
+                raise ValueError('register names produce duplicate SystemVerilog symbols')
+            symbols.add(name)
             # No silent combination of read-clear and write-one-clear semantics.
             if reg['read_action'] == 'clear' and reg['write_action'] == 'one_to_clear':
                 raise ValueError('combined RC and W1C is unsupported')
