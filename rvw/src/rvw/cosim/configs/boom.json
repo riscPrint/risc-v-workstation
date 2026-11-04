@@ -23,7 +23,12 @@
   "aligned_mem": true,
   "illegal_insn_tval": "zero",
   "mode_after_change": true,
-  "irq_inputs": [3, 7, 9, 11],
+  "irq_inputs": [
+    3,
+    7,
+    9,
+    11
+  ],
   "csr_masks": {
     "0x301": "0x6",
     "0xf11-0xf13": "0xffffffffffffffff",
@@ -460,5 +465,21 @@
     "platform": {
       "archid": 2
     }
-  }
+  },
+  "privilege_modes": "MSU",
+  "misaligned": {
+    "load": "trap",
+    "store": "trap",
+    "atomic": "trap",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "endianness": {
+    "instruction": "little",
+    "data": "little",
+    "page_table": "little",
+    "device": "little"
+  },
+  "absent_pmp_csrs": "trap",
+  "ecall_tval": "zero"
 }

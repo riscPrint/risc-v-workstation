@@ -60,17 +60,20 @@ for normal use. The adapter defaults to its own core checkout.
 
 The core is RV32IM with M/S/U CSRs, simple instruction and data buses, 16 MiB of
 RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or debug
-unit. SATP stays bare. Interrupt inputs stay low. Misaligned data access traps.
+unit. SATP stays bare. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP, SEIP
+and MEIP. The adapter records changes in C2. See
+[RiscvSim interrupt schedules](../../RiscvSim/README.md#interrupt-schedules). Misaligned data access traps.
 The only configuration is `rv32im`.
 
-The build compiles core sources and the generic RiscvSim sources in the adapter's
-own target directory. This avoids the bundled BOOM `ProjectRef` in RiscvSim's
-build. The database build uses SpinalDB through `ProjectRef`. Core build files
+The build compiles core sources in the adapter's own target directory.
+It consumes the generic RiscvSim library through `ProjectRef`.
+The library does not load a BOOM checkout. The database build uses SpinalDB through `ProjectRef`. Core build files
 and core Scala sources are unchanged.
 
-The smoke program matches Spike. The ISA startup code differs at absent PMP CSR
-access. The ECALL program differs on `mtval=0x73`. The adapter preserves those
-values. It does not mask either difference. The external project check passed
+The smoke program matches Spike. The platform JSON declares absent PMP CSRs as
+zero on reads with ignored writes. It declares ECALL `mtval=0x73`. The adapter
+preserves those values. The comparator checks these exact outcomes. Wrong values
+still mismatch. Full PMP behavior is outside this example because it has no PMP. The external project check passed
 41 aligned RV32UI tests and a four-test committed gate with equal RTL hashes.
 These simulator checks do not establish formal or hardware correctness.
 
@@ -82,8 +85,15 @@ Fixed memory latency applies to fetches and loads. Without it, the recorded seed
 selects waits from zero to three cycles. Stores have no response channel.
 
 Database extraction uses the same `VexTop` configuration. It captures the core
-and adapter source roots. PDG, block and HGLDD exports are disabled. Navigation
-uses the direct graph. These checks do not prove full ISA, privileged-mode,
+and adapter source roots. PDG, block and HGLDD exports are enabled. Export them with
+`rvw query export pdg pdg.json`, `rvw query export blocks blocks.json.gz` and
+`rvw query export hgldd VexTop.dd`. Navigation uses the direct graph. It remains
+partial evidence: graph edges show possible structural influence. They do not
+show the active cause in a cycle. The default PDG naming phase adds probe wires,
+so its HGLDD requires the database RTL. For a plain simulation VCD, use a
+separate database built with `rvw/build-db.sh rv32im plain/design.db --no-pdg`.
+Keep that RTL separate from the PDG-named RTL. The launcher accepts the shared
+SpinalDB options after `OUT`. These checks do not prove full ISA, privileged-mode,
 interrupt, formal or hardware correctness.
 
 ## Adapter controls
@@ -95,3 +105,9 @@ VEXRISCV=/path/to/VexRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
   examples/vexriscv/rvw/tests -q --basetemp=/tmp/cw-vex-pytest
 rm -rf /tmp/cw-vex-pytest
 ```
+
+## Limit ownership
+
+PMP/ECALL policy: [#11](https://github.com/riscPrint/risc-v-workstation/issues/11). RV32 architecture models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
+
+Retained limit: The documented ISA, adapter and validation subset applies only to this example. It does not qualify other VexRiscv configurations.

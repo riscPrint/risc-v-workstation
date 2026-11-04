@@ -673,12 +673,25 @@ def xprop(args) -> int:
     snapshot, ports, files = _inputs(args, out, ['SYNTHESIS'])
     common.need("yosys"), common.need("sby")
     names = {p.name for p in ports}
-    reset = common.resolve_reset(args, ports)
-    R, S = args.reset_cycles, args.settle
+    comb = getattr(args, 'combinational', False)
+    if comb:
+        if any(p.direction == 'inout' for p in ports):
+            common.die('inout ports are not supported by rvw formal wrappers')
+        model = json.loads((out / 'module_ports.json').read_text())
+        state = [c['type'] for m in model['modules'].values() for c in m.get('cells', {}).values()
+                 if any(t in c['type'].lower() for t in ('dff', 'mem', 'latch', 'fsm'))]
+        if state:
+            common.die('--combinational refuses state: ' + ', '.join(sorted(set(state))))
+        if args.reset:
+            common.die('--combinational does not use --reset')
+        reset = None
+    else:
+        reset = common.resolve_reset(args, ports)
+    R, S = (0, 0) if comb else (args.reset_cycles, args.settle)
     # The asserts are armed once the step counter passes R+S; a clocked assert on step k's values is
     # reported at step k+1. Shallower runs would check nothing and pass.
     need = min_depth_reset(R, S) + 1
-    if args.depth < need:
+    if not comb and args.depth < need:
         common.die(f"--depth {args.depth} checks nothing after reset ({R} cycles) and settle ({S}); "
                    f"use --depth >= {need}")
     ties = _ties(args, ports, {args.clock, reset})
@@ -723,6 +736,7 @@ def xprop(args) -> int:
     ys_prep = f"""{common.read_rtlil(files)}
 prep -top {args.top}
 flatten
+memory_map
 {('expose ' + expose_sel) if internal else ''}
 """
     started = time.time()
@@ -737,7 +751,8 @@ flatten
         common.die(f"xprop: yosys timed out (--timeout {args.timeout} s)")
     if rc != 0:
         common.die("xprop: yosys failed, see " + str(out / "probe.log"))
-    common.check_one_clock(common.clock_problems(out / common.CLOCKS_JSON, args.top, args.clock), args.clock)
+    if not comb:
+        common.check_one_clock(common.clock_problems(out / common.CLOCKS_JSON, args.top, args.clock), args.clock)
     exposed_ports = common.ports_from_json(out / "exposed_ports.json", args.top)
     widths = {p.name: p.width for p in exposed_ports}
     present = set(widths)
@@ -755,20 +770,41 @@ flatten
     assume_defined = "-assume-def-inputs" if not args.x_inputs else ""
     w, conns = _reset_harness("rvw_xprop_top", ports, args.clock, reset, args.reset_active == "high",
                               R, False, ties, R + S + 1)
+    if comb:
+        w = ["module rvw_xprop_top(" + ', '.join('input ' + p.decl() for p in ports
+             if p.direction == 'input' and p.name not in ties) + ");"]
+        conns = [f".{vid(p.name)}({vid(p.name)})" for p in ports
+                 if p.direction == 'input' and p.name not in ties]
+        conns += [f".{vid(n)}({wd}'d{v})" for n, (wd, v) in ties.items()]
+    input_masks = {}
+    if args.x_inputs:
+        for index, p in enumerate(ports):
+            if p.direction == 'input':
+                input_masks[p.name] = (f'rvw_input_x{index}' if p.name not in ties
+                                       and (comb or p.name not in (args.clock, reset)) else "0")
+                if input_masks[p.name] != '0':
+                    w.insert(1, f'  (* anyseq *) reg [{p.width-1}:0] {input_masks[p.name]};')
+        split = []
+        for c in conns:
+            name = next(p.name for p in ports if c.startswith('.' + vid(p.name) + '('))
+            split += [c.replace('.' + vid(name) + '(', '.' + vid(name + '_d') + '(', 1),
+                      f".{vid(name + '_x')}({input_masks[name]})"]
+        conns = split
     cw = counter_width(R + S + 1)
     sigs = sorted({t[1] for t in targets} | {t[2] for t in targets if t[2]})
     for i, s in enumerate(sigs):
         wd = widths[s]
         rng = f"[{wd - 1}:0] " if wd > 1 else ""
-        if s in inputs:  # inputs are not split: defined by assumption (or tied)
+        if s in inputs:  # Input validity conditions use the same X masks as the DUT.
             src = f"{ties[s][0]}'d{ties[s][1]}" if s in ties else vid(s)
-            w.append(f"  wire {rng}rvw_d{i} = {src};\n  wire {rng}rvw_x{i} = 0;")
+            w.append(f"  wire {rng}rvw_d{i} = {src};\n  wire {rng}rvw_x{i} = {input_masks.get(s, '0')};")
             continue
         w.append(f"  wire {rng}rvw_d{i};\n  wire {rng}rvw_x{i};")
         conns.append(f".{vid(s + '_d')}(rvw_d{i})")
         conns.append(f".{vid(s + '_x')}(rvw_x{i})")
     w.append(f"  {args.top} dut ({', '.join(conns)});")
-    w.append(f"  always @(posedge {vid(args.clock)}) if (rvw_cycle > {cw}'d{R + S}) begin")
+    w.append("  always @* begin" if comb else
+             f"  always @(posedge {vid(args.clock)}) if (rvw_cycle > {cw}'d{R + S}) begin")
     labels = []
     for k, (label, s, cond) in enumerate(targets):
         i = sigs.index(s)
@@ -793,14 +829,14 @@ depth {args.depth}
 multiclock off
 
 [engines]
-{_engine_block(args.engine, True)}
+{_engine_block(args.engine, not getattr(args, "first_failure", False))}
 
 [script]
 {ys_prep}
 # Unwritten registers and undriven nets have no cell for xprop to encode. Make their
 # unknown value explicit first. Real inputs and driven/initialized state are preserved.
 setundef -undriven -undef
-xprop -split-outputs {assume_defined}
+xprop -split-outputs {'-split-inputs' if args.x_inputs else ''} {assume_defined}
 read_verilog -formal -sv {out / 'rvw_xprop_top.sv'}
 prep -top rvw_xprop_top
 
@@ -817,6 +853,34 @@ prep -top rvw_xprop_top
                      restrictions, _remaining(args.timeout, started),
                      extra={"targets": len(targets), "missing_signals": [t[1] for t in missing]},
                      xprop_labels=labels)
+    # Yosys cannot X-encode formal monitors. Keep them and their assumptions.
+    # Other unencoded cells cannot earn an X-clean verdict.
+    encoding_log = out / 'sby' / 'model' / 'design.log'
+    unencoded = []
+    if encoding_log.exists():
+        for line in encoding_log.read_text(errors='replace').splitlines():
+            if 'Warning: Unhandled cell ' in line:
+                match = re.search(r'Unhandled cell .* \(([^()]+)\)', line)
+                kind = match.group(1) if match else 'unreadable cell type'
+                if kind not in {'$check', '$assert', '$assume', '$cover', '$live', '$fair', '$print'}:
+                    unencoded.append(kind)
+    result['unencoded_cells'] = sorted(set(unencoded))
+    if unencoded and result['status'] == 'pass':
+        result.update(status='unknown', cause='unsupported_x_encoding')
+    from .xreplay import replay
+    result['backend'] = 'yosys-xprop'
+    result['inventory'] = [dict(t, disposition='candidate' if any(
+        f['assert'] == t['assert'] for f in result['x_reaches']) else 'not_reported') for t in labels]
+    if getattr(args, 'replay', None):
+        replay(args, out, ports, labels, result, reset, ties, R, S, comb)
+    snapshot.finish(result)
+    if result['input_snapshot']['problems']:
+        for target in result['inventory']:
+            if target['disposition'] == 'confirmed':
+                target.update(disposition='inconclusive', reason='tool capture verification failed')
+        if 'replay' in result:
+            result['replay']['status'] = 'inconclusive'
+    common.write_json(out / 'result.json', result)
     status = result['status']
     if args.json:
         print(json.dumps(result, indent=2))
@@ -824,7 +888,7 @@ prep -top rvw_xprop_top
         print(f"xprop: {status} ({len(targets)} targets, {result['assertions']} assertions, depth {args.depth}, {result['wall_s']} s)")
         _print_reachability(result)
         for f in result["x_reaches"]:
-            print(f"  X reaches {f['label']} at step {f['step']}")
+            print(f"  candidate: {f['label']} at step {f['step']}")
         for r in restrictions:
             print(f"  restriction: {r}")
         if missing:
@@ -844,3 +908,13 @@ def parse_xprop_failures(text: str, labels: list[dict]) -> list[dict]:
         if a and a.group(1) in by_assert and a.group(1) not in found:
             found[a.group(1)] = {**by_assert[a.group(1)], "step": step}
     return sorted(found.values(), key=lambda f: (f["step"], f["label"]))
+
+
+def x_sweep(args):
+    from .xsweep import sweep
+    return sweep(args)
+
+
+def x_context(args):
+    from .xcontext import run
+    return run(args)

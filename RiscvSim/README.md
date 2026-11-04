@@ -7,7 +7,8 @@ Simulation runner for Spinal RISC-V cores, implementing the run contract (C1) an
   tohost decoding, the RVFI probe and trace writer, `result.json`, native-output capture for
   assertion messages, and the command-line driver (`build`, `run`, `run-many`, `info`) with
   a worker pool.
-- `boom/` is BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
+- `build.sbt` builds the generic library without a core checkout.
+- `boom/` has a separate sbt build for BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
 
 Status: `build`, `run`, `run-many` and `info` work on BOOM `small` (see "Verified"). The other
 presets build through the same code but were not run.
@@ -66,6 +67,7 @@ run.sh info     [--json]
   tool identity. It starts no simulation. Unknown native inputs refuse result reuse.
 - Exit codes: `run` 0 pass, 1 fail/timeout/assert/rvfi_error, 2 harness error or bad usage.
   `run-many` 0 all pass, 1 some did not pass, 2 some harness error.
+  Both commands use 3 for inconclusive evidence unless a harness error requires 2.
 - stdout carries only the result: one summary line, or the JSON with `--json`. Progress goes to stderr.
 
 `run` writes `DIR/result.json` (C1) and `DIR/run.log`, plus the requested artifacts. Extra keys
@@ -73,6 +75,13 @@ beyond C1: `details` (adapter facts: traps, tohost value, memory timing, model f
 counts, Konata desyncs) and `metrics` (`roi_cycles`, `roi_instret`, `roi_ipc` when the ELF has a
 `bench_stats` symbol). `replay` writes to `DIR-replay` so it does not overwrite the original.
 `result.json` is written to a temporary file and renamed, so a reader never sees half of it.
+
+Adapters that call `RiscvSimConfig.elaborate` can pass `sourceRoots` as its
+fourth argument. Use roots from the core project, not the launch directory.
+The PDG extractor uses these roots to resolve Scala source files. The BOOM
+adapter passes both source directories from `sourceDir`. Generated PDGs use
+the existing absolute-path format. Portable fixtures must use project-relative
+paths, and cross-checkout comparisons must remove only the checkout prefix.
 
 ## Artifacts
 
@@ -168,13 +177,18 @@ checks cover only the selected tests and configuration. They do not prove the co
 - A concurrent failure can require a serial rerun. A failure that cannot be attributed stays inconclusive.
 - An abandoned simulation thread uses resources until the JVM exits.
 - The current BOOM checks cover `small`. They do not cover `medium`, `large`, `mega` or `giga`.
-- Interrupt stimulus comes from software writes to the CLINT and interrupt generator.
+- Software device stimulus and an inline cycle schedule are supported. See below.
 
 ## Tests
 
 ```sh
-scripts/with-lock.sh boom bash -c 'cd RiscvSim && sbt -J-Xmx4g -batch -Dsbt.offline=true "riscvsim/test"'
+scripts/with-lock.sh sbt bash -c 'cd RiscvSim && sbt -J-Xmx4g -batch -Dsbt.offline=true "riscvsim/test"'
 ```
+
+The driver rejects an ELF whose XLEN differs from `CoreAdapter.xlen` before model compilation.
+It writes C1 `status: error` with both XLEN values.
+`CoreAdapter.busBytes` defaults to `xlen / 8`. Pass it to `ToHost` and `MemWords`.
+These helpers track 64-bit words and select data lanes from the store address and bus width.
 
 The tests need a RISC-V GCC compiler. They build the small test ELFs on first use.
 `RISCV_GCC` can select the compiler. Missing tools cause a test failure with a reason.
@@ -182,3 +196,78 @@ The suite covers the CLI, ELF handling, RVFI records, assertions, replay, output
 watchdogs and concurrent failure attribution. RTL identity tests cover monitor bytes and
 unsupported external data dependencies. Python launcher tests cover native identity,
 compiler invocation names, cache reuse, changed flags and cancellation.
+
+## Dependency trace model
+
+`--spinaltrace` selects a separate model for `build`, `run`, `run-many` and
+`identity`. It keeps trace probes and writes a dependency graph from the same
+elaboration as the RTL. `details.model.spinaltrace` records the flag. Replay keeps
+it. Each completed run copies the graph to the `pdg` artifact (`pdg.json`).
+Use `--wave` to record the instrumented wave. Wave windows work as before.
+An adapter must use `RiscvSimConfig.elaborate` to support this flag. A requested
+model without its graph fails with an error. It cannot supply cause evidence.
+
+The `boom-spinaltrace` prototype stays until an old/new BOOM failure bundle has
+the same signature, failure cycle, criterion and dependency trace. Run both with
+the same ELF, seed, model options and wave window under the `boom` lock. Compare
+source statements, cycles and dependency edges after normalizing generated IDs
+and checkout paths. Record the measured result in the PR before removal.
+
+Some generated statements have no retained core frame. The location filter
+skips library frames and uses the elaboration caller. The prototype and the
+normal helper then give different source files and lines. Statement names can
+contain that file and line too. `CallerLocationSpec` tests this rule. Keep these
+locations and names in the comparison. Keep the prototype while they differ;
+do not map one helper to the other to claim exact parity.
+
+## Interrupt schedules
+
+BOOM and the VexRiscv example accept `--irq-schedule`:
+
+```sh
+RiscvSim/boom/run.sh run --elf RiscvSim/tests/programs/build/interrupt-timer \
+  --out /tmp/irq-timer --seed 1 --mem-latency 0 --rvfi-trace \
+  --irq-schedule '1:0x0,100:0x80,200:0x0,1000:0x80' --max-cycles 20000
+```
+
+Each pair gives a sampled cycle and the full input levels. Bits 3, 7, 9 and 11
+select software, timer, supervisor external and machine external inputs.
+A selected schedule replaces device-generated levels. C1 and replay keep the
+schedule. C2 records each driven change. New levels affect the next clock edge.
+The schedule does not change the RTL or the model cache key.
+
+`tests/programs/interrupt-*.S` keep interrupts masked during a fixed loop.
+They initialize writable status and trap-value CSRs before the loop.
+They then enable machine delivery, or enter S mode with SEIP delegated.
+The handler checks cause, EPC region and the cleared global enable bit.
+The regression also checks these values outside the program and compares the
+whole trace with Spike. The masked pulse and the later pending level are fixed
+before simulation. Trap timing does not select the expected window.
+
+Run the native regression with the core environment and RISC-V GCC on PATH:
+
+```sh
+RVW_INTERRUPT_RUNTIME=1 nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/interrupts/test_runtime.py -q --basetemp=/tmp/irq-regression
+```
+
+This runs eight BOOM jobs in one model. Set `RVW_HOME` to this checkout and
+`VEXRISCV` to its core checkout to also run eight VexRiscv jobs. The VexRiscv
+programs use RV32 instructions and omit PMP setup because that core has no PMP.
+Four masked runs per core end at their cycle limit.
+Their timeout is expected and is not a program pass. Logs, C1, C2 and comparison
+JSON stay in the selected temporary directory. The Python checker reports
+`consistent` only for its schedule and window checks. Spike supplies the separate
+instruction comparison. Missing bounds or trap evidence stays inconclusive.
+Sail cannot synchronize external inputs and refuses this comparison.
+## Additional test sources
+
+See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
+suites. These use the existing ELF run contract. ACT4 expected signatures
+must come from Sail or the suite, never from a DUT run.
+
+## Limit ownership
+
+Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
+
+Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.

@@ -1,0 +1,75 @@
+name: Native installer
+on:
+  workflow_dispatch:
+    inputs:
+      cosim_only:
+        description: Run only the cosim installer and shim capture tests
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - '.github/workflows/installer.yml'
+      - 'scripts/install*.sh'
+      - 'rvw/pyproject.toml'
+      - 'rvw/uv.lock'
+  schedule:
+    - cron: '23 4 * * 1'
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        flags: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.cosim_only && '["--with-cosim"]' || '["", "--with-sim", "--with-riscv-gcc", "--with-cosim", "--with-formal", "--with-sim --with-riscv-gcc --with-cosim"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install on the native host
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --yes "${flags[@]}"
+      - name: Check requested tools
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          source env.sh
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --check "${flags[@]}"
+      - name: Check shim input capture
+        if: contains(matrix.flags, '--with-cosim')
+        run: |
+          source env.sh
+          uv sync --locked --no-dev --extra dev --extra mcp --no-managed-python --project rvw
+          rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_build_capture.py -q
+      - name: Check the pinned reference policies
+        if: contains(matrix.flags, '--with-cosim') && contains(matrix.flags, '--with-riscv-gcc')
+        run: |
+          source env.sh
+          rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
+  long-install:
+    if: github.event_name != 'workflow_dispatch' || !inputs.cosim_only
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        flags: ['--with-gem5', '--all']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install on the native host
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --yes "${flags[@]}"
+      - name: Check requested tools
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          source env.sh
+          read -r -a flags <<< "$FLAGS"
+          scripts/install.sh --check "${flags[@]}"

@@ -122,3 +122,9 @@ with transparent temporaries), `diff.py`, `cli.py` (argparse and text output), `
   the database. Source and RTL locations use their captured content bindings.
 - Keep BOOM examples and fixtures separate from generic query code. See
   `SpinalDB/README.md` for the key model, column reference and extraction limits.
+
+## Limit ownership
+
+More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Non-Spinal inputs: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55).
+
+Retained limit: SpinalDB extraction and incomplete-key restrictions apply to every query and diff.

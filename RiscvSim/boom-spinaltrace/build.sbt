@@ -3,7 +3,7 @@
 ThisBuild / scalaVersion := "2.13.14"
 val spinalVersion = "1.15.0"
 
-lazy val riscvsimBoom = ProjectRef(file("..").getCanonicalFile, "boom")
+lazy val riscvsimBoom = ProjectRef(file("../boom"), "boom")
 lazy val spinaltrace = ProjectRef(file("../../SpinalTrace/spinaltrace").getCanonicalFile, "spinaltrace")
 
 lazy val root = (project in file("."))

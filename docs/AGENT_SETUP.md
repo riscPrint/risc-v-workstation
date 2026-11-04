@@ -467,3 +467,9 @@ Report each remaining error with its command and exit code.
 - State which optional paths and configurations were not checked.
 
 Do not claim hardware correctness from simulator results.
+
+## Limit ownership
+
+Waiver policy: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Integration choice: [#34](https://github.com/riscPrint/risc-v-workstation/issues/34). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116).
+
+Retained limit: Agents must preserve adapter refusals and require human review where stated. No invented RVFI, Konata or waiver support is permitted.

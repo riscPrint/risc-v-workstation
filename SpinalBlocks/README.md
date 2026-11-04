@@ -20,59 +20,87 @@ structure you wrote:
 
 Parts:
 
-* `spinalblocks/` – Scala library: `SpinalBlocks.generate(config, out)(new Top)` elaborates,
-  generates the RTL as usual, and writes the diagram data (`.json` or `.json.gz`). `boom/` in the
-  same build does it for spinal-boom.
+* `spinalblocks/` – Scala extractor library, called by SpinalDB. It also supports standalone designs.
 * `engine/` – the viewer engine, a TypeScript library with no UI around it (see below). Hosts embed it.
 * `hosts/web/` – a browser host: hierarchy tree, breadcrumbs, search, details panel.
 * VS Code: the `spinalblocks` feature of the RISC-V Workstation extension, in [`../vscode/features/spinalblocks/`](../vscode/features/spinalblocks/README.md).
 * `docs/FORMAT.md` – the data format between the two.
 
 ```
- Spinal design ──(spinalblocks, Scala)──> design.json(.gz) ──> engine ──> host (web page, VS Code, …)
+ Spinal design → SpinalDB → rvw query export blocks → design.json(.gz) → engine → host
 ```
 
-## Generate the data
+## Read the design database
 
-Requirements: JDK 21, sbt, SpinalHDL 1.15 (`source ../../spinal-boom/env.sh` with a spinal-boom checkout next to this repo), and the
-sibling `../SpinalWaves` checkout (used for source locations).
+Build the database with your core project's `rvw query build` command. Keep
+block export enabled (the default). Export the stored diagram with no new
+elaboration:
 
-From your own project, after `publishLocal` of `spinalblocks` (or with a `ProjectRef` like `boom/` uses):
+```sh
+rvw query build --config NAME
+rvw query export blocks blocks.json.gz
+# Or use an explicit database from the workstation checkout:
+SpinalBlocks/export.sh design.db blocks.json.gz
+```
+
+The viewer reads this JSON file. The artifact includes hierarchy, ports, Areas,
+logic, nets, FSMs and source locations from the database's elaboration.
+`export.sh` uses the workstation's `rvw/.venv/bin/rvw`. It needs no JDK, sbt,
+core checkout or RTL build. A database built with `--no-blocks` has no diagram;
+export then fails. Rebuild the database with blocks enabled.
+
+The core project owns its database entry point and source roots. See
+[the project guide](../docs/BRING_YOUR_OWN_CORE.md). The separate
+[`SpinalDB/boom/`](../SpinalDB/boom/) build is a BOOM example. For that example:
+
+```sh
+SpinalDB/build-db.sh boom small design.db
+rvw query export blocks blocks.json.gz --db design.db
+```
+
+Use `--no-pdg` when a database must use the same signal names as a plain RTL
+build. The default PDG naming phase adds probe wires. It can change diagram
+net names and source lines for those wires. It does not turn static nets into
+waveform causes.
+
+## Extractor library
+
+SpinalDB calls `SpinalBlocks.extract(report.toplevel, sourceRoots)` on its own
+report. It compiles the extractor sources without loading the legacy BOOM build.
+That legacy build and its BOOM entry remain while full parity fails.
+
+Implicit clock and reset signals can retain the elaboration caller as their
+source location. The standalone caller and `SpinalDB.elaborate` are different
+Scala statements. These locations describe generated infrastructure. They do
+not describe a statement in the core. Anonymous logic groups can also use that
+file and line in their names and IDs. `BlockArtifactSpec` tests this difference.
+Keep these fields in parity comparisons. Do not replace them with a core source
+line or discard them to claim a match. The old entry must stay until the source
+attribution rule is shared by both paths and full parity passes.
+A project can also
+use `SpinalBlocks.generate` for a standalone diagram. It needs JDK 21, sbt,
+SpinalHDL 1.15.0 and the sibling `SpinalWaves/` directory:
 
 ```scala
 import spinalblocks.SpinalBlocks
-
-SpinalBlocks.generate(SpinalConfig(targetDirectory = "rtl"), new java.io.File("blocks/top.json.gz"))(new MyTop)
+SpinalBlocks.generate(SpinalConfig(targetDirectory = "rtl"),
+  new java.io.File("blocks/top.json.gz"))(new MyTop)
 ```
 
-`generate` elaborates the design twice, the first time only to find which component classes exist,
-so Spinal records source locations for all of them (same method as SpinalWaves). Generators must be
-deterministic. Pass `locations = false` to elaborate once without jump-to-source. Source files are
-looked up under `src/main/scala` and `src/test/scala` of the working directory; pass `sourceRoots`
-otherwise. `SpinalBlocks.extract(report.toplevel)` gives the JSON of a design you generated yourself.
-
-Any component with a no-argument constructor, and the example:
+`generate` uses two elaborations to find source locations. Generators must be
+deterministic. `locations = false` skips the location pass. Set `sourceRoots`
+when sources are outside `src/main/scala` and `src/test/scala`.
 
 ```sh
 cd spinalblocks
-sbt "spinalblocks/runMain spinalblocks.Main my.pkg.MyTop out.json"
 sbt "spinalblocks/runMain spinalblocks.examples.Demo demo.json"
 ```
-
-BOOM (`small|medium|large|mega|giga`, about 35 s, 156 modules, 1.9 MB):
-
-```sh
-cd spinalblocks
-sbt "boom/run small"        # writes spinal-boom/blocks/boom-small.json.gz
-```
-
-`SPINALBLOCKS_LOCATIONS=0` skips the location pass.
 
 ## View it in the browser
 
 ```sh
 cd hosts/web && npm install
-node serve.mjs ../../spinal-boom/blocks/boom-small.json.gz
+node serve.mjs /path/to/blocks.json.gz
 ```
 
 `serve.mjs` builds the page if needed, serves it with the design, and opens the browser. Reloading the
@@ -114,8 +142,8 @@ like Chisel's `Enum(n)` (only ever assigned constants, tested in `switch`/`when`
 
 ### Live update
 
-Run the generator in sbt's watch mode, e.g. `sbt "~boom/run small"`, and reload: the diagrams follow
-the Scala code (the VS Code extension reloads by itself).
+Rebuild the database, export the diagram again, then reload the page. The VS Code
+extension reloads the exported file when it changes.
 
 ## The engine
 
@@ -193,3 +221,29 @@ cd engine && npm test                         # engine
 
 `examples/Demo.scala` (a FIFO, two GCD units, an FSM area and a memory) is the shared fixture; its
 JSON is checked in as `engine/test/fixtures/demo.json`.
+
+## Decisions and limits
+
+- Read stored block artifacts through `rvw query`. New core entry points belong
+  in project data or separate example builds. The legacy extractor build still
+  loads BOOM. Its removal is deferred until BOOM diagram and source-link parity
+  is checked. The old command remains `cd spinalblocks && sbt "boom/run small"`.
+- Diagram nets and database edges show possible structural influence. They do
+  not select the active driver at a waveform time. Use SpinalTrace for that.
+- A BlackBox diagram shows ports only. The database uses coarse dependencies:
+  each output or inout can depend on each other input or inout. No internal
+  behavior is inferred from this diagram.
+- Inout ports are shown. Analog attachment nets are omitted from the diagram.
+  Use database queries for conservative inout paths. The diagram does not
+  resolve analog drive strength or tri-state values. SpinalHDL's `PhaseAnalog` can reject sliced wide inout
+  attachments before either extractor runs. See [SpinalDB limits](../SpinalDB/README.md#limitations).
+- Verilog and SystemVerilog exports use the same diagram format. Other compiler
+  backends need separate checks. The workstation's Scala and SpinalHDL versions
+  must match the core build. NaxRiscv's upstream build uses Scala 2.12 and local
+  SpinalHDL submodules; it cannot use a Scala 2.13 library `ProjectRef` unchanged.
+
+## Limit ownership
+
+Database migration and legacy entry removal: [#44](https://github.com/riscPrint/risc-v-workstation/issues/44). More-design checks: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Cross-navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: Database export is available. Legacy entry removal still needs parity evidence. Missing source files and extraction approximations do not become verified navigation.

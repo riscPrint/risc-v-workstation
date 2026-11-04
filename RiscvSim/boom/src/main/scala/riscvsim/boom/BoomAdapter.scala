@@ -39,6 +39,7 @@ object BoomAdapter extends CoreAdapter {
   val boomDir: File = new File(sys.props.getOrElse("riscvsim.boom.dir",
     sys.env.getOrElse("SPINAL_BOOM", "."))).getCanonicalFile
 
+  override def irqInputMask: BigInt = 0xA88
   def core = "boom"
   val configs = Seq("small", "medium", "large", "mega", "giga")
   def xlen = 64
@@ -57,7 +58,8 @@ object BoomAdapter extends CoreAdapter {
   private def report(key: ModelKey, work: File): SpinalReport[BoomSimTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
     val formal = new File(boomDir, "formal")
-    RiscvSimConfig.elaborate(key, work, SpinalBoomConfig()) {
+    RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
+      Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
@@ -100,9 +102,9 @@ object BoomAdapter extends CoreAdapter {
   def run(compiled: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     val elf = ctx.elf
     val tohostAddr = ToHost.find(elf).getOrElse(throw new IllegalArgumentException(s"${job.elf} has no tohost symbol"))
-    val tohost = new ToHost(tohostAddr)
+    val tohost = new ToHost(tohostAddr, busBytes)
     // riscv-tests benchmarks store ROI cycles and instret here (see BenchmarksSpec)
-    val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2))
+    val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
     val konataFile = new File(job.out, "konata.log")
     var tracer: Option[KonataTracer] = None
@@ -111,6 +113,8 @@ object BoomAdapter extends CoreAdapter {
     var rvfiCode = 0
 
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
+      require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
+        "this configuration has no SEIP input")
       val cd = dut.clockDomain
       cd.forkStimulus(10)
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
@@ -150,10 +154,11 @@ object BoomAdapter extends CoreAdapter {
         val stored = readLong(mtime)
         mtimeValue = (if (stored != mtimeValue) stored else mtimeValue) + 1
         mem.write(mtime, mtimeValue)
-        val mtipLevel = java.lang.Long.compareUnsigned(mtimeValue, readLong(mtimecmp)) >= 0
-        val msipLevel = (mem.readInt(msip) & 1) != 0
-        val meipLevel = (mem.readInt(intGen) & 1) != 0
-        val seipLevel = dut.io.interrupts.seip != null && (mem.readInt(intGen + 4) & 1) != 0
+        val scheduled = job.irqSchedule.map(_.levelsAt(ctl.cycle))
+        val mtipLevel = scheduled.map(_.testBit(7)).getOrElse(java.lang.Long.compareUnsigned(mtimeValue, readLong(mtimecmp)) >= 0)
+        val msipLevel = scheduled.map(_.testBit(3)).getOrElse((mem.readInt(msip) & 1) != 0)
+        val meipLevel = scheduled.map(_.testBit(11)).getOrElse((mem.readInt(intGen) & 1) != 0)
+        val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(intGen + 4) & 1) != 0)
         dut.io.interrupts.mtip #= mtipLevel
         dut.io.interrupts.msip #= msipLevel
         dut.io.interrupts.meip #= meipLevel

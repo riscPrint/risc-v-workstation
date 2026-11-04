@@ -2,7 +2,9 @@
 
 IDE tools to make RISC-V development easier. SpinalHDL gets first-class treatment, however should be easy to extend to other HDLs. Many features do not rely on SpinalHDL.
 
-The RISC-V core these tools are built alongside lives in [riscPrint/spinal-boom](https://github.com/riscPrint/spinal-boom).
+The BOOM core these tools use is in the private repository
+[riscPrint/spinal-boom](https://github.com/riscPrint/spinal-boom). Access is optional.
+For a public core example, use [examples/vexriscv](examples/vexriscv/).
 
 Start with [AGENTS.md](AGENTS.md) (layout, commands, rules), [ROADMAP.md](ROADMAP.md) (plan, and where each area stands against commercial EDA tools) and [TODO.md](TODO.md) (the open GitHub issues, by area).
 
@@ -20,7 +22,10 @@ Keep your core in a separate repository. Follow the
 [agent setup playbook](docs/AGENT_SETUP.md) or the
 [bring-your-own-core guide](docs/BRING_YOUR_OWN_CORE.md).
 Use the [architecture playbook](docs/AGENT_ARCH.md) for gem5.
-The installer asks before system package commands.
+The installer asks before system package commands. Homebrew is required on macOS.
+The full quickstart combination is not yet qualified on clean macOS and Linux
+hosts ([#17](https://github.com/riscPrint/risc-v-workstation/issues/17),
+[#40](https://github.com/riscPrint/risc-v-workstation/issues/40)). See [tool versions and install limits](docs/TOOL_VERSIONS.md).
 
 Track work in the [v0.2 (near term) milestone](https://github.com/riscPrint/risc-v-workstation/milestone/1)
 and the [Later phases milestone](https://github.com/riscPrint/risc-v-workstation/milestone/2).
@@ -84,7 +89,7 @@ The separate VexRiscv project passed 41 aligned RV32UI tests, a four-test commit
 gate with equal RTL hashes, a 17-instruction Spike smoke comparison and database
 queries. See the [VexRiscv limits](examples/vexriscv/README.md#design-and-limits).
 
-## Status (2026-10-24)
+## Status (integration branch, 2026-11-03)
 
 Supported scope under contract C8:
 
@@ -97,17 +102,18 @@ Supported scope under contract C8:
 
 Experimental features need manual result checks before use:
 
-- Known-failure waivers (`rvw regress known`) and failure-signature matching.
-- Gates on stored result folders (`--base`/`--cand` folders) and performance metrics (`perf_metrics`).
-- Mutation testing (`rvw cov mutate`).
+- Known-failure waivers (`rvw regress known`) and failure-signature matching ([#2](https://github.com/riscPrint/risc-v-workstation/issues/2)).
+- Gates on stored result folders (`--base`/`--cand` folders) and performance metrics (`perf_metrics`) ([#4](https://github.com/riscPrint/risc-v-workstation/issues/4)).
+- Mutation testing (`rvw cov mutate`) ([#3](https://github.com/riscPrint/risc-v-workstation/issues/3)).
 - SpinalChecks generated checks (run reports, check selection). On BOOM, 24 stream checks fire;
-  most are probably legal `Decoupled` behaviour from the Chisel port (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
+  source-backed dispositions are recorded, but runtime triage remains open (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
 
 ## VS Code extension
 
 [vscode/](vscode/) is one extension for all the tools. Each tool adds a feature under `vscode/features/<tool>/` (SpinalBlocks is the first). See [vscode/README.md](vscode/README.md) to build it or add a feature.
 
-Each tool has its own README with build and usage instructions. SpinalBlocks depends on SpinalWaves through a relative path, so keep them side by side. Its `boom` example also expects a `spinal-boom` checkout two levels up.
+Each tool has its own README with build and usage instructions. SpinalBlocks depends on SpinalWaves through a relative path, so keep them side by side. Read diagrams from SpinalDB with `rvw query export blocks blocks.json.gz`.
+The separate `SpinalDB/boom` example needs a BOOM checkout.
 
 ## Decisions
 
@@ -116,8 +122,12 @@ Each tool has its own README with build and usage instructions. SpinalBlocks dep
 - Shared formats stay in `docs/PLATFORM_CONTRACTS.md`. Core details stay in adapters.
 - Heavy jobs use the machine-wide lock. Timeout and cancellation stop the process group.
 - [Cosim/README.md](Cosim/README.md) is the canonical co-simulation guide.
-- Current gaps stay in [TODO.md](TODO.md). Git history retains past review records.
+- Current gaps stay in [TODO.md](TODO.md). Review results belong in issues and pull requests.
 
 ## History
 
-SpinalWaves and SpinalTrace were separate repositories; their full histories were merged in with `git subtree`. SpinalBlocks starts with a single import commit.
+SpinalWaves and SpinalTrace started as separate ports. This checkout does not
+retain their full import histories or past review reports. Upstream revisions
+and local patches are listed in
+[SpinalWaves Rust porting notes](SpinalWaves/docs/RUST_PORTING.md) and
+[SpinalTrace porting notes](SpinalTrace/PORTING_NOTES.md).

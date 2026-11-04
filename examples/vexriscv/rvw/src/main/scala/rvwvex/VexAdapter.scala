@@ -9,6 +9,7 @@ import scala.collection.mutable
 
 object VexAdapter extends CoreAdapter {
   type Model = SimCompiled[VexTop]
+  override def irqInputMask: BigInt = 0xA88
   def core = "vexriscv"
   val configs = Seq("rv32im")
   def xlen = 32
@@ -38,10 +39,9 @@ object VexAdapter extends CoreAdapter {
 
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     require(!job.rvfiCheck, "VexRiscv adapter has no riscv-formal monitor; use --rvfi-trace")
-    require(ctx.elf.xlen == 32, "VexRiscv requires an ELF32 image")
     require(ctx.elf.entry == 0x80000000L, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
-      throw new IllegalArgumentException("ELF has no tohost symbol")))
+      throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
     val memory = mutable.LongMap.empty[Int]
     def inRam(a: Long, n: Long): Boolean = a >= 0x80000000L && n >= 0 && a + n <= 0x81000000L
     ctx.elf.load { (addr, bytes) =>
@@ -119,9 +119,15 @@ object VexAdapter extends CoreAdapter {
             }
           }
         }
+        var irqLevels = BigInt(-1)
         cd.onSamplings {
           ctl.tick()
-          if (ctl.cycle == 1) writer.foreach(_.irq(ctl.cycle, 0))
+          val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(BigInt(0))
+          dut.csr.timerInterrupt #= levels.testBit(7)
+          dut.csr.softwareInterrupt #= levels.testBit(3)
+          dut.csr.externalInterrupt #= levels.testBit(11)
+          dut.csr.externalInterruptS #= levels.testBit(9)
+          if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
           if (dut.traps.valid.toBoolean) {
             traps += 1
             val cause = dut.traps.cause.toBigInt
@@ -139,9 +145,7 @@ object VexAdapter extends CoreAdapter {
               val lane = Integer.numberOfTrailingZeros(r.memWmask)
               val count = Integer.bitCount(r.memWmask)
               require(Set(1, 2, 4)(count), "unsupported RVFI store mask")
-              // ToHost uses eight-byte bus lanes. Repeat the 32-bit word for a split RV32 store.
-              val data = r.memWdata | (r.memWdata << 32)
-              tohost.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), data) match {
+              tohost.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata) match {
                 case Some(ToHost.Pass) => ctl.finish(Status.Pass)
                 case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
                 case None =>

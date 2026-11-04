@@ -14,7 +14,7 @@ ACTIVE = ContextVar('formal_tools', default=None)
 
 # These upstream commands have no successful --version interface. Their adapters
 # report a captured content identity rather than inventing an upstream version.
-_IDENTITY_ONLY = {'yosys-smtbmc', 'yosys-witness', 'yosys-abc'}
+_IDENTITY_ONLY = {'yosys-smtbmc', 'yosys-witness', 'yosys-abc', 'iverilog', 'vvp'}
 _SOLVERS = {'yices': 'yices-smt2', 'z3': 'z3', 'bitwuzla': 'bitwuzla',
             'boolector': 'boolector', 'cvc4': 'cvc4', 'cvc5': 'cvc5',
             'mathsat': 'mathsat', 'abc': 'yosys-abc'}
@@ -68,6 +68,8 @@ class Toolchain:
                 names.append('yosys-abc')
             else:
                 raise CaptureError('input_not_captured:tool:engine', f'unsupported engine {parts[0]}')
+        if getattr(args, 'replay', None) == 'icarus':
+            names += ['iverilog', 'vvp']
         trace = getattr(args, 'trace', None)
         if trace:
             names.append('vcd2fst')

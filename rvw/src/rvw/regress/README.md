@@ -342,3 +342,9 @@ Run and gate return a job ID. Use `job_status(wait_s=60)` for the final CLI JSON
 for progress and `job_cancel` to stop the adapter process tree and release its resource lock.
 The runner still owns locking, cache/resume, provenance and verdict generation. Compare writes
 `verdict.json`; known add/remove update TOML. List/history/known list are read-only.
+
+## Limit ownership
+
+Waivers/signatures: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder and performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Full-tier timing: [#73](https://github.com/riscPrint/risc-v-workstation/issues/73).
+
+Retained limit: Committed revisions and complete captured inputs remain necessary for acceptance. Watchdog expiry and unqualified identity cannot earn a pass.

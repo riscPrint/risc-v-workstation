@@ -111,6 +111,12 @@ in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd
 
 ## C1. Run contract (core adapter)
 
+RiscvSim supports the optional `--spinaltrace` model flag on `build`, `run`,
+`run-many` and `identity`. Its model identity includes `spinaltrace` (default
+false), and replay preserves it. A supported traced model emits a `pdg` artifact
+from its RTL elaboration. `--wave` records the instrumented wave. A missing
+requested trace model is an error; it must not yield computed-cause claims.
+
 Each core provides one adapter command. BOOM's is `RiscvSim/boom/run.sh`.
 
 ```
@@ -124,6 +130,16 @@ Each core provides one adapter command. BOOM's is `RiscvSim/boom/run.sh`.
 `run-many` takes one JSON object per line with the same keys as `run`'s options (`elf`, `out`,
 `config`, `seed`, ...), written with underscores or dashes (`max_cycles` or `max-cycles`). A missing seed means "pick one and record it". `--mem-latency` absent means
 randomized memory timing; present means fixed latency.
+
+Optional `--irq-schedule '1:0x0,1000:0x80,12000:0x0'` (manifest
+`irq_schedule`, a string) selects full input levels in `mip` bit positions.
+Cycles must strictly increase, start at 1, and finish before `max_cycles`.
+Adapters reject unsupported input bits. A selected schedule replaces software device
+levels. Without a schedule, existing device behavior stays active. At sampled edge N,
+the adapter drives the new levels for the next edge. C2 records the actual driven
+levels at N. Interrupt acceptance at N is not evidence for the new levels.
+C1 `irq_schedule` stores the normalized string, or null. Replay carries the same string.
+The schedule is inline, so replay needs no separate stimulus file.
 
 Optional, declared in the core config of `rvw regress` (`[core] identity = true`, `wall_timeout = true`):
 
@@ -199,6 +215,19 @@ program wrote an odd value other than 1 to `tohost` (`fail_code` is the value >>
 HDL assertion or simulation exception; `rvfi_error` the riscv-formal monitor flagged an error;
 `error` the harness itself failed (bad ELF, build failure).
 
+C1 `run` and `run-many` exit 2 for `status: error`, including input errors before
+model compilation. This takes priority over missing-evidence markers such as missing RTL.
+Otherwise they exit 3 for an explicit `inconclusive` marker, 0 when all runs pass,
+and 1 for other run failures. Error results remain unsuitable as core evidence.
+
+Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
+installed reference's version, source revision when supplied, and origin. The same
+label is bound into `build_inputs`. Source installs supply `share/rvw/spike-source.json`;
+Homebrew builds capture their receipt and available SBOM. An unlabelled external
+build has null version/revision. These labels are package provenance, not binary
+attestation. The captured library and shim hashes identify the executed bytes.
+C1 from an RTL-only run does not imply that Spike ran.
+
 ## C2. RVFI trace (`rvfi.jsonl`)
 
 First line is a header, then one object per retired instruction in `order`:
@@ -228,6 +257,14 @@ cycle `N` on. An adapter that writes these events writes one with the first samp
 at every change; records of cycle `N` may come before it. `rvw cosim` takes an interrupt bit of a
 `mip`/`sip` read from the core only with such evidence (see `rvw/src/rvw/cosim/README.md`).
 Tools that report C2 values (for example `rvw cosim` mismatch JSON) use the same hex strings.
+
+The cosim platform JSON declares `privilege_modes`, `misaligned` outcomes,
+`endianness`, `absent_pmp_csrs` and `ecall_tval`. Missing keys retain the legacy
+MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
+Unsupported policies must be refused. These settings do not permit arbitrary
+trace values or broad CSR masks. See the exact settings and the
+[C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
+C2 does not carry partial memory effects, FP state or per-hart state.
 
 ## C3. Suite results (`rvw.results/1`)
 
@@ -945,3 +982,42 @@ workers have at least 30 seconds. Server shutdown honors that job grace.
 MCP exposes arch_build, arch_run, arch_calibrate
 and arch_compare as cancellable jobs. See Arch/README.md for commands and
 limits. gem5 shows trends; RTL is the truth.
+
+
+## Formal X campaign result extension
+
+`rvw.formal/1` X results can include `backend: "yosys-xprop"`, `inventory`, and `replay`.
+Each inventory target retains its assertion, signal, label and valid condition. Its
+`disposition` is `candidate`, `confirmed`, `inconclusive`, or `not_reported`.
+Only native 4-state replay can set `confirmed`. A formal encoded failure alone cannot.
+`replay.backend: "icarus"` names the source RTL backend. Replay observations preserve
+X/Z binary strings. Existing formal status and exit codes do not change. `unencoded_cells` lists data
+cell types that Yosys could not encode. A nonempty list prevents a pass.
+
+`rvw.formal.x-sweep/1` records `top`, `wall_s` and a `modules` array. Each module has its
+name, disposition, target inventory, and result path or reason for missing evidence.
+Module dispositions are `bounded_clean`, `confirmed`, or `inconclusive`. Bounded clean
+requires a formal pass with reachability evidence. It applies only to this module's
+free boundary inputs and selected bound. Campaign `status` is always `inconclusive`
+and exit is 1. The inventory does not establish distinct bugs or core reachability.
+
+### Native parent X context
+
+`rvw formal x-context` writes `rvw.formal.x-context/1`. It records `top`,
+`backend: "icarus"`, `depth`, `reset_cycles`, explicit constant `ties`,
+`restrictions`, input capture identities and an `inventory`.
+Each inventory entry has `signal`, `disposition` and `observations`.
+An observation has `step` and a four-state binary `bits` string.
+`reachable-in-core` requires a complete native run with X/Z after reset.
+It is an unconditional signal observation in the selected top, not a claim that
+a transaction is valid or a core bug exists. All other entries are `inconclusive`;
+absence of X is not an unreachability proof. Overall `status` is always
+`inconclusive`, and exit is 1. Invalid inputs exit 2.
+`xprop` and `x-sweep` accept `--first-failure` to limit formal witness
+collection. Unreported targets retain their existing disposition.
+
+## Limit ownership
+
+Backend semantics: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Faulting memory effects: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Database consumers: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
+
+Retained limit: All documented unsupported capture structures, size bounds and synchronous-state restrictions remain in force. C1 cannot report success without captured model evidence. C9 does not claim complete C8 capture, immutable generations or a gate verdict. No dedicated issue owns broader C9 capture.

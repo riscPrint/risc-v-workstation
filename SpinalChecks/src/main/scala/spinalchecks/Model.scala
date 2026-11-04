@@ -19,7 +19,10 @@ object Kind {
   val Progress            = "progress.watchdog"
   val TileLinkBurstStable = "tilelink.burst_stable"
   val all = Seq(StreamValidHold, StreamPayloadStable, MemIndex, VecIndex, EnumLegal, FsmStateLegal, Progress,
-    TileLinkBurstStable)
+    TileLinkBurstStable, "tilelink.response_match", "tilelink.source_busy", "tilelink.request_legal",
+    "tilelink.response_legal", "tilelink.sink_busy", "tilelink.sink_match", "tilelink.release_busy",
+    "tilelink.release_match", "axi4.address_legal", "axi4.read_match", "axi4.read_capacity",
+    "axi4.write_match", "axi4.write_beats", "axi4.write_capacity")
 
   /** Short tag used in generated signal names (`chk_<tag>_<object>`). */
   def tag(kind: String): String = kind match {
@@ -58,6 +61,11 @@ object Mode {
   * inserted; the report keeps them with `reason`. */
 case class Waiver(pattern: String, reason: String)
 
+/** A Decoupled producer can withdraw or replace an offer before acceptance. */
+case class StreamSemantics(pattern: String, reason: String) {
+  require(reason.trim.nonEmpty, "may-drop-valid settings need a reason")
+}
+
 /** Opt-in progress watchdog: `signal` (a regex over `<instance path>.<signal name>`, e.g.
   * `io_trace_insns_\d+_valid`) must show progress at least once every `maxCycles` cycles. When all
   * matches are Bools, progress is any of them being high; a single wider signal makes progress by
@@ -80,7 +88,8 @@ case class ChecksConfig(
     /** Monitor mode: `$display` the first N firings of each check. */
     monitorReports: Int = 3,
     /** Where to write the report; null means `<targetDirectory>/<toplevel>.checks.json`. */
-    reportPath: String = null
+    reportPath: String = null,
+    mayDropValid: Seq[StreamSemantics] = Nil
 ) {
   private def globs(ps: Seq[String]) = ps.map(Glob(_))
   private lazy val enableR  = globs(enable)
@@ -95,6 +104,12 @@ case class ChecksConfig(
       case None => waiverR.find(_._1.matches(id)).map { case (_, w) => ("waived", s"${w.pattern}: ${w.reason}") }
     }
   }
+
+  def streamReason(path: String, kind: String): Option[String] =
+    mayDropValid.find(s => Glob(s.pattern).matches(path) || Glob(s.pattern).matches(s"$kind:$path")).map(_.reason)
+
+  def withStreamFile(path: String): ChecksConfig = copy(mayDropValid = mayDropValid ++
+    ChecksConfig.readWaivers(path).map(w => StreamSemantics(w.pattern, w.reason)))
 
   def withWaiverFile(path: String): ChecksConfig = copy(waivers = waivers ++ ChecksConfig.readWaivers(path))
 }
@@ -112,7 +127,8 @@ object ChecksConfig {
 
   /** A config from environment variables, for harnesses that are not Scala code:
     * `SPINALCHECKS_MODE`, `SPINALCHECKS_ENABLE` / `_DISABLE` (comma-separated globs),
-    * `SPINALCHECKS_WAIVERS` (waiver file), `SPINALCHECKS_PROGRESS` (`name=regex@cycles`, comma-separated). */
+    * `SPINALCHECKS_WAIVERS` (waiver file), `SPINALCHECKS_STREAMS` (channel semantics file),
+    * `SPINALCHECKS_PROGRESS` (`name=regex@cycles`, comma-separated). */
   def fromEnv(base: ChecksConfig = ChecksConfig(), env: Map[String, String] = sys.env): ChecksConfig = {
     def list(k: String) = env.get(k).map(_.split(",").map(_.trim).filter(_.nonEmpty).toSeq)
     var c = base
@@ -120,6 +136,7 @@ object ChecksConfig {
     list("SPINALCHECKS_ENABLE").foreach(e => c = c.copy(enable = e))
     list("SPINALCHECKS_DISABLE").foreach(d => c = c.copy(disable = c.disable ++ d))
     env.get("SPINALCHECKS_WAIVERS").foreach(f => c = c.withWaiverFile(f))
+    env.get("SPINALCHECKS_STREAMS").foreach(f => c = c.withStreamFile(f))
     list("SPINALCHECKS_PROGRESS").foreach(ps => c = c.copy(progress = c.progress ++ ps.map(parseProgress)))
     c
   }

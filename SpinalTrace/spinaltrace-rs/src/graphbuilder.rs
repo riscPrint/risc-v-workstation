@@ -48,6 +48,7 @@ impl TraceSignals {
 }
 
 pub struct GraphBuilder {
+    pub accuracy: crate::pdg_spec::TraceAccuracy,
     reader: VcdReader,
     pdg: PDGSpec,
     linked_nodes: Vec<Rc<RefCell<PDGNode>>>,
@@ -236,7 +237,7 @@ impl GraphBuilder {
             }
         }
 
-        let mut builder = GraphBuilder { reader: vcd_reader, pdg, linked_nodes: linked, dependency_state: HashMap::new(), signals };
+        let mut builder = GraphBuilder { accuracy: crate::pdg_spec::TraceAccuracy::from_spec(&pdg), reader: vcd_reader, pdg, linked_nodes: linked, dependency_state: HashMap::new(), signals };
         builder.init_watches();
         Ok(builder)
     }
@@ -266,8 +267,11 @@ impl GraphBuilder {
             if !seen.insert(name.clone()) { continue; }
             match self.reader.find_var(&name) {
                 Ok(id) => self.reader.watched.entry(id).or_default().push(name),
-                Err(_) => eprintln!("warning: signal '{}' (predicate/probe) not found under scope '{}' in the VCD; \
-                    conditions on it are never satisfied", name, self.reader.extra_scopes.join(" ")),
+                Err(_) => {
+                    self.accuracy.report("incomplete", format!("Missing predicate/probe: {}", name));
+                    eprintln!("warning: signal '{}' (predicate/probe) not found under scope '{}' in the VCD; \
+                    conditions on it are never satisfied", name, self.reader.extra_scopes.join(" "));
+                },
             }
         }
     }
@@ -285,6 +289,9 @@ impl GraphBuilder {
 
         while !eof_reached && cycle * 2 <= max_timesteps.unwrap_or(i64::MAX) {
             eof_reached = self.reader.read_cycle_changes()?;
+            if self.reader.values.values().any(|v| v.chars().any(|b| b != '0' && b != '1')) {
+                self.accuracy.report("incomplete", "A sampled predicate/probe has an unknown VCD value.");
+            }
             let corrected_timestamp = cycle; // Time starts at zero
             // SPINALTRACE: stop in the requested cycle; its register updates (taking effect after the
             // edge that ends it) are not applied, so a signal criterion reports the value *during* it.
@@ -554,7 +561,7 @@ impl VcdReader {
                 reset_path.extend(r.split('.').map(String::from));
                 let found = header.find_var(&reset_path).map(|v| v.code);
                 if found.is_none() {
-                    eprintln!("warning: reset '{}' not found in the VCD ({}); init values only apply at t=0",
+                    anyhow::bail!("reset '{}' not found in the VCD ({}); use --no-reset only for a design without reset",
                         r, reset_path.join(" "));
                 }
                 found

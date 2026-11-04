@@ -80,7 +80,7 @@ pub fn reduce_cfg(pdg: PDGSpec, removed_indices: &Vec<usize>, idx_remap: &Vec<Op
         new_preds.remove(i);
     }
     // No need to remove edges, they shouldn't be affected
-    PDGSpec { vertices: pdg.vertices, edges: pdg.edges, predicates: new_preds, cfg: reduced_cfg, spinaltrace: pdg.spinaltrace }
+    PDGSpec { accuracy: pdg.accuracy, vertices: pdg.vertices, edges: pdg.edges, predicates: new_preds, cfg: reduced_cfg, spinaltrace: pdg.spinaltrace }
 }
 
 fn remove_cfg_statements(cfg: Vec<CFGSpecStatement>, remove_idx: &Vec<usize>, idx_remap: &Vec<Option<u32>>, removed_predicates: &mut Vec<usize>) -> Vec<CFGSpecStatement> {
@@ -150,7 +150,8 @@ pub fn pdg_slice(pdg: PDGSpec, criterion: &str) -> Result<PDGSpec> {
         }
     }).collect::<Vec<_>>();
 
-    let new_pdg = reduce_cfg(PDGSpec{ vertices: new_vertices, edges: new_edges, predicates: pdg.predicates, cfg: pdg.cfg, spinaltrace: pdg.spinaltrace }, &removed_indices, &idx_remap);
+    let accuracy = Some(crate::pdg_spec::TraceAccuracy::from_spec(&pdg));
+    let new_pdg = reduce_cfg(PDGSpec{ accuracy, vertices: new_vertices, edges: new_edges, predicates: pdg.predicates, cfg: pdg.cfg, spinaltrace: pdg.spinaltrace }, &removed_indices, &idx_remap);
 
     Ok(new_pdg)
 }
@@ -168,7 +169,7 @@ pub fn write_static_slice<P: AsRef<Path>>(pdg: &ExportablePDG, path: P) -> Resul
     let output_file = File::create(path)?;
     let writer = BufWriter::new(output_file);
 
-    serde_json::to_writer_pretty(writer, &ExportableSlice { statements: pdg.vertices.iter().map(|x| x.clone().into()).collect::<Vec<_>>() })?;
+    serde_json::to_writer_pretty(writer, &ExportableSlice { accuracy: pdg.accuracy.clone(), statements: pdg.vertices.iter().map(|x| x.clone().into()).collect::<Vec<_>>() })?;
     Ok(())
 }
 
@@ -191,7 +192,7 @@ pub fn write_dynamic_slice<P: AsRef<Path>>(pdg: &Rc<RefCell<DynPDGNode>>, path: 
 
     let output_file = File::create(path)?;
     let writer = BufWriter::new(output_file);
-    serde_json::to_writer_pretty(writer, &ExportableSlice { statements: unique_statements.into_iter().map(|x| x.into()).collect::<Vec<_>>() })?;
+    serde_json::to_writer_pretty(writer, &ExportableSlice { accuracy: Default::default(), statements: unique_statements.into_iter().map(|x| x.into()).collect::<Vec<_>>() })?;
 
     Ok(())
 }

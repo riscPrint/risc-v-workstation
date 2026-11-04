@@ -66,3 +66,9 @@ The full patch rationale, submodule origins, build evidence and upstream behavio
 - `SpinalWavesSim.doSim` arms Spinal's `SimTimeout` (`SimGuard`, default 10,000,000 sim time units, i.e. 1M cycles at
   `forkStimulus(10)`; `simTimeout = None` or env `SPINAL_SIM_TIMEOUT=0` disables). A hung testbench otherwise keeps the
   clock running and writes an unbounded VCD (an orphaned test run once wrote >200 GB).
+
+## Limit ownership
+
+Interactive validation: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83). Vendored backend behavior: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Database integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
+
+Retained limit: The listed pruning, deterministic two-pass generation, source lookup, parameter reflection and typed-model restrictions remain in force. FST viewer support does not imply FST support in the simulation wrapper.

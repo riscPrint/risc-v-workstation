@@ -5,6 +5,8 @@ from pathlib import Path
 import shutil
 import subprocess
 
+import pytest
+
 from rvw.common.project import find_project, load_project
 from rvw.regress.config import load_config
 
@@ -30,7 +32,8 @@ def test_copied_project_uses_core_owned_paths(tmp_path, monkeypatch):
     assert project.get('cosim', 'platform') == core / 'rvw/platform.json'
 
 
-def test_database_launcher_preserves_output_and_rejects_bad_config(tmp_path):
+@pytest.mark.parametrize("options", [[], ["--no-pdg", "--rtl", "space /rtl"]])
+def test_database_launcher_preserves_output_and_rejects_bad_config(tmp_path, options):
     tools = tmp_path / 'installed workstation'
     (tools / 'scripts').mkdir(parents=True)
     lock = tools / 'scripts/with-lock.sh'
@@ -54,11 +57,11 @@ pathlib.Path(args[1]).write_text('database fixture')
                CAPTURE=str(captured), PATH=str(binary) + os.pathsep + os.environ['PATH'])
     launcher = EXAMPLE / 'rvw/build-db.sh'
     out = Path('space ; quote "/design.db')
-    run = subprocess.run([str(launcher), 'rv32im', str(out)], cwd=tmp_path,
+    run = subprocess.run([str(launcher), 'rv32im', str(out), *options], cwd=tmp_path,
                          env=env, capture_output=True, text=True)
     assert run.returncode == 0, run.stderr
     capture = json.loads(captured.read_text())
-    assert capture['args'] == ['rv32im', str(tmp_path / out)]
+    assert capture['args'] == ['rv32im', str(tmp_path / out), *options]
     assert capture['runner'] == str(tools / 'SpinalDB/scripts/hdl-deps.py')
     assert capture['python'] == env.get('RVW_PYTHON', str(tools / 'rvw/.venv/bin/python'))
     assert (tmp_path / out).read_text() == 'database fixture'

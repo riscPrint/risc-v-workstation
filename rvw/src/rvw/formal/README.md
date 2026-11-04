@@ -4,7 +4,7 @@
 state. `xprop` checks whether unknown state can reach selected signals. See
 [SpinalChecks](../../../../SpinalChecks/README.md) for commands and limits.
 
-Every flow requires one rising-edge clock and synchronous state controls. Asynchronous
+Sequential flows require one rising-edge clock and synchronous state controls. Asynchronous
 reset/load/set/clear controls and latches are refused. A result applies only to the selected depth,
 input ties, assumptions, and reset settings. Missing replay state starts free and can cause
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
@@ -140,8 +140,9 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
 ## Validation limits
 
 - Tests use small Verilog designs with real Yosys, SymbiYosys, Yices, ABC, Verilator, Icarus,
-  VCD and FST tools. No BOOM simulation or proof was repeated for the current flow. Earlier
-  BOOM timings and results do not validate it.
+  VCD and FST tools. BOOM candidate inventories belong to
+  [spinal-boom#4](https://github.com/riscPrint/spinal-boom/issues/4). Unit tests and module
+  campaigns do not establish whole-core behavior.
 - Regressions keep these review cases:
   - an async-reset design that gave a false pass at depth 8 (all three flows now refuse it);
   - an unwritten register that xprop counted as X-clean (Icarus shows the X after six clocks);
@@ -162,3 +163,80 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
   the BOOM replay script's shell arguments.
 - Installed interpreter libraries, shared libraries and tool data remain trusted runtime
   inputs. This capture does not copy or sandbox a complete installed toolchain.
+
+## X campaigns and four-state replay
+
+```sh
+rvw formal xprop --verilog design.v --top Top --outputs --replay icarus --out out/x
+rvw formal xprop --verilog comb.v --top Comb --outputs --combinational --x-inputs --replay icarus --out out/comb
+rvw formal x-sweep --verilog design.v --top Top --module Unit --module Comb --depth 8 --module-timeout 30 --campaign-timeout 300 --out out/sweep
+```
+
+`--replay icarus` declares the native Icarus Verilog 4-state backend (`iverilog`, `vvp`).
+The run captures these tools before elaboration. It replays each solver input sequence
+on the copied source RTL with `SYNTHESIS` defined. It does not load binary solver state
+into the DUT. Registers and memories keep their native initial values. The monitor
+preserves X and Z bits. A target is `confirmed` only when this replay observes an unknown
+bit at that target during a checked step. A conditional target also needs valid to be
+exactly 1. The replay log records the target, step and full binary value with X/Z bits.
+
+`inventory` lists every selected target. A solver finding alone is a `candidate`.
+A replay failure, missing trace/input, or a replay without X gives `inconclusive`.
+`not_reported` means the solver did not report that target. It is not a target proof.
+The formal `status` and exit code keep their existing meaning. A replay does not turn
+an encoded formal failure into a pass. The `backend` field names Yosys X encoding;
+`replay.backend` names Icarus. Source `if`/`case` optimism can differ from pessimistic
+encoded mux behavior. A non-reproduced finding remains inconclusive.
+
+Before X encoding, memory mapping expands memories to state cells. The flow records
+unencoded cell types. An unencoded data cell prevents a pass. Formal monitors and their
+assumptions remain in the design. An unencoded memory cannot earn a clean result.
+`--x-inputs` exposes separate free X masks for data inputs. Replay combines each data bit
+and its mask without selecting a binary replacement for an unknown. Clock, reset and
+ties remain defined. Reset release is checked after `--reset-cycles` and `--settle`.
+Uninitialized memories and power-control transitions use the same campaign: leave memory
+state uninitialized and power inputs free, or use `--tie` for a restricted environment.
+There is no UPF power model or asynchronous power-event model.
+
+`--combinational` makes a clock-free harness with immediate assertions. It refuses
+state, including incomplete assignments that infer latches. Sequential runs retain
+clock and state-control checks. No synthetic DUT clock is added.
+
+`x-sweep` discovers modules in the selected top's elaborated hierarchy. It runs a separate
+output campaign for each module, or each repeated `--module`. It uses Icarus replay and
+automatically selects the clock-free harness when the clock port is absent. Inputs at
+each module boundary are free. A confirmed module result does not establish reachability
+in the enclosing core or a distinct core bug. Each entry records its target inventory,
+result path and disposition. Specialized module names that cannot be selected as plain
+Verilog tops remain inconclusive. Time limits include child probes, proofs and replays.
+The campaign limit starts before discovery; each discovery subprocess also uses `--timeout`.
+Unrun modules stay in the inventory. The command returns 1 with status `inconclusive`:
+it is an inventory, not an acceptance gate. Use the machine's core lock for large designs.
+
+### Bounded witness collection and parent replay
+
+Use `xprop --first-failure` or `x-sweep --first-failure` to stop each solver
+after its first failure trace. Native replay still observes every selected target.
+Targets without evidence stay `not_reported`. This option does not turn a timeout
+into a pass. Increase the module and campaign budgets when required.
+
+Use `rvw formal x-context` to observe hierarchical signals in the parent RTL.
+This native Icarus run starts from reset. It does not inject solver state or free
+module inputs. Give `--verilog`, `--top`, repeatable `--signal instance.port`,
+`--depth`, `--reset-cycles`, a positive `--timeout`, and `--out`.
+Use `--tie PORT=VALUE` for every external input except the clock and reset.
+The inputs stay constant. Select values that form a legal environment for the design.
+
+The result records each signal as `reachable-in-core` only if the complete native
+run observes X/Z after reset. This label describes an unconditional signal value,
+not a valid transaction or an architectural failure. The selected top must be the
+real core to make a core-context claim. Check payload validity separately.
+A signal with no X/Z observation stays `inconclusive`. This run cannot prove
+`unreachable`. Compile errors, timeouts and capture problems stay inconclusive.
+The command returns 1 for all results. It never reports a design pass.
+
+## Limit ownership
+
+Multi-clock and asynchronous state: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67). Counterexample debugging: [#60](https://github.com/riscPrint/risc-v-workstation/issues/60). Engine depth: [#21](https://github.com/riscPrint/risc-v-workstation/issues/21). Shared runner: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117).
+
+Retained limit: Only validated engine releases and supported synchronous state qualify. Missing reports, unsupported state, free inputs and replay assumptions retain their documented error or inconclusive outcomes.

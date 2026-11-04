@@ -4,7 +4,11 @@ Open block diagrams and state machine diagrams beside the Scala source of an ela
 
 It is part of the RISC-V Workstation extension; install that (see [../../README.md](../../README.md)). Commands and settings keep the `spinalblocks.` prefix.
 
-Generate a design from `SpinalBlocks/spinalblocks` (in this repository) with `sbt "boom/run small"`. For live updates use `sbt "~boom/run small"`. The extension watches the generated file and refreshes both diagram panels after sbt writes it.
+Build the design database with your core project's `rvw query build --config NAME`.
+Export its diagram with `rvw query export blocks blocks.json.gz`. Open that file
+in the extension. Rebuild the database and export again after a source change.
+The extension watches the exported file and refreshes both diagram panels.
+See [SpinalBlocks](../../../SpinalBlocks/README.md).
 
 ## Work from Scala
 

@@ -223,6 +223,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           case bf: tilelink.BusFragment if bf.withData && bf.p.beatWidth > 0 => Seq(Kind.TileLinkBurstStable)
           case _ => Nil
         } else Nil)
+      checked.forall(k => cfg.streamReason(qualify(paths(c), streamNames(c)(s)), k).isEmpty) &&
       selected && !(c == top && s.valid.isInput) && driven(s.valid) && driven(s.ready) &&
         s.payload.flatten.forall(driven) &&
         checked.forall(k => cfg.decide(s"$k:${qualify(paths(c), streamNames(c)(s))}").isEmpty)
@@ -425,6 +426,13 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
             val stable = if (payload.nonEmpty) newRecord(Kind.StreamPayloadStable, name, env, loc,
               s"${payload.size} payload signals") else null
             if (stable != null) { stable.signals("valid") = Seq(v); stable.signals("ready") = Seq(r); stable.signals("payload") = payload }
+            Seq(hold, stable).filter(_ != null).filter(_.inserted).foreach { rec =>
+              val semantics = cfg.streamReason(qualify(path, name), rec.kind).orElse(
+                if (s.parent.isInstanceOf[tilelink.Bus]) Some("TileLink permits pre-acceptance offer changes; burst checks remain active") else None)
+              semantics.foreach { reason =>
+                rec.status = "waived"; rec.reason = "declared channel semantics: " + reason
+              }
+            }
             if (hold.inserted || (stable != null && stable.inserted)) todo += { () =>
               val stall = (v && !r)
               val stallPrev = RegNext(stall).init(False).setName(uniqueName(s"chk_${sanitize(name)}_stall_prev"))
@@ -480,6 +488,59 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               emit(rec, active(ClockDomain.current) && v && inBurst && (hdr =/= first || (stallPrev && now =/= prev)))
             }
           }
+        case _ =>
+      }
+      val buses = f.streams.toSeq.map(_.parent).distinct
+      val busNames = {
+        val taken = mutable.HashSet[String]()
+        buses.filter(_ != null).map(b => b -> unique(objName(b, "bus"), taken)).toMap
+      }
+      for (bus <- buses) bus match {
+        case b: tilelink.Bus if b.a.valid.component == c =>
+          todo += { () => ProtocolChecks.tileLink(b, (kind, suffix, env, detail, fail) => {
+            val rec = newRecord(kind, busNames(b) + suffix, env && isTop, SourceLoc.of(b.a.valid), detail)
+            if (rec.inserted) emit(rec, active(ClockDomain.current) && fail)
+          }) }
+        case b: spinal.lib.bus.amba4.axi.Axi4 if b.ar.valid.component == c && b.config.readIssuingCapability > 0 =>
+          todo += { () => AxiReadChecks(b.ar, b.r, (kind, suffix, env, detail, fail) => {
+            val rec = newRecord(kind, busNames(b) + suffix, env && isTop, SourceLoc.of(b.r.valid), detail)
+            if (rec.inserted) emit(rec, active(ClockDomain.current) && fail)
+          }) }
+        case b: spinal.lib.bus.amba4.axi.Axi4ReadOnly if b.ar.valid.component == c && b.config.readIssuingCapability > 0 =>
+          todo += { () => AxiReadChecks(b.ar, b.r, (kind, suffix, env, detail, fail) => {
+            val rec = newRecord(kind, busNames(b) + suffix, env && isTop, SourceLoc.of(b.r.valid), detail)
+            if (rec.inserted) emit(rec, active(ClockDomain.current) && fail)
+          }) }
+        case b: spinal.lib.bus.amba4.axi.Axi4 =>
+          result.notes += s"AXI4 ${objName(b, "bus")}: read bookkeeping needs a positive readIssuingCapability"
+        case b: spinal.lib.bus.amba4.axi.Axi4ReadOnly =>
+          result.notes += s"AXI4 ${objName(b, "bus")}: read bookkeeping needs a positive readIssuingCapability"
+        case _ =>
+      }
+      for (bus <- buses) {
+        def writeChecks(aw: Stream[spinal.lib.bus.amba4.axi.Axi4Aw],
+                        w: Stream[spinal.lib.bus.amba4.axi.Axi4W],
+                        b: Stream[spinal.lib.bus.amba4.axi.Axi4B]): Unit = {
+          if (aw.payload.config.writeIssuingCapability > 0) todo += { () =>
+            AxiWriteChecks(aw, w, b, (kind, suffix, env, detail, fail) => {
+              val rec = newRecord(kind, busNames(bus) + suffix, env && isTop, SourceLoc.of(b.valid), detail)
+              if (rec.inserted) emit(rec, active(ClockDomain.current) && fail)
+            })
+          } else result.notes += s"AXI4 ${objName(bus, "bus")}: write bookkeeping needs a positive writeIssuingCapability"
+        }
+        bus match {
+          case b: spinal.lib.bus.amba4.axi.Axi4 if b.aw.valid.component == c => writeChecks(b.aw, b.w, b.b)
+          case b: spinal.lib.bus.amba4.axi.Axi4WriteOnly if b.aw.valid.component == c => writeChecks(b.aw, b.w, b.b)
+          case _ =>
+        }
+      }
+      for (s <- f.streams) s.payload match {
+        case ax: spinal.lib.bus.amba4.axi.Axi4Ax if driven(s.valid) && driven(s.ready) =>
+          todo += { () => ProtocolChecks.axiAddress(ax, fail => {
+            val rec = newRecord("axi4.address_legal", streamName(s), s.valid.isInput && isTop,
+              SourceLoc.of(s.valid), "AXI4 address options, burst length, alignment and 4 KiB boundary")
+            if (rec.inserted) emit(rec, active(ClockDomain.current) && s.valid && fail)
+          }) }
         case _ =>
       }
       for (fl <- f.flows) {

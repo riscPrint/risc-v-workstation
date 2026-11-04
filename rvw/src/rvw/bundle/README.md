@@ -107,10 +107,14 @@ had no source; the costs below were measured before that change.
 
 So the trace must run on a short window, which is what `--trace-cycles` does. The trace needs a wave
 of the *instrumented* model (the naming phase keeps the probe wires; the plain build's wave lacks
-them). The adapter has no such model yet; until it does (suggested: a `--spinaltrace` model flag that
-applies `SpinalTrace.instrument` in `BoomAdapter.compile`, writes `pdg.json` next to the model and
-records it as the `pdg` artifact), produce one with an instrumented build and pass `--pdg` and
-`--trace-wave`. The instrumentation adds no logic, so the same seed reproduces the same run.
+them). The bundle requests `--spinaltrace` from the run adapter when no graph is
+available. RiscvSim records the flag in model identity and copies the graph to
+the run's `pdg` artifact. The trace uses the re-run only if it reproduces the
+same failure at the same cycle with conclusive evidence. Missing model support
+or a missing graph skips the trace. It cannot produce a cause digest.
+The optional `[spinaltrace].adapter` override supports older adapters.
+The BOOM prototype stays until old/new failure-bundle dependency traces match;
+see [RiscvSim](../../../../RiscvSim/README.md#dependency-trace-model).
 
 ## rvw reduce
 
@@ -371,3 +375,9 @@ What the wave shows, and what it does not:
   argument, not a demonstrated result: it holds if a store from another agent changes the line between
   the two loads' data returns, which this run does not show. Restoring the order-failure replay of the
   younger load is the likely fix, but that is a decision for the core, not made here.
+
+## Limit ownership
+
+Real-history bisect validation: [#45](https://github.com/riscPrint/risc-v-workstation/issues/45). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Integrated debug: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: Cause traces require suitable waves, a matching graph and a bounded window. A partial bundle does not prove a root cause.

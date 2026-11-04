@@ -15,11 +15,19 @@ RiscvSim/boom-spinaltrace/run.sh run --elf ELF --out DIR --config large --seed 1
 ```
 
 Always pass a wave window: the model is built with tracing, and `dyn-pdg` unrolls every cycle of the
-wave (20 cycles of BOOM small: 5 s, 0.9 GB; 2,500 cycles: 34 GB). `rvw bundle` uses this adapter
-automatically through `[spinaltrace].adapter` in `RiscvSim/boom/debug.toml`.
+wave (20 cycles of BOOM small: 5 s, 0.9 GB; 2,500 cycles: 34 GB).
+`rvw bundle` now requests `--spinaltrace` from the standard adapter. This prototype
+stays as the old implementation for dependency-trace parity checks.
 
-Why a separate project: it needs the SpinalTrace library on the classpath, which the plain adapter
-does not. Suggested final form: a `--spinaltrace` model flag in `RiscvSim` (`ModelKey.spinaltrace`,
-applied in `BoomAdapter.compile`, PDG recorded as the `pdg` artifact), which removes this directory.
+Remove this directory only after a BOOM failure bundle has equal old/new
+signatures, cycles, criteria and dependency traces. Use the same ELF, seed,
+model options and wave window under the `boom` lock. Normalize generated IDs
+and checkout paths before comparing source statements and dependency edges.
+Record the measured result in the PR.
 It starts through sbt and compiles the BOOM checkout,
 so run it under `scripts/with-lock.sh boom`.
+
+## Limit ownership
+
+Runtime parity and prototype removal: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68).
+Retained limit: use short wave windows. The recorded resource examples are not current performance guarantees.

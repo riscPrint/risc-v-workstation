@@ -351,13 +351,16 @@ def _spinaltrace(run, cfg: dict, S: dict, out: Path, wave: Path | None, o: Optio
     pdg = Path(o.pdg) if o.pdg else (run.artifact("pdg") or _details_pdg(run))
     if o.trace_wave:
         wave = Path(o.trace_wave)
-    elif pdg is None and st.get("adapter") and o.rerun and S.get("cycles") is not None:
+    elif pdg is None and o.rerun and S.get("cycles") is not None:
         # Re-run through the core's SpinalTrace-instrumented adapter with a short wave window
         f = int(S["cycles"])
         cmd = replay_cmd.set(wave=True, wave_from=max(1, f - o.trace_cycles - 5),
                                            wave_to=f + 5, rvfi_trace=None, konata=None)
-        cmd.exe = st["captured_command"].exe
-        cmd.env = st["captured_command"].env.copy()
+        if st.get("captured_command"):
+            cmd.exe = st["captured_command"].exe
+            cmd.env = st["captured_command"].env.copy()
+        else:
+            cmd = cmd.set(spinaltrace=True)
         tdir = out / "rerun-spinaltrace"
         say("bundle", f"re-running with the SpinalTrace model: {cmd.set(out=str(tdir)).shell()}")
         at = adapter.execute(cmd, tdir, core=run.get("core"), timeout=o.timeout)
@@ -371,7 +374,7 @@ def _spinaltrace(run, cfg: dict, S: dict, out: Path, wave: Path | None, o: Optio
         tinc = tr.inconclusive if tr is not None else None
         R["reproduced"] = tr is not None and tinc is None and R["signature"] == S["signature"] and R["cycles"] == f
         if R["reproduced"]:
-            pdg = _details_pdg(tr)
+            pdg = tr.artifact("pdg") or _details_pdg(tr)
             wave = tr.artifact("wave")
             trace_run = tr
         elif tr is None:
@@ -443,6 +446,8 @@ def _spinaltrace(run, cfg: dict, S: dict, out: Path, wave: Path | None, o: Optio
         S["files"]["dynpdg"] = "dynpdg.json"
         from .pdgdigest import digest
         res["digest"] = digest(str(out / "dynpdg.json"), 40, crit)
+    else:
+        res["error"] = f"dependency trace not computed (CLI exit {p.returncode}, graph output required)"
     return res
 
 
@@ -493,7 +498,7 @@ def next_commands(S: dict, out: Path, cfg: dict) -> list[str]:
                 cmds.append(f"rvw wave list {w} '{g['scope']}'  # all {g['name']} signals")
                 break
     d = S.get("dynpdg") or {}
-    if d.get("command"):
+    if S.get("files", {}).get("dynpdg"):
         cmds.append(f"spinaltrace -s {d['criterion']} ...  # GUI on the same inputs as dynpdg.json")
     cmds.append(f"rvw reduce {S['run']}  # shortest reproduction (seed/latency/cycles)")
     if S.get('replay'):
@@ -604,6 +609,8 @@ def render_md(S: dict, out: Path) -> str:
         L.append("")
         if d.get("skipped"):
             L.append(f"Skipped: {d['skipped']}. Criterion would be `{d.get('criterion')}`.")
+        elif d.get("error"):
+            L.append(f"Dependency trace unavailable: {d['error']}.")
         else:
             if d.get("criterion_note"):
                 L.append(f"Note: {d['criterion_note']}.")

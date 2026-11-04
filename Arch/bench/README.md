@@ -46,3 +46,9 @@ classes. Use explicit operation classes for each functional unit.
 The default benchmark list contains single-hart workloads with one ROI.
 Compiler versions can change code layout and timing. Rebuild and rerun both
 sides after a compiler change. gem5 shows trends; RTL is the truth.
+
+## Limit ownership
+
+RV32/in-order runtime: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Fitting and measurement work: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12).
+
+Retained limit: The bare-metal ROI runtime and documented compiler/runtime assumptions remain required. Benchmarks do not prove cycle accuracy.

@@ -307,3 +307,31 @@ with SQL; the BlackBox dependency test needs `yosys` on `PATH`, `source ../spina
   extra named probe wires (`mux_sel_*`, `index_*`, `mem_addr_*`) that a waveform from a plain
   simulation build does not contain; for Surfer on a plain build's VCD, build the database with
   `--no-pdg`, or simulate the RTL in `rtl_dir`.
+
+### Other core builds
+
+The [VexRiscv example](../examples/vexriscv/) enables PDG, block and HGLDD
+artifacts. Its PDG can contain `no provider` warnings for plugin-generated
+signals, including fetch response fields and stage stall conditions. Read the
+`warnings` table before using it. Database navigation remains partial evidence.
+It uses structural edges, not the PDG's cycle-specific execution model.
+BlackBox inout attachments have conservative database edges, but the block
+diagram currently omits their analog attachment nets. It shows the inout ports.
+
+For a plain VexRiscv waveform, use `rvw/build-db.sh rv32im plain/design.db --no-pdg`.
+Keep its RTL output separate from a database with PDG naming. HGLDD name
+compatibility does not establish instruction correctness or dynamic trace coverage.
+
+NaxRiscv's upstream build uses Scala 2.12.18 and a local development SpinalHDL
+submodule. The workstation uses Scala 2.13.14 and SpinalHDL 1.15.0. Compiling
+NaxRiscv sources unchanged with those workstation versions fails. Examples
+include mutable `ArrayBuffer` versus immutable `Seq`, removed collection
+operations and changed Spinal APIs. This is a build compatibility gap before
+extraction. No NaxRiscv database or artifact support is claimed. A matching
+Scala/SpinalHDL library build needs a separate integration check.
+
+## Limit ownership
+
+More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Non-Spinal queries: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55). Consumer integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69).
+
+Retained limit: Best-effort source and parameter capture, incomplete keys, dependency refusals and local source paths remain deliberate restrictions. An incomplete identity cannot support reuse. No general extraction-completeness claim is made.

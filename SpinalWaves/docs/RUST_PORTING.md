@@ -19,8 +19,9 @@ are in `docs/CONTRACT.md`.
 The submodule commits are the ones pinned by surfer-tywaves `5a8755b`. The `tywaves-rs`
 submodule of surfer-tywaves (also pinned at `215ff16`) is not copied; surfer uses
 `third_party/tywaves-rs` instead. Copies exclude `.git` and build output; nothing else was
-removed. The first two commits of each copy (`Vendor ... (pristine)`) are byte-for-byte
-upstream, so `git diff <pristine commit> -- <dir>` shows every local change.
+removed at import. This checkout does not retain pristine import commits.
+To inspect local changes, compare each directory with its upstream revision in
+the table above. The sections below describe the local patches.
 
 ## Patches
 
@@ -219,3 +220,9 @@ Results on 2026-10-19:
   `surfer-tywaves --version` prints `surfer-tywaves 0.3.0-dev` and `--help` lists `--hgldd-dir`,
   `--extra-scopes`, `--top-module`. Both run headless (no window). The GUI was not started here.
 - `scripts/install.sh --prefix /tmp/sw-bin --test` passes end to end (3m38s with a warm cache).
+
+## Limit ownership
+
+Vendored rendering and backend limits: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Interactive qualification: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83).
+
+Retained limit: The documented conversion fallbacks and diagnostic categories remain part of the checker contract. Upstream experimental server, GHW and f128 notes in the vendored tree are upstream scope, not qualified workstation features.

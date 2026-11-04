@@ -137,9 +137,18 @@ pub fn trace(req: &TraceRequest) -> Result<ExportablePDG> {
     let extra_scopes = signals.extra_scopes.clone();
     let clock = signals.clock.clone();
 
+    let reset_disabled = req.no_reset && pdg.spinaltrace.as_ref().map_or(false,
+        |m| m.clock_domains.iter().any(|c| c.reset.is_some()));
     let mut builder = GraphBuilder::with_signals(&req.vcd_path, signals, pdg)?;
     let dpdg = builder.process(&criterion, req.max_timesteps, req.processing_type)?;
-    let dpdg = dpdg_make_exportable(dpdg);
+    let mut dpdg = dpdg_make_exportable(dpdg);
+    dpdg.accuracy = builder.accuracy.clone();
+    if reset_disabled {
+        dpdg.accuracy.report("incomplete", "Reset replay was disabled for a design with reset.");
+    }
+    if matches!(req.processing_type, GraphProcessingType::DataOnly) {
+        dpdg.accuracy.report("incomplete", "Data-only tracing omits control and index causes.");
+    }
     let mut converted = if req.convert_to_source { pdg_convert_to_source(dpdg, false, true) } else { dpdg };
 
     let mut typed = false;
@@ -170,7 +179,8 @@ pub fn summary(pdg: &ExportablePDG) -> String {
     for (i, v) in pdg.vertices.iter().enumerate() {
         by_time.entry(std::cmp::Reverse(v.timestamp)).or_default().push(i);
     }
-    let mut out = String::new();
+    let mut out = format!("Trace accuracy: {}\n", pdg.accuracy.status);
+    for reason in &pdg.accuracy.reasons { out += &format!("- {}\n", reason); }
     out += &format!("{} nodes, {} edges\n", pdg.vertices.len(), pdg.edges.len());
     let dropped = crate::conversion::dropped_probe_edges();
     if dropped > 0 {

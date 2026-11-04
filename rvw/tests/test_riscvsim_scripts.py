@@ -402,14 +402,26 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
     project = tmp_path / "generic-project"
     (project / "project").mkdir(parents=True)
     (project / "src").symlink_to(sim / "src", target_is_directory=True)
-    (project / "build.sbt").write_text((sim / "build.sbt").read_text().split("// BOOM's adapter.")[0])
+    (tmp_path / "SpinalTrace").symlink_to(repo / "SpinalTrace", target_is_directory=True)
+    (tmp_path / "SpinalWaves").symlink_to(repo / "SpinalWaves", target_is_directory=True)
+    (project / "build.sbt").write_text((sim / "build.sbt").read_text())
     shutil.copy2(sim / "project/build.properties", project / "project/build.properties")
     env = {**os.environ, "RVW_LOCK_PYTHON": sys.executable, "RVW_PYTHON": sys.executable}
+    env.pop("SPINAL_BOOM", None)
     # Use the checked-in make wrapper. This test must also prove stable native cache hits.
     env["SPINAL_MAKE_CMD"] = str(sim / "scripts/make-jobs.sh")
+    # Load the library from an external build too. sbt resolves relative
+    # ProjectRefs against the defining build, not the consumer's cwd.
+    consumer = tmp_path / "consumer" / "deep"
+    (consumer / "project").mkdir(parents=True)
+    shutil.copy2(sim / "project/build.properties", consumer / "project/build.properties")
+    (consumer / "build.sbt").write_text(
+        'lazy val root = (project in file(".")).dependsOn('
+        'ProjectRef(file("../../generic-project"), "riscvsim"))\n')
+    ref = '{' + project.as_uri() + '/}riscvsim'
     build = run_group([str(repo / "scripts/with-lock.sh"), "sbt", "nice", "-n", "10", "sbt",
-                       "-J-Xmx1g", "-Dsbt.offline=true", "-batch", "riscvsim/Test/compile", "export riscvsim/Test/fullClasspath"],
-                      cwd=project, env=env, capture=True, timeout=240)
+                       "-J-Xmx1g", "-Dsbt.offline=true", "-batch", f"{ref}/Test/compile", f"export {ref}/Test/fullClasspath"],
+                      cwd=consumer, env=env, capture=True, timeout=240)
     assert build.returncode == 0, (build.stdout, build.stderr)
     cp = next(line for line in reversed(build.stdout.splitlines())
               if not line.startswith("[") and "scala-library" in line)
@@ -556,3 +568,27 @@ def test_native_launch_pins_the_collected_lookup_target(launcher, tmp_path, monk
     assert module.launch(record, tmp_path, ['--version']) == 0
     assert len(launched) == 1
     assert not list(tmp_path.glob('native-bin.*'))
+
+
+def test_generic_build_does_not_load_core_projects():
+    """The library must load in installations with no adjacent core checkout."""
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[2]
+    build = (repo / "RiscvSim/build.sbt").read_text()
+    # The generic trace library is required by --spinaltrace. Permit that exact
+    # reference only; a core ProjectRef must still fail this check.
+    trace_ref = 'ProjectRef(file("../SpinalTrace/spinaltrace"), "spinaltrace")'
+    assert build.count(trace_ref) == 1
+    assert "ProjectRef" not in build.replace(trace_ref, "")
+    assert "SPINAL_BOOM" not in build
+    adapter = (repo / "RiscvSim/boom/build.sbt").read_text()
+    assert 'ProjectRef(file("..").getCanonicalFile, "riscvsim")' in adapter
+    vex = (repo / "examples/vexriscv/rvw/build.sbt").read_text()
+    assert 'ProjectRef(workstation / "RiscvSim", "riscvsim")' in vex
+    assert 'workstation / "RiscvSim/src/main/scala"' not in vex
+
+
+def test_trace_prototype_uses_the_separate_boom_build():
+    repo = SCRIPT.parents[2]
+    prototype = (repo / 'RiscvSim/boom-spinaltrace/build.sbt').read_text()
+    assert 'ProjectRef(file("../boom"), "boom")' in prototype

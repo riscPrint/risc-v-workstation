@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-[ "$#" -eq 2 ] && [ "$1" = rv32im ] || {
-  echo 'usage: build-db.sh rv32im OUT' >&2; exit 2;
+[ "$#" -ge 2 ] && [ "$1" = rv32im ] || {
+  echo 'usage: build-db.sh rv32im OUT [SpinalDB options]' >&2; exit 2;
 }
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export RVW_HOME="$(cd "${RVW_HOME:?Set RVW_HOME to the installed workstation checkout.}" && pwd)"
@@ -14,7 +14,8 @@ mkdir -p "$(dirname "$2")"
 out="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 argsdir="$(mktemp -d /tmp/rvw-vex-db.XXXXXX)"
 trap 'rm -rf "$argsdir"' EXIT
-printf '%s\0' "$1" "$out" > "$argsdir/args"
+config="$1"; shift 2
+printf '%s\0' "$config" "$out" "$@" > "$argsdir/args"
 cd "$here"
 "$RVW_HOME/scripts/with-lock.sh" vex "$RVW_HOME/scripts/with-lock.sh" sbt \
   nice -n 10 sbt -J-Xmx3g -batch -Dsbt.offline=true "db/runMain rvwvex.Database --args-file $argsdir/args"

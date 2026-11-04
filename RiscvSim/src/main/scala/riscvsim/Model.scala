@@ -19,19 +19,19 @@ object Status {
  * (cached across processes by Spinal's compile cache, keyed on the generated Verilog).
  */
 case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false, coverage: Boolean = false,
-                    konata: Boolean = false) {
+                    konata: Boolean = false, spinaltrace: Boolean = false) {
   def name: String = config + (if (rvfi) "_rvfi" else "") + (if (konata) "_konata" else "") +
-    (if (wave) "_wave" else "") + (if (coverage) "_cov" else "")
+    (if (wave) "_wave" else "") + (if (coverage) "_cov" else "") + (if (spinaltrace) "_spinaltrace" else "")
   def toJson: ujson.Obj = ujson.Obj("config" -> config, "rvfi" -> rvfi, "wave" -> wave, "coverage" -> coverage,
-    "coverage_types" -> (if (coverage) ujson.Arr.from(RiscvSimConfig.coverageTypes) else ujson.Arr()), "konata" -> konata, "name" -> name)
+    "coverage_types" -> (if (coverage) ujson.Arr.from(RiscvSimConfig.coverageTypes) else ujson.Arr()), "konata" -> konata, "spinaltrace" -> spinaltrace, "name" -> name)
 }
 
 /** One simulation job (the options of `run`, or one line of a `run-many` manifest). */
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None) {
-  def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata)
+                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None) {
+  def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace)
 }
 
 /** What an adapter's run loop reports back. `metrics` (optional, C1) holds named numbers such as roi_cycles. */
@@ -50,10 +50,13 @@ trait CoreAdapter {
   def core: String
   def configs: Seq[String]
   def defaultConfig: String = configs.head
+  def irqInputMask: BigInt = 0
   def defaultMaxCycles: Long = 200000L
   /** ISA string for the RVFI trace header. */
   def isa(config: String): String
   def xlen: Int
+  /** Number of byte lanes in the store data bus. Override when it differs from XLEN. */
+  def busBytes: Int = xlen / 8
   /** The core's source checkout, for `source.core_repo/core_rev/core_dirty`. */
   def sourceDir: File
   /** Builds (or loads from cache) the model. `work` is this process's workspace, `cache` is shared. */

@@ -29,8 +29,9 @@ t=0    Gcd.scala:26    Connection connect_x              24 (0x18)   cond->Gcd.s
 ## Install
 
 Tested on macOS arm64 with: JDK 21, sbt 1.10, Scala 2.13.14, SpinalHDL 1.15.0, Verilator 5.x,
-Yosys (only for one test), Rust 1.98 (edition 2024), Node 26 / npm. On this machine
-`source ../../spinal-boom/env.sh` (from a spinal-boom checkout next to this repo) puts JDK, Verilator and Yosys on `PATH`.
+Yosys (only for one test), Rust 1.98 (edition 2024), Node 26 / npm. From the workstation root, run
+`scripts/install.sh --with-sim --with-formal` and source the generated `env.sh`.
+From `SpinalTrace/`, use `source ../env.sh`.
 SpinalTrace expects the sibling checkout `../SpinalWaves` (sbt source dependency and tywaves-rs).
 
 ```bash
@@ -117,7 +118,7 @@ The GUI is the ChiselTrace viewer: timeline, hover for source and typed values, 
 ## Tests
 
 ```bash
-source ../../spinal-boom/env.sh
+source ../env.sh
 cargo build --release -p spinaltrace-cli      # the Scala tests call this binary
 cargo test -p spinaltrace-rs                   # engine unit tests + fixture traces (no JVM needed)
 cd spinaltrace && sbt test                     # 20 tests, Verilator simulations, ~2 min
@@ -150,3 +151,24 @@ ChiselTrace.
 
 If you use this work, please cite ChiselTrace: J. Brand, C. Cromjongh, H.P. Hofstee, Z. Al-Ars,
 "ChiselTrace: Typed Behavioral Debugging in Chisel Through Signal Dependency Tracing", IEEE NorCAS 2025.
+
+## Trace accuracy
+
+Read `accuracy.status` and `accuracy.reasons` in every graph or slice JSON result.
+The GUI shows the same status above the graph. Source grouping reports `approximate`.
+Missing causes or unmodeled timing report `incomplete`. Do not use either result as
+an exact dependency trace. Limits apply to the whole design, including paths outside
+the criterion. Legacy extraction files report incomplete. Re-extract with the current
+front-end to use the formatVersion 2 contract.
+
+The supported subset uses one rising-edge clock without a clock enable or soft reset.
+Memory writes must be synchronous, equal-width and unmasked. Memory reads can be
+synchronous or asynchronous. Large memories and dynamic partial writes report
+incomplete. See [the accuracy contract](docs/PDG_FORMAT.md#accuracy-contract-formatversion-2)
+for the bounds and source grouping rules.
+
+## Limit ownership
+
+Clock semantics: [#89](https://github.com/riscPrint/risc-v-workstation/issues/89). Memory attribution: [#92](https://github.com/riscPrint/risc-v-workstation/issues/92). Accuracy and source grouping: [#94](https://github.com/riscPrint/risc-v-workstation/issues/94). Viewer node IDs: [#113](https://github.com/riscPrint/risc-v-workstation/issues/113). Database integration: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Integrated navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
+
+Retained limit: VCD/Verilator is the validated input. FST and other simulators remain unqualified. Use short trace windows. Source paths require the original source tree. Graph copying and graph-representation cleanup remain performance work without a separate issue; neither establishes a correctness defect.

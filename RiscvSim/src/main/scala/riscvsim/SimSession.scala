@@ -14,7 +14,8 @@ object RiscvSimConfig {
     sys.env.getOrElse("RISCVSIM_COVERAGE", "line,user").split(",").map(_.trim).filter(_.nonEmpty).toSeq
 
   /** Use Spinal's simulation phases for both identity and native compilation. */
-  def elaborate[T <: Component](key: ModelKey, work: File, config: SpinalConfig)(rtl: => T): SpinalReport[T] = {
+  def elaborate[T <: Component](key: ModelKey, work: File, config: SpinalConfig,
+      sourceRoots: Seq[File] = Nil)(rtl: => T): SpinalReport[T] = {
     val cfg = config.copy(targetDirectory = new File(work, key.name + "-rtl").getAbsolutePath,
       headerWithRepoHash = false, headerWithDate = false).includeSimulation
     cfg.noAssertAtTimeZero = true
@@ -36,7 +37,10 @@ object RiscvSimConfig {
       }
     })
     cfg.addTransformationPhase(new SimVerilatorPhase)
-    val report = cfg.generateVerilog(rtl)
+    val report = if (key.spinaltrace) spinaltrace.SpinalTrace.elaborate(cfg)(rtl) else cfg.generateVerilog(rtl)
+    if (key.spinaltrace) {
+      spinaltrace.PdgExtractor.extractTo(report, dependencyGraph(key, work), spinaltrace.ExtractOptions(sourceRoots = sourceRoots))
+    }
     // Include blackbox RTL, such as an RVFI monitor, in the exact file Verilator reads.
     require(report.generatedSourcesPaths.size == 1 && report.blackboxesIncludeDir.isEmpty,
       "RTL identity requires one generated file and no external include directories")
@@ -49,6 +53,10 @@ object RiscvSimConfig {
     report.blackboxesSourcesPaths.clear()
     report
   }
+
+  /** Dependency graph emitted by the same elaboration as the model RTL. */
+  def dependencyGraph(key: ModelKey, work: File): File =
+    new File(work, key.name + "-rtl/spinaltrace/pdg.json")
 
   /**
    * A Verilator SimConfig for `key`: workspace under `work` (private to this process),

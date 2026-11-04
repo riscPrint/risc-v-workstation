@@ -492,3 +492,9 @@ absolute paths. They do not claim complete C8 capture or immutable generations.
 Inputs and tools must stay stable during commands. File races and hostile
 inputs are outside the stated threat model. Simulator reports do not prove
 hardware behavior.
+
+## Limit ownership
+
+Fitting: [#12](https://github.com/riscPrint/risc-v-workstation/issues/12). RV32/in-order support: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). Wide-core structures: [#72](https://github.com/riscPrint/risc-v-workstation/issues/72). Experiment management: [#160](https://github.com/riscPrint/risc-v-workstation/issues/160).
+
+Retained limit: Source-to-model parameter mapping remains manual and reviewed. Complete capture, portable report paths and immutable generations have no dedicated issue. C9 remains measured model evidence, with no calibration acceptance or hardware proof.

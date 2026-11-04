@@ -52,13 +52,11 @@ The script writes `env.sh` with `RVW_HOME`, `PATH`, `RVW_PYTHON` and
 for your shell startup file. It adds that line only with `--shell-rc FILE`.
 Repeat the same command to check or repair the install. It does not update the
 checkout or run a system-wide package upgrade. Local tool downloads use `.tools/`.
-Linux sbt uses the official 1.10.7 archive and its SHA-256 file.
-Fedora and RHEL use a private Temurin JDK 21 with a checksum check. Formal tools use
-the latest OSS CAD Suite release. Linux Spike builds from its source checkout.
-Fedora bare-metal GCC builds from source and can take a long time.
-The installer does not pin all native dependencies. Native installation uses
-the host package manager. Native package availability depends on the host.
-The pinned tool bundle remains open ([#71](https://github.com/riscPrint/risc-v-workstation/issues/71)).
+Downloaded native inputs use fixed revisions and archive checksums. See the
+[tool version table](TOOL_VERSIONS.md) for selections, warnings and qualification
+limits. Homebrew and OS repository packages can drift. Homebrew is a macOS
+prerequisite. Full clean installs remain under issue #17, including Fedora and
+macOS. A dry run does not establish a working install.
 
 For a manual install, use Python 3.11 or later and `uv`. For example, install the
 workstation under `$HOME/tools` and keep your core under `$HOME/projects`:
@@ -67,8 +65,7 @@ workstation under `$HOME/tools` and keep your core under `$HOME/projects`:
 git clone https://github.com/riscPrint/risc-v-workstation.git "$HOME/tools/risc-v-workstation"
 export RVW_HOME="$HOME/tools/risc-v-workstation"
 cd "$RVW_HOME/rvw"
-uv venv .venv
-uv pip install --python .venv/bin/python -e '.[mcp]'
+uv sync --locked --no-dev --extra mcp
 export PATH="$RVW_HOME/rvw/.venv/bin:$PATH"
 rvw --help
 ```
@@ -79,13 +76,22 @@ The editable Python install uses this checkout, so keep it in place.
 
 Install the tools needed by your adapter. A Spinal simulation normally needs
 JDK 21, sbt, Verilator, a C++ compiler and make. Test builds need a RISC-V toolchain.
+Fresh `--with-cosim` installs build the same qualified Spike source revision on
+macOS and Linux. Existing headers and libraries are reused, including those under
+`SPIKE_PREFIX`. The cosim build manifest records their identity. See
+[the reference choice](../Cosim/README.md#build-and-run) before selecting a newer Spike.
+
 Spike co-simulation needs Spike with its headers and library, plus
 `"$RVW_HOME/Cosim/build.sh"`. Formal flows need Yosys, SymbiYosys and a supported
 solver. See the [co-simulation guide](../Cosim/README.md) and
 [SpinalChecks guide](../SpinalChecks/README.md) for those tools.
 
 The Python install does not install native tools or cache Scala dependencies.
-Offline sbt builds need their dependencies already in the cache.
+Offline sbt builds need their dependencies already in the cache. The VexRiscv
+launcher uses `-Dsbt.offline=true`. With an empty cache, first fetch its Scala,
+SpinalHDL and sbt dependencies online from `examples/vexriscv/rvw/`. Empty-cache
+startup remains unverified. SpinalWaves, SpinalTrace GUI, the VS Code extension
+and Sail need separate setup steps. See [tool versions](TOOL_VERSIONS.md).
 
 Use a patched JDK 21. Fetch Scala dependencies only when the local network
 policy permits it. Then use offline sbt for repeat builds.
@@ -410,12 +416,9 @@ libraries that your adapter uses. Add a `compile->test` mapping only if it needs
 the core's test sources. Match Scala, SpinalHDL and compiler-plugin versions.
 The current workstation builds use Scala 2.13.14 and SpinalHDL 1.15.0.
 
-The current `RiscvSim` sbt build also loads its bundled BOOM `ProjectRef`.
-For a standalone core without that checkout, compile `RiscvSim/src/main/scala`
-as an unmanaged source directory in your adapter build. Use the matching library
-dependencies from the [VexRiscv project example](../examples/vexriscv/rvw/build.sbt).
-This workaround does not require a change to the core's build or sources.
-SpinalDB can still use its `ProjectRef`.
+The `RiscvSim` build loads only the generic library. It needs no core checkout.
+The bundled BOOM adapter has a separate build under `RiscvSim/boom`.
+Use the library `ProjectRef` above for external adapters.
 
 Run builds offline from the adapter build directory. Use the machine lock for
 shared sbt outputs:
@@ -502,3 +505,9 @@ riscv-tests benchmarks. `benchmarks` is the native ELF build directory.
 Run `rvw arch build` to locate gem5 and build the benchmarks. Run
 `rvw arch calibrate --out rvw/out/calibration-1` to run both engines and
 write JSON and text reports. See [the architecture guide](../Arch/README.md).
+
+## Limit ownership
+
+Installer qualification: [#17](https://github.com/riscPrint/risc-v-workstation/issues/17) and [#40](https://github.com/riscPrint/risc-v-workstation/issues/40). Native bundle: [#71](https://github.com/riscPrint/risc-v-workstation/issues/71). Waivers: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder/performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Owner integration choice: [#34](https://github.com/riscPrint/risc-v-workstation/issues/34).
+
+Retained limit: Adapters must reject unsupported options. Example validation does not qualify every host, backend or core preset. Owner decisions remain open.

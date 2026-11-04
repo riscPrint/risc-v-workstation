@@ -43,7 +43,32 @@ Use an editable installation from this repository; a standalone Python wheel doe
 not bundle the native library or build script.
 
 Verified installation: Spike `1.1.1-dev`, Homebrew `riscv-isa-sim/main`, arm64.
-The bottle receipt does not identify the upstream source commit. Every check
+The installer pins source builds to `eff659cd43d7eafb7f3559bceed2540eabb31c50`
+(2025-08-11). The tested bottle's SBOM source timestamp matches that commit;
+all 30 installed `riscv` headers present in that source tree match byte for byte.
+The formula uses `version "main"` without a source revision, so the bottle's
+exact source commit is inferred from this evidence, not attested by its receipt.
+Homebrew tap receipt revision: `2434aac00803d570c1b04190c76f647e7d1661e7`.
+Fresh `--with-cosim` installs build this pin on macOS and Linux. Existing matching
+headers/libraries, including an explicit `SPIKE_PREFIX`, remain external inputs;
+they are reused and identified by the build manifest. Do not use a moving
+Homebrew formula as a portable source pin.
+
+The later `5cf8c829d2033c5132158b59860fea8d6c06a94d` pin changes library defaults.
+Upstream commit `1bf835816a6871a4b638d0795054bb726eec5d6c` starts
+`processor_t` with `set_max_vaddr_bits(0)`. Spike's full simulator sets the MMU
+from its device tree; this shim does not use that simulator. With that revision,
+SUM/MXR read as zero and translated data/instruction accesses run without the
+expected MMU. This explains the extra illegal, dirty and icache-alias differences.
+It is not the later `cfg.misaligned` removal or a changed A/D policy.
+Use the qualified pin with this shim. A newer Spike needs explicit MMU setup
+before reset; building the shim alone does not qualify that reference.
+
+Source installs record their version and revision in `share/rvw/spike-source.json`.
+The build captures that file, or the Homebrew receipt and available SBOM, and puts
+`spike_identity` in the manifest and its bound build inputs. External builds without
+this metadata use null version/revision. Package metadata is a label supplied by the
+installation. The actual library hashes remain authoritative. Every check
 records the actual shim/library hashes and embedded shim version; no source-build fallback
 was necessary. Sail `0.15` was also exercised.
 
@@ -78,6 +103,40 @@ Use `--core LABEL --platform /path/platform.json` for another core:
   "mmio": [{"base": "0x02000000", "size": "0x10000"}]
 }
 ```
+
+Platform policy keys are explicit in the BOOM and VexRiscv JSON files:
+
+- `privilege_modes`: `M`, `MU` or `MSU` (default `MSU`). Spike receives this value.
+- `misaligned`: an object with `load`, `store`, `atomic`, `split_page` and
+  `split_bus`. Loads and stores must both select `trap` (default), or both
+  select `emulate`. With `trap`, `atomic` must be `trap`. With `emulate`,
+  `atomic` must be `access_fault`, the installed Spike outcome. Alignment
+  traps use causes 4/6; atomic access faults use causes 5/7. Trap events compare
+  the failing address in `tval` without a mask.
+- `split_page` and `split_bus` must be `refuse`. Scalar C2 cannot describe
+  partial writes, bus fault precedence or intermediate transactions. Completed
+  accesses across an XLEN word, and multiple reference memory effects, are
+  refused. XLEN is the trace word boundary, not a claim about physical bus width.
+  An alignment trap before a split compares as a trap. Partial effects and fault
+  precedence after a split are outside this comparison. Other policies are refused.
+- `endianness`: an object with `instruction`, `data`, `page_table` and `device`.
+  Each must be `little`. Other combinations are refused before model execution.
+  This declaration does not establish big-endian support.
+- `absent_pmp_csrs`: `trap` (default), or `read_zero_write_ignored` with
+  `pmp_regions: 0`. The latter installs constant-zero PMP CSRs in Spike.
+  Writes have no effect. Normal CSR privilege checks still apply. RV64 odd
+  `pmpcfg` addresses remain illegal. This applies only to `0x3a0..0x3ef`.
+  Other CSR accesses, wrong read values and unexpected traps still mismatch.
+- `ecall_tval`: `zero` (default) or `insn` (exactly `0x73`). Only a matching
+  synchronous ECALL cause 8, 9 or 11 can use this rule. The checker sets the
+  reference trap CSR to that declared value for later reads. Other causes and
+  other values still mismatch. This is a platform rule, not synchronization;
+  `--strict` retains it. Without a trap event, C2 cannot check `tval`.
+
+VexRiscv declares zero PMP reads with ignored writes and ECALL `tval=0x73`.
+BOOM retains its previous outcomes. Sail currently refuses non-MSU modes,
+misaligned emulation, zero absent-PMP CSRs and nonzero ECALL `tval`.
+It does not silently replace these settings with its defaults.
 
 `aligned_mem` selects RVFI's `RISCV_FORMAL_ALIGNED_MEM` convention: word-aligned
 addresses with masks/data shifted into the active byte lanes. It defaults to
@@ -378,6 +437,11 @@ Large traces are temporary and never committed.
   System headers and compiler support files use C8's installed-toolchain assumption.
   Verify inputs and tools before publication. The manifest binds output bytes to
   the build record. The binary embeds the build ID. A stale build requires a rebuild.
+  On Linux, capture `readelf` and read the ELF SONAME from the saved library.
+  Link through its library name so a missing SONAME cannot retain a temporary path.
+  Bind the load name into the build ID. At runtime, place a hard link to the captured
+  dependency beside the captured shim for `$ORIGIN` lookup. Keep the bytes unchanged.
+  macOS retains its native install-name handling.
   Binary and manifest use separate atomic replacements; a mismatched pair refuses.
 - Runtime checks the source, shim, manifest and linked libriscv hashes and embedded
   identity. Load private binaries and check the actual dependency binding and shim
@@ -449,3 +513,55 @@ Both return a job ID. `job_status(wait_s=60)` returns the same JSON as the corre
 and synchronization limits described in the main README ("What match guarantees"): no FP
 registers, `fflags`, unread CSR side effects or unread memory; a matching prefix also returns
 `match`. It is not proof that the program passed: check `trace_complete` and `end_status`.
+
+## Architectural comparison coverage
+
+This matrix describes the current C2 contract and comparators. It does not add
+features or claim independent-reference experiment results. A match applies only
+to the fields and recorded execution below.
+
+| State or effect | C2 evidence | Spike | Sail |
+|---|---|---|---|
+| PC, next PC, instruction, privilege | Per instruction | Compared; declared mode-after-change quirk | Compared; same quirk |
+| Integer destination and value | Per instruction | Compared; declared synchronization below | Compared; external values cannot be injected |
+| Integer source operands | Present in C2 | Not directly compared; later effects can expose errors | Same |
+| Scalar memory address, masks, active bytes, fault flag | Per instruction | Compared; inert MMIO load data synchronized | Compared; model device behavior, no external data injection |
+| Trap cause and failing address (`tval`) | Optional trap event | Compared; exact declared illegal/ECALL value | Compared; unsupported ECALL policy refused |
+| CSR read result | Integer destination | Compared except declared masks, counters and evidenced input bits | Compared; nondeterministic reads refused |
+| Unread CSR state and CSR side effects | No CSR snapshot | Out of scope until observed by a later effect | Same |
+| Cycle/time/HPM read | Integer destination | Synchronized on pure reads; strict mode disables this | Refused when offline synchronization would be needed |
+| instret/minstret | Integer destination | Strict from reset; declared late-trace offset only | Compared; no external offset injection |
+| MMIO and interrupt external inputs | Optional IRQ levels, load result and trap event | Declared MMIO/input synchronization; not a device or timing proof | External-input synchronization unsupported; nondeterministic traces refused |
+| FP registers, `fflags`, `fcsr` | No FP state | Out of scope; FP integer/memory effects can compare | Same |
+| Vector, hypervisor state | No matching state contract | Out of scope; scalar-unrepresentable effects refused | Unsupported ISA/virtualized modes refused |
+| Debug state | No debug state contract | Debug execution refused | Unsupported execution refused; no debug-state comparison |
+| Per-hart state, inter-hart order | No hart identity or shared-memory order | Single hart only; multi-hart out of scope | Same |
+| Partial memory effects, split-bus/page fault precedence | No transaction history | Refused split completion; partial effects out of scope | No partial-effect comparison; no split policy support |
+| Endianness | Platform declaration, little-endian ELF | Little only; other combinations refused | Little only |
+| PMP TOR/NA4/NAPOT, priority, grain, locked entries | Only observed instruction effects | Model execution; no claim of a complete coverage suite | Same |
+| Halt/WFI and timing | C2 halt/cycle fields | No cycle or halt equality; WFI may resume | No timing proof |
+
+Dependencies: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10)
+(FP state), [#47](https://github.com/riscPrint/risc-v-workstation/issues/47)
+(interrupt stimulus), and [#75](https://github.com/riscPrint/risc-v-workstation/issues/75).
+Related scope: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87),
+[#114](https://github.com/riscPrint/risc-v-workstation/issues/114),
+[#136](https://github.com/riscPrint/risc-v-workstation/issues/136),
+[#90](https://github.com/riscPrint/risc-v-workstation/issues/90), and
+[#100](https://github.com/riscPrint/risc-v-workstation/issues/100).
+
+## Adapter interrupt regression
+
+See [RiscvSim interrupt schedules](../RiscvSim/README.md#interrupt-schedules).
+`rvw/tests/interrupts/window_check.py` checks independently supplied cycle and
+PC bounds, input changes and the test program's trap-entry state. It does not
+replace Spike instruction comparison. Spike injection still uses C2 trap events;
+a Spike match alone does not prove legal interrupt timing. The regression checks
+both results. Missing independent bounds stays inconclusive. Sail still refuses
+external-input synchronization.
+
+## Limit ownership
+
+FP state: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10). Unread CSR effects: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87). Faulting accesses: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Hypervisor state: [#114](https://github.com/riscPrint/risc-v-workstation/issues/114). Debug state: [#136](https://github.com/riscPrint/risc-v-workstation/issues/136). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75). WFI: [#149](https://github.com/riscPrint/risc-v-workstation/issues/149).
+
+Retained limit: The comparison matrix bounds every match. Synchronization is not a timing or device proof. Little-endian scalar C2 evidence, refused unknown input structures and incomplete runtime dependency capture remain explicit restrictions.

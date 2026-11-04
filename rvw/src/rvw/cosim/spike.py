@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 2
+SHIM_VERSION = 3
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -70,6 +70,7 @@ def capture_shim(capture, path, source=None):
                  and bound_source == source.sha256
                  and bound_library == built.get('spike_library_sha256')
                  and built.get('shim_sha256') == library.sha256
+                 and built.get('spike_identity') == inputs.get('spike_identity')
                  and bool(inputs['capture']['tools']) and bool(inputs['flags']))
     except (KeyError, TypeError, ValueError):
         valid = False
@@ -82,8 +83,22 @@ def capture_shim(capture, path, source=None):
     def row(item):
         return next(dict(r, copy=str(item.copy)) for r in record["files"]
                     if r["copy"] == item.copy.relative_to(capture.root).as_posix())
+    dependency_row = row(dependency)
+    load_name = inputs.get('spike_load_name')
+    if load_name and not Path(load_name).is_absolute():
+        if Path(load_name).name != load_name or load_name in ('.', '..'):
+            raise ValueError(f"unsupported Spike load name; {REBUILD}")
+        # $ORIGIN resolves beside the captured shim. Hard-link only captured bytes.
+        adjacent = library.copy.parent / load_name
+        if adjacent == library.copy:
+            raise ValueError(f"Spike load name conflicts with shim; {REBUILD}")
+        if not adjacent.exists():
+            os.link(dependency.copy, adjacent)
+        elif not adjacent.samefile(dependency.copy):
+            raise CaptureError('input_not_captured:spike_loader', 'conflicting captured dependency')
+        dependency_row['copy'] = str(adjacent)
     return {"library": row(library), "manifest": row(manifest), "source": row(source),
-            "dependency": row(dependency), "manifest_data": built}
+            "dependency": dependency_row, "manifest_data": built}
 
 
 # Keep handles to captured dependencies. A loader may reuse an earlier mapping with the
@@ -168,7 +183,7 @@ class Spike:
         self.lib = lib = load_shim(shim)
         lib.rvw_error.restype = C.c_char_p
         lib.rvw_create.argtypes = [C.c_char_p, C.POINTER(C.c_uint64), C.c_size_t,
-                                  C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint]
+                                  C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_char_p, C.c_int, C.c_int]
         lib.rvw_create.restype = C.c_void_p
         lib.rvw_destroy.argtypes = [C.c_void_p]
         lib.rvw_write.argtypes = [C.c_void_p, C.c_uint64, C.c_void_p, C.c_size_t]
@@ -184,7 +199,9 @@ class Spike:
             return (C.c_uint64 * (len(rs)*2))(*(v for r in rs for v in r))
         self.handle = lib.rvw_create((platform.reference_isa or platform.isa).encode(), array(platform.ram), len(platform.ram),
                                      array(platform.mmio), len(platform.mmio), platform.reset_pc,
-                                     platform.pmp_regions)
+                                     platform.pmp_regions, platform.privilege_modes.encode(),
+                                     int(platform.misaligned["load"] == "emulate"),
+                                     int(platform.absent_pmp_csrs == "read_zero_write_ignored"))
         if not self.handle:
             raise ValueError(self.error())
         try:
@@ -223,6 +240,12 @@ class Spike:
         result = {k: int(getattr(e, k)) & mask for k in FIELDS}
         result.update(regs=[int(x) & mask for x in e.regs], before=list(self.regs),
                       disasm=e.disasm.decode(errors="replace"))
+        if (result["trap"] and not result["intr"] and result["insn"] == 0x73
+                and result["cause"] in (8, 9, 11)):
+            wanted = 0x73 if self.platform.ecall_tval == "insn" else 0
+            if result["tval"] != wanted:
+                self.set_trap_tval(wanted)
+                result["tval"] = wanted
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
 
