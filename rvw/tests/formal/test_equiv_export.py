@@ -68,3 +68,31 @@ def test_revision_arguments_fail_closed(tmp_path):
     out = tmp_path / 'out'
     assert main(['formal', 'equiv', '--gold-rev', 'HEAD', '--top', 'leaf', '--out', str(out)]) == 1
     assert json.loads((out / 'result.json').read_text())['status'] == 'inconclusive'
+
+
+def test_export_timeout_includes_lock_queue(tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+    locks = tmp_path / 'locks'
+    (repo / 'rvw.toml').write_text(f'''[core]
+name="fixture"
+adapter="false"
+source_env="TEST_SOURCE"
+lock="export-test"
+lock_dir="{locks}"
+[query]
+build=["{sys.executable}", "-c", "raise SystemExit(99)"]
+[formal]
+export_dependencies=["."]
+''')
+    rev = commit(repo)
+    code = f'from rvw.common.lock import held; import sys\nwith held("export-test", directory={str(locks)!r}):\n print("ready",flush=True)\n sys.stdin.read()\n'
+    holder = subprocess.Popen([sys.executable, '-c', code], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    try:
+        assert holder.stdout.readline().strip() == 'ready'
+        with pytest.raises(ValueError, match=r'revision build failed \(124\)'):
+            export_revision(repo / 'rvw.toml', rev, None, 'leaf', tmp_path / 'export', 0.5)
+        assert 'waiting for export-test' in (tmp_path / 'export/build.log').read_text()
+    finally:
+        holder.communicate(input='', timeout=10)
