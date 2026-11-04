@@ -439,6 +439,8 @@ Runner C3 entries retain complete failure messages with `message_complete: true`
 Display limits must not truncate this evidence. Legacy 400-character messages without
 this marker may be cut previews. Compare treats these entries as inconclusive and requires a rerun.
 Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
+C3 retains C1 `details.rvfi_errcode` when present. Compare uses this code before parsing
+the message, as C1 signature generation does.
 Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
 override saved fail signatures. An unchanged failure must also have the same status.
 An assertion without a saved message or a complete location is inconclusive and needs a rerun.

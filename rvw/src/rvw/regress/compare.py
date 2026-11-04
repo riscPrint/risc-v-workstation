@@ -32,7 +32,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from rvw.results import SuiteResults, TestEntry, Verdict, find_results, inconclusive_cause
-from rvw.results.signature import failure_signature, located_assertion
+from rvw.results.signature import failure_signature, located_assertion, run_signature
 
 from .config import finite_number, metric_specs
 from .known import Known
@@ -65,8 +65,10 @@ def with_assertion_identity(t: TestEntry) -> TestEntry:
         return replace(t, extra={**t.extra, "inconclusive": "invalid fail code; rerun"})
     if t.status == "rvfi_error":
         message = t.extra.get("message")
-        if isinstance(message, str) and message:
-            return replace(t, signature=failure_signature("rvfi_error", message=message))
+        details = t.extra.get("details")
+        code = details.get("rvfi_errcode") if isinstance(details, dict) else None
+        if (isinstance(code, int) and not isinstance(code, bool)) or (isinstance(message, str) and message):
+            return replace(t, signature=run_signature({**t.extra, "status": t.status}))
         if not re.fullmatch(r"rvfi_error:[0-9]+", t.signature or ""):
             return replace(t, extra={**t.extra, "inconclusive":
                            "RVFI identity needs a monitor code or full message; rerun"})
