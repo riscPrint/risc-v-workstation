@@ -1892,3 +1892,16 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+
+### Cooperative farm capacity extensions (#57)
+
+Host capacity and request resources support `disk_bytes` and `jobs` in addition
+to CPU slots, memory bytes and named locks. A host can set `projects` with
+per-project limits for those four dimensions. Requests then require a configured
+`project`. All active requests for that project share its quota. Host aliases
+share the same host state. An oversized request is refused; a capacity conflict
+waits within the request timeout. Disk admission also checks current free space.
+Reports include effective `limits`, `queued_s`, `held_s`, `released` and `outcome`.
+Handled cancellation releases all reservations. These fields describe reservations,
+not actual consumption. OS resource limits and cumulative project accounting are
+not provided. See `rvw/src/rvw/farm/README.md` for defaults and remaining limits.
