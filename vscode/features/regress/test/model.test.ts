@@ -35,7 +35,7 @@ test('row navigation uses explicit signal and run fields only',()=>{
   assert.equal(rowSignal({key:'signal',value:'top.io.data'}),'top.io.data');
   for (const value of [{path:'result.json'}, {signal:42}, {signal:' '}])
     assert.equal(rowSignal({key:'point',value}),undefined);
-  assert.equal(runResultPath('/tmp/suite/results.json',{key:'job',value:{run:'jobs/a'}}),'/tmp/suite/jobs/a/result.json');
-  assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:'/other/a'}}),'/other/a/result.json');
+  assert.equal(runResultPath('/tmp/suite/results.json',{key:'job',value:{run:'jobs/a/result.json'}}),'/tmp/suite/jobs/a/result.json');
+  assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:'/other/a/result.json'}}),'/other/a/result.json');
   assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:null}}),undefined);
 });

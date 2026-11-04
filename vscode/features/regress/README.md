@@ -89,6 +89,6 @@ database choice and captured source hash checks still apply. A generic `path`
 field is not treated as a signal.
 
 Use **Open Declared C1 Run Result** on a job row with a `run` field. Relative
-paths resolve from the suite report directory. The command opens that run's
-`result.json` directly. A missing file gives an error. It does not fall back to
+paths resolve from the suite report directory. The `run` field names the result file, including
+`result.json`. The command opens that exact file. A missing file gives an error. It does not fall back to
 another run or validate generation ownership. The saved suite stays in the tree.

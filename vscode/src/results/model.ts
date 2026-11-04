@@ -71,5 +71,5 @@ export function rowSignal(row: Row | undefined): string | undefined {
 }
 export function runResultPath(reportFile: string, row: Row | undefined): string | undefined {
   const run = object(row?.value).run;
-  return typeof run === 'string' && run.trim() ? resolve(reportFile, '..', run, 'result.json') : undefined;
+  return typeof run === 'string' && run.trim() ? resolve(reportFile, '..', run) : undefined;
 }

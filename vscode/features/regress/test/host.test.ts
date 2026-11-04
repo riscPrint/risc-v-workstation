@@ -82,7 +82,7 @@ test('result host loads fixtures, clears failed loads and launches native tools'
     assert.equal(tasks.length,2);
     assert.match(errors.at(-1)!,/Trust the workspace/);
     vscode.workspace.isTrusted=true;
-    const row={key:'job',value:{run:'jobs/one',status:'error',inconclusive:'missing evidence'}};
+    const row={key:'job',value:{run:'jobs/one/result.json',status:'error',inconclusive:'missing evidence'}};
     assert.equal(provider.getTreeItem(row).contextValue,'rvw.run');
     await commands.get('regress.runResult')!(row);
     assert.equal(opened.at(-1).document.fsPath,'/tmp/jobs/one/result.json');
