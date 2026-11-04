@@ -76,7 +76,7 @@ def test_invalid_deadline(timeout):
         deadline(timeout)
 
 
-@pytest.mark.parametrize('kind', ['match', 'mismatch', 'short', 'empty', 'bad-order'])
+@pytest.mark.parametrize('kind', ['match', 'mismatch', 'short', 'empty', 'bad-order', 'wrong-token'])
 def test_comparison(kind):
     a, aclient = socket.socketpair()
     b, bclient = socket.socketpair()
@@ -84,6 +84,7 @@ def test_comparison(kind):
         receive(sock, 24, deadline(1))
         packets = [Retirement(order=i, insn=0x13) for i in range(2)]
         if altered:
+            if kind == 'wrong-token': packets[1] = replace(packets[1], insn=0x93)
             if kind == 'mismatch': packets[1] = replace(packets[1], trap=1)
             if kind == 'short': packets.pop()
             if kind == 'empty': packets.clear()
@@ -97,7 +98,7 @@ def test_comparison(kind):
             bclient.sendall(Token(0x13).encode()*2 + Token(cmd=0).encode())
         else:
             result=compare(aclient,bclient,[Token(0x13)]*2,timeout=1)
-            expected='inconclusive' if kind in ['short','empty'] else kind
+            expected='inconclusive' if kind in ['short','empty','wrong-token'] else kind
             assert result['status'] == expected
         fa.result(); fb.result()
 

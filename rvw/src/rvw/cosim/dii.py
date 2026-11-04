@@ -168,6 +168,10 @@ def compare(core, sail, tokens, *, timeout=30):
     if len(dut) != len(tokens) or len(reference) != len(tokens):
         return {"status": "inconclusive", "cause": "incomplete_stream",
                 "core_retired": len(dut), "sail_retired": len(reference)}
+    for index, token in enumerate(tokens):
+        mask = 0xffffffff if token.insn & 3 == 3 else 0xffff
+        if any(packets[index].insn != token.insn & mask for packets in (dut, reference)):
+            return {"status": "inconclusive", "cause": "injection_mismatch", "index": index}
     for index, (actual, expected) in enumerate(zip(dut, reference)):
         differences = {name: [getattr(actual, name), getattr(expected, name)]
                        for name in actual.__dataclass_fields__

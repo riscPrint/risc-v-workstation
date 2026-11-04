@@ -89,12 +89,37 @@ timing code can synchronize. A match does not check FP register state or fflags.
 ## riscv-dv random programs
 
 Generator ownership stays in [#33](https://github.com/riscPrint/risc-v-workstation/issues/33).
-Use the upstream [riscv-dv](https://github.com/chipsalliance/riscv-dv) `pyflow`
-backend for native Python generation. It needs PyVSC and Boolector. Its pinned
-`pyboolector` source distribution must build on the host. If its build fails
-with a missing `pyboolector_enums.pxd`, generation is blocked. Do not replace
-the generator with an unreviewed random encoder or claim a generated test pass.
-Pre-generated programs need their generator revision, target, options and seed.
+Use the upstream [riscv-dv](https://github.com/chipsalliance/riscv-dv)
+base pygen through `scripts/riscv-dv-pygen.py`. The launcher requires a clean
+checkout at `f557b89ed6881a20515481a2585e9d004cd9642b` and these dependencies:
+
+```sh
+uv venv --python 3.11 /tmp/dv-venv
+uv pip install --python /tmp/dv-venv/bin/python \
+  pyboolector==3.2.4.38488416565 pyvsc==0.9.1.10086043874 \
+  pip PyYAML bitstring tabulate
+rvw/.venv/bin/python scripts/riscv-dv-pygen.py --checkout /path/to/riscv-dv \
+  --python /tmp/dv-venv/bin/python --target rv32imc --seed 48 \
+  --instructions 50 --timeout 120 --out /tmp/dv32-48
+```
+
+Use a new output directory for each run. `generation.json` records the seed,
+profile, upstream revision, solver versions, status and assembly hash.
+The newer pinned native wheel avoids the broken source distribution
+`pyboolector==3.2.4.20240823.1`. The launcher aliases two old PyVSC option
+names to `BtorOption`. It calls the upstream base phase in one process to avoid
+the unguarded macOS multiprocessing entry point. The upstream random test
+sets 10,000 instructions and five subprograms regardless of the requested
+bounds. This launcher uses the base test, which honors the instruction bound.
+It seeds Python before object construction and again inside the upstream phase.
+
+This profile generates bare integer ALU programs with no random branch, load,
+store, compressed or directed streams. Initialization and termination code
+remain upstream. `rv64imc` selects RV64. This is a bounded bring-up profile,
+not the full riscv-dv campaign. Keep generator ownership in #33. Run with
+`nice` on a shared host. Compile with the selected ISA and ABI, upstream
+`user_extension` include path and `scripts/link.ld`, or a reviewed project
+linker script. The generated `tohost` termination reports completion only.
 
 After generation, compile for the selected core's ISA, ABI, linker layout and
 termination protocol. Keep these settings in the core project. A bounded ELF
