@@ -2110,3 +2110,20 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+## Agent benchmark fixture formats
+
+`rvw.agent-tasks/1` has a nonempty `tasks` array with unique IDs. Each task has
+`public` requirements, width, statements, expression choices, source text and
+artifact identity claims. Its evaluator-only `private` object has the cause
+statement ID, injected artifact defects and `[a, b, expected]` vectors. These
+fixtures are not C1 runs, C2 traces or C6 database IDs.
+
+`rvw.agent-bench/1` records `track: "fixture"`, agent name, pack SHA-256, per-task
+scores, final candidates and ordered tool transcripts. Elapsed times use a
+monotonic clock. Missing root causes have null times and a censor flag. Summary
+rates retain counts and denominators; empty conditional rates are null.
+`native_validation: "NOT RUN"` is mandatory for this track. Scores cannot earn
+C4 acceptance. The dedicated stdio server exposes only fixture tools and rvw job
+status tools, not the normal rvw tool registry or plugins. See
+[the benchmark guide](../rvw/src/rvw/agent_bench/README.md).

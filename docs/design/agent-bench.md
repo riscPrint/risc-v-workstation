@@ -100,4 +100,6 @@ expression grammar. This slice cannot check arbitrary Scala patches.
 3. Add external agent clients, process isolation, time budgets and repeated trials.
    Retain failure logs and compare agents only on the same pack and machine profile.
 
-Follow-up issue links will be added after the first working increment.
+Follow-up work:
+- [#364: native Spinal and VexRiscv tasks](https://github.com/riscPrint/risc-v-workstation/issues/364).
+- [#366: bounded external agent trials](https://github.com/riscPrint/risc-v-workstation/issues/366).
