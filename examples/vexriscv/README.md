@@ -153,6 +153,21 @@ RISCV_FORMAL=/path/to/riscv-formal scripts/with-lock.sh vex nice -n 10 \
 
 Read each C3 row in `results.json`. A timeout is inconclusive. A bounded PASS
 is not a full ISA proof. The C4 verdict cannot accept a core revision.
-Liveness uses the upstream fairness assumptions, including no traps.
+Liveness uses a bounded simple-bus environment, including no traps.
+It counts accepted fetches and loads. Stores need no response. Responses must
+consume an outstanding request and arrive at least one cycle after acceptance.
+A response and a new request can occur in the same cycle. Overlapping fetches
+remain legal. Each command stall and each gap between owed responses has at
+most four cycles. Responses return in request order because neither bus has
+transaction IDs. Response data stays arbitrary. These assumptions apply only
+to liveness. They do not model coherent memory or prove adapter conformance.
+The counters cover the runner's maximum 200-cycle bound. The native environment
+regression checks response legality and wait bounds. It also covers overlap,
+simultaneous acceptance and response, stores, and queue drain:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python -m pytest \
+  examples/vexriscv/formal/tests/test_environment.py -q
+```
 See the [formal guide](../../rvw/src/rvw/formal/README.md) for scope and Sail
 arithmetic model generation. Measured results belong in issue #63.
