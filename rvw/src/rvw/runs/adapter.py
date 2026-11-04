@@ -259,7 +259,7 @@ def fresh_dir(out: str | os.PathLike) -> Path:
     raise RuntimeError(f"no free attempt directory next to {out}")
 
 
-def _collect(d: Path, started: float) -> tuple[Run | None, str | None]:
+def _collect(d: Path, started: float, cmd: Command | None = None) -> tuple[Run | None, str | None]:
     f = d / "result.json"
     if not f.exists():
         return None, f"no result.json in {d}"
@@ -269,7 +269,21 @@ def _collect(d: Path, started: float) -> tuple[Run | None, str | None]:
         return None, f"{f} predates this attempt"
     try:
         from .inputs import new_capture
-        return open_run(d, capture=new_capture()), None
+        run = open_run(d, capture=new_capture())
+        if cmd is not None:
+            for name in ("seed", "config", "max_cycles", "mem_latency"):
+                wanted = cmd.get(name)
+                if wanted is None:
+                    continue
+                if name != "config":
+                    wanted = int(wanted)
+                actual = run.get(name)
+                if type(actual) is not type(wanted) or actual != wanted:
+                    why = f"C1 {name} {actual!r} differs from requested {wanted!r}"
+                    run.result.extra["inconclusive"] = why
+                    run.data["inconclusive"] = why
+                    return run, why
+        return run, None
     except (OSError, ValueError) as e:
         return None, str(e)
 
@@ -298,7 +312,7 @@ def execute(cmd: Command, out: Path, core: str | None = None, log: Path | None =
         return Attempt(None, d, wall, r.returncode, True, log, f"timed out after {timeout}s", held.wait)
     if c.inputs is not None:
         c.inputs.verify()
-    run, err = _collect(d, started)
+    run, err = _collect(d, started, c)
     return Attempt(run, d, wall, r.returncode, False, log, err, held.wait)
 
 
@@ -348,8 +362,8 @@ def execute_many(cmds: list[Command], outs: list[Path], core: str | None = None,
         if many.inputs is not None:
             many.inputs.verify()
         res = []
-        for d in dirs:
-            run, err = _collect(d, started)
+        for d, cmd in zip(dirs, cmds):
+            run, err = _collect(d, started, cmd)
             res.append(Attempt(run, d, wall, r.returncode, r.timed_out and run is None, log,
                                err if run is None and not r.timed_out else
                                (f"run-many timed out after {budget}s" if run is None else None), held.wait))
