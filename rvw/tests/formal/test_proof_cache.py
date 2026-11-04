@@ -58,3 +58,12 @@ def test_native_cache_reuses_and_invalidates(tmp_path, mode, engine):
     third = check(3)
     assert third['proof_cache']['hit'] is False
     assert third['proof_cache']['key'] != first['proof_cache']['key']
+
+
+@pytest.mark.parametrize('record', [None, [], {'identity': {}, 'files': None}])
+def test_malformed_cache_record_is_a_miss(tmp_path, record):
+    identity = {'test': 'key'}
+    entry = tmp_path / proof_cache.key_for(identity)
+    entry.mkdir()
+    (entry / 'entry.json').write_text(json.dumps(record))
+    assert proof_cache.restore(tmp_path, identity, tmp_path / 'out') is False

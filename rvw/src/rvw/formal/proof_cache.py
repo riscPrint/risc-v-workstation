@@ -58,7 +58,7 @@ def restore(root, identity, out):
             return False
         shutil.copytree(entry / 'sby', out / 'sby')
         return True
-    except (OSError, ValueError, KeyError, TypeError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return False
 
 
