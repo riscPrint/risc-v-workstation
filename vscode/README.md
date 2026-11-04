@@ -4,6 +4,7 @@ One VS Code extension for the tools in this repository. Each tool adds a **featu
 
 | Feature | What it adds | Docs |
 |---|---|---|
+| `debug` | Linked waves, Scala, blocks and dependency traces from one captured database | [features/debug/README.md](features/debug/README.md) |
 | `spinalblocks` | Block and state machine diagrams for elaborated SpinalHDL designs, linked to the Scala source | [features/spinalblocks/README.md](features/spinalblocks/README.md) |
 | `regress` | Saved C3 tests and C4 verdicts, with full causes | [features/regress/README.md](features/regress/README.md) |
 | `coverage` | Saved coverage reports, holes and limits | [features/coverage/README.md](features/coverage/README.md) |
