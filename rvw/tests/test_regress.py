@@ -273,12 +273,13 @@ def test_compare_perf():
     cand = [_res([T("qsort", cycles=1030, ipc=0.8), T("towers", cycles=1990, ipc=0.45)], suite="bench", perf=["cycles", "ipc:max"])]
     v = compare(base, cand, perf_tolerance=0.01)
     assert v.verdict == "reject"
-    assert v.reasons == ["qsort cycles +3.0% > 1.0%", "towers ipc -10.0% > 1.0%"]
+    assert v.reasons == ["qsort cycles paired loss +3.0% on seed 1 > 1.0%", "towers ipc paired loss +10.0% on seed 1 > 1.0%"]
     p = next(p for p in v.perf if p["id"] == "qsort")
     assert p == {"suite": "bench", "config": "small", "id": "qsort", "metric": "cycles", "base": 1000,
                  "candidate": 1030, "change": 0.03, "regression": True,
                  "samples": {"base": 1, "candidate": 1, "paired": 1},
-                 "comparison_rule": "relative_mean", "confidence": "not_estimated"}
+                 "comparison_rule": "max_paired_relative_loss", "confidence": "not_estimated",
+                 "max_paired_loss": 0.03, "worst_seed": 1}
     assert compare(base, cand, perf_tolerance=0.2).verdict == "accept"
     # A failing test is not perf-compared.
     cand2 = [_res([T("qsort", "fail", "fail:1", cycles=5000), T("towers", cycles=2000, ipc=0.5)], suite="bench", perf=["cycles"])]
@@ -293,7 +294,7 @@ def test_compare_cli(fake, rvw, tmp_path):
     code, out, data = rvw("regress", "compare", tmp_path / "base", tmp_path / "cand", "--core", fake.config, "--json")
     assert code == 1
     assert [(i["id"], i["signature"]) for i in data["new_failures"]] == [("rv64ui-p-sub", "assert:lsu.scala:99")]
-    assert any("qsort cycles +10.0%" in r for r in data["reasons"])
+    assert any("qsort cycles paired loss +10.0% on seed 1" in r for r in data["reasons"])
     assert (tmp_path / "cand" / "verdict.json").is_file()
     code, out, _ = rvw("regress", "compare", tmp_path / "base", tmp_path / "cand", "--perf-tolerance", "0.5")
     assert code == 1 and "new failures (1)" in out and "rv64ui-p-sub" in out

@@ -631,10 +631,16 @@ Changed messages cannot be hidden by equal timeout, fail-code, monitor-code or s
 ### Regression performance evidence (C4)
 
 Each `perf` item also records `samples: {base, candidate, paired}`,
-`comparison_rule: "relative_mean"` and `confidence: "not_estimated"`.
+`comparison_rule: "max_paired_relative_loss"` and `confidence: "not_estimated"`.
 The counts refer to the seeds used in that workload's arithmetic means. The means use equal
-seed sets. The relative mean loss must exceed `perf_tolerance` to reject. No confidence
-interval or statistical significance is claimed. A declared performance workload without a
+seed sets. Means and `change` are descriptive. Acceptance checks every paired seed separately.
+For a lower-is-better metric, loss is `(candidate - base) / base`.
+For a higher-is-better metric, loss is `(base - candidate) / base`.
+`max_paired_loss` records the greatest loss. `worst_seed` identifies its seed.
+A loss greater than `perf_tolerance` on any seed rejects. Equality does not reject.
+A faster seed cannot cancel a slower seed. Non-finite paired losses are inconclusive.
+This is a bounded deterministic acceptance rule. It makes no population estimate.
+No confidence interval, noise distribution or statistical significance is claimed. A declared performance workload without a
 baseline or without passing results on every seed is inconclusive, even when its failure
 is known or unchanged. A new correctness failure still rejects.
 
