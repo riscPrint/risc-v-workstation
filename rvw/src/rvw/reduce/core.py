@@ -346,7 +346,10 @@ class Reducer:
             if len(self.trials) >= self.o.budget:
                 exhausted = True
                 return None
-            c, meta = command(kept)
+            candidate = command(kept)
+            if candidate is None:  # Constraint refusal, not a simulated non-match.
+                return False
+            c, meta = candidate
             recs = self.trial([(f"stream{len(self.trials)}", c,
                                {"seed": self.best["seed"], "mem_latency": self.best["mem_latency"], **meta})])
             rec = recs[0]
@@ -400,6 +403,31 @@ class Reducer:
             schedule = ','.join([entries[0], *[entries[i] for i in kept]])
             return base.set(irq_schedule=schedule), {"irq_schedule": schedule, "elf": self.best['elf']}
         self._stream_search('irq', range(1, len(entries)), command)
+
+    def mode_stimulus(self):
+        from .streams import Stimulus
+        base = self.best['cmd']
+        source = base.get('stimulus_file')
+        expected = self.run.get('stimulus_sha256')
+        if not source or not isinstance(expected, str):
+            raise ValueError('stimulus mode needs replay --stimulus-file and recorded stimulus_sha256')
+        path = Path(source)
+        if not path.is_absolute():
+            path = self.inputs.root / path
+        item = self.inputs.capture.file(path)
+        if item.sha256 != expected:
+            raise ValueError('stimulus sha256 mismatch; restore the input or re-run')
+        stimulus = Stimulus(json.loads(item.copy.read_text()))
+        def command(kept):
+            data = stimulus.candidate(kept)
+            if data is None:
+                return None
+            p = self.out / f'stimulus-{len(self.trials)}.json'
+            p.write_text(json.dumps(data) + '\n')
+            captured = self.inputs.capture.file(p)
+            return base.set(stimulus_file=str(captured.copy)), {
+                'stimulus_sha256': captured.sha256, 'stimulus_groups': kept, 'elf': self.best['elf']}
+        self._stream_search('stimulus', stimulus.groups, command)
 
     def _take(self, rec: dict) -> None:
         c = rec["_cmd"]

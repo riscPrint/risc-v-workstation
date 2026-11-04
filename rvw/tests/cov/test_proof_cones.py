@@ -71,3 +71,35 @@ def test_refused_proof_does_not_contribute_a_proven_cone():
     r = report({'bound_modules': {'h': body}}, 'h', [mapping], [row], {'sha256': 'abc'})
     assert r['properties'][0]['proof_status'] == 'not_proven'
     assert len(r['outside_proven_cones']) == 1
+
+
+@pytest.mark.parametrize('job,guard,expected', [
+    ({'status': 'PASS', 'exit_code': 0, 'free_wires': []}, True, 'reached'),
+    ({'status': 'PASS', 'exit_code': 0, 'free_wires': []}, False, 'inconclusive'),
+    ({'status': 'PASS', 'exit_code': 0}, True, 'inconclusive'),
+    ({'status': 'PASS', 'exit_code': 1, 'free_wires': []}, True, 'inconclusive'),
+    ({'status': 'FAIL', 'exit_code': 0, 'free_wires': []}, True, 'inconclusive'),
+    ({'status': 'PASS', 'exit_code': 0, 'free_wires': ['undriven']}, True, 'inconclusive'),
+])
+def test_activation_needs_its_own_guarded_evidence(job, guard, expected):
+    from rvw.cov.proof_cones import activation
+    assert activation({'jobs': {'activation': job}, 'activation_guard': guard})['status'] == expected
+    assert activation({'jobs': {'cover': job}})['status'] == 'not_measured'
+
+
+@needs_sby
+def test_native_activation_and_requirement_join(tmp_path):
+    dut, harness = TINY.split('module h')
+    cfg, db = _setup(tmp_path, 'module h' + harness, "s == 2'd3", dut=dut, extra={'reset': None})
+    plan = json.loads(cfg.read_text())
+    plan['points'][0].update(property_id='counter.range', requirement_ids=['counter.modulo3'],
+                             activation="s == 2'd1")
+    cfg.write_text(json.dumps(plan))
+    result = prove(cfg, db, tmp_path / 'work', timeout=30)['proof_cones']
+    prop = result['properties'][0]
+    assert prop['activation']['status'] == 'reached'
+    assert prop['proof_core']['status'] == 'unavailable'
+    requirement = result['requirements'][0]
+    assert requirement['requirement_id'] == 'counter.modulo3'
+    assert requirement['property_ids'] == ['counter.range']
+    assert requirement['status'] == 'inconclusive'

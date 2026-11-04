@@ -131,3 +131,22 @@ replay events by cause and evidence; it does not turn replay counts into lost cy
 Predictor direction/target/return outcomes, recovery latency, predictor aliasing
 and context analysis are not implemented by this extension. A flush alone does
 not establish a prediction outcome. BOOM still needs core-owned probe signals.
+
+## Observed predictor outcomes
+
+`#rvw` prediction records add direction, target and return outcomes, observed
+recovery cycles and wrong-path admission counts. See the
+[wire contract](../../../../docs/PLATFORM_CONTRACTS.md#observed-prediction-outcome-extension).
+The `predictions` report groups observations by predictor, kind, warmup,
+alias and context. Each cost gives observed samples, unknown samples, sum and
+maximum. Unknown is not zero. Overlapping groups must not be summed as global
+cost. Flags and contexts describe observations; they do not prove causal effects.
+
+`PredictionOutcome` in SpinalKonata emits this record. Use `PipelineTags.event`
+to bind a project's observed signals. Complete recovery/work counts can arrive
+at recovery completion, before the resolving instruction's terminal R. Leave
+unavailable fields unknown. BOOM stall/commit probe wiring remains core-owned:
+[riscPrint/spinal-boom #12](https://github.com/riscPrint/spinal-boom/issues/12) and
+[#13](https://github.com/riscPrint/spinal-boom/issues/13). BOOM predictor event
+bindings and DUT validation remain open under #49. No predictor measurements
+are claimed from legacy logs.
