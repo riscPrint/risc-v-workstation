@@ -1551,7 +1551,8 @@ records. This report does not assert that an obligation is complete.
 `proof_status` is `proven_conditional` only for an unbounded proof job with PASS,
 exit 0 and no reported free wires. Otherwise it is `not_proven`. `proof_job`
 retains the parent's local job paths and hashes, or is null. All proof assumptions
-and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`.
+and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`
+unless a separate declared activation cover runs, as specified below.
 The solver does not export a proof core in this flow. `proof_core` has
 `status: unavailable`, `cells: null` and a reason. Null is not an empty proof core.
 
@@ -1679,11 +1680,12 @@ and hashes them. It does not modify the upstream models.
 ## Formal event model extension
 
 BMC can explicitly select a sampled event model with `--event-model` and repeatable
-`--event-clock PORT`. Extra clocks must be independent rising-edge top inputs.
+`--event-clock PORT`. Extra clocks must be rising-edge top inputs.
 `--async-reset` separately enables constant-value reset FFs (`$adff`, `$adffe`).
 SBY `multiclock on` applies Yosys `clk2fflogic`. Each step is a global input
 sample, with arbitrary clock rates, phases, simultaneous edges and stalls.
-There are no declared ratio constraints or fairness assumptions.
+Optional periodic schedules constrain sampled clock ratios and phases, as specified
+below. Unscheduled clocks have no ratio constraints. No fairness is inferred.
 Async reset pulses visible for a sample are represented without a clock edge.
 Pulses wholly between samples and analog timing are outside the model.
 
@@ -1705,15 +1707,16 @@ Older reports without this field remain readable.
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
 `status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
 successful eqy run, at least one partition, PASS for every output partition, and
-complete register matching. A timeout, unknown partition or unmatched register
-cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+complete register matching by default. `--unmatched-state prove` instead checks
+closed output cones without name pairing, as specified below. A timeout or unknown
+partition cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
 output directory exits 2. `not_equivalent` requires a failed output partition and
 a VCD counterexample in `traces`. There are no internal state equality assumptions.
 `state_mapping` records automatic or manual pairs and their widths. `unmatched`
 lists unpaired registers on each side. `partitions` records each partition status.
 `inputs` contains each side's capture and snapshot records. `restrictions` records
 the single-clock, two-state model, reset alignment, unchecked startup clocks and
-zero latency difference. Blackbox obligations are refused. Optional `dsec` evidence
+the declared fixed output latency difference. Blackbox obligations are refused. Optional `dsec` evidence
 is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal README
 for the supported subset and initialization limits. This contract is separate from
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
@@ -1972,6 +1975,70 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+
+### Property activation and requirement links
+
+A `cov prove` point can declare an `activation` SystemVerilog expression. The
+runner creates a separate cover job with the same captured inputs and assumptions.
+The expression must be one statement-free expression. A successful cover needs
+exit 0, PASS, no free wires and the existing sanity guard. Only then does
+`proof_cones.properties[].activation.status` become `reached`. Other evidence is
+`inconclusive`; an absent predicate is `not_measured`. This is a user-declared
+activation predicate. It does not establish full property non-vacuity.
+
+The additive `rvw.proof-cones/1` `requirements` array joins each declared
+`requirement_id` to sorted `property_ids`. Property records join activation,
+structural cones and the unavailable solver core through `property_id`. Every
+requirement status stays `inconclusive`. A list of linked properties is not a
+complete set of functional obligations. A structural cone is not a solver core.
+These fields do not change exclusion or gate verdicts.
+
+
+### Related clocks as periodic sampled schedules
+
+Event BMC accepts repeated `--clock-schedule PORT=BITS` options. Declare every
+clock, including `--clock`, or declare none. `clk=01` and `other=0011` describe
+a 2:1 rate ratio. Rotate the bit strings to declare a phase. The leftmost bit is
+sample zero. Each pattern repeats forever. Each must contain both levels and
+2..256 samples. The joint period must not exceed 4096 samples. These are explicit
+proof restrictions, not measured hardware clock relationships.
+
+One solver step advances one global sample. The wrapper constrains clock levels
+at that sample. The event backend samples property data before its triggering
+edge; data that changes with a clock uses its previous sample at that edge.
+Clock schedules do not add analog timing, delta cycles, jitter or events between
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
+The existing reset harness still counts primary-clock edges. Async reset state
+requires the separate `--async-reset` option. Unsupported state controls and raw
+async-triggered properties remain refused. Replay and X flows remain unchanged.
+`event_model.schedules` records the exact patterns; `relationships` states whether
+the run used periodic schedules or unrelated clocks. Native phase tests require
+both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Sequential equivalence latency restrictions
+
+The additive `rvw.formal.equiv/1` `restrictions.latency` is the nonnegative
+candidate lag in clocks (0..64). The reference wrapper delays all output ports by
+that amount. Both wrappers mask outputs until reset cycles plus settle cycles
+plus latency cycles have elapsed. There is no input shift or protocol adapter.
+`restrictions.unmatched_state` is `refuse` by default. With `prove`, unmatched
+register names remain in the inventory but do not block a complete closed-output
+proof. State equality is never assumed. Every partition must still have no
+internal crossbits. Missing partitions, unknown results and tool failures remain
+inconclusive. No named state relation or blackbox obligation is inferred.
+
+
+### Imported single-sample implication
+
+The slang import subset also accepts one top-level `Boolean |-> Boolean` in an
+inline clocked assert or assume property. The pinned frontend patch evaluates
+both operands at the same pre-update sample and checks `!antecedent || consequent`.
+The existing `disable iff` condition gates the check. There are no pending threads.
+`|=>`, delays, repetition, chained and nested implication remain refused before
+a proof job. Qualified engines remain SMTBMC/Yices and ABC BMC3. The captured
+plugin bytes identify the applied lowering. This is not full temporal SVA support.
 
 ### Init platform review marker
 
