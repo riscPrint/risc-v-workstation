@@ -445,3 +445,18 @@ def test_formal_dry_run_builds_pinned_native_slang(tmp_path):
     assert 'build-yosys-slang.py' in result.stdout
     assert '--yosys-config' in result.stdout
     assert not (tmp_path / 'install').exists()
+
+
+def test_slang_checksum_error_precedes_build(tmp_path):
+    import json
+    source = json.loads((ROOT / 'scripts/yosys-slang-sources.json').read_text())[0]
+    downloads = tmp_path / 'downloads'
+    downloads.mkdir()
+    (downloads / (source['name'] + '-' + source['revision'] + '.tar.gz')).write_bytes(b'changed')
+    result = run_group([str(ROOT / 'rvw/.venv/bin/python'),
+                        str(ROOT / 'scripts/build-yosys-slang.py'), '--prefix', str(tmp_path),
+                        '--yosys-config', '/unused/yosys-config'], capture=True, timeout=10)
+    assert result.returncode != 0
+    assert 'archive checksum mismatch' in result.stderr
+    assert not (tmp_path / 'src').exists()
+    assert not (tmp_path / 'build').exists()
