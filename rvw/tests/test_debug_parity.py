@@ -55,3 +55,18 @@ def test_duplicate_labels_need_identity_mapping():
     g['vertices'][1] = dict(g['vertices'][0])
     with pytest.raises(ValueError, match='duplicate vertex'):
         compare(g, g, kind='trace')
+
+
+def test_explicit_source_identity_preserves_package_line_and_graph_fields():
+    old = graph()
+    old['vertices'][1]['file'] = 'Misc.scala'
+    new = deepcopy(old)
+    new['vertices'][1]['file'] = '/core/plugin/Misc.scala'
+    kw = dict(kind='trace', source_files=[('Misc.scala', '/core/plugin/Misc.scala')])
+    assert not compare(old, new, kind='trace')
+    assert compare(old, new, **kw)
+    for field, value in [('file', '/core/demo/Misc.scala'), ('line', 8), ('char', 2)]:
+        bad = deepcopy(new)
+        bad['vertices'][1][field] = value
+        assert not compare(old, bad, **kw)
+    assert old['vertices'][1]['file'] == 'Misc.scala'

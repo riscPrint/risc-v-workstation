@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 
-def normalize(value, *, roots=(), callers=()):
+def normalize(value, *, roots=(), callers=(), source_files=()):
     value = copy.deepcopy(value)
     def walk(node):
         if isinstance(node, list):
@@ -20,6 +20,8 @@ def normalize(value, *, roots=(), callers=()):
             return node
         node = {k: walk(v) for k, v in node.items()}
         if isinstance(node.get('file'), str):
+            # Explicit file identities are audited separately from changed callers.
+            node['file'] = dict(source_files).get(node['file'], node['file'])
             path = Path(node['file'])
             if path.is_absolute():
                 matches = [path.relative_to(Path(r)).as_posix() for r in roots if path.is_relative_to(Path(r))]
@@ -60,8 +62,8 @@ def graph_key(graph):
     return metadata, Counter(vertices), Counter(edges)
 
 
-def compare(left, right, *, kind, left_roots=(), right_roots=(), callers=()):
-    a = normalize(left, roots=left_roots, callers=callers)
+def compare(left, right, *, kind, left_roots=(), right_roots=(), callers=(), source_files=()):
+    a = normalize(left, roots=left_roots, callers=callers, source_files=source_files)
     b = normalize(right, roots=right_roots)
     if kind == 'blocks':
         # The extraction time is not design/source-navigation information.
