@@ -5,6 +5,9 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action in ('sched-generate', 'sched-measure'):
+        from .sched import generate, measure
+        return (generate if action == 'sched-generate' else measure)(**kw)
     if action == 'measure':
         from .measure import measure
         return measure(**kw)
@@ -49,6 +52,17 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
+    for action in ('sched-generate', 'sched-measure'):
+        p = sub.add_parser(action)
+        p.set_defaults(func=_run)
+        p.add_argument('description_path')
+        p.add_argument('--out', required=True)
+        p.add_argument('--json', action='store_true')
+        if action == 'sched-measure':
+            p.add_argument('--count', type=int, default=32)
+            p.add_argument('--timeout', type=float, default=600)
+            p.add_argument('--cc', default='riscv64-unknown-elf-gcc')
+            p.add_argument('--mca', default='llvm-mca')
     for action, fields in (('search', ('plan',)), ('predict', ('candidate',)),
                            ('score-prediction', ('prediction', 'rtl'))):
         p = sub.add_parser(action)

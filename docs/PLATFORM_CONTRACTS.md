@@ -2110,3 +2110,26 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+## C9 compiler scheduling extension
+
+`rvw arch sched-generate` reads `rvw.sched-core/1`. Required fields are `name`,
+`config`, `isa` (rv32im or rv64im), `entry`, `issue_width`, `buffer_size`,
+`resources` (identifier to instance count), `classes` and `mca_cpu`.
+Each class requires `name`, `resource`, `latency`, `occupancy`, `llvm_opcodes`,
+`gcc_type`, `mnemonic` and `encoding` (base RISC-V instruction word).
+Cycles and counts are integers. Unknown fields, duplicate class/type/opcode
+mappings and unsupported instructions fail. Occupancy is per unit instance.
+The command writes partial `model.td` and `model.md` target fragments.
+
+`rvw arch sched-measure` selects an existing project and C1 config. It builds
+paired unrolled ELFs per class and mode. It requires passing C1 evidence with
+matching ELF hash, core, config, seed 1 and fixed memory latency 0. C2 must end
+with pass and contain every expected instruction at the exact PC and encoding.
+Traps, order gaps and decreasing cycles are errors. Measurement output is
+`rvw.sched-measure/1`, with `status=reported`, `model_kind=builtin-baseline`,
+`generated_model_accuracy=inconclusive`, tool identities, raw evidence hashes,
+per-size cycles and per-class signed slope errors. Missing evidence exits 2.
+The report is local timing evidence, not a C4 verdict or complete C8 capture.
+Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
+validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
