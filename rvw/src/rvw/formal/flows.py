@@ -21,6 +21,13 @@ def _inputs(args, out: Path, defines: list[str] = ()) -> tuple[InputSnapshot, li
     args._formal_tools_token = ACTIVE.set(snapshot.tools)
     ports = common.module_ports(snapshot.sources, args.top, out, args.timeout, defines, snapshot=snapshot,
                                 allow_async_reset=getattr(args, "async_reset", False))
+    # App port maps must match the sealed DUT interface. Yosys can otherwise resize
+    # instance connections and leave an omitted port free without rejecting the RTL.
+    for module, expected in getattr(args, "expected_interfaces", {}).items():
+        actual = {p.name: {"direction": p.direction, "width": p.width}
+                  for p in common.ports_from_json(out / "module_ports.json", module)}
+        if actual != expected:
+            raise ValueError(f"declared port map differs from elaborated interface: {module}")
     # Ports and state controls describe this exact elaboration. Later probes and proofs
     # read it instead of re-reading Verilog or running its preprocessor again.
     model = snapshot.seal(out / 'module_ports.il')

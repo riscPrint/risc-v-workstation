@@ -110,11 +110,11 @@ def generate(plan, prop):
             '\n'.join(body) + '\nendmodule\n')
 
 
-def flow(files, top, clock, reset, out, depth, engine, timeout, mode='bmc'):
+def flow(files, top, clock, reset, out, depth, engine, timeout, mode='bmc', expected_interfaces=None):
     from .cli import _flow
     args = Namespace(verilog=[str(p) for p in files], top=top, clock=clock, reset=reset,
                      out=str(out), depth=depth, engine=engine, timeout=timeout, mode=mode,
-                     checks=None, reset_active='high', reset_cycles=1, free_reset=False,
+                     expected_interfaces=expected_interfaces or {}, checks=None, reset_active='high', reset_cycles=1, free_reset=False,
                      first_failure=True, tie=None, cut=None, event_model=False, event_clock=None,
                      async_reset=False, frontend='verilog', json=False)
     with contextlib.redirect_stdout(io.StringIO()):
@@ -151,7 +151,7 @@ def run(args):
         wrapper = out / (prop['id'] + '.sv')
         wrapper.write_text(text)
         result = flow([*files, wrapper], 'rvwa_top', plan['clock'], plan['reset'],
-                      out / prop['id'], args.depth, args.engine, args.timeout, args.mode)
+                      out / prop['id'], args.depth, args.engine, args.timeout, args.mode, {plan['top']: plan['ports']})
         rows.append({'property_id': prop['id'], 'requirement_ids': prop.get('requirement_ids', []),
                      'kind': prop['kind'], 'status': result['status'],
                      'proof_kind': result['proof_kind'], 'result': f'{prop["id"]}/result.json',

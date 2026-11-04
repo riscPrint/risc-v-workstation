@@ -4,9 +4,14 @@ from pathlib import Path
 import json
 import math
 import shutil
+import sys
+import re
+import time
+
+from rvw.common.proc import run_group
 
 from . import common
-from .apps import flow, ident
+from .apps import ident
 
 ENGINES = {'smtbmc:yices': 'yices-smt2', 'smtbmc:z3': 'z3',
            'smtbmc:bitwuzla': 'bitwuzla', 'smtbmc:boolector': 'boolector',
@@ -34,6 +39,81 @@ def compare(rows, baseline, candidate, margin=0.05):
             'noninferior_on_suite': max(ratios) <= 1 + margin,
             'superior_on_suite': max(ratios) < 1 - margin,
             'scope': 'All paired cases in this run; no population or commercial parity inference'}
+
+
+def measure(sources, case, engine, target, timeout):
+    """Measure the complete command. Native time reports process-tree maximum RSS."""
+    command = [sys.executable, '-m', 'rvw', 'formal', case['mode'], '--verilog',
+               *map(str, sources), '--top', case['top'], '--clock', case['clock'],
+               '--reset', case['reset'], '--out', str(target), '--depth', str(case['depth']),
+               '--engine', engine, '--timeout', str(timeout)]
+    timer = Path('/usr/bin/time')
+    if timer.exists():
+        command = [str(timer), '-l' if sys.platform == 'darwin' else '-v', *command]
+    started = time.monotonic()
+    # Allow frontend, reachability and capture overhead beyond the solver timeout.
+    process = run_group(command, capture=True, timeout=timeout * 4 + 30)
+    elapsed = time.monotonic() - started
+    path = target / 'result.json'
+    if not path.exists():
+        return {'status': 'timeout' if process.timed_out else 'error', 'wall_s': elapsed,
+                'reason': (process.stderr or '')[-2000:]}
+    result = json.loads(path.read_text())
+    if process.timed_out or process.returncode not in (0, 1):
+        result['status'] = 'timeout' if process.timed_out else 'error'
+    memory = None
+    if timer.exists():
+        if sys.platform == 'darwin':
+            match = re.search(r'(\d+)\s+maximum resident set size', process.stderr or '')
+            memory = int(match[1]) if match else None
+        else:
+            match = re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)', process.stderr or '')
+            memory = int(match[1]) * 1024 if match else None
+    log = target / 'sby/logfile.txt'
+    steps = re.findall(r'Checking assertions in step (\d+)', log.read_text() if log.exists() else '')
+    result.update(wall_s=elapsed, peak_memory_bytes=memory,
+                  reached_depth=max(map(int, steps)) if steps else None)
+    (target.parent / (target.name + '.measurement.log')).write_text(
+        (process.stdout or '') + (process.stderr or ''))
+    return result
+
+
+def licensed_adapter(adapter, sources, case, directory, timeout):
+    """Observe an explicitly configured local adapter. It owns licence setup."""
+    from rvw.common.capture import Capture
+    capture = Capture(directory / 'adapter-inputs')
+    tool = capture.tool(adapter['command'])
+    request = {'schema': 'rvw.formal-adapter-request/1',
+               'case': case, 'sources': [str(p) for p in sources]}
+    payload = json.dumps(request, sort_keys=True)
+    digest = sha256(payload.encode()).hexdigest()
+    request_path = directory / 'request.json'
+    request_path.write_text(payload)
+    response_path = directory / 'response.json'
+    process = run_group([tool.path, str(request_path), str(response_path)],
+                        capture=True, timeout=timeout)
+    row = {'case': case['id'], 'engine': adapter['id'], 'mode': case['mode'],
+           'status': 'inconclusive', 'wall_s': None, 'peak_memory_bytes': None,
+           'reached_depth': None, 'evidence_kind': 'trusted_adapter_observation',
+           'tools': capture.record()}
+    (directory / 'adapter.log').write_text((process.stdout or '') + (process.stderr or ''))
+    if process.returncode or process.timed_out or not response_path.exists():
+        return row
+    response = json.loads(response_path.read_text())
+    if (response.get('schema') != 'rvw.formal-adapter-response/1'
+            or response.get('request_sha256') != digest
+            or response.get('status') not in ('pass', 'fail', 'inconclusive')
+            or response.get('mode') != case['mode']):
+        return row
+    for key in ('wall_s', 'peak_memory_bytes', 'reached_depth'):
+        value = response.get(key)
+        if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+            return row
+    if not isinstance(response.get('engine_version'), str) or not response['engine_version']:
+        return row
+    row.update({k: response[k] for k in ('status', 'wall_s', 'peak_memory_bytes',
+                                       'reached_depth', 'engine_version')})
+    return row
 
 
 def run(args):
@@ -64,6 +144,13 @@ def run(args):
         for key in ('top', 'clock', 'reset'):
             ident(case[key])
         cases.append((case, files))
+    adapters = plan.get('adapters', [])
+    for adapter in adapters:
+        ident(adapter['id'])
+        if adapter['id'] in ENGINES or not Path(adapter['command']).is_absolute():
+            raise ValueError('adapter needs unique ID and absolute executable path')
+    if len({a['id'] for a in adapters}) != len(adapters):
+        raise ValueError('duplicate adapter ID')
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     common.write_json(out / 'manifest.json', plan)
@@ -88,14 +175,18 @@ def run(args):
             elif executable:
                 target = directory / engine.replace(':', '_')
                 try:
-                    result = flow(sources, case['top'], case['clock'], case['reset'], target,
-                                  case['depth'], engine, args.timeout, case['mode'])
+                    result = measure(sources, case, engine, target, args.timeout)
                     row.update(status=result['status'], wall_s=result['wall_s'],
-                               tools=result.get('tools'), result=str(target.relative_to(out) / 'result.json'))
+                               tools=result.get('tools'), peak_memory_bytes=result.get('peak_memory_bytes'),
+                               reached_depth=result.get('reached_depth'), reason=result.get('reason'), result=str(target.relative_to(out) / 'result.json'))
                     # Requested depth is not an observed engine depth.
                 except (ValueError, OSError, SystemExit) as exc:
                     row.update(status='error', reason=str(exc))
             rows.append(row)
+        for adapter in adapters:
+            adapter_dir = directory / adapter['id']
+            adapter_dir.mkdir()
+            rows.append(licensed_adapter(adapter, sources, case, adapter_dir, args.timeout))
     agreement = []
     for case, _ in cases:
         samples = [r for r in rows if r['case'] == case['id'] and r['status'] not in ('not_installed', 'unsupported_mode')]
@@ -105,10 +196,10 @@ def run(args):
         agreement.append({'case': case['id'], 'status': status})
     baseline = plan.get('baseline', 'smtbmc:yices')
     report = {'schema': 'rvw.formal-bench-results/1', 'rows': rows, 'agreement': agreement,
-              'comparisons': {e: compare(rows, baseline, e) for e in installed if e != baseline},
-              'limits': 'Wall time includes frontend, capture and reachability checks. Peak memory and reached '
-                        'depth are not collected. Installed unsupported engines are not silently counted as passes. '
-                        'No licensed commercial adapter or published-result comparison in this increment.'}
+              'comparisons': {e: compare(rows, baseline, e) for e in [*installed, *(a['id'] for a in adapters)] if e != baseline},
+              'limits': 'Wall time includes frontend, capture and reachability checks. Peak memory is native time RSS. '
+                        'Reached depth is the largest explicitly logged assertion step, otherwise null. Installed unsupported engines are not silently counted as passes. '
+                        'Licensed adapters supply trusted observations, not independently replayed proofs. No published-result comparison.'}
     common.write_json(out / 'result.json', report)
     print(json.dumps(report, indent=2) if args.json else str(out / 'result.json'))
     return 0 if all(a['status'] == 'agree' for a in agreement) else 1
