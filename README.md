@@ -96,6 +96,9 @@ The separate VexRiscv project passed 41 aligned RV32UI tests, a four-test commit
 gate with equal RTL hashes, a 17-instruction Spike smoke comparison and database
 queries. See the [VexRiscv limits](examples/vexriscv/README.md#design-and-limits).
 
+See the [public release procedure](docs/RELEASING.md) for release gates.
+Source setup support does not establish clean-host qualification.
+
 ## Status (P1+P2 integration branch, 2026-11-04)
 
 Supported scope under contract C8:

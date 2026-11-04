@@ -3,7 +3,9 @@
 The table separates prior tool use from clean-install support. A version probe
 alone does not test a tool flow. Clean-install results belong in
 [issue #17](https://github.com/riscPrint/risc-v-workstation/issues/17).
-No complete pinned combination is qualified yet. The native installer workflow needs a Linux self-hosted runner. GitHub-hosted
+No complete pinned combination is qualified yet. Use the
+[native qualification command](../scripts/README.md#native-install-qualification)
+to collect per-case install and runtime results. The native installer workflow needs a Linux self-hosted runner. GitHub-hosted
 workflows are disabled. Ubuntu and Fedora runtime qualification is pending. The shared macOS host is not a clean-install host.
 
 | Tool | Version in the check table | Source selection | Qualification |
