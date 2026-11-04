@@ -83,3 +83,14 @@ def test_regress_cli():
     with pytest.raises(SystemExit) as result:
         main(["regress", "uvm", "--help"])
     assert result.value.code == 0
+
+
+@pytest.mark.parametrize('fault,diagnostic', [
+    ('ral','[RAL] read or prediction mismatch'),
+    ('pins','[PINS] interrupt/debug pin mismatch')])
+def test_control_and_ral_faults_need_expected_failure(fault,diagnostic):
+    assert uvm.evidence(diagnostic,1,False,negative=fault)
+    assert not uvm.evidence(diagnostic,0,False,negative=fault)
+    assert not uvm.evidence(diagnostic,1,True,negative=fault)
+    assert not uvm.evidence('unrelated crash',1,False,negative=fault)
+    assert not uvm.evidence(diagnostic+'\nRVW_UVM_DONE',1,False,negative=fault)
