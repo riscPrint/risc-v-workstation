@@ -995,7 +995,9 @@ Existing and interrupted projects still require a fresh run directory.
 Raw databases and all saved `rvw.mutation/1` results provide observations only. This includes
 `/1` records with `dependency_complete: true`. A fresh `/2` writer must attach and validate
 its declaration, capture and tool evidence before it classifies outcomes. Saved-result role,
-failed-run and mutation-control checks still apply.
+failed-run and mutation-control checks still apply. All selected equivalence
+checks must return PASS before a mutation can be equivalent. Missing checks
+stay pending. Conflicting equivalence PASS and FAIL results are errors.
 
 ### Result generation layout
 
