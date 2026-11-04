@@ -162,7 +162,28 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate,live} ...
+usage: rvw cosim [-h] [--project PROJECT] {dii,check,generate,live} ...
+```
+
+### `rvw cosim dii`
+
+```text
+usage: rvw cosim dii [-h] [--project PROJECT] {replay,serve} ...
+```
+
+### `rvw cosim dii replay`
+
+```text
+usage: rvw cosim dii replay [-h] --tokens TOKENS --core-endpoint CORE_ENDPOINT
+    --sail-endpoint SAIL_ENDPOINT [--timeout TIMEOUT] [--json] [--project
+    PROJECT]
+```
+
+### `rvw cosim dii serve`
+
+```text
+usage: rvw cosim dii serve [-h] [--listen LISTEN] --hook HOOK [--max-streams
+    MAX_STREAMS] [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim check`

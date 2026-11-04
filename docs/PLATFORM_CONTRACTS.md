@@ -415,6 +415,18 @@ complete file identity. Launch metadata captures the executable identity and
 argument list; adapter build dependencies still require C1 provenance.
 
 
+### Unspecified mscratch reset bits in C2 comparison
+
+For a declared trace from reset, CSR synchronization can resolve the unknown
+reset bits of `mscratch` (0x340) from its first read or C2 CSR snapshot.
+`rvw.cosim/1.recent_synchronizations` records `reason: csr_reset_unknown`,
+`csr`, `mask`, `reference`, `core`, `order` and `source` (`rd_wdata|csr_state`).
+The reference takes only unknown bits. Full writes clear the unknown mask;
+set/clear writes clear their written bits from that mask. Subsequent observations
+remain strict. The rule is disabled by strict CSR synchronization or by
+`trace_from_reset=false`. Unsupported reference synchronization is an error.
+No other CSR reset state is inferred by this rule. C1/C2 formats do not change.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
@@ -1991,6 +2003,24 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## TestRIG socket transport (`rvw.dii/1`)
+
+`rvw cosim dii serve` and `replay` use RVFI-DII v1, separate from C1/C2.
+See [the hook contract](TESTRIG.md) for wire pins, reset, timing and memory.
+The server accepts at most 65,536 tokens per stream and a finite stream count.
+Socket operations share a per-stream deadline. Replay accepts exactly one
+nonempty stream terminated by EndOfTrace. It records the token SHA-256 and
+both endpoints. These labels do not verify the remote model or its ISA config.
+The caller must supply an independent Sail model. Each endpoint returns ordered
+88-byte retirement packets and a halt delimiter. Empty, short, truncated,
+unsupported or timed-out streams cannot earn a match. Exit codes: match or
+served 0, mismatch 1, error 2, inconclusive 3. `served` is not equivalence.
+The result has `schema`, `protocol` and `status`. Mismatch adds `index` and
+`differences`; match adds `instructions` and `trace_complete`. Short streams add
+`cause`, `core_retired` and `sail_retired`. Errors add `message`. All results
+print one JSON document. This CLI mode has no MCP endpoint yet.
+
 
 ### Observed prediction outcome extension
 
