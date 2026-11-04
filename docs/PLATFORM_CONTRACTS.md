@@ -1891,6 +1891,7 @@ report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
 
+
 ## Standalone HDL semantic tests
 
 `rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
@@ -1909,6 +1910,27 @@ one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
 A failed compile, failed run, timeout or missing completion marker gives error.
 Requirements and missing-tool errors occur before output creation (CLI exit 2).
 This format does not capture transitive file inputs or establish C8 reuse.
+
+## Workload reference flow
+
+`rvw workloads list|build|verify` uses `rvw.workloads/1` manifests.
+See [the workload README](../rvw/src/rvw/workloads/README.md) for fields.
+`rvw.workload-build/1` records the manifest, captured source/runtime hashes,
+compiler identity and per-workload commands, ELF hashes and sizes.
+It means build completion, not output correctness.
+`rvw.workload-verify/1` binds the build report SHA-256, oracle identity,
+executed commands, ELF hashes, exits, timeout flags and stdout/stderr hashes.
+`pass` requires a nonempty set, exit 0, no timeout and exact expected stdout
+for every row. A timeout, nonzero exit or mismatch is `fail` (exit 2).
+Invalid input or missing tools give an error (exit 2). No C4 verdict is issued.
+The flow requires stable tools and inputs. Local external scripts and compiler
+sysroots are not a complete C8 capture. Reports must not grant gate acceptance.
+With `verify --trace`, successful Spike rows also contain `profile` with
+whole-program instruction category counts and observed conditional-branch
+transitions. Compressed instructions are decoded as RV64. FP and memory
+categories overlap. Cache misses and branch mispredictions stay null.
+The retained stderr file is the hashed instruction-log evidence.
+
 
 ### C9 search, repeats and prediction ledger
 

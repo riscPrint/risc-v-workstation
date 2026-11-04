@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,hdl,cocotb,soc,wave}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -787,6 +787,33 @@ usage: rvw wave cut [-h] [--json] [--period PERIOD] [--clock CLOCK] --from T0
 ```text
 usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--project PROJECT] wave
+```
+
+### `rvw workloads`
+
+```text
+usage: rvw workloads [-h] [--project PROJECT] {list,build,verify} ...
+```
+
+### `rvw workloads list`
+
+```text
+usage: rvw workloads list [-h] [--json] [--manifest MANIFEST] [--project
+    PROJECT]
+```
+
+### `rvw workloads build`
+
+```text
+usage: rvw workloads build [-h] [--json] [--manifest MANIFEST] --source SOURCE
+    --out OUT [--cc CC] [--bench BENCH] [--project PROJECT]
+```
+
+### `rvw workloads verify`
+
+```text
+usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
+    ORACLE] [--trace] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ## MCP tools
