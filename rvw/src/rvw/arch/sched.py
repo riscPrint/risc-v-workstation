@@ -185,6 +185,8 @@ def slope_report(samples, count):
 
 
 def command(argv, log, timeout, env=None):
+    write_json(Path(str(log) + '.command.json'),
+               {'argv': list(map(str, argv)), 'cwd': str(Path.cwd()), 'timeout': timeout})
     with Path(log).open('w') as f:
         r = run_group(list(map(str, argv)), stdout=f, stderr=f, timeout=timeout, grace=20, env=env)
     if r.returncode or r.timed_out:
