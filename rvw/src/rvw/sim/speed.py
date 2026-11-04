@@ -118,7 +118,8 @@ def compare(pairs, *, min_seconds=1.0, resamples=10000, seed=1):
 def command(args):
     try:
         report = compare(args.pair, min_seconds=args.min_seconds, resamples=args.resamples, seed=args.seed)
-        args.out.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        with args.out.open('x') as output:
+            output.write(json.dumps(report, indent=2, allow_nan=False) + '\n')
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(json.dumps(dict(status='inconclusive', error=str(exc))))
         return 3
@@ -134,7 +135,7 @@ def sweep(args):
     from rvw.common.proc import run_group
     if (args.repeats < 5 or not positive(args.timeout) or args.timeout > 1800
             or not positive(args.min_seconds) or not args.threads or any(n < 1 for n in args.threads)
-            or len(set(args.threads)) != len(args.threads)):
+            or args.max_cycles <= 0 or len(set(args.threads)) != len(args.threads)):
         raise ValueError('use >=5 repeats, unique positive threads, and timeout in (0, 1800]')
     adapter = args.adapter.resolve(strict=True)
     elf = args.elf.resolve(strict=True)
@@ -200,3 +201,11 @@ def sweep(args):
         publish()
     print(json.dumps(dict(status=plan['status'], report=str(output))))
     return 0 if plan['status'] == 'equivalent' else 3
+
+
+def sweep_command(args):
+    try:
+        return sweep(args)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(json.dumps(dict(status='inconclusive', error=str(exc))))
+        return 3
