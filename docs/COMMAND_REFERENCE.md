@@ -254,7 +254,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -305,6 +305,14 @@ usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
 ```text
 usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
     PROJECT]
+```
+
+### `rvw formal connectivity`
+
+```text
+usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
+    [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
+    ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
 ```
 
 ### `rvw formal equiv`

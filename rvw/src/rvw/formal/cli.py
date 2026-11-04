@@ -126,6 +126,8 @@ def register(sub) -> None:
     r.add_argument("--json", action="store_true")
     from rvw.formal.riscv import main as riscv_main
     r.set_defaults(func=riscv_main)
+    from .connectivity import register as register_connectivity
+    register_connectivity(s)
     from .equiv import register as register_equiv
     register_equiv(s)
 
