@@ -421,3 +421,13 @@ def test_walk_checker_superpage_target_uses_low_virtual_bits():
     with pytest.raises(ValueError, match='ordered'):
         check_walk(scenario(), [dict(kind='bus_a', cycle=c, address='0x0', opcode=4,
                                     size_log2=3) for c in (5, 4)])
+
+
+def test_root_switch_uses_distinct_tables_and_reuses_original_asid():
+    text = assembly(scenario(remap=True, root_switch=True, asid=7, fence='va-asid'))
+    assert text.count('csrw satp, t0') == 4
+    assert 'li t0, ' + str((8 << 60) | (7 << 44) | (0x80013000 >> 12)) in text
+    assert text.count('.dword') == 3076
+    row = scenario(remap=True, nonleaf_global=True, fence='asid')
+    with pytest.raises(ValueError, match='global'):
+        assembly(row)

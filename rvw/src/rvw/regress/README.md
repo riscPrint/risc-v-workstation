@@ -622,3 +622,11 @@ requires an external transaction that contains the translated physical target.
 cache-satisfied target remain inconclusive. Remaps, faults, hardware A/D updates
 and Bare mode remain unsupported. This field cannot pass architectural bins,
 prove ordering, bind a cache transaction to one instruction or close #84.
+
+`root_switch: true` requires `remap`. It allocates a second root and two child
+tables. It switches to the second root, back to the first, and to the second
+again with the same ASID. Each switch uses the selected fence scope. Data must
+match that root after each fence. `nonleaf_global: true` sets G on the non-leaf
+PTEs. Remaps then require an all-ASID fence (`all` or `va`). These cases check
+single-hart effects only. They do not test concurrent races, shootdown messages
+or cross-hart completion. Speculation and extra invalidation remain permitted.

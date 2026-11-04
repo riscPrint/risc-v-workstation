@@ -51,7 +51,7 @@ def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -77,7 +77,7 @@ def validate(s):
         raise ValueError('remap requires an 8-byte access')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
-    for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid'):
+    for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid', 'root_switch', 'nonleaf_global'):
         if key in s and type(s[key]) is not bool:
             raise ValueError(f'{key} must be boolean')
     for key in ('va', 'pa'):
@@ -91,8 +91,12 @@ def validate(s):
     if s.get('remap', False):
         if s['level'] != 0 or s['access'] != 'load' or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA:
             raise ValueError('remap requires a successful level-0 load from DATA')
-        if 'G' in s['flags'] and s.get('fence', 'all') not in ('all', 'va'):
+        if ('G' in s['flags'] or s.get('nonleaf_global')) and s.get('fence', 'all') not in ('all', 'va'):
             raise ValueError('global remap requires an all-ASID fence')
+    if s.get('nonleaf_global') and s['level'] == 2:
+        raise ValueError('nonleaf_global requires a non-leaf PTE')
+    if s.get('root_switch') and (not s.get('remap') or s.get('unfenced') or s.get('switch_asid')):
+        raise ValueError('root_switch requires remap and excludes unfenced/switch_asid')
     if 'remap' in s and type(s['remap']) is not bool:
         raise ValueError('remap must be boolean')
     if type(s.get('value', 42)) is not int or not 0 <= s.get('value', 42) < 2**63:
@@ -130,6 +134,16 @@ def assembly(s):
     for depth, table in enumerate(tables):
         i = 2 - depth
         table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+    if s.get('nonleaf_global'):
+        for depth, table in enumerate(tables[:-1]):
+            table[indexes[2 - depth]] |= FLAGS['G']
+    if s.get('root_switch'):
+        alternate = [list(table) for table in tables]
+        for depth, table in enumerate(alternate):
+            level_index = 2 - depth
+            table[indexes[level_index]] = ((((ROOT + 4096 * (depth + 4)) >> 12) << 10) | 1 | (FLAGS['G'] if s.get('nonleaf_global') else 0)
+                if depth < 2 else (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags'])))
+        tables += alternate
     leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
     va += s.get('offset', 0)
     fault = s['expect'] != 'success'
@@ -193,7 +207,22 @@ check_data:
     code += f" li t1, {43 if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
-        code += f''' li t0, {leaf}
+        if s.get('root_switch'):
+            # Same ASID, different root. Fence each transition, including reuse.
+            for root, value in ((ROOT + 12288, 43), (ROOT, 42), (ROOT + 12288, 43)):
+                code += f''' li t0, {(8 << 60) | (asid << 44) | (root >> 12)}
+ csrw satp, t0
+ {fence}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, {value}
+ bne a0, t1, fail
+'''
+        else:
+            code += f''' li t0, {leaf}
  li t1, {replacement}
  sd t1, 0(t0)
 '''

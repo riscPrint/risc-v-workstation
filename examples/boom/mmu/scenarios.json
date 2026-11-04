@@ -584,6 +584,90 @@
       "bins": [
         "sv39.fetch-a-clear"
       ]
+    },
+    {
+      "id": "root-switch-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "all",
+      "bins": [
+        "tlb.root-switch-all"
+      ]
+    },
+    {
+      "id": "root-switch-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "va",
+      "bins": [
+        "tlb.root-switch-va"
+      ]
+    },
+    {
+      "id": "root-switch-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "asid",
+      "bins": [
+        "tlb.root-switch-asid"
+      ]
+    },
+    {
+      "id": "root-switch-va-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "root_switch": true,
+      "asid": 7,
+      "fence": "va-asid",
+      "bins": [
+        "tlb.root-switch-va-asid"
+      ]
+    },
+    {
+      "id": "nonleaf-global-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "nonleaf_global": true,
+      "asid": 7,
+      "fence": "all",
+      "bins": [
+        "tlb.nonleaf-global-all"
+      ]
+    },
+    {
+      "id": "nonleaf-global-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "remap": true,
+      "nonleaf_global": true,
+      "asid": 7,
+      "fence": "va",
+      "bins": [
+        "tlb.nonleaf-global-va"
+      ]
     }
   ]
 }

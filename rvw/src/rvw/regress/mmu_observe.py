@@ -25,7 +25,7 @@ def check_walk(s, events):
     for depth in range(3 - s['level']):
         level = 2 - depth
         address = ROOT + depth * 4096 + ((va >> (12 + 9 * level)) & 511) * 8
-        pte = (((ROOT + (depth + 1) * 4096) >> 12) << 10) | 1
+        pte = (((ROOT + (depth + 1) * 4096) >> 12) << 10) | 1 | (FLAGS['G'] if s.get('nonleaf_global') else 0)
         if level == s['level']:
             pte = ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         expected[address] = pte
