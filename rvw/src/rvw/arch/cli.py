@@ -14,6 +14,9 @@ def execute_json(action, **kw):
     if action in ('predict', 'score-prediction'):
         from .ledger import predict, score_prediction
         return (predict if action == 'predict' else score_prediction)(**kw)
+    if action == 'pareto':
+        from .dse import pareto
+        return pareto(**kw)
     if action == 'fit':
         from .fitting import fit
         return fit(**kw)
@@ -57,6 +60,10 @@ def register(subparsers):
             p.add_argument(field)
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
+    p = sub.add_parser('pareto')
+    p.set_defaults(func=_run)
+    p.add_argument('plan')
+    p.add_argument('--json', action='store_true')
     p = sub.add_parser('memory-report')
     p.set_defaults(func=_run)
     p.add_argument('observations')

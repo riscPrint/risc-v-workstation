@@ -370,7 +370,8 @@ contains all point records and a Pareto list for the single objective: minimize
 the sum of selected ROI cycles. Each workload has equal weight. Ties remain.
 This is a speed-only frontier. Area, power and uncertainty are unknown. All
 points are model-only and need RTL confirmation. Multi-objective area/power
-trade-offs, uncertainty intervals and RTL confirmation remain open work.
+trade-offs and declared uncertainty intervals use `arch pareto` below. RTL
+confirmation remains open work.
 A partial sweep reports inconclusive and exits 3. Input errors exit 2.
 
 ## Linux reference flow
@@ -536,3 +537,26 @@ MCP exposes `arch_search`, `arch_measure`, `arch_predict` and
 Native VexRiscv fitting still needs independently checked ROI event mappings.
 Description tests and synthetic subprocess tests do not establish native model
 fidelity. No BOOM fitted parameters belong in this repository.
+
+### Multi-objective interval comparison
+
+`rvw arch pareto plan.json --json` (MCP `arch_pareto`) compares saved model
+reports. The plan has schema `rvw.arch-pareto-plan/1` and a `points` array.
+Each point has a unique `id`, a `report` path and a `costs` path. Paths are
+relative to the plan. All reports must use the same ELFs and ROI instruction
+counts. Raw model evidence and ELF hashes are checked again.
+
+Each costs file has schema `rvw.arch-costs/1`, `report_sha256`, a nonempty
+`method`, and `cycles`, `area_mm2`, `power_w`. Each objective is either null
+or `[lower, nominal, upper]`, with positive ordered values. Nominal cycles
+must equal summed model ROI cycles. State the source and method for each
+cost estimate. These bounds are declarations, not inferred confidence levels.
+Missing objectives exclude a point and make the result inconclusive.
+
+All three objectives are minimized. The nominal frontier uses central values.
+The conservative frontier removes a point only when another point's upper
+bounds are no greater than its lower bounds, with at least one strict gain.
+Overlapping bounds can therefore retain a nominally dominated point. Costs
+files and reports are hash-bound in the output. All points remain model-only.
+Matching RTL performance and physical area/power evidence remain required
+before claims about hardware gains.

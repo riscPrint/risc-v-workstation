@@ -1941,3 +1941,18 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+
+### Architecture Pareto intervals
+
+`rvw.arch-pareto-plan/1` has `points` with unique `id`, `report` and `costs`
+paths, relative to the plan. Reports are checked `rvw.arch-run/1` gem5 runs
+with identical ELF hashes and ROI instruction counts. `rvw.arch-costs/1`
+has `report_sha256`, nonempty `method`, and `cycles`, `area_mm2`, `power_w`.
+Objectives are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are producer declarations.
+`rvw.arch-pareto/1` records plan/report/cost hashes, objective intervals,
+`eligible`, `evidence_class: model-only`, `nominal_frontier` and
+`conservative_frontier`. Conservative dominance requires all upper bounds
+no greater than the other point's lower bounds and at least one strict gain.
+Null objectives exclude a point and make status inconclusive (CLI exit 3).
+No point is RTL-confirmed by this command.

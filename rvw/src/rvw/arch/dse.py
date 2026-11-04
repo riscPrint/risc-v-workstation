@@ -124,3 +124,71 @@ def sweep(spec, out, project=None, bench=None):
                   limits='Speed-only frontier. Area, power and uncertainty are unknown. No RTL confirmation.')
     write_json(out / 'dse.json', result)
     return result
+
+
+def pareto(plan, project=None):
+    """Compare saved model results with explicit, hash-bound cost intervals."""
+    if project is not None:
+        from rvw.common.project import load_project
+        load_project(project)
+    path = Path(plan).resolve()
+    raw = path.read_bytes()
+    data = core.read_json(raw)
+    if set(data) != {'schema', 'points'} or data['schema'] != 'rvw.arch-pareto-plan/1':
+        raise core.ArchError('expected rvw.arch-pareto-plan/1')
+    if not isinstance(data['points'], list) or not data['points']:
+        raise core.ArchError('points must be nonempty')
+    rows, seen, workload = [], set(), None
+    for item in data['points']:
+        if not isinstance(item, dict) or set(item) != {'id', 'report', 'costs'}:
+            raise core.ArchError('each point needs id, report and costs')
+        identity = item['id']
+        if not isinstance(identity, str) or not identity.strip() or identity in seen:
+            raise core.ArchError('point IDs must be nonempty and unique')
+        seen.add(identity)
+        report_path = path.parent / item['report']
+        report, benchmarks, report_hash = core.checked_report(report_path)
+        if report['engine'] != 'gem5':
+            raise core.ArchError('Pareto points require gem5 reports')
+        current = sorted((name, row['elf_sha256'], row['instret']) for name, row in benchmarks.items())
+        if workload is not None and current != workload:
+            raise core.ArchError('Pareto points need identical ELFs and ROI instruction counts')
+        workload = current
+        costs_raw = (path.parent / item['costs']).read_bytes()
+        costs = core.read_json(costs_raw)
+        if (set(costs) != {'schema', 'report_sha256', 'method', 'cycles', 'area_mm2', 'power_w'}
+                or costs['schema'] != 'rvw.arch-costs/1' or costs['report_sha256'] != report_hash):
+            raise core.ArchError('costs must bind the exact model report')
+        if not isinstance(costs['method'], str) or not costs['method'].strip():
+            raise core.ArchError('costs need a measurement or estimation method')
+        objectives = {}
+        for key in ('cycles', 'area_mm2', 'power_w'):
+            interval = costs[key]
+            if interval is None:
+                objectives[key] = None
+                continue
+            if (not isinstance(interval, list) or len(interval) != 3
+                    or any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in interval)
+                    or not interval[0] <= interval[1] <= interval[2]):
+                raise core.ArchError(f'{key} needs positive [lower, nominal, upper] bounds')
+            objectives[key] = interval
+        cycles = sum(row['cycles'] for row in benchmarks.values())
+        if objectives['cycles'] is not None and objectives['cycles'][1] != cycles:
+            raise core.ArchError('nominal cycles differ from model report')
+        rows.append(dict(id=identity, report_sha256=report_hash,
+                         costs_sha256=core.digest(costs_raw), method=costs['method'],
+                         objectives=objectives, evidence_class='model-only',
+                         eligible=all(v is not None for v in objectives.values())))
+    valid = [r for r in rows if r['eligible']]
+
+    def dominates(a, b, conservative):
+        pairs = [(a['objectives'][k][2 if conservative else 1],
+                  b['objectives'][k][0 if conservative else 1]) for k in a['objectives']]
+        return all(x <= y for x, y in pairs) and any(x < y for x, y in pairs)
+
+    return dict(schema='rvw.arch-pareto/1', plan_sha256=core.digest(raw),
+                status='reported' if len(valid) == len(rows) else 'inconclusive', points=rows,
+                nominal_frontier=[r['id'] for r in valid if not any(dominates(a, r, False) for a in valid)],
+                conservative_frontier=[r['id'] for r in valid if not any(dominates(a, r, True) for a in valid)],
+                limits='Minimize summed ROI cycles, area_mm2 and power_w. Bounds are producer declarations, '
+                       'not inferred confidence intervals. All points remain model-only. No RTL confirmation.')
