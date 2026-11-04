@@ -637,3 +637,13 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+## Selected CDC protocol references
+
+`examples/cdc/` contains event-enable handshake, depth-four FIFO and reset
+release references, plus a digital old/new sampling model. `rvw lint --protocol`
+checks an independent queue or release-order monitor through the native formal
+flow. `--simulate` runs the same monitor with seeded Icarus perturbation.
+See the [lint guide](../rvw/src/rvw/lint/README.md#selected-protocol-safety-checks)
+for the fixed port contract, assumptions, commands and limits. These reference
+checks do not qualify whole-core CDC or analog metastability behavior.

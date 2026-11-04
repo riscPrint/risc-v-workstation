@@ -12,6 +12,14 @@ from . import native, structural
 def register(sub):
     p = sub.add_parser('lint', help='native lint and structural CDC/RDC inventory')
     p.add_argument('--settings', help='lint settings JSON; else project lint.settings')
+    p.add_argument('--protocol', help='selected event-enable CDC safety manifest')
+    p.add_argument('--out', help='fresh protocol result directory')
+    p.add_argument('--depth', type=int, default=24)
+    p.add_argument('--engine', default='smtbmc:yices')
+    p.add_argument('--timeout', type=float, default=60)
+    p.add_argument('--simulate', type=int, default=0, metavar='SAMPLES')
+    p.add_argument('--seed', type=int, default=1)
+    p.add_argument('--mode', choices=['bmc', 'prove'], default='bmc')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=run)
 
@@ -106,6 +114,11 @@ def report(path):
 
 def run(args):
     try:
+        if args.protocol:
+            if args.settings or not args.out:
+                raise ValueError('--protocol needs --out and cannot use --settings')
+            from . import protocol
+            return protocol.run(args)
         path = args.settings
         if not path:
             selected = load_project(getattr(args, 'project', None))

@@ -2094,3 +2094,18 @@ Lint settings can select optional backend `yosys`. Native `check` warnings use
 or fallback `yosys.warning`. Findings retain elaborated bit IDs and available
 source attributes. Backend output includes `elaborated_modules` and `script`.
 Blackbox modules cannot earn a completed connectivity check.
+
+### Selected CDC protocol and simulation results
+
+`rvw lint --protocol MANIFEST --out NEW_DIRECTORY` accepts
+`rvw.cdc-protocol/1` with exactly `schema`, `kind`, `top` and `verilog`.
+The selected kinds, fixed port interfaces and digital sampling abstraction are
+specified in the lint guide. Sources are frozen before native elaboration.
+`rvw.cdc-protocol-result/1` records `status`, `proof_kind`, `kind`, source hashes,
+the native child `result`, model, limits and `activation: not_measured`.
+A pass only applies to the selected monitor and environment. It is not a
+structural waiver or whole-design CDC verdict. No C4 acceptance is emitted.
+`--simulate SAMPLES --seed SEED` instead emits `rvw.cdc-simulation/1` with
+status, kind, seed, requested sample count, input hashes and limits. Missing
+tools and incomplete execution are inconclusive. A simulation pass needs the
+completion marker and no failed monitor assertion. It is not a proof.

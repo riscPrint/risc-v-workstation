@@ -216,3 +216,55 @@ wire bits and source attributes. Required outputs are output ports in the RTL.
 Undriven outputs and floating used wires are findings. Unused input ports do
 not imply a fault. Opaque blackboxes keep the backend inconclusive. Intentional
 wired logic needs an explicit RTL resolution model; waivers do not supply it.
+
+## Selected protocol safety checks
+
+Use `rvw lint --protocol protocol.json --out NEW_DIRECTORY --mode prove
+--engine abc:pdr --timeout 60 --json`. The manifest is:
+
+```json
+{"schema":"rvw.cdc-protocol/1", "kind":"async_fifo", "top":"cdc_fifo",
+ "verilog":["sampling.sv","fifo.sv"]}
+```
+
+Kinds are `handshake`, `async_fifo` and `reset_release`. Sources must be
+self-contained exported RTL. Paths resolve from the manifest. The runner freezes
+the sources and checks the exact DUT interface with the native formal flow.
+It keeps input hashes, the monitor, native logs and the proof result. BMC is the
+default. Select `--mode prove` for an unbounded safety proof. Missing or failed
+engines cannot earn a pass. These results do not clear structural findings.
+
+The selected interface uses one global `clk`, active-high synchronous `reset`,
+and independent one-bit `source_tick` and `destination_tick` enables. This
+explicit event-enable interface is required; a wrapper for real clocks needs
+separate review. No clock ratio, fairness or minimum tick rate is assumed.
+Transfer designs have one-bit `push`, `pop`, `ready`, `valid`, eight-bit
+`data_in` and `data_out`, and three-bit `forward_choice` and `reverse_choice`.
+All except ready, valid and data_out are inputs. The handshake monitor permits
+one outstanding transfer. The FIFO monitor permits four. An independent queue
+checks overflow, underflow, accepted data order and data integrity. Concurrent
+send and receive use the old queue state. Empty fall-through is outside scope.
+A safety pass does not prove eventual delivery. Activation is `not_measured`;
+a DUT that never accepts traffic needs a separate progress/activation check.
+
+Reset designs have the four clock/reset/event inputs and one-bit `source_up`
+and `destination_up` outputs. The monitor proves that destination release
+follows source release and two destination events. It does not prove physical
+recovery/removal or behavior under independent mid-transfer resets.
+
+`SpinalChecks/examples/cdc/` supplies selected implementations. `sampling.sv`
+uses per-bit choices between the previous and current digital sample at the
+first stage, followed by a second destination stage. Proof leaves all choice
+inputs unconstrained. This model can delay a transition and split a multi-bit
+transition. It cannot establish analog metastability, voltage, resolution time,
+setup/hold, MTBF, placement, or capture of pulses between global samples.
+The supplied FIFO uses registered binary state and combinational Gray encoding;
+it is not a replacement for the elaborated topology recognizer's registered
+Gray encoder requirement. Formal checks inspect the selected RTL directly.
+
+Use `--simulate 1000 --seed 42` instead of formal options to run Icarus with
+controlled digital perturbation and independent event enables. Every monitor
+assertion is fatal. Success needs the completion marker and a zero exit code.
+Missing simulators, timeouts and compile errors remain inconclusive. This is a
+seeded simulation result, not a proof. Tests exercise all three correct designs
+and faults in held data, FIFO full control and reset release order.
