@@ -404,6 +404,10 @@ It runs a separate shell process to check the kernel type. It prints a marker
 and calls poweroff. This is a minimal userspace check. It is not a Linux selftest
 suite or a test of signals, page faults or scheduling correctness.
 
+For pinned prebuilt images on macOS, see [the reference platform](../examples/qemu-linux/README.md#native-prebuilt-reference-images).
+The prebuilt flow selects a small userspace from a hash-checked Debian initramfs.
+It runs natively and does not require a Linux compiler.
+
 macOS cannot build Buildroot. Use `.github/workflows/linux-boot.yml` for that
 step on native Ubuntu 24.04. The workflow uses no container. It builds images,
 boots QEMU and uploads images, configuration, console and reports. A workflow
@@ -536,6 +540,30 @@ Native VexRiscv fitting still needs independently checked ROI event mappings.
 Description tests and synthetic subprocess tests do not establish native model
 fidelity. No BOOM fitted parameters belong in this repository.
 
+## Compiler scheduling models
+
+See [compiler scheduling models](SCHED_MODELS.md) for partial LLVM/GCC generation
+and bounded RTL instruction-stream measurements with built-in llvm-mca baselines.
+## RISC-V decoupled front end
+
+The pinned gem5 already contains BAC and FTQ. Select them in project-owned
+`cpu` data with `decoupledFrontEnd: true`, `minInstSize: 2`, a positive
+`numFTQEntries`, and `fetchTargetWidth >= fetchBufferSize`. The default target
+width is 32 bytes and the default fetch buffer is 64 bytes. Set compatible
+values explicitly. `maxFTPerCycle` and `maxTakenPredPerCycle` must be positive.
+The model uses one hart. The coupled default stays unchanged.
+
+Run `rvw arch build --bench ftq-branches` and `rvw arch run` with that project.
+The microbenchmark checks a mix of compressed and 32-bit conditional branches.
+Compare identical ELFs with coupled and decoupled descriptions. Expect FTQ
+inserts only in decoupled mode. A deeper FTQ need not improve IPC. This slice
+adds no instruction prefetch requests or multi-level BTB.
+
+The pinned BAC has a mixed-width not-taken fallthrough defect. See the
+[optional source patch and native regression](patches/README.md) before using
+that path. The design and later phases are in
+[the design note](../docs/design/gem5-wide.md). The native binary hash in C9
+reports distinguishes patched builds. A version string alone does not.
 ### Multi-objective interval comparison
 
 `rvw arch pareto plan.json --json` (MCP `arch_pareto`) compares saved model

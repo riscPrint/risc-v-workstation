@@ -47,6 +47,8 @@ class Trace:
             for k in ("isa", "core", "config", "elf"):
                 if not isinstance(h.get(k), str):
                     raise ValueError(f"missing or invalid C2 header {k}")
+            from .extensions import header_fields
+            header_fields(h)
         except BaseException:
             self.file.close()
             raise
@@ -154,6 +156,8 @@ class Trace:
                 elif "event" not in obj and any(k in obj for k in ("fd_valid", "fd_wdata", "fflags", "fcsr")):
                     raise ValueError("FP fields require rvw.rvfi/2")
                 if "event" not in obj:
+                    from .extensions import state_fields
+                    state_fields(obj, self.header)
                     snapshots = obj.get("csr_state", {})
                     if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
                         raise ValueError("csr_state must contain exactly the declared snapshot addresses")
@@ -188,10 +192,12 @@ class Trace:
 
 def record(effect, order, cycle=None, intr=False, xlen=64):
     """Serialize an independently executed reference instruction to C2."""
-    if not effect['trap'] and decode(effect['insn'], xlen).mnemonic == 'unknown':
+    from .extensions import vector_sources
+    vector_regs = vector_sources(effect['insn']) if 'vector' in effect else None
+    if not effect['trap'] and vector_regs is None and decode(effect['insn'], xlen).mnemonic == 'unknown':
         raise ValueError(f"unknown source operands for successful instruction {effect['insn']:#x}")
     result = {k: hex(effect[k]) for k in HEX if k in effect}
-    rs1, rs2 = integer_sources(effect["insn"], xlen)
+    rs1, rs2 = vector_regs if vector_regs is not None else integer_sources(effect["insn"], xlen)
     before = effect["before"]
     result.update(rs1=rs1, rs2=rs2, rs1_rdata=hex(before[rs1]), rs2_rdata=hex(before[rs2]),
                   order=order, cycle=order if cycle is None else cycle,

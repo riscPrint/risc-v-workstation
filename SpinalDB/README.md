@@ -357,3 +357,50 @@ synchronizer paths. FIFO topology uses registered Gray encoders and a 4-word
 memory. These are small structural references, not complete transfer protocols.
 Run `RVW_LINT_FIXTURES=DIR python -m pytest rvw/tests/test_lint_extracted.py -q`
 from the workstation root to check their extracted graphs.
+
+
+## Verilog and SystemVerilog navigation
+
+`rvw query build-hdl` uses native Yosys. It accepts the synthesizable subset of
+`read_verilog -sv`. It writes the same C6 tables as SpinalDB. It does not need
+SpinalHDL or sbt. Install Yosys separately and select it with `--yosys PATH`.
+
+```sh
+rvw query build-hdl --top top --out design.db top.sv leaf.sv
+rvw query drivers u0.result --db design.db --json
+rvw query loads request --db design.db --json
+rvw query path request result --db design.db --json
+```
+
+The importer preserves module instances and named nets. Yosys lowers processes
+before import. Generated bit signals connect the lowered cells. Paths are
+conservative: each cell input can affect each output, and a named vector can
+join disjoint slices. `sel` edges identify mux selects and enable/reset ports.
+Clock inputs do not become value dependencies. State outputs stop combinational
+traversal. Register stage counts can include multiple aliases of the same state.
+Clock-domain and reset-value extraction are not implemented.
+Assignment text describes the lowered cell or net alias. Process source ranges
+can cover several statements. These results are navigation evidence.
+
+The importer refuses memories, blackboxes, unresolved modules, inouts, unknown
+cells, include directives, source remapping and file-reading tasks. Supply all
+self-contained translation units explicitly. It captures source bytes and the
+Yosys executable identity before compilation. It publishes the database with
+atomic replacement. A failed build leaves an existing output intact.
+Semantic diff keys stay incomplete. Self-diff cannot report hardware identity.
+No PDG, block or HGLDD artifact is generated.
+
+The native integration tests accept read-only SERV and Ibex reference clones.
+Set `RVW_HDL_REF` to their parent directory. The tests use SERV `serv_top` with
+its external register-file interface and Ibex `ibex_counter`, not a full Ibex core.
+The reference clones are not modified. Missing clones cause explicit skips.
+
+```sh
+git clone https://github.com/olofk/serv.git ref/serv
+git -C ref/serv checkout f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8
+git clone https://github.com/lowRISC/ibex.git ref/ibex
+git -C ref/ibex checkout 2c72091c12187b5c7caf925aa911c94b806aab54
+RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py -q
+```
+
+See [the design](../docs/design/hdl-frontends.md) for slang, Chisel and VHDL phases.

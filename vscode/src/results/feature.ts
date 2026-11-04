@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { execFile } from 'node:child_process';
 import type { Feature, FeatureContext } from '../api';
-import { children, headline, label, object, parseReport, queryArgs, sourceMatches, sourceTargets, type Kind, type Row } from './model';
+import { rowSignal, runResultPath, children, headline, label, object, parseReport, queryArgs, sourceMatches, sourceTargets, type Kind, type Row } from './model';
 
 /** Shared host for saved rvw results. Each tool owns its feature manifest and entry point. */
 export function resultsFeature(id: Kind, title: string): Feature {
@@ -18,6 +18,9 @@ export function resultsFeature(id: Kind, title: string): Feature {
       ] : [{key: 'Open an rvw JSON report to show results', value: null, heading: true}],
       getTreeItem: row => {
         const item = new vscode.TreeItem(row.heading ? row.key : label(row), children(row.value).length ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+        if (rowSignal(row)) item.contextValue = 'rvw.signal';
+        if (id === 'regress' && file && runResultPath(file.fsPath, row)) item.contextValue = 'rvw.run';
+        item.accessibilityInformation = {label: row.heading ? row.key : label(row)};
         item.tooltip = row.heading ? row.key : JSON.stringify(row.value, null, 2);
         // No success icons: saved claims and incomplete evidence must never imply acceptance.
         if (/inconclusive|incomplete|unsupported|unknown|stale/i.test(item.label as string)) item.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('editorWarning.foreground'));
@@ -25,8 +28,8 @@ export function resultsFeature(id: Kind, title: string): Feature {
       },
     };
     const view = vscode.window.createTreeView(`${id}.results`, {treeDataProvider: provider});
-    const guard = (fn: () => Promise<unknown>) => async () => { try { await fn(); } catch (e) { void vscode.window.showErrorMessage(`${title}: ${String(e)}`); } };
-    const register = (name: string, fn: () => Promise<unknown>) => context.subscriptions.push(vscode.commands.registerCommand(`${id}.${name}`, guard(fn)));
+    const guard = (fn: (row?: Row) => Promise<unknown>) => async (row?: Row) => { try { await fn(row); } catch (e) { void vscode.window.showErrorMessage(`${title}: ${String(e)}`); } };
+    const register = (name: string, fn: (row?: Row) => Promise<unknown>) => context.subscriptions.push(vscode.commands.registerCommand(`${id}.${name}`, guard(fn)));
     async function pick(label: string, extensions?: string[]): Promise<vscode.Uri | undefined> {
       return (await vscode.window.showOpenDialog({title: label, canSelectMany: false, filters: extensions ? {[label]: extensions} : undefined}))?.[0];
     }
@@ -39,10 +42,10 @@ export function resultsFeature(id: Kind, title: string): Feature {
     register('open', async () => { const uri = await pick('Open rvw result', ['json']); if (uri) await load(uri); });
     register('refresh', async () => { if (file) await load(file); });
     register('raw', async () => { if (file) await vscode.window.showTextDocument(file); });
-    register('source', async () => {
+    register('source', async row => {
       if (!vscode.workspace.isTrusted) throw new Error('Trust the workspace before running rvw.');
       const db = await pick('Select the captured design database'); if (!db) return;
-      const signal = await vscode.window.showInputBox({title: 'Signal path in the selected database', prompt: 'Select the database for this run. Report-to-database identity is not verified.'});
+      const signal = rowSignal(row) ?? await vscode.window.showInputBox({title: 'Signal path in the selected database', prompt: 'Select the database for this run. Report-to-database identity is not verified.'});
       if (!signal) return;
       const executable = vscode.workspace.getConfiguration(id).get<string>('rvwExecutable', 'rvw');
       const output = await new Promise<string>((resolve, reject) => execFile(executable, queryArgs(db.fsPath, signal), {cwd: vscode.workspace.getWorkspaceFolder(db)?.uri.fsPath, timeout: 30000, maxBuffer: 8 * 1024 * 1024}, (error, stdout, stderr) => {
@@ -59,6 +62,17 @@ export function resultsFeature(id: Kind, title: string): Feature {
       const document = await vscode.workspace.openTextDocument(uri);
       if (choice.line > document.lineCount) throw new Error('Source line is unresolved.');
       await vscode.window.showTextDocument(document, {selection: new vscode.Range(choice.line - 1, 0, choice.line - 1, 0)});
+    });
+    register('evidence', async row => {
+      if (!row) return;
+      const document = await vscode.workspace.openTextDocument({language:'json', content:JSON.stringify(row.value, null, 2)});
+      await vscode.window.showTextDocument(document);
+    });
+    register('runResult', async row => {
+      const path = file && runResultPath(file.fsPath, row);
+      if (!path) throw new Error('No declared C1 run path for this row.');
+      // Open the exact declared result. Never fall back to a different run.
+      await vscode.window.showTextDocument(vscode.Uri.file(path));
     });
     // Process tasks use argument arrays. Paths and criteria never become shell text.
     async function launch(executable: string, args: string[]): Promise<void> {

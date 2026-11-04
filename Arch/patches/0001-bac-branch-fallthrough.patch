@@ -1,0 +1,17 @@
+diff --git a/src/cpu/o3/bac.cc b/src/cpu/o3/bac.cc
+index 131ab55..7355881 100644
+--- a/src/cpu/o3/bac.cc
++++ b/src/cpu/o3/bac.cc
+@@ -692,7 +692,11 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
+ 
+         if (!predict_taken) {
+             // Not predicted taken. Start the next FT at the next address.
+-            next_pc->set(cur_pc.instAddr() + minInstSize);
++            // A known branch can be wider than the BTB search step (for
++            // example a 32-bit branch in an RVC instruction stream).
++            // Keep its decoded length when constructing the fallthrough.
++            next_pc->set(cur_pc.instAddr() +
++                         (staticInst ? staticInst->size() : minInstSize));
+         }
+ 
+         // x86 has some complex instruction like string copy where the branch

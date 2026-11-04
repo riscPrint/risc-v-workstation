@@ -383,6 +383,45 @@ The small reference designs are in the protocol and reference `*Spec` files. Run
 They inject legal offer changes, source reuse, unmatched responses, response
 opcode and size faults, parameter faults, and AXI address faults.
 
+## Explicit safety intent
+
+Project adapters can call these helpers in the signal sampling clock domain.
+They use `DeclaredChecks.rule`, so selection, waivers, monitor counters and
+stable check IDs apply. No core signal names occur in the helpers.
+
+| Helper | Rules and contract |
+|---|---|
+| `QueueChecks.fifo` | `queue.capacity`, `queue.occupancy`, `queue.order`. Bind accepted push/pop events, flush, payload or unique token, and the pre-edge occupancy. The independent FIFO checks data order and count. Flush discards all entries and dominates transfers. Full replacement is legal. Empty bypass is not supported. |
+| `QueueChecks.arbiter` | `arbiter.exclusive`, `arbiter.requested`. At most one grant is permitted. Every grant needs its request. No fairness or progress is inferred. |
+| `StateChecks.machine` | `state.encoding`, `state.transition`. Declare all legal codes and edges, including self loops. The first initialized sample checks encoding. Consecutive initialized samples check transitions. |
+| `StateChecks.branches` | `state.exclusive`, optional `state.required`. Declare the branch selection vector and its active condition. |
+| `ExecutionChecks.bind` | `execution.allocate`, `execution.wakeup`, `execution.issue`, `execution.operands`, `execution.replay`, `execution.writeback`. Bind accepted token events, operand readiness and a cancellation mask. Missing signals and resetless domains are refused. |
+| `ValueChecks.range` | `value.underflow`, `value.overflow`. Bind a full precision signed expression and mathematical bounds. Unsigned intent uses a zero-extended value converted to `SInt`. |
+| `ValueChecks.unsignedInterpretation` | `value.signedness`. Declare an unsigned magnitude at a wider signed consumer. Zero extension is required. Sign extension is an error. |
+| `ValueChecks.narrowing` | `value.truncation`. Declare signed value preservation or modular low-bit behavior. Modular behavior permits lost high bits but still checks the low bits. |
+
+FIFO reference state starts empty at reset. Resetless FIFO bindings are refused;
+a separate startup contract is still required. State initialization
+and value activation come from the adapter. An inactive value does not delay a
+later violation. Do not derive initialization from a fixed cycle delay.
+The library does not infer reset values or unreachable-state assumptions.
+
+The execution reference starts with no live tokens. Allocate only free tokens.
+Wakeup updates readiness for the next cycle. Issue needs all operands ready
+before the edge. Replay reopens an issued token. Writeback completes it.
+Cancellation forbids issue and writeback in the same cycle and all later cycles
+until a new allocation. State priority is cancellation, writeback, replay,
+issue, then allocation. Same-cycle allocation reuse and wakeup bypass are not
+supported. Tokens must include a generation if late events can outlive reuse.
+Readiness supplied by the adapter must come from independent accepted events.
+This helper does not compare result data or architectural retirement.
+
+These are bounded local safety checks. Queue tokens must include all identity or
+data fields that the adapter needs to compare. They do not establish whole-core
+retirement, LSQ ordering, speculation recovery or eventual progress. No BOOM
+bindings for these helpers are installed by default. Tests are in
+`IntentChecksSpec` and `ExecutionChecksSpec`; each rule has legal and illegal stimulus.
+
 ## Gaps
 
 - Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
@@ -653,3 +692,86 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+### Sampled reset protocol bindings
+
+`ResetChecks.bind` takes independent reset request, normalized reset level,
+destination-edge and controls-known observations. Bind it in a separate
+observation clock domain. It checks sampled assertion, a minimum number of
+settling edges, and release only on a destination edge. The settling count
+uses edges completed before the release sample. `order` checks a declared
+source-before-destination release relation. `crossing` checks isolation while
+an independently reset source feeds an active consumer. `reconvergence` checks
+isolation when two reset states differ. Unknown controls produce a finding.
+
+These are executable project bindings. They do not infer a reset synchronizer
+from a graph. The project must supply the independent observations and control
+validity. Two-state simulation cannot discover X values by itself. A pulse
+between observation samples can be missed. Physical asynchronous assertion,
+recovery/removal, metastability, static synchronous-release recognition and
+functional reconvergence proof remain open. Structural lint findings stay active.
+
+### Optional HPM selector and interrupt bindings
+
+`HpmControlChecks.selector` models accepted selector writes with a project WARL
+mask and reset value. It does not derive selector meaning from the DUT.
+`HpmControlChecks.interrupt` uses an independently derived expected count and
+event multiplicity to check sticky overflow pending state and its enable-gated
+interrupt. Inhibit, filtering and counter writes suppress overflow. Pending
+clear has priority. The project must select this policy explicitly; it is not
+a universal Zihpm interrupt specification. Bind count checks separately with
+`HpmChecks.bind`. Do not use the observed DUT count as `expectedCount`.
+
+Native reference tests cover legal controls and injected selector, pending and
+interrupt faults. Real-core event bindings, architectural access and RV32 half
+checks, and a complete Zihpm compliance campaign need separate evidence. The
+access and RV32 work in PR #303 remains compatible with these optional bindings.
+
+### Independent device-bus bindings
+
+`DeviceBusChecks.bind` takes a project-owned `Seq[DeviceRegister]`. Each entry
+pairs a byte address with the existing version-1 `RegisterModel`. Feed accepted
+request observations and response observations from an independent bus monitor.
+Do not drive the model from DUT register contents or internal address selects.
+It checks address decoding through the error response, pre-side-effect read data,
+response order and a project latency bound. It supports zero-cycle responses and
+bounded variable latency. It allows one outstanding request. A simultaneous
+response and new request while busy is refused as an order finding.
+
+The bus model applies read-clear, normal write masks, bit strobes and W1C from
+the accepted request. It supports no independent hardware updates; use
+`RegisterChecks.bind` for those register-state checks. Write response payloads
+are not checked. A response at the declared maximum latency is legal. Missing
+responses produce a finding. An unmapped address must return an error.
+`DeviceBusChecks.accesses` generates reads and masked writes for a bus driver.
+The reference test binds two concrete address entries and checks independent
+response captures against a software oracle. It is not a real device binding.
+
+`DeviceRegister.load(file)` binds the normalized map importer from PR #303.
+The native bus test exercises both imported SystemRDL and IP-XACT maps.
+These checks remain separate from architectural CSR checks. Multiple outstanding
+requests, back-to-back replacement and real device campaigns remain open.
+
+## Selected CDC protocol references
+
+`examples/cdc/` contains event-enable handshake, depth-four FIFO and reset
+release references, plus a digital old/new sampling model. `rvw lint --protocol`
+checks an independent queue or release-order monitor through the native formal
+flow. `--simulate` runs the same monitor with seeded Icarus perturbation.
+See the [lint guide](../rvw/src/rvw/lint/README.md#selected-protocol-safety-checks)
+for the fixed port contract, assumptions, commands and limits. These reference
+checks do not qualify whole-core CDC or analog metastability behavior.
+
+## Hardware information flow
+
+[security/](security/README.md) contains the native `rvw_ift` Yosys pass.
+It adds value-sensitive data and control taint to mapped Boolean gates and
+rising-edge registers. It is optional. It does not change core source files.
+See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
+
+## Finite coherence model
+
+[coherence/](coherence/README.md) explores a finite two-agent TileLink-C permission
+abstraction. It generates a permission relation for RTL and simulation monitors.
+The two-hart fixture binding checks permission safety only. Channel refinement,
+RTL data invariants and general fair liveness remain open.

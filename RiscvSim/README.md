@@ -11,11 +11,16 @@ Simulation runner for Spinal RISC-V cores, implementing the run contract (C1) an
 - `boom/` has a separate sbt build for BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
 
 Status: `build`, `run`, `run-many` and `info` work on BOOM `small` (see "Verified"). The other
-presets build through the same code but were not run.
+presets use the same code. Medium has a bounded throughput profile; large and
+larger presets remain unqualified here.
 
 The adapters require Verilator on `PATH`. Source the core environment script or
 add the installed tools to `PATH` before use. `tests/programs/build.sh` uses
 `riscv64-unknown-elf-gcc` on `PATH`; `RISCV_GCC` selects another executable.
+
+The optional [medium thread profile](boom/benchmarks/README.md#opt-in-medium-launcher)
+selects two runtime threads through the normal captured launcher. Use its
+qualification limits before selecting it.
 
 ## Quick start
 
@@ -82,6 +87,27 @@ The PDG extractor uses these roots to resolve Scala source files. The BOOM
 adapter passes both source directories from `sourceDir`. Generated PDGs use
 the existing absolute-path format. Portable fixtures must use project-relative
 paths, and cross-checkout comparisons must remove only the checkout prefix.
+
+## Benchmark ROI definition
+
+The BOOM benchmark adapter reads two 64-bit words at `bench_stats`.
+The benchmark runtime stores the `mcycle` and `minstret` deltas when `setStats(0)` follows
+`setStats(1)`. These markers enclose the measured benchmark call. Input setup, optional
+warmup calls, result checks and exit stay outside this interval. Counter reads and marker
+call overhead remain part of this implementation's measurement. The ROI is not an exact
+count of instructions in the benchmark function alone.
+
+Use the same ELF hash, runtime, marker placement and adapter on both sides. Equal counter
+names alone do not establish equal ROI boundaries. `metrics.roi_cycles` and
+`metrics.roi_instret` identify these deltas. Whole-program `cycles` and `instret` identify
+a different interval. Never combine the two origins in a performance comparison.
+A failed run without both ROI words supplies no usable ROI sample.
+
+Repeat a declared seed set with the same memory mode on both sides. Random-memory seeds
+can change cycle counts even when ROI instruction counts stay equal. Fixed-latency seeds
+need not sample that variation. C4 checks the largest paired relative loss. Means are
+only descriptive. This rule estimates no population confidence. Keep failed seeds and
+required workloads visible; they cannot be replaced by faster passing workloads.
 
 ## Artifacts
 
@@ -594,6 +620,113 @@ The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
 
+### Independent bus capture
+
+BOOM `--rvfi-trace` also writes `memory-bus.jsonl`. It samples accepted A and D
+handshakes at the external TileLink port. Source IDs, data, masks, response errors
+and cycles come from bus wires. They do not come from retirement records.
+See the [bus format](../docs/PLATFORM_CONTRACTS.md#passive-bus-observations).
+The port is outside the caches. A cache hit has no external request. A D response
+is not a device-side completion promise. FENCE checks must declare that boundary
+and match requests from an independent test plan. This capture alone is not a
+FENCE verdict. Device campaigns and cache-internal observers remain required.
+
+Run the bounded native MMIO FENCE campaign with the core environment and GCC:
+
+```sh
+nice -n 10 rvw/.venv/bin/python RiscvSim/boom/tests/fence-device.py --out /tmp/fence-device-1
+```
+
+It runs I/I, I/O, O/I and O/O pairs with unique addresses in BOOM's uncached
+interrupt-generator window. The sparse memory agent serves these extra offsets.
+The plan comes from stimulus and matches actual accepted A/D handshakes.
+Random memory timing uses the selected seed. The boundary ends at D acceptance;
+there is no separate device execution queue. The program's tohost pass only
+establishes completion. The separate comparison checks the four order edges.
+R/W classes, device-side execution and concurrent target campaigns remain open.
+
+### Instruction visibility observations
+
+BOOM's optional `mmu-observations.jsonl` also records `icache_response` with
+physical address, raw fetch data and byte width. It records `icache_invalidate`
+with `refill_pending`, and accepted `icache_refill_request` addresses.
+These are cache-stage observations. A response can be speculative or discarded.
+It does not prove that the fetch buffer consumed those bytes after a fence.
+
+`InstructionVisibility` checks consumed bytes against independent stimulus.
+Use a unique publication ID for each patch. The adapter must observe data
+visibility and the reader's local FENCE.I before `synchronize`. A writer's fence
+cannot synchronize another hart. The project owns the release/acquire or
+platform publication protocol. The checker refuses missing required observations.
+BOOM also captures `fetch_consumed` at each decode-slot handshake, with its PC
+and original instruction bits from the fetch buffer. These can still be on a
+wrong path. Publication epochs must exclude entries killed by the fence redirect.
+The byte checker is not yet connected to that epoch mapping. Pending-request
+campaigns and cross-hart RTL publication remain open under #103.
+
+CacheScoreboard accepts `replacement = "lru"` or `"fifo"` for projects with that
+policy. Call `evict(..., replacementEviction = true)` for demand replacement.
+Maintenance eviction does not use the replacement rule. LRU updates on reads
+and nonempty stores. FIFO updates only on fills. The default `any` keeps the
+existing capacity-only rule. Do not select LRU for a random-policy DUT.
+BOOM bus capture also records accepted B probes, C releases/probe replies and
+E grant acknowledgments. These keep permission parameters and dirty data on the
+wire. A and D rows keep permission parameters; D also keeps the sink ID.
+This is raw capture. Mapping it to cache scoreboards, checking virtual aliases
+and injecting cache errors remain open under #109.
+
+`DmaAgent` accepts an optional `DmaTransport` for a project RTL bus driver.
+The transport must call `accepted` exactly once at the captured serialization
+point. Read expectations are sampled there. CPU atomics that win arbitration
+before the DMA read can update the independent expected image first.
+DMA writes update expected bytes at acceptance, not when the request is queued.
+If no transport is set, the agent uses simulation memory. External snoop hooks
+own clean/invalidate completion unless the transport performs coherence under
+its own serialization lock. A transport must not call `accepted` from retirement.
+The bounded BOOM campaign below checks the native connection. Other fabrics
+need their own adapters and campaigns.
+
+`TileLinkDmaTransport` connects the DMA agent to Spinal's simulation memory
+manager. It holds the manager's line lock while it sends actual B probes and
+waits for C replies. Coherent reads downgrade dirty CPU copies. Coherent writes
+invalidate CPU copies before the masked memory update. A transport read samples
+the independent expected image at that serialization point. Split cross-line
+transactions before calling this transport. Noncoherent transactions skip
+snoops; the project must clean and invalidate CPU caches as needed.
+
+`boom/tests/dma.S` and `riscvsim.boom.DmaCampaign` provide a bounded native BOOM
+campaign. It checks dirty CPU data, coherent DMA reads and masked writes, CPU
+invalidation and a CPU AMOADD. It checks a stale noncoherent device read and a
+stale CPU read after a noncoherent device write. It invalidates the CPU copy
+before publishing new data. MMIO phase barriers make the schedule explicit.
+It also releases CPU AMOADD and a coherent DMA write without a phase barrier. A subsequent coherent read and the CPU old value must form one
+of the two serial outcomes computed from fixed operands. DMA acceptance occurs
+under the manager line lock. The old value arrives through MMIO, independently
+of retirement. Two bounded DMA delays must observe both serial outcomes.
+A finite campaign does not prove the whole fabric. Direct
+test-main runs do not earn C1 gate acceptance. Keep them separate from
+conclusive C1 ELF results.
+
+Run that direct DMA campaign with `RiscvSim/boom/tests/run-dma.sh /tmp/dma-1`
+after setting JDK 21, Verilator, GCC and `SPINAL_BOOM`. Use a fresh output path.
+The script holds `boom`, then `sbt`. The native test has a 20000-cycle limit.
+Use an outer process-group timeout for lock wait and native compilation.
+
+### Bounded fairness and resource waits
+
+`FairnessMonitor` samples every cycle. It measures environment enable gaps
+separately from arbiter grant opportunities. Missing samples and missing client
+grants cannot establish fairness. `ResourceWaitMonitor` checks a sampled graph
+of exclusive resource owners and blocked requests. It reports a cycle separately
+from an outstanding-request timeout. Adapters must supply actual resource waits.
+The two-hart atomic fixture now measures its enable and grant wires separately.
+It still has no cyclic resource fabric. Coherent-fabric dependency campaigns and
+unbounded liveness proofs remain open under #128. None of these bounded monitors
+proves eventual progress.
+
+Direct native launches can set `RISCVSIM_REQUIRES=two_state,clock`. The shared
+profile checker rejects unsupported needs before locks and native tools start.
+See `rvw/src/rvw/sim/README.md` for regression suite declarations and limits.
 ### Serialized multi-hart reference
 
 `SerializedMemoryReference` checks accepted memory actions at a project-declared
@@ -664,3 +797,9 @@ trace writes and artifact handling are included. The dashboard plots recorded
 C3 rates per preset. These rates do not prove correctness. Use long workloads,
 fixed seed and memory latency, and serial runs. Keep tracing options equal.
 See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.
+
+The [Linux startup example](../examples/qemu-linux/README.md#bounded-linux-startup-payloads)
+prepares reset firmware, kernel, initramfs and a final DTB for `--boot-payloads`.
+A separate fixed-image QEMU check uses the same payload bytes. The project
+software device composition does not connect the BOOM RTL bus. A startup
+prefix comparison must not be reported as a Linux RTL boot.

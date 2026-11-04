@@ -426,6 +426,19 @@ endpoint. The result marks it `inconclusive: true`. It does not identify a guilt
 commit. Use a compatible adapter before repeating the comparison. Do not use
 `--no-verify` to turn an untested endpoint into evidence.
 
+Before a native history bisect, run the same ELF at both proposed endpoints with the
+selected adapter. Keep the ELF hash, seed, config, memory latency and cycle limit equal.
+The good endpoint must complete with `pass`. The bad endpoint must reproduce the requested
+signature. Check the C1 source and native identities on both sides. An endpoint before the
+simulation harness or required memory system exists cannot establish a passing boundary.
+A source-level introduction or fix is only a candidate boundary until these runs complete.
+
+For an adapter API mismatch, provide a core-owned compatibility adapter through the debug
+configuration. It must preserve memory timing and reject unsupported trace or timing options.
+It must not silently drop constructor arguments to make an old revision compile.
+If no executable passing ancestor exists, keep the historical regression unqualified.
+Do not substitute a later passing fix, a fixture or a synthesized core edit for that ancestor.
+
 Debug reruns refuse conclusive evidence when the returned C1 seed, config,
 max_cycles or mem_latency differs from an explicitly requested value.
 This rule applies to bundle, reduce and bisect, including run-many batches.

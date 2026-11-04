@@ -31,6 +31,10 @@
       {
         "command": "coverage.trace",
         "title": "Coverage: Open SpinalTrace"
+      },
+      {
+        "command": "coverage.evidence",
+        "title": "Coverage: Open Selected Evidence"
       }
     ],
     "views": {
@@ -72,6 +76,18 @@
           "command": "coverage.trace",
           "when": "view == coverage.results",
           "group": "results"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "coverage.evidence",
+          "when": "view == coverage.results",
+          "group": "evidence"
+        },
+        {
+          "command": "coverage.source",
+          "when": "view == coverage.results && viewItem == rvw.signal",
+          "group": "navigation"
         }
       ]
     },

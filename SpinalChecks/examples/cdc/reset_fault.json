@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.cdc-protocol/1",
+  "kind": "reset_release",
+  "top": "cdc_reset",
+  "verilog": [
+    "sampling.sv",
+    "reset_fault.sv"
+  ]
+}

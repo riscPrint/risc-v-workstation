@@ -1,6 +1,6 @@
 # rvw cosim
 
-Trace-driven architectural comparison for any scalar RISC-V core emitting the
+Trace-driven architectural comparison for a RISC-V core emitting the
 [C2 trace contract](../docs/PLATFORM_CONTRACTS.md#c2-rvfi-trace-rvfijsonl).
 This is the first implementation of an open replacement for the lockstep portion
 of ImperasDV / Questa RISC-V VIP. It does not claim commercial feature parity.
@@ -488,9 +488,8 @@ Large traces are temporary and never committed.
 ## Limits and next work
 
 C2 version 1 contains no FP writes or CSR snapshots. Version 2 adds them;
-Spike compares them and Sail refuses unavailable observations. No vector/multi-
-access instruction, debug-mode execution, multiple harts, H extension, or device
-model is supported. `halt` is retained as input metadata; WFI is not RVFI halt.
+Spike compares them and Sail refuses unavailable observations. Vector memory instructions, debug-mode execution, multiple harts and device
+models remain unsupported. C2/2 can check V register state and H privilege state. `halt` is retained as input metadata; WFI is not RVFI halt.
 Optional version 2 fault-access records check supported zero-completion attempts.
 Other fault effects remain unsupported.
 
@@ -536,7 +535,7 @@ to the fields and recorded execution below.
 | instret/minstret | Integer destination | Strict from reset; declared late-trace offset only | Compared; no external offset injection |
 | MMIO and interrupt external inputs | Optional IRQ levels, load result and trap event | Declared MMIO/input synchronization; not a device or timing proof | External-input synchronization unsupported; nondeterministic traces refused |
 | FP registers, `fflags`, `fcsr` | Required version 2 fields | Exact raw write and post-step flags | Version 2 fields refused |
-| Vector, hypervisor state | No matching state contract | Out of scope; scalar-unrepresentable effects refused | Unsupported ISA/virtualized modes refused |
+| Vector and hypervisor state | Required C2/2 extension snapshots when ISA declares V or H | Full V registers, mask v0 and vector CSRs; guest/host privilege and virtual trap CSRs; bounded Sv39/Sv39x4 translation observations | Unavailable observations refused |
 | Debug state | No debug state contract | Debug execution refused | Unsupported execution refused; no debug-state comparison |
 | Per-hart state, inter-hart order | No hart identity or shared-memory order | Single hart only; multi-hart out of scope | Same |
 | Fault attempts and partial memory effects | Optional version 2 attempt/completion masks | Supported zero-completion scalar attempts; partial effects refused | Fault-access extension refused |
@@ -707,6 +706,50 @@ establish Linux device support.
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
 
+
+### V and H reference readiness
+
+C2/2 `vector` snapshots check all 32 registers after each step, including v0,
+`vl`, `vtype`, `vstart`, `vcsr` and `mstatus.VS`. VLEN and ELEN must equal
+Spike's actual dimensions. An integer-only trace for an ISA declaring V or H
+is refused. Complete snapshots check the result of vector writes, including
+preserved lanes. They do not identify writes of an unchanged value. Exact
+comparison can reject differing permitted agnostic values. No agnostic-bit
+waiver is implemented. All vector memory instructions are refused before
+execution. Ordered memory accesses and partial completion remain open.
+
+H snapshots check before/after virtual mode, after-step privilege, H/VS CSRs,
+M status/delegation/trap CSRs and nonvirtual HS status/trap CSRs. The latter
+must not alias VS CSRs while the reference executes a guest. The native tests
+execute M to VS entry, guest ECALL to HS, and nonidentity two-stage mapping.
+These tests use only Spike. They do not establish DUT correctness.
+
+Nonempty `translations` records request a bounded independent walk of the
+reference page tables. Successful guest fetch and scalar load addresses come
+from the reference step. The walker supports RV64 Bare, Sv39 and Sv39x4,
+including G translation of VS page-table reads. It compares VA, GPA and PA.
+It refuses faulting instructions, stores, unsupported modes and PTE fields.
+Empty records check no translation. This is an address mapping observation;
+it does not prove access permission checks, walk traffic, TLB behavior, PMP,
+fault precedence or A/D atomicity. Post-step table reads cannot check stores
+that modify those tables. Reference trace generation leaves this list empty;
+a DUT producer must supply observations to request comparison.
+
+The pinned Spike rejects the directed nonzero-vstart ALU instruction with an
+illegal-instruction trap. The test checks this outcome and the handler's
+explicit vstart clear. It does not claim successful ALU restart. The portable
+riscv-vector-tests suite setup and strict state check are described in the
+[regression guide](../rvw/src/rvw/regress/README.md#riscv-vector-tests).
+
+The [Linux project](../examples/qemu-linux/README.md) composes the reference
+Timer and Plic with an output-only Ns16550 register subset. Device-state tests
+do not certify an RTL bus connection or a device timing match.
+## TestRIG sockets
+
+`rvw cosim dii` adds bounded v1 transport for core-owned injection hooks and
+strict replay against a Sail DII server. See [the hook guide](../docs/TESTRIG.md).
+This mode does not use the ELF shim or change the C2 comparison contract.
+
 Directed reference tests in `test_fp_rounding.py` check halfway additions in
 RNE, RTZ, RDN, RUP, RMM and dynamic RUP, for both signs. They also check a
 signaling NaN, an unboxed single operand and FS Initial/Clean to Dirty changes.
@@ -759,3 +802,19 @@ identity is inferred from that prefix. Reproduction metadata captures the
 launch executable identity and original argument list. Adapter scripts and
 build dependencies need their own C1 provenance. A complete trace match is
 not a C1 program-pass or clean-revision acceptance claim.
+
+### Unspecified mscratch reset state
+
+For a trace from reset, the checker treats only the reset bits of `mscratch`
+(CSR 0x340) as unknown. The first read or CSR snapshot supplies those bits from
+DUT evidence. The checker records `reason: csr_reset_unknown`, CSR, bit mask,
+reference value, DUT value and observation source in `recent_synchronizations`.
+It also updates the reference CSR so later reads and read-modify-write effects
+remain checked. A full write before observation removes the unknown state.
+A set/clear write makes its written bits known. Those bits stay strict.
+
+This rule uses the existing `csr` synchronization kind. `--strict` or
+`--strict-sync csr` disables it. Traces with `trace_from_reset=false` remain
+strict for this rule. Missing reference support gives an error. No other CSR,
+software-written bit, trap, instruction, PC or memory effect is masked.
+The Spike shim uses ABI version 5 and must be rebuilt with `Cosim/build.sh`.
