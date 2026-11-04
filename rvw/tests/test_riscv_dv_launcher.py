@@ -27,3 +27,24 @@ def test_wrong_generator_revision(tmp_path):
                       '--target','rv32imc','--seed','48','--out',str(out)],capture_output=True,text=True)
     assert r.returncode == 2 and not out.exists()
     assert 'generator checkout must be clean' in r.stderr
+
+
+def test_timeout_cannot_report_generated_even_with_zero_exit(tmp_path, monkeypatch):
+    import importlib.util
+    import json
+    from types import SimpleNamespace
+    from rvw.common import proc
+    spec = importlib.util.spec_from_file_location('pygen_launcher', SCRIPT)
+    launcher = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(launcher)
+    monkeypatch.setattr(launcher.subprocess, 'check_output',
+                        lambda argv, **kw: '' if 'status' in argv else launcher.REVISION+'\n')
+    out = tmp_path/'out'
+    def timed_out(*args, **kwargs):
+        (out/'program_0.S').write_text('addi x1,x0,1\n')
+        return SimpleNamespace(returncode=0, timed_out=True)
+    monkeypatch.setattr(proc, 'run_group', timed_out)
+    monkeypatch.setattr(sys, 'argv', [str(SCRIPT), '--checkout', str(tmp_path),
+                        '--target', 'rv32imc', '--seed', '48', '--out', str(out)])
+    assert launcher.main() == 2
+    assert json.loads((out/'generation.json').read_text())['status'] == 'error'

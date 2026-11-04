@@ -78,7 +78,7 @@ def main():
                        '--seed', str(a.seed), '--instructions', str(a.instructions),
                        '--out', str(a.out)], timeout=a.timeout, stdout=log, stderr=log)
     source = a.out/'program_0.S'
-    metadata = dict(status='generated' if r.returncode == 0 and source.is_file() else 'error',
+    metadata = dict(status='generated' if not r.timed_out and r.returncode == 0 and source.is_file() else 'error',
                     generator_revision=revision, target=a.target, seed=a.seed,
                     instructions=a.instructions, profile='bare-integer-alu',
                     pyboolector='3.2.4.38488416565', pyvsc='0.9.1.10086043874',

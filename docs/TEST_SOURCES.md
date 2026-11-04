@@ -154,3 +154,15 @@ instruction injection. A new simulation-only core hook is required.
 Additional sources and TestRIG: [#48](https://github.com/riscPrint/risc-v-workstation/issues/48). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75).
 
 Retained limit: Reference synchronization and signature provenance restrictions still apply. A DUT result cannot supply an expected signature.
+
+### REMUW monitor limit
+
+The pinned riscv-formal revision `c992aa61fdfe0846c5ed90324c596202a1c69b76`
+checks REMUW divide by zero using the full XLEN divisor before taking a word
+remainder. In `insns/generate.py` and generated `insns/insn_remuw.v`, a divisor
+with a zero low word and nonzero upper word can give the wrong monitor result.
+For example, numerator 8 and divisor `0xc000000000000000` require result 8.
+The seed-50 campaign records DUT, Spike and native Sail agreement on that result.
+The monitor reports `RVFI_ERROR`. Keep that C1 result as an error. Do not waive,
+disable or reinterpret the monitor failure as a passing program. The proposed
+upstream word-divisor fix remains separate from this workstation change.
