@@ -9,7 +9,7 @@ trap 'rm -rf "$job"' EXIT
 export RVW_CI_SOURCE="$root" RVW_CI_WORK="$job/work"
 echo "Local CI mode: $mode"
 # Copy tracked files, including local edits. Exclude all old build output and venvs.
-python3 - <<'PY'
+"${CI_PYTHON:-python3.11}" - <<'PY'
 import os, pathlib, shutil, subprocess
 src = pathlib.Path(os.environ['RVW_CI_SOURCE'])
 dst = pathlib.Path(os.environ['RVW_CI_WORK'])
@@ -40,7 +40,7 @@ unset RVW_HOME RVW_PROJECT RVW_CORE RVW_LOCKS_HELD RVW_LOCK_PYTHON PYTHONPATH VI
 # Optional core tests must never find a neighbouring developer checkout.
 export SPINAL_BOOM="$job/no-boom" VEXRISCV="$job/no-vex"
 export RVW_RESULTS="$job/results" RVW_SRC_CACHE="$job/src-cache"
-python3 -m venv rvw/.venv
+"${CI_PYTHON:-python3.11}" -m venv rvw/.venv
 export PATH="$PWD/rvw/.venv/bin:$PATH"
 export RVW_LOCK_PYTHON="$PWD/rvw/.venv/bin/python"
 lock() { scripts/with-lock.sh "$1" nice -n 10 "${@:2}"; }

@@ -91,7 +91,7 @@ Actions need paid minutes. The runner has labels `self-hosted`, `macOS`, `ARM64`
 and `rvw-local`. It accepts one job at a time. CI and Conventional Commits run
 on pushes and pull requests. Nightly runs at 03:23 UTC (03:23 GMT or 04:23 BST).
 Schedules use the default branch, so workflow changes must reach that branch
-before the new schedule takes effect.
+before the new schedule takes effect. Keep Nightly disabled until then.
 
 The runner is installed in `~/opt/actions-runner`. It runs as a per-user
 launchd agent. It starts when the user logs in after a restart. It does not
@@ -114,7 +114,8 @@ Run the same fast checks without Actions from the repository root:
 scripts/ci-local.sh
 ```
 
-The command needs Python 3.11+, Git, Node 22, npm, Rust/Cargo, JDK 21 and sbt.
+The command needs `python3.11`, Git, Node 22, npm, Rust/Cargo, JDK 21 and sbt.
+Use `CI_PYTHON` to select another Python 3.11+ executable.
 It copies tracked files, including local edits, into a temporary work directory.
 It creates a new Python venv and removes the work directory on exit. Add new
 files to Git before you run it. It does not use another checkout or its venv.
