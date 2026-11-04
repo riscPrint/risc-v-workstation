@@ -121,6 +121,8 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#215](https://github.com/riscPrint/risc-v-workstation/issues/215) feat(sim): add pcie transaction-model adapters
 - [#216](https://github.com/riscPrint/risc-v-workstation/issues/216) feat(sim): add ethernet packet-model adapters
 - [#217](https://github.com/riscPrint/risc-v-workstation/issues/217) feat(sim): define mixed-signal boundary model adapters
+- [#295](https://github.com/riscPrint/risc-v-workstation/issues/295) feat(sim): extend open simulation to match or beat VCS and Xcelium
+- [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) feat(sim): build a full open UVM flow
 
 ## SIM: regression
 
@@ -183,6 +185,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#64](https://github.com/riscPrint/risc-v-workstation/issues/64) Formal: riscv-formal checks generated from Sail
 - [#67](https://github.com/riscPrint/risc-v-workstation/issues/67) Formal: X-propagation tooling
 - [#107](https://github.com/riscPrint/risc-v-workstation/issues/107) feat(formal): prove declared connectivity
+- [#294](https://github.com/riscPrint/risc-v-workstation/issues/294) feat(formal): extend open formal engines to match or beat JasperGold and VC Formal
 
 ## LINT: lint and clock-domain crossing
 
@@ -211,6 +214,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#194](https://github.com/riscPrint/risc-v-workstation/issues/194) feat(debug): verify n-trace encoder streams
 - [#195](https://github.com/riscPrint/risc-v-workstation/issues/195) feat(debug): verify trace control and security filters
 - [#207](https://github.com/riscPrint/risc-v-workstation/issues/207) feat(debug): verify vendor trace format adapters
+- [#297](https://github.com/riscPrint/risc-v-workstation/issues/297) feat(debug): extend open debug tools to match or beat Verdi
 
 ## EMU: emulation and FPGA prototyping
 
@@ -263,8 +267,3 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#106](https://github.com/riscPrint/risc-v-workstation/issues/106) feat(platform): test agents against misleading evidence
 - [#119](https://github.com/riscPrint/risc-v-workstation/issues/119) feat(platform): benchmark agent and human engineering tasks
 - [#123](https://github.com/riscPrint/risc-v-workstation/issues/123) feat(platform): expose agent workflow plans and completion events
-
-## Architecture model scope
-
-Core projects choose queue models, event counters and fitting targets.
-`examples/boom/arch/` is a demonstration. It is not a tuned BOOM model.
