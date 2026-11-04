@@ -276,3 +276,20 @@ def test_report_keeps_observations_separate_from_architectural_bins(tmp_path):
     observations.write_text(json.dumps(dict(schema='rvw.mmu-observations/1', elf_sha256='wrong')))
     with pytest.raises(ValueError, match='header'):
         mmu.report(tmp_path, run)
+
+
+def test_unfenced_oracle_divergence_cannot_earn_a_pass(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'ELF')
+    s = scenario(remap=True, unfenced=True)
+    (tmp_path/'manifest.json').write_text(json.dumps({'scenarios': [dict(s, elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir(); (run/'rvfi.jsonl').write_text('fixture')
+    (run/'result.json').write_text(json.dumps(dict(schema='rvw.run/1', status='pass',
+        elf_sha256=mmu.digest(elf), artifacts={'rvfi_trace': 'rvfi.jsonl'})))
+    monkeypatch.setattr(mmu, 'run_group', lambda *a, **k: SimpleNamespace(
+        stdout=json.dumps({'status': 'mismatch'}), returncode=1, timed_out=False))
+    result = mmu.check(tmp_path, run, tmp_path/'platform.json', 'sail', 1)
+    assert result['status'] == 'inconclusive'
+    assert result['scenarios'][0]['comparison']['status'] == 'mismatch'
+    assert result['scenarios'][0]['c1_status'] == 'pass'

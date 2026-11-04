@@ -442,7 +442,10 @@ def check(directory, results, platform, model, timeout, sail=None):
                         comparison = {}
                     reason = 'oracle did not establish a complete strict match'
                     if not result.timed_out and comparison.get('status') == 'mismatch':
-                        status, reason = 'fail', 'architectural mismatch'
+                        if s.get('unfenced'):
+                            status, reason = 'inconclusive', 'strict model divergence in a scenario with permitted unfenced alternatives'
+                        else:
+                            status, reason = 'fail', 'architectural mismatch'
                     elif (not result.timed_out and result.returncode == 0
                           and comparison.get('status') == 'match'
                           and comparison.get('trace_complete') is True

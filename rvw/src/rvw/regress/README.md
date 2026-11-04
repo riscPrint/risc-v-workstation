@@ -549,3 +549,9 @@ architectural bins. Without a bound check, bins remain inconclusive. Observation
 files have separate paths, hashes and event counts. `recorded` means capture
 exists. It gives no walk or device correctness verdict. The report lists the
 remaining protocol, PMA, atomicity and multi-hart obligations explicitly.
+
+For `unfenced` scenarios, a strict oracle mismatch is retained and the checker
+returns inconclusive. Two models can select different permitted translations.
+No mismatch in that scenario earns coverage. The C1 self-check still fails
+wrong values and a wrong result after the required fence. Other scenarios keep
+the normal strict mismatch failure rule. Raw `c1_status` remains in check rows.
