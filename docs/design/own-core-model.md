@@ -149,4 +149,15 @@ semantics before support. Warmup and ROI entry state can dominate short runs.
 - Phase 4: frozen prediction ledger, repeated timing and the joint speed/accuracy
   acceptance. Optimize only after profile evidence identifies the bottleneck.
 
-Follow-up issue links will be added after the first working increment.
+## Follow-up work
+
+- [#354](https://github.com/riscPrint/risc-v-workstation/issues/354): effective
+  configuration checks and predictor/cache timing modules (phase 2).
+- [#355](https://github.com/riscPrint/risc-v-workstation/issues/355): calibration
+  and held-out RTL event correlation (phase 3).
+- [#356](https://github.com/riscPrint/risc-v-workstation/issues/356): prediction
+  ledger and joint native speed/accuracy qualification (phase 4).
+
+Phase 1 supports integer straight-line regions. Branches and jumps are rejected
+until their timing semantics exist. It does not yet meet the bounded BOOM
+validation, configuration agreement or speed/accuracy acceptance targets.
