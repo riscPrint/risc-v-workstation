@@ -80,3 +80,71 @@ small timer, clock/reset, settled register, X/Z and two-state conformance cases.
 Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
+
+## Compare simulation speed
+
+`rvw regress speed-compare --pair BASE1 CAND1 --pair BASE2 CAND2 ... --out report.json`
+compares at least five pairs of C1 files. Each file must record a conclusive
+pass, a native build identity, positive counters, a serial first attempt and
+at least one second in `details.execution_s`. Use `--min-seconds 10` for long
+workloads. Warm the model first. Do not include warmup results in the pairs.
+Keep the workload, preset, seed, memory timing and trace options fixed.
+Interleave baseline and candidate runs. Reverse their order in alternate pairs.
+Use distinct result paths. Run one simulation at a time under the core lock.
+
+The command validates C2 records and requires an end event, matching C1
+counters, matching ELF and seed, and identical trace events across all pairs.
+Native build identities may differ between baseline and candidate. Each
+side must keep one identity. A missing trace or any difference gives exit 3.
+This is simulation result equivalence. It is not an ISA oracle check.
+Run the reference-model checks separately before adopting an option.
+
+The report records every C1 path and hash, C2 hash and native build identity.
+`speedup` is the geometric mean of paired baseline/candidate execution times.
+`speedup_ci95` is a percentile bootstrap interval over pairs (10000 resamples;
+fixed seed 1). `retain` requires its lower bound to exceed 1. This threshold
+checks timing noise only. The interval assumes independent pairs. Shared-host
+load, order bias and autocorrelation can invalidate that assumption. Do not
+use five short samples to claim precise speedups. Report host load and run
+order with measured results. The command does not tune or change defaults.
+
+Use separate reports for each preset and workload. The input files must remain
+available to inspect a report. Reports belong outside the repository.
+
+### Verilator experiment protocol
+
+Sweep `SPINAL_VERILATOR_FLAGS='--threads N'` for N = 1, 2, 4, then test output
+splitting with `--output-split 10000 --output-split-cfuncs 500`. Test only one
+change at a time. Keep `RISCVSIM_MAKE_JOBS` fixed. Native identity captures these
+options. Keep an option only after complete result equivalence and a measured
+benefit on the target design. More threads can reduce throughput.
+
+Thread PGO requires a training build with `--prof-pgo`, a representative run
+that writes `profile.vlt`, then a rebuild with that file as a Verilator input.
+Keep source, flags and profile hashes. Treat `PROFOUTOFDATE` as a failed
+experiment. The current native identity collector refuses profile file inputs;
+these runs cannot earn conclusive C1 evidence or a retained speed option yet.
+Do not bypass that check. Hierarchical builds require declared partition
+boundaries and a separate build integration. They are not enabled by this tool.
+
+`ccache` affects native build time, not steady-state simulation throughput.
+Measure cold and warm builds separately. The current collector refuses opaque
+compiler wrappers and `OBJCACHE`; do not use an inconclusive run as speed evidence.
+See [Verilator simulation guidance](https://verilator.org/guide/latest/simulating.html)
+and [Verilator options](https://verilator.org/guide/latest/exe_verilator.html).
+
+### Checkpoints and other simulators
+
+The existing replay descriptor starts from reset. It cannot resume live state.
+Adding `--savable` alone is insufficient: the Spinal native bridge needs save
+and restore calls, and the Scala scheduler, memory, devices, monitor, RNG and
+pending stimulus need one versioned snapshot. External effects must be refused.
+Fresh-process suffix equivalence on VexRiscv and bounded BOOM remains required.
+No live checkpoint result is supplied by `speed-compare`.
+
+CIRCT's [circt-verilog](https://circt.llvm.org/docs/Tools/circt-verilog/)
+accepts Verilog input. An Arcilator evaluation also needs a native driver for
+the lowered design and the same memory, reset and retirement observations.
+Parsing or compiling generated Verilog is not result equivalence. An absent
+tool or unsupported lowering must be reported as inconclusive. Backend capability
+profiles remain separate from this comparison command.
