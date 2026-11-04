@@ -82,3 +82,13 @@ def test_spike_plic_oracle(spike_devices):
 def test_invalid_priority_mask():
     with pytest.raises(ValueError):
         PlicMap(0, 0x1000, 0x2000, 128, 0x200000, 4096, 63, 2, 5)
+
+
+def test_spike_claim_ignores_threshold(spike_devices):
+    # Independent oracle for the controller adapter's threshold conformance case.
+    actions = ['w 4 3 4', 'w 8192 2 4', 'w 2097152 3 4',
+               'l 1 1 4', 'r 2097156 0 4', 'r 4096 0 4', 'r 2097156 0 4']
+    observed = spike_devices('plic', actions)
+    assert observed[3] == (1, 0, 0, 0)  # threshold masks both IRQ outputs
+    assert observed[4] == (1, 1, 0, 0)  # claim must still return source 1
+    assert observed[5:] == [(1, 0, 0, 0), (1, 0, 0, 0)]  # IP clear; no duplicate claim
