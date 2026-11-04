@@ -167,9 +167,12 @@ Each path triple names `[source, first destination stage, second stage]`.
 The handshake check requires one-bit chains in opposite clock directions.
 The FIFO check requires opposite chains, equal pointer widths, a power-of-two
 memory depth, one wrap bit, and synchronous read/write ports in opposite domains.
-The memory path identifies the SpinalDB memory signal. Pointer-to-address logic,
-Gray encoding, full/empty logic and data stability remain unproved. Encoding is
-`declared_only`. A matching declaration gives `cdc.handshake_candidate` or
+The memory path identifies the SpinalDB memory signal. The check also requires
+each registered pointer to have one unconditional typed assignment of
+`binary ^ (binary >> 1)` through `CastUIntToBits`. Other encodings stay invalid
+for this bounded recognizer. The report retains the exact typed expression keys.
+Pointer-to-address logic, pointer step behavior, full/empty logic and data
+stability remain unproved. A Gray encoder match is not a one-bit-transition proof. A matching declaration gives `cdc.handshake_candidate` or
 `cdc.async_fifo_candidate`. A broken topology gives the corresponding `_invalid`
 finding. Both retain warnings. They do not suppress individual crossings.
 
@@ -190,3 +193,10 @@ unproved. All structural reports stay inconclusive or findings.
 each matching and broken topology, merge/no-merge cases, and declared/missing
 release order. These tests exercise the analyzer with controlled graphs. They do
 not establish that RTL protocol behavior or extraction matches those graphs.
+
+The extracted fixtures also include `handshake`, `handshake-broken`, `fifo`,
+`fifo-broken`, `separate` and `reconverge`. The paired cases exercise topology;
+they are not full handshake or FIFO implementations. The FIFO topology uses a
+4-word dual-clock memory and registered Gray encoders. The broken cases add a
+second input at the reverse first stage. Extracted tests also use the independent
+reset design with and without a source-before-destination declaration.

@@ -1689,3 +1689,7 @@ Functional reconvergence and async FIFO rules retain `not_run` status as
 `cdc.reconvergence_protocol`, `rdc.reconvergence_protocol` and
 `cdc.async_fifo_protocol`. Structural findings retain the domain-bound waiver
 identity. Protocol findings also bind their exact declaration in the message.
+FIFO candidates require exact unconditional typed Gray encoder expressions.
+`protocol_evidence` retains these keys and the selected memory/port records in
+the finding, so they contribute to its waiver ID. This establishes an encoder
+shape only. Pointer transitions and transfer behavior remain unproved.

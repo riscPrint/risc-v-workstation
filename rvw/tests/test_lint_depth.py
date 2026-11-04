@@ -53,6 +53,9 @@ def protocol_reference(tmp_path, fifo=False, fault=False):
             edges(c, [(1,5)])
         if fifo:
             c.execute("INSERT INTO signals(id,component_id,name,path,kind,width) VALUES(7,1,'fifo','fifo','mem',8)")
+            for target, binary in [(1,'writeBinary'), (4,'readBinary')]:
+                key = f' := CastUIntToBits[3](Operator$UInt$Xor[3]({binary}:UInt[3],Operator$UInt$ShiftRightByIntFixedWidth<1>[3]({binary}:UInt[3])))'
+                c.execute("INSERT INTO assignments(id,target_id,component_id,kind,key,seq) VALUES(?,?,1,'data',?,0)", (target,target,key))
             c.execute("INSERT INTO memories(id,signal_id,component_id,name,path,width,depth) VALUES(1,7,1,'fifo','fifo',8,4)")
             c.execute("INSERT INTO mem_ports(id,memory_id,kind,clock_domain_id) VALUES(1,1,'write',1)")
             c.execute("INSERT INTO mem_ports(id,memory_id,kind,clock_domain_id) VALUES(2,1,'read_sync',2)")
@@ -72,7 +75,7 @@ def test_bidirectional_protocol_reference(tmp_path, fifo, fault):
     assert r['status'] == 'inconclusive'
     assert 'cdc.protocol' in {x['id'] for x in r['rules']}
     if fifo:
-        assert r['depth']['structures'][-1]['encoding_evidence'] == 'declared_only'
+        assert all(r['depth']['structures'][-1]['encoding_evidence'])
 
 
 @pytest.mark.parametrize('fault', ['read_domain', 'depth', 'width', 'missing_memory'])
@@ -152,3 +155,18 @@ def test_intent_is_part_of_waiver_identity(tmp_path):
 def test_invalid_intent(tmp_path, intent):
     with pytest.raises(ValueError):
         result(fixture_db(tmp_path), intent)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'wrong_shift', 'conditional', 'multiple'])
+def test_fifo_rejects_unestablished_gray(tmp_path, fault):
+    db, intent = protocol_reference(tmp_path, True)
+    with sqlite3.connect(db) as c:
+        if fault == 'missing':
+            c.execute('DELETE FROM assignments WHERE target_id=1')
+        elif fault == 'wrong_shift':
+            c.execute("UPDATE assignments SET key=replace(key,'<1>','<2>') WHERE target_id=1")
+        elif fault == 'conditional':
+            c.execute('UPDATE assignments SET cond_id=1 WHERE target_id=1')
+        else:
+            c.execute("INSERT INTO assignments(id,target_id,component_id,kind,key,seq) VALUES(20,1,1,'data','other',1)")
+    assert 'cdc.async_fifo_invalid' in rules(result(db, intent))

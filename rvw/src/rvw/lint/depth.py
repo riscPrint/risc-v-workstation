@@ -1,5 +1,6 @@
 """Bounded topology checks. Declarations are assumptions, never protocol proof."""
 from collections import defaultdict
+import re
 
 
 def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_crossings, emit, intent):
@@ -22,6 +23,22 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
                 and regs[b]['clock_domain_id'] == regs[d]['clock_domain_id']
                 and regs[a]['width'] == regs[b]['width'] == regs[d]['width']
                 and incoming[b] == {a} and outgoing[b] == {d} and incoming[d] == {b})
+
+    def gray_encoder(path):
+        node = by_path.get(path)
+        if node not in regs:
+            return None
+        assignments = [dict(a) for a in c.execute(
+            "SELECT * FROM assignments WHERE target_id=? AND kind!='init'", (node,))]
+        if len(assignments) != 1 or assignments[0]['cond_id'] is not None:
+            return None
+        width = regs[node]['width']
+        # Match the extractor's exact typed expression, not a source-name hint.
+        pattern = (rf" := CastUIntToBits\[{width}\]\(Operator\$UInt\$Xor\[{width}\]"
+                   rf"\(([^(), ]+:UInt\[{width}\]),Operator\$UInt\$ShiftRightByIntFixedWidth"
+                   rf"<1>\[{width}\]\(\1\)\)\)")
+        key = assignments[0]['key'] or ''
+        return key if re.fullmatch(pattern, key) else None
 
     structures = []
     # Direct chains have no combinational logic or first-stage fanout.
@@ -81,6 +98,7 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
         if kind == 'async_fifo' and (not isinstance(p['memory'], str) or p['encoding'] != 'gray'):
             raise ValueError('async_fifo needs a memory path and encoding gray')
         forward, reverse = p['forward'], p['reverse']
+        memory, ports = None, []
         ok = chain(*forward) and chain(*reverse)
         if ok:
             a, b = by_path[forward[0]], by_path[reverse[0]]
@@ -96,7 +114,8 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
                 write_domains = {x['clock_domain_id'] for x in ports if x['kind'] == 'write'}
                 read_domains = {x['clock_domain_id'] for x in ports if x['kind'] == 'read_sync'}
                 ok &= (bool(memory) and regs[a]['width'] == regs[b]['width']
-                       and regs[a]['width'] > 1 and memory['depth'] > 1
+                       and regs[a]['width'] > 1 and gray_encoder(forward[0]) is not None and gray_encoder(reverse[0]) is not None
+                       and memory['depth'] > 1
                        and memory['depth'] & (memory['depth'] - 1) == 0
                        and regs[a]['width'] == memory['depth'].bit_length()
                        and write_domains == {regs[a]['clock_domain_id']}
@@ -104,11 +123,14 @@ def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_cros
         endpoint = next((regs[by_path[x]] for x in forward if by_path.get(x) in regs), None)
         if endpoint is None:
             raise ValueError('protocol must name at least one existing register')
-        emit('cdc.' + kind + ('_candidate' if ok else '_invalid'), None, endpoint,
+        finding = emit('cdc.' + kind + ('_candidate' if ok else '_invalid'), None, endpoint,
              ('Declared protocol matches bounded topology; behavior remains unproved. ' if ok else
               'Declared protocol does not match bounded topology. ') + repr(p))
+        finding['protocol_evidence'] = dict(memory=memory, ports=ports,
+            gray_keys=[gray_encoder(forward[0]), gray_encoder(reverse[0])] if kind == 'async_fifo' else None)
         structures.append(dict(kind=kind, status='candidate' if ok else 'invalid', declaration=p,
-                               encoding_evidence='declared_only' if kind == 'async_fifo' else None))
+                               encoding_evidence=([gray_encoder(forward[0]), gray_encoder(reverse[0])]
+                                                  if kind == 'async_fifo' else None)))
 
     order = intent.get('reset_order', [])
     if not isinstance(order, list) or any(not isinstance(pair, list) or len(pair) != 2

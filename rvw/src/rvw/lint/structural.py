@@ -32,6 +32,7 @@ def analyze(db, intent=None):
                              source_domain=domains.get(src['clock_domain_id']) if src else None,
                              destination_domain=domains.get(dst['clock_domain_id']),
                              source_width=src['width'] if src else None, destination_width=dst['width']))
+        return findings[-1]
 
     def clock(d):
         return (d.get('clock_key'), d.get('clock_edge'))
