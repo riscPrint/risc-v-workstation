@@ -1,6 +1,11 @@
 name: Native installer
 on:
   workflow_dispatch:
+    inputs:
+      long_builds:
+        description: Also run the gem5 and all-tools builds (up to six hours each)
+        type: boolean
+        default: false
   pull_request:
     paths:
       - 'scripts/install.sh'
@@ -53,6 +58,7 @@ jobs:
           uv sync --locked --extra dev --extra mcp --project rvw
           rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
   long-install:
+    if: github.event_name == 'workflow_dispatch' && inputs.long_builds
     runs-on: ubuntu-latest
     timeout-minutes: 360
     strategy:
