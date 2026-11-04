@@ -436,3 +436,12 @@ def test_bundle_check_needs_no_run_or_network(tmp_path):
     assert 'MISSING Sail' in result.stdout
     assert 'native-bundle.py' not in result.stdout
     assert not (tmp_path / 'absent').exists()
+
+
+def test_formal_dry_run_builds_pinned_native_slang(tmp_path):
+    env = {**os.environ, 'RVW_SLANG': str(tmp_path / 'absent.so')}
+    result = invoke('--with-formal', '--dry-run', '--prefix', tmp_path / 'install', env=env)
+    assert result.returncode == 0, result.stderr
+    assert 'build-yosys-slang.py' in result.stdout
+    assert '--yosys-config' in result.stdout
+    assert not (tmp_path / 'install').exists()
