@@ -20,6 +20,9 @@ class Elf:
         self.entry += load_bias
         if self.entry >= 1 << self.xlen:
             raise ValueError("ELF entry address overflow")
+        if h[9] and (h[8] < (56 if self.xlen == 64 else 32) or
+                     phoff + h[9] * h[8] > len(d)):
+            raise ValueError("invalid ELF program header table")
         self.segments = []
         for i in range(h[9]):
             off = phoff + i * h[8]
@@ -37,6 +40,9 @@ class Elf:
             self.segments.append(((pa or va) + load_bias, d[offset:offset+filesz], memsz))
         if not self.segments:
             raise ValueError("ELF has no load segments")
+        spans = sorted((a, a + size) for a, _, size in self.segments if size)
+        if any(left[1] > right[0] for left, right in zip(spans, spans[1:])):
+            raise ValueError("ELF load segments overlap")
         self.symbols = {}
         sections = [struct.unpack_from("<IIQQQQIIQQ" if self.xlen == 64 else "<IIIIIIIIII",
                                        d, shoff + i * h[10]) for i in range(h[11])]

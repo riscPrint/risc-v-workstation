@@ -31,3 +31,23 @@ def test_pie_explicit_bias(tmp_path):
 def test_unsupported_loader_contract(tmp_path, kind, segment_type, bias):
     with pytest.raises(ValueError):
         Elf(image(tmp_path, kind, segment_type), load_bias=bias)
+
+
+@pytest.mark.parametrize('second_address', [0x100, 0x106])
+def test_reject_overlapping_load_segments(tmp_path, second_address):
+    path = image(tmp_path)
+    d = bytearray(path.read_bytes())
+    struct.pack_into('<H', d, 56, 2)
+    struct.pack_into('<IIQQQQQQ', d, 120, 1, 5, 256, second_address, second_address, 4, 8, 1)
+    path.write_bytes(d)
+    with pytest.raises(ValueError, match='overlap'):
+        Elf(path)
+
+
+def test_reject_short_program_header_stride(tmp_path):
+    path = image(tmp_path)
+    d = bytearray(path.read_bytes())
+    struct.pack_into('<H', d, 54, 0)
+    path.write_bytes(d)
+    with pytest.raises(ValueError, match='program header'):
+        Elf(path)

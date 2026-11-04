@@ -92,4 +92,37 @@ class BootImageSpec extends AnyFunSuite {
     } finally org.apache.commons.io.FileUtils.deleteDirectory(dir)
   }
 
+  test("ELF alone rejects overlapping segments including BSS") {
+    for (address <- Seq(0x100L, 0x106L)) {
+      val file = image()
+      val data = Files.readAllBytes(file.toPath)
+      val b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+      b.putShort(56, 2)
+      b.putInt(120, 1); b.putLong(128, 256)
+      b.putLong(136, address); b.putLong(144, address)
+      b.putLong(152, 4); b.putLong(160, 8)
+      Files.write(file.toPath, data)
+      intercept[IllegalArgumentException](new ElfFile(file))
+    }
+  }
+  test("ELF rejects a short program header stride") {
+    val file = image()
+    val data = Files.readAllBytes(file.toPath)
+    ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).putShort(54, 0)
+    Files.write(file.toPath, data)
+    intercept[IllegalArgumentException](new ElfFile(file))
+  }
+  test("ELF32 bias cannot overflow its address width") {
+    val file = image()
+    val data = Files.readAllBytes(file.toPath)
+    val b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+    data(4) = 1
+    b.putInt(24, 0x100); b.putInt(28, 52)
+    b.putShort(42, 32); b.putShort(44, 1)
+    b.putInt(52, 1); b.putInt(56, 256); b.putInt(60, 0x100); b.putInt(64, 0x100)
+    b.putInt(68, 4); b.putInt(72, 8)
+    Files.write(file.toPath, data)
+    intercept[IllegalArgumentException](new ElfFile(file, 0x100000000L))
+  }
+
 }

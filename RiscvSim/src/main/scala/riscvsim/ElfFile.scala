@@ -35,12 +35,20 @@ final class ElfFile(val file: File, val loadBias: Long = 0L) {
   require(elfType == 2 || elfType == 3, "only ET_EXEC and self-relocating ET_DYN images are supported")
   require(loadBias == 0 || elfType == 3, "load bias requires ET_DYN")
   require(loadBias >= 0, "load bias must be nonnegative")
-  private def relocated(a: Long): Long = Math.addExact(a, loadBias)
+  private def relocated(a: Long): Long = {
+    val address = Math.addExact(a, loadBias)
+    require(address >= 0 && (is64 || address < (1L << 32)), "ELF address overflow")
+    address
+  }
   val entry: Long = relocated(word(0x18))
   private val phoff = if (is64) u64(0x20) else u32(0x1c)
   private val shoff = if (is64) u64(0x28) else u32(0x20)
   private val (phentsize, phnum, shentsize, shnum) =
     if (is64) (u16(0x36), u16(0x38), u16(0x3a), u16(0x3c)) else (u16(0x2a), u16(0x2c), u16(0x2e), u16(0x30))
+
+  require(phnum == 0 || (phoff >= 0 && phentsize >= (if (is64) 56 else 32) &&
+    phoff <= contents.length && phnum.toLong * phentsize <= contents.length - phoff),
+    "invalid ELF program header table")
 
   /** A PT_LOAD segment: physical address, file bytes, memory size (>= data length; the rest is zero). */
   case class Segment(paddr: Long, data: Array[Byte], memsz: Long)
@@ -56,9 +64,14 @@ final class ElfFile(val file: File, val loadBias: Long = 0L) {
       require(off >= 0 && filesz >= 0 && memsz >= filesz && off <= contents.length &&
         filesz <= contents.length - off && memsz <= Int.MaxValue, "invalid ELF load segment")
       val address = relocated(paddr)
-      require(address >= 0 && memsz <= Long.MaxValue - address, "ELF address overflow")
+      require(memsz <= Long.MaxValue - address && (is64 || address + memsz <= (1L << 32)),
+        "ELF address overflow")
       Some(Segment(address, java.util.Arrays.copyOfRange(contents, off.toInt, (off + filesz).toInt), memsz))
     }
+  }
+
+  parsedSegments.filter(_.memsz > 0).sortBy(_.paddr).sliding(2).filter(_.size == 2).foreach { pair =>
+    require(pair.head.paddr + pair.head.memsz <= pair.last.paddr, "ELF load segments overlap")
   }
 
   /** Symbol name -> value, from every SHT_SYMTAB section. */
