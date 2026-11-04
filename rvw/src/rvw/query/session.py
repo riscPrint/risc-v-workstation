@@ -10,6 +10,8 @@ import gzip
 import json
 from pathlib import Path
 import sys
+import signal
+import subprocess
 from time import perf_counter
 
 from .db import DesignDB, QueryError
@@ -54,7 +56,9 @@ class Session:
             t, end = int(a['time']), int(a.get('end', int(a['time']) + 100))
             if not 0 <= t <= end <= 2**63 - 1:
                 raise QueryError('invalid time range')
-            sig = self.db.resolve_one(a['signal'])
+            sig = self.db.resolve(a['signal'], include_pruned=True)[0]
+            if sig.pruned:
+                return dict(result=dict(mapping='pruned', where=dict(status='inconclusive', cause='signal was pruned; it is absent from hardware'), source=None, location=None, values=[], drivers={}), database=self.db.capture.record(), elapsed_ms=(perf_counter()-start)*1000)
             where = ops.where(self.db, sig.path)
             wave_name = self.db.wave_path(sig.path)
             with reader(self.wave) as (conn, header):
@@ -126,11 +130,14 @@ def main():
     p.add_argument('--web', type=Path)
     p.add_argument('--port', type=int, default=0)
     a = p.parse_args()
+    def cancel(signum, frame):
+        raise KeyboardInterrupt('debug session cancelled')
+    signal.signal(signal.SIGTERM, cancel)
     session = Session(a.db, a.wave)
     def respond(request):
         try:
             return session.request(request)
-        except (QueryError, WaveError, ValueError, KeyError, OSError) as e:
+        except (QueryError, WaveError, ValueError, KeyError, OSError, subprocess.TimeoutExpired) as e:
             return dict(error=str(e), status='inconclusive')
     try:
         if a.web:

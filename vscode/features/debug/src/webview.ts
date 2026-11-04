@@ -1,15 +1,18 @@
 import { createEngine } from '../../../../SpinalBlocks/engine/src/index';
 import { workerLayout } from '../../../../SpinalBlocks/engine/src/elk';
+import {lane} from './wave';
 import type { Request } from './protocol';
 
 declare function acquireVsCodeApi(): {postMessage(v:unknown):void};
+async function main():Promise<void> {
 const api = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
 const $ = (id:string) => document.getElementById(id)!;
 const signal = $('signal') as HTMLInputElement, time = $('time') as HTMLInputElement;
 let serial = 0, generation = 0, highlighting = false;
 const pending = new Map<number, {resolve:(v:any)=>void; reject:(e:Error)=>void}>();
 window.addEventListener('message', e => {
-  if (e.data?.type === 'source') { void fromSource(e.data.file, e.data.line); return; }
+  if (e.data?.type === 'source') { run(() => fromSource(e.data.file, e.data.line)); return; }
+  if(e.data?.id===-1 && e.data.error) {for(const p of pending.values()) p.reject(new Error(e.data.error));pending.clear();$('status').textContent=e.data.error;return;}
   const p = pending.get(e.data?.id); if (!p) return;
   pending.delete(e.data.id);
   e.data.error ? p.reject(new Error(e.data.error)) : p.resolve(e.data);
@@ -25,6 +28,11 @@ function button(label:string, action:()=>void):HTMLButtonElement {
   const b = document.createElement('button'); b.textContent = label; b.onclick = action; return b;
 }
 function run(action:()=>Promise<void>):void { void action().catch(e => { $('status').textContent = String(e); }); }
+// Fetch the packaged worker before making its blob. VS Code serves resource URLs
+// through a service worker that a worker cannot import directly.
+const workerResponse=await fetch(document.body.dataset.worker ?? new URL('elk-worker.js',location.href).href);
+if(!workerResponse.ok) throw new Error(`ELK worker: ${workerResponse.status}`);
+const workerUrl=URL.createObjectURL(new Blob([await workerResponse.text()],{type:'text/javascript'}));
 const engine = createEngine($('diagram'), {
   openSource: loc => run(() => fromSource(loc.file, loc.line)),
   selectionChanged: d => {
@@ -32,7 +40,7 @@ const engine = createEngine($('diagram'), {
     if (d.loc) run(() => fromSource(d.loc!.file, d.loc!.line));
   },
   error: e => { $('status').textContent = e.message; },
-}, {layout:workerLayout(document.body.dataset.worker ?? 'elk-worker.js')});
+}, {layout:workerLayout(workerUrl)});
 async function fromSource(file:string, line:number):Promise<void> {
   const data = await request({op:'source', file, line});
   const candidates = data.result.candidates as string[];
@@ -51,12 +59,14 @@ function links(value:any, container:HTMLElement):void {
 }
 async function select():Promise<void> {
   const ticket = ++generation;
-  const response = await request({op:'select', signal:signal.value, time:time.value});
+  const start=time.value, end=String(BigInt(start)+100n);
+  const response = await request({op:'select', signal:signal.value, time:start, end});
   if (ticket !== generation) return;
   const r = response.result, loc = r.location;
   $('status').textContent = `${r.mapping}; ${r.where.cause ?? ''}; ${response.elapsed_ms.toFixed(1)} ms backend; database ${JSON.stringify(response.database)}`;
   $('wave').replaceChildren();
   for (const v of r.values) {
+    $('wave').append(lane(v.initial,v.changes,start,v.truncated ? v.changes.at(-1).time : end,800));
     $('wave').append(button(`${v.signal} @ ${time.value} = ${v.initial ?? 'unknown'}`, () => run(select)));
     // Event cells retain exact integer times. They also form a native value lane.
     for (const c of v.changes) $('wave').append(button(`${c.time}: ${c.value}`, () => {time.value=String(c.time); run(select);}));
@@ -92,3 +102,6 @@ run(async () => {
   if (r.result.blocks) await engine.setDesign(r.result.blocks);
   else $('diagram').textContent = 'No blocks artifact in this database.';
 });
+
+}
+void main().catch(error=>{document.getElementById('status')!.textContent=String(error);});

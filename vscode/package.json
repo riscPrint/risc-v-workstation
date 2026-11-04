@@ -436,7 +436,8 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run manifest:check && node --test \"dist/*/test/*.test.js\"",
     "test:integration:spinalblocks": "node features/spinalblocks/test/run.cjs",
-    "package": "vsce package"
+    "package": "vsce package",
+    "test:integration:debug": "node features/debug/test/browser.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

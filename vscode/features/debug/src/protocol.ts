@@ -4,7 +4,7 @@ export function isRequest(v: unknown): v is Request {
   const a = v as Record<string, unknown>;
   if (a.op === 'open') return true;
   if (a.op === 'source') return typeof a.file === 'string' && Number.isSafeInteger(a.line) && Number(a.line) > 0;
-  return (a.op === 'select' || a.op === 'trace') && typeof a.signal === 'string' && /^\d+$/.test(String(a.time)) &&
+  return (a.op === 'select' || a.op === 'trace') && typeof a.signal === 'string' && typeof a.time === 'string' && /^\d+$/.test(a.time) &&
     (a.end === undefined || /^\d+$/.test(String(a.end)));
 }
 export const body = `<header><label>Signal <input id="signal" list="signals"></label><datalist id="signals"></datalist>

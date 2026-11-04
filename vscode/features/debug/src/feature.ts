@@ -22,7 +22,7 @@ const feature:Feature = { id:'debug', activate(ctx) {
     child.stderr.on('data',data=>ctx.log.error(String(data)));
     const fail=(message:string)=>void panel.webview.postMessage({id:-1,error:message});
     child.on('error',e=>{ctx.log.error(e.message);fail(e.message);void vscode.window.showErrorMessage(`Debug backend: ${e.message}`);});
-    child.on('exit',code=>{if(code) {ctx.log.error(`Debug backend exited: ${code}`);void vscode.window.showErrorMessage(`Debug backend exited: ${code}. See the Workstation output.`);}});
+    child.on('exit',code=>{if(code) {ctx.log.error(`Debug backend exited: ${code}`);fail(`Debug backend exited: ${code}`);void vscode.window.showErrorMessage(`Debug backend exited: ${code}. See the Workstation output.`);}});
     const messages=panel.webview.onDidReceiveMessage(a=>{if(Number.isSafeInteger(a?.id) && isRequest(a) && child.stdin.writable) child.stdin.write(JSON.stringify(a)+'\n');});
     const source=vscode.window.onDidChangeTextEditorSelection(e=>{if(e.textEditor.document.languageId==='scala') void panel.webview.postMessage({type:'source',file:e.textEditor.document.uri.fsPath,line:e.selections[0].active.line+1});});
     panel.onDidDispose(()=>{messages.dispose();source.dispose();lines.close();child.kill('SIGTERM');});

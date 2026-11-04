@@ -10,3 +10,6 @@ test('all panes and navigation requests are present',()=>{
 test('reject malformed requests',()=>{
   for(const a of [null,{}, {op:'trace',signal:'x',time:'-1'},{op:'source',file:'x',line:0},{op:'exec',signal:'x',time:'0'}]) assert.equal(isRequest(a),false);
 });
+
+import {position} from '../src/wave';
+test('wave time positions retain precision above 2^53',()=>{assert.equal(position('9007199254740994','9007199254740993','9007199254741003'),80);});
