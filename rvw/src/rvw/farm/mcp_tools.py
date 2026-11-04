@@ -4,6 +4,9 @@ from .dashboard import dashboard
 
 
 def execute_json(hosts=None, manifest=None, adapter=None, identity_command=None, identity=None, out=None, jobs=1, timeout=600, action=None):
+    if action == "recover":
+        from .executor import recover
+        return recover(out)
     if action == "cancel":
         return cancel_json(out)
     from .executor import execute
@@ -25,5 +28,7 @@ def mcp_tools():
                 "jobs": {"type": "integer", "minimum": 1}, "timeout": {"type": "number", "exclusiveMinimum": 0}},
                ["hosts", "manifest", "adapter", "identity_command", "identity", "out"]),
         handler("rvw.farm.mcp_tools"), long=True),
+        ToolSpec("farm_recover", "Read crash checkpoints. Missing final collection stays inconclusive.",
+                 schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "recover")),
         ToolSpec("farm_cancel", "Cancel shards and confirm host process-group cleanup.",
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "cancel"), long=True)]

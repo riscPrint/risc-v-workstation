@@ -14,6 +14,30 @@ from rvw.common.proc import run_group
 from rvw.results import RunResult
 
 
+def save_json(path, value):
+    path = Path(path)
+    temp = path.with_suffix(path.suffix + '.tmp')
+    temp.write_text(json.dumps(value, indent=2))
+    temp.replace(path)
+
+
+def recover(out):
+    """Read controller checkpoints. Never infer collection from artifact presence."""
+    out = Path(out)
+    if (out / 'farm.json').exists():
+        return json.loads((out / 'farm.json').read_text())
+    plan = json.loads((out / 'plan.json').read_text())
+    shards = []
+    for index, expected in enumerate(plan['shards']):
+        path = out / f'progress-{index}.json'
+        shard = json.loads(path.read_text()) if path.exists() else {
+            **expected, 'status': 'inconclusive', 'cells': [], 'cause': 'controller stopped before shard checkpoint'}
+        recorded = {cell['id'] for cell in shard['cells']}
+        shards.append({**shard, 'missing_cells': [c for c in expected['expected_cells'] if c not in recorded]})
+    return {**plan, 'shards': shards, 'status': 'inconclusive', 'recovered': True,
+            'cause': 'no final collection report; use farm cancel to check remote cleanup'}
+
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -79,13 +103,22 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         cells.append({"id": str(i), "options": {k: v for k, v in row.items() if k not in ("elf", "out")},
                       "elf_bytes": base64.b64encode(data).decode(), "elf_sha256": digest(data)})
     controls = [{"host": host, "token": uuid.uuid4().hex, "dispatched": i < len(cells)} for i, host in enumerate(hosts)]
-    (out / "control.json").write_text(json.dumps(controls))
+    save_json(out / "control.json", controls)
+    plan = {"schema": "rvw.farm/1", "expected_cells": len(cells),
+            "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells],
+            "shards": [{"host": h["name"], "expected_cells": [c["id"] for c in cells[i::len(hosts)]]}
+                       for i, h in enumerate(hosts)]}
+    save_json(out / "plan.json", plan)
     def shard(index_host):
         index, host = index_host
         selected = cells[index::len(hosts)]
         result = {"host": host["name"], "expected_cells": [c["id"] for c in selected], "cells": [], "status": "inconclusive"}
+        checkpoint = out / f"progress-{index}.json"
+        save_json(checkpoint, result)
         if not selected:
-            return {**result, "status": "empty"}
+            result["status"] = "empty"
+            save_json(checkpoint, result)
+            return result
         request = dict(cells=selected, adapter=adapter, identity_command=identity_command,
                        identity=identity, jobs=jobs, timeout=timeout, token=controls[index]["token"],
                        resources={"cpu": jobs, **host.get("resources", {})})
@@ -142,11 +175,13 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                     raise ValueError("C1 identity claim differs")
                 result["cells"].append({"id": sent["id"], "status": run.status,
                                          "inconclusive": run.why_inconclusive})
+                save_json(checkpoint, result)
             result["status"] = "complete" if all(not c["inconclusive"] for c in result["cells"]) else "inconclusive"
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result["cause"] = str(exc)
         recorded = {c["id"] for c in result["cells"]}
         result["missing_cells"] = [c["id"] for c in selected if c["id"] not in recorded]
+        save_json(checkpoint, result)
         return result
     pool = ThreadPoolExecutor(max_workers=len(hosts))
     try:
@@ -159,7 +194,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         pool.shutdown(wait=True)
     report = {"schema": "rvw.farm/1", "expected_cells": len(cells), "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells], "shards": shards,
               "status": "complete" if all(s["status"] in ("complete", "empty") for s in shards) else "inconclusive"}
-    (out / "farm.json").write_text(json.dumps(report, indent=2))
+    save_json(out / "farm.json", report)
     return report
 
 

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from .executor import execute, cancel
+from .executor import execute, cancel, recover
 from .dashboard import dashboard
 
 
@@ -16,6 +16,9 @@ def register(sub):
     stop = commands.add_parser("cancel")
     stop.add_argument("--out", required=True)
     stop.set_defaults(func=cancel_command)
+    recovery = commands.add_parser("recover")
+    recovery.add_argument("--out", required=True)
+    recovery.set_defaults(func=recover_command)
     report = commands.add_parser("dashboard")
     report.add_argument("--root", required=True)
     report.add_argument("--out", required=True)
@@ -39,3 +42,9 @@ def cancel_command(args):
     report = cancel(args.out)
     print(json.dumps(report))
     return 0 if report["status"] == "cancelled" else 3
+
+
+def recover_command(args):
+    report = recover(args.out)
+    print(json.dumps(report))
+    return 0 if report['status'] == 'complete' else 3

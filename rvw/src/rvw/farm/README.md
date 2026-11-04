@@ -80,6 +80,16 @@ times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
 
+## Controller recovery
+
+`rvw farm recover --out /tmp/campaign` (MCP `farm_recover`) reads the saved
+plan and shard checkpoints. The controller saves the plan before dispatch and
+checkpoints each validated C1 cell. Recovery preserves failures and lists missing
+cells. Without `farm.json`, the campaign stays inconclusive even if every shard
+has a checkpoint. Recovery does not rerun jobs, modify evidence or claim worker
+cleanup. Use `farm cancel` to check cleanup. A SIGKILL between receiving an
+artifact and validating its C1 can leave that cell missing in the checkpoint.
+
 ## Decisions and limits
 
 - Workers own temporary directories and bounded process groups. Normal completion

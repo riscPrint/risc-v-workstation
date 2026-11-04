@@ -1284,6 +1284,11 @@ Unmarked directories are not deleted. Evicted or partial entries are misses.
 `rvw.farm/1` records the explicit run-many plan, campaign-local cell IDs, options,
 ELF hashes, hosts, per-shard completion, C1 outcomes and missing IDs. `complete`
 means collection is complete. It does not mean tests pass or a gate accepts.
+The controller writes `plan.json` before dispatch and atomically replaces
+`progress-N.json` after each validated cell and finished shard. `farm recover`
+reads these checkpoints without mutation. Missing `farm.json` always gives an
+inconclusive recovered campaign. Missing cells remain explicit. Recovery does
+not infer a C1 outcome from unvalidated artifact files or confirm host cleanup.
 A shard with a lost connection, wrong identity, missing C1 or invalid artifact
 is inconclusive. Results retain their original failure outcomes. C1 config, seed,
 ELF hash and every declared identity claim must match. Worker identity documents

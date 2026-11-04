@@ -136,3 +136,39 @@ def test_wait_timeout_removes_ticket(tmp_path):
             with reserve({'locks': ['build']}, .1, tmp_path):
                 pass
         assert json.loads((tmp_path / 'queue.json').read_text()) == []
+
+
+def test_recovery_retains_failures_and_missing_cells(tmp_path):
+    from rvw.farm.executor import recover, save_json
+    save_json(tmp_path / 'plan.json', {'schema': 'rvw.farm/1', 'expected_cells': 3,
+        'plan': [{'id': str(i)} for i in range(3)], 'shards': [
+            {'host': 'a', 'expected_cells': ['0', '2']}, {'host': 'b', 'expected_cells': ['1']}]})
+    save_json(tmp_path / 'progress-0.json', {'host': 'a', 'expected_cells': ['0', '2'],
+        'status': 'inconclusive', 'cells': [{'id': '0', 'status': 'fail', 'inconclusive': None}]})
+    report = recover(tmp_path)
+    assert report['status'] == 'inconclusive'
+    assert report['shards'][0]['cells'][0]['status'] == 'fail'
+    assert report['shards'][0]['missing_cells'] == ['2']
+    assert report['shards'][1]['missing_cells'] == ['1']
+    assert not (tmp_path / 'farm.json').exists()  # Read-only.
+    save_json(tmp_path / 'farm.json', {**report, 'status': 'complete'})
+    assert recover(tmp_path)['status'] == 'complete'
+
+
+def test_controller_checkpoint_survives_dispatch_crash(tmp_path, adapter, monkeypatch):
+    from rvw.farm import executor
+    elf = tmp_path / 'test.elf'; elf.write_bytes(b'fail')
+    manifest = tmp_path / 'manifest.jsonl'
+    manifest.write_text(json.dumps({'elf': str(elf), 'config': 'test', 'seed': 4}))
+    def crash(*args, **kwargs):
+        raise KeyboardInterrupt('controller fixture')
+    monkeypatch.setattr(executor, 'run_group', crash)
+    monkeypatch.setattr(executor, 'cancel_host', lambda _: {'acknowledged': False})
+    out = tmp_path / 'out'
+    with pytest.raises(KeyboardInterrupt):
+        execute([{'name': 'a', 'address': 'localhost'}], manifest, adapter,
+                [*adapter, 'identity'], IDENTITY, out)
+    report = executor.recover(out)
+    assert report['status'] == 'inconclusive'
+    assert report['plan'][0]['options']['seed'] == 4
+    assert report['shards'][0]['missing_cells'] == ['0']
