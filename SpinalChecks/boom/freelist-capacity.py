@@ -20,6 +20,8 @@ ports = re.findall(r'^\s*(input|output)\s+wire\s*(?:\[(\d+):0\])?\s+(\w+)\s*[,\n
 widths = {name: int(msb)+1 if msb else 1 for _, msb, name in ports}
 if not {'clk', 'reset', 'io_alloc_pregs_0_valid', 'io_alloc_pregs_0_payload', 'io_debug_freelist'} <= widths.keys():
     raise SystemExit('unsupported export ports')
+if widths['io_debug_freelist'] != 52 or widths['io_alloc_pregs_0_payload'] != 6:
+    raise SystemExit('this recipe requires the 52-entry small free-list export')
 a.out.mkdir(parents=True, exist_ok=False)
 # Check only the named properties. Native assertion environment requirements need a separate harness.
 (a.out / 'freelist.v').write_text('`define SYNTHESIS\n' + body + '\n`undef SYNTHESIS\n')
