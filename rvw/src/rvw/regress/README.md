@@ -716,3 +716,8 @@ bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
 See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
 licence checks, supported test scope and limits. It writes standalone C3.
 It does not schedule ELF suites or earn C4 acceptance.
+
+`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
+`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
+for the strict profile and the offline replay boundary.
