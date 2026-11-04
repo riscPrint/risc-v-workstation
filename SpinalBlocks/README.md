@@ -225,9 +225,10 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
 ## Decisions and limits
 
 - Read stored block artifacts through `rvw query`. New core entry points belong
-  in project data or separate example builds. The legacy extractor build still
-  loads BOOM. Its removal is deferred until BOOM diagram and source-link parity
-  is checked. The old command remains `cd spinalblocks && sbt "boom/run small"`.
+  in project data or separate example builds. The extractor library has no BOOM
+  dependency. Build BOOM databases with `SpinalDB/build-db.sh boom small OUT`.
+  Export diagrams with `rvw query export blocks blocks.json.gz --db OUT`.
+  The core project owns the top-level construction; the viewer reads the database.
 - Diagram nets and database edges show possible structural influence. They do
   not select the active driver at a waveform time. Use SpinalTrace for that.
 - A BlackBox diagram shows ports only. The database uses coarse dependencies:
@@ -246,7 +247,28 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
 
 Database migration and legacy entry removal: [#44](https://github.com/riscPrint/risc-v-workstation/issues/44). More-design checks: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70). Cross-navigation: [#24](https://github.com/riscPrint/risc-v-workstation/issues/24).
 
-Retained limit: Database export is available. Legacy entry removal still needs parity evidence. Missing source files and extraction approximations do not become verified navigation.
+Retained limit: Diagrams read the database. Missing source files and extraction approximations do not become verified navigation.
+
+### Compare caller locations
+
+Use `rvw.debug.parity.compare(..., kind='blocks')` for an explicit caller-location
+comparison. It ignores only the extraction timestamp by default. A declared
+caller mapping can replace a file/line pair and the exact generated identifier
+that contains that pair. All port, node, instance and net fields remain checked.
+Check both source destinations before treating a changed elaboration caller as
+equivalent information. This comparison does not relabel stored source locations.
+See the source-root and caller rules in [RiscvSim](../RiscvSim/README.md).
+The comparison cases are BOOM `small` and VexRiscv `rv32im`.
+Compare legacy diagrams with a database built with `--no-pdg`.
+Check every module, port, instance, node, net, FSM and source location.
+Audit caller differences on clock/reset ports separately. The caller must perform
+the same top-level construction. Keep both actual destinations in the artifacts.
+PDG naming is a separate opt-in transformation; do not compare a plain diagram
+against an instrumented diagram and drop the changed names.
+The Vex example exports independent cases with
+`db/Test/runMain rvwvex.DebugParity OUT` from `examples/vexriscv/rvw`.
+Hold the `vex` and `sbt` locks for this command. Set `RVW_HOME`, `RVW_ADAPTER`
+and `VEXRISCV` to the selected checkouts. OUT must not exist.
 
 ## Viewer package notices
 

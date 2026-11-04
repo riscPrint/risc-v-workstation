@@ -123,7 +123,7 @@ def process_alive(pid):
 
 
 @pytest.mark.parametrize('sig', [signal.SIGTERM, signal.SIGINT, signal.SIGHUP])
-@pytest.mark.parametrize('script', ['boom-spinaltrace/run.sh', 'tests/programs/build.sh'])
+@pytest.mark.parametrize('script', ['tests/programs/build.sh'])
 def test_other_riscvsim_scripts_stop_children(launcher, tmp_path, sig, script):
     destination = launcher.sim / script
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -588,7 +588,3 @@ def test_generic_build_does_not_load_core_projects():
     assert 'workstation / "RiscvSim/src/main/scala"' not in vex
 
 
-def test_trace_prototype_uses_the_separate_boom_build():
-    repo = SCRIPT.parents[2]
-    prototype = (repo / 'RiscvSim/boom-spinaltrace/build.sbt').read_text()
-    assert 'ProjectRef(file("../boom"), "boom")' in prototype

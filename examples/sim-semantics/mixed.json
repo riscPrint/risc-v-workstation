@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.hdl/1",
+  "backend": "ghdl-yosys-icarus",
+  "top": "tb",
+  "sources": [
+    "mixed.sv"
+  ],
+  "requires": [
+    "mixed_synth",
+    "hdl_delays"
+  ],
+  "vhdl_sources": [
+    "counter.vhd"
+  ],
+  "vhdl_top": "counter"
+}
