@@ -20,7 +20,7 @@ def sample():
     rows = [{'schema': 'rvw.bus-observations/1', 'boundary': plan['boundary'], 'independent': True, 'bus_bytes': 8},
             {'channel': 'a', 'cycle': '1', 'sequence': '0', 'source': '0x0', 'address': '0xc000000', 'opcode': 0, 'size_log2': 2, 'data': '0x7', 'mask': '0xf'},
             {'channel': 'd', 'cycle': '3', 'sequence': '1', 'source': '0x0', 'opcode': 0, 'size_log2': 2, 'denied': False, 'data': '0x0'},
-            {'channel': 'a', 'cycle': '4', 'sequence': '2', 'source': '0x0', 'address': '0xc000008', 'opcode': 4, 'size_log2': 2},
+            {'channel': 'a', 'cycle': '4', 'sequence': '2', 'source': '0x0', 'address': '0xc000008', 'opcode': 4, 'size_log2': 2, 'mask': '0xf'},
             {'channel': 'd', 'cycle': '5', 'sequence': '3', 'source': '0x0', 'opcode': 1, 'size_log2': 2, 'denied': False, 'data': '0x9'},
             {'kind': 'end', 'cycle': '6', 'status': 'pass'}]
     return plan, rows
@@ -96,3 +96,18 @@ def test_unselected_bus_lanes_do_not_define_write_or_read_bytes():
     assert m.observe(plan, rows)['complete']
     rows[1]['data'] = '0x700000008'
     assert not m.observe(plan, rows)['complete']
+
+
+@pytest.mark.parametrize('fault', ['empty-write', 'wrong-write-lanes', 'partial-get', 'misaligned'])
+def test_illegal_request_cannot_establish_planned_access(fault):
+    plan, rows = sample()
+    plan['accesses'][0].pop('mask')
+    rows[3]['mask'] = '0xf'
+    if fault == 'empty-write': rows[1]['mask'] = '0x0'
+    if fault == 'wrong-write-lanes': rows[1]['mask'] = '0xf0'
+    if fault == 'partial-get': rows[3]['mask'] = '0x1'
+    if fault == 'misaligned':
+        plan['accesses'][1]['address'] = rows[3]['address'] = '0xc00000f'
+    observation = m.observe(plan, rows)
+    assert not observation['complete']
+    assert m.check(plan, observation)['status'] == 'inconclusive'

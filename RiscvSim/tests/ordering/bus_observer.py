@@ -30,6 +30,8 @@ def observe(plan, rows):
                 raise ValueError('ambiguous access plan')
             if op['opcode'] not in (0, 1, 4) or not 0 <= op['size_log2'] <= width.bit_length() - 1:
                 raise ValueError('only single-beat Get and Put supported')
+            if address < 0 or address % (1 << op['size_log2']):
+                raise ValueError('unaligned planned access')
             planned[address] = op
         if len({v['id'] for v in planned.values()}) != len(planned):
             raise ValueError('duplicate plan ID')
@@ -58,6 +60,11 @@ def observe(plan, rows):
                         raise ValueError('repeated access or source reuse')
                     if row['opcode'] != op['opcode'] or row['size_log2'] != op['size_log2']:
                         raise ValueError('request differs from plan')
+                    lane = int(row['address'], 0) % width
+                    lanes = ((1 << (1 << op['size_log2'])) - 1) << lane
+                    mask = int(row['mask'], 0)
+                    if mask < 0 or mask & ~lanes or (op['opcode'] in (0, 4) and mask != lanes):
+                        raise ValueError('invalid request byte lanes')
                     if 'mask' in op and int(row['mask'], 0) != int(op['mask'], 0):
                         raise ValueError('request mask differs from plan')
                     if 'data' in op:
