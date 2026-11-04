@@ -49,6 +49,8 @@ def graph_key(graph):
         raise ValueError('empty graph is not parity evidence')
     dump = lambda v: json.dumps(v, sort_keys=True, separators=(',', ':'))
     vertices = [dump(v) for v in graph['vertices']]
+    if len(set(vertices)) != len(vertices):
+        raise ValueError('duplicate vertex labels need an explicit identity mapping')
     edges = []
     for edge in graph['edges']:
         edge = dict(edge)

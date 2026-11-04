@@ -44,6 +44,20 @@ export_dependencies=["."]
     assert json.loads((a.parent / 'export.json').read_text())['module_sha256']
     with pytest.raises(ValueError, match='module selection failed'):
         export_revision(repo / 'rvw.toml', first, None, 'absent', tmp_path / 'absent', 30)
+    with pytest.raises(ValueError, match='git revision/export input failed'):
+        export_revision(repo / 'rvw.toml', 'no-such-revision', None, 'leaf', tmp_path / 'missing-rev', 30)
+    if all(shutil.which(tool) for tool in ('eqy', 'sby', 'yosys-abc', 'yices-smt2')):
+        from rvw.cli import main
+        for rev, expected in [(first, 'equivalent'), (second, 'not_equivalent')]:
+            out = tmp_path / ('proof-' + rev)
+            rc = main(['--project', str(repo / 'rvw.toml'), 'formal', 'equiv',
+                       '--gold-rev', first, '--gate-rev', rev, '--top', 'leaf',
+                       '--settle', '1', '--out', str(out)])
+            result = json.loads((out / 'result.json').read_text())
+            assert result['status'] == expected, result
+            assert rc == (0 if expected == 'equivalent' else 1)
+            assert result['exports']['gold']['revision'] == first
+            assert result['exports']['gate']['revision'] == rev
     (repo / 'build.py').write_text('raise Exception("dirty")')
     with pytest.raises(ValueError, match='must be clean'):
         export_revision(repo / 'rvw.toml', first, None, 'leaf', tmp_path / 'dirty', 30)

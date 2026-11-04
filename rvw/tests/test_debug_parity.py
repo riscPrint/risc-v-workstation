@@ -48,3 +48,10 @@ def test_source_roots_do_not_drop_file_identity():
     assert not compare(a, b, kind='blocks', left_roots=['/old'], right_roots=['/new'])
     with pytest.raises(ValueError, match='empty graph'):
         compare({'vertices': [], 'edges': []}, {'vertices': [], 'edges': []}, kind='trace')
+
+
+def test_duplicate_labels_need_identity_mapping():
+    g = graph()
+    g['vertices'][1] = dict(g['vertices'][0])
+    with pytest.raises(ValueError, match='duplicate vertex'):
+        compare(g, g, kind='trace')

@@ -6,7 +6,8 @@ import os
 from pathlib import Path
 import subprocess
 import tarfile
-import tempfile
+from contextlib import nullcontext
+import time
 
 from rvw.common.lock import held
 from rvw.common.proc import run_group
@@ -16,7 +17,10 @@ from . import common
 
 
 def git(repo, *args):
-    return subprocess.check_output(['git', '-C', str(repo), *args], text=True).strip()
+    try:
+        return subprocess.check_output(['git', '-C', str(repo), *args], text=True, stderr=subprocess.PIPE).strip()
+    except subprocess.CalledProcessError as exc:
+        raise ValueError(f'git revision/export input failed: {exc.stderr.strip()}') from exc
 
 
 def export_revision(project_path, revision, config, top, out, timeout):
@@ -25,6 +29,12 @@ def export_revision(project_path, revision, config, top, out, timeout):
     The project owns query.build and its generator dependencies. This does not
     infer dependencies from a cached JVM classpath.
     """
+    deadline = time.monotonic() + timeout
+    def budget():
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("revision export time limit")
+        return remaining
     project = load_project(project_path)
     if project is None or not project.get('query', 'build'):
         raise ValueError('revision export requires project query.build')
@@ -58,9 +68,9 @@ def export_revision(project_path, revision, config, top, out, timeout):
     env[core.source_env] = str(source)
     command = [*project.get('query', 'build'), config or core.default_config,
                str(out / 'design.db'), '--rtl', str(rtl), '--no-pdg', '--no-blocks', '--no-hgldd']
-    with held(core.lock, directory=core.lock_dir) if core.lock else tempfile.TemporaryDirectory():
+    with held(core.lock, directory=core.lock_dir) if core.lock else nullcontext():
         with (out / 'build.log').open('w') as log:
-            process = run_group(command, cwd=project.root, env=env, stdout=log, stderr=log, timeout=timeout)
+            process = run_group(command, cwd=project.root, env=env, stdout=log, stderr=log, timeout=budget())
     if process.returncode:
         raise ValueError(f'revision build failed ({process.returncode}); see {out}/build.log')
     files = sorted([*rtl.rglob('*.v'), *rtl.rglob('*.sv')])
@@ -72,7 +82,7 @@ def export_revision(project_path, revision, config, top, out, timeout):
     script += f'write_verilog -noattr {json.dumps(str(out / "module.v"))}\n'
     (out / 'select.ys').write_text(script)
     with (out / 'select.log').open('w') as log:
-        process = run_group(['yosys', '-Q', '-s', str(out / 'select.ys')], stdout=log, stderr=log, timeout=timeout)
+        process = run_group(['yosys', '-Q', '-s', str(out / 'select.ys')], stdout=log, stderr=log, timeout=budget())
     if process.returncode:
         raise ValueError(f'module selection failed ({process.returncode}); see {out}/select.log')
     from .snapshot import digest

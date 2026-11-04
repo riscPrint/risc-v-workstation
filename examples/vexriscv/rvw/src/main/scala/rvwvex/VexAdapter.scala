@@ -20,7 +20,8 @@ object VexAdapter extends CoreAdapter {
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
     require(!key.konata, "VexRiscv adapter does not support Konata")
-    RiscvSimConfig.elaborate(key, work, VexTop.spinalConfig)(new VexTop)
+    RiscvSimConfig.elaborate(key, work, VexTop.spinalConfig,
+      sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new VexTop)
   }
   override def elaborate(key: ModelKey, work: File): Seq[File] =
     report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
