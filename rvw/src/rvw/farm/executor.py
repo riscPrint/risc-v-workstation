@@ -106,7 +106,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                       "elf_bytes": base64.b64encode(data).decode(), "elf_sha256": digest(data)})
     controls = [{"host": host, "token": uuid.uuid4().hex, "dispatched": i < len(cells)} for i, host in enumerate(hosts)]
     save_json(out / "control.json", controls)
-    plan = {"schema": "rvw.farm/1", "expected_cells": len(cells),
+    plan = {"campaign_id": uuid.uuid4().hex, "identity": identity, "schema": "rvw.farm/1", "expected_cells": len(cells),
             "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells],
             "shards": [{"host": h["name"], "expected_cells": [c["id"] for c in cells[i::len(hosts)]]}
                        for i, h in enumerate(hosts)]}
@@ -138,48 +138,54 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
             result["reservation"] = reply.get("reservation")
             result["limits"] = reply.get("limits", {})
             (out / f"shard-{index}.json").write_text(json.dumps(reply))
-            if reply["identity"] != identity or reply["returncode"] or reply["timed_out"]:
-                raise ValueError("shard identity or completion differs")
+            if reply["identity"] != identity:
+                raise ValueError("shard identity differs")
+            if reply["returncode"] or reply["timed_out"]:
+                result["cause"] = "adapter aborted or timed out; retain validated cells"
             if [c["id"] for c in reply["cells"]] != [c["id"] for c in selected]:
                 raise ValueError("missing or duplicate shard cells")
             for sent, received in zip(selected, reply["cells"]):
-                target = out / sent["id"]
-                target.mkdir()
-                for name, artifact in received["files"].items():
-                    relative = Path(name)
-                    if relative.is_absolute() or ".." in relative.parts:
-                        raise ValueError("invalid artifact path")
-                    data = base64.b64decode(artifact["data"], validate=True)
-                    if digest(data) != artifact["sha256"]:
-                        raise ValueError("artifact transfer hash differs")
-                    p = target / relative
-                    p.parent.mkdir(parents=True, exist_ok=True)
-                    p.write_bytes(data)
-                run = RunResult.from_dict(json.loads((target / "result.json").read_text()))
-                if run.config != sent["options"].get("config") or run.seed != sent["options"].get("seed"):
-                    raise ValueError("result config or seed differs")
-                for name in ("max_cycles", "mem_latency"):
-                    for key in (name, name.replace("_", "-")):
-                        if key in sent["options"]:
-                            actual, wanted = getattr(run, name, None), sent["options"][key]
-                            if type(actual) is not type(wanted) or actual != wanted:
-                                raise ValueError(f"result {name} differs from requested value")
-                if run.elf_sha256 != sent["elf_sha256"]:
-                    raise ValueError("result ELF identity differs")
-                raw = run.to_dict()
-                def lookup(key):
-                    value = raw
-                    for part in key.split("."):
-                        if not isinstance(value, dict) or part not in value:
-                            raise ValueError("missing C1 identity claim")
-                        value = value[part]
-                    return value
-                if any(lookup(key) != value for key, value in claims.items()):
-                    raise ValueError("C1 identity claim differs")
-                result["cells"].append({"id": sent["id"], "status": run.status,
-                                         "inconclusive": run.why_inconclusive})
-                save_json(checkpoint, result)
-            result["status"] = "complete" if all(not c["inconclusive"] for c in result["cells"]) else "inconclusive"
+                try:
+                    target = out / sent["id"]
+                    target.mkdir()
+                    for name, artifact in received["files"].items():
+                        relative = Path(name)
+                        if relative.is_absolute() or ".." in relative.parts:
+                            raise ValueError("invalid artifact path")
+                        data = base64.b64decode(artifact["data"], validate=True)
+                        if digest(data) != artifact["sha256"]:
+                            raise ValueError("artifact transfer hash differs")
+                        p = target / relative
+                        p.parent.mkdir(parents=True, exist_ok=True)
+                        p.write_bytes(data)
+                    run = RunResult.from_dict(json.loads((target / "result.json").read_text()))
+                    if run.config != sent["options"].get("config") or run.seed != sent["options"].get("seed"):
+                        raise ValueError("result config or seed differs")
+                    for name in ("max_cycles", "mem_latency"):
+                        for key in (name, name.replace("_", "-")):
+                            if key in sent["options"]:
+                                actual, wanted = getattr(run, name, None), sent["options"][key]
+                                if type(actual) is not type(wanted) or actual != wanted:
+                                    raise ValueError(f"result {name} differs from requested value")
+                    if run.elf_sha256 != sent["elf_sha256"]:
+                        raise ValueError("result ELF identity differs")
+                    raw = run.to_dict()
+                    def lookup(key):
+                        value = raw
+                        for part in key.split("."):
+                            if not isinstance(value, dict) or part not in value:
+                                raise ValueError("missing C1 identity claim")
+                            value = value[part]
+                        return value
+                    if any(lookup(key) != value for key, value in claims.items()):
+                        raise ValueError("C1 identity claim differs")
+                    result["cells"].append({"id": sent["id"], "status": run.status,
+                                             "inconclusive": run.why_inconclusive})
+                    save_json(checkpoint, result)
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    result.setdefault("cell_errors", []).append({"id": sent["id"], "cause": str(exc)})
+            result["status"] = "complete" if (not result.get("cause") and not result.get("cell_errors")
+                and all(not c["inconclusive"] for c in result["cells"])) else "inconclusive"
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result["cause"] = str(exc)
         recorded = {c["id"] for c in result["cells"]}
@@ -195,7 +201,7 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         raise
     finally:
         pool.shutdown(wait=True)
-    report = {"schema": "rvw.farm/1", "expected_cells": len(cells), "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells], "shards": shards,
+    report = {"campaign_id": plan["campaign_id"], "identity": identity, "schema": "rvw.farm/1", "expected_cells": len(cells), "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells], "shards": shards,
               "status": "complete" if all(s["status"] in ("complete", "empty") for s in shards) else "inconclusive"}
     save_json(out / "farm.json", report)
     return report

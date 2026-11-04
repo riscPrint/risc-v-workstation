@@ -80,6 +80,22 @@ times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
 
+## Recorded repeats
+
+`rvw farm classify campaign-a/farm.json campaign-b/farm.json` (MCP
+`farm_classify`) compares recorded executions. It does not launch retries.
+New campaign reports capture a campaign ID and the full tool identity. Groups
+bind that identity, the ELF hash and all options, including config and seed.
+Different seeds or builds stay separate. Reports without these captured
+identities and duplicate executions are refused.
+
+Each `rvw.farm-classification/1` group retains every original outcome, report
+path, report hash, campaign ID and cell ID. A conclusive DUT failure followed by
+a pass sets `unstable: true` and keeps status `fail`. Errors and inconclusive
+outcomes set `infrastructure_fault` separately. Missing attempts stay explicit.
+No outcome is waived. This classification does not earn C4 acceptance.
+Automatic retry selection and declared retry execution policies remain open.
+
 ## Filter history
 
 `farm dashboard` accepts `--core`, `--suite`, `--config`, `--gate` and `--run`.

@@ -3,7 +3,10 @@ from rvw.mcp.worker import handler
 from .dashboard import dashboard
 
 
-def execute_json(hosts=None, manifest=None, adapter=None, identity_command=None, identity=None, out=None, jobs=1, timeout=600, action=None, root=None, core=None, suite=None, config=None, gate=None, run=None):
+def execute_json(hosts=None, manifest=None, adapter=None, identity_command=None, identity=None, out=None, jobs=1, timeout=600, action=None, root=None, core=None, suite=None, config=None, gate=None, run=None, reports=None):
+    if action == "classify":
+        from .classify import classify
+        return classify(reports)
     if action == "dashboard":
         return dashboard(root, out, core=core, suite=suite, config=config, gate=gate, run=run)
     if action == "recover":
@@ -30,6 +33,8 @@ def mcp_tools():
                 "jobs": {"type": "integer", "minimum": 1}, "timeout": {"type": "number", "exclusiveMinimum": 0}},
                ["hosts", "manifest", "adapter", "identity_command", "identity", "out"]),
         handler("rvw.farm.mcp_tools"), long=True),
+        ToolSpec("farm_classify", "Classify identity-bound recorded repeats. Retain every DUT failure.",
+                 schema({"reports": array}, ["reports"]), handler("rvw.farm.mcp_tools", "classify"), long=True),
         ToolSpec("farm_dashboard", "Write filtered C3/C4 history. Missing evidence remains visible.",
                  schema({"root": string, "out": string, **{k: string for k in ("core", "suite", "config", "gate", "run")}},
                         ["root", "out"]), handler("rvw.farm.mcp_tools", "dashboard"), long=True),

@@ -1284,6 +1284,14 @@ Unmarked directories are not deleted. Evicted or partial entries are misses.
 `rvw.farm/1` records the explicit run-many plan, campaign-local cell IDs, options,
 ELF hashes, hosts, per-shard completion, C1 outcomes and missing IDs. `complete`
 means collection is complete. It does not mean tests pass or a gate accepts.
+New reports also carry `campaign_id` and the captured adapter `identity`.
+`rvw.farm-classification/1` groups recorded executions by tool identity, ELF
+hash and complete options. Every attempt retains its original outcome, source
+report path and SHA-256, campaign ID and cell ID. An observed DUT failure keeps
+the group failed even after a pass; that combination marks it unstable.
+Infrastructure faults and missing outcomes stay separate. Different seeds and
+builds cannot establish instability of one fixed execution identity. This is
+recorded-outcome classification, not automatic retry or failure waiver.
 The controller writes `plan.json` before dispatch and atomically replaces
 `progress-N.json` after each validated cell and finished shard. `farm recover`
 reads these checkpoints without mutation. Missing `farm.json` always gives an

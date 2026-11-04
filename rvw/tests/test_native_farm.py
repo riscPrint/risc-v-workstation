@@ -186,3 +186,27 @@ def test_dashboard_filters_metrics_and_retains_unknown_evidence(tmp_path, monkey
     assert 'chosen-gap' in text and 'missing or invalid evidence' in text
     assert 'another' not in text
     assert module.dashboard(tmp_path, output, gate='inconclusive')['runs'] == 1
+
+
+def test_aborted_adapter_retains_valid_cells_after_missing_cell(tmp_path, adapter, monkeypatch):
+    from rvw.farm import executor
+    from rvw.common.proc import Result
+    rows, cells = [], []
+    for i, status in enumerate(('missing', 'fail', 'pass')):
+        elf = tmp_path / f'{i}.elf'; elf.write_text(status)
+        row = {'elf': str(elf), 'config': 'test', 'seed': i}
+        rows.append(row)
+        cell = request(adapter, status.encode())['cells'][0]
+        cells.append({**cell, 'id': str(i), 'options': {'config': 'test', 'seed': i}})
+    manifest = tmp_path / 'manifest'
+    manifest.write_text('\n'.join(json.dumps(r) for r in rows))
+    reply = worker({**request(adapter), 'cells': cells})
+    reply['returncode'] = 1
+    monkeypatch.setattr(executor, 'run_group', lambda *a, **kw: Result(0, stdout=json.dumps(reply)))
+    report = execute([{'name': 'a', 'address': 'localhost'}], manifest, adapter,
+                     [*adapter, 'identity'], IDENTITY, tmp_path / 'out')
+    assert report['status'] == 'inconclusive'
+    shard = report['shards'][0]
+    assert [c['status'] for c in shard['cells']] == ['fail', 'pass']
+    assert shard['missing_cells'] == ['0']
+    assert shard['cell_errors'][0]['id'] == '0'

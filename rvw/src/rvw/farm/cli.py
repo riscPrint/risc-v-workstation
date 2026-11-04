@@ -16,6 +16,9 @@ def register(sub):
     stop = commands.add_parser("cancel")
     stop.add_argument("--out", required=True)
     stop.set_defaults(func=cancel_command)
+    classification = commands.add_parser("classify")
+    classification.add_argument("reports", nargs='+')
+    classification.set_defaults(func=classify_command)
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
@@ -50,3 +53,8 @@ def recover_command(args):
     report = recover(args.out)
     print(json.dumps(report))
     return 0 if report['status'] == 'complete' else 3
+
+
+def classify_command(args):
+    from .classify import classify
+    print(json.dumps(classify(args.reports)))
