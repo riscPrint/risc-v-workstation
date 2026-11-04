@@ -4,6 +4,7 @@ schema = "rvw.project/1"
 root = "."
 # Uses the generic RiscvSim launch capture and generated RTL identity.
 [core]
+backend = "riscvsim-verilator"
 name = "vexriscv"
 adapter = "./rvw/run.sh"
 configs = ["rv32im"]
@@ -11,7 +12,7 @@ default_config = "rv32im"
 lock = "vex"                     # same lock as run.sh
 source_repo = "."
 source_env = "VEXRISCV"
-cache_paths = ["rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
+cache_paths = ["${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
 identity = true                   # generated RTL and native tool identity
 # The launcher binds the generated RTL, harness revision and native tool record.
 input_complete = true
@@ -37,7 +38,7 @@ input_env = [
   "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
   "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
   "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
-  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
   "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
   "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
   "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "VEXRISCV", "RVW_HOME", "SPINAL_MAKE_CMD",
