@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,cocotb,soc,wave}
+    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,backends,hdl,cocotb,soc,wave}
     ...
 ```
 
@@ -520,14 +520,22 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {backends,cocotb,mmu,run,compare,gate,known,history,list} ...
+    {backends,hdl,cocotb,mmu,run,compare,gate,known,history,list} ...
 ```
 
 ### `rvw regress backends`
 
 ```text
-usage: rvw regress backends [-h] [--backend {verilator,icarus}] [--json]
-    [--project PROJECT]
+usage: rvw regress backends [-h] [--backend {verilator,icarus} | --hdl]
+    [--json] [--project PROJECT]
+```
+
+### `rvw regress hdl`
+
+```text
+usage: rvw regress hdl [-h] [--backend
+    {icarus,verilator-timing,ghdl-yosys-icarus}] --out OUT [--timeout TIMEOUT]
+    [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw regress cocotb`
@@ -652,8 +660,15 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 ### `rvw backends`
 
 ```text
-usage: rvw backends [-h] [--backend {verilator,icarus}] [--json] [--project
-    PROJECT]
+usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
+    [--project PROJECT]
+```
+
+### `rvw hdl`
+
+```text
+usage: rvw hdl [-h] [--backend {icarus,verilator-timing,ghdl-yosys-icarus}]
+    --out OUT [--timeout TIMEOUT] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw cocotb`
