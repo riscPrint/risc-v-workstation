@@ -22,7 +22,7 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {search,predict,score-prediction,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -43,6 +43,18 @@ usage: rvw arch predict [-h] --out OUT [--json] [--project PROJECT] candidate
 ```text
 usage: rvw arch score-prediction [-h] --out OUT [--json] [--project PROJECT]
     prediction rtl
+```
+
+### `rvw arch memory-extract`
+
+```text
+usage: rvw arch memory-extract [-h] [--json] [--project PROJECT] mapping
+```
+
+### `rvw arch pareto`
+
+```text
+usage: rvw arch pareto [-h] [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch memory-report`
@@ -135,7 +147,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate} ...
+usage: rvw cosim [-h] [--project PROJECT] {check,generate,live} ...
 ```
 
 ### `rvw cosim check`
@@ -153,6 +165,15 @@ usage: rvw cosim check [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
     [--json] --out OUT [--max-instructions MAX_INSTRUCTIONS] [--project
     PROJECT]
+```
+
+### `rvw cosim live`
+
+```text
+usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
+    [--json] --out OUT --simulator ... [--model {spike,sail}] [--history
+    HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config
+    SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cov`
@@ -282,7 +303,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -372,6 +393,14 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
     PROJECT]
 ```
 
+### `rvw formal connectivity`
+
+```text
+usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
+    [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
+    ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
+```
+
 ### `rvw formal equiv`
 
 ```text
@@ -379,8 +408,8 @@ usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
     [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
     [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
-    GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
-    [--project PROJECT]
+    GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -391,8 +420,8 @@ usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
     [--json] [--tie PORT=VALUE] [--frontend {verilog,slang}] [--abstraction
     ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
-    [--async-reset] [--reset-cycles RESET_CYCLES] [--free-reset]
-    [--first-failure] [--project PROJECT]
+    [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
+    [--free-reset] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal from-sim`
@@ -910,7 +939,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 68 built-in tools, including the four job tools.
+The default server exposes 70 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -965,11 +994,27 @@ Arguments: `project`, `bench`, `out` (required), `timeout`, `repeats`.
 
 Starts a background job: yes.
 
+### `arch_memory_extract`
+
+Extract exact project counter mappings from native gem5 ROI stats.
+
+Arguments: `mapping` (required), `project`.
+
+Starts a background job: yes.
+
 ### `arch_memory_report`
 
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_pareto`
+
+Compare model cycles with optional user-supplied area and power inputs.
+
+Arguments: `plan` (required), `project`.
 
 Starts a background job: yes.
 
@@ -1137,7 +1182,7 @@ Starts a background job: yes.
 
 Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.
 
-Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `event_model`, `event_clock`, `async_reset`.
+Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `clock_schedule`, `event_model`, `event_clock`, `async_reset`.
 
 Starts a background job: yes.
 
