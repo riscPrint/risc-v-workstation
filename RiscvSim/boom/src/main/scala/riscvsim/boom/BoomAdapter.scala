@@ -226,12 +226,28 @@ object BoomAdapter extends CoreAdapter {
           val a = dut.io.mem.a
           val d = dut.io.mem.d
           if (a.valid.toBoolean && a.ready.toBoolean) w.sample("a", ctl.cycle,
+            "param" -> ujson.Num(a.payload.param.toInt),
             "source" -> Hex(a.payload.source.toBigInt), "address" -> Hex(a.payload.address.toBigInt),
             "opcode" -> ujson.Num(SimEncoding.value(a.payload.opcode).toInt),
             "size_log2" -> ujson.Num(a.payload.size.toInt), "mask" -> Hex(a.payload.mask.toBigInt),
             "data" -> Hex(a.payload.data.toBigInt))
+          val b = dut.io.mem.b
+          val c = dut.io.mem.c
+          val e = dut.io.mem.e
+          if (b != null && b.valid.toBoolean && b.ready.toBoolean) w.sample("b", ctl.cycle,
+            "source" -> Hex(b.payload.source.toBigInt), "address" -> Hex(b.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(b.payload.opcode).toInt),
+            "param" -> ujson.Num(b.payload.param.toInt), "size_log2" -> ujson.Num(b.payload.size.toInt))
+          if (c != null && c.valid.toBoolean && c.ready.toBoolean) w.sample("c", ctl.cycle,
+            "source" -> Hex(c.payload.source.toBigInt), "address" -> Hex(c.payload.address.toBigInt),
+            "opcode" -> ujson.Num(SimEncoding.value(c.payload.opcode).toInt),
+            "param" -> ujson.Num(c.payload.param.toInt), "size_log2" -> ujson.Num(c.payload.size.toInt),
+            "data" -> Hex(c.payload.data.toBigInt))
+          if (e != null && e.valid.toBoolean && e.ready.toBoolean) w.sample("e", ctl.cycle,
+            "sink" -> Hex(e.payload.sink.toBigInt))
           if (d.valid.toBoolean && d.ready.toBoolean) w.sample("d", ctl.cycle,
-            "source" -> Hex(d.payload.source.toBigInt),
+            "source" -> Hex(d.payload.source.toBigInt), "sink" -> Hex(d.payload.sink.toBigInt),
+            "param" -> ujson.Num(d.payload.param.toInt),
             "opcode" -> ujson.Num(SimEncoding.value(d.payload.opcode).toInt),
             "size_log2" -> ujson.Num(d.payload.size.toInt), "denied" -> ujson.Bool(d.payload.denied.toBoolean),
             "data" -> Hex(d.payload.data.toBigInt))

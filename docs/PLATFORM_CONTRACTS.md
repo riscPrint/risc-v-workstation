@@ -1885,3 +1885,9 @@ They include speculative responses. They are not consumed-instruction evidence.
 come from the fetch buffer, independently of retirement. Wrong-path entries can
 still occur. The project must map publication epochs and fence redirects before
 using them as synchronized-byte checks.
+
+Bus capture can include B, C and E rows. B gives `source`, `address`, `opcode`,
+`param` and `size_log2`. C adds `data`. E gives `sink`. A and D rows also give
+`param`; D gives `sink`. These accepted-channel observations do not identify
+internal hits or replacement ways. Do not infer cache residency from capture
+alone: clean evictions can be silent.

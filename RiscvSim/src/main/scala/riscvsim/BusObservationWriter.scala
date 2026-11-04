@@ -11,7 +11,7 @@ final class BusObservationWriter(file: File, identity: ujson.Obj, val busBytes: 
   out.println(ujson.write(ujson.Obj("schema" -> "rvw.bus-observations/1", "identity" -> identity,
     "bus_bytes" -> busBytes, "boundary" -> "accepted-external-tilelink", "independent" -> true)))
   def sample(channel: String, cycle: Long, fields: (String, ujson.Value)*): Unit = {
-    require(Set("a", "d")(channel), "unsupported bus channel")
+    require(Set("a", "b", "c", "d", "e")(channel), "unsupported bus channel")
     require(cycle >= 0 && cycle >= lastCycle, "bus observation cycle order")
     require(!fields.exists(p => Set("channel", "cycle", "sequence", "kind")(p._1)), "reserved bus field")
     lastCycle = cycle

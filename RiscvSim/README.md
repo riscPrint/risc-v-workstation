@@ -598,3 +598,14 @@ and original instruction bits from the fetch buffer. These can still be on a
 wrong path. Publication epochs must exclude entries killed by the fence redirect.
 The byte checker is not yet connected to that epoch mapping. Pending-request
 campaigns and cross-hart RTL publication remain open under #103.
+
+CacheScoreboard accepts `replacement = "lru"` or `"fifo"` for projects with that
+policy. Call `evict(..., replacementEviction = true)` for demand replacement.
+Maintenance eviction does not use the replacement rule. LRU updates on reads
+and nonempty stores. FIFO updates only on fills. The default `any` keeps the
+existing capacity-only rule. Do not select LRU for a random-policy DUT.
+BOOM bus capture also records accepted B probes, C releases/probe replies and
+E grant acknowledgments. These keep permission parameters and dirty data on the
+wire. A and D rows keep permission parameters; D also keeps the sink ID.
+This is raw capture. Mapping it to cache scoreboards, checking virtual aliases
+and injecting cache errors remain open under #109.
