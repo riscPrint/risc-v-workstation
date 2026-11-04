@@ -146,7 +146,7 @@ object BoomAdapter extends CoreAdapter {
               "data" -> Hex(ptw.resp.payload.data.toBigInt))
           if (a.valid.toBoolean && a.ready.toBoolean)
             event("bus_a", "address" -> Hex(a.payload.address.toBigInt),
-              "opcode" -> ujson.Num(a.payload.opcode.toInt), "size_log2" -> ujson.Num(a.payload.size.toInt))
+              "opcode" -> ujson.Num(a.payload.opcode.encoding.getValue(a.payload.opcode.toEnum).toInt), "size_log2" -> ujson.Num(a.payload.size.toInt))
         }
       }
 
