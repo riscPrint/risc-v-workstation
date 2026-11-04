@@ -1921,3 +1921,10 @@ names to fields with `bits` (`[hi,lo,destination_lo]` slices), `width`, `bins`
 Statuses are `legal|illegal|unavailable`. Functional plans retain the catalog.
 Cross reports retain every bin in the denominator and add `classifications`
 with observed `count`. No catalog declaration is a proof exclusion.
+
+`rvw.coverage-report/1.scala_mapping.methods` counts source mapping methods.
+The `covered-span-assignment-links` method navigates to a unique local full
+SpinalDB data assignment for an exact covered RTL target. Multiple, partial,
+init/reset and nonlocal assignments refuse that inference. Mixed links have a
+separate method. These links do not prove individual Scala statement hits;
+`scala_mapping.statement_hit_status` remains `undetermined`.

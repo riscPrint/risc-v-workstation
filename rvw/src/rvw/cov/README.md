@@ -1035,3 +1035,17 @@ Reports retain all combinations in the denominator and report observations per
 classification. A declared illegal or unavailable bin is not a proof exclusion.
 These declarations require spec review. The tool does not claim that a finite
 catalog covers every semantic obligation of the selected ISA version.
+
+### Assignment navigation from the same-elaboration database
+
+When a covered native line names an assignment target, the mapper can link it
+to a unique full data assignment in the same instance. It uses the database
+assignment location instead of the signal declaration. Multiple assignments,
+reset/init assignments, partial targets and parent-to-child assignments refuse
+this inference. Wildcard instances and toggle points do not get assignment
+links. The mapper still checks the RTL hash against the database capture.
+The method is `covered-span-assignment-links`, or a mixed variant when the
+point also has other source links. These are navigation links. A native point
+can cover several emitted statements. It does not prove individual Scala
+statement hits. `scala_mapping.methods` reports each mapping method separately.
+`statement_hit_status` stays `undetermined`.
