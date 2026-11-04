@@ -80,3 +80,164 @@ small timer, clock/reset, settled register, X/Z and two-state conformance cases.
 Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
+
+
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seeds 3 --json` runs the pinned
+Accellera UVM library with native Verilator timing and coverage.
+See [the UVM suite](../../../../Uvm/README.md) for the pin, licence checks,
+machine lock command, conformance boundary and remaining DPI/VIP gaps.
+It writes standalone C3. It does not implement C1 or earn C4 acceptance.
+
+## Compare simulation speed
+
+`rvw regress speed-compare --pair BASE1 CAND1 --pair BASE2 CAND2 ... --out report.json`
+compares at least five pairs of C1 files. Each file must record a conclusive
+pass, a native build identity, positive counters, a serial first attempt and
+at least one second in `details.execution_s`. Use `--min-seconds 10` for long
+workloads. Warm the model first. Do not include warmup results in the pairs.
+Keep the workload, preset, seed, memory timing and trace options fixed.
+Interleave baseline and candidate runs. Reverse their order in alternate pairs.
+Use distinct result paths and simulation execution `run_id` values. Run one simulation at a time under the core lock.
+
+The command validates C2 records and requires an end event, matching C1
+counters, matching ELF and seed, and identical trace events across all pairs.
+Native build identities may differ between baseline and candidate. Each
+side must keep one identity. A missing trace or any difference gives exit 3.
+This is simulation result equivalence. It is not an ISA oracle check.
+Run the reference-model checks separately before adopting an option.
+
+The report records every C1 path and hash, C2 hash and native build identity.
+`speedup` is the geometric mean of paired baseline/candidate execution times.
+`speedup_ci95` is a percentile bootstrap interval over pairs (10000 resamples;
+fixed seed 1). `retain` requires its lower bound to exceed 1. This threshold
+checks timing noise only. The interval assumes independent pairs. Shared-host
+load, order bias and autocorrelation can invalidate that assumption. Do not
+use five short samples to claim precise speedups. Report host load and run
+order with measured results. The command does not tune or change defaults.
+
+Use separate reports for each preset and workload. The input files must remain
+available to inspect a report. Reports belong outside the repository.
+
+### Verilator experiment protocol
+
+Sweep `SPINAL_VERILATOR_FLAGS='--threads N'` for N = 1, 2, 4, then test output
+splitting with `--output-split 10000 --output-split-cfuncs 500`. Test only one
+change at a time. Keep `RISCVSIM_MAKE_JOBS` fixed. Native identity captures these
+options. Keep an option only after complete result equivalence and a measured
+benefit on the target design. More threads can reduce throughput.
+
+Thread PGO requires a training build with `--prof-pgo`, a representative run
+that writes `profile.vlt`, then a rebuild with that file as a Verilator input.
+Keep source, flags and profile hashes. Treat `PROFOUTOFDATE` as a failed
+experiment. The current native identity collector refuses profile file inputs;
+these runs cannot earn conclusive C1 evidence or a retained speed option yet.
+Do not bypass that check. Hierarchical builds require declared partition
+boundaries and a separate build integration. They are not enabled by this tool.
+
+`ccache` affects native build time, not steady-state simulation throughput.
+Measure cold and warm builds separately. The current collector refuses opaque
+compiler wrappers and `OBJCACHE`; do not use an inconclusive run as speed evidence.
+See [Verilator simulation guidance](https://verilator.org/guide/latest/simulating.html)
+and [Verilator options](https://verilator.org/guide/latest/exe_verilator.html).
+
+### Checkpoints and other simulators
+
+The existing replay descriptor starts from reset. It cannot resume live state.
+Adding `--savable` alone is insufficient: the Spinal native bridge needs save
+and restore calls, and the Scala scheduler, memory, devices, monitor, RNG and
+pending stimulus need one versioned snapshot. External effects must be refused.
+Fresh-process suffix equivalence on VexRiscv and bounded BOOM remains required.
+No live checkpoint result is supplied by `speed-compare`.
+
+CIRCT's [circt-verilog](https://circt.llvm.org/docs/Tools/circt-verilog/)
+accepts Verilog input. An Arcilator evaluation also needs a native driver for
+the lowered design and the same memory, reset and retirement observations.
+Parsing or compiling generated Verilog is not result equivalence. An absent
+tool or unsupported lowering must be reported as inconclusive. Backend capability
+profiles remain separate from this comparison command.
+
+### Run a thread sweep
+
+Use `rvw regress speed-sweep --adapter /path/to/run.sh --elf /path/to/long.elf
+--config PRESET --lock vex --threads 2 4 --repeats 5 --min-seconds 10 --out NEW_DIR`.
+Choose the core's machine lock. The command warms each native model, then runs
+serial baseline/candidate pairs in alternating order. Each run uses a fresh
+process, seed 1, fixed memory latency zero and C2 tracing. Use `--seed` and
+`--max-cycles` to set the workload bounds. The baseline uses one thread.
+The command appends `--threads N` to inherited `SPINAL_VERILATOR_FLAGS`.
+Remove any inherited thread option first. Other inherited build settings stay
+fixed and remain subject to native input capture.
+
+Each launch holds the selected lock and uses `nice -n 10`. `--timeout` bounds
+the entire launch, including the lock wait and compilation (default 1200 s,
+maximum 1800 s). Timeout or cancellation stops its process group. A failure
+stops the sweep. `sweep.json` retains run order, commands, flags, launch times,
+host, CPU count, file hashes and completed comparisons. Its status stays
+inconclusive until every requested comparison passes. It does not change
+simulator defaults. The sweep covers run throughput only. Build phase timing,
+peak RSS, partitioning, PGO and ccache require separate experiments.
+
+
+## Native HDL testbenches
+
+Use `rvw regress backends --hdl --json` to list HDL invocation profiles.
+Use `rvw regress hdl MANIFEST --out NEW_DIRECTORY --json` to run one testbench.
+`--backend NAME` selects a profile per run. Requirements still apply after an
+override. These profiles are separate from the cocotb profiles.
+
+| Profile | Values and scheduling | Supported subset |
+|---|---|---|
+| `icarus` | Four-state HDL events | X/Z values, delays, immediate assertions |
+| `verilator-timing` | Two-state HDL events with `--timing --assert` | Delays, edge controls, nonblocking assignments, fork/join, immediate assertions |
+| `ghdl-yosys-icarus` | Icarus events on a synthesized VHDL netlist | Synthesizable VHDL-2008 components in a Verilog/SystemVerilog testbench |
+
+No profile enables coverage or foreign interfaces. Concurrent SVA, full
+SystemVerilog, pessimistic X propagation, VHDL event semantics and VHDL
+nine-value logic are unsupported requirements. The mixed path converts VHDL
+with `ghdl --synth --std=08 --out=verilog`. Yosys checks the hierarchy and lowers
+processes. Icarus compiles the resulting netlist with the HDL testbench. This
+path needs native GHDL synthesis support and Yosys. It does not use a VPI bridge.
+Synthesis can change unknown values. The mixed profile thus refuses
+`four_state` and `xz_values` even though Icarus runs the final netlist.
+
+Example `rvw.hdl/1` manifest:
+
+```json
+{
+  "schema": "rvw.hdl/1",
+  "backend": "icarus",
+  "top": "tb",
+  "sources": ["xreset.sv"],
+  "requires": ["four_state", "xz_values", "hdl_delays"]
+}
+```
+
+For mixed synthesis, also set `vhdl_sources` to an ordered list of VHDL files
+and `vhdl_top` to their component entity name. Use `requires: ["mixed_synth"]`.
+The testbench `top` and `vhdl_top` must be simple HDL identifiers. Paths resolve
+from the manifest directory. Unknown fields and requirements are errors before
+output creation or tool launch. Missing tools also cause a preflight error.
+The compiler checks language support on the installed version before simulation.
+Profiles state adapter limits; they do not certify arbitrary language constructs.
+
+The testbench must use `$fatal(1, ...)` on a failed check. It must print one
+exact `RVW_PASS` line only after all checks finish. Then it must call `$finish`.
+Exit zero alone cannot pass. Native error diagnostics, a missing or duplicate
+marker, a failed tool or a timeout produce `error` and CLI exit 2. A pass gives
+exit 0. `--timeout` bounds version probes, synthesis, compilation and simulation
+together. Cancellation stops the process group. Builds use one compiler job.
+The output directory must be new. It contains `results.json`, the resolved
+request, separate stdout/stderr logs for each command, and generated files.
+
+See [the examples](../../../../examples/sim-semantics/README.md) for commands
+and conformance cases. Four-state accuracy here means Icarus language X/Z
+semantics, including X optimism in conditional statements. It does not mean
+pessimistic X propagation. The comparison case checks four settled values in
+one X-free counter, not equivalence of arbitrary designs. This runner does not
+execute C1 ELF runs, change the RiscvSim backend, or earn C4 gate acceptance.
+Hashes cover listed source files, not transitive includes, memory images,
+libraries or all environment inputs. Replay is not hermetic under C8.
+

@@ -136,3 +136,13 @@ separate Linux self-hosted runner. To use paid GitHub-hosted minutes instead,
 change their runner labels to Ubuntu and get owner approval before enabling
 them. Native tool bundles also remains disabled. Its host matrix still needs
 separate runner and cost decisions. Do not enable a hosted workflow on this Mac.
+
+The root [CI workflow](.github/workflows/ci.yml) runs the fast set on PRs.
+The [nightly workflow](.github/workflows/nightly.yml) runs all Python tests at
+03:23 UTC and supports manual dispatch. Both use `scripts/ci-local.sh`.
+This is the root CI work tracked in [#16](https://github.com/riscPrint/risc-v-workstation/issues/16).
+Python jobs publish pass, skip, failure and error counts in the Actions summary.
+The fast Python set must finish in less than 300 seconds. This budget excludes
+installation and the separate extension, Rust and Scala checks. A missing test
+report fails the job. Native skips remain visible in pytest output.
+A configured schedule does not prove that a nightly run completed.

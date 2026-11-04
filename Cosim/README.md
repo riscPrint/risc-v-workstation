@@ -88,8 +88,9 @@ Exit 0 means: every traced instruction and trap event agrees with the reference 
 compared fields (see "Comparison and synchronization"), after the listed synchronizations.
 Version 1 does not check floating-point registers or `fflags`/`fcsr` state.
 Version 2 compares raw FP writes and post-instruction `fflags`/`fcsr` with Spike.
-Sail refuses these fields because its effect interface lacks them. Neither version checks CSR side effects that
-no traced instruction reads, memory that no traced instruction reads, or timing. A matching
+Sail refuses these fields because its effect interface lacks them. Version 2 also checks
+the declared post-instruction CSR snapshots with Spike, including unread writes and trap entry.
+Undeclared CSR state, memory that no traced instruction reads, and timing remain unchecked. A matching
 **prefix** (no end event, `trace_complete: false`) also exits 0, and so does a trace that
 ended in `fail` or `timeout`. Agents must check `trace_complete` and `end_status`, and read
 `recent_synchronizations` and `recent_quirks` for what was taken from the core.
@@ -662,9 +663,9 @@ these records. Timing-dependent CSRs need an agreed observation point.
 
 C2 version 2 separates attempted data accesses from completed `mem_*` effects.
 `fault_access` uses access-relative byte lanes even with `aligned_mem=true`.
-Spike checks zero-completion uncompressed scalar loads/stores (width codes 0..3)
-using reference operands. Partly completed faults, compressed attempts, unsigned
-load width codes and AMOs are refused. Sail refuses this extension. Null means
+Spike checks zero-completion scalar loads/stores, compressed accesses and
+LR/SC/AMO attempts using reference operands. Unsigned loads retain their
+access width. Partly completed faults are refused on either side. Sail refuses this extension. Null means
 unobserved data. Neither checker fills missing DUT data from the reference.
 
 ### Live retirement integration API
@@ -683,8 +684,8 @@ A producer must flush each line. It must provide a wall timeout for a stalled
 producer. The result reports the digest and line count of the consumed prefix,
 including lookahead. It never calls that digest a complete input trace hash.
 EOF before an end event is inconclusive. Save the complete stream for offline
-replay. The CLI and the BOOM adapter do not yet launch this API. This increment
-provides the generic integration point, not BOOM online runtime evidence.
+replay. The `live` CLI launches C1 adapters through this API. See the command below.
+Native BOOM runtime evidence must be reported separately.
 
 Self-relocating ET_DYN firmware is also accepted at its declared PT_LOAD
 addresses. PT_INTERP and ET_REL remain unsupported. No dynamic linker or ELF
@@ -698,3 +699,56 @@ establish Linux device support.
 `--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
+
+Directed reference tests in `test_fp_rounding.py` check halfway additions in
+RNE, RTZ, RDN, RUP, RMM and dynamic RUP, for both signs. They also check a
+signaling NaN, an unboxed single operand and FS Initial/Clean to Dirty changes.
+These use native Spike with fixed expected bits. They are not independent DUT
+captures. DUT FP state remains blocked by
+[spinal-boom #9](https://github.com/riscPrint/spinal-boom/issues/9).
+Sail's public text trace does not supply full post-instruction FP flags or
+register state. Do not infer unreported flags from a write log or copy them
+from Spike. Sail state comparison remains unsupported.
+
+`test_unread_csr.py` checks native Spike snapshots after two unread `mscratch`
+writes and synchronous ECALL entry. A reference-generated fixture puts these
+instructions in one cycle. Mutations detect use of the final cycle state in
+an earlier retire slot and a wrong unread `mepc`. This tests the checker, not
+a DUT producer. BOOM per-slot capture remains blocked by
+[spinal-boom #10](https://github.com/riscPrint/spinal-boom/issues/10).
+Sail's public write log is not a full CSR snapshot. Missing writes cannot
+establish full state. Sail snapshot support remains unavailable.
+
+
+### Launch a simulator with online checking
+
+Use `rvw cosim live` with a C1 adapter that writes `rvfi.jsonl`. Supply the
+adapter command after all cosim options. Use `{elf}` and `{out}` placeholders.
+The command receives the captured ELF copy and a new absolute output path.
+The output directory must not exist. The CLI saves the simulator log and C2
+file there. Spike uses the same captured ELF and platform as offline checking.
+Sail is offline only. This command is CLI only; MCP does not accept launch commands.
+
+```sh
+rvw cosim live --core boom --elf PROGRAM --out /tmp/live-run --timeout 120 --json \
+  --simulator scripts/with-lock.sh boom nice -n 10 RiscvSim/boom/run.sh run \
+  --elf '{elf}' --out '{out}' --rvfi-trace --max-cycles 100000
+```
+
+The launcher sets `RVW_RVFI_FLUSH=1`. RiscvSim then flushes each C2 line.
+Buffered output remains the default for other runs. Other adapters must supply
+flushed complete lines. One later-cycle record is still needed before the
+checker can compare the preceding cycle. At a checked divergence or parser
+error, the launcher sends TERM to the simulator process group. It lets nested
+supervisors reap their groups, then forces exit after a 20-second grace period
+if needed. The launcher reaps its process. The wall
+timeout also covers build and lock wait time. A timeout or nonzero simulator
+exit cannot produce an online match. Exit 3 means inconclusive; exit 1 means
+a checked mismatch. Input/parse errors return exit 2.
+
+The consumed prefix digest retains its API meaning. The saved C2 file can
+contain later unchecked lines. No full-trace hash or complete dependency
+identity is inferred from that prefix. Reproduction metadata captures the
+launch executable identity and original argument list. Adapter scripts and
+build dependencies need their own C1 provenance. A complete trace match is
+not a C1 program-pass or clean-revision acceptance claim.

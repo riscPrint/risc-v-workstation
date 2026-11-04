@@ -74,9 +74,9 @@ def pinned_reference():
     pins = json.loads(fixture.PINS.read_text())
     cases = []
     for name in pins['cases']:
-        keys = ['1:x5', '1:x7'] if name.endswith('/MP.litmus') else ['0:x5', '1:x5'] if name.endswith('/LB.litmus') else ['0:x7', '1:x7']
+        keys = ['1:x5', '1:x7'] if '/MP' in name else ['0:x5', '1:x5'] if '/LB' in name else ['0:x7', '1:x7']
         states = [dict(zip(keys, v)) for v in product((0, 1), repeat=2)
-                  if 'fence' not in name or v != (0, 0)]
+                  if 'fence' not in name or v != ((1, 0) if '/MP' in name else (1, 1) if '/LB' in name else (0, 0))]
         cases.append({'test': name, 'allowed': states})
     return {'pins': pins, 'dut': 'not_run', 'cases': cases}
 
@@ -93,3 +93,15 @@ def test_pinned_reference_rejects_changed_allowed_sets():
     reference['cases'][0]['allowed'].pop()
     with pytest.raises(ValueError, match='allowed states'):
         fixture.check(reference, samples)
+
+
+def test_fenced_mp_and_lb_have_distinct_forbidden_states():
+    reference = pinned_reference()
+    samples = [sample_for(c) for c in reference['cases']]
+    for sample in samples:
+        if '/MP+' in sample['test']:
+            sample['observations'] = [{'state': {'1:x5': 1, '1:x7': 0}, 'count': 1}]
+        if '/LB+' in sample['test']:
+            sample['observations'] = [{'state': {'0:x5': 1, '1:x5': 1}, 'count': 1}]
+    rows = fixture.check(reference, samples)
+    assert sum(r['status'] == 'mismatch' for r in rows) == 2
