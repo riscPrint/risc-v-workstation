@@ -383,6 +383,33 @@ The small reference designs are in the protocol and reference `*Spec` files. Run
 They inject legal offer changes, source reuse, unmatched responses, response
 opcode and size faults, parameter faults, and AXI address faults.
 
+## Explicit safety intent
+
+Project adapters can call these helpers in the signal sampling clock domain.
+They use `DeclaredChecks.rule`, so selection, waivers, monitor counters and
+stable check IDs apply. No core signal names occur in the helpers.
+
+| Helper | Rules and contract |
+|---|---|
+| `QueueChecks.fifo` | `queue.capacity`, `queue.occupancy`, `queue.order`. Bind accepted push/pop events, flush, payload or unique token, and the pre-edge occupancy. The independent FIFO checks data order and count. Flush discards all entries and dominates transfers. Full replacement is legal. Empty bypass is not supported. |
+| `QueueChecks.arbiter` | `arbiter.exclusive`, `arbiter.requested`. At most one grant is permitted. Every grant needs its request. No fairness or progress is inferred. |
+| `StateChecks.machine` | `state.encoding`, `state.transition`. Declare all legal codes and edges, including self loops. The first initialized sample checks encoding. Consecutive initialized samples check transitions. |
+| `StateChecks.branches` | `state.exclusive`, optional `state.required`. Declare the branch selection vector and its active condition. |
+| `ValueChecks.range` | `value.underflow`, `value.overflow`. Bind a full precision signed expression and mathematical bounds. Unsigned intent uses a zero-extended value converted to `SInt`. |
+| `ValueChecks.narrowing` | `value.truncation`. Declare signed value preservation or modular low-bit behavior. Modular behavior permits lost high bits but still checks the low bits. |
+
+FIFO reference state starts empty at reset. Bind resetless queues only after an
+explicit flush; automatic startup inference is not supported. State initialization
+and value activation come from the adapter. An inactive value does not delay a
+later violation. Do not derive initialization from a fixed cycle delay.
+The library does not infer reset values or unreachable-state assumptions.
+
+These are bounded local safety checks. Queue tokens must include all identity or
+data fields that the adapter needs to compare. They do not establish whole-core
+retirement, LSQ ordering, speculation recovery or eventual progress. No BOOM
+bindings for these helpers are installed by default. Tests are in
+`IntentChecksSpec`; each rule has legal and illegal stimulus.
+
 ## Gaps
 
 - Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
