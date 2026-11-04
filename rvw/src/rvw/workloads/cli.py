@@ -10,7 +10,7 @@ def _run(args):
         elif args.action == "build":
             value = core.build(args.manifest, args.source, args.out, args.cc, args.bench)
         else:
-            value = core.verify(args.build, args.out, args.oracle, args.timeout)
+            value = core.verify(args.build, args.out, args.oracle, args.timeout, args.trace)
         print(json.dumps(value, indent=2))
         return 0 if value.get("status") != "fail" else 2
     except (ValueError, OSError, KeyError, TypeError) as exc:
@@ -36,4 +36,5 @@ def register(subparsers):
             p.add_argument("--build", required=True, help="build.json")
             p.add_argument("--out", required=True, help="fresh reference result directory")
             p.add_argument("--oracle", default="spike", help="Spike or qemu-riscv64 executable")
+            p.add_argument("--trace", action="store_true", help="capture Spike instruction categories")
             p.add_argument("--timeout", type=int, default=120)

@@ -137,6 +137,8 @@ def build(manifest, source, out, cc, bench=None):
             raise ValueError("build output must be a little-endian RV64 ELF")
         records.append({**w, "argv": argv, "elf": str(elf), "elf_sha256": digest(elf),
                         "elf_bytes": elf.stat().st_size})
+    if tree_hash(captured) != source_hash:
+        raise ValueError("build modified captured sources; put generated files under {out}")
     if digest(compiler["path"]) != compiler["sha256"]:
         raise ValueError("compiler changed during build")
     report = {"schema": "rvw.workload-build/1", "status": "built", "manifest": data,
@@ -146,7 +148,7 @@ def build(manifest, source, out, cc, bench=None):
     return report
 
 
-def verify(build_path, out, oracle, timeout=120):
+def verify(build_path, out, oracle, timeout=120, trace=False):
     if timeout <= 0:
         raise ValueError("timeout must be positive")
     raw = Path(build_path).read_bytes()
@@ -157,6 +159,8 @@ def verify(build_path, out, oracle, timeout=120):
     name = Path(tool["path"]).name
     if name not in ("spike", "qemu-riscv64", "qemu-riscv64-static"):
         raise ValueError("oracle must be Spike or QEMU RISC-V Linux user mode")
+    if trace and name != "spike":
+        raise ValueError("instruction logs require Spike")
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     rows = []
@@ -167,19 +171,26 @@ def verify(build_path, out, oracle, timeout=120):
         if (name == "spike") != (w["mode"] == "bare"):
             raise ValueError("Spike requires bare mode; QEMU user mode requires linux mode")
         argv = [tool["path"]] + (["--isa=rv64gc"] if name == "spike" else [])
+        if trace:
+            argv.append("-l")
         argv += [str(elf), *w.get("args", [])]
         # File inputs are part of the captured source tree. Recheck their bytes.
         source = Path(build_path).resolve().parent / "source"
         if tree_hash(source) != data["source_sha256"]:
             raise ValueError("captured source or inputs changed")
+        workdir = out / f"{w['id']}.inputs"
+        shutil.copytree(source, workdir, symlinks=True)
         stdout, stderr = out / f"{w['id']}.stdout", out / f"{w['id']}.stderr"
         with stdout.open("wb") as so, stderr.open("wb") as se:
-            result = run_group(argv, cwd=source, stdout=so, stderr=se, timeout=timeout)
+            result = run_group(argv, cwd=workdir, stdout=so, stderr=se, timeout=timeout)
         ok = not result.timed_out and result.returncode == 0 and digest(stdout) == w["stdout_sha256"]
         rows.append({"id": w["id"], "status": "pass" if ok else "fail", "argv": argv,
                      "elf_sha256": w["elf_sha256"], "exit_code": result.returncode,
                      "timed_out": result.timed_out, "stdout_sha256": digest(stdout),
                      "stderr_sha256": digest(stderr)})
+        if trace and ok:
+            from .profile import summarize
+            rows[-1]["profile"] = summarize(stderr)
     if digest(tool["path"]) != tool["sha256"]:
         raise ValueError("oracle changed during verification")
     report = {"schema": "rvw.workload-verify/1", "status": "pass" if all(

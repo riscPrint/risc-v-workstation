@@ -162,3 +162,34 @@ def test_build_local_hook_and_wrong_elf(tmp_path):
     put(Path(file), manifest)
     with pytest.raises(ValueError, match='compiler pin'):
         core.build(file, source, tmp_path / 'other', str(cc))
+
+
+@pytest.mark.parametrize('bits,cats', [
+    (0x00003003, ('load',)), (0x00003007, ('load', 'fp')),
+    (0x00003023, ('store',)), (0x00000063, ('branch',)),
+    (0x00000067, ('indirect_jump',)), (0x00000053, ('fp',)),
+    (0xc001, ('branch',)), (0xe001, ('branch',)),
+    (0x6082, ('load',)), (0xe002, ('store',)),
+    (0x2000, ('load', 'fp')), (0x8082, ('indirect_jump',)),
+    (0x9002, ('other',)), (0xa001, ('direct_jump',)),
+])
+def test_instruction_categories(bits, cats):
+    from rvw.workloads.profile import categories
+    assert categories(bits) == cats
+
+
+def test_trace_branch_transitions(tmp_path):
+    from rvw.workloads.profile import summarize
+    trace = tmp_path / 'trace'
+    trace.write_text('core   0: 0x80000000 (0x0000c001) c.beqz a0, 8\n'
+                     'core   0: 0x80000008 (0x00000063) beq a0, a1, 8\n'
+                     'core   0: 0x8000000c (0x00006082) c.ldsp ra, 0(sp)\n')
+    p = summarize(trace)
+    assert p['counts']['instructions'] == 3
+    assert p['counts']['branch_transitions'] == 2
+    assert p['counts']['taken_branches'] == 1
+    assert p['counts']['load'] == 1
+    assert p['cache_misses'] is None
+    trace.write_text('no instructions\n')
+    with pytest.raises(ValueError, match='empty'):
+        summarize(trace)
