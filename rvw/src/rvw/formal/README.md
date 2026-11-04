@@ -821,3 +821,8 @@ both be one, and that forwarding `found` agrees with the prior cycle's nonzero m
 The VexRiscv FIFO needs the sampled-event model because its reset is asynchronous.
 These are small exported leaf invariants. They are not whole-core verification,
 full CSR or connectivity checks on these processors, or a performance benchmark.
+
+
+Depth search records its engine selection and termination reason. It doubles
+`--depth` up to `--max-depth` under `--budget`. It stops at the first result
+other than pass. The largest passing bound remains a bounded observation.

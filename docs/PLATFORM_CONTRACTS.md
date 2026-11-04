@@ -2080,3 +2080,15 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+
+### Formal bounded depth-search termination
+
+`rvw.formal-depth-search/1` records `stop_reason`: `max_depth_reached`,
+`budget_exhausted`, or `attempt_<status>`. `support` records the doubling
+schedule, initial and maximum depths, total budget, per-attempt timeout and
+engine selection. Engine portfolios and depth search are separate choices.
+Every attempt uses at most the remaining budget as its timeout. Frontend and
+capture overhead can exceed this budget. No new attempt starts after expiry.
+A bounded pass at the maximum depth remains `inconclusive`. Only a concrete
+failed attempt gives aggregate `fail`. Search never claims an unbounded proof.
