@@ -60,3 +60,32 @@ def test_bmc_adapter_cannot_claim_short_prefix(tmp_path, monkeypatch):
     r = compare.adapter('/fake',dict(mode='bmc',depth=10),tmp_path / 'adapter',1)
     assert r['status'] == 'inconclusive'
     assert 'shorter' in r['reason']
+
+
+@pytest.mark.parametrize('observed,expected,qualification', [
+    ('pass','pass','matches_on_suite'),
+    ('fail','pass','mismatch'),
+    ('pass','fail','mismatch'),
+    ('unknown','pass','inconclusive'),
+])
+def test_suite_oracle_is_independent(tmp_path, monkeypatch, capsys, observed, expected, qualification):
+    from argparse import Namespace
+    import hashlib
+    source = tmp_path / 'source.sv'; source.write_text('// exported fixture')
+    spec = tmp_path / 'spec.json'
+    spec.write_text(json.dumps(dict(schema='rvw.cdc-protocol/1',kind='reset_release',
+                                    top='Design',verilog=['source.sv'])))
+    manifest = tmp_path / 'suite.json'
+    manifest.write_text(json.dumps(dict(schema='rvw.cdc-bench/1',cases=[dict(
+        id='reference',manifest='spec.json',expected=expected,
+        source_sha256=[hashlib.sha256(source.read_bytes()).hexdigest()])])))
+    def native(args):
+        root = Path(args.out); root.mkdir()
+        (root / 'result.json').write_text(json.dumps(dict(status=observed,proof_kind='unbounded')))
+    monkeypatch.setattr(compare.protocol,'run',native)
+    out = tmp_path / 'out'
+    compare.run(Namespace(benchmark=str(manifest),out=str(out),depth=24,mode='prove',
+                          engine='abc:pdr',timeout=1,json=True))
+    r = json.loads((out / 'result.json').read_text())
+    assert r['qualification']['native'] == qualification
+    assert r['commercial_comparison'] == 'not_run'

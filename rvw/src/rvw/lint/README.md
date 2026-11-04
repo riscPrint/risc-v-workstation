@@ -9,7 +9,7 @@ CDC analysis from SpinalDB. It does not establish CDC signoff.
 |---|---|---|
 | [Verilator lint](https://verilator.org/guide/latest/warnings.html) | Elaborated RTL warnings, including UNOPTFLAT, MULTIDRIVEN and PINMISSING | No metastability or transfer protocol proof |
 | [Verible](https://chipsalliance.github.io/verible/verilog_lint.html) | SystemVerilog syntax and style rules | No elaborated clock relationships |
-| [Yosys check](https://yosyshq.readthedocs.io/projects/yosys/en/latest/cmd/check.html) | Combinational loops, conflicting drivers and undriven wires after synthesis | Not a CDC protocol checker; adapter not implemented here |
+| [Yosys check](https://yosyshq.readthedocs.io/projects/yosys/en/latest/cmd/check.html) | Combinational loops, conflicting drivers and undriven wires after synthesis | Native connectivity adapter; not a CDC protocol checker |
 | [VC SpyGlass CDC](https://www.synopsys.com/verification/static-and-formal-verification/vc-spyglass/vc-spyglass-cdc.html) | Structural and functional CDC, protocol assumptions, formal analysis | Commercial reference target |
 | [Questa RDC](https://www.siemens.com/en-us/products/ic/questa-one/design-solutions/reset-domain-crossing/) | Functional reset crossing paths with formal analysis | Commercial reference target |
 
@@ -90,7 +90,7 @@ paths, pulse loss, metastability perturbation and protocol properties remain
 unproved. Bounded FIFO topology and reconvergence checks are described below.
 A single-clock design can report `no_crossings_found` for register paths. This
 is not a multi-clock validation result. Non-Spinal RTL needs a domain-aware
-importer. Yosys is surveyed but is not a backend in this increment.
+importer. The optional Yosys backend checks native connectivity. It does not infer clock domains.
 
 ## Reset-domain crossings
 
