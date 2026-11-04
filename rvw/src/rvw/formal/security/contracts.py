@@ -31,7 +31,8 @@ def reference(platform, elf, shim, registers, stop_pc, max_steps):
 
 def eligible_zkt(insn):
     """Initial supported Zkt instruction: uncompressed integer ADD only."""
-    return type(insn) is int and insn & 0xfe00707f == 0x33
+    return (type(insn) is int and 0 <= insn < 1 << 32
+            and insn & 0xfe00707f == 0x33 and (insn >> 7) & 31 != 0)
 
 
 def assess(rows, observation_names):

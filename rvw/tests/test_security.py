@@ -65,7 +65,8 @@ def native_env():
     return env
 
 
-def test_native_ift_mask_control_and_sequential_reset(tmp_path,native_env):
+@pytest.mark.parametrize('backend', ['json', 'yosys'])
+def test_native_ift_mask_control_and_sequential_reset(tmp_path,native_env,ift_plugin,backend):
     source=tmp_path/'source.v'
     source.write_text('''module dut(input clk,reset,secret,mask,select,output reg q,output y);
     assign y=secret & mask;
@@ -74,12 +75,15 @@ def test_native_ift_mask_control_and_sequential_reset(tmp_path,native_env):
     net=tmp_path/'net.json'
     native(['yosys','-Q','-T','-p', f'read_verilog {source}; hierarchy -top dut; proc; flatten; techmap; simplemap; write_json {net}'],env=native_env)
     design=json.loads(net.read_text())
-    output=tmp_path/'ift.v'; output.write_text(instrument(design,'dut'))
+    output=tmp_path/'ift.v'
+    if backend=='json': output.write_text(instrument(design,'dut'))
+    else:
+        native(['yosys','-Q','-T','-m',ift_plugin,'-p',f'read_json {net}; rvw_ift; rename dut dut__ift; write_verilog -noattr {output}'],env=native_env)
     tb=tmp_path/'tb.v'
     tb.write_text('''module tb;
     reg clk=0,reset=1,secret=1,mask=0,select=0,st=0;
     wire q,qt,y,yt;
-    dut__ift d(clk,reset,1'b0,secret,1'b1,mask,1'b0,select,st,q,qt,y,yt);
+    dut__ift d(.clk(clk),.reset(reset),.reset__t(1'b0),.secret(secret),.secret__t(1'b1),.mask(mask),.mask__t(1'b0),.select(select),.select__t(st),.q(q),.q__t(qt),.y(y),.y__t(yt));
     always #5 clk=~clk;
     initial begin
       #6; if(qt!==0 || yt!==0) $fatal;
@@ -103,7 +107,7 @@ def test_native_spike_rtl_seeded_campaign(tmp_path,native_env):
     elf=tmp_path/'program.elf'
     native([gcc,'-march=rv32i','-mabi=ilp32','-nostdlib','-Wl,-Ttext=0x80000000','-Wl,--no-relax',ROOT/'examples/security/program.S','-o',elf],env=native_env)
     platform=tmp_path/'platform.json'
-    platform.write_text(json.dumps(dict(name='security-slice',xlen=32,isa='rv32i',reset_pc=0x80000000,ram=[[0x80000000,0x10000]],mmio=[])))
+    platform.write_text(json.dumps(dict(name='security-slice',xlen=32,isa='rv32i',reset_pc=0x80000000,ram=[[0x7ffff000,0x20000]],mmio=[])))
     results=[]
     for seed in range(5):
         manifest=tmp_path/f'manifest-{seed}.json'
@@ -124,8 +128,9 @@ def test_native_spike_rtl_seeded_campaign(tmp_path,native_env):
     print(json.dumps(metric,sort_keys=True))
 
 
+@pytest.mark.parametrize('backend', ['json', 'yosys'])
 @pytest.mark.parametrize('kind', ['NOT', 'AND', 'OR', 'XOR', 'MUX'])
-def test_native_ift_exhaustive_gate_truth_tables(kind,tmp_path,native_env):
+def test_native_ift_exhaustive_gate_truth_tables(kind,tmp_path,native_env,ift_plugin,backend):
     from itertools import product
     names=['a'] if kind=='NOT' else ['a','b','s'] if kind=='MUX' else ['a','b']
     ports={p:{'direction':'input','bits':[i+2]} for i,p in enumerate(names)}
@@ -133,7 +138,16 @@ def test_native_ift_exhaustive_gate_truth_tables(kind,tmp_path,native_env):
     con={p.upper():ports[p]['bits'] for p in names};con['Y']=[8]
     mod={'ports':ports,'cells':{'g':{'type':f'$_{kind}_','connections':con}},
          'netnames':{p:{'bits':d['bits']} for p,d in ports.items()}}
-    rtl=tmp_path/'ift.v';rtl.write_text(instrument({'modules':{'gate':mod}},'gate'))
+    rtl=tmp_path/'ift.v'
+    if backend=='json': rtl.write_text(instrument({'modules':{'gate':mod}},'gate'))
+    else:
+        design={'creator':'rvw test', 'modules':{'gate':mod}}
+        # Yosys read_json requires netname defaults and cell metadata.
+        for d in mod['netnames'].values(): d.update(hide_name=0,attributes={})
+        mod['attributes']={'top':'1'}
+        mod['cells']['g'].update(hide_name=0,parameters={},attributes={},port_directions={p:'output' if p=='Y' else 'input' for p in con})
+        net=tmp_path/'gate.json';net.write_text(json.dumps(design))
+        native(['yosys','-Q','-T','-m',ift_plugin,'-p',f'read_json {net}; rvw_ift; rename gate gate__ift; write_verilog -noattr {rtl}'],env=native_env)
     def gate(values):
         a=values[0];b=values[1] if len(values)>1 else 0
         return {'NOT':1-a,'AND':a&b,'OR':a|b,'XOR':a^b,'MUX':b if len(values)>2 and values[2] else a}[kind]
@@ -144,8 +158,77 @@ def test_native_ift_exhaustive_gate_truth_tables(kind,tmp_path,native_env):
             assigns=' '.join(f'{p}={v}; {p}t={t};' for p,v,t in zip(names,values,taints))
             checks.append(assigns+f' #1; if(y!==1\'b{gate(values)} || yt!==1\'b{int(len(possible)>1)}) $fatal;')
     tb=tmp_path/'tb.v'
-    args=','.join(x for p in names for x in (p,p+'t'))+',y,yt'
+    args=','.join(f'.{p}({p}),.{p}__t({p}t)' for p in names)+',.y(y),.y__t(yt)'
     tb.write_text('module tb; reg '+','.join(x for p in names for x in (p,p+'t'))+'; wire y,yt;\n'
         +f'gate__ift d({args}); initial begin\n'+'\n'.join(checks)+'\n$finish; end endmodule')
     native(['iverilog','-s','tb','-o',tmp_path/'sim',rtl,tb],env=native_env)
     native(['vvp',tmp_path/'sim'],env=native_env)
+
+
+@pytest.fixture(scope='session')
+def ift_plugin(tmp_path_factory):
+    compiler=shutil.which('clang++')
+    include=Path(os.environ.get('YOSYS_INCLUDE',Path.home()/'opt/oss-cad-suite/share/yosys/include'))
+    if not compiler or not (include/'kernel/yosys.h').exists():
+        pytest.skip('Yosys plugin headers or clang++ missing')
+    out=tmp_path_factory.mktemp('ift-plugin')/'rvw_ift.so'
+    flags=['-undefined','dynamic_lookup'] if sys.platform=='darwin' else []
+    native([compiler,'-std=c++17','-O1','-fPIC','-D_YOSYS_','-DYOSYS_ENABLE_PLUGINS',
+            '-I',include,*flags,'-shared',ROOT/'SpinalChecks/security/rvw_ift.cc','-o',out])
+    return out
+
+
+def test_zkt_scope_excludes_hint_and_other_instructions():
+    from rvw.formal.security.contracts import eligible_zkt
+    assert eligible_zkt(0x002081b3)
+    for insn in (0x00208033,0x00000463,0x0000a283,0x022081b3,0x002081b3+(1<<32)):
+        assert not eligible_zkt(insn)
+
+
+@pytest.mark.parametrize('case', ['incomplete','mismatch','missing-channel','nonmonotonic','timeout'])
+def test_native_bad_adapter_never_earns_clean_verdict(tmp_path,monkeypatch,case):
+    from rvw.formal.security import cli
+    from rvw.cosim.platform import Platform
+    from types import SimpleNamespace
+    from rvw.common.proc import Result
+    # Keep the test independent of optional Spike; the native experiment above covers it.
+    elf=tmp_path/'image';elf.write_bytes(b'elf')
+    platform=tmp_path/'platform';platform.write_text(json.dumps(dict(name='test',xlen=32,isa='rv32i',reset_pc=0,ram=[[0,4096]],mmio=[])))
+    tree=tmp_path/'adapter';tree.mkdir();(tree/'adapter.py').write_text('fixture')
+    ref=row()['reference']
+    monkeypatch.setattr(cli,'capture_shim',lambda *a: {})
+    monkeypatch.setattr(cli,'reference',lambda *a: ref)
+    def adapter(argv,**kwargs):
+        if case=='timeout': return Result(124,True)
+        data=copy.deepcopy(row()['rtl'])
+        if case=='incomplete': data['complete']=False
+        if case=='mismatch': data['effects'][0]['rd_wdata']=99
+        if case=='missing-channel': data['observations']={}
+        if case=='nonmonotonic': data['cycles']=[0]
+        Path(argv[-1]).write_text(json.dumps(data))
+        return Result(0)
+    monkeypatch.setattr(cli,'run_group',adapter)
+    manifest=tmp_path/'manifest.json'
+    manifest.write_text(json.dumps(dict(elf=str(elf),platform=str(platform),shim='unused',adapter_tree=str(tree),
+        adapter_command=[sys.executable,'{out}'],secret_registers=[1],unmodeled_channels=['all other'],
+        stop_pc=4,max_steps=1,observations=['cache'],cases=[dict(public_key=[],registers={'1':s}) for s in (0,1)])))
+    assert cli.run_contract(SimpleNamespace(out=str(tmp_path/'run'),manifest=str(manifest)))==3
+    report=json.loads((tmp_path/'run/result.json').read_text())
+    assert report['verdict']=='inconclusive'
+
+
+@pytest.mark.parametrize('source', [
+    'module dut(input clk,reset,d,output reg q); always @(posedge clk or posedge reset) if(reset) q<=0; else q<=d; endmodule',
+    'module dut(input a,b,d,output reg q,r); always @(posedge a) q<=d; always @(posedge b) r<=d; endmodule',
+    'module dut(input clk,d,output reg q); initial q=0; always @(posedge clk) q<=d; endmodule',
+    'module dut(output y); wire x; assign y=x; endmodule',
+    'module dut(inout x, output y); assign y=x; endmodule',
+    'module dut(input d,output y); assign y=d & 1\'bx; endmodule',
+])
+def test_native_ift_refuses_unmodeled_state_and_channels(source,tmp_path,native_env,ift_plugin):
+    rtl=tmp_path/'source.v';rtl.write_text(source)
+    net=tmp_path/'design.json'
+    native(['yosys','-Q','-T','-p',f'read_verilog {rtl}; hierarchy -top dut; proc; flatten; techmap; simplemap; write_json {net}'],env=native_env)
+    with pytest.raises(ValueError): instrument(json.loads(net.read_text()),'dut')
+    result=run_group(['yosys','-Q','-T','-m',str(ift_plugin),'-p',f'read_json {net}; rvw_ift'],env=native_env,capture=True,timeout=30)
+    assert result.returncode!=0 and not result.timed_out

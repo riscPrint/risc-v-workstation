@@ -48,6 +48,7 @@ def tool(name):
     return found
 
 iverilog, vvp = tool('iverilog'), tool('vvp')
+tool_hashes = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in (iverilog,vvp)}
 binary = work/'sim'
 for argv in ([iverilog, '-g2012', '-s', 'tb', '-o', str(binary), str(source), str(tb)], [vvp, str(binary)]):
     run = run_group(argv, capture=True, timeout=20)
@@ -62,7 +63,9 @@ for line in run.stdout.splitlines():
         cycles.append(int(words[5]))
     if words[0] == 'O':
         observations = dict(zip(('cache','protected_trace','test_output'), [int(x,16) for x in words[1:]]))
+if any(hashlib.sha256(Path(p).read_bytes()).hexdigest() != h for p,h in tool_hashes.items()):
+    raise RuntimeError('simulator changed during run')
 output.write_text(json.dumps({'complete': observations is not None and len(effects)==2,
     'effects': effects, 'cycles': cycles, 'observations': observations,
-    'tools': {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in (iverilog,vvp)},
+    'tools': tool_hashes,
     'rtl_sha256': hashlib.sha256(source.read_bytes()).hexdigest()}))

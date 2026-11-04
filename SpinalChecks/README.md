@@ -637,3 +637,10 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+## Hardware information flow
+
+[security/](security/README.md) contains the native `rvw_ift` Yosys pass.
+It adds value-sensitive data and control taint to mapped Boolean gates and
+rising-edge registers. It is optional. It does not change core source files.
+See `rvw formal security` for bounded Spike contracts and sampled ADD timing.

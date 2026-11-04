@@ -14,7 +14,10 @@ implicit declassification occurs. Unsupported cells, blackboxes, X/Z constants,
 multiple clocks and undriven bits cause an error. No structural path is a proof.
 Reconvergent paths can overtaint because the transform loses correlations.
 
-This is an external Yosys netlist transform, not the upstream CellIFT pass.
+Two implementations use the same gate transfer rules: the native Yosys
+`rvw_ift` pass in `SpinalChecks/security/`, and a JSON reference transform.
+Neither implementation is the upstream CellIFT pass. This first increment
+uses Boolean gates rather than CellIFT word-level shadow cells.
 
 ## Commands
 
@@ -69,7 +72,7 @@ Public reset clears taint only when the actual logic resets that register.
 ## Basis and limits
 
 - [Revizor contracts](https://microsoft.github.io/side-channel-fuzzer/latest/topics/contracts/): executable leakage contracts and equal-trace comparison classes.
-- [CellIFT](https://github.com/eth-sri/cellift): value-sensitive gate taint instrumentation. This transform is a small independent implementation.
+- [CellIFT](https://github.com/comsec-group/cellift-yosys): value-sensitive gate taint instrumentation. This transform is a small independent implementation.
 - [RISC-V scalar cryptography specification](https://github.com/riscv/riscv-crypto/blob/main/doc/scalar/riscv-crypto-scalar-zkt.adoc): data-independent execution latency. ADD is the initial tested subset.
 
 The current native experiment has four explicit leak seeds and one clean control.

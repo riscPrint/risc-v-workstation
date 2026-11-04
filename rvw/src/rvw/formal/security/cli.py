@@ -52,6 +52,7 @@ def run_contract(args):
         command = cfg['adapter_command']
         if not command or not all(isinstance(x, str) for x in command):
             raise ValueError('adapter_command must be an argv list')
+        adapter_tool = capture.tool(command[0])
         if not (0 < cfg.get('timeout', 30) <= 300):
             raise ValueError('adapter timeout must be in 0..300 seconds')
         secrets = cfg['secret_registers']
@@ -66,6 +67,7 @@ def run_contract(args):
             request.write_text(json.dumps({'registers': case['registers'], 'elf': str(elf),
                                          'stop_pc': cfg['stop_pc'], 'max_steps': cfg['max_steps']}))
             argv = [x.replace('{tree}', str(adapter.copy)).replace('{case}', str(request)).replace('{out}', str(response)) for x in command]
+            argv[0] = str(adapter_tool.path)
             proc = run_group(argv, capture=True, timeout=cfg.get('timeout', 30), cwd=out)
             if proc.timed_out or proc.returncode:
                 raise ValueError(f'RTL adapter failed for case {index}: {proc.stderr}')
@@ -76,6 +78,7 @@ def run_contract(args):
         report['unmodeled_channels'] = cfg['unmodeled_channels']
         report['secret_registers'] = secrets
         report['rows'] = rows
+        capture.verify_tools()
         report['input_capture'] = capture.record()
         report['adapter_command'] = command
         report['adapter_binding'] = 'Adapter must bind its simulator and dependencies; no tool qualification claim.'
