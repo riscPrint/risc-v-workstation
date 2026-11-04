@@ -2110,3 +2110,14 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+### C9 decoupled RISC-V O3 settings
+
+The existing `cpu` scalar fields can enable gem5's BAC and FTQ.
+`decoupledFrontEnd` must be a boolean. When true, the model requires O3,
+`minInstSize=2`, positive FTQ capacity and prediction rates, and
+`fetchTargetWidth >= fetchBufferSize`. Omitted numeric settings use the
+pinned gem5 defaults. The default target width (32) is smaller than the
+default fetch buffer (64), so set compatible values explicitly. Invalid
+settings fail before native execution. C9 evidence and verdict rules do not
+change. See `Arch/patches/README.md` for the optional mixed-width BAC fix.

@@ -277,3 +277,22 @@ def test_roi_accepts_sign_extended_rv32_pc(simulation):
                 (0xffffffff00000014, 'simpoint starting point found'),
                 (0, 'Finished drain')]
     assert model.run_bare(s.system, s.syms, 100)['exit_code'] == 0
+
+
+@pytest.mark.parametrize('override', [
+    {'numFTQEntries': 0}, {'numFTQEntries': True}, {'minInstSize': 4},
+    {'minInstSize': 0}, {'fetchTargetWidth': 32}, {'maxFTPerCycle': 0},
+    {'maxTakenPredPerCycle': 0}, {'decoupledFrontEnd': 'true'},
+])
+def test_invalid_riscv_decoupled_settings(description, override):
+    description['cpu'].update(decoupledFrontEnd=True, minInstSize=2,
+                              fetchTargetWidth=64, numFTQEntries=16)
+    description['cpu'].update(override)
+    with pytest.raises(ValueError, match='cpu\.'):
+        model.validate_description(description)
+
+
+def test_riscv_decoupled_settings(description):
+    description['cpu'].update(decoupledFrontEnd=True, minInstSize=2,
+                              fetchTargetWidth=64, numFTQEntries=16)
+    model.validate_description(description)
