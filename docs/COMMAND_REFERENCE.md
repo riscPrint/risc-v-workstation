@@ -22,7 +22,7 @@ usage: rvw [-h] [--version] [--project PROJECT]
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {search,predict,score-prediction,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -43,6 +43,18 @@ usage: rvw arch predict [-h] --out OUT [--json] [--project PROJECT] candidate
 ```text
 usage: rvw arch score-prediction [-h] --out OUT [--json] [--project PROJECT]
     prediction rtl
+```
+
+### `rvw arch memory-extract`
+
+```text
+usage: rvw arch memory-extract [-h] [--json] [--project PROJECT] mapping
+```
+
+### `rvw arch pareto`
+
+```text
+usage: rvw arch pareto [-h] [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch memory-report`
@@ -927,7 +939,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 68 built-in tools, including the four job tools.
+The default server exposes 70 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -982,11 +994,27 @@ Arguments: `project`, `bench`, `out` (required), `timeout`, `repeats`.
 
 Starts a background job: yes.
 
+### `arch_memory_extract`
+
+Extract exact project counter mappings from native gem5 ROI stats.
+
+Arguments: `mapping` (required), `project`.
+
+Starts a background job: yes.
+
 ### `arch_memory_report`
 
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_pareto`
+
+Compare model cycles with optional user-supplied area and power inputs.
+
+Arguments: `plan` (required), `project`.
 
 Starts a background job: yes.
 
