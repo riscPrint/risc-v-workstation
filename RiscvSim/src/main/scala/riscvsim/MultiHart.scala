@@ -74,3 +74,36 @@ final class MultiHartTrace(file: File, header: ujson.Obj, hartIds: Seq[Int]) ext
   }
   def close(): Unit = { out.close(); require(!out.checkError(), "trace write failed") }
 }
+
+/** Reference for a project-declared serialized memory boundary, not RVWMO.
+  * Expected writes must come from stimulus or independent architectural state.
+  * Serialization IDs belong to accepted memory actions, never retirement order. */
+final class SerializedMemoryReference(initial: Seq[Byte]) {
+  require(initial.nonEmpty)
+  private val image = new MemoryImage(initial.size)
+  image.write(0, initial, (BigInt(1) << initial.size) - 1)
+  private val writers = Array.fill(initial.size)("initial")
+  private val ids = mutable.Set("initial")
+  private var next = 0L
+  private def accept(serial: Long, id: String): Unit = {
+    require(serial == next && id.nonEmpty && !ids(id), "memory serialization gap or duplicate action")
+  }
+  def expected(address: Int, count: Int): Vector[Byte] = image.read(address, count)
+  def read(serial: Long, id: String, address: Int, observed: Seq[Byte]): Vector[String] = {
+    accept(serial, id)
+    require(observed == image.read(address, observed.size), "serialized read mismatch")
+    val from = writers.slice(address, address + observed.size).toVector
+    ids += id; next += 1
+    from
+  }
+  def write(serial: Long, id: String, address: Int, expected: Seq[Byte], observed: Seq[Byte], mask: BigInt): Unit = {
+    accept(serial, id)
+    require(expected.nonEmpty && expected.size == observed.size, "memory write width")
+    require(mask >= 0 && mask < (BigInt(1) << expected.size), "byte mask")
+    image.read(address, expected.size) // Validate the whole range before mutation.
+    require(expected.indices.filter(mask.testBit).forall(i => expected(i) == observed(i)), "serialized write mismatch")
+    image.write(address, expected, mask)
+    expected.indices.filter(mask.testBit).foreach(i => writers(address + i) = id)
+    ids += id; next += 1
+  }
+}

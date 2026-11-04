@@ -108,3 +108,15 @@ def test_cut_preserves_initial_value_order(tmp_path, updates):
     ops.cut(str(source), str(full_cut), 3, 8)
     ops.cut(str(saved), str(indexed_cut), 3, 8)
     assert ops.changes(str(indexed_cut), '.') == ops.changes(str(full_cut), '.')
+
+
+def test_memory_benchmark_small(tmp_path):
+    from pathlib import Path
+    script = Path(__file__).resolve().parents[2] / 'scripts/benchmark-wave-index.py'
+    result = subprocess.run([sys.executable, str(script), str(tmp_path / 'bench'),
+                             '--updates', '24', '--width', '64'],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    rows = [json.loads(line) for line in result.stdout.splitlines()]
+    assert [r['operation'] for r in rows[1:3]] == ['build', 'query']
+    assert all(r['within_measured_limit'] for r in rows[1:3])
