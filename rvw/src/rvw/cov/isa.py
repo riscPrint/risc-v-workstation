@@ -119,19 +119,24 @@ def plan(manifest, root):
                 continue
             groups.append({'name': f"isa_{insn['name']}_{arg}", 'fields': [f'isa_{arg}'],
                            'when': {'isa_instruction': insn['name']}, 'bins': [[v] for v in values]})
+    from .semantic import groups as semantic_groups
+    groups += semantic_groups(data, instructions)
     return {'groups': groups, 'isa_plan': {'manifest': data, 'instructions': instructions, 'args': args,
-            'scope': 'Selected opcode encodings and register fields; not legal-combination or compliance coverage.',
+            'scope': 'Selected opcode encodings, fields and declared semantic domains; not exhaustive legal-combination or compliance coverage.',
             'unavailable': data.get('unavailable', [])}}
 
 
 def observe_encoding(obs, isa_plan):
-    if obs['event'] != 'retire' or obs.get('trap'):
+    if obs['event'] != 'retire':
         return
     insn = int(obs['insn'], 0) if isinstance(obs['insn'], str) else obs['insn']
     found = [i for i in isa_plan['instructions'] if insn & i['mask'] == i['value']]
     if len(found) != 1:
         return  # Ambiguous encodings earn no hit.
     item = found[0]
+    if obs.get('trap'):
+        obs['fault_instruction'] = item['name']
+        return
     obs['isa_instruction'] = item['name']
     for arg in item['args']:
         hi, lo = isa_plan['args'][arg]
@@ -147,7 +152,7 @@ def spec_diff(before, after, old_root, new_root):
     added, removed = sorted(b.keys() - a.keys()), sorted(a.keys() - b.keys())
     changed = sorted(k for k in a.keys() & b.keys() if a[k] != b[k])
     declarations = {k: {'before': old.get(k), 'after': new.get(k)} for k in
-                    ('isa', 'extensions', 'options', 'consumers', 'source', 'specifications', 'unavailable')
+                    ('isa', 'extensions', 'options', 'consumers', 'source', 'specifications', 'unavailable', 'semantics')
                     if old.get(k) != new.get(k)}
     needs_review = bool(declarations or added or removed or changed)
     return {'schema': 'rvw.isa-diff/1', 'status': 'inconclusive' if needs_review else 'unchanged',

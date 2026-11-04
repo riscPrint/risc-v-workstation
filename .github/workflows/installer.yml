@@ -4,6 +4,10 @@ name: Native installer
 on:
   workflow_dispatch:
     inputs:
+      long_builds:
+        description: Also run the gem5 and all-tools builds (up to six hours each)
+        type: boolean
+        default: false
       cosim_only:
         description: Run only the cosim installer and shim capture tests
         type: boolean
@@ -47,9 +51,10 @@ jobs:
         if: contains(matrix.flags, '--with-cosim') && contains(matrix.flags, '--with-riscv-gcc')
         run: |
           source env.sh
+          uv sync --locked --extra dev --extra mcp --project rvw
           rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
   long-install:
-    if: github.event_name != 'workflow_dispatch' || !inputs.cosim_only
+    if: github.event_name == 'workflow_dispatch' && inputs.long_builds && !inputs.cosim_only
     runs-on: [self-hosted, Linux, X64, rvw-linux]
     timeout-minutes: 360
     strategy:

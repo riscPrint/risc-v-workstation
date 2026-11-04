@@ -268,3 +268,12 @@ def test_project_data_preserves_historical_queue_placement():
     assert baseline == disjoint
     for name in ("small", "medium", "large", "mega", "large-disjoint"):
         model.validate_description(json.loads((data_dir / (name + ".json")).read_text()))
+
+
+def test_roi_accepts_sign_extended_rv32_pc(simulation):
+    s = simulation
+    s.events = [(0xffffffff0000000a, 'simpoint starting point found'),
+                (0xffffffff0000000a, 'simpoint starting point found'),
+                (0xffffffff00000014, 'simpoint starting point found'),
+                (0, 'Finished drain')]
+    assert model.run_bare(s.system, s.syms, 100)['exit_code'] == 0

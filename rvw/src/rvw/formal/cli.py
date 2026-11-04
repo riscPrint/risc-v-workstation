@@ -131,6 +131,8 @@ def register(sub) -> None:
 
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
+    b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
+                   help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")

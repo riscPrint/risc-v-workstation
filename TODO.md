@@ -16,7 +16,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#41](https://github.com/riscPrint/risc-v-workstation/issues/41) Fast and slow test sets for CI
 - [#78](https://github.com/riscPrint/risc-v-workstation/issues/78) chore(release): define the public release checklist
 - [#79](https://github.com/riscPrint/risc-v-workstation/issues/79) test(release): scan credentials and publication metadata
-- [#81](https://github.com/riscPrint/risc-v-workstation/issues/81) docs(release): remove local setup and history assumptions
 - [#83](https://github.com/riscPrint/risc-v-workstation/issues/83) test(waves): validate interactive typed rendering
 
 ## Integration with cores
@@ -33,7 +32,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 ## ARCH: architecture exploration
 
 - [#12](https://github.com/riscPrint/risc-v-workstation/issues/12) gem5: generic fitting
-- [#13](https://github.com/riscPrint/risc-v-workstation/issues/13) gem5: in-order and RV32 cores
 - [#56](https://github.com/riscPrint/risc-v-workstation/issues/56) Linux boot flow: QEMU, OpenSBI and Buildroot
 - [#72](https://github.com/riscPrint/risc-v-workstation/issues/72) gem5: model features for wide cores
 - [#124](https://github.com/riscPrint/risc-v-workstation/issues/124) feat(arch): model soc cache and memory topology
@@ -42,6 +40,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#183](https://github.com/riscPrint/risc-v-workstation/issues/183) feat(arch): support representative workload sampling
 - [#196](https://github.com/riscPrint/risc-v-workstation/issues/196) feat(arch): explore custom instruction trade-offs
 - [#201](https://github.com/riscPrint/risc-v-workstation/issues/201) feat(arch): model system power-state workloads
+- [#282](https://github.com/riscPrint/risc-v-workstation/issues/282) chore(workloads): choose open alternatives to SPEC CPU2017
 
 ## IDE: design entry and navigation
 
@@ -71,7 +70,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#112](https://github.com/riscPrint/risc-v-workstation/issues/112) feat(sim): verify physical memory attributes
 - [#116](https://github.com/riscPrint/risc-v-workstation/issues/116) feat(sim): declare backend semantic capabilities
 - [#121](https://github.com/riscPrint/risc-v-workstation/issues/121) feat(sim): verify dma and cache coherence interactions
-- [#126](https://github.com/riscPrint/risc-v-workstation/issues/126) feat(sim): integrate reusable cocotb testbenches
 - [#128](https://github.com/riscPrint/risc-v-workstation/issues/128) feat(sim): verify coherence forward progress
 - [#129](https://github.com/riscPrint/risc-v-workstation/issues/129) feat(sim): verify page access and dirty updates
 - [#131](https://github.com/riscPrint/risc-v-workstation/issues/131) feat(sim): verify plic arbitration and delivery
@@ -135,13 +133,9 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 
 ## Coverage
 
-- [#3](https://github.com/riscPrint/risc-v-workstation/issues/3) Review: `rvw cov mutate` on a BOOM unit
 - [#42](https://github.com/riscPrint/risc-v-workstation/issues/42) Coverage: FSM coverage and Scala line mapping
 - [#62](https://github.com/riscPrint/risc-v-workstation/issues/62) Formal: proof-core and cone-of-influence reports (FV 6)
 - [#82](https://github.com/riscPrint/risc-v-workstation/issues/82) feat(cov): generate expected isa coverage bins
-- [#88](https://github.com/riscPrint/risc-v-workstation/issues/88) feat(cov): add typed rtl event coverage
-- [#105](https://github.com/riscPrint/risc-v-workstation/issues/105) feat(cov): cover instruction sequences and hazards
-- [#115](https://github.com/riscPrint/risc-v-workstation/issues/115) feat(cov): add temporal rtl coverage sequences
 - [#167](https://github.com/riscPrint/risc-v-workstation/issues/167) feat(cov): track reusable block verification evidence
 - [#180](https://github.com/riscPrint/risc-v-workstation/issues/180) feat(cov): exchange coverage through ucis
 
@@ -151,9 +145,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#10](https://github.com/riscPrint/risc-v-workstation/issues/10) Cosim: compare FP registers and `fflags`
 - [#11](https://github.com/riscPrint/risc-v-workstation/issues/11) Cosim: per-core settings for absent PMP CSRs and `mtval` on `ecall`
 - [#47](https://github.com/riscPrint/risc-v-workstation/issues/47) Cosim: interrupt stimulus
-- [#50](https://github.com/riscPrint/risc-v-workstation/issues/50) Regenerate the saved BOOM cosim traces
 - [#75](https://github.com/riscPrint/risc-v-workstation/issues/75) Verification: riscv-vector-tests
-- [#86](https://github.com/riscPrint/risc-v-workstation/issues/86) docs(cosim): define architectural comparison coverage
 - [#87](https://github.com/riscPrint/risc-v-workstation/issues/87) feat(cosim): check unread architectural csr effects
 - [#93](https://github.com/riscPrint/risc-v-workstation/issues/93) feat(cosim): define faulting memory access records
 - [#96](https://github.com/riscPrint/risc-v-workstation/issues/96) feat(cosim): check rvwmo litmus outcomes
@@ -191,7 +183,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#64](https://github.com/riscPrint/risc-v-workstation/issues/64) Formal: riscv-formal checks generated from Sail
 - [#67](https://github.com/riscPrint/risc-v-workstation/issues/67) Formal: X-propagation tooling
 - [#107](https://github.com/riscPrint/risc-v-workstation/issues/107) feat(formal): prove declared connectivity
-- [#117](https://github.com/riscPrint/risc-v-workstation/issues/117) refactor(formal): share symbiyosys execution
 
 ## LINT: lint and clock-domain crossing
 
@@ -206,10 +197,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#44](https://github.com/riscPrint/risc-v-workstation/issues/44) SpinalBlocks: use the design database and remove the BOOM entry point
 - [#45](https://github.com/riscPrint/risc-v-workstation/issues/45) Run `rvw bisect` on real core history
 - [#49](https://github.com/riscPrint/risc-v-workstation/issues/49) Konata: stall causes and predicated-off commits
-- [#89](https://github.com/riscPrint/risc-v-workstation/issues/89) fix(trace): enforce supported clock semantics
-- [#92](https://github.com/riscPrint/risc-v-workstation/issues/92) fix(trace): bound memory and partial-write attribution
-- [#94](https://github.com/riscPrint/risc-v-workstation/issues/94) fix(trace): expose incomplete extraction and source grouping
-- [#113](https://github.com/riscPrint/risc-v-workstation/issues/113) fix(debug): verify unique spinaltrace viewer node ids
 - [#120](https://github.com/riscPrint/risc-v-workstation/issues/120) chore(waves): triage vendored typed-viewer limits
 - [#127](https://github.com/riscPrint/risc-v-workstation/issues/127) feat(debug): verify debug module lifecycle
 - [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) feat(debug): add native dmi and jtag simulation drivers
@@ -245,7 +232,6 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#26](https://github.com/riscPrint/risc-v-workstation/issues/26) Non-Spinal cores
 - [#35](https://github.com/riscPrint/risc-v-workstation/issues/35) `rvw doctor`: check (and optionally install) the setup
 - [#36](https://github.com/riscPrint/risc-v-workstation/issues/36) `rvw init`: scaffold a core project
-- [#53](https://github.com/riscPrint/risc-v-workstation/issues/53) Remote result cache
 - [#54](https://github.com/riscPrint/risc-v-workstation/issues/54) Remote MCP server with authentication
 - [#55](https://github.com/riscPrint/risc-v-workstation/issues/55) SystemVerilog and Verilog cores: design queries
 - [#57](https://github.com/riscPrint/risc-v-workstation/issues/57) Agent run budgets and cost reports

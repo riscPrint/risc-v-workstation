@@ -191,3 +191,18 @@ def test_kill_group_kills_members_after_leader_exit(monkeypatch, term_denied):
     monkeypatch.setattr(proc.os, 'killpg', killpg)
     proc.kill_group(ExitedLeader(), grace=0.1)
     assert calls == [signal.SIGTERM, signal.SIGKILL]
+
+
+def test_start_callback_exception_stops_group(tmp_path):
+    import os
+    import sys
+    from rvw.common.proc import run_group
+    import pytest
+    started = []
+    def reject(pid):
+        started.append(pid)
+        raise ValueError('callback cancelled')
+    with pytest.raises(ValueError, match='callback cancelled'):
+        run_group([sys.executable, '-c', 'import time; time.sleep(60)'], on_start=reject)
+    with pytest.raises(ProcessLookupError):
+        os.kill(started[0], 0)

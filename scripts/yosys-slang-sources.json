@@ -1,0 +1,30 @@
+[
+  {
+    "name": "frontend",
+    "url": "https://codeload.github.com/povik/sv-elab/tar.gz/4a77e391c2a66bf1caec5e076b7e29609123985b",
+    "revision": "4a77e391c2a66bf1caec5e076b7e29609123985b",
+    "path": ".",
+    "sha256": "97fc1cde346dc6c58dac166b5a4b542d0aa98ed7ca2ec90dbd5627fd5fefb590"
+  },
+  {
+    "name": "slang",
+    "url": "https://codeload.github.com/MikePopoloski/slang/tar.gz/42710c788ce76cd08ce2080773e0b8286c428a05",
+    "revision": "42710c788ce76cd08ce2080773e0b8286c428a05",
+    "path": "third_party/slang",
+    "sha256": "418d6171c77150d887a8d2a0e3564a2abcc37190f393df60a79fd69cbfbcdad9"
+  },
+  {
+    "name": "fmt",
+    "url": "https://codeload.github.com/fmtlib/fmt/tar.gz/1be298e1bd68957e4cd352e1f676f00e07dcfb57",
+    "revision": "1be298e1bd68957e4cd352e1f676f00e07dcfb57",
+    "path": "third_party/fmt",
+    "sha256": "d041f836d9b2a3c1c0fe3cce81ffe6a4a257028faa2f4af0dd20d7e58b493766"
+  },
+  {
+    "name": "regex",
+    "url": "https://codeload.github.com/MikePopoloski/regex/tar.gz/2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d",
+    "revision": "2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d",
+    "path": "third_party/regex",
+    "sha256": "5674d9802e115d3ed12c9a1301716f7f0debabf46478449f1112e2a21e6eeecf"
+  }
+]

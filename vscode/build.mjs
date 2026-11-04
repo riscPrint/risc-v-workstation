@@ -1,6 +1,7 @@
 // Builds the extension host and, for every feature, its webview bundles, assets and tests.
 // Output: dist/extension.js, dist/<feature id>/..., dist/<feature id>/test/...
 import { build } from 'esbuild';
+import { copyElkNotices, writeLockNotices } from '../scripts/package-notices.mjs';
 import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, join } from 'node:path';
@@ -29,4 +30,6 @@ for (const feature of loadFeatures()) {
   if (tests.length) await build({entryPoints: tests.map(t => join(feature.path, t)), bundle: true, platform: 'node', format: 'cjs',
     target: 'node20', external: ['vscode', 'playwright-core'], outdir: join(out, 'test'), ...log});
 }
+copyElkNotices(dist, require.resolve('elkjs/package.json'));
+writeLockNotices(join(root, 'package-lock.json'), join(root, 'THIRD_PARTY_NOTICES.md'));
 console.log(`built ${basename(dist)}/`);

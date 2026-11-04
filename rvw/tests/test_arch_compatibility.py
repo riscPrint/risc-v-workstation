@@ -27,15 +27,15 @@ def elf32(tmp_path):
     return path
 
 
-def test_rv32_static_check_keeps_runtime_blocked(tmp_path, rvw):
+def test_rv32_static_check_is_not_runtime_validation(tmp_path, rvw):
     path = elf32(tmp_path)
     symbols = model.elf_symbols(path, xlen=32)
     assert symbols['bench_stats'] == (0x80000310, 16)
     result = core.inspect(path, 'rv32im', 'minor')
-    assert result['status'] == 'unsupported' and len(result['blockers']) == 2
+    assert result['status'] == 'compatible' and result['blockers'] == []
     code, _, report = rvw('arch', 'inspect', '--elf', path, '--isa', 'rv32im', '--kind', 'minor', '--json')
-    assert code == 2 and report['status'] == 'unsupported'
-    # The simulation entry still uses default xlen=64 and must refuse ELF32.
+    assert code == 0 and report['status'] == 'compatible'
+    # The ELF helper defaults to xlen=64 and must refuse ELF32 without selection.
     with pytest.raises(ValueError, match='ELF64'):
         model.elf_symbols(path)
 
@@ -62,7 +62,7 @@ def test_bad_elf32_refuses(tmp_path, damage):
     with pytest.raises(ValueError): model.elf_symbols(path, xlen=32)
 
 
-@pytest.mark.parametrize('isa,kind', [('rv32im', 'o3'), ('rv64gc', 'minor'), ('rv32im', 'timing')])
+@pytest.mark.parametrize('isa,kind', [('rv32im', 'o3'), ('rv64gc', 'minor'), ('rv64gc', 'timing')])
 def test_known_unsupported_combinations_stay_blocked(tmp_path, isa, kind):
     path = elf32(tmp_path) if isa == 'rv32im' else make_elf(tmp_path)[0]
     assert core.inspect(path, isa, kind)['status'] == 'unsupported'

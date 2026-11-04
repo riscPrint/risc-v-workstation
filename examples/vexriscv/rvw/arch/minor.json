@@ -1,0 +1,20 @@
+{
+  "ram_bytes": 16777216,
+  "schema": "rvw.arch-core/1",
+  "kind": "minor",
+  "config": "rv32im",
+  "isa": "rv32im",
+  "cpu": {
+    "executeIssueLimit": 1,
+    "executeCommitLimit": 1
+  },
+  "queues": [],
+  "predictor": null,
+  "icache": null,
+  "dcache": null,
+  "itlb_entries": 1,
+  "dtlb_entries": 1,
+  "line_bytes": 64,
+  "bus_bytes": 4,
+  "memory_latency": 1
+}

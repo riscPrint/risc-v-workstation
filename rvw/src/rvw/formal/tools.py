@@ -54,6 +54,15 @@ class Toolchain:
         self.commands = {}
         self.identities = {}
         self.checks = []
+        self.slang = None
+        if getattr(args, 'frontend', 'verilog') == 'slang':
+            selected = os.environ.get('RVW_SLANG')
+            if not selected:
+                raise ValueError('slang frontend needs RVW_SLANG; run scripts/install.sh --with-formal')
+            from .common import check_path
+            plugin = self._file(Path(selected).absolute())
+            self.slang = check_path('RVW_SLANG', plugin.copy)
+
         names = ['bash', 'yosys', 'sby', 'yosys-smtbmc', 'yosys-witness', 'yices-smt2']
         smtbmc_abc = False
         for engine in args.engine.split(','):

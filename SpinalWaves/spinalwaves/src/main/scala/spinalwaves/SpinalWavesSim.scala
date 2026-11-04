@@ -71,6 +71,7 @@ final class SpinalWavesCompiled[T <: Component](val compiled: SimCompiled[T], va
   private def guarded(body: T => Unit): T => Unit = { dut => SimGuard.arm(simTimeout); body(dut) }
 
   private def run(name: String)(simulation: => Unit): Unit = {
+    lastWave = None
     val index = compiled.testNameMap.synchronized { compiled.testNameMap.getOrElse(name, 0) }
     val allocated = if (index == 0) name else s"${name}_$index"
     simulation

@@ -76,6 +76,9 @@ class Platform:
     def load(cls, core, path=None):
         path = Path(path) if path else Path(__file__).parent / "configs" / f"{core}.json"
         obj = json.loads(path.read_text())
+        if obj.get("schema") == "rvw.soc/1":
+            from rvw.soc.model import load, platform
+            obj = platform(load(path))
         def ranges(key):
             return [(number(r["base"]), number(r["size"])) for r in obj[key]]
         p = cls(obj["name"], obj["xlen"], obj["isa"], number(obj["reset_pc"]),

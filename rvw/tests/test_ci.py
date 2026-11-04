@@ -34,6 +34,29 @@ def test_title_needs_no_footer():
     assert policy.errors("ci(tests): add checks", title=True) == []
 
 
+def test_installer_reference_tests_install_pytest():
+    root = Path(__file__).resolve().parents[2]
+    text = (root / '.github/workflows/installer.yml').read_text()
+    step = text.split('- name: Check the pinned reference policies')[1]
+    assert 'uv sync --locked --extra dev --extra mcp --project rvw' in step
+    assert step.index('uv sync') < step.index('python -m pytest')
+
+
+def test_push_checks_do_not_duplicate_pull_request_checks():
+    root = Path(__file__).resolve().parents[2]
+    for name in ('ci.yml', 'conventional.yml'):
+        text = (root / '.github/workflows' / name).read_text()
+        push = text.split('  push:')[1].split('  pull_request:')[0]
+        assert 'branches: [main, p1/integration, p2/integration]' in push
+
+
+def test_long_installer_builds_require_explicit_manual_request():
+    root = Path(__file__).resolve().parents[2]
+    text = (root / '.github/workflows/installer.yml').read_text()
+    job = text.split('  long-install:')[1]
+    assert "if: github.event_name == 'workflow_dispatch' && inputs.long_builds && !inputs.cosim_only" in job
+    assert 'long_builds:' in text and 'default: false' in text
+
 REPO = Path(__file__).resolve().parents[2]
 
 

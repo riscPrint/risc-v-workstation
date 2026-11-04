@@ -136,7 +136,7 @@ def test_reset_crossings_same_clock(tmp_path, independent):
             c.execute("UPDATE clock_domains SET reset='other', reset_key='other:Bool' WHERE id=2")
     r = run_on(p, structural.analyze)
     assert len(r['reset_crossings']) == int(independent)
-    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset'] if independent else [])
+    assert [f['rule'] for f in r['findings']] == (['rdc.independent_reset', 'rdc.release_order_unproved'] if independent else [])
     assert all(t['status'] == 'unknown_control' for t in r['reset_trees'])
 
 
@@ -246,3 +246,57 @@ def test_waiver_without_finding_id_is_rejected(tmp_path):
     p.write_text(json.dumps(cfg))
     with pytest.raises(ValueError, match='finding_id'):
         report(p)
+
+
+def test_verible_syntax_error_is_not_hidden_by_a_style_diagnostic(monkeypatch):
+    from rvw.common.proc import Result
+    monkeypatch.setattr(native.shutil, 'which', lambda _: '/tool')
+    output = ('a.sv:1:1: Use always_comb [always-comb]\n'
+              'a.sv:2:9: syntax error at token "endmodule"\n')
+    monkeypatch.setattr(native, 'run_group', lambda *a, **k: Result(1, stdout=output))
+    result = native.run('verible', ['a.sv'], 'top', 1)
+    assert result['status'] == 'inconclusive'
+    assert result['raw_output'] == output
+    assert len(result['findings']) == 1
+
+
+def test_waiver_expires_when_clock_domain_changes(tmp_path):
+    db = fixture_db(tmp_path)
+    path = settings(tmp_path, db)
+    original = report(path)['backends']['structural']['findings'][0]
+    cfg = json.loads(path.read_text())
+    cfg['waivers'] = [dict(rule=original['rule'], endpoint=original['endpoint'],
+                           finding_id=original['id'], config='reference',
+                           reason='Reviewed crossing between a and b only.')]
+    path.write_text(json.dumps(cfg))
+    assert report(path)['waivers'][0]['matches'] == 1
+    with sqlite3.connect(db) as c:
+        c.execute("UPDATE clock_domains SET clock='c', clock_key='c:Bool' WHERE id=2")
+    result = report(path)
+    assert result['waivers'][0]['matches'] == 0
+    assert result['backends']['structural']['findings'][0]['disposition'] == 'active'
+
+
+
+def test_native_verible_style_and_syntax(tmp_path):
+    import shutil
+    if not shutil.which('verible-verilog-lint'):
+        pytest.skip('Verible is not installed')
+    style = tmp_path / 'bad.sv'
+    style.write_text('module bad(input logic a, output logic b);\nalways @* b = a;\nendmodule\n')
+    result = native.run('verible', [str(style)], 'bad', 30)
+    assert result['status'] == 'completed'
+    assert result['findings']
+    config = tmp_path / 'native.json'
+    config.write_text(json.dumps(dict(schema='rvw.lint-settings/1', config='reference',
+                                     top='bad', files=[str(style)], backends=['verible'])))
+    actual = report(config)
+    assert actual['status'] == 'findings'
+    assert actual['backends']['verible']['status'] == 'completed'
+    assert actual['backends']['verible']['version']
+    assert actual['backends']['verible']['raw_output']
+    broken = tmp_path / 'broken.sv'
+    broken.write_text('module broken;\nassign x = ;\nendmodule\n')
+    result = native.run('verible', [str(style), str(broken)], 'bad', 30)
+    assert result['status'] == 'inconclusive'
+    assert result['findings'] and result['raw_output']

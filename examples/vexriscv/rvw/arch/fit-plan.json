@@ -1,0 +1,50 @@
+{
+  "schema": "rvw.arch-fit-plan/1",
+  "rtl": "minor/rtl.json",
+  "candidates": {
+    "minor": "minor/gem5.json",
+    "timing": "timing/gem5.json"
+  },
+  "train": [
+    "dependent-chain"
+  ],
+  "held_out": [
+    "branch-loop"
+  ],
+  "events": [
+    {
+      "name": "retired",
+      "rtl_metric": "roi_retired",
+      "gem5_stat": "system.cpu.commitStats0.numInsts",
+      "unit": "instructions",
+      "semantics": "Retired RV32IM instructions; exclude first setStats entry, include second."
+    },
+    {
+      "name": "loads",
+      "rtl_metric": "roi_loads",
+      "gem5_stat": "system.cpu.commitStats0.numLoadInsts",
+      "unit": "instructions",
+      "semantics": "Retired integer loads in the retired-PC ROI."
+    },
+    {
+      "name": "stores",
+      "rtl_metric": "roi_stores",
+      "gem5_stat": "system.cpu.commitStats0.numStoreInsts",
+      "unit": "instructions",
+      "semantics": "Retired integer stores in the retired-PC ROI."
+    },
+    {
+      "name": "branches",
+      "rtl_metric": "roi_branches",
+      "gem5_stat": "system.cpu.executeStats0.numBranches",
+      "unit": "instructions",
+      "semantics": "RV32IM branches including JAL and JALR; model execute statistics can differ from retirement."
+    }
+  ],
+  "scope": "RV32IM example, two microbenchmarks, physical uncached memory. Model trends only.",
+  "uncertainty": "One measurement per model. No repeatability estimate or confidence interval.",
+  "unsupported": [
+    "Exact pipeline and predictor mapping",
+    "Speculative requests, cache misses, stall and replay causes"
+  ]
+}

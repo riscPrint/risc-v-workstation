@@ -24,7 +24,11 @@ import scala.jdk.CollectionConverters._
 object Driver {
 
   case class Ctx(job: RunJob, elf: ElfFile, logF: String => Unit, rvfiHeader: ujson.Obj, assertIndex: AssertIndex, outputMark: Long,
-                 override val wallClock: WallClock = WallClock.none) extends RunContext {
+                 override val wallClock: WallClock = WallClock.none,
+                 requestIdentity: ujson.Obj = ujson.Obj(), bootImage: Option[BootImage] = None) extends RunContext {
+    override def captureIdentity: ujson.Obj = ujson.Obj.from(rvfiHeader.value.toSeq ++ requestIdentity.value.toSeq)
+    override def loadMemory(write: (Long, Array[Byte]) => Unit): Unit =
+      bootImage match { case Some(b) => b.load(write); case None => elf.load(write) }
     def log(line: String): Unit = logF(line)
   }
 
@@ -189,7 +193,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- one run
-  val artifactFiles: Seq[(String, String)] = Seq("log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
+  val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
     "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile)
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
@@ -213,6 +217,9 @@ class Driver(val adapter: CoreAdapter) {
     val out = new File(job.out.getPath + "-replay")
     val parts = Seq(replayScript, "run", "--elf", job.elf.getPath, "--out", out.getPath, "--config", job.config,
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
+      job.bootPayloads.toSeq.flatMap(f => Seq("--boot-payloads", f.getPath)) ++
+      Seq("--elf-load-bias", job.elfLoadBias.toString) ++
+      job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
@@ -231,6 +238,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- runs in progress
+  private val capturedBootImages = new ConcurrentHashMap[RunJob, BootImage]()
   private val capturedElfs = new ConcurrentHashMap[String, ElfFile]()
   private val activeRuns = new java.util.LinkedHashSet[Driver.RunState]()
   /** Prefixes of the driver's own stderr lines (`[tag] ...`); they never go into a run.log as native output. */
@@ -273,9 +281,10 @@ class Driver(val adapter: CoreAdapter) {
       "schema" -> "rvw.run/1",
       "execution_mode" -> (if (serverMode) "server" else "process"),
       "core" -> adapter.core, "config" -> job.config,
-      "elf" -> job.elf.getPath, "elf_sha256" -> elfSha,
+      "elf" -> job.elf.getPath, "elf_sha256" -> elfSha, "elf_load_bias" -> job.elfLoadBias.toString,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
+      "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
       "status" -> status.name,
       "fail_code" -> failCode.map(c => ujson.Num(c.toDouble)).getOrElse(ujson.Null),
@@ -291,7 +300,8 @@ class Driver(val adapter: CoreAdapter) {
   // ---------------------------------------------------------------- one run
   /** Runs one job and writes `job.out/result.json`; returns the result. Never throws. */
   def runOne(job: RunJob): ujson.Obj = {
-    capturedElfs.remove(job.elf.getAbsolutePath)
+    capturedElfs.remove((job.elf.getAbsolutePath + ":" + job.elfLoadBias))
+    capturedBootImages.remove(job)
     runOne(job, newState(job))
   }
 
@@ -308,6 +318,7 @@ class Driver(val adapter: CoreAdapter) {
    */
   def runOne(job: RunJob, st: Driver.RunState, keepResult: Boolean = false): ujson.Obj = {
     val t0 = System.nanoTime()
+    val runId = java.util.UUID.randomUUID().toString
     job.out.mkdirs()
     for ((_, f) <- artifactFiles ++ (if (keepResult) Nil else Seq("result" -> "result.json"))) new File(job.out, f).delete()
     val logW = new PrintWriter(new java.io.FileWriter(new File(job.out, "run.log")))
@@ -333,16 +344,22 @@ class Driver(val adapter: CoreAdapter) {
     val outcome: RunOutcome = try {
       log(s"run ${job.elf} config=${job.config} seed=${job.seed}${if (job.seedPicked) " (picked)" else ""} max_cycles=${job.maxCycles}" +
         job.wallTimeoutS.map(w => f" wall_timeout=$w%.0fs").getOrElse(""))
-      val elf = capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
+      val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias), _ => new ElfFile(job.elf, job.elfLoadBias))
       elfSha = elf.sha256
       require(elf.xlen == adapter.xlen,
         s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen} (${adapter.core}/${job.config})")
+      job.bootPayloads.foreach { manifest =>
+        require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
+        capturedBootImages.computeIfAbsent(job, _ => BootImage.fromManifest(elf, manifest))
+      }
       val b = model(job.model, log)
       built = Some(b)
       st.wall.start()
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
-        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath), b.index, mark, st.wall)
+        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
+        "source" -> source, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall,
+        bootImage = Option(capturedBootImages.get(job)), requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>
@@ -365,9 +382,17 @@ class Driver(val adapter: CoreAdapter) {
       artifacts("pdg") = "pdg.json"
     }
     val details = outcome.details
+    Option(capturedBootImages.get(job)).foreach { image =>
+      details("boot_loads") = ujson.Arr.from(image.layout.map { case (address, size) =>
+        ujson.Obj("address" -> Hex(address), "size" -> size.toString)
+      })
+      details("boot_payloads") = ujson.Arr.from(image.identities.map { case (path, sha) =>
+        ujson.Obj("path" -> path, "sha256" -> sha)
+      })
+    }
     built.foreach { b =>
       details("model") = job.model.toJson
-      details("simulation_session") = ujson.Obj("id" -> sessionId,
+      details("simulation_session") = ujson.Obj("id" -> sessionId, "run_id" -> runId,
         "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
         "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
       details("execution_s") = st.wall.elapsedS
@@ -452,11 +477,23 @@ class Driver(val adapter: CoreAdapter) {
    * Native output carries no run identity: an `assert` or `rvfi_error` of a run that overlapped
    * another run is rerun alone afterwards, and a message is kept only from a run that was alone.
    */
-  def runJobs(jobs: Seq[RunJob], n: Int, progress: (Int, ujson.Obj) => Unit = (_, _) => ()): Array[ujson.Obj] = {
+  private def captureJobs(jobs: Seq[RunJob]): Unit = {
     // Freeze every batch ELF before any worker can compile a model. Reruns use these bytes.
+    capturedBootImages.clear()
     capturedElfs.clear()
-    for (job <- jobs) try capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
-      catch { case _: Exception => () } // runOne reports an invalid ELF as a harness error
+    for (job <- jobs) try {
+      val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias),
+        _ => new ElfFile(job.elf, job.elfLoadBias))
+      job.bootPayloads.foreach { manifest =>
+        require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
+        capturedBootImages.put(job, BootImage.fromManifest(elf, manifest))
+      }
+    } catch { case _: Exception => () } // runOne reports invalid input as a harness error
+  }
+
+  def runJobs(jobs: Seq[RunJob], n: Int, progress: (Int, ujson.Obj) => Unit = (_, _) => (),
+      captureInputs: Boolean = true): Array[ujson.Obj] = {
+    if (captureInputs) captureJobs(jobs)
     val results = new Array[ujson.Obj](jobs.size)
     val states = jobs.map(newState).toArray
     val latch = new java.util.concurrent.CountDownLatch(jobs.size)
@@ -691,7 +728,8 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   /** Serial JSONL requests. EOF is teardown. A stuck worker poisons the process. */
-  def serve(o: Map[String, String], lines: Iterator[String], reply: ujson.Obj => Unit): Int = {
+  def serve(o: Map[String, String], lines: Iterator[String], reply: ujson.Obj => Unit,
+      capturedBatch: Boolean = false): Int = {
     if (!adapter.freshInstancePerRun) throw new Cli.UsageError("adapter does not declare a fresh instance for each run")
     val previousMode = serverMode
     serverMode = true
@@ -705,7 +743,7 @@ class Driver(val adapter: CoreAdapter) {
           }
           val job = Cli.job(o ++ Cli.fromJson(request), adapter, cwd)
           checkOutputs(Seq(job))
-          val result = runJobs(Seq(job), 1).head
+          val result = runJobs(Seq(job), 1, captureInputs = !capturedBatch).head
           reply(ujson.Obj("schema" -> "rvw.sim-server/1", "result" -> result))
           // The watchdog cannot kill a native simulation thread safely. Do not let
           // later requests share a process that still has this run alive.
@@ -726,8 +764,12 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdRunMany(o: Map[String, String]): Int = {
     val n = Cli.int(o, "jobs", min = 1).getOrElse(1)
+    val persistent = Cli.bool(o, "persistent")
+    if (persistent && n != 1) throw new Cli.UsageError("--persistent requires --jobs 1")
+    if (persistent && !adapter.freshInstancePerRun)
+      throw new Cli.UsageError("adapter does not declare a fresh instance for each run")
     val manifest = Cli.file(cwd, o.getOrElse("manifest", throw new Cli.UsageError("--manifest is required")))
-    val defaults = o -- Seq("manifest", "jobs", "summary", "json")
+    val defaults = o -- Seq("manifest", "jobs", "summary", "json", "persistent")
     val input = scala.io.Source.fromFile(manifest)
     val lines = try input.getLines().map(_.trim).zipWithIndex
       .filter { case (l, _) => l.nonEmpty && !l.startsWith("#") && !l.startsWith("//") }.toVector
@@ -740,7 +782,22 @@ class Driver(val adapter: CoreAdapter) {
     checkOutputs(jobs)
     System.err.println(s"[run-many] ${jobs.size} jobs, $n workers")
     val t0 = System.nanoTime()
-    val results = runJobs(jobs, n, (k, r) => System.err.println(s"[run-many] $k/${jobs.size} ${summaryLine(r)}"))
+    val results = if (persistent) {
+      val collected = scala.collection.mutable.ArrayBuffer.empty[ujson.Obj]
+      // Use the server path, including its poisoned-worker stop rule. Do not
+      // submit later jobs after a native worker failed to stop.
+      captureJobs(jobs)
+      serve(defaults, lines.iterator.zip(jobs.iterator).map { case ((line, _), job) =>
+        val request = ujson.read(line)
+        request("seed") = job.seed
+        ujson.write(request)
+      }, reply => {
+        if (reply.obj.contains("error")) throw new Cli.UsageError(reply("error").str)
+        collected += ujson.Obj.from(reply("result").obj)
+        System.err.println(s"[run-many] ${collected.size}/${jobs.size} ${summaryLine(collected.last)}")
+      }, capturedBatch = true)
+      collected.toArray
+    } else runJobs(jobs, n, (k, r) => System.err.println(s"[run-many] $k/${jobs.size} ${summaryLine(r)}"))
     val wall = (System.nanoTime() - t0) / 1e9
     val counts = ujson.Obj.from(Status.all.map(s => s.name -> ujson.Num(results.count(_("status").str == s.name))))
     val summary = ujson.Obj("schema" -> "rvw.run-many/1", "core" -> adapter.core, "manifest" -> manifest.getPath,
@@ -755,6 +812,6 @@ class Driver(val adapter: CoreAdapter) {
     emit(Cli.bool(o, "json"), summary,
       s"${jobs.size} runs in ${f"$wall%.1f"}s: " + Status.all.map(s => s"${counts(s.name).num.toInt} ${s.name}").mkString(", ") +
         results.filter(_("status").str != "pass").map(r => "\n  " + summaryLine(r)).mkString)
-    if (results.exists(_("status").str == "error")) 2 else if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.forall(_("status").str == "pass")) 0 else 1
+    if (results.length != jobs.length || results.exists(_("status").str == "error")) 2 else if (results.exists(_.obj.contains("inconclusive"))) 3 else if (results.forall(_("status").str == "pass")) 0 else 1
   }
 }

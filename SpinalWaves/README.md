@@ -61,7 +61,9 @@ println(sim.extraScopes.mkString(" "))
 
 Pass `sourceRoots = Seq(java.nio.file.Paths.get("src/main/scala"), ...)` to resolve source files outside the default main/test roots. The hardware generator runs twice to enable Spinal's stack trace capture. Keep elaboration deterministic and avoid external side effects in the generator and transformation phases.
 
-With the default simulation paths, metadata is written to `simWorkspace/Gcd/spinalwaves/hgldd/Gcd.dd`. `sim.vcdFile` is the actual VCD path selected by SpinalSim. `SimLayout.extraScopes(vcd, topModule)` reads the VCD header rather than assuming a testbench scope.
+With the default simulation paths, metadata is written to `simWorkspace/Gcd/spinalwaves/hgldd/Gcd.dd`. `sim.vcdFile` is the actual VCD path selected by SpinalSim.
+Each run clears the previous path before it starts. After a failed run,
+`vcdFile` and `extraScopes` refuse access until a new run completes. `SimLayout.extraScopes(vcd, topModule)` reads the VCD header rather than assuming a testbench scope.
 
 The wrapper can launch Surfer after simulation with `launchViewer = true` and an optional `viewerBinary` path. The default is `false`; no environment variable enables a GUI implicitly.
 
