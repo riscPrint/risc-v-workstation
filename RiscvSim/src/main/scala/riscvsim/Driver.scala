@@ -24,7 +24,9 @@ import scala.jdk.CollectionConverters._
 object Driver {
 
   case class Ctx(job: RunJob, elf: ElfFile, logF: String => Unit, rvfiHeader: ujson.Obj, assertIndex: AssertIndex, outputMark: Long,
-                 override val wallClock: WallClock = WallClock.none) extends RunContext {
+                 override val wallClock: WallClock = WallClock.none, bootImage: Option[BootImage] = None) extends RunContext {
+    override def loadMemory(write: (Long, Array[Byte]) => Unit): Unit =
+      bootImage match { case Some(b) => b.load(write); case None => elf.load(write) }
     def log(line: String): Unit = logF(line)
   }
 
@@ -213,6 +215,8 @@ class Driver(val adapter: CoreAdapter) {
     val out = new File(job.out.getPath + "-replay")
     val parts = Seq(replayScript, "run", "--elf", job.elf.getPath, "--out", out.getPath, "--config", job.config,
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
+      job.bootPayloads.toSeq.flatMap(f => Seq("--boot-payloads", f.getPath)) ++
+      Seq("--elf-load-bias", job.elfLoadBias.toString) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
@@ -231,6 +235,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- runs in progress
+  private val capturedBootImages = new ConcurrentHashMap[RunJob, BootImage]()
   private val capturedElfs = new ConcurrentHashMap[String, ElfFile]()
   private val activeRuns = new java.util.LinkedHashSet[Driver.RunState]()
   /** Prefixes of the driver's own stderr lines (`[tag] ...`); they never go into a run.log as native output. */
@@ -273,7 +278,7 @@ class Driver(val adapter: CoreAdapter) {
       "schema" -> "rvw.run/1",
       "execution_mode" -> (if (serverMode) "server" else "process"),
       "core" -> adapter.core, "config" -> job.config,
-      "elf" -> job.elf.getPath, "elf_sha256" -> elfSha,
+      "elf" -> job.elf.getPath, "elf_sha256" -> elfSha, "elf_load_bias" -> job.elfLoadBias.toString,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
@@ -291,7 +296,8 @@ class Driver(val adapter: CoreAdapter) {
   // ---------------------------------------------------------------- one run
   /** Runs one job and writes `job.out/result.json`; returns the result. Never throws. */
   def runOne(job: RunJob): ujson.Obj = {
-    capturedElfs.remove(job.elf.getAbsolutePath)
+    capturedElfs.remove((job.elf.getAbsolutePath + ":" + job.elfLoadBias))
+    capturedBootImages.remove(job)
     runOne(job, newState(job))
   }
 
@@ -333,16 +339,20 @@ class Driver(val adapter: CoreAdapter) {
     val outcome: RunOutcome = try {
       log(s"run ${job.elf} config=${job.config} seed=${job.seed}${if (job.seedPicked) " (picked)" else ""} max_cycles=${job.maxCycles}" +
         job.wallTimeoutS.map(w => f" wall_timeout=$w%.0fs").getOrElse(""))
-      val elf = capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
+      val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias), _ => new ElfFile(job.elf, job.elfLoadBias))
       elfSha = elf.sha256
       require(elf.xlen == adapter.xlen,
         s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen} (${adapter.core}/${job.config})")
+      job.bootPayloads.foreach { manifest =>
+        require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
+        capturedBootImages.computeIfAbsent(job, _ => BootImage.fromManifest(elf, manifest))
+      }
       val b = model(job.model, log)
       built = Some(b)
       st.wall.start()
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
-        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath), b.index, mark, st.wall)
+        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath), b.index, mark, st.wall, Option(capturedBootImages.get(job)))
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>
@@ -365,6 +375,14 @@ class Driver(val adapter: CoreAdapter) {
       artifacts("pdg") = "pdg.json"
     }
     val details = outcome.details
+    Option(capturedBootImages.get(job)).foreach { image =>
+      details("boot_loads") = ujson.Arr.from(image.layout.map { case (address, size) =>
+        ujson.Obj("address" -> Hex(address), "size" -> size.toString)
+      })
+      details("boot_payloads") = ujson.Arr.from(image.identities.map { case (path, sha) =>
+        ujson.Obj("path" -> path, "sha256" -> sha)
+      })
+    }
     built.foreach { b =>
       details("model") = job.model.toJson
       details("simulation_session") = ujson.Obj("id" -> sessionId,
@@ -454,9 +472,16 @@ class Driver(val adapter: CoreAdapter) {
    */
   def runJobs(jobs: Seq[RunJob], n: Int, progress: (Int, ujson.Obj) => Unit = (_, _) => ()): Array[ujson.Obj] = {
     // Freeze every batch ELF before any worker can compile a model. Reruns use these bytes.
+    capturedBootImages.clear()
     capturedElfs.clear()
-    for (job <- jobs) try capturedElfs.computeIfAbsent(job.elf.getAbsolutePath, _ => new ElfFile(job.elf))
-      catch { case _: Exception => () } // runOne reports an invalid ELF as a harness error
+    for (job <- jobs) try {
+      val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias),
+        _ => new ElfFile(job.elf, job.elfLoadBias))
+      job.bootPayloads.foreach { manifest =>
+        require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
+        capturedBootImages.put(job, BootImage.fromManifest(elf, manifest))
+      }
+    } catch { case _: Exception => () } // runOne reports invalid input as a harness error
     val results = new Array[ujson.Obj](jobs.size)
     val states = jobs.map(newState).toArray
     val latch = new java.util.concurrent.CountDownLatch(jobs.size)

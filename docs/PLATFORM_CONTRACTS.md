@@ -1674,3 +1674,23 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+### C1 firmware payload extension
+
+RiscvSim accepts `--elf-load-bias BYTES` (nonnegative decimal, default zero).
+It applies only to self-relocating ET_DYN firmware. `elf_load_bias` records it
+as a decimal string in C1. The ELF hash still identifies the original bytes.
+ET_REL and PT_INTERP are unsupported. The loader does not apply dynamic
+relocations. The adapter controls initial PC, privilege and GPRs.
+
+`--boot-payloads PATH` selects a `rvw.boot-payloads/1` JSON object with `ram`
+(`base`, `size`) and `payloads` (`file`, `address`) arrays. Addresses and sizes
+are strings, in decimal or `0x` notation. Resolve files relative to the manifest.
+Capture bytes before compilation. Reject overflow, overlap (including BSS),
+empty payloads and ranges outside the declared RAM before the first write.
+An adapter must declare support and load through `RunContext.loadMemory`.
+Unsupported adapters must refuse this option. C1 `details.boot_payloads`
+contains `path` and `sha256` for each input. `details.boot_loads` lists each
+segment's `address` (hex string) and `size` (decimal string), in load order.
+The replay command retains both loader options. These fields describe memory
+placement only. They make no device, reset, Linux boot or timing claim.

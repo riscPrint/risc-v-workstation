@@ -58,6 +58,7 @@ class GenericAdapterSpec extends AnyFunSuite {
         val header = ByteBuffer.allocate(64).order(ByteOrder.LITTLE_ENDIAN)
         header.put(Array[Byte](0x7f, 'E'.toByte, 'L'.toByte, 'F'.toByte,
           (if (elfXlen == 32) 1 else 2).toByte, 1))
+        header.putShort(0x10, 2.toShort)
         header.putShort(0x12, 243.toShort)
         Files.write(file.toPath, header.array())
         val adapter = new Adapter(xlen)

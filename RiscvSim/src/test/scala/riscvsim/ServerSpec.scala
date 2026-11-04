@@ -28,7 +28,8 @@ class ServerSpec extends AnyFunSuite {
     val elf = new File(dir, "test.elf")
     val header = ByteBuffer.allocate(64).order(ByteOrder.LITTLE_ENDIAN)
     header.put(Array[Byte](0x7f, 69, 76, 70, 1, 1))
-    header.putShort(0x12, 243.toShort)
+    header.putShort(0x10, 2.toShort)
+        header.putShort(0x12, 243.toShort)
     Files.write(elf.toPath, header.array())
     try body(dir, elf) finally org.apache.commons.io.FileUtils.deleteDirectory(dir)
   }
