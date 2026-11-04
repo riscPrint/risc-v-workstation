@@ -216,6 +216,14 @@ The campaign limit starts before discovery; each discovery subprocess also uses 
 Unrun modules stay in the inventory. The command returns 1 with status `inconclusive`:
 it is an inventory, not an acceptance gate. Use the machine's core lock for large designs.
 
+The BOOM inventory has a [complete per-target table in PR #235](https://github.com/riscPrint/risc-v-workstation/pull/235).
+Keep its [group dispositions on spinal-boom#4](https://github.com/riscPrint/spinal-boom/issues/4#issuecomment-6626689541)
+with the parent-context observations. FpPipeline module observations retain
+inconclusive whole-core reachability. ITLB inactive payload X values do not
+establish invalid transactions. Arbiter results are bounded module checks.
+Candidate counts do not count distinct core bugs. New campaigns must retain
+unreported targets and update the core issue with their bounds and dispositions.
+
 ### Bounded witness collection and parent replay
 
 Use `xprop --first-failure` or `x-sweep --first-failure` to stop each solver
@@ -509,6 +517,14 @@ ISA simulator when requested.
 The generator requires compiler version 0.20.1 and the exact rule hash.
 It records compiler bytes, version, source and generated hashes, options,
 XLEN, compiler library hashes and the subset boundary in `manifest.json` under the output directory.
+Each `files.INSTRUCTION.property_trace` entry names a stable property ID,
+the pinned Sail path, rule, line, exact expression and execution context.
+It records operand bindings and the generated result port. It lists the
+upstream shell separately. Do not attribute decode or architectural transition
+proofs to this Sail slice. `implementation_options` declares the supported
+XLEN 32, NRET 1, uncompressed ADD/SUB/ADDI configuration. The Python generator
+refuses other XLEN or NRET values before it creates output. Compiler backend
+options and all generated hashes remain in each instruction entry.
 Generated files and measured proof results stay outside the repository.
 
 ```sh
@@ -711,6 +727,77 @@ The command captures the plugin bytes and checks its source identity before resu
 publication. The frontend reports RTL dependencies. Reads outside the copied input
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
+
+## Declared connectivity (#107)
+
+Resolve required and forbidden connections from a captured SpinalDB database:
+
+```sh
+rvw formal connectivity connections.toml --db design.db --out /tmp/connections
+rvw formal connectivity connections.toml --db design.db --out /tmp/connection-bmc \
+  --run --depth 10 --timeout 60
+```
+
+Declare each connection in TOML. Use a unique ID. Mode and enable each name
+one active-high Boolean signal. Both are optional. Their conjunction selects
+the source sample. Latency defaults to zero.
+
+```toml
+[[connection]]
+id = "selected-transfer"
+kind = "required"
+source = "io_source"
+destination = "io_destination"
+mode = "io_mode"
+enable = "io_enable"
+latency = 1
+
+[[connection]]
+id = "isolated-source"
+kind = "forbidden"
+source = "io_other"
+destination = "io_destination"
+mode = "io_mode"
+```
+
+The resolver uses the current SpinalDB schema and its standard name resolution.
+It searches the complete destination cone. It retains data, selection, condition,
+initialization, clock and reset dependencies. Missing or ambiguous endpoints,
+opaque BlackBox cones and search limits remain incomplete. A shortest known
+path cannot hide an alternate opaque path. Required value-transfer endpoints
+must have equal widths. A dependency path is a candidate, not a temporal proof.
+A missing path does not discharge mode, enable or latency conditions.
+
+`--run` checks bounded top-port contracts with the existing native BMC runner.
+It requires a source input, destination output, one-bit clock and synchronous
+active-high reset. Mode and enable must be common inputs distinct from source.
+Required transfers compare the destination with the delayed source. The harness
+delays mode and enable with that source. Reset clears delayed-valid state.
+Forbidden influence uses two DUT copies. All inputs except source are shared.
+Source values can differ at every cycle. The copies have independent initial
+state. A passing result establishes the stronger bounded contract for these
+states. A failing result can need initial-state triage. It is not a confirmed
+source-influence bug. The mode/enable sample selects the comparison after the
+declared latency; it does not constrain source differences at earlier cycles.
+
+Each campaign retains separate transfer and activation jobs. Activation must
+produce a counterexample to `assert(!delayed_enable)` after reset. A transfer
+pass without this activation witness remains incomplete. Both jobs must retain
+exactly one assertion. The BMC runner also checks bounded reachability before
+it reports a pass. Each RTL file must match its database content hash. The
+runner retains copied inputs, native tool identities, logs and counterexamples.
+Timeouts and tool errors cannot earn a bounded pass.
+
+`result.json` uses `rvw.connectivity/1`. Each entry retains the declaration,
+resolved endpoints, structural path or absence, conditions, limits and optional
+campaign observations. `semantic_status: bounded_pass` describes only the stated
+two-state bound under captured DUT assumptions. Overall `status` remains
+`incomplete`, and exit code is 1. This command supplies no design acceptance verdict.
+Invalid input exits 2. Use a fresh output directory for each campaign.
+
+General internal RTL binding and core qualification remain open. Inouts,
+asynchronous resets and multiple clocks need another backend. No whole-core
+proof, commercial parity or unbounded connectivity result is claimed.
 
 ## Capacity templates and contracts
 

@@ -23,7 +23,7 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
   }) & mask
 
   /** Expected bytes and registers depend only on programs, not DUT read data. */
-  private def run(programs: Seq[Seq[Long]], seed: Int = 0, fault: Int = 0, checkValues: Boolean = true, invalidate: Boolean = false): Seq[Array[Long]] = {
+  private def run(programs: Seq[Seq[Long]], seed: Int = 0, fault: Int = 0, checkValues: Boolean = true, invalidate: Boolean = false, scBound: Int = 0): Seq[Array[Long]] = {
     val regs = Seq.fill(2)(Array.fill[Long](32)(0))
     val actual = Seq.fill(2)(Array.fill[Long](32)(0))
     compiled.doSim(seed = seed) { dut =>
@@ -33,6 +33,8 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
       val mem = Array.fill[Long](2)(0)
       val reservation = Array.fill(2)(-1)
       val pcs = Array(0, 0)
+      val attempts = Array(0, 0)
+      val succeeded = Array(false, false)
       val pending = Array.fill[Option[String]](2)(None)
       val progress = new ProgressMonitor(32, 2, "round-robin slot every 8 cycles; enable within 3 cycles; immediate memory response")
       val coherence = new CoherenceMonitor(4, Set(0, 1))
@@ -66,7 +68,16 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
               assert(h.io.address.toLong == addr, "memory address")
               val word = (addr/4).toInt; val old = mem(word); val arg = r(rs2)
               val fn = (insn >>> 27).toInt
-              val success = reservation(i) == word
+              val isSc = op == 47 && fn == 3
+              // SC may fail spuriously. Its result chooses the legal branch;
+              // the independent memory oracle still checks every byte effect.
+              val scResult = if (isSc) h.io.rdata.toLong else 1L
+              if (isSc && scResult == 0) assert(reservation(i) == word, "reservation invalidation: SC success without reservation")
+              val success = isSc && scResult == 0
+              if (isSc && scBound > 0) {
+                attempts(i) += 1; succeeded(i) ||= success
+                assert(success || attempts(i) < scBound, "constrained SC service bound exceeded")
+              }
               val result = if (op == 47 && fn == 3) { if (success) 0L else 1L } else old
               if (op != 35 && checkValues) assert(h.io.rdata.toLong == result, "atomic/load returned value or reservation invalidation")
               val writes = op == 35 || (op == 47 && fn != 2 && (fn != 3 || success))
@@ -79,7 +90,12 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
               if (op != 35 && rd != 0) r(rd) = result
               pending(i).foreach(progress.complete(_, cycle)); pending(i) = None
             } else if (op == 19 && rd != 0) r(rd) = (r(rs1) + (insn.toInt >> 20)) & mask
-            else assert(op == 19 || op == 15, "unsupported fixture instruction")
+            else if (op == 99) {
+              val imm = (((insn >> 31)&1)<<12) | (((insn>>7)&1)<<11) | (((insn>>25)&63)<<5) | (((insn>>8)&15)<<1)
+              val offset = (imm.toInt << 19) >> 19
+              val equal = r(rs1) == r(rs2)
+              if (equal != (((insn >> 12)&1) == 1)) pcs(i) += offset/4 - 1
+            } else assert(op == 19 || op == 15, "unsupported fixture instruction")
             pcs(i) += 1
           }
         }
@@ -102,6 +118,7 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
       }
       assert(pcs.indices.forall(i => pcs(i) == programs(i).size), "bounded campaign incomplete")
       for (i <- 0 until 2; r <- 0 until 32) actual(i)(r) = dut.harts(i).io.registers(r).toLong
+      if (scBound > 0) assert(succeeded(0), "constrained loop did not complete SC")
       progress.finish(cycle)
       dut.io.enable #= 0; dut.io.evict #= true
       dut.clockDomain.waitSampling(); sleep(1)
@@ -129,6 +146,24 @@ class AtomicFixtureSpec extends AnyFunSuite with BeforeAndAfterAll {
     }
     val r = run(Seq(Seq(add(3,9),amo(3,4,3),amo(2,2,0),amo(3,5,3)),Seq(load(6))))
     assert(r(0)(4) == 1 && r(0)(5) == 0)
+  }
+  // LR; SC; BNE x4,x0,-8. No loads, stores or forbidden instructions
+  // occur in the retry path. The loop fits in 16 consecutive instructions.
+  private def constrainedPrograms = Seq(
+    Seq(add(3,9), amo(2,2,0), amo(3,4,3), 0xfe021ce3L, load(5)),
+    Seq(add(10,1)))
+  test("constrained LR/SC retries legal spurious failures under bounded service") {
+    for (flags <- 0 until 4; seed <- 0 until 4) {
+      val programs = constrainedPrograms.map(_.map(insn =>
+        if ((insn & 127) == 47) insn | (flags.toLong << 25) else insn))
+      val r = run(programs, seed=seed, fault=10, scBound=4)
+      assert(r(0)(4) == 0 && r(0)(5) == 9)
+    }
+  }
+  test("fault: constrained LR/SC service never permits success") {
+    val e = intercept[org.scalatest.exceptions.TestFailedException](
+      run(constrainedPrograms, fault=11, scBound=4))
+    assert(e.getMessage.contains("constrained SC service bound exceeded"))
   }
   test("all word AMOs and aq/rl encodings with concurrent observers") {
     for (op <- Seq(0,1,4,8,12,16,20,24,28); flags <- 0 until 4)

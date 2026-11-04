@@ -135,7 +135,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {check,generate} ...
+usage: rvw cosim [-h] [--project PROJECT] {check,generate,live} ...
 ```
 
 ### `rvw cosim check`
@@ -153,6 +153,15 @@ usage: rvw cosim check [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
     [--json] --out OUT [--max-instructions MAX_INSTRUCTIONS] [--project
     PROJECT]
+```
+
+### `rvw cosim live`
+
+```text
+usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
+    [--json] --out OUT --simulator ... [--model {spike,sail}] [--history
+    HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config
+    SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cov`
@@ -282,7 +291,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,equiv,bmc,from-sim,xprop,x-context,x-sweep}
+    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -370,6 +379,14 @@ usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
 ```text
 usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
     PROJECT]
+```
+
+### `rvw formal connectivity`
+
+```text
+usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
+    [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
+    ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
 ```
 
 ### `rvw formal equiv`

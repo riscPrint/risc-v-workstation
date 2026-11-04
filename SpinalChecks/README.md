@@ -581,9 +581,12 @@ The reference has zero-cycle and one-cycle paths with injected transfer faults.
 
 This emits `connectivity.value` assertions for simulation or a formal backend.
 Simulation checks exercised transfers only. It is not a structural proof.
-SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
-formal qualification remain open under #107. No proof result is inferred from
-successful elaboration or simulation.
+`rvw formal connectivity` resolves required and forbidden endpoints through
+SpinalDB. Its optional native campaign checks bounded top-port transfers and
+forbidden influence. It retains unresolved endpoints, opaque cones and limits
+as incomplete. See [the formal command guide](../rvw/src/rvw/formal/README.md#declared-connectivity-107).
+General internal RTL binding and core qualification remain open under #107.
+No proof result is inferred from successful elaboration or simulation.
 
 ### Device register transactions
 
