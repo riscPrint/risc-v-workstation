@@ -17,6 +17,9 @@ object SourceRootsCheck {
         val expected = new File(VexAdapter.sourceDir, "src/main/scala/vexriscv/plugin/" + name).getCanonicalPath
         require(files.contains(expected), "unresolved core source: " + expected)
       }
+      val adapter = new File(sys.env.getOrElse("RVW_ADAPTER", ".")).getCanonicalFile
+      val top = new File(adapter, "src/main/scala/rvwvex/VexTop.scala").getCanonicalPath
+      require(files.contains(top), "unresolved adapter source: " + top)
       println("SourceRootsCheck: 1 passed")
     } finally org.apache.commons.io.FileUtils.deleteDirectory(work)
   }
