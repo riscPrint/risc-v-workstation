@@ -698,3 +698,9 @@ establish Linux device support.
 `--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
+
+## TestRIG sockets
+
+`rvw cosim dii` adds bounded v1 transport for core-owned injection hooks and
+strict replay against a Sail DII server. See [the hook guide](../docs/TESTRIG.md).
+This mode does not use the ELF shim or change the C2 comparison contract.

@@ -17,6 +17,8 @@ from .generate import generate
 def register(subparsers):
     parser = subparsers.add_parser("cosim", help="trace-driven architectural comparison")
     subs = parser.add_subparsers(dest="cosim_action", required=True)
+    from .dii_cli import register as register_dii
+    register_dii(subs)
     for action in ("check", "generate"):
         cmd = subs.add_parser(action, help="check C2 against a model" if action == "check" else "make a C2 trace from Spike")
         cmd.add_argument("--elf", required=True, type=Path)

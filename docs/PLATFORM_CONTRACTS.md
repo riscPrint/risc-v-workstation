@@ -1859,3 +1859,20 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## TestRIG socket transport (`rvw.dii/1`)
+
+`rvw cosim dii serve` and `replay` use RVFI-DII v1, separate from C1/C2.
+See [the hook contract](TESTRIG.md) for wire pins, reset, timing and memory.
+The server accepts at most 65,536 tokens per stream and a finite stream count.
+Socket operations share a per-stream deadline. Replay accepts exactly one
+nonempty stream terminated by EndOfTrace. It records the token SHA-256 and
+both endpoints. These labels do not verify the remote model or its ISA config.
+The caller must supply an independent Sail model. Each endpoint returns ordered
+88-byte retirement packets and a halt delimiter. Empty, short, truncated,
+unsupported or timed-out streams cannot earn a match. Exit codes: match or
+served 0, mismatch 1, error 2, inconclusive 3. `served` is not equivalence.
+The result has `schema`, `protocol` and `status`. Mismatch adds `index` and
+`differences`; match adds `instructions` and `trace_complete`. Short streams add
+`cause`, `core_retired` and `sail_retired`. Errors add `message`. All results
+print one JSON document. This CLI mode has no MCP endpoint yet.
