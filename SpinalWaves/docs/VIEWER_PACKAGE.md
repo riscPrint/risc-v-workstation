@@ -60,3 +60,25 @@ The remote server is outside the supported local viewer path. The installer
 builds only `-p surfer-tywaves`, not the standalone `surver` binary. The viewer
 still links its server library. Optional `f128` is off in the default features;
 this package does not enable nightly Rust or quad precision.
+
+## macOS application
+
+On macOS, the installer also writes `PREFIX/SpinalWaves.app`.
+The bundle contains a copy of the native viewer, EUPL notices, the vendor
+manifest and the source archive. It uses an ad-hoc signature. No certificate
+is needed. The plist records the pinned fork version from Cargo.toml.
+The CLI executable remains available. Linux installation does not change.
+
+Launch the bundle with absolute waveform and metadata paths:
+
+```sh
+open -a "$HOME/.local/bin/SpinalWaves.app" --args /absolute/wave.vcd \
+  --hgldd-dir /absolute/hgldd --extra-scopes TOP MyTop --top-module MyTop
+```
+
+The bundle makes the viewer available to macOS application discovery.
+It does not establish interactive rendering support. Issue #83 remains open.
+
+The macOS launcher uses a temporary work directory for rewritten typed VCD
+files. Use absolute input paths. The viewer leaves this directory in the
+system temporary directory after exit.

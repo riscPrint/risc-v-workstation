@@ -1,0 +1,12 @@
+{
+  "schema": "rvw.hdl/1",
+  "backend": "verilator-timing",
+  "top": "tb",
+  "sources": [
+    "timing.sv"
+  ],
+  "requires": [
+    "hdl_delays",
+    "fork_join"
+  ]
+}

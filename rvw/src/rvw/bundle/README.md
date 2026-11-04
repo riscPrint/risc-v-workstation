@@ -291,7 +291,7 @@ The first four are annotated read-only. `wave_cut` writes `out`. Time arguments 
 C1 adapter whose "bug" depends on seed, memory latency and a file in a fake core repo (plus modes for
 hangs, a data symbol, a reset offset and an RVFI stamp skew). `rvw/tests/test_debug_runs.py` covers the
 re-run layer (fresh attempt directories, process-tree timeouts, replay paths, C1 loading).
-`RiscvSim/boom-spinaltrace/run.sh` quoting is checked with a stub `sbt`.
+The model flag `--spinaltrace` selects dependency-trace instrumentation.
 
 ## Decisions
 
