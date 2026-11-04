@@ -221,6 +221,7 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
+    [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
     [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
 ```
 
