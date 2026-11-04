@@ -593,3 +593,11 @@ Scenario `access_width` selects 1, 2, 4 or 8 bytes (default 8). Loads use
 access wider than that declaration. The project owns the declaration.
 The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
 Remap scenarios require the default 8-byte access.
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json` runs a
+bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
+See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
+licence checks, supported test scope and limits. It writes standalone C3.
+It does not schedule ELF suites or earn C4 acceptance.

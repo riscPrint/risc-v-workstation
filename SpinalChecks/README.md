@@ -611,6 +611,19 @@ It includes inline clocked Boolean properties, `disable iff` and single-argument
 sampled value functions. Temporal implication, sequence delay and repetition remain
 unsupported. The SBY campaign runner does not depend on this frontend.
 
+## Capacity monitors and free-list proofs
+
+`rvw formal template` generates reusable ROB/credit, free-list, rename, issue and
+LSQ safety monitors. `rvw formal contracts` checks typed interfaces, neighbour
+guarantees and a closed composition. `rvw formal strengthen` proves mined unsigned
+bounds before adding them as joint assertions. See the
+[capacity commands and limits](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
+`boom/freelist-capacity.py` prepares two named properties on an existing
+`RenameFreeList` export. It copies the module and records the export hash. It does
+not change core sources. The export revision remains unverified. Native core
+assertions are disabled in this copied module; only the named capacity properties
+are checked. No full-block protocol or whole-core proof is implied.
 ### Register-map imports
 
 Run `scripts/import-map.py ipxact INPUT.xml OUTPUT.properties` with Python 3.
