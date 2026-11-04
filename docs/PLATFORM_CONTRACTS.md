@@ -1758,3 +1758,28 @@ second. It publishes roi_retired, roi_loads, roi_stores and roi_branches only
 with two markers and complete bench_stats stores. The CSR delta window stays
 separate. Missing events remain missing; fitting refuses them. See the example
 architecture README for opcodes, limitations and the saved-candidate fit plan.
+
+### Generated SoC runtime input
+
+C1 jobs can set `soc_map` / `--soc-map` to generated `rvw.sim-map/1`.
+The parser captures the map bytes. C1 records `soc_map_sha256` and lists the
+saved `sim-map.json` and `soc-transactions.jsonl` in `artifacts`.
+`rvw.soc-capture/1` starts with `map_sha256`, `identity` (source and RTL hash), and
+`observation` (`harness_decoder` or `map_monitor`). A map monitor classifies
+accepted requests. It does not observe an actual RTL decoder select.
+Request lines have `cycle` (integer string), `bus`, `address` (hex string),
+`size` (byte count string), `write` (boolean) and `selected` (region name or null).
+`{"event":"end"}` ends capture. These are harness request/endpoint observations.
+They are not software-to-bus pairs. An incomplete stream cannot establish coverage.
+`rvw soc capture-check` gives mismatch (1), inconclusive (3), or input error (2).
+It has no pass verdict. `--platform` in cosim can also read `rvw.soc/1` directly.
+
+SoC capture request identity: `rvw.soc-capture/1` headers carry a nonempty
+`identity.run_id`. It is a fresh UUID for each simulation request. C1 records the
+same value in `details.simulation_session.run_id`. `soc capture-check` requires
+both values to match. A session UUID, ELF hash and seed alone do not identify one
+request in a persistent session. Captures without a request ID are refused.
+
+Request and process UUIDs belong to `RunContext.captureIdentity`. They do not
+appear in the C2 header (`RunContext.rvfiHeader`). Equal simulation inputs keep
+stable trace header bytes across fresh and persistent runs.

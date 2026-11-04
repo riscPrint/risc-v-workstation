@@ -30,7 +30,7 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None) {
+                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace)
 }
 
@@ -103,6 +103,8 @@ trait RunContext {
   def log(line: String): Unit
   /** RVFI trace header fields (core, config, elf, isa, xlen); the writer adds the schema. */
   def rvfiHeader: ujson.Obj
+  /** Request identity for live bus captures. Keep process IDs out of C2 bytes. */
+  def captureIdentity: ujson.Obj = rvfiHeader
   /** Index of assertion messages for the model being run. */
   def assertIndex: AssertIndex
   /** Native-output mark taken when the run started (see NativeOutput). */

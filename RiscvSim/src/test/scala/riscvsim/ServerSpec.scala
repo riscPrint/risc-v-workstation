@@ -157,4 +157,24 @@ class ServerSpec extends AnyFunSuite {
       driver.cleanWorkspace()
     }
   }
+  test("each server request binds a distinct run identity to its result") {
+    fixture { (dir, elf) =>
+      val ids = scala.collection.mutable.ArrayBuffer.empty[String]
+      val adapter = new Adapter(false) {
+        override def run(model: Unit, job: RunJob, ctx: RunContext): RunOutcome = {
+          assert(!ctx.rvfiHeader.obj.contains("session_id"))
+          assert(!ctx.rvfiHeader.obj.contains("run_id"))
+          ids += ctx.captureIdentity("run_id").str
+          super.run(model, job, ctx)
+        }
+      }
+      val replies = scala.collection.mutable.ArrayBuffer.empty[ujson.Obj]
+      val driver = new Driver(adapter)
+      driver.serve(Map.empty, Iterator(request(dir, elf, "one"), request(dir, elf, "two")), replies += _)
+      assert(ids.size == 2 && ids.distinct.size == 2)
+      assert(replies.map(_("result")("details")("simulation_session")("run_id").str) == ids)
+      driver.cleanWorkspace()
+    }
+  }
+
 }

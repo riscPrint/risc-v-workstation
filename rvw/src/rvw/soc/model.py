@@ -140,6 +140,17 @@ def svd(obj):
     return ET.tostring(root, encoding='unicode') + '\n'
 
 
+def exact_json(value):
+    """Keep large integers exact in simulation readers that use Double."""
+    if type(value) is int and abs(value) > 9007199254740991:
+        return hex(value)
+    if isinstance(value, dict):
+        return {k: exact_json(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [exact_json(v) for v in value]
+    return value
+
+
 def generate(source, out):
     obj = load(source)
     p = platform(obj)
@@ -173,7 +184,7 @@ def generate(source, out):
     header += ['#endif']
     files = {'platform.json': dumps(p), 'soc.h': '\n'.join(header)+'\n', 'memory.ld': '\n'.join(linker)+'\n',
              'soc.dts': '\n'.join(dts)+'\n', 'registers.svd': svd(obj),
-             'sim-map.json': dumps(dict(schema='rvw.sim-map/1', address_bits=obj['address_bits'], regions=obj['regions'], interrupts=obj['interrupts'])),
+             'sim-map.json': dumps(exact_json(dict(schema='rvw.sim-map/1', address_bits=obj['address_bits'], regions=obj['regions'], interrupts=obj['interrupts']))),
              'spike.args': f'--isa={validated.reference_isa or validated.isa}\n--pc={hex(validated.reset_pc)}\n-m' + ','.join(f'{hex(b)}:{hex(s)}' for b,s in validated.ram)+'\n'}
     out.mkdir(parents=True, exist_ok=True)
     for name, content in files.items():

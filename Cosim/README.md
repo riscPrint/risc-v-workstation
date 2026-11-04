@@ -694,3 +694,7 @@ For a common RTL/reference input, rebase the firmware ELF with the toolchain's
 `objcopy --change-addresses` and capture the resulting hash. Do not change its
 instructions or infer a base from the observed DUT trace. These checks do not
 establish Linux device support.
+
+`--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
+and MMIO ranges from its regions. It preserves the explicit reference policy.
+The command captures the source map before it starts Spike.

@@ -24,7 +24,9 @@ import scala.jdk.CollectionConverters._
 object Driver {
 
   case class Ctx(job: RunJob, elf: ElfFile, logF: String => Unit, rvfiHeader: ujson.Obj, assertIndex: AssertIndex, outputMark: Long,
-                 override val wallClock: WallClock = WallClock.none, bootImage: Option[BootImage] = None) extends RunContext {
+                 override val wallClock: WallClock = WallClock.none,
+                 requestIdentity: ujson.Obj = ujson.Obj(), bootImage: Option[BootImage] = None) extends RunContext {
+    override def captureIdentity: ujson.Obj = ujson.Obj.from(rvfiHeader.value.toSeq ++ requestIdentity.value.toSeq)
     override def loadMemory(write: (Long, Array[Byte]) => Unit): Unit =
       bootImage match { case Some(b) => b.load(write); case None => elf.load(write) }
     def log(line: String): Unit = logF(line)
@@ -191,7 +193,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- one run
-  val artifactFiles: Seq[(String, String)] = Seq("log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
+  val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
     "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile)
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
@@ -217,6 +219,7 @@ class Driver(val adapter: CoreAdapter) {
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
       job.bootPayloads.toSeq.flatMap(f => Seq("--boot-payloads", f.getPath)) ++
       Seq("--elf-load-bias", job.elfLoadBias.toString) ++
+      job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
@@ -281,6 +284,7 @@ class Driver(val adapter: CoreAdapter) {
       "elf" -> job.elf.getPath, "elf_sha256" -> elfSha, "elf_load_bias" -> job.elfLoadBias.toString,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
+      "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
       "status" -> status.name,
       "fail_code" -> failCode.map(c => ujson.Num(c.toDouble)).getOrElse(ujson.Null),
@@ -314,6 +318,7 @@ class Driver(val adapter: CoreAdapter) {
    */
   def runOne(job: RunJob, st: Driver.RunState, keepResult: Boolean = false): ujson.Obj = {
     val t0 = System.nanoTime()
+    val runId = java.util.UUID.randomUUID().toString
     job.out.mkdirs()
     for ((_, f) <- artifactFiles ++ (if (keepResult) Nil else Seq("result" -> "result.json"))) new File(job.out, f).delete()
     val logW = new PrintWriter(new java.io.FileWriter(new File(job.out, "run.log")))
@@ -352,7 +357,9 @@ class Driver(val adapter: CoreAdapter) {
       st.wall.start()
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
-        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath), b.index, mark, st.wall, Option(capturedBootImages.get(job)))
+        "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
+        "source" -> source, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall,
+        bootImage = Option(capturedBootImages.get(job)), requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>
@@ -385,7 +392,7 @@ class Driver(val adapter: CoreAdapter) {
     }
     built.foreach { b =>
       details("model") = job.model.toJson
-      details("simulation_session") = ujson.Obj("id" -> sessionId,
+      details("simulation_session") = ujson.Obj("id" -> sessionId, "run_id" -> runId,
         "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
         "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
       details("execution_s") = st.wall.elapsedS

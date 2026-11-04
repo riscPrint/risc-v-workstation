@@ -515,3 +515,9 @@ This is a memory loader. BOOM still requires a `tohost` symbol and its existing
 reset state. It has no Linux UART/PLIC adapter. See the project-owned
 [Linux adapter plan](../examples/qemu-linux/rtl-adapter-plan.json).
 No RTL Linux boot support follows from successful payload loading.
+
+## Generated SoC maps
+
+`run` and `run-many` accept `--soc-map PATH` (`soc_map` in manifests).
+See the [SoC guide](../rvw/src/rvw/soc/README.md#runtime-maps-and-live-capture)
+for region checks, device placement, captured bus requests and limits.
