@@ -106,3 +106,11 @@ python3 scripts/build-yosys-slang.py --prefix /absolute/native-prefix \
 ```
 
 This is a native source build. Existing formal bundles do not contain this plugin.
+
+## Local checks
+
+`ci-local.sh` runs the same fast checks as the macOS self-hosted CI job.
+It uses a new temporary work directory and venv, machine-wide locks and
+`nice -n 10`. See [Local CI](../CONTRIBUTING.md#local-ci) for commands and
+prerequisites. The `nightly-python`, `nightly-scala` and `messages` modes
+serve the other local Actions jobs. `messages` needs a GitHub event file.
