@@ -52,6 +52,12 @@ def _source_identity(r: SuiteResults) -> str:
 
 def with_assertion_identity(t: TestEntry) -> TestEntry:
     """Derive assertion identity from complete saved evidence, without changing the input."""
+    message = t.extra.get("message")
+    if t.status in ("assert", "rvfi_error") and (t.extra.get("message_complete") is False
+            or (t.extra.get("message_complete") is not True
+                and isinstance(message, str) and len(message) == 400)):
+        # Older runner entries kept only a 400-character preview. Its hash is not evidence.
+        return replace(t, extra={**t.extra, "inconclusive": "failure message may be truncated; rerun"})
     if t.status == "fail" and "fail_code" in t.extra:
         code = t.extra["fail_code"]
         if isinstance(code, int) and not isinstance(code, bool) and code > 0:

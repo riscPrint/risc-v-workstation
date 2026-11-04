@@ -1180,7 +1180,9 @@ os.execvpe(command[0], command, os.environ)
             extra["adapter_identity"] = j.params["identity"]
         if r.status != "pass":
             if r.message:
-                extra["message"] = r.message[:MESSAGE_MAX]
+                # Compare rebuilds failure identity from this evidence. Do not truncate it.
+                extra["message"] = r.message
+                extra["message_complete"] = True
             if r.fail_code is not None:
                 extra["fail_code"] = r.fail_code
         if r.extra.get("synthesized"):

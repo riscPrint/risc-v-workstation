@@ -435,6 +435,9 @@ used to tell a known failure from a new one (`rvw.results.failure_signature`): e
 Assertions use the HDL file and line when there is no Scala location, for example `assert:core.sv:4`.
 Without either location, `assert:sha256:<digest>` binds the full, unnormalized message.
 Uncoded RVFI errors use `rvfi_error:sha256:<digest>` over the full message.
+Runner C3 entries retain complete failure messages with `message_complete: true`.
+Display limits must not truncate this evidence. Legacy 400-character messages without
+this marker may be cut previews. Compare treats these entries as inconclusive and requires a rerun.
 Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
 Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
 override saved fail signatures. An unchanged failure must also have the same status.
