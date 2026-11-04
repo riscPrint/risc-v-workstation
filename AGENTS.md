@@ -224,3 +224,6 @@ The IPC ratio is model IPC divided by RTL IPC. It is a measured model gap.
 It is not a correctness or gate verdict. gem5 shows trends; RTL is the truth.
 Use the project's lock for RTL. gem5 runs under the `gem5` lock, one process
 at a time. Core presets and calibration targets belong in project data.
+
+See the complete [CLI and MCP reference](docs/COMMAND_REFERENCE.md) for command paths,
+options and built-in tool arguments. The reference is checked against the code.

@@ -49,7 +49,8 @@ The open setup tasks are [integration model #34](https://github.com/riscPrint/ri
 | [Cosim](Cosim/) | The Spike library shim behind `rvw cosim`. |
 | [rvw](rvw/) | The `rvw` command: one CLI (and one MCP server) for every tool below. |
 
-`rvw` subcommands, each with `--json`:
+`rvw` command groups (JSON support depends on the command). See the complete
+[CLI and MCP reference](docs/COMMAND_REFERENCE.md) for every command and tool:
 
 | Command | What it does |
 |---|---|
@@ -62,6 +63,11 @@ The open setup tasks are [integration model #34](https://github.com/riscPrint/ri
 | [`rvw formal`](SpinalChecks/) | BMC from reset, BMC from a simulation state, X-propagation. |
 | [`rvw arch`](Arch/) | Build and run native gem5 models. Compare the same ELFs with C1 RTL ROI counters. |
 | [`rvw perf`](rvw/src/rvw/perf/) | Text performance reports from Konata logs. |
+| [`rvw doctor`](rvw/src/rvw/doctor/) | Check native tools, project inputs and adapter readiness. |
+| [`rvw init`](rvw/src/rvw/init/) | Create safe setup stubs for a Spinal/sbt core. CLI-only. |
+| [`rvw farm`](rvw/src/rvw/farm/) | Run native SSH shards and write a static results dashboard. |
+| [`rvw lint`](rvw/src/rvw/lint/) | Native lint diagnostics and structural CDC/RDC inventory. |
+| [`rvw soc`](rvw/src/rvw/soc/) | Export project maps and check bounded database bindings. CLI-only. |
 | [`rvw mcp`](rvw/src/rvw/mcp/) | One stdio MCP server exposing all of the above to agents, with background jobs. |
 
 The shared file formats are in [docs/PLATFORM_CONTRACTS.md](docs/PLATFORM_CONTRACTS.md).
