@@ -311,8 +311,17 @@ prep -top rvw_formal_top
 """
     common.need("sby")
     _sby(out, "bmc.sby", sby)
-    rc, secs = common.run(["sby", "-f", "-d", "sby", "bmc.sby"], out, out / "sby.log",
-                          _remaining(args.timeout, started))
+    cache_root = getattr(args, "proof_cache", None)
+    cache_identity, cache_hit = None, False
+    if cache_root:
+        from . import proof_cache
+        cache_identity = proof_cache.identity(out, sby, snapshot)
+        cache_hit = proof_cache.restore(cache_root, cache_identity, out)
+    if cache_hit:
+        rc, secs = 0, 0
+    else:
+        rc, secs = common.run(["sby", "-f", "-d", "sby", "bmc.sby"], out, out / "sby.log",
+                              _remaining(args.timeout, started))
     result = _finish(out, getattr(args, "mode", "bmc"), args, rc, secs, ChecksIndex.load(snapshot.checks), "rvw_formal_top",
                      reset, ties, restrictions, _remaining(args.timeout, started))
     if cut_records:
@@ -320,6 +329,12 @@ prep -top rvw_formal_top
         if result['status'] == 'fail':
             result['status'] = 'unknown'
             result['abstraction_counterexample'] = True
+        common.write_json(out / "result.json", result)
+    if cache_root:
+        result['proof_cache'] = {'key': proof_cache.key_for(cache_identity), 'hit': cache_hit,
+                                 'rule': 'exact prepared inputs, tools, environment and runner code'}
+        # _finish always performs fresh reachability and tool verification, even on a hit.
+        proof_cache.publish(cache_root, cache_identity, out, result)
         common.write_json(out / "result.json", result)
     _print(result, args.json)
     return 0 if result["status"] == "pass" else 1

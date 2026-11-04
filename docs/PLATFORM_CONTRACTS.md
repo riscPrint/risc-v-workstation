@@ -2104,3 +2104,18 @@ state has `status: error` and a reason. `missing_cycles` lists tasks not started
 earn reset reachability, gate acceptance or unbounded proof. Sources, includes,
 checks and waveform are copied once in the parent `input_snapshot`. Child
 results retain their own full tool/input captures and solver evidence.
+
+
+### Formal exact proof reuse
+
+`rvw.formal/1` results can include `proof_cache` with `key`, `hit` and the checked
+`rule`. The optional `bmc`/`prove` cache stores complete successful SBY evidence
+under a SHA-256 input key. `rvw.formal-proof-key/1` binds complete prepared input
+artifacts, script, captured files, tool payloads/versions, captured environment,
+Python identity and formal/common runner code. Only the owned output prefix is
+normalized. Whole-model identity is required; no inferred cone independence is
+accepted. Entry manifests hash all retained evidence and provenance. Fresh input
+capture, frontend checks, tool verification and bounded reachability remain
+mandatory on hits. An invalid entry is a miss. Only successful results with
+assertions and reachable guards enter this cache. Mounted directory sharing
+requires C8 trust; no remote authentication or gate acceptance is supplied.

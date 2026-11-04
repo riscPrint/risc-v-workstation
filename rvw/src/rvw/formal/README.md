@@ -55,7 +55,7 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
   user to rerun with `--engine smtbmc:yices`. No proof or pass is inferred from
   that ABC error. A portfolio can still earn a pass through another engine.
   Other engines refuse capture because their executable dependencies are not defined here.
-  No formal result is cached.
+  Optional exact proof reuse is described below.
 - Replay converts its sealed state VCD to FST with the pinned converter before Yosys
   loads it. This prevents an internal converter lookup from changing the selected tool.
 - The first frontend run reports its file dependencies with Yosys `-E`. Every file it reads
@@ -851,3 +851,29 @@ are explicit if the budget expires. This selection does not establish coverage,
 property activation, typed-cone selection or an unbounded proof. `--memories free`
 keeps all initial memory words free; trace mode loads available words. Zero fill
 is excluded from this command.
+
+
+## Exact proof reuse
+
+`bmc` and `prove` accept `--proof-cache DIR`. The cache shares retained successful
+SBY evidence through a local or mounted directory. It skips only the main engine
+job. Each invocation still captures inputs and tools, elaborates the design,
+checks clocks and state controls, runs fresh reachability, and verifies tools.
+
+The dependency rule requires identical complete prepared input artifacts,
+property and environment restrictions, proof script and depth, captured file
+hashes, tool payloads and versions, captured environment, Python executable and
+version, and formal/common runner code. Only the owned output path prefix is
+normalized. Other source paths and locations remain significant. A changed cone,
+assumption, property, relevant design input or tool therefore misses. An unrelated
+file outside these dependencies can change without invalidating the entry.
+This is conservative whole-model reuse. It does not infer per-property cone
+independence or reuse across a design change.
+
+Only pass results with assertions and successful reachability enter the cache.
+Entry hashes protect retained artifacts against accidental changes. Corrupt or
+incomplete entries miss. Entries are published by directory rename. Share only
+trusted directories under C8. This is not an authenticated remote cache. There
+is no automatic eviction or repair of a corrupt entry; remove it to republish.
+Cache-hit wall time describes current work. It does not measure original proof
+cost or establish a speedup.
