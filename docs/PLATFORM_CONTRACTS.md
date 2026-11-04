@@ -1313,6 +1313,9 @@ Pass rate divides conclusive passes by all recorded C3 tests. Run time sums all
 recorded test `wall_s` values only when every value is present and valid. History
 charts retain missing runs as gaps. These metrics do not prove plan completeness.
 It does not establish bin compatibility or verification closure.
+Dashboard filters select exact core, suite, config and gate values, plus a run-ID
+substring. Counts and metrics use selected C3 suites. Missing evidence stays
+visible when suite/config membership is unknown. Active filters are in the HTML.
 
 ## Lint and crossing inventory extension
 

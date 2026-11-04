@@ -160,3 +160,29 @@ def test_farm_refuses_result_for_other_requested_options(tmp_path, adapter, monk
     assert report['status'] == ('complete' if reported == 20 else 'inconclusive')
     if reported != 20:
         assert option.replace('-', '_') in report['shards'][0]['cause']
+
+
+def test_dashboard_filters_metrics_and_retains_unknown_evidence(tmp_path, monkeypatch):
+    from types import SimpleNamespace as NS
+    import importlib
+    module = importlib.import_module('rvw.farm.dashboard')
+    monkeypatch.setattr(module, 'read_index', lambda _: [
+        {'path': 'first', 'run_id': 'chosen-old', 'core': 'fixture'},
+        {'path': 'missing', 'run_id': 'chosen-gap', 'core': 'fixture'},
+        {'path': 'other', 'run_id': 'other', 'core': 'another'}])
+    def find(path):
+        if str(path) == 'missing':
+            raise ValueError('lost')
+        return [NS(core='fixture', suite='isa', config=c, tests=[
+            NS(status='pass', conclusive=True, metrics={'ipc': value}, wall_s=2)])
+            for c, value in [('a', 1), ('b', 100)]]
+    monkeypatch.setattr(module, 'find_results', find)
+    output = tmp_path / 'dashboard.html'
+    report = module.dashboard(tmp_path, output, core='fixture', suite='isa', config='a', run='chosen')
+    assert report['runs'] == 2
+    text = output.read_text()
+    assert 'fixture / isa / a / ipc' in text
+    assert 'fixture / isa / b / ipc' not in text
+    assert 'chosen-gap' in text and 'missing or invalid evidence' in text
+    assert 'another' not in text
+    assert module.dashboard(tmp_path, output, gate='inconclusive')['runs'] == 1

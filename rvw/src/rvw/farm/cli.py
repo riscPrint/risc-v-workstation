@@ -22,6 +22,8 @@ def register(sub):
     report = commands.add_parser("dashboard")
     report.add_argument("--root", required=True)
     report.add_argument("--out", required=True)
+    for name in ("core", "suite", "config", "gate", "run"):
+        report.add_argument("--" + name)
     report.set_defaults(func=dashboard_command)
 
 
@@ -35,7 +37,7 @@ def run_command(args):
 
 
 def dashboard_command(args):
-    print(json.dumps(dashboard(args.root, args.out)))
+    print(json.dumps(dashboard(args.root, args.out, **{k: getattr(args, k) for k in ("core", "suite", "config", "gate", "run")})))
 
 
 def cancel_command(args):

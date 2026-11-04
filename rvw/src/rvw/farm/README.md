@@ -80,6 +80,15 @@ times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
 
+## Filter history
+
+`farm dashboard` accepts `--core`, `--suite`, `--config`, `--gate` and `--run`.
+The first four use exact values. `--run` matches a run-ID substring. The same
+filters are available through MCP `farm_dashboard`. Counts and trends use only
+selected suites. Missing evidence stays visible if its suite or config cannot
+be checked. The HTML records the active filters. Gate filters select the recorded
+C4 verdict, not a verdict inferred from C3 pass counts.
+
 ## Native OS limits
 
 A host can set `limits`, for example `{"cpu_seconds": 120,
