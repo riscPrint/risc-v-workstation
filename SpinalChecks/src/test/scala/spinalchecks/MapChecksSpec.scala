@@ -66,6 +66,24 @@ class MapChecksSpec extends AnyFunSuite with ApplicationTest {
   test("device read returns pre-clear data: legal passes, wrong response fires") {
     exercise("register_response", Set("register.response"))(new ResponseRef)
   }
+  class ImportedRef extends ApplicationRef {
+    val m = RegisterMap.load(new java.io.File("src/test/maps/status.properties")).head.model
+    val state = Reg(Bits(32 bits)).init(12)
+    when(read) { state(3) := False }
+    when(write) {
+      for (i <- 0 to 1) when(strobes(i)) { state(i) := data(i) }
+      when(strobes(2) && data(2)) { state(2) := False }
+    }
+    for (i <- 0 until 4) {
+      when(hwClear(i)) { state(i) := False }
+      when(hwSet(i)) { state(i) := True }
+    }
+    RegisterChecks.bind("imported", m, state ^ Mux(corrupt,B(1,32 bits),B(0,32 bits)),
+      read, write, data.resize(32), strobes.resize(32), hwSet.resize(32), hwClear.resize(32))
+  }
+  test("imported IP-XACT model drives side-effect checks: legal passes and fault fires") {
+    exercise("imported_map", Set("register.state"))(new ImportedRef)
+  }
   test("normalized map loads side effects and rejects overlap") {
     val file = java.io.File.createTempFile("register-map", ".properties")
     try {

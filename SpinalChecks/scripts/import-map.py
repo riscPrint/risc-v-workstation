@@ -41,16 +41,21 @@ def ipxact(path):
         found = node.find(tag)
         return default if found is None else found.text.strip()
     unsupported = {'registerFile', 'dim', 'alternateRegisters', 'bank', 'writeConstraint', 'vendorExtensions',
-                   'parameters', 'isPresent', 'resetMask'}
+                   'parameters', 'isPresent', 'resetMask', 'aliasOf', 'accessPolicies', 'enumeratedValues'}
     if any(n.tag in unsupported for n in root.iter()):
         raise ValueError('unsupported IP-XACT construct')
     result = []
+    for mm in root.findall('.//memoryMap'):
+        if value(mm, 'addressUnitBits', '8') != '8':
+            raise ValueError('only byte address units are supported')
     for block in root.findall('.//addressBlock'):
         if value(block, 'usage', 'register') != 'register':
             raise ValueError('only register address blocks are supported')
         base = integer(value(block, 'baseAddress'))
         for reg in block.findall('register'):
             width = integer(value(reg, 'size'))
+            if any(reg.find(t) is not None for t in ('reset', 'resets', 'modifiedWriteValue', 'readAction')):
+                raise ValueError('put reset and side effects on explicit fields')
             fields = []
             for f in reg.findall('field'):
                 access = value(f, 'access', value(reg, 'access', 'read-write'))
@@ -59,8 +64,10 @@ def ipxact(path):
                 ow = {'oneToClear': 'woclr'}.get(ow, ow)
                 read = value(f, 'readAction')
                 read = {'clear': 'rclr'}.get(read, read)
+                if len(f.findall('resets/reset')) != 1 or f.find('resets/reset/mask') is not None:
+                    raise ValueError('one complete explicit reset per field is required')
                 fields.append((integer(value(f, 'bitOffset')), integer(value(f, 'bitWidth')),
-                               integer(value(f, 'resets/reset/value', '0')), access, ow, read))
+                               integer(value(f, 'resets/reset/value')), access, ow, read))
             if not fields:
                 raise ValueError('explicit fields are required')
             result.append(pack(value(reg, 'name'), base + integer(value(reg, 'addressOffset')), width, fields))
@@ -79,7 +86,7 @@ def systemrdl(path):
             continue
         fields = []
         for f in reg.fields():
-            for prop in ('hwset', 'hwclr', 'counter', 'singlepulse', 'swwe', 'swwel'):
+            for prop in ('hwset', 'hwclr', 'counter', 'singlepulse', 'swwe', 'swwel', 'swmod', 'swacc'):
                 if f.get_property(prop):
                     raise ValueError(f'unsupported SystemRDL property {prop}')
             enum = lambda x: None if x is None else x.name

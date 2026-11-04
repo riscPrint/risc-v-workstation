@@ -542,9 +542,13 @@ For example, `CsrModel(1, 32, 0, 255, 3)` declares eight writable bits and machi
 access. Bind the observed state, read/write requests, write data, privilege,
 access-denied response, hardware-set mask and hardware-clear mask, in that order.
 Requests must include denied attempts so that `csr.access` can check the response.
-`csr.state` checks the state each active cycle. This model does not implement
-aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
-These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
+`csr.state` checks the state each active cycle. Optional disjoint `w1cMask`
+and `readClearMask` declare side effects. A read clears before a software write.
+The `legalize` table maps masked candidates to legal WARL values. Unmapped illegal
+candidates retain state. `wlrl=true` instead requires a denied response to an illegal
+candidate. This is an explicit project policy. `readOnly=true` denies every write.
+Individual read-only fields stay outside both write masks. These models do not
+decode CSR instructions or bind aliases. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
 under the `sbt` lock. The reference injects state and access faults separately
 from the expected-state model. No BOOM CSR binding is supplied.
 
@@ -558,8 +562,11 @@ an independent observation. A DUT event output alone does not supply an oracle.
 
 Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
 covers count transitions, inhibit, filtering, writes and modular wrap. It does
-not check privilege faults, RV32 half accesses, event selector CSRs or counter
-interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
+check event selector CSRs or counter interrupts. `bindAccess` checks denied
+responses from privilege and independently observed counter-enable bits. Requests
+include denied attempts. Gate the count model's software writes with its returned
+permission. `bindHalfRead` checks a selected RV32 half against an independent
+64-bit expected counter. Bind accepted responses at the same sample. It does not establish full Zihpm compliance. No core binding is supplied.
 
 ### Value connectivity model
 
@@ -588,9 +595,11 @@ The model never copies expected state from observed state.
 
 Run `sbt "testOnly spinalchecks.RegisterChecksSpec"` under the `sbt` lock.
 The reference uses separate per-bit logic and injects an observed-state fault.
-This checks accepted transactions, not bus decoding, response data, response
-ordering or latency. A project must supply those bindings and test its address
-decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
+Optional `response`, `responseValid` and `latency` bindings check read response
+data against expected state before read-clear. Each accepted read must produce
+one response after the declared fixed latency, including back-to-back reads.
+This does not check address decoding, variable response latency or bus ordering.
+A project must supply those bindings and test its address decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
 
 ### Imported SVA subset
 
@@ -599,3 +608,30 @@ See [the subset and sampling rules](../rvw/src/rvw/formal/README.md#imported-sva
 It includes inline clocked Boolean properties, `disable iff` and single-argument
 sampled value functions. Temporal implication, sequence delay and repetition remain
 unsupported. The SBY campaign runner does not depend on this frontend.
+
+### Register-map imports
+
+Run `scripts/import-map.py ipxact INPUT.xml OUTPUT.properties` with Python 3.
+For SystemRDL, install `systemrdl-compiler==1.33.0` in your environment and run
+`scripts/import-map.py systemrdl INPUT.rdl OUTPUT.properties`.
+The SystemRDL compiler elaborates the source. The importer does not parse RDL with
+regular expressions. `RegisterMap.load(new java.io.File(path))` loads the result.
+Each entry has an address and a `RegisterModel`. Use `entry.csr(minPrivilege)`
+for an architectural CSR model. Declare WARL/WLRL policies in project data.
+Bind independent transaction and hardware observations with the existing APIs.
+No bus or CSR binding is inferred from a map name.
+
+The supported subset has explicit field resets, ordinary writes, read-only
+fields, W1C and read-clear. IP-XACT uses byte addresses, explicit bit offsets and
+widths, and one complete reset per field. SystemRDL uses elaborated register
+addresses and bit positions. Unsupported side effects and listed unsupported
+constructs raise an error. This is a subset importer, not general standards
+compliance. Parameterized IP-XACT, register files, alternate registers, aliases,
+write constraints and vendor extensions need a separate adapter. The examples
+in `src/test/maps/` describe equivalent maps in both formats.
+
+Index use inference follows local combinational wires, expression mux branches,
+literal switch cases and asynchronous memory read consumers. Unknown expression
+uses and cross-component uses stay conservative. Masked switch keys and general
+clock-domain inference remain open. Local use checks do not prove application
+coverage or non-vacuity.

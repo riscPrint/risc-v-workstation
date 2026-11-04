@@ -39,7 +39,7 @@ class LocalRulesSpec extends AnyFunSuite {
       }
     }
   }
-  class Indirect extends Component {
+  class Indirect(style: Int = 0) extends Component {
     val use = in Bool()
     val idx = in UInt(2 bits)
     val bits = in Bits(3 bits)
@@ -47,14 +47,25 @@ class LocalRulesSpec extends AnyFunSuite {
     val value = out UInt(8 bits)
     val selected = bits(idx)
     val selectedValue = Vec(U(1,8 bits), U(2,8 bits), U(3,8 bits))(idx)
-    bit := Mux(use, selected, False)
-    value := Mux(use, selectedValue, U(0,8 bits))
+    if (style == 0) {
+      bit := Mux(use, selected, False)
+      value := Mux(use, selectedValue, U(0,8 bits))
+    } else if (style == 1) {
+      bit := False; value := 0
+      switch(use.asUInt) { is(U(1,1 bits)) { bit := selected; value := selectedValue } }
+    } else {
+      val mem = Mem(Bits(8 bits), 3)
+      mem.initBigInt(Seq(BigInt(1),BigInt(2),BigInt(3)))
+      val data = mem.readAsync(idx)
+      bit := Mux(use, selected, False)
+      value := Mux(use, data.asUInt, U(0,8 bits))
+    }
   }
-  test("intermediate wires and expression muxes use-gate illegal indices") {
+  for (style <- 0 to 2) test(s"intermediate use gating: expression mux, switch or async memory style=$style") {
     val (cfg, _) = SpinalChecks.install(SpinalConfig(targetDirectory = "generated/indirect"), ChecksConfig(mode = Mode.Monitor))
-    val sim = SimConfig.withConfig(cfg).withVerilator.workspacePath("simWorkspace").workspaceName("indirect").compile(new Indirect)
+    val sim = SimConfig.withConfig(cfg).withVerilator.workspacePath("simWorkspace").workspaceName(s"indirect_$style").compile(new Indirect(style))
     for ((use, idx, expected) <- Seq((false,3,Set.empty[String]), (true,2,Set.empty[String]),
-      (true,3,Set("bits.index", "vec.index")))) sim.doSim { d =>
+      (true,3,if (style == 2) Set("bits.index", "mem.index") else Set("bits.index", "vec.index")))) sim.doSim { d =>
       d.use #= use; d.idx #= idx; d.bits #= 5
       d.clockDomain.forkStimulus(10); d.clockDomain.waitSampling(8); d.clockDomain.waitFallingEdge()
       assert(ChecksSim.firings(d).map(_.check.kind).toSet == expected)

@@ -388,6 +388,12 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
     val ctxs = mutable.HashMap[Component, Ctx]()
     def ctxOf(c: Component) = ctxs.getOrElseUpdate(c, new Ctx(c))
 
+    // Cross-component consumers cannot be gated by a local use cone.
+    val externalUses = mutable.HashSet[BaseType]()
+    comps.foreach { owner => owner.dslBody.walkStatements { st => st.walkExpression {
+      case b: BaseType if b.component != owner => externalUses += b
+      case _ =>
+    } } }
     // ---- insertion ----
     for (c <- comps) {
       val f = found(c)
@@ -433,6 +439,11 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       } }
       val todo = ArrayBuffer[() => Unit]()
       // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
+      def keyValue(e: Expression): Option[BigInt] = e match {
+        case l: Literal if !l.hasPoison() => Some(l.getValue())
+        case b: BaseType => try { Some(Literal(b)) } catch { case _: Throwable => None }
+        case _ => None
+      }
       def useGuard(st: Statement): Bool = {
         def walk(scope: ScopeStatement): Bool = {
           if (scope == null || scope.parentStatement == null) True
@@ -443,6 +454,17 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
                 case e => val b = Bool(); b.assignFrom(e); w.cond = b; b
               }
               walk(w.parentScope) && (if (scope eq w.whenTrue) cond else !cond)
+            case sw: SwitchStatement if (sw.value.isInstanceOf[BaseType] || sw.value.getTypeObject == TypeUInt) &&
+                sw.elements.forall(_.keys.forall(k => keyValue(k).isDefined)) =>
+              val value = sw.value match {
+                case b: BaseType => b.asBits
+                case e => val u = UInt(); u.assignFrom(e); sw.value = u; u.asBits
+              }
+              def matches(keys: Seq[Expression]): Bool = keys.map(k =>
+                value === B(keyValue(k).get, value.getWidth bits)).foldLeft(False: Bool)(_ || _)
+              val hit = sw.elements.find(e => e.scopeStatement eq scope).map(e => matches(e.keys.toSeq))
+                .getOrElse(!matches(sw.elements.flatMap(_.keys).toSeq))
+              walk(sw.parentScope) && hit
             case other => walk(other.parentScope)
           }
         }
@@ -468,7 +490,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       def valueUse(value: Expression, seen: Set[Expression] = Set.empty): Bool = {
         if (seen(value)) True // a cycle or unknown use must not suppress a check
         else value match {
-          case b: BaseType if b.isReg || b.isOutput || b.component != c => True
+          case b: BaseType if b.isReg || b.isOutput || b.component != c || externalUses(b) => True
           case _ =>
             consumers.get(value).map(_.toSeq.distinct.map { st =>
               val sink = st match {
@@ -478,7 +500,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               val roots = ArrayBuffer[Bool]()
               st.foreachDrivingExpression(e => roots += expressionUse(e, value))
               useGuard(st) && roots.foldLeft(False: Bool)(_ || _) && sink
-            }.foldLeft(False: Bool)(_ || _)).getOrElse(True)
+            }.foldLeft(False: Bool)(_ || _)).getOrElse(value match { case _: BaseType => False; case _ => True })
         }
       }
       def selectedUse(st: Statement, selected: Expression): Bool = {
@@ -681,7 +703,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
                 case e => val w = UInt().setName(uniqueName(s"chk_${sanitize(obj)}_addr")); w.assignFrom(e); setAddr(w); w
               }
               val e: Bool = en match {
-                case null => True
+                case null => port match { case p: MemReadAsync => valueUse(p); case _ => True }
                 case b: Bool => b
                 case x => val w = Bool().setName(uniqueName(s"chk_${sanitize(obj)}_en")); w.assignFrom(x); setEn(w); w
               }
