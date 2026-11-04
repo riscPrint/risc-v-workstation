@@ -57,6 +57,25 @@ The same assertions run on Spike before the DUT. This is a functional check.
 These ELF tests do not check concurrent observers or external aq/rl ordering.
 The fixture below adds concurrent observers and injected faults.
 
+Select `--suite amo-fault` in `run.py` for aligned access-fault tests. This is
+opt-in. The target must support a locked NAPOT PMP region. The program makes a
+64-byte region readable and not writable. It checks the effective PMP setting
+before testing all nine AMOs, each width and aq/rl encoding. Each AMO must raise
+store/AMO access fault (cause 7). The handler checks `mepc` and `mtval`, then
+returns past that instruction. The test checks that the destination register,
+operand and every adjacent byte in the protected region stay unchanged. These
+are precise access-fault checks. They do not test misaligned accesses or imply
+concurrent aq/rl ordering. Missing PMP support is a failure for this selected
+platform test. It must not be silently skipped or treated as a generic ISA fault
+policy.
+
+```sh
+rvw/.venv/bin/python RiscvSim/tests/ordering/run.py --out /tmp/amo-fault \
+  --xlen 64 --seeds 7 --suite amo-fault
+# Add --adapter /absolute/path/to/run.sh for the DUT.
+```
+
+
 ## FENCE and independent observation
 
 The FENCE program exercises 49 predecessor/successor combinations, with seeded
