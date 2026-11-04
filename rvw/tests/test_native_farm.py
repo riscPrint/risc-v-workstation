@@ -65,7 +65,8 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     if not options:
         pytest.skip("set RVW_TEST_SSH_OPTIONS for a native localhost SSH test")
     hosts = [{"name": name, "address": "localhost", "python": sys.executable,
-              "ssh_options": json.loads(options), "resources": {"memory_bytes": 1024}} for name in ("host-a", "host-b")]
+              "ssh_options": json.loads(options), "resources": {"memory_bytes": 1024},
+              "limits": {"file_bytes": 1048576, "open_files": 256}} for name in ("host-a", "host-b")]
     manifest = tmp_path / "manifest.jsonl"
     rows = []
     for i in range(4):
@@ -77,6 +78,7 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     assert report["expected_cells"] == 4
     assert report["status"] == ("inconclusive" if state == "missing" else "complete"), report
     assert all(s["reservation"]["cpu"] == 2 for s in report["shards"])
+    assert all(s["limits"] == hosts[0]["limits"] for s in report["shards"])
     if state != "missing":
         assert [c["status"] for s in report["shards"] for c in s["cells"]] == [state] * 4
     hosts[1]["ssh_options"] = ["-p", "1"]

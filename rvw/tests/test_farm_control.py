@@ -204,3 +204,24 @@ def test_native_limits_refuse_unsupported_or_bad_values(monkeypatch):
     monkeypatch.setattr(limits.sys, 'platform', 'darwin')
     with pytest.raises(ValueError, match='unsupported'):
         limits.validate({'address_space_bytes': 1000000000})
+
+
+@pytest.mark.parametrize('timeout', [float('nan'), float('inf'), 0, -1, True])
+def test_capacity_wait_requires_finite_timeout(tmp_path, timeout):
+    with pytest.raises(ValueError, match='finite'):
+        with reserve({}, timeout, tmp_path):
+            pass
+
+
+def test_dead_wait_ticket_removed_but_active_reservation_retained(tmp_path):
+    # Get a PID that has exited and been reaped, rather than guessing a PID.
+    child = subprocess.Popen([sys.executable, '-c', 'pass'])
+    child.wait(timeout=5)
+    (tmp_path / 'queue.json').write_text(json.dumps([{'token': 'dead', 'pid': child.pid}]))
+    active = {'token': 'dead-active', 'pid': child.pid, 'cpu': 1, 'memory_bytes': 0, 'locks': ['build']}
+    (tmp_path / 'reservations.json').write_text(json.dumps([active]))
+    with pytest.raises(ValueError, match='wait timeout'):
+        with reserve({'locks': ['build']}, .1, tmp_path):
+            pass
+    assert json.loads((tmp_path / 'queue.json').read_text()) == []
+    assert json.loads((tmp_path / 'reservations.json').read_text()) == [active]

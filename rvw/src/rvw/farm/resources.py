@@ -25,6 +25,9 @@ def reserve(resources, timeout, root=None):
     config = Path.home() / '.config/rvw/farm-capacity.json'
     capacity = json.loads(config.read_text()) if config.exists() else {
         'cpu': max(1, (os.cpu_count() or 1) - 1), 'memory_bytes': host_memory() // 2}
+    if (not isinstance(capacity, dict) or any(type(capacity.get(k)) is not int or capacity[k] < minimum
+            for k, minimum in (('cpu', 1), ('memory_bytes', 0)))):
+        raise ValueError('invalid host capacity')
     cpu, memory = resources.get('cpu', 1), resources.get('memory_bytes', 0)
     locks = resources.get('locks', [])
     if (type(cpu) is not int or cpu < 1 or type(memory) is not int or memory < 0
@@ -34,7 +37,6 @@ def reserve(resources, timeout, root=None):
     if cpu > capacity['cpu'] or memory > capacity['memory_bytes']:
         raise ValueError('reservation exceeds host capacity')
     start = time.monotonic()
-    acquired = False
     token = uuid.uuid4().hex
     def update(release=False):
         with (root / 'capacity.lock').open('a+') as lock:
@@ -75,7 +77,6 @@ def reserve(resources, timeout, root=None):
             if time.monotonic() - start >= timeout:
                 raise ValueError('host capacity wait timeout')
             time.sleep(.1)
-        acquired = True
         yield dict(cpu=cpu, memory_bytes=memory, locks=locks, queued_s=time.monotonic()-start,
                    enforcement='cooperative reservation', scheduling='fifo')
     finally:
