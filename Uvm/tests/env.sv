@@ -23,16 +23,23 @@ package vip;
    function new(string name="stimulus"); super.new(name); endfunction
    task body();
      item t;
+     bit [31:0] previous_data;
+     bit data_changed;
      for(int i=0;i<40;i++) begin
        t=item::type_id::create("t");
        start_item(t);
        if(!t.randomize()) `uvm_fatal("RANDOM","randomize failed")
        if (!(t.opcode inside {0,4}) || !(t.address inside {0,4,8,12}))
          `uvm_fatal("RANDOM","constraint violation")
+       if(i>=8 && t.data!=previous_data) data_changed=1;
+       previous_data=t.data;
        // Eight directed transactions guarantee each opcode/address bin.
        if(i<8) begin t.opcode=i<4 ? 0 : 4; t.address=(i%4)*4; end
        finish_item(t);
      end
+     if(!data_changed) `uvm_fatal("RANDOM","random data did not change")
+     if(t.randomize() with { opcode==3; })
+       `uvm_fatal("RANDOM","unsatisfiable constraint was accepted")
    endtask
  endclass
 

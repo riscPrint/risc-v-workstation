@@ -39,7 +39,7 @@ does not select a licence for the workstation project (#37).
 | C3 test ID | Checked behavior |
 |---|---|
 | `phases_config_factory_tlm` | Build, connect, run, check and report phases; timed run objection; virtual interface through config DB; factory creation; sequencer/driver handshake; analysis port to subscriber |
-| `constrained_random` | Forty item randomizations; legal opcode and aligned address constraints checked before directed overrides; randomized data and source |
+| `constrained_random` | Forty item randomizations; legal opcode and aligned address constraints checked before directed overrides; randomized data and source; changed data; unsatisfiable constraint must fail |
 | `functional_coverage` | SV covergroup sample; opcode and address coverpoints; cross; `get_inst_coverage()` must return 100%; independent eight-bin bitmap must also be full |
 | `tlul` | Four-word RAM; Get and PutFullData; aligned 32-bit transfers; one outstanding request; source echo and D opcode/data checks |
 | `rvfi` | Synthetic load observation: valid, order, instruction, memory address/data and destination data checked against an independent memory model |
