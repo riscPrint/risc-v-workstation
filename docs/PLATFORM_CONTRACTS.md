@@ -2302,3 +2302,15 @@ comparison with repository HEAD bytes. Rows report `committed`, `modified`,
 not a generator-origin or adapter-conformance claim. `source.identity_complete`
 remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
+
+### Unspecified mscratch reset bits in C2 comparison
+
+For a declared trace from reset, CSR synchronization can resolve the unknown
+reset bits of `mscratch` (0x340) from its first read or C2 CSR snapshot.
+`rvw.cosim/1.recent_synchronizations` records `reason: csr_reset_unknown`,
+`csr`, `mask`, `reference`, `core`, `order` and `source` (`rd_wdata|csr_state`).
+The reference takes only unknown bits. Full writes clear the unknown mask;
+set/clear writes clear their written bits from that mask. Subsequent observations
+remain strict. The rule is disabled by strict CSR synchronization or by
+`trace_from_reset=false`. Unsupported reference synchronization is an error.
+No other CSR reset state is inferred by this rule. C1/C2 formats do not change.

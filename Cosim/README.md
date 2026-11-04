@@ -765,3 +765,19 @@ identity is inferred from that prefix. Reproduction metadata captures the
 launch executable identity and original argument list. Adapter scripts and
 build dependencies need their own C1 provenance. A complete trace match is
 not a C1 program-pass or clean-revision acceptance claim.
+
+### Unspecified mscratch reset state
+
+For a trace from reset, the checker treats only the reset bits of `mscratch`
+(CSR 0x340) as unknown. The first read or CSR snapshot supplies those bits from
+DUT evidence. The checker records `reason: csr_reset_unknown`, CSR, bit mask,
+reference value, DUT value and observation source in `recent_synchronizations`.
+It also updates the reference CSR so later reads and read-modify-write effects
+remain checked. A full write before observation removes the unknown state.
+A set/clear write makes its written bits known. Those bits stay strict.
+
+This rule uses the existing `csr` synchronization kind. `--strict` or
+`--strict-sync csr` disables it. Traces with `trace_from_reset=false` remain
+strict for this rule. Missing reference support gives an error. No other CSR,
+software-written bit, trap, instruction, PC or memory effect is masked.
+The Spike shim uses ABI version 5 and must be rebuilt with `Cosim/build.sh`.
