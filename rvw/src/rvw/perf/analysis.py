@@ -281,6 +281,11 @@ def render(report, top=10):
         lines.append(f"result.json cross-check: cycles delta={x['cycles_delta']:+d}, instret delta={x['instret_delta']:+d}, "
                      f"IPC delta={x['ipc_delta']:+.6f}; exact match={x['exact_counter_match']}.")
     lines.extend("Warning: " + w for w in report["warnings"])
+    if "predictions" in report:
+        predictions = report["predictions"]
+        lines.append(f"Observed prediction outcomes: {predictions['outcomes']}")
+        for row in predictions["by_context"]:
+            lines.append(f"  {row['predictor']} {row['kind']} warmup={row['warmup']} alias={row['alias']} context={row['context']}: {row['correct']}/{row['outcomes']} correct; recovery={row['recovery_cycles']}; wrong-path={row['wrong_path_instructions']}")
     if "stall_causes" in report:
         causes = report["stall_causes"]
         lines.append(f"Measured stall cycles: {causes['measured_cycles']}; overlap cycles: {causes['overlap_cycles']}; "
