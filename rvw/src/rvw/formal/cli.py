@@ -75,6 +75,31 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
+    from . import invariants, contracts
+    template.add_argument("kind", choices=invariants.NAMES)
+    template.add_argument("--entries", type=int, default=4)
+    template.add_argument("--width", type=int, default=3)
+    template.add_argument("--out", required=True)
+    template.set_defaults(func=invariants.run)
+    contract = s.add_parser("contracts", help="check neighbour guarantees and closed composition")
+    contract.add_argument("manifest")
+    contract.add_argument("--out", required=True)
+    contract.add_argument("--budget", type=float, default=60)
+    contract.add_argument("--depth", type=int, default=12)
+    contract.add_argument("--engine", default="abc:pdr")
+    contract.add_argument("--json", action="store_true")
+    contract.set_defaults(func=contracts.run)
+
+    strengthen = s.add_parser("strengthen", help="mine unsigned bounds and prove candidates before strengthening")
+    from . import mining
+    strengthen.add_argument("manifest")
+    strengthen.add_argument("--out", required=True)
+    strengthen.add_argument("--budget", type=float, default=60)
+    strengthen.add_argument("--depth", type=int, default=12)
+    strengthen.add_argument("--engine", default="smtbmc:yices")
+    strengthen.add_argument("--json", action="store_true")
+    strengthen.set_defaults(func=mining.run)
     from . import apps, bench
     app = s.add_parser("apps", help="table-driven connectivity, CSR, progress and UNR checks")
     app.add_argument("manifest")
@@ -123,6 +148,7 @@ def register(sub) -> None:
 
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
+    proof.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     proof.add_argument("--reset-cycles", type=int, default=1)
     proof.add_argument("--free-reset", action="store_true")
@@ -152,6 +178,7 @@ def register(sub) -> None:
     _common(b, 20)
     b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
+    b.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
