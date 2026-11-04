@@ -214,3 +214,16 @@ def test_vex_formal_snapshot_uses_compressed_alignment():
     example = Path(__file__).resolve().parents[2] / 'examples/vexriscv/formal/rvw.toml'
     settings = tomllib.loads(example.read_text())['riscv_formal']
     assert settings['isa'] == 'rv32ic'
+
+
+def test_identity_binds_settings_and_original_wrapper(cfg, tmp_path):
+    import hashlib
+    _, first = prepare(cfg, tmp_path / 'first')
+    cfg['check_options'] = {'insn_add_ch0': {'cycles': [19]}}
+    _, second = prepare(cfg, tmp_path / 'second')
+    assert first['settings_sha256'] != second['settings_sha256']
+    rows = first['committed_inputs']['files']
+    wrapper = next(r for r in rows if r['path'] == cfg['wrapper'])
+    assert wrapper['sha256'] == hashlib.sha256(Path(cfg['wrapper']).read_bytes()).hexdigest()
+    assert wrapper['sha256'] != first[cfg['wrapper']]  # expanded wrapper is separately hashed
+    assert not first['committed_inputs']['all_committed']

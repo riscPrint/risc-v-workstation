@@ -12,7 +12,7 @@ from rvw.formal.sva import validate_sources
 
 
 @pytest.mark.parametrize('body', [
-    'a |-> b', 'a |=> b', 'a ##1 b', 'a[*2]', '$past(a, 2)',
+    'a |-> b |=> a', 'a |=> b', '(a |-> b)', 'a ##1 b', 'a[*2]', '$past(a, 2)',
     'strong(a)', '@(negedge clk) a', 'a until b', 'a and b',
 ])
 def test_refuse_unqualified_constructs(tmp_path, body):
@@ -42,6 +42,10 @@ CASES = {
     'stable': ('!valid || $stable(a) == (a == prev)', '!valid || $stable(a) != (a == prev)'),
     'changed': ('!valid || $changed(a) == (a != prev)', '!valid || $changed(a) != (a != prev)'),
     'assume': ('a == 2', 'a != 2'),
+    'overlap': ('a == 2 |-> a[1]', 'a == 2 |-> !a[1]'),
+    'overlap_assume': ('!a[0] || a[1]', 'a[0] && !a[1]'),
+    'overlap_disable': ('disable iff (reset) a == 2 |-> a[1]',
+                        'disable iff (reset) a == 2 |-> !a[1]'),
 }
 
 
@@ -54,6 +58,8 @@ def test_native_semantics(tmp_path, construct, negative, engine):
     source = tmp_path / 'top.sv'
     expr = CASES[construct][negative]
     body = f'count != 3 || ({expr})' if negative else f'count < 7 && ({expr})'
+    if construct in ('overlap', 'overlap_disable'):
+        body = expr
     if construct == 'disable':
         expr = CASES['boolean'][negative]
         body = 'disable iff (reset) ' + (f'count != 3 || ({expr})' if negative else f'count < 7 && ({expr})')
@@ -65,7 +71,8 @@ reg [3:0] count = 0;
 always @(posedge clk) begin
   q <= a; expected <= a; prev <= a; valid <= 1; count <= count + 1;
 end
-''' + ('assume property (@(posedge clk) a == 2);\n' if construct == 'assume' else '') +
+''' + ('assume property (@(posedge clk) a == 2);\n' if construct == 'assume' else
+        'assume property (@(posedge clk) a[0] |-> a[1]);\n' if construct == 'overlap_assume' else '') +
         f'assert property (@(posedge clk) {body});\nendmodule\n')
     if construct == 'disable':
         source.write_text(source.read_text().replace('expected = 0', 'expected = 1'))
@@ -81,7 +88,7 @@ end
     assert data['assertions'] == 1
 
 
-@pytest.mark.parametrize('body', ['a |=> a', 'a ##1 a', 'a[*2]', '@(negedge clk) a'])
+@pytest.mark.parametrize('body', ['a |=> a |-> a', 'a ##1 a', 'a[*2]', '@(negedge clk) a'])
 def test_native_refusal_before_sby(tmp_path, body):
     source = tmp_path / 'bad.sv'
     source.write_text(f'module top(input clk,a); assert property (@(posedge clk) {body}); endmodule')
@@ -112,3 +119,27 @@ def test_slang_dependency_report_is_required_and_closed(tmp_path):
     dependency.write_text(dependency.read_text() + '/outside/hidden.sv\n')
     with pytest.raises(SystemExit):
         snapshot.check_frontend()
+
+
+@pytest.mark.parametrize('expr', ['a |-> b', '(a && b) |-> $past(a)',
+                                  'disable iff (reset) a |-> b'])
+def test_accept_simple_implication_syntax(tmp_path, expr):
+    source = tmp_path / 'top.sv'
+    source.write_text('module top(input clk,reset,a,b); assert property (@(posedge clk) ' + expr + '); endmodule')
+    validate_sources([source], 'clk')
+
+
+@pytest.mark.parametrize('body,accepted', [
+    ('a |-> b', True), ('a |=> b', False),
+    ('a[*2] |-> b', False), ('a |-> b[*2]', False),
+    ('(a |-> b) |-> a', False),
+])
+def test_native_frontend_boundary_without_local_guard(tmp_path, body, accepted):
+    plugin = os.environ.get('RVW_SLANG')
+    if not plugin or not shutil.which('yosys'):
+        pytest.skip('needs source-built native slang')
+    source = tmp_path / 'top.sv'
+    source.write_text(f'module top(input clk,a,b); assert property (@(posedge clk) {body}); endmodule')
+    result = run_group(['yosys', '-Q', '-T', '-m', plugin, '-p', f'read_slang --top top {source}'],
+                       capture=True, timeout=15)
+    assert (result.returncode == 0) == accepted, result.stdout + result.stderr

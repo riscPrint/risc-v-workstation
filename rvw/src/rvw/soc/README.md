@@ -168,3 +168,31 @@ This is a register subset import, not a lossless IP-XACT round trip.
 
 The subset follows the [Accellera 1685-2014 memory map schema](https://www.accellera.org/XMLSchema/IPXACT/1685-2014/memoryMap.xsd).
 The importer checks its subset; it does not run full XSD validation.
+
+### Paired bridge beat samples
+
+Bridge bindings can set `byteorder` and `software_byteorder` to `little` or
+`big`. Both default to `little`. An extended transaction record keeps `bridge`,
+`software_address`, `bus_address` and `size`. It adds `write` (boolean), `data`
+(the software value), `error` (the software response) and `beats`.
+Each beat has `address` (aligned local bus word address), `data` (full bus word),
+`mask` (one bit per byte lane, indexed by ascending address), `write`, and `error`.
+Each beat direction must match the software operation.
+Both data values accept integer strings. A sample covers 1 to 64 software bytes.
+
+The checker compares the selected byte lanes with the software byte range.
+It detects duplicate, missing and extra lanes. Transfers can span several bus
+words. It compares byte values through each endpoint's byte order. It compares
+the software error with the OR of bus errors. Failed response data is unspecified.
+
+Optional `register` has independently observed `before` and `after` values.
+It requires an exact full-width mapped register access. The checker uses the
+map's access policy, read-clear and write-one-to-clear rules to compute the
+expected next value. Failed accesses must keep the value. Autonomous registers,
+partial register accesses and multi-master interference need a richer model.
+
+The capture producer must pair the same operation and observe both endpoints.
+These fields do not establish capture provenance. Fixture tests check comparison
+rules only. The supplied BOOM and VexRiscv captures do not yet emit these fields.
+A matching sample remains inconclusive. Real decoder bindings, source freshness
+and complete decode coverage remain open under #134.
