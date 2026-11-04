@@ -2108,3 +2108,6 @@ checks no translation. State comparison alone does not prove page walks.
 The Spike walker checks successful RV64 guest fetch and scalar load mappings
 with Bare/Sv39/Sv39x4. It refuses stores, faults and unsupported PTEs. HS
 CSR addresses above always mean nonvirtual host state, including while in VS.
+
+`state_coverage.two_stage_translations` counts matched translation records.
+A zero count makes no translation comparison claim.

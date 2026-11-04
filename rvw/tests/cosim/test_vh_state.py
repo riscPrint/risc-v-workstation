@@ -148,7 +148,9 @@ def test_spike_only_two_stage(tmp_path, tmp_path_factory):
     trace.write_text('\n'.join(map(json.dumps, rows))+'\n')
     model = Spike(p, elf)
     try:
-        assert check(trace, model, p, sync=())['status'] == 'match'
+        result = check(trace, model, p, sync=())
+        assert result['status'] == 'match'
+        assert result['state_coverage']['two_stage_translations'] == len(translated)
     finally:
         model.close()
     translated[0]['hypervisor']['translations'][0]['gpa'] = '0x0'
@@ -158,3 +160,35 @@ def test_spike_only_two_stage(tmp_path, tmp_path_factory):
         assert 'hypervisor.translations' in check(trace, model, p, sync=())['mismatch']['differences']
     finally:
         model.close()
+
+
+@pytest.mark.parametrize('field', ['vstart', 'vl', 'vtype', 'vcsr', 'vs', 'regs'])
+def test_partial_vector_fields_refused(field):
+    a = state()
+    del a['vector'][field]
+    with pytest.raises(ValueError, match='partial vector'):
+        state_fields(a, header())
+
+
+def test_v1_vector_cannot_match_integer_only():
+    h = header()
+    h['schema'] = 'rvw.rvfi/1'
+    with pytest.raises(ValueError, match='requires C2/2'):
+        header_fields(h)
+
+
+def test_translation_state_validates_all_addresses():
+    a = state()
+    a['hypervisor']['translations'] = [dict(va='0x1', gpa='0x2', pa='unknown', access='load')]
+    with pytest.raises(ValueError, match='hex string'):
+        state_fields(a, header())
+
+
+@pytest.mark.parametrize('letter', ['v', 'h'])
+def test_reference_isa_cannot_hide_extension_state(letter):
+    from rvw.cosim.platform import Platform
+    from rvw.cosim.spike import Spike
+    p = Platform('reference', 64, 'rv64imafdc_zicsr', 0x80000000, [(0x80000000, 4096)], [],
+                 reference_isa='rv64imafdc'+letter+'_zicsr')
+    with pytest.raises(ValueError, match='preserve V/H'):
+        Spike(p, 'unused.elf', shim=None)

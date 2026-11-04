@@ -175,6 +175,10 @@ def load_shim(shim):
 
 class Spike:
     def __init__(self, platform, elf, *, shim):
+        from .extensions import has_extension
+        for letter in ("v", "h"):
+            if has_extension(platform.reference_isa or platform.isa, letter) != has_extension(platform.isa, letter):
+                raise ValueError("reference ISA must preserve V/H state requirements")
         self.platform = platform
         self.regs = [0] * 32
         self.elf = Elf(elf)

@@ -607,7 +607,7 @@ It does not schedule ELF suites or earn C4 acceptance.
 Use the [CHIPS Alliance generator](https://github.com/chipsalliance/riscv-vector-tests)
 in a separate checkout. Build machine-mode tests for the project's XLEN, VLEN,
 ELEN and extensions. Use its `make help` for generation options. Its normal
-self-checking output is `out/v<VLEN>x<XLEN>m/bin/stage2/`.
+self-checking output is `out/v<VLEN>x<XLEN>machine/bin/stage2/`.
 Do not use stage1 binaries with the stock Spike shim. They contain generator
 instructions that the stock reference does not implement.
 
@@ -616,7 +616,7 @@ Any project whose `cosim.platform` ISA declares V can select these built ELFs:
 ```toml
 [suites.vector]
 kind = "elf-dir"
-dir = "/path/to/riscv-vector-tests/out/v128x64m/bin/stage2"
+dir = "/path/to/riscv-vector-tests/out/v128x64machine/bin/stage2"
 glob = "*"
 max_cycles = 1000000
 ```
@@ -632,7 +632,7 @@ No V-capable RTL adapter or full upstream suite run is claimed here.
 
 The upstream suite has no coverage guarantees. It documents gaps for tails,
 masks, fault-only-first, vstart and register overlap. Our bounded native tests
-check mask v0, arithmetic, vstart reset and guest transitions separately.
+check mask v0, arithmetic, an explicit vstart clear and guest transitions separately.
 Vector memory operations with multiple accesses remain outside the scalar
 memory effect interface and are refused by Spike. These limits can make a
 full vector suite inconclusive. They must not be converted to passes.

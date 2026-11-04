@@ -102,6 +102,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     recent = deque(maxlen=history)
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
+    translation_count = 0
     instret_synced = False
     sync_recent = deque(maxlen=history)
     quirks = deque(maxlen=history)
@@ -141,6 +142,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                                    "fp": trace.header["schema"] == "rvw.rvfi/2" and last_order is not None,
                                    "vector": trace.header.get("vector") if last_order is not None else None,
                                    "hypervisor": bool(trace.header.get("hypervisor") and last_order is not None),
+                                   "two_stage_translations": translation_count,
                                    "csr_snapshot": trace.header.get("csr_snapshot", [])},
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
                 "trace_complete": ended, "end_status": end_status,
@@ -331,6 +333,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     diff["rd_wdata"] = {"expected": expected["rd_wdata"], "actual": actual["rd_wdata"]}
             if diff:
                 return mismatch(actual, expected, diff, count)
+            translation_count += len(actual.get("hypervisor", {}).get("translations", []))
             if sync_mask is not None and actual["rd_wdata"] == expected["rd_wdata"]:
                 sync_reason = None   # the masked bits agree: nothing to take from the core
             if sync_reason and not hasattr(model, "set_reg"):
