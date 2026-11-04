@@ -1395,8 +1395,10 @@ The objective averages relative cycle error and eligible event errors per
 workload, then averages workloads. `selected_errors` includes each event's
 resolved role. `headline` includes `metric=cycle_relative_error`, per-workload
 comparison rows (cycle gap and IPC ratio), and mean absolute cycle error per split.
-Fewer than three training workloads, constant training cycle targets, or equal
-scores across multiple candidates give status `inconclusive` with a reason. Only training scores
+Fewer than three training workloads, constant training cycle or eligible event targets, or equal
+scores across multiple candidates give status `inconclusive` with a reason.
+`event_fit` lists eligible events and constant targets. No eligible events or
+insufficient target variation gives event-fit status `inconclusive`. Only training scores
 select the winner. Lexical candidate names break ties. No acceptance or
 confidence claim follows from this report. The caller must keep held-out
 workloads separate when creating candidates. This offline command runs no parameter search.

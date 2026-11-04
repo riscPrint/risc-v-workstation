@@ -137,3 +137,33 @@ def test_fixed_instruction_counts_cannot_hide_timing_gap(plan):
 
 def test_constant_training_targets_are_inconclusive(plan):
     assert fit(plan)['status'] == 'inconclusive'
+
+
+@pytest.mark.parametrize('event', [
+    {'name': 'custom', 'rtl_metric': 'custom', 'gem5_stat': 'simInsts', 'unit': 'count'},
+    {'name': 'loads', 'rtl_metric': 'custom', 'gem5_stat': 'custom', 'unit': 'count'},
+    {'name': 'custom', 'rtl_metric': 'roi_instret', 'gem5_stat': 'custom', 'unit': 'count'},
+    {'name': 'custom', 'rtl_metric': 'custom', 'gem5_stat': 'system.cpu.commitStats0.numInsts', 'unit': 'count'},
+])
+def test_known_fixed_events_cannot_opt_into_objective(event):
+    from rvw.arch.fitting import event_role, objective
+    event['role'] = 'fit'
+    role = event_role(event)
+    assert role == 'consistency'
+    assert objective({'cycles': 100}, {'cycles': 160},
+                     [{'role': role, 'error': 0}]) == .6
+
+
+def test_perfect_event_counts_are_not_perfect_fit(plan):
+    spec = read_json(plan)
+    spec['events'][0]['unit'] = 'instructions'
+    write_json(plan, spec)
+    model = read_json(Path(spec['candidates']['synthetic']))
+    for row in model['benchmarks']:
+        path = Path(row['evidence']).with_name('stats.txt')
+        path.write_text(path.read_text().replace('branch_misses 12', 'branch_misses 10'))
+    result = fit(plan)
+    assert all(v['error'] == 0 for values in result['selected_errors'].values() for v in values)
+    assert result['training_scores']['synthetic'] == .5
+    assert result['held_out_score'] == .75
+    assert result['status'] == 'inconclusive'

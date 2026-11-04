@@ -212,7 +212,7 @@ Only the winner gets a held-out score. Splits must be nonempty, disjoint and
 cover exactly the report workloads. Training and held-out ELF hashes must also
 be disjoint. Renaming the same ELF does not make an unseen workload.
 The report is `inconclusive` for fewer than three training workloads,
-constant training cycle targets, or tied scores across multiple candidates.
+constant training cycle or eligible event targets, or tied scores across multiple candidates.
 A selected candidate in this report does not establish a useful fit.
 It gives no fidelity threshold, confidence interval or correctness verdict.
 A single workload cannot establish general model fidelity.

@@ -110,9 +110,15 @@ def fit(plan, project=None):
     training = {name: score(name, spec['train']) for name in candidates}
     winner = min(training, key=lambda name: (training[name], name))
     targets = [rows[w]['cycles'] for w in spec['train']]
-    degenerate = len(targets) < 3 or len(set(targets)) == 1 or (len(training) > 1 and len(set(training.values())) == 1)
+    fit_targets = {event['name']: [v['rtl'] for w in spec['train']
+                   for v in errors[winner][w] if v['event'] == event['name']]
+                   for event in events if event_role(event) == 'fit'}
+    constant_events = [name for name, values in fit_targets.items() if len(set(values)) < 2]
+    degenerate = bool(constant_events) or len(targets) < 3 or len(set(targets)) == 1 or (len(training) > 1 and len(set(training.values())) == 1)
     return {'schema': 'rvw.arch-fit/1', 'status': 'inconclusive' if degenerate else 'reported',
             'reason': 'Degenerate or insufficient training targets/candidate variation.' if degenerate else '',
+            'event_fit': {'status': 'inconclusive' if not fit_targets or constant_events or len(targets) < 3 else 'reported',
+                          'constant_targets': constant_events, 'eligible_events': list(fit_targets)},
             'headline': {'metric': 'cycle_relative_error', 'benchmarks': timings[winner],
                          'splits': {split: sum(abs(r['cycle_gap_percent']) / 100
                              for r in timings[winner] if r['id'] in names) / len(names)
