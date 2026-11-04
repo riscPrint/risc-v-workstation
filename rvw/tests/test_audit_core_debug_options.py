@@ -37,3 +37,29 @@ for job in jobs:
         reducer = object.__new__(Reducer)
         reducer.sig = 'assert:Core.scala:42'
         assert reducer.matches(attempt.run)[0] is None
+
+
+@pytest.mark.parametrize('batched', [False, True])
+def test_debug_attempt_refuses_result_for_other_elf(tmp_path, monkeypatch, batched):
+    monkeypatch.setenv('RVW_NO_LOCK', '1')
+    monkeypatch.delenv('RVW_NO_RUN_MANY', raising=False)
+    elf = tmp_path / 'wanted.elf'
+    elf.write_bytes(b'wanted program')
+    script = tmp_path / 'other_elf.py'
+    script.write_text('''import json, sys, hashlib
+from pathlib import Path
+args = sys.argv
+jobs = ([json.loads(line) for line in Path(args[args.index('--manifest') + 1]).read_text().splitlines()]
+        if args[1] == 'run-many' else [{'out': args[args.index('--out') + 1]}])
+for job in jobs:
+    Path(job['out'], 'result.json').write_text(json.dumps({
+        'schema': 'rvw.run/1', 'status': 'assert', 'cycles': 10,
+        'elf_sha256': hashlib.sha256(b'other program').hexdigest(),
+        'message': 'Core.scala:42 assertion'}))
+''')
+    cmd = Command(exe=[sys.executable, str(script)], opts={'--elf': str(elf)})
+    attempts = execute_many([cmd, cmd], [tmp_path / 'a', tmp_path / 'b']) if batched else [execute(cmd, tmp_path / 'a')]
+    for attempt in attempts:
+        assert attempt.run is not None
+        assert attempt.run.inconclusive
+        assert 'ELF' in attempt.run.inconclusive

@@ -201,6 +201,8 @@ Optional `"inconclusive": "<reason>"` marks a result the adapter cannot vouch fo
 it could not attribute to this run (RiscvSim: an `assert` printed while other simulations ran,
 pending or failing its serial rerun; RiscvSim's `details.serial_rerun.attributed: false` and a
 `details.concurrent` `assert`/`rvfi_error` without `serial_rerun` are read the same way).
+Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
+A missing or different hash makes the attempt inconclusive.
 Debug reruns check each explicitly requested C1 seed, config, max_cycles and mem_latency
 against the returned result. A missing or different value marks the attempt inconclusive.
 It cannot reproduce or rule out the requested failure.

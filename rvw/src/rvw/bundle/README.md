@@ -429,3 +429,6 @@ commit. Use a compatible adapter before repeating the comparison. Do not use
 Debug reruns refuse conclusive evidence when the returned C1 seed, config,
 max_cycles or mem_latency differs from an explicitly requested value.
 This rule applies to bundle, reduce and bisect, including run-many batches.
+
+Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
+A missing or different hash makes the attempt inconclusive.

@@ -271,6 +271,15 @@ def _collect(d: Path, started: float, cmd: Command | None = None) -> tuple[Run |
         from .inputs import new_capture
         run = open_run(d, capture=new_capture())
         if cmd is not None:
+            elf = cmd.get("elf")
+            if elf is not None:
+                import hashlib
+                expected = hashlib.sha256(Path(elf).read_bytes()).hexdigest()
+                if run.get("elf_sha256") != expected:
+                    why = "C1 ELF hash is missing or differs from requested ELF"
+                    run.result.extra["inconclusive"] = why
+                    run.data["inconclusive"] = why
+                    return run, why
             for name in ("seed", "config", "max_cycles", "mem_latency"):
                 wanted = cmd.get(name)
                 if wanted is None:
