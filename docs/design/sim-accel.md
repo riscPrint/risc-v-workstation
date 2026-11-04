@@ -4,8 +4,7 @@
 
 Epic: [#295](https://github.com/riscPrint/risc-v-workstation/issues/295).
 Measure BOOM medium with the existing C1 adapter. Compare one and two
-Verilator runtime threads on a long deterministic ELF. Start with one and two
-threads. Keep the four-thread trial in the follow-up matrix. Keep the current default.
+Verilator runtime threads on a long deterministic ELF. Keep the four-thread trial in the follow-up matrix. Keep the current default.
 Offer a measured winner only as an explicit opt-in. A candidate must have
 bit-identical complete C2 files, equal terminal results, and a paired speedup
 95% confidence interval whose lower bound exceeds one. If no candidate meets
@@ -46,6 +45,9 @@ execution. Generic comparison code must not contain BOOM names or presets.
 Put workload and preset choices in the BOOM example or experiment invocation.
 
 Phase 1 uses the existing `SPINAL_VERILATOR_FLAGS='--threads N'` opt-in.
+The BOOM launcher `RiscvSim/boom/run-medium-fast.sh` fixes preset medium and
+two threads. It refuses preset and thread overrides, then calls the standard
+C1 runner. Ordinary invocations keep their current behavior.
 Each treatment keeps one native identity. Set build parallelism explicitly and
 keep it fixed. Disable waves, coverage and Konata for throughput comparisons.
 Keep complete C2 tracing enabled on both sides. Rates therefore include trace

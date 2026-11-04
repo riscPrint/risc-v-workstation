@@ -11,7 +11,8 @@ Simulation runner for Spinal RISC-V cores, implementing the run contract (C1) an
 - `boom/` has a separate sbt build for BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
 
 Status: `build`, `run`, `run-many` and `info` work on BOOM `small` (see "Verified"). The other
-presets build through the same code but were not run.
+presets use the same code. Medium has a bounded throughput profile; large and
+larger presets remain unqualified here.
 
 The adapters require Verilator on `PATH`. Source the core environment script or
 add the installed tools to `PATH` before use. `tests/programs/build.sh` uses

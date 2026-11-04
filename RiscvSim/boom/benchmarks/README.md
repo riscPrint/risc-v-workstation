@@ -30,5 +30,5 @@ override or inherited thread flags. Other run options pass through unchanged.
 The normal `run.sh` command keeps its current behavior.
 
 Qualification applies to the workload, preset, toolchain and host in the PR.
-Recheck on another host or workload. Four threads, BOOM large, hierarchical
+Recheck on another host or workload. Other native flags require a new comparison. Four threads, BOOM large, hierarchical
 builds, PGO, Arcilator and live snapshots have separate acceptance tasks.
