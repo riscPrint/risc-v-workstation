@@ -3,17 +3,16 @@
 The table separates prior tool use from clean-install support. A version probe
 alone does not test a tool flow. Clean-install results belong in
 [issue #17](https://github.com/riscPrint/risc-v-workstation/issues/17).
-No complete pinned combination is qualified yet. The native Ubuntu installer
-workflow tests each flag and the quickstart combination. Fedora needs a native
-runner. The shared macOS host is not a clean-install host.
+No complete pinned combination is qualified yet. The native installer workflow needs a Linux self-hosted runner. GitHub-hosted
+workflows are disabled. Ubuntu and Fedora runtime qualification is pending. The shared macOS host is not a clean-install host.
 
 | Tool | Version in the check table | Source selection | Qualification |
 |---|---|---|---|
-| Verilator | 5.052 | Host package manager | Local version probe; full combination pending |
+| Verilator | 5.052 | Source `ea338be98e1e838d3518809ce8899f85a009963c` or existing host tool | Local version probe; full combination pending |
 | Yosys | 0.70 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
 | SymbiYosys | 0.70 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
 | Yices | 2.7.0 | OSS CAD Suite 2026-10-22 | Local version probe; pinned archive flow pending |
-| Spike | 1.1.1-dev | Linux source `5cf8c829d2033c5132158b59860fea8d6c06a94d`; macOS Homebrew | Prior arm64 Homebrew co-simulation; Linux pin pending |
+| Spike | 1.1.1-dev | Fresh source builds `eff659cd43d7eafb7f3559bceed2540eabb31c50`; existing external headers/libraries may be reused | Prior arm64 Homebrew co-simulation; Linux pin pending |
 | Sail RISC-V model | 0.15 | `549e723031b34b5ffea5bbb56367be15c7a38a9e` | Prior co-simulation; separate archive installer pending |
 | gem5 | 25.1.0.1 | `c8222cc67a399bfc01e8658dd14b30d5bfd634f9` | Existing architecture flow; clean install pending |
 | JDK | 21.0.13 | Host packages; fallback Temurin 21.0.13+9 | Local version probe; fallback flow pending |
@@ -56,9 +55,8 @@ Clean Linux qualification: [#17](https://github.com/riscPrint/risc-v-workstation
 
 Retained limit: Unqualified host/tool combinations remain unqualified. Extracted executables do not establish a tested setup.
 
-Installer CI checks the short native combinations on matching pull requests and
-on its weekly schedule. The gem5 and all-tools source builds run only when an
-owner selects `long_builds` in the manual Native installer workflow.
-Fast CI and commit checks run on pull requests and integration/main pushes.
-Feature pushes do not start a duplicate run. All workflows define concurrency
-and cancel superseded pull request runs. Manual and scheduled runs are retained.
+The Native installer workflow is manual and requires a Linux self-hosted runner.
+It does not supply a clean host. Each clean-install case needs a fresh native
+machine or VM. Package reuse on a shared host is a separate check. Do not treat
+workflow configuration as an executed result. The final release needs a passing
+CI result at its exact revision under #16.
