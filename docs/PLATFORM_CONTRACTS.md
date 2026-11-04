@@ -2080,3 +2080,11 @@ must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
 
+
+### CDC sequential reconvergence depth
+
+Lint intent accepts `reconvergence_depth` (integer 1..64, default 1). It bounds
+register boundaries between synchronizer outputs and each sink. Findings retain
+each synchronized endpoint and its minimum register depth in `reconvergence`.
+Combinational edges do not consume this bound. Cycles are bounded. Memory and
+blackbox internals remain outside scope. This is structural evidence only.

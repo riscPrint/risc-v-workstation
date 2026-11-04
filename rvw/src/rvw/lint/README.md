@@ -200,3 +200,8 @@ they are not full handshake or FIFO implementations. The FIFO topology uses a
 4-word dual-clock memory and registered Gray encoders. The broken cases add a
 second input at the reverse first stage. Extracted tests also use the independent
 reset design with and without a source-before-destination declaration.
+
+Set `intent.reconvergence_depth` to 1..64 to inspect sequential reconvergence.
+The default is 1. Each finding lists synchronized endpoints and minimum register
+depths. A larger bound can find merges after independent pipeline registers.
+This does not establish functional correlation or safe relative latency.
