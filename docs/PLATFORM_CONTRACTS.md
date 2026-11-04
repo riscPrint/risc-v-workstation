@@ -1900,3 +1900,13 @@ The interrupt policy is sticky modular overflow with clear priority and a
 separate interrupt enable. Counts and event multiplicity come from independent
 observations. These rules do not establish architectural CSR access compliance,
 selector event meaning, or real-core coverage without explicit project bindings.
+
+### Independent device bus checks
+
+Optional `register.bus_decode`, `register.bus_data`, `register.bus_order` and
+`register.bus_latency` rules check accepted bus request/response observations
+against project register addresses and version-1 register models. One request
+can be outstanding. Read data precedes the request's side effects. An unmapped
+address must receive an error. A zero-cycle response is allowed. A delayed
+response must arrive within the declared positive cycle bound. These rules
+provide no real-device or CSR compliance claim without a concrete binding.

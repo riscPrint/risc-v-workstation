@@ -671,3 +671,28 @@ Native reference tests cover legal controls and injected selector, pending and
 interrupt faults. Real-core event bindings, architectural access and RV32 half
 checks, and a complete Zihpm compliance campaign need separate evidence. The
 access and RV32 work in PR #303 remains compatible with these optional bindings.
+
+### Independent device-bus bindings
+
+`DeviceBusChecks.bind` takes a project-owned `Seq[DeviceRegister]`. Each entry
+pairs a byte address with the existing version-1 `RegisterModel`. Feed accepted
+request observations and response observations from an independent bus monitor.
+Do not drive the model from DUT register contents or internal address selects.
+It checks address decoding through the error response, pre-side-effect read data,
+response order and a project latency bound. It supports zero-cycle responses and
+bounded variable latency. It allows one outstanding request. A simultaneous
+response and new request while busy is refused as an order finding.
+
+The bus model applies read-clear, normal write masks, bit strobes and W1C from
+the accepted request. It supports no independent hardware updates; use
+`RegisterChecks.bind` for those register-state checks. Write response payloads
+are not checked. A response at the declared maximum latency is legal. Missing
+responses produce a finding. An unmapped address must return an error.
+`DeviceBusChecks.accesses` generates reads and masked writes for a bus driver.
+The reference test binds two concrete address entries and checks independent
+response captures against a software oracle. It is not a real device binding.
+
+`DeviceRegister.load(file)` binds the normalized map importer from PR #303.
+The native bus test exercises both imported SystemRDL and IP-XACT maps.
+These checks remain separate from architectural CSR checks. Multiple outstanding
+requests, back-to-back replacement and real device campaigns remain open.
