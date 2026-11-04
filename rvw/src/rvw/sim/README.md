@@ -80,3 +80,13 @@ small timer, clock/reset, settled register, X/Z and two-state conformance cases.
 Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
+
+C1 native adapters use a separate `riscvsim-verilator` invocation profile. It
+supports two-state values, clocks and generated immediate assertions. It does
+not promise cocotb callbacks, four-state values, SVA or coverage semantics.
+Set `[core] backend = "riscvsim-verilator"` and a suite's `requires = ["clock"]`.
+The runner checks all suite requirements before input capture or adapter launch.
+A suite with requirements must select a known profile. Old projects without
+requirements can omit the profile. Direct RiscvSim shell entry points also check
+comma-separated `RISCVSIM_REQUIRES` before launch output, locks or native tools.
+Requirements are author declarations. They are not inferred from RTL.

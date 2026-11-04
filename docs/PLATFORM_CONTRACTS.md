@@ -1869,3 +1869,15 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+
+### C1 native semantic requirements
+
+A regression config can set `[core] backend = "riscvsim-verilator"`.
+Each suite can set `requires = ["two_state", "clock", "immediate_assertions"]`.
+The shared native profile checker refuses unsupported or malformed requirements
+before input capture and adapter launch. A nonempty requirement list without a
+known profile is an error. Existing configs with no requirements stay valid.
+The direct RiscvSim shell launch checks `RISCVSIM_REQUIRES`, a comma-separated
+feature list, before it creates temporary launch state. This profile describes
+the Spinal native interface, not the cocotb Verilator invocation. Coverage flags
+retain their existing version checks and do not imply a coverage guarantee.
