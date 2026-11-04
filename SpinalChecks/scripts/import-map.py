@@ -46,10 +46,6 @@ def ipxact(path):
     def value(node, tag, default=None):
         found = node.find(tag)
         return default if found is None else found.text.strip()
-    unsupported = {'registerFile', 'dim', 'alternateRegisters', 'bank', 'writeConstraint', 'vendorExtensions',
-                   'parameters', 'isPresent', 'resetMask', 'aliasOf', 'accessPolicies', 'enumeratedValues'}
-    if any(n.tag in unsupported for n in root.iter()):
-        raise ValueError('unsupported IP-XACT construct')
     result = []
     for mm in root.findall('.//memoryMap'):
         if value(mm, 'addressUnitBits', '8') != '8':
@@ -82,7 +78,7 @@ def ipxact(path):
 
 def systemrdl(path):
     from systemrdl import RDLCompiler
-    from systemrdl.node import RegNode, FieldNode
+    from systemrdl.node import RegNode
     compiler = RDLCompiler()
     compiler.compile_file(str(path))
     root = compiler.elaborate()
@@ -90,6 +86,8 @@ def systemrdl(path):
     for reg in root.descendants(unroll=True):
         if not isinstance(reg, RegNode):
             continue
+        if reg.is_alias or reg.has_aliases:
+            raise ValueError('unsupported SystemRDL register alias')
         fields = []
         for f in reg.fields():
             for prop in ('hwset', 'hwclr', 'counter', 'singlepulse', 'swwe', 'swwel', 'swmod', 'swacc'):

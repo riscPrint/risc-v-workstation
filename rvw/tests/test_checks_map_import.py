@@ -47,3 +47,15 @@ def test_systemrdl_refuses_unmodeled_side_effect(tmp_path):
     path.write_text((ROOT / 'src/test/maps/status.rdl').read_text().replace('onwrite=woclr', 'onwrite=woset'))
     with pytest.raises(ValueError, match='unsupported'):
         module.systemrdl(path)
+
+
+def test_systemrdl_refuses_aliases(tmp_path):
+    pytest.importorskip('systemrdl')
+    path = tmp_path / 'alias.rdl'
+    path.write_text("""addrmap device {
+        reg status_t { field { sw=rw; hw=r; reset=0; } value[0:0]; };
+        status_t primary @0x0;
+        alias primary status_t secondary @0x4;
+    };""")
+    with pytest.raises(ValueError, match='alias'):
+        module.systemrdl(path)
