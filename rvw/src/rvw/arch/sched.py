@@ -81,20 +81,20 @@ def render(d):
           f'  let MicroOpBufferSize = {d["buffer_size"]};',
           '  let CompleteModel = 0;', '}', f'let SchedModel = {name}Model in {{']
     md = [';; Partial model. Include only for the selected CPU.',
-          ';; Set TARGET_SCHED_ISSUE_RATE to issue_width in the target hook.',
+          f';; TARGET_SCHED_ISSUE_RATE must return {d["issue_width"]}.',
           f'(define_automaton "{name}")']
     slots = '|'.join(f'{name}_issue{i}' for i in range(d['issue_width']))
     units = [f'{name}_issue{i}' for i in range(d['issue_width'])]
     for r, count in d['resources'].items():
-        td.append(f'  def {name}{r} : ProcResource<{count}>;')
+        td.append(f'  def {name}Res{r} : ProcResource<{count}>;')
         units.extend(f'{name}_{r}{i}' for i in range(count))
     md.append(f'(define_cpu_unit "{",".join(units)}" "{name}")')
     for c in d['classes']:
-        res = f'{name}{c["resource"]}'
-        td += [f'  def {name}{c["name"]} : SchedWriteRes<[{res}]> {{',
+        res = f'{name}Res{c["resource"]}'
+        td += [f'  def {name}Write{c["name"]} : SchedWriteRes<[{res}]> {{',
                f'    let Latency = {c["latency"]};',
                f'    let ReleaseAtCycles = [{c["occupancy"]}];', '  }',
-               f'  def : InstRW<[{name}{c["name"]}], (instregex "' +
+               f'  def : InstRW<[{name}Write{c["name"]}], (instregex "' +
                '|'.join(f'^{op}$' for op in c['llvm_opcodes']) + '")>;']
         choices = '|'.join(f'({name}_{c["resource"]}{i}*{c["occupancy"]})'
                            for i in range(d['resources'][c['resource']]))

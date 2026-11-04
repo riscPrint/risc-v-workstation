@@ -111,11 +111,14 @@ def test_nonpositive_slope():
         sched.slope_report([dict(rtl_cycles=2, mca_cycles=2)]*2, 16)
 
 
-def test_native_tablegen(tmp_path):
+@pytest.mark.parametrize("same_name", [False, True])
+def test_native_tablegen(tmp_path, same_name):
     tool = shutil.which('llvm-tblgen')
     include = Path('/opt/homebrew/opt/llvm/include')
     if not tool or not include.exists(): pytest.skip('native LLVM headers and tblgen absent')
-    td, _ = sched.render(desc())
+    d = desc()
+    if same_name: d['classes'][0]['name'] = 'ALU'
+    td, _ = sched.render(d)
     path = tmp_path / 'model.td'; path.write_text(td)
     result = subprocess.run([tool, '-I', str(include), str(path), '-o', str(tmp_path/'out')],
                             capture_output=True, text=True, timeout=30)
