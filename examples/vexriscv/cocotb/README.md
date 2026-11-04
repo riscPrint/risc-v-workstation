@@ -27,3 +27,28 @@ cd ../cocotb
 
 Install `rvw[cocotb]` first. Each output directory must be new. RTL and outputs
 are ignored by Git. See [adapter contracts and limits](../../../rvw/src/rvw/sim/README.md).
+
+## PLIC controller adapter
+
+`rvwvex.PlicUnit` emits the unmodified SpinalHDL 1.15.0 PLIC library with
+three level sources, two target contexts and an APB3 register interface.
+`plic_bus.py` drives that interface. Expected state comes from the independent
+Python PLIC reference. The test changes source levels during APB accesses.
+It checks arbitration, tie breaking, threshold, shared pending state and
+claim/complete gateway behavior across both contexts.
+
+Generate RTL with the same setup as above. Replace the main class with
+`runMain rvwvex.PlicUnit ../cocotb/rtl`. Then run:
+
+```sh
+"$RVW_HOME/scripts/with-lock.sh" vex nice -n 10 rvw regress cocotb \
+  plic-icarus.json --out out/plic-icarus --seed 1 --json
+```
+
+`claim_must_ignore_threshold` is a conformance test for a known source-level gap.
+The library gates the claim value with the interrupt threshold. The reference
+requires a claim to select an enabled pending source regardless of threshold.
+A mismatch makes the native suite fail. Do not waive this failure.
+The other test checks the directed arbitration sequence. A CPU is not connected to this component
+adapter. Real-core PLIC delivery and full simultaneous context arbitration
+remain open in #131. Do not use this suite to claim complete PLIC compliance.

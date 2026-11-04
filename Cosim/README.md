@@ -590,7 +590,14 @@ with M/S contexts. Native oracle tests skip when the prefix is absent.
 The Python model has global pending state and level gateways. Spike's device
 has its own context bookkeeping. Oracle tests cover only the common sequence
 in the test. They do not establish equivalence for all context races.
-These models do not connect an RTL bus or establish DUT device coverage.
+The [PLIC component adapter](../examples/vexriscv/cocotb/README.md#plic-controller-adapter)
+connects this reference to the unmodified SpinalHDL PLIC through APB3.
+Its threshold conformance test remains a failure. The installed native Spike
+device also returns zero for the same masked-threshold claim. Agreement with
+that device is not sufficient for conformance. The ratified
+[PLIC claim rule](https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc#interrupt-claim-process)
+requires claim selection to ignore the threshold. Keep that rule in the oracle.
+These reference models alone do not establish DUT device coverage.
 The current BOOM and VexRiscv adapters do not implement a PLIC.
 
 ### Decisions and limits
