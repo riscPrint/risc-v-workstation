@@ -16,6 +16,13 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        *[ToolSpec("arch_" + action.replace("-", "_"), description,
+                   schema({k: {"type": "string"} for k in (*fields, "out", "project")}, [*fields, "out"]),
+                   handler("rvw.arch.cli", action), long=True)
+          for action, fields, description in (
+              ("search", ("plan",), "Run bounded Bayesian fitting and score the selected point on held-out workloads."),
+              ("predict", ("candidate",), "Store a timestamped model prediction before RTL measurement."),
+              ("score-prediction", ("prediction", "rtl"), "Score a stored prediction against later RTL evidence."))],
         ToolSpec('arch_inspect', 'Check ELF layout and report CPU/ISA compatibility. Static only; unsupported combinations stay blocked.',
                  schema({k: {'type': 'string'} for k in ('elf', 'isa', 'kind', 'project')}, ['elf', 'isa', 'kind']),
                  handler('rvw.arch.cli', 'inspect'), long=True),

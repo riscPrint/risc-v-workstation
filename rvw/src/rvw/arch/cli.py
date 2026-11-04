@@ -5,6 +5,12 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == 'search':
+        from .search import search
+        return search(**kw)
+    if action in ('predict', 'score-prediction'):
+        from .ledger import predict, score_prediction
+        return (predict if action == 'predict' else score_prediction)(**kw)
     if action == 'fit':
         from .fitting import fit
         return fit(**kw)
@@ -40,6 +46,14 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
+    for action, fields in (('search', ('plan',)), ('predict', ('candidate',)),
+                           ('score-prediction', ('prediction', 'rtl'))):
+        p = sub.add_parser(action)
+        p.set_defaults(func=_run)
+        for field in fields:
+            p.add_argument(field)
+        p.add_argument('--out', required=True)
+        p.add_argument('--json', action='store_true')
     p = sub.add_parser('memory-report')
     p.set_defaults(func=_run)
     p.add_argument('observations')

@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 
 from .core import checked_report, compare, digest, read_json
+from .statistics import correlation
 
 
 def number(value, where):
@@ -40,32 +41,9 @@ def fit(plan, project=None):
     path = Path(plan).resolve()
     raw = path.read_bytes()
     spec = read_json(raw)
-    required = {'schema', 'rtl', 'candidates', 'train', 'held_out', 'events',
-                'scope', 'uncertainty', 'unsupported'}
-    if set(spec) != required or spec['schema'] != 'rvw.arch-fit-plan/1':
-        raise ValueError('invalid rvw.arch-fit-plan/1 fields')
-    for field in ('scope', 'uncertainty'):
-        if not isinstance(spec[field], str) or not spec[field].strip():
-            raise ValueError(f'{field} must be a nonempty statement')
-    if not isinstance(spec['unsupported'], list) or any(not isinstance(s, str) or not s.strip() for s in spec['unsupported']):
-        raise ValueError('unsupported must be an array of structure descriptions')
-    for field in ('train', 'held_out'):
-        names = spec[field]
-        if not isinstance(names, list) or not names or any(not isinstance(n, str) or not n for n in names) or len(set(names)) != len(names):
-            raise ValueError(f'{field} must contain distinct workload IDs')
-    if set(spec['train']) & set(spec['held_out']):
-        raise ValueError('train and held_out must be disjoint')
+    validate_plan(spec)
     events = spec['events']
-    if not isinstance(events, list) or not events:
-        raise ValueError('events must be nonempty')
-    for event in events:
-        if not isinstance(event, dict) or set(event) != {'name', 'rtl_metric', 'gem5_stat', 'unit', 'semantics'} or any(not isinstance(v, str) or not v.strip() for v in event.values()):
-            raise ValueError('each event needs name, rtl_metric, gem5_stat, unit and semantics')
-    if len({e['name'] for e in events}) != len(events):
-        raise ValueError('duplicate event names')
     candidates = spec['candidates']
-    if not isinstance(candidates, dict) or not candidates or any(not isinstance(k, str) or not k or not isinstance(v, str) for k, v in candidates.items()):
-        raise ValueError('candidates must map distinct names to report paths')
     def resolve(value):
         return path.parent / value
     rtl_path = resolve(spec['rtl'])
@@ -110,8 +88,41 @@ def fit(plan, project=None):
     winner = min(training, key=lambda name: (training[name], name))
     return {'schema': 'rvw.arch-fit/1', 'status': 'reported', 'selected': winner,
             'training_scores': training, 'held_out_score': score(winner, spec['held_out']),
-            'selected_errors': errors[winner], 'train': spec['train'], 'held_out': spec['held_out'],
+            'selected_errors': errors[winner],
+            'event_correlations': {split: {event['name']: correlation([
+                (v['rtl'], v['gem5']) for w in names for v in errors[winner][w]
+                if v['event'] == event['name']]) for event in events}
+                for split, names in (('train', spec['train']), ('held_out', spec['held_out']))}, 'train': spec['train'], 'held_out': spec['held_out'],
             'events': events, 'scope': spec['scope'], 'uncertainty': spec['uncertainty'],
             'unsupported': spec['unsupported'], 'plan_sha256': digest(raw),
             'rtl_sha256': rtl_hash, 'candidates': evidence,
             'limits': 'Offline candidate selection. No fidelity verdict or confidence interval. Holdout must not guide candidate creation. gem5 shows trends; RTL is the truth.'}
+
+
+def validate_plan(spec):
+    required = {'schema', 'rtl', 'candidates', 'train', 'held_out', 'events',
+                'scope', 'uncertainty', 'unsupported'}
+    if set(spec) != required or spec['schema'] != 'rvw.arch-fit-plan/1':
+        raise ValueError('invalid rvw.arch-fit-plan/1 fields')
+    for field in ('scope', 'uncertainty'):
+        if not isinstance(spec[field], str) or not spec[field].strip():
+            raise ValueError(f'{field} must be a nonempty statement')
+    if not isinstance(spec['unsupported'], list) or any(not isinstance(s, str) or not s.strip() for s in spec['unsupported']):
+        raise ValueError('unsupported must be an array of structure descriptions')
+    for field in ('train', 'held_out'):
+        names = spec[field]
+        if not isinstance(names, list) or not names or any(not isinstance(n, str) or not n for n in names) or len(set(names)) != len(names):
+            raise ValueError(f'{field} must contain distinct workload IDs')
+    if set(spec['train']) & set(spec['held_out']):
+        raise ValueError('train and held_out must be disjoint')
+    events = spec['events']
+    if not isinstance(events, list) or not events:
+        raise ValueError('events must be nonempty')
+    for event in events:
+        if not isinstance(event, dict) or set(event) != {'name', 'rtl_metric', 'gem5_stat', 'unit', 'semantics'} or any(not isinstance(v, str) or not v.strip() for v in event.values()):
+            raise ValueError('each event needs name, rtl_metric, gem5_stat, unit and semantics')
+    if len({e['name'] for e in events}) != len(events):
+        raise ValueError('duplicate event names')
+    candidates = spec['candidates']
+    if not isinstance(candidates, dict) or not candidates or any(not isinstance(k, str) or not k or not isinstance(v, str) for k, v in candidates.items()):
+        raise ValueError('candidates must map distinct names to report paths')
