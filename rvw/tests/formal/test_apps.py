@@ -109,3 +109,22 @@ def test_native_register_access(tmp_path, access, fault):
     args = Namespace(manifest=str(path), out=str(tmp_path / 'out'), depth=8,
                      engine='smtbmc:yices', timeout=20, mode='bmc', json=False)
     assert run(args) == int(fault)
+
+
+def test_native_async_register_needs_explicit_event_model(tmp_path):
+    if not all(shutil.which(t) for t in ('yosys', 'sby', 'yices-smt2')):
+        pytest.skip('native tools required')
+    spec = plan()
+    spec['properties'] = [spec['properties'][1]]
+    rtl = (FIXTURE / 'Contracts.sv').read_text().replace(
+        'always @(posedge clk)', 'always @(posedge clk or posedge reset)')
+    (tmp_path / 'Contracts.sv').write_text(rtl)
+    path = tmp_path / 'apps.json'
+    path.write_text(json.dumps(spec))
+    args = Namespace(manifest=str(path), out=str(tmp_path / 'refused'), depth=10,
+                     engine='smtbmc:yices', timeout=20, mode='bmc', json=False)
+    with pytest.raises(SystemExit):
+        run(args)
+    args.out = str(tmp_path / 'event')
+    args.event_model = args.async_reset = True
+    assert run(args) == 0

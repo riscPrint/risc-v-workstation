@@ -83,6 +83,8 @@ def register(sub) -> None:
     app.add_argument("--engine", default="smtbmc:yices")
     app.add_argument("--timeout", type=float, default=60)
     app.add_argument("--mode", choices=["bmc", "prove"], default="bmc")
+    app.add_argument("--event-model", action="store_true")
+    app.add_argument("--async-reset", action="store_true")
     app.add_argument("--json", action="store_true")
     app.set_defaults(func=apps.run)
     benchmark = s.add_parser("bench", help="pinned same-input formal engine benchmark")
