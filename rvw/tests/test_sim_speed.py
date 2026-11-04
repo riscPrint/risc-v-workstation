@@ -198,3 +198,23 @@ def test_sweep_accepts_project_owned_lock_name(tmp_path):
         '--elf', str(tmp_path / 'test.elf'), '--config', 'preset',
         '--lock', 'custom-core', '--out', str(tmp_path / 'out')])
     assert args.lock == 'custom-core'
+
+
+def test_byte_different_trace_cannot_be_retained(tmp_path):
+    data = pairs(tmp_path)
+    for _, candidate in data:
+        trace = candidate.parent / 'rvfi.jsonl'
+        # Same parsed events. Raw bytes differ only in JSON whitespace.
+        events = [json.loads(line) for line in trace.read_text().splitlines()]
+        trace.write_text(''.join(json.dumps(e, separators=(',', ':')) + '\n' for e in events))
+    report = compare(data, resamples=1000)
+    assert report['trace_bit_identical'] is False
+    assert report['retain'] is False
+
+
+def test_absolute_rate_confidence_intervals(tmp_path):
+    report = compare(pairs(tmp_path), resamples=1000)
+    assert report['trace_bit_identical'] is True
+    for side, rate in [('baseline', 500), ('candidate', 1000)]:
+        assert report['sim_khz'][side]['geomean'] == pytest.approx(rate)
+        assert report['sim_khz'][side]['ci95'] == pytest.approx([rate, rate])

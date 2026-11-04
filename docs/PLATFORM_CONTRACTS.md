@@ -1972,7 +1972,13 @@ match. Each side must keep one native build identity. Default minimum sample
 time is one second. Missing evidence or a difference gives exit 3.
 `status: equivalent` is trace/result equivalence only. It is not ISA correctness,
 C8 capture completeness or C4 acceptance. `retain` is a diagnostic timing filter:
-the 95% interval lower bound must exceed one. It does not change any options.
+the 95% interval lower bound must exceed one and all complete C2 files must
+have the same raw SHA-256. `trace_bit_identical` reports this byte check.
+Parsed equality alone can still report `equivalent`, but cannot retain an option.
+`sim_khz.baseline` and `sim_khz.candidate` each record `geomean` and `ci95`.
+These marginal percentile bootstrap intervals use the same pair resamples.
+They include adapter and trace cost. They exclude model compilation.
+The report does not change any options.
 
 `rvw.sim-speed-sweep/1` records an explicit adapter, ELF hash, preset, host,
 logical CPU count, seed, repeat count, thread counts, minimum sample seconds,
