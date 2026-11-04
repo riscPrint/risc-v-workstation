@@ -43,11 +43,14 @@ def load_manifest(path):
 @captured.command
 def check_manifest(path):
     data = load_manifest(path)
+    from .isa_consumers import check
+    reports, unchecked = check(data, Path(path).resolve().parent)
     unknown = [name for name, item in data['extensions'].items() if item['version'] is None]
     return {'schema': 'rvw.isa-check/1', 'isa': data['isa'],
-            'status': 'inconclusive' if unknown else 'declared',
+            'status': 'inconclusive' if unknown or unchecked else 'consistent',
             'unverified_versions': unknown, 'consumers': data.get('consumers', {}),
-            'notes': ['Consumer strings are declarations; tools are not probed.']}
+            'probes': reports, 'unchecked_consumers': unchecked,
+            'notes': ['Configuration consistency only. Reported versions do not establish ISA compliance.']}
 
 
 def pinned_files(data, root):

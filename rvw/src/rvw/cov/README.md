@@ -708,8 +708,8 @@ manifest. Declare `isa`, `extensions` (each has `version` and optional
 `requires`), `options`, and optional `consumers` (tool name to ISA string).
 Use an expanded unversioned ISA string. Use null for an unverified version.
 The command rejects missing dependencies and contradictory consumer strings.
-Null versions give `inconclusive`. Consumer strings are declarations. This
-increment does not probe compiler, adapter, reference model or ACT settings.
+Null versions give `inconclusive`. Consumer strings are declarations. Configure
+consumer probes below to check actual target macros or consumer settings.
 
 ### Pinned opcode bins
 
@@ -980,3 +980,27 @@ not a test result. Changes require explicit adoption. No model or pin changes.
 Catalogs need human review for completeness. Metadata-only pins appear in
 `unchecked_specifications`. This path does not extract every normative rule
 from arbitrary prose. It does not establish compliance.
+
+### ISA consumer probes
+
+An optional `probes` object in the manifest selects `compiler`, `dut`,
+`reference`, `act` and `coverage` inputs. Each probe has one of these forms:
+
+- `{"kind": "gcc", "argv": ["riscv64-unknown-elf-gcc", "-march=rv32im", "-mabi=ilp32"]}`
+  reads native target macros. It adds `-dM -E -x c -` and supplies empty input.
+- `{"kind": "json", "path": "adapter.json", "key": ["isa_config"]}`
+  reads actual JSON settings. `kind: "toml"` reads TOML settings.
+- `{"kind": "command", "argv": ["adapter", "isa-config"]}` reads a native
+  capability command. It must return `schema: "rvw.isa-consumer/1"`.
+
+File and command inputs report `xlen`, `extensions` (name to version string
+or null), and `options`. Paths use the manifest directory. Commands have a
+10-second process-group timeout. The capture records tools and input files.
+Probe settings must select the same configuration used by the consumer.
+The check rejects contradictory XLEN, extension sets, known versions and
+options. M permits the implied Zmmul subset in GCC output. Missing probes,
+unknown versions and missing option evidence give `inconclusive`. Only all
+five consistent inputs give `consistent`. This is a configuration check, not
+an ISA compliance result. A capability command is a consumer report, not an
+independent proof that the consumer implements that version. Existing adapters
+without capability commands still need an integration or a settings-file probe.

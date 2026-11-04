@@ -1901,3 +1901,14 @@ excerpt membership. `rvw.isa-diff/1.obligations` reports added, removed and
 changed rows, affected checkers, missing tests and present test hashes.
 It reports metadata-only pins as unchecked. A changed catalog requires adoption.
 Catalog completeness needs review. Test presence does not establish execution.
+
+`rvw.isa/1.probes` can configure `compiler|dut|reference|act|coverage` probes.
+Kinds are `gcc` (native target macros), `command` (native JSON capability
+output), and `json|toml` (captured settings file with optional `key` path).
+Command probes return `rvw.isa-consumer/1` with `xlen`, `extensions` (versions
+or null), and `options`. File probes select the same fields. Paths use the
+manifest directory. `rvw.isa-check/1` includes observed `probes` and
+`unchecked_consumers`. `consistent` requires all five inputs with known,
+matching versions and options. Missing evidence gives `inconclusive`.
+Contradictions are errors. These statuses describe configuration consistency.
+They do not certify ISA implementation or compliance.
