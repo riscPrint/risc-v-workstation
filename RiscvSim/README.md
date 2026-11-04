@@ -646,3 +646,15 @@ Run that direct DMA campaign with `RiscvSim/boom/tests/run-dma.sh /tmp/dma-1`
 after setting JDK 21, Verilator, GCC and `SPINAL_BOOM`. Use a fresh output path.
 The script holds `boom`, then `sbt`. The native test has a 20000-cycle limit.
 Use an outer process-group timeout for lock wait and native compilation.
+
+### Bounded fairness and resource waits
+
+`FairnessMonitor` samples every cycle. It measures environment enable gaps
+separately from arbiter grant opportunities. Missing samples and missing client
+grants cannot establish fairness. `ResourceWaitMonitor` checks a sampled graph
+of exclusive resource owners and blocked requests. It reports a cycle separately
+from an outstanding-request timeout. Adapters must supply actual resource waits.
+The two-hart atomic fixture now measures its enable and grant wires separately.
+It still has no cyclic resource fabric. Coherent-fabric dependency campaigns and
+unbounded liveness proofs remain open under #128. None of these bounded monitors
+proves eventual progress.
