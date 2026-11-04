@@ -133,4 +133,12 @@ rather than convert a discontinuity into a taken branch. Trace distributions,
 warmup, sampling and address layout limit conclusions. Never report speedup
 from MPKI alone. Licensed workload data stay outside this repository.
 
-Follow-up issue links will be added after the draft PR opens.
+## Follow-up issues
+
+- #351: [TAGE-SC-L and BOOM-like settings](https://github.com/riscPrint/risc-v-workstation/issues/351).
+- #358: [explicit RTL event comparison](https://github.com/riscPrint/risc-v-workstation/issues/358).
+- #360: [BTB and RAS](https://github.com/riscPrint/risc-v-workstation/issues/360).
+- #365: [prefetch and cache replacement](https://github.com/riscPrint/risc-v-workstation/issues/365).
+
+This design and the baseline increment are in draft PR #336. These issues own
+remaining phases. The baseline does not complete the requested TAGE-SC-L slice.
