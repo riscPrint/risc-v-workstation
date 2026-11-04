@@ -314,7 +314,9 @@ def check(directory, results, platform, model, timeout, sail=None):
                 if not trace or not (run.path / trace).is_file():
                     reason = 'missing C2 trace'
                 else:
-                    command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--elf', str(elf),
+                    # The explicit platform supplies the oracle; use a generic label
+                    # so the child does not require project discovery.
+                    command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--core', 'reference', '--elf', str(elf),
                                '--trace', str(run.path / trace), '--platform', str(Path(platform).resolve()),
                                '--model', model, '--strict', '--timeout', str(timeout), '--json']
                     if sail:
