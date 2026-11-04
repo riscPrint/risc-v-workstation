@@ -55,6 +55,16 @@ try {
  await page.locator('#source button').first().click();await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
  await page.locator('#diagram .sb-box').first().click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
+ // Failed navigation must remove the previous wave, source and trace evidence.
+ await page.locator('#signal').fill('missing_signal');await page.locator('#signal').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('inconclusive'));
+ for (const id of ['wave','source','dependencies']) assert.equal(await page.locator('#'+id).innerText(),'');
+ await page.locator('#signal').fill('execute_PC');await page.locator('#time').fill('9223372036854775808');
+ await page.locator('#time').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('Time must be an integer'));
+ await page.locator('#time').fill('10');await page.locator('#time').press('Enter');
+ await page.locator('#wave svg').waitFor();
+ assert.equal(await page.getByRole('region',{name:'Indexed wave',exact:true}).count(),1);
  await page.locator('#trace').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('no pdg.json'));
  assert.deepEqual(errors,[]);
  console.log('PASS: block and wave SVG, source and wave links, missing trace metadata; 0 page errors');
