@@ -14,7 +14,7 @@ reusing open-source tools and extending them where they fall short.
 
 - `ROADMAP.md`: the plan for every area, and where each area stands against commercial tools.
 - GitHub issues: the tasks. `TODO.md` lists them under the roadmap areas.
-- `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C8).
+- `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C9).
 - [docs/BRING_YOUR_OWN_CORE.md](docs/BRING_YOUR_OWN_CORE.md): install once, then use a
   separate core repository with `rvw.toml`, core adapters and project selection.
 

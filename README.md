@@ -29,7 +29,7 @@ hosts ([#17](https://github.com/riscPrint/risc-v-workstation/issues/17),
 
 Track work in the [v0.2 (near term) milestone](https://github.com/riscPrint/risc-v-workstation/milestone/1)
 and the [Later phases milestone](https://github.com/riscPrint/risc-v-workstation/milestone/2).
-The open setup tasks are [integration model #34](https://github.com/riscPrint/risc-v-workstation/issues/34),
+The setup tasks are [integration model #34](https://github.com/riscPrint/risc-v-workstation/issues/34),
 [`rvw doctor` #35](https://github.com/riscPrint/risc-v-workstation/issues/35),
 [`rvw init` #36](https://github.com/riscPrint/risc-v-workstation/issues/36) and
 [CI #16](https://github.com/riscPrint/risc-v-workstation/issues/16).
@@ -95,7 +95,7 @@ The separate VexRiscv project passed 41 aligned RV32UI tests, a four-test commit
 gate with equal RTL hashes, a 17-instruction Spike smoke comparison and database
 queries. See the [VexRiscv limits](examples/vexriscv/README.md#design-and-limits).
 
-## Status (integration branch, 2026-11-03)
+## Status (P1+P2 integration branch, 2026-11-04)
 
 Supported scope under contract C8:
 
@@ -105,8 +105,25 @@ Supported scope under contract C8:
 - `rvw cov prove` (proof exclusions), `rvw cov merge/report/select`, `rvw cov functional`.
 - `rvw query diff` and the navigation queries (drivers, loads, path, where).
 - `rvw bundle`, `reduce`, `bisect`, `wave`, `perf`, and `rvw mcp`.
+- Read-only `rvw doctor` checks and the minimal Spinal/sbt `rvw init` scaffold.
+  Doctor needs an explicit smoke run for build/run readiness. Init writes safe stubs.
+  Neither command qualifies a core or earns gate acceptance.
 
 Experimental features need manual result checks before use:
+
+- Native SSH farm execution, static dashboards, remote caches and job budgets.
+  Farm completion is collection status. It is not a gate verdict. See
+  [farm limits](rvw/src/rvw/farm/README.md), [cache limits](rvw/src/rvw/regress/README.md)
+  and [budget limits](rvw/src/rvw/common/README.md#native-job-budgets).
+- `rvw lint` structural CDC/RDC inventory and `rvw soc check` bindings.
+  Neither establishes signoff or full bridge correctness. SoC exports use explicit project data.
+- Extended formal flows (multi-clock, equivalence, protocol checks and counterexample replay),
+  architecture fitting/sweeps and Linux reference boot. Their bounded scope and
+  native qualification limits stay in [SpinalChecks](SpinalChecks/README.md) and [Arch](Arch/README.md).
+- Native tool bundles. Pins and checksums are checked, but native builds and
+  relocation on all three hosts remain unqualified. See [bundle limits](scripts/README.md).
+- Saved VS Code result views and manual source/wave/trace navigation.
+  They display producer data and do not issue verification verdicts.
 
 - Known-failure waivers (`rvw regress known`) and failure-signature matching.
   The #2 review fixes more signature collisions. Wildcard scope and coarse failure identities
