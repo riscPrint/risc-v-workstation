@@ -375,7 +375,9 @@ rvw arch linux boot --images /tmp/linux-build/build/images \
 Each action needs a new output directory. `--timeout` bounds each build command
 or QEMU process. `--jobs` accepts 1 through 4. Builds run serial commands.
 The tool stops the full process group on timeout or cancellation.
-The build checks the Buildroot 2025.02.1 archive SHA-256. Buildroot pins the
+The build checks the Buildroot 2025.02.1 archive SHA-256. It extracts regular
+content before skeleton symlinks. It preserves absolute symlinks for the target
+root filesystem. Archive errors stop the build and record an inconclusive result. Buildroot pins the
 internal musl toolchain, BusyBox, Linux 6.12.9 and OpenSBI 1.6. It checks package
 hashes from the release, including its QEMU board patches. The root filesystem
 is a gzip cpio initramfs. `Arch/linux/overlay/init` mounts proc, sysfs and devtmpfs.

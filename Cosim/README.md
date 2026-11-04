@@ -440,6 +440,11 @@ Large traces are temporary and never committed.
   System headers and compiler support files use C8's installed-toolchain assumption.
   Verify inputs and tools before publication. The manifest binds output bytes to
   the build record. The binary embeds the build ID. A stale build requires a rebuild.
+  On Linux, capture `readelf` and read the ELF SONAME from the saved library.
+  Link through its library name so a missing SONAME cannot retain a temporary path.
+  Bind the load name into the build ID. At runtime, place a hard link to the captured
+  dependency beside the captured shim for `$ORIGIN` lookup. Keep the bytes unchanged.
+  macOS retains its native install-name handling.
   Binary and manifest use separate atomic replacements; a mismatched pair refuses.
 - Runtime checks the source, shim, manifest and linked libriscv hashes and embedded
   identity. Load private binaries and check the actual dependency binding and shim
