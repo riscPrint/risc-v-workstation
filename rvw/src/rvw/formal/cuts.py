@@ -1,10 +1,25 @@
-"""Width-checked, unconstrained cut points. No assume-guarantee composition."""
+"""Width-checked overapproximations. Assumptions need separate contract proofs."""
 import json
 from . import common
 
 
 def commands(args, out, files):
-    cuts = getattr(args, 'cut', None) or []
+    cuts = list(getattr(args, 'cut', None) or [])
+    annotations = {}
+    if getattr(args, 'abstraction', None):
+        from pathlib import Path
+        item = args._input_snapshot.capture.file(Path(args.abstraction).absolute())
+        plan = json.loads(item.copy.read_text())
+        if set(plan) != {'cuts'} or not isinstance(plan['cuts'], list) or not plan['cuts']:
+            raise ValueError('abstraction plan needs a nonempty cuts array')
+        for row in plan['cuts']:
+            if set(row) != {'signal', 'width', 'kind'} or row['kind'] not in ('cut', 'blackbox-output', 'data', 'memory-read'):
+                raise ValueError('abstraction supports unconstrained cut/data/blackbox-output/memory-read only; assumptions need contracts')
+            if type(row['width']) is not int or row['width'] <= 0 or not isinstance(row['signal'], str):
+                raise ValueError('abstraction signal and width are invalid')
+            cuts.append(f"{row['signal']}:{row['width']}")
+            annotations[row['signal']] = {'kind': row['kind'], 'plan_sha256': item.sha256}
+
     if not cuts:
         return '', []
     requested = []
@@ -39,6 +54,7 @@ def commands(args, out, files):
         clock_bits = nets.get('dut.' + args.clock, {}).get('bits', [])
         if set(bits) & set(clock_bits):
             raise ValueError('clock signals cannot be cut')
-        records.append({'signal': signal, 'width': width, 'semantics': 'unconstrained_anyseq'})
+        records.append({'signal': signal, 'width': width, 'semantics': 'unconstrained_anyseq',
+                        **annotations.get(signal, {})})
     return 'flatten\n' + '\n'.join(
         f'cutpoint rvw_formal_top/w:dut.{r["signal"]}' for r in records), records

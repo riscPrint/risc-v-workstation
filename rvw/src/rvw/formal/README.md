@@ -216,6 +216,14 @@ The campaign limit starts before discovery; each discovery subprocess also uses 
 Unrun modules stay in the inventory. The command returns 1 with status `inconclusive`:
 it is an inventory, not an acceptance gate. Use the machine's core lock for large designs.
 
+The BOOM inventory has a [complete per-target table in PR #235](https://github.com/riscPrint/risc-v-workstation/pull/235).
+Keep its [group dispositions on spinal-boom#4](https://github.com/riscPrint/spinal-boom/issues/4#issuecomment-6626689541)
+with the parent-context observations. FpPipeline module observations retain
+inconclusive whole-core reachability. ITLB inactive payload X values do not
+establish invalid transactions. Arbiter results are bounded module checks.
+Candidate counts do not count distinct core bugs. New campaigns must retain
+unreported targets and update the core issue with their bounds and dispositions.
+
 ### Bounded witness collection and parent replay
 
 Use `xprop --first-failure` or `x-sweep --first-failure` to stop each solver
@@ -509,6 +517,14 @@ ISA simulator when requested.
 The generator requires compiler version 0.20.1 and the exact rule hash.
 It records compiler bytes, version, source and generated hashes, options,
 XLEN, compiler library hashes and the subset boundary in `manifest.json` under the output directory.
+Each `files.INSTRUCTION.property_trace` entry names a stable property ID,
+the pinned Sail path, rule, line, exact expression and execution context.
+It records operand bindings and the generated result port. It lists the
+upstream shell separately. Do not attribute decode or architectural transition
+proofs to this Sail slice. `implementation_options` declares the supported
+XLEN 32, NRET 1, uncompressed ADD/SUB/ADDI configuration. The Python generator
+refuses other XLEN or NRET values before it creates output. Compiler backend
+options and all generated hashes remain in each instruction entry.
 Generated files and measured proof results stay outside the repository.
 
 ```sh
@@ -712,6 +728,189 @@ publication. The frontend reports RTL dependencies. Reads outside the copied inp
 set are refused. Later proof stages read the sealed RTLIL model. `result.json`
 records `frontend: "slang"` and the existing input capture records.
 
+## Declared connectivity (#107)
+
+Resolve required and forbidden connections from a captured SpinalDB database:
+
+```sh
+rvw formal connectivity connections.toml --db design.db --out /tmp/connections
+rvw formal connectivity connections.toml --db design.db --out /tmp/connection-bmc \
+  --run --depth 10 --timeout 60
+```
+
+Declare each connection in TOML. Use a unique ID. Mode and enable each name
+one active-high Boolean signal. Both are optional. Their conjunction selects
+the source sample. Latency defaults to zero.
+
+```toml
+[[connection]]
+id = "selected-transfer"
+kind = "required"
+source = "io_source"
+destination = "io_destination"
+mode = "io_mode"
+enable = "io_enable"
+latency = 1
+
+[[connection]]
+id = "isolated-source"
+kind = "forbidden"
+source = "io_other"
+destination = "io_destination"
+mode = "io_mode"
+```
+
+The resolver uses the current SpinalDB schema and its standard name resolution.
+It searches the complete destination cone. It retains data, selection, condition,
+initialization, clock and reset dependencies. Missing or ambiguous endpoints,
+opaque BlackBox cones and search limits remain incomplete. A shortest known
+path cannot hide an alternate opaque path. Required value-transfer endpoints
+must have equal widths. A dependency path is a candidate, not a temporal proof.
+A missing path does not discharge mode, enable or latency conditions.
+
+`--run` checks bounded top-port contracts with the existing native BMC runner.
+It requires a source input, destination output, one-bit clock and synchronous
+active-high reset. Mode and enable must be common inputs distinct from source.
+Required transfers compare the destination with the delayed source. The harness
+delays mode and enable with that source. Reset clears delayed-valid state.
+Forbidden influence uses two DUT copies. All inputs except source are shared.
+Source values can differ at every cycle. The copies have independent initial
+state. A passing result establishes the stronger bounded contract for these
+states. A failing result can need initial-state triage. It is not a confirmed
+source-influence bug. The mode/enable sample selects the comparison after the
+declared latency; it does not constrain source differences at earlier cycles.
+
+Each campaign retains separate transfer and activation jobs. Activation must
+produce a counterexample to `assert(!delayed_enable)` after reset. A transfer
+pass without this activation witness remains incomplete. Both jobs must retain
+exactly one assertion. The BMC runner also checks bounded reachability before
+it reports a pass. Each RTL file must match its database content hash. The
+runner retains copied inputs, native tool identities, logs and counterexamples.
+Timeouts and tool errors cannot earn a bounded pass.
+
+`result.json` uses `rvw.connectivity/1`. Each entry retains the declaration,
+resolved endpoints, structural path or absence, conditions, limits and optional
+campaign observations. `semantic_status: bounded_pass` describes only the stated
+two-state bound under captured DUT assumptions. Overall `status` remains
+`incomplete`, and exit code is 1. This command supplies no design acceptance verdict.
+Invalid input exits 2. Use a fresh output directory for each campaign.
+
+General internal RTL binding and core qualification remain open. Inouts,
+asynchronous resets and multiple clocks need another backend. No whole-core
+proof, commercial parity or unbounded connectivity result is claimed.
+
+## Capacity templates and contracts
+
+`rvw formal template KIND --entries 4 --width 3 --out monitor.sv` writes a
+SystemVerilog monitor. Instantiate it next to the DUT. The monitor adds assertions.
+It adds no assumptions. `entries` and `width` come from the reference specification.
+
+| Kind | Interface and property |
+|---|---|
+| `rob`, `credit` | `count`, accepted `push` and `pop`: capacity, legal events and exact count conservation. Simultaneous events have zero net change. |
+| `freelist` | `free_bits`, `allocated`: the bit sets do not overlap. |
+| `rename` | `valid`, packed `tags`: valid entries have distinct physical tags. Use for allocation lanes or a map that requires injectivity. Aliases in a move-elimination map need another specification. |
+| `issue` | `issued`, `valid`, `ready`: at most one grant; each grant has a valid, ready entry. |
+| `lsq` | `load_fire`, `older_store`, `address_match`, `forwarded`, `load_data`, `store_data`: a load that matches the selected older store forwards its data. The harness must select the youngest matching older store. |
+
+These are local safety templates. They do not specify a complete ROB or LSQ.
+They do not prove retirement order, flush recovery, fairness or eventual progress.
+The native tests give each monitor a small reference design and a separate seeded fault.
+
+`rvw formal contracts plan.json --budget 60 --engine abc:pdr --out proof`
+runs fresh unbounded jobs. A plan declares shared unsigned signals, predicates
+and component ports. All components have one `clk` and one active-high `reset`.
+The runner checks exact port widths and directions against the elaborated RTL.
+It connects ports with the same signal name in the closed composition.
+
+```json
+{
+  "verilog": ["units.sv"],
+  "signals": {"token": 1, "accepted": 1},
+  "predicates": {"token_ok": "token == 1", "accept_ok": "accepted == 1"},
+  "components": [
+    {"id": "producer", "top": "Producer", "inputs": [], "outputs": ["token"],
+     "assumes": [], "guarantees": ["token_ok"]},
+    {"id": "consumer", "top": "Consumer", "inputs": ["token"], "outputs": ["accepted"],
+     "assumes": ["token_ok"], "guarantees": ["accept_ok"]}
+  ]
+}
+```
+
+Each assumption names the exact predicate that a neighbour guarantees.
+An assumption can use only the consumer's inputs. Missing providers, multiple
+drivers and circular dependencies are errors. Each local proof assumes only its
+listed predicates. The closed proof removes all generated assumptions and checks
+all guarantees together. This last check is mandatory. It also checks the actual
+wiring. A local proof alone cannot earn composed success.
+
+Exit 0 means `conditional_proved`. Every component and the closed composition
+must have an unbounded pass with the existing bounded reachability guard.
+Source RTL assumptions remain environment restrictions. Each obligation records
+the assumption cells and their source locations. This flow does not prove
+that every assertion activation is reachable. It does not certify a supplied RTL
+export's generator revision. The budget limits each solver to the remaining time
+and stops new jobs after expiry. Frontend probes can add time beyond this budget.
+Use an outer process deadline when a strict total wall time is required.
+Fresh output directories are required. No cached proof is reused.
+
+## Explicit abstraction
+
+BMC and prove accept `--abstraction plan.json`. The file contains only `cuts`:
+
+```json
+{"cuts": [{"signal": "ram_read_data", "width": 32, "kind": "memory-read"}]}
+```
+
+Kinds are `cut`, `blackbox-output`, `data` and `memory-read`. Each cut replaces the
+selected signal with an unconstrained value at each step. Width checks and clock
+cut guards remain active. For a black box, list each output. This does not remove
+the instance or bypass clock and state checks. For a memory, cut each read-data
+signal. This loses address, collision, initialization and inter-port correlation.
+It keeps all concrete read values possible. Undefined read-under-write behavior
+stays free. This is an overapproximation, not a typed RAM refinement proof.
+Data abstraction frees the declared bits; it does not reduce an arithmetic width.
+
+Abstraction plans cannot add assumptions. Use a checked interface contract when
+an output restriction is needed. An abstract counterexample is `unknown`, not a
+concrete bug. An abstract proof applies to the larger unconstrained behavior set.
+The result records each cut, its semantics, kind and captured plan hash.
+
+## Invariant mining and strengthening
+
+`rvw formal strengthen plan.json --budget 60 --out proof` accepts a single
+component contract without generated assumptions. Add `samples`, an array of
+observed unsigned output values, for example `[{"token": 1}]`.
+The command mines minimum and maximum bounds for each output. It proves each
+candidate with a fresh unbounded job. An observed bound is never an assumption.
+A failed or incomplete candidate is excluded from the final strengthening set.
+The final job asserts the target guarantees and the certified bounds together.
+Use `smtbmc:yices` for k-induction or `abc:pdr` for IC3/PDR. This supplies joint
+assertions to the existing engine. It does not modify an engine's lemma database.
+Original RTL assertions remain checked in every job.
+
+Limits: unsigned interval mining only; no relational, memory or predicate mining.
+There is no measured capacity gain or commercial parity claim. A final pass is
+unbounded under the source RTL assumptions and the declared reset protocol.
+
+### BOOM free-list export recipe
+
+`SpinalChecks/boom/freelist-capacity.py` prepares the `RenameFreeList` module from
+an existing BOOM Verilog export. It leaves core sources unchanged. Run:
+
+```sh
+rvw/.venv/bin/python SpinalChecks/boom/freelist-capacity.py \
+  --verilog /path/to/BoomSimTop.v --out /tmp/freelist-plan
+scripts/with-lock.sh boom nice -n 10 rvw/.venv/bin/rvw formal contracts \
+  /tmp/freelist-plan/plan.json --engine abc:pdr --depth 8 --budget 60 \
+  --out /tmp/freelist-proof
+```
+
+The named properties check allocation payload range and membership in the debug
+free set. Inputs stay free. The recipe disables native assertions in the copied
+module because their environment protocol needs a separate harness. It records
+the input export hash. It does not certify the export's source revision. These
+local properties do not establish free-list protocol correctness or whole-core safety.
 ## Table-driven apps
 
 ```sh

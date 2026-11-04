@@ -326,10 +326,10 @@ Legacy `mem_*` fields still describe completed effects. A missing fault record
 makes no claim about attempted accesses. This extension describes data accesses;
 instruction fetch faults still use trap cause/tval.
 
-Spike checks zero-completion, uncompressed scalar load/store attempts for width
-codes 0..3. It computes address and width from its own instruction and pre-step
-registers, then checks the synchronous cause. Other encodings, partial effects,
-and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Spike checks zero-completion scalar load/store attempts, compressed accesses
+and LR/SC/AMOs. It computes address and width from its own instruction and
+pre-step registers, then checks the synchronous cause. Reserved encodings,
+partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 
@@ -383,6 +383,24 @@ missing external inputs give inconclusive. Current Spike/Sail single-hart
 commands do not implement this extension. Do not split `/2` into `/1` files and
 claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
 completion aggregation. It does not supply a multi-hart reference backend.
+
+
+### C2 online launch
+
+`rvw cosim live --elf ELF --core CORE --out DIR --simulator COMMAND ...`
+launches a C1 adapter. DIR must be new. COMMAND must contain `{elf}` and `{out}`
+placeholders. The command receives the captured ELF and writes C2 to
+`DIR/rvfi.jsonl`. `RVW_RVFI_FLUSH=1` requests line flushes in RiscvSim.
+The existing offline comparison and synchronization rules apply. The wall
+timeout covers the whole launch, including builds and lock waits. A checked
+mismatch stops the process group and returns exit 1. A timeout, incomplete
+stream or nonzero exit cannot produce a match; it returns exit 3 when usable
+trace evidence exists. A timeout before any C2 output is also inconclusive.
+Other input and trace errors return exit 2. `simulator` records command,
+returncode, timed_out and trace path. The consumed prefix digest is not a
+complete file identity. Launch metadata captures the executable identity and
+argument list; adapter build dependencies still require C1 provenance.
+
 
 ## C3. Suite results (`rvw.results/1`)
 
@@ -1880,6 +1898,29 @@ FIFO candidates require exact unconditional typed Gray encoder expressions.
 the finding, so they contribute to its waiver ID. This establishes an encoder
 shape only. Pointer transitions and transfer behavior remain unproved.
 
+## Formal capacity reports
+
+`rvw formal contracts` writes `rvw.formal-contracts/1` in a fresh output directory.
+Fields are `status`, `plan_sha256`, `obligations`, `restrictions` and `input_capture`.
+Each obligation has an `id`, `status`, and either a child `result` with `proof_kind`
+or a reason that it was not run. Run obligations also list assumption cells and
+their source locations. `conditional_proved` requires fresh unbounded
+passes for every component and the closed composition. Other outcomes give
+`inconclusive`. The command returns 0 only for `conditional_proved`. Input errors
+return 2. This report is not a C4 acceptance gate or a reusable proof certificate.
+The copied plan and child input captures bind the report to its inputs.
+
+`rvw formal strengthen` writes `rvw.formal-strengthen/1`. It records `status`,
+`candidates`, `certified`, `obligations` and `semantics`. Only fresh unbounded passes
+can add a candidate to `certified`. The final target proof supplies `status`.
+Certified candidates remain assertions in the final target. Source assumptions
+remain environment restrictions. Neither observations nor bounded passes can
+certify an invariant. Missing evidence gives an inconclusive result.
+
+BMC/prove abstraction entries extend `cut_points` with `kind` and `plan_sha256`.
+The semantics remain `unconstrained_anyseq`. No abstraction assumption is implicit.
+See the [formal capacity interface](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
 ## Formal app and benchmark reports
 
 `rvw formal apps` reads `rvw.formal-apps/1` and writes
@@ -1919,6 +1960,13 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Init platform review marker
+
+An optional `rvw init --linker-script` platform template carries
+`review_required: true`. The cosim platform loader refuses it. The owner must
+check the RAM, reset PC, MMIO, PMP, interrupt, privilege and fault policies
+against the core specification before removing the marker. A linker map alone
+does not establish these policies.
 ### C1 simulation throughput extension
 
 Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.

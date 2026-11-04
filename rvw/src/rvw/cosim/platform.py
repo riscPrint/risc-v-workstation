@@ -76,6 +76,8 @@ class Platform:
     def load(cls, core, path=None):
         path = Path(path) if path else Path(__file__).parent / "configs" / f"{core}.json"
         obj = json.loads(path.read_text())
+        if obj.get("review_required"):
+            raise ValueError("Review the scaffold platform against the core specification before removing review_required.")
         if obj.get("schema") == "rvw.soc/1":
             from rvw.soc.model import load, platform
             obj = platform(load(path))
