@@ -691,7 +691,11 @@ An empty `rows` list with unknown entries does not prove that the table is empty
 
 ### Reduction and bisect reports
 
-`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL` or `irq`.
+`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL`, `irq`, or `stimulus`.
+For `stimulus`, `kept` contains group names, and counts refer to groups.
+The replay must include `--stimulus-file`; C1 must record its `stimulus_sha256`.
+The `rvw.stimulus/1` event format and dependency rules are defined in
+`rvw/src/rvw/bundle/README.md`. Minimality applies to admissible group removals.
 Each entry has `original`, `remaining`, `kept` (zero-based input indices),
 `completion`, `one_minimal`, and `global_minimum` (always false).
 IRQ indices exclude the fixed initial event from the search, but still refer to
@@ -2247,4 +2251,37 @@ init/reset and nonlocal assignments refuse that inference. Mixed links have a
 separate method. These links do not prove individual Scala statement hits;
 `scala_mapping.statement_hit_status` remains `undetermined`.
 
+
+### Cooperative farm capacity extensions (#57)
+
+Host capacity and request resources support `disk_bytes` and `jobs` in addition
+to CPU slots, memory bytes and named locks. A host can set `projects` with
+per-project limits for those four dimensions. Requests then require a configured
+`project`. All active requests for that project share its quota. Host aliases
+share the same host state. An oversized request is refused; a capacity conflict
+waits within the request timeout. Disk admission also checks current free space.
+Reports include effective `limits`, `queued_s`, `held_s`, `released` and `outcome`.
+Handled cancellation releases all reservations. These fields describe reservations,
+not actual consumption. OS resource limits and cumulative project accounting are
+not provided. See `rvw/src/rvw/farm/README.md` for defaults and remaining limits.
+
+### Paired SoC bridge observations (#134)
+
+The optional extended `soc check --transactions` JSONL record includes `write`,
+`data`, `error`, `beats`, and optional `register`, in addition to the original
+address fields. Bindings can declare `byteorder` and `software_byteorder`.
+Beat masks index lanes by ascending address. The format and bounded comparison
+rules are defined in `rvw/src/rvw/soc/README.md`. Matching samples never produce
+a pass. Endpoint pairing and observation provenance remain the capture
+producer's responsibility. The bundled captures do not emit extended records.
+
+### riscv-formal input provenance (#63)
+
+C3 `source.formal_inputs.settings_sha256` binds the selected formal settings.
+`source.formal_inputs.committed_inputs.files` lists copied input hashes and their
+comparison with repository HEAD bytes. Rows report `committed`, `modified`,
+`untracked_or_unavailable`, or `unavailable`. The nonempty list has
+`all_committed=true` only when every row matches a commit. This is file provenance,
+not a generator-origin or adapter-conformance claim. `source.identity_complete`
+remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
