@@ -87,3 +87,5 @@ def test_native_mixed_width_ftq(tmp_path):
     assert stats['coupled']['system.cpu.ftq.inserts'] == 0
     assert stats['decoupled']['system.cpu.ftq.inserts'] > 0
     assert stats['decoupled']['system.cpu.ftq.removals'] > 0
+    assert stats['decoupled']['system.cpu.ftq.squashes'] > 0
+    assert stats['decoupled']['system.cpu.bac.status::FTQFull'] > 0

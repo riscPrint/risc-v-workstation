@@ -288,7 +288,7 @@ def test_invalid_riscv_decoupled_settings(description, override):
     description['cpu'].update(decoupledFrontEnd=True, minInstSize=2,
                               fetchTargetWidth=64, numFTQEntries=16)
     description['cpu'].update(override)
-    with pytest.raises(ValueError, match='cpu\.'):
+    with pytest.raises(ValueError, match=r'cpu\.'):
         model.validate_description(description)
 
 
