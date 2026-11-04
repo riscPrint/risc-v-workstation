@@ -42,7 +42,10 @@ needed for measured stall causes and predicated-off commit counts.
 `soc.json` describes this example's simulation map and reference policies.
 Run `rvw soc generate soc.json --out /tmp/boom-soc --json` from this folder.
 See the [format and limits](../../rvw/src/rvw/soc/README.md).
-The existing adapter does not yet consume the generated simulation map.
+Pass `--soc-map DIR/sim-map.json` to the launcher to use the generated map.
+The adapter reads device addresses and reset values from that map. It captures
+accepted TileLink A requests with a map monitor. This does not observe RTL
+decoder selects. See the SoC guide for fixed RTL limits.
 
 `isa.json` declares the adapter trace ISA and pins the opcode coverage source.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`
