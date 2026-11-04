@@ -650,3 +650,10 @@ literal switch cases and asynchronous memory read consumers. Unknown expression
 uses and cross-component uses stay conservative. Masked switch keys and general
 clock-domain inference remain open. Local use checks do not prove application
 coverage or non-vacuity.
+
+## Finite coherence model
+
+[coherence/](coherence/README.md) explores a finite two-agent TileLink-C permission
+abstraction. It generates a permission relation for RTL and simulation monitors.
+The two-hart fixture binding checks permission safety only. Channel refinement,
+RTL data invariants and general fair liveness remain open.
