@@ -3,9 +3,16 @@ from rvw.mcp.worker import handler
 from .dashboard import dashboard
 
 
-def execute_json(hosts, manifest, adapter, identity_command, identity, out, jobs=1, timeout=600):
+def execute_json(hosts=None, manifest=None, adapter=None, identity_command=None, identity=None, out=None, jobs=1, timeout=600, action=None):
+    if action == "cancel":
+        return cancel_json(out)
     from .executor import execute
     return execute(hosts, manifest, adapter, identity_command, identity, out, jobs=jobs, timeout=timeout)
+
+
+def cancel_json(out):
+    from .executor import cancel
+    return cancel(out)
 
 
 def mcp_tools():
@@ -17,4 +24,6 @@ def mcp_tools():
                 "identity": {"type": "object"}, "out": string,
                 "jobs": {"type": "integer", "minimum": 1}, "timeout": {"type": "number", "exclusiveMinimum": 0}},
                ["hosts", "manifest", "adapter", "identity_command", "identity", "out"]),
-        handler("rvw.farm.mcp_tools"), long=True)]
+        handler("rvw.farm.mcp_tools"), long=True),
+        ToolSpec("farm_cancel", "Cancel shards and confirm host process-group cleanup.",
+                 schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "cancel"), long=True)]

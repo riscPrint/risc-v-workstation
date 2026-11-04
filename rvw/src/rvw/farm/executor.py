@@ -7,6 +7,8 @@ from pathlib import Path
 import shlex
 import sys
 import tempfile
+import uuid
+import time
 
 from rvw.common.proc import run_group
 from rvw.results import RunResult
@@ -16,9 +18,10 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def worker(request):
+def worker(request, on_start=None):
     """Remote endpoint. Requires rvw installed in the host's selected Python."""
-    identity = run_group(request["identity_command"], capture=True, timeout=60)
+    deadline = time.monotonic() + request["timeout"]
+    identity = run_group(request["identity_command"], capture=True, timeout=min(60, request["timeout"]), on_start=on_start)
     if identity.returncode or json.loads(identity.stdout) != request["identity"]:
         raise ValueError("remote tool identity differs")
     with tempfile.TemporaryDirectory(prefix="rvw-shard-") as temp:
@@ -34,7 +37,7 @@ def worker(request):
         manifest = root / "manifest.jsonl"
         manifest.write_text("".join(json.dumps(row) + "\n" for row in rows))
         r = run_group([*request["adapter"], "run-many", "--manifest", str(manifest),
-                       "--jobs", str(request["jobs"])], timeout=request["timeout"], capture=True)
+                       "--jobs", str(request["jobs"])], timeout=max(.001, deadline - time.monotonic()), capture=True, on_start=on_start)
         cells = []
         for i, row in enumerate(rows):
             out = Path(row["out"])
@@ -58,6 +61,13 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
     if (identity.get("schema") != "rvw.adapter-capture/2" or not claims
             or not claims.get("tools.native_build.sha256") or claims.get("source.tools_dirty") is not False):
         raise ValueError("a complete /2 native tool identity with a clean harness is required")
+    if len({h['name'] for h in hosts}) != len(hosts):
+        raise ValueError("host names must be unique")
+    for host in hosts:
+        if host['address'].startswith('-'):
+            raise ValueError("invalid SSH address")
+        if host.get('resources', {}).get('cpu', jobs) < jobs:
+            raise ValueError("CPU reservation must cover adapter jobs")
     out = Path(out)
     out.mkdir(parents=True, exist_ok=False)
     rows = [json.loads(line) for line in Path(manifest).read_text().splitlines() if line.strip()]
@@ -68,6 +78,8 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         data = Path(row["elf"]).read_bytes()
         cells.append({"id": str(i), "options": {k: v for k, v in row.items() if k not in ("elf", "out")},
                       "elf_bytes": base64.b64encode(data).decode(), "elf_sha256": digest(data)})
+    controls = [{"host": host, "token": uuid.uuid4().hex, "dispatched": i < len(cells)} for i, host in enumerate(hosts)]
+    (out / "control.json").write_text(json.dumps(controls))
     def shard(index_host):
         index, host = index_host
         selected = cells[index::len(hosts)]
@@ -75,7 +87,8 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         if not selected:
             return {**result, "status": "empty"}
         request = dict(cells=selected, adapter=adapter, identity_command=identity_command,
-                       identity=identity, jobs=jobs, timeout=timeout)
+                       identity=identity, jobs=jobs, timeout=timeout, token=controls[index]["token"],
+                       resources={"cpu": jobs, **host.get("resources", {})})
         try:
             address = host["address"]
             if address.startswith("-"):
@@ -84,8 +97,10 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
                    shlex.join([host.get("python", "python3"), "-m", "rvw.farm.worker"])]
             r = run_group(cmd, input=json.dumps(request), capture=True, timeout=timeout + 90)
             if r.returncode or r.timed_out:
+                result["cancellation"] = cancel_host(controls[index])
                 raise ValueError(f"SSH shard lost or aborted: exit {r.returncode}: {r.stderr}")
             reply = json.loads(r.stdout)
+            result["reservation"] = reply.get("reservation")
             (out / f"shard-{index}.json").write_text(json.dumps(reply))
             if reply["identity"] != identity or reply["returncode"] or reply["timed_out"]:
                 raise ValueError("shard identity or completion differs")
@@ -127,9 +142,38 @@ def execute(hosts, manifest, adapter, identity_command, identity, out, *, jobs=1
         recorded = {c["id"] for c in result["cells"]}
         result["missing_cells"] = [c["id"] for c in selected if c["id"] not in recorded]
         return result
-    with ThreadPoolExecutor(max_workers=len(hosts)) as pool:
+    pool = ThreadPoolExecutor(max_workers=len(hosts))
+    try:
         shards = list(pool.map(shard, enumerate(hosts)))
+    except BaseException:
+        cancellation = [cancel_host(control) for control in controls]
+        (out / "cancellation.json").write_text(json.dumps(cancellation, indent=2))
+        raise
+    finally:
+        pool.shutdown(wait=True)
     report = {"schema": "rvw.farm/1", "expected_cells": len(cells), "plan": [{"id": c["id"], "options": c["options"], "elf_sha256": c["elf_sha256"]} for c in cells], "shards": shards,
               "status": "complete" if all(s["status"] in ("complete", "empty") for s in shards) else "inconclusive"}
     (out / "farm.json").write_text(json.dumps(report, indent=2))
     return report
+
+
+def cancel_host(control):
+    if not control.get("dispatched", True):
+        return {"token": control["token"], "acknowledged": True, "cause": "no shard dispatched"}
+    host = control["host"]
+    command = ["ssh", "-oBatchMode=yes", "-oConnectTimeout=10", *host.get("ssh_options", []),
+               host["address"], shlex.join([host.get("python", "python3"), "-m", "rvw.farm.worker", "--cancel", control["token"]])]
+    try:
+        reply = run_group(command, capture=True, timeout=30)
+        if reply.returncode == 0:
+            return json.loads(reply.stdout)
+    except (OSError, ValueError):
+        pass
+    return {"token": control["token"], "acknowledged": False, "cause": "host unavailable or cleanup unconfirmed"}
+
+
+def cancel(out):
+    controls = json.loads((Path(out) / "control.json").read_text())
+    results = [cancel_host(control) for control in controls]
+    (Path(out) / "cancellation.json").write_text(json.dumps(results, indent=2))
+    return {"status": "cancelled" if all(r["acknowledged"] for r in results) else "inconclusive", "shards": results}

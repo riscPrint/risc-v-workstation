@@ -91,9 +91,10 @@ def _close_streams(process: subprocess.Popen) -> None:
 
 
 def run_group(argv, cwd=None, env=None, timeout=None, stdout=None, stderr=None,
-              capture=False, text=True, input=None, grace=None) -> Result:
+              capture=False, text=True, input=None, grace=None, on_start=None) -> Result:
     """Like subprocess.run, but the child leads a new session; on timeout or any exception
     (KeyboardInterrupt, an MCP cancel unwinding the worker) the whole group is stopped.
+    `on_start(pid)` runs after process ownership is established. Exceptions stop the group.
     Returns TIMEOUT_EXIT (124) with timed_out=True on timeout. `argv` must be a list.
 
     The run ends when the leader exits, not when its pipes close (review 12): a member that keeps
@@ -120,6 +121,8 @@ def run_group(argv, cwd=None, env=None, timeout=None, stdout=None, stderr=None,
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
                                        stdin=subprocess.PIPE if input is not None else None,
                                        start_new_session=True, pass_fds=fds)
+            if on_start is not None:
+                on_start(process.pid)
         # Setup can itself raise or be cancelled, before _Pipes returns to us.
         pipes = _Pipes(process, input)
         timed_out = not pipes.wait_leader(timeout)

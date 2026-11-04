@@ -65,7 +65,7 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     if not options:
         pytest.skip("set RVW_TEST_SSH_OPTIONS for a native localhost SSH test")
     hosts = [{"name": name, "address": "localhost", "python": sys.executable,
-              "ssh_options": json.loads(options)} for name in ("host-a", "host-b")]
+              "ssh_options": json.loads(options), "resources": {"memory_bytes": 1024}} for name in ("host-a", "host-b")]
     manifest = tmp_path / "manifest.jsonl"
     rows = []
     for i in range(4):
@@ -73,9 +73,10 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
         elf.write_text(state)
         rows.append({"elf": str(elf), "out": "unused", "config": "test", "seed": i})
     manifest.write_text("".join(json.dumps(row) + "\n" for row in rows))
-    report = execute(hosts, manifest, adapter, [*adapter, "identity"], IDENTITY, tmp_path / "out", timeout=10)
+    report = execute(hosts, manifest, adapter, [*adapter, "identity"], IDENTITY, tmp_path / "out", jobs=2, timeout=10)
     assert report["expected_cells"] == 4
     assert report["status"] == ("inconclusive" if state == "missing" else "complete"), report
+    assert all(s["reservation"]["cpu"] == 2 for s in report["shards"])
     if state != "missing":
         assert [c["status"] for s in report["shards"] for c in s["cells"]] == [state] * 4
     hosts[1]["ssh_options"] = ["-p", "1"]
@@ -83,6 +84,7 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     assert lost["status"] == "inconclusive"
     assert lost["shards"][0]["status"] == ("inconclusive" if state == "missing" else "complete")
     assert lost["shards"][1]["status"] == "inconclusive"
+    assert lost["shards"][1]["cancellation"]["acknowledged"] is False
 
 def test_dashboard_missing_escaped_history(tmp_path):
     (tmp_path / "index.jsonl").write_text(json.dumps({"path": str(tmp_path / "missing"), "run_id": "<script>"}) + "\n")
@@ -107,4 +109,28 @@ def test_dashboard_keeps_configuration_trends_separate(tmp_path, monkeypatch):
     text = output.read_text()
     assert "fixture / isa / a / ipc" in text
     assert "fixture / isa / b / ipc" in text
-    assert text.count("<svg") == 2
+    assert text.count("<svg") == 4
+    assert "pass_rate" in text
+
+
+def test_dashboard_pass_rate_time_and_missing_history(tmp_path, monkeypatch):
+    from types import SimpleNamespace as NS
+    import importlib
+    module = importlib.import_module('rvw.farm.dashboard')
+    monkeypatch.setattr(module, 'read_index', lambda _: [
+        {'path': 'first', 'run_id': 'old'}, {'path': 'gap', 'run_id': 'gap'}, {'path': 'last', 'run_id': 'new'}])
+    def find(path):
+        if str(path) == 'gap':
+            raise ValueError('missing evidence')
+        return [NS(core='fixture', suite='isa', config='a', tests=[
+            NS(status='pass', conclusive=True, metrics={'coverage': .5}, wall_s=2),
+            NS(status='error', conclusive=False, metrics={}, wall_s=3)])]
+    monkeypatch.setattr(module, 'find_results', find)
+    output = tmp_path / 'dashboard.html'
+    module.dashboard(tmp_path, output)
+    text = output.read_text()
+    assert 'fixture / isa / a / pass_rate' in text
+    assert 'fixture / isa / a / run_time_s' in text
+    assert 'old: 0.5' in text and 'new: 5' in text
+    assert '<td>gap</td><td>not recorded</td>' in text
+    assert '<line ' not in text  # Do not draw through a missing run.

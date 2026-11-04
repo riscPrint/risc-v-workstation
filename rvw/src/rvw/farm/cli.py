@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from .executor import execute
+from .executor import execute, cancel
 from .dashboard import dashboard
 
 
@@ -13,6 +13,9 @@ def register(sub):
     run.add_argument("--jobs", type=int, default=1)
     run.add_argument("--timeout", type=float, default=600)
     run.set_defaults(func=run_command)
+    stop = commands.add_parser("cancel")
+    stop.add_argument("--out", required=True)
+    stop.set_defaults(func=cancel_command)
     report = commands.add_parser("dashboard")
     report.add_argument("--root", required=True)
     report.add_argument("--out", required=True)
@@ -30,3 +33,9 @@ def run_command(args):
 
 def dashboard_command(args):
     print(json.dumps(dashboard(args.root, args.out)))
+
+
+def cancel_command(args):
+    report = cancel(args.out)
+    print(json.dumps(report))
+    return 0 if report["status"] == "cancelled" else 3

@@ -400,10 +400,28 @@ A missing, partial, invalid or evicted remote entry is a miss. Upload sends the
 immutable generation before the atomic pointer update. Transfer failure does not
 change a measured result. `--no-cache` disables local and remote cache use.
 
-rsync keeps partial transfer data within a transfer directory. Downloads use
-private temporary directories and verify before local publication. Cross-command
-download resume, retention policy and remote garbage collection remain open.
-The cache owner must provision space and remove entries only between commands.
+Downloads keep private staging under `cache/.downloads/`, keyed by remote location
+and full cache key. A file lock serializes commands for that staging directory.
+Interrupted bytes survive the command. A later rsync checks file checksums and
+repairs partial or corrupt files. Inventory and full-key checks run again before
+local publication. A successful import removes its staging directory. Partial
+bytes never earn reused success. Owners can remove abandoned staging directories
+between commands.
+
+Uploads include `.rvw-owner.json` and `owners/<generation-id>.json` with the publishing host, user, full key,
+generation ID and upload time. This record is metadata, not evidence. To apply
+retention, stop transfers and run this on the cache host:
+
+```sh
+python -m rvw.regress.remote_cache --root /absolute/cache/path --max-bytes 10737418240 --max-age-s 2592000
+```
+
+The policy removes invalid managed entries first, then entries older than the
+age limit, then oldest publications until the byte limit is met. It reports each
+removed key and reason. It checks generation integrity and exact stored keys.
+It removes whole entries, including obsolete generations. It leaves unmarked
+folders in place. This is explicit maintenance, not a background service. An
+evicted entry is a miss. Retention uses publication age, not access time.
 
 For gate budgets and cost reports, see [common](../common/README.md#native-job-budgets).
 
