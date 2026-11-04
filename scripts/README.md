@@ -114,3 +114,47 @@ It uses a new temporary work directory and venv, machine-wide locks and
 `nice -n 10`. See [Local CI](../CONTRIBUTING.md#local-ci) for commands and
 prerequisites. The `nightly-python`, `nightly-scala` and `messages` modes
 serve the other local Actions jobs. `messages` needs a GitHub event file.
+
+## Native install qualification
+
+Run one case on a native macOS or Linux host. Install Python 3.11+, Git and uv
+0.13.6+ first. macOS also needs Homebrew and the Xcode command line tools.
+Commit source changes first. Use a new output directory outside this checkout.
+The command can ask for sudo through the installer. It approves the installer's
+package commands with `--yes`. It does not upgrade the whole host.
+
+```sh
+python3 scripts/qualify-install.py --case quickstart --cold-scala --out /tmp/rvw-quickstart
+```
+
+Use `--case core|sim|gcc|cosim|formal|gem5|quickstart|all` to select a case.
+Run each case separately on a fresh host to establish independent clean-install
+support. A sequence on one host records package reuse. Use the same command on
+Ubuntu and Fedora. Other apt/dnf systems can run it, but need their own results.
+No Actions runner or container is required. A full source build can take hours.
+`--timeout` bounds each step, including lock waits (default six hours).
+
+The command clones the committed workstation into the output directory. It
+runs the exact case's install and `--check` first. It then adds the GCC and
+simulation tools needed by the runtime harness as a separate step. GCC builds
+an actual pinned riscv-tests ELF. Simulation runs the pinned public VexRiscv
+smoke program offline. Cosim compares that complete passing trace with Spike. It also runs the native
+reference policy tests from a locked development environment. Any skipped native
+test stops qualification.
+Formal runs an eight-cycle counter BMC. gem5 builds and runs the median
+benchmark with `rvw arch`. These are bounded smoke checks. They do not establish
+whole-core correctness or a release verdict. The gem5 case uses the BOOM model
+data but needs no private BOOM sources.
+
+`--cold-scala` selects fresh sbt boot, global, Ivy and Coursier directories.
+The command first runs `root/update` online. It then invokes the normal offline
+launcher. This distinguishes dependency fetching from offline startup. Offline
+startup with empty caches cannot work. The script does not download a JDK or
+sbt launcher into those caches before this step.
+
+Each step saves its command, exit code, duration and log. `report.json` remains
+inconclusive until all required steps pass. An error, missing result or timeout
+stops the case. There is no skip-as-pass path. Attach reports and relevant logs
+to #17 and #40. Record whether the machine was clean before starting. The script
+cannot attest to a clean host. Inspect logs before sharing them. Retain the
+output until review; it includes cloned sources and native build outputs.

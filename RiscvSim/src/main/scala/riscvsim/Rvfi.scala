@@ -80,10 +80,12 @@ class RvfiProbe(channels: Seq[Bundle]) {
  * Counts records and order gaps (an order that is not the previous one plus one).
  * Cycles never decrease in the file (C2 requires it); a write that would break this fails.
  */
-class RvfiTraceWriter(file: File, header: ujson.Obj) extends AutoCloseable {
+class RvfiTraceWriter(file: File, header: ujson.Obj,
+                      flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1")) extends AutoCloseable {
   file.getAbsoluteFile.getParentFile.mkdirs()
   private val w = new PrintWriter(new BufferedWriter(new FileWriter(file), 1 << 20))
   w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str("rvw.rvfi/1")) ++ header.value)))
+  if (flushEachRecord) w.flush()
   var records = 0L
   var trapRecords = 0L
   var orderGaps = 0L
@@ -103,17 +105,20 @@ class RvfiTraceWriter(file: File, header: ujson.Obj) extends AutoCloseable {
     records += 1
     if (r.trap) trapRecords += 1
     w.println(r.toJson)
+    if (flushEachRecord) w.flush()
   }
 
   def trap(cycle: Long, cause: BigInt, tval: BigInt, intr: Boolean): Unit = {
     at(cycle)
     w.println(s"""{"event": "trap", "cycle": $cycle, "cause": "${Hex(cause)}", "tval": "${Hex(tval)}", "intr": $intr}""")
+    if (flushEachRecord) w.flush()
   }
 
   /** Interrupt input levels (in their `mip` bit positions) the harness drives from `cycle` on. */
   def irq(cycle: Long, levels: BigInt): Unit = {
     at(cycle)
     w.println(s"""{"event": "irq", "cycle": $cycle, "levels": "${Hex(levels)}"}""")
+    if (flushEachRecord) w.flush()
   }
 
   /** A trap seen at `cycle` whose tval is only known one cycle later. The next `cycle` call writes it. */
@@ -139,6 +144,7 @@ class RvfiTraceWriter(file: File, header: ujson.Obj) extends AutoCloseable {
     pending = None
     at(cycle)
     w.println(s"""{"event": "end", "cycle": $cycle, "status": "$status"}""")
+    if (flushEachRecord) w.flush()
   }
 
   def close(): Unit = w.close()

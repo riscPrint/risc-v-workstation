@@ -230,3 +230,15 @@ overlaps, unknown intervals, replay counts and commit kinds. These measurements
 are producer claims from sampled signals, not proof that a cause blocks all
 retirement. BOOM probe changes remain core-owned. See
 [the BOOM mapping](../examples/boom/konata-events.md).
+
+## Prediction outcomes
+
+`PredictionOutcome(id, predictor, kind, predicted, actual, recoveryCycles,
+wrongPathInstructions, warmup, alias, context)` records explicit observations.
+Optional values default to unknown. Bind project signals through
+`PipelineTags.event`; generic code does not name predictor implementations.
+See the [wire contract](../docs/PLATFORM_CONTRACTS.md#observed-prediction-outcome-extension)
+and [perf report guide](../rvw/src/rvw/perf/README.md#observed-predictor-outcomes).
+Emit outcomes while the instruction ID is live. Do not estimate missing
+recovery or wrong-path counts from flush records. Project-level predictor
+bindings and BOOM validation remain #49.

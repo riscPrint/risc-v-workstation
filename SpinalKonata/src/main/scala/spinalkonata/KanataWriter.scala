@@ -15,6 +15,14 @@ final case class Stall(scope: String, cause: String, evidence: String = "measure
 final case class Replay(id: Long, cause: String, evidence: String = "measured") extends Event
 /** Physical completion with an observed predication flag. Retire alone keeps unknown semantics. */
 final case class Commit(id: Long, predicatedOff: Boolean) extends Event
+/** Observed outcomes only. None means unknown, never an inferred zero.
+  * Recovery counts cycles to resumed correct-path fetch. Work counts admitted wrong-path instructions.
+  * Project bindings supply predictor identity, warmup, alias and context observations.
+  */
+final case class PredictionOutcome(id: Long, predictor: String, kind: String,
+    predicted: String, actual: String, recoveryCycles: Option[Long] = None,
+    wrongPathInstructions: Option[Long] = None, warmup: Option[Boolean] = None,
+    alias: Option[Boolean] = None, context: Option[String] = None) extends Event
 object StallCause {
   val OperandWait = "operand_wait"
   val Structural = "structural"
@@ -35,6 +43,7 @@ final class KanataWriter(out: File, startCycle: Long = 0) extends AutoCloseable 
   writer.print(s"Kanata\t0004\nC=\t$startCycle\n")
   private val pending = mutable.TreeMap.empty[Long, mutable.ArrayBuffer[Event]]
   private val seen = mutable.HashSet.empty[Long]
+  private val predictions = mutable.HashSet.empty[(Long, String, String)]
   private val alive = mutable.HashSet.empty[Long]
   private val lanes = mutable.HashMap.empty[(Long, String), String]
   private var sealedThrough = startCycle - 1
@@ -89,6 +98,25 @@ final class KanataWriter(out: File, startCycle: Long = 0) extends AutoCloseable 
     case Replay(id, cause, basis) =>
       live(id)
       line(s"#rvw\t1\treplay\t$id\t${token(cause)}\t${evidence(basis)}")
+    case PredictionOutcome(id, predictor, kind, predicted, actual, recovery, work, warmup, alias, context) =>
+      live(id)
+      require(token(predictor) != "?", "unknown predictor identity")
+      require(Set("direction", "target", "return")(kind), "invalid prediction kind")
+      def address(value: String): BigInt = {
+        require(value.matches("(0x[0-9a-fA-F]+|[0-9]+)"), "invalid prediction address")
+        val result = if (value.startsWith("0x")) BigInt(value.drop(2), 16) else BigInt(value)
+        require(result >= 0, "negative prediction address"); result
+      }
+      if (kind == "direction") {
+        require(Seq(predicted, actual).forall(Set("taken", "not_taken")), "invalid direction")
+      } else { address(predicted); address(actual) }
+      require(predictions.add((id, predictor, kind)), "duplicate prediction outcome")
+      def count(value: Option[Long]): String = value.map { n => require(n >= 0); n.toString }.getOrElse("?")
+      val fields = Seq("#rvw", "1", "prediction", id.toString, predictor, kind,
+        token(predicted), token(actual), count(recovery), count(work),
+        warmup.map(_.toString).getOrElse("?"), alias.map(_.toString).getOrElse("?"),
+        context.map(token).getOrElse("?"))
+      line(fields.mkString("\t"))
     case Commit(id, off) =>
       live(id)
       line(s"#rvw\t1\tcommit\t$id\t${if (off) "predicated_off" else "architectural"}")

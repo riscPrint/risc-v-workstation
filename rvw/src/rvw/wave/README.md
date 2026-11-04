@@ -114,3 +114,17 @@ Direct native FST range reads are not implemented.
 checks aliases, x/z bits, same-time updates, real/string values, empty ranges,
 trailing timestamps, failed builds and SQL index selection. These fixture tests
 do not establish performance for every large waveform.
+
+Measure a large synthetic trace in separate build and query processes:
+
+```sh
+scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/python \
+  scripts/benchmark-wave-index.py /tmp/wave-bench --rss-limit-mib 256
+```
+
+The default fixture has 524,288 changes to one 4096-bit signal. Its VCD is
+2,153,664,099 bytes. The script checks the last ten values and reports peak
+process RSS for each operation. It returns an error if measured RSS exceeds
+the selected limit. This is a measured limit for this fixture, not an enforced
+process allocation cap. Headers with many signals and longer tokens need
+separate measurements. Direct native FST seeking remains open work.
