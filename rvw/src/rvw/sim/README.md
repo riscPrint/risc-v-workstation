@@ -80,3 +80,11 @@ small timer, clock/reset, settled register, X/Z and two-state conformance cases.
 Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seeds 3 --json` runs the pinned
+Accellera UVM library with native Verilator timing and coverage.
+See [the UVM suite](../../../../Uvm/README.md) for the pin, licence checks,
+machine lock command, conformance boundary and remaining DPI/VIP gaps.
+It writes standalone C3. It does not implement C1 or earn C4 acceptance.
