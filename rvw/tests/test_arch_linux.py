@@ -200,3 +200,29 @@ def test_archive_member_cannot_escape(tmp_path):
     with pytest.raises(linux.tarfile.TarError):
         linux.extract_buildroot(archive, tmp_path / 'out')
     assert not (tmp_path / 'escape').exists()
+
+
+def test_newc_overlay_is_deterministic_and_has_executable_init():
+    script = b'#!/bin/sh\necho check\n'
+    archive = linux.init_overlay(script)
+    assert archive == linux.init_overlay(script)
+    assert archive[:6] == b'070701'
+    assert int(archive[14:22], 16) == 0o100755
+    assert int(archive[54:62], 16) == len(script)
+    assert b'rvw-init\0' in archive
+    assert b'TRAILER!!!\0' in archive
+
+
+def test_prebuilt_checksum_failure_blocks_publication(tmp_path, monkeypatch):
+    lock = tmp_path / 'source.json'
+    lock.write_text(json.dumps({'schema': 'rvw.linux-prebuilt/1', 'artifacts': {
+        'Image': {'url': 'https://example.org/kernel', 'sha256': '0' * 64}}}))
+    monkeypatch.setattr(linux, 'tool', lambda _: 'curl')
+    def download(argv, out, timeout):
+        Path(argv[-1]).write_bytes(b'wrong image')
+    monkeypatch.setattr(linux, 'command', download)
+    out = tmp_path / 'out'
+    with pytest.raises(ValueError, match='SHA-256 mismatch'):
+        linux.execute('prebuilt', out, source=lock, images=tmp_path)
+    assert json.loads((out / 'manifest.json').read_text())['status'] == 'inconclusive'
+    assert not (out / 'build/images/Image').exists()

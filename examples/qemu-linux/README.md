@@ -62,3 +62,25 @@ boom --elf /tmp/opensbi-smoke.elf --trace PREFIX --json`. Require 162 compared
 instructions and `scope=trace prefix`. Keep `trace_complete=false` explicit.
 A direct firmware entry can read unspecified reset GPR values. Do not copy
 those values from the DUT into the reference to force a match.
+
+## Native prebuilt reference images
+
+On macOS or Linux, use the pinned Debian trixie installer images in
+`prebuilt.json`. SHA-256 checks run before image preparation. The flow appends
+an initramfs member with `/rvw-init`. It runs the same small user process check
+as the Buildroot flow. It does not run the Debian installer. Use the separate
+`platform-prebuilt.json` to select that entry point.
+
+```sh
+rvw arch linux prebuilt --source examples/qemu-linux/prebuilt.json \
+  --images /path/to/opensbi/build/platform/generic/firmware \
+  --out /tmp/linux-prebuilt --json
+rvw arch linux boot --platform examples/qemu-linux/platform-prebuilt.json \
+  --images /tmp/linux-prebuilt/build/images --out /tmp/linux-boot \
+  --timeout 180 --json
+```
+
+Build firmware first with the pinned `firmware --llvm` command. The manifest
+binds the supplied firmware bytes, downloaded image bytes and final initramfs.
+The prebuilt source lock records the upstream checksum URL. Hash checks detect
+changed downloads. They do not verify a Debian signature.
