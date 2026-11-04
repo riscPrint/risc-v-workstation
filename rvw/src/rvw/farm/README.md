@@ -119,3 +119,8 @@ CPU quotas or cumulative project usage. A caller that declares zero memory or
 disk reserves none. Direct third-party subprocesses do not acquire these limits.
 Crash recovery still needs owner cleanup. Money rates and measured build and
 simulation categories remain open under #57.
+
+The dashboard also plots recorded C3 `sim_khz` and
+`sim_instructions_per_s` per core, suite and preset. Missing values stay absent.
+The denominator includes adapter execution and artifact handling. It excludes
+model setup. These plots do not establish equivalent results or speedups.

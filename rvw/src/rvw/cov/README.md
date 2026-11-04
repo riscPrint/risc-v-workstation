@@ -961,3 +961,21 @@ Each instance report includes mapped and unmapped point counts with its denomina
 
 RTL sequence goals with no completion also appear in the closure report.
 Their pending activation count stays separate from reachability.
+
+
+### Property activation and requirement links
+
+A `cov prove` point can declare an `activation` SystemVerilog expression. The
+runner creates a separate cover job with the same captured inputs and assumptions.
+The expression must be one statement-free expression. A successful cover needs
+exit 0, PASS, no free wires and the existing sanity guard. Only then does
+`proof_cones.properties[].activation.status` become `reached`. Other evidence is
+`inconclusive`; an absent predicate is `not_measured`. This is a user-declared
+activation predicate. It does not establish full property non-vacuity.
+
+The additive `rvw.proof-cones/1` `requirements` array joins each declared
+`requirement_id` to sorted `property_ids`. Property records join activation,
+structural cones and the unavailable solver core through `property_id`. Every
+requirement status stays `inconclusive`. A list of linked properties is not a
+complete set of functional obligations. A structural cone is not a solver core.
+These fields do not change exclusion or gate verdicts.

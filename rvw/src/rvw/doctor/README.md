@@ -14,8 +14,7 @@ Sail is checked by the installer when `RVW_SAIL` is set.
 Native checks call `scripts/install.sh --check`. The installer owns minimum
 versions and warnings against `docs/TOOL_VERSIONS.md`. Doctor preserves its
 output and parses version records. Version probes do not qualify a tool flow.
-Unrequested backends remain visible as `skipped`. Other optional GUI tools
-and IDE packages are outside this first increment.
+Unrequested backends remain visible as `skipped`. Optional GUI and IDE checks are described below.
 
 `--install FEATURES` is the only installation path. It calls the same script.
 The script asks before system packages. `--yes` approves those commands.
@@ -36,7 +35,8 @@ match the request. Synthesized and wall-clock-marked results cannot show readine
 Temporary run files are removed; the
 result stays in doctor JSON. Adapter build caches can change. The adapter owns
 native build locks. Without this flag build/run conformance stays inconclusive.
-A smoke check does not test all options, RVFI mapping or replay completeness.
+The default smoke check does not test optional artifacts or replay completeness.
+Use the explicit options below for bounded C2 and artifact checks.
 
 ## Output and exits
 
@@ -60,3 +60,33 @@ Use the existing installer policy. Keep installation explicit. Never infer
 adapter conformance from file presence or `info`. Input declarations are claims
 that need review; doctor does not prove their completeness. Gate readiness is a
 preflight check. Full C1 option conformance and C2 mapping checks remain open.
+
+## Optional backend and trace checks
+
+`--features waves,ide` probes Surfer and VS Code. It records executable paths,
+versions and capabilities in JSON. The IDE check also needs the installed
+`riscprint.risc-v-workstation` extension and records its version. `all` includes
+these backends. Missing requested tools are errors. GUI installation is manual;
+`--install` accepts native features only. A version probe does not test a GUI
+session. Native backend status reflects the aggregate installer check; individual
+version records remain in `native`.
+
+Use an explicit smoke request to check selected C1 artifacts:
+
+```sh
+rvw doctor --smoke-elf rvw/out/programs/smoke --smoke-options rvfi,wave,coverage,konata,spinaltrace --json
+rvw doctor --smoke-elf rvw/out/programs/smoke --smoke-options rvfi --smoke-platform rvw/cosim.json --json
+```
+
+Each selected option reaches build and run. Its artifact must be nonempty and
+inside the run directory. Doctor streams C2 through the shared validator. It
+checks core, config, ISA and XLEN against adapter info and requires instructions
+and a passing end event. Schema validation alone does not establish signal
+mapping. Without `--smoke-platform`, mapping stays inconclusive. With that option,
+the shared Spike checker must return a complete match with `end_status: pass`.
+The platform JSON must describe the actual core and its memory map.
+
+`adapter_conformance` lists the adapter checks and their bounded scope. Full C1
+conformance stays inconclusive. This smoke request does not test every config,
+run-many, option interactions, wall timeouts, replay or interrupt scheduling.
+No native combination was qualified by the fixture tests for this increment.
