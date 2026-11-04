@@ -207,11 +207,10 @@ Use `--wave` to record the instrumented wave. Wave windows work as before.
 An adapter must use `RiscvSimConfig.elaborate` to support this flag. A requested
 model without its graph fails with an error. It cannot supply cause evidence.
 
-The `boom-spinaltrace` prototype stays until an old/new BOOM failure bundle has
-the same signature, failure cycle, criterion and dependency trace. Run both with
-the same ELF, seed, model options and wave window under the `boom` lock. Compare
-source statements, cycles and dependency edges after normalizing generated IDs
-and checkout paths. Record the measured result in the PR before removal.
+The legacy `boom-spinaltrace` prototype is removed. Use the BOOM adapter with
+`--spinaltrace`. BOOM small and VexRiscv have old/new caller-equivalence checks.
+The checks retain design source locations, graph fields and accuracy metadata.
+Equivalence of caller locations does not establish graph completeness.
 
 Some generated statements have no retained core frame. The location filter
 skips library frames and uses the elaboration caller. The prototype and the
@@ -477,6 +476,41 @@ format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
 
+### Source roots and caller equivalence
+
+Core adapters must pass the core's Scala source roots to
+`RiscvSimConfig.elaborate`. The VexRiscv example supplies its selected core root.
+Without this argument, source files outside the adapter tree can remain bare
+names. A bare name can be ambiguous when two packages use the same file name.
+Run the Vex source regression with JDK 21 and `VEXRISCV` set to its checkout:
+
+```sh
+cd examples/vexriscv/rvw
+sbt 'Test/runMain rvwvex.SourceRootsCheck'
+```
+
+Hold the workstation's `vex` and `sbt` locks around that command.
+
+`rvw.debug.parity.compare` compares saved diagrams or computed traces. Supply
+`kind='blocks'` or `kind='trace'`. Supply checkout prefixes as `left_roots` and
+`right_roots`. An optional `callers` list contains tuples of
+`(old_file, old_line, new_file, new_line)`. Use a mapping only after checking that
+both frames identify the same elaboration operation. The function retains every
+other source field. It checks generated caller names and diagram references too.
+Use `source_files=[(old_file, new_file)]` for an audited file identity, such as
+an unresolved basename and its absolute path. This changes no line or column.
+Check the source package and the statement before declaring that identity.
+If two packages contain the same basename, do not select the first search result.
+Use the retained stack frame or audit the caller's imports and called method.
+For traces, it retains edge kinds, edge multiplicity and accuracy metadata.
+Duplicate vertex labels require an explicit identity mapping and are refused.
+
+Caller equivalence does not mean identical source navigation. Each artifact
+keeps its actual caller location. The old and new callers must both be available
+for the source-navigation check. Do not map design-source statements to make a
+comparison pass. Empty traces cannot establish parity. The removal cases are BOOM small and
+VexRiscv; other cores and configurations need their own comparisons.
+
 ### BOOM MMU observations
 
 With `--rvfi-trace`, BOOM also records `mmu-observations.jsonl`, named by
@@ -554,3 +588,74 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+### Serialized multi-hart reference
+
+`SerializedMemoryReference` checks accepted memory actions at a project-declared
+serialized boundary. Initialize it from captured input bytes. Supply expected
+write bytes from independent program or device state. Its read method checks
+observed bytes and returns the last write ID for each byte. It rejects missing
+serialization IDs, duplicate action IDs and wrong data. Failed checks do not
+advance the reference.
+
+`TwoHartNativeSpec` uses this reference with independent register state for its
+producer/consumer programs. It records memory serialization and read-from IDs
+beside C2 hart retirement order. This fixture check does not add a full ISA
+reference or production multi-image adapter. Use herd or another memory-model
+checker for weak-memory outcomes. Do not impose this serialized model on a
+boundary that permits other legal interleavings.
+
+### Native coherent cache checks
+
+`CoherentCacheNativeSpec` runs SpinalHDL's `CacheFiber` writeback cache in native
+Verilator. The cache has one way, 1024 bytes and 64-byte lines. Two simulated
+TileLink coherent clients share its 64-bit port. The clients are test agents,
+not CPU implementations.
+
+Spinal's TileLink monitors aggregate accepted A/C/D beats. The test connects
+completed permission changes to `CoherenceMonitor`. It compares response,
+intervention and writeback bytes with a separate stimulus-owned `MemoryImage`.
+It initializes both reference and backing RAM from the same input bytes.
+Expected data never comes from DUT reads.
+
+The directed test dirties a client line and requests shared ownership from the
+other client. It releases both clients, then overlaps two exclusive requests.
+It holds D acceptance for 80 cycles and requires both A requests to be accepted
+before release. Random channel stalls add backpressure. A same-set alias must
+evict dirty cache data that has not yet reached backing RAM. The test requires
+an observed writeback and checks final backing bytes. Missing interventions,
+releases, writebacks, stalls or request overlap fail the test.
+
+A second run corrupts an untouched backing byte while retaining the correct
+reference image. It must fail with `cache response byte mismatch`. The wrapper
+checks `TilelinkTester.checkErrors()` because that helper records simulation
+exceptions instead of immediately throwing them.
+
+Run with the `sbt` lock:
+
+```sh
+(cd RiscvSim && ../scripts/with-lock.sh sbt nice -n 10 sbt -batch \
+  -J-XX:ActiveProcessorCount=2 'testOnly riscvsim.CoherentCacheNativeSpec')
+```
+
+These are bounded cache-module checks for the declared configuration and seed.
+They are not a proof of all interleavings or coherence in a CPU integration.
+
+
+## Online co-simulation
+
+`rvw cosim live` can launch a C1 adapter and check its C2 file during the run.
+See [the cosim launch command](../Cosim/README.md#launch-a-simulator-with-online-checking).
+The launcher sets `RVW_RVFI_FLUSH=1`. `RvfiTraceWriter` then flushes its header,
+retirement records and events before returning. The default stays buffered.
+This option changes output delivery. It does not add C2 v2 state observations.
+The writer constructor also accepts `flushEachRecord` for adapter tests.
+
+## Simulation speed metrics
+
+C1 records `metrics.sim_khz` and `metrics.sim_instructions_per_s` from the
+unrounded `details.execution_s`. Model setup is excluded. Adapter execution,
+trace writes and artifact handling are included. The dashboard plots recorded
+C3 rates per preset. These rates do not prove correctness. Use long workloads,
+fixed seed and memory latency, and serial runs. Keep tracing options equal.
+See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.

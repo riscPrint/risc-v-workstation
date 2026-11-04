@@ -1,0 +1,8 @@
+addrmap device {
+  reg {
+    regwidth = 32;
+    field { sw=rw; hw=r; reset=0; } control[1:0];
+    field { sw=rw; hw=rw; onwrite=woclr; reset=1; } pending[2:2];
+    field { sw=r; hw=rw; onread=rclr; reset=1; } event[3:3];
+  } status @ 0x10;
+};

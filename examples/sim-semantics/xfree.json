@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.hdl/1",
+  "backend": "icarus",
+  "top": "tb",
+  "sources": [
+    "xfree.sv"
+  ],
+  "requires": [
+    "hdl_delays"
+  ]
+}

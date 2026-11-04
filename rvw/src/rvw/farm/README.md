@@ -97,3 +97,30 @@ establish coverage compatibility or verification closure.
 
 Collection checks explicitly requested `max_cycles` and `mem_latency` in each C1 result.
 Missing or different values make collection inconclusive.
+
+### Disk and project reservations
+
+Host capacity also accepts `disk_bytes`, `jobs`, and `projects`.
+`projects` maps project names to limits for `cpu`, `memory_bytes`, `disk_bytes`
+and `jobs`. Missing project limits use the host limit. When this map is nonempty,
+every request must name a configured `project`. Each project's simultaneous
+requests share its limits, even through different host aliases.
+
+Request `resources` can set the same four quantities and `project`. Disk and
+memory default to zero; CPU and jobs default to one. Old host files default
+disk capacity to half the free bytes and jobs to CPU capacity. The scheduler
+also checks current free disk before admission. Reports include effective
+`limits`, `queued_s`, `held_s`, `released` and `outcome`. Handled cancellation
+releases every quantity. Requests above a host or project limit are refused.
+Capacity conflicts wait up to the request timeout.
+
+These are declared simultaneous reservations, not measured RSS, disk writes,
+CPU quotas or cumulative project usage. A caller that declares zero memory or
+disk reserves none. Direct third-party subprocesses do not acquire these limits.
+Crash recovery still needs owner cleanup. Money rates and measured build and
+simulation categories remain open under #57.
+
+The dashboard also plots recorded C3 `sim_khz` and
+`sim_instructions_per_s` per core, suite and preset. Missing values stay absent.
+The denominator includes adapter execution and artifact handling. It excludes
+model setup. These plots do not establish equivalent results or speedups.

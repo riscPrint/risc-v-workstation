@@ -120,3 +120,31 @@ def test_invalid_width(tmp_path, width):
     args = SimpleNamespace(out=tmp_path / 'out', width=width, timeout=30,
                            model='', rtl='')
     assert flow.run(args)['status'] == 'inconclusive'
+
+
+@native
+@pytest.mark.parametrize('model', [
+    'uint64_t reference(uint32_t a,uint32_t b) { return a+b; }',
+    'int reference(uint32_t a,uint32_t b) { return (int)((a+b)&15); }',
+    'double reference(uint32_t a,uint32_t b) { return a+b; }',
+    'uint32_t reference(uint64_t a,uint64_t b) { return (a+b)&15; }',
+])
+def test_oracle_interface_is_exact(tmp_path, model):
+    r = check(tmp_path, model=model)
+    assert r['status'] == 'inconclusive'
+    assert 'compile failed' in r['reason']
+    assert not (tmp_path / 'out/check.sby').exists()
+
+
+@native
+@pytest.mark.parametrize('operation', [
+    'a / b',
+    '(uint32_t)((int32_t)2147483647 + (int32_t)a)',
+    '(uint32_t)((int32_t)-1 << b)',
+])
+def test_undefined_oracles_never_reach_solver(tmp_path, operation):
+    model = 'uint32_t reference(uint32_t a,uint32_t b) { (void)a; (void)b; return (' + operation + ') & 15u; }'
+    r = check(tmp_path, model=model)
+    assert r['status'] == 'inconclusive'
+    assert 'table failed' in r['reason']
+    assert not (tmp_path / 'out/check.sby').exists()
