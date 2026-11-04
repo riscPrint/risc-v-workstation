@@ -11,11 +11,16 @@ Simulation runner for Spinal RISC-V cores, implementing the run contract (C1) an
 - `boom/` has a separate sbt build for BOOM's adapter (package `riscvsim.boom`). `boom/run.sh` is the command other tools call.
 
 Status: `build`, `run`, `run-many` and `info` work on BOOM `small` (see "Verified"). The other
-presets build through the same code but were not run.
+presets use the same code. Medium has a bounded throughput profile; large and
+larger presets remain unqualified here.
 
 The adapters require Verilator on `PATH`. Source the core environment script or
 add the installed tools to `PATH` before use. `tests/programs/build.sh` uses
 `riscv64-unknown-elf-gcc` on `PATH`; `RISCV_GCC` selects another executable.
+
+The optional [medium thread profile](boom/benchmarks/README.md#opt-in-medium-launcher)
+selects two runtime threads through the normal captured launcher. Use its
+qualification limits before selecting it.
 
 ## Quick start
 
