@@ -170,3 +170,9 @@ def test_native_spike_reset_state_and_later_read(tmp_path, tmp_path_factory, pla
     assert result['trace_complete'] and result['end_status'] == 'pass'
     assert result['synchronized'] == 1
     assert result['recent_synchronizations'][0]['csr'] == '0x340'
+
+
+def test_snapshot_without_backend_support_is_an_error(tmp_path, monkeypatch):
+    monkeypatch.delattr(Model, 'csr_snapshot')
+    with pytest.raises(ValueError, match='cannot check CSR snapshots'):
+        run(tmp_path, [(2, 0, 0)], snapshot=True)

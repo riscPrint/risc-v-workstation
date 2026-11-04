@@ -40,6 +40,8 @@ class ResetScratch:
                 self.mask &= ~value
         snapshot = actual.get('csr_state', {})
         if self.mask and '0x340' in snapshot:
+            if not hasattr(model, 'csr_snapshot'):
+                raise ValueError('reference cannot check CSR snapshots')
             reference = model.csr_snapshot(['0x340'])['0x340']
             observed = snapshot['0x340']
             self.seed(model, (reference & ~self.mask) | (observed & self.mask))
