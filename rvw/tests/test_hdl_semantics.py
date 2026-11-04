@@ -65,7 +65,7 @@ def test_mixed_has_no_four_state_claim():
         require('ghdl-yosys-icarus', ['four_state'])
 
 
-@pytest.mark.parametrize('body', ['', 'assert (0) else $error("assertion failure"); $display("RVW_PASS"); $finish;', '$display("RVW_PASS"); $fatal(1, "failure after marker");', '$display("RVW_PASS"); forever #1;'])
+@pytest.mark.parametrize('body', ['$finish;', '$display("RVW_PASS"); $display("RVW_PASS"); $finish;', 'assert (0) else $error("assertion failure"); $display("RVW_PASS"); $finish;', '$display("RVW_PASS"); $fatal(1, "failure after marker");', '$display("RVW_PASS"); forever #1;'])
 def test_no_false_pass(tmp_path, body):
     available('icarus')
     (tmp_path / 'tb.sv').write_text('module tb; initial begin ' + body + ' end endmodule')
@@ -118,3 +118,13 @@ def test_existing_output_refused(tmp_path):
     with pytest.raises(FileExistsError):
         run(EXAMPLES / 'xfree.json', out)
     assert (out / 'results.json').read_text() == 'old results'
+
+
+def test_cli_native_pass(tmp_path, capsys):
+    from rvw.cli import main
+    available('icarus')
+    assert main(['regress', 'hdl', str(EXAMPLES / 'xfree.json'),
+                 '--out', str(tmp_path / 'out'), '--json']) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report['status'] == 'pass'
+    assert report == json.loads((tmp_path / 'out/results.json').read_text())

@@ -1860,7 +1860,7 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
-### Standalone HDL semantic tests
+## Standalone HDL semantic tests
 
 `rvw regress hdl` reads `rvw.hdl/1` and writes `rvw.hdl-result/1`.
 This standalone format is not C1, C3 or C4 acceptance evidence.
