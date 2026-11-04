@@ -49,6 +49,14 @@ Generate RTL with the same setup as above. Replace the main class with
 The library gates the claim value with the interrupt threshold. The reference
 requires a claim to select an enabled pending source regardless of threshold.
 A mismatch makes the native suite fail. Do not waive this failure.
+The ratified [PLIC 1.0.0](https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc#interrupt-claim-process)
+separates notification masking in Priority Thresholds from claim selection.
+It explicitly states that threshold does not affect claim. It also permits
+polling claims with threshold set to maximum. Interrupt Completion rearms the
+gateway; it does not weaken the claim rule. Thus an enabled pending source at
+priority 3 must be claimed with threshold 3, even while notification is low.
+Both the library RTL and installed Spike return zero in this case. Their
+agreement does not override the specification.
 The other test checks the directed arbitration sequence. A CPU is not connected to this component
 adapter. Real-core PLIC delivery and full simultaneous context arbitration
 remain open in #131. Do not use this suite to claim complete PLIC compliance.
@@ -84,13 +92,29 @@ MIE clear and the handler's completion store. The masked-global case checks
 WFI return with local MTIE enabled and MIE clear, without an interrupt trap.
 The tests impose no minimum sleep duration and accept early WFI return.
 
-Two further cases request an illegal-instruction trap from U-mode WFI and
-S-mode WFI with TW set. The observation bound is 64 cycles after WFI arrival.
-The S-mode case first requires TW readback. No trap within that bound fails
-this bounded project test; it is not proof of an unbounded architecture defect.
-A missing TW readback also fails. Failures stay visible in C3. Do not waive
-them or count them as passing privilege coverage. The reference is the
-[RISC-V machine specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/machine.adoc#wait-for-interrupt).
+The S-mode test requests TW=1 and verifies this configuration's legal WARL
+readback of zero. It then checks timer wake and interrupt delivery in S-mode.
+Zero readback is spec-allowed. Requiring the write to be retained was a test
+bug. This test does not claim TW=1 trap coverage.
+
+The U-mode test requires a qualified `RVW_WFI_TRAP_BOUND` in core cycles.
+Without it, cocotb skips the test and C3 marks it inconclusive. The old fixed
+64-cycle trap deadline was a test bug. The test now accepts WFI completion
+before the bound, or an illegal-instruction trap at the WFI PC. It does not
+accept a trap from setup code. Do not supply an arbitrary bound to earn coverage.
+
+The source-level U-mode finding remains open. VexRiscv `CsrPlugin` decodes WFI
+without a privilege check and stalls it until `wfiWake`, with no timeout in
+that path. With S-mode present, an indefinitely stalled U-mode WFI is not
+spec-allowed. The previous 64-cycle observation alone did not prove this.
+Confirm the core's target privileged-spec version and qualify its timeout
+before claiming runtime privilege conformance. No core source is changed here.
+
+The references are the ratified [machine ISA 1.13, virtualization support and
+WFI](https://docs.riscv.org/reference/isa/v20260120/priv/machine.html) and
+[WARL field rules](https://docs.riscv.org/reference/isa/v20260120/priv/priv-csrs.html).
+The timeout is implementation-specific. WFI can complete early, including as
+a NOP. TW is WARL; a request for an unsupported value need not be retained.
 
 These are RTL simulation checks. They do not test a physical clock gate,
 metastability, debug wake, or clock-domain crossings. The component harness

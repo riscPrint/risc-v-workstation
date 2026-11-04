@@ -39,4 +39,6 @@ async def claim_must_ignore_threshold(dut):
     await b.access(0x2000, 2)
     await b.access(0x200000, 3, levels=1)
     assert int(dut.io_irq.value) == 0
-    await b.access(0x200004)  # reference requires 1, library returns 0
+    assert await b.access(0x200004) == 1
+    assert await b.access(0x1000) == 0  # the successful claim must clear IP
+    assert await b.access(0x200004) == 0  # no duplicate claim before completion
