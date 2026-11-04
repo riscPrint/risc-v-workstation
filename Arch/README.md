@@ -577,3 +577,29 @@ After the selected duration they remain idle. They do not write guest memory.
 Their raw counters and effective ports remain in gem5 stats and config files.
 CPU ROI markers still select the reporting interval. A background agent is
 not a hart. These observations do not establish matching RTL interference.
+
+### Native memory counter extraction
+
+Build `sequential-bandwidth` for sequential reads and `pointer-chase` for
+serial load latency. Use `independent-misses` with and without `soc.agents`
+for a model interference experiment. All three have checked return values
+and paired ROI markers. Build and run them with the existing `arch` commands.
+
+`rvw arch memory-extract mapping.json --json` (MCP `arch_memory_extract`)
+extracts mapped counters from the first gem5 ROI stats block. The mapping uses
+schema `rvw.memory-mapping/1`, an `inputs` object, and an `observations` array.
+`inputs` has `stats`, `config`, and `bare`. Each has `path` and `sha256`.
+Each observation has `point`, `region`, `hart`, `workload` and `counters`.
+`point` must exist in native config. Each counter uses the existing interval
+counter name and has `stats` (distinct full native counter names) and positive
+`scale`. Every name must start with the observation point plus a dot.
+
+For example, map `bytes` to `{"stats":["system.traffic0.bytesRead"],"scale":1}`,
+`transactions` to `system.traffic0.totalReads`, and `latency_ns_sum` to
+`system.traffic0.totalReadLatency` with scale `0.001` (ticks to ns).
+The stats interval must match both ROI tick markers at a 1 ps tick period.
+Later whole-program dumps are ignored. Input and mapping hashes are retained.
+The tool checks exact names and object paths. The project still owns counter
+semantics and unit scales. Missing counters stay unobserved. Request latency
+sums do not establish an outstanding-request integral. Retry time does not
+establish queue-full time. Neither establishes a cause of contention.

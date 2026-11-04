@@ -1968,3 +1968,16 @@ contains up to eight read-only linear generators. Fields are `start`, `size`,
 RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
 the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
 SoC topologies. Native model execution alone is not RTL correlation.
+
+### Native memory mappings
+
+`rvw.memory-mapping/1` has `inputs` (`stats`, `config`, `bare`, each with path
+and SHA-256) and `observations`. Each observation has `point`, `region`, `hart`,
+`workload` and `counters`. Counter keys use `rvw.memory-observations/1`; each
+value has distinct `stats` names and positive `scale`. Names must start with
+the native config object's point plus a dot. The first complete stats block
+must have simFreq=1e12, simTicks equal to the difference of the two bare ROI
+markers, and finalTick equal to the exit marker. Bare execution must pass.
+`arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
+`native_inputs` hashes. It checks names and interval identity. The project
+owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
