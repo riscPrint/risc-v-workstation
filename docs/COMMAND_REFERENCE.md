@@ -310,8 +310,9 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] --gold GOLD [GOLD ...] --gate GATE [GATE ...]
-    --top TOP [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
+usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
+    [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
+    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
     [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
     GOLD=GATE] [--latency {0}] [--timeout TIMEOUT] --out OUT [--json]
     [--project PROJECT]

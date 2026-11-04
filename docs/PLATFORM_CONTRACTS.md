@@ -1724,6 +1724,25 @@ only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
 
+### Source-revision equivalence export
+
+`rvw formal equiv --gold-rev REV --gate-rev REV --top MODULE` selects
+committed revisions from the selected project's `core.source_repo`. It requires
+`core.source_env`, `query.build` and `formal.export_dependencies` (a nonempty
+list of generator repository paths). Each generator repository must be clean.
+The export records its commit. The build runs on a `git archive` source copy,
+with `core.source_env` set to that copy, under the project's lock.
+`query.build CONFIG DB --rtl DIR --no-pdg --no-blocks --no-hgldd` must generate
+Verilog in DIR. Yosys selects MODULE and its child modules with `hierarchy -check`.
+Missing modules or build failures cannot earn an equivalence verdict.
+
+The result's `exports` records source commits, generator commits, configuration,
+commands and RTL hashes. Each side retains source, generated RTL, selected module,
+logs and `export.json`. Export directories must be new. This supports declared
+sbt dependencies. It does not capture arbitrary external generator file reads,
+network services or environment effects. Project authors must declare all generator
+repositories. Submodule source content is not exported by `git archive`.
+
 Directed MMU extensions retain the existing C1-C4 verdict rules. Control rows,
 data corner fields, the optional adapter `rvw.mmu-observations/1` capture and
 `rvw.mmu-coverage/1` inventory follow the regress README. `mmu check` additionally
@@ -1878,3 +1897,12 @@ one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
 A failed compile, failed run, timeout or missing completion marker gives error.
 Requirements and missing-tool errors occur before output creation (CLI exit 2).
 This format does not capture transitive file inputs or establish C8 reuse.
+## SpinalChecks normalized register map (version 1)
+
+`SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
+required. `registers` lists unique comma-separated register names. Each name has
+`address`, `width`, `reset`, `writeMask`, `w1cMask` and `readClearMask` properties.
+Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
+must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
+must not overlap. Missing required fields fail loading. This format declares
+register intent. It does not provide independent bus observations or a verdict.
