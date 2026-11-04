@@ -29,7 +29,10 @@ def verify_reference(root):
 
 
 def retirement(path, *, require_rv64=False):
-    trace = Trace(path)
+    try:
+        trace = Trace(path)
+    except StopIteration as exc:
+        raise ValueError('empty C2 stream') from exc
     try:
         if require_rv64 and trace.header['xlen'] != 64:
             raise ValueError('encoder ingress profile requires RV64')
@@ -106,7 +109,10 @@ def decode(root, packets, static_config, user_config, *, toolchain, timeout=30):
     packets = Path(packets).resolve()
     static_config, user_config = Path(static_config).resolve(), Path(user_config).resolve()
     cfg = configparser.ConfigParser()
-    cfg.read(user_config)
+    try:
+        cfg.read(user_config)
+    except configparser.Error as exc:
+        raise ValueError('invalid E-Trace user configuration') from exc
     # Upstream resolves object-files against cwd; require absolute ELF paths.
     objects = cfg['required']['object-files'].split()
     if not objects or any(not Path(p).is_absolute() or not Path(p).is_file() for p in objects):

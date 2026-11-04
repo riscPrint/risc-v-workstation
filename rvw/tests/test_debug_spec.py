@@ -18,12 +18,11 @@ from rvw.debug import campaign, etrace
 from rvw.debug.dmi import RemoteDMI
 
 FIXTURES = Path(__file__).parent / 'fixtures/debug'
-GCC = '/opt/homebrew/opt/riscv-gnu-toolchain/bin/riscv64-unknown-elf-gcc'
 TOOLCHAIN = Path(os.environ.get('RISCV_TOOLCHAIN', '/opt/homebrew/opt/riscv-gnu-toolchain'))
 
 
 def build(tmp_path, name):
-    gcc = shutil.which('riscv64-unknown-elf-gcc') or GCC
+    gcc = shutil.which('riscv64-unknown-elf-gcc') or str(TOOLCHAIN / 'bin/riscv64-unknown-elf-gcc')
     if not Path(gcc).is_file():
         pytest.skip('native RISC-V GCC is unavailable')
     elf = tmp_path / (name + '.elf')
@@ -298,3 +297,11 @@ def test_c2_completion_and_cli(tmp_path, capsys):
     assert main(args) == 3
     import json
     assert json.loads((tmp_path / 'out').read_text())['status'] == 'inconclusive'
+
+
+def test_empty_c2_is_inconclusive(tmp_path, capsys):
+    from rvw.cli import main
+    path = tmp_path / 'empty.jsonl'
+    path.write_text('')
+    assert main(['debug', 'ingress', '--rvfi', str(path), '--out', str(tmp_path / 'out')]) == 3
+    assert 'empty C2 stream' in capsys.readouterr().out
