@@ -13,7 +13,11 @@ from rvw.common.project import load_project
 from rvw.regress.config import load_config
 from rvw.regress.discover import discover
 
-FEATURES = ('sim', 'riscv-gcc', 'cosim', 'formal', 'gem5')
+from . import backends
+from .conformance import smoke_options, artifacts
+
+NATIVE_FEATURES = ('sim', 'riscv-gcc', 'cosim', 'formal', 'gem5')
+FEATURES = (*NATIVE_FEATURES, *backends.GUI)
 
 
 def features(value):
@@ -42,13 +46,20 @@ def native_records(output, table=None):
     return records
 
 
-def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None):
+def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None):
     checks = []
     def add(name, status, detail, fix=''):
         checks.append(dict(name=name, status=status, detail=detail, fix=fix))
     try:
         selected = globals()['features'](features)
-        installing = globals()['features'](install) if install is not None else []
+        installing = list(NATIVE_FEATURES) if install == 'all' else globals()['features'](install) if install is not None else []
+        if any(x not in NATIVE_FEATURES for x in installing):
+            raise ValueError('GUI installation is manual. --install supports native features only.')
+        options = smoke_options(smoke_flags)
+        if (options or smoke_platform) and smoke_elf is None:
+            raise ValueError('--smoke-options and --smoke-platform need --smoke-elf')
+        if smoke_platform and 'rvfi' not in options:
+            raise ValueError('--smoke-platform needs rvfi in --smoke-options')
         if (yes or dry_run) and install is None:
             raise ValueError('--yes and --dry-run need --install FEATURES')
     except ValueError as exc:
@@ -72,7 +83,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         add('installation', 'planned' if dry_run and done.returncode == 0 else 'ready' if done.returncode == 0 else 'error',
             'Installer exit ' + str(done.returncode), 'Read the installer log and source env.sh.')
     try:
-        done = run_group(['bash', str(script), '--check', *['--with-' + x for x in selected]], timeout=120, capture=True)
+        done = run_group(['bash', str(script), '--check', *['--with-' + x for x in selected if x in NATIVE_FEATURES]], timeout=120, capture=True)
         table = {}
         table_path = home / 'docs/TOOL_VERSIONS.md'
         if table_path.is_file():
@@ -87,8 +98,22 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             'Source env.sh. Use --install FEATURES for missing tools.')
     except OSError as exc:
         add('native', 'error', str(exc), 'Set RVW_HOME to the workstation checkout.')
-    result['backends'] = [{'feature': x, 'status': 'checked' if x in selected else 'skipped',
-                           'reason': '' if x in selected else 'Feature not requested.'} for x in FEATURES]
+    result['backends'] = []
+    capabilities = dict(sim=['build', 'run'], **{'riscv-gcc': ['elf_build'],
+                        'cosim': ['reference_comparison'], 'formal': ['formal_checks'],
+                        'gem5': ['architecture_model']})
+    native_status = next(c['status'] for c in checks if c['name'] == 'native')
+    for feature in FEATURES:
+        if feature not in selected:
+            backend = dict(feature=feature, status='skipped', reason='Feature not requested.')
+        elif feature in backends.GUI:
+            backend = backends.probe(feature)
+            add('backend.' + feature, backend['status'], backend, backend['reason'])
+        else:
+            backend = dict(feature=feature, status=native_status,
+                           capabilities=capabilities[feature], qualification='version_probe_only',
+                           reason='Aggregate requested native installer check. See native records.')
+        result['backends'].append(backend)
     try:
         config_project = load_project(project)
         if config_project is None:
@@ -99,6 +124,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         add('project', 'error', str(exc), 'Run rvw init or fix the selected rvw.toml.')
         cfg = None
     if cfg:
+        info = {}
         try:
             done = run_group([*cfg.adapter, 'info', '--json'], cwd=cfg.path.parent, timeout=30, capture=True)
             info = json.loads(done.stdout or '{}')
@@ -110,6 +136,8 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             add('adapter.info', 'ready' if valid else 'error', info, 'Implement C1 info --json for the selected core and configs.')
         except (OSError, ValueError) as exc:
             add('adapter.info', 'error', str(exc), 'Make the adapter executable and implement info --json.')
+        if not isinstance(info, dict):
+            info = {}
         if smoke_elf is None:
             add('adapter.build_run', 'inconclusive', 'Not run. info does not prove C1 build/run conformance.',
                 'Use --smoke-elf ELF to build and run a small program. Review RVFI separately.')
@@ -118,13 +146,15 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             try:
                 smoke_hash = hashlib.sha256(Path(smoke_elf).read_bytes()).hexdigest()
                 with tempfile.TemporaryDirectory(prefix='rvw-doctor-smoke-') as directory:
-                    build = run_group([*cfg.adapter, 'build', '--config', cfg.default_config, '--json'],
+                    build_flags = ['--' + x for x in options]
+                    run_flags = ['--rvfi-trace' if x == 'rvfi' else '--' + x for x in options]
+                    build = run_group([*cfg.adapter, 'build', '--config', cfg.default_config, *build_flags, '--json'],
                                       cwd=cfg.path.parent, timeout=cfg.build_timeout_s, capture=True)
                     if build.returncode != 0:
                         raise ValueError('C1 build failed: ' + (build.stderr or build.stdout or ''))
                     run = run_group([*cfg.adapter, 'run', '--config', cfg.default_config,
                                      '--elf', str(Path(smoke_elf).resolve()), '--out', directory,
-                                     '--max-cycles', '10000', '--seed', '1', '--json'],
+                                     '--max-cycles', '10000', '--seed', '1', *run_flags, '--json'],
                                     cwd=cfg.path.parent, timeout=120, capture=True)
                     record = json.loads((Path(directory) / 'result.json').read_text())
                     errors = validate_run(record)
@@ -137,7 +167,10 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                     add('adapter.build_run', 'ready' if valid else 'error',
                         {'exit_code': run.returncode, 'errors': errors, 'result': record},
                         'Fix C1 build/run and completion mapping. This checks one config and ELF only.')
-            except (OSError, ValueError) as exc:
+                    if valid:
+                        checks.extend(artifacts(record, directory, options, info, elf=smoke_elf,
+                                                core=cfg.name, config=cfg.default_config, platform=smoke_platform))
+            except (OSError, ValueError, TypeError) as exc:
                 add('adapter.build_run', 'error', str(exc), 'Implement C1 build/run and use a valid small ELF.')
         for name, suite in cfg.suites.items():
             tests = []
@@ -158,6 +191,9 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             head = run_group(['git', '-C', str(root), 'rev-parse', '--verify', 'HEAD'], timeout=10, capture=True)
             add('gate.' + label, 'ready' if done.returncode == head.returncode == 0 and not done.stdout else 'inconclusive',
                 {'revision': (head.stdout or '').strip(), 'changes': done.stdout}, 'Commit reviewed changes in this repository.')
+    result['adapter_conformance'] = {'scope': 'one config and ELF; selected options only',
+                                     'full_c1': 'inconclusive',
+                                     'checks': [c for c in checks if c['name'].startswith('adapter.')]}
     ready = all(c['status'] == 'ready' for c in checks)
     result.update(status='ready' if ready else 'not_ready', exit_code=0 if ready else 1)
     return result
