@@ -681,6 +681,20 @@
       "bins": [
         "ad.svade-software-rsw"
       ]
+    },
+    {
+      "id": "clint-msip-store",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "success",
+      "pa": "0x02000000",
+      "access_width": 4,
+      "register_width": 32,
+      "bins": [
+        "pma.clint-msip-store"
+      ],
+      "store_value": 1
     }
   ]
 }

@@ -66,3 +66,55 @@ def check_walk(s, events):
                 returned_ptes=len(responses), physical_target=hex(physical),
                 physical_target_observed=target,
                 reason=None if status != 'inconclusive' else 'missing PTE responses or physical target transaction')
+
+
+def check_pma(s, events, regions):
+    """Check a single MMIO request and independent harness register state.
+
+    No verdict for RAM, fault paths, cacheable aliases or unobserved devices.
+    Declared PMA attributes are the oracle. Capture does not define attributes.
+    """
+    unknown = dict(status='inconclusive', reason='need one declared non-cacheable device access and independent state')
+    if ('control' in s or s.get('expect') != 'success' or s.get('remap')
+            or s.get('access') not in ('load', 'store') or not regions):
+        return unknown
+    pa = number(s.get('pa', DATA))
+    va = number(s.get('va', 0x40000000)) + s.get('offset', 0)
+    physical = pa | (va & ((1 << (12 + 9 * s['level'])) - 1))
+    selected = [r for r in regions if number(r['start']) <= physical < number(r['start']) + number(r['size'])]
+    if len(selected) != 1 or selected[0]['cacheable']:
+        return unknown
+    region = selected[0]
+    transfers = [e for e in events if e['kind'] == 'bus_a' and number(e['address']) == physical]
+    states = [e for e in events if e['kind'] == 'device_state' and number(e['address']) == physical and e.get('scheduled') is False]
+    if not transfers or not states:
+        return unknown
+    errors = []
+    write = s['access'] == 'store'
+    # A store program also reads the device once to check the stored value.
+    expected_opcodes = (0, 1) if write else (4,)
+    tested = [e for e in transfers if e['opcode'] in expected_opcodes]
+    readbacks = [e for e in transfers if e['opcode'] == 4]
+    if len(tested) != 1 or (write and len(readbacks) != 1):
+        errors.append('device access or readback transfer count differs from the program')
+    for e in transfers:
+        size = e['size_log2']
+        if type(size) is not int or not 0 <= size <= 6:
+            raise ValueError('unsupported TileLink size')
+        width = 1 << size
+        if width != s.get('access_width', 8) or width not in region['widths']:
+            errors.append('device transfer width differs from scenario or PMA declaration')
+        if physical + width > number(region['start']) + number(region['size']):
+            errors.append('device transfer crosses a declared PMA boundary')
+        direction = 'read' if e['opcode'] == 4 else 'write'
+        if not region[direction] or e['opcode'] not in ((0, 1, 4) if write else (4,)):
+            errors.append('device transfer direction differs from scenario or PMA declaration')
+    expected = s.get('store_value', 43) if s['access'] == 'store' else s.get('value', 42)
+    final = states[-1]
+    if write and (not tested or number(final['cycle']) < number(tested[-1]['cycle'])):
+        return unknown
+    if number(final['value']) != expected:
+        errors.append('independent device state differs from expected value')
+    return dict(status='mismatch' if errors else 'consistent', errors=errors,
+                region=region['name'], physical_target=hex(physical),
+                scope='one accepted device transfer and sampled harness register state only')

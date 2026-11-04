@@ -1,0 +1,36 @@
+{
+  "schema": "rvw.mmu-pma/1",
+  "regions": [
+    {
+      "name": "ram",
+      "start": "0x80000000",
+      "size": "0x10000000",
+      "widths": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "read": true,
+      "write": true,
+      "execute": true,
+      "cacheable": true,
+      "idempotent": true,
+      "atomic": true
+    },
+    {
+      "name": "msip",
+      "start": "0x02000000",
+      "size": 4,
+      "widths": [
+        4
+      ],
+      "read": true,
+      "write": true,
+      "execute": false,
+      "cacheable": false,
+      "idempotent": true,
+      "atomic": false
+    }
+  ]
+}

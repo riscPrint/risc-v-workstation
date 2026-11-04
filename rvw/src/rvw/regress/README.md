@@ -638,3 +638,29 @@ The Svade case requires the complete faulting PTE to stay unchanged. The opt-in
 Svadu cases require A/D updates to preserve software RSW and all other fields.
 A correct final PTE does not prove atomicity. Concurrent PTE writes and bus-level
 atomic observations remain open. The project's unsupported Svadu stays reference-only.
+
+The BOOM observation stream can include `device_state` when MSIP backing state
+changes. It records `address`, `value`, `cycle` and `scheduled` (whether an IRQ
+schedule overrides device-driven interrupts). This is a harness device-state
+observation. It is independent of C2 load/store results. It does not observe a
+physical device or prove interrupt delivery.
+
+The report can add `pma_check` for a successful, non-cacheable device scenario
+when the build manifest includes PMA data. It checks accepted transfer count,
+width, direction and containment in one declared region. It also checks the
+independent device state. A store has one write and one program readback.
+Missing device observations or scheduled IRQ overrides stay inconclusive.
+`consistent` is a bounded observation result and cannot pass coverage bins.
+Boundary faults, conflicting cache attributes, atomic access and side effects
+on other devices remain open. `store_value` can select a nonnegative signed
+32-bit store operand. The default is 43. The MSIP case writes 1.
+
+Bounded observation checks also require the capture header's core, config, ELF,
+RTL, source and seed to match C1. Older captures without this identity remain
+recorded inventories. Their walk and PMA checks stay inconclusive.
+
+The strict Spike shim currently treats configured MMIO stores as inert and
+returns zero for MMIO loads. The native Spike executable has a CLINT device,
+but the shim does not model MSIP write/readback state. Keep strict comparison
+mismatches separate from bounded harness state observations. A device-state
+observation must not waive a strict mismatch or grant architectural coverage.

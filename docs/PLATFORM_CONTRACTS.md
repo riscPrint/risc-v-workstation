@@ -2071,3 +2071,8 @@ MMU observation inventories can add `walk_check` with `status` of `consistent`,
 `mismatch` or `inconclusive`. This bounded check compares immutable PTE read
 addresses and values with scenario data and observes the physical target range.
 It does not change architectural bins or C1-C4 verdicts. See the regress README.
+
+Optional MMU `device_state` events retain sampled harness register state and an
+IRQ schedule override flag. `pma_check` uses declared PMA data plus these events
+and accepted bus requests. Its `consistent` result has the same bounded scope
+as `walk_check`; neither changes architectural coverage or gate verdicts.

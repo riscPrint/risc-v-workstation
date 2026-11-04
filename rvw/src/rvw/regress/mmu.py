@@ -51,7 +51,7 @@ def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -99,6 +99,8 @@ def validate(s):
         raise ValueError('root_switch requires remap and excludes unfenced/switch_asid')
     if 'remap' in s and type(s['remap']) is not bool:
         raise ValueError('remap must be boolean')
+    if 'store_value' in s and (s['access'] != 'store' or type(s['store_value']) is not int or not 0 <= s['store_value'] < 2**31):
+        raise ValueError('store_value must be a nonnegative signed 32-bit store value')
     if type(s.get('value', 42)) is not int or not 0 <= s.get('value', 42) < 2**63:
         raise ValueError('value must be a nonnegative signed 64-bit integer')
     if type(s.get('offset', 0)) is not int or not 0 <= s.get('offset', 0) <= 4088:
@@ -182,7 +184,7 @@ _start:
  csrc mstatus, t0
  li t0, {status}
  csrs mstatus, t0
- li a0, {43 if s['access'] == 'store' else -1}
+ li a0, {s.get('store_value', 43) if s['access'] == 'store' else -1}
 access_site:
  {load_op if s['access'] == 'load' else store_op} a0, 0(t3)
  li t0, 0x20000
@@ -207,7 +209,7 @@ check_data:
 '''
     if s['access'] == 'store':
         code += f' li t0, {pa + s.get("offset", 0)}\n {load_op} a0, 0(t0)\n'
-    code += f" li t1, {43 if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
+    code += f" li t1, {s.get('store_value', 43) if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         if s.get('root_switch'):
@@ -605,11 +607,17 @@ def report(directory, results, checked=None):
                 if (not events or events[0].get('schema') != 'rvw.mmu-observations/1'
                         or events[0].get('elf_sha256') != s['elf_sha256']):
                     raise ValueError('invalid observation header')
-                from .mmu_observe import check_walk
+                from .mmu_observe import check_walk, check_pma
+                identity = events[0].get('identity', {})
+                bound = bool(identity.get('rtl_sha256')) and all(
+                    k in identity and identity[k] == raw.get(k)
+                    for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))
+                unbound = dict(status='inconclusive', reason='observation identity is not bound to C1')
                 # Keep bounded walk consistency separate from architectural coverage.
                 observed = dict(status='recorded', path=str(path), sha256=digest(path),
                     c1_sha256=digest(run.path / 'result.json'),
-                    walk_check=check_walk(s, events[1:]),
+                    walk_check=check_walk(s, events[1:]) if bound else unbound,
+                    pma_check=check_pma(s, events[1:], (manifest.get("pma") or {}).get("regions")) if bound else unbound,
                     counts={k: sum(e.get('kind') == k for e in events[1:])
                             for k in ('walk_request', 'walk_response', 'bus_a')})
         rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,

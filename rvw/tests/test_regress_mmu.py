@@ -272,6 +272,8 @@ def test_report_keeps_observations_separate_from_architectural_bins(tmp_path):
     assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
     observed = result['scenarios'][0]['observations']
     assert observed['status'] == 'recorded'
+    assert observed['walk_check']['status'] == 'inconclusive'
+    assert 'identity' in observed['walk_check']['reason']
     assert observed['counts'] == dict(walk_request=1, walk_response=0, bus_a=1)
     assert observed['sha256'] == mmu.digest(observations)
     observations.write_text(json.dumps(dict(schema='rvw.mmu-observations/1', elf_sha256='wrong')))
@@ -456,3 +458,45 @@ def test_software_rsw_change_requires_full_pte_check():
     assert 'andi t0, t0, 192' not in text
     with pytest.raises(ValueError, match='software_rsw'):
         assembly(scenario(software_rsw=3))
+
+
+def test_pma_check_needs_independent_device_state_and_correct_width():
+    from rvw.regress.mmu_observe import check_pma
+    region = dict(name='device', start='0x2000000', size=4, widths=[4], read=True,
+                  write=True, execute=False, idempotent=False, cacheable=False, atomic=False)
+    row = scenario(pa='0x2000000', value=0, access_width=4, register_width=32)
+    bus = dict(kind='bus_a', cycle=1, address='0x2000000', opcode=4, size_log2=2)
+    state = dict(kind='device_state', cycle=2, address='0x2000000', value='0x0', scheduled=False)
+    assert check_pma(row, [bus], [region])['status'] == 'inconclusive'
+    assert check_pma(row, [bus, state], [region])['status'] == 'consistent'
+    assert check_pma(row, [dict(bus, size_log2=3), state], [region])['status'] == 'mismatch'
+    assert check_pma(row, [bus, dict(state, value='0x1')], [region])['status'] == 'mismatch'
+    assert check_pma(row, [bus, dict(state, scheduled=True)], [region])['status'] == 'inconclusive'
+    assert check_pma(row, [bus, bus, state], [region])['status'] == 'mismatch'
+
+
+def test_pma_store_has_one_write_one_readback_and_updated_state():
+    from rvw.regress.mmu_observe import check_pma
+    region = dict(name='msip', start='0x2000000', size=4, widths=[4], read=True,
+                  write=True, execute=False, idempotent=False, cacheable=False, atomic=False)
+    row = scenario(pa='0x2000000', access_width=4, register_width=32, store_value=1)
+    row['access'] = 'store'
+    events = [dict(kind='bus_a', cycle=i, address='0x2000000', opcode=op, size_log2=2)
+              for i, op in ((1, 0), (3, 4))]
+    events.append(dict(kind='device_state', cycle=2, address='0x2000000', value='0x1', scheduled=False))
+    assert check_pma(row, events, [region])['status'] == 'consistent'
+    events[-1]['cycle'] = 0
+    assert check_pma(row, events, [region])['status'] == 'inconclusive'
+
+
+def test_focused_msip_pma_matches_platform_register():
+    from rvw.regress.mmu import read_pma, number
+    pma = read_pma(DESCRIPTION.with_name('pma.json'))
+    msip = next(r for r in pma['regions'] if r['name'] == 'msip')
+    soc = json.loads((DESCRIPTION.parents[1] / 'soc.json').read_text())
+    clint = next(r for r in soc['regions'] if r['name'] == 'clint')
+    register = next(r for r in clint['registers'] if r['name'] == 'msip')
+    assert number(msip['start']) == number(clint['base']) + number(register['offset'])
+    assert msip['size'] * 8 == register['width']
+    assert msip['widths'] == [register['width'] // 8]
+    assert msip['cacheable'] == clint['cacheable']
