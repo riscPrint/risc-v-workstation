@@ -719,6 +719,8 @@ It does not schedule ELF suites or earn C4 acceptance.
 
 ## riscv-vector-tests
 
+The complete comparison instruction count must equal the C1 retirement count.
+
 Use the [CHIPS Alliance generator](https://github.com/chipsalliance/riscv-vector-tests)
 in a separate checkout. Build machine-mode tests for the project's XLEN, VLEN,
 ELEN and extensions. Use its `make help` for generation options. Its normal

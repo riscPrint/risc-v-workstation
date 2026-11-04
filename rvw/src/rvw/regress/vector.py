@@ -48,6 +48,7 @@ def check(elf_dir, results, platform_path, *, project=None):
                           and comparison.get('trace_complete') is True
                           and comparison.get('end_status') == 'pass'
                           and comparison.get('instructions', 0) > 0
+                          and comparison['instructions'] == run.instret
                           and comparison.get('synchronized') == 0
                           and comparison.get('state_coverage', {}).get('vector')):
                         status, reason = 'pass', None

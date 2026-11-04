@@ -15,7 +15,7 @@ def fixture(tmp_path, monkeypatch, result):
     elf.write_bytes(b'\x7fELFtest')
     digest = hashlib.sha256(elf.read_bytes()).hexdigest()
     run = SimpleNamespace(elf_sha256=digest, why_inconclusive=None, status='pass',
-                          path=tmp_path, artifacts={'rvfi_trace': 'rvfi.jsonl'})
+                          path=tmp_path, instret=1, artifacts={'rvfi_trace': 'rvfi.jsonl'})
     (tmp_path/'result.json').write_text('{}')
     monkeypatch.setattr(results, 'load_run', lambda _: run)
     monkeypatch.setattr(Platform, 'load', lambda *a: SimpleNamespace(isa='rv64imafdcv_zicsr'))
@@ -52,3 +52,9 @@ def test_requires_v(tmp_path, monkeypatch):
     monkeypatch.setattr(Platform, 'load', lambda *a: SimpleNamespace(isa='rv64imac'))
     with pytest.raises(ValueError, match='declaring V'):
         check(elfs, tmp_path, tmp_path/'p.json')
+
+
+def test_suite_refuses_c1_c2_count_difference(tmp_path, monkeypatch):
+    elfs, run = fixture(tmp_path, monkeypatch, good())
+    run.instret = 2
+    assert check(elfs, tmp_path, tmp_path / 'p.json')['status'] == 'inconclusive'
