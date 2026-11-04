@@ -68,3 +68,32 @@ Each reset discards harness-owned bus responses. General-purpose registers
 have no reset contract here. The test does not use their initial values.
 The current example has no local reset or debug port. Those parts of #111
 remain open. A system reset does not establish local reset behavior.
+
+## WFI and stopped clock
+
+Generate `LifecycleUnit` as described above. Install RISC-V GCC on PATH.
+Run `wfi-icarus.json` with `rvw regress cocotb` under the `vex` lock.
+The test compiles `rvw/programs/wfi-clock.S` for RV32IM. The Python harness
+sets each wake input from stimulus. It does not derive expected values from
+DUT data. No backend clock task runs in these tests.
+
+Timer, software and machine external cases pause the clock at a WFI observation.
+They assert a pending input during a 100 ns pause. They check retained state
+before and after that pause. After restart they check trap cause, EPC region,
+MIE clear and the handler's completion store. The masked-global case checks
+WFI return with local MTIE enabled and MIE clear, without an interrupt trap.
+The tests impose no minimum sleep duration and accept early WFI return.
+
+Two further cases request an illegal-instruction trap from U-mode WFI and
+S-mode WFI with TW set. The observation bound is 64 cycles after WFI arrival.
+The S-mode case first requires TW readback. No trap within that bound fails
+this bounded project test; it is not proof of an unbounded architecture defect.
+A missing TW readback also fails. Failures stay visible in C3. Do not waive
+them or count them as passing privilege coverage. The reference is the
+[RISC-V machine specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/machine.adoc#wait-for-interrupt).
+
+These are RTL simulation checks. They do not test a physical clock gate,
+metastability, debug wake, or clock-domain crossings. The component harness
+does not emit C2 or claim a Spike instruction match. The separate opt-in
+`rvw/tests/devices/test_wfi_runtime.py` supplies C1/C2 and Spike comparison.
+Full #149 acceptance requires the unresolved privilege and reference checks.
