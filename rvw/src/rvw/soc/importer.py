@@ -26,7 +26,7 @@ def import_ipxact(source, template, out):
         return result
     def one(d, name):
         values = d.get(name, [])
-        if len(values) != 1 or len(values[0]) or values[0].attrib:
+        if len(values) != 1 or len(values[0]) or values[0].attrib or not values[0].text or not values[0].text.strip():
             raise ValueError('requires one scalar ' + name)
         return values[0].text.strip()
     if tag(root) != 'memoryMap':

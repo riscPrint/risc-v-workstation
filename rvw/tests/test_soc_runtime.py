@@ -71,7 +71,7 @@ def test_import_registers(ipxact, tmp_path):
     assert regs[0]['reset'] == 0 and regs[1]['offset'] == 0x4000
     assert regs[1]['reset'] is None
 
-@pytest.mark.parametrize('old,new', [('0xffffffff','0xff'), ('<size>32</size>', '<size>32</size><field/>'), ('<range>0x10000</range>', '<range>0x1000</range>'), ('<bitOffset>0', '<bitOffset>1'), ('<addressUnitBits>8', '<addressUnitBits>16'), ('<access>read-write</access>', '<access>read-writeOnce</access>')])
+@pytest.mark.parametrize('old,new', [('0xffffffff','0xff'), ('<name>msip</name>', '<name/>'), ('<size>32</size>', '<size>32</size><field/>'), ('<range>0x10000</range>', '<range>0x1000</range>'), ('<bitOffset>0', '<bitOffset>1'), ('<addressUnitBits>8', '<addressUnitBits>16'), ('<access>read-write</access>', '<access>read-writeOnce</access>')])
 def test_import_refuses_loss(ipxact, tmp_path, old, new):
     ipxact.write_text(ipxact.read_text().replace(old,new))
     out = tmp_path / 'soc.json'
