@@ -1915,3 +1915,13 @@ Beat masks index lanes by ascending address. The format and bounded comparison
 rules are defined in `rvw/src/rvw/soc/README.md`. Matching samples never produce
 a pass. Endpoint pairing and observation provenance remain the capture
 producer's responsibility. The bundled captures do not emit extended records.
+
+### riscv-formal input provenance (#63)
+
+C3 `source.formal_inputs.settings_sha256` binds the selected formal settings.
+`source.formal_inputs.committed_inputs.files` lists copied input hashes and their
+comparison with repository HEAD bytes. Rows report `committed`, `modified`,
+`untracked_or_unavailable`, or `unavailable`. The nonempty list has
+`all_committed=true` only when every row matches a commit. This is file provenance,
+not a generator-origin or adapter-conformance claim. `source.identity_complete`
+remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
