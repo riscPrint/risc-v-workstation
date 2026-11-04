@@ -621,6 +621,12 @@ Unknown fields or invalid types are usage errors with a file and line diagnostic
 Imports keep each result's config. `--config` filters imports and never relabels them.
 Only conclusive failures are imported. Empty selections and `--from` with `--signature` are errors.
 An all-config waiver requires a manual entry with no `config` field.
+A matching all-config or wildcard-signature waiver makes comparison inconclusive.
+Only an exact signature with an explicit config can waive a failure for acceptance.
+An exact waiver covers its diagnostic class, including changed messages within that class.
+It does not prove equal root causes. Without a waiver, unchanged failures also require
+identical saved messages (including two absent messages for legacy diagnostic-only evidence).
+Changed messages cannot be hidden by equal timeout, fail-code, monitor-code or source-line signatures.
 
 ### Regression performance evidence (C4)
 

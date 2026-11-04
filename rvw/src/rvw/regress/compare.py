@@ -342,12 +342,17 @@ def compare(base: Path | list[SuiteResults], cand: Path | list[SuiteResults], kn
                 continue
             seen.add(t.signature)
             hit = next((kn for kn in known if kn.matches(suite, tid, t.signature, config)), None)
+            if hit and (hit.config is None or any(ch in hit.signature for ch in "*?[")):
+                inconclusive.append({**item, "why": "broad waiver needs an exact signature and config; "
+                                     "review the failure and narrow the waiver"})
+                continue
             if hit:
                 if ("known", t.signature) not in classified:
                     known_hits.append({**item, "reason": hit.reason, "recorded_at_rev": hit.recorded_at_rev})
                     classified.add(("known", t.signature))
             elif (t.seed in bs and bs[t.seed].conclusive and bs[t.seed].failed
-                  and t.status == bs[t.seed].status and t.signature == bs[t.seed].signature):
+                  and t.status == bs[t.seed].status and t.signature == bs[t.seed].signature
+                  and t.extra.get("message") == bs[t.seed].extra.get("message")):
                 if ("still", t.signature) not in classified:
                     still.append(item)
                     classified.add(("still", t.signature))

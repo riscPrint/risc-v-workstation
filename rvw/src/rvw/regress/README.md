@@ -361,16 +361,25 @@ Retained limit: Committed revisions and complete captured inputs remain necessar
 
 ## Review status and close rules
 
-Waivers and failure signatures remain experimental (#2). The review covers changed RVFI
-messages, stale saved fail codes and status changes. Compare derives RVFI identity from the
-full saved message. Without a monitor code or message, old RVFI evidence needs a rerun.
-A saved fail code overrides its saved signature. Unchanged failures must also have the same status.
+The #2 close rule is a completed case matrix and an explicit diagnostic-class policy.
+The negative cases cover changed messages, status, fail code, monitor code, assertion line,
+legacy truncation, wildcard signatures and all-config waivers.
 
-The close rule requires negative tests for changed failures, legacy evidence and waiver scope.
-It also requires a policy for wildcard waivers, config-wide waivers and coarse identities
-(cycle timeout, fail code, monitor code or source line). These identities can group different
-root causes. A wildcard can deliberately cover a changed failure. This review does not prove
-that such a waiver is safe. Check each waiver and its full failure evidence before use.
+Only an exact signature with an explicit config can waive a failure for acceptance.
+A matching wildcard (`*`, `?`, `[...]`) or all-config entry makes the result inconclusive.
+It cannot fall back to unchanged-failure acceptance. Narrow the entry after review.
+Files can retain broad entries for migration, but those entries cannot earn acceptance.
+
+An exact waiver accepts a diagnostic class, not a root cause. For a cycle timeout this
+class is the cycle limit with the captured inputs. For a fail code or monitor code it is
+that producer's code. For an assertion it is the recorded source location. These classes
+can contain several causes. Review the full evidence before adding an exact waiver.
+An exact waiver deliberately covers changed messages within its declared class.
+Without a waiver, unchanged failures require equal status, signature and full saved message.
+A changed or missing message on one side is a new failure. Two absent messages establish
+only diagnostic-class equality. They do not establish equal root causes.
+Legacy ambiguous 400-character previews and uncoded RVFI errors without full messages
+remain inconclusive. No class identity can override an inconclusive C1 result.
 
 Stored-folder gates and performance metrics remain experimental (#4). Keep these reviews separate:
 

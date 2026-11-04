@@ -126,8 +126,8 @@ Experimental features need manual result checks before use:
   They display producer data and do not issue verification verdicts.
 
 - Known-failure waivers (`rvw regress known`) and failure-signature matching.
-  The #2 review fixes more signature collisions. Wildcard scope and coarse failure identities
-  still need review. See the [close rules](rvw/src/rvw/regress/README.md#review-status-and-close-rules).
+  The #2 review defines diagnostic-class limits and blocks broad waivers from acceptance.
+  Review each exact waiver against full evidence. See the [close rules](rvw/src/rvw/regress/README.md#review-status-and-close-rules).
 - Gates on stored result folders (`--base`/`--cand` folders). The #4 identity checklist remains open.
 - Performance metrics (`perf_metrics`). Reports state sample counts and no estimated confidence.
   Native repeated-seed experiments, semantic ROI checks and statistical rules remain open (#4).

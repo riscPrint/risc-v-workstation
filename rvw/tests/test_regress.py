@@ -236,7 +236,7 @@ def test_compare_classification():
     base = [_res([T("a"), T("b", "fail", "fail:3"), T("c", "fail", "fail:3"), T("d", "fail", "fail:3"), T("e"), T("f")])]
     cand = [_res([T("a", "fail", "fail:1"), T("b"), T("c", "fail", "fail:3"), T("d", "fail", "assert:x.scala:1"),
                   T("f", "fail", "timeout"), T("g", "fail", "fail:2"), T("h")], rev="bbb")]
-    known = [Known("isa", "f", "timeout", "slow", "aaa")]
+    known = [Known("isa", "f", "timeout", "slow", "aaa", config="small")]
     v = compare(base, cand, known)
     assert v.verdict == "reject"
     assert [(i["id"], i["base"]) for i in v.new_failures] == [
@@ -254,7 +254,7 @@ def test_compare_accept_and_known_config_and_wildcards():
     base = [_res([T("a"), T("b")])]
     cand = [_res([T("a"), T("b", "assert", "assert:lsu.scala:1241")])]
     assert compare(base, base).verdict == "accept"
-    assert compare(base, cand, [Known("isa", "b", "assert:*", "lsu bug")]).verdict == "accept"
+    assert compare(base, cand, [Known("isa", "b", "assert:*", "lsu bug")]).verdict == "inconclusive"
     assert compare(base, cand, [Known("isa", "b", "assert:*", "lsu bug", config="large")]).verdict == "reject"
     assert compare(base, cand, [Known("isa", "b", "fail:3", "other")]).verdict == "reject"
     assert compare(base, [_res([T("a")])], allow_missing=True).verdict == "accept"
@@ -350,7 +350,7 @@ def test_gate(fake, rvw, tmp_path):
     assert code == 1 and fake.calls("run")  # Failures are never cached.
     # Accept once it is known.
     rvw("regress", "known", "add", "--core", fake.config, "--suite", "isa", "--id", "rv64ui-p-add",
-        "--signature", "fail:9", "--reason", "intended")
+        "--signature", "fail:9", "--config", "small", "--reason", "intended")
     code, out, _ = rvw("regress", "gate", "--core", fake.config, "--base-rev", base_rev)
     assert code == 0 and "ACCEPT" in out
     # Gate against stored base results.
