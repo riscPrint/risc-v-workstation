@@ -88,8 +88,9 @@ Exit 0 means: every traced instruction and trap event agrees with the reference 
 compared fields (see "Comparison and synchronization"), after the listed synchronizations.
 Version 1 does not check floating-point registers or `fflags`/`fcsr` state.
 Version 2 compares raw FP writes and post-instruction `fflags`/`fcsr` with Spike.
-Sail refuses these fields because its effect interface lacks them. Neither version checks CSR side effects that
-no traced instruction reads, memory that no traced instruction reads, or timing. A matching
+Sail refuses these fields because its effect interface lacks them. Version 2 also checks
+the declared post-instruction CSR snapshots with Spike, including unread writes and trap entry.
+Undeclared CSR state, memory that no traced instruction reads, and timing remain unchecked. A matching
 **prefix** (no end event, `trace_complete: false`) also exits 0, and so does a trace that
 ended in `fail` or `timeout`. Agents must check `trace_complete` and `end_status`, and read
 `recent_synchronizations` and `recent_quirks` for what was taken from the core.
