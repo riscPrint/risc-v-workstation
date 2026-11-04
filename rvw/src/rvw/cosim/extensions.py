@@ -1,0 +1,91 @@
+"""C2 vector and hypervisor state. Missing observations are errors."""
+import re
+
+H_CSRS = (0x600, 0x602, 0x603, 0x643, 0x64a, 0x680,
+          0x200, 0x205, 0x241, 0x242, 0x243, 0x280, 0x34a, 0x34b)
+
+
+def has_extension(isa, letter):
+    match = re.match(r"rv(?:32|64)([a-z]+)", isa.lower())
+    return bool(match and letter in match[1])
+
+
+def header_fields(header):
+    for name, letter in (("vector", "v"), ("hypervisor", "h")):
+        if has_extension(header["isa"], letter):
+            if header["schema"] != "rvw.rvfi/2" or not header.get(name):
+                raise ValueError(f"{letter.upper()} requires C2/2 {name} observations")
+        if name in header and header["schema"] != "rvw.rvfi/2":
+            raise ValueError(f"{name} requires C2/2")
+    if "vector" in header:
+        v = header["vector"]
+        if not isinstance(v, dict) or set(v) != {"vlen", "elen"}:
+            raise ValueError("vector requires vlen and elen")
+        for key, low, high in (("vlen", 128, 65536), ("elen", 8, 64)):
+            n = v[key]
+            if type(n) is not int or not low <= n <= high or n & (n-1):
+                raise ValueError(f"unsupported vector {key}")
+        if v["elen"] > v["vlen"]:
+            raise ValueError("ELEN exceeds VLEN")
+    if "hypervisor" in header and header["hypervisor"] is not True:
+        raise ValueError("hypervisor must be true")
+
+
+def state_fields(obj, header):
+    from .trace import hexnum
+    for name in ("vector", "hypervisor"):
+        if (name in obj) != (name in header):
+            raise ValueError(f"{name} state must match header declaration")
+    if "vector" in header:
+        v = obj["vector"]
+        keys = {"vstart", "vl", "vtype", "vcsr", "vs", "regs"}
+        if not isinstance(v, dict) or set(v) != keys:
+            raise ValueError("partial vector state")
+        for key in keys - {"regs"}:
+            v[key] = hexnum(v[key], 3 if key == "vcsr" else 2 if key == "vs" else header["xlen"])
+        if not isinstance(v["regs"], list) or len(v["regs"]) != 32:
+            raise ValueError("vector state requires all 32 registers, including mask v0")
+        v["regs"] = [hexnum(r, header["vector"]["vlen"]) for r in v["regs"]]
+    if "hypervisor" in header:
+        h = obj["hypervisor"]
+        if not isinstance(h, dict) or set(h) != {"virtual", "mode_after", "virtual_after", "csrs", "translations"}:
+            raise ValueError("partial hypervisor state")
+        if type(h["virtual"]) is not bool or type(h["virtual_after"]) is not bool or type(h["mode_after"]) is not int or h["mode_after"] not in (0, 1, 3):
+            raise ValueError("invalid guest/host privilege")
+        if (h["virtual"] and obj["mode"] == 3) or (h["virtual_after"] and h["mode_after"] == 3):
+            raise ValueError("machine mode cannot be virtual")
+        if not isinstance(h["csrs"], dict) or set(h["csrs"]) != {hex(a) for a in H_CSRS}:
+            raise ValueError("partial hypervisor CSR state")
+        h["csrs"] = {a: hexnum(v, header["xlen"]) for a, v in h["csrs"].items()}
+        if not isinstance(h["translations"], list):
+            raise ValueError("translations must be a list")
+        for t in h["translations"]:
+            if not isinstance(t, dict) or set(t) != {"va", "gpa", "pa", "access"} or t["access"] not in ("fetch", "load", "store"):
+                raise ValueError("invalid two-stage translation")
+            for k in ("va", "gpa", "pa"):
+                t[k] = hexnum(t[k], header["xlen"])
+
+
+def compare_extensions(actual, expected, header):
+    diff = {}
+    for name in ("vector", "hypervisor"):
+        if name not in header:
+            continue
+        if name not in expected:
+            raise ValueError(f"reference cannot check {name} state")
+        for key, value in actual[name].items():
+            if key not in expected[name]:
+                raise ValueError(f"reference cannot check {name}.{key}")
+            if value != expected[name][key]:
+                diff[f"{name}.{key}"] = {"expected": serialize(expected[name][key]), "actual": serialize(value)}
+    return diff
+
+
+def serialize(value):
+    if type(value) is int:
+        return hex(value)
+    if isinstance(value, dict):
+        return {k: serialize(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [serialize(v) for v in value]
+    return value

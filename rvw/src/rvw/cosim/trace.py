@@ -47,6 +47,8 @@ class Trace:
             for k in ("isa", "core", "config", "elf"):
                 if not isinstance(h.get(k), str):
                     raise ValueError(f"missing or invalid C2 header {k}")
+            from .extensions import header_fields
+            header_fields(h)
         except BaseException:
             self.file.close()
             raise
@@ -154,6 +156,8 @@ class Trace:
                 elif "event" not in obj and any(k in obj for k in ("fd_valid", "fd_wdata", "fflags", "fcsr")):
                     raise ValueError("FP fields require rvw.rvfi/2")
                 if "event" not in obj:
+                    from .extensions import state_fields
+                    state_fields(obj, self.header)
                     snapshots = obj.get("csr_state", {})
                     if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
                         raise ValueError("csr_state must contain exactly the declared snapshot addresses")

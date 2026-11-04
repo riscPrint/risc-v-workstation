@@ -59,6 +59,10 @@ def c2_view(values):
     if "fault_access" in result:
         result["fault_access"] = {k: hex(v) if k in ("addr", "rdata", "wdata") and v is not None else v
                                   for k, v in result["fault_access"].items()}
+    from .extensions import serialize
+    for name in ("vector", "hypervisor"):
+        if name in result:
+            result[name] = serialize(result[name])
     return result
 
 
@@ -135,6 +139,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                 "instructions": count, "trap_events": trap_events,
                 "state_coverage": {"trace_schema": trace.header["schema"],
                                    "fp": trace.header["schema"] == "rvw.rvfi/2" and last_order is not None,
+                                   "vector": trace.header.get("vector") if last_order is not None else None,
+                                   "hypervisor": bool(trace.header.get("hypervisor") and last_order is not None),
                                    "csr_snapshot": trace.header.get("csr_snapshot", [])},
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
                 "trace_complete": ended, "end_status": end_status,
@@ -245,6 +251,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError(f"reference cannot check C2 state fields: {sorted(missing)}")
                 fields += state_fields
             diff = differences(actual, expected, fields)
+            from .extensions import compare_extensions
+            diff.update(compare_extensions(actual, expected, trace.header))
             if actual.get("csr_state"):
                 if not hasattr(model, "csr_snapshot"):
                     raise ValueError("reference cannot check CSR snapshots")
