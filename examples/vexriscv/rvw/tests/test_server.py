@@ -59,6 +59,23 @@ def test_server_reset_matches_fresh_process(tmp_path):
     assert (tmp_path / 'second/rvfi.jsonl').read_bytes() == expected
     assert (tmp_path / 'third/rvfi.jsonl').read_bytes() == expected
 
+    # The regression-facing opt-in must use the same server reset path.
+    manifest = tmp_path / 'manifest.jsonl'
+    batch_jobs = [dict(jobs[-1], out=str(tmp_path / name)) for name in ('batch-one', 'batch-two')]
+    manifest.write_text(''.join(json.dumps(j) + '\n' for j in batch_jobs))
+    batch = run_group([str(EXAMPLE / 'run.sh'), 'run-many', '--persistent',
+                       '--jobs', '1', '--manifest', str(manifest), '--json'],
+                      env=dict(os.environ), timeout=600, capture=True, text=True)
+    assert batch.returncode == 0, batch.stderr
+    assert json.loads(batch.stdout)['counts']['pass'] == 2
+    for name in ('batch-one', 'batch-two'):
+        result = json.loads((tmp_path / name / 'result.json').read_text())
+        assert result['execution_mode'] == 'server'
+        assert not result.get('inconclusive')
+        for key in ('status', 'cycles', 'instret', 'fail_code', 'elf_sha256', 'rtl_sha256'):
+            assert result[key] == reference[key]
+        assert (tmp_path / name / 'rvfi.jsonl').read_bytes() == expected
+
     # A portable checkpoint records a suffix and verifies a fresh replay.
     import importlib.util
     spec = importlib.util.spec_from_file_location('checkpoint',

@@ -215,6 +215,8 @@ identity = false                 # true: `<adapter> identity` joins the cache ke
 wall_timeout = false             # true: manifests carry wall_timeout = timeout_s (C1, optional)
 known_failures = "mycore.known.toml"
 jobs = 4                         # run-many --jobs
+persistent = false               # opt-in serial server; skips the separate pre-build
+
 build_first = true               # call `build` before `run-many`
 build_timeout_s = 3600
 startup_s = 120                  # adapter start-up allowance per batch
