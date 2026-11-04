@@ -1859,3 +1859,13 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+## SpinalChecks normalized register map (version 1)
+
+`SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
+required. `registers` lists unique comma-separated register names. Each name has
+`address`, `width`, `reset`, `writeMask`, `w1cMask` and `readClearMask` properties.
+Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
+must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
+must not overlap. Missing required fields fail loading. This format declares
+register intent. It does not provide independent bus observations or a verdict.
