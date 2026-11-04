@@ -101,7 +101,9 @@ class ServerSpec extends AnyFunSuite {
       val ids = scala.collection.mutable.ArrayBuffer.empty[String]
       val adapter = new Adapter(false) {
         override def run(model: Unit, job: RunJob, ctx: RunContext): RunOutcome = {
-          ids += ctx.rvfiHeader("run_id").str
+          assert(!ctx.rvfiHeader.obj.contains("session_id"))
+          assert(!ctx.rvfiHeader.obj.contains("run_id"))
+          ids += ctx.captureIdentity("run_id").str
           super.run(model, job, ctx)
         }
       }

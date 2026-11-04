@@ -24,7 +24,9 @@ import scala.jdk.CollectionConverters._
 object Driver {
 
   case class Ctx(job: RunJob, elf: ElfFile, logF: String => Unit, rvfiHeader: ujson.Obj, assertIndex: AssertIndex, outputMark: Long,
-                 override val wallClock: WallClock = WallClock.none) extends RunContext {
+                 override val wallClock: WallClock = WallClock.none,
+                 requestIdentity: ujson.Obj = ujson.Obj()) extends RunContext {
+    override def captureIdentity: ujson.Obj = ujson.Obj.from(rvfiHeader.value.toSeq ++ requestIdentity.value.toSeq)
     def log(line: String): Unit = logF(line)
   }
 
@@ -346,7 +348,8 @@ class Driver(val adapter: CoreAdapter) {
       val mark = NativeOutput.mark()
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
         "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
-        "source" -> source, "session_id" -> sessionId, "run_id" -> runId, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall)
+        "source" -> source, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall,
+        requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>

@@ -1695,3 +1695,7 @@ SoC capture request identity: `rvw.soc-capture/1` headers carry a nonempty
 same value in `details.simulation_session.run_id`. `soc capture-check` requires
 both values to match. A session UUID, ELF hash and seed alone do not identify one
 request in a persistent session. Captures without a request ID are refused.
+
+Request and process UUIDs belong to `RunContext.captureIdentity`. They do not
+appear in the C2 header (`RunContext.rvfiHeader`). Equal simulation inputs keep
+stable trace header bytes across fresh and persistent runs.

@@ -101,6 +101,8 @@ trait RunContext {
   def log(line: String): Unit
   /** RVFI trace header fields (core, config, elf, isa, xlen); the writer adds the schema. */
   def rvfiHeader: ujson.Obj
+  /** Request identity for live bus captures. Keep process IDs out of C2 bytes. */
+  def captureIdentity: ujson.Obj = rvfiHeader
   /** Index of assertion messages for the model being run. */
   def assertIndex: AssertIndex
   /** Native-output mark taken when the run started (see NativeOutput). */
