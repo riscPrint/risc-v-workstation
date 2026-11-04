@@ -84,3 +84,11 @@ packaging and redistribution review remain open before wider distribution.
 Native builds and relocated native checks must run in GitHub Actions. Local
 fixture tests cover packing, checksums, pin checks and installation paths. They
 do not establish that these native builds pass on the three hosts.
+
+## Local checks
+
+`ci-local.sh` runs the same fast checks as the macOS self-hosted CI job.
+It uses a new temporary work directory and venv, machine-wide locks and
+`nice -n 10`. See [Local CI](../CONTRIBUTING.md#local-ci) for commands and
+prerequisites. The `nightly-python`, `nightly-scala` and `messages` modes
+serve the other local Actions jobs. `messages` needs a GitHub event file.
