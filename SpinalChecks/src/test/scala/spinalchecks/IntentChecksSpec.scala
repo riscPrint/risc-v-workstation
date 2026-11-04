@@ -27,8 +27,8 @@ class IntentChecksSpec extends AnyFunSuite {
       def step(push: Option[Int] = None, pop: Boolean = false, flush: Boolean = false, bad: Boolean = false): Unit = {
         d.clockDomain.waitFallingEdge()
         d.push #= push.nonEmpty; d.pop #= pop; d.flush #= flush
-        d.pushed #= push.getOrElse(0)
-        d.popped #= (if (bad && fault == "order") 255 else q.headOption.getOrElse(0))
+        d.pushed #= push.getOrElse(0).toLong
+        d.popped #= (if (bad && fault == "order") 255 else q.headOption.getOrElse(0)).toLong
         d.occupancy #= (if (bad && fault == "occupancy") (q.size + 1) % 4 else q.size)
         d.clockDomain.waitSampling()
         if (flush) q = Vector.empty

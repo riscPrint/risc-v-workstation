@@ -398,8 +398,8 @@ stable check IDs apply. No core signal names occur in the helpers.
 | `ValueChecks.range` | `value.underflow`, `value.overflow`. Bind a full precision signed expression and mathematical bounds. Unsigned intent uses a zero-extended value converted to `SInt`. |
 | `ValueChecks.narrowing` | `value.truncation`. Declare signed value preservation or modular low-bit behavior. Modular behavior permits lost high bits but still checks the low bits. |
 
-FIFO reference state starts empty at reset. Bind resetless queues only after an
-explicit flush; automatic startup inference is not supported. State initialization
+FIFO reference state starts empty at reset. Resetless FIFO bindings are refused;
+a separate startup contract is still required. State initialization
 and value activation come from the adapter. An inactive value does not delay a
 later violation. Do not derive initialization from a fixed cycle delay.
 The library does not infer reset values or unreachable-state assumptions.

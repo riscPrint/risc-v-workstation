@@ -6,6 +6,8 @@ import spinal.core._
 object QueueChecks {
   def fifo(name: String, depth: Int, push: Bool, pop: Bool, flush: Bool,
            pushed: Bits, popped: Bits, occupancy: UInt): Unit = {
+    require(ClockDomain.current.hasResetSignal || ClockDomain.current.hasSoftResetSignal,
+      "FIFO reference state needs a reset domain")
     require(depth > 0 && pushed.getWidth == popped.getWidth)
     require(occupancy.getWidth >= log2Up(depth + 1))
     val count = Reg(UInt(log2Up(depth + 1) bits)).init(0)
