@@ -554,3 +554,13 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+
+## Online co-simulation
+
+`rvw cosim live` can launch a C1 adapter and check its C2 file during the run.
+See [the cosim launch command](../Cosim/README.md#launch-a-simulator-with-online-checking).
+The launcher sets `RVW_RVFI_FLUSH=1`. `RvfiTraceWriter` then flushes its header,
+retirement records and events before returning. The default stays buffered.
+This option changes output delivery. It does not add C2 v2 state observations.
+The writer constructor also accepts `flushEachRecord` for adapter tests.

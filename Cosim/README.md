@@ -683,8 +683,8 @@ A producer must flush each line. It must provide a wall timeout for a stalled
 producer. The result reports the digest and line count of the consumed prefix,
 including lookahead. It never calls that digest a complete input trace hash.
 EOF before an end event is inconclusive. Save the complete stream for offline
-replay. The CLI and the BOOM adapter do not yet launch this API. This increment
-provides the generic integration point, not BOOM online runtime evidence.
+replay. The `live` CLI launches C1 adapters through this API. See the command below.
+Native BOOM runtime evidence must be reported separately.
 
 Self-relocating ET_DYN firmware is also accepted at its declared PT_LOAD
 addresses. PT_INTERP and ET_REL remain unsupported. No dynamic linker or ELF
@@ -717,3 +717,37 @@ a DUT producer. BOOM per-slot capture remains blocked by
 [spinal-boom #10](https://github.com/riscPrint/spinal-boom/issues/10).
 Sail's public write log is not a full CSR snapshot. Missing writes cannot
 establish full state. Sail snapshot support remains unavailable.
+
+
+### Launch a simulator with online checking
+
+Use `rvw cosim live` with a C1 adapter that writes `rvfi.jsonl`. Supply the
+adapter command after all cosim options. Use `{elf}` and `{out}` placeholders.
+The command receives the captured ELF copy and a new absolute output path.
+The output directory must not exist. The CLI saves the simulator log and C2
+file there. Spike uses the same captured ELF and platform as offline checking.
+Sail is offline only. This command is CLI only; MCP does not accept launch commands.
+
+```sh
+rvw cosim live --core boom --elf PROGRAM --out /tmp/live-run --timeout 120 --json \
+  --simulator scripts/with-lock.sh boom nice -n 10 RiscvSim/boom/run.sh run \
+  --elf '{elf}' --out '{out}' --rvfi-trace --max-cycles 100000
+```
+
+The launcher sets `RVW_RVFI_FLUSH=1`. RiscvSim then flushes each C2 line.
+Buffered output remains the default for other runs. Other adapters must supply
+flushed complete lines. One later-cycle record is still needed before the
+checker can compare the preceding cycle. At a checked divergence or parser
+error, the launcher sends TERM to the simulator process group. It lets nested
+supervisors reap their groups, then forces exit after a 20-second grace period
+if needed. The launcher reaps its process. The wall
+timeout also covers build and lock wait time. A timeout or nonzero simulator
+exit cannot produce an online match. Exit 3 means inconclusive; exit 1 means
+a checked mismatch. Input/parse errors return exit 2.
+
+The consumed prefix digest retains its API meaning. The saved C2 file can
+contain later unchecked lines. No full-trace hash or complete dependency
+identity is inferred from that prefix. Reproduction metadata captures the
+launch executable identity and original argument list. Adapter scripts and
+build dependencies need their own C1 provenance. A complete trace match is
+not a C1 program-pass or clean-revision acceptance claim.
