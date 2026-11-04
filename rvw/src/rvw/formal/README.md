@@ -456,8 +456,13 @@ C1 simulation results are not fabricated for formal jobs.
 ## Examples and provenance
 
 [BOOM](../../../../examples/boom/formal/rvw.toml) and
-[VexRiscv](../../../../examples/vexriscv/formal/rvw.toml) each select ADD, SUB
-and retirement cover at depth 20. Set `RISCV_FORMAL` to a native checkout.
+[VexRiscv](../../../../examples/vexriscv/formal/rvw.toml) supply separate settings.
+BOOM selects ADD, SUB and retirement cover at depth 20. VexRiscv selects
+all 37 upstream RV32I instruction checks and reg at depth 20. It selects
+pc_fwd, pc_bwd, liveness, unique and causal at depth 30. It uses BTORMC for
+pc_fwd, ABC bmc3 for the other assertions, and Bitwuzla for retirement cover. Liveness alone enables the
+upstream VEXRISCV_FAIRNESS assumptions. These restrict bus stalls and traps.
+These assumptions are part of the result, not a claim about a real bus. Set `RISCV_FORMAL` to a native checkout.
 BOOM also needs `SPINAL_BOOM/formal/BoomFormalTop.v`. Generate that RTL in the
 owner-approved private clone. The runner never elaborates in the source checkout.
 
@@ -482,9 +487,50 @@ private input copies, missing status, failing cover, timeout and result mapping.
 
 ## Sail SystemVerilog checks (#64)
 
-Sail-generated RVFI properties are not implemented. The native riscv-formal
-runner above uses upstream hand-written instruction models. Do not label them
-as Sail-generated checks.
+`python -m rvw.formal.sail_subset` compiles an explicit arithmetic slice
+through the native Sail 0.20.1 SystemVerilog backend. It extracts the exact
+ADD, SUB and ADDI right-hand expressions from the pinned rule file below.
+The adapter supplies `bits(32)` operands and Sail sign extension for ADDI.
+It binds the older `sub_vec` name to the compiler primitive `sub_bits`.
+It specializes integer widths, keeps the pure generated modules and removes
+the unused simulator top and runtime types. It does not rewrite generated
+arithmetic logic. It retains the raw backend output beside the RVFI models.
+Upstream riscv-formal supplies instruction decode, x0 write suppression,
+PC advance and RVFI wiring. This is not the full Sail machine or an independent
+decode implementation. Memory, CSR, traps and privilege are outside the slice.
+
+Install the native compiler with `opam install sail.0.20.1 --jobs=2` in an
+appropriate opam switch. This is separate from the simulator installer.
+The opam source archive is `sail-0.20.1.tbz` from the Sail 0.20.1 release.
+Its SHA-256 is
+`ba81b8d7aa5705e04064013ab20c006b80c6db44f95225ac4fbf6042297e50eb`.
+The installer does not install this compiler. It still installs the separate
+ISA simulator when requested.
+The generator requires compiler version 0.20.1 and the exact rule hash.
+It records compiler bytes, version, source and generated hashes, options,
+XLEN, compiler library hashes and the subset boundary in `manifest.json` under the output directory.
+Generated files and measured proof results stay outside the repository.
+
+```sh
+python -m rvw.formal.sail_subset --model /path/to/sail-riscv \
+  --compiler /path/to/opam/bin/sail --riscv-formal "$RISCV_FORMAL" \
+  --out /tmp/sail-subset
+```
+
+Select the generated files in a copy of the core project settings:
+
+```toml
+[riscv_formal.instruction_models]
+add = "/tmp/sail-subset/insn_add.v"
+sub = "/tmp/sail-subset/insn_sub.v"
+addi = "/tmp/sail-subset/insn_addi.v"
+```
+
+Run the same checks without overrides to use the independent upstream
+arithmetic models. Run `test_riscv_formal.py` with `SAIL_MODELS` set to the
+generated directory for independent correct and intentionally wrong arithmetic
+fixtures. The fixture equations are handwritten. The generated model never
+uses DUT results as its oracle. These tests do not establish adapter conformance.
 
 The first intended subset is RV32I ADD, SUB and ADDI, with one retirement
 channel and no memory, CSR, trap or privileged effects. The source baseline is
@@ -506,15 +552,8 @@ not expose the SystemVerilog backend. The Sail compiler's backend option is
 `--sv`; see the [Sail manual](https://github.com/rems-project/sail/blob/master/doc/asciidoc/usage.adoc).
 A simulator version alone cannot identify the compiler or its backend.
 
-Before implementing this subset, install and pin a native Sail compiler with
-that backend. Supply the pinned model's full type and state dependencies.
-Record XLEN, extension settings, compiler identity, model input hashes and
-backend options with generated properties. Do not infer those options from
-DUT behavior. Test correct and deliberately wrong units against a separate
-oracle, including x0 and sign-extension cases. Then connect the generated
-transition outputs to RVFI checks. These steps remain required; no generated
-property, supported implementation configuration or independent Sail proof is
-claimed here. Local attempts and blockers belong in issue #64, not in this repo.
+Full-machine Sail generation, independent decode and state-transition
+properties remain open. The expression slice cannot establish those claims.
 
 ## Sampled event BMC
 
