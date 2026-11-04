@@ -66,7 +66,8 @@ def run(args):
     if plan.get('schema') != 'rvw.cdc-protocol/1' or set(plan) != {'schema', 'kind', 'top', 'verilog'}:
         raise ValueError('expected rvw.cdc-protocol/1 with kind, top and verilog')
     wrapper, ports = generate(plan)
-    if not isinstance(plan['verilog'], list) or not plan['verilog']:
+    if (not isinstance(plan['verilog'], list) or not plan['verilog']
+            or not all(isinstance(p, str) and p for p in plan['verilog'])):
         raise ValueError('verilog must be a nonempty source list')
     sources = [(path.parent / p).resolve() for p in plan['verilog']]
     data = [p.read_bytes() for p in sources]
@@ -87,7 +88,7 @@ def run(args):
                   proof_kind=result['proof_kind'], result='proof/result.json',
                   inputs=[dict(path=str(p), sha256=hashlib.sha256(d).hexdigest()) for p,d in zip(sources,data)],
                   activation='not_measured', model='global clock with independent event enables; old/new sampling choices are DUT inputs',
-                  limits='Selected fixed-port CDC monitor. Safety or bounded destination-event response only. No fairness, pulse capture, analog metastability or CDC signoff. Reset checks use synchronous active-high global reset.')
+                  limits='Selected fixed-port CDC monitor. Safety or bounded destination-event response only. No fairness, inter-sample pulse guarantee, analog metastability or CDC signoff. Reset checks use synchronous active-high global reset.')
     common.write_json(out / 'result.json', report)
     print(json.dumps(report, indent=2) if args.json else report['status'])
     return 0 if result['status'] == 'pass' else 1
@@ -116,14 +117,19 @@ def simulate(args, plan, ports, files, monitor, sources, data, out):
         f'repeat ({args.simulate}) begin\n' + randomize + '\n@(negedge clk); end\n' +
         '$display("RVW_CDC_SIM_COMPLETE"); $finish; end\nendmodule\n')
     compiler, runtime = shutil.which('iverilog'), shutil.which('vvp')
-    logs = []
+    logs, commands = [], []
+    tool_version = None
     status = 'inconclusive'
     if compiler and runtime:
         executable = out / 'simulation'
         command = [compiler, '-g2012', '-s', 'testbench', '-o', str(executable), *map(str, files), str(monitor), str(tb)]
+        commands.append(command)
+        version = run_group([compiler, '-V'], timeout=10, capture=True)
+        tool_version = (version.stdout or '') + (version.stderr or '')
         built = run_group(command, timeout=args.timeout, capture=True)
         logs.append((built.stdout or '') + (built.stderr or ''))
         if built.returncode == 0 and not built.timed_out:
+            commands.append([runtime, str(executable)])
             run = run_group([runtime, str(executable)], timeout=args.timeout, capture=True)
             log = (run.stdout or '') + (run.stderr or ''); logs.append(log)
             if not run.timed_out:
@@ -134,6 +140,8 @@ def simulate(args, plan, ports, files, monitor, sources, data, out):
     (out / 'simulation.log').write_text('\n'.join(logs))
     report = dict(schema='rvw.cdc-simulation/1', status=status, kind=plan['kind'],
                   seed=args.seed, requested_samples=args.simulate,
+                  completed_samples=args.simulate if status == 'pass' else None,
+                  commands=commands, tool_version=tool_version,
                   inputs=[dict(path=str(p), sha256=hashlib.sha256(d).hexdigest()) for p,d in zip(sources,data)],
                   limits='Seeded digital old/new perturbation only. No proof, analog metastability, MTBF or signoff.')
     common.write_json(out / 'result.json', report)

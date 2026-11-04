@@ -61,3 +61,14 @@ def test_perturbed_native_simulation(tmp_path, kind, fault):
     assert r['status'] == ('fail' if fault else 'pass')
     assert rc == int(fault)
     assert r['schema'] == 'rvw.cdc-simulation/1'
+
+
+@pytest.mark.parametrize('argv', [
+    ['--protocol','unused.json'],
+    ['--protocol','unused.json','--settings','unused.json','--out','unused'],
+    ['--simulate','10'],
+    ['--benchmark','unused.json','--protocol','unused.json','--out','unused'],
+])
+def test_invalid_cli_combinations(argv, capsys):
+    assert main(['lint',*argv,'--json']) == 2
+    assert json.loads(capsys.readouterr().out)['status'] == 'error'

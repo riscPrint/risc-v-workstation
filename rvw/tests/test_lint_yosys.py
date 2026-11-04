@@ -43,3 +43,24 @@ def test_opaque_module_cannot_earn_clean(tmp_path):
     p = tmp_path / 'Design.v'
     p.write_text('module Design(input a, output y); endmodule')
     assert yosys.run([str(p)], 'Design', 20)['status'] == 'inconclusive'
+
+
+def test_yosys_settings_and_waiver_identity(tmp_path):
+    import json
+    from rvw.lint.cli import report
+    source = tmp_path / 'Design.v'
+    source.write_text('module Design(input a,output y,z); assign z = ~a; endmodule')
+    settings = tmp_path / 'lint.json'
+    cfg = dict(schema='rvw.lint-settings/1', config='ref', top='Design',
+               files=['Design.v'], backends=['yosys'])
+    settings.write_text(json.dumps(cfg))
+    r = report(settings)
+    assert r['status'] == 'findings'
+    f = r['backends']['yosys']['findings'][0]
+    cfg['waivers'] = [dict(rule=f['rule'],endpoint=f['endpoint'],finding_id=f['id'],
+                           config='ref',reason='Reference fault.')]
+    settings.write_text(json.dumps(cfg))
+    waived = report(settings)
+    assert waived['waivers'][0]['matches'] == 1
+    source.write_text('\nmodule Design(input a,output y,z);\n assign z = ~a;\n endmodule')
+    assert report(settings)['waivers'][0]['matches'] == 0

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import re
 
 from rvw.common.project import load_project, ProjectError
 from rvw.query.db import run_on, QueryError
@@ -73,7 +74,7 @@ def load(path):
 def report(path):
     cfg, identity = load(path)
     runs = {}
-    for backend in ('verilator', 'verible', 'structural', *(['yosys'] if 'yosys' in cfg['backends'] else [])):
+    for backend in ('verilator', 'verible', 'yosys', 'structural'):
         if backend not in cfg['backends']:
             runs[backend] = dict(status='not_run', reason='not selected', findings=[])
         elif backend == 'structural':
@@ -86,7 +87,7 @@ def report(path):
             runs[backend] = run_on(cfg['db'], checked)
         elif backend == 'yosys':
             from . import yosys
-            if not native.re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', cfg['top']):
+            if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', cfg['top']):
                 raise ValueError('yosys top must be a plain identifier')
             runs[backend] = yosys.run(cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
         else:
@@ -115,6 +116,10 @@ def report(path):
 
 def run(args):
     try:
+        if (args.protocol or args.benchmark) and getattr(args, 'project', None):
+            load_project(args.project)
+        if not (args.protocol or args.benchmark) and (args.out or args.simulate):
+            raise ValueError('--out and --simulate need --protocol or --benchmark')
         if args.benchmark:
             if args.settings or args.protocol or not args.out or args.simulate:
                 raise ValueError('--benchmark needs --out and cannot use --settings, --protocol or --simulate')

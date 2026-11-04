@@ -46,3 +46,17 @@ def test_pinned_suite_sources():
         hashes = [hashlib.sha256((root / p).read_bytes()).hexdigest() for p in spec['verilog']]
         assert hashes == case['source_sha256']
         assert case['expected'] == ('fail' if case['id'].endswith('_fault') else 'pass')
+
+
+def test_bmc_adapter_cannot_claim_short_prefix(tmp_path, monkeypatch):
+    import hashlib
+    def run(argv, **kwargs):
+        request = Path(argv[1])
+        Path(argv[2]).write_text(json.dumps(dict(schema='rvw.cdc-adapter-response/1',
+            mode='bmc',status='pass',tool_version='fake',reached_depth=2,
+            request_sha256=hashlib.sha256(request.read_bytes()).hexdigest())))
+        return Result(0)
+    monkeypatch.setattr(compare,'run_group',run)
+    r = compare.adapter('/fake',dict(mode='bmc',depth=10),tmp_path / 'adapter',1)
+    assert r['status'] == 'inconclusive'
+    assert 'shorter' in r['reason']
