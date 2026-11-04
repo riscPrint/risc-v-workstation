@@ -136,3 +136,10 @@ certify VexRiscv ISA compliance or change the adapter configuration.
 bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
 matching HGLDD. It also measures Scala attribution of native toggle points.
 This interface exercise is separate from ISA regression coverage.
+
+## Architecture models
+
+[Minor and TimingSimple descriptions](rvw/arch/README.md) select RV32IM,
+uncached physical RAM and the RV32 benchmark runtime. The C1 adapter publishes
+live retirement events for a project-owned fitting plan. These models show
+trends. They do not reproduce the core's exact timing.

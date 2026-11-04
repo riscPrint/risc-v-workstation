@@ -68,8 +68,6 @@ def settings(project=None):
         raise ArchError('description needs schema rvw.arch-core/1')
     if not isinstance(desc.get('config'), str) or not desc['config']:
         raise ArchError('description needs a C1 config name')
-    if desc.get('isa') not in ('rv64gc', 'rv64gc_zba_zbb_zbs') or desc.get('kind') != 'o3':
-        raise ArchError('only rv64gc o3 models are supported')
     runpy.run_path(str(ROOT / 'Arch/model.py'))['validate_description'](desc)
     positive_int(desc.get('memory_latency'), 'memory_latency')
     return p, data, desc
@@ -128,7 +126,8 @@ def build(project=None, bench=None):
     with held('arch-build'):
         invoke(['make', '-C', ROOT / 'Arch/bench', 'bare',
                 f'SRC={p.get("arch", "sources")}', f'BARE_CC={cc}',
-                f'BUILD={out}', f'MARCH={desc["isa"]}', 'BENCHES=' + ' '.join(names)], out / 'build.log')
+                f'BUILD={out}', f'MARCH={desc["isa"]}',
+                f'ABI={"ilp32" if desc["isa"].startswith("rv32") else "lp64d"}', 'BENCHES=' + ' '.join(names)], out / 'build.log')
     files = []
     for name in names:
         path = out / f'{name}.riscv'
@@ -362,10 +361,9 @@ def inspect(elf, isa, kind, project=None):
     path = Path(elf).resolve()
     symbols = runpy.run_path(str(ROOT / 'Arch/model.py'))['elf_symbols'](path, xlen=xlen)
     missing = []
-    if kind != 'o3':
-        missing.append('In-order CPU construction and ROI probe validation are not implemented.')
-    if xlen == 32:
-        missing.append('RV32 runtime, stable 64-bit CSR reads and gem5 ISA configuration are not validated.')
+    if (kind, isa) not in (("o3", "rv64gc"), ("o3", "rv64gc_zba_zbb_zbs"),
+                           ("minor", "rv32im"), ("timing", "rv32im")):
+        missing.append("Unsupported CPU/ISA combination.")
     return {'schema': 'rvw.arch-compatibility/1',
             'status': 'unsupported' if missing else 'compatible',
             'elf': str(path), 'elf_sha256': digest(path.read_bytes()),

@@ -21,12 +21,40 @@ cat <<'C'
 
 volatile uint64_t bench_stats[2] __attribute__((aligned(8)));
 
+#if __riscv_xlen == 32
+static uint64_t read_cycle64(void) {
+  uint32_t hi, lo, again;
+  do {
+    __asm__ volatile ("csrr %0, mcycleh" : "=r"(hi));
+    __asm__ volatile ("csrr %0, mcycle" : "=r"(lo));
+    __asm__ volatile ("csrr %0, mcycleh" : "=r"(again));
+  } while (hi != again);
+  return ((uint64_t)hi << 32) | lo;
+}
+static uint64_t read_instret64(void) {
+  uint32_t hi, lo, again;
+  do {
+    __asm__ volatile ("csrr %0, minstreth" : "=r"(hi));
+    __asm__ volatile ("csrr %0, minstret" : "=r"(lo));
+    __asm__ volatile ("csrr %0, minstreth" : "=r"(again));
+  } while (hi != again);
+  return ((uint64_t)hi << 32) | lo;
+}
+#endif
+
 void setStats(int enable)
 {
+#if __riscv_xlen == 32
+  static uint64_t start_cycles, start_instret;
+  uint64_t cycles = read_cycle64(), instret = read_instret64();
+  if (enable) { start_cycles = cycles; start_instret = instret; }
+  else { bench_stats[0] = cycles - start_cycles; bench_stats[1] = instret - start_instret; }
+#else
   setStats_rt(enable);
   if (!enable) {
     bench_stats[0] = counters[0]; /* mcycle delta */
     bench_stats[1] = counters[1]; /* minstret delta */
   }
+#endif
 }
 C

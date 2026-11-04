@@ -33,27 +33,16 @@ rg --files -g '*.scala' -g 'rvw.toml' -g '*Config*' -g '*Param*'
 rg -n -i 'xlen|rv32|rv64|out.of.order|reorder|rename|isa|plugins' src
 ```
 
-**Success check:** The source defines one RV64 out-of-order hart. It supports
-the instructions emitted for `rv64gc` or `rv64gc_zba_zbb_zbs`, with ABI `lp64d`.
-Record the selected preset and the source locations that establish these facts.
-Search other source roots if the project does not use `src/`.
+**Success check:** The source defines one supported hart. RV64 out-of-order
+cores use `kind = "o3"` with `rv64gc` or `rv64gc_zba_zbb_zbs` and ABI lp64d.
+RV32IM in-order cores use `kind = "minor"` or `kind = "timing"` and ABI ilp32.
+Other CPU/ISA pairs are refused. Record the preset and source locations.
 
-**Failure action:** Stop this playbook for an RV32 or in-order core.
-Use `rvw arch inspect --elf ELF --isa rv32im --kind minor --json` to check
-ELF layout separately. Its expected result is `unsupported` (exit 2).
-This static check does not enable simulation or validate ROI counters. Track the
-missing support in [issue #13](https://github.com/riscPrint/risc-v-workstation/issues/13).
-The current flow needs a matching CPU model, ISA build options, runtime,
-description and C1 adapter before it can support that core. Do not label an
-in-order core as `kind = "o3"`. Do not label an RV32 core as RV64 to pass parsing.
-Other ISA strings also stop this CLI flow. A parser error is not evidence about
-the core.
-
-The supplied VexRiscv example stops here. Its
-[`VexTop.scala`](../examples/vexriscv/rvw/src/main/scala/rvwvex/VexTop.scala)
-selects an in-order RV32IM core. Its regression, Spike and database results do
-not establish architecture-model support. Do not run the later build or
-calibration steps for that example.
+The VexRiscv example has uncached RV32IM descriptions and live C1 retirement
+counters. Start with [its architecture guide](../examples/vexriscv/rvw/arch/README.md).
+Minor and TimingSimple are explicit approximations. They do not reproduce
+VexRiscv pipeline timing. Static compatibility remains separate from native
+runs and calibration. Use the O3 field mapping below only for O3 models.
 
 ## 2. Select the installed workstation and core project
 
@@ -240,10 +229,10 @@ these notes outside the description JSON. Unknown top-level fields are errors.
 For example, use `rvw/arch/README.md` to record the source revision, source
 locations, derivations, model assumptions and intended use.
 
-The current model fixes these structures: one `RiscvO3CPU`, LTAGE with a loop
+The O3 model fixes these structures: one `RiscvO3CPU`, LTAGE with a loop
 predictor, `SimpleBTB`, a RAS, `SimpleIndirectPredictor`, split L1 caches, and
 fixed-latency memory. It has no L2. RAM is 512 MiB at `0x80000000`.
-The `isa` label does not configure gem5's ISA implementation.
+The `isa` label selects XLEN. It does not disable gem5's extra ISA extensions.
 
 If the RTL has a different predictor, no cache or TLB, an L2, a different memory
 map, variable FU timing, or another unsupported structure, do not invent a
@@ -474,7 +463,8 @@ only when the runner needs a new modeling capability.
 The shipped BOOM project's `RVW_ARCH_CONFIG` override comes from its own TOML
 data. It is not an automatic description selector for every core project.
 
-On VexRiscv (RV32, in-order) this playbook stops at step 1 until #13 is done.
+For VexRiscv RV32IM, use the project-owned Minor or TimingSimple description.
+Check both engines before using a fitted candidate.
 
 ## Source and validation limits
 

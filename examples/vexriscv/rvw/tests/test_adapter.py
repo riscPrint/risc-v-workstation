@@ -123,3 +123,68 @@ def test_ecall_keeps_actual_tval(tmp_path):
     compared = json.loads(comparison.stdout)
     assert compared['status'] == 'mismatch'
     assert compared['mismatch']['differences']['tval'] == {'expected': '0x0', 'actual': '0x73'}
+
+
+def test_live_arch_roi_events(tmp_path):
+    """Check adapter counts against the saved retirement trace, not gem5."""
+    source = tmp_path / 'roi.S'
+    source.write_text('''
+.section .text
+.globl _start, setStats
+_start:
+  la s0, bench_stats
+  li s1, 42
+  jal ra, setStats
+  sw s1, 0(s0)
+  lw s2, 0(s0)
+  bne s1, s2, bad
+  sw zero, 4(s0)
+  li s1, 10
+  sw s1, 8(s0)
+  sw zero, 12(s0)
+  jal ra, setStats
+  la t0, tohost
+  li t1, 1
+  sw t1, 0(t0)
+1: j 1b
+bad:
+  la t0, tohost
+  li t1, 3
+  sw t1, 0(t0)
+  j 1b
+setStats:
+  ret
+.section .data
+.balign 8
+.globl tohost, bench_stats
+tohost: .dword 0
+bench_stats: .dword 0,0
+''')
+    elf = tmp_path / 'roi'
+    built = run_group([GCC, '-march=rv32im_zicsr', '-mabi=ilp32', '-nostdlib', '-nostartfiles',
+                       '-T', str(EXAMPLE / 'programs/link.ld'), str(source), '-o', str(elf)],
+                      capture=True, text=True, timeout=30)
+    assert built.returncode == 0, built.stderr
+    out = tmp_path / 'run'
+    result = invoke(['run', '--elf', elf, '--out', out, '--seed', 1,
+                     '--mem-latency', 1, '--rvfi-trace', '--json'])
+    assert result.returncode == 0, result.stderr
+    raw = json.loads((out / 'result.json').read_text())
+    assert raw['status'] == 'pass'
+    metrics = raw['metrics']
+    assert metrics['roi_cycles'] == 42 and metrics['roi_instret'] == 10
+    # Locate the entry symbol from the ELF's symbol table via the native nm tool.
+    nm = run_group([GCC.removesuffix('gcc') + 'nm', str(elf)], capture=True, text=True, timeout=10)
+    assert nm.returncode == 0
+    marker = int(next(line.split()[0] for line in nm.stdout.splitlines()
+                      if line.split()[-1] == 'setStats'), 16)
+    records = [json.loads(line) for line in (out / 'rvfi.jsonl').read_text().splitlines()]
+    records = [r for r in records if 'pc' in r]
+    boundaries = [i for i, r in enumerate(records) if int(r['pc'], 16) == marker]
+    assert len(boundaries) == 2
+    roi = records[boundaries[0] + 1:boundaries[1] + 1]
+    opcodes = [int(r['insn'], 16) & 127 for r in roi]
+    assert metrics['roi_retired'] == len(roi)
+    assert metrics['roi_loads'] == opcodes.count(3) == 1
+    assert metrics['roi_stores'] == opcodes.count(35) == 4
+    assert metrics['roi_branches'] == sum(op in (99, 103, 111) for op in opcodes)

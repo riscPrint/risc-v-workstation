@@ -44,7 +44,7 @@ discovery). See the [bring-your-own-core guide](docs/BRING_YOUR_OWN_CORE.md).
 The [agent setup](docs/AGENT_SETUP.md) and [architecture](docs/AGENT_ARCH.md)
 playbooks include commands, checks and failure actions. A scratch VexRiscv
 setup validated regression, both gate outcomes, Spike smoke, database queries
-and MCP. The architecture flow stops for this RV32 in-order core.
+and MCP. RV32 architecture models use Minor or TimingSimple approximations.
 BOOM as an external
 project passed the five-test committed gate (accept, `instret_overflow` still failing), a full Spike
 trace match, and SpinalDB and SpinalChecks elaboration. A second core, VexRiscv
@@ -93,7 +93,7 @@ BOOM `small` (2026-10-22, SpinalChecks 2026-10-23).
 | Jasper SPV, VC Formal FSV | Information flow / security | none | none | FV 4. |
 | SpyGlass, Questa CDC / Lint | Lint and CDC | `rvw lint` (Verilator, Verible, SpinalDB structural CDC/RDC) | first increment | No protocol proof, metastability analysis or signoff. Structural results remain findings or inconclusive. |
 | Palladium, Protium, ZeBu | Emulation and prototyping | none | none | Phase 3. |
-| Arm Fast Models, Platform Architect | Virtual platforms, architecture exploration | `rvw arch` (native gem5, calibrated against the RTL), Spike, `rvw perf` | exploring | RV64 O3 bare-metal calibration; interval counters, held-out event fitting, SoC topology and bounded speed-only sweeps are first increments. RTL correlation and broader core models remain open. |
+| Arm Fast Models, Platform Architect | Virtual platforms, architecture exploration | `rvw arch` (native gem5, calibrated against the RTL), Spike, `rvw perf` | exploring | RV64 O3 and RV32IM Minor/TimingSimple; C1 ROI comparison and held-out event fitting. Next: repeated measurements and broader counter mappings. |
 | (no commercial equivalent) | Agent interface over the whole flow | `rvw mcp`: 62 built-in MCP tools (see [reference](docs/COMMAND_REFERENCE.md)), background jobs, cancel | usable | — |
 
 Summary: for the daily loop an agent needs (run, judge, compare with a reference, triage, query the
@@ -118,7 +118,7 @@ is from being usable on other designs.
 | rvw soc | `rvw/src/rvw/soc/` | PLAT | Versioned SoC maps and deterministic software exports | Project-owned JSON, existing Spike platform reader, CMSIS-SVD register subset | generic; BOOM and VexRiscv example maps; full bridge verification pending |
 | rvw cov | `rvw/src/rvw/cov/` | SIM, FV | Coverage merge, ranking, RVFI functional coverage, change-based selection, proof exclusions, mcy | Any Verilator design / RISC-V core | generic; partial Scala attribution; pinned opcode plans, retirement sequences, typed RTL bins and guarded proof cones |
 | SpinalChecks + rvw formal | `SpinalChecks/`, `rvw/src/rvw/formal/` | FV | 516 generated checks (24 fire, untriaged); BMC from a riscv-tests state; xprop | Any Spinal design within the supported clock and state model | generic libraries; opt-in sampled multi-clock/async-reset BMC; bounded first-witness X sweep and native parent-context Icarus replay; TileLink/AXI4 protocol checks and reference traffic; BOOM triage pending |
-| Arch + rvw arch | `Arch/`, `rvw/src/rvw/arch/` | ARCH | Project O3 descriptions, native setup, same-ELF C1 calibration and MCP | One RV64 O3 hart with the bare-metal ROI runtime | generic runner; project SoC topology, interval observations, held-out event fitting, compatibility preflight, Linux reference flow and bounded speed-only DSE; RTL correlation pending |
+| Arch + rvw arch | `Arch/`, `rvw/src/rvw/arch/` | ARCH | Project O3 descriptions, native setup, same-ELF C1 calibration and MCP | One RV64 O3 or RV32IM in-order hart with the bare-metal ROI runtime | generic runner; project SoC topology, interval observations, held-out event fitting, compatibility preflight, Linux reference flow and bounded speed-only DSE; RTL correlation pending |
 | SpinalKonata + rvw perf | `SpinalKonata/`, `rvw/src/rvw/perf/` | DBG, ARCH | BOOM probe adapter; text reports on `large` benchmarks | Any design that tags pipeline events; any Kanata log | generic cause/replay events and commit kinds; BOOM probe mapping documented, not wired |
 | C model datapath checks | `SpinalChecks/c2rtl/` | FV | No core binding | C references against RTL | unsigned 1–4-bit combinational truth tables; SBY depth 1; sequential and FP pending |
 | rvw CLI + MCP project selection | `rvw/`, `docs/BRING_YOUR_OWN_CORE.md` | PLAT | Explicit `--core boom` compatibility; background MCP jobs | Install once; core-owned `rvw.toml` and adapters; `--project`, `RVW_PROJECT`, upward discovery | project interface documented; external BOOM validated, BOOM and VexRiscv projects validated |
