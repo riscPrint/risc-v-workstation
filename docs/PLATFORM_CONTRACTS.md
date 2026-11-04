@@ -2097,9 +2097,14 @@ relaxation is implied.
 Hypervisor state has boolean `virtual` (before), `virtual_after`, integer
 `mode_after` (0, 1 or 3), `csrs`, and `translations`. Together with `mode`,
 these distinguish M, HS, U, VS and VU entry and exit. `csrs` holds XLEN hex
-values for 0x600, 0x602, 0x603, 0x643, 0x64a, 0x680, 0x200, 0x205, 0x241,
+values for 0x100, 0x105, 0x141, 0x142, 0x143, 0x300, 0x302, 0x303,
+0x341, 0x342, 0x343, 0x600, 0x602, 0x603, 0x643, 0x64a, 0x680, 0x200, 0x205, 0x241,
 0x242, 0x243, 0x280, 0x34a and 0x34b after the step. Translation records
 have XLEN hex `va`, `gpa`, `pa` and `access` (fetch, load or store), in access
 order. Missing intermediate translations are unavailable evidence. A backend
 without translation observations must refuse nonempty records. An empty list
 checks no translation. State comparison alone does not prove page walks.
+
+The Spike walker checks successful RV64 guest fetch and scalar load mappings
+with Bare/Sv39/Sv39x4. It refuses stores, faults and unsupported PTEs. HS
+CSR addresses above always mean nonvirtual host state, including while in VS.

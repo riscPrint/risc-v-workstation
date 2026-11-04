@@ -97,6 +97,9 @@ struct Machine : simif_t {
       auto dis=cpu->get_disassembler()->disassemble(fetch.insn);
       snprintf(e.disasm,sizeof(e.disasm),"%s",dis.c_str());
     } catch(...) { snprintf(e.disasm,sizeof(e.disasm),"<instruction fetch fault>"); }
+    if(cpu->extension_enabled('V') && ((e.insn&0x7f)==7 || (e.insn&0x7f)==0x27)
+        && (((e.insn>>12)&7)==0 || ((e.insn>>12)&7)>=5))
+      throw std::runtime_error("vector memory requires ordered per-access reference observations");
     // Refuse emulated split accesses before execution. A fault on the second
     // part could leave partial stores that scalar C2 cannot report.
     if(cfg.misaligned) {
@@ -165,7 +168,7 @@ struct Machine : simif_t {
       e.tval=(s->prv==1 ? s->stval : s->mtval)->read();
       e.intr=e.cause>>(cpu->get_xlen()-1);
       auto c=e.cause & 0xff;
-      e.mem_fault=!e.intr && (c==1||c==5||c==7||c==12||c==13||c==15);
+      e.mem_fault=!e.intr && (c==1||c==5||c==7||c==12||c==13||c==15||c==20||c==21||c==23);
     } else {
       for(auto& [key,value]:s->log_reg_write) if((key&15)==0 && (key>>4)!=0) {
         if(e.rd) throw std::runtime_error("multiple integer writes cannot be represented by C2");
@@ -286,6 +289,17 @@ int rvw_read_physical(void* m, uint64_t addr, uint64_t* value) {
     *value |= uint64_t(uint8_t(*p)) << (8*i);
   }
   return 0;
+}
+int rvw_read_host_csr(void* m,unsigned address,uint64_t* value) {
+  auto* s=static_cast<Machine*>(m)->cpu->get_state();
+  switch(address) {
+    case 0x100: *value=s->nonvirtual_sstatus->read(); return 0;
+    case 0x105: *value=s->nonvirtual_stvec->read(); return 0;
+    case 0x141: *value=s->nonvirtual_sepc->read(); return 0;
+    case 0x142: *value=s->nonvirtual_scause->read(); return 0;
+    case 0x143: *value=s->nonvirtual_stval->read(); return 0;
+    default: return rvw_read_csr(m,address,value);
+  }
 }
 unsigned rvw_prv(void* m) { return static_cast<Machine*>(m)->cpu->get_state()->prv; }
 void rvw_set_reg(void* m,unsigned rd,uint64_t value) {

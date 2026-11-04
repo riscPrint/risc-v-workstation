@@ -193,6 +193,7 @@ class Spike:
         lib.rvw_set_reg.argtypes = [C.c_void_p, C.c_uint, C.c_uint64]
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
+        lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
         lib.rvw_vector.argtypes = [C.c_void_p, C.POINTER(C.c_uint64), C.POINTER(C.c_uint8), C.c_size_t]
@@ -238,6 +239,10 @@ class Spike:
         return self._step_raw(interrupt, mmio)
 
     def _step_raw(self, interrupt=0, mmio=None):
+        from .extensions import has_extension
+        if has_extension(self.platform.isa, "h"):
+            roots = self.csr_snapshot(["0x280", "0x680"])
+            self.translation_context = (bool(self.lib.rvw_virtual(self.handle, 0)), roots["0x280"], roots["0x680"])
         e = Effect()
         if self.lib.rvw_step(self.handle, C.byref(e), interrupt, *(mmio or (0, 0)), int(mmio is not None)):
             raise ValueError(self.error())
@@ -264,9 +269,13 @@ class Spike:
         if has_extension(self.platform.isa, "h"):
             result["hypervisor"] = dict(virtual=bool(self.lib.rvw_virtual(self.handle, 1)),
                 virtual_after=bool(self.lib.rvw_virtual(self.handle, 0)), mode_after=self.mode(),
-                csrs=self.csr_snapshot([hex(a) for a in H_CSRS]), translations=[])
+                csrs=self.csr_snapshot([hex(a) for a in H_CSRS], host=True), translations=[])
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
+
+    def translations(self, effect):
+        from .translation import observations
+        return observations(effect, self.translation_context, self.read_physical)
 
     def read_physical(self, address):
         value = C.c_uint64()
@@ -277,11 +286,12 @@ class Spike:
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
 
-    def csr_snapshot(self, addresses):
+    def csr_snapshot(self, addresses, *, host=False):
         values = {}
         for address in addresses:
             value = C.c_uint64()
-            if self.lib.rvw_read_csr(self.handle, int(address, 16), C.byref(value)):
+            read = self.lib.rvw_read_host_csr if host else self.lib.rvw_read_csr
+            if read(self.handle, int(address, 16), C.byref(value)):
                 raise ValueError(self.error())
             values[address] = value.value
         return values

@@ -1,7 +1,8 @@
 """C2 vector and hypervisor state. Missing observations are errors."""
 import re
 
-H_CSRS = (0x600, 0x602, 0x603, 0x643, 0x64a, 0x680,
+H_CSRS = (0x100, 0x105, 0x141, 0x142, 0x143,
+          0x300, 0x302, 0x303, 0x341, 0x342, 0x343, 0x600, 0x602, 0x603, 0x643, 0x64a, 0x680,
           0x200, 0x205, 0x241, 0x242, 0x243, 0x280, 0x34a, 0x34b)
 
 
@@ -85,7 +86,7 @@ def serialize(value):
     if type(value) is int:
         return hex(value)
     if isinstance(value, dict):
-        return {k: serialize(v) for k, v in value.items()}
+        return {k: v if k == "mode_after" else serialize(v) for k, v in value.items()}
     if isinstance(value, list):
         return [serialize(v) for v in value]
     return value

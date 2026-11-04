@@ -601,3 +601,38 @@ bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
 See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
 licence checks, supported test scope and limits. It writes standalone C3.
 It does not schedule ELF suites or earn C4 acceptance.
+
+## riscv-vector-tests
+
+Use the [CHIPS Alliance generator](https://github.com/chipsalliance/riscv-vector-tests)
+in a separate checkout. Build machine-mode tests for the project's XLEN, VLEN,
+ELEN and extensions. Use its `make help` for generation options. Its normal
+self-checking output is `out/v<VLEN>x<XLEN>m/bin/stage2/`.
+Do not use stage1 binaries with the stock Spike shim. They contain generator
+instructions that the stock reference does not implement.
+
+Any project whose `cosim.platform` ISA declares V can select these built ELFs:
+
+```toml
+[suites.vector]
+kind = "elf-dir"
+dir = "/path/to/riscv-vector-tests/out/v128x64m/bin/stage2"
+glob = "*"
+max_cycles = 1000000
+```
+
+Run `rvw regress run --suite vector --rvfi-trace` with the project's adapter.
+Then run `rvw regress vector --elf-dir PATH --results RUN_DIR --json` in the
+same project. `--platform FILE` can select an explicit platform instead.
+The check requires exactly one conclusive C1 result for each ELF, a passing
+self-check, a complete strict Spike match, matching VLEN/ELEN and full C2/2
+vector snapshots. Integer-only comparison cannot pass this check. Missing
+reference support gives inconclusive suite evidence. A mismatch fails it.
+No V-capable RTL adapter or full upstream suite run is claimed here.
+
+The upstream suite has no coverage guarantees. It documents gaps for tails,
+masks, fault-only-first, vstart and register overlap. Our bounded native tests
+check mask v0, arithmetic, vstart reset and guest transitions separately.
+Vector memory operations with multiple accesses remain outside the scalar
+memory effect interface and are refused by Spike. These limits can make a
+full vector suite inconclusive. They must not be converted to passes.
