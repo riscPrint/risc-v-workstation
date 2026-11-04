@@ -275,7 +275,8 @@ def _collect(d: Path, started: float, cmd: Command | None = None) -> tuple[Run |
             if elf is not None:
                 import hashlib
                 expected = hashlib.sha256(Path(elf).read_bytes()).hexdigest()
-                if run.get("elf_sha256") != expected:
+                reported = run.get("elf_sha256")
+                if not isinstance(reported, str) or reported.lower() != expected:
                     why = "C1 ELF hash is missing or differs from requested ELF"
                     run.result.extra["inconclusive"] = why
                     run.data["inconclusive"] = why

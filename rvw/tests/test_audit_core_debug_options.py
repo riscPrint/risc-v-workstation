@@ -40,7 +40,8 @@ for job in jobs:
 
 
 @pytest.mark.parametrize('batched', [False, True])
-def test_debug_attempt_refuses_result_for_other_elf(tmp_path, monkeypatch, batched):
+@pytest.mark.parametrize('identity', ['other', 'missing', 'match', 'uppercase'])
+def test_debug_attempt_checks_requested_elf(tmp_path, monkeypatch, batched, identity):
     monkeypatch.setenv('RVW_NO_LOCK', '1')
     monkeypatch.delenv('RVW_NO_RUN_MANY', raising=False)
     elf = tmp_path / 'wanted.elf'
@@ -57,9 +58,16 @@ for job in jobs:
         'elf_sha256': hashlib.sha256(b'other program').hexdigest(),
         'message': 'Core.scala:42 assertion'}))
 ''')
+    import hashlib
+    reported = hashlib.sha256(b'other program' if identity == 'other' else elf.read_bytes()).hexdigest()
+    reported = None if identity == 'missing' else reported.upper() if identity == 'uppercase' else reported
+    script.write_text(script.read_text().replace("hashlib.sha256(b'other program').hexdigest()", repr(reported)))
     cmd = Command(exe=[sys.executable, str(script)], opts={'--elf': str(elf)})
     attempts = execute_many([cmd, cmd], [tmp_path / 'a', tmp_path / 'b']) if batched else [execute(cmd, tmp_path / 'a')]
     for attempt in attempts:
         assert attempt.run is not None
-        assert attempt.run.inconclusive
-        assert 'ELF' in attempt.run.inconclusive
+        if identity in ('match', 'uppercase'):
+            assert not attempt.run.inconclusive
+        else:
+            assert attempt.run.inconclusive
+            assert 'ELF' in attempt.run.inconclusive
