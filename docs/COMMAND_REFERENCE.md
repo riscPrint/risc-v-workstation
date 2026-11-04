@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
+    {arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -263,6 +263,34 @@ usage: rvw cov prove [-h] --config CONFIG --work-dir WORK_DIR [--timeout
 usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
     [--jobs JOBS] [--test TEST] [--equivalence-test EQUIVALENCE_TEST] [--json]
     [--out OUT] [--project PROJECT] project
+```
+
+### `rvw debug`
+
+```text
+usage: rvw debug [-h] [--project PROJECT] {openocd,ingress,etrace} ...
+```
+
+### `rvw debug openocd`
+
+```text
+usage: rvw debug openocd [-h] --config CONFIG [--openocd OPENOCD] --log LOG
+    [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw debug ingress`
+
+```text
+usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
+```
+
+### `rvw debug etrace`
+
+```text
+usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
+    --static-config STATIC_CONFIG --user-config USER_CONFIG --toolchain
+    TOOLCHAIN --rvfi RVFI --out OUT [--loss] [--timeout TIMEOUT] [--project
+    PROJECT]
 ```
 
 ### `rvw doctor`
