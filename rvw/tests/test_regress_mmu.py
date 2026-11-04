@@ -194,3 +194,62 @@ def test_native_checker_detects_a_suppressed_load(tmp_path, monkeypatch):
     monkeypatch.setattr(mmu, 'assembly', lambda row: original(row).replace('ld a0, 0(t3)', 'nop'))
     build(description, tmp_path/'build', gcc)
     assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+@pytest.mark.parametrize('control,instruction', [('tvm','satp-read'), ('tvm','satp-write'),
+    ('tvm','sfence'), ('tw','wfi'), ('tsr','sret')])
+def test_control_fault_campaign(control, instruction):
+    text = assembly(dict(id='control', control=control, instruction=instruction,
+                         enabled=True, privilege='S', bins=['control']))
+    assert 'mret' in text and 'csrr t0, mepc' in text
+    assert 'li t1, 2' in text and 'la t1, access_site' in text
+
+
+def test_wfi_clear_requires_a_wakeup_schedule():
+    with pytest.raises(ValueError, match='interrupt schedule'):
+        validate(dict(id='control', control='tw', instruction='wfi', enabled=False,
+                      privilege='S', bins=['control']))
+
+
+@pytest.mark.parametrize('changes', [dict(offset=-1), dict(offset=4096), dict(value=-1),
+    dict(unfenced=True), dict(switch_asid=True), dict(walk_deny=1)])
+def test_corner_case_validation(changes):
+    s = scenario(); s.update(changes)
+    with pytest.raises(ValueError):
+        validate(s)
+
+
+def test_native_checker_rejects_suppressed_sret(tmp_path, monkeypatch):
+    from rvw.regress import mmu
+    gcc, spike = shutil.which('riscv64-unknown-elf-gcc'), shutil.which('spike')
+    if not gcc or not spike:
+        pytest.skip('native RISC-V GCC and Spike required')
+    s = dict(id='sret', control='tsr', instruction='sret', enabled=False, privilege='S', bins=['sret'])
+    path = tmp_path/'case.json'
+    path.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=[s])))
+    original = mmu.assembly
+    monkeypatch.setattr(mmu, 'assembly', lambda row: original(row).replace('\n sret\n', '\n nop\n'))
+    build(path, tmp_path/'build', gcc)
+    assert reference(tmp_path/'build', spike, 5)['status'] == 'fail'
+
+
+def test_report_needs_bound_check_and_unique_c1(tmp_path):
+    from rvw.regress import mmu
+    elf = tmp_path/'load.elf'; elf.write_bytes(b'elf')
+    manifest = tmp_path/'manifest.json'
+    manifest.write_text(json.dumps({'scenarios': [dict(scenario(), elf=elf.name, elf_sha256=mmu.digest(elf))]}))
+    run = tmp_path/'run'; run.mkdir()
+    c1 = run/'result.json'
+    c1.write_text(json.dumps(dict(schema='rvw.run/1', status='pass', elf_sha256=mmu.digest(elf))))
+    result = mmu.report(tmp_path, run)
+    assert result['counts'] == {'pass': 0, 'fail': 0, 'inconclusive': 1}
+    checked = tmp_path/'checked.json'
+    checked.write_text(json.dumps(dict(schema='rvw.mmu-check/1', manifest_sha256=mmu.digest(manifest),
+        scenarios=[dict(id='load', elf_sha256=mmu.digest(elf), c1_sha256=mmu.digest(c1), status='pass')])))
+    assert mmu.report(tmp_path, run, checked)['counts']['pass'] == 1
+    assert mmu.report(tmp_path, run, checked)['scenarios'][0]['observations']['status'] == 'inconclusive'
+    c1.write_text(c1.read_text()+'\n')
+    assert mmu.report(tmp_path, run, checked)['counts']['pass'] == 0
+    manifest.write_text(manifest.read_text()+'\n')
+    with pytest.raises(ValueError, match='coverage needs'):
+        mmu.report(tmp_path, run, checked)

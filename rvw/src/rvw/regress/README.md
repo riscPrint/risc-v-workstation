@@ -507,3 +507,45 @@ configs. Match the model platform, including Svade/Svadu, to the selected suite.
 Sail uses the existing `rvw cosim` platform configuration and `--sail` option.
 The checker preserves the full comparison result and its captured input identity.
 It checks architectural effects; page-walk transactions need a separate observer.
+
+### Privilege controls and observation reports
+
+Control scenarios use a separate row shape in `rvw.mmu/1`: `id`, `control`
+(`tvm`, `tw`, `tsr`), boolean `enabled`, `instruction`, `privilege` (`S`, `U`),
+and `bins`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
+TSR selects `sret`. These programs use Bare mode and MRET to enter S/U mode.
+They check illegal-instruction cause 2 and the exact fault PC. Allowed S-mode
+operations exit through a checked cause-9 ECALL. Successful SRET must branch
+to its declared return PC. U-mode checks keep supervisor instructions illegal
+when the machine control is clear. TW-clear WFI is refused because it needs
+an interrupt wakeup schedule. These rules use the pinned Machine ISA 1.13
+(20260120), Machine Status register, TVM, TW and TSR sections.
+
+Data scenarios also accept `offset` (0..4088), `value` (expected load value),
+`walk_deny`, `unfenced` and `switch_asid` (booleans). Expectations also accept
+`access-fault` and `misaligned`. Faults check exact cause, address and PC.
+`walk_deny` uses three PMP TOR entries to deny S-mode reads of the table pages.
+It checks an access fault, not a page fault. `unfenced` and `switch_asid` require
+`remap`. The unfenced read permits either old or new data before the required
+fence. The ASID case switches to a second ASID, then reuses the first ASID.
+It fences each switch and requires the new data. This does not test ASID width
+or require unrelated entries to stay cached. Software changes are sequential.
+
+On BOOM, `--rvfi-trace` also writes `mmu-observations.jsonl`. C1 names it under
+`details.mmu_observations`. Its header has schema `rvw.mmu-observations/1` and
+an `identity` object from the C2 header. Event rows carry `cycle` and `kind`:
+`walk_request` has physical `address` and memory `command`; `walk_response`
+has `address` and `data`; `bus_a` has physical `address`, TileLink `opcode`
+and `size_log2`. Addresses and data use hexadecimal strings. These are sampled
+PTW/cache and accepted external A-channel events. Requests may be killed or
+retried. Responses do not establish an atomic update. Cached device accesses
+and device state need separate checks. Bus events alone cannot identify walks.
+
+`rvw regress mmu report ELF_DIR --results RUN_DIR --checked CHECK.json --json`
+writes `rvw.mmu-coverage/1`. The optional check file must come from `mmu check`.
+The report binds its manifest and C1 hashes. It lists every scenario and every
+unique bin in the declared denominator. Only strict oracle checks can pass
+architectural bins. Without a bound check, bins remain inconclusive. Observation
+files have separate paths, hashes and event counts. `recorded` means capture
+exists. It gives no walk or device correctness verdict. The report lists the
+remaining protocol, PMA, atomicity and multi-hart obligations explicitly.

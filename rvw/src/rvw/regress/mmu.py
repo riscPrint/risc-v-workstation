@@ -48,8 +48,10 @@ def load(path):
 
 
 def validate(s):
+    if isinstance(s, dict) and 'control' in s:
+        return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -58,11 +60,11 @@ def validate(s):
         raise ValueError('level must be 0, 1 or 2')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
         raise ValueError('invalid PTE flags')
-    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault'):
+    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
         raise ValueError('unsupported access or expectation')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
-    for key in ('sum', 'mxr', 'mprv'):
+    for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid'):
         if key in s and type(s[key]) is not bool:
             raise ValueError(f'{key} must be boolean')
     for key in ('va', 'pa'):
@@ -80,6 +82,12 @@ def validate(s):
             raise ValueError('global remap requires an all-ASID fence')
     if 'remap' in s and type(s['remap']) is not bool:
         raise ValueError('remap must be boolean')
+    if type(s.get('value', 42)) is not int or not 0 <= s.get('value', 42) < 2**63:
+        raise ValueError('value must be a nonnegative signed 64-bit integer')
+    if type(s.get('offset', 0)) is not int or not 0 <= s.get('offset', 0) <= 4088:
+        raise ValueError('offset must be in 0..4088')
+    if any(s.get(k) for k in ('unfenced', 'switch_asid')) and not s.get('remap'):
+        raise ValueError('unfenced and switch_asid require remap')
     va = number(s.get('va', 0x40000000))
     if va >> 39 != ((1 << 25) - 1 if va & (1 << 38) else 0):
         raise ValueError('va must be canonical Sv39')
@@ -96,6 +104,8 @@ def validate(s):
 
 
 def assembly(s):
+    if 'control' in s:
+        return control_assembly(s)
     validate(s)
     va = number(s.get('va', 0x40000000))
     pa = number(s.get('pa', DATA))
@@ -106,8 +116,9 @@ def assembly(s):
         i = 2 - depth
         table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
     leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
-    fault = s['expect'] == 'page-fault'
-    cause = 13 if s['access'] == 'load' else 15
+    va += s.get('offset', 0)
+    fault = s['expect'] != 'success'
+    cause = {'page-fault': (13, 15), 'access-fault': (5, 7), 'misaligned': (4, 6), 'success': (0, 0)}[s['expect']][s['access'] == 'store']
     status = (int(s.get('mprv', True)) << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
     status |= int(s.get('sum', False)) << 18 | int(s.get('mxr', False)) << 19
     asid = s.get('asid', 0)
@@ -127,6 +138,7 @@ _start:
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
+ {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + 12288) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
  li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
  csrw satp, t0
  {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
@@ -162,14 +174,40 @@ check_trap:
 check_data:
 '''
     if s['access'] == 'store':
-        code += f' li t0, {DATA}\n ld a0, 0(t0)\n'
-    code += f" li t1, {43 if s['access'] == 'store' else 42}\n bne a0, t1, fail\n"
+        code += f' li t0, {pa + s.get("offset", 0)}\n ld a0, 0(t0)\n'
+    code += f" li t1, {43 if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         code += f''' li t0, {leaf}
  li t1, {replacement}
  sd t1, 0(t0)
+'''
+        if s.get('unfenced'):
+            code += f''' li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 42
+ beq a0, t1, stale_allowed
+ li t1, 43
+ bne a0, t1, fail
+stale_allowed:
+'''
+        if s.get('switch_asid'):
+            for other in ((asid + 1) % 65536, asid):
+                code += f''' li t0, {(8 << 60) | (other << 44) | (ROOT >> 12)}
+ csrw satp, t0
  {fence}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 43
+ bne a0, t1, fail
+'''
+        code += f''' {fence}
  li t0, {status}
  csrs mstatus, t0
  ld a0, 0(t3)
@@ -200,6 +238,80 @@ fromhost: .dword 0
         code += '\n'.join(f' .dword {v}' for v in table) + '\n'
     code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
     return code
+
+
+def control_validate(s):
+    required = {'id', 'control', 'enabled', 'instruction', 'privilege', 'bins'}
+    if set(s) != required or not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
+        raise ValueError('invalid control scenario fields')
+    choices = {'tvm': ('satp-read', 'satp-write', 'sfence'), 'tw': ('wfi',), 'tsr': ('sret',)}
+    if s['control'] not in choices or s['instruction'] not in choices[s['control']]:
+        raise ValueError('unsupported control instruction')
+    if type(s['enabled']) is not bool or s['privilege'] not in ('S', 'U'):
+        raise ValueError('invalid control state or privilege')
+    if s['control'] == 'tw' and not s['enabled']:
+        raise ValueError('TW-clear WFI needs an interrupt schedule')
+    if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
+        raise ValueError('bins must be nonempty strings')
+
+
+def control_assembly(s):
+    control_validate(s)
+    bit = {'tvm': 20, 'tw': 21, 'tsr': 22}[s['control']]
+    denied = s['enabled'] or s['privilege'] == 'U'
+    instruction = {'satp-read': 'csrr a0, satp', 'satp-write': 'csrw satp, zero',
+                   'sfence': 'sfence.vma x0, x0', 'wfi': 'wfi', 'sret': 'sret'}[s['instruction']]
+    # Successful SRET returns to S. ECALL then gives a checked M-mode exit.
+    return f'''.option norvc
+.section .text
+.globl _start
+_start:
+ la t0, trap
+ csrw mtvec, t0
+ csrw mie, zero
+ csrw medeleg, zero
+ csrw mideleg, zero
+ csrw satp, zero
+ li t0, -1
+ csrw pmpaddr0, t0
+ li t0, 15
+ csrw pmpcfg0, t0
+ li t0, 0x7e1900
+ csrc mstatus, t0
+ li t0, {(int(s['enabled']) << bit) | (int(s['privilege'] == 'S') << 11) | 256}
+ csrs mstatus, t0
+ la t0, done
+ csrw sepc, t0
+ la t0, access_site
+ csrw mepc, t0
+ mret
+access_site:
+ {instruction}
+ {'j fail' if s['instruction'] == 'sret' else 'nop'}
+done:
+ ecall
+ j fail
+trap:
+ csrr t0, mcause
+ li t1, {2 if denied else 9}
+ bne t0, t1, fail
+ csrr t0, mepc
+ la t1, {'access_site' if denied else 'done'}
+ bne t0, t1, fail
+ li t1, 1
+ j finish
+fail:
+ li t1, 3
+finish:
+ la t0, tohost
+ sd t1, 0(t0)
+1: j 1b
+.section .tohost,"aw"
+.balign 64
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0
+'''
 
 
 def digest(path):
@@ -303,9 +415,11 @@ def check(directory, results, platform, model, timeout, sail=None):
         if digest(elf) != s['elf_sha256']:
             raise ValueError('ELF differs from build manifest')
         candidates = [r for r in runs if r.elf_sha256 == s['elf_sha256']]
+        c1_sha256 = None
         status, reason, comparison = 'inconclusive', 'need exactly one C1 result for this ELF', None
         if len(candidates) == 1:
             run = candidates[0]
+            c1_sha256 = digest(run.path / 'result.json')
             reason = run.why_inconclusive
             if not reason and run.status != 'pass':
                 status, reason = 'fail', 'C1 self-check failed: ' + run.status
@@ -335,10 +449,62 @@ def check(directory, results, platform, model, timeout, sail=None):
                           and comparison.get('synchronized') == 0):
                         status, reason = 'pass', None
         rows.append({'id': s['id'], 'elf_sha256': s['elf_sha256'], 'status': status,
-                     'reason': reason, 'comparison': comparison, 'bins': {b: status for b in s['bins']}})
-    return {'schema': 'rvw.mmu-check/1', 'model': model,
+                     'reason': reason, 'comparison': comparison, 'c1_sha256': c1_sha256, 'bins': {b: status for b in s['bins']}})
+    return {'schema': 'rvw.mmu-check/1', 'model': model, 'manifest_sha256': digest(directory / 'manifest.json'),
             'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
             'scenarios': rows}
+
+
+def report(directory, results, checked=None):
+    """Report the scenario denominator. Never infer coverage from an ELF or bus activity."""
+    from rvw.results import load_run
+    directory = Path(directory).resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    oracle = json.loads(Path(checked).read_text()) if checked else None
+    if oracle and (oracle.get('schema') != 'rvw.mmu-check/1' or oracle.get('manifest_sha256') != digest(directory / 'manifest.json')):
+        raise ValueError('coverage needs an rvw.mmu-check/1 report')
+    checks = oracle['scenarios'] if oracle else []
+    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    rows = []
+    for s in manifest['scenarios']:
+        if digest(directory / s['elf']) != s['elf_sha256']:
+            raise ValueError('ELF differs from build manifest')
+        matches = [c for c in checks if c['id'] == s['id'] and c['elf_sha256'] == s['elf_sha256']]
+        status = matches[0]['status'] if len(matches) == 1 else 'inconclusive'
+        observed = {'status': 'inconclusive', 'reason': 'missing unique C1 observation file'}
+        candidates = [r for r in runs if r.elf_sha256 == s['elf_sha256']]
+        if len(candidates) != 1 or len(matches) != 1 or matches[0].get('c1_sha256') != digest(candidates[0].path / 'result.json'):
+            status = 'inconclusive'
+        if len(candidates) == 1:
+            run = candidates[0]
+            raw = json.loads((run.path / 'result.json').read_text())
+            name = raw.get('details', {}).get('mmu_observations')
+            if name and (run.path / name).is_file():
+                path = run.path / name
+                events = [json.loads(line) for line in path.read_text().splitlines()]
+                if (not events or events[0].get('schema') != 'rvw.mmu-observations/1'
+                        or events[0].get('elf_sha256') != s['elf_sha256']):
+                    raise ValueError('invalid observation header')
+                # Capture presence is not a walk correctness verdict or device coverage.
+                observed = dict(status='recorded', path=str(path), sha256=digest(path),
+                    c1_sha256=digest(run.path / 'result.json'),
+                    counts={k: sum(e.get('kind') == k for e in events[1:])
+                            for k in ('walk_request', 'walk_response', 'bus_a')})
+        rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,
+                         bins=s['bins'], observations=observed))
+    universe = sorted({b for s in rows for b in s['bins']})
+    bins = {b: ('pass' if all(s['status'] == 'pass' for s in rows if b in s['bins']) else
+                'fail' if any(s['status'] == 'fail' for s in rows if b in s['bins']) else 'inconclusive')
+            for b in universe}
+    return dict(schema='rvw.mmu-coverage/1', status='reported',
+        manifest_sha256=digest(directory / 'manifest.json'),
+        check_sha256=digest(checked) if checked else None,
+        denominator=len(bins), counts={k: list(bins.values()).count(k) for k in ('pass', 'fail', 'inconclusive')},
+        bins=bins, scenarios=rows,
+        unverified=['walk request/response correctness', 'TLB request and completion protocol',
+                    'A/D atomicity', 'concurrent PTE changes', 'cross-hart shootdowns',
+                    'PMA width, boundary, atomic and conflicting-attribute behavior',
+                    'device side effects', 'TW-clear interrupt wakeup'])
 
 
 def register(sub):
@@ -360,7 +526,11 @@ def register(sub):
     c.add_argument('--model', choices=('spike', 'sail'), default='spike')
     c.add_argument('--timeout', type=float, default=120)
     c.add_argument('--sail')
-    for p in (b, r, c):
+    coverage = actions.add_parser('report', help='scenario bins and separate observation inventory')
+    coverage.add_argument('directory', type=Path)
+    coverage.add_argument('--results', type=Path, required=True)
+    coverage.add_argument('--checked', type=Path)
+    for p in (b, r, c, coverage):
         p.add_argument('--json', action='store_true')
         p.set_defaults(func=main)
 
@@ -368,16 +538,18 @@ def register(sub):
 def main(args):
     import math
     try:
-        if args.mmu_action != 'build' and (not math.isfinite(args.timeout) or args.timeout <= 0):
+        if args.mmu_action in ('reference', 'check') and (not math.isfinite(args.timeout) or args.timeout <= 0):
             raise ValueError('timeout must be finite and positive')
         if args.mmu_action == 'build':
             result = build(args.description, args.out, args.gcc, args.pma)
         elif args.mmu_action == 'reference':
             result = reference(args.directory, args.spike, args.timeout)
+        elif args.mmu_action == 'report':
+            result = report(args.directory, args.results, args.checked)
         else:
             result = check(args.directory, args.results, args.platform, args.model, args.timeout, args.sail)
         print(json.dumps(result, allow_nan=False))
-        return 0 if result.get('status', 'pass') == 'pass' else 3 if result.get('status') == 'inconclusive' else 1
+        return 0 if result.get('status', 'pass') in ('pass', 'reported') else 3 if result.get('status') == 'inconclusive' else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(json.dumps({'status': 'error', 'message': str(exc)}))
         return 2

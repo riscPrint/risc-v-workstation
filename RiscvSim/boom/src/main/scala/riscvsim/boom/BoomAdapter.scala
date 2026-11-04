@@ -63,6 +63,8 @@ object BoomAdapter extends CoreAdapter {
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
+        top.tile.ptw.io.mem.req.flatten.foreach(_.simPublic())
+        top.tile.ptw.io.mem.resp.flatten.foreach(_.simPublic())
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
         trapEpcs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
       }
@@ -108,6 +110,9 @@ object BoomAdapter extends CoreAdapter {
     val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
     val konataFile = new File(job.out, "konata.log")
+    val observations = if (job.rvfiTrace) Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl"))) else None
+    observations.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
+      "identity" -> ctx.rvfiHeader, "elf_sha256" -> elf.sha256))))
     var tracer: Option[KonataTracer] = None
     var retired = 0L
     var traps = 0L
@@ -123,6 +128,28 @@ object BoomAdapter extends CoreAdapter {
       val mem = SparseMemory(seed = 0)
       elf.load((a, d) => mem.write(a, d))
       new BoomMemoryAgent(dut.io.mem, cd, mem, job.memLatency)
+      // Optional simulation observations. Keep these separate from C2 retirement effects.
+      if (job.rvfiTrace) {
+        val ptw = dut.tile.ptw.io.mem
+        val a = dut.io.mem.a
+        cd.onSamplings {
+          def event(kind: String, fields: (String, ujson.Value)*): Unit = {
+            val row = ujson.Obj("kind" -> kind, "cycle" -> RvwJson.num(ctl.cycle))
+            fields.foreach { case (key, value) => row(key) = value }
+            observations.foreach(_.println(ujson.write(row)))
+          }
+          if (ptw.req.valid.toBoolean && ptw.req.ready.toBoolean)
+            event("walk_request", "address" -> Hex(ptw.req.payload.addr.toBigInt),
+              "command" -> ujson.Num(ptw.req.payload.cmd.toInt))
+          if (ptw.resp.valid.toBoolean)
+            event("walk_response", "address" -> Hex(ptw.resp.payload.addr.toBigInt),
+              "data" -> Hex(ptw.resp.payload.data.toBigInt))
+          if (a.valid.toBoolean && a.ready.toBoolean)
+            event("bus_a", "address" -> Hex(a.payload.address.toBigInt),
+              "opcode" -> ujson.Num(a.payload.opcode.toInt), "size_log2" -> ujson.Num(a.payload.size.toInt))
+        }
+      }
+
       import BoomSim.Platform._
       mem.write(msip, 0)
       mem.write(mtimecmp, -1L)
@@ -219,12 +246,14 @@ object BoomAdapter extends CoreAdapter {
       while (true) cd.waitSampling(100000)
     } finally {
       for (t <- tracer) t.close()
+      observations.foreach(_.close())
     }
 
     for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),
       "mem_timing" -> ujson.Str(job.memLatency.map(l => s"fixed $l").getOrElse("random")),
       "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(simCtl.timeOfCycle1))
+    if (job.rvfiTrace) details("mmu_observations") = "mmu-observations.jsonl"
     for (w <- rvfi) {
       details("rvfi_records") = RvwJson.num(w.records)
       details("rvfi_trap_records") = RvwJson.num(w.trapRecords)

@@ -1674,3 +1674,10 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+Directed MMU extensions retain the existing C1-C4 verdict rules. Control rows,
+data corner fields, the optional adapter `rvw.mmu-observations/1` capture and
+`rvw.mmu-coverage/1` inventory follow the regress README. `mmu check` additionally
+binds `manifest_sha256` and each row's `c1_sha256`. A coverage report verifies
+these hashes before using architectural bins. Observation counts are separate
+from coverage. `recorded` is not a correctness pass.

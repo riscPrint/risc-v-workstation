@@ -458,3 +458,11 @@ It does not establish ISA correctness. Keep external effects disabled. This
 format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
+
+### BOOM MMU observations
+
+With `--rvfi-trace`, BOOM also records `mmu-observations.jsonl`, named by
+`details.mmu_observations` in C1. It samples the optional public PTW/cache
+request and response signals and accepted physical TileLink A handshakes.
+It changes no core source. See the [MMU format](../rvw/src/rvw/regress/README.md#privilege-controls-and-observation-reports).
+Capture presence and event counts are observations, not protocol or PMA verdicts.
