@@ -7,6 +7,7 @@ from pathlib import Path
 import platform
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -103,7 +104,7 @@ class Runner:
         # These are harness dependencies, installed only AFTER the exact flag check.
         sim = case in ('sim', 'cosim', 'quickstart', 'all')
         gcc = sim or case in ('gcc', 'gem5')
-        if sim or gcc:
+        if (sim and case not in ('quickstart', 'all')) or case == 'gem5':
             extra = ['--with-riscv-gcc'] + (['--with-sim'] if sim else [])
             self.run('harness-tools', [*install, '--yes', *extra], lock='suite')
             self.load_env()
@@ -129,7 +130,7 @@ class Runner:
                 self.env.update(COURSIER_CACHE=str(cache / 'coursier'),
                                 SBT_OPTS=f'-Dsbt.boot.directory={cache}/boot -Dsbt.global.base={cache}/global -Dsbt.ivy.home={cache}/ivy')
             self.run('scala-fetch', ['sbt', '-batch', '-J-XX:ActiveProcessorCount=2',
-                                     '-Dsbt.offline=false', 'root/update'], cwd=vex / 'rvw', lock='sbt')
+                                     '-Dsbt.offline=false', 'root/update', 'root/compile'], cwd=vex / 'rvw', lock='sbt')
             run = self.out / 'vex-smoke'
             self.run('vex-offline-smoke', [vex / 'rvw/run.sh', 'run', '--elf',
                      vex / 'rvw/out/programs/smoke', '--out', run, '--seed', '1',
@@ -190,9 +191,13 @@ def main():
         p.error('commit source changes before qualification')
     out.mkdir(parents=True, exist_ok=False)
     runner = Runner(out, args.case, args.timeout, args.cold_scala)
+    def interrupted(signum, frame):
+        raise InterruptedError(f'qualification interrupted by signal {signum}')
+    for sig in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(sig, interrupted)
     try:
         runner.execute(args.case, args.cold_scala)
-    except (OSError, ValueError, RuntimeError) as exc:
+    except (OSError, ValueError, RuntimeError, KeyboardInterrupt) as exc:
         runner.report.update(status='error', error=str(exc))
         runner.save()
         print(str(exc), file=sys.stderr)
