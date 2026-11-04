@@ -128,3 +128,20 @@ def test_native_async_register_needs_explicit_event_model(tmp_path):
     args.out = str(tmp_path / 'event')
     args.event_model = args.async_reset = True
     assert run(args) == 0
+
+
+def test_existing_dut_assertion_cannot_be_attributed_to_app(tmp_path):
+    if not all(shutil.which(t) for t in ('yosys', 'sby', 'yices-smt2')):
+        pytest.skip('native tools required')
+    spec = plan()
+    spec['properties'] = [spec['properties'][0]]
+    rtl = (FIXTURE / 'Contracts.sv').read_text().replace(
+        'endmodule', 'always @(posedge clk) assert(source == 0); endmodule')
+    (tmp_path / 'Contracts.sv').write_text(rtl)
+    path = tmp_path / 'apps.json'
+    path.write_text(json.dumps(spec))
+    args = Namespace(manifest=str(path), out=str(tmp_path / 'out'), depth=8,
+                     engine='smtbmc:yices', timeout=20, mode='bmc', json=False)
+    with pytest.raises(SystemExit):
+        run(args)
+    assert not (tmp_path / 'out/result.json').exists()
