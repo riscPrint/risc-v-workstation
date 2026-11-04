@@ -80,13 +80,21 @@ def report(netlist, top, mappings, rows, snapshot):
             'point_id': mapping['point_id'], 'requirement_ids': mapping.get('requirement_ids', []),
             'proof_status': 'proven_conditional' if proven else 'not_proven',
             'proof_job': job or None, 'expression': mapping['expression'],
-            'activation': {'status': 'not_measured'},
+            'activation': activation(row),
             'proof_core': {'status': 'unavailable', 'cells': None,
                            'reason': 'No solver core is exported by this flow'},
             'cone': {'status': 'inconclusive' if problems else 'structural_overapproximation',
                      'cells': sorted(cell_id(n) for n in cone), 'problems': sorted(set(problems))},
         })
-    return {'schema': SCHEMA, 'source_snapshot': snapshot, 'top': top,
+    requirements = {}
+    for prop in properties:
+        for rid in prop['requirement_ids']:
+            requirements.setdefault(rid, []).append(prop['property_id'])
+    return {'requirements': [dict(requirement_id=rid, property_ids=sorted(ids),
+                                  status='inconclusive',
+                                  reason='Solver proof cores and complete requirement obligations are unavailable')
+                             for rid, ids in sorted(requirements.items())],
+            'schema': SCHEMA, 'source_snapshot': snapshot, 'top': top,
             'properties': properties,
             'logic': [{'id': cell_id(n), 'name': n, 'type': cells[n]['type'],
                        'source': cells[n].get('attributes', {}).get('src')}
@@ -97,5 +105,17 @@ def report(netlist, top, mappings, rows, snapshot):
                                     for n, c in sorted(cells.items()) if c['type'] == '$assume'
                                     or (c['type'] == '$check' and c.get('parameters', {}).get('FLAVOR') == 'assume')],
             'limits': 'Structural fan-in includes state, clock and reset inputs. It is not a minimal proof core. '
-                      'Outside-cone logic is not proven irrelevant. Activation and assumption adequacy are not tested. '
+                      'Outside-cone logic is not proven irrelevant. Declared activation covers do not establish assumption adequacy. '
                       'No functional coverage percentage is implied.'}
+
+
+def activation(row):
+    """Report only a separate activation cover, never the unreachable point cover."""
+    job = row.get('jobs', {}).get('activation')
+    if not job:
+        return {'status': 'not_measured'}
+    reached = (job.get('status') == 'PASS' and job.get('exit_code') == 0
+               and job.get('free_wires') == [] and row.get('activation_guard') is True)
+    return {'status': 'reached' if reached else 'inconclusive',
+            'expression': row.get('activation_expression'), 'job': job,
+            'meaning': 'User-declared activation predicate; not assumption adequacy or full non-vacuity'}

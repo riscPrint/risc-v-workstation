@@ -51,7 +51,7 @@ def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -60,8 +60,10 @@ def validate(s):
         raise ValueError('level must be 0, 1 or 2')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
         raise ValueError('invalid PTE flags')
-    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
+    if s['access'] not in ('load', 'store', 'fetch') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
         raise ValueError('unsupported access or expectation')
+    if s['access'] == 'fetch' and (s['expect'] not in ('success', 'page-fault', 'access-fault') or any(k in s for k in ('remap', 'unfenced', 'switch_asid', 'offset', 'access_width', 'register_width', 'mprv', 'satp_mode', 'ad_expect')) or number(s.get('pa', DATA)) != DATA):
+        raise ValueError('fetch requires a fixed payload at DATA and no data-only options')
     width = s.get('access_width', 8)
     if type(width) is not int or width not in (1, 2, 4, 8):
         raise ValueError('access_width must be 1, 2, 4 or 8 bytes')
@@ -75,7 +77,7 @@ def validate(s):
         raise ValueError('remap requires an 8-byte access')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
-    for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid'):
+    for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid', 'root_switch', 'nonleaf_global'):
         if key in s and type(s[key]) is not bool:
             raise ValueError(f'{key} must be boolean')
     for key in ('va', 'pa'):
@@ -89,10 +91,16 @@ def validate(s):
     if s.get('remap', False):
         if s['level'] != 0 or s['access'] != 'load' or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA:
             raise ValueError('remap requires a successful level-0 load from DATA')
-        if 'G' in s['flags'] and s.get('fence', 'all') not in ('all', 'va'):
+        if ('G' in s['flags'] or s.get('nonleaf_global')) and s.get('fence', 'all') not in ('all', 'va'):
             raise ValueError('global remap requires an all-ASID fence')
+    if s.get('nonleaf_global') and s['level'] == 2:
+        raise ValueError('nonleaf_global requires a non-leaf PTE')
+    if s.get('root_switch') and (not s.get('remap') or s.get('unfenced') or s.get('switch_asid')):
+        raise ValueError('root_switch requires remap and excludes unfenced/switch_asid')
     if 'remap' in s and type(s['remap']) is not bool:
         raise ValueError('remap must be boolean')
+    if 'store_value' in s and (s['access'] != 'store' or type(s['store_value']) is not int or not 0 <= s['store_value'] < 2**31):
+        raise ValueError('store_value must be a nonnegative signed 32-bit store value')
     if type(s.get('value', 42)) is not int or not 0 <= s.get('value', 42) < 2**63:
         raise ValueError('value must be a nonnegative signed 64-bit integer')
     if type(s.get('offset', 0)) is not int or not 0 <= s.get('offset', 0) <= 4088:
@@ -104,6 +112,8 @@ def validate(s):
         raise ValueError('va must be canonical Sv39')
     if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
         raise ValueError('bins must be nonempty strings')
+    if 'software_rsw' in s and (type(s['software_rsw']) is not int or not 0 <= s['software_rsw'] <= 3 or 'ad_expect' not in s or s.get('remap') or s['access'] == 'fetch'):
+        raise ValueError('software_rsw requires 0..3 and ad_expect, without remap/fetch')
     if 'ad_expect' in s and (type(s['ad_expect']) is not int or s['ad_expect'] & ~192):
         raise ValueError('ad_expect must contain only A/D bits')
     if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
@@ -128,6 +138,16 @@ def assembly(s):
     for depth, table in enumerate(tables):
         i = 2 - depth
         table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+    if s.get('nonleaf_global'):
+        for depth, table in enumerate(tables[:-1]):
+            table[indexes[2 - depth]] |= FLAGS['G']
+    if s.get('root_switch'):
+        alternate = [list(table) for table in tables]
+        for depth, table in enumerate(alternate):
+            level_index = 2 - depth
+            table[indexes[level_index]] = ((((ROOT + 4096 * (depth + 4)) >> 12) << 10) | 1 | (FLAGS['G'] if s.get('nonleaf_global') else 0)
+                if depth < 2 else (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags'])))
+        tables += alternate
     leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
     va += s.get('offset', 0)
     fault = s['expect'] != 'success'
@@ -154,6 +174,7 @@ _start:
  {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + 12288) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
  li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
  csrw satp, t0
+ {('li t0, ' + str(leaf) + chr(10) + ' ld t1, 0(t0)' + chr(10) + ' li t2, ' + str(s.get('software_rsw', 0) << 8) + chr(10) + ' or t1, t1, t2' + chr(10) + ' sd t1, 0(t0)') if 'software_rsw' in s else ''}
  {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
  sfence.vma x0, x0
  li t3, {va}
@@ -163,7 +184,7 @@ _start:
  csrc mstatus, t0
  li t0, {status}
  csrs mstatus, t0
- li a0, {43 if s['access'] == 'store' else -1}
+ li a0, {s.get('store_value', 43) if s['access'] == 'store' else -1}
 access_site:
  {load_op if s['access'] == 'load' else store_op} a0, 0(t3)
  li t0, 0x20000
@@ -188,10 +209,25 @@ check_data:
 '''
     if s['access'] == 'store':
         code += f' li t0, {pa + s.get("offset", 0)}\n {load_op} a0, 0(t0)\n'
-    code += f" li t1, {43 if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
+    code += f" li t1, {s.get('store_value', 43) if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
-        code += f''' li t0, {leaf}
+        if s.get('root_switch'):
+            # Same ASID, different root. Fence each transition, including reuse.
+            for root, value in ((ROOT + 12288, 43), (ROOT, 42), (ROOT + 12288, 43)):
+                code += f''' li t0, {(8 << 60) | (asid << 44) | (root >> 12)}
+ csrw satp, t0
+ {fence}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, {value}
+ bne a0, t1, fail
+'''
+        else:
+            code += f''' li t0, {leaf}
  li t1, {replacement}
  sd t1, 0(t0)
 '''
@@ -231,7 +267,9 @@ stale_allowed:
 '''
     code += 'check_ad:\n'
     if 'ad_expect' in s:
-        code += f' li t0, {leaf}\n ld t0, 0(t0)\n andi t0, t0, 192\n li t1, {s["ad_expect"]}\n bne t0, t1, fail\n'
+        expected_pa = DATA + 4096 if s.get('remap') and not s.get('root_switch') else pa
+        expected_pte = (((expected_pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags'])) | (s.get('software_rsw', 0) << 8)) & ~192 | s['ad_expect']
+        code += f' li t0, {leaf}\n ld t0, 0(t0)\n li t1, {expected_pte}\n bne t0, t1, fail\n'
     code += ''' li t1, 1
  j finish
 fail:
@@ -250,30 +288,93 @@ fromhost: .dword 0
     for table in tables:
         code += '\n'.join(f' .dword {v}' for v in table) + '\n'
     code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
+    if s['access'] == 'fetch':
+        # MRET changes real fetch privilege. MPRV cannot test instruction access.
+        begin = code.index(' li a0,')
+        end = code.index('check_ad:')
+        expected = 9 if not fault and s.get('privilege', 'S') == 'S' else 8 if not fault else 12 if s['expect'] == 'page-fault' else 1
+        code = code[:begin] + f''' csrw mepc, t3
+ mret
+trap:
+ li t0, 0x20000
+ csrc mstatus, t0
+ csrr t0, mcause
+ li t1, {expected}
+ bne t0, t1, fail
+ csrr t0, mepc
+ li t1, {va}
+ bne t0, t1, fail
+''' + (f' csrr t0, mtval\n li t1, {va}\n bne t0, t1, fail\n' if fault else '') + code[end:]
+        code = code.replace('.section .data\n .dword 42\n .zero 4088\n .dword 43\n', '.section .data\n .word 0x00000073\n .word 0x0000006f\n')
     return code
 
 
 def control_validate(s):
     required = {'id', 'control', 'enabled', 'instruction', 'privilege', 'bins'}
-    if set(s) != required or not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
+    if not required <= s.keys() or s.keys() - required - {'wakeup'} or not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
         raise ValueError('invalid control scenario fields')
-    choices = {'tvm': ('satp-read', 'satp-write', 'sfence'), 'tw': ('wfi',), 'tsr': ('sret',)}
+    choices = {'tvm': ('satp-read', 'satp-write', 'sfence'), 'tw': ('wfi',), 'tsr': ('sret',), 'satp-mode': ('reserved-mode-write',)}
     if s['control'] not in choices or s['instruction'] not in choices[s['control']]:
         raise ValueError('unsupported control instruction')
-    if type(s['enabled']) is not bool or s['privilege'] not in ('S', 'U'):
+    if type(s['enabled']) is not bool or s['privilege'] not in (('M',) if s['control'] == 'satp-mode' else ('S', 'U')):
         raise ValueError('invalid control state or privilege')
-    if s['control'] == 'tw' and not s['enabled']:
+    if s['control'] == 'satp-mode' and s['enabled']:
+        raise ValueError('satp-mode does not use an mstatus control bit')
+    if s.get('wakeup') is not None and (s['control'] != 'tw' or s['enabled'] or s['privilege'] != 'S' or s['wakeup'] != 'pending-ssip'):
+        raise ValueError('wakeup requires TW-clear S-mode WFI with pending-ssip')
+    if s['control'] == 'tw' and not s['enabled'] and s.get('wakeup') != 'pending-ssip':
         raise ValueError('TW-clear WFI needs an interrupt schedule')
     if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
         raise ValueError('bins must be nonempty strings')
 
 
+def satp_warl_assembly():
+    """Unsupported MODE writes must leave every satp field unchanged."""
+    initial = (8 << 60) | (ROOT >> 12)
+    reserved = (1 << 60) | (7 << 44) | ((ROOT + 4096) >> 12)
+    return f''' .option norvc
+.section .text
+.globl _start
+_start:
+ la t0, fail
+ csrw mtvec, t0
+ csrw mie, zero
+ li t0, {initial}
+ csrw satp, t0
+ csrr t2, satp
+ li t1, {initial}
+ bne t2, t1, fail
+ li t0, {reserved}
+ csrw satp, t0
+ csrr t0, satp
+ bne t0, t2, fail
+ li t1, 1
+ j finish
+fail:
+ li t1, 3
+finish:
+ csrw satp, zero
+ sfence.vma x0, x0
+ la t0, tohost
+ sd t1, 0(t0)
+1: j 1b
+.section .tohost,"aw"
+.balign 64
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0
+'''
+
+
 def control_assembly(s):
     control_validate(s)
+    if s['control'] == 'satp-mode':
+        return satp_warl_assembly()
     bit = {'tvm': 20, 'tw': 21, 'tsr': 22}[s['control']]
     denied = s['enabled'] or s['privilege'] == 'U'
     instruction = {'satp-read': 'csrr a0, satp', 'satp-write': 'csrw satp, zero',
                    'sfence': 'sfence.vma x0, x0', 'wfi': 'wfi', 'sret': 'sret'}[s['instruction']]
+    wakeup = 'li t0, 2\n csrw mideleg, t0\n csrw mie, t0\n csrs mip, t0' if s.get('wakeup') else ''
     # Successful SRET returns to S. ECALL then gives a checked M-mode exit.
     return f'''.option norvc
 .section .text
@@ -289,8 +390,9 @@ _start:
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
- li t0, 0x7e1900
+ li t0, 0x7e190a
  csrc mstatus, t0
+ {wakeup}
  li t0, {(int(s['enabled']) << bit) | (int(s['privilege'] == 'S') << 11) | 256}
  csrs mstatus, t0
  la t0, done
@@ -505,9 +607,17 @@ def report(directory, results, checked=None):
                 if (not events or events[0].get('schema') != 'rvw.mmu-observations/1'
                         or events[0].get('elf_sha256') != s['elf_sha256']):
                     raise ValueError('invalid observation header')
-                # Capture presence is not a walk correctness verdict or device coverage.
+                from .mmu_observe import check_walk, check_pma
+                identity = events[0].get('identity', {})
+                bound = bool(identity.get('rtl_sha256')) and all(
+                    k in identity and identity[k] == raw.get(k)
+                    for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))
+                unbound = dict(status='inconclusive', reason='observation identity is not bound to C1')
+                # Keep bounded walk consistency separate from architectural coverage.
                 observed = dict(status='recorded', path=str(path), sha256=digest(path),
                     c1_sha256=digest(run.path / 'result.json'),
+                    walk_check=check_walk(s, events[1:]) if bound else unbound,
+                    pma_check=check_pma(s, events[1:], (manifest.get("pma") or {}).get("regions")) if bound else unbound,
                     counts={k: sum(e.get('kind') == k for e in events[1:])
                             for k in ('walk_request', 'walk_response', 'bus_a')})
         rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,
