@@ -731,7 +731,7 @@ it starts a property. Each child uses the existing captured RTL and tool flow.
 
 | Kind | Required fields | Contract |
 |---|---|---|
-| `connectivity` | `source`, `destination` | Equal values at the declared ports. Optional `latency` (0..64), `enable` and `mode`. The condition samples with the source. Startup history is gated. |
+| `connectivity` | `source`, `destination` | Equal values at the declared ports. A reviewed `source_expression` plus `source_width` can replace `source`. Optional `latency` (0..64), `enable` and `mode`. The condition samples with the source. Startup history is gated. |
 | `csr` | `state`, `write_enable`, `write_data`, `reset_value` | Independent reference register. Optional `access` (`rw`, `ro`, `w1c`) and integer `write_mask`. |
 | `deadlock`, `livelock` | `pending`, `progress`, `bound` | A continuously pending request must make progress within the declared bound. The counter saturates. |
 | `unr` | `target` | Assert that the target is false outside reset. |
@@ -816,7 +816,7 @@ elaborate either core or certify the source revision of supplied RTL.
 Run `rvw formal apps DIR/vex.json --depth 10 --event-model --async-reset --out VEX_OUT` under the `vex`
 lock. Run `rvw formal apps DIR/boom.json --depth 10 --out BOOM_OUT` under the
 `boom` lock. The properties check that FIFO occupancy and availability cannot
-both be one, and that forwarding `found` agrees with a nonzero match vector.
+both be one, and that forwarding `found` agrees with the prior cycle's nonzero match vector.
 The VexRiscv FIFO needs the sampled-event model because its reset is asynchronous.
 These are small exported leaf invariants. They are not whole-core verification,
 full CSR or connectivity checks on these processors, or a performance benchmark.

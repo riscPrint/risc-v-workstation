@@ -19,6 +19,9 @@ for tag,path,module,target in configs:
   if width:
    high,low=map(int,re.findall(r'\d+',width));w=high-low+1
   ports[name]=dict(direction=direction,width=w)
- plan=dict(schema='rvw.formal-apps/1',top=module,clock='clk',reset='reset',ports=ports,verilog=[tag+'.sv'],properties=[dict(id=tag+'_invariant',kind='unr',target=target,requirement_ids=[tag+'_leaf_contract'])])
+ prop=dict(id=tag+'_invariant',kind='unr',target=target,requirement_ids=[tag+'_leaf_contract'])
+ if tag == 'boom':
+  prop=dict(id='boom_invariant',kind='connectivity',source_expression='io_matches != 0',source_width=1,destination='io_found',latency=1,requirement_ids=['boom_leaf_contract'])
+ plan=dict(schema='rvw.formal-apps/1',top=module,clock='clk',reset='reset',ports=ports,verilog=[tag+'.sv'],properties=[prop])
  (base/(tag+'.json')).write_text(json.dumps(plan,indent=2)+'\n')
  print(tag, 'full_rtl_sha256',hashlib.sha256(path.read_bytes()).hexdigest(),'leaf_sha256',hashlib.sha256(rtl.encode()).hexdigest())

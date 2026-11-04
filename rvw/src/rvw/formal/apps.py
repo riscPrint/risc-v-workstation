@@ -49,8 +49,17 @@ def generate(plan, prop):
     body = []
     kind = prop['kind']
     if kind == 'connectivity':
-        source, dest = signal(prop['source']), signal(prop['destination'])
-        if ports[dest]['direction'] != 'output' or ports[source]['width'] != ports[dest]['width']:
+        dest = signal(prop['destination'])
+        if 'source_expression' in prop:
+            if 'source' in prop:
+                raise ValueError('select source or source_expression, not both')
+            source, width = '(' + expr(prop['source_expression']) + ')', prop['source_width']
+            if type(width) is not int or not 1 <= width <= 4096:
+                raise ValueError('source_width must be 1..4096')
+        else:
+            source = signal(prop['source'])
+            width = ports[source]['width']
+        if ports[dest]['direction'] != 'output' or width != ports[dest]['width']:
             raise ValueError('destination must be an output of the same width')
         if prop.get('relation', 'required') != 'required':
             raise ValueError('forbidden connectivity needs structural/noninterference evidence; inequality is not sufficient')
@@ -62,7 +71,7 @@ def generate(plan, prop):
         guard = f'({enable}) && ({mode})'
         value = source
         for i in range(latency):
-            body += [f'reg [{ports[source]["width"]-1}:0] rvwa_data{i};', f'reg rvwa_valid{i} = 0;',
+            body += [f'reg [{width-1}:0] rvwa_data{i};', f'reg rvwa_valid{i} = 0;',
                      f'always @(posedge {clock}) begin',
                      f'  rvwa_valid{i} <= !{reset} && ({guard});',
                      f'  rvwa_data{i} <= {value}; end']

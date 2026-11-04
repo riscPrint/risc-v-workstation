@@ -145,3 +145,25 @@ def test_existing_dut_assertion_cannot_be_attributed_to_app(tmp_path):
     with pytest.raises(SystemExit):
         run(args)
     assert not (tmp_path / 'out/result.json').exists()
+
+
+@pytest.mark.parametrize('latency,expected', [(0, 'fail'), (1, 'pass')])
+def test_native_expression_connectivity_obeys_latency(tmp_path, latency, expected):
+    if not all(shutil.which(t) for t in ('yosys', 'sby', 'yices-smt2')):
+        pytest.skip('native tools required')
+    spec = plan()
+    spec['properties'] = [dict(id='registered_progress',kind='connectivity',
+                              source_expression='pending != 0',source_width=1,
+                              destination='progress',latency=latency)]
+    rtl = (FIXTURE / 'Contracts.sv').read_text().replace(
+        'output wire progress', 'output reg progress').replace(
+        'assign progress = pending;', 'always @(posedge clk) progress <= pending;')
+    # Fixture uses a compact output declaration.
+    rtl = rtl.replace('output wire progress);', 'output reg progress);')
+    (tmp_path / 'Contracts.sv').write_text(rtl)
+    path = tmp_path / 'apps.json'
+    path.write_text(json.dumps(spec))
+    args = Namespace(manifest=str(path), out=str(tmp_path / 'out'), depth=8,
+                     engine='smtbmc:yices', timeout=20, mode='bmc', json=False)
+    run(args)
+    assert json.loads((tmp_path / 'out/result.json').read_text())['status'] == expected
