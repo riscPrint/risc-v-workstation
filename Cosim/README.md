@@ -698,3 +698,13 @@ establish Linux device support.
 `--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
 and MMIO ranges from its regions. It preserves the explicit reference policy.
 The command captures the source map before it starts Spike.
+
+Directed reference tests in `test_fp_rounding.py` check halfway additions in
+RNE, RTZ, RDN, RUP, RMM and dynamic RUP, for both signs. They also check a
+signaling NaN, an unboxed single operand and FS Initial/Clean to Dirty changes.
+These use native Spike with fixed expected bits. They are not independent DUT
+captures. DUT FP state remains blocked by
+[spinal-boom #9](https://github.com/riscPrint/spinal-boom/issues/9).
+Sail's public text trace does not supply full post-instruction FP flags or
+register state. Do not infer unreported flags from a write log or copy them
+from Spike. Sail state comparison remains unsupported.
