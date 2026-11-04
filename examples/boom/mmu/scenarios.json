@@ -1,0 +1,264 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "page-load",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.page-load"
+      ]
+    },
+    {
+      "id": "page-store",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "store",
+      "expect": "success",
+      "bins": [
+        "sv39.page-store"
+      ]
+    },
+    {
+      "id": "megapage-load",
+      "level": 1,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.megapage-load"
+      ]
+    },
+    {
+      "id": "gigapage-load",
+      "level": 2,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.gigapage-load"
+      ],
+      "pa": "0x80000000",
+      "va": "0x40200000"
+    },
+    {
+      "id": "invalid-pte",
+      "level": 0,
+      "flags": "RWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.invalid-pte"
+      ]
+    },
+    {
+      "id": "write-without-read",
+      "level": 0,
+      "flags": "VWAD",
+      "access": "store",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.write-without-read"
+      ]
+    },
+    {
+      "id": "read-only-store",
+      "level": 0,
+      "flags": "VRAD",
+      "access": "store",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.read-only-store"
+      ]
+    },
+    {
+      "id": "misaligned-superpage",
+      "level": 1,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.misaligned-superpage"
+      ],
+      "pa": "0x80201000"
+    },
+    {
+      "id": "remap-all",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "all",
+      "remap": true,
+      "bins": [
+        "tlb.remap.all"
+      ]
+    },
+    {
+      "id": "remap-va",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "va",
+      "remap": true,
+      "bins": [
+        "tlb.remap.va"
+      ]
+    },
+    {
+      "id": "remap-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "asid",
+      "remap": true,
+      "bins": [
+        "tlb.remap.asid"
+      ]
+    },
+    {
+      "id": "remap-va-asid",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "asid": 7,
+      "fence": "va-asid",
+      "remap": true,
+      "bins": [
+        "tlb.remap.va-asid"
+      ]
+    },
+    {
+      "id": "remap-global",
+      "level": 0,
+      "flags": "VRWGAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "va",
+      "remap": true,
+      "bins": [
+        "tlb.remap.global"
+      ]
+    },
+    {
+      "id": "accessed-fault",
+      "level": 0,
+      "flags": "VRWD",
+      "access": "load",
+      "expect": "page-fault",
+      "ad_expect": 128,
+      "ad_mode": "svade",
+      "bins": [
+        "ad.svade.accessed-fault"
+      ]
+    },
+    {
+      "id": "dirty-fault",
+      "level": 0,
+      "flags": "VRWA",
+      "access": "store",
+      "expect": "page-fault",
+      "ad_expect": 64,
+      "ad_mode": "svade",
+      "bins": [
+        "ad.svade.dirty-fault"
+      ]
+    },
+    {
+      "id": "sum-deny",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.sum-deny"
+      ]
+    },
+    {
+      "id": "sum-allow",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.sum-allow"
+      ],
+      "sum": true
+    },
+    {
+      "id": "mxr-deny",
+      "level": 0,
+      "flags": "VXAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.mxr-deny"
+      ]
+    },
+    {
+      "id": "mxr-allow",
+      "level": 0,
+      "flags": "VXAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.mxr-allow"
+      ],
+      "mxr": true
+    },
+    {
+      "id": "user-page",
+      "level": 0,
+      "flags": "VRWUAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.user-page"
+      ],
+      "privilege": "U"
+    },
+    {
+      "id": "user-deny-supervisor",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "priv.user-deny-supervisor"
+      ],
+      "privilege": "U"
+    },
+    {
+      "id": "mprv-clear-bypass",
+      "level": 0,
+      "flags": "",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.mprv-clear-bypass"
+      ],
+      "va": "0x80200000",
+      "mprv": false
+    },
+    {
+      "id": "bare-bypass",
+      "level": 0,
+      "flags": "",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "priv.bare-bypass"
+      ],
+      "va": "0x80200000",
+      "satp_mode": "bare"
+    }
+  ]
+}

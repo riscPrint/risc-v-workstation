@@ -32,6 +32,7 @@ def test_identity_uses_selected_python_with_broken_path(launcher, fallback):
         (venv / 'python').symlink_to(sys.executable)
     result = run_group([str(launcher.sim / 'boom/run.sh'), 'identity'],
                        env=env, capture=True, timeout=30)
+    assert result.returncode == 0, result.stderr
     native = json.loads(next(line.removeprefix('native-build ') for line in result.stdout.splitlines()
                              if line.startswith('native-build ')))
     assert result.returncode == 0, (result.stderr, native['cache_disabled_reasons'])

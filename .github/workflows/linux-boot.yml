@@ -1,0 +1,43 @@
+name: Native Linux reference boot
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/linux-boot.yml'
+      - 'Arch/linux/**'
+      - 'examples/qemu-linux/**'
+      - 'rvw/src/rvw/arch/linux.py'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+
+permissions:
+  contents: read
+jobs:
+  linux-reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex cpio rsync file wget curl unzip git python3-venv libncurses-dev libssl-dev device-tree-compiler qemu-system-misc
+          python3 -m venv rvw/.venv
+          rvw/.venv/bin/pip install -e './rvw[dev]'
+      - name: Run Linux orchestration tests
+        run: rvw/.venv/bin/python -m pytest rvw/tests/test_arch_linux.py -q
+      - name: Build pinned sources on Ubuntu
+        run: nice -n 10 rvw/.venv/bin/rvw arch linux build --out /tmp/rvw-linux-build --timeout 9000 --jobs 2 --json
+      - name: Boot reference and check userspace
+        run: rvw/.venv/bin/rvw arch linux boot --images /tmp/rvw-linux-build/build/images --platform examples/qemu-linux/platform.json --out /tmp/rvw-linux-boot --timeout 120 --json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-reference
+          path: |
+            /tmp/rvw-linux-build/manifest.json
+            /tmp/rvw-linux-build/commands.log
+            /tmp/rvw-linux-build/build/.config
+            /tmp/rvw-linux-build/build/images/
+            /tmp/rvw-linux-boot/

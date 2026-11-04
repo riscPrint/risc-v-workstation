@@ -25,13 +25,19 @@ keep the issue list in `TODO.md` in step with them.
 
 | Path | What |
 |------|------|
+| `rvw/src/rvw/init/` | Minimal Spinal/sbt core project scaffold. See its `README.md`. |
+| `rvw/src/rvw/doctor/` | Setup diagnostics, explicit installer forwarding and `rvw_doctor` MCP. See its `README.md`. |
+| `rvw/src/rvw/farm/` | Native SSH shards and a static C3/C4 history dashboard. |
+| `rvw/src/rvw/soc/` | Project-owned SoC map validation, software exports and bounded design checks. See its `README.md`. |
 | `rvw/` | The `rvw` command and `rvw mcp` server. One subpackage per tool under `rvw/src/rvw/<tool>/`; each registers its subcommand (`cli.py`) and its MCP tools (`mcp_tools.py`). Shared code in `rvw/src/rvw/common/` (process groups, the lock, the RISC-V decoder) and `rvw/src/rvw/results/` (C1/C3/C4 formats). |
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
 | `Arch/` | Native gem5 O3 model and bare-metal benchmark runtime. `rvw arch` builds, runs, and compares it with C1 RTL results. Core parameters live in project data. |
 | `Cosim/` | The C++ shim that lets `rvw cosim` drive Spike as a library. |
+| `rvw/src/rvw/lint/` | Native lint adapters and structural CDC/RDC inventory. See its `README.md`. |
 | `SpinalDB/` | Elaborates a Spinal design and writes a design database (SQLite, `rvw.designdb/20`). Queried with `rvw query`. |
 | `SpinalChecks/` | Assertions generated from the elaborated design, and the formal flows behind `rvw formal`. BOOM settings and waivers in `SpinalChecks/boom/`. |
+| `SpinalChecks/c2rtl/` | Native C truth-table reference against small combinational RTL units. See its `README.md`. |
 | `SpinalKonata/` | Konata pipeline traces for any Spinal design that tags its pipeline events. |
 | `SpinalWaves/` | Spinal types and source locations in Surfer waveforms (port of Tywaves). |
 | `SpinalTrace/` | Traces a signal value back to the Spinal statements that caused it (port of ChiselTrace). |

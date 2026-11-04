@@ -12,7 +12,7 @@ cd ../rvw
 uv run rvw perf ../SpinalKonata/demo.log --json
 ```
 
-The demo is an actual three-register Spinal pipeline. It holds for three cycles
+The demo is an actual three-register Spinal pipeline. Tests also need Python 3.11 or later. It holds for three cycles
 and discards instruction 2. The simulation test checks six creations, five
 retirements and one discard. Writer tests cover future event ordering, parallel
 lanes, dependencies, sanitization, quiet tails and invalid events.
@@ -189,3 +189,44 @@ replace architectural IPC. These trace checks do not establish silicon behavior.
 Additional probe events and commit semantics: [#49](https://github.com/riscPrint/risc-v-workstation/issues/49).
 
 Retained limit: Standalone compiled-model capture remains incomplete, with no dedicated implementation issue. Keep C1 status=error, input_not_captured:compiled_model and cache_key=null. Trace-only reports cannot earn gate acceptance. Complete capture must precede any wider claim.
+
+## Stall, replay and commit events
+
+`Stall(scope, cause, evidence = "measured")` records one sampled cycle. A scope
+names a resource, pipeline or thread. It does not require a live instruction.
+Emit it on each blocked cycle. Several causes can apply to the same cycle.
+`StallCause` supplies `OperandWait`, `Structural`, `LoadMiss`, `RobFull` and
+`LsqFull`. Custom nonempty names also work. Evidence must be `measured` or
+`inferred`. Set `inferred` when an adapter estimates the cause.
+
+`Replay(id, cause, evidence = "measured")` records an explicit replay event for
+a live instruction. A repeated stage visit alone does not establish a replay cause.
+`Dependency(consumer, producer)` records an optional `W` edge. The consumer must
+be live. The producer must have appeared in the trace. An edge alone does not
+establish a stall.
+
+`Commit(id, predicatedOff)` records a physical commit with an observed flag and
+ends the instruction with R type 0. False means architectural commit; true means
+predicated-off physical commit. Use this only when the producer can establish
+those semantics. `Retire(id)` still emits R type 0 without a commit kind. Perf
+keeps such events unknown. It never guesses predication from a counter mismatch.
+
+```scala
+tags.stall(operandBlocked, "issue", StallCause.OperandWait)
+tags.stall(cacheBlocked, "memory", StallCause.LoadMiss)
+tags.replay(replayFire, replayId, "memory_order")
+tags.dependency(waitEdgeFire, consumerId, producerId)
+tags.commit(physicalCommitFire, commitId, predicatedOff)
+```
+
+Register these tags only when tracing is enabled. Register commit tags after all
+other events for the same instruction. The demo now emits three measured global
+hold samples and one predicated-off commit. It still emits five R type 0 events.
+
+The writer uses the `#rvw` version 1 comment extension described in
+[PLATFORM_CONTRACTS.md](../docs/PLATFORM_CONTRACTS.md#pipeline-cause-event-extension).
+Ordinary stage and R records remain intact. `rvw perf` reports cause unions,
+overlaps, unknown intervals, replay counts and commit kinds. These measurements
+are producer claims from sampled signals, not proof that a cause blocks all
+retirement. BOOM probe changes remain core-owned. See
+[the BOOM mapping](../examples/boom/konata-events.md).

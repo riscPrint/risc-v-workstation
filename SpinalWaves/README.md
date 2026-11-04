@@ -121,3 +121,32 @@ bits and type metadata. Memories and blackbox internals have no special typed mo
 Interactive rendering: [#83](https://github.com/riscPrint/risc-v-workstation/issues/83). Vendored viewer and backend triage: [#120](https://github.com/riscPrint/risc-v-workstation/issues/120). Shared database input: [#69](https://github.com/riscPrint/risc-v-workstation/issues/69). Fork dependency: [#43](https://github.com/riscPrint/risc-v-workstation/issues/43).
 
 Retained limit: The simulation wrapper remains Verilator/VCD only. Typed memories, BlackBox internals, generated temporaries, fixed-point scaling and complete constructor values remain outside scope. Source lookup remains best effort and needs local source roots.
+
+## Viewer package and vendored limits
+
+See [the package guide](docs/VIEWER_PACKAGE.md) for pinned source inputs,
+`cargo --locked`, EUPL notices and the upstream WASM plugin assessment (#43).
+See [vendored limits](docs/VENDORED_LIMITS.md) for the TODO triage (#120).
+Restart the viewer after metadata changes. Typed reload, External values,
+arithmetic HGLDD expressions and real/string typed updates are unsupported.
+Interactive validation remains tracked in #83.
+
+## Read a design database
+
+Use the HGLDD stored by SpinalDB. No Scala process or new elaboration is needed:
+
+```sh
+SpinalDB/debug.sh --db design.db --out wave-metadata --consumer surfer -- \
+  wave.vcd --top-module MyTop --extra-scopes TOP MyTop
+SpinalDB/debug.sh --db design.db --out check-metadata --consumer check -- \
+  --vcd wave.vcd --top-module MyTop --extra-scopes TOP MyTop --json check.json
+```
+
+Run from the workstation root after installing `rvw` and the native consumer.
+Use `--binary PATH` to select the consumer. The output directory must be empty.
+The launcher writes all HGLDD files and `database.json`, with the captured database
+identity and artifact hashes. Surfer and the checker require HGLDD but do not require
+PDG. Use `--consumer export` to export both PDG and HGLDD without a consumer.
+Use a waveform from the RTL described by the database. PDG naming adds probe wires;
+a plain waveform can need a separate database built with `--no-pdg`.
+Native checker results and interactive Surfer rendering are separate evidence.

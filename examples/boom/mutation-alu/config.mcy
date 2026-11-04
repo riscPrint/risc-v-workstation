@@ -1,0 +1,27 @@
+[options]
+size 12
+seed 20261103
+tags KILLED SURVIVED
+select RocketALU
+
+[script]
+read_verilog -sv RocketALU.v
+prep -top RocketALU
+
+[files]
+RocketALU.v
+tb.sv
+test_sim.sh
+
+[logic]
+if result("add_sub") == "FAIL":
+    tag("KILLED")
+else:
+    tag("SURVIVED")
+
+[test add_sub]
+expect PASS FAIL
+run bash $PRJDIR/test_sim.sh
+
+[report]
+print("killed=%d survived=%d" % (tags("KILLED"), tags("SURVIVED")))

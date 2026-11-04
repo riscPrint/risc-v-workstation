@@ -292,11 +292,7 @@ pub fn open_vs_code(state: State<'_, RwLock<AppState>>, id: usize) -> Result<(),
             anyhow::bail!("Uninitialized graph!");
         };
         
-        if id >= graph.dpdg.vertices.len() {
-            return Ok(());
-        }
-
-        let node = &graph.dpdg.vertices[id as usize];
+        let node = &graph.dpdg.vertices[source_node_id(graph, id)?];
         Command::new("code")
             .arg("--goto")
             .arg(format!("{}:{}", node.file, node.line))
@@ -315,6 +311,24 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
             anyhow::bail!("Uninitialized graph!");
         };
 
+        partial_graph(graph, range_begin, range_end)
+    })
+}
+
+fn source_node_id(graph: &ViewableGraph, id: usize) -> anyhow::Result<usize> {
+    if id < graph.dpdg.vertices.len() { return Ok(id); }
+    let index = id - graph.dpdg.vertices.len();
+    if graph.should_group_nodes {
+        let hier = graph.current_hier_dpdg.as_ref().ok_or_else(|| anyhow!("No grouped graph"))?;
+        let edge = hier.dpdg.edges.get(index).ok_or_else(|| anyhow!("Unknown viewer node"))?;
+        Ok(hier.original_ids[edge.to as usize])
+    } else {
+        let edge = graph.dpdg.edges.get(index).ok_or_else(|| anyhow!("Unknown viewer node"))?;
+        Ok(edge.to as usize)
+    }
+}
+
+fn partial_graph(graph: &ViewableGraph, range_begin: u64, range_end: u64) -> anyhow::Result<String> {
         if !graph.should_group_nodes { // Regular 
             let mut viewer_graph = ViewerGraph { vertices: vec![], edges: vec![] };
 
@@ -346,8 +360,8 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                         line: node.line
                     });
                     if let Some(edges) = edges {
-                        for edge in edges {
-                            let edge = &graph.dpdg.edges[*edge];
+                        for edge_index in edges {
+                            let edge = &graph.dpdg.edges[*edge_index];
                             let destination = &graph.dpdg.vertices[edge.to as usize];
                             let label = if let Some(d) = &destination.sim_data {
                                 let translated = interpret_tywaves_value(d, TranslationStrategy::Auto);
@@ -360,7 +374,7 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                                 // If an edge goes to a node that is more than 3 timesteps away, instead add it as a long distance relation
                                 // It is important to generate a unique ID for these pseudo-nodes, because they MUST be unique in the graph
                                 viewer_graph.vertices.push(ViewerNode {
-                                    id: edge.to as u64 + graph.dpdg.vertices.len() as u64 + edge.from as u64,
+                                    id: spinaltrace_rs::viewer_ids::relation_id(graph.dpdg.vertices.len(), *edge_index)?,
                                     label: destination.name.clone(),
                                     group: group.clone(),
                                     module_path: destination.module_path.clone(),
@@ -371,12 +385,12 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                                     code: graph.source_files.get(&destination.file).map(|v| v.get(destination.line as usize - 1).map(|l| l.clone())).flatten(),
                                     incoming,
                                     outgoing,
-                                    file: node.file.clone(),
-                                    line: node.line
+                                    file: destination.file.clone(),
+                                    line: destination.line
                                 });
                                 viewer_graph.edges.push(ViewerEdge {
                                     from: edge.from as u64,
-                                    to: edge.to as u64 + graph.dpdg.vertices.len() as u64 + edge.from as u64,
+                                    to: spinaltrace_rs::viewer_ids::relation_id(graph.dpdg.vertices.len(), *edge_index)?,
                                     arrows: "to".into(),
                                     color: EdgeColour::from(edge.kind),
                                     dotted: edge.clocked,
@@ -446,8 +460,8 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                         line: node.line
                     });
                     if let Some(edges) = edges {
-                        for edge in edges {
-                            let edge = &hier_graph.dpdg.edges[*edge];
+                        for edge_index in edges {
+                            let edge = &hier_graph.dpdg.edges[*edge_index];
                             let destination = &hier_graph.dpdg.vertices[edge.to as usize];
                             let label = if let Some(d) = &destination.sim_data {
                                 let translated = interpret_tywaves_value(d, TranslationStrategy::Auto);
@@ -459,9 +473,8 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                                 let outgoing = hier_graph.prov_to_edges.get(&edge.to).map_or(vec![], |edges| get_viewer_signals(&hier_graph.dpdg, edges, true));
                                 // If an edge goes to a node that is more than 3 timesteps away, instead add it as a long distance relation
                                 // It is important to generate a unique ID for these pseudo-nodes, because they MUST be unique in the graph
-                                let node_id = (hier_graph.original_ids[edge.to as usize] << 32) as u64 + 10 * graph.dpdg.vertices.len() as u64 + hier_graph.original_ids[edge.from as usize] as u64;
+                                let node_id = spinaltrace_rs::viewer_ids::relation_id(graph.dpdg.vertices.len(), *edge_index)?;
                                 viewer_graph.vertices.push(ViewerNode {
-                                    // TODO: replace the 10x with an actual fix. This just shifts the duplicate ID problem elsewhere.
                                     id: node_id,
                                     label: destination.name.clone(),
                                     group: group.clone(),
@@ -473,8 +486,8 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
                                     code: graph.source_files.get(&destination.file).map(|v| v.get(destination.line as usize - 1).map(|l| l.clone())).flatten(),
                                     incoming,
                                     outgoing,
-                                    file: node.file.clone(),
-                                    line: node.line
+                                    file: destination.file.clone(),
+                                    line: destination.line
                                 });
                                 viewer_graph.edges.push(ViewerEdge {
                                     from: hier_graph.original_ids[edge.from as usize] as u64,
@@ -500,5 +513,58 @@ pub fn get_partial_graph(state: State<'_, RwLock<AppState>>, range_begin: u64, r
             }
             Ok(serde_json::to_string(&viewer_graph)?)
         }
-    })
+}
+
+#[cfg(test)]
+mod viewer_tests {
+    use super::*;
+    use std::collections::HashMap;
+    use crate::app_state::HierarchicalGraph;
+
+    #[test]
+    fn repeated_relations_render_unique_ids_and_destination_sources() {
+        let vertices = (0..8).map(|i| serde_json::json!({
+            "file": format!("Node{}.scala", i), "line": i + 1, "char": 0,
+            "name": format!("node{}", i), "kind": "Connection", "clocked": false,
+            "module_path": [], "timestamp": if i < 2 {10} else {0},
+            "is_chisel_assignment": true
+        })).collect::<Vec<_>>();
+        let edges = [(0,7),(1,6),(0,7),(1,6)].iter().map(|(a,b)| serde_json::json!({
+            "from": a, "to": b, "kind": "Data", "clocked": false
+        })).collect::<Vec<_>>();
+        let dpdg: ExportablePDG = serde_json::from_value(serde_json::json!({"vertices": vertices, "edges": edges})).unwrap();
+        let mut graph = ViewableGraph {
+            dpdg, shown_ids: (0..8).collect(), time_to_nodes: HashMap::from([(10, vec![0,1])]),
+            dep_to_edges: HashMap::from([(0, vec![0,2]), (1, vec![1,3])]),
+            prov_to_edges: HashMap::new(), n_timestamps: 11, source_files: HashMap::new(),
+            should_group_nodes: false, node_hierarchy: None, node_hierarchy_lookup: None,
+            current_hier_dpdg: None,
+        };
+        graph.current_hier_dpdg = Some(HierarchicalGraph {
+            dpdg: graph.dpdg.clone(), group_ids: HashMap::new(), original_ids: (0..8).collect(),
+            time_to_nodes: graph.time_to_nodes.clone(), dep_to_edges: graph.dep_to_edges.clone(),
+            prov_to_edges: HashMap::new(),
+        });
+        // Grouping can renumber vertices. Navigation must use original_ids.
+        let hier = graph.current_hier_dpdg.as_mut().unwrap();
+        hier.original_ids.swap(6, 7);
+        hier.dpdg.vertices.swap(6, 7);
+        for grouped in [false, true] {
+            graph.should_group_nodes = grouped;
+            let result: serde_json::Value = serde_json::from_str(&partial_graph(&graph,10,10).unwrap()).unwrap();
+            let nodes = result["vertices"].as_array().unwrap();
+            let ids: HashSet<_> = nodes.iter().map(|n| n["id"].as_u64().unwrap()).collect();
+            assert_eq!(nodes.len(), 6);
+            assert_eq!(ids.len(), nodes.len());
+            for node in nodes.iter().filter(|n| n["longDistance"] == true) {
+                let id = node["id"].as_u64().unwrap() as usize;
+                let source = &graph.dpdg.vertices[source_node_id(&graph, id).unwrap()];
+                assert_eq!(node["file"], source.file);
+                assert_eq!(node["line"], source.line);
+            }
+            for edge in result["edges"].as_array().unwrap() {
+                assert!(ids.contains(&edge["to"].as_u64().unwrap()));
+            }
+        }
+    }
 }

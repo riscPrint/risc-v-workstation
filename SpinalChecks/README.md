@@ -134,7 +134,7 @@ What a result means:
   report (older reports had empty path segments, `tile.frontend..io_x_valid`), the message says to
   regenerate the report. Clock, reset and tie ports must be inputs of the toplevel, `--signal` must exist
   in the flattened design. `--reset` defaults to `reset` if the toplevel has it.
-- One clock only. sby runs with `multiclock off`: one solver step is one cycle of every flip-flop, memory
+- By default, one clock only. sby runs with `multiclock off`: one solver step is one cycle of every flip-flop, memory
   port and clocked assertion. Before the proof, every flow runs a Yosys clock probe on the flattened
   design (`clock_probe.ys`, `clock_cells.json`) and refuses (exit 2, no `result.json`) a design where any
   enabled clock or trigger input is not the rising edge of `--clock`: a second clock, a gated or derived
@@ -275,7 +275,7 @@ Earlier measurements on BOOM `small`, seed 1:
   by hand in the parent.
 - **Vec reads are found as multiplexers.** `Vec(a, b, c)` does not set element parents, so Vecs cannot
   be found from signals; every dynamic Vec read is a Spinal `Multiplexer` with the index as select.
-  Fires for any out-of-range index, used or not (as JasperGold's array-out-of-bounds does).
+  Direct conditional uses are gated by their enclosing `when` scopes.
 - **Enum encodings** are resolved when the phase runs (native becomes binarySequential, as Spinal's
   Verilog backend does); the legal check compares the full bit pattern, so one-hot multi-hot values fail.
 - **Source locations** need Spinal's `debugComponents`, so `withLocations` elaborates the design twice:
@@ -328,17 +328,12 @@ Earlier measurements on BOOM `small`, seed 1:
   call in the same process would wait for itself.
 - **Formal inputs are rejected rather than escaped.** Yosys and sby scripts have no reliable quoting, so
   names and paths outside a strict character set are errors (paths with spaces included).
-- **One clock, refused otherwise.** `multiclock on` was rejected: it makes the clocks free inputs, so a
-  step is no longer a cycle, and the depth checks, the reset wrapper, the from-sim cycle numbers and
-  xprop's arming all count cycles. `inconclusive` was rejected too: nothing is proven about such a
-  design, so it is an input error like a bad depth. The check is conservative: a design entirely on the
-  falling edge, or with a buffered clock copy kept as a separate net, is refused although it could be
-  modelled. Asynchronous state controls, latches and unsupported state cell types (also fine-grained
-  gate cells) are refused too: events between clock edges are outside this model. Each flow checks
-  every elaborated module before optimization, ties or replay state loading. Async memory reads remain
-  supported; memory async reset ports must be tied to zero. Refusal exits 2 and removes any old
-  `result.json`. A regression keeps an async-reset design that gave a false pass at depth 8; all
-  three flows refuse it.
+- **Explicit clock and state models.** Default flows require one rising-edge clock and synchronous
+  state. BMC can opt into the sampled event model below. It separately enables constant-value async
+  reset FFs. Other unsupported clocks and state remain input errors. Each flow checks elaborated state
+  before optimization, ties or replay loading. Asynchronous memory reads remain supported; memory
+  async reset ports must be tied to zero. Refusal exits 2 and removes any old `result.json`.
+  The async-reset false-pass regression remains refused by default.
 - **No pass without a checked assertion**: zero assertions is `no_checks`; too shallow a depth is an
   input error. The minimum depths are exact for clocked assertions (tested: the minimum depth finds a
   failure possible in the first cycle after reset).
@@ -390,9 +385,9 @@ opcode and size faults, parameter faults, and AXI address faults.
 
 ## Gaps
 
-- Flow has no rule at all (no handshake, no payload rule); Flows are only X-propagation targets.
-- `vec.index` fires for any out-of-range index whether or not the read value is used, and `mem.index`
-  for an asynchronous read port fires whether or not the read data is used (no enable to gate it).
+- Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
+- Vec use through intermediate wires and switch scopes remains conservative. Asynchronous memory
+  read indexes remain ungated.
 - TileLink: probe tracking, negotiated transfer capabilities,
   B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
   end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
@@ -407,18 +402,22 @@ opcode and size faults, parameter faults, and AXI address faults.
   bursts and a DMA copy with response delays and interruptions. The helper serializes
   memory operations. Concurrent overlapping memory traffic needs an ordering model.
   AXI4-Lite needs its own explicit rules and reference designs.
-- `bits(uint)` dynamic bit selects on non-power-of-two widths are not checked yet.
+- Dynamic bit reads have range checks; intermediate-wire use remains conservative.
 - Components without reset: checks there are always active.
 - `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
   Use `xprop --combinational` for a clock-free wrapper. See the
   [formal commands](../rvw/src/rvw/formal/README.md#x-campaigns-and-four-state-replay) for dispositions.
   Module inputs are free; a confirmed module observation does not establish a core bug.
+- BMC's event model supports independent rising-edge top clocks and optional constant-value
+  async-reset state. Gated, derived and falling-edge clocks remain refused. Other flows retain
+  the one-clock model. Async loads, set/clear and latches remain refused.
+- Streams in a component with registers in another domain are refused. Use child components.
+
 - Designs with more than one clock (or a gated clock, or registers on the falling edge) are refused by
   every `rvw formal` flow; there is no multi-clock model yet.
 - Asynchronous state controls and latches are refused by every `rvw formal` flow. There is no model
   for their events between clock edges.
-- Check placement uses the component's clock domain; streams in another clock domain of the same
-  component would need the domain of their signals.
+- Stream checks still use the component domain. Project-declared rules use their binding domain.
 - from-sim: signals Verilator does not trace (optimized away) start free; the report counts them. This
   includes registers with an RTL initial value.
 - Two sby runners: `rvw/src/rvw/formal/common.py` (`run`, through `rvw.common.proc.run_group`) and
@@ -429,3 +428,166 @@ opcode and size faults, parameter faults, and AXI address faults.
 Check rules: [#65](https://github.com/riscPrint/risc-v-workstation/issues/65). Protocol coverage: [#66](https://github.com/riscPrint/risc-v-workstation/issues/66). BOOM dispositions: [#5](https://github.com/riscPrint/risc-v-workstation/issues/5). Multi-clock/async formal: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). Shared runners: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67).
 
 Retained limit: The documented TileLink/AXI subsets, queue capacities, free replay state, clock-domain placement and index-check behavior remain bounded restrictions. Reference traffic does not establish complete protocol compliance or coherent ordering.
+
+## C reference datapath checks
+
+See [c2rtl/README.md](c2rtl/README.md) for the native C truth-table and
+SymbiYosys flow. It supports unsigned combinational units with widths 1 to 4.
+It reports proved, counterexample or inconclusive with the checked bound.
+
+## Counterexample what-if replay
+
+`rvw formal cex --result OUT/bmc --edit bad@0=0 --out OUT/whatif` replays a
+captured BMC witness with Yosys `sim`. It keeps the original inputs and constraints.
+It writes VCD/FST and can call SpinalWaves, Surfer and SpinalTrace with matching
+metadata. Replay never earns a proof pass. See the [command guide](../rvw/src/rvw/formal/README.md#counterexample-what-if-replay)
+for edit syntax, result meanings and validation limits.
+
+
+
+### Shared solver execution
+
+Formal probes and coverage exclusion jobs use `rvw.common.sby.execute`.
+The shared runner writes the combined log and stops the process group on timeout
+or cancellation. It gives SBY 10 seconds to stop its solver sessions.
+Each caller keeps its captured environment and tool bindings.
+Formal still checks the DONE line, process exit and assertion count.
+Coverage still checks its captured status, source snapshot and vacuity evidence.
+A timeout cannot earn a proof or an exclusion.
+
+## Multiple clock domains and asynchronous reset
+
+`rvw formal bmc --event-model` uses SBY `multiclock on` and Yosys `clk2fflogic`.
+Declare every extra independent rising-edge top input with `--event-clock PORT`.
+Enable constant-value asynchronous-reset flip-flops separately with `--async-reset`.
+All other formal flows keep their current clock and state refusals.
+
+```sh
+rvw formal bmc --verilog SpinalChecks/examples/events/clocks_fail.sv --top top --event-clock other_clk --depth 14 --out out/clocks
+rvw formal bmc --verilog SpinalChecks/examples/events/async_fail.sv --top top --event-model --async-reset --depth 14 --out out/async
+```
+
+Both examples must fail. Their `*_pass.sv` peers must pass at the same bound.
+The clocks have no rate, phase or fairness constraints. One solver step is one
+global input sample. The model includes inter-edge reset pulses that remain
+visible for a sample. Pulses entirely between samples are outside the model.
+It does not establish analog CDC behavior or physical reset recovery/removal.
+
+Enum-register checks use the register's Spinal clock domain. Vec checks whose
+selector is a register use that register's domain. Memory checks retain the
+memory port's domain. Their reset gating, assertion and monitor state use the
+same domain. Monitor cycle counters are local to each domain. Stream, bus,
+combinational-selector and progress checks still use the containing component's
+domain. Place these interfaces in a component with the correct domain.
+A component with streams, a combinational Vec selector, or a progress check
+and registers in another domain
+is refused. Use child components for these domains. The phase does not infer
+a stream's domain from its wiring.
+
+Inserted checks report `clock_domain` with clock, edge, reset, reset kind, reset
+active level and clock-enable names. This records Spinal's domain information.
+It does not declare relationships between domains or replace the RTL clock probe.
+See [the formal event model](../rvw/src/rvw/formal/README.md#sampled-event-bmc)
+for reset sequencing, result meaning and the full refusal list.
+
+Formal generated assertions sample on clock edges even when the state has an async
+reset. Reset still gates the check. Formal mode omits monitor text reports.
+Raw assertions with an async reset in their sensitivity list remain refused.
+Their trigger semantics are outside this increment.
+
+### Sequential equivalence
+
+`rvw formal equiv` compares two exported RTL revisions with eqy and native ABC.
+It supports one clock, aligned synchronous reset, automatic register names and
+manual pairs. Unknown partitions and unmatched state stay inconclusive. See the
+[formal README](../rvw/src/rvw/formal/README.md#sequential-equivalence-first-increment-issue-18)
+for the result contract, tests and limits. Issue #18 remains an epic.
+
+## Project-declared checks
+
+Call these APIs from the project wrapper during elaboration. Install SpinalChecks
+on that wrapper. Use the sampling `ClockingArea` for each binding. The phase adds
+normal check records, exact IDs, waivers, assertions and monitor counters.
+`DeclaredChecks.rule(kind, name, detail)(failure)` is the low-level binding API.
+It does not infer intent. A missing binding does not establish checked behavior.
+
+`DeclaredChecks.flowValues(name, flow, allowed)` checks a `Flow[Bits]` payload
+against a nonempty declared set on valid beats. No rule requires a Flow to hold
+valid or payload between beats. Each call captures its current clock domain.
+
+Dynamic bit reads on non-power-of-two widths produce `bits.index` checks.
+Vec and bit-read checks use the enclosing `when` conditions. An unused read in
+an inactive direct assignment does not fire. Uses through intermediate wires,
+expression multiplexers and `switch` scopes remain conservative. Asynchronous
+memory reads remain ungated. A register select or bit source supplies the clock
+domain; otherwise the component domain is used. Each domain has its own monitor
+cycle counter. Existing `NamingSpec` tests keep loop-built IDs distinct.
+
+Connectivity and CSR applications are selected as explicit project bindings.
+Deadlock generation remains deferred to #21. This choice does not add automatic
+application discovery or core-specific rename, LSQ, ROB or issue bindings.
+Run `sbt "testOnly spinalchecks.LocalRulesSpec spinalchecks.NamingSpec"` under
+the `sbt` lock for the local rules.
+
+### Architectural CSR model
+
+`CsrChecks.bind` accepts a version-1 `CsrModel` and independent accepted access
+signals. The model declares width, reset, write mask, minimum privilege and an
+optional allowed-value set. Unwritable bits retain their value. A masked candidate
+outside the set is rejected. Hardware clear follows the software update.
+Hardware set has final priority. Expected state starts at the declared reset.
+The model never initializes expected state from the DUT.
+
+For example, `CsrModel(1, 32, 0, 255, 3)` declares eight writable bits and machine
+access. Bind the observed state, read/write requests, write data, privilege,
+access-denied response, hardware-set mask and hardware-clear mask, in that order.
+Requests must include denied attempts so that `csr.access` can check the response.
+`csr.state` checks the state each active cycle. This model does not implement
+aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
+These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
+under the `sbt` lock. The reference injects state and access faults separately
+from the expected-state model. No BOOM CSR binding is supplied.
+
+### HPM count model
+
+`HpmChecks.bind` accepts `HpmModel(1, width, reset, eventMeaning)` and the observed
+counter, independent event count, inhibit, permitted filter, software write and
+write data. It checks `hpm.count`. Write has priority over counting. Arithmetic
+wraps at the declared width. Each project must state the event meaning and bind
+an independent observation. A DUT event output alone does not supply an oracle.
+
+Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
+covers count transitions, inhibit, filtering, writes and modular wrap. It does
+not check privilege faults, RV32 half accesses, event selector CSRs or counter
+interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
+
+### Value connectivity model
+
+`ConnectivityChecks.bind(name, source, destination, enable, latency)` checks equal
+width values at a nonnegative fixed latency. Each enabled sample creates an
+obligation. Enable is sampled with the source and delayed with its value.
+Reset clears pipeline-valid state. Mode conditions can be included in enable.
+Run `sbt "testOnly spinalchecks.ConnectivityChecksSpec"` under the `sbt` lock.
+The reference has zero-cycle and one-cycle paths with injected transfer faults.
+
+This emits `connectivity.value` assertions for simulation or a formal backend.
+Simulation checks exercised transfers only. It is not a structural proof.
+SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
+formal qualification remain open under #107. No proof result is inferred from
+successful elaboration or simulation.
+
+### Device register transactions
+
+`RegisterChecks.bind` uses a version-1 `RegisterModel` with width, reset,
+ordinary-write mask, W1C mask and read-clear mask. Ordinary and W1C masks must
+be disjoint. Bind observed state, accepted read/write, data, strobes expanded to
+bit enables, and independent hardware-set and hardware-clear events.
+The update order is read-clear, software write/W1C, hardware clear, hardware set.
+Unwritten bits retain their independent expected value. Reset uses project data.
+The model never copies expected state from observed state.
+
+Run `sbt "testOnly spinalchecks.RegisterChecksSpec"` under the `sbt` lock.
+The reference uses separate per-bit logic and injects an observed-state fault.
+This checks accepted transactions, not bus decoding, response data, response
+ordering or latency. A project must supply those bindings and test its address
+decoder. Architectural CSRs use `CsrChecks`, not this device-register model.

@@ -152,3 +152,30 @@ error or `inconclusive`. Never accept a partial result after either error.
 ## Limit ownership
 
 Retained limit: The documented generation, capture, tree-size and subprocess restrictions remain required. Missing, changed or unsupported evidence must refuse publication or remain inconclusive. No separate issue is assigned for widening these bounds.
+
+## Native job budgets
+
+`budget.py` supervises one native process job. `Budget` accepts `cpu_seconds`,
+`wall_seconds` and `job_count`. Values must be finite and positive. CPU charge is
+elapsed wall time times the host logical CPU count. This conservative reservation
+can stop an idle job early. It covers local descendants without sampling them.
+Cleanup has a separate 20-second grace. The report includes cleanup consumption.
+Measured child CPU is separate; it can omit descendants not reaped by their parent.
+No money rate is assumed.
+
+Each `run_group` launch is one job-count unit. Builds, identity calls, simulations
+and transfer commands all use units. A run-many batch is one unit, regardless of
+its test count. A shared locked counter covers nested launches. Direct subprocess
+calls in third-party plugins are outside this counter. These limits cover local
+processes. They do not reserve remote host capacity.
+
+`rvw regress gate --budget-cpu-seconds 600 --budget-wall-seconds 120
+--budget-job-count 40 --cost-report /tmp/gate-cost.json --core PROJECT --base-rev REV`
+limits the gate. A limit gives an inconclusive response and exit 3. It cannot earn
+acceptance. `--cost-report` alone records consumption without limits. The default
+report path with limits is `./gate-cost.json`. Store reports outside source control.
+
+Set `RVW_JOB_BUDGET='{"cpu_seconds":600,"wall_seconds":120,"job_count":40}'`
+to apply limits to MCP process workers. `job_status` includes `cost`. Python-only
+plugin handlers need cooperative limits. Memory, disk, project reservations,
+license tokens and shared capacity scheduling remain open under #57.

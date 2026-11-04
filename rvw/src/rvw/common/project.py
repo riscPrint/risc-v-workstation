@@ -68,11 +68,13 @@ def parse_project(raw, path, environment):
     from rvw.regress.config import _path, _cmd, _check_keys
     base = path.parent
     tables = {
-        "project": {"schema", "root"}, "cosim": {"platform"},
+        "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
         "query": {"build", "db"},
+        "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
         "formal": {"verilog", "top", "checks", "clock", "reset"},
+        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports"},
     }
     _check_keys(raw, {"core", "suites", "tiers", *tables}, str(path))
     sections = {}
@@ -84,12 +86,27 @@ def parse_project(raw, path, environment):
         sections[section] = dict(table)
     if sections["project"].get("schema", "rvw.project/1") != "rvw.project/1":
         raise ProjectError(f"{path}: unsupported project schema")
+    pin = sections["project"].get("rvw_version")
+    if pin is not None:
+        import rvw
+        if not isinstance(pin, str) or pin != rvw.__version__:
+            raise ProjectError(f"{path}: needs rvw {pin!r}; running {rvw.__version__}")
     core = raw.get("core", {})
     if not isinstance(core, dict) or not isinstance(core.get("name"), str) or not core["name"].strip():
         raise ProjectError(f"{path}: project needs [core] name")
     for section, table in sections.items():
         for key, value in list(table.items()):
-            if key in {"schema", "top", "clock", "reset"}:
+            if section == "riscv_formal":
+                if key in {"root", "wrapper"}:
+                    if not isinstance(value, str) or not value:
+                        raise ProjectError(f"riscv_formal.{key} must be a nonempty path")
+                    table[key] = _path(value, base, environment)
+                elif key == "verilog":
+                    if not isinstance(value, list) or not value or not all(isinstance(v, str) and v for v in value):
+                        raise ProjectError("riscv_formal.verilog must be a nonempty path list")
+                    table[key] = [_path(v, base, environment) for v in value]
+                continue
+            if key in {"schema", "rvw_version", "top", "clock", "reset"}:
                 if not isinstance(value, str) or not value:
                     raise ProjectError(f"{section}.{key} must be a non-empty string")
             elif key in {"build", "verilog"}:

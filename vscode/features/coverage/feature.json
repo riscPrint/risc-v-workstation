@@ -1,0 +1,106 @@
+{
+  "id": "coverage",
+  "title": "Coverage",
+  "description": "Show saved rvw coverage results.",
+  "activationEvents": [
+    "onCommand:coverage.open",
+    "onView:coverage.results"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "coverage.open",
+        "title": "Coverage: Open Report"
+      },
+      {
+        "command": "coverage.refresh",
+        "title": "Coverage: Refresh Report"
+      },
+      {
+        "command": "coverage.raw",
+        "title": "Coverage: Open Raw Report"
+      },
+      {
+        "command": "coverage.source",
+        "title": "Coverage: Jump to Source via Design Database"
+      },
+      {
+        "command": "coverage.wave",
+        "title": "Coverage: Open Waveform in Surfer"
+      },
+      {
+        "command": "coverage.trace",
+        "title": "Coverage: Open SpinalTrace"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "coverage.results",
+          "name": "RVW Coverage"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "coverage.open",
+          "when": "view == coverage.results",
+          "group": "navigation"
+        },
+        {
+          "command": "coverage.refresh",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.raw",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.source",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.wave",
+          "when": "view == coverage.results",
+          "group": "results"
+        },
+        {
+          "command": "coverage.trace",
+          "when": "view == coverage.results",
+          "group": "results"
+        }
+      ]
+    },
+    "configuration": {
+      "properties": {
+        "coverage.rvwExecutable": {
+          "type": "string",
+          "default": "rvw",
+          "description": "Path to rvw.",
+          "restricted": true
+        },
+        "coverage.surferExecutable": {
+          "type": "string",
+          "default": "surfer",
+          "description": "Path to Surfer.",
+          "restricted": true
+        },
+        "coverage.spinaltraceExecutable": {
+          "type": "string",
+          "default": "spinaltrace",
+          "description": "Path to the SpinalTrace GUI.",
+          "restricted": true
+        }
+      }
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}

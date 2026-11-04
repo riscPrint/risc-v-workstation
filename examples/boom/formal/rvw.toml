@@ -1,0 +1,36 @@
+[core]
+name = "boom-formal"
+
+[riscv_formal]
+root = "${RISCV_FORMAL}"
+wrapper = "wrapper.sv.in"
+verilog = ["${SPINAL_BOOM}/formal/BoomFormalTop.v"]
+isa = "rv64imc"
+nret = 1
+checks = ["insn_add_ch0", "insn_sub_ch0", "cover"]
+depth = 20
+solver = "bitwuzla"
+defines = ["`define YOSYS", "`define RISCV_FORMAL_ALIGNED_MEM", "`define RISCV_FORMAL_VALIDADDR(addr) ((addr) >= 64'h80000000 && (addr) < 64'h90000000)"]
+
+[riscv_formal.ports]
+valid = "io_rvfi_0_valid"
+order = "io_rvfi_0_order"
+insn = "io_rvfi_0_insn"
+trap = "io_rvfi_0_trap"
+halt = "io_rvfi_0_halt"
+intr = "io_rvfi_0_intr"
+mode = "io_rvfi_0_mode"
+ixl = "io_rvfi_0_ixl"
+rs1_addr = "io_rvfi_0_rs1_addr"
+rs2_addr = "io_rvfi_0_rs2_addr"
+rs1_rdata = "io_rvfi_0_rs1_rdata"
+rs2_rdata = "io_rvfi_0_rs2_rdata"
+rd_addr = "io_rvfi_0_rd_addr"
+rd_wdata = "io_rvfi_0_rd_wdata"
+pc_rdata = "io_rvfi_0_pc_rdata"
+pc_wdata = "io_rvfi_0_pc_wdata"
+mem_addr = "io_rvfi_0_mem_addr"
+mem_rmask = "io_rvfi_0_mem_rmask"
+mem_wmask = "io_rvfi_0_mem_wmask"
+mem_rdata = "io_rvfi_0_mem_rdata"
+mem_wdata = "io_rvfi_0_mem_wdata"

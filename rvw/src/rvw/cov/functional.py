@@ -176,7 +176,7 @@ def trace_platform(header, platform=None):
 
 
 @captured.command
-def functional(paths, config=None, platform=None):
+def functional(paths, config=None, platform=None, manifest=None, source_root=None):
     saved_paths = captured.current().files(Path(p) for p in paths)
     custom = json.loads(captured.read_text(config)) if config else None
     config = json.loads(json.dumps(DEFAULT))
@@ -186,6 +186,19 @@ def functional(paths, config=None, platform=None):
         else:
             overrides = {g['name']: g for g in custom['groups']}
             config['groups'] = [overrides.pop(g['name'], g) for g in config['groups']] + list(overrides.values())
+    if custom and 'sequences' in custom:
+        config['sequences'] = custom['sequences']
+    if manifest:
+        from .isa import plan
+        if not source_root:
+            raise ValueError('--manifest needs --source-root for pinned opcodes')
+        generated = plan(manifest, source_root)
+        config['groups'] += generated['groups']
+        config['isa_plan'] = generated['isa_plan']
+    sequence_settings = config.get('sequences')
+    if sequence_settings is not None:
+        from .sequence import groups as sequence_groups
+        config['groups'] += sequence_groups(sequence_settings)
     groups = config['groups']
     names = [g['name'] for g in groups]
     if len(names) != len(set(names)):
@@ -216,6 +229,9 @@ def functional(paths, config=None, platform=None):
             first = json.loads(next(stream))
             if first.get('schema') != 'rvw.rvfi/1' or first.get('xlen') not in (32, 64):
                 raise ValueError(f'{path}: expected C2 RVFI header with xlen 32 or 64')
+            if manifest and (first['isa'] != config['isa_plan']['manifest']['isa']
+                             or first['xlen'] != int(config['isa_plan']['manifest']['isa'][2:4])):
+                raise ValueError('trace ISA contradicts manifest')
             this_context = (first['xlen'], first['isa'])
             if context is not None and this_context != context:
                 raise ValueError('cannot merge different XLEN/ISA trace contexts')
@@ -229,6 +245,7 @@ def functional(paths, config=None, platform=None):
                                  "platform": plat.name if plat else None,
                                  "address_convention": {True: "aligned_mem", False: "byte", None: "unknown"}[aligned_mem]}
             previous, order = None, -1
+            history = []
             for line_no, line in enumerate(stream, 2):
                 row = json.loads(line)
                 if 'event' not in row:
@@ -237,7 +254,17 @@ def functional(paths, config=None, platform=None):
                     order = row['order']
                     records += 1
                 observed, previous = observations(row, first['xlen'], previous, aligned_mem)
+                if sequence_settings is not None:
+                    from .sequence import observe as observe_sequence
+                    if 'event' not in row:
+                        observed += observe_sequence(history, row, decode(number(row['insn']), first['xlen']),
+                                                     previous, sequence_settings.get('distances', [1, 2, 4]))
+                    elif row['event'] not in ('irq', 'end'):
+                        history.clear()
                 for obs in observed:
+                    if 'isa_plan' in config:
+                        from .isa import observe_encoding
+                        observe_encoding(obs, config['isa_plan'])
                     if obs['event'] == 'retire' and obs['mnemonic'] == 'unknown':
                         unknown[row['insn']] += 1
                     for group in groups:

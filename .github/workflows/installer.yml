@@ -8,12 +8,18 @@ on:
         default: false
   pull_request:
     paths:
-      - '.github/workflows/installer.yml'
-      - 'scripts/install*.sh'
-      - 'rvw/pyproject.toml'
+      - 'scripts/install.sh'
       - 'rvw/uv.lock'
+      - '.github/workflows/installer.yml'
+      - 'Cosim/build.sh'
+      - 'docs/TOOL_VERSIONS.md'
+      - 'docs/INSTALL_TESTED.md'
   schedule:
     - cron: '23 4 * * 1'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+
 permissions:
   contents: read
 jobs:

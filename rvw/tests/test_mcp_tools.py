@@ -230,16 +230,24 @@ def test_cov_prove_job(registry, tmp_path, monkeypatch, rvw):
     assert result["sanity"]["passed"] and result["sanity"]["expression"] == "!$initstate && !$stable({state})"
     shutil.rmtree(out)
     assert result == rvw("cov", "prove", database, "--config", config, "--work-dir", out, "--json")[2]
-    assert set(result["tools"]) == {"sby", "yosys", "z3", "yosys-smtbmc", "yosys-witness",
-                                    "bash", "yices-smt2", "tabbypy3"}
+    expected = {"sby", "yosys", "z3", "yosys-smtbmc", "yosys-witness", "bash", "yices-smt2"}
+    # OSS CAD Suite uses a tabbypy3 launcher. Homebrew ships Python directly.
+    uses_tabby = "tabbypy3" in Path(shutil.which("yosys-smtbmc")).read_text()
+    if uses_tabby:
+        expected.add("tabbypy3")
+    assert set(result["tools"]) == expected
     assert set(result["tool_bindings"]) == set(result["tools"])
     for name, binding in result["tool_bindings"].items():
         assert result["tools"][name]["executable"] == binding["input"]["resolved"]
         assert result["tools"][name]["sha256"] == binding["input"]["sha256"]
     # The release launcher runs the bound shell and Python, including solver probes.
     smtbmc = Path(result["tool_bindings"]["yosys-smtbmc"]["command"]["path"]).read_text()
-    assert result["tools"]["bash"]["executable"] in smtbmc
-    assert result["tool_bindings"]["tabbypy3"]["command"]["path"] in smtbmc
+    if uses_tabby:
+        assert result["tools"]["bash"]["executable"] in smtbmc
+        assert result["tool_bindings"]["tabbypy3"]["command"]["path"] in smtbmc
+    else:
+        assert "tabbypy3" not in smtbmc
+        assert result["tools"]["yosys-smtbmc"]["executable"] in smtbmc
     assert not lock_status("boom", tmp_path / "locks")["held"]
 
 
@@ -308,7 +316,7 @@ sys.meta_path.insert(0, BlockSDK())
 from rvw.mcp.registry import Registry
 registry, problems = Registry.discover({'regress', 'cosim', 'cov', 'perf', 'wave', 'bundle', 'reduce', 'bisect'})
 assert not problems, problems
-assert len(registry.tools) == 31  # twenty-seven package tools plus four job tools
+assert len(registry.tools) == 32  # twenty-eight package tools plus four job tools
 registry.jobs.shutdown()
 """
     subprocess.run([sys.executable, "-c", script], check=True, capture_output=True, text=True)

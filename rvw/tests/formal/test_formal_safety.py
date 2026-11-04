@@ -344,8 +344,8 @@ def test_tool_grace_is_below_the_mcp_job_grace(tmp_path, monkeypatch):
     def fake(argv, **kw):
         seen.append(kw.get("grace"))
         return Result(0, False, "x\n")
-    monkeypatch.setattr(common, "run_group", fake)
-    monkeypatch.setattr(proof, "run_group", fake)
+    from rvw.common import sby
+    monkeypatch.setattr(sby, "run_group", fake)
     common.run(["true"], tmp_path, tmp_path / "log")
     # Version metadata now comes from the command capture, without subprocesses.
     with pytest.raises(RuntimeError, match='no command capture'):

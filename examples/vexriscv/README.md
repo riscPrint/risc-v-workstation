@@ -111,3 +111,28 @@ rm -rf /tmp/cw-vex-pytest
 PMP/ECALL policy: [#11](https://github.com/riscPrint/risc-v-workstation/issues/11). RV32 architecture models: [#13](https://github.com/riscPrint/risc-v-workstation/issues/13). More-design validation: [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
 
 Retained limit: The documented ISA, adapter and validation subset applies only to this example. It does not qualify other VexRiscv configurations.
+
+## Cocotb component tests
+
+The [cocotb example](cocotb/README.md) generates a small counter and the upstream
+PMP address unit. It runs both with Icarus and Verilator through `rvw regress
+cocotb`. The test bindings stay outside the generic library.
+
+## SoC map
+
+`soc.json` describes this example's simulation map and reference policies.
+Run `rvw soc generate soc.json --out /tmp/vexriscv-soc --json` from this folder.
+See the [format and limits](../../rvw/src/rvw/soc/README.md).
+The existing adapter does not yet consume the generated simulation map.
+
+`isa.json` declares the adapter trace ISA and pins the opcode coverage source.
+Extension versions remain null until verified. Use it with `rvw cov isa-check`
+and `rvw cov functional --manifest`; see the coverage tool README. It does not
+certify VexRiscv ISA compliance or change the adapter configuration.
+
+## RTL event coverage
+
+[The coverage example](rvw/coverage/README.md) samples typed fetch-interface
+bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
+matching HGLDD. It also measures Scala attribution of native toggle points.
+This interface exercise is separate from ISA regression coverage.

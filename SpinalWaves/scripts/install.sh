@@ -33,6 +33,14 @@ case "$ONLY" in ""|check|surfer) ;; *) echo "install.sh: --only must be check or
 
 command -v cargo >/dev/null || { echo "install.sh: cargo not found on PATH" >&2; exit 1; }
 
+# Verify the local patches and Cargo.lock files before Cargo can run.
+python3 "$ROOT/scripts/package-source.py"
+NOTICES="$PREFIX/../share/spinalwaves"
+mkdir -p "$NOTICES"
+cp "$ROOT/surfer-tywaves/LICENSE-EUPL-1.2.txt" "$NOTICES/"
+cp "$ROOT/vendor-lock.json" "$NOTICES/"
+python3 "$ROOT/scripts/package-source.py" --out "$NOTICES/source.tar.gz"
+
 install_bin() {  # install_bin <built binary> <name>
   local src="$1" name="$2"
   [ -x "$src" ] || { echo "install.sh: missing build output $src" >&2; exit 1; }

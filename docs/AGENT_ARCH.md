@@ -7,6 +7,11 @@ Read [Arch/README.md](../Arch/README.md) and
 [contract C9](PLATFORM_CONTRACTS.md#c9-native-architecture-models) for the model
 and report limits.
 
+For optional SoC topology, declared memory observations, and bounded model-only
+sweeps, use the matching sections of [Arch/README.md](../Arch/README.md).
+SoC descriptions cannot use this playbook's fixed-latency C1 calibration.
+The sweep frontier covers speed only; area, power and uncertainty stay unknown.
+
 gem5 shows trends. RTL is the truth. A report measures a model gap. It does not
 give a correctness result, a C4 gate verdict, or complete C8 evidence.
 
@@ -33,7 +38,10 @@ the instructions emitted for `rv64gc` or `rv64gc_zba_zbb_zbs`, with ABI `lp64d`.
 Record the selected preset and the source locations that establish these facts.
 Search other source roots if the project does not use `src/`.
 
-**Failure action:** Stop this playbook for an RV32 or in-order core. Track the
+**Failure action:** Stop this playbook for an RV32 or in-order core.
+Use `rvw arch inspect --elf ELF --isa rv32im --kind minor --json` to check
+ELF layout separately. Its expected result is `unsupported` (exit 2).
+This static check does not enable simulation or validate ROI counters. Track the
 missing support in [issue #13](https://github.com/riscPrint/risc-v-workstation/issues/13).
 The current flow needs a matching CPU model, ISA build options, runtime,
 description and C1 adapter before it can support that core. Do not label an

@@ -66,6 +66,11 @@ def register(sub) -> None:
                        description=__doc__)
     rs = p.add_subparsers(dest="regress_cmd", required=True)
 
+    from rvw.sim.cli import register as register_sim
+    register_sim(rs)
+    from . import mmu
+    mmu.register(rs)
+
     r = rs.add_parser("run", help="run suites or a tier; writes C3 results")
     _core_arg(r)
     g = r.add_mutually_exclusive_group(required=True)
@@ -106,6 +111,10 @@ def register(sub) -> None:
     gt.add_argument("--perf-tolerance", type=float)
     gt.add_argument("--allow-missing", action="store_true")
     _seed_policy_arg(gt)
+    gt.add_argument("--budget-cpu-seconds", type=float)
+    gt.add_argument("--budget-wall-seconds", type=float)
+    gt.add_argument("--budget-job-count", type=int)
+    gt.add_argument("--cost-report", type=Path)
     _run_opts(gt)
     _json_arg(gt)
     gt.set_defaults(func=cmd_gate)
@@ -251,6 +260,30 @@ def cmd_compare(a):
 
 @_wrap
 def cmd_gate(a):
+    limits = {key: getattr(a, "budget_" + key, None) for key in ("cpu_seconds", "wall_seconds", "job_count")}
+    if any(value is not None for value in limits.values()) or getattr(a, "cost_report", None):
+        import tempfile
+        from rvw.common.budget import Budget, supervise
+        Budget(**limits)
+        with tempfile.TemporaryDirectory(prefix="rvw-gate-budget-") as directory:
+            request, output = Path(directory) / "request.json", Path(directory) / "result.json"
+            options = {k: (str(v) if isinstance(v, Path) else v) for k, v in vars(a).items()
+                       if k not in ("func", "command", "regress_cmd", "json", "structured", "cost_report")
+                       and not k.startswith("budget_")}
+            request.write_text(json.dumps({"module": "rvw.regress.cli", "function": "execute_json", "arguments": {"action": "gate", **options}}))
+            report = getattr(a, "cost_report", None) or Path.cwd() / "gate-cost.json"
+            rc = supervise([sys.executable, "-m", "rvw.mcp.worker", str(request), str(output)], Budget(**limits), report)
+            cost = json.loads(Path(report).read_text())
+            if rc or cost["status"] != "complete" or not output.is_file():
+                value = {"verdict": "inconclusive", "tests": "incomplete", "causes": [cost["reason"]], "cost": cost}
+                _emit(a, value, "INCONCLUSIVE: budget or worker stopped")
+                return 3
+            envelope = json.loads(output.read_text())
+            if "result" not in envelope:
+                raise ValueError(envelope.get("error", "worker result missing"))
+            value = {**envelope["result"], "cost": cost}
+            _emit(a, value, str(value.get("verdict", "inconclusive")))
+            return {"accept": 0, "reject": 1}.get(value.get("verdict"), 3)
     core = load_config(a.core, project=getattr(a, "project", None))
     opts = _make_opts(a)
     known = a.known or core.known_failures
@@ -392,7 +425,8 @@ def execute_json(action: str, **options) -> dict:
                     max_cycles=None, timeout=None, rvfi_trace=False, no_cache=False, replay_max_bytes=None,
                     known=None, perf_tolerance=None, allow_missing=False, seed_policy="auto", base_rev=None,
                     cand_rev=None, base=None, cand=None, candidate=None, file=None, from_=None,
-                    id=None, signature=None, reason=None, limit=20)
+                    id=None, signature=None, reason=None, limit=20,
+                    budget_cpu_seconds=None, budget_wall_seconds=None, budget_job_count=None, cost_report=None)
     unknown = options.keys() - defaults.keys()
     if unknown:
         raise TypeError(f"unknown options: {sorted(unknown)}")

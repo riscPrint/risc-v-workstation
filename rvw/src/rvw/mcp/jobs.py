@@ -51,6 +51,7 @@ class Job:
         self._lock = threading.Lock()
         self.done = threading.Event()
         self.exception: BaseException | None = None
+        self.cost_report = None
 
     # -- for handlers
     def log(self, line: str) -> None:
@@ -80,6 +81,20 @@ class Job:
         # As rvw.common.proc.run_group: the current entries, and none without a descriptor.
         # Only this thread's own locks and inherited ones: a lock another thread (another job)
         # holds is not this job's (review 10).
+        import json
+        import tempfile
+        from pathlib import Path
+        import sys
+        budget_temp = None
+        budget = os.environ.get("RVW_JOB_BUDGET")
+        if budget:
+            from rvw.common.budget import Budget
+            self.GRACE_S = max(self.GRACE_S, 30.0)
+            settings = json.loads(budget)
+            Budget(**settings)
+            budget_temp = tempfile.TemporaryDirectory(prefix="rvw-job-cost-")
+            cost_path = Path(budget_temp.name) / "cost.json"
+            cmd = [sys.executable, "-m", "rvw.common.budget", budget, str(cost_path), *cmd]
         merged, fds = _lock.child_env({**os.environ, **(env or {})})
         p = pump = None
         try:
@@ -127,6 +142,10 @@ class Job:
                 with self._lock:
                     if p in self._procs:
                         self._procs.remove(p)
+            if budget_temp is not None:
+                if cost_path.is_file():
+                    self.cost_report = json.loads(cost_path.read_text())
+                budget_temp.cleanup()
             if self.cancelled:
                 raise Cancelled()
 
@@ -187,6 +206,8 @@ class Job:
 
     def to_json(self, with_result: bool = True) -> dict:
         d = {"job_id": self.id, "tool": self.tool, "status": self.state, "arguments": self.arguments}
+        if self.cost_report is not None:
+            d["cost"] = self.cost_report
         if self.progress:
             d["progress"] = self.progress
         if self.started:

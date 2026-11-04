@@ -5,6 +5,14 @@ One VS Code extension for the tools in this repository. Each tool adds a **featu
 | Feature | What it adds | Docs |
 |---|---|---|
 | `spinalblocks` | Block and state machine diagrams for elaborated SpinalHDL designs, linked to the Scala source | [features/spinalblocks/README.md](features/spinalblocks/README.md) |
+| `regress` | Saved C3 tests and C4 verdicts, with full causes | [features/regress/README.md](features/regress/README.md) |
+| `coverage` | Saved coverage reports, holes and limits | [features/coverage/README.md](features/coverage/README.md) |
+| `perf` | Saved perf measurements and scope | [features/perf/README.md](features/perf/README.md) |
+
+The result views include manual source navigation through `rvw query where`.
+They also open selected waves in Surfer and selected dependency traces in SpinalTrace.
+They show saved producer data. They do not validate run-set identity or issue verdicts.
+See each feature README for commands and limits.
 
 ## Build and install
 

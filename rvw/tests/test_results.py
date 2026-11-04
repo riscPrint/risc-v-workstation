@@ -114,7 +114,7 @@ def test_verdict_round_trip(tmp_path):
     ("rvfi_error", None, "riscv-formal monitor error 105 at pc 0x80000124", "rvfi_error:105"),
     ("rvfi_error", None, "riscv-formal RVFI monitor error 105", "rvfi_error:105"),
     ("rvfi_error", None, "riscv-formal RVFI monitor error 105: rd_wdata mismatch", "rvfi_error:105"),
-    ("rvfi_error", None, "monitor flagged something", "rvfi_error:monitor flagged something"),
+    ("rvfi_error", None, "monitor flagged something", "rvfi_error:sha256:" + hashlib.sha256(b"monitor flagged something").hexdigest()),
     # testbench exceptions keep their type, not only the top frame
     ("assert", None, "java.lang.IllegalStateException: bad at boom.sim.Mem.read(Mem.scala:42)",
      "assert:IllegalStateException@Mem.scala:42"),

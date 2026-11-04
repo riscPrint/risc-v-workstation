@@ -6,3 +6,4 @@ pub mod graphbuilder;
 pub mod sim_data_injection;
 pub mod util;
 pub mod pipeline;
+pub mod viewer_ids;

@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 
-from rvw.common.proc import run_group
+from rvw.common.sby import TOOL_GRACE_S, execute
 from rvw.common.capture import CaptureError
 from rvw.results import write_json
 from rvw.formal.common import async_state_problems, clock_probe_cmds, clock_problems
@@ -29,21 +29,15 @@ from . import source_snapshot
 # /6: refuse asynchronous state controls, including when rechecking the saved netlist on apply.
 # /7: every front end reads one frozen RTL/include snapshot, with verified per-job copies.
 EXCLUSIONS_SCHEMA = 'rvw.coverage-exclusions/7'
-# SIGTERM to SIGKILL for sby: below the MCP job grace (rvw.mcp.jobs.Job.GRACE_S), see formal/common.py.
-TOOL_GRACE_S = 10.0
-
-
 @captured.command
 def run_job(argv, cwd, log, timeout):
     """Runs a solver job in its own process group; a timeout, error or MCP cancel stops the tree."""
     bindings = getattr(captured.current(), '_coverage_proof_tools', None)
     environment = bindings.env if bindings is not None else captured.environment()
-    with Path(log).open('w') as stream:
-        try:
-            return run_group(argv, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, timeout=timeout,
-                             grace=TOOL_GRACE_S, env=environment).returncode
-        except FileNotFoundError as exc:
-            raise ValueError(f'tool not installed: {argv[0]}') from exc
+    try:
+        return execute(argv, cwd, log, timeout, env=environment)[0]
+    except FileNotFoundError as exc:
+        raise ValueError(f'tool not installed: {argv[0]}') from exc
 
 
 # Yosys turns an unknown name (a typo, or a hierarchical reference `dut.q`, which read_verilog does
@@ -993,6 +987,7 @@ def prove(config_path, database_path, out, timeout=60):
     config_path, database_path = Path(config_item.resolved), Path(database_item.resolved)
     config_bytes, database_bytes = config_item.copy.read_bytes(), database_item.copy.read_bytes()
     config = json.loads(config_bytes)
+    from .proof_cones import validate_ids
     data = json.loads(database_bytes)
     out = Path(out).resolve()
     written = [config_path.parent / s for s in config['sources']] + [config_path.parent / config['harness']]
@@ -1016,6 +1011,7 @@ def prove(config_path, database_path, out, timeout=60):
     ids = [p['point_id'] for p in config['points']]
     if len(set(ids)) != len(ids):
         raise ValueError('formal plan has duplicate point ids')
+    validate_ids(config['points'])
     for point in config['points']:
         if '`' in point['expression']:
             raise ValueError('source snapshot: point expressions cannot contain preprocessor directives or macros')
@@ -1138,6 +1134,9 @@ def prove(config_path, database_path, out, timeout=60):
               "replay": ['rvw', 'cov', 'prove', str(database_path), '--config', str(config_path),
                          '--work-dir', str(out) + '-replay', '--timeout', str(timeout), '--json'],
               "note": "Exclusions depend on the reviewed point-expression mapping and hashed harness assumptions."}
+    from .proof_cones import report as cone_report
+    result['proof_cones'] = cone_report(netlist, config['top'], config['points'], rows, reference)
+    write_json(out / 'proof-cones.json', result['proof_cones'])
     write_json(out / 'exclusions.json', result)
     return result
 

@@ -34,6 +34,7 @@ import riscvsim._
  * accept an input bit read from `mip` only when the input was high.
  */
 object BoomAdapter extends CoreAdapter {
+  override def freshInstancePerRun = true
   type Model = SimCompiled[BoomSimTop]
 
   val boomDir: File = new File(sys.props.getOrElse("riscvsim.boom.dir",

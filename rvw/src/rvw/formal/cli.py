@@ -7,10 +7,12 @@
 With `--checks <top>.checks.json` (written by SpinalChecks), failures are reported by check id and
 Scala source location instead of Verilog line.
 
-One clock only: every register, memory port and clocked assertion must be on the rising edge of --clock.
+By default, one clock only: every register, memory port and clocked assertion must be on the rising edge of --clock.
 A design with another clock, a gated clock or a falling edge is refused (exit 2): the flows step every
 clock together (sby multiclock off), which could give a false pass.
 Asynchronous state controls and latches are also refused: events between clock edges are not modelled.
+BMC --event-model enables sampled clock events. Declare extra clocks with --event-clock.
+BMC --async-reset separately enables constant-value asynchronous-reset flip-flops in that model.
 Use xprop --combinational for a clock-free module. That mode refuses all state.
 
 Exit codes: 0 pass; 1 any other status (fail, unknown, timeout, error, no_checks), with result.json
@@ -50,13 +52,14 @@ def _flow(name: str, args) -> int:
 
 
 def _common(p: argparse.ArgumentParser, depth: int) -> None:
+    p.set_defaults(event_model=False, event_clock=None, async_reset=False)
     p.add_argument("--verilog", nargs="+", help="design Verilog files")
     p.add_argument("--top", help="toplevel module")
     p.add_argument("--clock", help="clock port (default clk)")
     p.add_argument("--reset", help="reset input (default: `reset` if the toplevel has it; an explicit name must exist)")
     p.add_argument("--reset-active", choices=["high", "low"], default="high")
     p.add_argument("--checks", help="SpinalChecks report (<top>.checks.json) to name failures")
-    p.add_argument("--depth", type=int, default=depth, help=f"BMC depth in cycles (default {depth})")
+    p.add_argument("--depth", type=int, default=depth, help=f"BMC steps: cycles by default, global samples in event BMC (default {depth})")
     p.add_argument("--engine", default="smtbmc:yices", help="sby engine, ':'-separated, or a comma-separated portfolio run in parallel "
                         "(default smtbmc:yices; e.g. abc:bmc3, smtbmc:bitwuzla, 'smtbmc:yices,smtbmc:bitwuzla')")
     p.add_argument("--timeout", type=float, help="seconds before sby is stopped")
@@ -72,9 +75,68 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
+    c.add_argument("--result", required=True, help="formal result.json or directory")
+    c.add_argument("--trace-index", type=int, default=0)
+    c.add_argument("--edit", action="append", help="PORT@TIME=INTEGER; lasts to the next witness change")
+    c.add_argument("--timeout", type=float, default=60)
+    c.add_argument("--out", required=True)
+    c.add_argument("--json", action="store_true")
+    c.add_argument("--hgldd", help="SpinalWaves HGLDD directory for this captured design")
+    c.add_argument("--pdg", help="SpinalTrace pdg.json for this captured design")
+    c.add_argument("--criterion", help="SpinalTrace failing assertion criterion, e.g. line:Top.scala:20")
+    c.add_argument("--at-time", type=int, help="SpinalTrace sample time in VCD units")
+    c.add_argument("--open", action="store_true", help="open Surfer after typed lookup succeeds")
+    from . import cex
+    c.set_defaults(func=cex.run)
+    hist = s.add_parser("sby-history", help="read per-property history from retained C3 campaigns")
+    hist.add_argument("paths", nargs="+")
+    from .campaign import history
+    hist.set_defaults(func=history)
+
+    campaign = s.add_parser("sby-regress", help="run SBY jobs and write conditional C3/C4 observations")
+    campaign.add_argument("manifest", help="TOML campaign with [[property]] rows")
+    campaign.add_argument("--out", required=True)
+    campaign.add_argument("--timeout", type=float, default=60)
+    campaign.add_argument("--json", action="store_true")
+    from .campaign import run as run_campaign
+    campaign.set_defaults(func=run_campaign)
+
+    proof = s.add_parser("prove", help="unbounded safety proof from reset")
+    _common(proof, 20)
+    proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
+    proof.add_argument("--reset-cycles", type=int, default=1)
+    proof.add_argument("--free-reset", action="store_true")
+    proof.add_argument("--first-failure", action="store_true")
+    proof.set_defaults(func=lambda a: _flow("bmc", a), mode="prove",
+                       engine="abc:pdr,aiger:avy")
+
+    search = s.add_parser("depth-search", help="bounded search with a total time budget")
+    _common(search, 4)
+    search.add_argument("--max-depth", required=True, type=int)
+    search.add_argument("--budget", required=True, type=float)
+    search.add_argument("--reset-cycles", type=int, default=1)
+    search.add_argument("--free-reset", action="store_true")
+    search.add_argument("--first-failure", action="store_true")
+    from .search import depth_search
+    search.set_defaults(func=depth_search)
+    r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
+    r.add_argument("--out", required=True)
+    r.add_argument("--timeout", type=float, default=60, help="seconds per check")
+    r.add_argument("--json", action="store_true")
+    from rvw.formal.riscv import main as riscv_main
+    r.set_defaults(func=riscv_main)
+    from .equiv import register as register_equiv
+    register_equiv(s)
+
     b = s.add_parser("bmc", help="bounded model check from reset")
     _common(b, 20)
-    b.add_argument("--reset-cycles", type=int, default=1, help="steps the reset is held active (default 1)")
+    b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
+    b.add_argument("--event-clock", action="append", metavar="PORT",
+                   help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
+    b.add_argument("--event-model", action="store_true", help="use sampled events and sby multiclock on")
+    b.add_argument("--async-reset", action="store_true", help="allow constant-value async reset FFs in event BMC")
+    b.add_argument("--reset-cycles", type=int, default=1, help="primary-clock cycles the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")
     b.add_argument("--first-failure", action="store_true", help="stop at the first failing step (default: keep going)")
     b.set_defaults(func=lambda a: _flow("bmc", a))

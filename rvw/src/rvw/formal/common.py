@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import math
 import os
 import re
 import shutil
@@ -15,7 +16,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from rvw.common.proc import TIMEOUT_EXIT, run_group
+from rvw.common.proc import TIMEOUT_EXIT
+from rvw.common.sby import TOOL_GRACE_S, execute
 from .tools import ACTIVE
 
 
@@ -163,6 +165,13 @@ def begin(args) -> Path:
     if args.reset is not None:
         check_ident("--reset", args.reset)
     check_engine(args.engine)
+    mode = getattr(args, 'mode', 'bmc')
+    for engine in args.engine.split(','):
+        engine = engine.strip()
+        if (engine == 'aiger:avy' or engine == 'abc:pdr') and mode != 'prove':
+            die(f'{engine} requires formal prove')
+        if engine.startswith('btor:') and mode != 'bmc':
+            die(f'{engine} requires bounded formal bmc')
     check_count("--depth", args.depth, 1)
     for opt in ("reset_cycles", "settle", "cycle", "time"):
         if getattr(args, opt, None) is not None:
@@ -171,7 +180,7 @@ def begin(args) -> Path:
         check_hier("--scope", args.scope)
     for s in getattr(args, "signal", None) or []:
         check_hier("--signal", s)
-    if args.timeout is not None and not args.timeout > 0:
+    if args.timeout is not None and (not args.timeout > 0 or not math.isfinite(args.timeout)):
         die(f"--timeout must be > 0, got {args.timeout}")
     return out
 
@@ -228,7 +237,7 @@ def ports_from_json(path: Path, top: str) -> list[Port]:
 
 
 def module_ports(verilog_files: list[Path], top: str, out: Path,
-                 timeout: float | None = None, defines: list[str] = (), *, snapshot) -> list[Port]:
+                 timeout: float | None = None, defines: list[str] = (), *, snapshot, allow_async_reset=False) -> list[Port]:
     """Elaborate using the proof's defines and read all top ports before any optimization.
 
     `proc` lowers processes because `write_json` cannot serialize them. It preserves the interface.
@@ -251,7 +260,7 @@ def module_ports(verilog_files: list[Path], top: str, out: Path,
     if rc != 0:
         die("the port probe (yosys) failed, see " + str(out / "module_ports.log"))
     snapshot.check_frontend()
-    check_state_controls(out / "module_ports.json")
+    check_state_controls(out / "module_ports.json", allow_async_reset=allow_async_reset)
     return ports_from_json(out / "module_ports.json", top)
 
 
@@ -261,7 +270,7 @@ _STATE_MEMORIES = {'$memrd', '$memwr', '$memwr_v2', '$meminit', '$meminit_v2', '
                    '$memrd_v2', '$mem_v2'}
 
 
-def async_state_problems(modules) -> list[str]:
+def async_state_problems(modules, *, allow_async_reset=False) -> list[str]:
     """Refuse state events outside the single-clock model in every elaborated module.
 
     This includes async reset/load/set/clear cells, latches and fine-grained state cells.
@@ -284,6 +293,8 @@ def async_state_problems(modules) -> list[str]:
             if kind in modules:
                 continue  # module bodies are all checked before pruning unused instances
             where = f'{module}.{name} ({kind})'
+            if allow_async_reset and kind in {'$adff', '$adffe'}:
+                continue  # clk2fflogic preserves constant-value asynchronous resets
             if _STATE_LIKE.match(kind) and kind not in _SYNCHRONOUS_STATE | _STATE_MEMORIES:
                 problems.append(f'{where}: asynchronous, latched or unsupported state control; '
                                 'the single-clock model supports synchronous state only')
@@ -297,16 +308,19 @@ def async_state_problems(modules) -> list[str]:
     return problems
 
 
-def check_state_controls(probe_json: Path) -> None:
+def check_state_controls(probe_json: Path, *, allow_async_reset=False) -> None:
     """Refuse unsupported state controls with exit 2, before writing a proof result."""
     try:
-        problems = async_state_problems(json.loads(probe_json.read_text())['modules'])
+        problems = async_state_problems(json.loads(probe_json.read_text())['modules'], allow_async_reset=allow_async_reset)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         problems = [f'cannot read the asynchronous state-control probe {probe_json} ({exc})']
     if problems:
         shown = '\n  '.join(problems[:10])
         if len(problems) > 10:
             shown += f'\n  ... {len(problems) - 10} more'
+        if allow_async_reset:
+            die('unsupported asynchronous or latched state in event BMC; only constant-value async reset FFs '
+                'are enabled. Refusing:\n  ' + shown)
         die('unsupported asynchronous or latched state: rvw formal uses a single-clock model '
             '(sby multiclock off), which can miss events between clock edges. Refusing:\n  ' + shown)
 
@@ -341,24 +355,15 @@ def sigterm_raises():
         signal.signal(signal.SIGTERM, old)
 
 
-# SIGTERM to SIGKILL for yosys/sby. Long enough for sby to stop the solver groups it started (their own
-# sessions; a SIGKILLed sby leaves them running), and below the MCP job grace (rvw.mcp.jobs.Job.GRACE_S,
-# 15 s) so the MCP server does not SIGKILL this CLI while it still waits for sby.
-TOOL_GRACE_S = 10.0
-
-
 def run(cmd: list[str], cwd: Path, log: Path, timeout: float | None = None) -> tuple[int, float]:
     """Run `cmd` in its own process group, writing stdout+stderr to `log`. Returns (exit code, seconds);
     124 on timeout. On timeout, error or SIGTERM the whole group is stopped (SIGTERM first: sby then stops
     the solver groups it started; SIGKILL after TOOL_GRACE_S)."""
-    t0 = time.time()
     active = ACTIVE.get()
     env = None
     if active is not None:
         cmd, env = active.command(cmd), active.env
-    with open(log, "w") as fh:
-        r = run_group(cmd, cwd=cwd, env=env, stdout=fh, stderr=subprocess.STDOUT, timeout=timeout, grace=TOOL_GRACE_S)
-    return (TIMEOUT_EXIT if r.timed_out else r.returncode), time.time() - t0
+    return execute(cmd, cwd, log, timeout, env=env)
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -399,7 +404,7 @@ def _param_bits(value, width: int) -> str | None:
     return ("1" if "1" in value else "0") * width
 
 
-def clock_problems(probe_json: Path, top: str, clock: str) -> list[str]:
+def clock_problems(probe_json: Path, top: str, clock: str, *, extra_clocks=()) -> list[str]:
     """Every clock or trigger input in `probe_json` (written by `clock_probe_cmds`) that is not the rising
     edge of the toplevel port `clock`, in words. Empty when the design has one clock."""
     try:
@@ -410,6 +415,13 @@ def clock_problems(probe_json: Path, top: str, clock: str) -> list[str]:
     if len(clk_bits) != 1:
         return [f"--clock {clock} is {len(clk_bits)} bits wide; one bit is needed"]
     clk = clk_bits[0]
+    allowed = {clk}
+    for name in extra_clocks:
+        port = mod.get("ports", {}).get(name, {})
+        bits = port.get("bits", [])
+        if port.get("direction") != "input" or len(bits) != 1 or type(bits[0]) is not int:
+            return [f"event clock {name!r} must be a one-bit top input"]
+        allowed.add(bits[0])
     names: dict = {}
     for name, n in sorted(mod.get("netnames", {}).items(), key=lambda kv: (kv[0].startswith("$"), kv[0])):
         for i, b in enumerate(n.get("bits", [])):
@@ -439,7 +451,7 @@ def clock_problems(probe_json: Path, top: str, clock: str) -> list[str]:
             for i, b in enumerate(bits):
                 if en[i] != "1":
                     continue  # an asynchronous memory read port, an unclocked assertion
-                if b != clk:
+                if b not in allowed:
                     what = f"constant {b}" if isinstance(b, str) else names.get(b, f"net {b}")
                     problems.append(f"{where}: {port} is {what}, not {clock}")
                 elif pol[i] != "1":
@@ -447,28 +459,36 @@ def clock_problems(probe_json: Path, top: str, clock: str) -> list[str]:
     return problems
 
 
-def check_one_clock(problems: list[str], clock: str) -> None:
+def check_one_clock(problems: list[str], clock: str, *, event_model=False) -> None:
     """Refuse (exit 2, no result) a design whose clocked cells are not all on the rising edge of `clock`."""
     if not problems:
         return
     shown = "\n  ".join(problems[:10]) + (f"\n  ... {len(problems) - 10} more" if len(problems) > 10 else "")
+    if event_model:
+        die("unsupported event clock; only declared rising-edge top inputs are supported. Refusing:\n  " + shown)
     die(f"the design is not clocked by the rising edge of --clock {clock} alone; rvw formal models one clock "
         "(sby multiclock off) and would step every clock together, which can give a false pass. "
         f"Refusing:\n  {shown}")
 
 
-def probe_clocks(files: list[Path], top: str, clock: str, out: Path, timeout: float | None) -> float:
+def probe_clocks(files: list[Path], top: str, clock: str, out: Path, timeout: float | None, *, extra_clocks=(), event_model=False) -> float:
     """Run the clock probe on the design as the flow reads it; refuse a design with more than one clock
     (see `check_one_clock`). Returns the seconds it took."""
     clear_outputs(out, CLOCKS_JSON, "clock_probe.ys", "clock_probe.log")
     reads = read_rtlil(files)
-    (out / "clock_probe.ys").write_text(f"{reads}\nprep -top {top}\n{clock_probe_cmds(top, out / CLOCKS_JSON)}")
+    probe = clock_probe_cmds(top, out / CLOCKS_JSON)
+    if event_model:
+        # Preserve dead and tied state before clock validation, just as the state probe does.
+        probe = f"flatten\nwrite_json -noscopeinfo {out / CLOCKS_JSON}\n"
+    (out / "clock_probe.ys").write_text(f"{reads}\nhierarchy -check -top {top}\n{probe}" if event_model
+                                             else f"{reads}\nprep -top {top}\n{probe}")
     rc, secs = run(["yosys", "-q", "-s", "clock_probe.ys"], out, out / "clock_probe.log", timeout)
     if rc == TIMEOUT_EXIT:
         die(f"the clock probe timed out (--timeout {timeout} s)")
     if rc != 0:
         die("the clock probe (yosys) failed, see " + str(out / "clock_probe.log"))
-    check_one_clock(clock_problems(out / CLOCKS_JSON, top, clock), clock)
+    check_one_clock(clock_problems(out / CLOCKS_JSON, top, clock, extra_clocks=extra_clocks),
+                    clock, event_model=event_model)
     return secs
 
 
@@ -709,6 +729,9 @@ def count_asserts(rtlil: Path, top: str) -> int | None:
 
 def final_status(rc: int, sby_text: str, asserts: int | None) -> str:
     """A pass needs matching process/log exit codes and assertions in the prepared model."""
+    answers = set(re.findall(r"Status returned by engine: (PASS|FAIL)\b", sby_text))
+    if answers == {"PASS", "FAIL"}:
+        return "error"
     if rc == TIMEOUT_EXIT:
         return "timeout"
     status, log_rc = sby_result(sby_text)

@@ -165,40 +165,75 @@ class SourceMap:
                 if Path(item.source).suffix == '.scala':
                     self.scala_files[Path(item.source).name].append(Path(item.source).absolute())
         self.signals = {}
+        candidates = defaultdict(list)
         for filename in hgldd:
             documents = json.loads(captured.read_text(filename))
             if not isinstance(documents, list):
                 documents = [documents]
             for doc in documents:
                 files = doc['HGLDD']['file_info']
-                for obj in doc['objects']:
+                structs = {o['obj_name']: o for o in doc['objects'] if o.get('kind') == 'struct'}
+
+                def leaves(var, value, parents=()):
+                    # Spinal emits aggregate expressions with matching struct fields.
+                    # Attribute each leaf to its own declaration, never to its container.
+                    if 'sig_name' in value:
+                        yield var, value['sig_name']
+                        return
+                    name = var.get('type_name')
+                    if name in parents:
+                        raise ValueError('recursive HGLDD struct')
+                    operands = value.get('operands', [])
+                    if var.get('unpacked_range'):
+                        element = {k: v for k, v in var.items() if k != 'unpacked_range'}
+                        for operand in operands:
+                            yield from leaves(element, operand, parents)
+                    elif name in structs:
+                        fields = structs[name].get('port_vars', [])
+                        if len(fields) != len(operands):
+                            raise ValueError('HGLDD struct expression shape differs')
+                        for field, operand in zip(fields, operands):
+                            yield from leaves(field, operand, (*parents, name))
+
+                objects = list(doc['objects'])
+                for obj in objects:
+                    # Instance overrides can differ after RTL module deduplication.
+                    # A module-level toggle point cannot choose one such location.
+                    objects.extend(obj.get('children', []))
                     module = obj.get('module_name')
                     if not module:
                         continue
-                    for var in obj.get('port_vars', []):
-                        loc = var.get('hgl_loc')
-                        if not loc or not loc.get('begin_line'):
-                            continue
-                        source = files[loc['file'] - 1]  # SpinalWaves/CIRCT indexes are 1-based.
-                        value = var.get('value', {})
-                        if 'sig_name' in value:
-                            self.signals[(module, value['sig_name'])] = {
-                                "file": source, "line": loc['begin_line'], "method": "hgldd-signal-declaration"}
-                        # Use explicit HDL locations only when supplied; do not spread a
-                        # module's Scala location over every statement in that module.
-                        hdl = var.get('hdl_loc')
-                        if hdl and hdl.get('begin_line'):
-                            self.mapping.append({"verilog": files[hdl['file'] - 1],
-                                "line_start": hdl['begin_line'], "line_end": hdl.get('end_line', hdl['begin_line']),
-                                "scala": source, "scala_line": loc['begin_line']})
+                    for root_var in obj.get('port_vars', []):
+                        for var, signal in leaves(root_var, root_var.get('value', {})):
+                            loc = var.get('hgl_loc')
+                            if not loc or not loc.get('begin_line'):
+                                continue
+                            source = files[loc['file'] - 1]
+                            candidates[(module, signal)].append({
+                                "file": source, "line": loc['begin_line'],
+                                "method": "hgldd-signal-declaration"})
+                            hdl = var.get('hdl_loc')
+                            if hdl and hdl.get('begin_line'):
+                                self.mapping.append({"verilog": files[hdl['file'] - 1],
+                                    "line_start": hdl['begin_line'],
+                                    "line_end": hdl.get('end_line', hdl['begin_line']),
+                                    "scala": source, "scala_line": loc['begin_line']})
+        for key, locations in candidates.items():
+            if all(loc == locations[0] for loc in locations):
+                self.signals[key] = locations[0]
 
     @captured.command
     def location(self, fields):
         file = fields.get('f', fields.get('filename', ''))
         line = int(fields.get('l', fields.get('lineno', 0)))
-        for item in self.mapping:
-            if item['verilog'] == file and item['line_start'] <= line <= item.get('line_end', item['line_start']):
-                return {"file": item['scala'], "line": item['scala_line'], "method": "explicit-range"}
+        spans = [item for item in self.mapping if item['verilog'] == file
+                 and item['line_start'] <= line <= item.get('line_end', item['line_start'])]
+        if spans:
+            locations = {(item['scala'], item['scala_line']) for item in spans}
+            if len(locations) != 1:
+                return None
+            source, source_line = locations.pop()
+            return {"file": source, "line": source_line, "method": "explicit-range"}
         if fields.get('t') == 'toggle':
             signal = re.sub(r'\[\d+\]$', '', fields.get('o', '').split(':')[0])
             location = self.signals.get((fields.get('page', '').removeprefix('v_toggle/'), signal))
@@ -322,7 +357,7 @@ def report(data, exclusions=None):
         f = p['fields']
         # Verilator's page is a coverage type plus module name, not a hierarchy.
         page = f.get('page', 'unknown')
-        module = re.sub(r'^v_(?:line|toggle|branch|expr|fsm|user)/', '', page)
+        module = re.sub(r'^v_(?:line|toggle|branch|expr|fsm(?:_arc|_state)?|user)/', '', page)
         groups['modules'][module].append(p)
         groups['types'][f.get('t', 'unknown')].append(p)
         module_types[module][f.get('t', 'unknown')].append(p)
@@ -335,7 +370,15 @@ def report(data, exclusions=None):
                 groups['scala'][f"{loc['file']}:{loc['line']}"].append(p)
     never = [{"id": p['id'], "fields": p['fields'], "scala": p.get('scala')} for p in data['points']
              if p['count'] == 0 and not p.get('exclusion')]
-    return {"schema": "rvw.coverage-report/1", "summary": summary(data['points']),
+    instance_scope = {
+        name: {"scope": "aggregate" if '*' in name else "unknown" if name == 'unknown' else "instance",
+               "instrumented_points": len(points),
+               "exact_instance_denominator": None if '*' in name or name == 'unknown' else len(points)}
+        for name, points in groups['instances'].items()}
+    return {"schema": "rvw.coverage-report/1", "instance_scope": instance_scope,
+            "scala_mapping": {"denominator": len(data['points']),
+                              "mapped": sum(bool(p.get('scala')) for p in data['points']),
+                              "unit": "instrumented points; a point can link to several Scala lines"}, "summary": summary(data['points']),
             **{kind: {k: summary(v) for k, v in sorted(items.items())} for kind, items in groups.items()},
             "module_types": {module: {kind: summary(points) for kind, points in sorted(kinds.items())}
                              for module, kinds in sorted(module_types.items())},

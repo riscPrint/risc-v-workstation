@@ -4,7 +4,8 @@ Trace-driven architectural comparison for any scalar RISC-V core emitting the
 [C2 trace contract](../docs/PLATFORM_CONTRACTS.md#c2-rvfi-trace-rvfijsonl).
 This is the first implementation of an open replacement for the lockstep portion
 of ImperasDV / Questa RISC-V VIP. It does not claim commercial feature parity.
-The simulator finishes first; checking and mutation replay need no RTL rebuild.
+Offline checking starts after simulation. The live integration API can check a
+flushed retirement stream during simulation. Neither mode needs an RTL rebuild.
 Generic code is in `rvw/src/rvw/cosim/`. BOOM's memory map is isolated in
 `rvw/src/rvw/cosim/configs/boom.json`.
 
@@ -85,7 +86,9 @@ termination status. A trace without an end event is explicitly a matching prefix
 
 Exit 0 means: every traced instruction and trap event agrees with the reference in the
 compared fields (see "Comparison and synchronization"), after the listed synchronizations.
-It does not check floating-point registers, `fflags`/`fcsr` state, CSR side effects that
+Version 1 does not check floating-point registers or `fflags`/`fcsr` state.
+Version 2 compares raw FP writes and post-instruction `fflags`/`fcsr` with Spike.
+Sail refuses these fields because its effect interface lacks them. Neither version checks CSR side effects that
 no traced instruction reads, memory that no traced instruction reads, or timing. A matching
 **prefix** (no end event, `trace_complete: false`) also exits 0, and so does a trace that
 ended in `fail` or `timeout`. Agents must check `trace_complete` and `end_status`, and read
@@ -483,13 +486,12 @@ Large traces are temporary and never committed.
 
 ## Limits and next work
 
-C2 contains no floating-point/vector register writes or CSR side-effect payloads.
-F/D instructions execute in Spike/Sail and their integer/memory effects compare,
-but direct FP state and fflags cannot be checked from C2 alone. No vector/multi-
+C2 version 1 contains no FP writes or CSR snapshots. Version 2 adds them;
+Spike compares them and Sail refuses unavailable observations. No vector/multi-
 access instruction, debug-mode execution, multiple harts, H extension, or device
 model is supported. `halt` is retained as input metadata; WFI is not RVFI halt.
-Memory faults currently expose the reference fault flag; per-access masks/address
-on an unsuccessful memory operation need further contract clarification.
+Optional version 2 fault-access records check supported zero-completion attempts.
+Other fault effects remain unsupported.
 
 Real-core validation depends on the separately built BOOM adapter. Run its C1
 command with `--rvfi-trace`, then the same `cosim check` command on the resulting
@@ -510,8 +512,8 @@ C2 trace recorded from a core (it replaces only an earlier reference trace).
 Both return a job ID. `job_status(wait_s=60)` returns the same JSON as the corresponding CLI
 `--json` command, including reproduction metadata and mismatch/error or prefix/end status.
 `job_cancel` stops the worker and model subprocesses. Matching execution still has the scope
-and synchronization limits described in the main README ("What match guarantees"): no FP
-registers, `fflags`, unread CSR side effects or unread memory; a matching prefix also returns
+and synchronization limits described in the main README ("What match guarantees"):
+version 1 excludes FP state and unread CSR state. Unread memory remains unchecked; a matching prefix also returns
 `match`. It is not proof that the program passed: check `trace_complete` and `end_status`.
 
 ## Architectural comparison coverage
@@ -528,15 +530,15 @@ to the fields and recorded execution below.
 | Scalar memory address, masks, active bytes, fault flag | Per instruction | Compared; inert MMIO load data synchronized | Compared; model device behavior, no external data injection |
 | Trap cause and failing address (`tval`) | Optional trap event | Compared; exact declared illegal/ECALL value | Compared; unsupported ECALL policy refused |
 | CSR read result | Integer destination | Compared except declared masks, counters and evidenced input bits | Compared; nondeterministic reads refused |
-| Unread CSR state and CSR side effects | No CSR snapshot | Out of scope until observed by a later effect | Same |
+| Unread CSR state and CSR side effects | Optional version 2 post-instruction snapshots | Exact declared CSR set | Snapshots refused |
 | Cycle/time/HPM read | Integer destination | Synchronized on pure reads; strict mode disables this | Refused when offline synchronization would be needed |
 | instret/minstret | Integer destination | Strict from reset; declared late-trace offset only | Compared; no external offset injection |
 | MMIO and interrupt external inputs | Optional IRQ levels, load result and trap event | Declared MMIO/input synchronization; not a device or timing proof | External-input synchronization unsupported; nondeterministic traces refused |
-| FP registers, `fflags`, `fcsr` | No FP state | Out of scope; FP integer/memory effects can compare | Same |
+| FP registers, `fflags`, `fcsr` | Required version 2 fields | Exact raw write and post-step flags | Version 2 fields refused |
 | Vector, hypervisor state | No matching state contract | Out of scope; scalar-unrepresentable effects refused | Unsupported ISA/virtualized modes refused |
 | Debug state | No debug state contract | Debug execution refused | Unsupported execution refused; no debug-state comparison |
 | Per-hart state, inter-hart order | No hart identity or shared-memory order | Single hart only; multi-hart out of scope | Same |
-| Partial memory effects, split-bus/page fault precedence | No transaction history | Refused split completion; partial effects out of scope | No partial-effect comparison; no split policy support |
+| Fault attempts and partial memory effects | Optional version 2 attempt/completion masks | Supported zero-completion scalar attempts; partial effects refused | Fault-access extension refused |
 | Endianness | Platform declaration, little-endian ELF | Little only; other combinations refused | Little only |
 | PMP TOR/NA4/NAPOT, priority, grain, locked entries | Only observed instruction effects | Model execution; no claim of a complete coverage suite | Same |
 | Halt/WFI and timing | C2 halt/cycle fields | No cycle or halt equality; WFI may resume | No timing proof |
@@ -565,3 +567,121 @@ external-input synchronization.
 FP state: [#10](https://github.com/riscPrint/risc-v-workstation/issues/10). Unread CSR effects: [#87](https://github.com/riscPrint/risc-v-workstation/issues/87). Faulting accesses: [#93](https://github.com/riscPrint/risc-v-workstation/issues/93). Hypervisor state: [#114](https://github.com/riscPrint/risc-v-workstation/issues/114). Debug state: [#136](https://github.com/riscPrint/risc-v-workstation/issues/136). Multi-hart: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90). Vector tests: [#75](https://github.com/riscPrint/risc-v-workstation/issues/75). WFI: [#149](https://github.com/riscPrint/risc-v-workstation/issues/149).
 
 Retained limit: The comparison matrix bounds every match. Synchronization is not a timing or device proof. Little-endian scalar C2 evidence, refused unknown input structures and incomplete runtime dependency capture remain explicit restrictions.
+## Reference interrupt devices
+
+`rvw.cosim.devices.Plic` is a deterministic level-triggered PLIC reference.
+`PlicMap` takes absolute register addresses and dimensions from the caller.
+It supports priority, threshold, enable words, pending bits and claim/complete.
+Source zero is reserved. Equal priorities select the lowest source ID.
+Claim ignores the threshold. Completion reopens the level gateway.
+Calls form one ordered sequence. Apply concurrent inputs in a declared order.
+Unmapped or unsupported access widths raise `ValueError`.
+
+Run the directed suite and native Spike oracle:
+
+```sh
+RVW_DEVICE_SPIKE_PREFIX=/path/to/spike nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices -q
+```
+
+The prefix must have matching Spike headers and libraries. The tests compile
+`spike_devices.cc` and use Spike's `plic_t` directly. The oracle uses two harts
+with M/S contexts. Native oracle tests skip when the prefix is absent.
+The Python model has global pending state and level gateways. Spike's device
+has its own context bookkeeping. Oracle tests cover only the common sequence
+in the test. They do not establish equivalence for all context races.
+These models do not connect an RTL bus or establish DUT device coverage.
+The current BOOM and VexRiscv adapters do not implement a PLIC.
+
+### Decisions and limits
+
+Keep addresses and context dimensions in project data or caller data.
+Keep reference-device tests separate from instruction co-simulation.
+Do not use a DUT MMIO read as the expected device state.
+Edge gateways, bus errors, asynchronous CDC and arbitrary PLIC register WARL
+behavior are outside this model. `max_priority` must be a contiguous low-bit mask.
+
+### Timer and software interrupts
+
+`Timer(TimerMap.from_dict(data['timer']))` loads a declared map from JSON.
+See `examples/boom/devices.json` and `examples/vexriscv/devices.json`.
+The examples declare reference maps. They do not install devices in the adapters.
+BOOM's timer addresses match its current memory map. Its `intGen` at
+`0x0c000000` is not a PLIC. Do not replace it with the reference PLIC implicitly.
+VexRiscv has only scheduled interrupt inputs and no MMIO timer device.
+
+`Timer` supports CLINT and relocated ACLINT MTIMER/MSWI registers, one compare
+and software register per declared hart. Call `tick(n)` to advance time.
+Use aligned 32-bit split accesses or aligned 64-bit timer accesses.
+Software registers retain bit zero only. IRQ bit 3 is MSIP; bit 7 is MTIP.
+MTIP asserts at unsigned `mtime >= mtimecmp`. Time wraps at 64 bits.
+Reset values come from project data. They are not architectural reset guarantees.
+The native oracle compares CLINT accesses, split writes and two-hart IRQ state
+with Spike's `clint_t`. Relocated ACLINT accesses have model unit tests only.
+ACLINT SSWI, bus timing and a native ACLINT oracle remain unsupported.
+
+### Reset state observer
+
+`rvw.cosim.reset.check_reset` checks samples against `ResetContract`.
+Supply expected state values and masks from the project's reset contract.
+Supply the valid outputs that must stay low during reset.
+Capture an asserted sample and a released sample from the same DUT instance.
+Select the post-release state-check boundary before the run.
+Check each cold, warm, local or repeated pulse separately. Warm and local
+retention values must come from the project. The observer does not choose them.
+
+The result is `consistent`, `mismatch` or `inconclusive`.
+Missing state, output values, pulse evidence or contract gives `inconclusive`.
+A measured conflicting value gives `mismatch`.
+The observer does not assert reset or prove that an adapter sampled a DUT.
+`test_reset.py` checks observer fixtures and repeated reference-device reset
+while IRQs and a PLIC claim are active. These are not RTL reset results.
+Real core reset during bus, trap and debug activity remains unsupported here.
+Do not use simulator initialization as a reset sample.
+
+### Version 2 FP state
+
+Use `rvw.rvfi/2` with the required fields defined in C2. Spike shim ABI 4 exports
+raw FP writes, including f0, and post-step `fflags` and `fcsr`. Comparison uses
+all 64 FP data bits. No FP data or flag field permits synchronization. Legacy
+BOOM traces remain version 1 and cannot establish FP register coverage. The
+reference generator still emits version 1. Adapters must capture DUT state;
+they must never fill these fields from Spike.
+
+### Unread CSR state
+
+Version 2 adapters can declare `csr_snapshot` addresses and emit `csr_state`
+after each instruction. Spike reads its own CSRs through its public peek API.
+The comparison uses full values and does not use `csr_masks`. Include mstatus
+or sstatus to check FS dirty-state transitions. The adapter must resolve the
+state after each retirement, including each slot of a multi-retire cycle.
+Only the declared CSR set is covered. Sail has no snapshot API and refuses
+these records. Timing-dependent CSRs need an agreed observation point.
+
+### Fault-access records
+
+C2 version 2 separates attempted data accesses from completed `mem_*` effects.
+`fault_access` uses access-relative byte lanes even with `aligned_mem=true`.
+Spike checks zero-completion uncompressed scalar loads/stores (width codes 0..3)
+using reference operands. Partly completed faults, compressed attempts, unsigned
+load width codes and AMOs are refused. Sail refuses this extension. Null means
+unobserved data. Neither checker fills missing DUT data from the reference.
+
+### Live retirement integration API
+
+`rvw.cosim.online.check_online(stream, model, platform, stop=stop_sim,
+reproduction=identity)` checks a flushed text JSONL stream during simulation.
+`identity` must come from the same captured ELF, platform and reference inputs
+used to start the model, using `Inputs.metadata()`. The caller owns the stream,
+model lifetime, wall timeout and simulator process group. `stop_sim` must stop
+and reap that group, for example with `rvw.common.proc.kill_group`. The checker
+calls it at the first checked mismatch or parse/reference error. This API uses
+the offline comparison and synchronization report without a second policy.
+
+Cycle grouping needs one later-cycle line before checking the preceding cycle.
+A producer must flush each line. It must provide a wall timeout for a stalled
+producer. The result reports the digest and line count of the consumed prefix,
+including lookahead. It never calls that digest a complete input trace hash.
+EOF before an end event is inconclusive. Save the complete stream for offline
+replay. The CLI and the BOOM adapter do not yet launch this API. This increment
+provides the generic integration point, not BOOM online runtime evidence.

@@ -1,0 +1,106 @@
+{
+  "id": "perf",
+  "title": "Performance",
+  "description": "Show saved rvw perf results.",
+  "activationEvents": [
+    "onCommand:perf.open",
+    "onView:perf.results"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "perf.open",
+        "title": "Performance: Open Report"
+      },
+      {
+        "command": "perf.refresh",
+        "title": "Performance: Refresh Report"
+      },
+      {
+        "command": "perf.raw",
+        "title": "Performance: Open Raw Report"
+      },
+      {
+        "command": "perf.source",
+        "title": "Performance: Jump to Source via Design Database"
+      },
+      {
+        "command": "perf.wave",
+        "title": "Performance: Open Waveform in Surfer"
+      },
+      {
+        "command": "perf.trace",
+        "title": "Performance: Open SpinalTrace"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "perf.results",
+          "name": "RVW Performance"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "perf.open",
+          "when": "view == perf.results",
+          "group": "navigation"
+        },
+        {
+          "command": "perf.refresh",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.raw",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.source",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.wave",
+          "when": "view == perf.results",
+          "group": "results"
+        },
+        {
+          "command": "perf.trace",
+          "when": "view == perf.results",
+          "group": "results"
+        }
+      ]
+    },
+    "configuration": {
+      "properties": {
+        "perf.rvwExecutable": {
+          "type": "string",
+          "default": "rvw",
+          "description": "Path to rvw.",
+          "restricted": true
+        },
+        "perf.surferExecutable": {
+          "type": "string",
+          "default": "surfer",
+          "description": "Path to Surfer.",
+          "restricted": true
+        },
+        "perf.spinaltraceExecutable": {
+          "type": "string",
+          "default": "spinaltrace",
+          "description": "Path to the SpinalTrace GUI.",
+          "restricted": true
+        }
+      }
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}

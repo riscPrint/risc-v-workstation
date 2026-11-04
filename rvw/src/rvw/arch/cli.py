@@ -5,6 +5,18 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == 'fit':
+        from .fitting import fit
+        return fit(**kw)
+    if action == "sweep":
+        from .dse import sweep
+        return sweep(**kw)
+    if action == "memory-report":
+        from .memory import memory_report
+        return memory_report(**kw)
+    if action == 'linux':
+        from .linux import execute
+        return execute(action=kw.pop('linux_action'), **kw)
     return getattr(core, action)(**kw)
 
 
@@ -16,7 +28,7 @@ def _run(args):
         result = execute_json(args.arch_action, **kw)
         text = json.dumps(result, indent=2, allow_nan=False)
         print(text if args.json or args.arch_action != 'calibrate' else core.summary(result))
-        return 0
+        return 2 if result.get("status") == "unsupported" else (3 if result.get("status") == "inconclusive" else 0)
     except (ValueError, OSError, KeyError, TypeError) as exc:
         if args.json:
             print(json.dumps({'error': str(exc)}, allow_nan=False))
@@ -28,11 +40,27 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
-    for action in ('build', 'run', 'calibrate', 'compare'):
+    p = sub.add_parser('memory-report')
+    p.set_defaults(func=_run)
+    p.add_argument('observations')
+    p.add_argument('--json', action='store_true')
+    p = sub.add_parser('sweep')
+    p.set_defaults(func=_run)
+    p.add_argument('spec')
+    p.add_argument('--out', required=True)
+    p.add_argument('--bench')
+    p.add_argument('--json', action='store_true')
+    for action in ('build', 'run', 'calibrate', 'compare', 'fit', 'inspect'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)
         p.add_argument('--json', action='store_true')
-        if action == 'compare':
+        if action == 'inspect':
+            p.add_argument('--elf', required=True)
+            p.add_argument('--isa', required=True)
+            p.add_argument('--kind', required=True)
+        elif action == 'fit':
+            p.add_argument('plan')
+        elif action == 'compare':
             p.add_argument('base')
             p.add_argument('candidate')
         else:
@@ -40,3 +68,15 @@ def register(subparsers):
             if action != 'build':
                 p.add_argument('--out', required=True, help='new output directory')
                 p.add_argument('--timeout', type=float, default=3600 if action == 'calibrate' else 600)
+
+    p = sub.add_parser('linux', help='native Linux reference build and QEMU boot')
+    p.set_defaults(func=_run)
+    p.add_argument('linux_action', choices=('firmware', 'build', 'prepare', 'boot'))
+    p.add_argument('--out', required=True, help='new output directory')
+    p.add_argument('--platform', help='project Linux platform JSON')
+    p.add_argument('--images', help='Buildroot images directory')
+    p.add_argument('--timeout', type=float, default=600)
+    p.add_argument('--jobs', type=int, default=2)
+    p.add_argument('--llvm', action='store_true', help='build OpenSBI with native LLVM tools')
+    p.add_argument('--cross-compile', default='riscv64-unknown-elf-')
+    p.add_argument('--json', action='store_true')

@@ -276,7 +276,9 @@ def test_compare_perf():
     assert v.reasons == ["qsort cycles +3.0% > 1.0%", "towers ipc -10.0% > 1.0%"]
     p = next(p for p in v.perf if p["id"] == "qsort")
     assert p == {"suite": "bench", "config": "small", "id": "qsort", "metric": "cycles", "base": 1000,
-                 "candidate": 1030, "change": 0.03, "regression": True}
+                 "candidate": 1030, "change": 0.03, "regression": True,
+                 "samples": {"base": 1, "candidate": 1, "paired": 1},
+                 "comparison_rule": "relative_mean", "confidence": "not_estimated"}
     assert compare(base, cand, perf_tolerance=0.2).verdict == "accept"
     # A failing test is not perf-compared.
     cand2 = [_res([T("qsort", "fail", "fail:1", cycles=5000), T("towers", cycles=2000, ipc=0.5)], suite="bench", perf=["cycles"])]

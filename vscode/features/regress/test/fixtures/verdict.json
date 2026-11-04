@@ -1,0 +1,1 @@
+{"schema": "rvw.verdict/2", "verdict": "inconclusive", "tests": "pass", "not_accepted_reason": "uncommitted", "still_failing": [{"id": "unchanged"}], "known_failures": [{"id": "known"}], "reasons": ["candidate source is dirty"], "scope": {"suite": "fixture"}}

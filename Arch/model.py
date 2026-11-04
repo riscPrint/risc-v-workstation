@@ -48,7 +48,7 @@ def _scalars(value, where):
 
 
 def validate_description(d):
-    _keys(d, ("schema", "config", "isa", "kind", "cpu", "queues", "predictor",
+    _keys({k: v for k, v in d.items() if k != "soc"}, ("schema", "config", "isa", "kind", "cpu", "queues", "predictor",
               "icache", "dcache", "itlb_entries", "dtlb_entries", "line_bytes",
               "bus_bytes", "memory_latency"), "description")
     if d["schema"] != "rvw.arch-core/1" or d["kind"] != "o3":
@@ -117,7 +117,76 @@ def validate_description(d):
         _integer(value, f"btb.{key}")
     if p["btb"]["numEntries"] % p["btb"]["associativity"]:
         raise ValueError("btb.numEntries must be divisible by associativity")
+    if "soc" in d:
+        validate_soc(d["soc"])
     return d
+
+
+def validate_soc(soc):
+    """A serial classic-cache hierarchy with one memory controller."""
+    _keys(soc, ("levels", "interconnect", "memory"), "soc")
+    if not isinstance(soc["levels"], list) or len(soc["levels"]) > 2:
+        raise ValueError("soc.levels must be an array with at most L2 and LLC")
+    for cache in soc["levels"]:
+        _scalars(cache, "soc.levels cache")
+    bus = soc["interconnect"]
+    _keys(bus, ("width", "frontend_latency", "forward_latency", "response_latency",
+                "snoop_response_latency"), "soc.interconnect")
+    for key, value in bus.items():
+        _integer(value, "interconnect." + key, 1 if key == "width" else 0)
+    mem = soc["memory"]
+    if not isinstance(mem, dict):
+        raise ValueError("soc.memory must be an object")
+    if mem.get("kind") == "simple":
+        _keys(mem, ("kind", "latency", "bandwidth"), "soc.memory")
+        for key in ("latency", "bandwidth"):
+            if not isinstance(mem[key], str) or not mem[key].strip():
+                raise ValueError("simple memory needs latency and bandwidth strings")
+    elif mem.get("kind") == "dram":
+        _keys(mem, ("kind", "model", "controller", "interface"), "soc.memory")
+        if mem["model"] not in ("DDR3_1600_8x8", "DDR4_2400_8x8"):
+            raise ValueError("unsupported DRAM model")
+        for key in ("controller", "interface"):
+            if not isinstance(mem[key], dict):
+                raise ValueError("DRAM parameters must be objects")
+            if mem[key]:
+                _scalars(mem[key], "soc.memory." + key)
+    else:
+        raise ValueError("soc.memory.kind must be simple or dram")
+
+
+def connect_memory(system, cpu, d, g, scalar_kwargs):
+    """Connect split L1 caches through optional L2/LLC to RAM."""
+    soc = d.get("soc")
+    bus = (soc["interconnect"] if soc else dict(width=d["bus_bytes"], frontend_latency=0,
+           forward_latency=0, response_latency=0, snoop_response_latency=0))
+    system.membus = g.SystemXBar(**bus)
+    upstream = system.membus
+    # Build from the memory side. Store every object below system for gem5 ownership.
+    for index, params in reversed(list(enumerate(soc["levels"] if soc else []))):
+        cache = g.Cache(**scalar_kwargs(g.Cache, params))
+        xbar = g.L2XBar(**bus)
+        setattr(system, f"level{index + 2}", cache)
+        setattr(system, f"level{index + 2}bus", xbar)
+        cache.mem_side = upstream.cpu_side_ports
+        cache.cpu_side = xbar.mem_side_ports
+        upstream = xbar
+    cpu.createInterruptController()
+    cpu.connectAllPorts(upstream.cpu_side_ports, system.membus.cpu_side_ports,
+                        system.membus.mem_side_ports)
+    system.system_port = system.membus.cpu_side_ports
+    mem = soc["memory"] if soc else dict(kind="simple", latency=f'{d["memory_latency"]}ns',
+                                       bandwidth=f'{d["bus_bytes"]}GiB/s')
+    if mem["kind"] == "simple":
+        system.mem = g.SimpleMemory(range=system.mem_ranges[0], latency=mem["latency"],
+                                    latency_var="0ns", bandwidth=mem["bandwidth"])
+    else:
+        cls = getattr(g, mem["model"])
+        interface = cls(**scalar_kwargs(cls, mem["interface"]))
+        interface.range = system.mem_ranges[0]
+        system.mem = g.MemCtrl(**scalar_kwargs(g.MemCtrl, mem["controller"]))
+        system.mem.dram = interface
+    system.mem.port = system.membus.mem_side_ports
 
 
 def _unique_object(pairs):
@@ -134,8 +203,8 @@ def load_description(path):
         return validate_description(json.load(f, object_pairs_hook=_unique_object))
 
 
-def elf_symbols(path):
-    """Read and validate a little-endian RV64 executable and its required symbols."""
+def elf_symbols(path, xlen=64):
+    """Read an ELF32/ELF64 image. Simulation still requires RV64."""
     elf = Path(path).read_bytes()
 
     def unpack(fmt, offset):
@@ -148,18 +217,24 @@ def elf_symbols(path):
             raise ValueError("ELF section or segment is outside the file")
         return elf[offset:offset + size]
 
-    if len(elf) < 64 or elf[:7] != b"\x7fELF\x02\x01\x01":
-        raise ValueError("expected a little-endian ELF64 executable")
+    if xlen not in (32, 64):
+        raise ValueError("ELF xlen must be 32 or 64")
+    elf_class = 1 if xlen == 32 else 2
+    if len(elf) < (52 if xlen == 32 else 64) or elf[:7] != b"\x7fELF" + bytes((elf_class, 1, 1)):
+        raise ValueError(f"expected a little-endian ELF{xlen} executable")
     kind, machine = unpack("<HH", 16)
     if kind != 2 or machine != 243:
         raise ValueError("expected a RISC-V executable")
-    entry, phoff, shoff = unpack("<QQQ", 24)
-    phentsize, phnum, shentsize, shnum = unpack("<HHHH", 54)
-    if phentsize != 56 or not phnum or shentsize != 64 or not shnum:
+    entry, phoff, shoff = unpack("<III" if xlen == 32 else "<QQQ", 24)
+    phentsize, phnum, shentsize, shnum = unpack("<HHHH", 42 if xlen == 32 else 54)
+    if phentsize != (32 if xlen == 32 else 56) or not phnum or shentsize != (40 if xlen == 32 else 64) or not shnum:
         raise ValueError("ELF needs program headers and a symbol table")
     loaded = []
     for i in range(phnum):
-        typ, flags, off, va, pa, filesz, memsz, _ = unpack("<IIQQQQQQ", phoff + i * phentsize)
+        if xlen == 32:
+            typ, off, va, pa, filesz, memsz, flags, _ = unpack("<IIIIIIII", phoff + i * phentsize)
+        else:
+            typ, flags, off, va, pa, filesz, memsz, _ = unpack("<IIQQQQQQ", phoff + i * phentsize)
         if typ == 1:
             span(off, filesz)
             if filesz > memsz or va != pa or not RAM_BASE <= pa < pa + memsz <= RAM_BASE + RAM_SIZE:
@@ -169,17 +244,20 @@ def elf_symbols(path):
     # M-mode uses the physical mapping; it does not enforce these flags.
     if not any(lo <= entry < hi for lo, hi in loaded):
         raise ValueError("ELF entry must be in a load segment")
-    sections = [unpack("<IIQQQQIIQQ", shoff + i * shentsize) for i in range(shnum)]
+    sections = [unpack("<IIIIIIIIII" if xlen == 32 else "<IIQQQQIIQQ", shoff + i * shentsize) for i in range(shnum)]
     syms = {}
     for _, typ, _, _, off, size, link, _, _, entsize in sections:
         if typ != 2:  # SHT_SYMTAB
             continue
         span(off, size)
-        if entsize != 24 or size % entsize or link >= len(sections) or sections[link][1] != 3:
+        if entsize != (16 if xlen == 32 else 24) or size % entsize or link >= len(sections) or sections[link][1] != 3:
             raise ValueError("invalid ELF symbol table")
         strings = span(sections[link][4], sections[link][5])
         for pos in range(off, off + size, entsize):
-            name, _, _, index, value, sz = unpack("<IBBHQQ", pos)
+            if xlen == 32:
+                name, value, sz, _, _, index = unpack("<IIIBBH", pos)
+            else:
+                name, _, _, index, value, sz = unpack("<IBBHQQ", pos)
             if not index:
                 continue  # Undefined symbols are not evidence.
             if name >= len(strings) or (end := strings.find(b"\0", name)) < 0:
@@ -240,16 +318,7 @@ def make_system(d, binary, syms):
     cpu.addPrivateSplitL1Caches(
         g.Cache(**scalar_kwargs(g.Cache, d["icache"])),
         g.Cache(**scalar_kwargs(g.Cache, d["dcache"])))
-    system.membus = g.SystemXBar(width=d["bus_bytes"], frontend_latency=0,
-                                forward_latency=0, response_latency=0, snoop_response_latency=0)
-    cpu.createInterruptController()
-    cpu.connectAllPorts(system.membus.cpu_side_ports, system.membus.cpu_side_ports,
-                        system.membus.mem_side_ports)
-    system.system_port = system.membus.cpu_side_ports
-    system.mem = g.SimpleMemory(range=system.mem_ranges[0],
-                               latency=f'{d["memory_latency"]}ns', latency_var="0ns",
-                               bandwidth=f'{d["bus_bytes"]}GiB/s')
-    system.mem.port = system.membus.mem_side_ports
+    connect_memory(system, cpu, d, g, scalar_kwargs)
     system.workload = g.RiscvBareMetal(bootloader=str(binary))
     system.membus.badaddr_responder = g.BadAddr()
     system.membus.default = system.membus.badaddr_responder.pio

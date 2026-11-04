@@ -19,7 +19,8 @@ object Kind {
   val Progress            = "progress.watchdog"
   val TileLinkBurstStable = "tilelink.burst_stable"
   val all = Seq(StreamValidHold, StreamPayloadStable, MemIndex, VecIndex, EnumLegal, FsmStateLegal, Progress,
-    TileLinkBurstStable, "tilelink.response_match", "tilelink.source_busy", "tilelink.request_legal",
+    TileLinkBurstStable, "bits.index", "flow.payload_legal", "csr.state", "csr.access", "hpm.count",
+    "register.state", "connectivity.value", "tilelink.response_match", "tilelink.source_busy", "tilelink.request_legal",
     "tilelink.response_legal", "tilelink.sink_busy", "tilelink.sink_match", "tilelink.release_busy",
     "tilelink.release_match", "axi4.address_legal", "axi4.read_match", "axi4.read_capacity",
     "axi4.write_match", "axi4.write_beats", "axi4.write_capacity")
@@ -185,6 +186,7 @@ class CheckRecord(val id: String, val kind: String, val component: Component, va
   var status: String = "inserted"
   var reason: String = null
   var fail: Bool = null
+  var clockDomain: ClockDomain = null
   var fired: Bool = null
   var count: UInt = null
   var firstCycle: UInt = null

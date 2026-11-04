@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "rvw/src"))
 from rvw.common.proc import run_group, _defer_cancellation
 
 
-NAMESPACE = "native-inputs-v26"
+NAMESPACE = "native-inputs-v27"
 # The bundled build tools do not read shell bookkeeping or the inherited lock descriptor.
 # Custom wrappers and shell expansions are excluded from native reuse below.
 BOOKKEEPING = {"_", "PWD", "OLDPWD", "SHLVL", "RVW_LOCKS_HELD", "RVW_PYTHON",
@@ -176,6 +176,20 @@ def collect():
             tokens = ["<invalid>"]
         if variable == "SPINAL_VERILATOR_FLAGS":
             tokens = [t for t in tokens if t not in ("-CFLAGS", "-LDFLAGS")]
+            # These options only change native code generation. They cannot name
+            # external files. Keep their exact spelling and values in the identity.
+            numeric = {"--threads", "--output-split", "--output-split-cfuncs"}
+            remaining = []
+            i = 0
+            while i < len(tokens):
+                if (tokens[i] in numeric and i + 1 < len(tokens)
+                        and re.fullmatch(r"[0-9]{1,9}", tokens[i + 1])
+                        and (tokens[i] != "--threads" or int(tokens[i + 1]) > 0)):
+                    i += 2
+                else:
+                    remaining.append(tokens[i])
+                    i += 1
+            tokens = remaining
         if any(not re.fullmatch(simple, t) for t in tokens):
             reasons.append(f"cannot enumerate {variable} external inputs")
     for variable in OPAQUE_VARIABLES:

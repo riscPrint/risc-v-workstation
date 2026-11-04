@@ -9,13 +9,36 @@ import spinal.sim.SimFailure
 
 /** Spinal simulation settings shared by adapters. */
 object RiscvSimConfig {
-  /** Verilator coverage kinds for coverage models (RISCVSIM_COVERAGE, comma-separated). */
-  def coverageTypes: Seq[String] =
-    sys.env.getOrElse("RISCVSIM_COVERAGE", "line,user").split(",").map(_.trim).filter(_.nonEmpty).toSeq
+  /** Use the native executable's version, since launcher --version can be stale. */
+  private lazy val verilatorVersion: String = {
+    import scala.sys.process._
+    scala.util.Try(Process(Seq("verilator", "-V")).!!).getOrElse("")
+  }
+
+  private[riscvsim] def fsmSupported(version: String): Boolean = {
+    val pattern = "Verilator ([0-9]+)\\.([0-9]+)".r
+    pattern.findFirstMatchIn(version).exists { m =>
+      m.group(1).toInt > 5 || (m.group(1).toInt == 5 && m.group(2).toInt >= 52)
+    }
+  }
+
+  /** FSM detection was checked on 5.052; 5.049 crashes on an empty reset branch. */
+  def coverageTypes: Seq[String] = {
+    val supported = fsmSupported(verilatorVersion)
+    val kinds = sys.env.getOrElse("RISCVSIM_COVERAGE", if (supported) "line,user,fsm" else "line,user")
+      .split(",").map(_.trim).filter(_.nonEmpty).toSeq
+    require(kinds.forall(Set("line", "user", "toggle", "expr", "fsm")), "unsupported coverage kind")
+    require(!kinds.contains("fsm") || supported, "FSM coverage requires Verilator >= 5.052")
+    kinds
+  }
+  private val elaborations = new java.util.concurrent.ConcurrentHashMap[ModelKey, java.lang.Double]()
+  def elaborationSeconds(key: ModelKey): Option[Double] = Option(elaborations.get(key)).map(_.doubleValue)
+
 
   /** Use Spinal's simulation phases for both identity and native compilation. */
   def elaborate[T <: Component](key: ModelKey, work: File, config: SpinalConfig,
       sourceRoots: Seq[File] = Nil)(rtl: => T): SpinalReport[T] = {
+    val started = System.nanoTime()
     val cfg = config.copy(targetDirectory = new File(work, key.name + "-rtl").getAbsolutePath,
       headerWithRepoHash = false, headerWithDate = false).includeSimulation
     cfg.noAssertAtTimeZero = true
@@ -51,6 +74,7 @@ object RiscvSimConfig {
       "RTL identity does not support external include or memory data files")
     java.nio.file.Files.writeString(file.toPath, text)
     report.blackboxesSourcesPaths.clear()
+    elaborations.put(key, (System.nanoTime() - started) / 1e9)
     report
   }
 
@@ -80,8 +104,7 @@ object RiscvSimConfig {
     }
     if (key.wave) cfg.withVcdWave
     if (key.coverage) {
-      // Not Spinal's withCoverage (Verilator's --coverage): it includes FSM coverage, whose
-      // detection crashes Verilator 5.049 on BOOM. -DCOVERAGE makes Spinal's wrapper write coverage.dat.
+      // Select explicit kinds through the version gate. -DCOVERAGE enables the wrapper writer.
       cfg.addSimulatorFlag("-CFLAGS -DCOVERAGE")
       for (t <- coverageTypes) cfg.addSimulatorFlag(s"--coverage-$t")
     }

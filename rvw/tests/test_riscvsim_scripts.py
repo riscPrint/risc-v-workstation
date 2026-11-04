@@ -64,7 +64,7 @@ def launcher(tmp_path):
         shutil.copy2(SCRIPT.parents[1] / rel, sim / rel)
     # Exercise the real lock protocol in a private lock directory, without a BOOM build.
     repo = SCRIPT.parents[2]
-    for rel in ("scripts/with-lock.sh", "rvw/src/rvw/common/lock.py", "rvw/src/rvw/common/proc.py", "rvw/src/rvw/common/capture.py", "rvw/src/rvw/regress/source.py"):
+    for rel in ("scripts/with-lock.sh", "rvw/src/rvw/common/lock.py", "rvw/src/rvw/common/proc.py", "rvw/src/rvw/common/budget.py", "rvw/src/rvw/common/capture.py", "rvw/src/rvw/regress/source.py"):
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(repo / rel, tmp_path / rel)
     bin_ = tmp_path / "bin"

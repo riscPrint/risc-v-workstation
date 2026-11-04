@@ -266,8 +266,195 @@ See [test sources](../docs/TEST_SOURCES.md) for project-owned ACT4 and VM
 suites. These use the existing ELF run contract. ACT4 expected signatures
 must come from Sail or the suite, never from a DUT run.
 
+## Multi-hart trace extension
+
+`MultiHartTrace(file, header, hartIds)` is an adapter API. It writes C2/2.
+Call `reset`, `retire`, `memory` and `complete` from accepted simulation events.
+Call `outcome` for C1 completion aggregation. Close the writer before publishing
+results. Each hart has its own epoch and retirement order. Capture sequence is
+not a global architectural order. See C1/C2 in PLATFORM_CONTRACTS.md.
+The CLI and BOOM adapter remain single-hart. Multi-hart Spike/Sail comparison
+and a native two-core adapter are not supplied by this API.
+
+Run its tests with the `sbt` lock:
+`sbt -batch 'testOnly riscvsim.MultiHartSpec'` from `RiscvSim/`.
+
+`TwoHartNativeSpec` runs two small RV32I-subset RTL fixtures through Verilator.
+They share two words with round-robin backpressure. The producer writes 37.
+The consumer polls it and writes 38. Each hart emits its own retirement order.
+These test cores implement only x0/x1 and the fixture's ADDI/LW/SW/BEQ encodings.
+They have no caches and are not full RISC-V cores. The test checks a known shared
+memory result; it does not claim a Spike/Sail match or coherence RTL coverage.
+Run it with `sbt -batch 'testOnly riscvsim.TwoHartNativeSpec'` under the `sbt` lock.
+
+## Cache content scoreboard
+
+`MemoryImage` holds independent expected bytes from test stimulus.
+`CacheScoreboard` checks accepted fills, hits, stores and writebacks against it.
+Give it line size, set count and associativity from project data.
+Call `MemoryImage.write` with expected program writes before checking observed
+cache stores. Never copy DUT read values into the oracle. Split cross-line
+transactions in the adapter. Replacement requires explicit eviction; the generic
+checker does not assume LRU. A denied fill cannot install a resident line.
+Instruction invalidation is explicit. `CacheScoreboardSpec` tests self-modifying
+code at the model level, separately from coherence.
+
+Run: `sbt -batch 'testOnly riscvsim.CacheScoreboardSpec'` with the `sbt` lock.
+These tests check the scoreboard. They do not establish RTL cache coverage.
+
+## Coherence permissions
+
+`CoherenceMonitor(lineBytes, clients)` checks normalized TileLink-C permissions:
+N (None), B (Branch) and T (Trunk). Project adapters call `grant` only when a
+Grant is accepted and `shrink` when a ProbeAck or Release completes.
+Stalled requests must not change state. A branch grant requires intervention
+of another trunk. A trunk grant requires all other copies to be invalidated.
+Dirty shrink requires data. Use the cache scoreboard to check those bytes.
+The monitor does not parse TileLink beats, track sinks or check GrantAck timing.
+These require project channel adapters. It checks modeled permissions, not a
+full implementation of TileLink-C.
+
+Run: `sbt -batch 'testOnly riscvsim.CoherenceMonitorSpec'` with the `sbt` lock.
+
+## Bounded forward progress
+
+`ProgressMonitor(boundCycles, capacity, fairness)` tracks logical requests from
+presentation through completion. Supply the project's arbitration and response
+fairness assumptions as a nonempty string. Call `check` every sampled cycle.
+Keep the same request ID on retry. Retry and unrelated completions cannot renew
+its deadline. Check `finish` at campaign end; pending requests are not success.
+The bound includes backpressure. A fairness violation can trigger the watchdog;
+the monitor cannot distinguish that from a DUT progress failure without channel
+evidence. Capacity is the declared outstanding resource limit.
+This is a bounded test, not an unbounded liveness proof.
+
+Run: `sbt -batch 'testOnly riscvsim.ProgressMonitorSpec'` with the `sbt` lock.
+
+## DMA memory agent
+
+`DmaAgent(backing, expected, snoop, capture)` operates on separate memory images.
+The backing image is device-visible storage. Expected bytes come from test
+stimulus. CPU writeback updates backing only after an accepted memory transfer.
+`read` compares backing bytes with expected bytes. `write` applies the device
+stimulus and byte mask to both images. The capture callback receives each accepted
+transaction. Add its sampled cycle with `MultiHartTrace.memory` in the adapter.
+Coherent requests require `DmaSnoop`. Its hooks must complete writeback before
+read and invalidation before write. The agent does not invent those responses.
+For noncoherent requests, the test must clean before device read and invalidate
+a CPU copy after device write. A stale CPU observation fails the cache checker.
+Concurrent CPU atomics need a project arbiter and captured serialization point;
+the agent has no implicit thread synchronization or atomic reference backend.
+
+Run: `sbt -batch 'testOnly riscvsim.DmaAgentSpec'` with the `sbt` lock.
+
 ## Limit ownership
 
 Persistent simulation: [#14](https://github.com/riscPrint/risc-v-workstation/issues/14). Build/run performance: [#74](https://github.com/riscPrint/risc-v-workstation/issues/74). Dependency-model parity: [#68](https://github.com/riscPrint/risc-v-workstation/issues/68). Backend capabilities: [#116](https://github.com/riscPrint/risc-v-workstation/issues/116). Interrupt regression: [#47](https://github.com/riscPrint/risc-v-workstation/issues/47).
 
 Retained limit: Unattributed concurrent failures and direct JVM identity remain inconclusive. Small-only BOOM qualification does not qualify other presets. Abandoned threads live until JVM exit. Unsupported external dependencies still refuse identity.
+
+## FSM coverage version gate
+
+Coverage models select explicit Verilator coverage kinds. The default is
+`line,user,fsm` when the native `verilator -V` reports version 5.052 or later.
+Older or unknown versions default to `line,user`. An explicit `fsm` request
+on those versions fails before native compilation. Set `RISCVSIM_COVERAGE`
+to select kinds from `line,user,toggle,expr,fsm`. The C1 model and replay record
+the resolved list. Runs with different lists have different point universes.
+Use the native `-V` version: an installed Perl launcher can report a stale
+version with `--version`.
+
+### WFI wake test
+
+`tests/programs/wfi-timer.S` enables MTIP and executes WFI in a loop.
+It accepts early WFI return. It requires no minimum sleep time.
+The test drives MTIP after cycle 1000 with the schedule from #47.
+It checks the independent trap window, entry CSR state and program completion.
+It also compares the instruction trace with Spike.
+
+```sh
+RVW_WFI_RUNTIME=1 RVW_HOME="$PWD" VEXRISCV=/path/to/VexRiscv \
+  nice -n 10 rvw/.venv/bin/python -m pytest \
+  rvw/tests/devices/test_wfi_runtime.py -q
+```
+
+Each core runs at most 20000 cycles. The wall limit is 120 seconds after
+simulation starts. The outer process limit includes lock wait and compilation.
+The adapters hold their normal core and sbt locks.
+This test does not check physical clock stop, privilege traps, debug wake,
+or local reset. Those need adapter observations and project contracts.
+
+## Atomic and ordering programs
+
+See [the reusable ordering suites](tests/ordering/README.md). They build RV32/RV64
+ELFs, validate assertions on Spike, and produce C1 random-timing manifests.
+Reference and DUT results remain separate from ordering evidence.
+
+## Persistent request server
+
+`run.sh serve` reads one run-options JSON object per line from stdin. It writes
+one compact `rvw.sim-server/1` response per line to stdout. The response has
+`result` (a C1 result) or `error` (invalid request). CLI run options are defaults.
+Send `{"op":"shutdown"}` or close stdin to stop. Send SIGTERM or SIGINT to the
+launcher to cancel the current run and stop the whole process group.
+
+Adapters must opt in with `CoreAdapter.freshInstancePerRun = true`. They must
+construct a fresh native instance and fresh harness state for every run. The
+server refuses adapters without this declaration. BOOM and VexRiscv opt in.
+Other adapters report `reset: "adapter-defined"` in ordinary run metadata.
+
+The server handles requests in order. It retains compiled models. Each request
+uses a new native DUT instance and new adapter memory, random generator, device
+state and trace writer. The seed is a run input. C1 `details.simulation_session`
+records the process UUID, model run number, `reset: "new-native-instance"` and
+native cache-hit flag. Existing RTL and native hashes bind model identity.
+`details.execution_s` excludes model compilation. Source capture occurs at
+server start. Restart after source edits.
+C1 `execution_mode` is `server` for each server request and `process` for
+ordinary runs. Error and abandoned results also record this field.
+
+A failed run can be followed by another request. A watchdog-abandoned worker
+poisons the server: it sends the timeout result and exits 2. It does not accept
+another request. JVM exit stops abandoned simulation threads. The launcher owns
+process-group teardown. There is no per-request cancellation that keeps the
+server alive. The server holds the adapter's core lock for its full life.
+
+## Timing measurements
+
+`details.model_compile_s` measures the first model build in this JVM, including
+elaboration and native setup. `details.model_timing.elaboration_s` measures
+`RiscvSimConfig.elaborate`. `native_and_setup_s` is the remaining build time.
+It includes native compilation or cache lookup, workspace setup and loading.
+It is not a pure C++ compiler measurement. `details.execution_s` measures the
+adapter call. The launcher's sbt Scala compilation occurs before the JVM and
+must be timed separately. Lock waits are not compiler time.
+
+Use `SPINAL_VERILATOR_FLAGS` to test Verilator options, for example
+`--threads 2`, `-O3` or `--output-split 10000`. Existing native input capture
+includes these flags. A flag change gives a separate native cache identity.
+Keep the seed, ELF and memory latency fixed. Compare C2 bytes and terminal C1
+fields with a baseline. A faster run alone does not establish correctness.
+Compiler wrappers such as ccache can disable native capture. Check the result's
+`inconclusive` field before using it as evidence. Defaults remain unchanged.
+
+## From-reset replay checkpoints
+
+The native DUT and Spinal simulation scheduler cannot yet save live state.
+The first checkpoint increment is a portable replay descriptor:
+
+```sh
+python3 RiscvSim/scripts/replay-checkpoint.py save \
+  --result /tmp/first/result.json --cycle 50 --out /tmp/checkpoint.json
+# Run the same captured ELF from reset with the same options, then:
+python3 RiscvSim/scripts/replay-checkpoint.py verify \
+  --checkpoint /tmp/checkpoint.json --result /tmp/replay/result.json
+```
+
+The descriptor binds the original C1 and C2 bytes, model, native build, source,
+seed, timing inputs, IRQ schedule, terminal counters and selected trace suffix.
+Verification refuses changed original evidence, input identity changes and
+suffix differences. It reports `equivalent` only for the recorded replay suffix.
+It does not establish ISA correctness. Keep external effects disabled. This
+format supports only state derived from the captured ELF and C1 run options.
+It does not restore DUT, device, memory, scheduler or random-generator state.
+A replay still starts from reset. Native mid-run save/restore remains open.

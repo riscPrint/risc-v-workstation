@@ -10,7 +10,7 @@ from rvw.common.capture import CaptureError
 from .elf import Elf
 
 
-FIELDS = "pc pc_next insn mode rd rd_wdata mem_addr mem_rmask mem_wmask mem_rdata mem_wdata trap intr cause tval mem_fault halted".split()
+FIELDS = "pc pc_next insn mode rd rd_wdata mem_addr mem_rmask mem_wmask mem_rdata mem_wdata trap intr cause tval mem_fault halted fd_valid fd fd_wdata fflags fcsr".split()
 
 
 class Effect(C.Structure):
@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 3
+SHIM_VERSION = 4
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -192,6 +192,7 @@ class Spike:
         lib.rvw_sync_instret.argtypes = [C.c_void_p, C.c_uint64, C.c_uint64]
         lib.rvw_set_reg.argtypes = [C.c_void_p, C.c_uint, C.c_uint64]
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
+        lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
         self.lib = lib = _Serialized(lib)
@@ -237,7 +238,7 @@ class Spike:
         if self.lib.rvw_step(self.handle, C.byref(e), interrupt, *(mmio or (0, 0)), int(mmio is not None)):
             raise ValueError(self.error())
         mask = (1 << self.platform.xlen) - 1
-        result = {k: int(getattr(e, k)) & mask for k in FIELDS}
+        result = {k: int(getattr(e, k)) & (0xffffffffffffffff if k == "fd_wdata" else mask) for k in FIELDS}
         result.update(regs=[int(x) & mask for x in e.regs], before=list(self.regs),
                       disasm=e.disasm.decode(errors="replace"))
         if (result["trap"] and not result["intr"] and result["insn"] == 0x73
@@ -251,6 +252,15 @@ class Spike:
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
+
+    def csr_snapshot(self, addresses):
+        values = {}
+        for address in addresses:
+            value = C.c_uint64()
+            if self.lib.rvw_read_csr(self.handle, int(address, 16), C.byref(value)):
+                raise ValueError(self.error())
+            values[address] = value.value
+        return values
 
     def mode(self):
         """Privilege mode the model is in now (after the last step)."""

@@ -367,8 +367,42 @@ Exclusions are local evidence, not portable certificates.
 extraction. Proofs are conditional on the hashed harness's assumptions and reset/initial-state
 model. The guards do not prove that the environment is complete: assumptions can still be too
 strong in ways the covers do not see. Existing source assumptions can be vacuous; review them.
-This tool does not compute proof cores, cone-of-influence coverage or automatic cut points, and
+This tool does not compute solver proof cores, functional cone coverage or automatic cut points, and
 it does not prove physical hardware behavior.
+
+## Proof dependency reports
+
+`cov prove` also writes `proof-cones.json` and embeds the same report under
+`proof_cones` in its result. See `rvw.proof-cones/1` in
+[PLATFORM_CONTRACTS.md](../../../../docs/PLATFORM_CONTRACTS.md).
+The report reads the same frozen, flattened Yosys netlist as the proof guards.
+For each reviewed expression, it follows all driver inputs, including state,
+clock and reset. It includes full named buses. This is a conservative structural
+cone. It does not use solver evidence to minimize the cone.
+
+A plan point can add `property_id` and `requirement_ids`:
+
+```json
+{"point_id":"p1", "property_id":"counter.range", "requirement_ids":["counter.modulo3"],
+ "expression":"s == 2'd3", "reason":"Modulo-3 counter never reaches 3"}
+```
+
+`property_id` defaults to `point_id`. It must be unique in the plan. Keep these IDs
+stable in requirement and activation records that join this report. This flow
+does not measure property activation. It reports `activation.status: not_measured`.
+It does not extract a solver proof core. It reports `proof_core.status: unavailable`
+and `cells: null`. A successful unbounded job is `proven_conditional`; that label
+does not imply that the separate exclusion guards passed.
+
+`outside_proven_cones` lists logic outside all resolved cones of proven properties.
+These are candidates for further verification. They are not proven irrelevant.
+`untested_assumptions` lists elaborated assumptions with `not_tested` status.
+The structural cone excludes assumptions as constraints. It does not establish
+their adequacy. A large cone gives no functional coverage percentage.
+
+The native test proves a modulo-3 counter range property. Its known cone includes
+the counter addition and state cell. A second graph test checks a two-cell cone,
+an unrelated cell, requirement IDs, and an untested assumption.
 
 ## Mutation testing
 
@@ -552,13 +586,16 @@ for source attribution. The example config disables the runner's nested lock bec
 already owns it. Use `RVW_BOOM_ADAPTER` to choose another checked-out adapter explicitly.
 The shared simulation config enables Spinal assignment line comments when coverage is requested.
 The installed Verilator 5.049 aborts in experimental FSM detection on a BOOM empty reset
-branch (`V3FsmDetect.cpp:641`). The adapter therefore asks Verilator for explicit coverage
-kinds (`RISCVSIM_COVERAGE`, default `line,user`; line coverage includes branches) instead of
-`--coverage`, which would include FSM coverage. The collector sets `RISCVSIM_COVERAGE=line,user`.
+branch (`V3FsmDetect.cpp:641`). The adapter asks Verilator for explicit coverage kinds through `RISCVSIM_COVERAGE`
+instead of `--coverage`. Line coverage includes branches. The collector uses the adapter
+version gate by default. Set `RISCVSIM_COVERAGE=line,user` to reproduce the historical universe.
 Toggle and expression coverage can be added (`line,user,toggle,expr`), at about 230 MB of
 `coverage.dat` per BOOM small run for toggle. Each C1 model records `coverage_types`, and its
 replay preserves the setting. This is a compiler workaround, not an RTL or coverage exclusion;
-native FSM coverage remains a gap on this installed tool version.
+native FSM coverage remains unavailable on 5.049. RiscvSim now enables FSM coverage by default
+when the native `verilator -V` reports 5.052 or later. It refuses an explicit FSM request on
+older or unknown versions. `RISCVSIM_COVERAGE=line,user` still selects the historical point universe.
+Do not merge runs from different coverage-kind sets.
 Merge each generated C3 `results.json` with `cov merge`, then report/rank the merged database;
 feed the runs' `rvfi.jsonl` artifacts to `cov functional`. Keep collection failures visible.
 
@@ -579,12 +616,12 @@ excluded by proof. These measurements do not set an acceptance threshold.
 
 ## Remaining gaps
 
-Native FSM coverage is disabled on this installed compiler. Whole-core Scala attribution needs
+Native FSM coverage needs Verilator >= 5.052. Whole-core Scala attribution needs
 more HGLDD coverage, particularly declarations and memories. Collapsed Verilator hierarchy
 cannot provide exact per-instance counts from these artifacts. Proof exclusions require reviewed
-expression mappings and do not compute proof cores; the only cone they trace is the combinational
-fan-in of the point for the cone cover. The MCY end-to-end
-demonstration is the small design; BOOM-unit mutation with a riscv-tests subset was not run.
+expression mappings. Structural dependency reports do not provide minimal solver proof cores
+or property activation evidence. The BOOM RocketALU mutation recipe is in
+`examples/boom/mutation-alu/`. It uses a bounded ADD/SUB testbench, not riscv-tests.
 
 ## Decisions
 
@@ -662,3 +699,172 @@ Proof exclusions and mutation survivors retain the evidence limits documented ab
 FSM and Scala attribution: [#42](https://github.com/riscPrint/risc-v-workstation/issues/42). Expected ISA bins: [#82](https://github.com/riscPrint/risc-v-workstation/issues/82). Typed RTL events: [#88](https://github.com/riscPrint/risc-v-workstation/issues/88). Temporal coverage: [#115](https://github.com/riscPrint/risc-v-workstation/issues/115). BOOM mutation review: [#3](https://github.com/riscPrint/risc-v-workstation/issues/3). Proof-core reports: [#62](https://github.com/riscPrint/risc-v-workstation/issues/62).
 
 Retained limit: Reviewed expression mappings are not automatic semantic proofs. Capture bounds, unsupported state refusals, reset assumptions and proof/mutation evidence limits remain required. No complete coverage claim follows from observed bins.
+
+### ISA declarations
+
+`rvw cov isa-check isa.json --json` validates a core-owned `rvw.isa/1`
+manifest. Declare `isa`, `extensions` (each has `version` and optional
+`requires`), `options`, and optional `consumers` (tool name to ISA string).
+Use an expanded unversioned ISA string. Use null for an unverified version.
+The command rejects missing dependencies and contradictory consumer strings.
+Null versions give `inconclusive`. Consumer strings are declarations. This
+increment does not probe compiler, adapter, reference model or ACT settings.
+
+### Pinned opcode bins
+
+Clone `https://github.com/riscv/riscv-opcodes` and check out the `source.revision`
+in `examples/boom/isa.json` or `examples/vexriscv/isa.json`. Then run:
+
+```
+rvw cov functional TRACE --manifest examples/boom/isa.json --source-root OPCODES --json
+```
+
+The manifest pins each selected file by SHA-256. A changed file is an error.
+The plan generates every selected canonical opcode and its encoded register
+fields. It also generates static rounding-mode fields where present. Each
+unobserved bin remains a hole. Trapped records and ambiguous encoding matches
+receive no instruction hit. The trace ISA must equal the manifest ISA.
+The plan and pins enter the report fingerprint and prevent incompatible merges.
+`unavailable` lists excluded scope. Compressed instructions, semantic immediate
+classes, operand values, CSR legality, privilege and exceptions are not complete
+in this increment. These require semantic data beyond opcode masks. Register
+fields are encoded indices, including FP indices; they are not FP data values.
+These reports measure selected encoding coverage. They are not compliance results.
+
+### Retirement sequences
+
+Add `"sequences": {"distances": [1, 2, 4]}` to a functional JSON plan. The
+command generates fixed bins for RAW, WAW, WAR, branch-after-load, and all
+load/store pairs at each distance. Distance counts consecutive C2 instruction
+records, not cycles. x0 is not a producer. Register banks stay separate.
+A trap, handler entry, unknown instruction or missing order resets the window.
+Each file starts a fresh window. Memory pairs describe retirement order, not
+address aliasing or memory visibility. Branch-after-load does not require a
+register dependency; RAW records that condition separately. These bins cannot
+measure forwarding, stalls, speculative execution, flushes or wrong-path work.
+Use RTL coverage for those behaviors. No sequence crosses a missing record.
+
+### Review a proposed spec update
+
+```
+rvw cov isa-diff OLD.json NEW.json --old-source-root OLD_OPCODES --source-root NEW_OPCODES --json
+```
+
+Each manifest pins its own source files. The command verifies both sets of
+hashes. It reports added, removed and changed opcode definitions, changed
+versions and options, affected declared consumers, and instruction tests to
+review. Changed pins require adoption and return `inconclusive` (exit 3).
+The command never updates a pin or model. Optional `specifications` declarations
+can hold profile, debug and platform document pins. Their metadata is compared;
+their semantic obligations are not parsed. Test presence and changed semantic
+obligations still need review. An unchanged result is not a compliance verdict.
+
+## Scala mapping and denominators
+
+HGLDD signal mapping follows nested struct and vector expressions. A leaf uses
+its own Scala declaration. A container line does not stand in for its fields.
+Conflicting declarations for the same module and signal stay unmapped.
+This mapping applies to toggle points. It does not attribute a branch to a
+signal declaration. Assignment comments and explicit HDL spans still map
+statement points. Memory declarations without HGLDD expressions stay unmapped.
+
+`report.scala_mapping` gives the mapped-point numerator and the complete
+instrumented-point denominator. The small nested-bundle regression target is
+100% of its declared leaf toggle points, with no attribution of its unrelated
+branch point. This is a checkable fixture target, not a whole-core target.
+`instance_scope` gives each hierarchy bucket's instrumented point count.
+A literal hierarchy has an exact denominator for that recorded instance bucket.
+A wildcard hierarchy has aggregate counts and a null exact-instance denominator.
+Missing hierarchy also gives null. These fields cannot recover physical instance
+counts after Verilator merges modules. Scala line groups can overlap because
+one point can link to several source lines. Do not sum their denominators.
+
+FSM compatibility and Scala mapping are separate checks. `--coverage-fsm`
+can compile while some points still lack Scala lines. A compilation check does
+not establish state or transition hits.
+
+
+## Typed RTL event samples
+
+`rvw cov rtl SAMPLES.jsonl --config PLAN.json --json` reads exact-instance
+RTL samples. MCP exposes the same calculation as `cov_rtl`. This path is
+separate from C2 retirement coverage. It samples internal or interface signals.
+Projects supply the plan and sampler. Spinal annotation exporters can emit the
+same plan. No native Spinal annotation exporter is included yet.
+
+The plan uses schema `rvw.rtl-plan/1`. `design` identifies the instrumented RTL
+and configuration. Use a content hash, not a display name. `signals` maps
+exact hierarchical paths to `width`, `type` and `scala`. A Scala link has
+`file` and `line`. Use null when no source link is available. Types are
+source labels, with an unsigned integer sampling representation. Predicates
+map signal names to finite lists of integer values. Their entries form an AND.
+Use multiple bins for OR. No expression evaluation or automatic bins occur.
+
+`clock` has `signal`, `edge: rising` and `sampling: pre-edge`.
+`reset` has `signal`, `active: 0|1` and `rule: disable-clear`.
+The sampler must emit values immediately before every rising edge. The sampled
+clock value must be zero. Reset samples disable bins and clear transition
+history. Asynchronous reset events between samples are not supported. Refuse
+such a sampling model rather than silently treating it as synchronous.
+
+Each bin has a stable `id`, `kind`, `domain` and `when` predicate.
+Kinds are `event`, `occupancy`, `state`, `transition` and `arbitration`.
+Domains are `structural`, `committed` and `speculative`. Transition bins also
+have a `from` predicate for the preceding enabled sample. Ordinary bins count
+matching cycles. Transition bins count matching adjacent sample pairs.
+The plan lists the whole supported bin universe. Zero-hit bins stay unobserved.
+Their reachability is undetermined. This sampler accepts no proof exclusions
+and cannot mark a bin unreachable. A covered bin is an observation, not proof.
+
+The first JSONL record has `schema: rvw.rtl-samples/1`, `plan_id` and `design`.
+Compute `plan_id` with `rvw.cov.rtl.identity(plan)`: SHA-256 of sorted compact
+JSON. Each sample has `cycle` and `values`. Cycles must be consecutive.
+Values must contain every declared signal with an in-range integer value.
+Unknown values, missing signals and gaps refuse the calculation. The last
+record has `event: end` and `complete: true|false`. Missing or false completion
+makes the report inconclusive (exit 3), while preserving observations.
+The sampler owns this completeness assertion. The reader cannot prove that the
+producer sampled the declared edge or observed every cycle.
+
+Supply several sample files to sum independent runs. Each header must match
+the exact plan hash and design. Transition history never crosses runs.
+Duplicate trace bytes refuse counting. Saved reports are not merge inputs.
+The bin merge key is `(plan_id, id)`. Changing a domain, source link, clock,
+reset rule or bin universe changes the plan hash. `rvw.rtl-coverage/1` reports
+the declared denominator, observed bins, per-bin counts, event domains and
+reachability separately. Input captures retain plan and sample hashes.
+
+
+## Bounded RTL sequences
+
+A plan can add `sequences`. Each sequence has a unique `id`, a `domain` and
+2 to 32 `steps`. The first step has `when`. Each later step has `when` and
+`delay: [minimum, maximum]`. Delays count rising-edge samples from the preceding
+matched step. Both limits are inclusive integers from 1 to 1000000.
+Zero-delay, unbounded, falling-edge and multi-clock semantics are refused.
+
+A first-step match activates one attempt on each matching cycle. Attempts can
+overlap. Each attempt advances on the first match in its delay window and can
+complete once. This is deterministic first-match sequence coverage, not SVA
+assertion semantics or all possible path enumeration. Reset cancels pending
+attempts. Runs never share attempts. An attempt expires on the first sample
+after its last allowed delay. Attempts still open at trace end stay pending.
+The report keeps `activated`, `completed`, `expired`, `reset_cancelled` and
+`pending` separate. Pending attempts are not failures or unreachable bins.
+Their sum satisfies activated = completed + expired + reset_cancelled + pending.
+
+Run the native small example from the repository root:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python \
+  rvw/examples/coverage/rtl/demo.py /tmp/fresh-rtl-coverage
+rvw/.venv/bin/rvw cov rtl /tmp/fresh-rtl-coverage/samples.jsonl \
+  --config /tmp/fresh-rtl-coverage/plan.json --json
+```
+
+The example builds a small FSM with Verilator 5.052 or later. It collects
+pre-edge samples of actual state values and native FSM and line coverage.
+It declares all four state codes and one idle-to-active transition. State 3
+stays unobserved with undetermined reachability. A bounded round trip records
+activations and completions. Its source is SystemVerilog, so Scala links are
+null. The output directory must be new. Build logs and measurements stay there.

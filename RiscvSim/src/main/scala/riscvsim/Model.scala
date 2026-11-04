@@ -47,6 +47,9 @@ trait CoreAdapter {
   /** A compiled simulation model (e.g. a SimCompiled[Top]); shared by concurrent runs. */
   type Model
   /** Short core name for result files ("boom"). */
+  /** True only when run constructs a fresh native instance and fresh harness state.
+    * Persistent serve refuses adapters that do not make this declaration. */
+  def freshInstancePerRun: Boolean = false
   def core: String
   def configs: Seq[String]
   def defaultConfig: String = configs.head

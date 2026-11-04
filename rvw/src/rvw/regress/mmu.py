@@ -1,0 +1,383 @@
+"""Declarative, self-checking RV64 Sv39 data-access programs."""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import shutil
+from pathlib import Path
+
+from rvw.common.proc import run_group
+
+SPEC = 'https://docs.riscv.org/reference/isa/v20260120/priv/supervisor.html'
+FLAGS = dict(zip('VRWXUGAD', (1, 2, 4, 8, 16, 32, 64, 128)))
+ROOT = 0x80010000
+DATA = 0x80200000
+LINK = '''OUTPUT_ARCH("riscv")
+ENTRY(_start)
+SECTIONS {
+ . = 0x80000000; .text : { *(.text) }
+ . = 0x80008000; .tohost : { *(.tohost) }
+ . = 0x80010000; .tables : { *(.tables) }
+ . = 0x80200000; .data : { *(.data) }
+}
+'''
+
+
+def number(value):
+    if isinstance(value, str):
+        return int(value, 0)
+    if type(value) is not int:
+        raise ValueError('expected an integer or integer string')
+    return value
+
+
+def load(path):
+    raw = json.loads(Path(path).read_text())
+    if set(raw) != {'schema', 'scenarios'} or raw['schema'] != 'rvw.mmu/1':
+        raise ValueError('expected rvw.mmu/1 with scenarios')
+    if not isinstance(raw['scenarios'], list) or not raw['scenarios']:
+        raise ValueError('scenarios must be a nonempty list')
+    ids = set()
+    for s in raw['scenarios']:
+        validate(s)
+        if s['id'] in ids:
+            raise ValueError('duplicate scenario id')
+        ids.add(s['id'])
+    return raw['scenarios']
+
+
+def validate(s):
+    required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
+    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv'}
+    if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
+        raise ValueError('invalid scenario fields')
+    if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
+        raise ValueError('invalid scenario id')
+    if type(s['level']) is not int or s['level'] not in (0, 1, 2):
+        raise ValueError('level must be 0, 1 or 2')
+    if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
+        raise ValueError('invalid PTE flags')
+    if s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault'):
+        raise ValueError('unsupported access or expectation')
+    if s.get('privilege', 'S') not in ('S', 'U'):
+        raise ValueError('privilege must be S or U')
+    for key in ('sum', 'mxr', 'mprv'):
+        if key in s and type(s[key]) is not bool:
+            raise ValueError(f'{key} must be boolean')
+    for key in ('va', 'pa'):
+        n = number(s.get(key, 0x40000000 if key == 'va' else DATA))
+        if not 0 <= n < 2**64 or n % 4096:
+            raise ValueError(f'{key} must be an unsigned page address')
+    if s.get('satp_mode', 'sv39') not in ('sv39', 'bare'):
+        raise ValueError('satp_mode must be sv39 or bare')
+    if s.get('satp_mode') == 'bare' and (s.get('asid', 0) or s.get('remap')):
+        raise ValueError('bare mode requires ASID zero and no remap')
+    if s.get('remap', False):
+        if s['level'] != 0 or s['access'] != 'load' or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA:
+            raise ValueError('remap requires a successful level-0 load from DATA')
+        if 'G' in s['flags'] and s.get('fence', 'all') not in ('all', 'va'):
+            raise ValueError('global remap requires an all-ASID fence')
+    if 'remap' in s and type(s['remap']) is not bool:
+        raise ValueError('remap must be boolean')
+    va = number(s.get('va', 0x40000000))
+    if va >> 39 != ((1 << 25) - 1 if va & (1 << 38) else 0):
+        raise ValueError('va must be canonical Sv39')
+    if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
+        raise ValueError('bins must be nonempty strings')
+    if 'ad_expect' in s and (type(s['ad_expect']) is not int or s['ad_expect'] & ~192):
+        raise ValueError('ad_expect must contain only A/D bits')
+    if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
+        raise ValueError('asid must fit 16 bits')
+    if s.get('ad_mode', 'hardware') not in ('hardware', 'svade'):
+        raise ValueError('ad_mode must be hardware or svade')
+    if s.get('fence', 'all') not in ('all', 'va', 'asid', 'va-asid'):
+        raise ValueError('unsupported fence scope')
+
+
+def assembly(s):
+    validate(s)
+    va = number(s.get('va', 0x40000000))
+    pa = number(s.get('pa', DATA))
+    level = s['level']
+    indexes = [(va >> (12 + 9 * i)) & 511 for i in range(3)]
+    tables = [[0] * 512 for _ in range(3 - level)]
+    for depth, table in enumerate(tables):
+        i = 2 - depth
+        table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+    leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
+    fault = s['expect'] == 'page-fault'
+    cause = 13 if s['access'] == 'load' else 15
+    status = (int(s.get('mprv', True)) << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
+    status |= int(s.get('sum', False)) << 18 | int(s.get('mxr', False)) << 19
+    asid = s.get('asid', 0)
+    fence = {'all': 'sfence.vma x0, x0', 'va': 'sfence.vma t3, x0',
+             'asid': 'sfence.vma x0, t4', 'va-asid': 'sfence.vma t3, t4'}[s.get('fence', 'all')]
+    # All fetches stay in M-mode. MPRV selects S/U only for the tested data access.
+    code = f'''.option norvc
+.section .text
+.globl _start
+_start:
+ la t0, trap
+ csrw mtvec, t0
+ csrw mie, zero
+ csrw medeleg, zero
+ csrw mideleg, zero
+ li t0, -1
+ csrw pmpaddr0, t0
+ li t0, 15
+ csrw pmpcfg0, t0
+ li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
+ csrw satp, t0
+ {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
+ sfence.vma x0, x0
+ li t3, {va}
+ li t4, {asid}
+ {fence}
+ li t0, 0xe1800
+ csrc mstatus, t0
+ li t0, {status}
+ csrs mstatus, t0
+ li a0, {43 if s['access'] == 'store' else -1}
+access_site:
+ {'ld a0, 0(t3)' if s['access'] == 'load' else 'sd a0, 0(t3)'}
+ li t0, 0x20000
+ csrc mstatus, t0
+ {'j fail' if fault else 'j check_data'}
+trap:
+ li t0, 0x20000
+ csrc mstatus, t0
+ {'j check_trap' if fault else 'j fail'}
+check_trap:
+ csrr t0, mcause
+ li t1, {cause}
+ bne t0, t1, fail
+ csrr t0, mtval
+ li t1, {va}
+ bne t0, t1, fail
+ csrr t0, mepc
+ la t1, access_site
+ bne t0, t1, fail
+ j check_ad
+check_data:
+'''
+    if s['access'] == 'store':
+        code += f' li t0, {DATA}\n ld a0, 0(t0)\n'
+    code += f" li t1, {43 if s['access'] == 'store' else 42}\n bne a0, t1, fail\n"
+    if s.get('remap', False):
+        replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
+        code += f''' li t0, {leaf}
+ li t1, {replacement}
+ sd t1, 0(t0)
+ {fence}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 43
+ bne a0, t1, fail
+'''
+    code += 'check_ad:\n'
+    if 'ad_expect' in s:
+        code += f' li t0, {leaf}\n ld t0, 0(t0)\n andi t0, t0, 192\n li t1, {s["ad_expect"]}\n bne t0, t1, fail\n'
+    code += ''' li t1, 1
+ j finish
+fail:
+ li t1, 3
+finish:
+ la t0, tohost
+ sd t1, 0(t0)
+1: j 1b
+.section .tohost,"aw"
+.balign 64
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0
+.section .tables,"aw"
+'''
+    for table in tables:
+        code += '\n'.join(f' .dword {v}' for v in table) + '\n'
+    code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
+    return code
+
+
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def read_pma(path):
+    raw = json.loads(Path(path).read_text())
+    if set(raw) != {'schema', 'regions'} or raw['schema'] != 'rvw.mmu-pma/1':
+        raise ValueError('expected rvw.mmu-pma/1')
+    regions = raw['regions']
+    if not isinstance(regions, list) or not regions:
+        raise ValueError('PMA regions must be nonempty')
+    spans = []
+    fields = {'name', 'start', 'size', 'widths', 'read', 'write', 'execute', 'idempotent', 'cacheable', 'atomic'}
+    for r in regions:
+        if not isinstance(r, dict) or set(r) != fields:
+            raise ValueError('invalid PMA region fields')
+        start, size = number(r['start']), number(r['size'])
+        if start < 0 or size <= 0 or start + size > 2**64:
+            raise ValueError('invalid PMA range')
+        if not isinstance(r['name'], str) or not r['name']:
+            raise ValueError('PMA region needs a name')
+        if not isinstance(r['widths'], list) or not r['widths'] or any(type(w) is not int or w not in (1, 2, 4, 8, 16) for w in r['widths']):
+            raise ValueError('invalid PMA widths')
+        if any(type(r[k]) is not bool for k in ('read', 'write', 'execute', 'idempotent', 'cacheable', 'atomic')):
+            raise ValueError('PMA attributes must be boolean')
+        if any(start < end and begin < start + size for begin, end in spans):
+            raise ValueError('overlapping PMA regions need a resolved platform policy')
+        spans.append((start, start + size))
+    return raw
+
+
+def build(description, out, gcc, pma=None):
+    scenarios = load(description)
+    attributes = read_pma(pma) if pma else None
+    out = Path(out).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    # Refuse stale ELFs from an earlier description.
+    if any(out.iterdir()):
+        raise ValueError('build output must be empty')
+    (out / 'link.ld').write_text(LINK)
+    rows = []
+    for s in scenarios:
+        source = out / (s['id'] + '.S')
+        elf = out / (s['id'] + '.elf')
+        source.write_text(assembly(s))
+        command = [gcc, '-march=rv64im_zicsr_zifencei', '-mabi=lp64', '-nostdlib', '-nostartfiles',
+                   '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'), '-o', str(elf), str(source)]
+        result = run_group(command, capture=True, timeout=60)
+        if result.returncode:
+            raise ValueError(f'compiler failed for {s["id"]}: {result.stderr}')
+        rows.append(dict(s, elf=elf.name, elf_sha256=digest(elf), source_sha256=digest(source)))
+    manifest = {'schema': 'rvw.mmu-build/1', 'spec': SPEC, 'description_sha256': digest(description),
+                'scenarios': rows, 'pma': attributes, 'pma_sha256': digest(pma) if pma else None}
+    (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    return manifest
+
+
+def reference(directory, spike, timeout):
+    directory = Path(directory).resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    executable = shutil.which(spike)
+    if not executable:
+        raise ValueError('Spike executable not found')
+    executable = str(Path(executable).resolve())
+    executable_sha256 = digest(executable)
+    version = run_group([executable, '--help'], capture=True, timeout=10)
+    rows = []
+    for s in manifest['scenarios']:
+        elf = directory / s['elf']
+        if digest(elf) != s['elf_sha256']:
+            raise ValueError('ELF differs from build manifest')
+        isa = 'rv64im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
+        command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
+        r = run_group(command, capture=True, timeout=timeout)
+        status = ('inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else
+                  'fail' if re.search(r'\*\*\* FAILED \*\*\* \(tohost = [0-9a-fx]+\)', r.stderr or '') else 'inconclusive')
+        rows.append({'id': s['id'], 'status': status, 'elf_sha256': s['elf_sha256'],
+                     'command': command, 'returncode': r.returncode, 'stderr': r.stderr,
+                     'bins': {b: status for b in s['bins']}})
+    if digest(executable) != executable_sha256:
+        raise ValueError('Spike executable changed during reference run')
+    return {'schema': 'rvw.mmu-reference/1', 'model': 'spike',
+            'executable': executable, 'executable_sha256': executable_sha256,
+            'version': ((version.stderr or '') + (version.stdout or '')).splitlines()[:1], 'scope': 'self-checking architectural effects only',
+            'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
+            'scenarios': rows}
+
+
+def check(directory, results, platform, model, timeout, sail=None):
+    """Require a conclusive self-check and a complete, strict oracle match."""
+    import sys
+    from rvw.results import load_run
+    directory = Path(directory).resolve()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    rows = []
+    for s in manifest['scenarios']:
+        elf = directory / s['elf']
+        if digest(elf) != s['elf_sha256']:
+            raise ValueError('ELF differs from build manifest')
+        candidates = [r for r in runs if r.elf_sha256 == s['elf_sha256']]
+        status, reason, comparison = 'inconclusive', 'need exactly one C1 result for this ELF', None
+        if len(candidates) == 1:
+            run = candidates[0]
+            reason = run.why_inconclusive
+            if not reason and run.status != 'pass':
+                status, reason = 'fail', 'C1 self-check failed: ' + run.status
+            elif not reason:
+                trace = run.artifacts.get('rvfi_trace')
+                if not trace or not (run.path / trace).is_file():
+                    reason = 'missing C2 trace'
+                else:
+                    command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--elf', str(elf),
+                               '--trace', str(run.path / trace), '--platform', str(Path(platform).resolve()),
+                               '--model', model, '--strict', '--timeout', str(timeout), '--json']
+                    if sail:
+                        command += ['--sail', sail]
+                    result = run_group(command, capture=True, timeout=timeout + 10)
+                    try:
+                        comparison = json.loads(result.stdout or '{}')
+                    except ValueError:
+                        comparison = {}
+                    reason = 'oracle did not establish a complete strict match'
+                    if not result.timed_out and comparison.get('status') == 'mismatch':
+                        status, reason = 'fail', 'architectural mismatch'
+                    elif (not result.timed_out and result.returncode == 0
+                          and comparison.get('status') == 'match'
+                          and comparison.get('trace_complete') is True
+                          and comparison.get('end_status') == 'pass'
+                          and comparison.get('instructions', 0) > 0
+                          and comparison.get('synchronized') == 0):
+                        status, reason = 'pass', None
+        rows.append({'id': s['id'], 'elf_sha256': s['elf_sha256'], 'status': status,
+                     'reason': reason, 'comparison': comparison, 'bins': {b: status for b in s['bins']}})
+    return {'schema': 'rvw.mmu-check/1', 'model': model,
+            'status': 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive',
+            'scenarios': rows}
+
+
+def register(sub):
+    parser = sub.add_parser('mmu', help='build declarative Sv39 suites or validate them on Spike')
+    actions = parser.add_subparsers(dest='mmu_action', required=True)
+    b = actions.add_parser('build')
+    b.add_argument('description', type=Path)
+    b.add_argument('--out', required=True, type=Path)
+    b.add_argument('--pma', type=Path, help='core-owned PMA declaration; recorded, not device coverage')
+    b.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
+    r = actions.add_parser('reference')
+    r.add_argument('directory', type=Path)
+    r.add_argument('--spike', default='spike')
+    r.add_argument('--timeout', type=float, default=10)
+    c = actions.add_parser('check')
+    c.add_argument('directory', type=Path)
+    c.add_argument('--results', type=Path, required=True)
+    c.add_argument('--platform', type=Path, required=True)
+    c.add_argument('--model', choices=('spike', 'sail'), default='spike')
+    c.add_argument('--timeout', type=float, default=120)
+    c.add_argument('--sail')
+    for p in (b, r, c):
+        p.add_argument('--json', action='store_true')
+        p.set_defaults(func=main)
+
+
+def main(args):
+    import math
+    try:
+        if args.mmu_action != 'build' and (not math.isfinite(args.timeout) or args.timeout <= 0):
+            raise ValueError('timeout must be finite and positive')
+        if args.mmu_action == 'build':
+            result = build(args.description, args.out, args.gcc, args.pma)
+        elif args.mmu_action == 'reference':
+            result = reference(args.directory, args.spike, args.timeout)
+        else:
+            result = check(args.directory, args.results, args.platform, args.model, args.timeout, args.sail)
+        print(json.dumps(result, allow_nan=False))
+        return 0 if result.get('status', 'pass') == 'pass' else 3 if result.get('status') == 'inconclusive' else 1
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(json.dumps({'status': 'error', 'message': str(exc)}))
+        return 2

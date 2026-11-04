@@ -75,3 +75,42 @@ numbers used the old line reader; the new reader has not been benchmarked on BOO
 Indexed large-wave storage: [#173](https://github.com/riscPrint/risc-v-workstation/issues/173).
 
 Retained limit: The documented query, sample and window bounds remain required. Unsupported formats or invalid times must refuse the call.
+
+## Indexed snapshots
+
+Build an index once, then pass its `.rvwi` path to the existing queries:
+
+```sh
+rvw wave index large.vcd -o large.rvwi --json
+rvw wave changes large.rvwi 'unit.data' --from 1000000 --to 1000100 --json
+rvw wave sample large.rvwi 'unit.data' --at end --json
+rvw wave cut large.rvwi --from 1000000 --to 1000100 -o window.vcd
+```
+
+The SQLite index stores raw values, aliases, declaration ranges, timescale,
+ordered records and the captured input's SHA-256 and size. It is an explicit
+snapshot. It does not follow changes to the source. Use a new output path to
+index a new capture. An existing output is refused. The completed index is
+published only after the strict parser reaches EOF and capture checks finish.
+Keep published indexes immutable. Query transactions read the index directly;
+they do not capture-copy it or scan/hash the original waveform.
+
+SQLite uses disk indexes for time ranges and per-signal state lookup. A narrow
+range visits that time window, including unselected signals in the window.
+Samples use one indexed predecessor lookup per selected identifier. Cut writes
+a temporary VCD containing the initial state and selected range. The existing
+writer handles gzip/FST output. Unknown bits and real/string values stay raw in
+the index. Repeated changes at the same time keep file order.
+
+SQLite's page cache is limited to 8 MiB per connection. Build memory also includes
+the header, one parser line, capture buffers and SQLite's index sorter. Query
+memory includes the header and returned rows. `changes --limit 0` is unbounded.
+The limit is a row limit, not a process memory cap. This format uses signed 64-bit
+timestamps. Larger VCD times fail indexing. VCD, gzip and FST input use the current
+reader during index creation. FST still needs a full `fst2vcd` conversion once.
+Direct native FST range reads are not implemented.
+
+`test_wave_index.py` compares queries and cuts with the streaming reader. It
+checks aliases, x/z bits, same-time updates, real/string values, empty ranges,
+trailing timestamps, failed builds and SQL index selection. These fixture tests
+do not establish performance for every large waveform.

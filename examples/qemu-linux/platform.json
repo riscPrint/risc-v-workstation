@@ -1,0 +1,17 @@
+{
+  "schema": "rvw.linux-platform/1",
+  "machine": "virt",
+  "harts": 1,
+  "memory_mib": 128,
+  "command_line": "console=ttyS0 earlycon=sbi rdinit=/init panic=-1",
+  "dt_checks": [
+    {"node": "/cpus", "property": "timebase-frequency", "type": "u", "expected": "10000000"},
+    {"node": "/memory@80000000", "property": "reg", "type": "x", "expected": "0 80000000 0 8000000"},
+    {"node": "/soc/serial@10000000", "property": "compatible", "type": "s", "expected": "ns16550a"},
+    {"node": "/soc/serial@10000000", "property": "clock-frequency", "type": "u", "expected": "3686400"},
+    {"node": "/soc/serial@10000000", "property": "interrupts", "type": "u", "expected": "10"},
+    {"node": "/soc/clint@2000000", "property": "reg", "type": "x", "expected": "0 2000000 0 10000"},
+    {"node": "/soc/interrupt-controller@c000000", "property": "reg", "type": "x", "expected": "0 c000000 0 600000"},
+    {"node": "/cpus/cpu@0", "property": "mmu-type", "type": "s", "expected": "riscv,sv39"}
+  ]
+}

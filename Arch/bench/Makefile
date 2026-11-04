@@ -20,7 +20,7 @@ check:
 	@test -n "$(strip $(BENCHES))" || { echo 'BENCHES must not be empty' >&2; exit 1; }
 	@test -n "$(strip $(BUILD))" || { echo 'BUILD must not be empty' >&2; exit 1; }
 	@for b in $(BENCHES); do \
-	  test -d "$(SRC)/$$b" || { echo "Missing benchmark: $$b" >&2; exit 1; }; \
+	  test -f "micro/$$b.c" || test -d "$(SRC)/$$b" || { echo "Missing benchmark: $$b" >&2; exit 1; }; \
 	done
 
 # FORCE also catches a changed SRC, compiler or flags in a reused build dir.
@@ -32,7 +32,7 @@ $(BUILD)/syscalls.c: FORCE | check
 $(BUILD)/%.riscv: $(BUILD)/syscalls.c $(wildcard $(SRC)/common/*) FORCE | check
 	@mkdir -p $(@D)
 	$(BARE_CC) -I$(SRC)/../env -I$(SRC)/common -I$(SRC)/$* $(CFLAGS) $(BARE_FLAGS) \
-	  -o $@.tmp $(wildcard $(SRC)/$*/*.c) $(wildcard $(SRC)/$*/*.S) \
+	  -o $@.tmp $(if $(wildcard micro/$*.c),micro/$*.c,$(wildcard $(SRC)/$*/*.c) $(wildcard $(SRC)/$*/*.S)) \
 	  $(BUILD)/syscalls.c $(SRC)/common/crt.S -lm -lgcc
 	mv $@.tmp $@
 

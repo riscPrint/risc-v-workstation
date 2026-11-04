@@ -411,3 +411,28 @@ def test_macos_cosim_uses_same_source_pin(tmp_path):
     assert 'eff659cd43d7eafb7f3559bceed2540eabb31c50' in result.stdout
     assert 'make -C' in result.stdout
     assert 'brew install riscv-software-src/riscv/riscv-isa-sim' not in result.stdout
+
+
+def test_bundle_needs_explicit_location(tmp_path):
+    result = invoke('--from-bundle', '--with-riscv-gcc', '--prefix', tmp_path / 'absent')
+    assert result.returncode == 2
+    assert '--bundle-run or --bundle-dir' in result.stderr
+    assert not (tmp_path / 'absent').exists()
+
+
+def test_bundle_dry_run_does_not_download(tmp_path):
+    result = invoke('--from-bundle', '--bundle-run', '1234', '--with-riscv-gcc',
+                    '--dry-run', '--prefix', tmp_path / 'absent')
+    assert result.returncode == 0, result.stderr
+    assert 'native-bundle.py install' in result.stdout
+    assert '--tool gcc' in result.stdout
+    assert not (tmp_path / 'absent').exists()
+
+
+def test_bundle_check_needs_no_run_or_network(tmp_path):
+    result = invoke('--from-bundle', '--check', '--with-sail', '--prefix', tmp_path / 'absent',
+                    env={**os.environ, 'RVW_SAIL': ''})
+    assert result.returncode == 1
+    assert 'MISSING Sail' in result.stdout
+    assert 'native-bundle.py' not in result.stdout
+    assert not (tmp_path / 'absent').exists()

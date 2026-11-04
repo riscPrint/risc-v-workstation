@@ -19,7 +19,8 @@ def _inputs(args, out: Path, defines: list[str] = ()) -> tuple[InputSnapshot, li
     args._input_snapshot = snapshot
     snapshot.tools = Toolchain(snapshot.capture, args, snapshot.directory / 'tools')
     args._formal_tools_token = ACTIVE.set(snapshot.tools)
-    ports = common.module_ports(snapshot.sources, args.top, out, args.timeout, defines, snapshot=snapshot)
+    ports = common.module_ports(snapshot.sources, args.top, out, args.timeout, defines, snapshot=snapshot,
+                                allow_async_reset=getattr(args, "async_reset", False))
     # Ports and state controls describe this exact elaboration. Later probes and proofs
     # read it instead of re-reading Verilog or running its preprocessor again.
     model = snapshot.seal(out / 'module_ports.il')
@@ -36,6 +37,7 @@ def _header(kind: str, args, status: str, secs: float, asserts: int | None, rese
     return {
         "schema": "rvw.formal/1",
         "flow": kind,
+        "proof_kind": "unbounded" if kind == "prove" else "bounded",
         "top": args.top,
         # pass | fail | unknown | error | timeout | no_checks (the proven design has no assertion)
         "status": status,
@@ -82,6 +84,16 @@ def _finish(out: Path, kind: str, args, rc: int, secs: float, checks: ChecksInde
     })
     if extra:
         result.update(extra)
+    if getattr(args, "event_model", False):
+        result["event_model"] = {
+            "backend": "yosys clk2fflogic (sby multiclock on)",
+            "step": "one global input sample; transitions between samples are not represented",
+            "clocks": [args.clock, *(args.event_clock or [])],
+            "relationships": "unrelated; arbitrary rates, phase, simultaneous edges and stalls",
+            "async_reset": bool(args.async_reset),
+        }
+        for failure in result.get("failures", []):
+            failure["cycle"] = None  # global samples have no common clock-cycle number
     snapshot.finish(result)
     common.write_json(out / "result.json", result)
     return result
@@ -226,29 +238,48 @@ def wrapper(top: str, ports: list[Port], clock: str, reset: str | None, active_h
 
 def bmc(args) -> int:
     out = common.begin(args)
+    args.event_model = bool(args.event_model or args.event_clock)
+    if args.async_reset and not args.event_model:
+        common.die("--async-reset requires --event-model or --event-clock")
+    for clock in args.event_clock or []:
+        common.check_ident("--event-clock", clock)
+    if len(set([args.clock, *(args.event_clock or [])])) != 1 + len(args.event_clock or []):
+        common.die("event clocks must be distinct")
+
     snapshot, ports, files = _inputs(args, out)
     reset = common.resolve_reset(args, ports)
     if reset is None:
         # stderr: with --json, stdout is the result document only (result.json has "reset": null)
         print(f"note: {args.top} has no reset input; inputs are free from step 0", file=sys.stderr)
-    need = min_depth_reset(args.reset_cycles) if reset else 2
+    if args.event_model and reset in (args.event_clock or []):
+        common.die("an event clock cannot also be the reset input")
+    need = ((2 * args.reset_cycles + 4) if args.event_model else min_depth_reset(args.reset_cycles)) if reset else 2
     if args.depth < need:
         common.die(f"--depth {args.depth} checks nothing after the reset (reset held {args.reset_cycles} steps); "
                    f"use --depth >= {need}")
     ties = _ties(args, ports, {args.clock, reset})
+    if args.event_model and set(ties) & set(args.event_clock or []):
+        common.die("event clocks cannot be tied")
     started = time.time()
     common.need("yosys")
-    common.probe_clocks(files, args.top, args.clock, out, args.timeout)
+    common.probe_clocks(files, args.top, args.clock, out, args.timeout,
+                        extra_clocks=args.event_clock or (), event_model=args.event_model)
     restrictions = _restrictions(ties, reset, args.reset_cycles, args.free_reset)
+    if args.event_model and reset:
+        restrictions = [r for r in restrictions if not r.startswith("reset ")]
+        restrictions.append(f"reset {reset} held active until {args.reset_cycles} primary-clock rising edges"
+                            + (", then free" if args.free_reset else ", then inactive"))
     common.clear_outputs(out, 'rvw_formal_top.sv')
     (out / "rvw_formal_top.sv").write_text(
         wrapper(args.top, ports, args.clock, reset, args.reset_active == "high", args.reset_cycles, args.free_reset, ties))
     snapshot.seal(out / 'rvw_formal_top.sv')
-    # multiclock off is sound only for one clock: the clock probe above refused any other design.
+    from .cuts import commands
+    cut_script, cut_records = commands(args, out, files)
+    # SBY applies clk2fflogic in event mode; the default retains the one-clock model.
     sby = f"""[options]
-mode bmc
+mode {getattr(args, "mode", "bmc")}
 depth {args.depth}
-multiclock off
+multiclock {'on' if args.event_model else 'off'}
 
 [engines]
 {_engine_block(args.engine, not args.first_failure)}
@@ -257,6 +288,7 @@ multiclock off
 {common.read_rtlil(files)}
 read_verilog -formal -sv {out / 'rvw_formal_top.sv'}
 prep -top rvw_formal_top
+{cut_script}
 
 [files]
 """
@@ -264,8 +296,14 @@ prep -top rvw_formal_top
     _sby(out, "bmc.sby", sby)
     rc, secs = common.run(["sby", "-f", "-d", "sby", "bmc.sby"], out, out / "sby.log",
                           _remaining(args.timeout, started))
-    result = _finish(out, "bmc", args, rc, secs, ChecksIndex.load(snapshot.checks), "rvw_formal_top",
+    result = _finish(out, getattr(args, "mode", "bmc"), args, rc, secs, ChecksIndex.load(snapshot.checks), "rvw_formal_top",
                      reset, ties, restrictions, _remaining(args.timeout, started))
+    if cut_records:
+        result['cut_points'] = cut_records
+        if result['status'] == 'fail':
+            result['status'] = 'unknown'
+            result['abstraction_counterexample'] = True
+        common.write_json(out / "result.json", result)
     _print(result, args.json)
     return 0 if result["status"] == "pass" else 1
 

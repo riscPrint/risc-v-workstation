@@ -160,7 +160,13 @@ A perf test whose base result is inconclusive cannot be compared and makes the v
 inconclusive. So does a
 configured metric that is missing, non-finite or non-positive for any compared seed on either
 side. All samples of a metric must record the same origin. Missing origins make old performance
-evidence inconclusive. A metric is never silently left out.
+evidence inconclusive. A metric is never silently left out. A declared performance workload needs a passing
+baseline and candidate on every seed. An added workload without a baseline, or a failed
+workload (including a known or unchanged failure), makes performance evidence inconclusive.
+Each C4 performance item reports base, candidate and paired sample counts. Its
+`comparison_rule` is `relative_mean`. Its `confidence` is `not_estimated`. The threshold
+applies to the relative change in arithmetic means. Equality with the threshold does not reject.
+This rule supplies no statistical confidence and does not bound per-seed losses.
 
 Verdict: `reject` if anything rejects; else `inconclusive` if any candidate result is
 inconclusive, no test ran on both sides, or either source lacks a clean committed identity;
@@ -348,3 +354,156 @@ The runner still owns locking, cache/resume, provenance and verdict generation. 
 Waivers/signatures: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder and performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Full-tier timing: [#73](https://github.com/riscPrint/risc-v-workstation/issues/73).
 
 Retained limit: Committed revisions and complete captured inputs remain necessary for acceptance. Watchdog expiry and unqualified identity cannot earn a pass.
+
+## Review status and close rules
+
+Waivers and failure signatures remain experimental (#2). The review covers changed RVFI
+messages, stale saved fail codes and status changes. Compare derives RVFI identity from the
+full saved message. Without a monitor code or message, old RVFI evidence needs a rerun.
+A saved fail code overrides its saved signature. Unchanged failures must also have the same status.
+
+The close rule requires negative tests for changed failures, legacy evidence and waiver scope.
+It also requires a policy for wildcard waivers, config-wide waivers and coarse identities
+(cycle timeout, fail code, monitor code or source line). These identities can group different
+root causes. A wildcard can deliberately cover a changed failure. This review does not prove
+that such a waiver is safe. Check each waiver and its full failure evidence before use.
+
+Stored-folder gates and performance metrics remain experimental (#4). Keep these reviews separate:
+
+- Stored identity: negative tests must cover wrong core, mixed source or model, changed ELF,
+  options, metric selectors, stimulus bytes, missing seeds and missing required workloads.
+  Existing plan tests include quick folders requested as full, even with `allow_missing`.
+  This round reruns those fixtures. It does not establish native historical-folder compatibility.
+- Performance: use the same workload, seeds, options and measurement origins on both sides.
+  Declare ROI counters through `cycles_key` and `instret_key`. A selector name alone does not
+  define semantic ROI boundaries. The adapter must keep those boundaries stable and identify
+  changes in its inputs. The tests use repeated fixed-seed fixtures, not native noise experiments.
+  A mean can cancel a slow seed with a fast seed. Sample counts are visible, but confidence is
+  not estimated. The close rule requires native repeated-seed experiments, stable ROI boundaries
+  and a reviewed statistical acceptance rule. Do not treat this increment as that evidence.
+
+A quick gate covers only its requested tier. It must not substitute for required performance
+workloads in a full tier. Request that tier explicitly. A stored gate checks the requested plan;
+standalone `compare` does not load the current project plan.
+
+## Native shared cache
+
+Set `RVW_REMOTE_CACHE=HOST:/absolute/cache/path` to use a shared cache over SSH.
+The selected host needs SSH and rsync. Use a trusted SSH host entry and login key.
+`RVW_CACHE_SSH_OPTIONS` can hold a JSON array of SSH options, for example a port
+and a private known-hosts file. Paths currently use plain path characters.
+
+The runner still computes the full C8 version-10 key. There is no prefix or
+partial-identity lookup. Transfer cannot make an incomplete identity cacheable.
+An imported generation must match its inventory hashes and stored full key.
+A missing, partial, invalid or evicted remote entry is a miss. Upload sends the
+immutable generation before the atomic pointer update. Transfer failure does not
+change a measured result. `--no-cache` disables local and remote cache use.
+
+rsync keeps partial transfer data within a transfer directory. Downloads use
+private temporary directories and verify before local publication. Cross-command
+download resume, retention policy and remote garbage collection remain open.
+The cache owner must provision space and remove entries only between commands.
+
+For gate budgets and cost reports, see [common](../common/README.md#native-job-budgets).
+
+## Native backend capabilities
+
+`rvw regress backends --json` lists the supported native semantic profiles.
+See [native simulation](../sim/README.md). Requirements are explicit feature
+names. Unsupported requirements must fail before compilation.
+
+## Cocotb components
+
+`rvw regress cocotb manifest.json --out NEW_DIRECTORY --seed 1 --json` runs a
+native component suite on Icarus or Verilator. It writes standalone C3 results.
+See [manifest, clock/reset, result and artifact contracts](../sim/README.md).
+It is separate from ELF suite scheduling and cannot earn C4 gate acceptance.
+
+## Directed Sv39 programs
+
+`rvw regress mmu build DESCRIPTION --out EMPTY_DIR --json` builds RV64 ELFs
+from `rvw.mmu/1` JSON. Set `--gcc` to the native cross compiler if needed.
+`rvw regress mmu reference DIR --timeout 10 --json` runs each ELF on Spike
+before RTL use. Each program checks one declared load or store. It checks the
+value, or `mcause`, `mtval` and `mepc` for a page fault. Failure writes 3 to
+`tohost`. Success writes 1. A timeout is inconclusive.
+
+The description contains `schema` and a nonempty `scenarios` list. Each scenario
+has `id`, `level` (0, 1 or 2), PTE `flags` (`VRWXUGAD`), `access` (`load` or
+`store`), `expect` (`success` or `page-fault`) and a nonempty `bins` list.
+Optional fields are `va`, `pa`, `privilege` (`S` or `U`), `sum`, `mxr`,
+`ad_expect` (A/D mask), `asid` and `fence` (`all`, `va`, `asid`, `va-asid`).
+Unknown fields are errors. Expectations are explicit requirements. The generator
+does not use a DUT result to set them.
+
+Programs require RV64IM, Zicsr, Zifencei, S/U, Sv39 and PMP entry 0. They use
+MPRV for S/U data accesses. Fetch stays in M-mode. The linker reserves text at
+0x80000000, `tohost` at 0x80008000, tables at 0x80010000 and data at 0x80200000.
+This first increment uses a fixed RAM layout. Other S-mode platforms must map
+this RAM layout. It does not yet support RV32/Sv32 or arbitrary device layouts.
+
+The build writes source, ELFs and `manifest.json`. The manifest binds the
+input and ELF hashes. Reference results contain per-scenario bins. A bin earns
+`pass` only when its whole self-check program completes on that model. Generated
+bins alone are not coverage. These bins measure architectural effects only.
+They do not measure page-walk bus traffic, physical address signals, TLB contents,
+A/D atomicity or device effects. Use the pinned [Supervisor ISA 1.13,
+20260120](https://docs.riscv.org/reference/isa/v20260120/priv/supervisor.html),
+sections 11.1.1.1.2, 11.1.1.11 and the Sv39 translation algorithm.
+
+Use any C1 project's `elf-dir` suite with `glob = "*.elf"` and
+`strip_suffix = ".elf"`. Set its `dir` to the generated directory. Keep this
+suite outside default tiers until it has reference and RTL results. The BOOM
+example declares `mmu-priv`. It keeps all failures visible, including the known
+ACT4 Sv39 exception failures. It applies no waiver.
+
+Set `remap = true` on a successful level-0 load to prime a translation, replace
+its leaf PPN, execute the selected fence and check the new page's distinct value.
+The fixture uses ASID 7 for ASID scope tests. Global mappings require an
+all-ASID fence. Over-invalidation is legal. This does not prove that unrelated
+entries stay cached. ASID switching, cross-hart shootdowns and software races
+remain unchecked. The test makes no claim about an unfenced stale translation.
+
+Set `ad_mode = "svade"` to require faults for clear A/D bits. The Spike
+reference enables Svade explicitly. `ad_expect` reads the physical leaf PTE
+after the access or trap and checks both bits. The BOOM scenario file selects
+Svade for these cases. `hardware-ad.json` is a separate opt-in Svadu campaign.
+It sets `menvcfg.ADUE` and selects Svadu on Spike. Build it in another empty
+directory. Run it on RTL only when the project declares Svadu support. These
+checks verify final PTE bits. They do not prove atomic updates, concurrent
+software changes or faults during page-table accesses.
+
+`build --pma PLATFORM.json` records a core-owned `rvw.mmu-pma/1` declaration.
+It contains `schema` and `regions`. Each region requires `name`, `start`, `size`,
+`widths` (bytes), and boolean `read`, `write`, `execute`, `idempotent`,
+`cacheable` and `atomic` attributes. Ranges use an inclusive start and an
+exclusive end. Overlaps are errors. Resolve conflicts in project data first.
+The manifest binds the declaration hash. This is platform input validation,
+not a device model or PMA test. Spike's RAM backend does not check these
+attributes. No PMA coverage bin earns a pass from this declaration. Boundary
+accesses, attribute conflicts and independent device observations remain open.
+
+The privilege cases cover SUM off/on, MXR off/on, effective U-mode permissions,
+MPRV off/on and `satp` Bare/Sv39. Set `mprv = false` to test physical M-mode
+access. Set `satp_mode = "bare"` to test address-translation bypass. These
+programs do not enter S-mode for instruction fetch. TVM, TW, TSR, SRET, disabled
+features and unsupported WARL mode writes still need separate campaigns.
+
+After a traced RTL suite run, use the independent checker:
+
+```sh
+rvw regress mmu check ELF_DIR --results RUN_DIR --platform PROJECT/cosim.json --model spike --json
+rvw regress mmu check ELF_DIR --results RUN_DIR --platform PROJECT/cosim.json --model sail --json
+```
+
+It finds C1 `result.json` files by ELF hash. Each scenario needs exactly one
+conclusive C1 result. A pass also requires a complete C2 trace, a passing end
+event and an independent model match with `--strict` (zero synchronizations).
+Missing traces, prefix matches and unavailable models remain inconclusive.
+A conclusive RTL failure or architectural mismatch fails the scenario. Each
+scenario's bins carry that same status. Run separate directories for seeds or
+configs. Match the model platform, including Svade/Svadu, to the selected suite.
+Sail uses the existing `rvw cosim` platform configuration and `--sail` option.
+The checker preserves the full comparison result and its captured input identity.
+It checks architectural effects; page-walk transactions need a separate observer.

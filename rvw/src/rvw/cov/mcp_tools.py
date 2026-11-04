@@ -33,6 +33,10 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_rtl", "Sample typed RTL bins and bounded sequences from exact-instance samples. "
+                 "Incomplete traces stay inconclusive. Unobserved bins are not unreachable.",
+                 schema({"traces": ARRAY, "config": S, **OUT}, ["traces", "config"]),
+                 handler("rvw.cov.cli", "rtl"), long=True, annotations={"readOnlyHint": True}),
         ToolSpec("cov_merge", "Merge per-test coverage.dat or C1/C3 results into a coverage database before reporting/ranking. "
                  "Retains source attribution and rejects incompatible point universes; large inputs run as a job.",
                  schema({"inputs": ARRAY, "source_root": {**S, "default": "."}, "scala_root": S,
@@ -53,7 +57,7 @@ def mcp_tools():
                  handler("rvw.cov.cli", "select"), long=True, annotations={"readOnlyHint": True}),
         ToolSpec("cov_functional", "Report RVFI functional coverage bins and holes from C2 traces or saved functional reports. "
                  "Use config for a declarative coverage plan; large traces run as a job.",
-                 schema({"traces": ARRAY, "config": S,
+                 schema({"traces": ARRAY, "config": S, "manifest": S, "source_root": S,
                          "platform": {**S, "description": "platform name or JSON for the RVFI address convention "
                                       "(default: the bundled platform named by the trace header's core)"}}, ["traces"]),
                  handler("rvw.cov.cli", "functional"), long=True, annotations={"readOnlyHint": True}),

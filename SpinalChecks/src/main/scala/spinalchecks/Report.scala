@@ -65,7 +65,7 @@ object Report {
   private def alive(bt: BaseType): Boolean = bt.parentScope != null && bt.component != null
 
   def json(r: ChecksResult): String = {
-    val byKind = Kind.all.flatMap { k =>
+    val byKind = r.records.toSeq.map(_.kind).distinct.sorted.flatMap { k =>
       val rs = r.records.filter(_.kind == k)
       if (rs.isEmpty) None else Some(k -> (obj(rs.groupBy(_.status).toSeq.sortBy(_._1).map { case (s, v) => s -> (v.size: V) }: _*): V))
     }
@@ -79,6 +79,17 @@ object Report {
         "path" -> path, "module" -> c.module, "component_class" -> c.component.getClass.getName,
         "object" -> c.objName, "env" -> c.env, "detail" -> c.detail,
         "source" -> loc(c.location),
+        "clock_domain" -> Option(c.clockDomain).map { cd =>
+          def signal(bt: Bool): V = Option(bt).flatMap { original =>
+            c.component.pulledDataCache.get(original).collect {
+              case b: BaseType if alive(b) => b
+            }.orElse(Option(original).filter(alive))
+          }.map(b => vname(SpinalChecks.instancePath(b.component), b): V).getOrElse(Null)
+          obj("clock" -> signal(cd.clock), "edge" -> cd.config.clockEdge.toString,
+              "reset" -> signal(cd.reset), "reset_kind" -> cd.config.resetKind.toString,
+              "reset_active" -> cd.config.resetActiveLevel.toString,
+              "clock_enable" -> signal(cd.clockEnable)): V
+        }.getOrElse(Null),
         "fail_signal" -> Option(c.failName).map(n => SpinalChecks.qualify(path, n)),
         "signals" -> obj(c.signals.toSeq.map { case (role, bts) => role -> (arr(bts.filter(alive).map(b => vname(path, b): V)): V) }: _*)
       ): V

@@ -14,6 +14,18 @@ Save its exit code and log. Fix its cause before you continue.
 [#36](https://github.com/riscPrint/risc-v-workstation/issues/36).
 The commands below are the current setup path.
 
+## Setup diagnostics
+
+After the initial install, use `rvw doctor --features sim,riscv-gcc,cosim --json`
+in the core project. It checks native versions through the installer and reports
+project, adapter, ELF and gate actions. Exit 1 means setup is not ready.
+Use `rvw doctor --install sim,riscv-gcc,cosim --dry-run --json` to inspect
+installation. Remove `--dry-run` to run it. The installer asks before system
+packages. Source `env.sh` afterward. MCP `rvw_doctor` is diagnostic-only.
+Use `--smoke-elf PATH` to permit a build and one C1 run after the adapter works.
+This does not prove RVFI mapping or earn a gate verdict.
+See [doctor](../rvw/src/rvw/doctor/README.md) for exits and limits.
+
 ## 1. Select paths and check the installation
 
 Set these paths to existing directories. Use absolute paths.
@@ -75,6 +87,23 @@ Do not change library versions only to use an available cache.
 
 **Human decision:** agree on the ISA, reset PC, RAM map and supported presets.
 Start with one preset and one small program. Record the intended scope.
+
+For a new Spinal/sbt core, start with the minimal scaffold:
+
+```sh
+cd "$CORE_ROOT"
+rvw init --isa rv32im --dry-run --json
+rvw init --isa rv32im
+rvw doctor --json
+```
+
+Replace `rv32im` with the specified ISA. The generated project file is valid.
+Doctor should report `project: ready`. It returns exit 1 because adapter build/run,
+ELFs and gate inputs are unfinished. Follow the generated `rvw/README.md`.
+The launcher refuses build/run until signal mapping is complete. `--force`
+replaces existing scaffold files, so preserve edited files first.
+See [init limits](../rvw/src/rvw/init/README.md). It does not generate a cosim
+memory map or SpinalDB entry. The steps below still apply.
 
 For the shipped VexRiscv integration, run:
 

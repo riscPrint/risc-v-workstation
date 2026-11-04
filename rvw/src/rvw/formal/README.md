@@ -4,7 +4,10 @@
 state. `xprop` checks whether unknown state can reach selected signals. See
 [SpinalChecks](../../../../SpinalChecks/README.md) for commands and limits.
 
-Sequential flows require one rising-edge clock and synchronous state controls. Asynchronous
+By default, sequential flows require one rising-edge clock and synchronous state controls.
+BMC also supports the explicit sampled event model below. Asynchronous
+
+Assertion flows require one rising-edge clock and synchronous state controls. Asynchronous
 reset/load/set/clear controls and latches are refused. A result applies only to the selected depth,
 input ties, assumptions, and reset settings. Missing replay state starts free and can cause
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
@@ -72,7 +75,7 @@ spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid in
   check those edits.
 - All three flows check state cells in every elaborated module after `hierarchy -check -top`
   and `proc`, before `prep`, flattening, ties or state loading can remove them. The check
-  uses the proof's defines. Async flip-flops, latches and unsupported state cell types,
+  uses the proof's defines. By default, async flip-flops, latches and unsupported state cell types,
   including fine-grained gate cells, cause exit 2 with no `result.json`. A tied inactive
   reset or unused state does not bypass this check. Asynchronous memory reads remain
   supported; memory async reset ports must be tied to zero. `rvw cov prove` uses the same
@@ -240,3 +243,394 @@ The command returns 1 for all results. It never reports a design pass.
 Multi-clock and asynchronous state: [#46](https://github.com/riscPrint/risc-v-workstation/issues/46). X campaigns: [#67](https://github.com/riscPrint/risc-v-workstation/issues/67). Counterexample debugging: [#60](https://github.com/riscPrint/risc-v-workstation/issues/60). Engine depth: [#21](https://github.com/riscPrint/risc-v-workstation/issues/21). Shared runner: [#117](https://github.com/riscPrint/risc-v-workstation/issues/117).
 
 Retained limit: Only validated engine releases and supported synchronous state qualify. Missing reports, unsupported state, free inputs and replay assumptions retain their documented error or inconclusive outcomes.
+
+## Counterexample what-if replay
+
+Replay a failing `rvw formal bmc` result through native Yosys `sim`:
+
+```sh
+rvw formal cex --result out/bmc --out out/replay --json
+rvw formal cex --result out/bmc --edit bad@0=0 --out out/whatif --json
+```
+
+`--trace-index` selects a witness from `result.json` (default 0). Each repeatable
+`--edit PORT@TIME=INTEGER` changes a top-level input at an existing VCD timestamp.
+Values use decimal, `0x` or `0b`. An edit lasts until the next change to that input
+in the original witness. It does not tie the input for all later cycles. Clock and
+reset are inputs too. Editing them changes the replay environment.
+
+The command first replays the original witness. It then replays the edited witness
+against the same captured model. It uses `sby/model/design.il`, before SBY clock
+conversion. `clk2fflogic` and `chformal -lower` let `sim` evaluate clocked checks.
+VCD input is converted to FST before simulation. Each replay writes `wave.vcd`,
+`wave.fst`, `summary.json`, the Yosys script and log. Initial state comes from the
+original witness where Yosys can map it. Missing state keeps the model's initial
+state. The edited replay does not load later witness state over computed state.
+
+`inputs/` retains the original result, witness, model, copied RTL, checks and
+wrapper. `input_capture` maps source paths to copied bytes and hashes. The result
+keeps the original declared `restrictions`. Assertions and assumptions stay in the
+model. An observed assumption violation makes the disposition `inconclusive`.
+Use a separate output directory. The command refuses output paths that overlap
+the formal run. It does not change that run.
+
+The result uses `rvw.formal.cex/1`. `status` is always `inconclusive`, with exit 1.
+`disposition` is `reproduced` only when the original replay observes a property
+listed in the formal failure report and the edited replay observes that same
+property. `failure_not_observed` means that the original replay observed the
+property and the edited replay did not. A tool error, missing baseline failure or
+assumption violation gives `inconclusive`. No disposition proves correctness.
+Unknown state can hide a failure. Only the selected finite witness is replayed.
+
+For Spinal designs, supply metadata from the same elaboration:
+
+```sh
+rvw formal cex --result out/bmc --out out/debug --edit bad@0=0 \
+  --hgldd build/spinalwaves/hgldd --pdg build/spinaltrace/pdg.json \
+  --criterion line:Top.scala:20 --at-time 9 --open --json
+```
+
+HGLDD and PDG inputs are copied. `spinalwaves-check` checks typed lookup on the
+edited wave. `--open` launches `surfer-tywaves` only after that check completes.
+The result also gives its argument vector. SpinalTrace `dyn-pdg` runs on the
+**original replay wave**, where the assertion fails. Select the failing assertion
+with `--criterion`. Set `--at-time` to its pre-edge sample time in VCD units.
+The wrapper scopes are `rvw_formal_top dut`. The top module is the original design.
+Logs and `dynpdg.json` stay in the output directory. A missing tool or failed
+lookup reports `inconclusive` in `navigation`. A launched GUI is not a verified
+navigation result. Preserve the Scala files at the source paths in the metadata.
+
+MCP exposes the same command as the background tool `formal_cex`. It accepts
+`result`, `out`, `trace_index`, `edit` (array), `timeout`, `hgldd`, `pdg`,
+`criterion`, `at_time`, and `open`. The timeout bounds each native subprocess.
+Cancellation stops each native process group. A GUI explicitly opened by the
+user stays open after the replay job ends.
+
+### Validation and limits
+
+The native regression uses `Top` with `assert(!bad)` and `assume(!guard)` at each
+rising edge. BMC selects `bad=1` at time 0. Original replay reproduces the failure.
+`bad@0=0` removes the observed failure. `guard@0=1` violates the assumption and
+stays inconclusive. Tests also cover preserved inputs, refused output overlap,
+invalid edits, converter failure and the MCP runner.
+
+Optional viewer tests check command wiring with a test executable. They do not
+validate real Surfer or SpinalTrace navigation. A real Spinal elaboration with
+matched HGLDD, PDG and Scala source navigation remains to be checked. This first
+increment supports BMC results only. It does not minimize input changes, shorten
+the failure, remove irrelevant assumptions, or prove that an edited trace is a
+legal counterexample. Those parts of issue #60 remain open.
+
+## Proof engines and bounded depth search
+
+Use the source, clock, reset and tie options from `bmc`:
+
+```sh
+rvw formal prove --verilog counter.sv --top counter --out out/proof --timeout 60
+rvw formal bmc --verilog counter.sv --top counter --engine btor:pono,btor:btormc --out out/bmc
+rvw formal depth-search --verilog counter.sv --top counter --depth 4 --max-depth 64 --budget 120 --out out/search --json
+rvw formal prove --verilog counter.sv --top counter --cut count:4 --out out/cut
+```
+
+`prove` defaults to the parallel portfolio `abc:pdr,aiger:avy`.
+BMC supports `btor:pono` and `btor:btormc`. These SBY engines are bounded.
+Do not mix engines that require different modes. Each executable is captured.
+SBY stops the other engines after its first conclusive answer. Conflicting PASS
+and FAIL answers in the log produce an error. An engine stopped before its
+answer cannot be cross-checked. Timeout cannot earn a proof.
+The assertion, clock, state-control and assumption reachability guards remain.
+Results add `proof_kind`: `bounded` or `unbounded`. The reachability guard is
+bounded. It does not establish assumption activation for all time.
+
+Depth search doubles the depth up to `--max-depth`. It stops on failure,
+unknown, error, timeout or budget exhaustion. Each attempt has its own capture
+and result directory. Each attempt checks its current inputs. It does not reuse
+proofs between attempts. The total budget starts before the first attempt.
+Native cleanup and frontend setup can extend elapsed wall time.
+The summary reports the largest bounded pass. It always returns exit 1.
+A bounded search cannot earn an unbounded proof.
+
+`--cut SIGNAL:WIDTH` replaces a DUT signal with unconstrained `$anyseq`.
+The prepared model supplies its checked width. This is an overapproximation.
+No assumption restricts the cut value. A pass applies to all cut values.
+An abstract failure reports `unknown` with `abstraction_counterexample`.
+It is not a confirmed DUT failure. Interface contracts, dependency checks,
+circular-assumption rejection and RAM abstraction contracts remain open.
+
+## SBY campaigns and property history
+
+The runner is separate from full SVA language support:
+
+```sh
+rvw formal sby-regress campaign.toml --out out/campaign-1 --timeout 60 --json
+rvw formal sby-history out/campaign-1 out/campaign-2
+```
+
+Example manifest:
+
+```toml
+core = "external"
+config = "rtl-v1"
+
+[[property]]
+id = "counter_limit"
+sby = "counter.sby"
+top = "counter"
+config = "rtl-v1-reset-one-cycle"
+requirements = ["REQ-COUNT-1"]
+assumptions = ["reset starts active"]
+```
+
+Each job must have one assertion after preparation. Use one SBY task with
+`[options]`, `[engines]`, `[script]` and `[files]`. Modes are `bmc` and `prove`.
+Engines use plain names without extra options. File targets are unique basenames.
+The runner captures manifests, jobs, listed sources and tools before execution.
+Declare full dependencies in `[files]`. Transitive closure, property attribution,
+assumption activation and vacuity are not checked. Each C3 row records these
+limits as `inconclusive`. Raw engine passes are conditional observations.
+They cannot establish design acceptance or a non-vacuous proof.
+
+Outputs use C3 `results.json` and C4 `verdict.json`. `formal_status` preserves
+`bounded_pass`, `unbounded_engine_pass`, `counterexample`, `timeout`, `unknown`
+and `error`. C4 stays inconclusive. The command returns 1.
+Keep each fresh campaign directory for history. `sby-history` groups C3 samples
+by property id. Each sample retains assumptions, requirements, configuration
+and job hash. A matching name cannot establish proof equivalence or reuse.
+
+The native slang plugin loads on this host. However, it rejects
+`assert property (@(posedge clk) a |=> a)` with `SVA unsupported`.
+Full SVA remains blocked by language support in that plugin.
+Do not use `--ignore-assertions` for proof jobs. Sampling regions, multiple
+clocks, reset semantics and temporal sequences remain unqualified.
+Positive and negative semantic cases on each engine remain required.
+
+Native Avy can crash on a constant-safe AIG. That case returns `error`.
+A portfolio can still return a conclusive answer from another engine.
+Constant cut bits, repeated aliased bits and clock cuts are refused.
+
+## riscv-formal
+
+`rvw --project /path/to/rvw.toml formal riscv --out /new/output --timeout 60 --json`
+runs the exact check list in `[riscv_formal]`. The timeout applies to generation
+and to each check. Use the core's machine lock and `nice` for native runs.
+The output directory must be new. The runner copies the checker and design
+inputs there. It does not modify the core or the riscv-formal checkout.
+
+Required project fields:
+
+| Field | Meaning |
+|---|---|
+| `root` | Native riscv-formal checkout with `checks/` and `insns/`. |
+| `wrapper` | Project-owned SystemVerilog wrapper template. |
+| `verilog` | Nonempty list of design source paths. |
+| `isa` | `rv32i`, `rv32im`, `rv32ic`, `rv32imc`, or their `rv64` forms. |
+| `nret` | Must be 1 in this increment. Wider retirement is refused. |
+| `checks` | Exact generated task names. Must include `cover`. |
+| `depth` | Bound from 2 to 200 cycles. |
+| `solver` | `bitwuzla`, `yices`, `z3` or `boolector`. |
+| `defines` | Optional single-line Verilog definitions and assumptions. |
+| `ports` | Table from each RVFI field name to its distinct DUT port name. |
+
+The wrapper declares `rvfi_wrapper`, with `clock`, `reset` and
+`` `RVFI_OUTPUTS ``. Put `@RVFI_CONNECTIONS@` once in the DUT port list.
+The runner replaces it with the project port map. The wrapper must supply the
+memory environment, clock/reset connections and input constraints. Review these
+constraints before using a result. The runner does not certify that they model
+the intended system. It does not check the DUT's port widths before synthesis.
+
+Supported check names are `insn_<instruction>_ch0`, `reg_ch0`, `pc_fwd_ch0`,
+`pc_bwd_ch0`, `causal_ch0`, `unique_ch0` and `cover`. A task that the
+selected ISA does not generate produces an inconclusive error. No task is
+silently skipped. CSR, vector, atomic, floating-point and multi-channel checks
+are not supported by this interface.
+
+`results.json` uses C3. Missing status, tool errors, cover failure and timeouts
+are inconclusive. Assertion FAIL is a failure. PASS needs both an SBY PASS
+status and exit 0. Without retirement cover, assertion PASS records remain
+inconclusive. A reached retirement does not show that each instruction was
+reached. All properties remain bounded. `verdict.json` uses C4: failures reject;
+other results stay inconclusive. Even a complete bounded run cannot earn gate
+acceptance. Adapter conformance and committed gate identity remain work for #63.
+C1 simulation results are not fabricated for formal jobs.
+
+## Examples and provenance
+
+[BOOM](../../../../examples/boom/formal/rvw.toml) and
+[VexRiscv](../../../../examples/vexriscv/formal/rvw.toml) each select ADD, SUB
+and retirement cover at depth 20. Set `RISCV_FORMAL` to a native checkout.
+BOOM also needs `SPINAL_BOOM/formal/BoomFormalTop.v`. Generate that RTL in the
+owner-approved private clone. The runner never elaborates in the source checkout.
+
+The BOOM wrapper and settings are adapted from `riscPrint/spinal-boom`, commit
+`19c6244bca7c9442b34f6b536a63e2013ec36cf4`, `formal/wrapper.sv` and
+`formal/checks.cfg`. The core source stays read-only. The VexRiscv wrapper is
+adapted from `YosysHQ/riscv-formal`, commit
+`c992aa61fdfe0846c5ed90324c596202a1c69b76`, `cores/VexRiscv/wrapper.sv`.
+Its project selects the `FormalSimple` RTL snapshot in that checkout. This is
+not the workstation RV32IM simulation variant. The run records hashes of the
+actual copied RTL, wrapper and checker inputs. No third-party RTL is vendored.
+
+## Decisions and limits
+
+Reuse upstream `genchecks.py` and SBY. Keep all core signal names and memory
+constraints in project data. Require cover to expose shallow reset-only results.
+Do not claim full ISA proof, adapter conformance, privileged-mode correctness,
+or correct memory transactions from this bounded run. Independent transaction
+checks for retire width, order, traps, killed instructions, memory lanes and
+multiple effects remain open. The current tests cover configuration refusal,
+private input copies, missing status, failing cover, timeout and result mapping.
+
+## Sail SystemVerilog checks (#64)
+
+Sail-generated RVFI properties are not implemented. The native riscv-formal
+runner above uses upstream hand-written instruction models. Do not label them
+as Sail-generated checks.
+
+The first intended subset is RV32I ADD, SUB and ADDI, with one retirement
+channel and no memory, CSR, trap or privileged effects. The source baseline is
+[sail-riscv 0.15](https://github.com/riscv/sail-riscv/tree/549e723031b34b5ffea5bbb56367be15c7a38a9e),
+commit `549e723031b34b5ffea5bbb56367be15c7a38a9e`.
+`model/extensions/I/base_insts.sail` has SHA-256
+`07ce0b099023b6e9ce9aeedb0be15a800f2cec8dd7382a076853391537b5add3`.
+The rule locations at that commit are:
+
+| Instruction | Decode rule | Execution rule |
+|---|---|---|
+| ADD | `encdec RTYPE`, line 225 | `execute RTYPE`, lines 237 to 251; ADD at 239 |
+| SUB | `encdec RTYPE`, line 233 | `execute RTYPE`, lines 237 to 251; SUB at 247 |
+| ADDI | `encdec_iop` and `encdec ITYPE`, lines 145 to 155 | `execute ITYPE`, lines 158 to 169; ADDI at 161 |
+
+The compiler is a separate prerequisite. `sail_riscv_sim` from the binary
+release is an executable ISA simulator. It is not the Sail compiler and does
+not expose the SystemVerilog backend. The Sail compiler's backend option is
+`--sv`; see the [Sail manual](https://github.com/rems-project/sail/blob/master/doc/asciidoc/usage.adoc).
+A simulator version alone cannot identify the compiler or its backend.
+
+Before implementing this subset, install and pin a native Sail compiler with
+that backend. Supply the pinned model's full type and state dependencies.
+Record XLEN, extension settings, compiler identity, model input hashes and
+backend options with generated properties. Do not infer those options from
+DUT behavior. Test correct and deliberately wrong units against a separate
+oracle, including x0 and sign-extension cases. Then connect the generated
+transition outputs to RVFI checks. These steps remain required; no generated
+property, supported implementation configuration or independent Sail proof is
+claimed here. Local attempts and blockers belong in issue #64, not in this repo.
+
+## Sampled event BMC
+
+Use `bmc --event-model` for sampled events on `--clock`. Add each extra top input
+with `--event-clock PORT`. This option also enables the event model. Add
+`--async-reset` separately to allow `$adff` and `$adffe` constant-value reset cells.
+These controls remain refused without both options. MCP `formal_bmc` accepts
+`event_model`, `event_clock` and `async_reset`.
+
+SBY runs with `multiclock on` and applies Yosys `clk2fflogic`. One solver step
+is one global input sample. Each declared clock can change independently.
+No rate, phase, fairness or clock relationship is assumed. Simultaneous edges
+and clocks that stop are included. This model covers arbitrary sampled clock
+rates. It does not model analog metastability, propagation delay, or pulses
+that rise and fall entirely between two samples.
+
+An asynchronous reset acts at a sample even when no clock rises. Free reset
+inputs can make inter-edge pulses. The optional reset harness still counts
+`--reset-cycles` rising edges of the primary clock. It then holds reset inactive,
+unless `--free-reset` allows later pulses. Other reset inputs remain free unless
+tied. This sequence does not ensure that every other domain sees a clock edge
+during reset. State without RTL initialization remains free.
+
+The result records `event_model`, declared clocks, relationships, async-reset
+support and the solver-step meaning. Failure `step` is a global sample index.
+Failure `cycle` is null because no common cycle number exists.
+A bounded pass applies only to this sampled model and depth.
+
+Undeclared, derived, gated, constant and falling-edge clocks remain refused.
+Clock ports cannot be tied or used as the harness reset. Async loads, set/clear
+cells, latches, fine-grained state and memory async reset controls remain refused.
+The pre-optimization probes also check unused and tied state.
+`from-sim`, X flows and native replay retain the original one-clock restrictions.
+Related clocks with declared ratios or phase constraints are not yet supported.
+
+Small pass/fail designs and refusal cases are in
+[SpinalChecks/examples/events](../../../../SpinalChecks/examples/events).
+Tests check the independent-clock false-pass case and a pulse that clears an
+async-reset register without clearing a synchronous-reset register.
+
+Formal generated assertions sample on clock edges even when the state has an async
+reset. Reset still gates the check. Formal mode omits monitor text reports.
+Raw assertions with an async reset in their sensitivity list remain refused.
+Their trigger semantics are outside this increment.
+
+## Sequential equivalence (first increment, issue #18)
+
+```sh
+# Export RTL from each revision before this command. Keep the files separate.
+rvw formal equiv --gold old/Top.v --gate new/Top.v --top Top \
+  --clock clk --reset reset --reset-cycles 2 --timeout 60 --out out/equiv --json
+# Rename a flattened state signal explicitly. This is a mapping, not an assumption.
+rvw formal equiv --gold old/Top.v --gate new/Top.v --top Top \
+  --pair stage.old=stage.new --settle 2 --dsec --out out/equiv
+```
+
+The first design is a four-bit synchronous pipeline. Tests cover an equal arithmetic
+refactor, an equal retiming, renamed state, and a changed arithmetic result.
+The output contract is `rvw.formal.equiv/1`. Exit 0 means `equivalent` (proved).
+Exit 1 means `not_equivalent` with a VCD counterexample, or `inconclusive`.
+An invalid or busy output directory exits 2. Each run owns its output directory
+until it writes the result. A new run removes the old result first.
+
+Each side uses the existing captured RTL frontend and tool bindings. Both designs
+must have the same ordered port interface. One rising-edge clock is supported.
+Async controls, latches, memories, blackboxes, design properties and explicit
+nondeterministic cells are refused. State names must cover every register bit.
+The command pairs register names of equal width automatically. Repeat `--pair`
+for renamed state. An unmatched register always prevents an equivalence result.
+The mapping is an inventory. The solver does not assume that paired values agree.
+
+Eqy creates partitions. The command matches boundary ports and keeps internal
+state inside each output cone. Independent output cones can form separate
+partitions. All must pass. Internal state cutpoints are refused.
+SymbiYosys proves each partition with `yosys-abc`, using `scorr; pdr`.
+The flow uses two-state values, independent initial state on each side, and no
+user assumptions. An unknown or absent partition, a missing witness, a solver
+error, or a timeout cannot produce `equivalent`. A failure describes this initial
+state model. It need not be a reachable hardware difference after a real reset.
+
+`--reset` drives the same synchronous reset sequence into each design. It is active
+for `--reset-cycles` clocks, then inactive. Output checks start after that sequence
+and `--settle` extra clocks. Without `--reset`, checks start at time zero, unless
+`--settle` is set. These unchecked startup clocks are an explicit restriction.
+Only `--latency 0` is supported. There is no output cycle shift or protocol adapter.
+No reset port means no reset sequence is inferred. Inputs other than clock and
+reset remain free. Results list the reset, settle and latency settings.
+
+`--dsec` also exports each wrapped design to AIG and runs native ABC `dsec`.
+Its log is advisory. ABC's initialization and name matching differ from the eqy
+obligations. A dsec message cannot replace the partition proof. A dsec timeout
+still makes the command inconclusive. Native dsec as an authoritative backend,
+state encoding maps, nonzero output latency, blackbox contracts, multiple clocks,
+and a scalable partition dependency proof remain part of the epic.
+
+The command takes exported RTL files. It does not check out a source repository,
+run an elaborator, or claim that a supplied revision label produced those files.
+For tracked RTL, use `git show REV:path/to/Top.v > old/Top.v` for each side.
+For Spinal designs, elaborate each committed revision in a separate build area.
+Do not build or change an owner's shared core checkout.
+
+### Validation scope and export gap
+
+The committed equivalence tests use small Verilog designs. Run them from the
+workstation root with the native formal tools on `PATH`:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/formal/test_equiv.py -q
+```
+
+This increment has no committed BOOM leaf export recipe. It does not establish
+BOOM leaf or whole-core equivalence. A source revision label alone does not
+establish the origin of generated RTL.
+
+A reproducible source-revision comparison still needs a tested export flow.
+It must declare the generator dependencies and settings for each revision.
+Module selection must use the project's generated Verilog and project data.
+Core names and settings must stay outside `rvw/src`. Copying a Scala class and
+selected helpers into a temporary harness is not a supported export flow.

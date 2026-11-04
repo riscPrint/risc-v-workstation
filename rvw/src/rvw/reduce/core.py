@@ -61,6 +61,7 @@ class Options:
     seed_start: int = 1
     latencies: list[int] = field(default_factory=lambda: [1, 2, 5, 10, 20, 50])
     symbols: list[str] = field(default_factory=list)
+    instructions: list[str] = field(default_factory=list)
     margin: int = 100
     hang_cycles: int = 5000
     project: str | None = None
@@ -106,6 +107,7 @@ class Reducer:
         self.report_dir = adapter.fresh_dir(self.out / "reports")
         self.trials: list[dict] = []
         self.symbol_results: dict[str, dict] = {}
+        self.stream_results: dict[str, dict] = {}
         cfg, _ = self.inputs.config(self.core, project=o.project)
         self.base = self.inputs.command(self.run, cfg)
         elf = Path(self.base.get('elf'))
@@ -335,6 +337,70 @@ class Reducer:
                 res["note"] = why
             self.symbol_results[name] = res
 
+    def _stream_search(self, name, items, command):
+        from .streams import minimize
+        best_rec = None
+        exhausted = False
+        def probe(kept):
+            nonlocal best_rec, exhausted
+            if len(self.trials) >= self.o.budget:
+                exhausted = True
+                return None
+            c, meta = command(kept)
+            recs = self.trial([(f"stream{len(self.trials)}", c,
+                               {"seed": self.best["seed"], "mem_latency": self.best["mem_latency"], **meta})])
+            rec = recs[0]
+            if not rec['conclusive']:
+                return None
+            if rec['match']:
+                best_rec = rec
+                self._take(rec)  # Stream size, rather than failure cycle, is the objective.
+            return rec['match']
+        kept, reason = minimize(items, probe)
+        if reason == "inconclusive_or_budget":
+            reason = "budget_exhausted" if exhausted else "inconclusive"
+        if best_rec is not None:
+            self._take(best_rec)
+        self.stream_results[name] = {"original": len(items), "remaining": len(kept),
+                                     "kept": kept, "completion": reason,
+                                     "one_minimal": reason == 'one_minimal', "global_minimum": False}
+
+    def mode_instructions(self):
+        if not self.o.instructions:
+            raise ValueError("instructions mode needs --instruction-symbol NAME")
+        from .streams import instruction_slots
+        for name in self.o.instructions:
+            src = self.best['elf']
+            elf = Elf(src)
+            slots = instruction_slots(elf, name)
+            base = self.best['cmd']
+            def command(kept):
+                e = Elf(src)
+                keep = set(kept)
+                for i, (off, size) in enumerate(slots):
+                    if i not in keep:
+                        e.data[off:off+size] = bytes.fromhex('0100' if size == 2 else '13000000')
+                p = self.out / f'instructions-{len(self.trials)}.elf'
+                e.save(str(p))
+                item = self.inputs.capture.file(p)
+                if item.sha256 != hashlib.sha256(e.data).hexdigest():
+                    raise CaptureError('input_not_captured:patched_elf', 'instruction ELF changed before capture')
+                return base.set(elf=str(item.copy)), {"elf": str(item.copy), "instructions_kept": kept}
+            self._stream_search('instructions:' + name, range(len(slots)), command)
+
+    def mode_irq(self):
+        from .streams import irq_entries
+        base = self.best['cmd']
+        text = base.get('irq_schedule')
+        if not text:
+            raise ValueError('irq mode needs --irq-schedule in the original replay')
+        entries = irq_entries(text)
+        # The first event selects schedule mode and sets initial levels. Keep it.
+        def command(kept):
+            schedule = ','.join([entries[0], *[entries[i] for i in kept]])
+            return base.set(irq_schedule=schedule), {"irq_schedule": schedule, "elf": self.best['elf']}
+        self._stream_search('irq', range(1, len(entries)), command)
+
     def _take(self, rec: dict) -> None:
         c = rec["_cmd"]
         self.best.update({"cycles": rec["cycles"], "cmd": c, "dir": rec["dir"], "trial": rec["id"],
@@ -371,9 +437,10 @@ class Reducer:
                "reproducing_settings": sorted({(t.get("seed"), t.get("mem_latency")) for t in self.trials
                                                if t["match"]}, key=lambda x: (str(x[1]), x[0] or 0)),
                "reproduced": any(t["match"] for t in self.trials), "hang_cycles": self.o.hang_cycles,
-               "notes": self.notes, "symbols": self.symbol_results, "capture": self.inputs.record(),
+               "notes": self.notes, "symbols": self.symbol_results, "streams": self.stream_results, "capture": self.inputs.record(),
                "cache_key": None, "source": self.inputs.source_metadata(),
                "trials": [{k: v for k, v in t.items() if k != "_cmd"} for t in self.trials],
+               "budget_exhausted": len(self.trials) >= self.o.budget,
                "wall_s": round(time.monotonic() - self.t0, 1), "final": final}
         (self.report_dir / "reduce.json").write_text(json.dumps(rep, indent=1, default=str) + "\n")
         if not final:
@@ -401,6 +468,9 @@ def render_md(r: dict) -> str:
          f"- {sum(t['match'] for t in r['trials'])}/{len(r['trials'])} trials reproduced the signature "
          f"({r['wall_s']} s)"]
     L += [f"- Note: {n}" for n in r.get("notes") or []]
+    for name, sr in (r.get("streams") or {}).items():
+        L.append(f"- Stream `{name}`: {sr['original']} -> {sr['remaining']}; {sr['completion']}. "
+                 "No global minimum is claimed.")
     for name, sr in (r.get("symbols") or {}).items():
         if sr['smallest_failing'] is None:
             L.append(f"- Symbol `{name}` ({sr['bytes']} bytes): no minimum ({sr['note']})")
