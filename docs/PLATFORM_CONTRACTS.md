@@ -326,10 +326,10 @@ Legacy `mem_*` fields still describe completed effects. A missing fault record
 makes no claim about attempted accesses. This extension describes data accesses;
 instruction fetch faults still use trap cause/tval.
 
-Spike checks zero-completion, uncompressed scalar load/store attempts for width
-codes 0..3. It computes address and width from its own instruction and pre-step
-registers, then checks the synchronous cause. Other encodings, partial effects,
-and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Spike checks zero-completion scalar load/store attempts, compressed accesses
+and LR/SC/AMOs. It computes address and width from its own instruction and
+pre-step registers, then checks the synchronous cause. Reserved encodings,
+partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 

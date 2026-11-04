@@ -662,9 +662,9 @@ these records. Timing-dependent CSRs need an agreed observation point.
 
 C2 version 2 separates attempted data accesses from completed `mem_*` effects.
 `fault_access` uses access-relative byte lanes even with `aligned_mem=true`.
-Spike checks zero-completion uncompressed scalar loads/stores (width codes 0..3)
-using reference operands. Partly completed faults, compressed attempts, unsigned
-load width codes and AMOs are refused. Sail refuses this extension. Null means
+Spike checks zero-completion scalar loads/stores, compressed accesses and
+LR/SC/AMO attempts using reference operands. Unsigned loads retain their
+access width. Partly completed faults are refused on either side. Sail refuses this extension. Null means
 unobserved data. Neither checker fills missing DUT data from the reference.
 
 ### Live retirement integration API
