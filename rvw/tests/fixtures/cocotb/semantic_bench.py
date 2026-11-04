@@ -31,3 +31,41 @@ async def value_semantics(dut):
     else:
         assert dut.unknown_value.value.is_resolvable
         assert dut.high_z.value.is_resolvable
+
+
+@cocotb.test()
+async def synchronous_reset_reassertion(dut):
+    dut.enable.value = 1
+    await start(dut)
+    await RisingEdge(dut.clk)
+    await Timer(1, unit='ns')
+    assert int(dut.count.value) == 1
+    await FallingEdge(dut.clk)
+    dut.reset.value = 1
+    # The synchronous reset must not change state between clock edges.
+    await Timer(1, unit='ns')
+    assert int(dut.count.value) == 1
+    await RisingEdge(dut.clk)
+    await Timer(1, unit='ns')
+    assert int(dut.count.value) == 0
+    await FallingEdge(dut.clk)
+    dut.reset.value = 0
+    await RisingEdge(dut.clk)
+    await Timer(1, unit='ns')
+    assert int(dut.count.value) == 1
+
+
+@cocotb.test()
+async def hold_and_modular_wrap(dut):
+    dut.enable.value = 0
+    await start(dut)
+    for _ in range(3):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit='ns')
+        assert int(dut.count.value) == 0
+    await FallingEdge(dut.clk)
+    dut.enable.value = 1
+    for expected in range(1, 258):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit='ns')
+        assert int(dut.count.value) == expected % 256

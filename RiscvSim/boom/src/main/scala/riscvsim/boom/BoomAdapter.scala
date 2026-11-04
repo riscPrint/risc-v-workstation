@@ -201,6 +201,7 @@ object BoomAdapter extends CoreAdapter {
       val csrs = rvfi.map(_ => trapCsrs(dut))
       val epcs = rvfi.map(_ => trapEpcs(dut))
       var levels = BigInt(-1)
+      var observedMsip = Option.empty[Int]
 
       cd.onSamplings {
         ctl.tick()
@@ -227,6 +228,17 @@ object BoomAdapter extends CoreAdapter {
         val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(seipAddr) & 1) != 0)
         dut.io.interrupts.mtip #= mtipLevel
         dut.io.interrupts.msip #= msipLevel
+        // Observe device backing state independently of retired load/store values.
+        if (observations.nonEmpty) {
+          val msipState = mem.readInt(msip)
+          if (!observedMsip.contains(msipState)) {
+            observedMsip = Some(msipState)
+            observations.foreach(_.println(ujson.write(ujson.Obj(
+              "kind" -> "device_state", "cycle" -> RvwJson.num(ctl.cycle),
+              "address" -> Hex(BigInt(msip)), "value" -> Hex(BigInt(msipState & 0xffffffffL)),
+              "scheduled" -> ujson.Bool(job.irqSchedule.isDefined)))))
+          }
+        }
         dut.io.interrupts.meip #= meipLevel
         if (dut.io.interrupts.seip != null) dut.io.interrupts.seip #= seipLevel
 
