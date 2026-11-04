@@ -46,6 +46,9 @@ rvw arch calibrate --bench median,vvadd,memcpy --out rvw/out/calibration-1
 rvw arch compare rvw/out/calibration-1/rtl.json rvw/out/calibration-1/gem5.json --json
 ```
 
+`compare` requires an RTL base and a gem5 candidate, in that order.
+The IPC ratio is model IPC divided by RTL IPC.
+
 `build` locates gem5, checks its version and RISC-V support, and builds the ELFs.
 Run the installer first if gem5 is absent. Without `--bench`, the nine default
 benchmarks are median, qsort, rsort, towers, vvadd, memcpy, multiply, dhrystone,
