@@ -1905,3 +1905,13 @@ Reports include effective `limits`, `queued_s`, `held_s`, `released` and `outcom
 Handled cancellation releases all reservations. These fields describe reservations,
 not actual consumption. OS resource limits and cumulative project accounting are
 not provided. See `rvw/src/rvw/farm/README.md` for defaults and remaining limits.
+
+### Paired SoC bridge observations (#134)
+
+The optional extended `soc check --transactions` JSONL record includes `write`,
+`data`, `error`, `beats`, and optional `register`, in addition to the original
+address fields. Bindings can declare `byteorder` and `software_byteorder`.
+Beat masks index lanes by ascending address. The format and bounded comparison
+rules are defined in `rvw/src/rvw/soc/README.md`. Matching samples never produce
+a pass. Endpoint pairing and observation provenance remain the capture
+producer's responsibility. The bundled captures do not emit extended records.
