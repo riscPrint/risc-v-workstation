@@ -246,3 +246,15 @@ def test_waiver_without_finding_id_is_rejected(tmp_path):
     p.write_text(json.dumps(cfg))
     with pytest.raises(ValueError, match='finding_id'):
         report(p)
+
+
+def test_verible_syntax_error_is_not_hidden_by_a_style_diagnostic(monkeypatch):
+    from rvw.common.proc import Result
+    monkeypatch.setattr(native.shutil, 'which', lambda _: '/tool')
+    output = ('a.sv:1:1: Use always_comb [always-comb]\n'
+              'a.sv:2:9: syntax error at token "endmodule"\n')
+    monkeypatch.setattr(native, 'run_group', lambda *a, **k: Result(1, stdout=output))
+    result = native.run('verible', ['a.sv'], 'top', 1)
+    assert result['status'] == 'inconclusive'
+    assert result['raw_output'] == output
+    assert len(result['findings']) == 1

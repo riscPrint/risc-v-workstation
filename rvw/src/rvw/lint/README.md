@@ -59,7 +59,9 @@ records, extractor warnings, source locations and the SpinalDB input capture.
 Rule IDs use `verilator.<native-code>`, `verible.<native-rule>` and `cdc.*`.
 Verible rules have warning severity. Verilator preserves warning/error severity.
 Unparsed native text stays in `raw_output`. An execution failure or timeout is
-inconclusive. Missing tools and unselected backends stay visible as `not_run`.
+inconclusive. An unparsed Verible source diagnostic also makes the backend
+inconclusive, even when it also reports style warnings. A waiver cannot remove
+that incomplete-check status. Missing tools and unselected backends stay visible as `not_run`.
 
 Exit 1 means active findings. Exit 3 means incomplete evidence with no active
 findings. Exit 2 means invalid input. Exit 0 requires completed selected native

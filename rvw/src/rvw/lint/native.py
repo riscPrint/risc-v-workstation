@@ -39,6 +39,12 @@ def run(tool, files, top, timeout):
     # A Verilator error is a failed elaboration, even if other warnings were parsed.
     if tool == "verilator" and "%Error" in output:
         status = "inconclusive"
+    # Verible can emit style findings and an untagged syntax error in one run.
+    # Parsed warnings do not establish that every input was checked.
+    if tool == "verible" and any(
+            re.match(r".*?:\d+:\d+(?:-\d+)?:", line) and not parse(tool, line)
+            for line in output.splitlines()):
+        status = "inconclusive"
     version = run_group([executable, "--version"], timeout=10, capture=True)
     return dict(status=status, command=[*command, *files], tool=executable,
                 version=(version.stdout or "") + (version.stderr or ""),
