@@ -125,6 +125,72 @@ def amo(xlen, seed):
     return program('\n'.join(bodies), xlen=xlen).replace('cell: .dword 0', '.dword 0\ncell: .dword 0')
 
 
+def amo_fault(xlen, seed):
+    """Opt-in PMP read-only 64-byte region; aligned AMOs must raise cause 7.
+
+    Requires PMP with lock and NAPOT support. No policy is inferred from the DUT.
+    """
+    store = 'sd' if xlen == 64 else 'sw'
+    bodies = [f"""la t0, cell
+ li t1, 37
+ {store} t1, 0(t0)
+ mv s2, t0
+ srli t1, t0, 2
+ ori t1, t1, 7
+ csrw pmpaddr0, t1
+ li t1, 0x99
+ csrw pmpcfg0, t1
+ csrr t2, pmpcfg0
+ andi t2, t2, 255
+ bne t1, t2, fail
+ la t1, amo_trap
+ csrw mtvec, t1
+ li s1, 0
+"""]
+    index = 0
+    for width in (['w', 'd'] if xlen == 64 else ['w']):
+        for suffix in ['', '.aq', '.rl', '.aqrl']:
+            for op in ('swap', 'add', 'xor', 'and', 'or', 'min', 'max', 'minu', 'maxu'):
+                index += 1
+                bodies.append(f"""la s0, amo_fault_{index}
+ li t1, 73
+ li t2, 85
+amo_fault_{index}:
+ amo{op}.{width}{suffix} t2, t1, (t0)
+ li t3, 85
+ bne t2, t3, fail
+ l{width} t4, 0(t0)
+ li t3, 37
+ bne t4, t3, fail
+ li t3, {index}
+ bne s1, t3, fail
+ addi t4, t0, 1
+ li t5, 63
+check_bytes_{index}:
+ lbu t6, 0(t4)
+ bnez t6, fail
+ addi t4, t4, 1
+ addi t5, t5, -1
+ bnez t5, check_bytes_{index}
+""")
+    handler = """
+.balign 4
+amo_trap:
+ csrr t4, mcause
+ li t5, 7
+ bne t4, t5, fail
+ csrr t4, mepc
+ bne t4, s0, fail
+ csrr t4, mtval
+ bne t4, s2, fail
+ addi s1, s1, 1
+ addi t4, s0, 4
+ csrw mepc, t4
+ mret
+"""
+    return program('\n'.join(bodies), xlen=xlen).replace('other: .dword 0', 'other: .dword 0\n.space 48').replace('.section .tohost', handler + '\n.section .tohost')
+
+
 def fence(xlen, seed):
     rng = random.Random(seed)
     classes = ['r', 'w', 'rw', 'i', 'o', 'io', 'iorw']
@@ -177,7 +243,7 @@ def generate(out, xlen=64, seed=1, suites=None):
     out.mkdir(parents=True, exist_ok=True)
     (out / 'link.ld').write_text(LINK)
     jobs = []
-    for name in (tuple(GENERATORS) if suites is None else suites):
+    for name in (DEFAULT_SUITES if suites is None else suites):
         source = out / f'{name}-{seed}.S'
         source.write_text(GENERATORS[name](xlen, seed))
         jobs.append(dict(name=name, seed=seed, xlen=xlen, source=str(source.resolve()),
@@ -190,7 +256,8 @@ def generate(out, xlen=64, seed=1, suites=None):
     return jobs
 
 
-GENERATORS = {'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
+DEFAULT_SUITES = ('lrsc', 'amo', 'fence', 'fence-i')
+GENERATORS = {'amo-fault': amo_fault, 'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
 
 
 def main():
@@ -200,7 +267,7 @@ def main():
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--suite', choices=list(GENERATORS), action='append')
     args = parser.parse_args()
-    print(json.dumps(generate(args.out, args.xlen, args.seed, args.suite or tuple(GENERATORS)), indent=2))
+    print(json.dumps(generate(args.out, args.xlen, args.seed, args.suite or DEFAULT_SUITES), indent=2))
 
 
 if __name__ == '__main__':

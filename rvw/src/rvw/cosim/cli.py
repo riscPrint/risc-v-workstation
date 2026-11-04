@@ -17,14 +17,21 @@ from .generate import generate
 def register(subparsers):
     parser = subparsers.add_parser("cosim", help="trace-driven architectural comparison")
     subs = parser.add_subparsers(dest="cosim_action", required=True)
-    for action in ("check", "generate"):
-        cmd = subs.add_parser(action, help="check C2 against a model" if action == "check" else "make a C2 trace from Spike")
+    for action in ("check", "generate", "live"):
+        cmd = subs.add_parser(action, help={"check": "check C2 against a model", "generate": "make a C2 trace from Spike",
+                                          "live": "launch an adapter and check C2 during simulation"}[action])
         cmd.add_argument("--elf", required=True, type=Path)
         cmd.add_argument("--core", help="bundled platform name, or a label with --platform")
         cmd.add_argument("--platform", type=Path, help="per-core platform JSON")
         cmd.add_argument("--json", action="store_true")
-        if action == "check":
-            cmd.add_argument("--trace", required=True, type=Path)
+        if action in ("check", "live"):
+            if action == "check":
+                cmd.add_argument("--trace", required=True, type=Path)
+            else:
+                import argparse
+                cmd.add_argument("--out", required=True, type=Path, help="new simulator output directory")
+                cmd.add_argument("--simulator", nargs=argparse.REMAINDER, required=True,
+                                 help="adapter command; use {elf} and {out} placeholders")
             cmd.add_argument("--model", choices=("spike", "sail"), default="spike")
             cmd.add_argument("--history", type=int, default=10)
             cmd.add_argument("--strict", action="store_true", help="disable all synchronization (" + ", ".join(SYNC_KINDS) + ")")
@@ -65,6 +72,8 @@ def calculate(args):
             else:
                 if args.history < 0 or not math.isfinite(args.timeout) or args.timeout <= 0:
                     raise ValueError("history must be nonnegative and timeout must be finite and positive")
+                if args.cosim_action == "live" and args.model != "spike":
+                    raise ValueError("live checking requires Spike; Sail is offline only")
                 if args.model == "spike":
                     probe(platform, args.elf, shim=inputs.shim, executable=inputs.tool.path,
                           env=inputs.child_env, pythonpath=inputs.pythonpath)
@@ -76,13 +85,21 @@ def calculate(args):
                                  default_config=inputs.default_sail_config)
                 sync = () if args.strict else tuple(k for k in SYNC_KINDS if k not in args.strict_sync)
                 try:
-                    result = check(args.trace, model, platform, args.history, sync=sync)
+                    if args.cosim_action == "live":
+                        from .online import launch_online
+                        command = [part.replace("{elf}", str(args.elf)).replace("{out}", str(args.out))
+                                   for part in args.simulator]
+                        result = launch_online(command, model, platform, out=args.out,
+                                               reproduction=inputs.metadata(), timeout=args.timeout,
+                                               env=inputs.child_env, history=args.history, sync=sync)
+                    else:
+                        result = check(args.trace, model, platform, args.history, sync=sync)
                 finally:
                     model.close()
                     model = None
             inputs.capture.verify_tools()
             result["reproduction"] = inputs.metadata()
-            code = 1 if result["status"] == "mismatch" else 0
+            code = 3 if result["status"] == "inconclusive" else 1 if result["status"] == "mismatch" else 0
     except CaptureError as exc:
         result = {"schema": "rvw.cosim/1", "status": "inconclusive", "cause": exc.cause,
                   "message": str(exc)}
@@ -112,7 +129,7 @@ def run(args):
             print(f"  {e['order']} {e['pc']} {e['disassembly']}")
         print("register diff: " + json.dumps(m["register_diff"]))
     elif result["status"] in ("error", "inconclusive"):
-        print(f"cosim error: {result['message']}", file=sys.stderr)
+        print(f"cosim error: {result.get('message', result.get('cause', 'unknown'))}", file=sys.stderr)
     else:
         print(f"{result['status']}: {result['instructions']} instructions" +
               (f", {result['synchronized']} synchronizations ({result['scope']})" if "synchronized" in result else ""))

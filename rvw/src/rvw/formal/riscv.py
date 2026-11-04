@@ -98,14 +98,20 @@ def prepare(cfg, out):
         raise ValueError("--out must not exist; use a new directory for each run")
     root = out / 'riscv-formal'
     identity = {}
+    snapshots = {}
+    identity['settings_sha256'] = hashlib.sha256(json.dumps(cfg, sort_keys=True, default=str).encode()).hexdigest()
     for directory in ('checks', 'insns'):
         shutil.copytree(Path(cfg['root']) / directory, root / directory,
                         ignore=shutil.ignore_patterns('__pycache__'))
+    for path in sorted(root.rglob('*')):
+        if path.is_file():
+            snapshots[str(Path(cfg['root']) / path.relative_to(root))] = hashlib.sha256(path.read_bytes()).hexdigest()
     core = root / 'cores' / 'project'
     core.mkdir(parents=True)
     for i, src in enumerate([cfg['wrapper'], *cfg['verilog']]):
         dest = core / ('wrapper.sv' if i == 0 else f'design{i}.sv')
         shutil.copyfile(src, dest)
+        snapshots[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
         if i == 0:
             dest.write_text(dest.read_text().replace('@RVFI_CONNECTIONS@', ',\n'.join(
                 f'.{cfg["ports"][field]} (rvfi_{field})' for field in FIELDS)))
@@ -115,6 +121,8 @@ def prepare(cfg, out):
         if not dest.is_file():
             raise ValueError(f'unknown instruction model {insn}')
         shutil.copyfile(src, dest)
+        snapshots.pop(str(Path(cfg['root']) / 'insns' / f'insn_{insn}.v'), None)
+        snapshots[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
         identity[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
     # Include the actual checker bytes, including uncommitted changes.
     digest = hashlib.sha256()
@@ -123,6 +131,8 @@ def prepare(cfg, out):
             digest.update(str(path.relative_to(root)).encode())
             digest.update(path.read_bytes())
     identity['checker_sha256'] = digest.hexdigest()
+    from .input_identity import committed_inputs
+    identity['committed_inputs'] = committed_inputs(snapshots)
     verilog = '\n'.join('@basedir@/cores/@core@/' + p.name for p in sorted(core.glob('*.sv')))
     depth_lines = '\n'.join(name + ' ' + ' '.join(map(str, check_settings(cfg, name)['cycles'])) for name in cfg['checks'])
     # Exact check names avoid accidentally enabling other upstream checks.

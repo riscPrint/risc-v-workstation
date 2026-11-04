@@ -1,0 +1,25 @@
+--- a/src/yosys_plugin/sva.cc
++++ b/src/yosys_plugin/sva.cc
+@@ -54,0 +55,18 @@
++	// Single-sample Boolean implication has no pending sequence threads.
++	const ast::SimpleAssertionExpr *antecedent = nullptr;
++	if (ast::BinaryAssertionExpr::isKind(expr->kind)) {
++		auto &binary = expr->as<ast::BinaryAssertionExpr>();
++		if (binary.op != ast::BinaryAssertionOperator::OverlappedImplication ||
++			!ast::SimpleAssertionExpr::isKind(binary.left.kind) ||
++			!ast::SimpleAssertionExpr::isKind(binary.right.kind)) {
++			netlist.add_diag(diag::UnsupportedSVAFeature, source_range);
++			return;
++		}
++		antecedent = &binary.left.as<ast::SimpleAssertionExpr>();
++		if (antecedent->repetition.has_value()) {
++			netlist.add_diag(diag::RepetitionsUnsupported, source_range);
++			return;
++		}
++		expr = &binary.right;
++	}
++
+@@ -85,0 +104,3 @@
++	if (antecedent) {
++		a = netlist.LogicOr(netlist.LogicNot(procedural.eval.sva(antecedent->expr)), a);
++	}
