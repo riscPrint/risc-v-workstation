@@ -111,6 +111,7 @@ def test_dry_run_retains_results(tmp_path):
 
 
 def test_stdio_client(tmp_path):
+    pytest.importorskip('mcp')
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
@@ -139,3 +140,19 @@ def test_stdio_client(tmp_path):
     data = json.loads((out / 'results.json').read_text())
     assert data['summary']['correct_fixes'] == 1
     assert data['summary']['detected'] == 1
+
+
+def test_interrupted_run_keeps_full_denominator(tmp_path, monkeypatch):
+    from rvw.agent_bench import cli
+    from rvw.cli import main
+
+    def stop(call, careless=False):
+        raise RuntimeError('scripted client disconnected')
+    monkeypatch.setattr(cli, 'scripted', stop)
+    out = tmp_path / 'partial'
+    with pytest.raises(RuntimeError, match='disconnected'):
+        main(['agent-bench', 'dry-run', '--pack', str(PACK), '--out', str(out)])
+    result = json.loads((out / 'results.json').read_text())
+    assert result['summary']['tasks'] == 10
+    assert result['summary']['censored_root_causes'] == 10
+    assert all(not t['complete'] for t in result['tasks'])

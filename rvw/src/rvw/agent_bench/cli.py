@@ -27,8 +27,8 @@ def execute(args):
         if not tasks:
             raise ValueError('unknown task')
     args.out.mkdir(parents=True, exist_ok=False)
-    scores = []
-    for task in tasks:
+    scores = [Session(task).score() for task in tasks]
+    for index, task in enumerate(tasks):
         session = Session(task)
         registry = session.registry()
         try:
@@ -39,7 +39,7 @@ def execute(args):
                 scripted(registry.call, careless=args.agent == 'careless')
         finally:
             registry.jobs.shutdown()
-            scores.append(session.score())
+            scores[index] = session.score()
             # Retain partial results if an agent disconnects or a tool fails.
             (args.out / 'results.json').write_text(json.dumps(report(scores, digest, getattr(args, 'agent', 'mcp')), indent=2) + '\n')
     return 0
