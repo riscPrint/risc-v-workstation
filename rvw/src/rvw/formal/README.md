@@ -1172,3 +1172,9 @@ semantics. They add no memory abstraction assumptions. Undefined contents and
 read-under-write behavior stay under Yosys semantics. Blackbox memories need a
 separate refinement contract; this option cannot prove that contract. Native
 legal and faulty RAM tests check both encodings. No capacity gain is claimed.
+
+## Hardware leakage checks
+
+`rvw formal security` runs bounded Spike contract comparisons and emits mapped-gate
+IFT instrumentation. See [security/README.md](security/README.md) for the hardware
+threat model, adapter contract, sampled ADD timing scope and explicit limits.

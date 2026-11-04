@@ -368,8 +368,28 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {security,template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal security`
+
+```text
+usage: rvw formal security [-h] [--project PROJECT] {ift,contract} ...
+```
+
+### `rvw formal security ift`
+
+```text
+usage: rvw formal security ift [-h] --top TOP --out OUT [--project PROJECT]
+    netlist
+```
+
+### `rvw formal security contract`
+
+```text
+usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
+    manifest
 ```
 
 ### `rvw formal template`

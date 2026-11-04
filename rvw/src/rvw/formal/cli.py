@@ -75,6 +75,10 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from .security.cli import register as security_register
+    security_register(s)
+
+
     template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
     from . import invariants, contracts
     template.add_argument("kind", choices=invariants.NAMES)

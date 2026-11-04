@@ -1779,6 +1779,24 @@ and verdict. BMC passes must reach the requested depth. All observations and
 per-tool qualifications stay in `rvw.cdc-bench-result/1`. Missing commercial
 adapters are `not_run`. Suite agreement is not signoff or commercial parity.
 
+## Hardware leakage campaign result
+
+`rvw formal security contract` writes `rvw.leakage/1` in `result.json`.
+`verdict` is `violation`, sampled `no_violation`, or `inconclusive`.
+Exit codes are 1, 0, and 3 respectively. This is separate from a C4 accept or
+formal proof. `cases`, `compared_pairs`, `zkt_add_comparisons`, `zkt_verdict`,
+`violations` and `errors` preserve the tested scope. A case with missing evidence
+or architectural differences cannot contribute a clean comparison. No comparable
+pair is inconclusive. A witness can coexist with incomplete cases.
+
+The sequential Spike contract exposes retired PCs and memory addresses. RTL
+adapters return `complete`, reference-comparable `effects`, strictly increasing
+retirement `cycles`, and integer `observations` for exactly the declared channels.
+The runner compares only equal public contexts and equal contract traces.
+It records source inputs and adapter responses. Adapters must bind their native
+tools and all external dependencies. See `rvw/src/rvw/formal/security/README.md`.
+The hardware threat model and unmodeled channels do not expand C8.
+
 ### Formal campaign observations in C3 and C4
 
 `rvw formal sby-regress` writes standalone C3 suites named `formal-sby`.

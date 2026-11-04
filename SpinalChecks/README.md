@@ -722,3 +722,10 @@ flow. `--simulate` runs the same monitor with seeded Icarus perturbation.
 See the [lint guide](../rvw/src/rvw/lint/README.md#selected-protocol-safety-checks)
 for the fixed port contract, assumptions, commands and limits. These reference
 checks do not qualify whole-core CDC or analog metastability behavior.
+
+## Hardware information flow
+
+[security/](security/README.md) contains the native `rvw_ift` Yosys pass.
+It adds value-sensitive data and control taint to mapped Boolean gates and
+rising-edge registers. It is optional. It does not change core source files.
+See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
