@@ -182,3 +182,17 @@ def test_c1_binding_never_accepts_missing_or_mismatched_evidence(session, change
     assert binding['status'] == 'inconclusive'
     assert cause in binding['cause']
     assert 'run' not in binding
+
+
+@pytest.mark.parametrize('payload', [
+    None, {}, {'op':'source','file':'Unit.scala','line':True},
+    {'op':'source','file':'Unit.scala','line':1.5},
+    {'op':'select','signal':'','time':'0'},
+    {'op':'select','signal':'execute_PC','time':'0','end':1},
+    {'op':'select','signal':'execute_PC','time':'10','end':'9'},
+    *[dict(op='trace', signal='execute_PC', time=value)
+      for value in ['-1', '1.5', '9223372036854775808', 10, '9'*200]],
+])
+def test_native_and_web_requests_reject_invalid_navigation(session, payload):
+    with pytest.raises((QueryError, KeyError)):
+        session.request(payload)

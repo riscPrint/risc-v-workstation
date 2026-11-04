@@ -58,7 +58,7 @@ async function fromSource(file:string, line:number):Promise<void> {
   if (ticket !== generation) return;
   const candidates = data.result.candidates as string[];
   $('source').replaceChildren(...candidates.map(s => button(s, () => { signal.value=s; run(select); })));
-  if (candidates.length === 1) { signal.value=candidates[0]; await select(); }
+  if (candidates.length === 1) { signal.value=candidates[0]; await select(ticket); }
   else $('status').textContent = candidates.length ? 'Select a signal for this source line.' : 'Unresolved source mapping.';
 }
 function links(value:any, container:HTMLElement):void {
@@ -70,8 +70,7 @@ function links(value:any, container:HTMLElement):void {
   if (typeof value.file === 'string' && Number.isInteger(value.line)) container.append(button(`${value.file}:${value.line}`, () => run(() => fromSource(value.file,value.line))));
   for (const item of Object.values(value)) if (item && typeof item === 'object') links(item, container);
 }
-async function select():Promise<void> {
-  const ticket = begin();
+async function select(ticket = begin()):Promise<void> {
   const start=time.value;
   if (!isTime(start)) throw new Error('Time must be an integer from 0 to 9223372036854775807.');
   const end=String(BigInt(start)+100n > 2n**63n-1n ? 2n**63n-1n : BigInt(start)+100n);

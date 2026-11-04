@@ -59,6 +59,32 @@ try {
  await page.locator('#source button').first().click();await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
  await page.locator('#diagram .sb-box').first().click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('resolved'));
+ // An older reverse-source response must not clear a newer signal selection.
+ let releaseSource;
+ const intercepted = new Promise(resolve => { releaseSource=resolve; });
+ const holdSource=async route => {
+   if(route.request().postDataJSON().op==='source') releaseSource(route);
+   else await route.continue();
+ };
+ await page.route('**/api',holdSource);
+ await page.locator('#source button').first().click();
+ const held=await intercepted;
+ await page.locator('#time').fill('20');await page.locator('#time').press('Enter');
+ await page.waitForFunction(()=>document.querySelector('#wave').textContent.includes('@ 20 ='));
+ const current=await page.locator('#wave').innerText();
+ await held.fulfill({json:{result:{candidates:[]}}});
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ assert.equal(await page.locator('#wave').innerText(),current);
+ assert.match(await page.locator('#status').innerText(),/^resolved/);
+ await page.unroute('**/api',holdSource);
+ const unresolvedSource=async route => {
+   if(route.request().postDataJSON().op==='source') await route.fulfill({json:{result:{candidates:['missing_signal']}}});
+   else await route.continue();
+ };
+ await page.route('**/api',unresolvedSource);
+ await page.locator('#source button').first().click();
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('inconclusive'));
+ await page.unroute('**/api',unresolvedSource);
  // Failed navigation must remove the previous wave, source and trace evidence.
  await page.locator('#signal').fill('missing_signal');await page.locator('#signal').press('Enter');
  await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('inconclusive'));

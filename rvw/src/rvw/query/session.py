@@ -77,8 +77,29 @@ class Session:
         return json.loads(gzip.decompress(data) if encoding == 'gzip' else data)
 
     def request(self, a):
+        # The web host has no TypeScript transport guard. Apply the same bounds here.
+        if not isinstance(a, dict):
+            raise QueryError('invalid session request')
+        op = a.get('op')
+        if op == 'source':
+            if (not isinstance(a.get('file'), str) or type(a.get('line')) is not int
+                    or not 1 <= a['line'] <= 2**53 - 1):
+                raise QueryError('invalid source location')
+        elif op in ('select', 'trace'):
+            if not isinstance(a.get('signal'), str) or not a['signal'].strip():
+                raise QueryError('invalid signal')
+            for key in ('time', 'end'):
+                if key == 'end' and key not in a:
+                    continue
+                value = a.get(key)
+                if (not isinstance(value, str) or not 1 <= len(value) <= 19
+                        or not value.isascii() or not value.isdecimal()
+                        or int(value) > 2**63 - 1):
+                    raise QueryError('invalid time range')
+            if 'end' in a and int(a['end']) < int(a['time']):
+                raise QueryError('invalid time range')
         start = perf_counter()
-        op = a['op']
+        op = a.get('op')
         if op == 'open':
             with reader(self.wave) as (conn, header):
                 meta = json.loads(conn.execute('SELECT value FROM metadata').fetchone()[0])
@@ -92,7 +113,7 @@ class Session:
                              'WHERE f.path=? AND s.line=? ORDER BY s.path', (a['file'], int(a['line'])))
             result = dict(candidates=[r[0] for r in rows])
         elif op == 'select':
-            t, end = int(a['time']), int(a.get('end', int(a['time']) + 100))
+            t, end = int(a['time']), int(a.get('end', min(int(a['time']) + 100, 2**63 - 1)))
             if not 0 <= t <= end <= 2**63 - 1:
                 raise QueryError('invalid time range')
             sig = self.db.resolve(a['signal'], include_pruned=True)[0]
