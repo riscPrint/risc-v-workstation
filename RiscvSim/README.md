@@ -588,3 +588,13 @@ or newer. Older or unknown tools keep collapsed coverage.
 The make wrapper checks the generated compiler metadata before it enables the
 per-instance writer. It leaves shared-counter models under the native collapse
 rule. Forcing a writer cannot recover instance observations from shared counters.
+
+
+## Simulation speed metrics
+
+C1 records `metrics.sim_khz` and `metrics.sim_instructions_per_s` from the
+unrounded `details.execution_s`. Model setup is excluded. Adapter execution,
+trace writes and artifact handling are included. The dashboard plots recorded
+C3 rates per preset. These rates do not prove correctness. Use long workloads,
+fixed seed and memory latency, and serial runs. Keep tracing options equal.
+See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.
