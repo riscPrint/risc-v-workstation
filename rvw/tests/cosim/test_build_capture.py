@@ -149,3 +149,39 @@ def test_runtime_refuses_source_version_label_tampering(inputs):
     Path(str(output) + '.manifest.json').write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match='build.*binding.*rebuild'):
         load_shim(output, source)
+
+
+@pytest.mark.parametrize('soname', [None, 'libriscv.so.1'])
+def test_versioned_library_survives_build_cleanup(inputs, soname):
+    source, _, old_library, prefix, output = inputs
+    library = prefix / 'lib/libriscv.so.1.2'
+    cxx = shutil.which('c++')
+    cc = source.parent / 'dependency.cc'
+    # On macOS use its native install name. Linux also tests Spike's no-SONAME build.
+    identity = (['-Wl,-install_name,@rpath/libriscv.so.1'] if sys.platform == 'darwin'
+                else (['-Wl,-soname,' + soname] if soname else []))
+    result = run_group([cxx, '-shared', '-fPIC', str(cc), *identity, '-o', str(library)],
+                       capture=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    old_library.unlink()
+    (prefix / 'lib/libriscv.so.1').symlink_to(library.name)
+    (prefix / 'lib/libriscv.so').symlink_to('libriscv.so.1')
+    original = library.read_bytes()
+    manifest = builder.build(source, output, prefix)
+    assert not list(output.parent.glob('.rvw-shim-*'))
+    # The installed self-check must also load after the temporary build is gone.
+    result = run_group([sys.executable, '-c',
+                        'import ctypes,sys; assert ctypes.CDLL(sys.argv[1]).observed_value() == 8',
+                        str(output)], capture=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    # Prove that loading uses the capture, without a fallback to the live prefix.
+    from rvw.common.capture import Capture
+    capture = Capture(source.parent / 'runtime-inputs')
+    prepared = spike.capture_shim(capture, output, source)
+    library.unlink()
+    lib = spike.load_shim(prepared)
+    assert lib.observed_value() == 8
+    assert manifest['spike_library_sha256'] == sha256(original).hexdigest()
+    assert any(row['symlinks'] for row in manifest['build_inputs']['capture']['files']
+               if row['source'] == str(prefix / 'lib/libriscv.so'))
+    assert Path(prepared['dependency']['copy']).read_bytes() == original
