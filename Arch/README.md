@@ -447,3 +447,81 @@ must run on reference and RTL, device states and replay inputs must agree, and
 SBI, user-process, page-fault, signal, context-switch and selected kernel selftests
 must pass. FreeRTOS/Zephyr adapters also remain open. None is inferred from the
 minimal reference boot.
+
+## Bayesian fitting, repeats and predictions
+
+`rvw arch search search.json --out runs/search --json` runs a bounded search.
+Its plan has this shape. The `fit` object is a complete `rvw.arch-fit-plan/1`
+plan from above, with `candidates: {}`. Its `rtl` path resolves against the
+search plan. Keep the plan and output in the core project.
+
+```json
+{
+  "schema": "rvw.arch-search/1",
+  "fit": {"schema": "rvw.arch-fit-plan/1", "rtl": "runs/rtl.json", "candidates": {},
+          "train": ["train-workload"], "held_out": ["unseen-workload"],
+          "events": [{"name": "ROI cycles", "rtl_metric": "roi_cycles",
+                      "gem5_stat": "system.cpu.numCycles", "unit": "cycles",
+                      "semantics": "Verify the same ROI clock and boundaries in both engines."}],
+          "scope": "State the target and workload scope.",
+          "uncertainty": "State the counter and model limits.", "unsupported": []},
+  "parameters": {"bus_bytes": [4, 8, 16]},
+  "budget": 3,
+  "repeats": 3,
+  "timeout_s": 600
+}
+```
+
+This generic example does not fit a named core. Parameter rules are the same
+as `sweep`. There are at most 32 space points and 256 model processes.
+The search uses an RBF Gaussian process with fixed noise variance `1e-6` and
+expected improvement. Numeric ranges use unit scaling. Categories use one-hot
+encoding. The first point and ties use the declared space order.
+Each point runs on training workloads only. Repeated training event errors
+select the point. Only then does the selected point run on held-out workloads.
+The saved RTL report supplies observations. It does not run RTL again.
+Memory latency cannot change because RTL observations must stay comparable.
+SoC fitting is not supported. An invalid run stops the search.
+`progress.json` records completed training points. `search.json` records the
+selected point, training intervals, held-out interval and checked event fits.
+The command does not resume a partial search.
+
+`rvw arch measure --bench NAME,NAME --repeats 3 --out runs/repeats --json`
+runs both RTL and gem5 again for every repeat. It retains fresh evidence and
+checks stable tool, model, description, ELF and workload identities.
+`measure.json` reports mean cycles, IPC ratio and cycle gap with 95% percentile
+bootstrap intervals. Search also reports bootstrap intervals for repeated
+model scores. Both use 4000 resamples and bootstrap seed 0. These intervals
+describe repeat variation only. Calibration keeps RTL seed 1. Deterministic
+runs can give zero-width intervals even when a model has a large bias.
+Use enough independent measurements for the intended decision. These reports
+do not measure generalization uncertainty or establish a fidelity threshold.
+
+Event fits include `event_correlations` for each split. Pearson correlation
+needs at least three workloads and nonconstant counters. Missing variation or
+too few workloads gives `inconclusive` with a null coefficient. Correlation
+does not establish event semantics or accuracy.
+
+Store a prediction before the RTL experiment. Score it after that experiment:
+
+```sh
+rvw arch predict runs/model/gem5.json --out predictions/idea.json --json
+rvw arch score-prediction predictions/idea.json runs/later/rtl.json \
+  --out predictions/idea-score.json --json
+```
+
+Create the parent directory first. Each ledger file is created exclusively.
+A prediction stores UTC time, the model report, its hash and local evidence
+paths. Scoring rechecks the stored prediction, model evidence and later RTL
+with `compare`. Each RTL evidence file must have a modification time after
+the prediction. The score is a separate file linked by the prediction hash.
+This local ordering check is not a trusted timestamp or proof of blinding.
+Keep the original evidence trees. Do not use old RTL evidence with a changed
+timestamp as a new measurement. Ledger scores currently cover ROI cycles and
+IPC. Event errors remain in the separate fitting report.
+
+MCP exposes `arch_search`, `arch_measure`, `arch_predict` and
+`arch_score_prediction` with the same inputs as the CLI.
+Native VexRiscv fitting still needs independently checked ROI event mappings.
+Description tests and synthetic subprocess tests do not establish native model
+fidelity. No BOOM fitted parameters belong in this repository.

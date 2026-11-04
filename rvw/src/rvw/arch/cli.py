@@ -5,6 +5,9 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == 'measure':
+        from .measure import measure
+        return measure(**kw)
     if action == 'search':
         from .search import search
         return search(**kw)
@@ -64,7 +67,7 @@ def register(subparsers):
     p.add_argument('--out', required=True)
     p.add_argument('--bench')
     p.add_argument('--json', action='store_true')
-    for action in ('build', 'run', 'calibrate', 'compare', 'fit', 'inspect'):
+    for action in ('build', 'run', 'calibrate', 'compare', 'fit', 'inspect', 'measure'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)
         p.add_argument('--json', action='store_true')
@@ -78,6 +81,8 @@ def register(subparsers):
             p.add_argument('base')
             p.add_argument('candidate')
         else:
+            if action == 'measure':
+                p.add_argument('--repeats', type=int, default=3)
             p.add_argument('--bench', help='comma-separated benchmark names')
             if action != 'build':
                 p.add_argument('--out', required=True, help='new output directory')

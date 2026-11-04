@@ -1859,3 +1859,42 @@ reachability rules. It does not establish an unbounded proof or gate acceptance.
 The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+
+### C9 search, repeats and prediction ledger
+
+`arch search PLAN --out DIR` and MCP `arch_search` consume
+`rvw.arch-search/1`. Exact fields: `schema`, `fit`, `parameters`, `budget`,
+`repeats`, `timeout_s`. `fit` is `rvw.arch-fit-plan/1` with empty `candidates`.
+RTL paths resolve against PLAN. Parameter rules follow `rvw.arch-sweep/1`.
+The space is at most 32 points. Budget is 1..32. Repeats are 2..10.
+At most 256 model processes run, serially under the gem5 lock.
+Latency changes and SoC fitting are refused. Training mean event errors drive
+an RBF Gaussian process with expected improvement. Held-out workloads run only
+after selection. `rvw.arch-search-result/1` stores method, plan hash, trials
+with descriptions, report paths and training statistics, selected point,
+held-out statistics and checked fit reports. Partial progress is inconclusive.
+No search result is a fidelity verdict.
+
+`arch measure --out DIR [--repeats N]` and MCP `arch_measure` repeat calibration
+(default 3, range 2..10). `rvw.arch-measure/1` stores individual comparison
+reports and per-workload statistics for RTL cycles, model cycles, IPC ratio
+and cycle gap. The tool checks stable core, preset, latency, ELF, instruction
+counts, description, model and gem5 binary across repeats. Intervals in these
+reports use a 95% percentile bootstrap mean, 4000 resamples, seed 0. They
+measure observed repeat variation only. Fixed seed 1 and deterministic runs
+can give zero width. They do not quantify model bias or generalization error.
+
+`rvw.arch-fit/1` adds `event_correlations`, keyed by `train` and `held_out`, then
+event name. Values have `n`, `pearson_r`, `status` and `reason`. Less than three
+workloads or a constant counter gives null and `inconclusive`. Otherwise the
+coefficient describes the checked event pairs. No semantic match is implied.
+
+`arch predict CANDIDATE --out FILE` / MCP `arch_predict` exclusively create
+`rvw.arch-prediction/1`: UTC `created_at`, candidate path/hash, full checked
+model report and status `predicted`. `arch score-prediction PREDICTION RTL
+--out FILE` / MCP `arch_score_prediction` exclusively create
+`rvw.arch-prediction-score/1`: UTC `scored_at`, prediction path/hash, checked
+C9 comparison and status `reported`. Model report and raw evidence are rechecked.
+Every RTL evidence mtime must follow the prediction time. This is a local
+ordering check, not trusted chronology. The ledger requires original local
+paths and stable evidence. No file races or hostile timestamp claims are covered.
