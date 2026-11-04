@@ -399,6 +399,8 @@ class Runner:
         return src
 
     def run(self, plan: list[PlanItem]) -> dict:
+        for item in plan:
+            self.core.negotiate(item.suite)
         if self.inputs.closed:
             self.__init__(self.core, self.source, self.out, self.opts)
         try:
@@ -653,6 +655,7 @@ class Runner:
 
     def run_suite(self, item: PlanItem, tests: list[TestSpec]) -> SuiteResults:
         suite, config = item.suite, item.config
+        self.core.negotiate(suite)
         rdir = self.out / suite.name / config
         rdir.mkdir(parents=True, exist_ok=True)
         jobs = self._jobs(item, tests, rdir)

@@ -21,4 +21,4 @@ def test_native_semantics(tmp_path, backend):
     manifest = tmp_path / 'manifest.json'
     manifest.write_text(json.dumps(request))
     result = run(manifest, tmp_path / 'out', timeout=120)
-    assert [t['status'] for t in result['tests']] == ['pass', 'pass'], (tmp_path / 'out/run.log').read_text()
+    assert [t['status'] for t in result['tests']] == ['pass'] * 4, (tmp_path / 'out/run.log').read_text()

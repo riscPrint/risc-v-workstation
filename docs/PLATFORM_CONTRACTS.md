@@ -2253,6 +2253,47 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+### C1 native semantic requirements
+
+A regression config can set `[core] backend = "riscvsim-verilator"`.
+Each suite can set `requires = ["two_state", "clock", "immediate_assertions"]`.
+The shared native profile checker refuses unsupported or malformed requirements
+before input capture and adapter launch. A nonempty requirement list without a
+known profile is an error. Existing configs with no requirements stay valid.
+The direct RiscvSim shell launch checks `RISCVSIM_REQUIRES`, a comma-separated
+feature list, before it creates temporary launch state. This profile describes
+the Spinal native interface, not the cocotb Verilator invocation. Coverage flags
+retain their existing version checks and do not imply a coverage guarantee.
+
+### Sampled reset checks
+
+Optional project bindings can emit `rdc.assertion`, `rdc.release`,
+`rdc.unknown_control`, `rdc.release_order`, `rdc.isolation` and
+`rdc.reconvergence_protocol` monitor findings. Each binding uses an independent
+observation clock and normalized control levels. These findings do not discharge
+the structural lint report's unrun release or reconvergence proofs. Missing
+bindings provide no reset protocol evidence. Between-sample pulses and physical
+timing are outside this sampled contract.
+
+### Optional HPM control checks
+
+`hpm.selector`, `hpm.overflow_pending` and `hpm.counter_interrupt` identify
+optional project monitor rules. The selector policy is a declared WARL mask.
+The interrupt policy is sticky modular overflow with clear priority and a
+separate interrupt enable. Counts and event multiplicity come from independent
+observations. These rules do not establish architectural CSR access compliance,
+selector event meaning, or real-core coverage without explicit project bindings.
+
+### Independent device bus checks
+
+Optional `register.bus_decode`, `register.bus_data`, `register.bus_order` and
+`register.bus_latency` rules check accepted bus request/response observations
+against project register addresses and version-1 register models. One request
+can be outstanding. Read data precedes the request's side effects. An unmapped
+address must receive an error. A zero-cycle response is allowed. A delayed
+response must arrive within the declared positive cycle bound. These rules
+provide no real-device or CSR compliance claim without a concrete binding.
+
 MMU observation inventories can add `walk_check` with `status` of `consistent`,
 `mismatch` or `inconclusive`. This bounded check compares immutable PTE read
 addresses and values with scenario data and observes the physical target range.
