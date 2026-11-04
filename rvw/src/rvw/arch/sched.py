@@ -191,6 +191,12 @@ def command(argv, log, timeout, env=None):
         raise ValueError(f'command failed or timed out; see {log}')
 
 
+def linker_script(d):
+    return (f'ENTRY(_start)\nSECTIONS {{ . = {d["entry"]}; '
+            '.text : { *(.text.init) *(.text*) } '
+            '. = ALIGN(8); .tohost : { *(.tohost) } }\n')
+
+
 def measure(description_path, out, project=None, count=32, timeout=600,
             cc='riscv64-unknown-elf-gcc', mca='llvm-mca'):
     d = description(description_path); integer(count, 'count', 16, 256)
@@ -205,9 +211,7 @@ def measure(description_path, out, project=None, count=32, timeout=600,
     tools = {'cc': tool_identity(cc), 'mca': tool_identity(mca)}
     write_json(out / 'description.json', d)
     linker = out / 'link.ld'
-    linker.write_text(f'ENTRY(_start)\nSECTIONS {{ . = {d["entry"]}; '
-                      '.text : { *(.text.init) *(.text*) } '
-                      '. = ALIGN(8); .tohost : { *(.tohost) } }\n')
+    linker.write_text(linker_script(d))
     jobs, cases = [], []
     for c in d['classes']:
         for mode in ('dependent', 'independent'):

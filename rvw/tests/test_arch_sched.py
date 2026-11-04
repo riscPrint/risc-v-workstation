@@ -1,5 +1,4 @@
 """Scheduling fragments and fail-closed retirement-span reports."""
-import copy
 import json
 from pathlib import Path
 import shutil
@@ -137,11 +136,52 @@ def test_native_elf_entry(tmp_path):
     if not tool: pytest.skip('native RISC-V GCC absent')
     source, _ = sched.assembly(desc()['classes'][0], 16, 'dependent')
     (tmp_path/'test.S').write_text(source)
-    (tmp_path/'link.ld').write_text('ENTRY(_start)\nSECTIONS { . = 0x80000000; '
-        '.text : { *(.text.init) *(.text*) } . = ALIGN(8); .tohost : { *(.tohost) } }\n')
+    (tmp_path/'link.ld').write_text(sched.linker_script(desc()))
     r = subprocess.run([tool, '-nostdlib', '-nostartfiles', '-march=rv32im', '-mabi=ilp32',
         '-Wl,--no-relax', '-Wl,-T,'+str(tmp_path/'link.ld'), '-o', str(tmp_path/'test.elf'),
         str(tmp_path/'test.S')], capture_output=True, timeout=30)
     assert r.returncode == 0, r.stderr
     data = (tmp_path/'test.elf').read_bytes()
     assert int.from_bytes(data[24:28], 'little') == 0x80000000
+
+
+def test_measure_orchestration_with_synthetic_tools(tmp_path, monkeypatch):
+    """Fixture data test the runner. They do not measure RTL or LLVM."""
+    from types import SimpleNamespace
+    d = desc(); path = tmp_path/'desc.json'; path.write_text(json.dumps(d))
+    monkeypatch.setattr(sched, 'load_config', lambda **kw: SimpleNamespace(
+        configs=['rv32im'], default_config='rv32im', lock='test', source_env=None,
+        adapter=['synthetic-adapter'], name='test'))
+    monkeypatch.setattr(sched, 'executable', str)
+    monkeypatch.setattr(sched, 'tool_identity', lambda path: {'fixture': path})
+    monkeypatch.setattr(sched, 'run_group', lambda *a, **kw: SimpleNamespace(
+        returncode=0, stdout='00001000 T roi_start\n'))
+
+    def fake_command(argv, log, timeout, env=None):
+        args = list(map(str, argv))
+        if args[0].endswith('gcc'):
+            Path(args[args.index('-o')+1]).write_bytes(b'synthetic ELF')
+        elif args[0] == 'llvm-mca':
+            n = len(Path(args[-1]).read_text().splitlines())
+            Path(log).write_text(f'Total Cycles: {n+3}\n')
+        else:
+            manifest = Path(args[args.index('--manifest')+1])
+            for job in map(json.loads, manifest.read_text().splitlines()):
+                run = Path(job['out']); run.mkdir()
+                name, mode, n = run.stem.split('-'); n = int(n)
+                c = next(c for c in d['classes'] if c['name'] == name)
+                words = sched.kernel(c, n, mode)[1]
+                raw, header, _, _ = fixture_trace()
+                raw.update(elf=job['elf'], elf_sha256=sched.digest(Path(job['elf']).read_bytes()),
+                           instret=n, cycles=1000, artifacts={'rvfi_trace':'rvfi.jsonl'})
+                records = [dict(order=i, cycle=10+i*2, pc=hex(4096+i*4), insn=hex(w))
+                           for i,w in enumerate(words)]
+                records.append(dict(event='end', status='pass', cycle=1000))
+                (run/'result.json').write_text(json.dumps(raw))
+                (run/'rvfi.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in [header]+records))
+    monkeypatch.setattr(sched, 'command', fake_command)
+    report = sched.measure(path, tmp_path/'out', count=16)
+    assert report['generated_model_accuracy'] == 'inconclusive'
+    assert report['model_kind'] == 'builtin-baseline'
+    assert len(report['samples']) == 8 and len(report['classes']) == 4
+    assert all(row['error_percent'] == -50 for row in report['classes'])
