@@ -1955,6 +1955,18 @@ A failed run stops the sweep. Cancellation stops the active process group.
 Build costs, peak RSS, PGO and checkpoints are outside this report.
 
 
+### UVM component results in C3
+
+`rvw regress uvm` writes standalone `rvw.results/1` for the pinned
+Accellera library and the bounded component suite in `Uvm/README.md`.
+Entries use `kind: "uvm"` and the runtime seed. Normal passes require
+successful exit, all expected test markers, one completion marker and no
+UVM errors or fatals. The fault-detection entry requires the specific
+RVFI mismatch and a failed simulation. A timeout, missing evidence or a
+build failure is inconclusive with status `error`. These files have no
+C1 ELF or complete C8 identity. They cannot establish C4 gate acceptance.
+
+
 ## Local integrated debug session
 
 `python -m rvw.query.session --db DESIGN --wave SNAPSHOT.rvwi` holds one C6
@@ -2066,4 +2078,5 @@ Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
 must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
+
 

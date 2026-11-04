@@ -81,6 +81,16 @@ Missing optional tools cause skips. These cases qualify only the exercised
 behavior on the installed versions. See the Spinal-generated counter and
 VexRiscv unit examples in `examples/vexriscv/cocotb`.
 
+
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seeds 3 --json` runs the pinned
+Accellera UVM library with native Verilator timing and coverage.
+See [the UVM suite](../../../../Uvm/README.md) for the pin, licence checks,
+machine lock command, conformance boundary and remaining DPI/VIP gaps.
+It writes standalone C3. It does not implement C1 or earn C4 acceptance.
+
 ## Compare simulation speed
 
 `rvw regress speed-compare --pair BASE1 CAND1 --pair BASE2 CAND2 ... --out report.json`
@@ -170,6 +180,7 @@ inconclusive until every requested comparison passes. It does not change
 simulator defaults. The sweep covers run throughput only. Build phase timing,
 peak RSS, partitioning, PGO and ccache require separate experiments.
 
+
 ## Native HDL testbenches
 
 Use `rvw regress backends --hdl --json` to list HDL invocation profiles.
@@ -229,3 +240,4 @@ one X-free counter, not equivalence of arbitrary designs. This runner does not
 execute C1 ELF runs, change the RiscvSim backend, or earn C4 gate acceptance.
 Hashes cover listed source files, not transitive includes, memory images,
 libraries or all environment inputs. Replay is not hermetic under C8.
+
