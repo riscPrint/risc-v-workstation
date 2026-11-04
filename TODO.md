@@ -28,6 +28,8 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#206](https://github.com/riscPrint/risc-v-workstation/issues/206) feat(integration): import implementation feedback links
 - [#208](https://github.com/riscPrint/risc-v-workstation/issues/208) feat(integration): describe memory bist handoff requirements
 - [#211](https://github.com/riscPrint/risc-v-workstation/issues/211) feat(integration): describe jtag and test access topology
+- [#377](https://github.com/riscPrint/risc-v-workstation/issues/377) feat(integration): add VexiiRiscv as a test core
+- [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) docs(research): study Chipyard and find contributions we can make
 
 ## ARCH: architecture exploration
 
@@ -123,6 +125,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#217](https://github.com/riscPrint/risc-v-workstation/issues/217) feat(sim): define mixed-signal boundary model adapters
 - [#295](https://github.com/riscPrint/risc-v-workstation/issues/295) feat(sim): extend open simulation to match or beat VCS and Xcelium
 - [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) feat(sim): build a full open UVM flow
+- [#378](https://github.com/riscPrint/risc-v-workstation/issues/378) docs(research): study CORE-V-VERIF for UVM and CPU verification practice
 
 ## SIM: regression
 
@@ -157,6 +160,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#143](https://github.com/riscPrint/risc-v-workstation/issues/143) feat(cosim): load custom reference extensions
 - [#189](https://github.com/riscPrint/risc-v-workstation/issues/189) feat(cosim): exchange standard risc-v observation streams
 - [#210](https://github.com/riscPrint/risc-v-workstation/issues/210) feat(cosim): assess cheri architectural comparison
+- [#376](https://github.com/riscPrint/risc-v-workstation/issues/376) feat(cov): integrate RISCV-DV random instruction streams with cosim
 
 ## FV: generated checks
 
@@ -215,6 +219,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#195](https://github.com/riscPrint/risc-v-workstation/issues/195) feat(debug): verify trace control and security filters
 - [#207](https://github.com/riscPrint/risc-v-workstation/issues/207) feat(debug): verify vendor trace format adapters
 - [#297](https://github.com/riscPrint/risc-v-workstation/issues/297) feat(debug): extend open debug tools to match or beat Verdi
+- [#375](https://github.com/riscPrint/risc-v-workstation/issues/375) Owner review: upstream SpinalTrace work (ccromjongh/SpinalHDL, SigTrail)
 
 ## EMU: emulation and FPGA prototyping
 
