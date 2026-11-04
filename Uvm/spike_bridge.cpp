@@ -39,7 +39,7 @@ extern "C" int rvw_uvm_init(const char* lib,const char* source_hash,const char* 
  auto write=symbol<int(*)(void*,uint64_t,const uint8_t*,size_t)>("rvw_write");
  step_fn=symbol<decltype(step_fn)>("rvw_step"); destroy_fn=symbol<decltype(destroy_fn)>("rvw_destroy");
  if(!version || !source || !build || !create || !write || !step_fn || !destroy_fn ||
- version()!=4 || source_hash!=std::string(source()) || build_hash!=std::string(build())) { error="shim identity mismatch"; return -1; }
+ version()!=5 || source_hash!=std::string(source()) || build_hash!=std::string(build())) { error="shim identity mismatch"; return -1; }
  uint64_t ram[]={base,size}; machine=create(isa,ram,1,nullptr,0,pc,pmp,modes,0,absent_zero);
  if(!machine) return -1;
  std::ifstream input(image); uint64_t addr,value;

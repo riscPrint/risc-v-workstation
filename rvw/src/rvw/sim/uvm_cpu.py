@@ -12,7 +12,7 @@ from rvw.cosim.inputs import Inputs
 from rvw.cosim.elf import Elf
 from rvw.cosim.spike import FIELDS, SHIM_VERSION
 from rvw.cosim.trace import Trace
-from rvw.results import write_json
+from rvw.results import write_json, inconclusive_cause
 from rvw.sim import uvm
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -25,7 +25,7 @@ def prepare(inputs, out):
     elf = Elf(inputs.args.elf)
     p = inputs.platform
     if (not c1 or c1.get('schema') != 'rvw.run/1' or c1.get('status') != 'pass'
-            or c1.get('wall_clock_timeout') or c1.get('elf_sha256') != uvm.sha(inputs.args.elf)):
+            or inconclusive_cause(c1.get('status'), c1, c1.get('signature')) or c1.get('elf_sha256') != uvm.sha(inputs.args.elf)):
         raise ValueError('require passing C1 result bound to the captured ELF')
     if (len(p.ram) != 1 or p.mmio or p.misaligned['load'] != 'trap'
             or p.mode_after_change or elf.xlen != p.xlen):
@@ -90,7 +90,7 @@ def prepare(inputs, out):
  initial begin #10000000; $fatal(1,"watchdog"); end
 endmodule
 ''')
-    if SHIM_VERSION != 4:
+    if SHIM_VERSION != 5:
         raise ValueError('update the native DPI ABI profile')
     (out / 'spike_effect.h').write_text('#include <cstdint>\nstruct Effect {\n' + ''.join(
         f' uint64_t {name};\n' for name in FIELDS) + ' uint64_t regs[32]; char disasm[256];\n};\n')

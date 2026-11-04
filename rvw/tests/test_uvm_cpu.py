@@ -127,3 +127,11 @@ def test_adapter_result_must_match_requested_options(key,bad):
     c1[key]=bad
     with pytest.raises(ValueError,match=key):
         uvm_cpu.validate_request(c1,config='chosen',seed=1,max_cycles=200)
+
+
+@pytest.mark.parametrize('extra', [{'inconclusive': 'missing capture'}, {'synthesized': True}])
+def test_inconclusive_c1_cannot_earn_replay_pass(capture, tmp_path, extra):
+    inputs, _, _, _, _ = capture
+    inputs.core_run.update(extra)
+    with pytest.raises(ValueError, match='passing C1'):
+        uvm_cpu.prepare(inputs, tmp_path)
