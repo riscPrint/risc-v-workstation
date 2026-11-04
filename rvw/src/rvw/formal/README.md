@@ -517,6 +517,14 @@ ISA simulator when requested.
 The generator requires compiler version 0.20.1 and the exact rule hash.
 It records compiler bytes, version, source and generated hashes, options,
 XLEN, compiler library hashes and the subset boundary in `manifest.json` under the output directory.
+Each `files.INSTRUCTION.property_trace` entry names a stable property ID,
+the pinned Sail path, rule, line, exact expression and execution context.
+It records operand bindings and the generated result port. It lists the
+upstream shell separately. Do not attribute decode or architectural transition
+proofs to this Sail slice. `implementation_options` declares the supported
+XLEN 32, NRET 1, uncompressed ADD/SUB/ADDI configuration. The Python generator
+refuses other XLEN or NRET values before it creates output. Compiler backend
+options and all generated hashes remain in each instruction entry.
 Generated files and measured proof results stay outside the repository.
 
 ```sh
