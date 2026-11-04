@@ -2126,3 +2126,12 @@ The native engine emits `rvw.branch-sim/1` with `status=reported`, `model`,
 `instructions` excludes warmup. `mpki` is 1000 times measured direction misses
 divided by measured instructions. No C1 pass or C4 verdict is issued. Exit 0
 means report completion; exit 2 means error without a stdout report.
+
+The standalone Spike adapter selects one successful traced row from
+`rvw.workload-verify/1`. It checks the retained stderr hash and instruction count.
+It rejects multi-hart logs, exceptions and ambiguous branch successors.
+Its `rvw.branch-sim/1` report adds `workload`, `elf_sha256`, `scope`, `oracle`,
+`verify`, `source`, `trace`, `engine`, and `adapter_sha256`. The four file objects
+contain absolute `path` and `sha256`. Scope includes startup and checker code.
+A supplied verification report remains local trusted evidence, not an immutable
+C8 generation. The adapter does not independently rerun workload correctness.

@@ -49,3 +49,25 @@ updates. TAGE-SC-L, BOOM-like settings, BTB/RAS, memory models, RTL comparisons,
 CLI/MCP bindings and public trace qualification are not implemented.
 
 Run targeted checks with `python -m pytest ComponentSims/tests -q`.
+
+## Spike workload input
+
+First run `rvw workloads verify --trace` with Spike. Select one successful row:
+
+```sh
+python3 ComponentSims/spike.py --verify /path/to/reference/verify.json \
+  --workload crc32 --engine /tmp/branch-sim --out /path/to/study \
+  --model gshare --entries 4096 --history 12 --pc-shift 1 --warmup 0
+```
+
+Use a new output directory for each workload/model. The adapter writes trace.txt
+and report.json. It checks the verification status, Spike identity, retained log
+hash and instruction count. It binds the report, log, trace, engine and adapter
+hashes. It checks standard and compressed conditional targets against the next
+logged PC. It refuses multiple harts, exceptions, unresolved final branches and
+cases where target equals fallthrough. A refused run can leave a trace directory
+without report.json. Use another output directory after correction.
+
+Counts cover the full log, including startup and checker code. Test fixtures
+validate conversion and native execution. They do not qualify a published CBP
+trace set or a real application measurement. No RTL model is built by this tool.
