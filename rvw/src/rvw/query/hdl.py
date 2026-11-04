@@ -152,7 +152,6 @@ class _Writer:
              path.count('.')+1 if path else 0,fid,line,'$incomplete:hdl-navigation-only'))
         prefix = path + '.' if path else ''
         bits = sorted({b for n in m['netnames'].values() for b in n['bits'] if isinstance(b,int)})
-        bitids = {b:self.signal(cid,prefix+f'$bit${b}',f'$bit${b}',generated=True) for b in bits}
         named = {}
         for name, net in m['netnames'].items():
             direction = m['ports'].get(name,{}).get('direction')
@@ -160,12 +159,23 @@ class _Writer:
             sid = self.signal(cid,prefix+name,name,len(net['bits']),direction,
                               bool(net.get('hide_name')),net.get('attributes'))
             named[name] = sid
-            for b in net['bits']:
-                if isinstance(b,int):
-                    self.edge(sid,bitids[b])
-                    self.edge(bitids[b],sid)
-            self.assignment(cid,sid,[(bitids[b],'data') for b in net['bits'] if isinstance(b,int)],
-                            'Yosys net alias',net.get('attributes',{}))
+        # Reuse unique scalar declarations as graph vertices. This avoids an
+        # artificial alias cycle for the common scalar case.
+        bitids = {}
+        for b in bits:
+            aliases = [nn for nn, net in m['netnames'].items() if b in net['bits']]
+            if len(aliases) == 1 and len(m['netnames'][aliases[0]]['bits']) == 1:
+                bitids[b] = named[aliases[0]]
+            else:
+                bitids[b] = self.signal(cid,prefix+f'$bit${b}',f'$bit${b}',generated=True)
+        for name, net in m['netnames'].items():
+            sid = named[name]
+            reads = [(bitids[b],'data') for b in net['bits'] if isinstance(b,int) and bitids[b] != sid]
+            for bid, _ in reads:
+                self.edge(sid,bid)
+                self.edge(bid,sid)
+            if reads or not any(isinstance(b,int) for b in net['bits']):
+                self.assignment(cid,sid,reads,'Yosys net alias',net.get('attributes',{}))
         for name, cell in m['cells'].items():
             typ = cell['type']
             ports = cell['connections']

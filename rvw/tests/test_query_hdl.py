@@ -47,6 +47,7 @@ def test_hierarchy_queries(tmp_path, capsys):
         assert ops.path(db, 'a', 'q')['found']
         assert ops.path(db, 'sel', 'q')['found']
         assert not ops.path(db, 'q', 'a')['found']
+        assert not ops.path(db, 'a', 'a')['found']
         assert ops.drivers(db, 'u0.d')['assignments']
         assert ops.loads(db, 'a')['readers']
         assert ops.where(db, 'a')['signal']['loc'] == f'{source}:6'
