@@ -179,7 +179,9 @@ object BoomAdapter extends CoreAdapter {
           val a = dut.io.mem.a.payload
           val address = a.address.toBigInt
           val size = BigInt(1) << a.size.toInt
-          val write = a.opcode.toInt == 0 || a.opcode.toInt == 1
+          val opcode = a.opcode.toEnum
+          val write = opcode == spinal.lib.bus.tilelink.Opcode.A.PUT_FULL_DATA ||
+            opcode == spinal.lib.bus.tilelink.Opcode.A.PUT_PARTIAL_DATA
           val selected = job.socMap.flatMap(_.region(address, size, if (write) 'w' else 'r'))
           capture.foreach(_.request(ctl.cycle, "tilelink_a", address, size, write, selected))
           job.socMap.foreach(_ => require(selected.isDefined, "TileLink request outside mapped region"))
