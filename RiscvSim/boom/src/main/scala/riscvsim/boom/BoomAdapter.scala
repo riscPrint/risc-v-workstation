@@ -133,6 +133,12 @@ object BoomAdapter extends CoreAdapter {
       val intGen = job.socMap.map(_.register("intgen", "meip")).getOrElse(BoomSim.Platform.intGen)
       val seipAddr = job.socMap.map(_.register("intgen", "seip")).getOrElse(BoomSim.Platform.intGen + 4)
       job.socMap.foreach { m =>
+        require(m.regions.forall(r => if (r.kind == "ram")
+          r.permissions == "rwx" && r.cacheable && r.base >= BigInt("80000000", 16) && r.base + r.size <= BigInt("90000000", 16)
+          else r.permissions == "rw" && !r.cacheable), "map attributes differ from fixed RTL memory attributes")
+        val wiring = m.interrupts.map(i => (i("region").str, i("register").str, SimMap.number(i("cause")).toInt))
+        require(wiring.size == 4 && wiring.toSet == Set(("clint", "msip", 3), ("clint", "mtimecmp", 7),
+          ("intgen", "meip", 11), ("intgen", "seip", 9)), "unsupported interrupt wiring")
         for ((region, specs) <- Seq("clint" -> Map("msip" -> 32, "mtimecmp" -> 64, "mtime" -> 64),
                                   "intgen" -> Map("meip" -> 32, "seip" -> 32))) {
           val regs = m.regions.find(_.name == region).get.registers

@@ -43,7 +43,7 @@ object VexAdapter extends CoreAdapter {
     require(ctx.elf.entry == 0x80000000L, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
       throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
-    job.socMap.foreach(m => require(m.regions.forall(_.kind == "ram"), "VexRiscv adapter supports RAM only"))
+    job.socMap.foreach(m => require(m.regions.forall(r => r.kind == "ram" && !r.cacheable && r.base + r.size <= (BigInt(1) << 32)) && m.interrupts.isEmpty, "VexRiscv adapter supports RAM only"))
     val memory = mutable.LongMap.empty[Int]
     def inRam(a: Long, n: Long, permission: Char = 'r'): Boolean = job.socMap match {
       case Some(m) => m.region(BigInt(a), BigInt(n), permission).exists(_.kind == "ram")

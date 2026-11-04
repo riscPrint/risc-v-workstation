@@ -6,10 +6,10 @@ import java.security.MessageDigest
 
 /** Captured generated map. Adapters own device semantics and reject unsupported placements. */
 case class SimRegion(name: String, kind: String, base: BigInt, size: BigInt, permissions: String,
-                     registers: Seq[ujson.Value]) {
+                     registers: Seq[ujson.Value], cacheable: Boolean) {
   def contains(a: BigInt, n: BigInt): Boolean = n > 0 && a >= base && a + n <= base + size
 }
-case class SimMap(file: File, sha256: String, regions: Seq[SimRegion], bytes: Array[Byte]) {
+case class SimMap(file: File, sha256: String, regions: Seq[SimRegion], bytes: Array[Byte], interrupts: Seq[ujson.Value]) {
   def region(a: BigInt, n: BigInt, permission: Char): Option[SimRegion] =
     regions.find(r => r.contains(a, n) && r.permissions.contains(permission))
   def register(regionName: String, name: String): Long = {
@@ -65,11 +65,11 @@ object SimMap {
       }.sortBy(_._1)
       spans.sliding(2).filter(_.size == 2).foreach(p => require(p.head._1 + p.head._2 <= p.last._1, "overlapping registers"))
       require(r("kind").str == "mmio" || regs.isEmpty, "RAM cannot have registers")
-      SimRegion(r("name").str, r("kind").str, b, s, r("permissions").str, r("registers").arr.toSeq)
+      SimRegion(r("name").str, r("kind").str, b, s, r("permissions").str, r("registers").arr.toSeq, r("cacheable").bool)
     }
     require(regions.nonEmpty && regions.map(_.name).distinct.size == regions.size, "invalid region names")
     regions.sortBy(_.base).sliding(2).filter(_.size == 2).foreach(p => require(p.head.base + p.head.size <= p.last.base, "overlapping regions"))
-    SimMap(file, MessageDigest.getInstance("SHA-256").digest(bytes).map(b => f"${b & 255}%02x").mkString, regions, bytes)
+    SimMap(file, MessageDigest.getInstance("SHA-256").digest(bytes).map(b => f"${b & 255}%02x").mkString, regions, bytes, obj("interrupts").arr.toSeq)
   }
 }
 

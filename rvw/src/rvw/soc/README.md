@@ -121,7 +121,8 @@ Its reset vector stays fixed in RTL. BOOM checks ELF segments and accepted
 TileLink A requests against the map. BOOM takes device addresses and initial
 values from `clint` and `intgen` registers. Device placements must stay in the
 existing RTL device windows. This option does not change the core's cacheability
-or RTL decoder. A missing map keeps the legacy adapter behavior.
+or RTL decoder. BOOM refuses different cacheability, RAM permissions or interrupt
+wiring. Its RAM regions must stay within the fixed RTL RAM window. A missing map keeps the legacy adapter behavior.
 
 The driver captures map bytes when it parses the job. It saves those bytes as
 `OUT/sim-map.json`. Results include `soc_map_sha256`. Replay names the original
