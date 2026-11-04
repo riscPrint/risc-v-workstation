@@ -97,7 +97,7 @@ checkout at `f557b89ed6881a20515481a2585e9d004cd9642b` and these dependencies:
 uv venv --python 3.11 /tmp/dv-venv
 uv pip install --python /tmp/dv-venv/bin/python \
   pyboolector==3.2.4.38488416565 pyvsc==0.9.1.10086043874 \
-  pip PyYAML bitstring tabulate
+  pip PyYAML bitstring tabulate 'pandas<=2.2.3'
 rvw/.venv/bin/python scripts/riscv-dv-pygen.py --checkout /path/to/riscv-dv \
   --python /tmp/dv-venv/bin/python --target rv32imc --seed 48 \
   --instructions 50 --timeout 120 --out /tmp/dv32-48
