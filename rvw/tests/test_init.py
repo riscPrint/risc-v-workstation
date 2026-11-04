@@ -111,3 +111,128 @@ def test_cli_json(core, capsys):
     assert json.loads(capsys.readouterr().out)['status'] == 'planned'
     assert main(['init', str(core), '--isa', 'bad', '--json']) == 2
     assert json.loads(capsys.readouterr().out)['status'] == 'error'
+
+
+def test_optional_scaffolds_are_planned_and_loadable(core):
+    from rvw.cosim.platform import Platform
+    (core / 'build.sbt').write_text('val spinalVersion = "1.15.0"\nlazy val cpu = (project in file("."))\n')
+    linker = core / 'memory.ld'
+    linker.write_text('MEMORY { ram (rwx) : ORIGIN = 0x80000000, LENGTH = 64K }')
+    options = dict(wire_build=True, linker_script=linker, reset_pc='0x80000000', db_top='demo.Top')
+    report = scaffold(core, dry_run=True, **options)
+    assert not (core / 'rvw.toml').exists()
+    assert 'ProjectRef(coreSource, "cpu")' in report['files']['rvw/build.sbt']
+    assert 'SpinalDB/spinaldb' in report['files']['rvw/build.sbt']
+    assert 'with-lock.sh" sbt nice -n 10' in report['files']['rvw/build-db.sh']
+    scaffold(core, **options)
+    project = load_project(core)
+    assert project.get('cosim', 'platform') == core / 'rvw/cosim.json'
+    assert project.get('query', 'db') == core / 'rvw/out/design.db'
+    assert (core / 'rvw/build-db.sh').stat().st_mode & 0o111
+    platform = json.loads((core / 'rvw/cosim.json').read_text())
+    assert platform['ram'] == [{'base': '0x80000000', 'size': '0x10000'}]
+    with pytest.raises(ValueError, match='Review the scaffold'):
+        Platform.load('mycore', core / 'rvw/cosim.json')
+    with pytest.raises(ValueError, match='Refusing to overwrite'):
+        scaffold(core, **options)
+
+
+@pytest.mark.parametrize('memory,options,pattern', [
+    ('MEMORY { rom : ORIGIN = 0, LENGTH = 4K ram : ORIGIN = 4096, LENGTH = 8K }', {}, '--ram-region'),
+    ('MEMORY { ram : ORIGIN = BASE, LENGTH = 4K }', {}, 'literal'),
+    ('MEMORY { ram : ORIGIN = 0, LENGTH = 4K }', {'reset_pc': None}, '--reset-pc'),
+    ('MEMORY { ram : ORIGIN = 0, LENGTH = 4K }', {'reset_pc': '4096'}, 'inside selected RAM'),
+    ('MEMORY { ram : ORIGIN = 0, LENGTH = 0 }', {}, 'inside selected RAM'),
+])
+def test_linker_inputs_refuse_guessing(core, memory, options, pattern):
+    linker = core / 'memory.ld'
+    linker.write_text(memory)
+    with pytest.raises(ValueError, match=pattern):
+        scaffold(core, linker_script=linker, **({'reset_pc': '0'} | options))
+    assert not (core / 'rvw.toml').exists()
+
+
+def test_explicit_ram_selection(core):
+    linker = core / 'memory.ld'
+    linker.write_text('MEMORY { rom : ORIGIN = 0, LENGTH = 4K ram : ORIGIN = 4096, LENGTH = 2M }')
+    result = scaffold(core, linker_script=linker, ram_region='ram', reset_pc='4096', dry_run=True)
+    assert json.loads(result['files']['rvw/cosim.json'])['ram'][0]['size'] == '0x200000'
+
+
+def test_build_selection_refuses_ambiguity(core):
+    with pytest.raises(ValueError, match='--sbt-project'):
+        scaffold(core, wire_build=True)
+    assert not (core / 'rvw.toml').exists()
+    (core / 'build.sbt').write_text('val spinalVersion = "1.15.0"\nlazy val cpu = project\nlazy val tests = project')
+    with pytest.raises(ValueError, match='--sbt-project'):
+        scaffold(core, wire_build=True)
+    assert scaffold(core, sbt_project='cpu', dry_run=True)['build_wired']
+    with pytest.raises(ValueError, match='Invalid sbt'):
+        scaffold(core, sbt_project='cpu;run')
+
+
+def test_db_entry_forwards_arguments_without_sbt_command_injection(core, tmp_path):
+    import os
+    import subprocess
+    scaffold(core, sbt_project='cpu', db_top='demo.Top')
+    workstation = tmp_path / 'workstation'
+    (workstation / 'scripts').mkdir(parents=True)
+    (workstation / 'SpinalDB').mkdir()
+    lock = workstation / 'scripts/with-lock.sh'
+    lock.write_text('#!/bin/bash\nshift\nexec "$@"\n')
+    lock.chmod(0o755)
+    builder = workstation / 'SpinalDB/build-db.sh'
+    builder.write_text('#!/bin/bash\n[ "$SPINALDB_PROCESS_RUNNER" = "$RVW_HOME/SpinalDB/scripts/hdl-deps.py" ] || exit 7\n[ -n "$SPINALDB_PYTHON" ] || exit 8\nprintf "%s\\0" "$@" > "$OUTPUT_ARGS"\n')
+    builder.chmod(0o755)
+    arguments = tmp_path / 'args'
+    output = tmp_path / 'spaces ; dollar $ output.db'
+    env = dict(os.environ, RVW_HOME=str(workstation), OUTPUT_ARGS=str(arguments))
+    done = subprocess.run([str(core / 'rvw/build-db.sh'), 'default', str(output)], env=env)
+    assert done.returncode == 0
+    assert arguments.read_bytes().split(b'\0')[:4] == [b'class', b'demo.Top', str(output).encode(), b'--sbt-dir']
+    assert subprocess.run([str(core / 'rvw/build-db.sh'), 'other', str(output)], env=env).returncode == 2
+
+
+def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path):
+    import os
+    import subprocess
+    import sys
+    scaffold(core, sbt_project='cpu')
+    workstation = tmp_path / 'installed workstation'
+    scripts = workstation / 'RiscvSim/scripts'
+    scripts.mkdir(parents=True)
+    (workstation / 'scripts').mkdir()
+    supervisor = scripts / 'supervise.py'
+    supervisor.write_text('import os, sys\nos.execv(sys.argv[1], [*sys.argv[1:3], "--riscvsim-supervised", os.environ["LAUNCH_OWNER"], *sys.argv[3:]])\n')
+    (scripts / 'source-identity.py').write_text('print("{}")\n')
+    (scripts / 'native-identity.py').write_text('import json, os, sys\nfrom pathlib import Path\nif len(sys.argv) == 1: print(\'{}\')\nelse: Path(os.environ["OUTPUT_ARGS"]).write_text(json.dumps(sys.argv[1:]))\n')
+    lock = workstation / 'scripts/with-lock.sh'
+    lock.write_text('#!/bin/bash\nshift\nexec "$@"\n')
+    lock.chmod(0o755)
+    binaries = tmp_path / 'bin'
+    binaries.mkdir()
+    sbt = binaries / 'sbt'
+    sbt.write_text('#!/bin/bash\necho /synthetic/scala-library.jar\n')
+    sbt.chmod(0o755)
+    owner = tmp_path / 'owner'
+    owner.mkdir()
+    output = tmp_path / 'args'
+    env = dict(os.environ, RVW_HOME=str(workstation), RVW_PYTHON=sys.executable,
+               LAUNCH_OWNER=str(owner), OUTPUT_ARGS=str(output), PATH=str(binaries) + ':' + os.environ['PATH'])
+    env.pop('RISCVSIM_EXTRA_INPUTS', None)
+    done = subprocess.run([str(core / 'rvw/run.sh'), 'run', '--elf', 'path ; with spaces', '--out', 'out'], env=env)
+    assert done.returncode == 0
+    arguments = json.loads(output.read_text())
+    assert arguments[-5:] == ['run', '--elf', 'path ; with spaces', '--out', 'out']
+    assert 'rvwcore.Main' in arguments
+    assert (owner / 'source.json').read_text().strip() == '{}'
+
+
+def test_build_wiring_refuses_incompatible_literal_versions(core):
+    (core / 'build.sbt').write_text('val spinalVersion = "1.14.0"\nlazy val cpu = project')
+    with pytest.raises(ValueError, match='Spinal version 1.15.0'):
+        scaffold(core, wire_build=True)
+    (core / 'build.sbt').write_text('val spinalVersion = "1.15.0"\nscalaVersion := "2.12.18"\nlazy val cpu = project')
+    with pytest.raises(ValueError, match='Scala 2.13.14'):
+        scaffold(core, wire_build=True)
+    assert not (core / 'rvw.toml').exists()

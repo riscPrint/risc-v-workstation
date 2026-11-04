@@ -17,6 +17,7 @@ MODEL_COMMIT = '549e723031b34b5ffea5bbb56367be15c7a38a9e'
 RULE_HASH = '07ce0b099023b6e9ce9aeedb0be15a800f2cec8dd7382a076853391537b5add3'
 COMPILER_VERSION = '0.20.1'
 INSTRUCTIONS = ('add', 'sub', 'addi')
+RULE_PATH = 'model/extensions/I/base_insts.sail'
 
 
 def sha(path):
@@ -24,7 +25,9 @@ def sha(path):
 
 
 def slice_source(model, instruction):
-    rule = Path(model) / 'model/extensions/I/base_insts.sail'
+    if instruction not in INSTRUCTIONS:
+        raise ValueError('unsupported Sail instruction')
+    rule = Path(model) / RULE_PATH
     if sha(rule) != RULE_HASH:
         raise ValueError('Sail rule hash does not match the pinned model')
     text = rule.read_text()
@@ -44,7 +47,31 @@ def slice_source(model, instruction):
             f'  {expression}\n}}\n')
 
 
-def generate(model, compiler, upstream, out):
+def property_trace(model, instruction):
+    """Trace only the expression we lower. Do not attribute the RVFI shell to Sail."""
+    slice_source(model, instruction)  # Enforce the pinned content before line lookup.
+    lines = (Path(model) / RULE_PATH).read_text().splitlines()
+    expression_line = next(i for i, line in enumerate(lines, 1)
+                           if re.match(r'^    ' + instruction.upper() + r'  => ', line))
+    return {
+        'id': f'sail.rv32i.{instruction}.result',
+        'sail': {'commit': MODEL_COMMIT, 'path': RULE_PATH, 'sha256': RULE_HASH,
+                 'line': expression_line, 'text': lines[expression_line - 1],
+                 'rule': 'execute ITYPE' if instruction == 'addi' else 'execute RTYPE',
+                 'context_lines': [158, 169] if instruction == 'addi' else [237, 251]},
+        'operand_binding': {'X(rs1)': 'rvfi_rs1_rdata', 'X(rs2)': 'rvfi_rs2_rdata',
+                            'imm': 'rvfi_insn[31:20]'},
+        'generated_result': 'sail_model.sail_return_1',
+        'scope': 'arithmetic expression',
+        'upstream_shell': ['decode', 'x0 suppression', 'PC advance', 'RVFI wiring'],
+        'excluded': ['independent decode', 'full architectural transition', 'memory',
+                     'CSR', 'traps', 'privilege'],
+    }
+
+
+def generate(model, compiler, upstream, out, *, xlen=32, nret=1):
+    if type(xlen) is not int or xlen != 32 or type(nret) is not int or nret != 1:
+        raise ValueError('Sail slice supports only XLEN=32 and NRET=1')
     # Validate all source rules before creating output or invoking the compiler.
     sources = {insn: slice_source(model, insn) for insn in INSTRUCTIONS}
     compiler = shutil.which(str(compiler))
@@ -60,6 +87,9 @@ def generate(model, compiler, upstream, out):
     manifest = dict(schema='rvw.sail-subset/1', compiler=version, compiler_sha256=sha(compiler),
                     model_commit=MODEL_COMMIT, rule_sha256=RULE_HASH, xlen=32, nret=1,
                     subset=list(INSTRUCTIONS), boundary='arithmetic expressions only; upstream decode, x0 and PC',
+                    implementation_options={'xlen': 32, 'nret': 1, 'instructions': list(INSTRUCTIONS),
+                                            'compressed': False, 'alternative_operations': False,
+                                            'memory': False, 'privileged': False},
                     files={})
     library = Path(compiler).resolve().parents[1] / 'share/sail/lib'
     manifest['compiler_library'] = {str(p.relative_to(library)): sha(p) for p in sorted(library.rglob('*.sail'))}
@@ -94,7 +124,8 @@ def generate(model, compiler, upstream, out):
         (out/f'insn_{insn}.v').write_text(generated+'\n'+template)
         manifest['files'][insn]=dict(source_sha256=sha(source), sv_sha256=sha(sv),
                                     template_sha256=sha(Path(upstream)/'insns'/f'insn_{insn}.v'),
-                                    model_sha256=sha(out/f'insn_{insn}.v'), options=args[1:])
+                                    model_sha256=sha(out/f'insn_{insn}.v'), options=args[1:],
+                                    property_trace=property_trace(model, insn))
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     return manifest
 
