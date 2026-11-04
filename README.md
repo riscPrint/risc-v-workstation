@@ -133,11 +133,13 @@ Experimental features need manual result checks before use:
   They display producer data and do not issue verification verdicts.
 
 - Known-failure waivers (`rvw regress known`) and failure-signature matching.
-  The #2 review fixes more signature collisions. Wildcard scope and coarse failure identities
-  still need review. See the [close rules](rvw/src/rvw/regress/README.md#review-status-and-close-rules).
-- Gates on stored result folders (`--base`/`--cand` folders). The #4 identity checklist remains open.
+  The #2 review defines diagnostic-class limits and blocks broad waivers from acceptance.
+  Review each exact waiver against full evidence. See the [close rules](rvw/src/rvw/regress/README.md#review-status-and-close-rules).
+- Gates on stored result folders (`--base`/`--cand` folders). Stored inputs must cover the requested
+  plan and retain complete C8 identities.
 - Performance metrics (`perf_metrics`). Reports state sample counts and no estimated confidence.
-  Native repeated-seed experiments, semantic ROI checks and statistical rules remain open (#4).
+  The reviewed rule checks every paired seed. Each project must define stable ROI boundaries
+  and declare its required workload plan.
 - Mutation testing (`rvw cov mutate`) ([#3](https://github.com/riscPrint/risc-v-workstation/issues/3)).
 - SpinalChecks generated checks (run reports, check selection). On BOOM, 24 stream checks fire;
   source-backed dispositions are recorded, but runtime triage remains open (see [#5](https://github.com/riscPrint/risc-v-workstation/issues/5)).
