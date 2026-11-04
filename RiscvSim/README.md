@@ -207,11 +207,10 @@ Use `--wave` to record the instrumented wave. Wave windows work as before.
 An adapter must use `RiscvSimConfig.elaborate` to support this flag. A requested
 model without its graph fails with an error. It cannot supply cause evidence.
 
-The `boom-spinaltrace` prototype stays until an old/new BOOM failure bundle has
-the same signature, failure cycle, criterion and dependency trace. Run both with
-the same ELF, seed, model options and wave window under the `boom` lock. Compare
-source statements, cycles and dependency edges after normalizing generated IDs
-and checkout paths. Record the measured result in the PR before removal.
+The legacy `boom-spinaltrace` prototype is removed. Use the BOOM adapter with
+`--spinaltrace`. BOOM small and VexRiscv have old/new caller-equivalence checks.
+The checks retain design source locations, graph fields and accuracy metadata.
+Equivalence of caller locations does not establish graph completeness.
 
 Some generated statements have no retained core frame. The location filter
 skips library frames and uses the elaboration caller. The prototype and the
@@ -509,8 +508,8 @@ Duplicate vertex labels require an explicit identity mapping and are refused.
 Caller equivalence does not mean identical source navigation. Each artifact
 keeps its actual caller location. The old and new callers must both be available
 for the source-navigation check. Do not map design-source statements to make a
-comparison pass. Empty traces cannot establish parity. Keep the old entry points
-until both BOOM small and VexRiscv have the required independent comparisons.
+comparison pass. Empty traces cannot establish parity. The removal cases are BOOM small and
+VexRiscv; other cores and configurations need their own comparisons.
 
 ### BOOM MMU observations
 
