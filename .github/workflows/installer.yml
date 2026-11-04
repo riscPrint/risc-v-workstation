@@ -50,6 +50,7 @@ jobs:
         if: contains(matrix.flags, '--with-cosim') && contains(matrix.flags, '--with-riscv-gcc')
         run: |
           source env.sh
+          uv sync --locked --extra dev --extra mcp --project rvw
           rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_reference_mmu.py rvw/tests/cosim/test_platform_policy.py -q
   long-install:
     runs-on: ubuntu-latest

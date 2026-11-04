@@ -31,3 +31,11 @@ def test_invalid_commit(message):
 
 def test_title_needs_no_footer():
     assert policy.errors("ci(tests): add checks", title=True) == []
+
+
+def test_installer_reference_tests_install_pytest():
+    root = Path(__file__).resolve().parents[2]
+    text = (root / '.github/workflows/installer.yml').read_text()
+    step = text.split('- name: Check the pinned reference policies')[1]
+    assert 'uv sync --locked --extra dev --extra mcp --project rvw' in step
+    assert step.index('uv sync') < step.index('python -m pytest')
