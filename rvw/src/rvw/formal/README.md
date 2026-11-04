@@ -216,6 +216,14 @@ The campaign limit starts before discovery; each discovery subprocess also uses 
 Unrun modules stay in the inventory. The command returns 1 with status `inconclusive`:
 it is an inventory, not an acceptance gate. Use the machine's core lock for large designs.
 
+The BOOM inventory has a [complete per-target table in PR #235](https://github.com/riscPrint/risc-v-workstation/pull/235).
+Keep its [group dispositions on spinal-boom#4](https://github.com/riscPrint/spinal-boom/issues/4#issuecomment-6626689541)
+with the parent-context observations. FpPipeline module observations retain
+inconclusive whole-core reachability. ITLB inactive payload X values do not
+establish invalid transactions. Arbiter results are bounded module checks.
+Candidate counts do not count distinct core bugs. New campaigns must retain
+unreported targets and update the core issue with their bounds and dispositions.
+
 ### Bounded witness collection and parent replay
 
 Use `xprop --first-failure` or `x-sweep --first-failure` to stop each solver
