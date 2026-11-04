@@ -1887,3 +1887,12 @@ exact request bytes, retain the mode and engine version, and report finite
 nonnegative measurements. Adapter verdicts are trusted observations. Invalid,
 missing or timed-out responses stay inconclusive. See the formal README for
 input fields and limits. Neither command emits gate acceptance.
+## SpinalChecks normalized register map (version 1)
+
+`SpinalChecks/scripts/import-map.py` writes Java properties. `version=1` is
+required. `registers` lists unique comma-separated register names. Each name has
+`address`, `width`, `reset`, `writeMask`, `w1cMask` and `readClearMask` properties.
+Values are nonnegative decimal integers. Addresses use bytes. Masks and reset
+must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spans
+must not overlap. Missing required fields fail loading. This format declares
+register intent. It does not provide independent bus observations or a verdict.
