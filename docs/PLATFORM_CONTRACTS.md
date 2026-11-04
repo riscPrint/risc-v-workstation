@@ -2211,6 +2211,53 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+### Architecture Pareto intervals
+
+`rvw.arch-pareto-plan/1` has `points` with unique `id` and `report` paths.
+Optional `objectives` defaults to `["cycles"]`. Optional point `costs` paths
+select user input files. Paths are relative to the plan. Reports are checked
+`rvw.arch-run/1` gem5 runs with identical ELF hashes and ROI instruction counts.
+Without costs, cycles use summed ROI cycles for all three interval bounds.
+`rvw.arch-costs/1` has `report_sha256`, nonempty source/method text in `method`,
+and `cycles`. Optional `area_mm2` and `power_w` are user-supplied inputs only.
+The workstation does not estimate or validate area or power. PPA estimation
+and hardware gain claims are out of scope.
+
+Intervals are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are user declarations.
+`rvw.arch-pareto/1` records selected `objectives`, plan/report/cost hashes,
+`cost_origin` (`user-supplied` or `absent`), intervals, `eligible`,
+`evidence_class: model-only`, `nominal_frontier` and `conservative_frontier`.
+Conservative dominance compares only selected objectives. It requires all
+upper bounds no greater than the other point's lower bounds and one strict gain.
+Missing selected objectives exclude a point and make status inconclusive
+(CLI exit 3). Unselected missing inputs do not affect eligibility.
+No point is RTL-confirmed by this command.
+
+### Architecture topology channels and agents
+
+The optional `rvw.arch-core/1` `soc.memory.kind: multi` uses `interleave_bytes`
+and 2, 4 or 8 `controllers` (simple or DRAM memory objects). Channels stripe
+across RAM at a power-of-two byte size of at least 64. Optional `soc.agents`
+contains up to eight read-only linear generators. Fields are `start`, `size`,
+`block_bytes`, `period_ticks`, `duration_ticks`, `max_outstanding` and `attach`
+(`memory` or an existing cache level). Addresses and blocks must align and fit
+RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
+the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
+SoC topologies. Native model execution alone is not RTL correlation.
+
+### Native memory mappings
+
+`rvw.memory-mapping/1` has `inputs` (`stats`, `config`, `bare`, each with path
+and SHA-256) and `observations`. Each observation has `point`, `region`, `hart`,
+`workload` and `counters`. Counter keys use `rvw.memory-observations/1`; each
+value has distinct `stats` names and positive `scale`. Names must start with
+the native config object's point plus a dot. The first complete stats block
+must have simFreq=1e12, simTicks equal to the difference of the two bare ROI
+markers, and finalTick equal to the exit marker. Bare execution must pass.
+`arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
+`native_inputs` hashes. It checks names and interval identity. The project
+owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
 ## Reviewed specification obligation catalogs
 
 The optional `rvw.isa/1` `specifications` entries can bind a document and a
