@@ -89,13 +89,13 @@ changed downloads. They do not verify a Debian signature.
 ## Bounded Linux startup payloads
 
 Run `rvw/.venv/bin/python examples/qemu-linux/prepare-rtl.py --prepared
-/tmp/linux-boot --out /tmp/linux-startup` after a reference preparation or boot.
+/tmp/linux-boot --out /tmp/linux-startup --qemu-boot` after a reference preparation or boot.
 The script checks the captured artifact hashes. It patches `/chosen` with the
 command line and initramfs bounds. It adds a firmware reservation. The final
 DTB hash is in the startup manifest. It generates these inputs:
 
 - `reset.elf`: 36 instructions that clear GPRs, set a0/a1 and enter OpenSBI.
-- `payloads.json`: captured firmware at `0x80002000`, kernel at `0x80200000`,
+- `payloads.json`: captured firmware at `0x80200000`, kernel at `0x80400000`,
   initramfs at `0x86000000` and final DTB at `0x87e00000`.
 - `reference.elf`: the same reset and payload bytes in one ELF for Spike.
 
@@ -114,3 +114,16 @@ is declared. The adapter updates the UART source before and after bus accesses.
 Independent register tests check claim/complete, reset and timer thresholds.
 The adapter does not connect an RTL bus. BOOM still uses its interrupt generator.
 A full Linux bus adapter needs a separate integration step.
+
+
+`--qemu-boot` boots `reference.elf` through QEMU's generic ELF loader. It uses
+no `-kernel`, `-initrd`, `-append` or `-dtb` option. QEMU does not change the
+payload placement or chosen node. The manifest records the userspace check,
+console, command and QEMU hash. This checks the same fixed payload bytes that
+`reset.elf` plus `payloads.json` supplies to RiscvSim.
+
+The reset fixture moves firmware to the aligned address `0x80200000`.
+This OpenSBI build jumps two MiB past its runtime base, so the kernel moves to
+`0x80400000`. The reservation covers reset and firmware. The first QEMU flow
+uses firmware at `0x80000000` and kernel at `0x80200000`. Keep these layouts
+distinct. The fixed-image QEMU boot checks the RTL preparation layout.

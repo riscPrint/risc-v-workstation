@@ -598,3 +598,9 @@ trace writes and artifact handling are included. The dashboard plots recorded
 C3 rates per preset. These rates do not prove correctness. Use long workloads,
 fixed seed and memory latency, and serial runs. Keep tracing options equal.
 See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.
+
+The [Linux startup example](../examples/qemu-linux/README.md#bounded-linux-startup-payloads)
+prepares reset firmware, kernel, initramfs and a final DTB for `--boot-payloads`.
+A separate fixed-image QEMU check uses the same payload bytes. The project
+software device composition does not connect the BOOM RTL bus. A startup
+prefix comparison must not be reported as a Linux RTL boot.

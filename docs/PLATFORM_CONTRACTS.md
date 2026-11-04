@@ -1452,7 +1452,7 @@ and unquantified uncertainty must not be interpreted as zero cost or confidence.
 
 ### Linux reference reports
 
-`rvw arch linux firmware|build|prepare|boot` writes `rvw.linux/1` to
+`rvw arch linux firmware|build|prebuilt|prepare|boot` writes `rvw.linux/1` to
 `OUT/manifest.json`. `OUT` must be new. The JSON stdout uses the same object on
 success. Errors return exit 2; an initialized output keeps an inconclusive
 manifest and command log. These reports do not produce a C4 verdict or claim
@@ -1466,6 +1466,16 @@ Artifacts use absolute paths and SHA-256. The build report binds the source and
 configuration. Reference runs bind kernel, initramfs, firmware, DTB, platform,
 QEMU, command line and console. Selected table checks record expected and
 actual values separately. They are not device-state or timing checks.
+
+The `prebuilt` action takes `--source` (`rvw.linux-prebuilt/1`) and `--images`
+(the native firmware directory). The source declares HTTPS URLs and SHA-256
+for `Image` and `rootfs.cpio.gz`. `initramfs_selection` declares directories,
+source-to-target regular files and symbolic links. The action selects these
+bytes from the checked newc archive and adds `/rvw-init`. The report records
+upstream hashes, source-lock hash, init-script hash and transformed artifacts.
+It does not verify an upstream package signature. Device compositions and
+bounded startup reports in `examples/qemu-linux` are project data. They do not
+extend C1 or certify a connected RTL device bus.
 
 The explicit `--platform` JSON uses `rvw.linux-platform/1`: `machine=virt`,
 `harts=1`, `memory_mib=128`, `command_line`, and nonempty `dt_checks`. Each

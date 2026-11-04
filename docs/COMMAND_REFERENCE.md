@@ -109,7 +109,7 @@ usage: rvw arch measure [-h] [--json] [--repeats REPEATS] [--bench BENCH]
 ```text
 usage: rvw arch linux [-h] --out OUT [--platform PLATFORM] [--images IMAGES]
     [--timeout TIMEOUT] [--jobs JOBS] [--llvm] [--cross-compile CROSS_COMPILE]
-    [--json] [--project PROJECT] {firmware,build,prepare,boot}
+    [--json] [--project PROJECT] {firmware,build,prebuilt,prepare,boot}
 ```
 
 ### `rvw bisect`
