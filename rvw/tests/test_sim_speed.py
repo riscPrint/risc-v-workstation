@@ -1,4 +1,5 @@
 import json
+import uuid
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,7 @@ def result(root, seconds=2, native='c', change=None):
                seed=1, max_cycles=2000000, mem_latency=0, cycles=1000000, instret=1,
                elf_sha256='a' * 64, rtl_sha256='b' * 64,
                tools={'native_build': {'sha256': native * 64}},
-               details={'execution_s': seconds, 'model': {'rvfi': True}},
+               details={'execution_s': seconds, 'simulation_session': {'run_id': str(uuid.uuid4())}, 'model': {'rvfi': True}},
                artifacts={'rvfi_trace': 'rvfi.jsonl'})
     if change:
         change(obj)
@@ -167,3 +168,13 @@ def test_sweep_timeout_stops_and_keeps_inconclusive_report(tmp_path, monkeypatch
     assert report['status'] == 'inconclusive'
     assert not report['comparisons']
     assert report['order'][0]['timed_out'] is True
+
+
+def test_copied_execution_cannot_count_as_an_independent_sample(tmp_path):
+    data = pairs(tmp_path)
+    original = json.loads(data[0][0].read_text())
+    duplicate = json.loads(data[1][0].read_text())
+    duplicate['details']['simulation_session'] = original['details']['simulation_session']
+    data[1][0].write_text(json.dumps(duplicate))
+    with pytest.raises(ValueError, match='reused'):
+        compare(data)

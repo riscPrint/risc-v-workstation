@@ -90,7 +90,7 @@ at least one second in `details.execution_s`. Use `--min-seconds 10` for long
 workloads. Warm the model first. Do not include warmup results in the pairs.
 Keep the workload, preset, seed, memory timing and trace options fixed.
 Interleave baseline and candidate runs. Reverse their order in alternate pairs.
-Use distinct result paths. Run one simulation at a time under the core lock.
+Use distinct result paths and simulation execution `run_id` values. Run one simulation at a time under the core lock.
 
 The command validates C2 records and requires an end event, matching C1
 counters, matching ELF and seed, and identical trace events across all pairs.

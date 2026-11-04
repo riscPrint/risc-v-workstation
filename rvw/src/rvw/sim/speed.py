@@ -23,7 +23,7 @@ def evidence(path, min_seconds=1.0):
     path = Path(path).resolve()
     raw = path.read_bytes()
     obj = json.loads(raw)
-    if (obj.get('schema') != 'rvw.run/1' or obj.get('status') != 'pass'
+    if (not isinstance(obj, dict) or obj.get('schema') != 'rvw.run/1' or obj.get('status') != 'pass'
             or obj.get('inconclusive') or obj.get('wall_clock_timeout')):
         raise ValueError('speed comparison requires conclusive passing C1')
     seconds = obj.get('details', {}).get('execution_s')
@@ -44,6 +44,9 @@ def evidence(path, min_seconds=1.0):
     details = obj.get('details', {})
     if details.get('concurrent') or details.get('abandoned') or details.get('serial_rerun'):
         raise ValueError('speed samples must be serial first attempts')
+    run_id = details.get('simulation_session', {}).get('run_id')
+    if not isinstance(run_id, str) or not run_id:
+        raise ValueError('missing simulation execution run_id')
     trace_path = Path(obj.get('artifacts', {}).get('rvfi_trace', ''))
     if not trace_path.parts or trace_path.is_absolute() or '..' in trace_path.parts:
         raise ValueError('missing local C2 trace artifact')
@@ -72,7 +75,7 @@ def evidence(path, min_seconds=1.0):
                 'max_cycles', 'mem_latency', 'irq_schedule', 'elf_load_bias', 'boot_payloads', 'soc_map_sha256')}
     identity.update(model=details.get('model'), header=header, trace=digest.hexdigest(),
                     terminal={k: obj.get(k) for k in ('status', 'cycles', 'instret', 'fail_code')})
-    return dict(path=str(path), sha256=sha(raw), trace_sha256=sha(trace_path.read_bytes()),
+    return dict(path=str(path), run_id=run_id, sha256=sha(raw), trace_sha256=sha(trace_path.read_bytes()),
                 native_sha256=native, identity=identity, seconds=seconds,
                 sim_khz=obj['cycles'] / seconds / 1000,
                 sim_instructions_per_s=obj['instret'] / seconds, events=count)
@@ -84,15 +87,16 @@ def compare(pairs, *, min_seconds=1.0, resamples=10000, seed=1):
         raise ValueError('use positive min_seconds and at least 1000 bootstrap resamples')
     if len(pairs) < 5:
         raise ValueError('at least five independent pairs are required')
-    rows, seen = [], set()
+    rows, seen, executions = [], set(), set()
     reference = None
     builds = None
     for baseline, candidate in pairs:
         left, right = evidence(baseline, min_seconds), evidence(candidate, min_seconds)
         for sample in (left, right):
-            if sample['path'] in seen:
+            if sample['path'] in seen or sample['run_id'] in executions:
                 raise ValueError('a sample cannot be reused')
             seen.add(sample['path'])
+            executions.add(sample['run_id'])
         if left['identity'] != right['identity']:
             raise ValueError('C1 inputs, terminal results or complete C2 events differ')
         current = (left['native_sha256'], right['native_sha256'])
