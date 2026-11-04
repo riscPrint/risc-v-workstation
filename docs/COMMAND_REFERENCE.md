@@ -14,8 +14,28 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
     ...
+```
+
+### `rvw agent-bench`
+
+```text
+usage: rvw agent-bench [-h] [--project PROJECT] {dry-run,serve} ...
+```
+
+### `rvw agent-bench dry-run`
+
+```text
+usage: rvw agent-bench dry-run [-h] --pack PACK --out OUT [--agent
+    {scripted,careless}] [--project PROJECT]
+```
+
+### `rvw agent-bench serve`
+
+```text
+usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
+    PROJECT]
 ```
 
 ### `rvw arch`
