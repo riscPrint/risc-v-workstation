@@ -1013,6 +1013,10 @@ def prove(config_path, database_path, out, timeout=60):
         raise ValueError('formal plan has duplicate point ids')
     validate_ids(config['points'])
     for point in config['points']:
+        activation = point.get('activation')
+        if activation is not None and (not isinstance(activation, str) or not activation.strip()
+                                       or any(c in activation for c in ';\n\r`')):
+            raise ValueError('activation must be a single SystemVerilog expression')
         if '`' in point['expression']:
             raise ValueError('source snapshot: point expressions cannot contain preprocessor directives or macros')
     reference, manifest = source_snapshot.create(out, sources, harness_path, check_script_paths, captured.current())
@@ -1087,6 +1091,12 @@ def prove(config_path, database_path, out, timeout=60):
             row.update(unreachable=False, refused=sanity.get('error', 'clock probe failed'))
             rows.append(row)
             continue
+        if point.get('activation'):
+            row['activation_expression'] = point['activation']
+            row['activation_guard'] = sanity['passed']
+            row['jobs']['activation'] = _run(out, f'{index}-activation', 'cover',
+                f"cover ({point['activation']});", template, sources, config, timeout,
+                frozen=frozen, isolated_covers=1)
         for mode in ('cover', 'prove'):
             statement = f'cover ({expression});' if mode == 'cover' else f'assert (!({expression}));'
             row['jobs'][mode] = _run(out, f'{index}-{mode}', mode, statement, template, sources, config, timeout,

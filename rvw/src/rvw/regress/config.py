@@ -149,12 +149,15 @@ class Suite:
     build_options: list[str] = field(default_factory=list)  # extra `build` flags (kind = "build")
     cycles_key: str = "cycles"  # dotted path in result.json for the test's cycles
     instret_key: str = "instret"
+    requires: list[str] = field(default_factory=list)  # semantic needs, checked before adapter launch
     perf_metrics: list[str] = field(default_factory=list)  # compared by `rvw regress compare`
 
     def __post_init__(self) -> None:
         self.validate()
 
     def validate(self) -> None:
+        if not isinstance(self.requires, list) or not all(isinstance(x, str) and x for x in self.requires):
+            raise ConfigError("suite.requires must be a list of non-empty strings")
         metric_specs(self.perf_metrics)
         for key in ("cycles_key", "instret_key"):
             selector = getattr(self, key)
@@ -211,6 +214,7 @@ class CoreConfig:
     adapter: list[str]
     configs: list[str]
     default_config: str
+    backend: str | None = None  # optional native invocation profile
     lock: str | None = None
     lock_dir: Path | None = None
     source_repo: Path | None = None
@@ -240,6 +244,11 @@ class CoreConfig:
         self.validate()
 
     def validate(self) -> None:
+        if self.backend is not None:
+            from rvw.sim.backends import require_native
+            require_native(self.backend)
+        for suite in self.suites.values():
+            self.negotiate(suite)
         if not isinstance(self.input_complete, bool):
             raise ConfigError("core.input_complete must be a boolean")
         if not isinstance(self.input_verilator_toolchain, bool):
@@ -255,6 +264,12 @@ class CoreConfig:
         for key in ("identity_timeout_s", "build_timeout_s", "startup_s"):
             finite_number(getattr(self, key), f"core.{key}", positive=True)
         finite_number(self.perf_tolerance, "core.perf_tolerance")
+
+    def negotiate(self, suite: Suite) -> None:
+        suite.validate()
+        if suite.requires:
+            from rvw.sim.backends import require_native
+            require_native(self.backend, suite.requires)
 
     def require_source_selection(self) -> None:
         if not isinstance(self.source_env, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", self.source_env):
@@ -340,7 +355,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
     c = raw.get("core")
     if not isinstance(c, dict):
         raise ConfigError(f"{path}: missing [core] table")
-    _check_keys(c, {"name", "adapter", "configs", "default_config", "lock", "lock_dir", "source_repo",
+    _check_keys(c, {"name", "adapter", "backend", "configs", "default_config", "lock", "lock_dir", "source_repo",
                     "source_env", "cache_paths", "input_complete", "input_env", "input_tools", "input_verilator_toolchain", "input_commands", "input_commands_by_platform", "identity_capture", "identity", "identity_timeout_s", "wall_timeout", "known_failures", "jobs", "persistent", "build_first", "build_timeout_s",
                     "startup_s", "perf_tolerance"}, f"{path} [core]")
     if "adapter" not in c:
@@ -352,6 +367,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
         adapter=_cmd(c["adapter"], base, environment),
         configs=configs,
         default_config=c.get("default_config", configs[0] if configs else "default"),
+        backend=c.get("backend"),
         lock=c.get("lock"),
         lock_dir=_path(c["lock_dir"], base, environment) if c.get("lock_dir") else None,
         source_repo=(_path(c["source_repo"], base, environment) if c.get("source_repo")
@@ -404,12 +420,14 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
             timeout_s=s.get("timeout_s", 600), options=dict(s.get("options", {})),
             build_options=_strs(s.get("build_options"), "build_options"),
             cycles_key=s.get("cycles_key", "cycles"), instret_key=s.get("instret_key", "instret"),
+            requires=s.get("requires", []),
             perf_metrics=_strs(s.get("perf_metrics"), "perf_metrics"),
         )
         unknown = [x for x in suite.configs if configs and x not in configs]
         if unknown:
             raise ConfigError(f"{path} [suites.{name}]: unknown configs {', '.join(unknown)}")
         cfg.suites[name] = suite
+    cfg.validate()
     for name, t in (raw.get("tiers") or {}).items():
         _check_keys(t, {"description", "runs"}, f"{path} [tiers.{name}]")
         runs = []

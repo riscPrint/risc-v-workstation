@@ -16,6 +16,7 @@ Usage: scripts/install.sh [OPTIONS]
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
   --with-lint        Pinned native Verible syntax and style lint.
   --with-sail        Pinned Sail model (bundle mode only).
+  --with-typed-waves Build the pinned SpinalWaves checker and typed viewer (Cargo).
   --from-bundle      Use native workflow artifacts for selected tools.
   --bundle-run ID    Download artifacts from this private Actions run (needs gh).
   --bundle-dir DIR   Use artifacts saved in DIR. No artifact network requests.
@@ -38,7 +39,7 @@ value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a
 
 sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
-lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
+waves=0 lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --prefix) value "$@"; prefix="$2"; shift 2 ;;
@@ -47,6 +48,7 @@ while [ "$#" -gt 0 ]; do
     --from-bundle) bundle=1; shift ;;
     --bundle-run) value "$@"; bundle_run="$2"; shift 2 ;;
     --bundle-dir) value "$@"; bundle_dir="$2"; shift 2 ;;
+    --with-typed-waves) waves=1; shift ;;
     --with-lint) lint=1; shift ;;
     --with-sail) sail=1; shift ;;
     --with-sim) sim=1; shift ;;
@@ -54,7 +56,7 @@ while [ "$#" -gt 0 ]; do
     --with-cosim) cosim=1; shift ;;
     --with-formal) formal=1; shift ;;
     --with-gem5) gem5=1; shift ;;
-    --all) lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
+    --all) waves=1; lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
     --yes) yes=1; shift ;;
     --dry-run) dry=1; shift ;;
     --check) check=1; shift ;;
@@ -256,6 +258,18 @@ spike_inputs() {
 }
 optional_check() {
   local failed=0
+  if [ "$waves" = 1 ]; then
+    for wave_tool in spinalwaves-check surfer-tywaves; do
+      if [ ! -x "$tools/bin/$wave_tool" ]; then
+        printf 'MISSING typed viewer tool: %s\n' "$tools/bin/$wave_tool"; failed=1
+      elif ! "$tools/bin/$wave_tool" --version; then
+        printf 'UNUSABLE typed viewer tool: %s\n' "$wave_tool"; failed=1
+      fi
+    done
+    if [ ! -f "$tools/share/spinalwaves/source.tar.gz" ] || [ ! -f "$tools/share/spinalwaves/LICENSE-EUPL-1.2.txt" ] || [ ! -f "$tools/share/spinalwaves/vendor-lock.json" ]; then
+      printf 'MISSING typed viewer source or notices\n'; failed=1
+    fi
+  fi
   if [ "$lint" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-verible.py" --home "$rvw_home" --check || failed=1; fi
   if [ "$gem5" = 1 ]; then gem5_check || failed=1; fi
   if [ "$sim" = 1 ]; then sim_check || failed=1; fi
@@ -601,6 +615,14 @@ if [ "$gem5" = 1 ] && [ "$gem5_external" = 0 ] && ! gem5_check; then
   run "$rvw_home/scripts/with-lock.sh" gem5 nice "$tools/gem5-venv/bin/scons" \
     -C "$gem5_source" "$RVW_GEM5" -j2 --ignore-style
   if [ "$dry" = 0 ]; then gem5_check || fail 'Native gem5 build check failed'; fi
+fi
+
+if [ "$waves" = 1 ]; then
+  if [ "$dry" = 0 ]; then
+    command -v cargo >/dev/null || fail 'Install Rust/Cargo, then retry --with-typed-waves'
+  fi
+  run env CARGO_BUILD_JOBS=2 "$rvw_home/scripts/with-lock.sh" sbt nice -n 10 \
+    bash "$rvw_home/SpinalWaves/scripts/install.sh" --copy --prefix "$tools/bin"
 fi
 
 # Quote values for both bash and zsh. Do not change shell startup files by default.

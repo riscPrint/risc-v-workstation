@@ -326,10 +326,10 @@ Legacy `mem_*` fields still describe completed effects. A missing fault record
 makes no claim about attempted accesses. This extension describes data accesses;
 instruction fetch faults still use trap cause/tval.
 
-Spike checks zero-completion, uncompressed scalar load/store attempts for width
-codes 0..3. It computes address and width from its own instruction and pre-step
-registers, then checks the synchronous cause. Other encodings, partial effects,
-and Sail fault-attempt observations are refused. Such a refusal is not a match.
+Spike checks zero-completion scalar load/store attempts, compressed accesses
+and LR/SC/AMOs. It computes address and width from its own instruction and
+pre-step registers, then checks the synchronous cause. Reserved encodings,
+partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
 
 
@@ -383,6 +383,37 @@ missing external inputs give inconclusive. Current Spike/Sail single-hart
 commands do not implement this extension. Do not split `/2` into `/1` files and
 claim a shared-memory match. `MultiHartTrace` in RiscvSim supplies the writer and
 completion aggregation. It does not supply a multi-hart reference backend.
+
+A serialized project boundary can use `SerializedMemoryReference` for byte data
+and read-from checks. The project assigns contiguous `serialization` IDs only
+when memory actions are accepted. This order is separate from `capture_seq`
+and each hart's `order`. An event names its `boundary`. Reads add `read_from`,
+one write ID per observed byte; `initial` names the captured initial image.
+External writes consume serialization IDs too. Initialize the reference from
+captured input bytes. Derive expected writes from stimulus or independent
+architectural state. Compare observed writes before updating the reference.
+This stricter serialized model is valid only for a declared serialized boundary.
+It must not reject legal weak-memory core behavior by imposing retirement order.
+The native two-hart subset fixture uses this model. Production multi-image
+loading and a full multi-hart architectural reference remain unavailable.
+
+
+### C2 online launch
+
+`rvw cosim live --elf ELF --core CORE --out DIR --simulator COMMAND ...`
+launches a C1 adapter. DIR must be new. COMMAND must contain `{elf}` and `{out}`
+placeholders. The command receives the captured ELF and writes C2 to
+`DIR/rvfi.jsonl`. `RVW_RVFI_FLUSH=1` requests line flushes in RiscvSim.
+The existing offline comparison and synchronization rules apply. The wall
+timeout covers the whole launch, including builds and lock waits. A checked
+mismatch stops the process group and returns exit 1. A timeout, incomplete
+stream or nonzero exit cannot produce a match; it returns exit 3 when usable
+trace evidence exists. A timeout before any C2 output is also inconclusive.
+Other input and trace errors return exit 2. `simulator` records command,
+returncode, timed_out and trace path. The consumed prefix digest is not a
+complete file identity. Launch metadata captures the executable identity and
+argument list; adapter build dependencies still require C1 provenance.
+
 
 ## C3. Suite results (`rvw.results/1`)
 
@@ -660,7 +691,11 @@ An empty `rows` list with unknown entries does not prove that the table is empty
 
 ### Reduction and bisect reports
 
-`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL` or `irq`.
+`rvw.reduce/1` adds `streams`, keyed by `instructions:SYMBOL`, `irq`, or `stimulus`.
+For `stimulus`, `kept` contains group names, and counts refer to groups.
+The replay must include `--stimulus-file`; C1 must record its `stimulus_sha256`.
+The `rvw.stimulus/1` event format and dependency rules are defined in
+`rvw/src/rvw/bundle/README.md`. Minimality applies to admissible group removals.
 Each entry has `original`, `remaining`, `kept` (zero-based input indices),
 `completion`, `one_minimal`, and `global_minimum` (always false).
 IRQ indices exclude the fixed initial event from the search, but still refer to
@@ -1520,7 +1555,8 @@ records. This report does not assert that an obligation is complete.
 `proof_status` is `proven_conditional` only for an unbounded proof job with PASS,
 exit 0 and no reported free wires. Otherwise it is `not_proven`. `proof_job`
 retains the parent's local job paths and hashes, or is null. All proof assumptions
-and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`.
+and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`
+unless a separate declared activation cover runs, as specified below.
 The solver does not export a proof core in this flow. `proof_core` has
 `status: unavailable`, `cells: null` and a reason. Null is not an empty proof core.
 
@@ -1648,11 +1684,12 @@ and hashes them. It does not modify the upstream models.
 ## Formal event model extension
 
 BMC can explicitly select a sampled event model with `--event-model` and repeatable
-`--event-clock PORT`. Extra clocks must be independent rising-edge top inputs.
+`--event-clock PORT`. Extra clocks must be rising-edge top inputs.
 `--async-reset` separately enables constant-value reset FFs (`$adff`, `$adffe`).
 SBY `multiclock on` applies Yosys `clk2fflogic`. Each step is a global input
 sample, with arbitrary clock rates, phases, simultaneous edges and stalls.
-There are no declared ratio constraints or fairness assumptions.
+Optional periodic schedules constrain sampled clock ratios and phases, as specified
+below. Unscheduled clocks have no ratio constraints. No fairness is inferred.
 Async reset pulses visible for a sample are represented without a clock edge.
 Pulses wholly between samples and analog timing are outside the model.
 
@@ -1674,15 +1711,16 @@ Older reports without this field remain readable.
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
 `status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
 successful eqy run, at least one partition, PASS for every output partition, and
-complete register matching. A timeout, unknown partition or unmatched register
-cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+complete register matching by default. `--unmatched-state prove` instead checks
+closed output cones without name pairing, as specified below. A timeout or unknown
+partition cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
 output directory exits 2. `not_equivalent` requires a failed output partition and
 a VCD counterexample in `traces`. There are no internal state equality assumptions.
 `state_mapping` records automatic or manual pairs and their widths. `unmatched`
 lists unpaired registers on each side. `partitions` records each partition status.
 `inputs` contains each side's capture and snapshot records. `restrictions` records
 the single-clock, two-state model, reset alignment, unchecked startup clocks and
-zero latency difference. Blackbox obligations are refused. Optional `dsec` evidence
+the declared fixed output latency difference. Blackbox obligations are refused. Optional `dsec` evidence
 is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal README
 for the supported subset and initialization limits. This contract is separate from
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
@@ -1942,6 +1980,94 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Observed prediction outcome extension
+
+Kanata comments can contain one measured outcome per live instruction, predictor
+and kind. Emit it before terminal R. Fields are tab separated:
+
+```text
+#rvw  1  prediction  ID  PREDICTOR  KIND  PREDICTED  ACTUAL  RECOVERY  WORK  WARMUP  ALIAS  CONTEXT
+```
+
+`KIND` is `direction`, `target` or `return`. Direction values are `taken` or
+`not_taken`. Target and return values are nonnegative decimal or `0x` addresses.
+`RECOVERY` counts cycles from resolution to resumed correct-path fetch.
+`WORK` counts admitted wrong-path instructions attributed to this resolution.
+Both are nonnegative integers, or `?` for unknown. The producer must observe
+these quantities. R type 1 and stage residence cannot supply them.
+`WARMUP` and `ALIAS` are observed `true`, `false` or `?`. `CONTEXT` is a project
+context token, or `?`. Tokens cannot contain tabs or newlines. A predictor name
+is required. Duplicate outcomes, ended IDs and malformed known records fail.
+
+Reports separate predictor, kind, warmup, alias and context groups. Unknown
+costs stay unknown. Shared recovery costs can occur in multiple kinds. Do not
+sum these groups as global lost cycles. Context differences and alias flags
+do not establish causal effects. Project probes own the event bindings; the
+generic reader does not simulate a predictor or infer missing observations.
+
+### Property activation and requirement links
+
+A `cov prove` point can declare an `activation` SystemVerilog expression. The
+runner creates a separate cover job with the same captured inputs and assumptions.
+The expression must be one statement-free expression. A successful cover needs
+exit 0, PASS, no free wires and the existing sanity guard. Only then does
+`proof_cones.properties[].activation.status` become `reached`. Other evidence is
+`inconclusive`; an absent predicate is `not_measured`. This is a user-declared
+activation predicate. It does not establish full property non-vacuity.
+
+The additive `rvw.proof-cones/1` `requirements` array joins each declared
+`requirement_id` to sorted `property_ids`. Property records join activation,
+structural cones and the unavailable solver core through `property_id`. Every
+requirement status stays `inconclusive`. A list of linked properties is not a
+complete set of functional obligations. A structural cone is not a solver core.
+These fields do not change exclusion or gate verdicts.
+
+
+### Related clocks as periodic sampled schedules
+
+Event BMC accepts repeated `--clock-schedule PORT=BITS` options. Declare every
+clock, including `--clock`, or declare none. `clk=01` and `other=0011` describe
+a 2:1 rate ratio. Rotate the bit strings to declare a phase. The leftmost bit is
+sample zero. Each pattern repeats forever. Each must contain both levels and
+2..256 samples. The joint period must not exceed 4096 samples. These are explicit
+proof restrictions, not measured hardware clock relationships.
+
+One solver step advances one global sample. The wrapper constrains clock levels
+at that sample. The event backend samples property data before its triggering
+edge; data that changes with a clock uses its previous sample at that edge.
+Clock schedules do not add analog timing, delta cycles, jitter or events between
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
+The existing reset harness still counts primary-clock edges. Async reset state
+requires the separate `--async-reset` option. Unsupported state controls and raw
+async-triggered properties remain refused. Replay and X flows remain unchanged.
+`event_model.schedules` records the exact patterns; `relationships` states whether
+the run used periodic schedules or unrelated clocks. Native phase tests require
+both a passing same-phase reference and a failing opposite-phase reference.
+
+
+### Sequential equivalence latency restrictions
+
+The additive `rvw.formal.equiv/1` `restrictions.latency` is the nonnegative
+candidate lag in clocks (0..64). The reference wrapper delays all output ports by
+that amount. Both wrappers mask outputs until reset cycles plus settle cycles
+plus latency cycles have elapsed. There is no input shift or protocol adapter.
+`restrictions.unmatched_state` is `refuse` by default. With `prove`, unmatched
+register names remain in the inventory but do not block a complete closed-output
+proof. State equality is never assumed. Every partition must still have no
+internal crossbits. Missing partitions, unknown results and tool failures remain
+inconclusive. No named state relation or blackbox obligation is inferred.
+
+
+### Imported single-sample implication
+
+The slang import subset also accepts one top-level `Boolean |-> Boolean` in an
+inline clocked assert or assume property. The pinned frontend patch evaluates
+both operands at the same pre-update sample and checks `!antecedent || consequent`.
+The existing `disable iff` condition gates the check. There are no pending threads.
+`|=>`, delays, repetition, chained and nested implication remain refused before
+a proof job. Qualified engines remain SMTBMC/Yices and ABC BMC3. The captured
+plugin bytes identify the applied lowering. This is not full temporal SVA support.
+
 ### Init platform review marker
 
 An optional `rvw init --linker-script` platform template carries
@@ -2115,4 +2241,186 @@ must fit width. Ordinary-write and W1C masks must be disjoint. Register byte spa
 must not overlap. Missing required fields fail loading. This format declares
 register intent. It does not provide independent bus observations or a verdict.
 
+### C1 native semantic requirements
 
+A regression config can set `[core] backend = "riscvsim-verilator"`.
+Each suite can set `requires = ["two_state", "clock", "immediate_assertions"]`.
+The shared native profile checker refuses unsupported or malformed requirements
+before input capture and adapter launch. A nonempty requirement list without a
+known profile is an error. Existing configs with no requirements stay valid.
+The direct RiscvSim shell launch checks `RISCVSIM_REQUIRES`, a comma-separated
+feature list, before it creates temporary launch state. This profile describes
+the Spinal native interface, not the cocotb Verilator invocation. Coverage flags
+retain their existing version checks and do not imply a coverage guarantee.
+
+### Sampled reset checks
+
+Optional project bindings can emit `rdc.assertion`, `rdc.release`,
+`rdc.unknown_control`, `rdc.release_order`, `rdc.isolation` and
+`rdc.reconvergence_protocol` monitor findings. Each binding uses an independent
+observation clock and normalized control levels. These findings do not discharge
+the structural lint report's unrun release or reconvergence proofs. Missing
+bindings provide no reset protocol evidence. Between-sample pulses and physical
+timing are outside this sampled contract.
+
+### Optional HPM control checks
+
+`hpm.selector`, `hpm.overflow_pending` and `hpm.counter_interrupt` identify
+optional project monitor rules. The selector policy is a declared WARL mask.
+The interrupt policy is sticky modular overflow with clear priority and a
+separate interrupt enable. Counts and event multiplicity come from independent
+observations. These rules do not establish architectural CSR access compliance,
+selector event meaning, or real-core coverage without explicit project bindings.
+
+### Independent device bus checks
+
+Optional `register.bus_decode`, `register.bus_data`, `register.bus_order` and
+`register.bus_latency` rules check accepted bus request/response observations
+against project register addresses and version-1 register models. One request
+can be outstanding. Read data precedes the request's side effects. An unmapped
+address must receive an error. A zero-cycle response is allowed. A delayed
+response must arrive within the declared positive cycle bound. These rules
+provide no real-device or CSR compliance claim without a concrete binding.
+
+MMU observation inventories can add `walk_check` with `status` of `consistent`,
+`mismatch` or `inconclusive`. This bounded check compares immutable PTE read
+addresses and values with scenario data and observes the physical target range.
+It does not change architectural bins or C1-C4 verdicts. See the regress README.
+
+Optional MMU `device_state` events retain sampled harness register state and an
+IRQ schedule override flag. `pma_check` uses declared PMA data plus these events
+and accepted bus requests. Its `consistent` result has the same bounded scope
+as `walk_check`; neither changes architectural coverage or gate verdicts.
+
+### Architecture Pareto intervals
+
+`rvw.arch-pareto-plan/1` has `points` with unique `id` and `report` paths.
+Optional `objectives` defaults to `["cycles"]`. Optional point `costs` paths
+select user input files. Paths are relative to the plan. Reports are checked
+`rvw.arch-run/1` gem5 runs with identical ELF hashes and ROI instruction counts.
+Without costs, cycles use summed ROI cycles for all three interval bounds.
+`rvw.arch-costs/1` has `report_sha256`, nonempty source/method text in `method`,
+and `cycles`. Optional `area_mm2` and `power_w` are user-supplied inputs only.
+The workstation does not estimate or validate area or power. PPA estimation
+and hardware gain claims are out of scope.
+
+Intervals are null or positive ordered `[lower, nominal, upper]` values.
+Nominal cycles equal summed ROI cycles. Bounds are user declarations.
+`rvw.arch-pareto/1` records selected `objectives`, plan/report/cost hashes,
+`cost_origin` (`user-supplied` or `absent`), intervals, `eligible`,
+`evidence_class: model-only`, `nominal_frontier` and `conservative_frontier`.
+Conservative dominance compares only selected objectives. It requires all
+upper bounds no greater than the other point's lower bounds and one strict gain.
+Missing selected objectives exclude a point and make status inconclusive
+(CLI exit 3). Unselected missing inputs do not affect eligibility.
+No point is RTL-confirmed by this command.
+
+### Architecture topology channels and agents
+
+The optional `rvw.arch-core/1` `soc.memory.kind: multi` uses `interleave_bytes`
+and 2, 4 or 8 `controllers` (simple or DRAM memory objects). Channels stripe
+across RAM at a power-of-two byte size of at least 64. Optional `soc.agents`
+contains up to eight read-only linear generators. Fields are `start`, `size`,
+`block_bytes`, `period_ticks`, `duration_ticks`, `max_outstanding` and `attach`
+(`memory` or an existing cache level). Addresses and blocks must align and fit
+RAM. Time units are 1 ps ticks. Agents start at instantiation and idle after
+the duration. They are not CPU harts. Fixed-latency C1 calibration still refuses
+SoC topologies. Native model execution alone is not RTL correlation.
+
+### Native memory mappings
+
+`rvw.memory-mapping/1` has `inputs` (`stats`, `config`, `bare`, each with path
+and SHA-256) and `observations`. Each observation has `point`, `region`, `hart`,
+`workload` and `counters`. Counter keys use `rvw.memory-observations/1`; each
+value has distinct `stats` names and positive `scale`. Names must start with
+the native config object's point plus a dot. The first complete stats block
+must have simFreq=1e12, simTicks equal to the difference of the two bare ROI
+markers, and finalTick equal to the exit marker. Bare execution must pass.
+`arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
+`native_inputs` hashes. It checks names and interval identity. The project
+owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
+## Reviewed specification obligation catalogs
+
+The optional `rvw.isa/1` `specifications` entries can bind a document and a
+reviewed `rvw.spec-obligations/1` catalog. Each entry has `kind`
+(`isa|profile|debug|platform`), `revision`, `path`, `sha256` and
+`obligations` (`path`, `sha256`). Paths use the corresponding opcode source
+root. Catalog rows in `obligations` have unique `id`, exact document excerpt
+`text`, `checkers` and `tests` arrays. Diff verifies both hashes and document
+excerpt membership. `rvw.isa-diff/1.obligations` reports added, removed and
+changed rows, affected checkers, missing tests and present test hashes.
+It reports metadata-only pins as unchecked. A changed catalog requires adoption.
+Catalog completeness needs review. Test presence does not establish execution.
+
+`rvw.isa/1.probes` can configure `compiler|dut|reference|act|coverage` probes.
+Kinds are `gcc` (native target macros), `command` (native JSON capability
+output), and `json|toml` (captured settings file with optional `key` path).
+Command probes return `rvw.isa-consumer/1` with `xlen`, `extensions` (versions
+or null), and `options`. File probes select the same fields. Paths use the
+manifest directory. `rvw.isa-check/1` includes observed `probes` and
+`unchecked_consumers`. `consistent` requires all five inputs with known,
+matching versions and options. Missing evidence gives `inconclusive`.
+Contradictions are errors. These statuses describe configuration consistency.
+They do not certify ISA implementation or compliance.
+
+`rvw.isa/1.semantics` can include `forms` and `crosses`. Forms map instruction
+names to fields with `bits` (`[hi,lo,destination_lo]` slices), `width`, `bins`
+(explicit values or `boundaries`), optional `signed`, `offset` and register
+`bank`. Crosses declare `id`, `instruction`, `fields`, and exhaustive
+`combinations` (`bin`, `status`, `reason`) within those finite field domains.
+Statuses are `legal|illegal|unavailable`. Functional plans retain the catalog.
+Cross reports retain every bin in the denominator and add `classifications`
+with observed `count`. No catalog declaration is a proof exclusion.
+
+`rvw.coverage-report/1.scala_mapping.methods` counts source mapping methods.
+The `covered-span-assignment-links` method navigates to a unique local full
+SpinalDB data assignment for an exact covered RTL target. Multiple, partial,
+init/reset and nonlocal assignments refuse that inference. Mixed links have a
+separate method. These links do not prove individual Scala statement hits;
+`scala_mapping.statement_hit_status` remains `undetermined`.
+
+
+### Cooperative farm capacity extensions (#57)
+
+Host capacity and request resources support `disk_bytes` and `jobs` in addition
+to CPU slots, memory bytes and named locks. A host can set `projects` with
+per-project limits for those four dimensions. Requests then require a configured
+`project`. All active requests for that project share its quota. Host aliases
+share the same host state. An oversized request is refused; a capacity conflict
+waits within the request timeout. Disk admission also checks current free space.
+Reports include effective `limits`, `queued_s`, `held_s`, `released` and `outcome`.
+Handled cancellation releases all reservations. These fields describe reservations,
+not actual consumption. OS resource limits and cumulative project accounting are
+not provided. See `rvw/src/rvw/farm/README.md` for defaults and remaining limits.
+
+### Paired SoC bridge observations (#134)
+
+The optional extended `soc check --transactions` JSONL record includes `write`,
+`data`, `error`, `beats`, and optional `register`, in addition to the original
+address fields. Bindings can declare `byteorder` and `software_byteorder`.
+Beat masks index lanes by ascending address. The format and bounded comparison
+rules are defined in `rvw/src/rvw/soc/README.md`. Matching samples never produce
+a pass. Endpoint pairing and observation provenance remain the capture
+producer's responsibility. The bundled captures do not emit extended records.
+
+### riscv-formal input provenance (#63)
+
+C3 `source.formal_inputs.settings_sha256` binds the selected formal settings.
+`source.formal_inputs.committed_inputs.files` lists copied input hashes and their
+comparison with repository HEAD bytes. Rows report `committed`, `modified`,
+`untracked_or_unavailable`, or `unavailable`. The nonempty list has
+`all_committed=true` only when every row matches a commit. This is file provenance,
+not a generator-origin or adapter-conformance claim. `source.identity_complete`
+remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
+
+
+### C9 decoupled RISC-V O3 settings
+
+The existing `cpu` scalar fields can enable gem5's BAC and FTQ.
+`decoupledFrontEnd` must be a boolean. When true, the model requires O3,
+`minInstSize=2`, positive FTQ capacity and prediction rates, and
+`fetchTargetWidth >= fetchBufferSize`. Omitted numeric settings use the
+pinned gem5 defaults. The default target width (32) is smaller than the
+default fetch buffer (64), so set compatible values explicitly. Invalid
+settings fail before native execution. C9 evidence and verdict rules do not
+change. See `Arch/patches/README.md` for the optional mixed-width BAC fix.
