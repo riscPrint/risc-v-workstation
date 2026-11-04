@@ -415,6 +415,18 @@ complete file identity. Launch metadata captures the executable identity and
 argument list; adapter build dependencies still require C1 provenance.
 
 
+### Unspecified mscratch reset bits in C2 comparison
+
+For a declared trace from reset, CSR synchronization can resolve the unknown
+reset bits of `mscratch` (0x340) from its first read or C2 CSR snapshot.
+`rvw.cosim/1.recent_synchronizations` records `reason: csr_reset_unknown`,
+`csr`, `mask`, `reference`, `core`, `order` and `source` (`rd_wdata|csr_state`).
+The reference takes only unknown bits. Full writes clear the unknown mask;
+set/clear writes clear their written bits from that mask. Subsequent observations
+remain strict. The rule is disabled by strict CSR synchronization or by
+`trace_from_reset=false`. Unsupported reference synchronization is an error.
+No other CSR reset state is inferred by this rule. C1/C2 formats do not change.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
@@ -2426,14 +2438,13 @@ not a generator-origin or adapter-conformance claim. `source.identity_complete`
 remains false. C4 remains bounded and cannot accept. No C1 ELF run is fabricated.
 
 
-### Unspecified mscratch reset bits in C2 comparison
+### C9 decoupled RISC-V O3 settings
 
-For a declared trace from reset, CSR synchronization can resolve the unknown
-reset bits of `mscratch` (0x340) from its first read or C2 CSR snapshot.
-`rvw.cosim/1.recent_synchronizations` records `reason: csr_reset_unknown`,
-`csr`, `mask`, `reference`, `core`, `order` and `source` (`rd_wdata|csr_state`).
-The reference takes only unknown bits. Full writes clear the unknown mask;
-set/clear writes clear their written bits from that mask. Subsequent observations
-remain strict. The rule is disabled by strict CSR synchronization or by
-`trace_from_reset=false`. Unsupported reference synchronization is an error.
-No other CSR reset state is inferred by this rule. C1/C2 formats do not change.
+The existing `cpu` scalar fields can enable gem5's BAC and FTQ.
+`decoupledFrontEnd` must be a boolean. When true, the model requires O3,
+`minInstSize=2`, positive FTQ capacity and prediction rates, and
+`fetchTargetWidth >= fetchBufferSize`. Omitted numeric settings use the
+pinned gem5 defaults. The default target width (32) is smaller than the
+default fetch buffer (64), so set compatible values explicitly. Invalid
+settings fail before native execution. C9 evidence and verdict rules do not
+change. See `Arch/patches/README.md` for the optional mixed-width BAC fix.
