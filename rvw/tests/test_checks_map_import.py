@@ -30,9 +30,20 @@ def test_systemrdl_matches_ipxact():
     ('<readAction>clear</readAction>', '<readAction>modify</readAction>'),
     ('<bitOffset>2</bitOffset>', '<bitOffset>1</bitOffset>'),
     ('<size>32</size>', '<size>2</size>'),
+    ('<resets><reset><value>0</value></reset></resets>', ''),
+    ('<resets><reset><value>0</value></reset></resets>', '<resets><reset><value>0</value><mask>1</mask></reset></resets>'),
+    ('<name>device</name>', '<name>device</name><addressUnitBits>16</addressUnitBits>'),
 ])
 def test_refuse_unsupported_semantics(tmp_path, before, after):
     path = tmp_path / 'bad.xml'
     path.write_text((ROOT / 'src/test/maps/status.xml').read_text().replace(before, after))
     with pytest.raises(ValueError):
         module.ipxact(path)
+
+
+def test_systemrdl_refuses_unmodeled_side_effect(tmp_path):
+    pytest.importorskip('systemrdl')
+    path = tmp_path / 'bad.rdl'
+    path.write_text((ROOT / 'src/test/maps/status.rdl').read_text().replace('onwrite=woclr', 'onwrite=woset'))
+    with pytest.raises(ValueError, match='unsupported'):
+        module.systemrdl(path)

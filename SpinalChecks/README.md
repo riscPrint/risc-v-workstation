@@ -547,7 +547,8 @@ and `readClearMask` declare side effects. A read clears before a software write.
 The `legalize` table maps masked candidates to legal WARL values. Unmapped illegal
 candidates retain state. `wlrl=true` instead requires a denied response to an illegal
 candidate. This is an explicit project policy. `readOnly=true` denies every write.
-Individual read-only fields stay outside both write masks. These models do not
+Individual read-only fields stay outside both write masks. Optional `readData`
+checks granted reads against independent state before side effects. These models do not
 decode CSR instructions or bind aliases. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
 under the `sbt` lock. The reference injects state and access faults separately
 from the expected-state model. No BOOM CSR binding is supplied.

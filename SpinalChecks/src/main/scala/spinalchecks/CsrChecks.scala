@@ -13,14 +13,16 @@ case class CsrModel(version: Int, width: Int, reset: BigInt, writeMask: BigInt,
   require((writeMask & w1cMask) == 0, "ordinary and W1C masks overlap")
   require(!readOnly || (writeMask == 0 && w1cMask == 0))
   require(!wlrl || (allowed.nonEmpty && legalize.isEmpty))
+  require(legalize.forall { case (from, to) => ((from ^ to) & ~writeMask) == 0 },
+    "WARL legalization cannot change read-only or W1C fields")
   require(legalize.values.forall(x => allowed.isEmpty || allowed.contains(x)))
 }
 object CsrChecks {
-  /** Inputs describe accepted CSR accesses. Hardware set wins over clear and software writes.
+  /** Inputs include accepted requests and denied attempts. Hardware set wins over clear and software writes.
     * `observed` is the DUT state, never the source of expected state.
     */
   def bind(name: String, model: CsrModel, observed: Bits, read: Bool, write: Bool,
-           data: Bits, privilege: UInt, denied: Bool, hwSet: Bits, hwClear: Bits): Unit = {
+           data: Bits, privilege: UInt, denied: Bool, hwSet: Bits, hwClear: Bits, readData: Bits = null): Unit = {
     val w = model.width
     require(Seq(observed, data, hwSet, hwClear).forall(_.getWidth == w))
     val expected = Reg(Bits(w bits)).init(model.reset)
@@ -35,9 +37,17 @@ object CsrChecks {
     val accessDenied = privilege < model.minPrivilege || (write && Bool(model.readOnly)) ||
       (write && Bool(model.wlrl) && !legal)
     val next = Bits(w bits)
-    next := expected & ~Mux(read && !accessDenied, B(model.readClearMask, w bits), B(0, w bits))
-    when(write && !accessDenied && legal) { next := legalized & ~(data & B(model.w1cMask, w bits)) }
+    val afterRead = expected & ~Mux(read && !accessDenied, B(model.readClearMask, w bits), B(0, w bits))
+    next := afterRead
+    when(write && !accessDenied && legal) {
+      next := ((afterRead & ~mask) | (legalized & mask)) & ~(data & B(model.w1cMask, w bits))
+    }
     expected := (next & ~hwClear) | hwSet
+    if (readData != null) {
+      require(readData.getWidth == w)
+      DeclaredChecks.rule("csr.read", name, "granted read data before side effects")(
+        read && !accessDenied && readData =/= expected)
+    }
     DeclaredChecks.rule("csr.state", name, "v1 independent reset, WARL/WLRL, read-only, read-clear, W1C, hardware priority")(
       observed =/= expected)
     DeclaredChecks.rule("csr.access", name, "v1 declared minimum privilege")(

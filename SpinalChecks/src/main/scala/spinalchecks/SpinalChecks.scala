@@ -441,7 +441,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
       def keyValue(e: Expression): Option[BigInt] = e match {
         case l: Literal if !l.hasPoison() => Some(l.getValue())
-        case b: BaseType => try { Some(Literal(b)) } catch { case _: Throwable => None }
+        case b: BaseType => try { Some(Literal(b)) } catch { case scala.util.control.NonFatal(_) => None }
         case _ => None
       }
       def useGuard(st: Statement): Bool = {

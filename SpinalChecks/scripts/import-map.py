@@ -37,6 +37,12 @@ def ipxact(path):
     root = ET.parse(path).getroot()
     for node in root.iter():
         node.tag = node.tag.split('}')[-1]
+    supported = {'component', 'vendor', 'library', 'name', 'version', 'memoryMaps', 'memoryMap',
+                 'addressBlock', 'baseAddress', 'range', 'width', 'usage', 'register', 'addressOffset',
+                 'size', 'access', 'field', 'bitOffset', 'bitWidth', 'modifiedWriteValue', 'readAction',
+                 'resets', 'reset', 'value', 'addressUnitBits', 'description', 'displayName', 'volatile'}
+    if any(n.tag not in supported for n in root.iter()):
+        raise ValueError('unsupported IP-XACT element')
     def value(node, tag, default=None):
         found = node.find(tag)
         return default if found is None else found.text.strip()

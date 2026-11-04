@@ -24,11 +24,13 @@ object RegisterMap {
     val result = names.map { n =>
       require(n.matches("[A-Za-z_][A-Za-z0-9_.]*"))
       def number(k: String): BigInt = BigInt(get(s"$n.$k"))
-      MappedRegister(n, number("address"), RegisterModel(1, number("width").toInt,
+      val width = number("width")
+      require(width.isValidInt && width > 0, "register width must be a positive Int")
+      MappedRegister(n, number("address"), RegisterModel(1, width.toInt,
         number("reset"), number("writeMask"), number("w1cMask"), number("readClearMask")))
     }
     require(result.forall(_.address >= 0))
-    val spans = result.map(r => (r.address, r.address + (r.model.width + 7) / 8)).sortBy(_._1)
+    val spans = result.map(r => (r.address, r.address + (BigInt(r.model.width) + 7) / 8)).sortBy(_._1)
     require(spans.sliding(2).forall(x => x.size < 2 || x.head._2 <= x.last._1), "overlapping registers")
     result
   }
