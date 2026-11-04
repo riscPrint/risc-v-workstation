@@ -55,7 +55,7 @@ def validate_sources(paths, clock):
                     if '$' in condition:
                         raise ValueError('sampled functions in disable iff are unsupported')
                     expr = expr[offset:].strip()
-                _expression(expr)
+                _property(expr)
                 if not re.match(r'\s*;', text[end:]):
                     raise ValueError('SVA action blocks are unsupported')
                 spans.append((match.start(), end))
@@ -65,3 +65,20 @@ def validate_sources(paths, clock):
                 raise ValueError('only inline clocked assert/assume property is supported')
         except ValueError as error:
             raise ValueError(f'{path}: unsupported SVA subset: {error}') from error
+
+
+def _property(text):
+    # Qualify only one Boolean antecedent and one Boolean consequent. The native
+    # frontend performs temporal lowering. Nested or chained implications stay refused.
+    parts = re.split(r'(\|->)', text)
+    if len(parts) == 1:
+        return _expression(text)
+    if len(parts) != 3:
+        raise ValueError('only one simple SVA implication is supported')
+    depth = 0
+    for char in parts[0]:
+        depth += (char == '(') - (char == ')')
+    if depth:
+        raise ValueError('implication must be at the top property level')
+    _expression(parts[0])
+    _expression(parts[2])

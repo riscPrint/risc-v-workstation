@@ -406,7 +406,11 @@ class Driver(val adapter: CoreAdapter) {
     if (st.overlapped) details("concurrent") = true
     val result = baseResult(job, outcome.status, outcome.failCode, outcome.message, outcome.cycles, outcome.instret,
       wall, elfSha, artifacts, details)
-    if (outcome.metrics.value.nonEmpty) result("metrics") = outcome.metrics
+    val metrics = ujson.Obj.from(outcome.metrics.value.toSeq)
+    SpeedMetrics(outcome.cycles, outcome.instret, details.obj.get("execution_s").map(_.num)).foreach {
+      case (name, value) => metrics(name) = value
+    }
+    if (metrics.value.nonEmpty) result("metrics") = metrics
     if (outcome.status == Status.Timeout && st.wall.expired) result("wall_clock_timeout") = true
     // Until the serial rerun (runJobs) attributes it, a failure of a run that overlapped others
     // may carry another run's message: the result written now says nothing reliable. If the rerun

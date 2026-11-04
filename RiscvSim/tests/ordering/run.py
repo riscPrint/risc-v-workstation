@@ -7,7 +7,7 @@ import sys
 
 from rvw.common.proc import run_group
 from rvw.results import load_run
-from suite import generate
+from suite import generate, GENERATORS
 
 
 def main():
@@ -15,6 +15,7 @@ def main():
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--xlen', type=int, choices=[32, 64], default=64)
     p.add_argument('--seeds', type=int, nargs='+', default=[1, 7, 23])
+    p.add_argument('--suite', choices=list(GENERATORS), action='append', help='select programs; amo-fault requires PMP lock/NAPOT')
     p.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
     p.add_argument('--spike', default='spike')
     p.add_argument('--linker', type=Path, help='project link script; default RAM starts at 0x80000000')
@@ -25,7 +26,7 @@ def main():
         p.error('--timeout must be finite and positive')
     if len(set(args.seeds)) != len(args.seeds):
         p.error('seeds must be distinct')
-    jobs = [j for seed in args.seeds for j in generate(args.out, args.xlen, seed)]
+    jobs = [j for seed in args.seeds for j in generate(args.out, args.xlen, seed, args.suite)]
     if args.adapter and any(Path(j['out']).exists() for j in jobs):
         p.error('DUT output directories exist; use a fresh --out directory')
     isa = f'rv{args.xlen}ima_zicsr_zifencei'

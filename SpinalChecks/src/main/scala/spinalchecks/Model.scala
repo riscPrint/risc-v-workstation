@@ -19,7 +19,7 @@ object Kind {
   val Progress            = "progress.watchdog"
   val TileLinkBurstStable = "tilelink.burst_stable"
   val all = Seq(StreamValidHold, StreamPayloadStable, MemIndex, VecIndex, EnumLegal, FsmStateLegal, Progress,
-    TileLinkBurstStable, "bits.index", "flow.payload_legal", "csr.state", "csr.access", "hpm.count",
+    TileLinkBurstStable, "bits.index", "flow.payload_legal", "csr.state", "csr.access", "csr.read", "hpm.count", "hpm.access", "hpm.read", "register.response",
     "register.state", "connectivity.value", "tilelink.response_match", "tilelink.source_busy", "tilelink.request_legal",
     "tilelink.response_legal", "tilelink.sink_busy", "tilelink.sink_match", "tilelink.release_busy",
     "tilelink.release_match", "axi4.address_legal", "axi4.read_match", "axi4.read_capacity",

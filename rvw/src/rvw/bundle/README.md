@@ -291,7 +291,7 @@ The first four are annotated read-only. `wave_cut` writes `out`. Time arguments 
 C1 adapter whose "bug" depends on seed, memory latency and a file in a fake core repo (plus modes for
 hangs, a data symbol, a reset offset and an RVFI stamp skew). `rvw/tests/test_debug_runs.py` covers the
 re-run layer (fresh attempt directories, process-tree timeouts, replay paths, C1 loading).
-`RiscvSim/boom-spinaltrace/run.sh` quoting is checked with a stub `sbt`.
+The model flag `--spinaltrace` selects dependency-trace instrumentation.
 
 ## Decisions
 
@@ -445,3 +445,24 @@ This rule applies to bundle, reduce and bisect, including run-many batches.
 
 Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
 A missing or different hash makes the attempt inconclusive.
+
+
+### Concurrent stimulus reduction
+
+`rvw reduce RUN --modes stimulus` reads the original replay's `--stimulus-file`.
+The C1 result must record `stimulus_sha256`. A different input hash is refused.
+The adapter must support this option and execute the supplied events. The bundled
+BOOM and VexRiscv adapters do not yet implement it.
+
+The JSON input is `{"schema":"rvw.stimulus/1","events":[...]}`.
+Each event has `id`, `kind` (`instruction`, `irq`, `transaction`, or `device`),
+`hart` (nonnegative integer), `after` (IDs of earlier events), `group` (nonempty
+string), `required` (boolean), and `payload` (project-defined object).
+Groups are indivisible. Required events cannot be removed. A retained event must
+retain all its dependencies. Event order and payload bytes as JSON values stay
+fixed. Each admissible candidate gets a fresh adapter run. Invalid candidates
+are refused before execution. New timeouts do not match an assertion failure.
+A `one_minimal` result means no single group can be removed within these
+constraints. It does not establish a global minimum or verify the adapter's
+implementation of event semantics. Tests use fixture oracles. Real-core and
+arbitrary device schedule support remain open under #152.

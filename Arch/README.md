@@ -145,7 +145,7 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
 - Require exactly two ROI markers and a passing tohost value. A tick limit or
   incomplete exit must not produce successful evidence.
 - Report the gap before adding a fitter. Offline held-out candidate selection and measurement microbenchmarks are available.
-  Live RTL event integration and parameter search remain open work.
+  Bayesian parameter search is available. Live RTL event mappings remain project work.
 - RV32IM uses Minor or TimingSimple, with explicit RV32 ISA configuration.
   In-order descriptions require `queues=[]` and `predictor=null`.
   Their CPU defaults apply unless scalar CPU parameters override them.
@@ -199,15 +199,24 @@ entry and writes that block at ROI exit. Use reports from this model only.
 It hashes the stats files in the fit report. It does not certify the mappings.
 
 Error is `abs(model - RTL) / max(1, RTL)` per event and workload.
-The training score is the arithmetic mean of these errors, with equal weights.
+The objective includes relative cycle error for every workload.
+Instruction totals are consistency checks. They do not enter the objective.
+This includes instruction units, retired totals and instruction-class counts.
+Other events default to role `fit`. Use optional role `consistency` to exclude
+another fixed event. Role `fit` cannot override a known instruction total.
+The score averages cycle error and eligible event errors within each workload.
+Then it averages workloads. `headline` reports cycle error, cycle gap and IPC
+ratios. Matching instruction totals cannot hide a timing gap.
 The lowest training score wins. Names break ties in lexical order.
 Only the winner gets a held-out score. Splits must be nonempty, disjoint and
 cover exactly the report workloads. Training and held-out ELF hashes must also
 be disjoint. Renaming the same ELF does not make an unseen workload.
-The report has status `reported`.
+The report is `inconclusive` for fewer than three training workloads,
+constant training cycle or eligible event targets, or tied scores across multiple candidates.
+A selected candidate in this report does not establish a useful fit.
 It gives no fidelity threshold, confidence interval or correctness verdict.
 A single workload cannot establish general model fidelity.
-Candidate generation and parameter search remain project-owned work.
+Use `arch search` below for parameter generation. Keep plans and fitted values in the core project.
 The test target uses synthetic event evidence. It does not validate RTL counters.
 
 ## Measurement microbenchmarks
@@ -286,9 +295,7 @@ All values above are examples, not tuned core data. The captured description
 and gem5 `config.json` retain the declared and effective settings.
 
 Use `arch run` for SoC descriptions. `calibrate` refuses them because C1's
-fixed memory latency cannot describe this topology. Multiple traffic agents,
-multiple controllers, Ruby, and matching RTL interference comparisons remain
-unsupported. `memory_latency` remains required metadata for old report readers;
+fixed memory latency cannot describe this topology. Ruby and matching RTL interference comparisons remain unsupported. `memory_latency` remains required metadata for old report readers;
 it does not set the SoC memory timing.
 
 ## Memory observations
@@ -360,8 +367,9 @@ run. Failed points retain their error and cannot enter the frontier. `dse.json`
 contains all point records and a Pareto list for the single objective: minimize
 the sum of selected ROI cycles. Each workload has equal weight. Ties remain.
 This is a speed-only frontier. Area, power and uncertainty are unknown. All
-points are model-only and need RTL confirmation. Multi-objective area/power
-trade-offs, uncertainty intervals and RTL confirmation remain open work.
+points are model-only and need RTL confirmation. Use `arch pareto` below for optional user-supplied cost comparisons.
+The workstation does not estimate area or power. RTL performance confirmation
+remains open work.
 A partial sweep reports inconclusive and exits 3. Input errors exit 2.
 
 ## Linux reference flow
@@ -447,3 +455,157 @@ must run on reference and RTL, device states and replay inputs must agree, and
 SBI, user-process, page-fault, signal, context-switch and selected kernel selftests
 must pass. FreeRTOS/Zephyr adapters also remain open. None is inferred from the
 minimal reference boot.
+
+## Bayesian fitting, repeats and predictions
+
+`rvw arch search search.json --out runs/search --json` runs a bounded search.
+Its plan has this shape. The `fit` object is a complete `rvw.arch-fit-plan/1`
+plan from above, with `candidates: {}`. Its `rtl` path resolves against the
+search plan. Keep the plan and output in the core project.
+
+```json
+{
+  "schema": "rvw.arch-search/1",
+  "fit": {"schema": "rvw.arch-fit-plan/1", "rtl": "runs/rtl.json", "candidates": {},
+          "train": ["train-workload"], "held_out": ["unseen-workload"],
+          "events": [{"name": "ROI cycles", "rtl_metric": "roi_cycles",
+                      "gem5_stat": "system.cpu.numCycles", "unit": "cycles",
+                      "semantics": "Verify the same ROI clock and boundaries in both engines."}],
+          "scope": "State the target and workload scope.",
+          "uncertainty": "State the counter and model limits.", "unsupported": []},
+  "parameters": {"bus_bytes": [4, 8, 16]},
+  "budget": 3,
+  "repeats": 3,
+  "timeout_s": 600
+}
+```
+
+This generic example does not fit a named core. Parameter rules are the same
+as `sweep`. There are at most 32 space points and 256 model processes.
+The search uses an RBF Gaussian process with fixed noise variance `1e-6` and
+expected improvement. Numeric ranges use unit scaling. Categories use one-hot
+encoding. The first point and ties use the declared space order.
+Each point runs on training workloads only. Repeated training cycle and eligible event errors
+select the point. Only then does the selected point run on held-out workloads.
+The saved RTL report supplies observations. It does not run RTL again.
+Memory latency cannot change because RTL observations must stay comparable.
+SoC fitting is not supported. An invalid run stops the search.
+`progress.json` records completed training points. `search.json` records the
+selected point, training intervals, held-out interval and checked event fits.
+The command does not resume a partial search.
+
+`rvw arch measure --bench NAME,NAME --repeats 3 --out runs/repeats --json`
+runs both RTL and gem5 again for every repeat. It retains fresh evidence and
+checks stable tool, model, description, ELF and workload identities.
+`measure.json` reports mean cycles, IPC ratio and cycle gap with 95% percentile
+bootstrap intervals. Search also reports bootstrap intervals for repeated
+model scores. Both use 4000 resamples and bootstrap seed 0. These intervals
+describe repeat variation only. Calibration keeps RTL seed 1. Deterministic
+runs can give zero-width intervals even when a model has a large bias.
+A constant repeat series has interval status `inconclusive`. The numerical
+interval remains visible as a description of repeat variation.
+Use enough independent measurements for the intended decision. These reports
+do not measure generalization uncertainty or establish a fidelity threshold.
+
+Event fits include `event_correlations` for each split. Pearson correlation
+needs at least three workloads and nonconstant counters. Missing variation or
+too few workloads gives `inconclusive` with a null coefficient. Correlation
+does not establish event semantics or accuracy.
+
+Store a prediction before the RTL experiment. Score it after that experiment:
+
+```sh
+rvw arch predict runs/model/gem5.json --out predictions/idea.json --json
+rvw arch score-prediction predictions/idea.json runs/later/rtl.json \
+  --out predictions/idea-score.json --json
+```
+
+Create the parent directory first. Each ledger file is created exclusively.
+A prediction stores UTC time, the model report, its hash and local evidence
+paths. Scoring rechecks the stored prediction, model evidence and later RTL
+with `compare`. Each RTL evidence file must have a modification time after
+the prediction. The score is a separate file linked by the prediction hash.
+This local ordering check is not a trusted timestamp or proof of blinding.
+Keep the original evidence trees. Do not use old RTL evidence with a changed
+timestamp as a new measurement. Ledger scores currently cover ROI cycles and
+IPC. Event errors remain in the separate fitting report.
+
+MCP exposes `arch_search`, `arch_measure`, `arch_predict` and
+`arch_score_prediction` with the same inputs as the CLI.
+Native VexRiscv fitting still needs independently checked ROI event mappings.
+Description tests and synthetic subprocess tests do not establish native model
+fidelity. No BOOM fitted parameters belong in this repository.
+
+### Multi-objective interval comparison
+
+`rvw arch pareto plan.json --json` (MCP `arch_pareto`) compares saved model
+reports. The plan has schema `rvw.arch-pareto-plan/1` and a `points` array.
+Each point has a unique `id` and a `report` path. Paths are relative to the
+plan. All reports must use the same ELFs and ROI instruction counts. Raw model
+evidence and ELF hashes are checked again.
+
+The optional plan `objectives` list defaults to `["cycles"]`. Model cycles
+supply exact bounds when no `costs` file is given. Area and power are optional
+user-supplied inputs. To compare them, explicitly select `area_mm2` or `power_w`
+and supply a `costs` path for each point. The tool does not estimate or validate
+area or power. PPA estimation and hardware gain claims are out of scope.
+
+Each optional costs file has schema `rvw.arch-costs/1`, `report_sha256`, a
+nonempty `method` that states the source and method, and `cycles`. `area_mm2` and `power_w`
+can be absent. Each interval is null or positive ordered `[lower, nominal, upper]`.
+Nominal cycles must equal summed model ROI cycles. Bounds are user declarations,
+not inferred confidence levels. A missing selected objective excludes that
+point and makes the result inconclusive. Unselected missing costs do not block
+the default performance comparison.
+
+Selected objectives are minimized. The nominal frontier uses central values.
+The conservative frontier removes a point only when another point's upper
+bounds are no greater than its lower bounds, with at least one strict gain.
+Reports and supplied costs are hash-bound. Output labels supplied costs as
+`user-supplied`. These labels and bounds do not establish physical measurements.
+Model performance still needs RTL confirmation.
+
+### Traffic agents and memory channels
+
+`soc.memory` also accepts `{"kind":"multi", "interleave_bytes":64,
+"controllers":[MEMORY, MEMORY]}`. Each MEMORY is a simple or DRAM object
+as above. Use 2, 4 or 8 controllers. The interleave size is a power of two,
+at least 64 bytes. Each channel uses an interleaved range across the full RAM.
+The ranges share one backing store, including on macOS. This is channel
+interleaving, not a model of arbitrary address windows or a NoC.
+
+Optional `soc.agents` holds at most eight read-only linear traffic agents.
+Each object declares `start` (physical byte address), `size`, `block_bytes`
+(power of two up to 64), `period_ticks`, `duration_ticks`, `max_outstanding`
+and `attach` (`memory` or an existing `level2`/`level3`). Bounds must fit RAM.
+The period and duration use 1 ps ticks. Agents start after model instantiation.
+After the selected duration they remain idle. They do not write guest memory.
+Their raw counters and effective ports remain in gem5 stats and config files.
+CPU ROI markers still select the reporting interval. A background agent is
+not a hart. These observations do not establish matching RTL interference.
+
+### Native memory counter extraction
+
+Build `sequential-bandwidth` for sequential reads and `pointer-chase` for
+serial load latency. Use `independent-misses` with and without `soc.agents`
+for a model interference experiment. All three have checked return values
+and paired ROI markers. Build and run them with the existing `arch` commands.
+
+`rvw arch memory-extract mapping.json --json` (MCP `arch_memory_extract`)
+extracts mapped counters from the first gem5 ROI stats block. The mapping uses
+schema `rvw.memory-mapping/1`, an `inputs` object, and an `observations` array.
+`inputs` has `stats`, `config`, and `bare`. Each has `path` and `sha256`.
+Each observation has `point`, `region`, `hart`, `workload` and `counters`.
+`point` must exist in native config. Each counter uses the existing interval
+counter name and has `stats` (distinct full native counter names) and positive
+`scale`. Every name must start with the observation point plus a dot.
+
+For example, map `bytes` to `{"stats":["system.traffic0.bytesRead"],"scale":1}`,
+`transactions` to `system.traffic0.totalReads`, and `latency_ns_sum` to
+`system.traffic0.totalReadLatency` with scale `0.001` (ticks to ns).
+The stats interval must match both ROI tick markers at a 1 ps tick period.
+Later whole-program dumps are ignored. Input and mapping hashes are retained.
+The tool checks exact names and object paths. The project still owns counter
+semantics and unit scales. Missing counters stay unobserved. Request latency
+sums do not establish an outstanding-request integral. Retry time does not
+establish queue-full time. Neither establishes a cause of contention.

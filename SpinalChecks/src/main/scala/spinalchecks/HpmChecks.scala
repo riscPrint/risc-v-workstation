@@ -17,4 +17,26 @@ object HpmChecks {
     when(write) { expected := data }
     DeclaredChecks.rule("hpm.count", name, "v1 independent events: " + model.eventMeaning)(observed =/= expected)
   }
+  /** Requests include denied attempts. Counter-enable bits are independent project observations.
+    * Machine access bypasses counter enables; supervisor access needs mcounteren;
+    * user access needs both mcounteren and scounteren when S mode exists.
+    */
+  def bindAccess(name: String, read: Bool, write: Bool, privilege: UInt,
+                 machineEnable: Bool, supervisorEnable: Bool, hasSupervisor: Boolean,
+                 machineAlias: Bool, denied: Bool): Bool = {
+    val userAllowed = machineEnable && (if (hasSupervisor) supervisorEnable else True)
+    val allowed = (!write || machineAlias) && (privilege === 3 || (!machineAlias &&
+      ((privilege === 1 && machineEnable) || (privilege === 0 && userAllowed))))
+    DeclaredChecks.rule("hpm.access", name, "Zihpm privilege, read-only alias and counter enables")(
+      (read || write) && (denied === allowed))
+    allowed
+  }
+
+  /** Check an RV32 read response against a full independent expected counter. */
+  def bindHalfRead(name: String, expected: UInt, high: Bool, response: Bits, valid: Bool): Unit = {
+    require(expected.getWidth == 64 && response.getWidth == 32)
+    DeclaredChecks.rule("hpm.read", name, "RV32 selected counter half")(
+      valid && response =/= Mux(high, expected(63 downto 32).asBits, expected(31 downto 0).asBits))
+  }
+
 }

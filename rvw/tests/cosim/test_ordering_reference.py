@@ -22,10 +22,11 @@ def test_spike_sail_ordering(tmp_path_factory, tmp_path, platform, sail, name):
     source.write_text(suite.GENERATORS[name](64, 7))
     elf = _build(tmp_path_factory, source, march='rv64ima_zicsr_zifencei')
     trace = tmp_path / 'reference.jsonl'
-    assert generate(elf, trace, platform, 20000)['termination'] == 'pass'
+    assert generate(elf, trace, platform, 100000 if name == 'amo-fault' else 20000)['termination'] == 'pass'
     model = Sail(platform, elf, trace, sail)
     try:
         result = check(trace, model, platform)
     finally:
         model.close()
     assert result['status'] == 'match', result
+    assert result['trace_complete'] and result['end_status'] == 'pass', result

@@ -22,7 +22,7 @@ def verify(root=ROOT):
 def package(out, root=ROOT):
     manifest = verify(root)
     names = sorted([*manifest['files'], 'vendor-lock.json', 'scripts/install.sh',
-                    'scripts/package-source.py', 'docs/VIEWER_PACKAGE.md',
+                    'scripts/package-source.py', 'scripts/package-app.py', 'docs/VIEWER_PACKAGE.md',
                     'docs/VENDORED_LIMITS.md', 'README.md', 'PORTING_NOTES.md',
                     'docs/RUST_PORTING.md'])
     with open(out, 'wb') as target, gzip.GzipFile(fileobj=target, mode='wb', filename='', mtime=0) as gz:

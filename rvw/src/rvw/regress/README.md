@@ -577,14 +577,14 @@ It checks architectural effects; page-walk transactions need a separate observer
 ### Privilege controls and observation reports
 
 Control scenarios use a separate row shape in `rvw.mmu/1`: `id`, `control`
-(`tvm`, `tw`, `tsr`), boolean `enabled`, `instruction`, `privilege` (`S`, `U`),
-and `bins`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
+(`tvm`, `tw`, `tsr`, `satp-mode`), boolean `enabled`, `instruction`, `privilege`,
+and `bins`. TVM, TW and TSR use privilege `S` or `U`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
 TSR selects `sret`. These programs use Bare mode and MRET to enter S/U mode.
 They check illegal-instruction cause 2 and the exact fault PC. Allowed S-mode
 operations exit through a checked cause-9 ECALL. Successful SRET must branch
 to its declared return PC. U-mode checks keep supervisor instructions illegal
-when the machine control is clear. TW-clear WFI is refused because it needs
-an interrupt wakeup schedule. These rules use the pinned Machine ISA 1.13
+when the machine control is clear. TW-clear WFI requires the explicit
+`wakeup` input described below. These rules use the pinned Machine ISA 1.13
 (20260120), Machine Status register, TVM, TW and TSR sections.
 
 Data scenarios also accept `offset` (0..4088), `value` (expected load value),
@@ -637,3 +637,82 @@ Scenario `access_width` selects 1, 2, 4 or 8 bytes (default 8). Loads use
 access wider than that declaration. The project owns the declaration.
 The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
 Remap scenarios require the default 8-byte access.
+
+`satp-mode` control rows select `reserved-mode-write` in M-mode with
+`enabled: false`. The program first writes a supported Sv39 value. It then
+writes reserved MODE 1 with changed ASID and PPN fields. Every satp field must
+stay unchanged. A supported-mode mutation must fail the check. This follows
+the pinned Supervisor ISA, Supervisor Address Translation and Protection
+register section. Other disabled-feature combinations remain open.
+
+TW-clear S-mode WFI can select `wakeup: "pending-ssip"`. The program delegates
+SSIP to S-mode, enables SSIE and sets SSIP before entry. Both global interrupt
+enables stay clear. WFI must resume and reach the checked ECALL exit. This
+checks wakeup with an already pending interrupt. It does not measure wakeup
+latency or test an interrupt that arrives after WFI starts. The rule comes from
+the pinned privileged ISA, Machine-Level ISA, Wait for Interrupt section.
+
+Fetch scenarios use `access: "fetch"`, real S/U entry through MRET and a fixed
+ECALL payload at `DATA`. They check the exact fetch fault cause, PC and address,
+or the ECALL cause and virtual PC after a successful fetch. Data-only options
+are refused. The suite includes X permission, S/U permission, SUM and A-bit
+fault cases. SUM does not permit S-mode fetch from a user page.
+
+Observation inventories now include `walk_check`. For successful immutable
+mappings with preset A/D bits, it computes expected PTE addresses and values
+from the scenario. It checks each captured request and returned PTE. It also
+requires an external transaction that contains the translated physical target.
+`consistent` applies only to these sampled values. Missing responses or a
+cache-satisfied target remain inconclusive. Remaps, faults, hardware A/D updates
+and Bare mode remain unsupported. This field cannot pass architectural bins,
+prove ordering, bind a cache transaction to one instruction or close #84.
+
+`root_switch: true` requires `remap`. It allocates a second root and two child
+tables. It switches to the second root, back to the first, and to the second
+again with the same ASID. Each switch uses the selected fence scope. Data must
+match that root after each fence. `nonleaf_global: true` sets G on the non-leaf
+PTEs. Remaps then require an all-ASID fence (`all` or `va`). These cases check
+single-hart effects only. They do not test concurrent races, shootdown messages
+or cross-hart completion. Speculation and extra invalidation remain permitted.
+
+With `ad_expect`, the program now compares the complete leaf PTE. It checks
+PPN, permissions, RSW and A/D together. `software_rsw` selects a software RSW
+write (0..3) before the access and requires `ad_expect`. This write is sequential.
+The Svade case requires the complete faulting PTE to stay unchanged. The opt-in
+Svadu cases require A/D updates to preserve software RSW and all other fields.
+A correct final PTE does not prove atomicity. Concurrent PTE writes and bus-level
+atomic observations remain open. The project's unsupported Svadu stays reference-only.
+
+The BOOM observation stream can include `device_state` when MSIP backing state
+changes. It records `address`, `value`, `cycle` and `scheduled` (whether an IRQ
+schedule overrides device-driven interrupts). This is a harness device-state
+observation. It is independent of C2 load/store results. It does not observe a
+physical device or prove interrupt delivery.
+
+The report can add `pma_check` for a successful, non-cacheable device scenario
+when the build manifest includes PMA data. It checks accepted transfer count,
+width, direction and containment in one declared region. It also checks the
+independent device state. A store has one write and one program readback.
+Missing device observations or scheduled IRQ overrides stay inconclusive.
+`consistent` is a bounded observation result and cannot pass coverage bins.
+Boundary faults, conflicting cache attributes, atomic access and side effects
+on other devices remain open. `store_value` can select a nonnegative signed
+32-bit store operand. The default is 43. The MSIP case writes 1.
+
+Bounded observation checks also require the capture header's core, config, ELF,
+RTL, source and seed to match C1. Older captures without this identity remain
+recorded inventories. Their walk and PMA checks stay inconclusive.
+
+The strict Spike shim currently treats configured MMIO stores as inert and
+returns zero for MMIO loads. The native Spike executable has a CLINT device,
+but the shim does not model MSIP write/readback state. Keep strict comparison
+mismatches separate from bounded harness state observations. A device-state
+observation must not waive a strict mismatch or grant architectural coverage.
+
+## Accellera UVM components
+
+`rvw regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json` runs a
+bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
+See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
+licence checks, supported test scope and limits. It writes standalone C3.
+It does not schedule ELF suites or earn C4 acceptance.
