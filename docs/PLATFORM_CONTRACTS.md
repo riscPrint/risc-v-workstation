@@ -1880,6 +1880,7 @@ rows. `icache_response` gives hex `physical_address`, hex raw `data` and integer
 `bytes`. `icache_invalidate` gives Boolean `refill_pending`.
 `icache_refill_request` gives hex `address`. These share the stream's cycle clock.
 They include speculative responses. They are not consumed-instruction evidence.
+
 `fetch_consumed` rows in the optional observation stream give hex `pc` and
 `instruction` from each accepted decode slot. These original instruction bits
 come from the fetch buffer, independently of retirement. Wrong-path entries can

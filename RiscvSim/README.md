@@ -609,3 +609,40 @@ E grant acknowledgments. These keep permission parameters and dirty data on the
 wire. A and D rows keep permission parameters; D also keeps the sink ID.
 This is raw capture. Mapping it to cache scoreboards, checking virtual aliases
 and injecting cache errors remain open under #109.
+
+`DmaAgent` accepts an optional `DmaTransport` for a project RTL bus driver.
+The transport must call `accepted` exactly once at the captured serialization
+point. Read expectations are sampled there. CPU atomics that win arbitration
+before the DMA read can update the independent expected image first.
+DMA writes update expected bytes at acceptance, not when the request is queued.
+If no transport is set, the agent uses simulation memory. External snoop hooks
+own clean/invalidate completion unless the transport performs coherence under
+its own serialization lock. A transport must not call `accepted` from retirement.
+The bounded BOOM campaign below checks the native connection. Other fabrics
+need their own adapters and campaigns.
+
+`TileLinkDmaTransport` connects the DMA agent to Spinal's simulation memory
+manager. It holds the manager's line lock while it sends actual B probes and
+waits for C replies. Coherent reads downgrade dirty CPU copies. Coherent writes
+invalidate CPU copies before the masked memory update. A transport read samples
+the independent expected image at that serialization point. Split cross-line
+transactions before calling this transport. Noncoherent transactions skip
+snoops; the project must clean and invalidate CPU caches as needed.
+
+`boom/tests/dma.S` and `riscvsim.boom.DmaCampaign` provide a bounded native BOOM
+campaign. It checks dirty CPU data, coherent DMA reads and masked writes, CPU
+invalidation and a CPU AMOADD. It checks a stale noncoherent device read and a
+stale CPU read after a noncoherent device write. It invalidates the CPU copy
+before publishing new data. MMIO phase barriers make the schedule explicit.
+It also releases CPU AMOADD and a coherent DMA write without a phase barrier. A subsequent coherent read and the CPU old value must form one
+of the two serial outcomes computed from fixed operands. DMA acceptance occurs
+under the manager line lock. The old value arrives through MMIO, independently
+of retirement. Two bounded DMA delays must observe both serial outcomes.
+A finite campaign does not prove the whole fabric. Direct
+test-main runs do not earn C1 gate acceptance. Keep them separate from
+conclusive C1 ELF results.
+
+Run that direct DMA campaign with `RiscvSim/boom/tests/run-dma.sh /tmp/dma-1`
+after setting JDK 21, Verilator, GCC and `SPINAL_BOOM`. Use a fresh output path.
+The script holds `boom`, then `sbt`. The native test has a 20000-cycle limit.
+Use an outer process-group timeout for lock wait and native compilation.
