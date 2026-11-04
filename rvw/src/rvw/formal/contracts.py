@@ -108,6 +108,18 @@ def harness(plan, selected=None):
     return '\n'.join(lines) + '\nendmodule\n'
 
 
+def check_ports(plan, model):
+    """Reject implicit width changes, missing ports and direction errors."""
+    for node in plan['components']:
+        ports = model['modules'][node['top']]['ports']
+        expected = {'clk': ('input', 1), 'reset': ('input', 1)}
+        for key, direction in (('inputs', 'input'), ('outputs', 'output')):
+            expected.update({sig: (direction, plan['signals'][sig]) for sig in node[key]})
+        actual = {name: (p['direction'], len(p['bits'])) for name, p in ports.items()}
+        if actual != expected:
+            raise ValueError(f"{node['id']}: RTL interface differs from typed contract")
+
+
 def run(args):
     from .cli import _flow
     from .snapshot import InputSnapshot
@@ -140,6 +152,8 @@ def run(args):
                           tie=None, out=str(out / name), json=False, project=None)
         with contextlib.redirect_stdout(sys.stderr):
             _flow('bmc', child)
+        if name == 'closed':
+            check_ports(plan, json.loads((out / name / 'module_ports.json').read_text()))
         result = json.loads((out / name / 'result.json').read_text())
         rows.append({'id': name, 'status': result['status'], 'proof_kind': result['proof_kind'],
                      'result': str(out / name / 'result.json')})

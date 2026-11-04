@@ -58,6 +58,11 @@ def test_composition_requires_closed_proof(tmp_path, monkeypatch):
     def flow(_, args):
         out = __import__('pathlib').Path(args.out)
         out.mkdir()
+        (out / 'module_ports.json').write_text(json.dumps({'modules': {
+            n['top']: {'ports': {
+                **{s: {'direction': 'input', 'bits': [0]} for s in ['clk', 'reset'] + n['inputs']},
+                **{s: {'direction': 'output', 'bits': [0]} for s in n['outputs']}}}
+            for n in plan()['components']}}))
         (out / 'result.json').write_text(json.dumps({
             'status': 'unknown' if out.name == 'closed' else 'pass', 'proof_kind': 'unbounded'}))
     monkeypatch.setattr(cli, '_flow', flow)
@@ -80,3 +85,43 @@ def test_template_no_hidden_assumptions(kind):
 def test_parameter_overflow_refused():
     with pytest.raises(ValueError, match='overflow'):
         render('credit', 8, 3)
+
+
+def test_port_width_changes_are_refused():
+    from rvw.formal.contracts import check_ports
+    model = {'modules': {'Producer': {'ports': {
+        'clk': {'direction': 'input', 'bits': [1]},
+        'reset': {'direction': 'input', 'bits': [2]},
+        'token': {'direction': 'output', 'bits': [3, 4]}}}}}
+    with pytest.raises(ValueError, match='typed contract'):
+        check_ports(plan(), model)
+
+
+def test_mining_does_not_certify_observations():
+    from rvw.formal.mining import candidates
+    assert candidates({'count': 3}, [{'count': 1}, {'count': 4}]) == {
+        'bound_count': '(count >= 1) && (count <= 4)'}
+    with pytest.raises(ValueError, match='unsigned'):
+        candidates({'count': 3}, [{'count': 8}])
+
+
+def test_abstraction_metadata_and_refused_assumptions(tmp_path, monkeypatch):
+    from rvw.formal import cuts
+    from rvw.common.capture import Capture
+    def probe(*_):
+        (tmp_path / 'cut-model.json').write_text(json.dumps({'modules': {'rvw_formal_top': {
+            'netnames': {'dut.read_data': {'bits': [2, 3]}, 'dut.clk': {'bits': [1]}}}}}))
+        return 0, 0
+    monkeypatch.setattr(cuts.common, 'run', probe)
+    path = tmp_path / 'abstraction.json'
+    path.write_text(json.dumps({'cuts': [{'signal': 'read_data', 'width': 2, 'kind': 'memory-read'}]}))
+    args = Namespace(cut=[], abstraction=path, clock='clk', timeout=1,
+                     _input_snapshot=Namespace(capture=Capture(tmp_path / 'inputs')))
+    _, records = cuts.commands(args, tmp_path, [])
+    assert records[0]['kind'] == 'memory-read'
+    assert records[0]['semantics'] == 'unconstrained_anyseq'
+    path.write_text(json.dumps({'cuts': [{'signal': 'read_data', 'width': 2, 'kind': 'memory-read', 'assume': '0'}]}))
+    # A new capture represents a new run.
+    args._input_snapshot = Namespace(capture=Capture(tmp_path / 'other'))
+    with pytest.raises(ValueError, match='assumptions need contracts'):
+        cuts.commands(args, tmp_path, [])

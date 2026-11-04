@@ -50,3 +50,42 @@ else count <= count + (push ? 1 : 0) - (pop ? 1 : 0);'''
     assert data['proof_kind'] == 'unbounded'
     if bad:
         assert data['traces']
+
+
+@pytest.mark.parametrize('command', ['contracts', 'strengthen'])
+def test_contract_and_mining_native(tmp_path, command):
+    if not all(shutil.which(t) for t in ('sby', 'yosys', 'yices-smt2')):
+        pytest.skip('native formal tools missing')
+    source = tmp_path / 'units.sv'
+    source.write_text('''module Producer(input clk, reset, output reg token=0);
+always @(posedge clk) token <= reset ? 0 : 1;
+endmodule
+module Consumer(input clk, reset, token, output accepted);
+assign accepted = token;
+endmodule
+''')
+    # Producer's guarantee applies after reset; token is 0 on the release edge.
+    # Use a combinational producer to avoid an unstated latency contract.
+    source.write_text(source.read_text().replace('output reg token=0', 'output token')
+                      .replace('always @(posedge clk) token <= reset ? 0 : 1;', 'assign token = 1;'))
+    plan = {'verilog': ['units.sv'], 'signals': {'token': 1, 'accepted': 1},
+            'predicates': {'token_ok': 'token == 1', 'accepted_ok': 'accepted == 1'},
+            'components': [
+                {'id': 'producer', 'top': 'Producer', 'inputs': [], 'outputs': ['token'],
+                 'assumes': [], 'guarantees': ['token_ok']},
+                {'id': 'consumer', 'top': 'Consumer', 'inputs': ['token'], 'outputs': ['accepted'],
+                 'assumes': ['token_ok'], 'guarantees': ['accepted_ok']} ]}
+    if command == 'strengthen':
+        plan['components'] = plan['components'][:1]
+        plan['samples'] = [{'token': 1}]
+    manifest = tmp_path / 'plan.json'
+    manifest.write_text(json.dumps(plan))
+    out = tmp_path / 'out'
+    result = run_group([sys.executable, '-m', 'rvw', 'formal', command, str(manifest),
+                        '--engine', 'smtbmc:yices', '--budget', '30', '--out', str(out), '--json'],
+                       capture=True, timeout=60)
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    data = json.loads(result.stdout)
+    assert data['status'] == ('conditional_proved' if command == 'contracts' else 'pass')
+    if command == 'strengthen':
+        assert data['certified'] == ['bound_token']

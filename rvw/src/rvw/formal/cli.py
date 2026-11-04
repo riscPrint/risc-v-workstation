@@ -91,6 +91,16 @@ def register(sub) -> None:
     contract.add_argument("--json", action="store_true")
     contract.set_defaults(func=contracts.run)
 
+    strengthen = s.add_parser("strengthen", help="mine unsigned bounds and prove candidates before strengthening")
+    from . import mining
+    strengthen.add_argument("manifest")
+    strengthen.add_argument("--out", required=True)
+    strengthen.add_argument("--budget", type=float, default=60)
+    strengthen.add_argument("--depth", type=int, default=12)
+    strengthen.add_argument("--engine", default="smtbmc:yices")
+    strengthen.add_argument("--json", action="store_true")
+    strengthen.set_defaults(func=mining.run)
+
     c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
     c.add_argument("--result", required=True, help="formal result.json or directory")
     c.add_argument("--trace-index", type=int, default=0)
@@ -120,6 +130,7 @@ def register(sub) -> None:
 
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
+    proof.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     proof.add_argument("--reset-cycles", type=int, default=1)
     proof.add_argument("--free-reset", action="store_true")
@@ -149,6 +160,7 @@ def register(sub) -> None:
     _common(b, 20)
     b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
+    b.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
