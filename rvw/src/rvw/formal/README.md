@@ -634,3 +634,42 @@ It must declare the generator dependencies and settings for each revision.
 Module selection must use the project's generated Verilog and project data.
 Core names and settings must stay outside `rvw/src`. Copying a Scala class and
 selected helpers into a temporary harness is not a supported export flow.
+
+## Imported SVA through slang
+
+`rvw formal bmc --frontend slang` selects the pinned native plugin in `RVW_SLANG`.
+Install it with `scripts/install.sh --with-formal`. Source the generated `env.sh`.
+The default frontend stays `verilog`. The SBY campaign runner stays independent.
+
+```sh
+rvw formal bmc --frontend slang --verilog design.sv --top top \
+  --clock clk --engine smtbmc:yices --depth 12 --out proof
+```
+
+The qualified subset has inline `assert property` and `assume property`, each with
+an explicit `@(posedge clk)` on the selected clock. The property can contain a
+Boolean expression, optional `disable iff (condition)`, and single-argument
+`$past`, `$rose`, `$fell`, `$stable` and `$changed`. Normal bit and arithmetic
+expressions are allowed. User function calls in properties are refused.
+`$past` uses one prior sample. Guard its first use with initialized valid state.
+`$rose` and `$fell` check the least significant bit. `$stable` and `$changed`
+compare the whole value. Prior samples before the first edge remain unconstrained.
+
+The model uses two-state, pre-update samples at one rising edge per formal step.
+Nonblocking state updates affect the next sample. Inputs have one value per step.
+`disable iff` suppresses the current check when its condition is true. This subset
+has no pending temporal threads to abort. It does not model simulator delta cycles,
+four-state X/Z transitions, or reset events between edges. Existing reset handling
+and the separate bounded reachability check still apply. A pass is bounded by depth.
+
+Qualified engines are `smtbmc:yices` and `abc:bmc3`. Other engines, event BMC,
+macros/includes, named properties, sequences, clocking blocks, action blocks,
+cover/restrict, temporal implication, delay, repetition and multi-argument sampled
+functions are refused before SBY starts. There is no full temporal SVA claim.
+The native frontend checks syntax and types. The input guard checks the supported
+subset even in unused text. A frontend failure cannot produce a passing result.
+
+The command captures the plugin bytes and checks its source identity before result
+publication. The frontend reports RTL dependencies. Reads outside the copied input
+set are refused. Later proof stages read the sealed RTLIL model. `result.json`
+records `frontend: "slang"` and the existing input capture records.

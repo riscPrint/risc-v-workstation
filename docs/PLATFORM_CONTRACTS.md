@@ -1674,3 +1674,13 @@ original evidence. `rvw.replay-equivalence/1` with `status: "equivalent"` means
 only that input identity, terminal result and suffix events match. It is not a
 live snapshot or an architectural correctness verdict. External effects are
 unsupported. Missing identity, changed evidence or differences exit 2.
+
+### SVA frontend selection
+
+`rvw.formal/1` results can add `frontend`, with value `verilog` or `slang`.
+Absent means the default Verilog frontend. `slang` selects the restricted native
+SVA subset for single-clock BMC. It preserves the existing bounded status and
+reachability rules. It does not establish an unbounded proof or gate acceptance.
+The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
+report must stay within the copied inputs. See
+[the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
