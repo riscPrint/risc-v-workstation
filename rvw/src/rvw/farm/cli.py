@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from .executor import execute, cancel
+from .executor import execute, cancel, recover
 from .dashboard import dashboard
 
 
@@ -16,9 +16,20 @@ def register(sub):
     stop = commands.add_parser("cancel")
     stop.add_argument("--out", required=True)
     stop.set_defaults(func=cancel_command)
+    notify = commands.add_parser("notifications")
+    notify.add_argument("--out", required=True)
+    notify.set_defaults(func=notifications_command)
+    classification = commands.add_parser("classify")
+    classification.add_argument("reports", nargs='+')
+    classification.set_defaults(func=classify_command)
+    recovery = commands.add_parser("recover")
+    recovery.add_argument("--out", required=True)
+    recovery.set_defaults(func=recover_command)
     report = commands.add_parser("dashboard")
     report.add_argument("--root", required=True)
     report.add_argument("--out", required=True)
+    for name in ("core", "suite", "config", "gate", "run"):
+        report.add_argument("--" + name)
     report.set_defaults(func=dashboard_command)
 
 
@@ -32,10 +43,26 @@ def run_command(args):
 
 
 def dashboard_command(args):
-    print(json.dumps(dashboard(args.root, args.out)))
+    print(json.dumps(dashboard(args.root, args.out, **{k: getattr(args, k) for k in ("core", "suite", "config", "gate", "run")})))
 
 
 def cancel_command(args):
     report = cancel(args.out)
     print(json.dumps(report))
     return 0 if report["status"] == "cancelled" else 3
+
+
+def recover_command(args):
+    report = recover(args.out)
+    print(json.dumps(report))
+    return 0 if report['status'] == 'complete' else 3
+
+
+def classify_command(args):
+    from .classify import classify
+    print(json.dumps(classify(args.reports)))
+
+
+def notifications_command(args):
+    from .notifications import notifications
+    print(json.dumps(notifications(args.out)))

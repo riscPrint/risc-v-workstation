@@ -361,7 +361,8 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 ### `rvw farm`
 
 ```text
-usage: rvw farm [-h] [--project PROJECT] {run,cancel,dashboard} ...
+usage: rvw farm [-h] [--project PROJECT]
+    {run,cancel,notifications,classify,recover,dashboard} ...
 ```
 
 ### `rvw farm run`
@@ -378,10 +379,29 @@ usage: rvw farm run [-h] --hosts HOSTS --manifest MANIFEST --adapter ADAPTER
 usage: rvw farm cancel [-h] --out OUT [--project PROJECT]
 ```
 
+### `rvw farm notifications`
+
+```text
+usage: rvw farm notifications [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm classify`
+
+```text
+usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
+```
+
+### `rvw farm recover`
+
+```text
+usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
 ### `rvw farm dashboard`
 
 ```text
-usage: rvw farm dashboard [-h] --root ROOT --out OUT [--project PROJECT]
+usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
+    SUITE] [--config CONFIG] [--gate GATE] [--run RUN] [--project PROJECT]
 ```
 
 ### `rvw formal`
@@ -1111,7 +1131,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 70 built-in tools, including the four job tools.
+The default server exposes 74 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1341,6 +1361,38 @@ Cancel shards and confirm host process-group cleanup.
 Arguments: `out` (required).
 
 Starts a background job: yes.
+
+### `farm_classify`
+
+Classify identity-bound recorded repeats. Retain every DUT failure.
+
+Arguments: `reports` (required).
+
+Starts a background job: yes.
+
+### `farm_dashboard`
+
+Write filtered C3/C4 history. Missing evidence remains visible.
+
+Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate`, `run`.
+
+Starts a background job: yes.
+
+### `farm_notifications`
+
+Export notification events. No external delivery is attempted.
+
+Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `farm_recover`
+
+Read crash checkpoints. Missing final collection stays inconclusive.
+
+Arguments: `out` (required).
+
+Starts a background job: no.
 
 ### `farm_run`
 

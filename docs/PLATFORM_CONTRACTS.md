@@ -1362,6 +1362,25 @@ Unmarked directories are not deleted. Evicted or partial entries are misses.
 `rvw.farm/1` records the explicit run-many plan, campaign-local cell IDs, options,
 ELF hashes, hosts, per-shard completion, C1 outcomes and missing IDs. `complete`
 means collection is complete. It does not mean tests pass or a gate accepts.
+`rvw.farm-notifications/1` exports deterministic event IDs, campaign ID, event
+kind, subject and details. DUT failures and infrastructure faults are distinct.
+Collection-complete events do not claim pass. Delivery is `not_attempted`.
+The export is read-only; external consumers own delivery and deduplication.
+Host reservation stores are per OS user, not a cross-user admission service.
+The static dashboard has no authentication layer.
+New reports also carry `campaign_id` and the captured adapter `identity`.
+`rvw.farm-classification/1` groups recorded executions by tool identity, ELF
+hash and complete options. Every attempt retains its original outcome, source
+report path and SHA-256, campaign ID and cell ID. An observed DUT failure keeps
+the group failed even after a pass; that combination marks it unstable.
+Infrastructure faults and missing outcomes stay separate. Different seeds and
+builds cannot establish instability of one fixed execution identity. This is
+recorded-outcome classification, not automatic retry or failure waiver.
+The controller writes `plan.json` before dispatch and atomically replaces
+`progress-N.json` after each validated cell and finished shard. `farm recover`
+reads these checkpoints without mutation. Missing `farm.json` always gives an
+inconclusive recovered campaign. Missing cells remain explicit. Recovery does
+not infer a C1 outcome from unvalidated artifact files or confirm host cleanup.
 A shard with a lost connection, wrong identity, missing C1 or invalid artifact
 is inconclusive. Results retain their original failure outcomes. C1 config, seed,
 ELF hash and every declared identity claim must match. Worker identity documents
@@ -1372,7 +1391,13 @@ process group. Separate SSH cancellation uses campaign control tokens. A host
 acknowledges only after group cleanup and a host process-table check. Missing
 acknowledgement is inconclusive. Host reservations share CPU slots, declared
 memory bytes and named locks across workers. They report queue time and release
-on handled exit. They are cooperative, not OS CPU/RSS limits. SIGKILL can leave
+on handled exit. A persistent FIFO queue prevents newer requests from bypassing
+older requests. Dead waiting tickets can be removed; active reservations cannot.
+Reservations are cooperative, not OS CPU/RSS limits. Optional host `limits`
+apply native hard CPU-seconds, file-byte and open-file limits before exec.
+Linux also supports address-space-byte limits. Children inherit limits per
+process. Unsupported requested limits fail closed. These are not aggregate
+campaign CPU or RSS limits. The shard records its requested limit values. SIGKILL can leave
 stale reservations; owner cleanup is required. Scalable streaming, crash recovery
 and C3 gate import remain open. The static dashboard reads existing C3/C4/history. Recorded
 C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.
@@ -1380,6 +1405,9 @@ Pass rate divides conclusive passes by all recorded C3 tests. Run time sums all
 recorded test `wall_s` values only when every value is present and valid. History
 charts retain missing runs as gaps. These metrics do not prove plan completeness.
 It does not establish bin compatibility or verification closure.
+Dashboard filters select exact core, suite, config and gate values, plus a run-ID
+substring. Counts and metrics use selected C3 suites. Missing evidence stays
+visible when suite/config membership is unknown. Active filters are in the HTML.
 
 ## Lint and crossing inventory extension
 

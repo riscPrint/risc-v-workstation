@@ -65,7 +65,8 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     if not options:
         pytest.skip("set RVW_TEST_SSH_OPTIONS for a native localhost SSH test")
     hosts = [{"name": name, "address": "localhost", "python": sys.executable,
-              "ssh_options": json.loads(options), "resources": {"memory_bytes": 1024}} for name in ("host-a", "host-b")]
+              "ssh_options": json.loads(options), "resources": {"memory_bytes": 1024},
+              "limits": {"file_bytes": 1048576, "open_files": 256}} for name in ("host-a", "host-b")]
     manifest = tmp_path / "manifest.jsonl"
     rows = []
     for i in range(4):
@@ -77,6 +78,7 @@ def test_two_localhost_ssh_hosts(tmp_path, adapter, state):
     assert report["expected_cells"] == 4
     assert report["status"] == ("inconclusive" if state == "missing" else "complete"), report
     assert all(s["reservation"]["cpu"] == 2 for s in report["shards"])
+    assert all(s["limits"] == hosts[0]["limits"] for s in report["shards"])
     if state != "missing":
         assert [c["status"] for s in report["shards"] for c in s["cells"]] == [state] * 4
     hosts[1]["ssh_options"] = ["-p", "1"]
@@ -160,3 +162,53 @@ def test_farm_refuses_result_for_other_requested_options(tmp_path, adapter, monk
     assert report['status'] == ('complete' if reported == 20 else 'inconclusive')
     if reported != 20:
         assert option.replace('-', '_') in report['shards'][0]['cause']
+
+
+def test_dashboard_filters_metrics_and_retains_unknown_evidence(tmp_path, monkeypatch):
+    from types import SimpleNamespace as NS
+    import importlib
+    module = importlib.import_module('rvw.farm.dashboard')
+    monkeypatch.setattr(module, 'read_index', lambda _: [
+        {'path': 'first', 'run_id': 'chosen-old', 'core': 'fixture'},
+        {'path': 'missing', 'run_id': 'chosen-gap', 'core': 'fixture'},
+        {'path': 'other', 'run_id': 'other', 'core': 'another'}])
+    def find(path):
+        if str(path) == 'missing':
+            raise ValueError('lost')
+        return [NS(core='fixture', suite='isa', config=c, tests=[
+            NS(status='pass', conclusive=True, metrics={'ipc': value}, wall_s=2)])
+            for c, value in [('a', 1), ('b', 100)]]
+    monkeypatch.setattr(module, 'find_results', find)
+    output = tmp_path / 'dashboard.html'
+    report = module.dashboard(tmp_path, output, core='fixture', suite='isa', config='a', run='chosen')
+    assert report['runs'] == 2
+    text = output.read_text()
+    assert 'fixture / isa / a / ipc' in text
+    assert 'fixture / isa / b / ipc' not in text
+    assert 'chosen-gap' in text and 'missing or invalid evidence' in text
+    assert 'another' not in text
+    assert module.dashboard(tmp_path, output, gate='inconclusive')['runs'] == 1
+
+
+def test_aborted_adapter_retains_valid_cells_after_missing_cell(tmp_path, adapter, monkeypatch):
+    from rvw.farm import executor
+    from rvw.common.proc import Result
+    rows, cells = [], []
+    for i, status in enumerate(('missing', 'fail', 'pass')):
+        elf = tmp_path / f'{i}.elf'; elf.write_text(status)
+        row = {'elf': str(elf), 'config': 'test', 'seed': i}
+        rows.append(row)
+        cell = request(adapter, status.encode())['cells'][0]
+        cells.append({**cell, 'id': str(i), 'options': {'config': 'test', 'seed': i}})
+    manifest = tmp_path / 'manifest'
+    manifest.write_text('\n'.join(json.dumps(r) for r in rows))
+    reply = worker({**request(adapter), 'cells': cells})
+    reply['returncode'] = 1
+    monkeypatch.setattr(executor, 'run_group', lambda *a, **kw: Result(0, stdout=json.dumps(reply)))
+    report = execute([{'name': 'a', 'address': 'localhost'}], manifest, adapter,
+                     [*adapter, 'identity'], IDENTITY, tmp_path / 'out')
+    assert report['status'] == 'inconclusive'
+    shard = report['shards'][0]
+    assert [c['status'] for c in shard['cells']] == ['fail', 'pass']
+    assert shard['missing_cells'] == ['0']
+    assert shard['cell_errors'][0]['id'] == '0'

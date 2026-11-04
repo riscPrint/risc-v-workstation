@@ -58,12 +58,15 @@ A host can set `resources`, for example:
 ```
 
 CPU slots must cover `--jobs`. Workers reserve these values under one host file
-lock before they run the identity command or adapter. All aliases on the same
-OS share capacity. Set `~/.config/rvw/farm-capacity.json` on each host to an object
+lock before they run the identity command or adapter. All aliases for the same
+OS user share capacity. Different OS users do not share this reservation store. Set `~/.config/rvw/farm-capacity.json` on each host to an object
 with `cpu` and `memory_bytes`. Defaults reserve at most logical CPU count minus
 one (minimum one), and half physical memory. Omitted memory means zero requested
 bytes. Omitted locks means no named lock. A request waits up to the shard timeout
-for capacity. The reply records reserved values and `queued_s`. Each request owns
+for capacity. Requests use a persistent first-in, first-out queue per OS user.
+Small requests cannot bypass an older large request. This can leave slots idle
+while that request waits. Timed-out tickets and dead waiting processes leave the
+queue. Dead active reservations still need checked cleanup. The reply records reserved values and `queued_s`. Each request owns
 its reservation. Normal completion, timeout and handled cancel release it.
 These are cooperative reservations. They do not cap actual RSS or CPU use.
 Adapters and unrelated processes can exceed them. Dead worker records require
@@ -76,6 +79,71 @@ all recorded tests) and run time (sum of all test `wall_s` values). Missing wall
 times prevent a run-time sample. Charts and tables use oldest-first history and
 retain gaps. Missing samples are not zero. It does not merge bins or
 establish coverage compatibility or verification closure.
+
+## Notification export and access
+
+`rvw farm notifications --out /tmp/campaign` (MCP `farm_notifications`) emits
+`rvw.farm-notifications/1` JSON. Events separate DUT failures, infrastructure
+faults, incomplete shards and collection status. Event IDs are deterministic
+for the same captured event. Consumers can use them to suppress duplicate
+notifications. The command reads checkpoints after a controller crash. It does
+not send messages, store delivery state or retry external services. External
+email, chat and webhook delivery remain open. Collection complete is not pass.
+
+SSH access uses OS accounts and trusted keys. Capacity files are per OS user.
+The static dashboard has no server, login, roles or write API. Use OS file
+permissions or an existing authenticated web host to share its HTML. Do not
+assume that separate SSH users share capacity or that generated HTML supplies
+access control. A shared multi-user scheduler and authenticated dashboard
+service remain open.
+
+## Recorded repeats
+
+`rvw farm classify campaign-a/farm.json campaign-b/farm.json` (MCP
+`farm_classify`) compares recorded executions. It does not launch retries.
+New campaign reports capture a campaign ID and the full tool identity. Groups
+bind that identity, the ELF hash and all options, including config and seed.
+Different seeds or builds stay separate. Reports without these captured
+identities and duplicate executions are refused.
+
+Each `rvw.farm-classification/1` group retains every original outcome, report
+path, report hash, campaign ID and cell ID. A conclusive DUT failure followed by
+a pass sets `unstable: true` and keeps status `fail`. Errors and inconclusive
+outcomes set `infrastructure_fault` separately. Missing attempts stay explicit.
+No outcome is waived. This classification does not earn C4 acceptance.
+Automatic retry selection and declared retry execution policies remain open.
+
+## Filter history
+
+`farm dashboard` accepts `--core`, `--suite`, `--config`, `--gate` and `--run`.
+The first four use exact values. `--run` matches a run-ID substring. The same
+filters are available through MCP `farm_dashboard`. Counts and trends use only
+selected suites. Missing evidence stays visible if its suite or config cannot
+be checked. The HTML records the active filters. Gate filters select the recorded
+C4 verdict, not a verdict inferred from C3 pass counts.
+
+## Native OS limits
+
+A host can set `limits`, for example `{"cpu_seconds": 120,
+"file_bytes": 1073741824, "open_files": 256}`. Linux also supports
+`address_space_bytes`. Other OSes refuse that field. Unknown fields, nonpositive
+values and unsupported limits are errors before identity or adapter execution.
+The worker applies hard `setrlimit` limits in a fresh Python process, then calls
+`exec`. Identity commands, adapters and their children inherit these limits.
+An existing lower OS hard limit takes precedence. Values apply per process,
+not to the campaign total. CPU time is not a CPU slot count. Address space is
+not RSS. Exceeding a limit cannot earn collection completeness from missing C1
+files. Limits are opt-in and do not replace cooperative host reservations.
+
+## Controller recovery
+
+`rvw farm recover --out /tmp/campaign` (MCP `farm_recover`) reads the saved
+plan and shard checkpoints. The controller saves the plan before dispatch and
+checkpoints each validated C1 cell. Recovery preserves failures and lists missing
+cells. Without `farm.json`, the campaign stays inconclusive even if every shard
+has a checkpoint. Recovery does not rerun jobs, modify evidence or claim worker
+cleanup. Use `farm cancel` to check cleanup. A SIGKILL between receiving an
+artifact and validating its C1 can leave that cell missing in the checkpoint.
 
 ## Decisions and limits
 

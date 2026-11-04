@@ -7,15 +7,35 @@ from rvw.regress.store import read_index
 from rvw.results import find_results, load_verdict
 
 
-def dashboard(root, output):
+def dashboard(root, output, *, core=None, suite=None, config=None, gate=None, run=None):
     rows = []
     trends = {}
-    entries = read_index(Path(root))
-    for index, entry in enumerate(entries):
-        path = Path(entry["path"])
+    filters = dict(core=core, suite=suite, config=config, gate=gate, run=run)
+    selected = []
+    for entry in read_index(Path(root)):
+        if run is not None and run not in entry.get('run_id', ''):
+            continue
+        if core is not None and entry.get('core') not in (None, core):
+            continue
+        path = Path(entry['path'])
         try:
             suites = find_results(path)
-            verdict = load_verdict(path / "verdict.json").verdict if (path / "verdict.json").exists() else "not recorded"
+            suites = [s for s in suites if (core is None or s.core == core)
+                      and (suite is None or s.suite == suite)
+                      and (config is None or s.config == config)]
+            if not suites and any(v is not None for v in (core, suite, config)):
+                continue
+            verdict = load_verdict(path / 'verdict.json').verdict if (path / 'verdict.json').exists() else 'not recorded'
+        except (OSError, ValueError):
+            suites, verdict = None, 'inconclusive'
+        if gate is None or verdict == gate:
+            selected.append((entry, suites, verdict))
+    entries = [entry for entry, _, _ in selected]
+    for index, (entry, suites, verdict) in enumerate(selected):
+        path = Path(entry["path"])
+        try:
+            if suites is None:
+                raise ValueError("missing or invalid evidence")
             counts = {}
             for suite in suites:
                 samples = {"pass_rate": (sum(t.conclusive and t.status == "pass" for t in suite.tests) / len(suite.tests)) if suite.tests else None}
@@ -38,6 +58,8 @@ def dashboard(root, output):
         rows.append("<tr>" + "".join("<td>" + html.escape(str(v)) + "</td>" for v in
                     (entry.get("run_id", "unknown"), entry.get("core", "unknown"), verdict, state)) + "</tr>")
     page = '<!doctype html><meta charset="utf-8"><title>Regression history</title><h1>Regression history</h1><p>Gate acceptance is separate from verification closure. Pass rate uses all recorded C3 tests as its denominator, including inconclusive tests. Run time is the sum of all recorded test wall_s values. IPC, coverage and simulation speed use recorded C3 metrics. Speed is grouped by preset and includes adapter execution and artifact handling. Missing metrics are not zero. Coverage compatibility and verification closure are not established by this report.</p><table><thead><tr><th>Run</th><th>Core</th><th>Gate</th><th>C3 results</th></tr></thead><tbody>' + "".join(rows) + '</tbody></table>'
+    page += '<p>Filters: ' + html.escape(json.dumps({k: v for k, v in filters.items() if v is not None}, sort_keys=True)) + '</p>'
+    page += '<p>Missing evidence stays visible when suite or config cannot be checked.</p>'
     for key, samples in sorted(trends.items()):
         high = max(samples.values()) or 1
         page += '<h2>' + html.escape(" / ".join(key)) + '</h2><svg role="img" aria-label="Recorded metric samples, oldest first" viewBox="0 0 400 100" width="400">'
@@ -55,4 +77,4 @@ def dashboard(root, output):
     if not trends:
         page += '<p>Coverage and IPC metrics: not recorded.</p>'
     Path(output).write_text(page)
-    return {"file": str(output), "runs": len(rows)}
+    return {"file": str(output), "runs": len(rows), "filters": filters}
