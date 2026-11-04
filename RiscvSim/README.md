@@ -207,11 +207,10 @@ Use `--wave` to record the instrumented wave. Wave windows work as before.
 An adapter must use `RiscvSimConfig.elaborate` to support this flag. A requested
 model without its graph fails with an error. It cannot supply cause evidence.
 
-The `boom-spinaltrace` prototype stays until an old/new BOOM failure bundle has
-the same signature, failure cycle, criterion and dependency trace. Run both with
-the same ELF, seed, model options and wave window under the `boom` lock. Compare
-source statements, cycles and dependency edges after normalizing generated IDs
-and checkout paths. Record the measured result in the PR before removal.
+The legacy `boom-spinaltrace` prototype is removed. Use the BOOM adapter with
+`--spinaltrace`. BOOM small and VexRiscv have old/new caller-equivalence checks.
+The checks retain design source locations, graph fields and accuracy metadata.
+Equivalence of caller locations does not establish graph completeness.
 
 Some generated statements have no retained core frame. The location filter
 skips library frames and uses the elaboration caller. The prototype and the
@@ -477,6 +476,41 @@ format supports only state derived from the captured ELF and C1 run options.
 It does not restore DUT, device, memory, scheduler or random-generator state.
 A replay still starts from reset. Native mid-run save/restore remains open.
 
+### Source roots and caller equivalence
+
+Core adapters must pass the core's Scala source roots to
+`RiscvSimConfig.elaborate`. The VexRiscv example supplies its selected core root.
+Without this argument, source files outside the adapter tree can remain bare
+names. A bare name can be ambiguous when two packages use the same file name.
+Run the Vex source regression with JDK 21 and `VEXRISCV` set to its checkout:
+
+```sh
+cd examples/vexriscv/rvw
+sbt 'Test/runMain rvwvex.SourceRootsCheck'
+```
+
+Hold the workstation's `vex` and `sbt` locks around that command.
+
+`rvw.debug.parity.compare` compares saved diagrams or computed traces. Supply
+`kind='blocks'` or `kind='trace'`. Supply checkout prefixes as `left_roots` and
+`right_roots`. An optional `callers` list contains tuples of
+`(old_file, old_line, new_file, new_line)`. Use a mapping only after checking that
+both frames identify the same elaboration operation. The function retains every
+other source field. It checks generated caller names and diagram references too.
+Use `source_files=[(old_file, new_file)]` for an audited file identity, such as
+an unresolved basename and its absolute path. This changes no line or column.
+Check the source package and the statement before declaring that identity.
+If two packages contain the same basename, do not select the first search result.
+Use the retained stack frame or audit the caller's imports and called method.
+For traces, it retains edge kinds, edge multiplicity and accuracy metadata.
+Duplicate vertex labels require an explicit identity mapping and are refused.
+
+Caller equivalence does not mean identical source navigation. Each artifact
+keeps its actual caller location. The old and new callers must both be available
+for the source-navigation check. Do not map design-source statements to make a
+comparison pass. Empty traces cannot establish parity. The removal cases are BOOM small and
+VexRiscv; other cores and configurations need their own comparisons.
+
 ### BOOM MMU observations
 
 With `--rvfi-trace`, BOOM also records `mmu-observations.jsonl`, named by
@@ -564,3 +598,12 @@ The launcher sets `RVW_RVFI_FLUSH=1`. `RvfiTraceWriter` then flushes its header,
 retirement records and events before returning. The default stays buffered.
 This option changes output delivery. It does not add C2 v2 state observations.
 The writer constructor also accepts `flushEachRecord` for adapter tests.
+
+## Simulation speed metrics
+
+C1 records `metrics.sim_khz` and `metrics.sim_instructions_per_s` from the
+unrounded `details.execution_s`. Model setup is excluded. Adapter execution,
+trace writes and artifact handling are included. The dashboard plots recorded
+C3 rates per preset. These rates do not prove correctness. Use long workloads,
+fixed seed and memory latency, and serial runs. Keep tracing options equal.
+See `rvw regress speed-compare --help` for repeated, equivalence-gated comparisons.
