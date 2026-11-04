@@ -1919,6 +1919,13 @@ The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
 report must stay within the copied inputs. See
 [the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
 
+### Init platform review marker
+
+An optional `rvw init --linker-script` platform template carries
+`review_required: true`. The cosim platform loader refuses it. The owner must
+check the RAM, reset PC, MMIO, PMP, interrupt, privilege and fault policies
+against the core specification before removing the marker. A linker map alone
+does not establish these policies.
 ### C1 simulation throughput extension
 
 Optional C1 `metrics.sim_khz` is `cycles / details.execution_s / 1000`.

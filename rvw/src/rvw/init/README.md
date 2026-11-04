@@ -44,10 +44,46 @@ The output passes the shared project and regression loaders. Doctor reports
 tests, input declarations and clean commits are ready. A stub must not earn a
 ready setup verdict. Use the core's playbook to finish these actions.
 
-This increment does not generate a build definition, cosim memory map or
-SpinalDB entry. Connect the skeleton to the existing core build with the generic
-RiscvSim library. Use a shipped launcher for native identity and supervision.
-Preserve the actual source and native-tool inputs. Review all capture claims.
-Automatic build wiring, linker-script detection, optional cosim/SpinalDB files
-and broader build detection remain open under #36. This command makes no
-integration-model decision under #34.
+The default path stays minimal. Optional scaffolds use explicit inputs:
+
+```sh
+rvw init --isa rv32im --wire-build --sbt-project cpu --dry-run --json
+rvw init --isa rv32im --linker-script memory.ld --ram-region ram --reset-pc 0x80000000 --dry-run --json
+rvw init --isa rv32im --sbt-project cpu --db-top demo.Top --dry-run --json
+```
+
+`--wire-build` detects one literal sbt project declaration. If selection is
+ambiguous, it asks for `--sbt-project` in an error. This is a noninteractive CLI.
+The explicit project option also enables wiring. The generated `rvw/build.sbt`
+depends on that core project and the installed generic RiscvSim library. It does
+not copy core sources. Set `RVW_HOME` before use. Wiring supports a literal
+Spinal 1.15.0 build with Scala 2.13.14, the simulator's current versions.
+It uses `RVW_CORE_SOURCE` for captured core builds. It leaves the core's build intact and pins the local sbt launcher to 1.10.7.
+A dependency file is not a compiled adapter. The generated launcher uses the generic supervisor, native identity collector
+and source identity collector. It holds the core and sbt locks. Build and run
+reach the adapter skeleton, which throws until the real signals are mapped.
+The default scaffold without build wiring still returns exit 2 directly.
+
+`--linker-script` reads a literal GNU linker `MEMORY` block. `ORIGIN` and
+`LENGTH` accept decimal or hex values and K/M suffixes. Expressions and included
+files are refused. Select `--ram-region` if there is more than one region.
+Supply `--reset-pc` from the core specification. It must be in the selected RAM.
+The command writes `rvw/cosim.json` and connects `[cosim]` in the project file.
+The linker does not establish MMIO, PMP, IRQ, privilege or fault policies.
+The platform has `review_required: true`. The cosim loader refuses this template
+until the owner reviews these policies and removes that flag. No reference
+comparison can silently use the template's default policies.
+
+`--db-top` enables build wiring with SpinalDB and adds a C6 query entry. Supply
+a fully qualified Component class with a no-argument constructor. The entry
+supports only `default`. It forwards paths without passing them through the sbt
+command parser. It holds the core and sbt locks and uses `nice -n 10`.
+Parameterized tops need a manual Scala entry. Source inspection does not prove
+that the selected class elaborates.
+
+All optional files participate in the same dry-run and overwrite preflight.
+The tests check generated files, project loading, launcher arguments and refusal
+paths. They do not establish Scala compilation, DUT runtime or C2 mapping.
+Builds outside Spinal/sbt, automatic bus mapping and a complete native C1 launcher
+remain outside this supported path. This command makes no integration-model
+decision under #34.
