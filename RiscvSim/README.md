@@ -83,6 +83,27 @@ adapter passes both source directories from `sourceDir`. Generated PDGs use
 the existing absolute-path format. Portable fixtures must use project-relative
 paths, and cross-checkout comparisons must remove only the checkout prefix.
 
+## Benchmark ROI definition
+
+The BOOM benchmark adapter reads two 64-bit words at `bench_stats`.
+The benchmark runtime stores the `mcycle` and `minstret` deltas when `setStats(0)` follows
+`setStats(1)`. These markers enclose the measured benchmark call. Input setup, optional
+warmup calls, result checks and exit stay outside this interval. Counter reads and marker
+call overhead remain part of this implementation's measurement. The ROI is not an exact
+count of instructions in the benchmark function alone.
+
+Use the same ELF hash, runtime, marker placement and adapter on both sides. Equal counter
+names alone do not establish equal ROI boundaries. `metrics.roi_cycles` and
+`metrics.roi_instret` identify these deltas. Whole-program `cycles` and `instret` identify
+a different interval. Never combine the two origins in a performance comparison.
+A failed run without both ROI words supplies no usable ROI sample.
+
+Repeat a declared seed set with the same memory mode on both sides. Random-memory seeds
+can change cycle counts even when ROI instruction counts stay equal. Fixed-latency seeds
+need not sample that variation. C4 checks the largest paired relative loss. Means are
+only descriptive. This rule estimates no population confidence. Keep failed seeds and
+required workloads visible; they cannot be replaced by faster passing workloads.
+
 ## Artifacts
 
 | File | When | What |
