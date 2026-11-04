@@ -105,7 +105,7 @@ def report(netlist, top, mappings, rows, snapshot):
                                     for n, c in sorted(cells.items()) if c['type'] == '$assume'
                                     or (c['type'] == '$check' and c.get('parameters', {}).get('FLAVOR') == 'assume')],
             'limits': 'Structural fan-in includes state, clock and reset inputs. It is not a minimal proof core. '
-                      'Outside-cone logic is not proven irrelevant. Activation and assumption adequacy are not tested. '
+                      'Outside-cone logic is not proven irrelevant. Declared activation covers do not establish assumption adequacy. '
                       'No functional coverage percentage is implied.'}
 
 

@@ -1509,7 +1509,8 @@ records. This report does not assert that an obligation is complete.
 `proof_status` is `proven_conditional` only for an unbounded proof job with PASS,
 exit 0 and no reported free wires. Otherwise it is `not_proven`. `proof_job`
 retains the parent's local job paths and hashes, or is null. All proof assumptions
-and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`.
+and all parent exclusion guards still apply. Activation is `{"status":"not_measured"}`
+unless a separate declared activation cover runs, as specified below.
 The solver does not export a proof core in this flow. `proof_core` has
 `status: unavailable`, `cells: null` and a reason. Null is not an empty proof core.
 
@@ -1637,11 +1638,12 @@ and hashes them. It does not modify the upstream models.
 ## Formal event model extension
 
 BMC can explicitly select a sampled event model with `--event-model` and repeatable
-`--event-clock PORT`. Extra clocks must be independent rising-edge top inputs.
+`--event-clock PORT`. Extra clocks must be rising-edge top inputs.
 `--async-reset` separately enables constant-value reset FFs (`$adff`, `$adffe`).
 SBY `multiclock on` applies Yosys `clk2fflogic`. Each step is a global input
 sample, with arbitrary clock rates, phases, simultaneous edges and stalls.
-There are no declared ratio constraints or fairness assumptions.
+Optional periodic schedules constrain sampled clock ratios and phases, as specified
+below. Unscheduled clocks have no ratio constraints. No fairness is inferred.
 Async reset pulses visible for a sample are represented without a clock edge.
 Pulses wholly between samples and analog timing are outside the model.
 
@@ -1663,15 +1665,16 @@ Older reports without this field remain readable.
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
 `status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
 successful eqy run, at least one partition, PASS for every output partition, and
-complete register matching. A timeout, unknown partition or unmatched register
-cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+complete register matching by default. `--unmatched-state prove` instead checks
+closed output cones without name pairing, as specified below. A timeout or unknown
+partition cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
 output directory exits 2. `not_equivalent` requires a failed output partition and
 a VCD counterexample in `traces`. There are no internal state equality assumptions.
 `state_mapping` records automatic or manual pairs and their widths. `unmatched`
 lists unpaired registers on each side. `partitions` records each partition status.
 `inputs` contains each side's capture and snapshot records. `restrictions` records
 the single-clock, two-state model, reset alignment, unchecked startup clocks and
-zero latency difference. Blackbox obligations are refused. Optional `dsec` evidence
+the declared fixed output latency difference. Blackbox obligations are refused. Optional `dsec` evidence
 is advisory; `scorr; pdr` partition evidence sets the verdict. See the formal README
 for the supported subset and initialization limits. This contract is separate from
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
@@ -1892,7 +1895,7 @@ One solver step advances one global sample. The wrapper constrains clock levels
 at that sample. The event backend samples property data before its triggering
 edge; data that changes with a clock uses its previous sample at that edge.
 Clock schedules do not add analog timing, delta cycles, jitter or events between
-samples. No schedule keeps the independent arbitrary-rate event model.
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
 The existing reset harness still counts primary-clock edges. Async reset state
 requires the separate `--async-reset` option. Unsupported state controls and raw
 async-triggered properties remain refused. Replay and X flows remain unchanged.
@@ -1912,3 +1915,14 @@ register names remain in the inventory but do not block a complete closed-output
 proof. State equality is never assumed. Every partition must still have no
 internal crossbits. Missing partitions, unknown results and tool failures remain
 inconclusive. No named state relation or blackbox obligation is inferred.
+
+
+### Imported single-sample implication
+
+The slang import subset also accepts one top-level `Boolean |-> Boolean` in an
+inline clocked assert or assume property. The pinned frontend patch evaluates
+both operands at the same pre-update sample and checks `!antecedent || consequent`.
+The existing `disable iff` condition gates the check. There are no pending threads.
+`|=>`, delays, repetition, chained and nested implication remain refused before
+a proof job. Qualified engines remain SMTBMC/Yices and ABC BMC3. The captured
+plugin bytes identify the applied lowering. This is not full temporal SVA support.

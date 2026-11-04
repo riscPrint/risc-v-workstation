@@ -587,7 +587,7 @@ Clock ports cannot be tied or used as the harness reset. Async loads, set/clear
 cells, latches, fine-grained state and memory async reset controls remain refused.
 The pre-optimization probes also check unused and tied state.
 `from-sim`, X flows and native replay retain the original one-clock restrictions.
-Related clocks with declared ratios or phase constraints are not yet supported.
+Related clocks can use the periodic sampled schedules specified below.
 
 Small pass/fail designs and refusal cases are in
 [SpinalChecks/examples/events](../../../../SpinalChecks/examples/events).
@@ -709,7 +709,7 @@ and the separate bounded reachability check still apply. A pass is bounded by de
 
 Qualified engines are `smtbmc:yices` and `abc:bmc3`. Other engines, event BMC,
 macros/includes, named properties, sequences, clocking blocks, action blocks,
-cover/restrict, temporal implication, delay, repetition and multi-argument sampled
+cover/restrict, nonoverlapped or nested implication, delay, repetition and multi-argument sampled
 functions are refused before SBY starts. There is no full temporal SVA claim.
 The native frontend checks syntax and types. The input guard checks the supported
 subset even in unused text. A frontend failure cannot produce a passing result.
@@ -733,7 +733,7 @@ One solver step advances one global sample. The wrapper constrains clock levels
 at that sample. The event backend samples property data before its triggering
 edge; data that changes with a clock uses its previous sample at that edge.
 Clock schedules do not add analog timing, delta cycles, jitter or events between
-samples. No schedule keeps the independent arbitrary-rate event model.
+samples. When no schedule is given, the independent arbitrary-rate event model applies.
 The existing reset harness still counts primary-clock edges. Async reset state
 requires the separate `--async-reset` option. Unsupported state controls and raw
 async-triggered properties remain refused. Replay and X flows remain unchanged.
@@ -752,3 +752,24 @@ reference and two-stage candidate. They require proof at latency one and
 counterexamples for latency zero, latency two and a changed arithmetic result.
 The new option does not add memory maps, blackbox contracts or source-revision
 export. Those parts of issue #18 remain open.
+
+
+### Single-sample implication in native slang
+
+The pinned native slang build applies `scripts/patches/slang-overlap.patch`.
+It lowers `Boolean |-> Boolean` to `!antecedent || consequent` using the existing
+SVA expression evaluator. Both sides use the same sample. The existing
+`disable iff` condition gates the check. Inline assert and assume forms are
+supported. There are no pending sequence threads in this subset.
+
+The local import guard permits one top-level implication with Boolean operands.
+It continues to reject `|=>`, delays, repetitions, nested or chained implications,
+named properties and sequences before SBY starts. The frontend also rejects
+unsupported AST forms, even without this guard. Use the source-built plugin;
+the older OSS CAD Suite bundled plugin does not provide this extension.
+
+Native positive and negative cases cover assertion, assumption and disable forms
+on both qualified engines. The installer applies the patch after extraction of
+checksum-pinned source archives. A failed patch stops the build. This extends
+upstream lowering but does not provide full temporal SVA support or qualify
+additional engines. Issue #61 remains open.
