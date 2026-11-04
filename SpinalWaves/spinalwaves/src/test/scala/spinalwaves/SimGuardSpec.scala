@@ -23,4 +23,24 @@ class SimGuardSpec extends AnyFunSuite {
   test("SPINAL_SIM_TIMEOUT parsing") {
     assert(SimGuard.defaultTimeout.isEmpty || SimGuard.defaultTimeout.exists(_ > 0))
   }
+  test("a failed second run must not expose the first run's waveform") {
+    val sim = SpinalWavesSim(SimConfig.workspacePath("target/simguard-stale"), launchViewer = false)
+      .compile(new Gcd)
+    sim.doSim("first", 42) { dut =>
+      dut.clockDomain.forkStimulus(10)
+      dut.clockDomain.waitSampling(3)
+    }
+    assert(Files.isRegularFile(sim.vcdFile))
+    intercept[Throwable] {
+      sim.doSim("failed", 43) { _ => throw new IllegalStateException("injected failure") }
+    }
+    intercept[IllegalStateException](sim.vcdFile)
+    intercept[IllegalStateException](sim.extraScopes)
+    sim.doSim("third", 44) { dut =>
+      dut.clockDomain.forkStimulus(10)
+      dut.clockDomain.waitSampling(3)
+    }
+    assert(sim.vcdFile.toString.contains("third"))
+  }
+
 }

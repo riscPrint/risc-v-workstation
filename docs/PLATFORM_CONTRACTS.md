@@ -1114,6 +1114,7 @@ sets must be nonempty with unique identical IDs, identical ELF hashes and
 equal ROI instruction counts. Core, config and memory latency must match.
 `ipc_ratio` is candidate IPC/base IPC, or base cycles/candidate cycles when
 instructions match. `cycle_gap_percent` is 100*(candidate cycles/base cycles-1).
+Comparison requires an RTL base and a gem5 candidate, in that order.
 The aggregate is the geometric mean of IPC ratios. No acceptance threshold
 or parameter fit is applied. `calibrate` writes this JSON to calibration.json
 and a short table to summary.txt. Reports depend on the recorded local paths.

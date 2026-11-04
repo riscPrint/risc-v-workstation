@@ -315,6 +315,8 @@ def compare(base, candidate, project=None):
         load_project(project)
     a, aa, ah = checked_report(base)
     b, bb, bh = checked_report(candidate)
+    if a['engine'] != 'rtl' or b['engine'] != 'gem5':
+        raise ArchError('comparison requires an RTL base and gem5 candidate')
     if set(aa) != set(bb):
         raise ArchError('benchmark sets differ')
     for key in ('core', 'config', 'memory_latency'):
