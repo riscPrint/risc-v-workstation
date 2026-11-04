@@ -10,19 +10,22 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def check_fallthrough(log):
+def check_fallthrough(log, sizes):
     expected = {}
-    checked = 0
+    checked = set()
     for line in log.splitlines():
         branch = re.search(r'ftn:(\d+)\] Branch found at PC (0x[0-9a-f]+) taken\?:0, target:(0x[0-9a-f]+)', line)
         if branch:
-            expected[branch[1]] = int(branch[3], 16)
+            pc = int(branch[2], 16)
+            expected[branch[1]] = (pc + sizes[pc], sizes[pc])
         target = re.search(r'\[fn:(\d+)\].*Continue with PC:\((0x[0-9a-f]+)=>', line)
         if target and target[1] in expected:
-            assert int(target[2], 16) == expected.pop(target[1]), line
-            checked += 1
-    assert checked > 0, 'No trained not-taken branches were checked'
+            address, size = expected.pop(target[1])
+            assert int(target[2], 16) == address, line
+            checked.add(size)
+    assert checked, 'No trained not-taken branches were checked'
     assert not expected, 'Missing fetch target completion records'
+    return checked
 
 
 def first_stats(path):
@@ -34,8 +37,8 @@ def test_fallthrough_checker_rejects_half_instruction():
     log = ('[ftn:1] Branch found at PC 0x100 taken?:0, target:0x104\n'
            '[fn:1] Continue with PC:(0x102=>0x106)\n')
     with pytest.raises(AssertionError):
-        check_fallthrough(log)
-    check_fallthrough(log.replace('0x102=>', '0x104=>'))
+        check_fallthrough(log, {0x100: 4})
+    check_fallthrough(log.replace('0x102=>', '0x104=>'), {0x100: 4})
 
 
 @pytest.mark.skipif(os.environ.get('RVW_TEST_GEM5_FTQ') != '1', reason='opt-in native gem5 FTQ test')
@@ -52,6 +55,10 @@ def test_native_mixed_width_ftq(tmp_path):
     subprocess.run(['make', '-s', '-C', str(ROOT / 'Arch/bench'), f'SRC={sources}',
                     f'BARE_CC={cc}', 'BENCHES=ftq-branches', f'BUILD={tmp_path}/bench'], check=True)
     elf = tmp_path / 'bench/ftq-branches.riscv'
+    objdump = os.environ.get('RVW_RISCV_OBJDUMP', str(Path(cc).with_name('riscv64-unknown-elf-objdump')))
+    disassembly = subprocess.check_output([objdump, '-d', str(elf)], text=True)
+    sizes = {int(m[1], 16): len(m[2]) // 2 for m in re.finditer(
+        r'^\s*([0-9a-f]+):\s+([0-9a-f]{4}(?:[0-9a-f]{4})?)\s', disassembly, re.M)}
     # Reuse a shipped description as test input, not a claim about that core.
     d = json.loads((ROOT / 'examples/boom/arch/large.json').read_text())
     d['config'] = 'ftq-test'
@@ -75,7 +82,7 @@ def test_native_mixed_width_ftq(tmp_path):
         assert results[name]['bench_stats']['cycles'] > 0
         stats[name] = first_stats(out / 'stats.txt')
         if enabled:
-            check_fallthrough((out / 'bac.log').read_text())
+            assert check_fallthrough((out / 'bac.log').read_text(), sizes) == {2, 4}
     assert results['coupled']['bench_stats']['instret'] == results['decoupled']['bench_stats']['instret']
     assert stats['coupled']['system.cpu.ftq.inserts'] == 0
     assert stats['decoupled']['system.cpu.ftq.inserts'] > 0

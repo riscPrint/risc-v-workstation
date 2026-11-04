@@ -7,7 +7,7 @@ be smaller than this length. The untrained path keeps the search step.
 
 The patch is optional. The installer does not apply it. The native regression
 in `rvw/tests/test_arch_ftq.py` fails on the unpatched release. It compares
-BAC's predicted not-taken address with the next FTQ start address. It also
+the ELF's disassembled branch length with the next FTQ start address. It also
 checks complete exits, equal retired ROI counts and FTQ activity in both modes.
 
 Apply and build in a clean pinned source checkout. Hold the machine-wide

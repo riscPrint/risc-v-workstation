@@ -296,3 +296,11 @@ def test_riscv_decoupled_settings(description):
     description['cpu'].update(decoupledFrontEnd=True, minInstSize=2,
                               fetchTargetWidth=64, numFTQEntries=16)
     model.validate_description(description)
+
+
+def test_decoupled_frontend_refuses_minor(description):
+    description.update(kind='minor', isa='rv32im', queues=[], predictor=None)
+    description['cpu'].update(decoupledFrontEnd=True, minInstSize=2,
+                              fetchTargetWidth=64, numFTQEntries=16)
+    with pytest.raises(ValueError, match='requires O3'):
+        model.validate_description(description)

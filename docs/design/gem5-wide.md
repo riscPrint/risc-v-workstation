@@ -85,4 +85,8 @@ and fixes a reproduced mixed-width defect if needed.
 Phase 2 adds multi-level BTB and FDIP experiments with capacity and latency tests.
 Phase 3 adds a micro-op cache with invalidation and compressed instruction tests.
 Phase 4 studies memory renaming and validates widths eight and ten with resource
-sweeps. Each phase needs a bounded follow-up issue. Links will be added here.
+sweeps. The bounded follow-up issues are:
+
+- [#357: multi-level BTB and FTQ-directed prefetching](https://github.com/riscPrint/risc-v-workstation/issues/357).
+- [#359: micro-op cache](https://github.com/riscPrint/risc-v-workstation/issues/359).
+- [#362: wide rename and memory renaming](https://github.com/riscPrint/risc-v-workstation/issues/362).
