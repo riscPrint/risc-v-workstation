@@ -137,3 +137,7 @@ Run the extracted-design assertions from the workstation root:
 ```sh
 RVW_LINT_FIXTURES=/tmp/lint-fixtures rvw/.venv/bin/python -m pytest rvw/tests/test_lint_extracted.py -q
 ```
+
+Install the pinned Verible backend with `scripts/install.sh --with-lint`.
+Source `env.sh` before `rvw lint`. The installer verifies SHA256 and checks the
+native executable. Use `--with-lint --check` for a read-only version check.

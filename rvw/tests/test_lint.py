@@ -275,3 +275,19 @@ def test_waiver_expires_when_clock_domain_changes(tmp_path):
     result = report(path)
     assert result['waivers'][0]['matches'] == 0
     assert result['backends']['structural']['findings'][0]['disposition'] == 'active'
+
+
+def test_native_verible_style_and_syntax(tmp_path):
+    import shutil
+    if not shutil.which('verible-verilog-lint'):
+        pytest.skip('Verible is not installed')
+    style = tmp_path / 'bad.sv'
+    style.write_text('module bad(input logic a, output logic b);\nalways @* b = a;\nendmodule\n')
+    result = native.run('verible', [str(style)], 'bad', 30)
+    assert result['status'] == 'completed'
+    assert result['findings']
+    broken = tmp_path / 'broken.sv'
+    broken.write_text('module broken;\nassign x = ;\nendmodule\n')
+    result = native.run('verible', [str(style), str(broken)], 'bad', 30)
+    assert result['status'] == 'inconclusive'
+    assert result['findings'] and result['raw_output']
