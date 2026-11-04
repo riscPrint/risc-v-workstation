@@ -458,9 +458,9 @@ C1 simulation results are not fabricated for formal jobs.
 [BOOM](../../../../examples/boom/formal/rvw.toml) and
 [VexRiscv](../../../../examples/vexriscv/formal/rvw.toml) supply separate settings.
 BOOM selects ADD, SUB and retirement cover at depth 20. VexRiscv selects
-all 37 upstream RV32I instruction checks at depth 20 and reg, pc_fwd,
-pc_bwd, liveness, unique and causal at depth 30. It uses ABC bmc3 for
-assertions and Bitwuzla for retirement cover. Liveness alone enables the
+all 37 upstream RV32I instruction checks and reg at depth 20. It selects
+pc_fwd, pc_bwd, liveness, unique and causal at depth 30. It uses BTORMC for
+pc_fwd, ABC bmc3 for the other assertions, and Bitwuzla for retirement cover. Liveness alone enables the
 upstream VEXRISCV_FAIRNESS assumptions. These restrict bus stalls and traps.
 These assumptions are part of the result, not a claim about a real bus. Set `RISCV_FORMAL` to a native checkout.
 BOOM also needs `SPINAL_BOOM/formal/BoomFormalTop.v`. Generate that RTL in the

@@ -56,7 +56,7 @@ def validate(cfg):
             raise ValueError(f"invalid cycles for {name}")
         if not isinstance(settings['engine'], str) or settings['engine'] not in {'abc bmc3', 'btor btormc', 'smtbmc bitwuzla', 'smtbmc yices', 'smtbmc z3', 'smtbmc boolector'}:
             raise ValueError("unsupported engine")
-        if name == 'cover' and settings['engine'] == 'abc bmc3':
+        if name == 'cover' and not settings['engine'].startswith('smtbmc '):
             raise ValueError("cover needs an smtbmc engine")
         if not isinstance(settings['defines'], list) or any(not isinstance(d, str) or '\n' in d or '\r' in d for d in settings['defines']):
             raise ValueError("check defines must be single-line strings")

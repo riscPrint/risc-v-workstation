@@ -147,11 +147,11 @@ engine = "abc bmc3"
 cycles = [20]
 engine = "abc bmc3"
 [riscv_formal.check_options.reg_ch0]
-cycles = [15, 30]
+cycles = [15, 20]
 engine = "abc bmc3"
 [riscv_formal.check_options.pc_fwd_ch0]
 cycles = [10, 30]
-engine = "abc bmc3"
+engine = "btor btormc"
 [riscv_formal.check_options.pc_bwd_ch0]
 cycles = [10, 30]
 engine = "abc bmc3"

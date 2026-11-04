@@ -147,7 +147,7 @@ def test_check_cycles(cfg,tmp_path,name,cycles):
     assert cfg['check_options'][name]['defines']==['`define FAIR']
 
 @pytest.mark.parametrize('options', [
-    {'absent':{}}, {'cover':{'engine':'abc bmc3'}},
+    {'absent':{}}, {'cover':{'engine':'abc bmc3'}}, {'cover':{'engine':'btor btormc'}},
     {'cover':{'cycles':[9]}}, {'cover':{'cycles':[9,1]}},
     {'cover':{'cycles':[1,1]}}, {'cover':{'cycles':[True,9]}},
     {'cover':{'engine':'shell bad'}}, {'cover':{'engine':[]}}, {'cover':{'defines':['a\nb']}},
