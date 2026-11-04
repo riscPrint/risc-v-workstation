@@ -591,3 +591,11 @@ The reference uses separate per-bit logic and injects an observed-state fault.
 This checks accepted transactions, not bus decoding, response data, response
 ordering or latency. A project must supply those bindings and test its address
 decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
+
+### Imported SVA subset
+
+`rvw formal bmc --frontend slang` supports a restricted native SVA import path.
+See [the subset and sampling rules](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).
+It includes inline clocked Boolean properties, `disable iff` and single-argument
+sampled value functions. Temporal implication, sequence delay and repetition remain
+unsupported. The SBY campaign runner does not depend on this frontend.

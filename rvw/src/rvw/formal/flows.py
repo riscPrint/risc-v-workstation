@@ -37,6 +37,7 @@ def _header(kind: str, args, status: str, secs: float, asserts: int | None, rese
     return {
         "schema": "rvw.formal/1",
         "flow": kind,
+        "frontend": getattr(args, "frontend", "verilog"),
         "proof_kind": "unbounded" if kind == "prove" else "bounded",
         "top": args.top,
         # pass | fail | unknown | error | timeout | no_checks (the proven design has no assertion)

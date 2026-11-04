@@ -513,3 +513,9 @@ def test_calibrate_accepts_explicit_default_without_config_list(native_fixture, 
                           native_fixture.parent / "default-only", "--json")
     assert code == 0, report
     assert report["config"] == "fixture-o3"
+
+
+@pytest.mark.parametrize("order", [(1, 0), (0, 0), (1, 1)])
+def test_compare_requires_rtl_base_and_model_candidate(reports, order):
+    with pytest.raises(ValueError, match="RTL base and gem5 candidate"):
+        core.compare(reports[order[0]], reports[order[1]])

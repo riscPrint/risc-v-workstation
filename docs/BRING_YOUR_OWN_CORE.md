@@ -515,3 +515,10 @@ write JSON and text reports. See [the architecture guide](../Arch/README.md).
 Installer qualification: [#17](https://github.com/riscPrint/risc-v-workstation/issues/17) and [#40](https://github.com/riscPrint/risc-v-workstation/issues/40). Native bundle: [#71](https://github.com/riscPrint/risc-v-workstation/issues/71). Waivers: [#2](https://github.com/riscPrint/risc-v-workstation/issues/2). Stored-folder/performance gates: [#4](https://github.com/riscPrint/risc-v-workstation/issues/4). Owner integration choice: [#34](https://github.com/riscPrint/risc-v-workstation/issues/34).
 
 Retained limit: Adapters must reject unsupported options. Example validation does not qualify every host, backend or core preset. Owner decisions remain open.
+
+Native syntax and style lint: run `scripts/install.sh --with-lint` and source
+`env.sh`. This installs Verible v0.0-4298-g085eef05 under `.tools/verible`.
+The installer checks the release archive SHA256 before extraction. Linux x86_64,
+Linux arm64 and macOS are supported. The macOS release uses the upstream binary;
+Apple Silicon can need Rosetta. Run `scripts/install.sh --with-lint --check` to
+check the pinned version. `rvw lint` finds it through `PATH`.

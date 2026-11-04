@@ -1,0 +1,52 @@
+{
+  "schema": "rvw.linux-adapter-plan/1",
+  "status": "planned_not_connected",
+  "reference": "platform.json",
+  "memory": {"base": "0x80000000", "size": "0x08000000"},
+  "loads": {
+    "firmware": {"address": "0x80000000", "format": "self-relocating ET_DYN or raw"},
+    "kernel": {"address": "0x80200000", "format": "raw Image"},
+    "dtb": {"address": "0x87e00000", "format": "raw FDT"},
+    "initramfs": {"address": "0x86000000", "limit": "0x87e00000", "format": "cpio.gz"}
+  },
+  "reset": {"pc": "0x80000000", "privilege": "M", "a0": "0", "a1": "0x87e00000", "other_gprs": "zero", "interrupts": "low"},
+  "handoff": {"kernel_pc": "0x80200000", "privilege": "S", "a0": "hart id", "a1": "DTB address"},
+  "dtb_edits_required": ["/chosen/bootargs", "/chosen/linux,initrd-start", "/chosen/linux,initrd-end", "firmware reservation"],
+  "timer": {
+    "model": "rvw.cosim.devices.Timer",
+    "mtime": "0x0200bff8", "mtimecmp": ["0x02004000"], "msip": ["0x02000000"],
+    "reset_mtime": "0", "reset_mtimecmp": "0xffffffffffffffff",
+    "timebase_hz": 10000000,
+    "connect": ["MTIP -> mip[7]", "MSIP -> mip[3]"],
+    "clock_rule": "Declare model ticks per RTL cycle before timing comparison. Do not infer it from retired instructions."
+  },
+  "plic": {
+    "model": "rvw.cosim.devices.Plic",
+    "priority": "0x0c000000", "pending": "0x0c001000", "enable": "0x0c002000",
+    "enable_stride": "0x80", "context": "0x0c200000", "context_stride": "0x1000",
+    "sources": 63, "contexts": 2, "max_priority": 7,
+    "connect": ["context 0 -> MEIP mip[11]", "context 1 -> SEIP mip[9]", "UART -> source 10"],
+    "reset": "No pending source, priority, enable, claim or threshold state."
+  },
+  "uart": {
+    "status": "adapter_required", "compatible": "ns16550a", "base": "0x10000000",
+    "size": "0x100", "clock_hz": 3686400, "plic_source": 10,
+    "contract": "Implement byte registers, divisor latch, TX ready, RX FIFO, interrupt identification and reset. Capture TX output and version RX input events."
+  },
+  "external_inputs": {"console": "output only for first smoke", "network": "disabled", "storage": "initramfs only", "timed_inputs": []},
+  "required_checks": [
+    "Capture image, DTB, command line and adapter hashes before reset.",
+    "Reject payload overlap, BSS overlap, overflow and out-of-RAM placement.",
+    "Check timer and PLIC device state against independent expectations from round-2 device tests.",
+    "Check UART register behavior with an independent ns16550a oracle.",
+    "Compare selected live DTB properties on QEMU and RTL.",
+    "Check SBI timer, IPI, remote fence and hart-state functions separately.",
+    "Keep bounded startup instruction results separate from Linux userspace and RTL timing."
+  ],
+  "blockers": [
+    "BOOM's interrupt generator at 0x0c000000 is not a PLIC. It conflicts with this map.",
+    "Current BOOM reset does not set Linux a0/a1. Current VexRiscv example is RV32IM.",
+    "No ns16550a RTL bus adapter is connected. Round-2 Timer and PLIC are reference models only.",
+    "RiscvSim payload loading alone does not implement this reset/device contract."
+  ]
+}

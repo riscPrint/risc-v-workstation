@@ -103,3 +103,23 @@ Feature code may import from its tool's folder in the repository (SpinalBlocks i
 4. Run `npm run build`. `package.json`'s `activationEvents` and `contributes` are generated from the features; edit `feature.json`, not those fields. `npm test` fails if `package.json` is out of date or a feature is missing from `src/features.ts`.
 
 All features start when any feature's activation event fires. If start-up cost becomes a problem, features can defer their heavy work until first use.
+
+## Package notices
+
+`npm run build` generates `THIRD_PARTY_NOTICES.md` from every package entry in
+`package-lock.json`. This includes build and test dependencies. It is an
+inventory, not a list of code known to be in the bundle or release clearance.
+The VSIX includes this file and `dist/third_party/elkjs/LICENSE.md` and
+`NOTICE.txt`. The ELK source notice records the pinned source location.
+When the ELK version changes, review the retained files in `../third_party/elkjs/`.
+
+After `npm ci` here and in `../SpinalBlocks/engine`, run this package check
+from the repository root:
+
+```sh
+node --test scripts/package-notices.test.mjs
+```
+
+The check builds and inspects a local VSIX and an engine npm archive. It uses
+`--skip-license` only because the project license is unresolved in #37.
+It does not authorize public distribution.

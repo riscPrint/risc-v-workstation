@@ -258,3 +258,11 @@ Check both source destinations before treating a changed elaboration caller as
 equivalent information. This comparison does not relabel stored source locations.
 See the source-root and caller rules in [RiscvSim](../RiscvSim/README.md).
 The legacy BOOM entry remains until the cross-core parity checks are complete.
+
+## Viewer package notices
+
+The engine build copies the pinned ELK license and source notice into
+`engine/dist/third_party/elkjs/`. Keep these files with the worker and bundles.
+The extension retains the same files. See [the package check](../vscode/README.md#package-notices)
+for local archive inspection. These files do not resolve the project license
+choice in #37.

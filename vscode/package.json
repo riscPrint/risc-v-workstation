@@ -1,7 +1,7 @@
 {
   "name": "risc-v-workstation",
   "displayName": "RISC-V Workstation",
-  "description": "Tools for RISC-V and SpinalHDL hardware development in one extension: block diagrams today, more tools as they are added.",
+  "description": "Tools for RISC-V and SpinalHDL hardware development: block diagrams, saved regression, coverage and performance views.",
   "version": "0.1.0",
   "publisher": "riscprint",
   "license": "MIT",

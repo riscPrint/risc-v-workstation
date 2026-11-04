@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 class Elf:
-    def __init__(self, path):
+    def __init__(self, path, load_bias=0):
         self.data = Path(path).read_bytes()
         d = self.data
         if len(d) < 64 or d[:4] != b"\x7fELF" or d[5] != 1 or d[4] not in (1, 2):
@@ -12,24 +12,37 @@ class Elf:
         self.xlen = 64 if d[4] == 2 else 32
         f = "<HHIQQQIHHHHHH" if self.xlen == 64 else "<HHIIIIIHHHHHH"
         h = struct.unpack_from(f, d, 16)
-        if h[1] != 243 or h[0] != 2:
-            raise ValueError("expected a statically linked RISC-V executable ELF")
+        if h[1] != 243 or h[0] not in (2, 3):
+            raise ValueError("expected an executable or self-relocating RISC-V ELF")
+        if load_bias < 0 or (load_bias and h[0] != 3):
+            raise ValueError("load bias requires ET_DYN and a nonnegative address")
         self.entry, phoff, shoff = h[3:6]
+        self.entry += load_bias
+        if self.entry >= 1 << self.xlen:
+            raise ValueError("ELF entry address overflow")
+        if h[9] and (h[8] < (56 if self.xlen == 64 else 32) or
+                     phoff + h[9] * h[8] > len(d)):
+            raise ValueError("invalid ELF program header table")
         self.segments = []
         for i in range(h[9]):
             off = phoff + i * h[8]
             p = struct.unpack_from("<IIQQQQQQ" if self.xlen == 64 else "<IIIIIIII", d, off)
+            if p[0] == 3:
+                raise ValueError("PT_INTERP requires an unsupported dynamic linker")
             if p[0] != 1:
                 continue
             if self.xlen == 64:
                 _, _, offset, va, pa, filesz, memsz, _ = p
             else:
                 _, offset, va, pa, filesz, memsz, _, _ = p
-            if filesz > memsz or offset + filesz > len(d):
+            if filesz > memsz or offset + filesz > len(d) or (pa or va) + load_bias + memsz > 1 << self.xlen:
                 raise ValueError("invalid ELF load segment")
-            self.segments.append((pa or va, d[offset:offset+filesz], memsz))
+            self.segments.append(((pa or va) + load_bias, d[offset:offset+filesz], memsz))
         if not self.segments:
             raise ValueError("ELF has no load segments")
+        spans = sorted((a, a + size) for a, _, size in self.segments if size)
+        if any(left[1] > right[0] for left, right in zip(spans, spans[1:])):
+            raise ValueError("ELF load segments overlap")
         self.symbols = {}
         sections = [struct.unpack_from("<IIQQQQIIQQ" if self.xlen == 64 else "<IIIIIIIIII",
                                        d, shoff + i * h[10]) for i in range(h[11])]
@@ -43,4 +56,6 @@ class Elf:
                 name, value = vals[0], vals[4] if self.xlen == 64 else vals[1]
                 end = names.find(b"\0", name)
                 if end >= 0:
-                    self.symbols[names[name:end].decode(errors="replace")] = value
+                    section = vals[3] if self.xlen == 64 else vals[5]
+                    self.symbols[names[name:end].decode(errors="replace")] = (
+                        value + load_bias if section not in (0, 0xfff1) else value)

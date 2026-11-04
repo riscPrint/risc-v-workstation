@@ -38,6 +38,12 @@ def emit(args, obj):
             print('Selected: ' + ', '.join(obj['selected']))
         elif 'tests' in obj and isinstance(obj['tests'], list):
             print('\n'.join(obj['tests']))
+        elif 'unhit' in obj:
+            print(f"{len(obj['unhit'])} unhit bins")
+            for hole in obj['unhit']:
+                tests = ', '.join(t['id'] for t in hole['candidate_tests']) or 'none'
+                print(f"{hole['id']}: reachability={hole['reachability']}, "
+                      f"excluded={hole['excluded']}; candidates={tests}")
         elif 'groups' in obj:
             for name, g in obj['groups'].items():
                 print(f"{name}: {g['observed_bins']} observed bins, {len(g['holes'])} holes")
@@ -67,7 +73,7 @@ def write_bytes(path, content):
 def calculate(args):
     """Calculate a command result, including requested output artifacts, for CLI and MCP."""
     if args.cov_command == 'merge':
-        result = code.merge(args.inputs, args.source_root, args.source_map, args.hgldd, args.revision, args.scala_root)
+        result = code.merge(args.inputs, args.source_root, args.source_map, args.hgldd, args.revision, args.scala_root, args.design_db)
         if args.dat:
             originals = [p for _, p, _ in code.inputs(args.inputs)]
             files = [str(captured.file(p).copy) for p in originals]
@@ -85,6 +91,9 @@ def calculate(args):
                 raise ValueError('merged counts differ from verilator_coverage; refusing inconsistent output')
             captured.verify_tools()
             write_bytes(output, exported.copy.read_bytes())
+    elif args.cov_command == 'closure':
+        from .closure import closure
+        result = closure(args.database, args.candidates, args.exclusions)
     elif args.cov_command == 'isa-diff':
         from .isa import spec_diff
         result = spec_diff(args.before, args.after, args.old_source_root, args.source_root)
@@ -171,6 +180,7 @@ def register(subparsers):
     merge = sub.add_parser('merge', help='merge test=coverage.dat files or C1/C3 results')
     merge.add_argument('inputs', nargs='+')
     merge.add_argument('--source-root', default='.')
+    merge.add_argument('--design-db', help='same-elaboration rvw.designdb/20 for declaration attribution')
     merge.add_argument('--scala-root', help='resolve comment basenames to unique Scala files under this directory')
     merge.add_argument('--revision', help='BASE commit of raw coverage inputs, needed for safe change selection')
     merge.add_argument('--source-map', help='JSON explicit Verilog-range to Scala mapping')
@@ -187,6 +197,10 @@ def register(subparsers):
     select.add_argument('database')
     select.add_argument('--diff', required=True)
     select.add_argument('--repo', default='.')
+    closure = sub.add_parser('closure', help='list unhit bins and project-declared candidate tests')
+    closure.add_argument('database')
+    closure.add_argument('--candidates', required=True)
+    closure.add_argument('--exclusions', help='validate proof evidence for code points')
     isa_diff = sub.add_parser('isa-diff', help='compare pinned ISA proposals without adopting changes')
     isa_diff.add_argument('before')
     isa_diff.add_argument('after')
@@ -217,7 +231,7 @@ def register(subparsers):
     mutate.add_argument('--jobs', type=int, default=1)
     mutate.add_argument('--test', action='append', help='detection test name; repeatable, defaults to saved roles on inspection or all non-equivalence tests on a fresh run')
     mutate.add_argument('--equivalence-test', action='append', help='equivalence test name; repeatable, defaults to saved roles on inspection or none on a fresh run; FAIL is not a kill')
-    for command in (merge, report, rank, select, functional, rtl, prove, mutate, isa_check, isa_diff):
+    for command in (merge, report, rank, select, functional, rtl, prove, mutate, isa_check, isa_diff, closure):
         command.add_argument('--json', action='store_true')
         command.add_argument('--out', help='write structured JSON result')
         command.set_defaults(func=execute)
@@ -226,11 +240,11 @@ def register(subparsers):
 def execute_json(action: str, **options) -> dict:
     from argparse import Namespace
     defaults = dict(inputs=[], source_root=".", source_map=None, hgldd=[], revision=None,
-                    scala_root=None, dat=None, traces=[], config=None, database=None,
+                    scala_root=None, design_db=None, dat=None, traces=[], config=None, database=None,
                     work_dir=None, timeout=60 if action == "prove" else 120, project=None,
                     run=False, jobs=1, baseline=None, test=None, equivalence_test=None,
                     exclusions=None, annotate=None, exact=False, diff=None, repo=".", out=None,
-                    platform=None, manifest=None, before=None, after=None, old_source_root=None)
+                    platform=None, manifest=None, candidates=None, before=None, after=None, old_source_root=None)
     unknown = options.keys() - defaults.keys()
     if unknown:
         raise TypeError(f"unknown options: {sorted(unknown)}")

@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import sys
+import time
 from datetime import datetime, timezone
 
 from rvw.common.proc import Result, run_group
@@ -35,10 +36,30 @@ def validate(cfg):
     if not isinstance(checks, list) or not checks or not all(isinstance(c, str) for c in checks) or len(set(checks)) != len(checks):
         raise ValueError("checks must be a nonempty unique list")
     for check in checks:
-        if not isinstance(check, str) or not re.fullmatch(r"(?:(?:insn_[a-z0-9_]+|reg|pc_fwd|pc_bwd|causal|unique)_ch0|cover)", check):
+        if not isinstance(check, str) or not re.fullmatch(r"(?:(?:insn_[a-z0-9_]+|reg|pc_fwd|pc_bwd|liveness|causal|unique)_ch0|cover)", check):
             raise ValueError(f"unsupported check {check!r}")
     if "cover" not in checks:
         raise ValueError("checks must include cover to test retirement reachability")
+    options = cfg.get('check_options', {})
+    if not isinstance(options, dict) or set(options) - set(checks):
+        raise ValueError("check_options must name requested checks")
+    for name in checks:
+        opt = options.get(name, {})
+        if not isinstance(opt, dict) or set(opt) - {'cycles', 'engine', 'defines'}:
+            raise ValueError("check_options supports cycles, engine and defines")
+        settings = check_settings(cfg, name)
+        cycles = settings['cycles']
+        count = 1 if name.startswith('insn_') else 3 if name.startswith(('unique_', 'liveness_')) else 2
+        if (not isinstance(cycles, list) or len(cycles) != count or
+            any(type(c) is not int or not 1 <= c <= 200 for c in cycles) or
+            cycles != sorted(set(cycles))):
+            raise ValueError(f"invalid cycles for {name}")
+        if not isinstance(settings['engine'], str) or settings['engine'] not in {'abc bmc3', 'btor btormc', 'smtbmc bitwuzla', 'smtbmc yices', 'smtbmc z3', 'smtbmc boolector'}:
+            raise ValueError("unsupported engine")
+        if name == 'cover' and not settings['engine'].startswith('smtbmc '):
+            raise ValueError("cover needs an smtbmc engine")
+        if not isinstance(settings['defines'], list) or any(not isinstance(d, str) or '\n' in d or '\r' in d for d in settings['defines']):
+            raise ValueError("check defines must be single-line strings")
     ports = cfg['ports']
     if not isinstance(ports, dict) or set(ports) != set(FIELDS):
         raise ValueError("ports must map every RVFI field exactly once")
@@ -55,10 +76,19 @@ def validate(cfg):
     for path in [cfg['wrapper'], *files]:
         if not Path(path).is_file():
             raise ValueError(f"missing input {path}")
+    models = cfg.get('instruction_models', {})
+    if not isinstance(models, dict) or any(not isinstance(k, str) or not re.fullmatch(r'[a-z0-9_]+', k) or not isinstance(v, (str, Path)) or not Path(v).is_file() for k,v in models.items()):
+        raise ValueError('instruction_models must map instruction names to existing files')
     root = Path(cfg['root'])
     for directory in ('checks', 'insns'):
         if not (root / directory).is_dir():
             raise ValueError(f"missing riscv-formal {directory}")
+
+
+def check_settings(cfg, name):
+    depth = cfg['depth']
+    cycles = [depth] if name.startswith('insn_') else [1, 2, depth] if name.startswith(('unique_', 'liveness_')) else [1, depth]
+    return dict(cycles=cycles, engine=f"smtbmc {cfg['solver']}", defines=[]) | cfg.get('check_options', {}).get(name, {})
 
 
 def prepare(cfg, out):
@@ -80,6 +110,12 @@ def prepare(cfg, out):
             dest.write_text(dest.read_text().replace('@RVFI_CONNECTIONS@', ',\n'.join(
                 f'.{cfg["ports"][field]} (rvfi_{field})' for field in FIELDS)))
         identity[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
+    for insn, src in cfg.get('instruction_models', {}).items():
+        dest = root / 'insns' / f'insn_{insn}.v'
+        if not dest.is_file():
+            raise ValueError(f'unknown instruction model {insn}')
+        shutil.copyfile(src, dest)
+        identity[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
     # Include the actual checker bytes, including uncommitted changes.
     digest = hashlib.sha256()
     for path in sorted(root.rglob('*')):
@@ -88,11 +124,11 @@ def prepare(cfg, out):
             digest.update(path.read_bytes())
     identity['checker_sha256'] = digest.hexdigest()
     verilog = '\n'.join('@basedir@/cores/@core@/' + p.name for p in sorted(core.glob('*.sv')))
-    depth = cfg['depth']
+    depth_lines = '\n'.join(name + ' ' + ' '.join(map(str, check_settings(cfg, name)['cycles'])) for name in cfg['checks'])
+    # Exact check names avoid accidentally enabling other upstream checks.
     (core / 'checks.cfg').write_text(
         f"[options]\nisa {cfg['isa']}\nnret 1\nsolver {cfg['solver']}\n"
-        f"[depth]\ninsn {depth}\nreg 1 {depth}\npc_fwd 1 {depth}\npc_bwd 1 {depth}\n"
-        f"causal 1 {depth}\nunique 1 2 {depth}\ncover 1 {depth}\n"
+        f"[depth]\n{depth_lines}\n"
         '[defines]\n' + '\n'.join(cfg.get('defines', [])) + '\n'
         f'[verilog-files]\n{verilog}\n'
         '[cover]\nalways @* if (!reset) cover (channel[0].cnt_insns > 0);\n')
@@ -129,11 +165,20 @@ def run(cfg, out, timeout, core_name):
         gen = invoke([sys.executable, '../../checks/genchecks.py'], cwd=core,
                         timeout=timeout, stdout=log, stderr=log)
     for name in cfg['checks']:
+        started = time.monotonic()
         work = core / 'checks'
         file = work / f'{name}.sby'
         if gen.returncode or not file.is_file():
             entry = map_check(name, '', gen.returncode or 2, gen.timed_out)
         else:
+            settings = check_settings(cfg, name)
+            source = file.read_text()
+            if settings['defines']:
+                source = source.replace('[file defines.sv]\n', '[file defines.sv]\n' + '\n'.join(settings['defines']) + '\n', 1)
+            source = re.sub(r'(?m)^(\[engines\]\n)[^\n]+', lambda m: m[1] + settings['engine'], source)
+            if settings['engine'] == 'abc bmc3':
+                source = re.sub(r'(?m)^skip [^\n]+\n', '', source)
+            file.write_text(source)
             with (out / f'{name}.log').open('w') as log:
                 result = invoke(['sby', '-f', file.name], cwd=work,
                                    timeout=timeout, stdout=log, stderr=log)
@@ -141,6 +186,9 @@ def run(cfg, out, timeout, core_name):
             tokens = status.read_text().split() if status.is_file() else []
             token = tokens[0] if tokens else ''
             entry = map_check(name, token, result.returncode, result.timed_out)
+        entry.extra['formal_settings'] = check_settings(cfg, name)
+        entry.extra['wall_s'] = time.monotonic() - started
+        entry.extra['timeout_s'] = timeout
         entries.append(entry)
     covered = next(t for t in entries if t.id == 'cover').status == 'pass'
     for entry in entries:
@@ -149,7 +197,7 @@ def run(cfg, out, timeout, core_name):
     suite = SuiteResults(out.name, 'riscv-formal', core_name, cfg['isa'],
                          datetime.now(timezone.utc).isoformat(),
                          source={'identity_complete': False, 'formal_inputs': identity}, tests=entries,
-                         extra={'bounded_depth': cfg['depth'], 'settings': cfg})
+                         extra={'bounded_depth': max(check_settings(cfg, name)['cycles'][-1] for name in cfg['checks']), 'settings': cfg})
     write_json(out / 'results.json', suite.to_dict())
     failed = any(t.status == 'fail' for t in entries)
     complete = all(t.status == 'pass' and t.conclusive for t in entries)

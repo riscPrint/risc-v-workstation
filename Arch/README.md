@@ -1,6 +1,6 @@
 # Native architecture exploration
 
-`rvw arch` uses gem5 v25.1.0.1 to measure an approximate RISC-V O3 model.
+`rvw arch` uses gem5 v25.1.0.1 to measure an approximate RISC-V model.
 It runs the same bare-metal ELF on gem5 and the project's C1 RTL adapter.
 It reports ROI cycles, instructions, IPC, and the gap per benchmark.
 gem5 shows trends; RTL is the truth.
@@ -46,6 +46,9 @@ rvw arch calibrate --bench median,vvadd,memcpy --out rvw/out/calibration-1
 rvw arch compare rvw/out/calibration-1/rtl.json rvw/out/calibration-1/gem5.json --json
 ```
 
+`compare` requires an RTL base and a gem5 candidate, in that order.
+The IPC ratio is model IPC divided by RTL IPC.
+
 `build` locates gem5, checks its version and RISC-V support, and builds the ELFs.
 Run the installer first if gem5 is absent. Without `--bench`, the nine default
 benchmarks are median, qsort, rsort, towers, vvadd, memcpy, multiply, dhrystone,
@@ -82,9 +85,10 @@ Do not compare its ratios with the old table as if only the compiler changed.
 
 The required fields are:
 
-- `schema`, `kind = "o3"`, `config`, and `isa`. `config` selects the C1 preset.
-  This version builds `rv64gc` or `rv64gc_zba_zbb_zbs`. Other ISAs need an
-  extension to the runner and benchmark runtime.
+- `schema`, `kind`, `config`, and `isa`. `config` selects the C1 preset.
+  Supported pairs are O3 with `rv64gc` or `rv64gc_zba_zbb_zbs`, and Minor or
+  TimingSimple with `rv32im`. Use `kind = "o3"`, `"minor"`, or `"timing"`.
+  Other pairs fail. RV32 builds use ilp32 and stable high/low/high CSR reads.
 - `cpu`: gem5 scalar `RiscvO3CPU` parameters. These describe widths, pipeline
   delays, the ROB, registers, load/store queues, and memory ports. Parameters
   left out use gem5 defaults. The generated `config.json` records the effective
@@ -98,7 +102,9 @@ The required fields are:
 - `itlb_entries`, `dtlb_entries`, `line_bytes`, `bus_bytes`, and
   `memory_latency`. Memory latency is in cycles at the fixed 1 GHz clock.
 
-The model has one RV64 O3 hart. RAM is 512 MiB at `0x80000000`. L1 caches
+The model has one hart. RAM defaults to 512 MiB at `0x80000000`.
+Optional `ram_bytes` selects a page-aligned capacity up to that limit.
+ELF load ranges must fit the selected capacity. L1 caches
 connect directly to fixed-latency memory. The model uses no L2. Use a new
 project description for a sweep. Set `RVW_ARCH_CONFIG` to another JSON path
 with the shipped BOOM project. No generic code maps a core preset.
@@ -140,8 +146,13 @@ Use the model to select ideas. Confirm each claimed gain in RTL.
   incomplete exit must not produce successful evidence.
 - Report the gap before adding a fitter. Offline held-out candidate selection and measurement microbenchmarks are available.
   Live RTL event integration and parameter search remain open work.
-- An in-order or RV32 core needs a CPU model selection, a matching runtime and
-  ISA build options, a description, and a C1 adapter. VexRiscv is not validated.
+- RV32IM uses Minor or TimingSimple, with explicit RV32 ISA configuration.
+  In-order descriptions require `queues=[]` and `predictor=null`.
+  Their CPU defaults apply unless scalar CPU parameters override them.
+  `cpu={}` selects all defaults. Both caches can be null to bypass them.
+  In-order SoC extensions are refused. See the
+  [VexRiscv architecture guide](../examples/vexriscv/rvw/arch/README.md) for
+  uncached models, live C1 event mappings and a held-out fitting plan.
 
 ## Limit ownership
 
@@ -375,7 +386,9 @@ rvw arch linux boot --images /tmp/linux-build/build/images \
 Each action needs a new output directory. `--timeout` bounds each build command
 or QEMU process. `--jobs` accepts 1 through 4. Builds run serial commands.
 The tool stops the full process group on timeout or cancellation.
-The build checks the Buildroot 2025.02.1 archive SHA-256. Buildroot pins the
+The build checks the Buildroot 2025.02.1 archive SHA-256. It extracts regular
+content before skeleton symlinks. It preserves absolute symlinks for the target
+root filesystem. Archive errors stop the build and record an inconclusive result. Buildroot pins the
 internal musl toolchain, BusyBox, Linux 6.12.9 and OpenSBI 1.6. It checks package
 hashes from the release, including its QEMU board patches. The root filesystem
 is a gzip cpio initramfs. `Arch/linux/overlay/init` mounts proc, sysfs and devtmpfs.

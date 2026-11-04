@@ -93,7 +93,7 @@ errors. Tool input paths must exist when the command consumes them.
 | `debug` | `config` | Debug TOML for bundle, reduce and bisect. It must describe the recorded core. |
 | `checks` | `settings`, `waivers` | Project adapter settings and waiver file paths. Their format belongs to the adapter. The launcher must consume them. |
 | `query` | `build`, `db` | Build command list and output database path. `rvw query build` calls `build CONFIG OUT`; `--config` and `--out` override the core default and `db`. Query reads use `db` unless `--db` is explicit. |
-| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
+| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports`, `check_options`, `instruction_models` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
 | `formal` | `verilog`, `top`, `checks`, `clock`, `reset` | Defaults for existing formal arguments. `verilog` is a nonempty path list. Explicit arguments override these fields. No proof limits change. |
 
 The project file and expanded environment are captured before parsing and execution.
@@ -201,6 +201,11 @@ Optional `"inconclusive": "<reason>"` marks a result the adapter cannot vouch fo
 it could not attribute to this run (RiscvSim: an `assert` printed while other simulations ran,
 pending or failing its serial rerun; RiscvSim's `details.serial_rerun.attributed: false` and a
 `details.concurrent` `assert`/`rvfi_error` without `serial_rerun` are read the same way).
+Debug reruns also require the returned `elf_sha256` to match the requested ELF bytes.
+A missing or different hash makes the attempt inconclusive.
+Debug reruns check each explicitly requested C1 seed, config, max_cycles and mem_latency
+against the returned result. A missing or different value marks the attempt inconclusive.
+It cannot reproduce or rule out the requested failure.
 A C1 result is evidence about the core only when `rvw.results.inconclusive_cause` finds nothing:
 not `inconclusive`, not status `error` (the harness could not run the test), not `synthesized`
 (rvw wrote it), not a wall-clock timeout. Every reader uses that one rule (regress resume, cache
@@ -220,6 +225,15 @@ C1 `run` and `run-many` exit 2 for `status: error`, including input errors befor
 model compilation. This takes priority over missing-evidence markers such as missing RTL.
 Otherwise they exit 3 for an explicit `inconclusive` marker, 0 when all runs pass,
 and 1 for other run failures. Error results remain unsuitable as core evidence.
+
+Optional `run-many --persistent --jobs 1` uses the serial fresh-instance server.
+Adapters must declare fresh native and harness state for each request. C1
+`execution_mode` is `server`; `details.simulation_session` records session UUID,
+model run number and reset policy. RTL and native hashes still identify the model.
+An abandoned worker stops the batch before later requests and forces exit 2,
+including when no result exists for those requests. This is model reuse, not
+result reuse. Regression `[core] persistent = true` selects this mode and skips
+the separate pre-build process. It sets one worker for serial timeout budgets.
 
 Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
 installed reference's version, source revision when supplied, and origin. The same
@@ -435,7 +449,12 @@ used to tell a known failure from a new one (`rvw.results.failure_signature`): e
 Assertions use the HDL file and line when there is no Scala location, for example `assert:core.sv:4`.
 Without either location, `assert:sha256:<digest>` binds the full, unnormalized message.
 Uncoded RVFI errors use `rvfi_error:sha256:<digest>` over the full message.
+Runner C3 entries retain complete failure messages with `message_complete: true`.
+Display limits must not truncate this evidence. Legacy 400-character messages without
+this marker may be cut previews. Compare treats these entries as inconclusive and requires a rerun.
 Compare derives assertion and RVFI signatures again from saved messages, including older C3 results.
+C3 retains C1 `details.rvfi_errcode` when present. Compare uses this code before parsing
+the message, as C1 signature generation does.
 Old uncoded RVFI evidence without a saved message needs a rerun. Saved `fail_code` values
 override saved fail signatures. An unchanged failure must also have the same status.
 An assertion without a saved message or a complete location is inconclusive and needs a rerun.
@@ -995,7 +1014,9 @@ Existing and interrupted projects still require a fresh run directory.
 Raw databases and all saved `rvw.mutation/1` results provide observations only. This includes
 `/1` records with `dependency_complete: true`. A fresh `/2` writer must attach and validate
 its declaration, capture and tool evidence before it classifies outcomes. Saved-result role,
-failed-run and mutation-control checks still apply.
+failed-run and mutation-control checks still apply. All selected equivalence
+checks must return PASS before a mutation can be equivalent. Missing checks
+stay pending. Conflicting equivalence PASS and FAIL results are errors.
 
 ### Result generation layout
 
@@ -1068,24 +1089,25 @@ one error object with `--json`. Success exits 0 and means a report was produced.
 and `benchmarks`. Each path resolves against the project file. An absent or
 invalid selected section is an error. No core preset is selected implicitly.
 
-`rvw.arch-core/1` describes one RV64 O3 hart. Required fields are `schema`,
-`config` (C1 preset), `isa`, `kind="o3"`, `cpu`, `queues`, `predictor`, `icache`,
+`rvw.arch-core/1` describes one hart. O3 uses RV64; Minor and TimingSimple use
+RV32IM (see the RV32 in-order extension below). Required fields are `schema`,
+`config` (C1 preset), `isa`, `kind`, `cpu`, `queues`, `predictor`, `icache`,
 `dcache`, `itlb_entries`, `dtlb_entries`, `line_bytes`, `bus_bytes`, and
 `memory_latency`. Unknown top-level fields are errors. `cpu` contains scalar
-gem5 RiscvO3CPU parameters. The cache tables contain scalar Cache parameters.
+gem5 parameters for the selected CPU. The cache tables contain scalar Cache parameters.
 Unknown gem5 parameters and object references are errors. Omitted scalar
 parameters use gem5 defaults. Each queue has `entries` and `units`. Each unit
 has `ops` (gem5 opclass names), `count`, `latency`, and `pipelined`.
 `predictor` has `tage`, `loop`, `btb`, and `ras_entries`. TAGE has
 `nHistoryTables`, `minHist`, `maxHist`, `tagTableTagWidths`, `logTagTableSizes`,
 and `logUResetPeriod`. Loop has `logSizeLoopPred` and `logLoopTableAssoc`.
-BTB has `numEntries` and `associativity`. Clock is 1 GHz. Memory is 512 MiB
+BTB has `numEntries` and `associativity`. Clock is 1 GHz. Memory defaults to 512 MiB
 at 0x80000000. `memory_latency` is a positive whole number of cycles.
 
 `rvw.arch-build/1` records config, ISA, source path, gem5 and compiler identity (path, SHA-256,
 version), and benchmark IDs, paths and SHA-256 hashes. Builds use native
-newlib GCC and the description's ISA. Only RV64GC with optional Zba/Zbb/Zbs
-is supported in this version. The source path points to riscv-tests.
+newlib GCC and the description's ISA. RV64GC with optional Zba/Zbb/Zbs
+and RV32IM are supported. The source path points to riscv-tests.
 
 `rvw.arch-run/1` records `engine` (`rtl` or `gem5`), core, config, memory
 latency, project capture, description/model hashes and a nonempty `benchmarks`
@@ -1114,6 +1136,7 @@ sets must be nonempty with unique identical IDs, identical ELF hashes and
 equal ROI instruction counts. Core, config and memory latency must match.
 `ipc_ratio` is candidate IPC/base IPC, or base cycles/candidate cycles when
 instructions match. `cycle_gap_percent` is 100*(candidate cycles/base cycles-1).
+Comparison requires an RTL base and a gem5 candidate, in that order.
 The aggregate is the geometric mean of IPC ratios. No acceptance threshold
 or parameter fit is applied. `calibrate` writes this JSON to calibration.json
 and a short table to summary.txt. Reports depend on the recorded local paths.
@@ -1247,9 +1270,14 @@ cache generation contains `.rvw-cache-key` with that exact key. A fetched entry
 must have a valid generation inventory, all artifact hashes and an equal stored
 key. A missing or partial object is a miss. The existing runner still checks job
 parameters and C1 provenance before reuse. Transfer adds no new admission rule.
-Uploads send generations before `current`. Downloads use a private directory
-and publish a new local generation only after verification. The cache owner
-controls retention. Cross-command download resume is not implemented.
+Uploads send generations before `current`. Downloads use persistent private,
+locked staging keyed by remote location and full C8 key. rsync checks checksums
+on resume. Only fully verified generations can be published locally. Upload
+ownership metadata (`rvw.cache-owner/1`) in `owners/<generation-id>.json` records host, user, key, generation and
+upload time. It is not evidence. Explicit native maintenance verifies managed
+entries and removes invalid entries, expired entries, then oldest publications
+to meet an owner-supplied byte limit. Transfers must be idle during maintenance.
+Unmarked directories are not deleted. Evicted or partial entries are misses.
 
 ### Native farm collection (first increment, #25)
 
@@ -1262,9 +1290,17 @@ ELF hash and every declared identity claim must match. Worker identity documents
 must equal the supplied complete `/2` document. SHA-256 binds transferred files.
 
 The first native SSH endpoint buffers transfers and uses a bounded run-many
-process group. Remote cancel acknowledgement, scalable streaming and C3 gate
-import remain open. The static dashboard reads existing C3/C4/history. Recorded
+process group. Separate SSH cancellation uses campaign control tokens. A host
+acknowledges only after group cleanup and a host process-table check. Missing
+acknowledgement is inconclusive. Host reservations share CPU slots, declared
+memory bytes and named locks across workers. They report queue time and release
+on handled exit. They are cooperative, not OS CPU/RSS limits. SIGKILL can leave
+stale reservations; owner cleanup is required. Scalable streaming, crash recovery
+and C3 gate import remain open. The static dashboard reads existing C3/C4/history. Recorded
 C3 `ipc` and `coverage` metric samples are plotted by core, suite and config.
+Pass rate divides conclusive passes by all recorded C3 tests. Run time sums all
+recorded test `wall_s` values only when every value is present and valid. History
+charts retain missing runs as gaps. These metrics do not prove plan completeness.
 It does not establish bin compatibility or verification closure.
 
 ## Lint and crossing inventory extension
@@ -1276,6 +1312,9 @@ It does not establish bin compatibility or verification closure.
 structural inventory, exact waivers and match counts. Each finding has a SHA-256
 `id` of its diagnostic data, backend, top and configuration. Waivers require
 this value as `finding_id`, plus exact rule, endpoint, configuration and reason.
+Structural diagnostic data includes `source_domain` and `destination_domain`
+(the full domain records), `source_width` and `destination_width`. Changed clock
+or reset records and changed widths invalidate the waiver.
 A different source or message cannot reuse the waiver. Waived findings remain in
 place. Missing backends remain `not_run`. Exit 0 means completed checks without
 findings; 1 means active findings; 2 means input error; 3 means inconclusive.
@@ -1363,11 +1402,11 @@ RAM base/bytes, required symbol addresses/sizes, blockers and limits.
 Supported input labels are `rv32im`, `rv64gc`, `rv64gc_zba_zbb_zbs` and CPU
 kinds `o3`, `minor`, `timing`. ELF class must match XLEN. Required runtime
 symbols and the fixed RAM layout are checked in ELF32 and ELF64.
-Only RV64 O3 returns `compatible` (CLI exit 0). Other known combinations
-return `unsupported` (CLI exit 2) with runtime and CPU blockers. Unknown
+RV64 O3 and RV32IM Minor/TimingSimple return `compatible` (CLI exit 0).
+Other known combinations return `unsupported` (CLI exit 2) with a CPU/ISA blocker. Unknown
 labels or invalid files give the normal error object and exit 2.
 Compatibility does not establish instruction behavior, ISA extensions,
-ROI counter validity or model fidelity. It does not enable a new runner.
+ROI counter validity or model fidelity.
 MCP returns the same status in the result of its background job.
 
 ### C9 SoC description extension
@@ -1580,10 +1619,20 @@ Each requested task is a C3 entry. PASS requires exit 0 and SBY PASS. Missing
 status, unreachable retirement cover, tool errors and wall timeouts are
 inconclusive. Without retirement cover, assertion PASS entries carry an
 `inconclusive` reason. `source.formal_inputs` records input hashes;
-`identity_complete` is false. The suite records `bounded_depth` and settings.
+`identity_complete` is false. The suite records the maximum selected check depth as `bounded_depth` and the settings.
 C4 rejects assertion failures. Other outcomes remain inconclusive, including
 complete bounded tests. These files cannot establish committed gate acceptance.
 C1 is not emitted because these jobs do not execute an ELF.
+
+`check_options.<exact check name>` can set `cycles`, `engine` and `defines`.
+Cycles are `[check]` for instruction checks, `[start, check]` for consistency
+and cover checks, and `[start, trigger, check]` for liveness and unique.
+Each C3 entry retains these values in `formal_settings`. Engines are
+`abc bmc3`, `btor btormc` or `smtbmc` with a supported solver. Cover needs SMTBMC.
+ABC jobs omit the unsupported SBY `skip` option. The checker cycle still
+controls when each assertion fires. `instruction_models` maps instruction
+names to model files. The runner copies these over the private checker tree
+and hashes them. It does not modify the upstream models.
 
 ## Formal event model extension
 
@@ -1693,3 +1742,139 @@ logs and `export.json`. Export directories must be new. This supports declared
 sbt dependencies. It does not capture arbitrary external generator file reads,
 network services or environment effects. Project authors must declare all generator
 repositories. Submodule source content is not exported by `git archive`.
+
+Directed MMU extensions retain the existing C1-C4 verdict rules. Control rows,
+data corner fields, the optional adapter `rvw.mmu-observations/1` capture and
+`rvw.mmu-coverage/1` inventory follow the regress README. `mmu check` additionally
+binds `manifest_sha256` and each row's `c1_sha256`. A coverage report verifies
+these hashes before using architectural bins. Observation counts are separate
+from coverage. `recorded` is not a correctness pass.
+
+Native farm collection also checks explicitly requested `max_cycles` and `mem_latency`
+against C1 results. Missing or different values make collection inconclusive.
+
+### C1 firmware payload extension
+
+RiscvSim accepts `--elf-load-bias BYTES` (nonnegative decimal, default zero).
+It applies only to self-relocating ET_DYN firmware. `elf_load_bias` records it
+as a decimal string in C1. The ELF hash still identifies the original bytes.
+ET_REL and PT_INTERP are unsupported. The loader does not apply dynamic
+relocations. The adapter controls initial PC, privilege and GPRs.
+
+`--boot-payloads PATH` selects a `rvw.boot-payloads/1` JSON object with `ram`
+(`base`, `size`) and `payloads` (`file`, `address`) arrays. Addresses and sizes
+are strings, in decimal or `0x` notation. Resolve files relative to the manifest.
+Capture bytes before compilation. Reject overflow, overlap (including BSS),
+empty payloads and ranges outside the declared RAM before the first write.
+An adapter must declare support and load through `RunContext.loadMemory`.
+Unsupported adapters must refuse this option. C1 `details.boot_payloads`
+contains `path` and `sha256` for each input. `details.boot_loads` lists each
+segment's `address` (hex string) and `size` (decimal string), in load order.
+The replay command retains both loader options. These fields describe memory
+placement only. They make no device, reset, Linux boot or timing claim.
+
+### C9 RV32 in-order extension
+
+Descriptions accept `kind="minor"` or `kind="timing"` only with `isa="rv32im"`.
+O3 keeps its RV64 ISA choices. The CPU classes are RiscvMinorCPU and
+RiscvTimingSimpleCPU. In-order descriptions require `queues=[]` and
+`predictor=null`; CPU defaults apply. `cpu={}` selects all defaults.
+Both caches can be null to bypass them. In-order SoC extensions are refused.
+Optional `ram_bytes` selects page-aligned RAM capacity up to 512 MiB at the
+existing base. The default remains 512 MiB. ELF segments must fit that range.
+RV32 builds use ilp32 and stable high/low/high reads of 64-bit mcycle/minstret.
+The guest still exports two 64-bit bench_stats words.
+Static compatibility does not certify native execution or cycle fidelity.
+
+C1 adapters can publish project-defined live ROI event numbers in `metrics`.
+The project owns event names, observation points and mappings to gem5 stats.
+They must not be inferred from model statistics. The VexRiscv example observes
+RVFI retirement, excludes the first retired setStats entry and includes the
+second. It publishes roi_retired, roi_loads, roi_stores and roi_branches only
+with two markers and complete bench_stats stores. The CSR delta window stays
+separate. Missing events remain missing; fitting refuses them. See the example
+architecture README for opcodes, limitations and the saved-candidate fit plan.
+
+### Generated SoC runtime input
+
+C1 jobs can set `soc_map` / `--soc-map` to generated `rvw.sim-map/1`.
+The parser captures the map bytes. C1 records `soc_map_sha256` and lists the
+saved `sim-map.json` and `soc-transactions.jsonl` in `artifacts`.
+`rvw.soc-capture/1` starts with `map_sha256`, `identity` (source and RTL hash), and
+`observation` (`harness_decoder` or `map_monitor`). A map monitor classifies
+accepted requests. It does not observe an actual RTL decoder select.
+Request lines have `cycle` (integer string), `bus`, `address` (hex string),
+`size` (byte count string), `write` (boolean) and `selected` (region name or null).
+`{"event":"end"}` ends capture. These are harness request/endpoint observations.
+They are not software-to-bus pairs. An incomplete stream cannot establish coverage.
+`rvw soc capture-check` gives mismatch (1), inconclusive (3), or input error (2).
+It has no pass verdict. `--platform` in cosim can also read `rvw.soc/1` directly.
+
+SoC capture request identity: `rvw.soc-capture/1` headers carry a nonempty
+`identity.run_id`. It is a fresh UUID for each simulation request. C1 records the
+same value in `details.simulation_session.run_id`. `soc capture-check` requires
+both values to match. A session UUID, ELF hash and seed alone do not identify one
+request in a persistent session. Captures without a request ID are refused.
+
+Request and process UUIDs belong to `RunContext.captureIdentity`. They do not
+appear in the C2 header (`RunContext.rvfiHeader`). Equal simulation inputs keep
+stable trace header bytes across fresh and persistent runs.
+
+### Coverage semantic plans and closure suggestions
+
+`rvw.isa/1` may include `semantics` with `version: 1`, `privilege_modes` and
+an `exceptions` map from pinned instruction names to expected synchronous cause
+numbers. These declarations participate in functional plan identity. They are
+coverage targets, not reference outcomes or reachability proofs. Semantic operand
+classes use C2 operand values. A per-instruction exception hit requires adjacent,
+same-cycle trapped-instruction and synchronous trap records. Incomplete cause
+correlation earns no hit. Sequence plans may select `kinds` as well as `distances`.
+
+`rvw.coverage-candidates/1` has a `tests` array. Each item has `id`, `targets`
+(nonempty glob patterns over bin IDs), integer `priority`, and `reason`.
+`rvw.coverage-closure/1` hashes the report and candidates. It lists `unhit` bins
+with separate `observation`, `reachability`, and `excluded` fields. Each bin has
+ranked `candidate_tests`. Candidate rank is declared priority, not a measured
+probability. No candidate changes a hit count or a reachability result.
+
+RiscvSim exports native Spinal event tags as the existing `rvw.rtl-plan/1`.
+IDs include physical instance paths. The complete plan hash supplies merge
+identity. The exporter rejects pruned signals and conflicting source/type links.
+Code coverage collection uses native `--coverage-per-instance` on checked
+Verilator 5.052 or newer. Older or unknown tools keep collapsed coverage. Existing wildcard
+hierarchies retain unknown exact instance denominators. Optional SpinalDB
+attribution verifies the captured RTL hash and maps covered assignment targets
+to Scala declarations. This attribution does not prove Scala statement coverage.
+Schema `/20` memory-key `MemSymbolesTag` names can supply exact emitted memory
+aliases for declaration attribution. Unknown or conflicting aliases are not guessed.
+Coverage source links record comment, declaration, or mixed attribution methods.
+Branch-operand declaration links are navigation evidence, not Scala statement hits.
+Instance scope records include mapped and unmapped point counts.
+Uncompleted RTL sequence goals can appear in `unhit` with `kind: sequence` and
+`pending`. Pending activations do not establish unreachability.
+
+The optional lint settings `intent` object contains `protocols` and `reset_order`.
+The lint guide defines their exact fields. Structural `depth` records matched or
+invalid protocol declarations, direct two-stage structures and declared reset
+ordering. Protocol declarations and reset-order pairs are assumptions. They do
+not earn protocol or release proof. New rule IDs are `cdc.handshake_candidate`,
+`cdc.handshake_invalid`, `cdc.async_fifo_candidate`, `cdc.async_fifo_invalid`,
+`cdc.reconvergence`, `rdc.reconvergence` and `rdc.release_order_unproved`.
+Functional reconvergence and async FIFO rules retain `not_run` status as
+`cdc.reconvergence_protocol`, `rdc.reconvergence_protocol` and
+`cdc.async_fifo_protocol`. Structural findings retain the domain-bound waiver
+identity. Protocol findings also bind their exact declaration in the message.
+FIFO candidates require exact unconditional typed Gray encoder expressions.
+`protocol_evidence` retains these keys and the selected memory/port records in
+the finding, so they contribute to its waiver ID. This establishes an encoder
+shape only. Pointer transitions and transfer behavior remain unproved.
+
+### SVA frontend selection
+
+`rvw.formal/1` results can add `frontend`, with value `verilog` or `slang`.
+Absent means the default Verilog frontend. `slang` selects the restricted native
+SVA subset for single-clock BMC. It preserves the existing bounded status and
+reachability rules. It does not establish an unbounded proof or gate acceptance.
+The plugin bytes appear in `input_capture.files`. The frontend's RTL dependency
+report must stay within the copied inputs. See
+[the supported subset](../rvw/src/rvw/formal/README.md#imported-sva-through-slang).

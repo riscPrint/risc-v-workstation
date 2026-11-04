@@ -150,8 +150,8 @@ RAM must be page aligned; all ranges must be nonoverlapping. ELF PT_LOAD segment
 (file bytes and BSS) must lie wholly in RAM, for Spike and Sail (one shared check). Segments
 and BSS start from a fresh, zero-filled machine. Both models fault an access outside `ram` and
 `mmio`; Sail also needs page-aligned MMIO ranges (see "Sail offline checker").
-The reset PC is explicit, rather than inferred from the first trace PC. Only
-little-endian, statically linked RISC-V ELF32/ELF64 images are supported. Trace
+The reset PC is explicit, rather than inferred from the first trace PC. Little-endian RISC-V ELF32/ELF64 executables and self-relocating ET_DYN
+firmware are supported. Trace
 XLEN and ISA must exactly match the selected platform. Implementation-specific
 WARL CSR behavior and extension sets need a matching platform/model configuration.
 
@@ -440,6 +440,11 @@ Large traces are temporary and never committed.
   System headers and compiler support files use C8's installed-toolchain assumption.
   Verify inputs and tools before publication. The manifest binds output bytes to
   the build record. The binary embeds the build ID. A stale build requires a rebuild.
+  On Linux, capture `readelf` and read the ELF SONAME from the saved library.
+  Link through its library name so a missing SONAME cannot retain a temporary path.
+  Bind the load name into the build ID. At runtime, place a hard link to the captured
+  dependency beside the captured shim for `$ORIGIN` lookup. Keep the bytes unchanged.
+  macOS retains its native install-name handling.
   Binary and manifest use separate atomic replacements; a mismatched pair refuses.
 - Runtime checks the source, shim, manifest and linked libriscv hashes and embedded
   identity. Load private binaries and check the actual dependency binding and shim
@@ -680,3 +685,16 @@ including lookahead. It never calls that digest a complete input trace hash.
 EOF before an end event is inconclusive. Save the complete stream for offline
 replay. The CLI and the BOOM adapter do not yet launch this API. This increment
 provides the generic integration point, not BOOM online runtime evidence.
+
+Self-relocating ET_DYN firmware is also accepted at its declared PT_LOAD
+addresses. PT_INTERP and ET_REL remain unsupported. No dynamic linker or ELF
+relocation processing is provided. The Python `Elf` API also accepts an explicit
+nonnegative `load_bias`; CLI reference runs use the ELF's declared addresses.
+For a common RTL/reference input, rebase the firmware ELF with the toolchain's
+`objcopy --change-addresses` and capture the resulting hash. Do not change its
+instructions or infer a base from the observed DUT trace. These checks do not
+establish Linux device support.
+
+`--platform` also accepts a project `rvw.soc/1` map. The reader derives RAM
+and MMIO ranges from its regions. It preserves the explicit reference policy.
+The command captures the source map before it starts Spike.

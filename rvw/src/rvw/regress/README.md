@@ -57,7 +57,9 @@ DIR/<suite>/<config>/tests/<id>/seed-<n>/  instead, when a test runs with severa
 DIR/<suite>/<config>/tests/<id>/.rvw-job.json   the job's identity, for resume
 ```
 
-C3 test entries carry the contract's fields plus `message`, `fail_code` (failures), `elf`,
+C3 test entries keep the complete failure `message` for signature comparison.
+Monitor failures also retain `details.rvfi_errcode` when C1 supplies it.
+They carry the contract's fields plus `message`, `fail_code` (failures), `elf`,
 `cached` (served from the cache), `synthesized` (rvw wrote the result because the adapter did not),
 `wall_clock_timeout`, `inconclusive` (the reason, for a failure the adapter could not trust, any status;
 C1) and `multi_seed`. `results.json` carries `seeds` (mode and base), `filter`
@@ -215,6 +217,8 @@ identity = false                 # true: `<adapter> identity` joins the cache ke
 wall_timeout = false             # true: manifests carry wall_timeout = timeout_s (C1, optional)
 known_failures = "mycore.known.toml"
 jobs = 4                         # run-many --jobs
+persistent = false               # opt-in serial server; skips the separate pre-build
+
 build_first = true               # call `build` before `run-many`
 build_timeout_s = 3600
 startup_s = 120                  # adapter start-up allowance per batch
@@ -400,10 +404,28 @@ A missing, partial, invalid or evicted remote entry is a miss. Upload sends the
 immutable generation before the atomic pointer update. Transfer failure does not
 change a measured result. `--no-cache` disables local and remote cache use.
 
-rsync keeps partial transfer data within a transfer directory. Downloads use
-private temporary directories and verify before local publication. Cross-command
-download resume, retention policy and remote garbage collection remain open.
-The cache owner must provision space and remove entries only between commands.
+Downloads keep private staging under `cache/.downloads/`, keyed by remote location
+and full cache key. A file lock serializes commands for that staging directory.
+Interrupted bytes survive the command. A later rsync checks file checksums and
+repairs partial or corrupt files. Inventory and full-key checks run again before
+local publication. A successful import removes its staging directory. Partial
+bytes never earn reused success. Owners can remove abandoned staging directories
+between commands.
+
+Uploads include `.rvw-owner.json` and `owners/<generation-id>.json` with the publishing host, user, full key,
+generation ID and upload time. This record is metadata, not evidence. To apply
+retention, stop transfers and run this on the cache host:
+
+```sh
+python -m rvw.regress.remote_cache --root /absolute/cache/path --max-bytes 10737418240 --max-age-s 2592000
+```
+
+The policy removes invalid managed entries first, then entries older than the
+age limit, then oldest publications until the byte limit is met. It reports each
+removed key and reason. It checks generation integrity and exact stored keys.
+It removes whole entries, including obsolete generations. It leaves unmarked
+folders in place. This is explicit maintenance, not a background service. An
+evicted entry is a miss. Retention uses publication age, not access time.
 
 For gate budgets and cost reports, see [common](../common/README.md#native-job-budgets).
 
@@ -507,3 +529,67 @@ configs. Match the model platform, including Svade/Svadu, to the selected suite.
 Sail uses the existing `rvw cosim` platform configuration and `--sail` option.
 The checker preserves the full comparison result and its captured input identity.
 It checks architectural effects; page-walk transactions need a separate observer.
+
+### Privilege controls and observation reports
+
+Control scenarios use a separate row shape in `rvw.mmu/1`: `id`, `control`
+(`tvm`, `tw`, `tsr`), boolean `enabled`, `instruction`, `privilege` (`S`, `U`),
+and `bins`. TVM selects `satp-read`, `satp-write` or `sfence`. TW selects `wfi`.
+TSR selects `sret`. These programs use Bare mode and MRET to enter S/U mode.
+They check illegal-instruction cause 2 and the exact fault PC. Allowed S-mode
+operations exit through a checked cause-9 ECALL. Successful SRET must branch
+to its declared return PC. U-mode checks keep supervisor instructions illegal
+when the machine control is clear. TW-clear WFI is refused because it needs
+an interrupt wakeup schedule. These rules use the pinned Machine ISA 1.13
+(20260120), Machine Status register, TVM, TW and TSR sections.
+
+Data scenarios also accept `offset` (0..4088), `value` (expected load value),
+`walk_deny`, `unfenced` and `switch_asid` (booleans). Expectations also accept
+`access-fault` and `misaligned`. Faults check exact cause, address and PC.
+`walk_deny` uses three PMP TOR entries to deny S-mode reads of the table pages.
+It checks an access fault, not a page fault. `unfenced` and `switch_asid` require
+`remap`. The unfenced read permits either old or new data before the required
+fence. The ASID case switches to a second ASID, then reuses the first ASID.
+It fences each switch and requires the new data. This does not test ASID width
+or require unrelated entries to stay cached. Software changes are sequential.
+
+On BOOM, `--rvfi-trace` also writes `mmu-observations.jsonl`. C1 names it under
+`details.mmu_observations`. Its header has schema `rvw.mmu-observations/1` and
+an `identity` object from the C2 header. Event rows carry `cycle` and `kind`:
+`walk_request` has physical `address` and memory `command`; `walk_response`
+has `address` and `data`; `bus_a` has physical `address`, TileLink `opcode`
+and `size_log2`. Addresses and data use hexadecimal strings. These are sampled
+PTW/cache and accepted external A-channel events. Requests may be killed or
+retried. Responses do not establish an atomic update. Cached device accesses
+and device state need separate checks. Bus events alone cannot identify walks.
+
+`rvw regress mmu report ELF_DIR --results RUN_DIR --checked CHECK.json --json`
+writes `rvw.mmu-coverage/1`. The optional check file must come from `mmu check`.
+The report binds its manifest and C1 hashes. It lists every scenario and every
+unique bin in the declared denominator. Only strict oracle checks can pass
+architectural bins. Without a bound check, bins remain inconclusive. Observation
+files have separate paths, hashes and event counts. `recorded` means capture
+exists. It gives no walk or device correctness verdict. The report lists the
+remaining protocol, PMA, atomicity and multi-hart obligations explicitly.
+
+For `unfenced` scenarios, a strict oracle mismatch is retained and the checker
+returns inconclusive. Two models can select different permitted translations.
+No mismatch in that scenario earns coverage. The C1 self-check still fails
+wrong values and a wrong result after the required fence. Other scenarios keep
+the normal strict mismatch failure rule. Raw `c1_status` remains in check rows.
+
+For a Spike-to-Sail reference cross-check, use a separate platform file with
+`illegal_insn_tval: "insn"`. Spike-generated traces contain the instruction bits
+for illegal-instruction traps. BOOM's `"zero"` setting describes BOOM and makes
+Sail expect zero. It is not the platform setting for those Spike traces. Keep
+this reference-only file separate from the DUT platform. Do not waive the
+strict comparison or change the DUT contract to make two oracles agree.
+An unfenced translation can still differ under the correct reference platform.
+Keep that comparison inconclusive and retain both values.
+
+Scenario `access_width` selects 1, 2, 4 or 8 bytes (default 8). Loads use
+`lb`, `lh`, `lw` or `ld`. Stores use the matching width. Optional
+`register_width` declares 8, 16, 32 or 64 bits. Generation refuses an
+access wider than that declaration. The project owns the declaration.
+The BOOM MSIP scenario uses 4 bytes for its declared 32-bit register.
+Remap scenarios require the default 8-byte access.

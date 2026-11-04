@@ -384,14 +384,15 @@ def _classify(result, detection_tests, equivalence_tests, incomplete=False):
         results = row['tests']
         observed = {k: v for k, v in results.items()
                     if k not in equivalence_tests and (detection_tests is None or k in detection_tests)}
-        missing = set(detection_tests or ()) - observed.keys()
+        missing = (set(detection_tests or ()) - observed.keys()) | (set(equivalence_tests) - results.keys())
+        equivalence = {results[t] for t in equivalence_tests if t in results}
         state = ('pending' if row['pending'] or not observed or missing else
                  'error' if any(r not in ('PASS', 'FAIL') for r in results.values()) else
                  'killed' if 'FAIL' in observed.values() else
-                 'equivalent' if any(results.get(t) == 'PASS' for t in equivalence_tests) else 'survived')
+                 'equivalent' if equivalence_tests and equivalence == {'PASS'} else 'survived')
         if row['mutation'].strip() == 'mutate -mode none' and state not in ('pending', 'error'):
             state = 'control' if all(r == 'PASS' for r in results.values()) else 'error'
-        if 'FAIL' in observed.values() and any(results.get(t) == 'PASS' for t in equivalence_tests):
+        if equivalence == {'PASS', 'FAIL'} or ('FAIL' in observed.values() and 'PASS' in equivalence):
             state = 'error'
         row['state'] = state
         if incomplete:

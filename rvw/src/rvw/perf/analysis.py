@@ -208,8 +208,8 @@ def analyze(inputs, *, window=1000, isa="none", lane="0", queue_stage=None,
 
 
 def compare(a, b, tolerance=.05):
-    if tolerance < 0:
-        raise ValueError("tolerance must be nonnegative")
+    if not math.isfinite(tolerance) or tolerance < 0:
+        raise ValueError("tolerance must be finite and nonnegative")
     if a["configuration"] != b["configuration"]:
         raise ValueError("comparison requires identical analysis settings")
     differences = []

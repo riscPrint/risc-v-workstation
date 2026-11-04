@@ -89,15 +89,21 @@ class Cache:
     def get(self, key: str) -> Path | None:
         p = self.path(key)
         if not (p / "current").exists() and self.remote:
-            import tempfile
+            import fcntl
+            import hashlib
             from .remote_cache import transfer
-            with tempfile.TemporaryDirectory(prefix="rvw-cache-fetch-") as temp:
-                stage = Path(temp)
+            # Stable per remote/key staging preserves rsync partials across commands.
+            stage = self.dir / ".downloads" / hashlib.sha256((self.remote + key).encode()).hexdigest()
+            stage.parent.mkdir(parents=True, exist_ok=True)
+            with (stage.parent / (stage.name + ".lock")).open("a+") as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX)
+                stage.mkdir(exist_ok=True)
                 try:
                     if transfer(self.remote, key, stage):
                         self._put(key, open_current(stage).path)
+                        shutil.rmtree(stage)
                 except (OSError, ValueError):
-                    pass  # Transfer failure is a miss, never evidence.
+                    pass  # Retain partial bytes. Never admit them as evidence.
         if not (p / "current").exists():
             return None  # Legacy cache has no generation binding. Re-run it.
         if key not in self._readers:

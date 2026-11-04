@@ -123,7 +123,8 @@ cocotb`. The test bindings stay outside the generic library.
 `soc.json` describes this example's simulation map and reference policies.
 Run `rvw soc generate soc.json --out /tmp/vexriscv-soc --json` from this folder.
 See the [format and limits](../../rvw/src/rvw/soc/README.md).
-The existing adapter does not yet consume the generated simulation map.
+Pass `--soc-map DIR/sim-map.json` to `rvw/run.sh run` to use the generated RAM map.
+The adapter saves the map and captures accepted instruction and data bus requests.
 
 `isa.json` declares the adapter trace ISA and pins the opcode coverage source.
 Extension versions remain null until verified. Use it with `rvw cov isa-check`
@@ -136,3 +137,60 @@ certify VexRiscv ISA compliance or change the adapter configuration.
 bins and a bounded request-to-response sequence. It uses plain VexTop RTL and
 matching HGLDD. It also measures Scala attribution of native toggle points.
 This interface exercise is separate from ISA regression coverage.
+
+## Bounded RVFI checks
+
+`formal/rvw.toml` selects the upstream riscv-formal `FormalSimple` RTL snapshot.
+The snapshot has compressed instructions enabled. The checker uses RV32IC
+for 2-byte PC alignment. It selects the 37 RV32I instruction checks and reg, pc_fwd, pc_bwd, liveness,
+unique and causal. This snapshot is separate from the RV32IM simulation core.
+Run it with native tools and a new output directory:
+
+```sh
+RISCV_FORMAL=/path/to/riscv-formal scripts/with-lock.sh vex nice -n 10 \
+  rvw/.venv/bin/rvw --project examples/vexriscv/formal/rvw.toml \
+  formal riscv --out /tmp/vex-formal --timeout 120 --json
+```
+
+Read each C3 row in `results.json`. A timeout is inconclusive. A bounded PASS
+is not a full ISA proof. The C4 verdict cannot accept a core revision.
+Liveness uses a bounded simple-bus environment, including no traps.
+It counts accepted fetches and loads. Stores need no response. Responses must
+consume an outstanding request and arrive at least one cycle after acceptance.
+A response and a new request can occur in the same cycle. Overlapping fetches
+remain legal. Each command stall and each gap between owed responses has at
+most four cycles. Responses return in request order because neither bus has
+transaction IDs. Response data stays arbitrary. These assumptions apply only
+to liveness. They do not model coherent memory or prove adapter conformance.
+The counters cover the runner's maximum 200-cycle bound. The native environment
+regression checks response legality and wait bounds. It also covers overlap,
+simultaneous acceptance and response, stores, and queue drain:
+
+```sh
+scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/python -m pytest \
+  examples/vexriscv/formal/tests/test_environment.py -q
+```
+See the [formal guide](../../rvw/src/rvw/formal/README.md) for scope and Sail
+arithmetic model generation. Measured results belong in issue #63.
+
+## Architecture models
+
+[Minor and TimingSimple descriptions](rvw/arch/README.md) select RV32IM,
+uncached physical RAM and the RV32 benchmark runtime. The C1 adapter publishes
+live retirement events for a project-owned fitting plan. These models show
+trends. They do not reproduce the core's exact timing.
+
+### Tagged fetch coverage example
+
+From `rvw/`, run the following command with `RVW_HOME` and `VEXRISCV` set:
+
+```sh
+../../../scripts/with-lock.sh vex nice -n 10 sbt 'runMain rvwvex.CoverageExample /tmp/vex-tagged /tmp/vex-plan.json'
+```
+
+`CoverageExample` adds a tagged fetch-accept signal without changing VexRiscv
+sources. It emits an exact-instance `rvw.rtl-plan/1`. Its event domain is
+speculative. Fetch acceptance does not establish instruction retirement.
+The example binds the design identity to the emitted RTL SHA-256.
+Sample the declared signals before each rising edge. Run `rvw cov rtl` on the
+plan and those samples. The exporter does not collect samples by itself.

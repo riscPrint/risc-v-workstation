@@ -55,3 +55,10 @@ to the extracted executable. This separate setup path is not yet qualified.
 Clean Linux qualification: [#17](https://github.com/riscPrint/risc-v-workstation/issues/17). Reproducible versions: [#40](https://github.com/riscPrint/risc-v-workstation/issues/40). Native bundles: [#71](https://github.com/riscPrint/risc-v-workstation/issues/71).
 
 Retained limit: Unqualified host/tool combinations remain unqualified. Extracted executables do not establish a tested setup.
+
+Installer CI checks the short native combinations on matching pull requests and
+on its weekly schedule. The gem5 and all-tools source builds run only when an
+owner selects `long_builds` in the manual Native installer workflow.
+Fast CI and commit checks run on pull requests and integration/main pushes.
+Feature pushes do not start a duplicate run. All workflows define concurrency
+and cancel superseded pull request runs. Manual and scheduled runs are retained.

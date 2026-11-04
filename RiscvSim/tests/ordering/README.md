@@ -21,13 +21,17 @@ Reference-only success is not a DUT pass. Ordering stays `inconclusive`.
 
 The suite checks `.w` and, on RV64, `.d`, with all aq/rl encodings.
 It checks SC without a reservation, SC to a different address and the bytes after
-both legal SC outcomes. A successful SC must write. A failed SC must not write.
+both legal SC outcomes. The reservation set can include both addresses. The test
+accepts success or failure at the second address. It checks the target bytes and
+checks that the source bytes stay unchanged. It also checks that each SC consumes
+the reservation. It clears both operands at full width before each case. A successful SC must write. A failed SC must not write.
 It accepts spurious failure. It does not require success within a fixed time.
 Do not use exact Spike lockstep for an unconstrained LR/SC run: two legal runs
 can take different SC branches. The program checks each branch's required effects.
 
-Reservation invalidation by another agent, independent memory observation and
-constrained-loop eventual progress remain untested. A finite cycle limit cannot
+These single-hart ELF tests do not check external reservation invalidation or
+independent memory observation. The fixture below adds those bounded checks.
+Constrained-loop eventual progress remains untested. A finite cycle limit cannot
 establish eventuality without environment and fairness assumptions.
 
 ## Decisions and limits
@@ -43,7 +47,8 @@ All nine integer AMOs run at each supported width and aq/rl encoding.
 Signed extrema and seed-based random operands exercise the returned old value,
 new memory value, RV64 word sign extension and adjacent guard bytes.
 The same assertions run on Spike before the DUT. This is a functional check.
-Concurrent observers, faults and external aq/rl ordering remain untested.
+These ELF tests do not check concurrent observers or external aq/rl ordering.
+The fixture below adds concurrent observers and injected faults.
 
 ## FENCE and independent observation
 
@@ -121,7 +126,8 @@ iterations. Set `complete:false` if required observations are missing.
 No target means `dut:not_run`. Empty or incomplete samples mean `inconclusive`.
 Any observed forbidden state means `mismatch`. Permitted states not observed stay
 in `permitted_not_observed`. A consistent finite sample is not exhaustive proof.
-No current adapter can execute these multi-hart tests.
+The bounded fixture path below executes these tests on subset RTL harts.
+No production multi-hart core adapter is supplied.
 
 ## Tests
 
@@ -135,3 +141,74 @@ The second command compares Spike-generated traces with Sail for one RV64 seed.
 It is a reference cross-check. It is not a DUT comparison.
 The first command runs assertions on Spike for both XLENs and three seeds.
 Observer and outcome tests include forbidden and missing-evidence cases.
+Synthetic SC tests run the generated checker on Spike. They cover operand-sized
+and 64-byte reservation sets, legal outcomes, wrong memory effects and reuse of
+a consumed reservation. These are checker tests, not DUT geometry evidence.
+
+## Bounded two-hart RTL fixture
+
+`AtomicFixtureSpec` extends the round 2 `FixtureHart`. It runs two RV32 subset
+interpreters in native Verilator. It checks word LR/SC external invalidation,
+SC without reservation, successful SC without interference, all nine word AMOs
+and all four aq/rl encodings. Both harts access shared memory while a separate
+observer checks every memory word each cycle. Expected values come from program
+operands and an independent integer model, never from DUT read data.
+
+The fixture serializes memory operations. It gives each hart a slot every eight
+cycles. After test barriers, the environment enables each hart within three cycles.
+The invalidation test orders LR, the external store and SC with start barriers. A logical
+request has a 32-cycle deadline and retains its identity during retries.
+The campaign has a 400-cycle limit. These are bounded fixture checks under stated
+environment conditions. They do not prove constrained LR/SC eventuality or general
+arbiter fairness. No unbounded liveness claim follows.
+
+The fixture has per-word N/B/T permissions. Tests connect observed changes to
+`CoherenceMonitor`. They check intervention, invalidation, dirty-data transfer,
+racing requests under port backpressure and explicit final eviction. These are
+fixture permission transitions. They are not accepted TileLink-C channel events.
+There are no caches, resource dependency graphs or full RISC-V implementations.
+Real cache writeback, channel backpressure, cyclic resource waits and independent
+fairness measurement remain open under #108 and #128.
+
+Fault controls omit reservation invalidation, expose a partial AMO write, corrupt
+an AMO return, retain a conflicting permission, omit dirty transfer, starve one
+hart, or retry both requests without completion. Each negative test requires its
+specific checker message. The litmus fault returns 2 for loads. For that isolated
+outcome-checker test, value assertions are disabled and final registers come from
+RTL. Its observed states must be rejected by the herd outcome checker.
+
+Run the reference and prepare the plan first. Use fresh output paths:
+
+```sh
+rvw/.venv/bin/python RiscvSim/tests/ordering/litmus.py \
+  --tests /tmp/atomics-litmus --herd-source /tmp/atomics-herd \
+  --herd "$HOME/.opam/default/bin/herd7" --out /tmp/mhart2/herd
+rvw/.venv/bin/python RiscvSim/tests/ordering/fixture.py \
+  --reference /tmp/mhart2/herd/outcomes.json --tests /tmp/atomics-litmus \
+  --out /tmp/mhart2/plan.json
+(cd RiscvSim && RVW_FIXTURE_PLAN=/tmp/mhart2/plan.json \
+  RVW_FIXTURE_OUT=/tmp/mhart2/samples.json \
+  ../scripts/with-lock.sh sbt nice -n 10 sbt -batch -J-XX:ActiveProcessorCount=2 \
+  'testOnly riscvsim.AtomicFixtureSpec riscvsim.TwoHartNativeSpec riscvsim.CoherenceMonitorSpec riscvsim.ProgressMonitorSpec')
+rvw/.venv/bin/python RiscvSim/tests/ordering/fixture.py \
+  --reference /tmp/mhart2/herd/outcomes.json --samples /tmp/mhart2/samples.json \
+  --out /tmp/mhart2/comparison.json
+# This fault comparison must exit 1 (forbidden outcomes):
+rvw/.venv/bin/python RiscvSim/tests/ordering/fixture.py \
+  --reference /tmp/mhart2/herd/outcomes.json --samples /tmp/mhart2/samples.json.fault.json \
+  --out /tmp/mhart2/fault-comparison.json
+```
+
+Each pinned test runs 32 bounded seeded iterations.
+Each seed controls independent hart enables. Every third cycle enables both harts. Missing plans fail the Scala test.
+Missing, duplicate or incomplete samples cannot earn consistency. The comparison
+lists permitted states not observed. Serial memory can miss legal RVWMO outcomes.
+The fixture does not establish external aq/rl ordering, RV64 doubleword atomics,
+architectural faults, or production multi-hart core behavior. The existing C1 ELF
+suite supplies separate bounded single-hart checks on BOOM.
+
+The fixture checker requires all four pinned cases. It verifies the full allowed
+outcome set against canonical hashes in `litmus-pins.json`. These hashes pin
+reference-model expectations. They do not come from fixture observations.
+Regenerate the reference report after a pin change. A stale or partial report
+cannot earn consistency.

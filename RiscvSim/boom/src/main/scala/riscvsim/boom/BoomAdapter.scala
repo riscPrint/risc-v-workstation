@@ -63,6 +63,8 @@ object BoomAdapter extends CoreAdapter {
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
+        top.tile.ptw.io.mem.req.flatten.foreach(_.simPublic())
+        top.tile.ptw.io.mem.resp.flatten.foreach(_.simPublic())
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
         trapEpcs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
       }
@@ -100,6 +102,8 @@ object BoomAdapter extends CoreAdapter {
   def isEnvTrap(insn: Long): Boolean =
     insn == 0x00000073L || insn == 0x00100073L || (insn & 0xffffL) == 0x9002L && (insn & 3) != 3
 
+  override def supportsBootPayloads: Boolean = true
+
   def run(compiled: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     val elf = ctx.elf
     val tohostAddr = ToHost.find(elf).getOrElse(throw new IllegalArgumentException(s"${job.elf} has no tohost symbol"))
@@ -108,11 +112,15 @@ object BoomAdapter extends CoreAdapter {
     val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
     val konataFile = new File(job.out, "konata.log")
+    val observations = if (job.rvfiTrace) Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl"))) else None
+    observations.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
+      "identity" -> ctx.rvfiHeader, "elf_sha256" -> elf.sha256))))
     var tracer: Option[KonataTracer] = None
     var retired = 0L
     var traps = 0L
     var rvfiCode = 0
 
+    val capture = job.socMap.map(m => new MapCapture(m, job, ctx, "map_monitor"))
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
       require(!job.irqSchedule.exists(_.mask.testBit(9)) || dut.io.interrupts.seip != null,
         "this configuration has no SEIP input")
@@ -121,14 +129,60 @@ object BoomAdapter extends CoreAdapter {
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
 
       val mem = SparseMemory(seed = 0)
-      elf.load((a, d) => mem.write(a, d))
+      ctx.loadMemory { (a, d) =>
+        job.socMap.foreach(m => require(m.region(BigInt(a), BigInt(d.length), 'r').exists(_.kind == "ram"), "ELF outside mapped RAM"))
+        mem.write(a, d)
+      }
       new BoomMemoryAgent(dut.io.mem, cd, mem, job.memLatency)
-      import BoomSim.Platform._
-      mem.write(msip, 0)
-      mem.write(mtimecmp, -1L)
-      mem.write(intGen, 0L)
+      // Optional simulation observations. Keep these separate from C2 retirement effects.
+      if (job.rvfiTrace) {
+        val ptw = dut.tile.ptw.io.mem
+        val a = dut.io.mem.a
+        cd.onSamplings {
+          def event(kind: String, fields: (String, ujson.Value)*): Unit = {
+            val row = ujson.Obj("kind" -> kind, "cycle" -> RvwJson.num(ctl.cycle))
+            fields.foreach { case (key, value) => row(key) = value }
+            observations.foreach(_.println(ujson.write(row)))
+          }
+          if (ptw.req.valid.toBoolean && ptw.req.ready.toBoolean)
+            event("walk_request", "address" -> Hex(ptw.req.payload.addr.toBigInt),
+              "command" -> ujson.Num(ptw.req.payload.cmd.toInt))
+          if (ptw.resp.valid.toBoolean)
+            event("walk_response", "address" -> Hex(ptw.resp.payload.addr.toBigInt),
+              "data" -> Hex(ptw.resp.payload.data.toBigInt))
+          if (a.valid.toBoolean && a.ready.toBoolean)
+            event("bus_a", "address" -> Hex(a.payload.address.toBigInt),
+              "opcode" -> ujson.Num(SimEncoding.value(a.payload.opcode).toInt), "size_log2" -> ujson.Num(a.payload.size.toInt))
+        }
+      }
+
+      val msip = job.socMap.map(_.register("clint", "msip")).getOrElse(BoomSim.Platform.msip)
+      val mtimecmp = job.socMap.map(_.register("clint", "mtimecmp")).getOrElse(BoomSim.Platform.mtimecmp)
+      val mtime = job.socMap.map(_.register("clint", "mtime")).getOrElse(BoomSim.Platform.mtime)
+      val intGen = job.socMap.map(_.register("intgen", "meip")).getOrElse(BoomSim.Platform.intGen)
+      val seipAddr = job.socMap.map(_.register("intgen", "seip")).getOrElse(BoomSim.Platform.intGen + 4)
+      job.socMap.foreach { m =>
+        require(m.regions.forall(r => if (r.kind == "ram")
+          r.permissions == "rwx" && r.cacheable && r.base >= BigInt("80000000", 16) && r.base + r.size <= BigInt("90000000", 16)
+          else r.permissions == "rw" && !r.cacheable), "map attributes differ from fixed RTL memory attributes")
+        val wiring = m.interrupts.map(i => (i("region").str, i("register").str, SimMap.number(i("cause")).toInt))
+        require(wiring.size == 4 && wiring.toSet == Set(("clint", "msip", 3), ("clint", "mtimecmp", 7),
+          ("intgen", "meip", 11), ("intgen", "seip", 9)), "unsupported interrupt wiring")
+        for ((region, specs) <- Seq("clint" -> Map("msip" -> 32, "mtimecmp" -> 64, "mtime" -> 64),
+                                  "intgen" -> Map("meip" -> 32, "seip" -> 32))) {
+          val regs = m.regions.find(_.name == region).get.registers
+          require(regs.map(g => g("name").str -> SimMap.number(g("width")).toInt).toMap == specs,
+            "unsupported device register layout")
+        }
+        require(m.regions.filter(_.kind == "mmio").map(_.name).toSet == Set("clint", "intgen"), "unsupported MMIO device")
+        require(Seq(msip, mtimecmp, mtime, intGen, seipAddr).forall(a => (a >= 0x02000000L && a < 0x02010000L) || (a >= 0x0c000000L && a < 0x0c001000L)), "device placement must remain in RTL device windows")
+      }
+      mem.write(msip, job.socMap.map(_.reset("clint", "msip").toInt).getOrElse(0))
+      mem.write(mtimecmp, job.socMap.map(_.reset("clint", "mtimecmp")).getOrElse(-1L))
+      mem.write(intGen, job.socMap.map(_.reset("intgen", "meip").toInt).getOrElse(0))
+      mem.write(seipAddr, job.socMap.map(_.reset("intgen", "seip").toInt).getOrElse(0))
       def readLong(a: Long): Long = (0 until 8).map(i => (mem.read(a + i).toLong & 0xff) << (8 * i)).reduce(_ | _)
-      var mtimeValue = 0L
+      var mtimeValue = job.socMap.map(_.reset("clint", "mtime")).getOrElse(0L)
       mem.write(mtime, mtimeValue)
 
       tracer = if (job.konata) {
@@ -150,6 +204,17 @@ object BoomAdapter extends CoreAdapter {
 
       cd.onSamplings {
         ctl.tick()
+        if (dut.io.mem.a.valid.toBoolean && dut.io.mem.a.ready.toBoolean) {
+          val a = dut.io.mem.a.payload
+          val address = a.address.toBigInt
+          val size = BigInt(1) << a.size.toInt
+          val opcode = a.opcode.toEnum
+          val write = opcode == spinal.lib.bus.tilelink.Opcode.A.PUT_FULL_DATA ||
+            opcode == spinal.lib.bus.tilelink.Opcode.A.PUT_PARTIAL_DATA
+          val selected = job.socMap.flatMap(_.region(address, size, if (write) 'w' else 'r'))
+          capture.foreach(_.request(ctl.cycle, "tilelink_a", address, size, write, selected))
+          job.socMap.foreach(_ => require(selected.isDefined, "TileLink request outside mapped region"))
+        }
         tracer.foreach(_.sample())
         // mtime counts cycles unless software wrote it
         val stored = readLong(mtime)
@@ -159,7 +224,7 @@ object BoomAdapter extends CoreAdapter {
         val mtipLevel = scheduled.map(_.testBit(7)).getOrElse(java.lang.Long.compareUnsigned(mtimeValue, readLong(mtimecmp)) >= 0)
         val msipLevel = scheduled.map(_.testBit(3)).getOrElse((mem.readInt(msip) & 1) != 0)
         val meipLevel = scheduled.map(_.testBit(11)).getOrElse((mem.readInt(intGen) & 1) != 0)
-        val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(intGen + 4) & 1) != 0)
+        val seipLevel = scheduled.map(_.testBit(9)).getOrElse(dut.io.interrupts.seip != null && (mem.readInt(seipAddr) & 1) != 0)
         dut.io.interrupts.mtip #= mtipLevel
         dut.io.interrupts.msip #= msipLevel
         dut.io.interrupts.meip #= meipLevel
@@ -219,12 +284,16 @@ object BoomAdapter extends CoreAdapter {
       while (true) cd.waitSampling(100000)
     } finally {
       for (t <- tracer) t.close()
+      observations.foreach(_.close())
+
+      capture.foreach(_.close())
     }
 
     for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),
       "mem_timing" -> ujson.Str(job.memLatency.map(l => s"fixed $l").getOrElse("random")),
       "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(simCtl.timeOfCycle1))
+    if (job.rvfiTrace) details("mmu_observations") = "mmu-observations.jsonl"
     for (w <- rvfi) {
       details("rvfi_records") = RvwJson.num(w.records)
       details("rvfi_trap_records") = RvwJson.num(w.trapRecords)

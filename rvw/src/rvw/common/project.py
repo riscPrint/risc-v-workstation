@@ -74,7 +74,8 @@ def parse_project(raw, path, environment):
         "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
         "formal": {"verilog", "top", "checks", "clock", "reset", "export_dependencies"},
-        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports"},
+        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports", "check_options", "instruction_models"},
+
     }
     _check_keys(raw, {"core", "suites", "tiers", *tables}, str(path))
     sections = {}
@@ -97,6 +98,11 @@ def parse_project(raw, path, environment):
     for section, table in sections.items():
         for key, value in list(table.items()):
             if section == "riscv_formal":
+                if key == "instruction_models":
+                    if not isinstance(value, dict) or any(not isinstance(v, str) or not v for v in value.values()):
+                        raise ProjectError("instruction_models must be a path table")
+                    table[key] = {name: _path(path, base, environment) for name, path in value.items()}
+
                 if key in {"root", "wrapper"}:
                     if not isinstance(value, str) or not value:
                         raise ProjectError(f"riscv_formal.{key} must be a nonempty path")
