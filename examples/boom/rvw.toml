@@ -12,6 +12,7 @@ benchmarks = "${RVW_ARCH_BENCHMARKS:-out/arch/bench}"
 # BenchmarksSpec, BoomElabSpec). Keep known failures visible to the gate.
 
 [core]
+backend = "riscvsim-verilator"
 name = "boom"
 adapter = "${RVW_HOME}/RiscvSim/boom/run.sh"   # contract C1
 configs = ["small", "medium", "large", "mega", "giga"]
@@ -19,7 +20,7 @@ default_config = "small"
 lock = "boom"                     # machine-wide heavy-job lock, same as scripts/with-lock.sh boom
 source_repo = "${SPINAL_BOOM}"
 source_env = "SPINAL_BOOM"        # the adapter builds the core from this tree
-cache_paths = [
+cache_paths = ["${RVW_HOME}/rvw/src/rvw/sim",
   "${RVW_HOME}/RiscvSim", "${RVW_HOME}/rvw/src/rvw/common", "${RVW_HOME}/rvw/src/rvw/__init__.py", "${RVW_HOME}/scripts/with-lock.sh",
 ]  # results are reused only while these sources are unchanged
 identity = true                   # `run.sh identity`: Verilator, JDK and classpath key join the cache key
@@ -47,7 +48,7 @@ input_env = [
   "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
   "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
   "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
-  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
   "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
   "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
   "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "SPINAL_BOOM", "SPINAL_MAKE_CMD",
@@ -155,3 +156,10 @@ strip_suffix = ".elf"
 configs = ["small"]
 max_cycles = 30000
 timeout_s = 120
+
+[query]
+build = ["${RVW_HOME}/scripts/with-lock.sh", "sbt", "${RVW_HOME}/SpinalDB/build-db.sh", "boom"]
+
+[formal]
+# The generator sbt builds declare SpinalDB, BOOM and SpinalHDL dependencies.
+export_dependencies = ["${RVW_HOME}"]

@@ -386,8 +386,8 @@ opcode and size faults, parameter faults, and AXI address faults.
 ## Gaps
 
 - Flow payload legality needs a project-declared allowed set; there is no generic handshake rule.
-- Vec use through intermediate wires and switch scopes remains conservative. Asynchronous memory
-  read indexes remain ungated.
+- Index use inference supports local wires, mux branches, literal switch scopes and asynchronous
+  memory reads. Unknown and cross-component uses remain conservative.
 - TileLink: probe tracking, negotiated transfer capabilities,
   B/C parameter checks and coherent memory scoreboards remain open. Bus checks do not prove
   end-to-end data correctness. `spinalchecks.sim.TileLinkReference` reuses Spinal's
@@ -402,7 +402,7 @@ opcode and size faults, parameter faults, and AXI address faults.
   bursts and a DMA copy with response delays and interruptions. The helper serializes
   memory operations. Concurrent overlapping memory traffic needs an ordering model.
   AXI4-Lite needs its own explicit rules and reference designs.
-- Dynamic bit reads have range checks; intermediate-wire use remains conservative.
+- Dynamic bit reads have range checks; unknown consumer uses remain conservative.
 - Components without reset: checks there are always active.
 - `rvw formal x-sweep` inventories module outputs with bounded jobs and native Icarus replay.
   Use `xprop --combinational` for a clock-free wrapper. See the
@@ -517,9 +517,9 @@ valid or payload between beats. Each call captures its current clock domain.
 
 Dynamic bit reads on non-power-of-two widths produce `bits.index` checks.
 Vec and bit-read checks use the enclosing `when` conditions. An unused read in
-an inactive direct assignment does not fire. Uses through intermediate wires,
-expression multiplexers and `switch` scopes remain conservative. Asynchronous
-memory reads remain ungated. A register select or bit source supplies the clock
+an inactive direct assignment does not fire. Local uses through intermediate wires,
+expression multiplexers, literal `switch` scopes and asynchronous memory reads
+are gated. Unknown uses remain conservative. A register select or bit source supplies the clock
 domain; otherwise the component domain is used. Each domain has its own monitor
 cycle counter. Existing `NamingSpec` tests keep loop-built IDs distinct.
 
@@ -542,9 +542,14 @@ For example, `CsrModel(1, 32, 0, 255, 3)` declares eight writable bits and machi
 access. Bind the observed state, read/write requests, write data, privilege,
 access-denied response, hardware-set mask and hardware-clear mask, in that order.
 Requests must include denied attempts so that `csr.access` can check the response.
-`csr.state` checks the state each active cycle. This model does not implement
-aliases, arbitrary WARL legalization, CSR instruction decoding or side effects.
-These need explicit project models. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
+`csr.state` checks the state each active cycle. Optional disjoint `w1cMask`
+and `readClearMask` declare side effects. A read clears before a software write.
+The `legalize` table maps masked candidates to legal WARL values. Unmapped illegal
+candidates retain state. `wlrl=true` instead requires a denied response to an illegal
+candidate. This is an explicit project policy. `readOnly=true` denies every write.
+Individual read-only fields stay outside both write masks. Optional `readData`
+checks granted reads against independent state before side effects. These models do not
+decode CSR instructions or bind aliases. Run `sbt "testOnly spinalchecks.CsrChecksSpec"`
 under the `sbt` lock. The reference injects state and access faults separately
 from the expected-state model. No BOOM CSR binding is supplied.
 
@@ -557,9 +562,13 @@ wraps at the declared width. Each project must state the event meaning and bind
 an independent observation. A DUT event output alone does not supply an oracle.
 
 Run `sbt "testOnly spinalchecks.HpmChecksSpec"` under the `sbt` lock. This model
-covers count transitions, inhibit, filtering, writes and modular wrap. It does
-not check privilege faults, RV32 half accesses, event selector CSRs or counter
-interrupts. It does not establish full Zihpm compliance. No core binding is supplied.
+covers count transitions, inhibit, filtering, writes and modular wrap. It does not
+check event selector CSRs or counter interrupts. `bindAccess` checks denied
+responses from privilege and independently observed counter-enable bits. Requests
+include denied attempts. The read-only alias denies writes at every privilege.
+The machine alias permits writes only in machine mode. Gate the count model's software writes with its returned
+permission. `bindHalfRead` checks a selected RV32 half against an independent
+64-bit expected counter. Bind accepted responses at the same sample. It does not establish full Zihpm compliance. No core binding is supplied.
 
 ### Value connectivity model
 
@@ -572,9 +581,12 @@ The reference has zero-cycle and one-cycle paths with injected transfer faults.
 
 This emits `connectivity.value` assertions for simulation or a formal backend.
 Simulation checks exercised transfers only. It is not a structural proof.
-SpinalDB endpoint resolution, forbidden influence, opaque blackbox handling and
-formal qualification remain open under #107. No proof result is inferred from
-successful elaboration or simulation.
+`rvw formal connectivity` resolves required and forbidden endpoints through
+SpinalDB. Its optional native campaign checks bounded top-port transfers and
+forbidden influence. It retains unresolved endpoints, opaque cones and limits
+as incomplete. See [the formal command guide](../rvw/src/rvw/formal/README.md#declared-connectivity-107).
+General internal RTL binding and core qualification remain open under #107.
+No proof result is inferred from successful elaboration or simulation.
 
 ### Device register transactions
 
@@ -588,9 +600,11 @@ The model never copies expected state from observed state.
 
 Run `sbt "testOnly spinalchecks.RegisterChecksSpec"` under the `sbt` lock.
 The reference uses separate per-bit logic and injects an observed-state fault.
-This checks accepted transactions, not bus decoding, response data, response
-ordering or latency. A project must supply those bindings and test its address
-decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
+Optional `response`, `responseValid` and `latency` bindings check read response
+data against expected state before read-clear. Each accepted read must produce
+one response after the declared fixed latency, including back-to-back reads.
+This does not check address decoding, variable response latency or bus ordering.
+A project must supply those bindings and test its address decoder. Architectural CSRs use `CsrChecks`, not this device-register model.
 
 ### Imported SVA subset
 
@@ -599,3 +613,102 @@ See [the subset and sampling rules](../rvw/src/rvw/formal/README.md#imported-sva
 It includes inline clocked Boolean properties, `disable iff` and single-argument
 sampled value functions. Temporal implication, sequence delay and repetition remain
 unsupported. The SBY campaign runner does not depend on this frontend.
+
+## Capacity monitors and free-list proofs
+
+`rvw formal template` generates reusable ROB/credit, free-list, rename, issue and
+LSQ safety monitors. `rvw formal contracts` checks typed interfaces, neighbour
+guarantees and a closed composition. `rvw formal strengthen` proves mined unsigned
+bounds before adding them as joint assertions. See the
+[capacity commands and limits](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
+
+`boom/freelist-capacity.py` prepares two named properties on an existing
+`RenameFreeList` export. It copies the module and records the export hash. It does
+not change core sources. The export revision remains unverified. Native core
+assertions are disabled in this copied module; only the named capacity properties
+are checked. No full-block protocol or whole-core proof is implied.
+### Register-map imports
+
+Run `scripts/import-map.py ipxact INPUT.xml OUTPUT.properties` with Python 3.
+For SystemRDL, install `systemrdl-compiler==1.33.0` in your environment and run
+`scripts/import-map.py systemrdl INPUT.rdl OUTPUT.properties`.
+The SystemRDL compiler elaborates the source. The importer does not parse RDL with
+regular expressions. `RegisterMap.load(new java.io.File(path))` loads the result.
+Each entry has an address and a `RegisterModel`. Use `entry.csr(minPrivilege)`
+for an architectural CSR model. Declare WARL/WLRL policies in project data.
+Bind independent transaction and hardware observations with the existing APIs.
+No bus or CSR binding is inferred from a map name.
+
+The supported subset has explicit field resets, ordinary writes, read-only
+fields, W1C and read-clear. IP-XACT uses byte addresses, explicit bit offsets and
+widths, and one complete reset per field. SystemRDL uses elaborated register
+addresses and bit positions. Unsupported side effects and listed unsupported
+constructs raise an error. This is a subset importer, not general standards
+compliance. Parameterized IP-XACT, register files, alternate registers, aliases,
+write constraints and vendor extensions need a separate adapter. The examples
+in `src/test/maps/` describe equivalent maps in both formats.
+
+Index use inference follows local combinational wires, expression mux branches,
+literal switch cases and asynchronous memory read consumers. Unknown expression
+uses and cross-component uses stay conservative. Masked switch keys and general
+clock-domain inference remain open. Local use checks do not prove application
+coverage or non-vacuity.
+
+### Sampled reset protocol bindings
+
+`ResetChecks.bind` takes independent reset request, normalized reset level,
+destination-edge and controls-known observations. Bind it in a separate
+observation clock domain. It checks sampled assertion, a minimum number of
+settling edges, and release only on a destination edge. The settling count
+uses edges completed before the release sample. `order` checks a declared
+source-before-destination release relation. `crossing` checks isolation while
+an independently reset source feeds an active consumer. `reconvergence` checks
+isolation when two reset states differ. Unknown controls produce a finding.
+
+These are executable project bindings. They do not infer a reset synchronizer
+from a graph. The project must supply the independent observations and control
+validity. Two-state simulation cannot discover X values by itself. A pulse
+between observation samples can be missed. Physical asynchronous assertion,
+recovery/removal, metastability, static synchronous-release recognition and
+functional reconvergence proof remain open. Structural lint findings stay active.
+
+### Optional HPM selector and interrupt bindings
+
+`HpmControlChecks.selector` models accepted selector writes with a project WARL
+mask and reset value. It does not derive selector meaning from the DUT.
+`HpmControlChecks.interrupt` uses an independently derived expected count and
+event multiplicity to check sticky overflow pending state and its enable-gated
+interrupt. Inhibit, filtering and counter writes suppress overflow. Pending
+clear has priority. The project must select this policy explicitly; it is not
+a universal Zihpm interrupt specification. Bind count checks separately with
+`HpmChecks.bind`. Do not use the observed DUT count as `expectedCount`.
+
+Native reference tests cover legal controls and injected selector, pending and
+interrupt faults. Real-core event bindings, architectural access and RV32 half
+checks, and a complete Zihpm compliance campaign need separate evidence. The
+access and RV32 work in PR #303 remains compatible with these optional bindings.
+
+### Independent device-bus bindings
+
+`DeviceBusChecks.bind` takes a project-owned `Seq[DeviceRegister]`. Each entry
+pairs a byte address with the existing version-1 `RegisterModel`. Feed accepted
+request observations and response observations from an independent bus monitor.
+Do not drive the model from DUT register contents or internal address selects.
+It checks address decoding through the error response, pre-side-effect read data,
+response order and a project latency bound. It supports zero-cycle responses and
+bounded variable latency. It allows one outstanding request. A simultaneous
+response and new request while busy is refused as an order finding.
+
+The bus model applies read-clear, normal write masks, bit strobes and W1C from
+the accepted request. It supports no independent hardware updates; use
+`RegisterChecks.bind` for those register-state checks. Write response payloads
+are not checked. A response at the declared maximum latency is legal. Missing
+responses produce a finding. An unmapped address must return an error.
+`DeviceBusChecks.accesses` generates reads and masked writes for a bus driver.
+The reference test binds two concrete address entries and checks independent
+response captures against a software oracle. It is not a real device binding.
+
+`DeviceRegister.load(file)` binds the normalized map importer from PR #303.
+The native bus test exercises both imported SystemRDL and IP-XACT maps.
+These checks remain separate from architectural CSR checks. Multiple outstanding
+requests, back-to-back replacement and real device campaigns remain open.

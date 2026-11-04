@@ -4,6 +4,7 @@
 # BenchmarksSpec, BoomElabSpec). Keep known failures visible to the gate.
 
 [core]
+backend = "riscvsim-verilator"
 name = "boom"
 adapter = "${RVW_BOOM_ADAPTER:-../../RiscvSim/boom/run.sh}"   # contract C1
 configs = ["small", "medium", "large", "mega", "giga"]
@@ -11,7 +12,7 @@ default_config = "small"
 lock = "boom"                     # machine-wide heavy-job lock, same as scripts/with-lock.sh boom
 source_repo = "${SPINAL_BOOM:-../../../spinal-boom-eda}"
 source_env = "SPINAL_BOOM"        # the adapter builds the core from this tree
-cache_paths = [
+cache_paths = ["../src/rvw/sim",
   "../../RiscvSim", "../src/rvw/common", "../src/rvw/__init__.py", "../../scripts/with-lock.sh",
 ]  # results are reused only while these sources are unchanged
 identity = true                   # `run.sh identity`: Verilator, JDK and classpath key join the cache key
@@ -39,7 +40,7 @@ input_env = [
   "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
   "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
   "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
-  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
   "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
   "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
   "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "SPINAL_BOOM", "SPINAL_MAKE_CMD",

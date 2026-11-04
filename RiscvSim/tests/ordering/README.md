@@ -31,8 +31,15 @@ can take different SC branches. The program checks each branch's required effect
 
 These single-hart ELF tests do not check external reservation invalidation or
 independent memory observation. The fixture below adds those bounded checks.
-Constrained-loop eventual progress remains untested. A finite cycle limit cannot
-establish eventuality without environment and fairness assumptions.
+The fixture also runs a constrained LR/SC retry loop with no conflicting writer.
+It has LR, SC and a backward BNE within 16 consecutive instructions. The retry
+path has no other memory access, fence or system instruction. Test mode 10
+permits three legal spurious failures, then services SC. Each hart has a port
+slot every eight cycles and the environment enables it within three cycles.
+The independent memory observer checks that failed SC has no write effect.
+Mode 11 never services SC successfully. The test must reject that mode at the
+fourth failed attempt. This is a bounded service test under explicit fixture
+conditions. It does not prove general ISA eventuality or production-core progress.
 
 ## Decisions and limits
 
@@ -49,6 +56,25 @@ new memory value, RV64 word sign extension and adjacent guard bytes.
 The same assertions run on Spike before the DUT. This is a functional check.
 These ELF tests do not check concurrent observers or external aq/rl ordering.
 The fixture below adds concurrent observers and injected faults.
+
+Select `--suite amo-fault` in `run.py` for aligned access-fault tests. This is
+opt-in. The target must support a locked NAPOT PMP region. The program makes a
+64-byte region readable and not writable. It checks the effective PMP setting
+before testing all nine AMOs, each width and aq/rl encoding. Each AMO must raise
+store/AMO access fault (cause 7). The handler checks `mepc` and `mtval`, then
+returns past that instruction. The test checks that the destination register,
+operand and every adjacent byte in the protected region stay unchanged. These
+are precise access-fault checks. They do not test misaligned accesses or imply
+concurrent aq/rl ordering. Missing PMP support is a failure for this selected
+platform test. It must not be silently skipped or treated as a generic ISA fault
+policy.
+
+```sh
+rvw/.venv/bin/python RiscvSim/tests/ordering/run.py --out /tmp/amo-fault \
+  --xlen 64 --seeds 7 --suite amo-fault
+# Add --adapter /absolute/path/to/run.sh for the DUT.
+```
+
 
 ## FENCE and independent observation
 
@@ -84,7 +110,7 @@ cross-hart publication require project-specific stimulus and remain untested.
 
 ## RVWMO litmus
 
-`litmus-pins.json` pins four tests from the
+`litmus-pins.json` pins six tests from the
 [official RISC-V concurrency collection](https://github.com/litmus-tests/litmus-tests-riscv)
 and the herdtools7 7.58 model library. No third-party sources are copied here.
 The [collection README](https://github.com/litmus-tests/litmus-tests-riscv/blob/08728edcd99c7e1819d2d4c6789df6d5299ccb69/README.md)
@@ -108,7 +134,7 @@ It checks the tool version and records the executable hash. The tool version
 alone cannot certify a custom executable's source. Use the pinned native release.
 The model uses `riscv.cat`. Allowed sets come only from herd, never from the DUT.
 The output contains every allowed final-register state and separate raw logs.
-The smoke set covers SB, MP, LB and SB with full memory fences.
+The smoke set covers SB, MP and LB, each with and without full memory fences.
 It does not cover the whole upstream collection. It does not use isla-axiomatic.
 
 When a multi-hart target exists, add `--dut-adapter /path/to/project-script`.
@@ -167,8 +193,9 @@ The fixture has per-word N/B/T permissions. Tests connect observed changes to
 racing requests under port backpressure and explicit final eviction. These are
 fixture permission transitions. They are not accepted TileLink-C channel events.
 There are no caches, resource dependency graphs or full RISC-V implementations.
-Real cache writeback, channel backpressure, cyclic resource waits and independent
-fairness measurement remain open under #108 and #128.
+The separate `CoherentCacheNativeSpec` checks real cache writeback and accepted
+TileLink channel backpressure. See the RiscvSim README. Cyclic resource waits
+and independent fairness measurement remain outside these checks under #128.
 
 Fault controls omit reservation invalidation, expose a partial AMO write, corrupt
 an AMO return, retain a conflicting permission, omit dirty transfer, starve one
@@ -207,7 +234,7 @@ The fixture does not establish external aq/rl ordering, RV64 doubleword atomics,
 architectural faults, or production multi-hart core behavior. The existing C1 ELF
 suite supplies separate bounded single-hart checks on BOOM.
 
-The fixture checker requires all four pinned cases. It verifies the full allowed
+The fixture checker requires all six pinned cases. It verifies the full allowed
 outcome set against canonical hashes in `litmus-pins.json`. These hashes pin
 reference-model expectations. They do not come from fixture observations.
 Regenerate the reference report after a pin change. A stale or partial report

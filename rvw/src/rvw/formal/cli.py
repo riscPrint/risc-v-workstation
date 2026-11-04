@@ -75,6 +75,50 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
+    from . import invariants, contracts
+    template.add_argument("kind", choices=invariants.NAMES)
+    template.add_argument("--entries", type=int, default=4)
+    template.add_argument("--width", type=int, default=3)
+    template.add_argument("--out", required=True)
+    template.set_defaults(func=invariants.run)
+    contract = s.add_parser("contracts", help="check neighbour guarantees and closed composition")
+    contract.add_argument("manifest")
+    contract.add_argument("--out", required=True)
+    contract.add_argument("--budget", type=float, default=60)
+    contract.add_argument("--depth", type=int, default=12)
+    contract.add_argument("--engine", default="abc:pdr")
+    contract.add_argument("--json", action="store_true")
+    contract.set_defaults(func=contracts.run)
+
+    strengthen = s.add_parser("strengthen", help="mine unsigned bounds and prove candidates before strengthening")
+    from . import mining
+    strengthen.add_argument("manifest")
+    strengthen.add_argument("--out", required=True)
+    strengthen.add_argument("--budget", type=float, default=60)
+    strengthen.add_argument("--depth", type=int, default=12)
+    strengthen.add_argument("--engine", default="smtbmc:yices")
+    strengthen.add_argument("--json", action="store_true")
+    strengthen.set_defaults(func=mining.run)
+    from . import apps, bench
+    app = s.add_parser("apps", help="table-driven connectivity, CSR, progress and UNR checks")
+    app.add_argument("manifest")
+    app.add_argument("--out", required=True)
+    app.add_argument("--depth", type=int, default=20)
+    app.add_argument("--engine", default="smtbmc:yices")
+    app.add_argument("--timeout", type=float, default=60)
+    app.add_argument("--mode", choices=["bmc", "prove"], default="bmc")
+    app.add_argument("--event-model", action="store_true")
+    app.add_argument("--async-reset", action="store_true")
+    app.add_argument("--json", action="store_true")
+    app.set_defaults(func=apps.run)
+    benchmark = s.add_parser("bench", help="pinned same-input formal engine benchmark")
+    benchmark.add_argument("manifest")
+    benchmark.add_argument("--out", required=True)
+    benchmark.add_argument("--timeout", type=float, default=60)
+    benchmark.add_argument("--json", action="store_true")
+    benchmark.set_defaults(func=bench.run)
+
     c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
     c.add_argument("--result", required=True, help="formal result.json or directory")
     c.add_argument("--trace-index", type=int, default=0)
@@ -104,6 +148,7 @@ def register(sub) -> None:
 
     proof = s.add_parser("prove", help="unbounded safety proof from reset")
     _common(proof, 20)
+    proof.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     proof.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     proof.add_argument("--reset-cycles", type=int, default=1)
     proof.add_argument("--free-reset", action="store_true")
@@ -126,6 +171,8 @@ def register(sub) -> None:
     r.add_argument("--json", action="store_true")
     from rvw.formal.riscv import main as riscv_main
     r.set_defaults(func=riscv_main)
+    from .connectivity import register as register_connectivity
+    register_connectivity(s)
     from .equiv import register as register_equiv
     register_equiv(s)
 
@@ -133,10 +180,13 @@ def register(sub) -> None:
     _common(b, 20)
     b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
+    b.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")
     b.add_argument("--event-clock", action="append", metavar="PORT",
                    help="enable event BMC; declare each extra independent rising-edge clock (repeatable)")
     b.add_argument("--event-model", action="store_true", help="use sampled events and sby multiclock on")
+    b.add_argument("--clock-schedule", action="append", metavar="PORT=BITS",
+                   help="periodic clock levels, sample zero first; declare every event clock")
     b.add_argument("--async-reset", action="store_true", help="allow constant-value async reset FFs in event BMC")
     b.add_argument("--reset-cycles", type=int, default=1, help="primary-clock cycles the reset is held active (default 1)")
     b.add_argument("--free-reset", action="store_true", help="let the solver assert reset again later")

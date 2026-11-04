@@ -16,6 +16,22 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        *[ToolSpec("arch_" + action.replace("-", "_"), description,
+                   schema({k: {"type": "string"} for k in (*fields, "out", "project")}, [*fields, "out"]),
+                   handler("rvw.arch.cli", action), long=True)
+          for action, fields, description in (
+              ("search", ("plan",), "Run bounded Bayesian fitting and score the selected point on held-out workloads."),
+              ("predict", ("candidate",), "Store a timestamped model prediction before RTL measurement."),
+              ("score-prediction", ("prediction", "rtl"), "Score a stored prediction against later RTL evidence."))],
+        ToolSpec('arch_measure', 'Repeat RTL and gem5 measurements and report confidence intervals.',
+                 schema({**runs, 'repeats': {'type': 'integer', 'minimum': 2, 'maximum': 10}}, ['out']),
+                 handler('rvw.arch.cli', 'measure'), long=True),
+        ToolSpec('arch_memory_extract', 'Extract exact project counter mappings from native gem5 ROI stats.',
+                 schema({'mapping': {'type': 'string'}, 'project': {'type': 'string'}}, ['mapping']),
+                 handler('rvw.arch.cli', 'memory-extract'), long=True),
+        ToolSpec('arch_pareto', 'Compare model cycles with optional user-supplied area and power inputs.',
+                 schema({'plan': {'type': 'string'}, 'project': {'type': 'string'}}, ['plan']),
+                 handler('rvw.arch.cli', 'pareto'), long=True),
         ToolSpec('arch_inspect', 'Check ELF layout and report CPU/ISA compatibility. Static only; unsupported combinations stay blocked.',
                  schema({k: {'type': 'string'} for k in ('elf', 'isa', 'kind', 'project')}, ['elf', 'isa', 'kind']),
                  handler('rvw.arch.cli', 'inspect'), long=True),

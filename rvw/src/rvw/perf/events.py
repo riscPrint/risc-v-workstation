@@ -29,7 +29,9 @@ def event_report(trace, commits):
     replays = Counter((cause, evidence) for _, _, cause, evidence in trace.replays)
     kinds = Counter(i.commit_kind or "unknown" for i in trace.instructions.values()
                     if i.end is not None and not i.flushed)
+    from .prediction import report as prediction_report
     return {
+        "predictions": prediction_report(trace.predictions),
         "stall_causes": {
             "basis": "Explicit one-cycle producer samples. Causes may overlap. Inferred samples are separate.",
             "by_cause": [{"scope": scope, "cause": cause, "evidence": evidence,

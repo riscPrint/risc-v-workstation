@@ -66,7 +66,13 @@ fi
 if [ "$ONLY" != check ]; then
   echo "== cargo build --release: surfer-tywaves"
   cargo build --release --locked --manifest-path "$ROOT/surfer-tywaves/Cargo.toml" -p surfer-tywaves
-  install_bin "$ROOT/surfer-tywaves/target/release/surfer-tywaves" surfer-tywaves
+  VIEWER="${CARGO_TARGET_DIR:-$ROOT/surfer-tywaves/target}/release/surfer-tywaves"
+  install_bin "$VIEWER" surfer-tywaves
+  if [ "$(uname -s)" = Darwin ]; then
+    python3 "$ROOT/scripts/package-app.py" "$VIEWER" "$NOTICES" \
+      "$PREFIX/SpinalWaves.app"
+    echo "installed $PREFIX/SpinalWaves.app"
+  fi
 fi
 
 case ":$PATH:" in

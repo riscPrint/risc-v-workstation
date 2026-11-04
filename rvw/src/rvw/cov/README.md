@@ -708,8 +708,8 @@ manifest. Declare `isa`, `extensions` (each has `version` and optional
 `requires`), `options`, and optional `consumers` (tool name to ISA string).
 Use an expanded unversioned ISA string. Use null for an unverified version.
 The command rejects missing dependencies and contradictory consumer strings.
-Null versions give `inconclusive`. Consumer strings are declarations. This
-increment does not probe compiler, adapter, reference model or ACT settings.
+Null versions give `inconclusive`. Consumer strings are declarations. Configure
+consumer probes below to check actual target macros or consumer settings.
 
 ### Pinned opcode bins
 
@@ -757,8 +757,8 @@ versions and options, affected declared consumers, and instruction tests to
 review. Changed pins require adoption and return `inconclusive` (exit 3).
 The command never updates a pin or model. Optional `specifications` declarations
 can hold profile, debug and platform document pins. Their metadata is compared;
-their semantic obligations are not parsed. Test presence and changed semantic
-obligations still need review. An unchanged result is not a compliance verdict.
+their semantic obligations are parsed only when a reviewed catalog is supplied
+as described below. Catalog completeness still needs review. An unchanged result is not a compliance verdict.
 
 ## Scala mapping and denominators
 
@@ -961,3 +961,109 @@ Each instance report includes mapped and unmapped point counts with its denomina
 
 RTL sequence goals with no completion also appear in the closure report.
 Their pending activation count stays separate from reachability.
+
+### Reviewed specification obligations
+
+`isa-diff` can compare semantic obligations for ISA, profile, debug and platform
+pins. Each `specifications` entry can declare `kind`, `revision`, `path`,
+`sha256`, and `obligations: {"path": "rules.json", "sha256": "..."}`.
+Paths use the corresponding source root. The document hash binds the exact
+specification bytes. The catalog uses `rvw.spec-obligations/1` with an
+`obligations` array. Each row has a unique `id`, exact document excerpt `text`,
+`checkers` (names), and `tests` (source-root-relative file paths).
+
+The command checks both hashes and checks each excerpt against its document.
+It compares obligations by ID, reports both sides of changed obligations, and
+lists added and removed obligations. It checks test file presence and captures
+present files by hash. An empty test list is a missing-test entry. Presence is
+not a test result. Changes require explicit adoption. No model or pin changes.
+Catalogs need human review for completeness. Metadata-only pins appear in
+`unchecked_specifications`. This path does not extract every normative rule
+from arbitrary prose. It does not establish compliance.
+
+### ISA consumer probes
+
+An optional `probes` object in the manifest selects `compiler`, `dut`,
+`reference`, `act` and `coverage` inputs. Each probe has one of these forms:
+
+- `{"kind": "gcc", "argv": ["riscv64-unknown-elf-gcc", "-march=rv32im", "-mabi=ilp32"]}`
+  reads native target macros. It adds `-dM -E -x c -` and supplies empty input.
+- `{"kind": "json", "path": "adapter.json", "key": ["isa_config"]}`
+  reads actual JSON settings. `kind: "toml"` reads TOML settings.
+- `{"kind": "command", "argv": ["adapter", "isa-config"]}` reads a native
+  capability command. It must return `schema: "rvw.isa-consumer/1"`.
+
+File and command inputs report `xlen`, `extensions` (name to version string
+or null), and `options`. Paths use the manifest directory. Commands have a
+10-second process-group timeout. The capture records tools and input files.
+Probe settings must select the same configuration used by the consumer.
+The check rejects contradictory XLEN, extension sets, known versions and
+options. M permits the implied Zmmul subset in GCC output. Missing probes,
+unknown versions and missing option evidence give `inconclusive`. Only all
+five consistent inputs give `consistent`. This is a configuration check, not
+an ISA compliance result. A capability command is a consumer report, not an
+independent proof that the consumer implements that version. Existing adapters
+without capability commands still need an integration or a settings-file probe.
+
+### Reviewed semantic forms and crosses
+
+`semantics.forms` can declare bit layouts for each pinned instruction name.
+This supports compressed forms and split immediate layouts without guessing
+from mnemonic spelling. Each form maps field names to `bits`, `width`, `bins`,
+and optional `signed`, `offset` and `bank` (`integer|float`). A bit slice is
+`[instruction_high_bit, instruction_low_bit, result_low_bit]`. The reader joins
+slices, applies sign extension, then adds the offset. For example:
+
+```json
+{"c.addi": {"imm": {"bits": [[12,12,5], [6,2,0]], "width": 6,
+                       "signed": true, "bins": "boundaries"},
+             "rd": {"bits": [[11,7,0]], "width": 5,
+                    "bins": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+                             16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}}}
+```
+
+`boundaries` creates zero, positive, negative, minimum and maximum classes.
+A zero bit omitted from a slice stays zero. Compact registers can use offset 8.
+Fields named `rs1|rs2` with `bank: "integer"` also generate operand-value bins.
+Missing RVFI operand values earn no hit. Floating fields do not use integer data.
+
+`semantics.crosses` is an array of `id`, `instruction`, `fields` and
+`combinations`. Each combination has `bin`, `status` (`legal|illegal|unavailable`)
+and `reason`. Every Cartesian combination of the declared field domains must
+have exactly one classification. The reader refuses incomplete catalogs.
+Reports retain all combinations in the denominator and report observations per
+classification. A declared illegal or unavailable bin is not a proof exclusion.
+These declarations require spec review. The tool does not claim that a finite
+catalog covers every semantic obligation of the selected ISA version.
+
+### Assignment navigation from the same-elaboration database
+
+When a covered native line names an assignment target, the mapper can link it
+to a unique full data assignment in the same instance. It uses the database
+assignment location instead of the signal declaration. Multiple assignments,
+reset/init assignments, partial targets and parent-to-child assignments refuse
+this inference. Wildcard instances and toggle points do not get assignment
+links. The mapper still checks the RTL hash against the database capture.
+The method is `covered-span-assignment-links`, or a mixed variant when the
+point also has other source links. These are navigation links. A native point
+can cover several emitted statements. It does not prove individual Scala
+statement hits. `scala_mapping.methods` reports each mapping method separately.
+`statement_hit_status` stays `undetermined`.
+
+
+### Property activation and requirement links
+
+A `cov prove` point can declare an `activation` SystemVerilog expression. The
+runner creates a separate cover job with the same captured inputs and assumptions.
+The expression must be one statement-free expression. A successful cover needs
+exit 0, PASS, no free wires and the existing sanity guard. Only then does
+`proof_cones.properties[].activation.status` become `reached`. Other evidence is
+`inconclusive`; an absent predicate is `not_measured`. This is a user-declared
+activation predicate. It does not establish full property non-vacuity.
+
+The additive `rvw.proof-cones/1` `requirements` array joins each declared
+`requirement_id` to sorted `property_ids`. Property records join activation,
+structural cones and the unavailable solver core through `property_id`. Every
+requirement status stays `inconclusive`. A list of linked properties is not a
+complete set of functional obligations. A structural cone is not a solver core.
+These fields do not change exclusion or gate verdicts.

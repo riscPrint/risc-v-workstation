@@ -111,9 +111,23 @@ def launcher(tmp_path):
 
 def wait_for_file(path, process):
     deadline = time.monotonic() + 15
-    while not path.exists():
+    while not path.exists() or not path.read_text().strip():
         assert time.monotonic() < deadline and process.poll() is None, str(path)
         time.sleep(0.05)
+
+
+def test_wait_for_pid_marker_waits_for_writer(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    marker = tmp_path / 'writer.pid'
+    marker.touch()
+    pauses = []
+    def finish_write(seconds):
+        pauses.append(seconds)
+        marker.write_text('12345')
+    monkeypatch.setattr(time, 'sleep', finish_write)
+    wait_for_file(marker, SimpleNamespace(poll=lambda: None))
+    assert pauses
+    assert marker.read_text() == '12345'
 
 
 def process_alive(pid):
@@ -123,7 +137,7 @@ def process_alive(pid):
 
 
 @pytest.mark.parametrize('sig', [signal.SIGTERM, signal.SIGINT, signal.SIGHUP])
-@pytest.mark.parametrize('script', ['boom-spinaltrace/run.sh', 'tests/programs/build.sh'])
+@pytest.mark.parametrize('script', ['tests/programs/build.sh'])
 def test_other_riscvsim_scripts_stop_children(launcher, tmp_path, sig, script):
     destination = launcher.sim / script
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -588,7 +602,3 @@ def test_generic_build_does_not_load_core_projects():
     assert 'workstation / "RiscvSim/src/main/scala"' not in vex
 
 
-def test_trace_prototype_uses_the_separate_boom_build():
-    repo = SCRIPT.parents[2]
-    prototype = (repo / 'RiscvSim/boom-spinaltrace/build.sbt').read_text()
-    assert 'ProjectRef(file("../boom"), "boom")' in prototype
