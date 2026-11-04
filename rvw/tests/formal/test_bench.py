@@ -116,3 +116,16 @@ def test_proof_mode_does_not_launch_bounded_btor_engines(tmp_path, monkeypatch):
     bench.run(Namespace(manifest=manifest, out=out, timeout=5,json=False))
     result = json.loads((out / 'result.json').read_text())
     assert all(row['status'] == 'unsupported_mode' for row in result['rows'])
+
+
+def test_error_measurement_retains_native_memory_and_log(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from rvw.formal import bench
+    monkeypatch.setattr(bench, 'run_group', lambda *a, **k: SimpleNamespace(
+        returncode=2, timed_out=False, stdout='', stderr='4096 maximum resident set size'))
+    monkeypatch.setattr(bench.sys, 'platform', 'darwin')
+    case = {'mode':'bmc','top':'dut','clock':'clk','reset':'reset','depth':5}
+    result = bench.measure([], case, 'abc:bmc3', tmp_path / 'job', 1)
+    assert result['status'] == 'error'
+    assert result['peak_memory_bytes'] == 4096
+    assert (tmp_path / 'job.measurement.log').exists()

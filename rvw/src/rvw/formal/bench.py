@@ -56,9 +56,10 @@ def measure(sources, case, engine, target, timeout):
     elapsed = time.monotonic() - started
     path = target / 'result.json'
     if not path.exists():
-        return {'status': 'timeout' if process.timed_out else 'error', 'wall_s': elapsed,
-                'reason': (process.stderr or '')[-2000:]}
-    result = json.loads(path.read_text())
+        result = {'status': 'timeout' if process.timed_out else 'error',
+                  'reason': (process.stderr or '')[-2000:]}
+    else:
+        result = json.loads(path.read_text())
     if process.timed_out or process.returncode not in (0, 1):
         result['status'] = 'timeout' if process.timed_out else 'error'
     memory = None
@@ -183,7 +184,9 @@ def run(args):
                     result = measure(sources, case, engine, target, args.timeout)
                     row.update(status=result['status'], wall_s=result['wall_s'],
                                tools=result.get('tools'), peak_memory_bytes=result.get('peak_memory_bytes'),
-                               reached_depth=result.get('reached_depth'), reason=result.get('reason'), result=str(target.relative_to(out) / 'result.json'))
+                               reached_depth=result.get('reached_depth'), reason=result.get('reason'),
+                               result=str(target.relative_to(out) / 'result.json')
+                               if (target / 'result.json').exists() else None)
                     # Requested depth is not an observed engine depth.
                 except (ValueError, OSError, SystemExit) as exc:
                     row.update(status='error', reason=str(exc))
