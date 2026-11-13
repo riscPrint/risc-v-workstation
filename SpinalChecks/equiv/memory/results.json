@@ -1,0 +1,62 @@
+{
+  "schema": "rvw.memory-refinement-cases/1",
+  "cases": [
+    {
+      "case": "banked",
+      "status": "equivalent",
+      "wall_s": 4.268,
+      "model_sha256": "17fac6967679ec78a8759397099cc32489b8c34e63d8daeb96c2b3ab7d20c892",
+      "spec_sha256": "17f2c1a55b3fbbd846b8d5bd6a28aad12ee4901e17e6532d78b0563c9a8215e0",
+      "partitions": [
+        {
+          "name": "rvw_equiv.rd",
+          "status": "PASS"
+        }
+      ],
+      "candidate_sha256": "6ce6e5e95165f856f04fdfcd3f0cf5b950c87e72b0b6c65db9f39f90622a8cca"
+    },
+    {
+      "case": "packed",
+      "status": "equivalent",
+      "wall_s": 4.271,
+      "model_sha256": "8e3c771df7b50ea158f1859458c6256ad542691298d857bd7e831dac92b1a3df",
+      "spec_sha256": "17f2c1a55b3fbbd846b8d5bd6a28aad12ee4901e17e6532d78b0563c9a8215e0",
+      "partitions": [
+        {
+          "name": "rvw_equiv.rd",
+          "status": "PASS"
+        }
+      ],
+      "candidate_sha256": "e3e2db7fa8664334cbaaabb2022f221469791523fd9e0fafc7f4b65ee59cc789"
+    },
+    {
+      "case": "broken",
+      "status": "not_equivalent",
+      "wall_s": 4.251,
+      "model_sha256": "17fac6967679ec78a8759397099cc32489b8c34e63d8daeb96c2b3ab7d20c892",
+      "spec_sha256": "17f2c1a55b3fbbd846b8d5bd6a28aad12ee4901e17e6532d78b0563c9a8215e0",
+      "partitions": [
+        {
+          "name": "rvw_equiv.rd",
+          "status": "FAIL"
+        }
+      ],
+      "candidate_sha256": "f41748b302746e6145342ff0f448810cafaca63af94aa02c65fedbd1e6e16b86"
+    },
+    {
+      "case": "sync",
+      "status": "equivalent",
+      "wall_s": 5.028,
+      "model_sha256": "27377054d6bd8a9150ac0e9ad6090c6daca4eedb3a1338c4111543c7d8c398c4",
+      "spec_sha256": "c9ab64cb862141fdc17526fce5c39d0dbff8cb7b5f353cd99fbf6b393426467d",
+      "partitions": [
+        {
+          "name": "rvw_equiv.rd",
+          "status": "PASS"
+        }
+      ],
+      "candidate_sha256": "d029bd07fabe13edd2bd02d858b2e7c66d53c8977250ee70e433178dce07cf09"
+    }
+  ],
+  "scope": "finite eight-word memories, 8-bit words, all input streams after reset; no core qualification"
+}

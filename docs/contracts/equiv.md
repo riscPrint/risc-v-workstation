@@ -447,3 +447,27 @@ progress obligations. It records the active-step preconditions. This status
 is not a complete divide transaction proof. Mutants can return `counterexample`.
 `rvw.arithmetic-composition/1` collects these receipts and separate arithmetic
 lemma outcomes. It retains remaining transaction-composition obligations.
+
+## Logical memory refinement
+
+`rvw formal equiv --memory-spec SPEC --gate RTL --top TOP` generates a finite
+logical word-memory reference from `rvw.memory-refinement/1`. Required fields
+are `word_width` in 1..64, `address_width` in 1..8, `read_latency` in 0..1,
+`unwritten: zero`, and a `ports` map for clock, reset, write_enable,
+write_address, write_data, read_address and read_data. `reset_active` is high
+by default and can be low. Unknown fields are rejected. Each role needs a
+distinct Verilog port name.
+
+The generated model has independent uninitialized storage and resettable
+per-word valid bits. Reads of unwritten words return zero. Latency-one reads
+use old data on a simultaneous write edge. Reset ignores writes and clears
+valid bits and any registered read output. The model and candidate are
+compared with exact memory lowering and unmatched-state proof. No initial
+RAM equality is assumed. Explicit gold files, revision generation, state or
+output mappings, blackbox contracts and latency overrides are excluded.
+
+The outer result retains `schema`, `status`, `scope`, the spec, its hash,
+the generated model hash and the existing equivalence `proof`. It copies the
+proof verdict without promotion. `rvw.memory-refinement-cases/1` is the small
+example ledger. Behavioral finite-memory refinement is distinct from a large
+RAM solver abstraction and from whole-core qualification.

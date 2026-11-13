@@ -295,7 +295,7 @@ def mcp_tools():
                          "latency":I,"dsec":B,"pair":{"type":"array","items":S},
                          "unmatched_state":{**S,"enum":["refuse","prove"]},"blackbox_contract":S,"state_encoding":S,
                          "latency_map":{"type":"array","items":S},"output_map":{"type":"array","items":S},
-                         "memory_map":B,"sampled_events":B,"stable_at_edge":{"type":"array","items":S},
+                         "memory_spec":S,"memory_map":B,"sampled_events":B,"stable_at_edge":{"type":"array","items":S},
                          "timeout":{"type":"number","exclusiveMinimum":0}},["top","out"]), _runner("equiv"), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim', 'EQY')),
         ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",
                  schema({"rtl": S, "model": S, "binding": S, "max_latency": I, "width": {"type": "integer", "enum": [8,16,32,64]},

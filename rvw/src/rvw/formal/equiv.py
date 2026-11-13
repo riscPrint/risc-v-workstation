@@ -13,6 +13,7 @@ from .flows import _inputs
 
 def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
+    p.add_argument('--memory-spec', help='JSON logical word-memory contract to refine against --gate RTL')
     p.add_argument('--memory-map', action='store_true', help='lower finite memories exactly to registers; requires unmatched-state prove')
     p.add_argument('--sampled-events', action='store_true', help='conditional global-sample clock-event comparison')
     p.add_argument('--stable-at-edge', action='append', default=[], metavar='INPUT', help='input stable across sampled root rising edges')
@@ -178,6 +179,9 @@ def verdict(rc, timed_out, partitions, unmatched, traces):
 
 
 def run(args):
+    if getattr(args, 'memory_spec', None):
+        from .memory_refinement import run as refine
+        return refine(args)
     with common.sigterm_raises():
         try:
             return _run(args)
@@ -310,7 +314,9 @@ def _run(args):
                 inverse = {value: key for key, value in aliases.items()}
                 ports = [common.Port(inverse.get(p.name, p.name) if p.direction == 'output' else p.name,
                                      p.direction, p.width, p.signed) for p in ports]
-            portsets.append(ports)
+            # Wrappers connect ports by name. Declaration order is not part
+            # of the interface contract.
+            portsets.append(sorted(ports, key=lambda port: port.name))
             side_delays = {name: max(0, lag if side == 'gold' else -lag) for name, lag in delays.items()}
             (directory / 'wrapper.v').write_text(harness(args, ports, delays=side_delays,
                                                        aliases=aliases if side == 'gate' else {},
