@@ -321,3 +321,28 @@ selects that domain. The generated top exports `<name>_clk` and
 `<name>_reset`. Both source and destination resets must assert together.
 The manifest records domains and names the ingress profile. A generated
 manifest remains `generated_only`; it is not simulation or proof evidence.
+
+## SoC verification runner
+
+`rvw.soc-verify/1` has `checks` and optional `prepare`. Each check selects
+existing generators and an explicit consumer command or APB capture.
+`rvw.soc-verify-result/1` has `status` and seven `checks` rows with `kind`,
+`generated`, `ran`, `result` and diagnostic fields. Overall status is
+`inconclusive` unless all rows have generation and successful run evidence.
+Any observed mismatch makes it `fail`. Exit codes are 0, 1, 3 respectively.
+
+Consumer evidence schema `rvw.soc-verify-evidence/1` requires `kind`, the
+captured normalized `map_sha256`, positive integer `checks` and `status`.
+Formal rows require `proven`. Missing or stale evidence cannot pass.
+
+`rvw.soc-apb-samples/1` starts with a header containing `observation` equal
+to `rtl_peripheral_ports`. Each following row has `bus`, increasing `cycle`
+per bus, and APB pin values. A final `{"end":true}` closes the capture.
+The producer records selected cycles and the first deselected cycle after
+each selection. This is sampled peripheral evidence. It is not a proof or
+core ingress coverage. The format does not provide C1 identity binding.
+
+`rvw.soc-register-checks/1` lists map registers with absolute addresses and
+unknown-reset gaps. The oracle checks completed requests, read-clear,
+write-one-to-clear and partial-write state. Device-specific autonomous
+changes need a separate scoreboard. Unknown read values do not add checks.

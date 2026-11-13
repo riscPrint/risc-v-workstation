@@ -113,3 +113,8 @@ Automatic bench generation requires supported typed bus metadata. A database
 with plain Verilog ports returns `status: unsupported` and writes no bench.
 The CLI exits 2. MCP returns the same status. Supply a project-owned bench
 and explicit protocol pin bindings. Port names alone do not establish a bus.
+`rvw.uvm.soc.SocRegisterEnvironment` adds passive APB register side-effect
+checks for multiple mapped regions. Sample each bus monitor at its own clock.
+Call `reset()` when the peripheral reset is asserted. Unknown-reset reads do
+not add a comparison. Use separate scoreboards for autonomous registers.
+The existing `SocEnvironment` interface is unchanged.

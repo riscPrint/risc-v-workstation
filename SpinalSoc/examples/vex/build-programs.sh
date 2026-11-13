@@ -4,7 +4,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"
 out="$root/SpinalSoc/programs/vex"
 mkdir -p "$out"
-for name in hello interrupt external uart_irq; do
+for name in hello interrupt external uart_irq verify; do
   source="$here/$name.S"
   if [ ! -f "$source" ]; then source="$here/../stub/$name.S"; fi
   nice -n 10 "${RISCV_PREFIX:-riscv64-unknown-elf-}gcc" -march=rv32im_zicsr \

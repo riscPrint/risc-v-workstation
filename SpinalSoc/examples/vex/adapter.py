@@ -63,7 +63,7 @@ def main():
         generated = LIB/'generated'
         if generated.exists(): shutil.rmtree(generated)
         compose(HERE/'compose.json', generated)
-        build = run_group([str(ROOT/'scripts/with-lock.sh'),'sbt','nice','-n','10','sbt','-Drvw.soc.vex=true','compile','export Compile / dependencyClasspath'], cwd=LIB, timeout=300, capture=True)
+        build = run_group([str(ROOT/'scripts/with-lock.sh'),'sbt-soc','nice','-n','10','sbt','-Drvw.soc.vex=true','compile','export Compile / dependencyClasspath'], cwd=LIB, timeout=300, capture=True)
         if build.returncode:
             print(build.stdout); print(build.stderr, file=sys.stderr); return 2
         cp = str(LIB/'target/scala-2.13/classes') + ':' + (LIB/'target/streams/compile/dependencyClasspath/_global/streams/export').read_text().strip()
@@ -83,7 +83,7 @@ def main():
         prepared.append((job,out,words,tohost))
     if not prepared: raise ValueError('manifest has no jobs')
     manifest = prepared[0][1]/'native-jobs.tsv'
-    manifest.write_text(''.join(f'{words}\t{job.get("seed",31)}\t{job.get("max_cycles",100000)}\t{tohost:x}\t{Path(job["elf"]).name}\n' for job,out,words,tohost in prepared))
+    manifest.write_text(''.join(f'{words}\t{job.get("seed",31)}\t{job.get("max_cycles",100000)}\t{tohost:x}\t{Path(job["elf"]).name}\t{out/"apb.jsonl"}\n' for job,out,words,tohost in prepared))
     start = time.monotonic()
     native = run_group(['nice','-n','10','java','-Xmx3g','-cp',cp,'examplesocvex.Run',str(manifest)], cwd=LIB, timeout=120, capture=True)
     log = (native.stdout or '') + '\n' + (native.stderr or '')
@@ -109,7 +109,7 @@ def main():
             source=dict(core_repo=str(core),core_rev=core_rev[:12],core_rev_full=core_rev,core_dirty=core_dirty,
                         tools_repo=str(ROOT),tools_rev=tools_rev,tools_dirty=tools_dirty),
             tools=dict(spinalhdl='1.15.0',verilator=subprocess.check_output(['verilator','--version'],text=True).strip()),
-            artifacts=dict(log='run.log'),replay=shlex.join([str(HERE/'run.sh'),'run','--elf',str(out/'program.elf'),'--out','REPLAY','--seed',str(job.get('seed',31)),'--max-cycles',str(job.get('max_cycles',100000))]),
+            artifacts=dict(log='run.log',soc_apb='apb.jsonl'),replay=shlex.join([str(HERE/'run.sh'),'run','--elf',str(out/'program.elf'),'--out','REPLAY','--seed',str(job.get('seed',31)),'--max-cycles',str(job.get('max_cycles',100000))]),
             details=dict(profile='composed-vex-rv32im',uart=uart,external_classpath=bool(external_cp),gate_input_capture='incomplete'))
         (out/'result.json').write_text(json.dumps(report,indent=2)+'\n'); print(json.dumps(report))
         failed |= row['status'] != 'pass'

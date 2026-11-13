@@ -103,3 +103,40 @@ class SocEnvironment:
                 raise AssertionError('SOC_NO_BUS_CHECKS:'+name)
         return dict(cpu_checks=self.cpu.checks if self.cpu else 0, bus_checks=dict(self.bus_checks),
                     uart_frames=self.serial.count)
+
+
+class SocRegisterEnvironment:
+    """Passive APB register side effects for multiple mapped peripheral buses.
+
+    Sample each bus before its sequential update. The map must describe the
+    observed semantics. Autonomous registers need a separate device scoreboard.
+    """
+    def __init__(self, map_path, *, byte_strobes=False):
+        from rvw.checks.soc_registers import RegisterEffects
+        self.effects = RegisterEffects(map_path)
+        self.map = load(map_path)
+        self.buses = {}
+        self.transfers = {}
+        for region in self.map['regions']:
+            if region['kind'] != 'mmio':
+                continue
+            name, base = region['name'], region['base']
+            self.transfers[name] = 0
+            def completed(t, name=name, base=base):
+                if t.aborted:
+                    return
+                self.effects.observe(base+t.address, t.write, t.data, t.response,
+                                     error=t.error, strobe=t.strobe if byte_strobes else None)
+                self.transfers[name] += 1
+            self.buses[name] = apb.Monitor(completed)
+
+    def reset(self):
+        self.effects.reset()
+
+    def finish(self):
+        report = self.effects.finish()
+        report['transfers'] = dict(self.transfers)
+        report['unexercised'] = [name for name,count in self.transfers.items() if not count]
+        if any(bus.pending is not None for bus in self.buses.values()):
+            raise AssertionError('SOC_PENDING_APB')
+        return report
