@@ -40,3 +40,10 @@ Both example projects have generated profiles in `rvw/random/`. Run them with
 `regress random --settings examples/CORE/rvw/random/random.toml`. Set the
 project explicitly. Use private core copies and set both the project's
 `core.lock` and `RVW_VEX_LOCK` to the same private lock for parallel workers.
+
+The runtime writes `mscratch` before its first GPR initialization instruction.
+This defines scratch state before the first per-retirement CSR snapshot.
+VexRiscv does not give that storage a defined reset value. Leaving it untouched
+can produce a real strict comparison mismatch against Spike's zero startup
+value. The software write defines an architectural input. It does not mask a
+comparison or change the observed CSR value.

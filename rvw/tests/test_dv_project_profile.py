@@ -25,3 +25,11 @@ def test_platform_profile(tmp_path, core):
     assert 'ORIGIN = 0x80000000, LENGTH = 0x1000000' in (out/'link.ld').read_text()
     assert '.tohost' in (out/'link.ld').read_text()
     assert (out/'runtime/user_init.s').read_bytes() == (ROOT/'scripts/riscv-dv/user_init.s').read_bytes()
+
+
+def test_runtime_defines_scratch_before_gpr_initialization():
+    lines = (ROOT/'scripts/riscv-dv/user_init.s').read_text().splitlines()
+    instructions = [line.strip() for line in lines if line.strip() and not line.startswith('#')]
+    assert instructions[0] == 'csrw mscratch, zero'
+    assert instructions[1] == 'li x1, 0'
+

@@ -1,4 +1,6 @@
 # Initialize architectural inputs before upstream pygen setup.
+# Define scratch state before the first per-retirement CSR snapshot.
+csrw mscratch, zero
 li x1, 0
 li x2, 0
 li x3, 0

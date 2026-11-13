@@ -1,0 +1,257 @@
+{
+  "date": "2026-11-13",
+  "core": "vexriscv",
+  "configuration": "rv32im",
+  "scope": "bounded native simulation; no C4 acceptance or full ISA qualification",
+  "core_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+  "campaigns": [
+    {
+      "path": "rvw/out/dv/vex-native/campaign.json",
+      "sha256": "53743866fbf11e78a5b1ea118ad3204d4d47f36bc5abcb71bd62e4be60b2bc79",
+      "status": "fail",
+      "counts": {
+        "adapter_error": 1,
+        "mismatch": 1
+      },
+      "attempts": [
+        {
+          "seed": 48,
+          "status": "adapter_error",
+          "message": "C1 adapter capture claim source.tools_rev differs from the adapter identity",
+          "elf_sha256": "d3e14264177bcbe26aa7e9669af9d18a28147d47f56a24d702e8ea564335da87",
+          "runtime_sha256": {
+            "user_init.s": "af41b0d8432e94146010a68f876b9bc6601c5393d3d5c99b8910125c32d75e0b"
+          },
+          "platform_sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+          "generation": {
+            "status": "generated",
+            "generator_revision": "f557b89ed6881a20515481a2585e9d004cd9642b",
+            "target": "rv32imc",
+            "seed": 48,
+            "instructions": 50,
+            "profile": "bare-integer-alu",
+            "pyboolector": "3.2.4.38488416565",
+            "pyvsc": "0.9.1.10086043874",
+            "returncode": 0,
+            "timed_out": false,
+            "source_sha256": "f11075032fdf9c0713de9e9a211b03db9993fea29cbb0ce91880d444a676d91b"
+          },
+          "comparison": {},
+          "c1": {
+            "path": "rvw/out/dv/vex-native/seed-48/run/generations/c845e727a31d4ff69f83c28434eeddcb/riscv-dv/rv32im/tests/program/result.json",
+            "sha256": "e9f40b709df4461ab3838f9cfd8998c0e2b5a9bab8ce43f16b5139b2b9709f5c",
+            "status": "pass",
+            "inconclusive": "C1 adapter capture claim source.tools_rev differs from the adapter identity",
+            "instret": 124,
+            "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+            "tools_revision": "31f593a08d327874689644fee31e268b2559b244",
+            "tools_dirty": true,
+            "verilator": "Verilator 5.049 devel rev v5.048-26-g25d4827bd (mod)",
+            "java": "openjdk 21.0.13 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+            "trace_sha256": "8275817e45e97a9affdb6f265003478ce364385fbeb241f72b6805a4d916593b"
+          }
+        },
+        {
+          "seed": 49,
+          "status": "mismatch",
+          "elf_sha256": "2dcfec7529a4e5c4b92a27b3c277e68edd486d14a49d5e3040e595038d126192",
+          "runtime_sha256": {
+            "user_init.s": "af41b0d8432e94146010a68f876b9bc6601c5393d3d5c99b8910125c32d75e0b"
+          },
+          "platform_sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+          "generation": {
+            "status": "generated",
+            "generator_revision": "f557b89ed6881a20515481a2585e9d004cd9642b",
+            "target": "rv32imc",
+            "seed": 49,
+            "instructions": 50,
+            "profile": "bare-integer-alu",
+            "pyboolector": "3.2.4.38488416565",
+            "pyvsc": "0.9.1.10086043874",
+            "returncode": 0,
+            "timed_out": false,
+            "source_sha256": "7b5846a09307ba6d6364f231fa154bef0cf1d932da3342fa16c17eba1c1cb3c9"
+          },
+          "comparison": {
+            "status": "mismatch",
+            "instructions": 0,
+            "trace_complete": false,
+            "end_status": null,
+            "synchronized": 0,
+            "applied_masks": [],
+            "state_coverage": {
+              "trace_schema": "rvw.rvfi/2",
+              "fp": false,
+              "vector": null,
+              "hypervisor": false,
+              "two_stage_translations": 0,
+              "csr_snapshot": [
+                "0x340"
+              ],
+              "csr_snapshot_steps": 1,
+              "vector_memory_steps": 0,
+              "vector_memory_accesses": 0,
+              "fault_access_steps": 0
+            },
+            "mismatch": {
+              "instruction_index": 0,
+              "order": 0,
+              "cycle": 10,
+              "pc": "0x80000000",
+              "disassembly": "li      ra, 0",
+              "differences": {
+                "csr[0x340]": {
+                  "expected": "0x0",
+                  "actual": "0xdba352fc"
+                }
+              },
+              "actual": {
+                "order": 0,
+                "cycle": 10,
+                "pc": "0x80000000",
+                "pc_next": "0x80000004",
+                "insn": "0x93",
+                "mode": 3,
+                "trap": false,
+                "intr": false,
+                "halt": false,
+                "rs1": 0,
+                "rs1_rdata": "0x0",
+                "rs2": 0,
+                "rs2_rdata": "0x0",
+                "rd": 1,
+                "rd_wdata": "0x0",
+                "mem_addr": "0x0",
+                "mem_rmask": 0,
+                "mem_wmask": 0,
+                "mem_rdata": "0x0",
+                "mem_wdata": "0x0",
+                "mem_fault": false,
+                "csr_state": {
+                  "0x340": "0xdba352fc"
+                }
+              },
+              "expected": {
+                "pc": "0x80000000",
+                "pc_next": "0x80000004",
+                "insn": "0x93",
+                "mode": 3,
+                "rd": 1,
+                "rd_wdata": "0x0",
+                "mem_addr": "0x0",
+                "mem_rmask": 0,
+                "mem_wmask": 0,
+                "mem_rdata": "0x0",
+                "mem_wdata": "0x0",
+                "trap": 0,
+                "intr": 0,
+                "cause": "0x0",
+                "tval": "0x0",
+                "mem_fault": 0,
+                "halted": 0,
+                "fd_valid": 0,
+                "fd": 0,
+                "fd_wdata": "0x0",
+                "fflags": "0x0",
+                "fcsr": "0x0",
+                "disasm": "li      ra, 0",
+                "debug": {
+                  "mode": false,
+                  "dpc": "0x0",
+                  "dcsr": "0x40000000",
+                  "step": false
+                },
+                "csr_state": {
+                  "0x340": "0x0"
+                }
+              },
+              "last_matching": [],
+              "register_diff": []
+            }
+          },
+          "c1": {
+            "path": "rvw/out/dv/vex-native/seed-49/run/generations/474a1ffb12a74c708a1f1cdded54f10d/riscv-dv/rv32im/tests/program/result.json",
+            "sha256": "6d4a8289f3e7a66a020b6c03f94763803fcdf4703524624fba5e26f0f136f3c7",
+            "status": "pass",
+            "inconclusive": null,
+            "instret": 111,
+            "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+            "tools_revision": "31f593a08d327874689644fee31e268b2559b244",
+            "tools_dirty": true,
+            "verilator": "Verilator 5.049 devel rev v5.048-26-g25d4827bd (mod)",
+            "java": "openjdk 21.0.13 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+            "trace_sha256": "a96e5547a2d5df85f59cfbe742faae1fc76d37eee4544229976f701a159190ba"
+          }
+        }
+      ]
+    },
+    {
+      "path": "rvw/out/dv/vex-scratch-init/campaign.json",
+      "sha256": "3876084f2ad5c16cf51713cd32b33cc3bf682a4b66384d1a037c93270b5119da",
+      "status": "pass",
+      "counts": {
+        "pass": 1
+      },
+      "attempts": [
+        {
+          "seed": 49,
+          "status": "pass",
+          "elf_sha256": "c83b662a6bff0ea2ac31f57bdf1cc1c4688ee3f18f320ca3e53e601eda3944ae",
+          "runtime_sha256": {
+            "user_init.s": "bc0109b57c93ffab5393b49d79b6b292e02b300876edba417c231e9b5b27e39a"
+          },
+          "platform_sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+          "trace_sha256": "d23c6de2b45919ef11ccdc7156fbad70998f6e5e7f2b4a5ce1ba69bad33ecca6",
+          "generation": {
+            "status": "generated",
+            "generator_revision": "f557b89ed6881a20515481a2585e9d004cd9642b",
+            "target": "rv32imc",
+            "seed": 49,
+            "instructions": 50,
+            "profile": "bare-integer-alu",
+            "pyboolector": "3.2.4.38488416565",
+            "pyvsc": "0.9.1.10086043874",
+            "returncode": 0,
+            "timed_out": false,
+            "source_sha256": "7b5846a09307ba6d6364f231fa154bef0cf1d932da3342fa16c17eba1c1cb3c9"
+          },
+          "comparison": {
+            "status": "match",
+            "instructions": 112,
+            "trace_complete": true,
+            "end_status": "pass",
+            "synchronized": 0,
+            "applied_masks": [],
+            "state_coverage": {
+              "trace_schema": "rvw.rvfi/2",
+              "fp": false,
+              "vector": null,
+              "hypervisor": false,
+              "two_stage_translations": 0,
+              "csr_snapshot": [
+                "0x340"
+              ],
+              "csr_snapshot_steps": 112,
+              "vector_memory_steps": 0,
+              "vector_memory_accesses": 0,
+              "fault_access_steps": 0
+            }
+          },
+          "c1": {
+            "path": "rvw/out/dv/vex-scratch-init/seed-49/run/generations/ac5fc76a76fe4c9f860bef5f1cd88e53/riscv-dv/rv32im/tests/program/result.json",
+            "sha256": "ece8225e412d1477e2ff94155e70709b3d9775e335a3a1871a9c1c702cc5b707",
+            "status": "pass",
+            "inconclusive": null,
+            "instret": 112,
+            "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+            "tools_revision": "31f593a08d327874689644fee31e268b2559b244",
+            "tools_dirty": true,
+            "verilator": "Verilator 5.049 devel rev v5.048-26-g25d4827bd (mod)",
+            "java": "openjdk 21.0.13 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+            "trace_sha256": "d23c6de2b45919ef11ccdc7156fbad70998f6e5e7f2b4a5ce1ba69bad33ecca6"
+          }
+        }
+      ]
+    }
+  ]
+}
