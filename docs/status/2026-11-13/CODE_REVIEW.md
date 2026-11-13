@@ -2822,3 +2822,195 @@ No unconfirmed defect is retained.
 | `vscode/src/results/feature.ts` | 96 |
 | `vscode/src/results/html.ts` | 3 |
 | `vscode/src/results/model.ts` | 86 |
+
+## Coverage, verification plans and evidence index
+
+The review read 116 files. It fixed four defects. No unconfirmed finding is retained.
+
+The initial review base was `f3606ad0650861a3d8a3764c2ec0cbd8fecf182f`.
+The review started with functional bin definitions. It then covered merge arithmetic,
+exchange, proof exclusions, mutation, sequences, closure and resume, source metrics,
+verification plans and evidence discovery. The file table includes later changes
+read after rebasing. Each confirmed defect has a regression that failed before its fix.
+
+### Confirmed defects
+
+- Repeated trace contexts made plan trends incompatible when another trace used the same context. Fixed in [PR #1359](https://github.com/riscPrint/risc-v-workstation/pull/1359).
+- Exact functional bin targets lost closure candidates because JSON brackets were parsed as glob syntax. Fixed in [PR #1391](https://github.com/riscPrint/risc-v-workstation/pull/1391).
+- The evidence index omitted coverage schema families. Fixed for functional, RTL and probe reports in [PR #1419](https://github.com/riscPrint/risc-v-workstation/pull/1419) and for source-line and FP reports in [PR #1455](https://github.com/riscPrint/risc-v-workstation/pull/1455).
+- Exchange merging treated measured classification counts as bin semantics and refused compatible reports. Fixed in [PR #1434](https://github.com/riscPrint/risc-v-workstation/pull/1434).
+
+### Validation and limits
+
+The 170-goal Z3 candidate tests passed for RV32 and RV64: 8 passed.
+The focused coverage and plan selection had 224 passed and 5 failed. The failures
+were `test_encoding_domains.py::test_pinned_vector_fields_use_full_expected_domains`,
+`test_semantic_forms.py::test_compressed_plan_keeps_unobserved_bins`, and three sequence
+tests: `test_register_pairs_and_x0`, `test_memory_branch_and_boundaries`, and
+`test_control_flow_and_selected_kinds`. Their trace fixtures lack C1 qualification.
+The separate plan run had 9 passed and 2 failed in `test_vplan.py`:
+`test_rollup_keeps_holes_and_unassigned_requirements` and
+`test_trend_uses_same_plan_and_compatible_context`. Their report fixtures lack the
+qualification policy. These failures predate this review's changes.
+
+The broad area run was stopped after native MCY fixtures took longer than the
+review bound. It ended with 226 passed and 2 failed:
+`test_capture_inputs.py::test_trace_hash_matches_parsed_stream[False]` and `[True]`.
+These also use unqualified trace fixtures. This run is incomplete.
+No core build or core simulation was run. No long proof campaign was run.
+Native LCOV conversion and external UCIS schema validation were not run.
+DAT key round trips and the declared UCIS profile round trips passed in unit tests.
+
+The first required fast set had 3293 passed, 4 skipped, 7724 deselected and 1 failed:
+`test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`, outside
+this change. The closure fix's fast set passed with 3334 passed, 4 skipped and
+7726 deselected. Evidence-index and evidence-layer tests passed: 28 passed. The later source-line
+and FP schema cases failed before the prefix fix. All five schema families and
+the evidence-layer tests then passed: 30 passed.
+Closure tests passed: 7 passed. Exchange tests passed: 10 passed.
+The evidence-index fast set passed with 3458 passed, 4 skipped and 7736 deselected.
+The exchange fix's fast set passed with 3499 passed, 4 skipped and 7741 deselected.
+A later documentation fast run had 3550 passed, 4 skipped, 7744 deselected and
+2 failures outside this area: `test_boot_profile.py::test_launcher_reaches_nice_ten_once`
+for `[1-3]` and `[2-0]`. Both require niceness 10 but observe inherited niceness 15
+under the required `nice -n 15` test command. They were not changed.
+The final followup fast run had 3552 passed, 4 skipped, 7744 deselected and
+the same two failures. Post-rebase evidence and hygiene checks had 75 passed.
+
+F2 crediting logic was not changed. Functional coverage separates unqualified hits
+from credited bins and requires the C1 pass and complete C2 policy. Several older
+fixture tests still assume that a raw trace earns credited hits. Code coverage
+still admits conclusive failed C1 runs. The separate F2 worker owns that policy.
+Reserved encoding domains remain in the plan by design. They do not claim legal
+or reachable instruction combinations. This review did not remove bins without
+proof or change a verification verdict rule.
+
+Unconfirmed findings: none retained. The review did not read the complete shared
+RISC-V decoder, result readers, regression runner, capture library, cosim backends,
+external opcode repositories or every extension specification. It did not establish
+ISA compliance, native coverage closure or whole-core qualification. Other coverage
+design notes and READMEs were not read in full. Later commits outside the listed
+follow-up files were not part of the frozen review base.
+
+### Files read
+
+Line counts refer to the listed files at the review snapshot, including the fixes.
+
+| File | Lines |
+|---|---:|
+| `rvw/src/rvw/cov/EXCHANGE.md` | 37 |
+| `rvw/src/rvw/cov/__init__.py` | 1 |
+| `rvw/src/rvw/cov/action_cli.py` | 33 |
+| `rvw/src/rvw/cov/actions.py` | 72 |
+| `rvw/src/rvw/cov/block_evidence.py` | 93 |
+| `rvw/src/rvw/cov/campaign.py` | 307 |
+| `rvw/src/rvw/cov/campaign_artifacts.py` | 119 |
+| `rvw/src/rvw/cov/campaign_cli.py` | 30 |
+| `rvw/src/rvw/cov/campaign_replay.py` | 64 |
+| `rvw/src/rvw/cov/captured.py` | 110 |
+| `rvw/src/rvw/cov/cli.py` | 281 |
+| `rvw/src/rvw/cov/cli_declarations.py` | 2 |
+| `rvw/src/rvw/cov/closure.py` | 79 |
+| `rvw/src/rvw/cov/code.py` | 697 |
+| `rvw/src/rvw/cov/commands/__init__.py` | 0 |
+| `rvw/src/rvw/cov/commands/mutate_core.py` | 34 |
+| `rvw/src/rvw/cov/commands/probe_goals.py` | 29 |
+| `rvw/src/rvw/cov/commands/smoke.py` | 33 |
+| `rvw/src/rvw/cov/commands/source_report.py` | 33 |
+| `rvw/src/rvw/cov/core_mutation.py` | 266 |
+| `rvw/src/rvw/cov/encoding_domains.py` | 14 |
+| `rvw/src/rvw/cov/exchange.py` | 225 |
+| `rvw/src/rvw/cov/exchange_cli.py` | 28 |
+| `rvw/src/rvw/cov/feedback_campaign.py` | 52 |
+| `rvw/src/rvw/cov/fp.py` | 74 |
+| `rvw/src/rvw/cov/functional.py` | 387 |
+| `rvw/src/rvw/cov/guidance.py` | 132 |
+| `rvw/src/rvw/cov/initial_coverage.py` | 43 |
+| `rvw/src/rvw/cov/integer_sources.py` | 14 |
+| `rvw/src/rvw/cov/isa.py` | 175 |
+| `rvw/src/rvw/cov/isa_consumers.py` | 103 |
+| `rvw/src/rvw/cov/line_metrics.py` | 18 |
+| `rvw/src/rvw/cov/mcp_tools.py` | 102 |
+| `rvw/src/rvw/cov/mutation.py` | 609 |
+| `rvw/src/rvw/cov/mutation_regression.py` | 43 |
+| `rvw/src/rvw/cov/paired.py` | 63 |
+| `rvw/src/rvw/cov/probe_goals.py` | 99 |
+| `rvw/src/rvw/cov/proof.py` | 1339 |
+| `rvw/src/rvw/cov/proof_cones.py` | 121 |
+| `rvw/src/rvw/cov/random_candidate.py` | 42 |
+| `rvw/src/rvw/cov/rtl.py` | 186 |
+| `rvw/src/rvw/cov/semantic.py` | 110 |
+| `rvw/src/rvw/cov/semantic_forms.py` | 86 |
+| `rvw/src/rvw/cov/sequence.py` | 53 |
+| `rvw/src/rvw/cov/smoke.py` | 102 |
+| `rvw/src/rvw/cov/source_report.py` | 62 |
+| `rvw/src/rvw/cov/source_snapshot.py` | 159 |
+| `rvw/src/rvw/cov/specifications.py` | 64 |
+| `rvw/src/rvw/cov/stimulus.py` | 126 |
+| `rvw/src/rvw/evidence/README.md` | 35 |
+| `rvw/src/rvw/evidence/__init__.py` | 1 |
+| `rvw/src/rvw/evidence/cli.py` | 17 |
+| `rvw/src/rvw/evidence/cli_declarations.py` | 2 |
+| `rvw/src/rvw/evidence/index.py` | 72 |
+| `rvw/src/rvw/evidence/mcp_tools.py` | 21 |
+| `rvw/src/rvw/plan/__init__.py` | 9 |
+| `rvw/src/rvw/plan/cli.py` | 42 |
+| `rvw/src/rvw/plan/cli_declarations.py` | 2 |
+| `rvw/src/rvw/plan/mcp_tools.py` | 10 |
+| `rvw/src/rvw/plan/model.py` | 228 |
+| `rvw/tests/cov/__init__.py` | 0 |
+| `rvw/tests/cov/test_actions.py` | 48 |
+| `rvw/tests/cov/test_assignment_links.py` | 64 |
+| `rvw/tests/cov/test_block_evidence.py` | 60 |
+| `rvw/tests/cov/test_campaign.py` | 322 |
+| `rvw/tests/cov/test_campaign_artifacts.py` | 52 |
+| `rvw/tests/cov/test_capture_inputs.py` | 130 |
+| `rvw/tests/cov/test_capture_mutation.py` | 827 |
+| `rvw/tests/cov/test_capture_proof.py` | 47 |
+| `rvw/tests/cov/test_closure.py` | 103 |
+| `rvw/tests/cov/test_code.py` | 239 |
+| `rvw/tests/cov/test_code_guidance.py` | 104 |
+| `rvw/tests/cov/test_conclusive.py` | 163 |
+| `rvw/tests/cov/test_core_mutation.py` | 162 |
+| `rvw/tests/cov/test_demo.py` | 58 |
+| `rvw/tests/cov/test_encoding_domains.py` | 37 |
+| `rvw/tests/cov/test_evidence.py` | 56 |
+| `rvw/tests/cov/test_exchange.py` | 111 |
+| `rvw/tests/cov/test_functional.py` | 178 |
+| `rvw/tests/cov/test_generation_inputs.py` | 88 |
+| `rvw/tests/cov/test_ghdl_source_locations.py` | 15 |
+| `rvw/tests/cov/test_guidance.py` | 125 |
+| `rvw/tests/cov/test_integer_sources.py` | 24 |
+| `rvw/tests/cov/test_isa.py` | 103 |
+| `rvw/tests/cov/test_isa_consumers.py` | 120 |
+| `rvw/tests/cov/test_line_metrics.py` | 23 |
+| `rvw/tests/cov/test_mutation_regression.py` | 65 |
+| `rvw/tests/cov/test_mutation_replay.py` | 177 |
+| `rvw/tests/cov/test_mutation_verdicts.py` | 20 |
+| `rvw/tests/cov/test_paired.py` | 54 |
+| `rvw/tests/cov/test_payload_sampling.py` | 21 |
+| `rvw/tests/cov/test_probe_goals.py` | 94 |
+| `rvw/tests/cov/test_proof.py` | 1123 |
+| `rvw/tests/cov/test_proof_async.py` | 120 |
+| `rvw/tests/cov/test_proof_cones.py` | 105 |
+| `rvw/tests/cov/test_proof_snapshot.py` | 175 |
+| `rvw/tests/cov/test_proof_tools.py` | 113 |
+| `rvw/tests/cov/test_random_control.py` | 103 |
+| `rvw/tests/cov/test_rtl.py` | 99 |
+| `rvw/tests/cov/test_rtl_mapping.py` | 160 |
+| `rvw/tests/cov/test_rtl_sequences.py` | 40 |
+| `rvw/tests/cov/test_selection_refs.py` | 109 |
+| `rvw/tests/cov/test_semantic.py` | 87 |
+| `rvw/tests/cov/test_semantic_forms.py` | 87 |
+| `rvw/tests/cov/test_sequence.py` | 50 |
+| `rvw/tests/cov/test_smoke.py` | 61 |
+| `rvw/tests/cov/test_source_report.py` | 67 |
+| `rvw/tests/cov/test_specifications.py` | 85 |
+| `rvw/tests/cov/test_stimulus.py` | 133 |
+| `rvw/tests/test_evidence_index.py` | 65 |
+| `rvw/tests/test_evidence_layers.py` | 104 |
+| `rvw/tests/test_fp_coverage.py` | 24 |
+| `rvw/tests/test_plan_coverage_trend.py` | 34 |
+| `rvw/tests/test_plan_probes.py` | 30 |
+| `rvw/tests/test_sound3_coverage.py` | 53 |
+| `rvw/tests/test_vplan.py` | 134 |

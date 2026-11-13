@@ -50,6 +50,7 @@ def test_invalid_c1_and_no_matches(tmp_path):
 
 @pytest.mark.parametrize('schema', [
     'rvw.functional-coverage/1', 'rvw.rtl-coverage/1', 'rvw.probe-coverage/1',
+    'rvw.source-coverage/1', 'rvw.fp-coverage/1',
 ])
 def test_index_includes_all_measured_coverage_families(tmp_path, schema):
     report = tmp_path/'coverage.json'
