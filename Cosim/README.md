@@ -831,3 +831,32 @@ Spike refuses fault steps with logged memory effects because ordered partial
 effects are not yet available. Native zero-completion tests cover unsigned
 loads, stores, LR and AMOs. These tests use Spike as the reference. They do
 not establish DUT capture or Sail snapshot and fault-observation support.
+
+## Native vector source slice
+
+Build the shim, then fetch the pinned sources outside the repository:
+
+```sh
+Cosim/build.sh
+rvw cosim vector-source --out /tmp/rvw-vector-source --json
+rvw/.venv/bin/python Cosim/vector-slice.py /tmp/rvw-vector-source /tmp/rvw-vector-run
+```
+
+Put Go and RISC-V GCC on PATH, or set `RISCV_GCC`. The script checks both source
+revisions. It builds the upstream single-test generator. It selects the first
+`vadd.vv` slice with VLEN 128, XLEN 64 and split 2000. It compiles the upstream
+assembly in `COSIM_TEST_CASE` mode, with no generated self-check oracle. Spike
+executes it and writes full C2/2 vector state and ordered vector memory accesses.
+A fresh Spike instance replays that trace with strict comparison.
+
+This is a native reference-to-reference transport check. No vector DUT is at
+hand. It does not establish independent vector arithmetic correctness or a DUT
+suite pass. The scalar VexRiscv example cannot execute this workload. The shim
+refuses vector device accesses, translated memory and partial fault effects.
+
+Native validation on 2026-11-13 used source revision
+`f76bff121dce91b6b23e1d37be77a5e44af914c3` and environment revision
+`81721c126d7dd7335829948b4a19070546e465d6`. The slice completed 1,333 instructions
+and compared 2,536 vector memory accesses. Fresh-Spike strict C2 replay matched
+the complete trace with zero synchronizations. VLEN was 128 and ELEN was 64.
+This result is not a vector DUT result.

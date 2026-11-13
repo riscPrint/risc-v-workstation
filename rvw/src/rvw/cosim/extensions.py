@@ -12,6 +12,8 @@ def has_extension(isa, letter):
 
 
 def header_fields(header):
+    if 'vector_memory' in header and (header['vector_memory'] is not True or not header.get('vector')):
+        raise ValueError('vector_memory requires vector capture and true declaration')
     for name, letter in (("vector", "v"), ("hypervisor", "h")):
         if has_extension(header["isa"], letter):
             if header["schema"] != "rvw.rvfi/2" or not header.get(name):
@@ -36,6 +38,19 @@ def header_fields(header):
 
 def state_fields(obj, header):
     from .trace import hexnum
+    if ('vector_accesses' in obj) != bool(header.get('vector_memory')):
+        raise ValueError('vector memory observations must match header declaration')
+    if header.get('vector_memory'):
+        accesses = obj['vector_accesses']
+        if not isinstance(accesses, list):
+            raise ValueError('vector_accesses must be a list')
+        for a in accesses:
+            if (not isinstance(a, dict) or set(a) != {'kind', 'address', 'size', 'data'}
+                    or a['kind'] not in ('read', 'write') or type(a['size']) is not int
+                    or a['size'] not in (1, 2, 4, 8)):
+                raise ValueError('invalid vector memory access')
+            a['address'] = hex(hexnum(a['address'], header['xlen']))
+            a['data'] = hex(hexnum(a['data'], a['size'] * 8))
     for name in ("vector", "hypervisor", "debug"):
         if (name in obj) != (name in header):
             raise ValueError(f"{name} state must match header declaration")
@@ -74,6 +89,13 @@ def state_fields(obj, header):
 
 def compare_extensions(actual, expected, header):
     diff = {}
+    if header.get('vector_memory'):
+        if 'vector_accesses' not in expected:
+            raise ValueError('reference cannot check ordered vector memory')
+        if actual['vector_accesses'] != expected['vector_accesses']:
+            diff['vector_accesses'] = dict(expected=expected['vector_accesses'], actual=actual['vector_accesses'])
+    elif expected.get('vector_accesses'):
+        raise ValueError('trace lacks ordered vector memory capture')
     for name in ("vector", "hypervisor", "debug"):
         if name not in header:
             continue

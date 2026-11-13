@@ -40,6 +40,7 @@ struct Machine : simif_t {
   uint64_t io_addr = 0, io_value = 0;
   bool inject = false;
   bool step_virtual = false;
+  std::string vector_memory = "[]";
   Machine(const char* instruction_set, const uint64_t* regions, size_t nr,
           const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp, uint64_t grain,
           const char* modes, bool misaligned, bool absent_pmp_zero)
@@ -101,9 +102,10 @@ struct Machine : simif_t {
       auto dis=cpu->get_disassembler()->disassemble(fetch.insn);
       snprintf(e.disasm,sizeof(e.disasm),"%s",dis.c_str());
     } catch(...) { snprintf(e.disasm,sizeof(e.disasm),"<instruction fetch fault>"); }
-    if(cpu->extension_enabled('V') && ((e.insn&0x7f)==7 || (e.insn&0x7f)==0x27)
-        && (((e.insn>>12)&7)==0 || ((e.insn>>12)&7)>=5))
-      throw std::runtime_error("vector memory requires ordered per-access reference observations");
+    vector_memory = "[]";
+    bool vector_access = cpu->extension_enabled('V') &&
+      ((e.insn&0x7f)==7 || (e.insn&0x7f)==0x27) &&
+      (((e.insn>>12)&7)==0 || ((e.insn>>12)&7)>=5);
     // Refuse emulated split accesses before execution. A fault on the second
     // part could leave partial stores that scalar C2 cannot report.
     if(cfg.misaligned) {
@@ -182,34 +184,66 @@ struct Machine : simif_t {
         if(e.rd) throw std::runtime_error("multiple integer writes cannot be represented by C2");
         e.rd=key>>4; e.rd_wdata=value.v[0];
       }
-      if(s->log_mem_read.size()>1 || s->log_mem_write.size()>1)
-        throw std::runtime_error("multiple memory accesses cannot be represented by scalar C2");
-      // Scalar C2 has one address and no bus transaction/partial-effect records.
-      // Refuse split-word/page completion even if the reference can execute it.
-      auto check_split = [&](const auto& accesses) {
-        for(auto [addr,data,size]:accesses)
-          if(size && addr/(cpu->get_xlen()/8)!=(addr+size-1)/(cpu->get_xlen()/8))
-            throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
-      };
-      check_split(s->log_mem_read); check_split(s->log_mem_write);
-      auto reads=s->log_mem_read;
-      auto writes=s->log_mem_write;
-      for(auto [addr,data,size]:reads) {
-        if(size>8) throw std::runtime_error("wide load requires an extended trace contract");
-        e.mem_addr=addr; e.mem_rmask=(1ULL<<size)-1;
-        if(amo_valid) e.mem_rdata=amo_data;
-        else switch(size) {
-          case 1: e.mem_rdata=cpu->get_mmu()->load<uint8_t>(addr); break;
-          case 2: e.mem_rdata=cpu->get_mmu()->load<uint16_t>(addr); break;
-          case 4: e.mem_rdata=cpu->get_mmu()->load<uint32_t>(addr); break;
-          case 8: e.mem_rdata=cpu->get_mmu()->load<uint64_t>(addr); break;
-          default: throw std::runtime_error("unsupported scalar load size");
+      if(vector_access) {
+        if(s->satp->read() != 0 || s->v) throw std::runtime_error("vector memory observation requires bare RAM without translation");
+        // Bare RAM only. Vector loads and stores cannot share one instruction.
+        // Read logs have addresses and sizes, but no raw load values.
+        const auto reads = s->log_mem_read;
+        const auto writes = s->log_mem_write;
+        if(!reads.empty() && !writes.empty())
+          throw std::runtime_error("mixed vector memory directions unsupported");
+        std::ostringstream out; out << "["; bool first=true;
+        auto append = [&](const char* kind, uint64_t addr, uint64_t data, size_t size) {
+          if(!size || size>8) throw std::runtime_error("unsupported vector element width");
+          for(size_t i=0;i<size;i++) if(!addr_to_mem(addr+i))
+            throw std::runtime_error("vector memory observation requires bare RAM");
+          if(size<8) data &= (uint64_t(1)<<(8*size))-1;
+          if(!first) out << ","; first=false;
+          out << "{\"kind\":\"" << kind << "\",\"address\":\"0x" << std::hex << addr
+              << "\",\"size\":" << std::dec << size << ",\"data\":\"0x" << std::hex << data << "\"}";
+        };
+        for(auto [addr,data,size]:reads) {
+          if(!size || size>8) throw std::runtime_error("unsupported vector element width");
+          uint64_t value=0;
+          for(size_t i=0;i<size;i++) {
+            auto* byte=addr_to_mem(addr+i);
+            if(!byte) throw std::runtime_error("vector memory observation requires bare RAM");
+            value |= uint64_t(uint8_t(*byte)) << (8*i);
+          }
+          append("read",addr,value,size);
         }
-      }
-      for(auto [addr,data,size]:writes) {
-        if(size>8) throw std::runtime_error("wide store requires an extended trace contract");
-        if(e.mem_rmask && e.mem_addr!=addr) throw std::runtime_error("split AMO address");
-        e.mem_addr=addr; e.mem_wmask=(1ULL<<size)-1; e.mem_wdata=data;
+        for(auto [addr,data,size]:writes) append("write",addr,data,size);
+        out << "]"; vector_memory=out.str();
+      } else {
+        if(s->log_mem_read.size()>1 || s->log_mem_write.size()>1)
+          throw std::runtime_error("multiple memory accesses cannot be represented by scalar C2");
+        // Scalar C2 has one address and no bus transaction/partial-effect records.
+        // Refuse split-word/page completion even if the reference can execute it.
+        auto check_split = [&](const auto& accesses) {
+          for(auto [addr,data,size]:accesses)
+            if(size && addr/(cpu->get_xlen()/8)!=(addr+size-1)/(cpu->get_xlen()/8))
+              throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
+        };
+        check_split(s->log_mem_read); check_split(s->log_mem_write);
+        auto reads=s->log_mem_read;
+        auto writes=s->log_mem_write;
+        for(auto [addr,data,size]:reads) {
+          if(size>8) throw std::runtime_error("wide load requires an extended trace contract");
+          e.mem_addr=addr; e.mem_rmask=(1ULL<<size)-1;
+          if(amo_valid) e.mem_rdata=amo_data;
+          else switch(size) {
+            case 1: e.mem_rdata=cpu->get_mmu()->load<uint8_t>(addr); break;
+            case 2: e.mem_rdata=cpu->get_mmu()->load<uint16_t>(addr); break;
+            case 4: e.mem_rdata=cpu->get_mmu()->load<uint32_t>(addr); break;
+            case 8: e.mem_rdata=cpu->get_mmu()->load<uint64_t>(addr); break;
+            default: throw std::runtime_error("unsupported scalar load size");
+          }
+        }
+        for(auto [addr,data,size]:writes) {
+          if(size>8) throw std::runtime_error("wide store requires an extended trace contract");
+          if(e.mem_rmask && e.mem_addr!=addr) throw std::runtime_error("split AMO address");
+          e.mem_addr=addr; e.mem_wmask=(1ULL<<size)-1; e.mem_wdata=data;
+        }
       }
     }
     for(auto& [key,value]:s->log_reg_write) if((key&15)==1) {
@@ -328,6 +362,7 @@ int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
   catch(...) { error="reference cannot observe requested CSR"; return -1; }
 }
 // Snapshot bytes use architectural byte order, independent of host endian.
+const char* rvw_vector_memory(void* m) { return static_cast<Machine*>(m)->vector_memory.c_str(); }
 int rvw_vector(void* m, uint64_t* meta, uint8_t* data, size_t capacity) {
   try {
     auto* cpu=static_cast<Machine*>(m)->cpu.get(); auto& v=cpu->VU;
