@@ -143,3 +143,19 @@ an empty tuple. Its effect description must still name system commands such as
 Git and SSH, and project-selected commands. Keep the native declaration unknown
 when an optional dependency has no inventory entry. Do not hide that gap with an
 empty tuple.
+
+## Native tool inventory gaps
+
+Every discovered tool declares its effects beside its registration.
+Three dependencies have no optional installer inventory ID:
+
+- `arch_sched_study` can launch llvm-mca.
+- `cov_mutate` can launch MCY.
+- `farm_batch` can launch kubectl.
+
+These tools retain unknown `native_tools` metadata and one audit finding each.
+Their effects name the missing dependency.
+An empty tuple must not hide an unknown dependency.
+Git is a base installer prerequisite. Replay tools name Git in their effects.
+The audit baseline contains only these three findings.
+The fast inventory test checks this boundary and the replay/SVA discovery paths.
