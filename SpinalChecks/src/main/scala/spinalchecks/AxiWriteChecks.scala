@@ -53,7 +53,7 @@ private[spinalchecks] object AxiWriteChecks {
       q.pop := b.fire && bi === i
       q
     }
-    val known = Vec(pending.map(_.valid))(bi.resize(log2Up(ids)))
+    val known = Vec(pending.map(_.count =/= 0))(bi.resize(log2Up(ids)))
     val exclusive = Vec(pending.map(_.output(0)))(bi.resize(log2Up(ids)))
     emit("axi4.write_match", "_b", b.valid.isInput,
       "B ID follows AW and complete W burst; EXOKAY needs an exclusive request",

@@ -20,12 +20,12 @@ def fields(kind='axi4'):
     return result
 
 
-@pytest.mark.parametrize('case',['good','w_before_aw','w_before_aw_narrow','w_before_aw_strobe','zero','reorder','interleave','exclusive','error_response','narrow','wrap','unaligned','strobe','wlast','w_missing_last','w_short_prefix','w_prefix_ok','b_premature','rlast','rid','bid','r_exokay','b_exokay','boundary','capacity'])
+@pytest.mark.parametrize('case',['good','w_before_aw','w_before_aw_narrow','w_before_aw_strobe','zero','reorder','interleave','exclusive','error_response','reset','orphan_reset','narrow','wrap','unaligned','strobe','wlast','w_missing_last','w_short_prefix','w_prefix_ok','b_premature','rlast','rid','bid','r_exokay','b_exokay','boundary','capacity'])
 def test_full_axi_tracker(tmp_path,case):
     check(tmp_path,'axi4',case)
 
 
-@pytest.mark.parametrize('case',['good','w_before_aw','zero','bid','r_exokay'])
+@pytest.mark.parametrize('case',['good','reset','orphan_reset','w_before_aw','zero','bid','r_exokay'])
 def test_lite_tracker(tmp_path,case):
     check(tmp_path,'axi_lite4',case)
 
@@ -55,6 +55,10 @@ def check(tmp_path,kind,case):
             if case=='w_prefix_ok':v={'aw':'phase==2','w':'(phase==1 || phase==4)','b':'phase==5'}.get(ch,v)
             if case=='b_premature' and ch=='b':v='phase==2'
             if case=='capacity':v='(phase>=1 && phase<=3)' if ch=='ar' else '0'
+        if case=='reset' and key.endswith('valid'):
+            v={'aw':'(phase==1 || phase==4)','ar':'(phase==1 || phase==4)',
+               'w':'(phase==1 || phase==5)' if lite else '(phase==1 || phase==5 || phase==6)',
+               'r':'phase==5' if lite else '(phase==5 || phase==6)','b':'phase==6' if lite else 'phase==7'}[ch]
         if key.endswith('payload.id'):
             v='1' if ch in ('aw','b') else '0'
             if case=='rid' and ch=='r':v='1'
@@ -79,6 +83,7 @@ def check(tmp_path,kind,case):
             if case==ch+'last':v='1'
             if ch=='w' and case in ('w_missing_last','w_short_prefix'):v='0'
             if ch=='w' and case=='w_prefix_ok':v='phase==4'
+        if key.endswith('payload.last') and case=='reset':v='phase==6'
         if key=='r.payload.last' and case=='interleave':v='phase>=5'
         if key.endswith('payload.resp') and case=='error_response':v='2'
         if key.endswith('payload.lock') and case=='exclusive':v='1'
@@ -87,7 +92,8 @@ def check(tmp_path,kind,case):
         # AXI-Lite has no IDs: use an unsolicited response for its orphan case.
         if lite and case=='bid' and key=='b.valid':v='phase==1'
         wires.append(f'wire [{row[3]-1}:0] {row[0]}={v};')
-    source+='module fixture(input clk); reg [4:0] phase=0; always @(posedge clk) if(phase<12) phase<=phase+1; wire reset=phase==0;\n'+'\n'.join(wires)+'\nmonitor dut(.*); endmodule\n'
+    reset='phase==0 || phase==2' if case in ('reset','orphan_reset') else 'phase==0'
+    source+=f'module fixture(input clk); reg [4:0] phase=0; always @(posedge clk) if(phase<12) phase<=phase+1; wire reset={reset};\n'+'\n'.join(wires)+'\nmonitor dut(.*); endmodule\n'
     (tmp_path/'design.sv').write_text(source)
     engine='abc pdr' if lite else 'smtbmc yices'
     (tmp_path/'proof.sby').write_text(f'''[options]
@@ -104,5 +110,5 @@ design.sv
     r=run_group(['nice','-n','10','sby','-f','proof.sby'],cwd=tmp_path,capture=True,timeout=60)
     status=tmp_path/'proof/status'
     assert status.exists(),r.stdout+r.stderr
-    good=case in ('good','w_before_aw','zero','reorder','interleave','exclusive','error_response','w_prefix_ok','narrow','wrap','unaligned','w_before_aw_narrow')
+    good=case in ('good','w_before_aw','reset','reorder','interleave','exclusive','error_response','w_prefix_ok','narrow','wrap','unaligned','w_before_aw_narrow')
     assert status.read_text().split()[0]==('PASS' if good else 'FAIL'),r.stdout+r.stderr
