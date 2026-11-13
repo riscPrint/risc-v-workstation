@@ -11,7 +11,7 @@ Use an installed SystemC development library and native Verilator. Set
 Source the native Verilator environment, then run from the repository root:
 
 ```sh
-nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/test_systemc_tlm.py -q
+nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/test_systemc_tlm.py rvw/tests/test_systemc_tlm_multi.py -q
 ```
 
 The test runs the real Verilator `--sc --exe --build` command. It builds with
@@ -41,8 +41,27 @@ the target.
 The target supports blocking reads and writes, byte enables and range checks.
 Data bytes have no implicit endian conversion. The bridge packs little-endian
 32-bit words. Streaming widths smaller than the data length are refused.
-DMI, atomics, nonblocking transport, multiple initiators, temporal decoupling,
+DMI, atomics, nonblocking transport, temporal decoupling,
 interrupt delivery, plugin ABI binding and checkpoint restore are not supplied.
 The example's fixed delay is not measured device timing. The target alone is
 not a cycle-accurate memory model. A different bridge must define its own
 request sampling and response timing. This does not qualify a whole core.
+
+## Multiple initiators
+
+The target uses a TLM multi-passthrough socket. More than one initiator can
+bind to the same memory. The SystemC kernel orders blocking calls. The target
+applies each call before it returns. It records successful reads and writes
+for each socket binding in `initiatorReads` and `initiatorWrites`.
+
+`multi.cpp` binds two real SystemC initiators. They write one shared address
+at 1 ns and 3 ns. Both read the second value at 10 ns. They also check separate
+byte locations. Each caller consumes the configured 2 ns delay. The test checks
+four reads, four writes and two of each operation per initiator. This native
+test and the existing Verilator RTL bridge test passed together on 2026-11-13
+with SystemC 3.0.2 and Verilator 5.049.
+
+Call-time ordering does not model bus arbitration or fairness. Calls at the
+same simulation time use kernel process order. Annotated completion times do
+not reorder effects. The target has no host-thread synchronization. It does
+not support parallel host-thread access or independent TLM kernels.
