@@ -3115,6 +3115,24 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Hypervisor MMU matrices
+
+`rvw.mmu/1` may contain `guest_matrix = {"modes": [...]}` instead of scenarios.
+Supported modes are sv39, sv48 and sv57. The generator crosses the selected
+VS and x4 G geometries. Guest scenarios may give `guest_mode`, `guest_op`
+(hlv.d, hlvx.wu, hsv.d, vs-satp, vs-sfence, vs-sret), `guest_trap` (m or hs),
+and boolean `guest_switch`. VS controls require `expect = "virtual-instruction"`.
+`ad_mode` and `ad_expect` select VS-stage A/D behavior and check the full PTE.
+G roots have 16 KiB alignment and widened top-level indices. hgatp and vsatp
+readback must preserve the selected modes. G faults check mtval2 or htval and
+mtinst or htinst. Trap-instruction values may be zero or the specified
+transformed instruction. `guest_switch` uses two G roots with different payloads
+under the same VMID. It fences each switch, including reuse. It requires a
+successful M-mode HLV.D test. Independent `mmu_nested.translate` checks G walks
+for every VS PTE read as well as for the final payload. Its Python results do
+not imply DUT capture or nested-walk comparison. Hardware A/D and extension
+PTE walk models remain outside its scope.
+
 ### Translation protocol probes
 
 `rvw regress mmu report --protocol-config FILE` reads `rvw.mmu-probes/1`.

@@ -34,6 +34,9 @@ def number(value):
 
 def load(path):
     raw = json.loads(Path(path).read_text())
+    if set(raw) == {'schema', 'guest_matrix'} and raw['schema'] == 'rvw.mmu/1':
+        from .mmu_hypervisor import matrix as guest_matrix
+        raw = dict(schema=raw['schema'], scenarios=guest_matrix(raw['guest_matrix']))
     if set(raw) == {'schema', 'matrix'} and raw['schema'] == 'rvw.mmu/1':
         from .mmu_paging import matrix
         raw = dict(schema=raw['schema'], scenarios=matrix(raw['matrix']))
@@ -56,7 +59,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -75,8 +78,10 @@ def validate(s):
         raise ValueError('mode_switch requires a successful data access without remap')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
         raise ValueError('invalid PTE flags')
-    if s['access'] not in ('load', 'store', 'fetch') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
+    if s['access'] not in ('load', 'store', 'fetch') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned', 'virtual-instruction'):
         raise ValueError('unsupported access or expectation')
+    if s['expect'] == 'virtual-instruction' and not s.get('guest_op', '').startswith('vs-'):
+        raise ValueError('virtual-instruction requires a VS control operation')
     if s['access'] == 'fetch' and (s['expect'] not in ('success', 'page-fault', 'access-fault') or any(k in s for k in ('remap', 'unfenced', 'switch_asid', 'offset', 'access_width', 'register_width', 'mprv', 'satp_mode', 'ad_expect')) or number(s.get('pa', DATA)) != DATA):
         raise ValueError('fetch requires a fixed payload at DATA and no data-only options')
     width = s.get('access_width', g.width)
