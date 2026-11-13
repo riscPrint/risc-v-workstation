@@ -147,6 +147,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     def result(status, **extra):
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
+                "reference_limits": list(getattr(model, "limitations", ())),
                 "state_coverage": {"trace_schema": trace.header["schema"],
                                    "fp": trace.header["schema"] == "rvw.rvfi/2" and trace.state and last_order is not None,
                                    "vector": trace.header.get("vector") if last_order is not None else None,

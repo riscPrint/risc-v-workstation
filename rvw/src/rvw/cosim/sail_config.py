@@ -64,15 +64,14 @@ def merge(base, override):
 
 
 def build_config(base, platform, regions, *, custom=False):
-    if (platform.pmp_granularity != 4 or platform.privilege_modes != "MSU" or platform.misaligned["load"] != "trap"
-            or platform.absent_pmp_csrs != "trap" or platform.ecall_tval != "zero"):
-        raise ValueError("Sail cannot implement these privilege/misaligned/absent-PMP/ecall platform settings")
-    wanted = isa_extensions(platform.reference_isa or platform.isa, platform.xlen)
+    if platform.pmp_granularity != 4 or platform.misaligned["load"] != "trap":
+        raise ValueError("Sail cannot implement these PMP-granularity/misaligned platform settings")
+    wanted = isa_extensions(platform.sail_reference_isa or platform.reference_isa or platform.isa, platform.xlen)
     c = copy.deepcopy(base)
     if c["base"]["xlen"] != platform.xlen:
         raise ValueError("Sail config XLEN differs from the platform")
     # Start from the config's non-ISA parameters, but no default instruction extensions.
-    # Only explicit privileged tuning survives. The shim always models MSU.
+    # Only explicit privileged tuning survives. Privilege support follows the platform.
     tuning = {name: copy.deepcopy(c["extensions"][name]) for name in TUNING} if custom else {}
     c = merge(c, platform.sail_overrides)
     for name in TUNING & platform.sail_overrides.get("extensions", {}).keys():
@@ -93,15 +92,15 @@ def build_config(base, platform, regions, *, custom=False):
     c["base"]["xlen"] = platform.xlen
     c["base"]["hpmevent_width_bits"] = min(c["base"]["hpmevent_width_bits"], platform.xlen)
     for name, value in privilege.items():
-        c["extensions"][name] = dict(value, supported=True, mutable_misa=False)
+        c["extensions"][name] = dict(value, supported=name in platform.privilege_modes, mutable_misa=False)
     # Remove delegation bits for disabled H, double-trap and software-check extensions.
     if not custom and "medeleg" not in platform.sail_overrides.get("base", {}):
         c["base"]["medeleg"]["delegatable_bits"] = {"len": 64, "value": "0xb3ff"}
     if not custom and "mideleg" not in platform.sail_overrides.get("base", {}):
         c["base"]["mideleg"]["delegatable_bits"] = {"len": "xlen", "value": "0x222"}
-    for name in ("S", "U", "Svbare", "Sv32" if platform.xlen == 32 else "Sv39"):
+    for name in (("Svbare", "Sv32" if platform.xlen == 32 else "Sv39") if "S" in platform.privilege_modes else ()):
         c["extensions"][name]["supported"] = True
-    if platform.xlen == 64:
+    if platform.xlen == 64 and "S" in platform.privilege_modes:
         for name in ("Sv48", "Sv57"):
             c["extensions"][name]["supported"] = True
     for name, value in tuning.items():
@@ -112,8 +111,14 @@ def build_config(base, platform, regions, *, custom=False):
             if "mutable_misa" in value:
                 value["mutable_misa"] = mutability[name]
     c["extensions"]["C"]["mutable_misa"] = "c" in wanted and mutability["C"]
+    if "S" not in platform.privilege_modes:
+        c["memory"]["physaddr_bits"] = min(c["memory"]["physaddr_bits"], platform.xlen)
+        if "f" not in wanted:
+            c["base"]["mstatus"]["fs_legal_states"] = "ExtContext_Off"
+        c["base"]["mstatus"]["vs_legal_states"] = "ExtContext_Off"
     # Match Spike's explicit pmpregions and misaligned=false. Sail has fixed CSR-bank sizes.
-    c["memory"]["pmp"].update(count=0 if platform.pmp_regions == 0 else 16 if platform.pmp_regions <= 16 else 64,
+    c["memory"]["pmp"].update(count=64 if platform.absent_pmp_csrs == "read_zero_write_ignored" else
+                               0 if platform.pmp_regions == 0 else 16 if platform.pmp_regions <= 16 else 64,
                                usable_count=platform.pmp_regions)
     c["memory"]["regions"] = regions
     for name in ("load_store", "amo", "lrsc"):
@@ -146,11 +151,11 @@ def prepare_config(platform, executable, config, directory, regions, timeout, *,
     # Sail advertises privilege and LR/SC capability aliases that are not instruction choices.
     expected = wanted | {name.lower() for name in TUNING - {"Svbare", "Sv32", "Sv39", "Sv48", "Sv57"}
                          if effective["extensions"][name]["supported"]}
-    if platform.xlen == 64:
+    if platform.xlen == 64 and "U" in platform.privilege_modes:
         expected.add("ssu64xl")
     if "zalrsc" in wanted:
         expected |= {"za64rs", "za128rs"}
     if reported != expected:
-        raise ValueError(f"Sail effective ISA cannot be confirmed: requested {platform.reference_isa or platform.isa}, "
+        raise ValueError(f"Sail effective ISA cannot be confirmed: requested {platform.sail_reference_isa or platform.reference_isa or platform.isa}, "
                          f"reported {actual!r}; missing {sorted(expected - reported)}, extra {sorted(reported - expected)}")
     return path

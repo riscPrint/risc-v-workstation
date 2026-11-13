@@ -197,3 +197,19 @@ UTF-8 bytes per line. A longer line fails. The client returns 0 for continue,
 1 for a complete match, 2 for a comparison stop and -1 for transport failure.
 Only a complete match acknowledges the end record. The source digest enters
 the Verilator cache key. This transport does not add architectural masks.
+
+## Sail model selection and policy bounds
+
+The optional platform field `sail_reference_isa` selects Sail's instruction ISA.
+It must use the platform XLEN. It does not change the DUT ISA or Spike's
+`reference_isa`. The checker confirms Sail's effective ISA before execution.
+Sail rejects counter/MMIO reads and cannot observe general CSR snapshots.
+M-only and MU profiles configure S/U support explicitly. An empty PMP CSR bank
+with zero usable entries implements declared zero reads and ignored writes.
+
+C5 reports include `reference_limits`, a list of reference capability limits.
+For `ecall_tval: "insn"`, the exact ECALL event value remains `0x73` and its use
+is recorded in `recent_quirks`. Sail's raw CSR state is not overwritten from
+DUT data. A later `mtval` read is refused until an independent full CSR write
+or another trap restores common state. An unsupported observation cannot earn
+a complete match. There is no arbitrary trap-value mask.

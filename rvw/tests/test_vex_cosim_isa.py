@@ -40,3 +40,19 @@ def test_empty_campaign_cannot_match(tmp_path):
 def test_private_lock_in_launcher(core):
     script = (ROOT / f'examples/{core}/rvw/run.sh').read_text()
     assert '"${RVW_VEX_LOCK:-vex}"' in script
+
+@pytest.mark.parametrize('references,expected', [
+    ({'spike': {'status': 'match', 'trace_complete': True},
+      'sail': {'status': 'match', 'trace_complete': True}}, 0),
+    ({'spike': {'status': 'match', 'trace_complete': True}}, 1),
+    ({'spike': {'status': 'match', 'trace_complete': True},
+      'sail': {'status': 'match', 'trace_complete': False}}, 1),
+])
+def test_adjudication_requires_both_complete_references(tmp_path, monkeypatch, references, expected):
+    manifest = tmp_path/'jobs.jsonl'
+    manifest.write_text(json.dumps(dict(elf='test.elf', out='run'))+'\n')
+    def run(command, **kwargs):
+        assert command[3:5] == ['cosim', 'adjudicate']
+        return SimpleNamespace(returncode=0, stdout=json.dumps(dict(status='match', references=references)), stderr='')
+    monkeypatch.setattr(check_isa, 'run_group', run)
+    assert check_isa.compare(manifest, tmp_path/'report.json', adjudicate=True) == expected

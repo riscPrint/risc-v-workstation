@@ -371,6 +371,11 @@ class Sail:
 
     def _initialize(self, platform, elf, trace_path, executable, config, timeout, env, default_config):
         self.platform = platform
+        self.limitations = ["counter and MMIO reads are rejected", "CSR snapshots are not observed"]
+        if platform.ecall_tval == "insn":
+            self.limitations.append("ECALL tval follows the explicit platform policy; subsequent mtval reads require an independent full overwrite")
+        if platform.sail_reference_isa:
+            self.limitations.append("selected Sail ISA: " + platform.sail_reference_isa)
         image = Elf(elf)
         if image.xlen != platform.xlen or image.entry != platform.reset_pc:
             raise ValueError("Sail requires matching ELF XLEN and reset_pc at the ELF entry")
@@ -425,6 +430,16 @@ class Sail:
             self.close()
             raise
 
+    def set_trap_tval(self, value):
+        """Accept only the declared ECALL event value, without inventing Sail CSR state.
+
+        Raw Sail wrote zero. A later read cannot use that stale state. Refuse it
+        until an independent CSR write or another trap restores common state.
+        """
+        if self.platform.ecall_tval != "insn" or value != 0x73:
+            raise ValueError("Sail cannot apply this trap-value policy")
+        self.tval_override_pending = True
+
     def step(self, interrupt=0, mmio=None):
         """Sail's next step. With `interrupt` (a core trap event) Sail must have taken that
         interrupt itself; the checker compares the cause, and a step without one is a mismatch."""
@@ -436,6 +451,15 @@ class Sail:
             raise ValueError("Sail trace ended before the core trace (or lacks next-PC lookahead)") from exc
         if "end" in effect:
             raise ReferenceEnded(effect["end"])
+        if effect["trap"]:
+            self.tval_override_pending = False
+        if getattr(self, "tval_override_pending", False) and (effect["insn"] & 0x7f) == 0x73:
+            csr, op, rd = effect["insn"] >> 20, (effect["insn"] >> 12) & 7, (effect["insn"] >> 7) & 31
+            if csr == 0x343 and op:
+                if op in (1, 5) and rd == 0:
+                    self.tval_override_pending = False
+                else:
+                    raise ValueError("Sail cannot propagate instruction-valued ECALL mtval through a CSR read")
         if interrupt and not effect["intr"]:
             # The core took an interrupt here and Sail did not: keep Sail's step for the
             # report, marked as no trap so the checker reports the difference.

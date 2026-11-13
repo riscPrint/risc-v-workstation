@@ -74,6 +74,7 @@ class Platform:
     cheri: dict | None = None
     reference_extensions: list = field(default_factory=list)
     ecall_tval: str = "zero"
+    sail_reference_isa: str | None = None
 
     @classmethod
     def load(cls, core, path=None):
@@ -95,6 +96,7 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        p.sail_reference_isa = obj.get("sail_reference_isa")
         from .cheri import validate as validate_cheri
         p.cheri = validate_cheri(obj.get("cheri"))
         from .custom import validate_extensions
@@ -158,6 +160,10 @@ class Platform:
                 or not re.fullmatch(r"rv(?:32|64)[a-z0-9_]+", p.reference_isa)
                 or not p.reference_isa.startswith(f"rv{p.xlen}")):
             raise ValueError("invalid reference_isa")
+        if p.sail_reference_isa is not None and (not isinstance(p.sail_reference_isa, str)
+                or not re.fullmatch(r"rv(?:32|64)[a-z0-9_]+", p.sail_reference_isa)
+                or not p.sail_reference_isa.startswith(f"rv{p.xlen}")):
+            raise ValueError("invalid sail_reference_isa")
         if type(p.aligned_mem) is not bool:
             raise ValueError("aligned_mem must be boolean")
         if not 0 <= p.reset_pc < 1 << p.xlen:

@@ -179,3 +179,16 @@ Conditional masks describe allowed synchronization. Run `cosim check` to see
 which masks were applied and how much state was actually compared. This first
 inspection uses the Spike checker policy. It does not certify reference support,
 multi-hart ordering, trace provenance or full architectural state capture.
+
+### Sail machine-only profiles
+
+Sail can select M-only or MU privilege and a declared empty PMP CSR bank.
+`sail_reference_isa` can select its supported instruction subset separately
+from Spike. Counter and MMIO reads remain rejected. General CSR snapshots are
+not observed. The example can select a C2/1 capture for the common GPR, memory
+and trap scope. This does not imply CSR equivalence.
+
+The exact instruction-valued ECALL trap policy is reported as a quirk. Sail's
+own CSR state remains unchanged. A later `mtval` read is refused until a full
+independent write or another trap removes the state difference. The checker
+never takes arbitrary trap bits from the DUT to make a match.
