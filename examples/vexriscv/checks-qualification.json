@@ -7,7 +7,7 @@
       "generated": 1,
       "bound": 1,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -17,7 +17,7 @@
       "generated": 1,
       "bound": 1,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -27,7 +27,7 @@
       "generated": 1,
       "bound": 1,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -37,7 +37,7 @@
       "generated": 2,
       "bound": 2,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 2,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -47,7 +47,7 @@
       "generated": 4,
       "bound": 4,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 4,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -57,7 +57,7 @@
       "generated": 22,
       "bound": 22,
       "proven": 0,
-      "bounded": 1,
+      "bounded": 22,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -67,7 +67,7 @@
       "generated": 20,
       "bound": 20,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 20,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -77,7 +77,7 @@
       "generated": 1,
       "bound": 1,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -87,7 +87,7 @@
       "generated": 5,
       "bound": 5,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 5,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -341,7 +341,7 @@
       "elf_sha256": "fc7631a142b19c5cf1a2b6be5e698ef53c1549ce7f80944020cd650d681fbd95"
     }
   ],
-  "formal": "rvw/out/qualification-proof/result.json",
+  "formal": "$CHECKOUT/SpinalChecks/out/resume-formal/vex-results/result.json",
   "limitations": [
     "Null means NOT RUN. Zero means no matching observation in supplied evidence.",
     "Simulation covers exercised behavior only. Formal requirements are project associations.",
@@ -357,13 +357,14 @@
   },
   "artifacts_sha256": {
     "inventory": "612d3e364284ead9e5bda1581d981cf0361fd9a11df4c65f4629a3f2d6cc519f",
-    "formal": "806d0870c9eeb9163782cbabef0bf8d7bb73c5b37d3e69c42588c8146b1c4e83"
+    "formal": "67ea98b9e543f01c31b87321070308bf98fc20dbd7d00a0ce2f4cce5973b28a9"
   },
   "limits": [
-    "One selected check has a bounded pass at depth 4 with two initial reset samples. No activation evidence or unbounded proof.",
-    "Bounded simulation covers only the recorded programs. Source changes during this item are uncommitted in the capture. No release acceptance."
+    "Bounded simulation covers only the recorded programs. Source changes during this item are uncommitted in the capture. No release acceptance.",
+    "All generated IDs passed depth-4 BMC on the retained #921 formal capture. Vexii PC check is the original strict rule. No activation evidence or unbounded proof."
   ],
   "programs": {
     "pass": 49
-  }
+  },
+  "formal_campaign": "SpinalChecks/connected-depth4-results.json"
 }

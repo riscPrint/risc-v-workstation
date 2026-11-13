@@ -461,15 +461,17 @@ remaining limits for the independent scratch core.
 ## Connected generated check captures
 
 The 2026-11-13 captures compile generated checks into the selected simulation.
-These are native counts. A bounded count covers one selected check through BMC
-depth 4, with two initial reset samples. Activation was not measured. No
-unbounded proof was obtained. The other checks remain unproven.
+These are native simulation counts and depth-4 BMC counts for all 99 check IDs.
+Each formal job selects one fail signal in the retained #921 RTL capture. Reset
+is constrained for two samples. Activation was not measured. No unbounded proof
+was obtained. The Vexii PC formal rule is the original strict rule before the
+later cancellation binding. See the [formal record](../SpinalChecks/connected-depth4-results.json).
 
 | Design | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
-| VexRiscv | 57 | 57 | 0 | 1 | 0 / 0 | 0; native bindings present |
-| VexiiRiscv | 25 | 25 | 0 | 1 | 0 / 0 | 0; native bindings present |
-| Composed RV32 stub SoC | 17 | 17 | 0 | 1 | 0 / 0 | 0; native bindings present |
+| VexRiscv | 57 | 57 | 0 | 57 | 0 / 0 | 0; native bindings present |
+| VexiiRiscv | 25 | 25 | 0 | 25 | 0 / 0 | 0; native bindings present |
+| Composed RV32 stub SoC | 17 | 17 | 0 | 17 | 0 / 0 | 0; native bindings present |
 
 VexRiscv passed 49 aligned ISA programs with 49 C1 passes. VexiiRiscv ran two
 CSR programs. Both have C1 passes after an exact PC hold cancellation binding.
