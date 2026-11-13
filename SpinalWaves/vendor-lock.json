@@ -441,7 +441,7 @@
     "third_party/tywaves-rs/src/tyvcd/mod.rs": "7d24fe84bffbb7cba5161ff1131ae3d59cea49ba0174c6d46bdfaf98799d4407",
     "third_party/tywaves-rs/src/tyvcd/spec.rs": "57c8dbf921b858b486d60adb30d7ddd8795b5145cb950c8cdf9c6603905f5ab4",
     "third_party/tywaves-rs/src/tyvcd/trace_pointer.rs": "923199f0d19b87927eb86ee7ae078f9e494a500af634ad38ef3cf966be93dffe",
-    "third_party/tywaves-rs/src/vcd_rewrite.rs": "db36f3a18aa2d72aec60de67182bbcb16ccc4f4d8d2219865a0940b87b71c099",
+    "third_party/tywaves-rs/src/vcd_rewrite.rs": "e44d9a11484cc42b1809a69ddda5815a523d576e39433b4ece89f4ee1b7f8290",
     "third_party/tywaves-rs/tests/expected_tyvcd/bar.rs": "7313c4d6b0f8abd44892ef4c14f8cef7fe5139e0860a2a4a3a6d09cc7beb086d",
     "third_party/tywaves-rs/tests/expected_tyvcd/foo.rs": "3448ea1a8d17517f6961c55b97ad68cc2c7d282d3dc97f9647bf111be1397ad2",
     "third_party/tywaves-rs/tests/expected_tyvcd/mod.rs": "f6f52b198f2097d10fe8252b02fbf788b4a82f6762ac04dc02086dcbf9309bb7",

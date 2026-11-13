@@ -294,6 +294,10 @@ impl VcdRewriter {
             }
         }
 
+        // No following timestamp arrives to flush the last time block.
+        for (id, value) in self.change_buffer.drain() {
+            self.writer.change_vector(id, value.iter())?;
+        }
         Ok(())
     }
 }
@@ -521,5 +525,34 @@ impl IdCodeWithShift {
         self.value = value;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod regression_tests {
+    use super::*;
+    use crate::tyvcd::spec::{Scope, TypeInfo, Variable, VariableKind};
+
+    #[test]
+    fn rewrite_keeps_the_final_time_block() {
+        let dir = std::env::temp_dir().join(format!("rv-probes-rewrite-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let input = dir.join("input.vcd");
+        let output = dir.join("output.vcd");
+        std::fs::write(&input, "$scope module top $end\n$var wire 1 ! a $end\n$upscope $end\n$enddefinitions $end\n#0\n0!\n#5\n1!\n").unwrap();
+        let mut scope = Scope::empty("top".into(), "top".into(), TypeInfo::new("top".into(), vec![]), &[]);
+        scope.variables.push(Variable::new(TraceValue::RefTraceName("a".into()), "a".into(),
+            TypeInfo::new("Bool".into(), vec![]), VariableKind::Ground(1)));
+        {
+            let mut rewriter = VcdRewriter::new(&input, vec![scope], output.to_string_lossy().into_owned()).unwrap();
+            rewriter.rewrite().unwrap();
+        }
+        let mut parser = Parser::new(BufReader::new(File::open(&output).unwrap()));
+        parser.parse_header().unwrap();
+        let values: Vec<_> = parser.map(|c| c.unwrap()).filter_map(|c| match c {
+            Command::ChangeVector(_, v) => Some(v.to_string()), _ => None,
+        }).collect();
+        std::fs::remove_dir_all(dir).unwrap();
+        assert_eq!(values.last().map(String::as_str), Some("1"));
     }
 }
