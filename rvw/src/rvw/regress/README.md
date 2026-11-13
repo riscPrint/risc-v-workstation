@@ -989,8 +989,10 @@ case. Removal is blocked on complete replacement identities and negative tests.
 families and each missing requirement. MCP exposes `regress_plan`. The project
 supplies `{"schema":"rvw.regress-features/1","capabilities":["xlen:32",
 "mode:S","mode:U","satp:sv32","pmp","ad:fault"]}`. Capability names are
-explicit. The planner does not infer an MMU, devices or privilege modes from
-an ISA string. Declare each supported feature separately. Omitted features
+explicit. The optional `isa`, `privilege_modes`, `satp_modes`, `pmp_regions`, `harts`
+and `irq_inputs` fields also declare project features. `isa` uses an expanded,
+unversioned ISA string, such as `rv64ima_zicsr_zifencei`. The planner does not
+infer an MMU, devices or privilege modes from the ISA string. Declare each supported feature separately. Omitted features
 exclude a family. Selection gives no execution evidence.
 
 `--catalog requirements.json` selects a project-owned list of objects with

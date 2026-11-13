@@ -10,10 +10,38 @@ def plan(features, catalog=None):
     declared = json.loads(Path(features).read_text())
     if declared.get('schema') != 'rvw.regress-features/1':
         raise ValueError('expected rvw.regress-features/1')
-    supported = declared.get('capabilities')
+    supported = declared.get('capabilities', [])
     if not isinstance(supported, list) or not all(isinstance(x, str) for x in supported):
         raise ValueError('capabilities must be an explicit list of strings')
     supported = set(supported)
+    if 'isa' in declared:
+        from rvw.cov.isa import extensions
+        xlen, names = extensions(declared['isa'])
+        supported.add(f'xlen:{xlen}')
+        supported.update('ext:' + name for name in names)
+    modes = declared.get('privilege_modes', '')
+    if modes not in ('', 'M', 'MU', 'MSU'):
+        raise ValueError('privilege_modes must be M, MU or MSU')
+    supported.update('mode:' + mode for mode in modes)
+    for mode in declared.get('satp_modes', []):
+        if mode not in ('sv32', 'sv39', 'sv48', 'sv57'):
+            raise ValueError('unknown satp mode')
+        supported.add('satp:' + mode)
+    pmp = declared.get('pmp_regions', 0)
+    harts = declared.get('harts', 1)
+    if type(pmp) is not int or pmp < 0 or type(harts) is not int or harts < 1:
+        raise ValueError('invalid PMP or hart count')
+    if pmp:
+        supported.add('pmp')
+    if pmp >= 8:
+        supported.add('pmp:8')
+    if harts >= 2:
+        supported.add('harts:2')
+    for bit in declared.get('irq_inputs', []):
+        if bit in (3, 7, 11):
+            supported.add({3: 'irq:msip', 7: 'irq:mtip', 11: 'irq:meip'}[bit])
+    if len([x for x in supported if x.startswith('xlen:')]) > 1:
+        raise ValueError('contradictory XLEN declarations')
     source = Path(catalog) if catalog else Path(__file__).parents[1] / 'suite_requirements.json'
     suites = json.loads(source.read_text())
     rows = []
