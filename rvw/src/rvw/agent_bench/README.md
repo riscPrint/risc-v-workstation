@@ -54,3 +54,28 @@ Held-out vectors cover boundaries and seeded pseudorandom inputs, not all inputs
 
 See [the design](../../../../docs/design/agent-bench.md) for native qualification,
 external clients and issue #27 acceptance. Tests: `rvw/tests/test_agent_bench.py`.
+
+## Native seeded tasks
+
+Build the VexRiscv example ISA programs first. Use the source revision in
+`examples/agent-bench/native.json`. Keep the source checkout outside this repo.
+
+```sh
+rvw agent-bench native-qualify --pack examples/agent-bench/native.json \
+  --source /path/to/pinned/core --out /tmp/native-tasks
+```
+
+Use `--task xor` to select one task. Each adapter call has a 110-second limit.
+The example uses the private `vex-agent` lock. The generic runner takes core
+paths, mutations, config and workload names from the pack. It never edits the
+source checkout. The runner checks a seeded copy, reverses the seeded change,
+and checks the repaired copy. Each task needs a failing workload and passing
+control workloads. C1 status, C2 completion and matching identities are required.
+Both runs must use the same ELF, seed and config, and different RTL hashes.
+Missing evidence is inconclusive. Reports retain every run path and identity.
+MCP tool: `agent_bench_native_qualify`.
+
+These ten tasks use the real VexRiscv example. The repair is evaluator supplied.
+Qualification tests the task, not an agent. Dynamic Scala cause links, native
+synthetic-core tasks and external agent repairs remain open in #364 and #27.
+A native task result is not C4 acceptance.

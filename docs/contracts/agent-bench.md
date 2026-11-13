@@ -157,3 +157,20 @@ markers, and finalTick equal to the exit marker. Bare execution must pass.
 `arch memory-extract` returns `rvw.memory-report/1` with `mapping_sha256` and
 `native_inputs` hashes. It checks names and interval identity. The project
 owns semantic mappings. Unmapped metrics and contention causes stay unobserved.
+
+## Native task pack and qualification
+
+`rvw.agent-native-tasks/1` declares a pinned `source` revision, source-copy paths,
+source environment variable, adapter path, program directory, config, seed,
+environment and run arguments. Adapter and program paths are relative to the
+pack. Each task has a public summary and failing program names. Its private
+fields hold a text mutation, fail-to-pass workloads and pass-to-pass controls.
+A mutation can select a one-based occurrence. Core-specific data stays in the pack.
+
+`rvw.agent-native-qualification/1` retains the pack digest, source and workstation
+revisions and per-task seeded and repaired results. Each run retains C1/C2 paths,
+identity, exit code and timeout state. `qualified` requires seeded failure,
+passing controls and repaired workloads, complete C2, matching ELF/seed/config
+identities and changed RTL hashes. Other verdicts are `unqualified` and
+`inconclusive`. The evaluator supplies the repair. No agent reasoning, automatic
+root cause or C4 acceptance follows from qualification.

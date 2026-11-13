@@ -19,6 +19,9 @@ def register(subparsers):
             a.add_argument('--agent', choices=['scripted', 'careless'], default='scripted')
         a.set_defaults(func=execute)
 
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.agent_bench", sub)
+
 
 def execute(args):
     tasks, digest = load_pack(args.pack)
