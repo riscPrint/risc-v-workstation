@@ -21,7 +21,7 @@ usage: rvw [-h] [--version] [--project PROJECT] [--json]
 ### `rvw agent`
 
 ```text
-usage: rvw agent [-h] [--project PROJECT] [--json] {guide} ...
+usage: rvw agent [-h] [--project PROJECT] [--json] {guide,bringup-check} ...
 ```
 
 ### `rvw agent guide`
@@ -29,6 +29,13 @@ usage: rvw agent [-h] [--project PROJECT] [--json] {guide} ...
 ```text
 usage: rvw agent guide [-h] [--workflow WORKFLOW] [--json] [--markdown]
     [--write WRITE] [--project PROJECT]
+```
+
+### `rvw agent bringup-check`
+
+```text
+usage: rvw agent bringup-check [-h] --out OUT [--timeout TIMEOUT]
+    [--bring-up-only] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench`
@@ -1010,7 +1017,7 @@ usage: rvw fault report [-h] [--project PROJECT] [--json] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT] [--json]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-m,sail-state,strategy,sva-inspect,uf-prove}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-abstract,riscv-proof,sail-m,sail-state,strategy,sva-inspect,uf-prove}
     ...
 ```
 
@@ -1582,8 +1589,9 @@ usage: rvw formal initial-split [-h] --manifest MANIFEST --out OUT [--timeout
 ### `rvw formal isa`
 
 ```text
-usage: rvw formal isa [-h] --out OUT [--machine MACHINE] [--timeout TIMEOUT]
-    [--unbounded] [--engines ENGINES] [--json] [--project PROJECT]
+usage: rvw formal isa [-h] --out OUT [--abstraction ABSTRACTION] [--machine
+    MACHINE] [--timeout TIMEOUT] [--unbounded] [--engines ENGINES] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw formal lazy-ram`
@@ -1613,6 +1621,14 @@ usage: rvw formal reset-audit [-h] --rtl RTL --top TOP [--clock CLOCK] --reset
 ```text
 usage: rvw formal revision-bench [-h] --base BASE --revised REVISED --out OUT
     [--timeout TIMEOUT] [--trials TRIALS] [--json] [--project PROJECT]
+```
+
+### `rvw formal riscv-abstract`
+
+```text
+usage: rvw formal riscv-abstract [-h] --manifest MANIFEST --out OUT [--engines
+    ENGINES] [--checks CHECKS] [--timeout TIMEOUT] [--budget BUDGET] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw formal riscv-proof`
@@ -2376,7 +2392,7 @@ usage: rvw replay [-h] --out OUT [--timeout TIMEOUT] [--lock LOCK] [--project
 
 ```text
 usage: rvw sec [-h] [--project PROJECT] [--json]
-    {ift,contract,fault,gadgets,ift-core,isolation,latency,spec-suite,suite}
+    {ift,campaign,contract,fault,gadgets,ift-core,isolation,latency,model-check,spec-suite,suite}
     ...
 ```
 
@@ -2386,6 +2402,13 @@ usage: rvw sec [-h] [--project PROJECT] [--json]
 usage: rvw sec ift [-h] --rtl RTL --top TOP --policy POLICY --stimulus
     STIMULUS --out OUT [--mode {precise,conservative}] [--db DB] [--project
     PROJECT] [--json]
+```
+
+### `rvw sec campaign`
+
+```text
+usage: rvw sec campaign [-h] --manifest MANIFEST --out OUT [--resume]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw sec contract`
@@ -2413,8 +2436,8 @@ usage: rvw sec gadgets [-h] --out OUT [--seed SEED] [--threshold THRESHOLD]
 
 ```text
 usage: rvw sec ift-core [-h] --binding BINDING --policy POLICY (--elf ELF |
-    --asm ASM) --out OUT [--mode {precise,conservative}] [--project PROJECT]
-    [--json]
+    --asm ASM) --out OUT [--mode {precise,conservative}] [--soc SOC]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw sec isolation`
@@ -2429,6 +2452,13 @@ usage: rvw sec isolation [-h] --manifest MANIFEST --out OUT [--project
 ```text
 usage: rvw sec latency [-h] --manifest MANIFEST --out OUT [--project PROJECT]
     [--json]
+```
+
+### `rvw sec model-check`
+
+```text
+usage: rvw sec model-check [-h] --manifest MANIFEST --out OUT [--project
+    PROJECT] [--json]
 ```
 
 ### `rvw sec spec-suite`
@@ -3013,6 +3043,14 @@ Starts a background job: yes.
 Launch a bounded external MCP fixture client. Retain partial attempts and independent fixture scores. Not a native repair result.
 
 Arguments: `pack` (required), `task` (required), `out` (required), `command` (required), `budget_s`, `max_calls`, `repeats`, `model`.
+
+Starts a background job: yes.
+
+### `agent_bringup_check`
+
+Walk the agent guide (bring-up, then test-fails) on a scratch copy of a tiny seeded Spinal core in a new directory; report which steps work. Native, slow (sbt, Verilator, Spike). A setup test, not core evidence.
+
+Arguments: `out` (required), `timeout`, `bring_up_only`.
 
 Starts a background job: yes.
 
@@ -3996,7 +4034,7 @@ Starts a background job: yes.
 
 Run the ISA kit. Return per-check bounds, failures and unsupported gaps.
 
-Arguments: `out` (required), `machine`, `timeout`, `unbounded`, `engines`.
+Arguments: `project`, `out` (required), `machine`, `abstraction`, `timeout`, `unbounded`, `engines`.
 
 Starts a background job: yes.
 
@@ -4128,11 +4166,19 @@ Arguments: `project`, `out` (required), `timeout`.
 
 Starts a background job: yes.
 
+### `formal_riscv_abstract`
+
+Run declared single-flight instruction proofs with RAM abstraction. Results remain conditional.
+
+Arguments: `project`, `manifest` (required), `out` (required), `checks`, `engines`, `timeout`, `budget`.
+
+Starts a background job: yes.
+
 ### `formal_riscv_proof`
 
 Run unbounded RVFI instruction checks with the native engine portfolio.
 
-Arguments: `out` (required), `checks`, `engines`, `timeout`.
+Arguments: `project`, `out` (required), `checks`, `engines`, `timeout`.
 
 Starts a background job: yes.
 
@@ -4920,6 +4966,14 @@ Arguments: `keyword` (required).
 
 Starts a background job: no.
 
+### `sec_campaign`
+
+Run or resume a coverage-guided paired leakage campaign with reduction and deduplication.
+
+Arguments: `manifest` (required), `out` (required), `resume`.
+
+Starts a background job: yes.
+
 ### `sec_contract`
 
 Run bounded paired RTL leakage tests and reduce a witness.
@@ -4956,7 +5010,7 @@ Starts a background job: yes.
 
 Track secret memory words and registers through a whole core in Verilator.
 
-Arguments: `binding` (required), `policy` (required), `out` (required), `elf`, `asm`, `mode`.
+Arguments: `binding` (required), `policy` (required), `out` (required), `elf`, `asm`, `mode`, `soc`.
 
 Starts a background job: yes.
 
@@ -4971,6 +5025,14 @@ Starts a background job: yes.
 ### `sec_latency`
 
 Measure operand-paired declared instruction or crypto-unit latency.
+
+Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `sec_model_check`
+
+Predict contract-pair timing leakage on the OoO model from Spike traces.
 
 Arguments: `manifest` (required), `out` (required).
 
