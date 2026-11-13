@@ -3241,3 +3241,10 @@ Rebuild the database after changing that entry.
 Use `rvw formal datapath --unit mul --db design.db --out proposal` to find
 arithmetic candidates and propose port bindings. No proof runs. Each candidate
 requires designer confirmation. See [the kit guide](README-datapath-kit.md).
+
+### Internal state partition proofs
+
+`rvw formal equiv-partitions` matches register boundaries automatically and
+proves each observation in its full state cone. It keeps output equivalence and
+internal-relation results separate. No internal cut equality is assumed.
+See [the partition guide](README-equiv-partitions.md).
