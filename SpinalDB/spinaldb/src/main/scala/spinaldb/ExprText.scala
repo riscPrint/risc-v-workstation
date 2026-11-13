@@ -88,7 +88,7 @@ class ExprText(nameOf: (BaseType, Component) => String, generated: BaseType => B
       case r: MemReadAsync      => sb ++= memName(r.mem, from); sb += '('; rec(r.address); sb += ')'
       case r: MemReadSync       => sb ++= memName(r.mem, from); sb ++= ".readSync("; rec(r.address); sb += ')'
       case r: MemReadWrite      => sb ++= memName(r.mem, from); sb ++= ".readWrite("; rec(r.address); sb += ')'
-      case r: MemReadAsyncWrite => sb ++= memName(r.mem, from); sb += '('; rec(r.address); sb += ')'
+      case r: SpinalApi.AsyncWritePort => sb ++= memName(r.mem, from); sb += '('; rec(r.address); sb += ')'
       case s: Operator.BitVector.ShiftRightByInt => rec(s.source); sb ++= s" >> ${s.shift}"
       case s: Operator.BitVector.ShiftLeftByInt  => rec(s.source); sb ++= s" << ${s.shift}"
       case b: BinaryOperator =>
@@ -189,7 +189,7 @@ class ExprText(nameOf: (BaseType, Component) => String, generated: BaseType => B
       if (ts.isEmpty) sha(s)
       else {
         val pos = ts.zipWithIndex.toMap
-        sha(replaceTokens(s)(t => s"\u0002${pos(t)}")) + ts.map(t => s"\u0001$t\u0001").mkString("[", ",", "]")
+        sha(replaceTokens(s)(t => "\u0002" + pos(t))) + ts.map(t => "\u0001" + t + "\u0001").mkString("[", ",", "]")
       }
     }
 
@@ -417,10 +417,10 @@ class ExprText(nameOf: (BaseType, Component) => String, generated: BaseType => B
       case a: BitVectorBitAccessFixed                  => nodeP(s"$cls<${a.bitId}>")
       case a: BitVectorRangedAccessFixed               => nodeP(s"$cls<${a.hi}:${a.lo}>")
       case a: BitVectorRangedAccessFloating            => nodeP(s"$cls<${a.size}>")
-      case r: Operator.Bits.Repeat                     => nodeP(s"$cls<${r.count}>")
-      case r: Operator.Bool.Repeat                     => nodeP(s"$cls<${r.count}>")
-      case r: Operator.UInt.Repeat                     => nodeP(s"$cls<${r.count}>")
-      case r: Operator.SInt.Repeat                     => nodeP(s"$cls<${r.count}>")
+      case r: SpinalApi.BitsRepeat                     => nodeP(s"$cls<${r.count}>")
+      case r: SpinalApi.BoolRepeat                     => nodeP(s"$cls<${r.count}>")
+      case r: SpinalApi.UIntRepeat                     => nodeP(s"$cls<${r.count}>")
+      case r: SpinalApi.SIntRepeat                     => nodeP(s"$cls<${r.count}>")
       case p: Operator.Formal.PastBits                 => nodeP(s"$cls<${p.delay}>")
       case p: Operator.Formal.PastBool                 => nodeP(s"$cls<${p.delay}>")
       case p: Operator.Formal.PastUInt                 => nodeP(s"$cls<${p.delay}>")
@@ -434,7 +434,7 @@ class ExprText(nameOf: (BaseType, Component) => String, generated: BaseType => B
                                         s"${cdRawOf(r.clockDomain)}>")
       case r: MemReadWrite      => node(s"$cls<${KeyEnc.name(memName(r.mem, from))},${ExprText.rw(r.readUnderWrite)},${ExprText.dw(r.duringWrite)}," +
                                         s"vital=${r.isVital},${cdRawOf(r.clockDomain)}>")
-      case r: MemReadAsyncWrite => node(s"$cls<${KeyEnc.name(memName(r.mem, from))},${ExprText.rw(r.readUnderWrite)},${ExprText.dw(r.duringWrite)}," +
+      case r: SpinalApi.AsyncWritePort => node(s"$cls<${KeyEnc.name(memName(r.mem, from))},${ExprText.rw(r.readUnderWrite)},${ExprText.dw(r.duringWrite)}," +
                                         s"vital=${r.isVital},${cdRawOf(r.clockDomain)}>")
       case _                    => nodeP(cls)
     }
@@ -558,8 +558,8 @@ object ExprText {
       else if (is(classOf[BitVectorBitAccessFixed])) Set("bitId")
       else if (is(classOf[BitVectorRangedAccessFixed])) Set("hi", "lo")
       else if (is(classOf[BitVectorRangedAccessFloating])) Set("size")
-      else if (Seq(classOf[Operator.Bits.Repeat], classOf[Operator.Bool.Repeat], classOf[Operator.UInt.Repeat],
-        classOf[Operator.SInt.Repeat]).exists(is)) Set("count")
+      else if (Seq(classOf[SpinalApi.BitsRepeat], classOf[SpinalApi.BoolRepeat], classOf[SpinalApi.UIntRepeat],
+        classOf[SpinalApi.SIntRepeat]).exists(is)) Set("count")
       else if (Seq(classOf[F.PastBits], classOf[F.PastBool], classOf[F.PastUInt], classOf[F.PastSInt], classOf[F.PastEnum])
         .exists(is)) Set("delay")
       else if (is(classOf[F.RandomExp])) Set("kind", "width")
@@ -579,7 +579,7 @@ object ExprText {
     case c if c == classOf[MemReadAsync]      => Set("width", "readUnderWrite", "isVital", "mem")
     case c if c == classOf[MemReadSync]       => Set("width", "readUnderWrite", "isVital", "mem", "clockDomain")
     case c if c == classOf[MemReadWrite]      => Set("width", "readUnderWrite", "duringWrite", "isVital", "mem", "clockDomain")
-    case c if c == classOf[MemReadAsyncWrite] => Set("width", "readUnderWrite", "duringWrite", "isVital", "mem", "clockDomain")
+    case c if c == classOf[SpinalApi.AsyncWritePort] => Set("width", "readUnderWrite", "duringWrite", "isVital", "mem", "clockDomain")
     case c if c == classOf[MemWrite]          => Set("width", "isVital", "mem", "clockDomain")
     case _                                    => Set.empty
   }

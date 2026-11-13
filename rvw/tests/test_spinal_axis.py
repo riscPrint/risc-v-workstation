@@ -36,3 +36,12 @@ def test_axis_defaults_to_the_release_and_cross_builds_both_scala_versions():
     assert 'sys.env.get("RVW_SPINAL_SOURCE")' in axis
     assert 'crossScalaVersions := Seq("2.13.14", "2.12.18")' in axis
     assert 's"spinal-$axis"' in axis  # each source axis compiles into its own target directory
+
+
+def test_spinaldb_has_a_shim_for_each_api_level():
+    assert 'SpinalAxis.apiSources' in (ROOT / 'SpinalDB/spinaldb/build.sbt').read_text()
+    shims = [ROOT / f'SpinalDB/spinaldb/src/main/scala-spinal-{api}/spinaldb/SpinalApi.scala' for api in ('1.15', 'legacy')]
+    names = ['AsyncWritePort', 'BitsRepeat', 'VerilogValue', 'phaseDeviceDefault', 'configRecords', 'preventBlackbox']
+    for shim in shims:
+        text = shim.read_text()
+        assert all(name in text for name in names), shim
