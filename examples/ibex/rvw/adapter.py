@@ -3,6 +3,7 @@ import argparse, hashlib, json, os, shutil, struct, sys, time, subprocess
 from pathlib import Path
 from rvw.common.proc import run_group
 from rvw.init.hdl_identity import collect
+from rvw.cosim.elf import Elf
 
 ISA = "rv32imc_zicsr_zifencei"
 PROJECT = Path(__file__).resolve().parent.parent
@@ -68,8 +69,7 @@ def main(captured=None):
     out=Path(a.out).resolve(); out.mkdir(parents=True,exist_ok=True)
     elf=Path(a.elf).resolve(); data=elf.read_bytes()
     (out/"memory.bin").write_bytes(image(data))
-    nm=run_group(["riscv64-unknown-elf-nm",str(elf)],capture=True,timeout=10)
-    tohost=next(int(line.split()[0],16) for line in nm.stdout.splitlines() if line.split()[-1:] == ["tohost"])
+    tohost=Elf(elf,data=data).symbols["tohost"]
     start=time.monotonic()
     run=run_group([str(binary),str(out/"memory.bin"),str(tohost),str(a.max_cycles),str(out)],capture=True,timeout=a.wall_timeout)
     (out/"run.log").write_text((run.stdout or "")+(run.stderr or ""))

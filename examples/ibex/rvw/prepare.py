@@ -18,6 +18,7 @@ files = [str((edam.parent / f["name"]).resolve()) for f in data["files"] if f.ge
 incs = sorted({str((edam.parent / Path(f["name"]).parent).resolve()) for f in data["files"] if f.get("is_include_file")})
 spec = dict(top="ibex_top", sources=files, include_dirs=incs, defines=["RVFI", "SYNTHESIS"],
             verilator_flags=["-O1", "-Wno-fatal", "-GRV32M=1", "--coverage", "-j", "2"],
-            harness_sources=[str(project / "rvw/harness.cpp")], build_dir=str(work / "obj"))
+            harness_sources=[str(project / "rvw/harness.cpp")],
+            harness_inputs=[str(project / "rvw/devices.h")], build_dir=str(work / "obj"))
 (work / "hdl.json").write_text(json.dumps(spec, indent=2))
 print(work / "hdl.json")

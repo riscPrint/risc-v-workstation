@@ -38,8 +38,8 @@ def description(path):
         raise ValueError('privileged extensions require supervisor support')
     if data['halt'] != 'tohost-1-3':
         raise ValueError('only tohost pass=1/fail=3 is supported')
-    if len(platform.ram) != 1 or platform.reset_pc != platform.ram[0][0]:
-        raise ValueError('ACT4 requires one RAM range beginning at reset_pc')
+    if len(platform.ram) != 1 or not (platform.ram[0][0] <= platform.reset_pc < sum(platform.ram[0])):
+        raise ValueError('ACT4 requires one RAM range containing reset_pc')
     if data['params']['MXLEN'] != platform.xlen:
         raise ValueError('ACT4 MXLEN differs from platform')
     if data.get('all_applicable') and 'test_extensions' in data:
@@ -62,6 +62,17 @@ def selection(profile):
                 evidence='selection only; no DUT execution')
 
 
+def architecture_config(data):
+    """Bind UDB's named configuration cache to the actual architecture."""
+    value = dict(kind='architecture configuration', type='fully configured', name='rvw-act4',
+               description='Project ACT4 profile', implemented_extensions=[
+                   dict(name=data.get('udb_names', {}).get(k, k.upper() if len(k) == 1 else k[0].upper()+k[1:]), version=v)
+                   for k, v in data['extensions'].items()], params=data['params'])
+    key = sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()[:20]
+    value["name"] = "rvw-act4-" + key
+    return value
+
+
 def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc',
           reference='sail_riscv_sim'):
     data, platform, selected = description(profile)
@@ -80,10 +91,7 @@ def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc
     for name in ('rvmodel_macros.h', 'sail.json', 'link.ld'):
         shutil.copyfile(source / data['files'][name], config / name)
     # All platform-dependent UDB options are project data. No generic defaults hide a mismatch.
-    udb = dict(kind='architecture configuration', type='fully configured', name='rvw-act4',
-               description='Project ACT4 profile', implemented_extensions=[
-                   dict(name=data.get('udb_names', {}).get(k, k.upper() if len(k) == 1 else k[0].upper()+k[1:]), version=v)
-                   for k, v in data['extensions'].items()], params=data['params'])
+    udb = architecture_config(data)
     # JSON is valid YAML and avoids a second serializer and implicit YAML types.
     (config / 'udb.yaml').write_text(json.dumps(udb, indent=2))
     tc = dict(name='rvw-act4', compiler_exe=compiler, ref_model_exe=reference,

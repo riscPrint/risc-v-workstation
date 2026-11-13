@@ -5,7 +5,8 @@ This project uses lowRISC Ibex v2.1.0 at
 repository. No Ibex source file is changed. The configuration has two pipeline
 stages, slow RV32M, RV32C, a flip-flop register file, no instruction cache,
 no security mode and no PMP. U-mode is present. The boot vector is
-`0x80000080`. RAM is 1 MiB at `0x80000000`. There are no MMIO devices.
+`0x80000080`. RAM is 1 MiB at `0x80000000`. The harness maps single-hart CLINT registers at `0x02000000` and a machine
+external interrupt control word at `0x0c000004`. These are simulation devices.
 
 ## Setup
 
@@ -39,7 +40,8 @@ captures the resolved source tree. Build and run output stays outside Git.
 The adapter rejects another source checkout until `prepare.py` is rerun.
 It serves instruction and data requests with one-cycle responses. It supports
 zero added memory latency and one simulation at a time. Unsupported CLI
-options are errors. There is no wave capture or interrupt schedule.
+options are errors. There is no wave capture or user IRQ schedule. The device model drives machine
+software, timer and external interrupts. C2 records each input-level change.
 
 ## Trace decisions
 
@@ -62,15 +64,13 @@ See [FINDINGS.md](FINDINGS.md) for limits and measured results.
 | --- | --- |
 | Verilator | 5.052; native build passed |
 | Committed riscv-tests instruction profile | 51/51 C1 passes: UI 42, UM 8, UC 1 |
-| Initial strict Spike batch | 50 matches; ma_data differs under the default alignment-trap policy |
-| Corrected ma_data platform | Complete strict match, 344 instructions, zero synchronization and masks |
+| Strict Spike with the device harness | 51/51 complete matches; 14,596 retirements; zero synchronization and masks |
 | Committed gate control | Accept, 51 tests compared |
 | Committed harness fault | Reject, 51 new failures; fault removed |
 | Fast Python set | 3,098 passed, 4 skipped, 8,096 deselected |
 
-The platform now enables misaligned scalar RAM accesses. A fresh full strict
-batch uses that policy. The initial batch and the corrected single-test run
-remain separate observations. The gate fault changes a completed pass to
+The platform enables misaligned scalar RAM accesses. The full strict batch
+uses that policy. The gate fault changes a completed pass to
 failure in the harness. It does not change Ibex. To repeat it, change
 `finish=read(a);` to `finish=read(a); if(finish==1) finish=3;`, commit, and run
 the ISA suite in a new directory. Compare clean and fault run directories:
@@ -120,3 +120,72 @@ Its port has a declaration location. The lowered buffer has no statement
 location. This is a source-navigation limit. This configuration exercises
 packages, enum parameters and generate blocks. It does not establish general
 SystemVerilog interface support.
+
+## ACT4 machine and user profile
+
+See [ACT4 setup](../../docs/ACT4.md). Fetch the pinned ACT4 revision into a
+private directory. Install its dependencies there. Do not build in a reference
+checkout. The profile retains the standard Sm bootstrap and all selected
+self-checks. It selects RV32IMC, Zicsr, Zifencei, Sm and U. PMP is absent.
+
+```sh
+cd "$RVW_HOME"
+git clone https://github.com/riscv/riscv-arch-test.git "$ACT4_SOURCE"
+git -C "$ACT4_SOURCE" checkout --detach 56d40ab301dba23dd3104c17bd969afbaaea1931
+rvw --project examples/ibex regress act4-build \
+  --profile examples/ibex/rvw/act4/profile.json --checkout "$ACT4_SOURCE" \
+  --out "$IBEX_WORK/act4"
+rvw --project examples/ibex regress run --suite act4 --rvfi-trace \
+  --out "$IBEX_WORK/act4-run" --no-index --json
+rvw regress cosim "$IBEX_WORK/act4-run" --platform examples/ibex/rvw/platform.json \
+  --out "$IBEX_WORK/act4-strict.json" --json
+```
+
+Use the ACT4 private virtual environment, its Ruby dependency and Sail 0.15.
+The native run permits 500,000 cycles per ELF. A 50,000-cycle limit stops ten
+large CSR sweeps before completion. The profile declares Ibex's fixed vectored
+mtvec mode and 256-byte alignment. It also declares its implemented counters,
+zero breakpoint mtval, read-only-zero MENVCFG FIOM and U-mode WFI when TW is
+clear. The simulation devices bind machine software, timer and external IRQs.
+Fast IRQs, NMI, debug, PMP and S-mode are not qualified.
+
+| ACT4 group | ELFs | C1 passes |
+| --- | ---: | ---: |
+| I | 39 | 39 |
+| M and Zmmul | 12 | 12 |
+| Zca | 26 | 26 |
+| Misalign | 9 | 9 |
+| Zicsr and Zifencei | 7 | 7 |
+| ExceptionsSm, ExceptionsU and ExceptionsZc | 6 | 6 |
+| InterruptsSm | 14 | 14 |
+| Sm | 27 | 27 |
+| U | 8 | 8 |
+| Total | 148 | 148 |
+
+These are conclusive C1 program passes on the declared configuration. They do
+not establish complete strict Spike agreement or architectural qualification.
+
+| ACT4 reference comparison | Result |
+| --- | --- |
+| Strict Spike | 0 complete matches; 148 mismatches; zero synchronization and masks |
+| Common first difference | Order 34, `csrr s0,mtvec`: Ibex `0x80000001`, Spike `0x0` |
+
+The boot logic initializes mtvec from `boot_addr_i[31:8]` in vectored mode.
+Spike starts mtvec at zero. The strict comparison stops at this first
+difference. It does not verify the remaining ACT4 instruction stream.
+Sail-generated self-checks and strict Spike agreement are separate results.
+No CSR mask or reset synchronization was added to obtain a match.
+
+The following smaller program isolates that reset-state difference:
+
+```sh
+mkdir -p "$IBEX_WORK/repro"
+nice -n 15 riscv64-unknown-elf-gcc -march=rv32imc_zicsr_zifencei -mabi=ilp32 \
+  -nostdlib -nostartfiles -T examples/ibex/rvw/link.ld -Wl,--build-id=none \
+  examples/ibex/rvw/boot.S examples/ibex/rvw/mtvec-reset.S \
+  -o "$IBEX_WORK/repro/mtvec-reset"
+rvw --project examples/ibex regress run --suite mtvec-reset --rvfi-trace \
+  --out "$IBEX_WORK/mtvec-reset-run" --no-index --json
+rvw regress cosim "$IBEX_WORK/mtvec-reset-run" --platform examples/ibex/rvw/platform.json \
+  --out "$IBEX_WORK/mtvec-reset-strict.json" --json
+```

@@ -16,8 +16,8 @@ identity = true
 identity_capture = true
 input_complete = true
 jobs = 1
-cache_paths = ["rvw", "${IBEX_WORK}/hdl.json", "${IBEX_WORK}/files", "${RVW_HOME}/rvw/src/rvw/init/hdl_identity.py", "${RVW_HOME}/RiscvSim/scripts/native-identity.py"]
-input_tools = ["git", "verilator", "make", "riscv64-unknown-elf-nm"]
+cache_paths = ["rvw", "${IBEX_WORK}/hdl.json", "${IBEX_WORK}/files", "${RVW_HOME}/rvw/src/rvw/init/hdl_identity.py", "${RVW_HOME}/rvw/src/rvw/cosim/elf.py", "${RVW_HOME}/RiscvSim/scripts/native-identity.py"]
+input_tools = ["git", "verilator", "make"]
 input_verilator_toolchain = true
 input_env = ["IBEX_SOURCE", "IBEX_WORK", "PATH", "RVW_HOME"]
 
@@ -47,3 +47,19 @@ platform = "rvw/platform.json"
 [query]
 build = ["./rvw/build-db.sh"]
 db = "${IBEX_WORK}/design.db"
+
+[suites.act4]
+dir = "${IBEX_WORK}/act4/work/rvw-act4/elfs"
+act4_manifest = "${IBEX_WORK}/act4/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+max_cycles = 500000
+timeout_s = 120
+mem_latency = 0
+
+[suites.mtvec-reset]
+dir = "${IBEX_WORK}/repro"
+include = ["^mtvec-reset$"]
+max_cycles = 1000
+timeout_s = 120
+mem_latency = 0

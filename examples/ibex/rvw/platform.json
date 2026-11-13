@@ -9,8 +9,21 @@
       "size": "0x100000"
     }
   ],
-  "mmio": [],
-  "irq_inputs": [],
+  "mmio": [
+    {
+      "base": "0x02000000",
+      "size": "0xc000"
+    },
+    {
+      "base": "0x0c000000",
+      "size": "0x8"
+    }
+  ],
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
   "privilege_modes": "MU",
   "pmp_regions": 0,
   "aligned_mem": false,

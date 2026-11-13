@@ -38,3 +38,19 @@ def test_hdl_identity_tracks_build_inputs(tmp_path, monkeypatch):
     assert '-DFEATURE=1' in command
     assert '-I' + str(tmp_path / 'include') in command
     assert '--trace' in command
+
+
+def test_harness_inputs_are_hashed_without_compiling_headers(tmp_path, monkeypatch):
+    (tmp_path/'top.sv').write_text('module top; endmodule\n')
+    scaffold_hdl(tmp_path,hdl='sv',top='top',isa='rv32i',name='test')
+    header=tmp_path/'rvw/devices.h';header.write_text('// first device model\n')
+    manifest=tmp_path/'rvw/hdl.json';spec=json.loads(manifest.read_text())
+    spec['harness_inputs']=['rvw/devices.h'];manifest.write_text(json.dumps(spec))
+    monkeypatch.setattr('rvw.init.hdl_identity.native_identity',lambda:dict(sha256='1'*64,cache_enabled=True))
+    monkeypatch.setenv('RVW_CAPTURE_SOURCE',json.dumps(dict(core_repo=str(tmp_path),core_rev='abc',core_rev_full='abc',core_dirty=False)))
+    first,command=collect(manifest,preprocess=lambda args:b'RTL')
+    assert str(header) not in command
+    assert 'rvw/devices.h' in first['inputs']
+    header.write_text('// changed device model\n')
+    second,_=collect(manifest,preprocess=lambda args:b'RTL')
+    assert first['result_claims']['tools.hdl_model_sha256']!=second['result_claims']['tools.hdl_model_sha256']
