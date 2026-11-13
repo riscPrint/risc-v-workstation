@@ -156,13 +156,14 @@ def assembly(c, width):
     else:
         lines += [f'csrr s2, {addr}']
         if c.get('assembly_safe', False):
-            state = c['reset']
-            lines += [f'li t0, {state}', 'bne s2, t0, fail']
+            _, state = step(c, c['reset'], dict(read=True, write=False, data=0, privilege=3), width)
+            lines += [f'li t0, {c["reset"]}', 'bne s2, t0, fail']
             for value in (0, (1 << width)-1, c['reset']):
                 trap, state = step(c, state, dict(read=False, write=True, data=value, privilege=3), width)
                 lines += [f'li s1, {int(trap)}', 'li s0, 0', f'li t0, {value}', f'csrw {addr}, t0',
                           f'li t0, {int(trap)}', 'bne s0, t0, fail', 'li s1, 0',
                           f'csrr t1, {addr}', f'li t0, {state}', 'bne t1, t0, fail']
+                _, state = step(c, state, dict(read=True, write=False, data=0, privilege=3), width)
     lines += ['li t0, 1', 'j finish', 'fail:', 'li t0, 3', 'finish:', 'la t1, tohost',
               'sw t0, 0(t1)', '1: j 1b', '.balign 4', 'handler:', 'beqz s1, fail',
               'csrr t0, mcause', 'li t1, 2', 'bne t0, t1, fail', 'addi s0, s0, 1',
