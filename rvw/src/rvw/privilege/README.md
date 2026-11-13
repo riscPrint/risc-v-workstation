@@ -510,3 +510,27 @@ contract. Reports bind native and Python source hashes. Their evidence remains
 model-based. Source settling uses instruction steps here and makes no clock
 latency claim. This backend does not qualify a native Spike PLIC or an RTL PLIC.
 Concurrent context races and real-core delivery still need project tests.
+
+## RERI status transactions and CE counters
+
+`kind = "reri-transactions"` pins the same RERI v1.0 release. It requires
+`reri.logging_writable = true` and CE reporting. Three programs test valid
+status-write protection, the SRDP/SINV read race and disabled logging. Declaring
+`reri.ce_counter_bits = 16` adds four programs for increment, rollover, disabled
+counting and enable changes. Other counter widths are rejected by this profile.
+Wide reference values use hex strings.
+
+Programs first invalidate the record, then write their seed status. They do not
+check a reset value. The first control action has no status assertion, so prior
+valid, history and counter state cannot create a false initialization failure.
+The model tests several starting values. `reri.reference_initial_status` can
+select a nonzero native model state. It is a reference input, not a DUT reset
+contract. The example uses a valid record with a full counter.
+
+`reference_backend = "spike-python-reri"` and `reference_shim` run the actual
+ELF with the Python RERI device through the same captured Spike execution path
+as PLIC. The shared path commits MMIO effects only for executed instructions.
+Error events call the model's hardware-error entry. They do not emulate hardware
+injection by writing status. All seven self-checks pass with the example's
+nonzero initial state. Reports remain model-based. They make no RAS signal-
+delivery, poison-propagation, physical correction or DUT recovery claim.

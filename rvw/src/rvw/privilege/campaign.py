@@ -18,14 +18,14 @@ def load(path):
         raise ValueError('expected rvw.privilege/1')
     if set(raw) - {'reference_shim', 'plic_delivery', 'pmp', 'stateen', 'landing', 'epmp', 'disabled', 'reri', 'dvfs', 'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision', 'envcfg', 'sstc'}:
         raise ValueError('unknown campaign field')
-    if raw.get('reference_backend','spike') not in ('spike','python','spike-python-plic'):
-        raise ValueError('reference_backend must be spike, python or spike-python-plic')
+    if raw.get('reference_backend','spike') not in ('spike','python','spike-python-plic','spike-python-reri'):
+        raise ValueError('unsupported reference_backend')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -103,17 +103,19 @@ def reference(directory, spike='spike', timeout=2):
     manifest = json.loads((directory / 'manifest.json').read_text())
     if manifest['schema'] != 'rvw.privilege-build/1':
         raise ValueError('expected privilege build manifest')
-    if manifest['config'].get('reference_backend') in ('python','spike-python-plic'):
+    if manifest['config'].get('reference_backend') in ('python','spike-python-plic','spike-python-reri'):
         from importlib import import_module
         modules={'imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway',
                  'aclint':'fast_interrupts','smnip':'fast_interrupts',
-                 'reri':'reri','dvfs':'dvfs','plic-delivery':'plic_delivery'}
+                 'reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
         models=[import_module('rvw.privilege.controllers')];rows=[]
-        native=manifest['config']['reference_backend']=='spike-python-plic'
-        if native and manifest['config'].get('kind')!='plic-delivery':
-            raise ValueError('spike-python-plic requires the PLIC delivery profile')
+        backend=manifest['config']['reference_backend']
+        native=backend!='python'
+        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('reri-transactions','spike_reri')}
+        if native and manifest['config'].get('kind')!=native_modules[backend][0]:
+            raise ValueError('native device backend differs from the selected campaign kind')
         if native and not manifest['config'].get('reference_shim'):
-            raise ValueError('spike-python-plic requires reference_shim')
+            raise ValueError('native device execution requires reference_shim')
         capture=None;shim_inputs=None
         if native:
             import tempfile
@@ -121,7 +123,8 @@ def reference(directory, spike='spike', timeout=2):
             from rvw.cosim.spike import capture_shim
             capture=Capture(Path(tempfile.mkdtemp(prefix='reference-inputs-',dir=directory))/'inputs')
             shim_inputs=capture_shim(capture,manifest['config']['reference_shim'])
-            models.append(import_module('rvw.privilege.spike_plic'))
+            native_runner=import_module('rvw.privilege.'+native_modules[backend][1])
+            models.extend([native_runner,import_module('rvw.privilege.spike_device'),import_module('rvw.privilege.events')])
             models.extend(import_module('rvw.cosim.'+n) for n in ('spike','elf','platform'))
         for scenario in manifest['scenarios']:
             if digest(directory/scenario['elf'])!=scenario['elf_sha256']:
@@ -131,11 +134,12 @@ def reference(directory, spike='spike', timeout=2):
             model=import_module('rvw.privilege.'+modules[kind])
             if model not in models:models.append(model)
             if native:
-                rows.append(models[1].run(directory,scenario,manifest['config'],timeout,shim_inputs))
+                rows.append(native_runner.run(directory,scenario,manifest['config'],timeout,shim_inputs))
             else:rows.append(model.reference(scenario))
         if any(s.get('reference_model',{}).get('kind')=='plic-delivery' for s in manifest['scenarios']):
             models.append(import_module('rvw.cosim.devices'))
-        return dict(schema='rvw.privilege-reference/1',scope='Spike ISA with Python PLIC; no DUT coverage' if native else 'model-based Python reference; no DUT coverage',
+        if manifest['config'].get('kind')=='reri-transactions':models.append(import_module('rvw.privilege.reri'))
+        return dict(schema='rvw.privilege-reference/1',scope='Spike ISA with Python device model; no DUT coverage' if native else 'model-based Python reference; no DUT coverage',
                     reference_input_capture=capture.record() if capture else None,
                     evidence='model-based',manifest_sha256=digest(directory/'manifest.json'),
                     model_sha256={Path(m.__file__).name:digest(m.__file__) for m in models},

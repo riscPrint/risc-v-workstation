@@ -47,3 +47,14 @@ def reset_check(config, observations):
     status = ('fail' if any(r['status'] == 'mismatch' for r in results) else
               'pass' if all(r['status'] == 'consistent' for r in results) else 'inconclusive')
     return {'status': status, 'pulses': results}
+
+
+def mailbox(step):
+    return f''' la t0, stimulus_step
+ li t1, {step}
+ sd t1, 0(t0)
+ la t0, stimulus_ack
+1: ld t1, 0(t0)
+ li t2, {step}
+ bne t1, t2, 1b
+'''

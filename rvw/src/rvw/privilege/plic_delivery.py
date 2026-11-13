@@ -1,18 +1,8 @@
 """Machine/supervisor PLIC interrupt delivery with masked input phases."""
 from .programs import HEAD,TAIL
 from .disabled import enter
+from .events import mailbox
 from rvw.cosim.devices import Plic,PlicMap
-
-
-def mailbox(step):
-    return f''' la t0, stimulus_step
- li t1, {step}
- sd t1, 0(t0)
- la t0, stimulus_ack
-1: ld t1, 0(t0)
- li t2, {step}
- bne t1, t2, 1b
-'''
 
 
 def programs(config):
