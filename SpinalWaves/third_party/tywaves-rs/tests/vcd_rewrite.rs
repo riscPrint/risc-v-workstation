@@ -53,3 +53,14 @@ fn vec_push_vs_insert() {
 
     assert_eq!(vec_push, vec_insert);
 }
+
+#[test]
+fn every_field_with_the_same_vcd_code_is_updated() {
+    let source = vcd::IdCode::FIRST;
+    let mut variable = VcdRewriteVariable::new(source.next(), 2, vec![
+        IdCodeWithShift::create(source, vcd::Vector::from_str("0").unwrap(), false),
+        IdCodeWithShift::create(source, vcd::Vector::from_str("0").unwrap(), false),
+    ]);
+    variable.update_value(&source, &vcd::Vector::from_str("1").unwrap()).unwrap();
+    assert_eq!(variable.get_value().to_string(), "11");
+}
