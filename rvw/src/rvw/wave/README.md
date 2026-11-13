@@ -74,6 +74,10 @@ and `cut` keep the converter path. On the 9 MB, 500-signal FST above,
 `find 'sig3 == sig4 || sig7[3:0] == 5'` took 0.85 s (68 MB RSS) direct, 9.8 s through
 `fst2vcd`, with the same 175 intervals. pywellen does not expose the FST end time: an interval
 still open at the end of the wave ends, for `true_time`, at the last change of the signals read.
+wellen splits Verilator array elements into a scope and an `[i]` variable; the reader rejoins
+them as the VCD reader names them (`top.a.a[0]`). Escaped identifiers (Icarus `\a[0]`) lose
+their index in wellen, so such FSTs (and FSTs pywellen cannot read) use the `fst2vcd` path, and
+an `auto` index build uses the VCD reader. An explicit `--reader wellen` build refuses them.
 
 ## Spinal enum names (`--db`)
 

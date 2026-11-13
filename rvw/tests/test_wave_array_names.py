@@ -82,6 +82,11 @@ def test_simulator_array_queries_and_cuts(simulator_wave, tmp_path, rvw):
     assert sampled(wave, 0) == expected0
     assert sampled(wave, 5) == expected5
     assert {r['signal'] for r in ops.changes(wave, regex)} == set(expected0)
+    # Searches may read FST natively (wellen); names and values must match the converter path.
+    from rvw.wave import search
+    edges = {r['signal']: r['changes'] for r in search.edges(wave, regex)['signals']}
+    assert set(edges) == set(expected0)
+    assert search.find(wave, f"`{names['words', 1]}` == 10")['first'] == 5
     group = {'name': 'bits', 'scope': r'^.*\.', 'counts': {'valid': r'\\?a\[[01]\]'}}
     assert snapshot.take([group], wave, 0)[0]['counts']['valid'] == '1/2'
     assert rvw('wave', 'sample', wave, regex, '--at', 0, '--json')[2]['values'] == ops.sample(wave, regex, 0)
