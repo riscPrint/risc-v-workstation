@@ -104,7 +104,7 @@ object RiscvSimConfig {
       .withVerilator
       .allOptimisation
     NativeBuild.cachePath(cache) match {
-      case Some(path) => cfg.cachePath(path.getAbsolutePath)
+      case Some(path) => cfg.cachePath(key.simThreads.map(n => new File(path, s"sim-threads-$n")).getOrElse(path).getAbsolutePath)
       case None => cfg.disableCache
     }
     if (sys.env.get("RVW_COSIM_DPI").contains("1")) {
@@ -112,6 +112,11 @@ object RiscvSimConfig {
       cfg.addSimulatorFlag(source.getAbsolutePath)
       val hash = ElfFile.sha256(java.nio.file.Files.readAllBytes(source.toPath))
       cfg.addSimulatorFlag(s"-CFLAGS -DRVW_COSIM_DPI_$hash")
+    }
+    key.simThreads.foreach { n =>
+      require(!"(?:^|\\s)--threads(?:=|\\s)".r.findFirstIn(sys.env.getOrElse("SPINAL_VERILATOR_FLAGS", "")).nonEmpty,
+        "explicit simulation threads conflict with inherited --threads")
+      cfg.addSimulatorFlag(s"--threads $n")
     }
     if (key.wave) cfg.withFstWave
     // Fault models write registers from outside; Verilator must re-evaluate their readers.

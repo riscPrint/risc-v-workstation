@@ -965,3 +965,20 @@ location. It reproduced fail code 3 at cycle 9,023 with 2,005 retirements.
 All sixteen checks passed. The trace checkpoint was cycle 4,500. The archive
 was about 33.6 MB. This is local relocation evidence. Native execution on a
 second machine was NOT RUN. See [the sample](rvw/replay-results.json).
+
+## Device-wide reset and per-request threads
+
+Server requests can select `sim_threads: 1` or `sim_threads: 2`. The model cache
+keeps the compiled thread variants separate. Each request creates fresh RTL,
+RAM and UART/CLINT/PLIC state. C1 records the model choice and the initial
+device-state digest.
+
+`rvw/tests/test_reset_threads.py` first runs `device-poison.S`. It leaves a
+pending RX byte, overrun, FIFO/register/output state, asserted CLINT inputs
+and an incomplete PLIC claim. Later requests run `device-reset-check.S` and
+the interrupt-driven UART echo. They switch between one-/two-thread builds
+in one JVM and require complete C2 equality for each matching program.
+The native sample has four passes after the deliberate poisoning failure.
+Reset checks finish at cycle 158. Both echoes finish at cycle 4,079. Model-run
+counters prove reuse of the two compiled variants. No thread-speed gain or
+sampled OS-thread count is claimed. See [the sample](rvw/reset-thread-results.json).

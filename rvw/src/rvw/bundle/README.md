@@ -477,7 +477,8 @@ options still pass the normal C1 checks. A mismatch stays inconclusive.
 The live path captures the ELF and any captured simulation map. It sends these
 request bytes to the existing process. It does not copy or launch another core
 source tree. Normal process reruns retain full source capture. Boot payloads,
-hart images and fault-file requests currently need the normal process path.
+hart images, fault-file requests and interactive debug/trace bindings currently
+need the normal process path.
 The live bundle's replay script still requires the original project setup.
 A self-contained portable replay archive is a separate feature.
 

@@ -392,3 +392,32 @@ Portable replay compares semantic C2 header fields as well as events. Only
 `elf` and `source` header fields are excluded for path/provenance relocation.
 A changed ISA, XLEN, capability, CSR layout, seed or RTL declaration fails the
 header check. The validated C1 ELF identity remains a separate required check.
+
+## Per-request simulation threads and device reset
+
+Generic RiscvSim accepts `--sim-threads N` or JSON `sim_threads` for adapter
+implementations that declare `supportsSimThreads`. N is an integer from 1
+through 64. VexRiscv opts in. Other adapters must opt in before an explicit
+count can be selected. An absent count preserves the existing build profile.
+C1 records the override, or null, in `sim_threads` and `details.model`.
+Replay keeps an explicit override. Build and identity commands honor it too.
+
+An explicit count supplies Verilator `--threads N`. It has a distinct model
+key/workspace and a distinct native cache directory. This prevents reuse of
+a build with another count. An inherited `SPINAL_VERILATOR_FLAGS --threads`
+setting conflicts with an explicit request and is refused. Counts select
+compiled models in the same persistent process. They are not a measured
+OS-thread count or a speed-gain claim.
+
+`LiveDevices.reset()` restores its complete initial snapshot for a new run
+whose cycle origin is zero. It clears UART FIFO/output/registers/overrun/input
+position, CLINT time/deadline/software level and PLIC priority/enable/threshold/
+active/claimed state. VexRiscv allocates a fresh device set for each request
+and records `details.initial_device_state_sha256` before simulation.
+`details.device_reset` records this lifecycle. The native fixture dirties all
+three models, then checks reset and UART echo across one-/two-thread builds.
+Other adapter/device implementations still own their reset behavior.
+
+Portable and live-bundle paths also refuse interactive debug bindings and
+external trace-ingress bindings. These inputs need explicit transaction
+capture before they can supply deterministic reproduction evidence.

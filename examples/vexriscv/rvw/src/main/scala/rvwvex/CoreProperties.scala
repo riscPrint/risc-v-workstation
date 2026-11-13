@@ -34,7 +34,7 @@ object CoreProperties {
           val fire = observe(prefix + "_fire", a.isFiring)
           val removed = observe(prefix + "_removed", a.removeIt)
           val flush = observe(prefix + "_flush", a.isFlushed)
-          val pc = observe(prefix + "_pc", stage.input(top.PC))
+          val pc = observe(prefix + "_pc", stage.input(top.config.PC))
           check(prefix + "_fire_valid", fire, valid)
           check(prefix + "_fire_not_stuck", fire, !stuck)
           check(prefix + "_fire_not_removed", fire, !removed)

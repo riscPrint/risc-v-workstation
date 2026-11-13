@@ -62,4 +62,23 @@ class LiveDevicesSpec extends AnyFunSuite {
     assert(restored.snapshot() == d.snapshot())
     intercept[IllegalArgumentException](fresh().restore(ujson.Obj("schema" -> "bad")))
   }
+  test("device-wide reset clears FIFO, output, deadlines and claimed gateways") {
+    val d = fresh()
+    val initial = d.snapshot()
+    d.write(0x10000001L, 1, 1)
+    d.write(0xc000004L, 4, 7); d.write(0xc002000L, 4, 2)
+    assert(d.tick(3000) == 0x800)
+    assert(d.read(0xc200004L, 4) == 1)
+    d.write(0x10000002L, 1, 1)
+    d.write(0x10000007L, 1, 99)
+    d.write(0x10000000L, 1, 80)
+    d.write(0x2000000L, 4, 1)
+    d.write(0x2004000L, 4, 0); d.write(0x2004004L, 4, 0)
+    assert(d.snapshot() != initial)
+    d.reset()
+    assert(d.snapshot() == initial)
+    assert(d.outputs("uart").str == "")
+    assert(d.tick(2999) == 0)
+    assert(d.read(0xc200004L, 4) == 0)
+  }
 }

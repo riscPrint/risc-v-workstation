@@ -111,3 +111,13 @@ def test_changed_semantic_trace_header_is_not_reproduced(failing, tmp_path):
     assert result['status'] == 'mismatch'
     assert result['checks']['complete_c2']
     assert not result['checks']['c2_header']
+
+
+@pytest.mark.parametrize('option', ['debug', 'trace-ingress'])
+def test_pack_refuses_external_debug_and_trace_bindings(failing, tmp_path, option):
+    run, recipe, _, _ = failing
+    result = json.loads((run/'result.json').read_text())
+    result['replay'] += ' --' + option + ' external'
+    (run/'result.json').write_text(json.dumps(result))
+    with pytest.raises(ValueError, match='structured input'):
+        pack(run, recipe, tmp_path/'bad.rvw')
