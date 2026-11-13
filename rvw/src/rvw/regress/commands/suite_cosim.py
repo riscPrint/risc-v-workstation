@@ -40,6 +40,22 @@ def matched(comparison, run, allow):
     return complete(dict(comparison, synchronized=0), run)
 
 
+def _mailbox_read(run, elf, mismatch):
+    """True when a stimulus run's first difference is a load of its `stimulus_ack` word."""
+    extra = getattr(run, 'extra', None) or {}
+    actual = (mismatch or {}).get('actual') or {}
+    if not extra.get('stimulus_sha256') or not actual.get('mem_rmask') or actual.get('mem_wmask'):
+        return False
+    if set((mismatch or {}).get('differences', {})) - {'mem_rdata', 'rd_wdata'}:
+        return False
+    from rvw.runs.elf import Elf
+    try:
+        ack = Elf(str(elf)).symbols().get('stimulus_ack')
+    except (OSError, ValueError):
+        return False
+    return ack is not None and ack.value <= int(str(actual.get('mem_addr')), 0) < ack.value + 8
+
+
 def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
     """Compare each owned C1 result of `run_dir` with the reference. Returns rows and counts.
 
@@ -71,7 +87,12 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
                        if allow else dict(strict=True))
             comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model=model,
                                core=run.core, **options)
-            if comparison.get('status') == 'mismatch':
+            if comparison.get('status') == 'mismatch' and _mailbox_read(run, elf, comparison['mismatch']):
+                # The harness wrote this RAM word (rvw.stimulus/1 acknowledgement); the single-hart
+                # reference cannot model it, so the comparison stops here without a verdict.
+                row['reason'] = 'reference stopped at a harness-written stimulus_ack read'
+                row['mismatch'] = comparison.get('mismatch')
+            elif comparison.get('status') == 'mismatch':
                 row['status'] = 'mismatch'
                 row['mismatch'] = comparison.get('mismatch')
             elif matched(comparison, run, allow):

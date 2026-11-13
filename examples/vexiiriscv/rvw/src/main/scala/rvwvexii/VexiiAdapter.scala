@@ -26,6 +26,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   val ramSize = 0x1000000L
 
   override def supportsProbes = true
+  override def supportsStimulus = true
   private def report(key: ModelKey, work: File): SpinalReport[VexiiRiscv] = spinalprobes.Probe.enabled(key.probes) {
     RiscvSimConfig.elaborate(key, work, VexiiTop.spinalConfig,
       sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(VexiiTop(key.config))
@@ -83,6 +84,16 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val storeAddresses = mutable.LongMap.empty[(Long, Long)]
     val translatedAddresses = mutable.ArrayBuffer.empty[ujson.Value]
     var walkCapture = Option.empty[WalkCapture]
+    // rvw.stimulus/1: the program writes a step to stimulus_step; the harness drives the event
+    // on the device map and writes the step to stimulus_ack.
+    def symbol(name: String) = ctx.elf.symbol(name).getOrElse(throw new IllegalArgumentException(s"stimulus needs ELF symbol $name"))
+    val stimulusWords = job.stimulus.map(_ => (symbol("stimulus_step"), symbol("stimulus_ack")))
+    val mailbox = job.stimulus.map(s => new StimulusMailbox(s, event => event("kind").str match {
+      case "plic-level" =>
+        devices.getOrElse(throw new IllegalArgumentException("plic-level stimulus needs RVW_VEX_DEVICE_MAP"))
+          .setInput("plic", event("source").num.toInt, event("level").bool)
+      case other => throw new IllegalArgumentException(s"unsupported stimulus kind $other")
+    }, step => (0 until 8).foreach(i => memory(stimulusWords.get._2 + i) = ((step >> (8 * i)) & 255).toInt)))
     val lastVirtual = mutable.LongMap.empty[Long]
     def logicalAddress(load: Boolean, id: Long, physical: Long): Long = {
       // The probe reports an AMO's store half with a stale store id. A store whose tag entry is
@@ -144,6 +155,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           priv.int.m.external #= levels.testBit(11)
           if (levels != irqLevels) { events += ((cycle, () => writer.foreach(_.irq(cycle, levels)))); irqLevels = levels }
           if (tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt, tap.tval.toBigInt))
+          mailbox.foreach(_.tick(cycle))
           for (w <- tap.walk; capture <- walkCapture) {
             if (w.start.toBoolean) capture.start(w.va.toBigInt, w.read.toBoolean, w.write.toBoolean,
               w.execute.toBoolean, w.rootPpn.toBigInt)
@@ -234,6 +246,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           (c, cause, tval, intr) => events += ((c, () => writer.foreach(_.trap(c, cause, tval, intr)))),
           (addr, sizeLog2, data) => {
             bench.foreach(_.onStore(addr, sizeLog2, data))
+            for (m <- mailbox; (step, _) <- stimulusWords if addr == BigInt(step) && sizeLog2 == 3) m.request(ctl.cycle, data)
             tohost.onStore(addr, sizeLog2, data) match {
               case Some(ToHost.Pass) => finish = Some((Status.Pass, None, None))
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
@@ -280,13 +293,17 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
       metrics("roi_cycles") = RvwJson.num(b.words(0).toLong)
       metrics("roi_instret") = RvwJson.num(b.words(1).toLong)
     }
-    RunOutcome(status, cycles, retired, code, message,
+    // A passing program that skipped mailbox events did not run the declared stimulus.
+    val (finalStatus, finalMessage) = mailbox.filter(m => status == Status.Pass && !m.complete)
+      .map(m => (Status.Error, Some(s"stimulus served ${m.served} of its events"))).getOrElse((status, message))
+    RunOutcome(finalStatus, cycles, retired, code, finalMessage,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
         "device_output" -> live.map(_.outputs).getOrElse(ujson.Obj()),
         "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
         "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),
-        "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L))), metrics)
+        "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L)),
+        "stimulus_served" -> RvwJson.num(mailbox.map(_.served.toLong).getOrElse(0L))), metrics)
   }
 }
 

@@ -202,7 +202,7 @@ def verdict(rows):
     return 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive'
 
 
-def reference_blind(comparison, platform):
+def reference_blind(comparison, platform, ack=None):
     """Why a strict mismatch is missing reference evidence, or None for a real mismatch.
 
     Spike models neither a project's interrupt pins nor its MMIO devices.
@@ -210,7 +210,9 @@ def reference_blind(comparison, platform):
     in a declared MMIO region, differs from it. Only these exact shapes are
     accepted: a CSR read of mip whose differing bits are all declared
     irq_inputs, or a load inside a declared mmio region that differs only in
-    the loaded value. Any other difference stays a failure."""
+    the loaded value. A load of the harness-written mailbox word `ack` (the
+    rvw.stimulus/1 `stimulus_ack` address of a stimulus run) is the third
+    shape. Any other difference stays a failure."""
     try:
         data = json.loads(Path(platform).read_text())
         mismatch = comparison.get('mismatch') or {}
@@ -227,6 +229,9 @@ def reference_blind(comparison, platform):
         if (fields <= {'rd_wdata', 'mem_rdata'} and 'mem_rdata' in fields and insn & 0x7f == 0x03
                 and any(base <= address < base + size for base, size in regions)):
             return f'load at {address:#x} reads a declared MMIO device'
+        if (ack is not None and fields <= {'rd_wdata', 'mem_rdata'} and 'mem_rdata' in fields
+                and insn & 0x7f == 0x03 and ack <= address < ack + 8):
+            return f'load at {address:#x} reads the harness-written stimulus_ack word'
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return None
     return None
@@ -389,7 +394,12 @@ def check(directory, results, platform, timeout=10):
                         comparison = {}
                     row.update(comparison=comparison, reason='no complete strict reference match')
                     if not result.timed_out and comparison.get('status') == 'mismatch':
-                        hidden = reference_blind(comparison, platform)
+                        ack = None
+                        if scenario.get('stimulus_sha256'):
+                            from rvw.runs.elf import Elf
+                            symbol = Elf(str(elf)).symbols().get('stimulus_ack')
+                            ack = symbol.value if symbol else None
+                        hidden = reference_blind(comparison, platform, ack)
                         if hidden:
                             row.update(reason=hidden + ', which the strict reference cannot observe; '
                                        'no strict match is possible')

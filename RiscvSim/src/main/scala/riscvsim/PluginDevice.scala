@@ -8,14 +8,15 @@ import java.io.File
 final class PluginDevice(path: File, config: String, seed: Long) extends AutoCloseable {
   private val library = PluginDevice.library(path)
   private val api = library.getFunction("rvw_device_plugin_v1").invokePointer(Array.empty[Object])
-  require(api != null && api.getInt(0) == 1, "unsupported device plugin ABI")
+  private val abi = if (api == null) 0 else api.getInt(0)
+  require(abi == 1 || abi == 2, "unsupported device plugin ABI")
   private val first = ((4 + Native.POINTER_SIZE - 1) / Native.POINTER_SIZE) * Native.POINTER_SIZE
   private def function(index: Int): Function = {
     val pointer = api.getPointer(first + index.toLong * Native.POINTER_SIZE)
     require(pointer != null, "missing device plugin callback")
     Function.getFunction(pointer)
   }
-  private val functions = (0 until 8).map(function)
+  private val functions = (0 until (if (abi >= 2) 9 else 8)).map(function)
   private var handle = functions(0).invokePointer(Array[Object](config, Long.box(seed)))
   require(handle != null, "device plugin initialization failed")
   private def call(index: Int, args: Object*): Int = {
@@ -38,6 +39,11 @@ final class PluginDevice(path: File, config: String, seed: Long) extends AutoClo
     call(4, Long.box(cycle))
     val bits = functions(5).invokeLong(Array[Object](handle))
     BigInt(bits) & ((BigInt(1) << 64) - 1)
+  }
+  /** Drive device input `input` (for example a PLIC source) to `level`. Needs ABI 2. */
+  def setInput(input: Int, level: Boolean): Unit = {
+    require(abi >= 2, "device plugin has no inputs (ABI 1)")
+    call(8, Int.box(input), Int.box(if (level) 1 else 0))
   }
   def close(): Unit = if (handle != null) {
     functions(1).invokeVoid(Array[Object](handle))

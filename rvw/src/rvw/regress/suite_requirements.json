@@ -131,6 +131,26 @@
     ]
   },
   {
+    "name": "plic",
+    "source": "examples/privilege/plic.json",
+    "requires": [
+      "xlen:64",
+      "device:plic",
+      "irq:meip"
+    ]
+  },
+  {
+    "name": "plic-delivery",
+    "source": "examples/privilege/plic-delivery.json",
+    "requires": [
+      "xlen:64",
+      "device:plic",
+      "irq:meip",
+      "irq:seip",
+      "mode:S"
+    ]
+  },
+  {
     "name": "pmp",
     "source": "examples/privilege/pmp.json",
     "requires": [
