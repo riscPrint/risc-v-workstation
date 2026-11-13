@@ -12,6 +12,9 @@ def main(args):
         if project is None:
             raise ValueError('select a project with --project')
         cfg = project.sections.get('riscv_formal')
+        if cfg:
+            from rvw.formal.isa_latency import configure
+            cfg = configure(cfg, getattr(args, 'trace', None))
         if cfg and cfg.get('build'):
             from rvw.common.proc import run_group
             built = run_group(['nice', '-n', '10', *cfg['build']], cwd=project.root,
@@ -19,7 +22,7 @@ def main(args):
             if built.returncode or built.timed_out:
                 raise ValueError('riscv_formal.build failed: ' + (built.stderr or built.stdout)[-1500:])
         with sigterm_raises():
-            result = run(project.sections.get('riscv_formal'), args.out, args.timeout,
+            result = run(cfg, args.out, args.timeout,
                          project.name, unbounded=args.unbounded, engines=args.engines.split(','), machine=args.machine, abstraction=args.abstraction)
         print(json.dumps(result) if args.json else table(result))
         return 1 if result['status'] == 'fail' else 3
@@ -31,6 +34,7 @@ def main(args):
 def register(subparsers):
     p = subparsers.add_parser('isa', help='run the ISA proof kit and print its scoped signoff table')
     p.add_argument('--out', required=True)
+    p.add_argument('--trace', help='RVFI simulation trace used to select the instruction depth')
     p.add_argument('--abstraction', help='single-flight RAM abstraction manifest')
     p.add_argument('--machine', help='machine-checks manifest for the same project RTL')
     p.add_argument('--timeout', type=float, default=110)
@@ -55,6 +59,6 @@ def mcp_run(job, **args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_isa', 'Run the ISA kit. Return per-check bounds, failures and unsupported gaps.',
-                     schema({'project': {'type':'string'}, 'out': {'type':'string'}, 'machine': {'type':'string'}, 'abstraction': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0},
+                     schema({'trace': {'type':'string'}, 'project': {'type':'string'}, 'out': {'type':'string'}, 'machine': {'type':'string'}, 'abstraction': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0},
                              'unbounded': {'type':'boolean'}, 'engines': {'type':'string'}}, ['out']),
                      mcp_run, long=True, side_effects='writes-files', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

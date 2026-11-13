@@ -58,7 +58,8 @@ build = ["./rvw/export-rtl.sh"]
 isa = ISA
 nret = 1
 checks = ["insn_add_ch0", "insn_lw_ch0", "insn_sw_ch0", "cover"]
-depth = 24
+# Run smoke with --rvfi-trace, then pass --trace to rvw formal isa.
+# Or set depth explicitly after review.
 solver = "yices"
 [riscv_formal.ports]
 PORTS

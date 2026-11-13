@@ -16,7 +16,12 @@ def bounded_rows(suite):
         why = test.get('inconclusive')
         outcome = ('failed' if status == 'fail' else 'bounded' if status == 'pass' and not why
                    else 'inconclusive')
-        rows.append(dict(check=test['id'], status=outcome, depth=depth,
+        action = ''
+        if outcome == 'inconclusive':
+            action = ('Increase --timeout or select riscv_formal.solver/check_options.engine.'
+                      if status == 'timeout' else
+                      'Use --trace to measure depth; review check_options.cycles, memory response assumptions and RVFI order/valid. See bounded/*-activation.log.')
+        rows.append(dict(action=action, check=test['id'], status=outcome, depth=depth,
                          reason=why or ('' if outcome == 'bounded' else status),
                          evidence='bounded/results.json', instruction_activation=test.get('instruction_activation')))
     return rows
@@ -112,7 +117,7 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
     if cfg and cfg.get('instruction_models'):
         rows[-2] = dict(check='sail_models', status='not applicable',
                         reason='Selected instruction models are checked in the instruction rows; provenance is in bounded/results.json.')
-    report = dict(schema='rvw.isa-signoff/1', core=core_name, rows=rows,
+    report = dict(schema='rvw.isa-signoff/1', core=core_name, rows=rows, latency_measurement=cfg.get('latency_measurement') if cfg else None,
                   status='fail' if any(r['status'] == 'failed' for r in rows) else 'inconclusive',
                   limits=['Bounded results do not establish unbounded ISA conformance.',
                           'Unsupported rows are gaps, not passes.',
@@ -125,5 +130,5 @@ def table(report):
     lines = ['Check | Outcome | Reason', '--- | --- | ---']
     for row in report['rows']:
         outcome = f"bounded {row['depth']}" if row['status'] == 'bounded' else row['status']
-        lines.append(f"{row['check']} | {outcome} | {row.get('reason', '')}")
+        lines.append(f"{row['check']} | {outcome} | {row.get('reason', '')} {row.get('action', '')}")
     return '\n'.join(lines)
