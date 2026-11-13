@@ -21,6 +21,7 @@ object VexiiTop {
     p.addISA("m")
     if (config.endsWith("asu")) {
       p.addISA("a", "s", "u")
+      p.asidWidth = if (p.xlen == 64) 16 else 9
       p.pmpParam.pmpSize = 8
       p.pmpParam.granularity = if (p.xlen == 64) 16 else 4
     }
@@ -68,6 +69,8 @@ class TrapTapPlugin extends FiberPlugin {
     val epc = CombInit(trap.pending.pc).setName("rvw_trap_epc").simPublic()
     val tval = CombInit(trap.fsm.buffer.trap.tval).setName("rvw_trap_tval").simPublic()
     val fire = CombInit(trap.whitebox.trap).setName("rvw_trap_fire").simPublic()
+    val lsu = host[vexiiriscv.execute.lsu.LsuCachelessPlugin].logic
+    val lsuVirtualAddress = CombInit(lsu.forkCtrl(lsu.onAddress.RAW_ADDRESS)).setName("rvw_lsu_va").simPublic()
     val privilege = CombInit(host[PrivilegedPlugin].logic.harts(0).privilege).setName("rvw_privilege").simPublic()
     buildBefore.release()
   }

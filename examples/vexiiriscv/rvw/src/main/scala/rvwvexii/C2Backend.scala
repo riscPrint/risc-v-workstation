@@ -14,7 +14,8 @@ import scala.collection.mutable
   * xepc when a trap follows. The last record of a run uses the decoded fall-through target. */
 class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (BigInt, BigInt),
                 sink: RvfiRecord => Unit, trapSink: (Long, BigInt, BigInt, Boolean) => Unit,
-                onStore: (BigInt, Int, BigInt) => Unit) extends TraceBackend {
+                onStore: (BigInt, Int, BigInt) => Unit,
+                resolveAddress: (Boolean, Long, Long) => Long = (_, _, address) => address) extends TraceBackend {
   private val mask = (BigInt(1) << xlen) - 1
   val regs: Array[BigInt] = Array.fill(32)(BigInt(0))
   var retired = 0L
@@ -29,6 +30,8 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   private val stores = mutable.LongMap.empty[(Long, Long, BigInt)]
   private var load: Option[(Long, Long, BigInt)] = None
   private var store: Option[(Long, Long, BigInt)] = None
+  private val physicalStores = mutable.LongMap.empty[Long]
+  private var storePhysical: Option[Long] = None
   private val io = mutable.Queue.empty[(Boolean, Long, Int, BigInt)]
 
   private def bytes(data: Array[Byte], len: Long): BigInt =
@@ -59,15 +62,15 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
       val immediate = (raw.toInt << 20) >> 20
       require(write == expectedWrite && (BigInt(address) & mask) == ((regs(rs1) + immediate) & mask),
         "I/O observation does not match retiring instruction")
-      if (write) store = Some((address, size.toLong, data)) else load = Some((address, size.toLong, data))
+      if (write) { store = Some((address, size.toLong, data)); storePhysical = Some(address) } else load = Some((address, size.toLong, data))
     }
     val (memAddr, rmask, rdataMem, wmask, wdataMem) = (load, store) match {
-      case (Some((a, n, d)), None) => (BigInt(a), ((1 << n) - 1).toInt, d, 0, BigInt(0))
-      case (None, Some((a, n, d))) => (BigInt(a), 0, BigInt(0), ((1 << n) - 1).toInt, d)
+      case (Some((a, n, d)), None) => ((BigInt(a) & mask), ((1 << n) - 1).toInt, d, 0, BigInt(0))
+      case (None, Some((a, n, d))) => ((BigInt(a) & mask), 0, BigInt(0), ((1 << n) - 1).toInt, d)
       case (None, None) => (BigInt(0), 0, BigInt(0), 0, BigInt(0))
       case (Some((a, n, d)), Some((sa, sn, sd))) =>
         require(a == sa && n == sn, "atomic read/write addresses differ")
-        (BigInt(a), ((1 << n) - 1).toInt, d, ((1 << sn) - 1).toInt, sd)
+        ((BigInt(a) & mask), ((1 << n) - 1).toInt, d, ((1 << sn) - 1).toInt, sd)
     }
     val r = RvfiRecord(order, cycle(), insn, trap = false, halt = false, intr = handler, mode = mode(), ixl = (if (xlen == 64) 2 else 1),
       rs1 = rs1, rs1Rdata = regs(rs1), rs2 = rs2, rs2Rdata = regs(rs2), rd = rd, rdWdata = wdata,
@@ -79,8 +82,8 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     handler = false
     rdData = None; load = None
     pending = Some(r)
-    store.foreach { case (a, n, d) => onStore(BigInt(a), Integer.numberOfTrailingZeros(n.toInt), d) }
-    store = None
+    store.foreach { case (a, n, d) => onStore(BigInt(storePhysical.getOrElse(throw new IllegalStateException("store has no physical address"))) & mask, Integer.numberOfTrailingZeros(n.toInt), d) }
+    store = None; storePhysical = None
   }
 
   override def trap(hartId: Int, interrupt: Boolean, code: Int): Unit = {
@@ -90,17 +93,22 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     trapSink(cycle(), cause, tval & mask, interrupt)
     traps += 1
     handler = true
-    rdData = None; load = None; store = None
+    rdData = None; load = None; store = None; storePhysical = None
   }
 
   override def writeRf(hartId: Int, rfKind: Int, address: Int, data: Array[Byte]): Unit =
     if (rfKind == 0) rdData = Some(bytes(data, xlen / 8))
   override def loadExecute(hartId: Int, id: Long, addr: Long, len: Long, data: Array[Byte]): Unit =
-    loads(id) = (addr, len, bytes(data, len))
+    loads(id) = (resolveAddress(true, id, addr), len, bytes(data, len))
   override def loadCommit(hartId: Int, id: Long): Unit = load = loads.remove(id)
-  override def storeExecute(hartId: Int, id: Long, addr: Long, len: Long, data: Array[Byte]): Unit =
-    stores(id) = (addr, len, bytes(data, len))
-  override def storeCommit(hartId: Int, id: Long): Unit = store = stores.remove(id)
+  override def storeExecute(hartId: Int, id: Long, addr: Long, len: Long, data: Array[Byte]): Unit = {
+    stores(id) = (resolveAddress(false, id, addr), len, bytes(data, len))
+    physicalStores(id) = addr
+  }
+  override def storeCommit(hartId: Int, id: Long): Unit = {
+    store = stores.remove(id)
+    storePhysical = physicalStores.remove(id)
+  }
   override def storeConditional(hartId: Int, failure: Boolean): Unit =
     if (failure) store = None
   override def ioAccess(hartId: Int, access: TraceIo): Unit =

@@ -75,6 +75,15 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
     var probes = Option.empty[ProbeCollector]
+    val loadAddresses = mutable.LongMap.empty[(Long, Long)]
+    val storeAddresses = mutable.LongMap.empty[(Long, Long)]
+    val translatedAddresses = mutable.ArrayBuffer.empty[ujson.Value]
+    def logicalAddress(load: Boolean, id: Long, physical: Long): Long = {
+      val observed = (if (load) loadAddresses else storeAddresses).getOrElse(id,
+        throw new IllegalStateException(s"missing observed address for memory tag $id"))
+      require(observed._1 == physical, "memory tag does not match the observed physical address")
+      observed._2
+    }
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
@@ -134,6 +143,16 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           }
           if (dbus.cmd.valid.toBoolean && dbus.cmd.ready.toBoolean) {
             val cmd = dbus.cmd
+            if (cmd.fromHart.toBoolean && !cmd.io.toBoolean) {
+              val id = cmd.uopId.toLong
+              val physical = cmd.address.toLong
+              val virtual = tap.lsuVirtualAddress.toLong
+              loadAddresses(id & 15) = (physical, virtual)
+              storeAddresses(id) = (physical, virtual)
+              if (physical != virtual) translatedAddresses += ujson.Obj(
+                "cycle" -> RvwJson.num(cycle), "uop_id" -> RvwJson.num(id),
+                "virtual" -> Hex(BigInt(virtual) & ((BigInt(1) << xlen) - 1)), "physical" -> Hex(BigInt(physical)))
+            }
             val addr = cmd.address.toLong & ~(dbytes - 1L)
             val ok = inRam(addr, dbytes)
             val atomic = dbus.p.withAmo && cmd.amoEnable.toBoolean
@@ -193,7 +212,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
             }
-          })
+          }, logicalAddress)
         val probe = new VexiiRiscvProbe(dut, konataLog, withRvls = false)
         probe.checkLiveness = false
         probe.trace = job.konata
@@ -237,7 +256,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
-        "commit_source" -> "VexiiRiscvProbe"), metrics)
+        "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses)), metrics)
   }
 }
 

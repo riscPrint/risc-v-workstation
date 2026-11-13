@@ -3,6 +3,7 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -27,7 +28,7 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[3]
+    root = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[3])).resolve()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     from rvw.regress.mmu import build as mmu_build

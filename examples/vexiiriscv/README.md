@@ -278,8 +278,8 @@ checker and retained `fail`; the absent-CSR control stayed clean. Native runs
 used `vex-csr`. Formal was NOT RUN. See [the native record](csr-native-results.json).
 ## Supervisor suite configuration
 
-`rv32imasu` adds A, S/U modes, Sv32 and eight PMP entries with 4-byte
-regions. `rv64imasu` uses Sv39 and eight PMP entries with 16-byte regions.
+`rv32imasu` adds A, S/U modes, Sv32, nine ASID bits and eight PMP entries
+with 4-byte regions. `rv64imasu` uses Sv39, 16 ASID bits and eight PMP entries with 16-byte regions.
 Both keep one hart, one lane and cacheless fetch and LSU buses. They do not
 implement Sv48, Sv57, H, pointer masking, PBMT or NAPOT page mappings.
 The adapter services LR/SC and AMO commands on the native LSU bus. C2 retains
@@ -349,3 +349,14 @@ to emit formal RTL without simulating. This opt-in path keeps the default adapte
 binding, case templates, IFT programs and policies, contract, campaign and
 model pre-check manifests. See [its README](rvw/sec/README.md) and the
 results in [`rvw/src/rvw/sec/README.md`](../../rvw/src/rvw/sec/README.md).
+C2 memory addresses use the LSU's actual virtual address sampled when the
+native bus accepts the request. Micro-op tags bind that address to the probe's
+physical load/store observation. A physical-address mismatch rejects the
+binding. The adapter does not reconstruct this value from instruction operands
+or take it from Spike. C1 `details.translated_addresses` retains both addresses
+for requests where they differ. Completion still uses the physical store address.
+These records are not page-table-walk observations.
+
+The initial Sv39 run used zero ASID bits. Eight root/remap cases failed their
+satp readback check because they request ASID 7. The rich profile now enables
+16 ASID bits. Those initial setup failures do not establish a TLB defect.

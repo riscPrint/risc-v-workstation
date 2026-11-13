@@ -66,4 +66,18 @@ class C2BackendSpec extends AnyFunSuite {
     assert(rows.head.memWmask == 0)
   }
 
+  test("observed virtual addresses preserve physical store completion") {
+    val rows = ArrayBuffer.empty[RvfiRecord]
+    val writes = ArrayBuffer.empty[BigInt]
+    val backend = new C2Backend(64, () => 1L, () => 3, () => (BigInt(0), BigInt(0)),
+      r => rows += r, (_, _, _, _) => (), (address, _, _) => writes += address,
+      (_, _, _) => -4096L)
+    backend.storeExecute(0, 0, 0x80200000L, 4, Array[Byte](7, 0, 0, 0))
+    backend.storeCommit(0, 0)
+    backend.commit(0, 0x80000000L, 0x2023L)
+    backend.drain()
+    assert(rows.head.memAddr == BigInt("fffffffffffff000", 16))
+    assert(writes.toSeq == Seq(BigInt("80200000", 16)))
+  }
+
 }

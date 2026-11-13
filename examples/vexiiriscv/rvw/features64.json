@@ -13,6 +13,8 @@
     11
   ],
   "capabilities": [
-    "ad:fault"
+    "ad:fault",
+    "asid:16",
+    "pmp-granularity:16"
   ]
 }
