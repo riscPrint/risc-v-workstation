@@ -27,7 +27,7 @@ def prepare(out, spinal, vex, workstation):
 args = sys.argv
 rtl = pathlib.Path(args[args.index('--rtl') + 1]).resolve()
 source = pathlib.Path(os.environ['EQUIV_SOURCE'])
-cmd = [os.environ['RVW_HOME'] + '/scripts/with-lock.sh', 'sbt', 'nice', '-n', '10',
+cmd = [os.environ['RVW_HOME'] + '/scripts/with-lock.sh', 'sbt-equiv', 'nice', '-n', '10',
        'sbt', '-batch', '-J-Xmx2g', '-J-XX:ActiveProcessorCount=2', '-Dsbt.offline=true',
        'runMain RealExport ' + args[1] + ' ' + str(rtl)]
 subprocess.run(cmd, cwd=source, check=True)
@@ -83,21 +83,26 @@ export_dependencies=["{generator}"]
 ''')
         gold = commit(repo, 'test: capture upstream module')
         if name == 'divider':
-            # Register enable refactor: use an explicit mux for the subtract step.
-            old = '''    remainder := remainderShifted.resized
-    numerator := (numerator ## !remainderMinusDenominator.msb).asUInt.resized
-    when(!remainderMinusDenominator.msb){
-      remainder := remainderMinusDenominator.resized
-    }'''
-            new = '''    remainder := Mux(remainderMinusDenominator.msb, remainderShifted.resized, remainderMinusDenominator.resized)
-    numerator := (numerator ## !remainderMinusDenominator.msb).asUInt.resized'''
-            if old not in text:
+            import re
+            updated = re.sub(r'\bdone\s*:=', 'doneNext :=', text)
+            updated = re.sub(r'\bwaitRsp\s*:=', 'waitRspNext :=', updated)
+            old = '  val done = RegInit(True)\n  val waitRsp = RegInit(False)'
+            new = """  val stateCode = Reg(Bits(3 bits)) init(B"001")
+  val done = stateCode(0) || stateCode(2)
+  val waitRsp = stateCode(2)
+  val doneNext = Bool()
+  val waitRspNext = Bool()
+  doneNext := done
+  waitRspNext := waitRsp
+  stateCode := Mux(!doneNext, B"010", Mux(waitRspNext, B"100", B"001"))"""
+            if old not in updated:
                 raise ValueError('upstream divider changed; inspect the refactor')
-            src.write_text(text.replace(old,new))
+            src.write_text(updated.replace(old,new))
         else:
-            text = git(vex, 'show', 'baf7dc82f855eddaf5b0a20a6802c526f127e38a:' + path) + '\n'
-            src.write_text(text)
-            (repo / 'provenance.json').write_text(json.dumps({'repository':str(vex), 'revision':'baf7dc82f855eddaf5b0a20a6802c526f127e38a', 'path':path}, indent=2)+'\n')
+            # The component source stays fixed. Compare two RTL export settings.
+            exporter = repo / 'src/main/scala/RealExport.scala'
+            exporter.write_text(exporter.read_text().replace(
+                'targetDirectory=args(1),', 'targetDirectory=args(1), oneFilePerComponent=true,'))
         gate = commit(repo, 'test: capture comparison revision')
         cases[name] = dict(project=str(repo/'rvw.toml'),gold=gold,gate=gate,top=top)
     (out/'cases.json').write_text(json.dumps(cases,indent=2)+'\n')
