@@ -970,3 +970,31 @@ AXI4 native read/write trackers require a request accepted on an earlier
 edge before a response is valid. They do not use current-edge request
 bypass to authorize RVALID or BVALID. TileLink response timing follows
 its separate protocol rules.
+
+### Stream cancellation recognition
+
+The elaborated check inserter reads exact valid aliases and the assignment
+structure of `Stream.haltWhen`, `continueWhen`, `clearValidWhen`, `throwWhen`
+and `m2sPipe(flush = ...)`. A custom `m2sPipeWithFlush` method is recognised
+only at a direct register clear under a top-level guard. Enable creation stacks with `debugComponents`, or
+use `SpinalChecks.withLocations`. The inserter checks library method frames
+and assignment shapes. Signal names alone do not establish cancellation. Conjunctions inherit known
+operand cancellations. Arbitrary gates do not create new cancellation terms.
+A gate cancels in the current sample. A register clear cancels in the next
+sample. Both valid hold and payload stability retain their strict obligation
+when the recognised condition is false. Flow channels have no ready handshake.
+
+Each check's `detail` reports the recognised operation and sample timing.
+Its `signals.cancel` field names the effective cancellation signal. This signal
+can be read in the design database or a wave. An unclassified stream retains
+both strict checks and a disposition hint. Custom pipeline implementations and
+arbitrary valid equations still need source review. This recognition does not
+classify the complete VexRiscv fetch path or qualify a connected design.
+
+For custom equations, a project can supply exact `StreamCancelBinding` entries
+in `ChecksConfig.streamCancellations`. Each entry names one stream path, one
+local driven Bool, its sample timing and a source-review reason. This is a
+conditional obligation, not a waiver. A missing stream, missing Bool or duplicate
+binding fails elaboration. See the three VexRiscv project bindings in
+`examples/vexriscv/rvw/src/main/scala/rvwvex/CheckSemantics.scala` and their
+[wave evidence](../examples/vexriscv/checks-evidence/README.md).

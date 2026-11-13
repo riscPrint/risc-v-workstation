@@ -22,10 +22,14 @@ object CsrChecksRuntime {
     val core = VexTop.configuration()
     core.plugins += new CsrChecksPlugin(model, observationFault = fault == "csr")
     core.plugins += new HpmChecksPlugin(observationFault = fault == "hpm", readObservationFault = fault == "hpm_read")
-    val (config, result) = SpinalChecks.install(VexTop.spinalConfig.copy(targetDirectory = new File(out, "rtl").getPath),
-      ChecksConfig(mode = if (allChecks) Mode.Both else Mode.Monitor,
+    val (config, result) = SpinalChecks.install(VexTop.spinalConfig.copy(targetDirectory = new File(out, "rtl").getPath,
+      debugComponents = scala.collection.mutable.HashSet[Class[_]](classOf[VexRiscv])),
+      ChecksConfig(streamCancellations = if (allChecks) CheckSemantics.cancellations else Nil,
+        mode = if (allChecks) Mode.Both else Mode.Monitor,
         enable = if (allChecks) Seq("*") else Seq("csr.*", "hpm.*"), reportPath = new File(out, "checks.json").getPath))
-    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.addSimulatorFlag("--assert").compile(new VexRiscv(core))
+    val simConfig = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.addSimulatorFlag("--assert")
+    if (sys.env.get("RVW_CHECKS_WAVE").contains("1")) simConfig.withWave
+    val compiled = simConfig.compile(new VexRiscv(core))
     require(result.inserted.count(_.kind.startsWith("csr.")) == 3 && result.inserted.count(_.kind == "hpm.count") == 2 &&
       result.inserted.count(_.kind == "hpm.read") == 4)
     var campaignFailed = false
