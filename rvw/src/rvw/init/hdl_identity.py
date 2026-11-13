@@ -67,7 +67,7 @@ def collect(manifest, *, preprocess=None):
               'source.tools_rev': source['tools_rev'], 'source.tools_dirty': source['tools_dirty']}
     document = dict(schema='rvw.adapter-capture/2', complete=native['cache_enabled'], source=source,
                     result_claims=claims, inputs=inputs, manifest=spec, native_build=native)
-    command = [*args, '--cc', '--exe', '--build', '-Mdir', str(root / spec['build_dir']),
+    command = [*args, '--cc', '--exe', '--build', '-MAKEFLAGS', '-B', '-Mdir', str(root / spec['build_dir']),
                *map(str, harness), '-o', 'sim']
     return document, command
 

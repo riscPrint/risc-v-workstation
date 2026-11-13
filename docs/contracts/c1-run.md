@@ -169,3 +169,9 @@ these claims from the identity saved by its build, and must rebuild when the
 current identity differs. It must not relabel an old binary with a new identity.
 Native tools and declared environment remain captured by the regression runner.
 The generated harness still refuses execution until the project maps its buses.
+
+The plain HDL builder passes `-B` to make. A compiler flag or tool identity can
+change without a source timestamp change. A successful incremental make would
+then leave an old executable. The generated builder recompiles before saving
+new identity claims. Project launchers that skip an unchanged build must first
+compare the complete saved claims with current claims.
