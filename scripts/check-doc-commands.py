@@ -48,8 +48,10 @@ def extract(path):
                 tokens = list(lexer)
             except ValueError:
                 continue
+            found = False
             for start, token in enumerate(tokens):
                 if (start == 0 or tokens[start - 1] in ('&&', ';', '|')) and (token == 'rvw' or token.startswith(('scripts/', 'RiscvSim/'))):
+                    found = True
                     argv = tokens[start:]
                     for end, value in enumerate(argv):
                         if value in ('&&', ';', '|', '>', '>>', '2>&1'):
@@ -57,6 +59,8 @@ def extract(path):
                             break
                     yield dict(file=str(path.relative_to(ROOT)), line=number,
                                kind='command' if fenced else 'inline', argv=argv)
+            if fenced and not found and tokens:
+                yield dict(file=str(path.relative_to(ROOT)), line=number, kind='shell', argv=tokens)
         i += 1
 
 

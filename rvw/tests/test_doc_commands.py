@@ -28,6 +28,9 @@ def test_extraction_tracks_lines_and_shell_segments(tmp_path):
         records = list(docs.extract(path))
     finally:
         docs.ROOT = original
+    assert records[0]['kind'] == 'shell'
+    assert records[0]['argv'] == ['cp', '-R', 'rvw', 'dest']
+    records = [r for r in records if r['argv'][0] == 'rvw']
     assert [r['line'] for r in records] == [3, 3, 5]
     assert [r['argv'][1] for r in records] == ['regress', 'query', 'doctor']
     parser = build_parser()

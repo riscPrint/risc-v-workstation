@@ -260,3 +260,13 @@ scaffold writes this field. It is a language value, not a file path. Doctor
 marks JDK, javac and sbt version probes `not_applicable` for SV and VHDL.
 Their installed values remain recorded. Missing applicable native tools still
 fail the diagnostic. This does not assert adapter execution or qualification.
+
+
+## Doctor workflow readiness
+
+`rvw.doctor/1` includes a `workflows` object. The run, regress, gate, cosim,
+query and formal entries have `status`, `checks`, `fixes` and
+`qualification: setup_preconditions_only`. Suite and tier entries use `regress:SUITE`, `regress:tier:TIER` and
+`gate:tier:TIER` keys. Missing optional suite inputs and
+uncommitted files do not block unrelated workflows. A skipped adapter info
+check stays inconclusive. Setup readiness does not establish runtime success.
