@@ -8,7 +8,27 @@ from .common import check_ident
 GATES = {'$_NOT_', '$_AND_', '$_OR_', '$_XOR_', '$_XNOR_', '$_NAND_', '$_NOR_', '$_MUX_', '$_BUF_'}
 
 
-def translate(design, width, latency):
+def uncertainty(kind, values, unknown):
+    """Conservative Boolean unknown propagation, including controlling values."""
+    a, *rest = values
+    ta, *tail = unknown
+    b = rest[0] if rest else '0'
+    tb = tail[0] if tail else '0'
+    if kind in ('$_NOT_', '$_BUF_'):
+        return ta
+    if kind in ('$_XOR_', '$_XNOR_'):
+        return f'({ta} || {tb})'
+    if kind in ('$_AND_', '$_NAND_'):
+        return f'(({ta} && ({tb} || {b})) || ({tb} && {a}))'
+    if kind in ('$_OR_', '$_NOR_'):
+        return f'(({ta} && ({tb} || !{b})) || ({tb} && !{a}))'
+    if kind == '$_MUX_':
+        select, ts = rest[1], tail[1]
+        return f'(({select} ? {tb} : {ta}) || ({ts} && ({ta} || {tb} || ({a} != {b}))))'
+    raise ValueError('unsupported gate uncertainty: '+kind)
+
+
+def translate(design, width, latency, *, definedness=False):
     mod = design['modules']['dut']
     ports = mod['ports']
     expected = {'a': ('input', width), 'b': ('input', width), 'y': ('output', width)}
@@ -45,14 +65,20 @@ def translate(design, width, latency):
         if isinstance(b, int):
             return f'n{b}'
         if b not in ('0', '1'):
+            if definedness and b in ('x', 'z'):
+                return 'nondet_bool()'
             raise ValueError('X/Z constants are unsupported')
         return b
-    available = {'0', '1'}
+    def u(b):
+        return f'u{b}' if isinstance(b, int) else ('1' if b in ('x', 'z') else '0')
+    available = {'0', '1', 'x', 'z'} if definedness else {'0', '1'}
     driven = set()
     lines = ['#include <stdint.h>', 'extern _Bool nondet_bool(void);',
              'extern uint64_t nondet_u64(void);', 'extern void __CPROVER_assert(_Bool, const char *);',
              'extern void __CPROVER_assume(_Bool);']
     lines += [f'static _Bool n{b};' for b in sorted(bits)]
+    if definedness:
+        lines += [f'static _Bool u{b};' for b in sorted(bits)]
     for name, port in ports.items():
         check_ident('port', name)
         if port['direction'] == 'input':
@@ -82,6 +108,8 @@ def translate(design, width, latency):
                     '$_NOR_': f'!({a} | {b})',
                     '$_MUX_': f'{v(args[2])} ? {b} : {a}' if len(args)>2 else '0'}[kind]
             statements.append(f'{v(y)} = {expr};')
+            if definedness:
+                statements.append(f'{u(y)} = {uncertainty(kind, [v(x) for x in args], [u(x) for x in args])};')
             available.add(y); driven.add(y)
         if len(pending) == len(comb):
             raise ValueError('combinational loop or undriven input')
@@ -91,10 +119,20 @@ def translate(design, width, latency):
     lines += ['static void eval(void) {'] + statements + ['}']
     lines += ['static void tick(void) {', 'eval();']
     lines += [f'_Bool next{i} = {v(d)};' for i, (q,d) in enumerate(registers)]
-    lines += [f'{v(q)} = next{i};' for i, (q,d) in enumerate(registers)] + ['eval();', '}']
+    if definedness:
+        lines += [f'_Bool next_unknown{i} = {u(d)};' for i, (q,d) in enumerate(registers)]
+    lines += [f'{v(q)} = next{i};' for i, (q,d) in enumerate(registers)]
+    if definedness:
+        lines += [f'{u(q)} = next_unknown{i};' for i, (q,d) in enumerate(registers)]
+    lines += ['eval();', '}']
     lines += ['static void init(void) {'] + [f'{v(q)} = nondet_bool();' for q,d in registers] + ['}']
     def put(name, expr):
         return [f'{v(b)} = (({expr}) >> {i}) & 1;' for i,b in enumerate(ports[name]['bits'])]
     def get(name):
         return '(' + ' | '.join(f'((uint64_t){v(b)} << {i})' for i,b in enumerate(ports[name]['bits'])) + ')'
-    return '\n'.join(lines)+'\n', ports, put, get
+    translated = ('\n'.join(lines)+'\n', ports, put, get)
+    if definedness:
+        def unknown(name):
+            return '('+' || '.join(u(b) for b in ports[name]['bits'])+')'
+        return (*translated, unknown)
+    return translated

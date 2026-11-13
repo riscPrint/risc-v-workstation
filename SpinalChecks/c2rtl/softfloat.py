@@ -26,7 +26,9 @@ def prepare(root, operation):
     if operation not in files:
         raise ValueError('unknown SoftFloat operation')
     selected = {files['softfloat_state']}
-    pending = [files[operation]]
+    # RISC-V NaN conversion macros call this from specialize.h.
+    # A scan of C source tokens alone does not see the macro body.
+    pending = [files[operation], files['softfloat_raiseFlags']]
     # SoftFloat splits tables from the functions that use them.
     pending += list((root/'source').glob('s_*_1Ks.c'))
     while pending:

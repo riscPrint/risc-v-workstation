@@ -45,7 +45,13 @@ def bind(design, spec):
     unused = spec.get('unused_inputs', {})
     if not isinstance(unused, dict) or set(unused) - {'b', 'c'}:
         raise ValueError('unused_inputs can declare only reference b and c arguments')
-    if unused:
+    input_widths = spec.get('input_widths', {})
+    output_widths = spec.get('output_widths', {})
+    if not isinstance(input_widths, dict) or set(input_widths) - {'a','b','c'}:
+        raise ValueError('input_widths supports only reference operand ports')
+    if not isinstance(output_widths, dict) or set(output_widths) - {'y'}:
+        raise ValueError('output_widths supports only the reference result port')
+    if unused or input_widths:
         identifiers = [bit for p in module['ports'].values() for bit in p['bits'] if isinstance(bit, int)]
         identifiers += [bit for cell in module.get('cells', {}).values() for values in cell['connections'].values() for bit in values if isinstance(bit, int)]
         identifiers += [bit for net in module.get('netnames', {}).values() for bit in net['bits'] if isinstance(bit, int)]
@@ -55,6 +61,18 @@ def bind(design, spec):
                 raise ValueError('unused reference inputs need fresh names and widths 1..64')
             ports[name] = {'direction':'input', 'bits':list(range(next_bit,next_bit+width))}
             next_bit += width
+        for name, width in input_widths.items():
+            port = ports.get(name)
+            if port is None or port['direction'] != 'input' or type(width) is not int or not len(port['bits']) <= width <= 64:
+                raise ValueError('input widening needs existing input ports and widths up to 64; truncation is refused')
+            count = width - len(port['bits'])
+            port['bits'] = [*port['bits'], *range(next_bit,next_bit+count)]
+            next_bit += count
+    for name, width in output_widths.items():
+        port = ports.get(name)
+        if port is None or port['direction'] != 'output' or type(width) is not int or not len(port['bits']) <= width <= 64:
+            raise ValueError('output widening needs an existing result port and width up to 64; truncation is refused')
+        port['bits'] = [*port['bits'], *(['0']*(width-len(port['bits'])))]
     # The translator checks every port, bit width, state cell and driver after
     # this rename. Only declared constant inputs are removed. Other ports remain obligations.
     return {'modules': {'dut': {**module, 'ports': ports}}}

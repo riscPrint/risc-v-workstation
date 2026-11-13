@@ -158,3 +158,31 @@ setup constraint is captured as an assumption in both wrappers. Reset/settle
 count root-clock edges. There is no between-sample transition or analog claim.
 A completed query reports status `conditional` and a separate `contract_verdict`.
 CLI exit is 1. Default formal flows retain their prior state/clock restrictions.
+
+## Mixed-width datapath bindings and literal definedness
+
+`rvw.datapath/1.case_width` records the source FP format used for case splitting.
+It defaults to `width`. An explicit value is 16, 32 or 64 and cannot exceed
+`width`. Case `normal` excludes zero, subnormal, infinity and NaN operands.
+The case restriction still applies only to operand `a`.
+
+A captured datapath binding can declare `input_widths` for `a`, `b` and `c`.
+Each value widens an existing port to the reference word width. The added high
+bits are fresh symbolic reference inputs. They do not connect to the physical
+DUT. A proof therefore requires the reference to ignore those bits. It does not
+assume that they are zero. `output_widths` can widen only `y`. It pads the physical
+result with constant zero high bits. No adapter truncates a port. The normalized
+interface must still pass the existing width, direction and driver checks.
+These fields do not change flag or handshake widths.
+
+`rtl_definedness` is `not_checked`, `proved` or `inconclusive`. The Boolean C
+backend carries conservative literal X/Z propagation through gates and register
+updates. Unknown bits have unconstrained binary values. Separate assertions
+require defined result bits and flags at each result observation. Sequential
+checks also require defined completion signals at each completion observation.
+Both `proved` and `counterexample` require all required definedness assertions
+to succeed. A reachable unknown, incomplete query or missing obligation cannot
+earn either status. The gate rules can retain unknowns after reconvergence, so
+some defined circuits can remain inconclusive. Register initial values retain
+the existing arbitrary two-state contract. This is not four-state event
+simulation or an initial-state reachability result.
