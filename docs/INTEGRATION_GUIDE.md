@@ -362,73 +362,67 @@ and [component simulations](../ComponentSims/README.md).
 
 ### Measured structure-size limits
 
-All stages use the same base-only fitted parameters. The five corrected
-stages share one engine, including common recovery fixes. The historical
-baseline uses the earlier engine. Compare mechanisms against the current
-engine baseline as well as the historical result. No variant result selects
-parameters. The 30 RTL runs and 30 complete Spike matches are reused. No RTL
-variant was rebuilt. Calibration uses three training and six held-out programs.
-A pair meets the criterion only when its sign matches and its error is no
-more than half the measured change. Exact zero changes retain their sign check.
+The model now has structure matrices on two out-of-order cores. Each core
+uses its own fixed base calibration. Variant results do not select parameters.
+A pair meets the criterion when direction matches and error is at most half
+of the measured IPC change. A zero RTL change requires a zero prediction.
 
-| Policy | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) | Same-step rank tau-b |
-|---|---:|---:|---:|---:|---:|
-| Historical baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
-| Current engine baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
-| Wrong-path occupancy | 15 | 6 | 7.15 | 9.11 | 0.667 |
-| Plus finite store drain | 15 | 6 | 7.31 | 9.11 | 1.000 |
-| Plus memory-order window | 15 | 6 | 7.31 | 9.08 | 1.000 |
-| Plus cache-response retry | 10 | 1 | 9.46 | 9.55 | 1.000 |
-
-Rejected guarded-fetch attempts, before the final occupancy policy:
-
-| Attempt | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) |
+| Core and policy | Pairs within | Nonzero pairs within | Training MAE (%) | Held-out MAE (%) |
 |---|---:|---:|---:|---:|
-| Issue-time guard | 9 | 0 | 57.46 | 48.69 |
-| Rename-time guard | 10 | 1 | 51.05 | 40.55 |
+| NaxRiscv typed immediate recovery | 15/24 | 6/15 | 7.31 | 9.05 |
+| NaxRiscv commit-controlled recovery | 14/24 | 5/15 | 7.31 | 8.82 |
+| NaxRiscv immediate recovery with local cache retry, disabled | 12/24 | 3/15 | 7.39 | 7.52 |
+| NaxRiscv commit recovery with local cache retry, disabled | 11/24 | 2/15 | 7.39 | 7.29 |
+| ooo-mini fixed base fit | 35/36 | 9/10 | 3.17 | 1.23 |
 
-Rank uses pooled cycles and the same large steps as RTL. This is separate
-from the earlier local-sensitivity tau-b of 0.707 with three unresolved ties.
-Better rank does not establish correct change sizes.
-Read delta and absolute-error changes separately. A lower training error
-or a better rank does not qualify a design decision. Both absolute-error
-splits remain explicit for every policy.
+NaxRiscv reuses 30 passing RTL runs with complete Spike matches. Its delta
+matrix uses six programs. Absolute calibration uses three training programs
+and six held-out programs. ooo-mini has 45 passing RTL runs with complete
+Spike matches. It uses the same six delta programs and three extra pressure
+programs. Its training set has three base programs. Its held-out set has six.
+The absolute errors therefore cover different workloads on each core.
 
-| Structure change | Direction matches / 6 | Within size criterion / 6 | Use for a design decision |
-|---|---:|---:|---|
-| IQ 32 to 16 | 6 | 3 | Measure RTL |
-| ROB 64 to 128 | 6 | 6 | Measure RTL |
-| LQ 16 to 8 | 2 | 2 | Measure RTL |
-| SQ 16 to 8 | 5 | 4 | Measure RTL |
+The next table states whether direction and size meet the criterion on all,
+some or none of the measured programs. These words apply only to the measured
+programs and steps. They do not qualify general accuracy.
 
-The structure table uses the memory-order window policy, with the
-cache-response retry experiment disabled. No structure is qualified for
-general direction and size predictions.
-IQ, LQ and SQ still need RTL measurements. ROB doubling has no measured effect
-on these six programs. Those zero results do not validate ROB shrinkage or
-larger programs. Use the model to choose experiments and inspect pressure.
+| Structure | NaxRiscv typed immediate | NaxRiscv commit-controlled | ooo-mini |
+|---|---|---|---|
+| ROB | All, 6/6; 64 to 128; all zero changes | All, 6/6; all zero changes | All, 9/9; 8 to 16; 3 nonzero changes |
+| Issue queue | Some, 3/6; 32 to 16 | Some, 3/6 | All, 9/9; 8 to 4; 1 nonzero change |
+| Load queue | Some, 2/6; 16 to 8 | Some, 1/6 | Not measured |
+| Store queue | Some, 4/6; 16 to 8 | Some, 4/6 | All, 9/9; 8 to 4; 1 nonzero change |
+| Predictor | Not measured | Not measured | Some, 8/9; 16 to 4; 5 nonzero changes |
 
-Wrong-path work uses a deterministic committed-mix proxy. The existing Spike
-redirect capture cannot supply dynamic gshare paths. The policy has no nested
-prediction, wrong-path register dependencies or speculative cache traffic.
-Committed frontend lookahead remains optimistic. Stores now retain queue
-slots until bounded cache acceptance. Final store visibility after retirement
-is outside the measured region.
+The model gets all 36 mini-core directions right. Predictor median still
+underestimates the size of the IPC loss. The mini core is scalar and
+cacheless. Its results do not qualify cache, MMU or wide-core behavior.
+The zero NaxRiscv ROB changes do not validate ROB shrinkage.
 
-The cache-response experiment holds a missed load's queue line and readmits the younger
-window through finite capacity. Exact probe-driven replay remains **open**.
-The RTL reschedule counters mix branches, traps and LSU causes. They cannot
-identify a typed LSU retry window. The five-cycle penalty stays fixed; it is
-not inferred from those totals. A long cache response is only a retry proxy.
-Do not claim that all cache misses require an RTL replay.
+Typed LSU events now record cause, instruction ID and cycle. The NaxRiscv
+external tap observes all four causes in one directed base run. The mini
+core declares the same native probes and emits no retry records because
+it has none of those retry mechanisms. Model detection drives replay.
+Captured dynamic RTL events do not enter a prediction.
 
-The [resource configuration](../examples/naxriscv/rvw/arch/ooo-resource.json)
-enables finite memory-order readmission and disables cache-response retries.
-See [the retained project tables](../examples/naxriscv/README.md#resource-timing-study)
-and [the model timing rules](../rvw/src/rvw/ooo/README.md).
-Use `rvw arch ooo-delta` or MCP `arch_ooo_delta` for paired captures on another
-project. Use a new base calibration for each engine policy. Keep fit parameters
-fixed across variants.
+Exact local retry cost isolation and cache retry predicate agreement remain
+open. The commit-controlled policy predicts waiting at the ROB head and uses
+one measured restart cycle. It removes commit waiting from the fixed cost.
+It improves towers absolute error but loses one LQ delta. The occupancy and
+prediction-timing change explains most of the earlier absolute-error rise.
+The cache-disabled policy has not restored the historical 7.47% held-out mean.
+Local cache retry stays disabled because it lowers delta coverage even when
+absolute error falls. Do not select that mechanism from absolute error alone.
+
+Use the model to rank candidates and find pressure. Keep one base fit across
+variants. Measure the top few candidates on RTL with complete Spike matches
+before a structure-size decision. Read absolute error and delta accuracy
+separately. No structure is qualified for general sizing decisions.
+
+Read [the NaxRiscv diagnosis](../examples/naxriscv/rvw/arch/absolute-diagnosis.md),
+[the mini-core matrix](../examples/ooo-mini/README.md#current-structure-matrix)
+and [the model timing rules](../rvw/src/rvw/ooo/README.md#current-cross-core-results).
+Use `rvw arch ooo-delta` or MCP `arch_ooo_delta` for paired project captures.
 
 ## 13. Add UVM and protocol VIP
 
