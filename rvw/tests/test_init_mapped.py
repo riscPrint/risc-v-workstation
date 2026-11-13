@@ -109,6 +109,7 @@ def test_spinal_top_needs_explicit_bus(tmp_path):
         'i:req-rsp:cmd_valid=iBus_cmd_valid,cmd_ready=iBus_cmd_ready,address=iBus_cmd_payload_pc,'
         'rsp_valid=iBus_rsp_valid,rdata=iBus_rsp_payload_inst'], dry_run=True)
     assert 'ProjectRef(coreSource, "cpu")' in result['files']['rvw/build.sbt']
+    assert '${RVW_SBT_LOCK:-sbt-score}' in result['files']['rvw/build-db.sh']
     assert 'rvw/templates/RvfiPort.scala' in result['files']
     assert 'Probe.retire' in result['files']['rvw/templates/CoreProbes.scala']
     assert 'ProjectRef(workstation / "SpinalDB/spinaldb", "spinaldb")' in result['files']['rvw/build.sbt']

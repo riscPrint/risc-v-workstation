@@ -5,12 +5,13 @@ import shlex
 import shutil
 import pytest
 from rvw.common.proc import run_group
+from native_sdks import systemc_home
 
 
 def test_two_initiators(tmp_path):
     cxx=shutil.which(os.environ.get('CXX','c++'))
     if not cxx: pytest.skip('native C++ compiler required')
-    home=os.environ.get('SYSTEMC_HOME')
+    home=systemc_home()
     if home:
         flags=['-I'+str(Path(home)/'include'), '-L'+str(Path(home)/'lib'),
                '-Wl,-rpath,'+str(Path(home)/'lib'), '-lsystemc']

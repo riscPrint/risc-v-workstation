@@ -1,4 +1,4 @@
-"""Opt-in native integration; unit adjudication tests need no tools."""
+"""Native integration when Spike, Sail and the compiler are installed."""
 
 def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch):
     from pathlib import Path
@@ -9,8 +9,6 @@ def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch):
     from rvw.cosim.adjudicate import execute_json
     import os
     import shutil
-    if os.environ.get('RVW_TEST_NATIVE_ADJUDICATE') != '1':
-        pytest.skip('set RVW_TEST_NATIVE_ADJUDICATE=1 for native Spike/Sail integration')
     selected = os.environ.get('RVW_SAIL') or shutil.which('sail_riscv_sim')
     sail = Path(selected) if selected else None
     if sail is None or not sail.is_file():
