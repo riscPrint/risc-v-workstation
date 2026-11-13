@@ -98,11 +98,12 @@ def _build_db(out: str, design: str | None = None, entry: str | None = None, con
 
 def _build_hdl(sources: list, top: str, out: str, frontend: str = "yosys", include_dirs: list | None = None,
                defines: list | None = None, parameters: list | None = None, std: str | None = None,
-               timeout: int = 300) -> dict:
+               library: str = "work", timeout: int = 300) -> dict:
     from .hdl import build_hdl
     try:
         result = build_hdl(sources, top, out, frontend=frontend, include_dirs=include_dirs or (),
-                           defines=defines or (), parameters=parameters or (), std=std, timeout=timeout)
+                           defines=defines or (), parameters=parameters or (), std=std, library=library,
+                           timeout=timeout)
     except (ValueError, OSError) as e:
         raise ToolError(str(e)) from None
     return {**result, "info": run_on(out, ops.info)}
@@ -114,14 +115,16 @@ def mcp_tools() -> list[ToolSpec]:
                  "every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native "
                  "read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through "
                  "yosys-slang with include directories, defines and top parameters, and records per-instance "
-                 "parameters (artifact hdl/parameters.json) and declared SV types.",
+                 "parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL "
+                 "through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work "
+                 "library) with VHDL declaration and assignment lines.",
                  schema({"sources": {"type": "array", "items": {"type": "string"}}, "top": {"type": "string"},
-                         "out": {"type": "string"}, "frontend": {"type": "string", "enum": ["yosys", "slang"],
+                         "out": {"type": "string"}, "frontend": {"type": "string", "enum": ["yosys", "slang", "ghdl"],
                                                                  "default": "yosys"},
                          "include_dirs": {"type": "array", "items": {"type": "string"}},
                          "defines": {"type": "array", "items": {"type": "string"}, "description": "NAME[=VALUE]"},
                          "parameters": {"type": "array", "items": {"type": "string"}, "description": "NAME=VALUE"},
-                         "std": {"type": "string"}, "timeout": {"type": "integer", "default": 300}},
+                         "std": {"type": "string"}, "library": {"type": "string", "default": "work"}, "timeout": {"type": "integer", "default": 300}},
                         ["sources", "top", "out"]),
                  _build_hdl),
         ToolSpec("query_info", "What a design database holds: toplevel, configuration, counts, clock domains, "

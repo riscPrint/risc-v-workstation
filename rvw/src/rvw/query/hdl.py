@@ -29,7 +29,7 @@ def _quote(value):
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 
-FRONTENDS = {'yosys': 'yosys-verilog', 'slang': 'yosys-slang'}
+FRONTENDS = {'yosys': 'yosys-verilog', 'slang': 'yosys-slang', 'ghdl': 'yosys-ghdl'}
 SOURCE_REMAP = r'\$(?:readmem\w*|fopen)\b|`line\b|``'
 
 
@@ -46,11 +46,12 @@ def _slang_plugin(tool, plugin):
 
 
 def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys', include_dirs=(),
-              defines=(), parameters=(), std=None, slang=None):
+              defines=(), parameters=(), std=None, slang=None, ghdl_plugin=None, library='work'):
     """Capture, elaborate, translate and atomically publish. Errors keep old output.
 
-    `frontend` is `yosys` (native read_verilog -sv subset, self-contained files) or `slang`
-    (yosys-slang: full SystemVerilog with include directories, defines and top parameters)."""
+    `frontend` is `yosys` (native read_verilog -sv subset, self-contained files), `slang`
+    (yosys-slang: full SystemVerilog with include directories, defines and top parameters) or
+    `ghdl` (VHDL through the GHDL Yosys plugin; `parameters` are top generics, `std` 93/08)."""
     if frontend not in FRONTENDS:
         raise ValueError(f'unknown frontend {frontend!r}')
     if not re.fullmatch(r'[A-Za-z_][A-Za-z_0-9$]*', top):
@@ -60,6 +61,14 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
             raise ValueError(f'unsupported define or parameter: {value!r}')
     if frontend == 'yosys' and (include_dirs or defines or parameters or std):
         raise ValueError('include directories, defines, parameters and --std need --frontend slang')
+    if frontend == 'ghdl' and (include_dirs or defines):
+        raise ValueError('VHDL has no include directories or defines')
+    if not re.fullmatch(r'[A-Za-z][A-Za-z_0-9]*', library):
+        raise ValueError('unsupported VHDL library name')
+    if frontend == 'ghdl':
+        std = std or '08'
+        if std not in ('87', '93', '93c', '00', '02', '08', '19'):
+            raise ValueError(f'unsupported VHDL standard {std!r}')
     out = Path(out).absolute()
     sources = [Path(p).absolute() for p in sources]
     if not sources or out.resolve() in {p.resolve() for p in sources}:
@@ -69,13 +78,17 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
         private = Path(private).resolve()
         capture = Capture(private / 'inputs')
         tool = capture.tool(yosys)
-        if frontend == 'yosys':
+        if frontend in ('yosys', 'ghdl'):
             inputs = [capture.file(p) for p in sources]
             copies, includes, used = [i.copy for i in inputs], [], inputs
             # Refuse file access whose dependency set this subset cannot capture.
-            for item in inputs:
+            for item in inputs if frontend == 'yosys' else ():
                 if re.search(r'`include\b|' + SOURCE_REMAP, item.copy.read_text()):
                     raise ValueError('unsupported include, file input or source remapping')
+            if frontend == 'ghdl':
+                from . import hdl_ghdl
+                plugin = capture.file(hdl_ghdl.plugin_path(tool, ghdl_plugin))
+                ghdl_tool = capture.tool('ghdl')
         else:
             # Capture whole directories: the sources' own (local includes) and each include
             # directory. Elaboration reads only these copies.
@@ -94,8 +107,25 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
         paths = {os.path.realpath(i.copy): i.source for i in used}
         netlist = private / 'design.json'
         script = private / 'build.ys'
-        ast = None
-        if frontend == 'yosys':
+        ast = locs = None
+        env = None
+        if frontend == 'ghdl':
+            prefix = hdl_ghdl.ghdl_prefix(tool)
+            env = {**os.environ, **({'GHDL_PREFIX': prefix} if prefix else {})}
+            options = [f'--std={std}', f'--work={library}', *(f'-g{g}' for g in parameters)]
+            if any(re.search(r'\s|"', str(c)) for c in copies):
+                raise ValueError('source paths must not contain spaces or quotes')
+            xmldir = private / 'xml'
+            xmldir.mkdir()
+            process = run_group([ghdl_tool.path, '--file-to-xml', f'--std={std}', f'--work={library}',
+                                 *map(str, copies)], cwd=xmldir, capture=True, timeout=timeout)
+            if process.returncode:
+                raise ValueError('VHDL analysis failed: ' + process.stderr[-3000:])
+            locs = hdl_ghdl.locations(process.stdout)
+            script.write_text('ghdl ' + ' '.join(options) + ' ' + ' '.join(str(c) for c in copies)
+                              + f' -e {top}\nwrite_json {_quote(netlist)}\n')
+            argv = [tool.path, '-Q', '-T', '-m', str(plugin.resolved), '-s', str(script)]
+        elif frontend == 'yosys':
             script.write_text('read_verilog -sv ' + ' '.join(_quote(c) for c in copies)
                               + f'\nhierarchy -check -top {top}\nproc\nwrite_json {_quote(netlist)}\n')
             argv = [tool.path, '-Q', '-T', '-s', str(script)]
@@ -118,7 +148,7 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
             ast = instances(parse_ast(process.stdout))
             script.write_text('read_slang --keep-hierarchy ' + ' '.join(options)
                               + f'\nhierarchy -top {top}\nproc\nwrite_json {_quote(netlist)}\n')
-        process = run_group(argv, cwd=private, capture=True, timeout=timeout)
+        process = run_group(argv, cwd=private, env=env, capture=True, timeout=timeout)
         if process.returncode:
             raise ValueError('HDL elaboration failed: ' + ((process.stdout or '')[-1500:] + process.stderr)[-3000:])
         data = json.loads(netlist.read_text())
@@ -129,15 +159,25 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
             conn = sqlite3.connect(temp)
             try:
                 conn.executescript(schema_sql())
-                writer = _Writer(conn, data, paths, base=private, types=ast[1] if ast else {})
+                rename = {}
+                if locs:
+                    rename = {m: e for m in data['modules']
+                              if (e := hdl_ghdl.entity_of(m, locs['entities'])) is not None}
+                writer = _Writer(conn, data, paths, base=private, types=ast[1] if ast else {}, rename=rename)
                 writer.instance(top, '', None)
                 writer.domains()
+                if locs:
+                    hdl_ghdl.apply(conn, locs, paths)
                 meta = {'schema': 'rvw.designdb/20', 'toplevel': top,
                         'frontend': FRONTENDS[frontend], 'extra_scopes': f'TOP {top}',
                         'emission_config': '$incomplete:hdl-navigation-only',
                         'input_capture': json.dumps(capture.record()),
                         'graph_semantics': 'conservative signal and whole-cell dependencies; register stage counts can include state aliases',
                         'yosys_version': tool.version.strip()}
+                if frontend == 'ghdl':
+                    meta.update({'ghdl_plugin_sha256': plugin.sha256, 'ghdl_version': ghdl_tool.version.strip(),
+                                 'hdl_options': json.dumps({'std': std, 'library': library,
+                                                            'parameters': list(parameters)})})
                 if frontend == 'slang':
                     meta.update({'slang_plugin_sha256': plugin.sha256,
                                  'hdl_options': json.dumps({'include_dirs': [str(Path(d).absolute()) for d in include_dirs],
@@ -173,17 +213,19 @@ def _dotted(path):
 
 
 class _Writer:
-    def __init__(self, conn, data, paths, base=None, types=None):
+    def __init__(self, conn, data, paths, base=None, types=None, rename=None):
         self.c = conn
         self.modules = data['modules']
         self.paths = paths
         self.base = base
         self.types = types or {}
         self.components = {}
+        self.rename = rename or {}
         self.files = {}
         self.sid = self.cid = self.aid = 0
         self.active = set()
-        self.state = []  # (output signal ids, clock id, edge, reset id, reset kind, active high, reset value)
+        self.state = []  # (output signal ids, clock id, edge, reset id, reset kind, active high, reset bit)
+        self.vectors = []  # (visible net id, its bit node ids) for per-net reset values
 
     def loc(self, attrs):
         src = attrs.get('src', '').split('|')[0]
@@ -245,6 +287,7 @@ class _Writer:
         fid, line = self.loc(m.get('attributes', {}))
         # yosys-slang names each kept instance `module$top.path`; the module is the prefix.
         name = module.split('$', 1)[0] if '$' in module[1:] and not module.startswith('$') else module
+        name = self.rename.get(module, name)
         self.c.execute('''INSERT INTO components
             (id,parent_id,path,name,module,depth,file_id,line,tags) VALUES (?,?,?,?,?,?,?,?,?)''',
             (cid,parent,path,cell or name,name,
@@ -291,6 +334,9 @@ class _Writer:
                     label = f"{owner}[{m['netnames'][owner]['bits'].index(b)}]"
                 bitids[b] = self.signal(cid,prefix+label,label,generated=True,
                                         spinal=_dotted(prefix+label))
+        for name, net in m['netnames'].items():
+            if not net.get('hide_name') and all(isinstance(b, int) for b in net['bits']):
+                self.vectors.append((named[name], [bitids[b] for b in net['bits']]))
         for name, net in m['netnames'].items():
             sid = named[name]
             reads = [(bitids[b],'data') for b in net['bits'] if isinstance(b,int) and bitids[b] != sid]
@@ -354,7 +400,7 @@ class _Writer:
                 if base in STATE:
                     visible = [named[nn] for nn in dict.fromkeys(owners.get(b, []))
                                if not m['netnames'][nn].get('hide_name')]
-                    self._state(cell, base, bitids, b, visible)
+                    self._state(cell, base, bitids, b, visible, i)
                     self.c.execute("UPDATE signals SET kind='reg' WHERE id=?",(bitids[b],))
                     for v in visible:
                         self.c.execute("UPDATE signals SET kind='reg' WHERE id=?",(v,))
@@ -405,7 +451,7 @@ class _Writer:
         self.c.execute('INSERT INTO mem_ports(memory_id,component_id,kind,key,file_id,line) VALUES (?,?,?,?,?,?)',
                        (mem, cid, kind, '$incomplete:hdl-memory-port', fid, line))
 
-    def _state(self, cell, base, bitids, bit, names):
+    def _state(self, cell, base, bitids, bit, names, index=0):
         """Record the clock and reset of one flip-flop output bit."""
         ports, params = cell['connections'], cell.get('parameters', {})
 
@@ -430,35 +476,49 @@ class _Writer:
         else:
             reset, kind, high, value = None, 'BOOT', None, None
         edge = 'RISING' if flag('CLK_POLARITY' if 'CLK' in ports else 'EN_POLARITY') else 'FALLING'
-        self.state.append(([bitids[bit], *names], clock, edge, reset, kind, high, value))
+        # Reset values are MSB-first strings for the whole cell; keep this output bit's char.
+        value = str(value) if value is not None else None
+        char = value[len(value) - 1 - index] if value and index < len(value) else None
+        self.state.append(([bitids[bit], *names], clock, edge, reset, kind, high, char))
 
     def _root(self, sid):
-        """The toplevel input behind a control net (through ports and aliases), else the net."""
+        """(toplevel input, inverted) behind a control net, through ports, aliases, buffers and
+        inverters. A net derived by other logic is its own root: (net, False)."""
         if sid is None:
-            return None
-        pending, seen = [sid], set()
+            return None, False
+        pending, seen = [(sid, False)], set()
         while pending:
-            n = pending.pop(0)
+            n, inv = pending.pop(0)
             if n in seen:
                 continue
             seen.add(n)
             row = self.c.execute('SELECT s.direction, c.depth FROM signals s JOIN components c '
                                  'ON c.id=s.component_id WHERE s.id=?', (n,)).fetchone()
             if row == ('in', 0):
-                return n
-            pending.extend(r[0] for r in self.c.execute('SELECT src FROM edges WHERE dst=?', (n,)))
-        return sid
+                return n, inv
+            sources = {r[0] for r in self.c.execute('SELECT source FROM assignments WHERE target_id=?', (n,))}
+            cells = {x for x in sources if x != 'Yosys net alias' and not x.startswith('Yosys constant')}
+            if cells - {'$not', '$logic_not', '$buf', '$pos'}:
+                continue  # derived by logic: not a plain path to an input
+            flip = inv ^ bool(cells & {'$not', '$logic_not'})
+            pending.extend((r[0], flip) for r in self.c.execute('SELECT src FROM edges WHERE dst=?', (n,)))
+        return sid, False
 
     def domains(self):
         """Write clock_domains and register domain ids. Sync resets are recorded only where Yosys
         made $sdff cells; resets in plain mux logic stay data."""
-        ids, roots = {}, {}
+        ids, roots, bitreset = {}, {}, {}
         path = lambda i: self.c.execute('SELECT path FROM signals WHERE id=?', (i,)).fetchone()[0]
         for outs, clock, edge, reset, kind, high, value in self.state:
             for i in (clock, reset):
                 if i is not None and i not in roots:
                     roots[i] = self._root(i)
-            ck, rk = roots.get(clock), roots.get(reset)
+            ck, cinv = roots.get(clock, (None, False))
+            rk, rinv = roots.get(reset, (None, False))
+            if cinv:
+                edge = 'FALLING' if edge == 'RISING' else 'RISING'
+            if rinv and high is not None:
+                high = not high
             key = (ck, edge, rk, kind, high)
             if key not in ids:
                 ids[key] = len(ids) + 1
@@ -472,6 +532,14 @@ class _Writer:
                     self.c.execute("UPDATE signals SET clock_role='clock' WHERE id=?", (ck,))
                 if rk:
                     self.c.execute("UPDATE signals SET clock_role='reset' WHERE id=?", (rk,))
-            for o in outs:
-                self.c.execute('UPDATE signals SET clock_domain_id=?, reset_value=? WHERE id=?',
-                               (ids[key], value if rk else None, o))
+            self.c.execute('UPDATE signals SET clock_domain_id=?, reset_value=? WHERE id=?',
+                           (ids[key], value if rk else None, outs[0]))
+            for o in outs[1:]:
+                self.c.execute('UPDATE signals SET clock_domain_id=? WHERE id=?', (ids[key], o))
+            if rk and value is not None:
+                bitreset[outs[0]] = value
+        # A visible register net's reset value is the concatenation of its bits (MSB first).
+        for sid, bits in self.vectors:
+            chars = [bitreset.get(b) for b in reversed(bits)]
+            value = ''.join(chars) if bits and None not in chars else None
+            self.c.execute("UPDATE signals SET reset_value=? WHERE id=? AND kind='reg'", (value, sid))
