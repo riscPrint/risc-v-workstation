@@ -1,4 +1,85 @@
-# Hardware RVFI observer prototype
+# Retirement observer alignment
+
+The current observer targets the single-lane RV32 cacheless profile. It retains
+register and memory results by full micro-op ID. Dispatch clears reused slots.
+A same-cycle result can bypass its table. Emission requires a matching tag.
+The observer asserts on missing data or a completion-slot collision.
+
+A normal commit supplies the preceding instruction's next PC. A trap boundary
+ends that chain at xepc. The observer captures the faulting instruction at the
+trap stage. It records the actual trap redirect and emits a separate synchronous
+fault record. The core issues that redirect before its architectural trap pulse.
+The first handler instruction carries the RVFI interrupt-boundary flag. MRET is
+a normal instruction record. It is not a second synchronous fault record.
+Privilege mode is captured with each instruction.
+
+The memory observer uses the upstream WhiteboxerPlugin load and store events.
+It retains address, data, size-derived byte masks and the micro-op tag. It does
+not replace memory data with register results. CSR immediate fields do not become
+register-source indices. FENCE and privileged control instructions do not invent
+a destination register.
+
+## Directed alignment check
+
+```sh
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexiiriscv/formal/observer_smoke.py \
+  --rtl BUILD/VexiiRiscv.v --out SMOKE
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexiiriscv/formal/observer_checks.py \
+  --rtl BUILD/VexiiRiscv.v --riscv-formal "$RISCV_FORMAL" \
+  --out CHECKS --timeout 20
+rvw formal isa --project CHECKS/project --out SIGNOFF --timeout 20
+```
+
+The directed program checks a dependent store/load, arithmetic, ECALL, handler
+entry and MRET. It checks retirement order through the return. The positive run
+matched 15 records. The negative control forces the observer store-data output
+to zero. It returned nonzero at the store mismatch. These are finite simulation
+results. They are not formal observer equivalence or full ISA qualification.
+
+The first run exposed an observer error. It waited for a trap redirect after
+the trap pulse. That lost the ECALL record and later emitted a duplicate MRET
+fault. The correction retains the preceding actual redirect. The regression
+keeps the original failure and the successful retry in observer-results.json.
+
+## Formal scope
+
+The helper first runs ADD at depth 12. It then selects ADD, LUI, BEQ, LW and SW
+at depth 60 through the ISA kit. Each native task has a 20-second limit. The
+result retains assertion, retirement-cover and instruction-activation outcomes.
+All unselected instruction and machine rows remain unsupported. Interrupt and
+bus-error inputs are zero. Other bus inputs remain unconstrained. In particular,
+this is not a qualified bus-ID or response-order model. A diagnostic assertion
+failure needs attribution before it can be called a core defect.
+
+Interrupt entry, I/O, compressed instructions, overlapping trap/commit events,
+multiple lanes and full independent observer equivalence remain unqualified.
+A final normal commit still waits for the next commit or trap boundary to
+supply its next PC. The finite check does not establish observer liveness.
+The fault-completion slot is checked for overflow. No assumption waives it.
+
+## Build the profile
+
+Use the source pins and example build below. Set RVW_HOME to this workstation.
+Set VEXIIRISCV to the private checkout. Hold sbt-conn for compilation and vex-conn
+for native core work. Use nice priority 15. The measured continuation compiled
+the observer with the already-built pinned example classpath. It did not rebuild
+all core and Spinal sources. The emitted RTL digest binds each measured run.
+
+From examples/vexiiriscv/rvw:
+
+```sh
+"$RVW_HOME/scripts/with-lock.sh" sbt-conn nice -n 15 \
+  sbt '++2.13.14!' compile
+"$RVW_HOME/scripts/with-lock.sh" vex-conn nice -n 15 \
+  sbt '++2.13.14!' 'runMain rvwvexii.FormalRvfi BUILD'
+```
+
+The historical prototype and its results follow. Its limits describe that older
+export. They do not erase the later measured results or qualify the current one.
+
+# Historical hardware observer prototype
 
 `rvwvexii.FormalRvfi` is an opt-in elaboration entry point. It adds the
 project-owned `FormalRvfiPlugin`. It does not change VexiiRiscv sources or the
@@ -69,3 +150,13 @@ RTL SHA-256: `6e1460ca602ed78dcd9190a2c9b359bb0fcb1888b79928b8c52425464ff4fb09`.
 
 Evidence directories: `vexii-rvfi-v3`, `vexii-project-v1`, and `vexii-checks-v1`
 in the worker private evidence tree.
+
+## Continuation receipts
+
+See [observer-results.json](formal/observer-results.json) and the
+[signoff inventory](formal/observer-signoff.md). The
+[first failed stream](formal/observer-initial-failure.log),
+[final positive stream](formal/observer-positive.log) and
+[store-data negative control](formal/observer-negative.log) retain the native
+observations. All five selected depth-60 assertion and activation tasks timed
+out. General retirement cover also timed out. No instruction proof closed.

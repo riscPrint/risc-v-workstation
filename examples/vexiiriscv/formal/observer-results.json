@@ -1,0 +1,453 @@
+{
+  "schema": "rvw.vexii-observer-continuation/1",
+  "date": "2026-11-13",
+  "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "spinal_revision": "de72faf6062206a89b445e5cc07e32ed982712c8",
+  "observer_sha256": "fe5958f764b720ff7e28bcc645be92d75a01d6295580c5c040345cd139551266",
+  "smoke": {
+    "schema": "rvw.vexii-observer-smoke/1",
+    "rtl_sha256": "3829443d7095745469708714619b904b280fee8eedfbf7520780966c7625a4a6",
+    "bench_sha256": "8647d63caf8bcbb7251be251d9bd361dbc5d00a6362d27cc23bcd01ac68f6359",
+    "rows": [
+      {
+        "case": "positive",
+        "status": "matched",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "case": "negative",
+        "status": "detected",
+        "returncode": 1,
+        "timed_out": false
+      }
+    ],
+    "status": "matched",
+    "limits": [
+      "One directed program, not formal observer equivalence.",
+      "Normal retirements, dependent load/store, ECALL, handler boundary and MRET.",
+      "Negative control forces only the observer store-data output to zero.",
+      "Interrupts, I/O and overlapping fault/commit events remain unqualified."
+    ]
+  },
+  "initial_smoke": {
+    "schema": "rvw.vexii-observer-smoke/1",
+    "rtl_sha256": "0ffea13bb636396f03cdf0d2cae3fdb021f248aeadce8153fda8ccd99d70fa0d",
+    "bench_sha256": "30cdb8cb301439671f0985f33984d6405f2a56526b562f63f0fe3ceea4be8902",
+    "rows": [
+      {
+        "case": "positive",
+        "status": "failed",
+        "returncode": 1,
+        "timed_out": false
+      },
+      {
+        "case": "negative",
+        "status": "detected",
+        "returncode": 1,
+        "timed_out": false
+      }
+    ],
+    "status": "failed",
+    "limits": [
+      "One directed program, not formal observer equivalence.",
+      "Normal retirements, dependent load/store, ECALL, handler boundary and MRET.",
+      "Negative control forces only the observer store-data output to zero.",
+      "Interrupts, I/O and overlapping fault/commit events remain unqualified."
+    ]
+  },
+  "correction": "Retain the actual trap redirect issued before the architectural trap pulse; do not wait for a later MRET redirect.",
+  "small_bound": [
+    {
+      "check": "insn_add_ch0",
+      "status": "pass",
+      "reason": "retirement cover was not reached; bounded check may be vacuous",
+      "settings": {
+        "cycles": [
+          12
+        ],
+        "engine": "abc bmc3",
+        "defines": []
+      }
+    },
+    {
+      "check": "cover",
+      "status": "timeout",
+      "reason": "wall-clock timeout",
+      "settings": {
+        "cycles": [
+          1,
+          60
+        ],
+        "engine": "smtbmc bitwuzla",
+        "defines": []
+      }
+    }
+  ],
+  "isa": {
+    "schema": "rvw.isa-signoff/1",
+    "core": "vexii-observer-diagnostic",
+    "rows": [
+      {
+        "check": "insn_add_ch0",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_add_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "check": "insn_lui_ch0",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_lui_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "check": "insn_beq_ch0",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_beq_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "check": "insn_lw_ch0",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_lw_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "check": "insn_sw_ch0",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_sw_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "check": "cover",
+        "status": "inconclusive",
+        "depth": 60,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": null
+      },
+      {
+        "check": "causal_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_addi_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_and_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_andi_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_auipc_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_bge_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_bgeu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_blt_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_bltu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_bne_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_div_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_divu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_jal_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_jalr_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_lb_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_lbu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_lh_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_lhu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_mul_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_mulh_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_mulhsu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_mulhu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_or_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_ori_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_rem_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_remu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sb_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sh_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sll_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_slli_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_slt_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_slti_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sltiu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sltu_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sra_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_srai_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_srl_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_srli_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_sub_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_xor_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "insn_xori_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "liveness_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "pc_bwd_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "pc_fwd_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "reg_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "unique_ch0",
+        "status": "unsupported",
+        "reason": "Check is not selected in the project."
+      },
+      {
+        "check": "exception_entry",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "interrupt_entry",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "trap_return",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "csr_consistency",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "instruction_memory",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "x0",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "flush_retirement",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "trap_pc_chain",
+        "status": "unsupported",
+        "reason": "No machine-state binding selected."
+      },
+      {
+        "check": "sail_models",
+        "status": "unsupported",
+        "reason": "Select generated models through riscv_formal.instruction_models."
+      },
+      {
+        "check": "adapter_conformance",
+        "status": "unsupported",
+        "reason": "RVFI export or monitor equivalence is not certified by instruction checks."
+      }
+    ],
+    "status": "inconclusive",
+    "limits": [
+      "Bounded results do not establish unbounded ISA conformance.",
+      "Unsupported rows are gaps, not passes.",
+      "Source assumptions and reachability remain part of each result."
+    ]
+  },
+  "limits": [
+    "Compiler classpath reused the pinned private example build; full core and Spinal recompilation was not run.",
+    "No unbounded VexiiRiscv instruction proof or independent observer equivalence closed.",
+    "Five selected instruction checks; unselected ISA rows are unsupported.",
+    "Diagnostic bus environment, not a qualified protocol contract."
+  ]
+}
