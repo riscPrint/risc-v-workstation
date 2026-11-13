@@ -642,3 +642,28 @@ the tests check after teardown. See
 [the generic limits](../../RiscvSim/README.md#native-server-teardown-observation)
 and [the native sample](rvw/server-lifecycle.json). These controls do not
 establish complete device reset coverage or a thread count between requests.
+### CSR and HPM monitor execution
+
+`rvw/tests/formal/test_vex_generated_checks.py` runs generated `mscratch` and
+absent-`sscratch` programs, plus `csr-check-events.S`, on Spike and native
+VexRiscv with the CSR and HPM plugins installed. Select a private external
+checkout with `VEXRISCV`. Set `RVW_VEX_CHECKS_LOCK` to its private lock name.
+Source the native tool environment first. Run the slow module directly:
+
+```sh
+rvw/.venv/bin/python -m pytest rvw/tests/formal/test_vex_generated_checks.py -q
+```
+
+The native entry is `rvwvex.CsrChecksRuntime model.json OUT MODE ELF...`.
+Modes are `none`, `csr` and `hpm`. The latter two seed observation faults.
+They leave core storage and program instructions intact. A seeded run succeeds
+only when the required monitor fires. Its `rvw.checks-run/1` report retains
+status `fail`. A clean run requires program success and zero firing checks.
+The driver also requires executed scratch and counter instructions. Each
+native invocation has a 110-second limit in the slow test. Missing tools or
+external sources cause a skip, which supplies no execution evidence.
+
+The counter program writes both RV32 halves, crosses low-half wraparound and
+reads user aliases from M mode. Its Spike reference enables Zicntr. This is
+an M-only, no-debug example. It does not qualify privilege filters, programmable
+HPM events, AIA behavior, general CSR aliases or physical hardware.
