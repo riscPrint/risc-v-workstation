@@ -467,7 +467,7 @@ impl VcdRewriteVariable {
             };
             if id_sh_code == *source_id_code {
                 // Update the value
-                return id_code_with_shift.update_value(value.clone());
+                id_code_with_shift.update_value(value.clone())?;
             }
         }
 
