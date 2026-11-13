@@ -1,0 +1,1 @@
+{"schema": "rvw.lint/1", "status": "findings", "config": "small", "backends": {"cdc": {"status": "findings", "findings": [{"rule": "cdc.unsafe", "message": "unsafe crossing", "id": "a", "endpoint": "A.scala:2:1"}]}, "sdc": {"status": "findings", "findings": [{"rule": "sdc.missing_clock", "message": "clock missing", "file": "A.scala", "line": 4}]}}}

@@ -4,7 +4,8 @@
   "description": "Show rvw lint findings (lint rules, CDC, RDC, SDC intent, native lint) as diagnostics.",
   "activationEvents": [
     "onCommand:lint.run",
-    "onCommand:lint.open"
+    "onCommand:lint.open",
+    "onView:lint.rules"
   ],
   "contributes": {
     "commands": [
@@ -51,17 +52,39 @@
       }
     },
     "menus": {
-      "commandPalette": [
+      "view/title": [
+        {
+          "command": "lint.open",
+          "when": "view == lint.rules",
+          "group": "navigation"
+        },
+        {
+          "command": "lint.run",
+          "when": "view == lint.rules",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
         {
           "command": "lint.copyWaiver",
-          "when": "false"
+          "when": "view == lint.rules && viewItem == lint.finding",
+          "group": "quickfix"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "lint.rules",
+          "name": "RVW Lint, CDC, RDC and SDC"
         }
       ]
     }
   },
   "tests": {
     "unit": [
-      "test/model.test.ts"
+      "test/model.test.ts",
+      "test/groups.test.ts"
     ]
   }
 }

@@ -33,3 +33,7 @@ needs a trusted workspace.
   row to the settings `waivers` by hand; the feature does not edit settings.
 - Structural findings point at the Scala declaration of the endpoint, not at the
   logic that causes the crossing.
+
+## Rule tree
+
+The Lint, CDC, RDC and SDC tree groups findings by rule. Open the same saved lint JSON or SARIF used by Problems. SDC backend findings use the same source jumps. Select a finding to open its recorded source line. The context menu copies an exact waiver through the existing waiver command. The Problems quick fix provides the same action. Add a reason before you put the waiver into settings. A finding without waiver identity gives an error. Backend not-run states remain in the status line. No waiver is applied automatically.

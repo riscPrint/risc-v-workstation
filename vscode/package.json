@@ -36,6 +36,7 @@
     "onView:formal.results",
     "onCommand:lint.run",
     "onCommand:lint.open",
+    "onView:lint.rules",
     "onCommand:lsp.start",
     "onCommand:navigation.signals",
     "onCommand:navigation.blocks",
@@ -341,6 +342,10 @@
           "name": "RVW Formal Properties"
         },
         {
+          "id": "lint.rules",
+          "name": "RVW Lint, CDC, RDC and SDC"
+        },
+        {
           "id": "perf.results",
           "name": "RVW Performance"
         },
@@ -438,6 +443,16 @@
         {
           "command": "formal.clear",
           "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "lint.open",
+          "when": "view == lint.rules",
+          "group": "navigation"
+        },
+        {
+          "command": "lint.run",
+          "when": "view == lint.rules",
           "group": "navigation"
         },
         {
@@ -563,6 +578,11 @@
           "group": "navigation"
         },
         {
+          "command": "lint.copyWaiver",
+          "when": "view == lint.rules && viewItem == lint.finding",
+          "group": "quickfix"
+        },
+        {
           "command": "perf.evidence",
           "when": "view == perf.results",
           "group": "evidence"
@@ -621,12 +641,6 @@
           "command": "wave.runSaved",
           "when": "view == wave.results && viewItem =~ /query/",
           "group": "navigation"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "lint.copyWaiver",
-          "when": "false"
         }
       ],
       "editor/context": [
