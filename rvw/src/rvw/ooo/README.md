@@ -1095,3 +1095,95 @@ No variant result selects a parameter.
 
 [Retained results](../../../../examples/naxriscv/rvw/arch/drain-results.json) include
 the configuration, engine hash, absolute errors and paired results.
+
+## Bounded memory retry window
+
+`cache_miss_replay: true` needs an explicit component L1 data cache. A load
+response longer than the declared hit latency schedules one retry at response
+completion. The load keeps its compacting queue line while it waits. At the
+response, the load and all younger ROB instructions lose their completion
+state. They enter a pending retry window and re-enter the IQ at rename width.
+IQ and per-class capacities still apply. New rename waits for pending retries.
+The existing `replay_penalty` applies. The missed load retries at most once.
+Already started cache requests and execution reservations remain consumed.
+
+Memory-order violations now use the same bounded readmission path. Replayed
+instructions retain ROB and LSQ slots. Completed younger queue lines can be
+released, so their operations wait outside the IQ until readmission has space.
+`cache_miss_replays`, `replay_readmitted`, `replay_queue_blocked` and the
+`replay_pending` peak distinguish these costs from ordinary branch recovery.
+
+This policy is an approximation. A long response can include contention or a
+TLB walk. It does not prove that RTL replays every cache miss. The retained
+execute and commit reschedule counters combine branch, trap and LSU causes.
+They do not identify a typed LSU retry window. The existing penalty of five
+cycles stays fixed. It was not derived from those mixed counters. Exact
+probe-driven replay is **not implemented or validated**. Typed reason and
+instruction-linked retry events are needed before that claim can be made.
+
+A memory retry also squashes active wrong-path filler. It must not occupy the
+IQ while older correct-path instructions wait for readmission. The legacy
+`replayed_instructions` counter counts selected ROB invalidations, including
+unissued work and filler later squashed. `issued` counts actual execution
+attempts. Use `replay_readmitted` for admission demand. These counters have
+different predicates and cannot be equated with RTL reschedule totals.
+
+### Retry counters and RTL observation limits
+
+| Program | Model cache retries | Model memory-order recoveries | RTL execute reschedules | RTL commit reschedules | RTL D-cache refills |
+|---|---:|---:|---:|---:|---:|
+| towers | 0 | 6 | 208 | 207 | 10 |
+| vvadd | 56 | 0 | 51 | 51 | 79 |
+| rsort | 536 | 9 | 644 | 643 | 1082 |
+| memcpy | 506 | 0 | 48 | 47 | 1009 |
+| dhrystone | 8 | 1 | 657 | 644 | 28 |
+| spmv | 901 | 4 | 11369 | 10833 | 1238 |
+| median | 50 | 0 | 1158 | 1042 | 80 |
+| qsort | 264 | 0 | 14915 | 14042 | 272 |
+| multiply | 17 | 0 | 286 | 285 | 29 |
+
+These predicates differ. RTL reschedules combine causes. Refills include
+stores and speculative traffic. Neither total is an LSU retry count. The
+model penalty stays five cycles. No rate or window is inferred from these
+totals, and no matching-event error ratio is reported.
+
+## Resource study: replay
+
+This stage meets the criterion on 9/24 pairs and 1/15 nonzero changes.
+Training mean absolute IPC error is 9.46%.
+Held-out mean absolute IPC error is 9.54% across six programs.
+Same-step pooled elasticity rank tau-b is 1.000, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | +0.649 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | +0.400 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.064 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | +0.182 | outside |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.317 | outside |
+| rob128 | towers | +0.000 | -0.067 | outside |
+| lq8 | towers | -1.388 | -0.736 | within |
+| sq8 | towers | -4.393 | -0.523 | outside |
+| iq16 | vvadd | -8.244 | -0.981 | outside |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.000 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -0.770 | outside |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | +0.037 | outside |
+| sq8 | memcpy | -10.902 | -0.734 | outside |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/replay-results.json) include
+the configuration, engine hash, absolute errors and paired results.
