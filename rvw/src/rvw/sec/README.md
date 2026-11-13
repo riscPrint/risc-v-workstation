@@ -94,3 +94,25 @@ trials and defaults to 16. The witness is not necessarily a global minimum.
 Missing or mismatched evidence gives `inconclusive`. No eligible comparison also
 gives `inconclusive`. Adapter claims and external tool dependencies are trusted.
 No native whole-core campaign has been run for this interface.
+
+## Speculative gadget templates
+
+`rvw sec gadgets --out out/gadgets --seed 3` emits RV64 assembly for Spectre-v1,
+indirect-target v2, store-bypass v4 and return-predictor patterns. `sec_gadgets`
+provides the same MCP interface. Each pattern includes a seeded 256-line receiver.
+The receiver stores cycle deltas and sets t6 if a sample is below `--threshold`.
+That flag alone is not a leakage verdict. Compare paired receiver arrays and
+architectural contracts with `sec contract`. A trained public line can also be fast.
+
+`suite.json` declares the register ABI and required environment hooks. The project
+must initialize memory, flush probe lines, train predictor state, arrange delayed
+resolution and bind the receiver. V1 needs an index outside the architectural
+bound. V4 needs an alias slot that initially points to the secret and is overwritten
+with the public pointer. Threshold calibration belongs to the project.
+
+The generated suite expects no leak, including on an in-order core. A speculation
+declaration does not make a leak expected or acceptable. Generation is not an
+executed self-checking core suite. These templates do not demonstrate that a core
+speculates, triggers a gadget, or prevents leakage. Native core execution and
+portable training/flush adapters remain open. RISC-V has no universal predictor
+training or cache-flush interface for all cores.
