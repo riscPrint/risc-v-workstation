@@ -316,7 +316,14 @@ sys.meta_path.insert(0, BlockSDK())
 from rvw.mcp.registry import Registry
 registry, problems = Registry.discover({'regress', 'cosim', 'cov', 'perf', 'wave', 'bundle', 'reduce', 'bisect'})
 assert not problems, problems
-assert len(registry.tools) == 59  # fifty-five package tools plus four job tools
+# Structural check, not a fixed count: the count changes with every new tool.
+packages = ('regress', 'cosim', 'cov', 'perf', 'wave', 'bundle', 'reduce', 'bisect')
+for name, spec in registry.tools.items():
+    assert spec.name == name and spec.description.strip(), name
+    assert spec.input_schema.get('type') == 'object' and callable(spec.handler), name
+assert {'job_status', 'job_cancel', 'job_list'} <= set(registry.tools)
+for package in packages:
+    assert any(name.startswith(package + '_') for name in registry.tools), package
 registry.jobs.shutdown()
 """
     subprocess.run([sys.executable, "-c", script], check=True, capture_output=True, text=True)

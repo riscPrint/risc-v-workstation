@@ -35,6 +35,7 @@ def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
             m = importlib.import_module(name)
         except ModuleNotFoundError as e:
             if e.name == name:
+                tools.extend(_command_tools(f"rvw.{mod.name}", problems))
                 continue
             problems.append(f"{name}: {e}")
             continue
@@ -45,6 +46,7 @@ def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
             tools.extend(m.mcp_tools())
         except Exception as e:
             problems.append(f"{name}.mcp_tools(): {type(e).__name__}: {e}")
+        tools.extend(_command_tools(f"rvw.{mod.name}", problems))
     # Tool providers outside the rvw package: RVW_MCP_PLUGINS=module[,module...], each with mcp_tools().
     for name in filter(None, (x.strip() for x in os.environ.get("RVW_MCP_PLUGINS", "").split(","))):
         try:
@@ -52,6 +54,24 @@ def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
         except Exception as e:
             problems.append(f"plugin {name}: {type(e).__name__}: {e}")
     return tools, problems
+
+
+def _command_tools(package: str, problems: list[str]) -> list[ToolSpec]:
+    """Tools from `mcp_tools()` of each `<package>.commands` module (rvw.common.subcommands)."""
+    from rvw.common.subcommands import command_modules
+    try:
+        modules = command_modules(package)
+    except Exception as e:
+        problems.append(f"{package}.commands: {type(e).__name__}: {e}")
+        return []
+    tools: list[ToolSpec] = []
+    for module in modules:
+        if hasattr(module, "mcp_tools"):
+            try:
+                tools.extend(module.mcp_tools())
+            except Exception as e:
+                problems.append(f"{module.__name__}.mcp_tools(): {type(e).__name__}: {e}")
+    return tools
 
 
 class Registry:

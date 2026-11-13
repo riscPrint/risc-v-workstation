@@ -37,7 +37,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/agent_bench/` | Restricted agent fixture benchmark and scoring. See its `README.md`. |
 | `rvw/src/rvw/memory/` | Multi-image inputs and independent serialized memory checks. See its `README.md`. |
 | `rvw/src/rvw/privilege/` | Project-owned privilege, protection and interrupt program generation, campaigns, reference models and C1 evidence checks. See its `README.md`. |
-| `rvw/` | The `rvw` command and `rvw mcp` server. One subpackage per tool under `rvw/src/rvw/<tool>/`; each registers its subcommand (`cli.py`) and its MCP tools (`mcp_tools.py`). Shared code in `rvw/src/rvw/common/` (process groups, the lock, the RISC-V decoder) and `rvw/src/rvw/results/` (C1/C3/C4 formats). |
+| `rvw/` | The `rvw` command and `rvw mcp` server. One subpackage per tool under `rvw/src/rvw/<tool>/`; each registers its subcommand (`cli.py`) and its MCP tools (`mcp_tools.py`). A tool can also split commands into `<tool>/commands/<name>.py` modules, each with `register(subparsers)` and `mcp_tools()` (`rvw.common.subcommands`); `rvw formal` does. Shared code in `rvw/src/rvw/common/` (process groups, the lock, the RISC-V decoder) and `rvw/src/rvw/results/` (C1/C3/C4 formats). |
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
 | `rvw/src/rvw/workloads/` | Pinned open workload builds and Spike/QEMU output checks; local Linux and licensed SPEC manifests. |
@@ -134,7 +134,8 @@ installation. CI logs show timing, pass counts and skip counts on Linux and macO
 The JUnit artifacts retain the Python results for seven days.
 
 New modules default to `slow`. Review their dependencies and time before adding
-one to `FAST_MODULES`. The marker selection deselects tests; deselection is not a skip.
+one to the fast set: put `pytestmark = pytest.mark.fast` in the module (preferred, no shared
+edit) or add it to `FAST_MODULES`. The marker selection deselects tests; deselection is not a skip.
 Run the slow set with `-m slow`. Run both sets with no `-m` option:
 
 ```sh
