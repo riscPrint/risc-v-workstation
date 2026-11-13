@@ -10,7 +10,7 @@ adapter = "./rvw/run.sh"
 configs = ["rv32im", "rv32im_cached", "rv32ima_linux"]
 default_config = "rv32im"
 lock = "vex"                     # same lock as run.sh
-source_repo = "."
+source_repo = "${VEXRISCV}"
 source_env = "VEXRISCV"
 cache_paths = ["${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
 identity = true                   # generated RTL and native tool identity
@@ -112,3 +112,12 @@ benchmarks = "rvw/out/arch/bench"
 
 [debug]
 config = "rvw/debug.toml"
+
+[suites.dv-baseline]
+description = "four riscv-tests programs with defined scratch input state"
+dir = "rvw/out/closure-baseline/elfs"
+include = ['^rv32ui-p-(add|beq|lw|sw)$']
+configs = ["rv32im"]
+max_cycles = 200000
+timeout_s = 180
+mem_latency = 0

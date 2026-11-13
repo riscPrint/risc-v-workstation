@@ -1,0 +1,408 @@
+{
+  "date": "2026-11-13",
+  "attempt_budget": 4,
+  "supported_bins": 170,
+  "notes": [
+    "Initial suite covers add, beq, lw and sw with a software scratch initialization prologue.",
+    "Candidate coverage is payload-only. Initial-suite coverage includes the full trace.",
+    "Wall times include lock waits and exclude initial qualification and evidence publication.",
+    "CPU descendant completeness and CPU-hour rates remain unqualified.",
+    "No C4 acceptance or full ISA qualification."
+  ],
+  "arms": {
+    "directed": {
+      "state_store": "rvw/out/dv/vexii-directed/state",
+      "state_generation": "a64c0fda85204378904562aba2a398d6",
+      "status": "inconclusive",
+      "pair_context": "ab5b46837841c91483ce2f703a94192742760cd7375b41c7d95e6cdd5dc58c26",
+      "execution_identity": "902adbe5daf5d21f7230c148ab3448e0e667247bd6c8699acfea86f49f780b1e",
+      "implementation_sha256": "eee2ea74bef68ff97ddd86d4f348d49e21cd49c193f0e846277a7100a73ba8ce",
+      "full_plan_bins": 4536,
+      "initial_hits": [
+        "sem_add_rs1:[\"all_ones\"]",
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs1:[\"other_positive\"]",
+        "sem_add_rs1:[\"signed_max\"]",
+        "sem_add_rs1:[\"signed_min\"]",
+        "sem_add_rs1:[\"zero\"]",
+        "sem_add_rs2:[\"all_ones\"]",
+        "sem_add_rs2:[\"one\"]",
+        "sem_add_rs2:[\"other_negative\"]",
+        "sem_add_rs2:[\"other_positive\"]",
+        "sem_add_rs2:[\"signed_max\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"negative\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_imm12:[\"zero\"]",
+        "sem_addi_rs1:[\"one\"]",
+        "sem_addi_rs1:[\"other_negative\"]",
+        "sem_addi_rs1:[\"other_positive\"]",
+        "sem_addi_rs1:[\"signed_min\"]",
+        "sem_addi_rs1:[\"zero\"]"
+      ],
+      "final_hits": [
+        "sem_add_rs1:[\"all_ones\"]",
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs1:[\"other_negative\"]",
+        "sem_add_rs1:[\"other_positive\"]",
+        "sem_add_rs1:[\"signed_max\"]",
+        "sem_add_rs1:[\"signed_min\"]",
+        "sem_add_rs1:[\"zero\"]",
+        "sem_add_rs2:[\"all_ones\"]",
+        "sem_add_rs2:[\"one\"]",
+        "sem_add_rs2:[\"other_negative\"]",
+        "sem_add_rs2:[\"other_positive\"]",
+        "sem_add_rs2:[\"signed_max\"]",
+        "sem_add_rs2:[\"signed_min\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"maximum\"]",
+        "sem_addi_imm12:[\"minimum\"]",
+        "sem_addi_imm12:[\"negative\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_imm12:[\"zero\"]",
+        "sem_addi_rs1:[\"one\"]",
+        "sem_addi_rs1:[\"other_negative\"]",
+        "sem_addi_rs1:[\"other_positive\"]",
+        "sem_addi_rs1:[\"signed_min\"]",
+        "sem_addi_rs1:[\"zero\"]"
+      ],
+      "initial_results": [
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-add/result.json",
+          "result_sha256": "409200773623325f66fd7bad02cad46e16a5609ddb17b766a8917fdf37e2e816",
+          "elf_sha256": "ada87a7ca9607b505a16b8ece7138ebad5983b22298adf9c9a4864c8e396aa76",
+          "trace_sha256": "c459c5aeea710d0b78701e954c8adcd15f1ee39a2f9d372e5c926eaf4bf44a93",
+          "instructions": 503
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-beq/result.json",
+          "result_sha256": "01a9cab715a1ecf468fb0b59962b106766ec60f9281b969a86e6334851239496",
+          "elf_sha256": "df6c7261efc7e412c08581661fe3b7d8a48a31990f23a497a2faba8fbe549851",
+          "trace_sha256": "e572a68dba82754825c482e134f9fa00cbb8b0105bd7897214050d0b3ae7062e",
+          "instructions": 329
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-lw/result.json",
+          "result_sha256": "e2f51feff8362ef6f29742bd402ecb42f3a604cb04b57739c8f15844b5c75db4",
+          "elf_sha256": "48700e68f75b6bbf88d986131814701d453b583302d48a53fb835727c4e0cbdb",
+          "trace_sha256": "d3659e5376f87da5bbaebdffd798324e6774c25f7fa4b5b527b6fa9bc953b670",
+          "instructions": 321
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-sw/result.json",
+          "result_sha256": "a716a9d553e9df858ab51e6bf9716897d14084599255f0b61eb62c12d10b1af9",
+          "elf_sha256": "f02d1fc81ee30c708aeadc9f6085bff123c4ad05ff4d66148b947b86afa858ba",
+          "trace_sha256": "a2c3f6d6e3390d90aaf90b6f654d11f1bfed0e549e7fe4d537d95f2eec2cc536",
+          "instructions": 552
+        }
+      ],
+      "attempts": [
+        {
+          "goal": "sem_add_rs1:[\"other_negative\"]",
+          "seed": 1,
+          "status": "hit",
+          "new_hits": [
+            "sem_add_rs1:[\"other_negative\"]"
+          ],
+          "elapsed_s": 121.89261441596318,
+          "controller_cpu_s": 2.1900000000000004,
+          "reaped_child_cpu_s": 12.9,
+          "trace_sha256": "fcd6a56e87080a468e2f5384cbcf5e96f3061aa76b4d70fc449a0eb92f0ebe99",
+          "c1_sha256": "ee325ad4220bc656aba7d8a32633f633b88c9e3c9453f3869cd9f577df4a33f0",
+          "region": {
+            "elf_sha256": "fd077a6ec311cea6debf19f54184d1b73a70061e77c5254a60d7f77032acb4ce",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "sem_add_rs2:[\"signed_min\"]",
+          "seed": 2,
+          "status": "hit",
+          "new_hits": [
+            "sem_add_rs2:[\"signed_min\"]"
+          ],
+          "elapsed_s": 321.6699889160227,
+          "controller_cpu_s": 2.369999999999999,
+          "reaped_child_cpu_s": 13.309999999999999,
+          "trace_sha256": "85b0287fd9f695bc3b894b5d5457e2801b2cec44c86d9b5e1e9b14937ce7f9f4",
+          "c1_sha256": "c15ab035d1e399731e437a4dab6feb84b7001039363ae3c6f636852b199b3e10",
+          "region": {
+            "elf_sha256": "5e1df46cad572754ba8d99a5ebb50c8575c6d320da78d721600c18a83f82e626",
+            "ranges": [
+              [
+                2147483664,
+                2147483668
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 10,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "sem_addi_imm12:[\"maximum\"]",
+          "seed": 3,
+          "status": "hit",
+          "new_hits": [
+            "sem_addi_imm12:[\"maximum\"]"
+          ],
+          "elapsed_s": 292.33440649998374,
+          "controller_cpu_s": 2.4499999999999993,
+          "reaped_child_cpu_s": 12.920000000000005,
+          "trace_sha256": "23f47b7eb76b50c515875719bd0dd5e1dd79bb4201ba14c60c44772f92c39dc5",
+          "c1_sha256": "6f3f0b34536f20ae17ff5dea931cd5e199fa09dd41ca1428676a78b6f32e26c5",
+          "region": {
+            "elf_sha256": "c01a806b0255a953de0f295d374acb11c0b2f5e9b661e93dcc007622286a8994",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "sem_addi_imm12:[\"minimum\"]",
+          "seed": 4,
+          "status": "hit",
+          "new_hits": [
+            "sem_addi_imm12:[\"minimum\"]"
+          ],
+          "elapsed_s": 171.6547924579354,
+          "controller_cpu_s": 2.460000000000001,
+          "reaped_child_cpu_s": 14.119999999999992,
+          "trace_sha256": "fafafa87c0d4088ed2f32880240719f8388237c9f0a2146dda4f6fdc3ad6fbbd",
+          "c1_sha256": "d441fe39faa2c69eb052af0db3a1ab72549575887ba5df6a5da70e2d44e750df",
+          "region": {
+            "elf_sha256": "5fe99349eebcfb22b92bbd30a792f30e0a6e32e6e706a698f08047617c00489f",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        }
+      ]
+    },
+    "random": {
+      "state_store": "rvw/out/dv/vexii-random-control/state",
+      "state_generation": "c0df8912ecbc4623a29896d1e7b9bf55",
+      "status": "inconclusive",
+      "pair_context": "ab5b46837841c91483ce2f703a94192742760cd7375b41c7d95e6cdd5dc58c26",
+      "execution_identity": "902adbe5daf5d21f7230c148ab3448e0e667247bd6c8699acfea86f49f780b1e",
+      "implementation_sha256": "eee2ea74bef68ff97ddd86d4f348d49e21cd49c193f0e846277a7100a73ba8ce",
+      "full_plan_bins": 4536,
+      "initial_hits": [
+        "sem_add_rs1:[\"all_ones\"]",
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs1:[\"other_positive\"]",
+        "sem_add_rs1:[\"signed_max\"]",
+        "sem_add_rs1:[\"signed_min\"]",
+        "sem_add_rs1:[\"zero\"]",
+        "sem_add_rs2:[\"all_ones\"]",
+        "sem_add_rs2:[\"one\"]",
+        "sem_add_rs2:[\"other_negative\"]",
+        "sem_add_rs2:[\"other_positive\"]",
+        "sem_add_rs2:[\"signed_max\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"negative\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_imm12:[\"zero\"]",
+        "sem_addi_rs1:[\"one\"]",
+        "sem_addi_rs1:[\"other_negative\"]",
+        "sem_addi_rs1:[\"other_positive\"]",
+        "sem_addi_rs1:[\"signed_min\"]",
+        "sem_addi_rs1:[\"zero\"]"
+      ],
+      "final_hits": [
+        "sem_add_rs1:[\"all_ones\"]",
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs1:[\"other_positive\"]",
+        "sem_add_rs1:[\"signed_max\"]",
+        "sem_add_rs1:[\"signed_min\"]",
+        "sem_add_rs1:[\"zero\"]",
+        "sem_add_rs2:[\"all_ones\"]",
+        "sem_add_rs2:[\"one\"]",
+        "sem_add_rs2:[\"other_negative\"]",
+        "sem_add_rs2:[\"other_positive\"]",
+        "sem_add_rs2:[\"signed_max\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"negative\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_imm12:[\"zero\"]",
+        "sem_addi_rs1:[\"one\"]",
+        "sem_addi_rs1:[\"other_negative\"]",
+        "sem_addi_rs1:[\"other_positive\"]",
+        "sem_addi_rs1:[\"signed_min\"]",
+        "sem_addi_rs1:[\"zero\"]",
+        "sem_or_rs1:[\"other_negative\"]",
+        "sem_or_rs1:[\"other_positive\"]",
+        "sem_or_rs2:[\"other_negative\"]",
+        "sem_or_rs2:[\"other_positive\"]",
+        "sem_xor_rs1:[\"other_negative\"]",
+        "sem_xor_rs2:[\"other_negative\"]"
+      ],
+      "initial_results": [
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-add/result.json",
+          "result_sha256": "409200773623325f66fd7bad02cad46e16a5609ddb17b766a8917fdf37e2e816",
+          "elf_sha256": "ada87a7ca9607b505a16b8ece7138ebad5983b22298adf9c9a4864c8e396aa76",
+          "trace_sha256": "c459c5aeea710d0b78701e954c8adcd15f1ee39a2f9d372e5c926eaf4bf44a93",
+          "instructions": 503
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-beq/result.json",
+          "result_sha256": "01a9cab715a1ecf468fb0b59962b106766ec60f9281b969a86e6334851239496",
+          "elf_sha256": "df6c7261efc7e412c08581661fe3b7d8a48a31990f23a497a2faba8fbe549851",
+          "trace_sha256": "e572a68dba82754825c482e134f9fa00cbb8b0105bd7897214050d0b3ae7062e",
+          "instructions": 329
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-lw/result.json",
+          "result_sha256": "e2f51feff8362ef6f29742bd402ecb42f3a604cb04b57739c8f15844b5c75db4",
+          "elf_sha256": "48700e68f75b6bbf88d986131814701d453b583302d48a53fb835727c4e0cbdb",
+          "trace_sha256": "d3659e5376f87da5bbaebdffd798324e6774c25f7fa4b5b527b6fa9bc953b670",
+          "instructions": 321
+        },
+        {
+          "result": "rvw/out/dv/vexii-baseline/dv-baseline/rv32im/tests/rv32ui-p-sw/result.json",
+          "result_sha256": "a716a9d553e9df858ab51e6bf9716897d14084599255f0b61eb62c12d10b1af9",
+          "elf_sha256": "f02d1fc81ee30c708aeadc9f6085bff123c4ad05ff4d66148b947b86afa858ba",
+          "trace_sha256": "a2c3f6d6e3390d90aaf90b6f654d11f1bfed0e549e7fe4d537d95f2eec2cc536",
+          "instructions": 552
+        }
+      ],
+      "attempts": [
+        {
+          "goal": "random",
+          "seed": 1,
+          "status": "hit",
+          "new_hits": [
+            "sem_xor_rs1:[\"other_negative\"]",
+            "sem_xor_rs2:[\"other_negative\"]"
+          ],
+          "elapsed_s": 293.8857253330061,
+          "controller_cpu_s": 2.369999999999999,
+          "reaped_child_cpu_s": 13.540000000000001,
+          "trace_sha256": "d7371b0fc708f281aca6e80e5d7b4e6259ff21d8be9975766f7441941639c2c1",
+          "c1_sha256": "4df90e058ff78f90ea0d33a967e8303078ebc525aded19fa0dee6232de4f5683",
+          "region": {
+            "elf_sha256": "a7fb4a7d4889fd65b49d06e7c26624ad54e350e36a73c5538dfae70e6edf14aa",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "random",
+          "seed": 2,
+          "status": "miss",
+          "new_hits": [],
+          "elapsed_s": 175.37614645902067,
+          "controller_cpu_s": 2.2399999999999993,
+          "reaped_child_cpu_s": 13.45,
+          "trace_sha256": "38a1d26b571eecf2a5f477986c2fe2e8ccb8543c60769225096c0157fbfd6326",
+          "c1_sha256": "34d07a62e7c2b7c63f72d0768f198e017d816846ace2b9292bb31c57e3ba0266",
+          "region": {
+            "elf_sha256": "a039ed01dd2ca696813cc2ebcf55744eaf3442d68e0a1fe55bac8cf9a2e48bdd",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "random",
+          "seed": 3,
+          "status": "hit",
+          "new_hits": [
+            "sem_or_rs1:[\"other_negative\"]",
+            "sem_or_rs2:[\"other_negative\"]"
+          ],
+          "elapsed_s": 91.67377020791173,
+          "controller_cpu_s": 2.299999999999999,
+          "reaped_child_cpu_s": 13.719999999999999,
+          "trace_sha256": "bdc2b24f6eeca829bfed7d0a5bdb037dcc4d7de90492b36dd16b8dcd00622211",
+          "c1_sha256": "ad61fb1fae4e552d86bf304f977684a3a4080f307d1420bfb5b1e6f694654081",
+          "region": {
+            "elf_sha256": "83d14778621158d6c8bb14a481dda3d4df32b0ec491179459ab8b71a67261e91",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        },
+        {
+          "goal": "random",
+          "seed": 4,
+          "status": "hit",
+          "new_hits": [
+            "sem_or_rs1:[\"other_positive\"]",
+            "sem_or_rs2:[\"other_positive\"]"
+          ],
+          "elapsed_s": 36.25754833291285,
+          "controller_cpu_s": 2.2600000000000016,
+          "reaped_child_cpu_s": 13.79,
+          "trace_sha256": "90ccbc5716d71e356c685a37e29b4af71f675b3cf571f46c7d9695101b1bb33a",
+          "c1_sha256": "668fe09180df13f772c08964352987f96ece97e3d6e402f1e3776504de863298",
+          "region": {
+            "elf_sha256": "4870a218efed607fd34f4e8dade895dc130fafebe4f38b7c2c7fe20ced022d70",
+            "ranges": [
+              [
+                2147483668,
+                2147483672
+              ]
+            ],
+            "policy": "payload-pc-v1"
+          },
+          "matched_instructions": 11,
+          "synchronized": 0,
+          "applied_masks": []
+        }
+      ]
+    }
+  },
+  "resume": {
+    "attempts": 4,
+    "credited_bins": 24,
+    "credit_preserved": true
+  }
+}

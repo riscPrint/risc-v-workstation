@@ -460,6 +460,30 @@ def held(name: str | None, directory=None, poll_s: float = 0.5, log=_STDERR):
         os.close(fd)   # no LOCK_UN: children that inherited the descriptor keep the lock
 
 
+def thread_context():
+    """Permit related worker threads to forward the caller's locks to children.
+
+    The caller must keep its lock scopes open until all workers finish. Other
+    threads get no permission unless the caller gives them this context factory.
+    """
+    owned = held_fds()
+    with _state:
+        snapshot = {fd: _mine[fd] for fd in owned if fd in _mine}
+
+    @contextlib.contextmanager
+    def enter():
+        with _state:
+            if any(_mine.get(fd) is not ident for fd, ident in snapshot.items()):
+                raise ValueError("worker lock context has expired")
+        previous = getattr(_local, "forwarded", {})
+        _local.forwarded = {**previous, **snapshot}
+        try:
+            yield
+        finally:
+            _local.forwarded = previous
+    return enter
+
+
 def held_fds() -> list:
     """Lock descriptors the calling thread may pass to a child, for `pass_fds` so children keep
     the lock as long as they run: the locks this thread took, and those this process inherited
@@ -469,6 +493,8 @@ def held_fds() -> list:
     me = threading.get_ident()
     with _state:
         fds = {fd for fd, t in _owner.items() if t == me}
+        fds.update(fd for fd, ident in getattr(_local, "forwarded", {}).items()
+                   if _mine.get(fd) is ident)
         others = set(_mine) - fds
     for tname, _pid, fd, tident in _tokens():
         if fd in fds or fd in others:

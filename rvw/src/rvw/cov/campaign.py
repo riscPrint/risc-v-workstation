@@ -85,11 +85,16 @@ def campaign(settings, work_dir, resume=False, replay=None):
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
                 'runtime', 'linker', 'platform', 'compiler', 'isa', 'abi', 'attempts', 'seed'}
-    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'code_plan', 'recipes'}
+    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'code_plan', 'recipes', 'strategy', 'initial_results'}
     if data.keys()-required-optional or required-data.keys() or data['schema'] != 'rvw.stimulus-loop/1':
         raise ValueError('expected rvw.stimulus-loop/1 with declared fields')
     if type(data['attempts']) is not int or not 1 <= data['attempts'] <= 1000:
         raise ValueError('attempts must be 1..1000')
+    strategy = data.get('strategy', 'directed')
+    if strategy not in ('directed', 'random'):
+        raise ValueError('strategy must be directed or random')
+    if strategy == 'random' and (data.get('sequences') or data.get('recipes')):
+        raise ValueError('random control supports integer ISA bins only')
     def path(key):
         p = Path(data[key]).expanduser()
         return p.resolve() if p.is_absolute() else (settings.parent/p).resolve()
@@ -123,6 +128,19 @@ def campaign(settings, work_dir, resume=False, replay=None):
         inputs.update({key:captured.sha256(path(key)) for key in (guidance_key,'recipes')})
         from .guidance import load_guide
         guide=load_guide(path(guidance_key),path('recipes'))
+    initial = None
+    if 'initial_results' in data:
+        paths = data['initial_results']
+        if not isinstance(paths, list) or not paths or any(not isinstance(p, str) for p in paths):
+            raise ValueError('initial_results must list C1 result paths')
+        from .initial_coverage import measure
+        initial_core = load_config(project=path('project'))
+        initial = measure([(settings.parent / Path(p).expanduser()).resolve() for p in paths],
+                          path('platform'), manifest, root, initial_core.name, data['config'])
+        initial_identity = {'execution_identity':initial['execution_identity'],
+                            'records':[{k:v for k,v in r.items() if k != 'comparison'}
+                                       for r in initial['records']]}
+        inputs['initial_results'] = sha256(json.dumps(initial_identity, sort_keys=True).encode()).hexdigest()
     implementation = implementation_id()
     identity = sha256(json.dumps([data, inputs, pinned, implementation], sort_keys=True).encode()).hexdigest()
     out = Path(work_dir).resolve()
@@ -135,6 +153,17 @@ def campaign(settings, work_dir, resume=False, replay=None):
               'notes': ['os.times includes reaped child CPU; descendant completeness is not qualified.',
                         'No C4 acceptance or comparative closure rate is granted.',
                         'Attempt cost samples exclude raw sealing and state publication; total costs remain unqualified.']}
+    if initial is not None:
+        report['initial'] = initial
+        report['hits'] = sorted(identifiers(initial['coverage']) & supported)
+        report['execution_identity'] = initial['execution_identity']
+    pair_settings = {k:data.get(k) for k in ('config','registers','isa','abi','attempts','seed',
+                                             'timeout_s','max_cycles','timeout_ms','sequences','memory')}
+    report['pair_context'] = sha256(json.dumps([inputs,pinned,pair_settings,implementation],
+                                               sort_keys=True).encode()).hexdigest()
+    report['initial_hits'] = list(report['hits'])
+    report['strategy'] = strategy
+    report['attempt_budget'] = data['attempts']
     if resume:
         previous = open_current(out/'state')
         report = json.loads(previous.read_bytes('report.json'))
@@ -172,9 +201,9 @@ def campaign(settings, work_dir, resume=False, replay=None):
         holes = sorted(supported-hits-attempted, key=lambda goal: (not goal.startswith('sequence:'),goal))
         if guide is not None:
             holes = sorted(set(holes) | (guide.pending_goals() & supported))
-        if not holes:
+        if not holes and strategy != 'random':
             break
-        goal = guide.choose(holes) if guide is not None else holes[0]
+        goal = 'random' if strategy == 'random' else guide.choose(holes) if guide is not None else holes[0]
         attempted.add(goal)
         directory = out/f'attempt-{index:04d}'
         if directory.exists():
@@ -187,7 +216,11 @@ def campaign(settings, work_dir, resume=False, replay=None):
         report['attempts'].append(attempt)
         before, wall = os.times(), time.monotonic()
         try:
-            if goal.startswith('sequence:'):
+            if strategy == 'random':
+                from .random_candidate import generate as generate_random
+                candidate = generate_random(manifest, root, directory/'candidate',
+                                            data['registers'], attempt['seed'])
+            elif goal.startswith('sequence:'):
                 from .actions import generate as generate_actions
                 candidate = generate_actions(goal,directory/'candidate',data['registers'],
                     sequence_settings.get('distances',[1,2,4]),data.get('memory',False))
@@ -236,7 +269,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
                         measured = identifiers(evidence['coverage']) & supported
                         attempt['new_hits'] = sorted(measured-hits)
                         hits.update(measured)
-                        attempt['status'] = 'hit' if goal in measured else 'miss'
+                        attempt['status'] = 'hit' if (attempt['new_hits'] if strategy == 'random' else goal in measured) else 'miss'
         except (OSError, ValueError, KeyError, TypeError) as exc:
             attempt.update(status='inconclusive', reason=str(exc))
         except BaseException:
