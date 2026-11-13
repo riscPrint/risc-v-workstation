@@ -45,6 +45,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   private class Responder(latency: () => Long) {
     val queue = mutable.Queue.empty[(Long, BigInt, Boolean, Int, Boolean)]
     var driven = false
+    def clear(): Unit = { queue.clear(); driven = false }
     def accept(cycle: Long, data: BigInt, error: Boolean, id: Int, scMiss: Boolean = false): Unit = queue.enqueue((cycle + latency(), data, error, id, scMiss))
     /** Call once per sampled edge: retires the response the core sampled, returns the next one to drive. */
     def next(cycle: Long): Option[(BigInt, Boolean, Int, Boolean)] = {
@@ -104,11 +105,24 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     }
     def external(cycle: Long, kind: String, fields: ujson.Obj): Unit = if (externalEvidence.nonEmpty)
       events += ((cycle, () => writer.foreach(_.externalInterrupt(cycle, kind, fields))))
+    val resetEvents = job.stimulus.toSeq.flatMap(_.events).filter(_("kind").str == "reset")
+    require(resetEvents.isEmpty || job.config == "rv64imasu", "reset binding requires cacheless rv64imasu")
+    require(resetEvents.isEmpty || (job.socMap.isEmpty && devices.isEmpty), "reset binding has no device reset contract")
+    require(resetEvents.isEmpty || !sys.env.get("RVW_COSIM_DPI").contains("1"), "reset evidence requires offline comparison")
+    resetEvents.foreach(e => require(e("schedule")("pin").str == "main", "unknown project reset pin"))
+    var reset = Option.empty[ResetSchedule]
+    var resetStep = 0L
+    val resetObservations = ujson.Arr()
     val mailbox = job.stimulus.map(s => new StimulusMailbox(s, event => event("kind").str match {
       case "plic-level" =>
         devices.getOrElse(throw new IllegalArgumentException("plic-level stimulus needs RVW_VEX_DEVICE_MAP"))
           .setInput("plic", event("source").num.toInt, event("level").bool)
         external(currentCycle, "source", ujson.Obj("source" -> event("source"), "level" -> event("level"), "step" -> event("step")))
+      case "reset" =>
+        require(!reset.get.busy, "reset already pending")
+        ctx.log(s"reset request at $currentCycle")
+        resetStep = event("step").num.toLong
+        reset.get.request(currentCycle, resetStep)
       case other => throw new IllegalArgumentException(s"unsupported stimulus kind $other")
     }, step => {
       (0 until 8).foreach(i => memory(stimulusWords.get._2 + i) = ((step >> (8 * i)) & 255).toInt)
@@ -133,7 +147,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           Some(dut.host[LockstepTapPlugin].logic.transport) else None
         dpi.foreach(_.initialize())
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"),
-          ujson.Obj.from(ctx.rvfiHeader.value.toSeq ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+          ujson.Obj.from(ctx.rvfiHeader.value.toSeq ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e) ++ (if (resetEvents.nonEmpty) Seq("reset_events" -> ujson.Obj("schema" -> "rvw.reset-events/1", "events" -> ujson.Arr.from(resetEvents))) else Nil)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
         probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
@@ -163,9 +177,10 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         val traps = mutable.Queue.empty[(BigInt, BigInt)]
         var irqLevels = BigInt(-1)
         // Registered before the probe: the trap values are queued before the probe reports the trap.
-        cd.onSamplings {
+        def sampleCycle(): Unit = {
           ctl.tick()
           val cycle = ctl.cycle
+          if (!reset.exists(_.active)) {
           currentCycle = cycle
           probes.foreach(_.sample(cycle))
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
@@ -256,7 +271,16 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               if (dbus.p.withAmo) dbus.rsp.scMiss #= sc
             case None => dbus.rsp.valid #= false
           }
+          }
         }
+        // Sampling callbacks stop while reset is asserted. Reset timing must use raw edges.
+        if (resetEvents.nonEmpty) {
+          var started = false
+          cd.onRisingEdges {
+            if (!cd.isResetAsserted) started = true
+            if (started) sampleCycle()
+          }
+        } else cd.onSamplings { sampleCycle() }
         backend = new C2Backend(xlen, () => ctl.cycle, () => (tap.privilege.toInt & 3),
           () => if (traps.nonEmpty) traps.dequeue() else throw new IllegalStateException("trap reported without trap-entry values"),
           r => {
@@ -287,10 +311,42 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         probe.checkLiveness = false
         probe.trace = job.konata
         probe.add(backend)
+        if (resetEvents.nonEmpty) {
+          val timing = resetEvents.head("schedule")
+          require(resetEvents.forall(_("schedule") == timing), "reset timing must be uniform in one run")
+          reset = Some(new ResetSchedule(timing("assert_clocks").num.toInt, timing("delay_clocks").num.toInt,
+            asserted => { if (asserted) cd.assertReset() else cd.deassertReset() },
+            () => ujson.Obj("state" -> ujson.Obj("privilege" -> tap.privilege.toBigInt.toDouble),
+              "valid" -> ujson.Obj("request_valid" -> (dbus.cmd.valid.toBoolean || ibusOpt.exists(_.cmd.valid.toBoolean)))),
+            () => {
+              ctx.log(s"reset assert at ${ctl.cycle}")
+              backend.drain()
+              events.sortBy(_._1).foreach(_._2()); events.clear()
+              probe.enabled = false
+              fetch.clear(); lsu.clear(); reservation = None
+              ibusOpt.foreach(_.rsp.valid #= false); dbus.rsp.valid #= false
+              loadAddresses.clear(); storeAddresses.clear(); lastVirtual.clear(); traps.clear()
+              backend.resetState()
+            },
+            () => {
+              ctx.log(s"reset release at ${ctl.cycle}")
+              probe.harts.indices.foreach(i => probe.harts(i) = new probe.HartCtx(probe.hartsIds(i)))
+              probe.enabled = true
+            }))
+        }
         fork {
           while (true) {
-            cd.waitSampling()
+            if (resetEvents.nonEmpty) cd.waitRisingEdge() else cd.waitSampling()
             sleep(1) // The upstream probe and bus callbacks finish before transport runs.
+            reset.foreach { controller =>
+              val before = controller.observations.arr.size
+              controller.tick(ctl.cycle)
+              if (controller.observations.arr.size > before) {
+                val samples = controller.observations.arr.last
+                resetObservations.value += samples
+                writer.foreach(_.resetEvent(ctl.cycle, resetStep, samples))
+              }
+            }
             if (finish.nonEmpty) backend.drain()
             val watermark = backend.pendingCycle.getOrElse(Long.MaxValue)
             val ready = events.filter(_._1 <= watermark).sortBy(_._1).toVector
@@ -337,6 +393,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
         "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),
         "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L)),
+        "reset_observations" -> resetObservations,
         "stimulus_served" -> RvwJson.num(mailbox.map(_.served.toLong).getOrElse(0L))), metrics)
   }
 }

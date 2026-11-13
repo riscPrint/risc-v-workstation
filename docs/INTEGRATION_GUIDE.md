@@ -586,7 +586,7 @@ The project files select all four ELFs per XLEN with `--suite random-privilege`.
 | Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
 | Vexii RV32 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
 | Vexii RV64 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 | Reset events | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Vexii RV64 | Reset events | 3 | 3 | 3 | 3 | 0 | 3 | 0 |
 
 [The family record](../examples/vexiiriscv/family-results.json) retains the random run identities and
 names every matrix subset member. Matrix generated counts span all four satp
@@ -595,11 +595,16 @@ use Svade, so only the two fault-on-clear A/D cases per profile apply.
 Hardware A/D updates are not tested. TLB/ASID and fence programs check
 architectural results; they do not observe internal TLB hits.
 
-Reset programs require project-driven cold, warm and local reset pulses with
-RAM retained. The current adapters cannot serve those events or record the
-required reset-state observations. The planner lists `reset-rv64` with missing
-`harness:reset-events`. This is a harness limit, not a core finding or a pass.
-Initial simulation reset is not evidence for these repeated reset programs.
+The RV64 reset binding now runs all three programs with retained RAM.
+Cold reset uses a fetch loop. Warm reset uses a load loop. Local reset uses a
+store loop. Each program drives three five-clock pulses after a 64-clock
+mailbox delay. All three pass and match Spike strictly: 507 instructions,
+zero synchronizations and no masks. The independent reference resets its
+processor and retains only its own memory state. Each load/store delay window
+contains 11 retired accesses before assertion. Reset samples check M privilege
+and inactive bus requests. Cold, warm and local select the same main pin on
+this single-hart core. Separate SoC reset domains and device resets are not
+covered. The project declares `harness:reset-events` only for this RV64 profile.
 
 ## Fresh Verilog project results
 

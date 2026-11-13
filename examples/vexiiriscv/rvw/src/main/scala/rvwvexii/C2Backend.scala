@@ -45,6 +45,13 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   /** Writes the buffered record with its decoded fall-through target. Call at the end of a run. */
   def drain(): Unit = pending.foreach(r => emit(C2Backend.fallThrough(r, xlen)))
 
+  def resetState(): Unit = {
+    pending = None; rdData = None; load = None; store = None; storePhysical = None
+    loads.clear(); stores.clear(); physicalStores.clear(); io.clear()
+    regs.indices.foreach(i => regs(i) = BigInt(0))
+    handler = false
+  }
+
   override def commit(hartId: Int, pc: Long, instruction: Long): Unit = {
     val insn = instruction & 0xffffffffL
     val pcValue = BigInt(pc) & mask

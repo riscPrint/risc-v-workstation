@@ -127,6 +127,8 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     "lockstep cannot resume without a reference checkpoint")
   require(resume.isEmpty || !header.value.contains("external_interrupts"),
     "external interrupt evidence cannot resume without its event state")
+  require(resume.isEmpty || !header.value.contains("reset_events"),
+    "reset events cannot resume without pulse and reference state")
   // Validate the captured prefix before opening or replacing the output.
   private val restored = resume.map(RvfiWriterCheckpoint.decode(_, header))
   file.getAbsoluteFile.getParentFile.mkdirs()
@@ -212,6 +214,13 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
   }
 
   /** Interrupt input levels (in their `mip` bit positions) the harness drives from `cycle` on. */
+  def resetEvent(cycle: Long, step: Long, samples: ujson.Value): Unit = {
+    require(header.value.contains("reset_events"), "declare reset events")
+    at(cycle)
+    emit(ujson.write(ujson.Obj("event" -> "reset_pulse", "cycle" -> RvwJson.num(cycle),
+      "step" -> RvwJson.num(step), "samples" -> samples)))
+  }
+
   def irq(cycle: Long, levels: BigInt): Unit = {
     at(cycle)
     emit(s"""{"event": "irq", "cycle": $cycle, "levels": "${Hex(levels)}"}""")

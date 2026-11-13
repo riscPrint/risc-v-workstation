@@ -594,3 +594,20 @@ shim support or incomplete event bindings cannot earn a strict match.
 Select one environment evidence protocol per stream. Do not combine the
 `environment` capability with an `external_interrupts` declaration. The
 separate external-interrupt record protocol retains its own model binding.
+
+## Repeated single-hart reset
+
+A C2 header can declare `reset_events` with schema `rvw.reset-events/1` and
+an `events` array. Each reset event has consecutive `step` values from one,
+`kind: reset`, `preserve_ram: true`, and project `schedule` data. The schedule
+has a pin binding, `assert_clocks`, `delay_clocks`, masked `state` expectations
+and `invalid_outputs`. A `reset_pulse` C2 event records cycle, step and sampled
+reset state. Samples have `cycle`, `asserted`, `state` and `valid` fields.
+The last sample is one edge after release. Retirement order stays monotonic.
+
+The reference validates every pulse, sampled state, inactive output and clock
+sequence before resetting its processor. Reference RAM retains only the state
+created by reference execution. No DUT RAM or GPR value seeds the reference.
+Missing pulses, observations or reference support prevent a match. This path
+supports offline single-hart capture. Checkpoint resume, DPI lockstep,
+external devices and multi-hart repeated reset remain unsupported.

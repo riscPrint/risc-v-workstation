@@ -33,7 +33,16 @@ restart_count: .dword 0
 stimulus_step: .dword 0
 stimulus_ack: .dword 0
 '''
-            events = [dict(step=i, kind='reset', reset_kind=kind, preserve_ram=True)
+            activity = contract.get('activity', {}).get(kind, 'fetch')
+            if activity not in ('fetch', 'load', 'store'):
+                raise ValueError('reset activity must be fetch, load or store')
+            if activity != 'fetch':
+                operation = 'ld t3, 0(t0)' if activity == 'load' else 'sd t1, 0(t0)'
+                assembly = assembly.replace('reset_wait:\n j reset_wait',
+                    f' la t0, probe_data\nreset_wait:\n {operation}\n j reset_wait')
+                assembly += 'probe_data: .dword 0\n'
+            events = [dict(step=i, kind='reset', reset_kind=kind, preserve_ram=True,
+                           **({'schedule': contract['schedule'][kind]} if 'schedule' in contract else {}))
                       for i in range(1, count + 1)]
             rows.append(dict(id='reset-' + kind, assembly=assembly, family='reset',
                 bins=['reset.' + kind], events=events, reset_contract=contract,

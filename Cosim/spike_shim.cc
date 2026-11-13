@@ -353,6 +353,16 @@ void* rvw_create(const char* isa,const uint64_t* ram,size_t nr,const uint64_t* i
   catch(const std::exception& ex) { error=ex.what(); return nullptr; }
   catch(...) { error="Spike initialization failed"; return nullptr; }
 }
+int rvw_reset_preserve_ram(void* m, uint64_t pc) {
+  try {
+    auto* machine = static_cast<Machine*>(m);
+    if (!machine->parked.empty()) throw std::runtime_error("reset requires one hart");
+    machine->cpu->reset();
+    machine->cpu->get_state()->pc = pc;
+    machine->external_mip.reset();
+    return 0;
+  } catch (const std::exception& e) { error = e.what(); return -1; }
+}
 void rvw_destroy(void* m) { delete static_cast<Machine*>(m); }
 int rvw_write(void* m,uint64_t addr,const uint8_t* data,size_t n) {
   auto& machine=*static_cast<Machine*>(m);

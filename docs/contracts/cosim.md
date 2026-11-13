@@ -310,3 +310,13 @@ interrupts taken. A missing category can have zero count. No incomplete
 source plan, acknowledgement, request, device access or taken boundary can
 earn a match. This replay supports one PLIC and one hart. Other external
 devices need their own declared consumer. Missing bindings give an error.
+
+## Reference reset with retained RAM
+
+The optional Spike shim function `rvw_reset_preserve_ram(handle, pc)` resets
+one processor and its architectural state, then sets the project reset PC.
+It keeps the reference memory pages. It refuses a multi-hart machine.
+`Spike.reset_preserve_ram` requires this function. The C2 reset consumer checks
+the project schedule and sampled reset contract before it calls the function.
+No values from DUT RAM seed reference memory. Existing shim ABI 8 consumers
+remain valid. A stale source hash requires a rebuild.

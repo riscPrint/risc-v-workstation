@@ -224,6 +224,9 @@ class Spike:
         lib.rvw_virtual.argtypes = [C.c_void_p, C.c_int]
         lib.rvw_virtual.restype = C.c_uint
         lib.rvw_read_physical.argtypes = [C.c_void_p, C.c_uint64, C.POINTER(C.c_uint64)]
+        if hasattr(lib, 'rvw_reset_preserve_ram'):
+            lib.rvw_reset_preserve_ram.argtypes = [C.c_void_p, C.c_uint64]
+            lib.rvw_reset_preserve_ram.restype = C.c_int
         self.lib = lib = _Serialized(lib)
         def array(rs):
             return (C.c_uint64 * (len(rs)*2))(*(v for r in rs for v in r))
@@ -249,6 +252,13 @@ class Spike:
 
     def error(self):
         return self.lib.rvw_error().decode(errors="replace")
+
+    def reset_preserve_ram(self, pc):
+        if not hasattr(self.lib, 'rvw_reset_preserve_ram'):
+            raise ValueError('reference lacks reset support; rebuild with Cosim/build.sh')
+        if self.lib.rvw_reset_preserve_ram(self.handle, pc):
+            raise ValueError(self.error())
+        self.regs = [0] * 32
 
     def close(self):
         if self.handle:

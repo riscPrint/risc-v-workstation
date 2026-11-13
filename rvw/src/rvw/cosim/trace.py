@@ -153,6 +153,11 @@ class Trace:
                             raise ValueError("trap event intr must be boolean")
                         if bool(obj["cause"] >> (xlen-1)) != obj["intr"]:
                             raise ValueError("trap cause interrupt bit and intr disagree")
+                    elif obj["event"] == "reset_pulse":
+                        if not self.header.get('reset_events') or self.multihart:
+                            raise ValueError('reset pulse needs a single-hart reset declaration')
+                        if type(obj.get('step')) is not int or obj['step'] <= 0 or not isinstance(obj.get('samples'), list):
+                            raise ValueError('invalid reset pulse')
                     elif obj["event"] == "irq":
                         obj["levels"] = hexnum(obj["levels"], xlen)
                     elif obj["event"] == "end":

@@ -1196,3 +1196,15 @@ disable its normal instruction responder. Keep data memory independent.
 The generic driver captures inputs and response receipts. A missing attachment
 or response prevents pass. See the stimulus contract and the two example
 `rvw/testrig/` directories. Live TestRIG transport remains separate work.
+
+## Repeated reset schedules
+
+`ResetSchedule` serves delayed reset requests from project mailbox stimulus.
+The project supplies the pin callback, pulse length, state sampler, bus cleanup
+and release callback. The controller samples actual state on asserted edges
+and on the first edge after release. The adapter preserves RAM and discards
+outstanding bus responses and probe state. `RvfiTraceWriter.resetEvent`
+records each receipt under a declared `rvw.reset-events/1` header.
+Offline Spike comparison checks receipts and resets its processor with RAM
+retained. It does not use DUT memory as expected state. Missing observations
+prevent a match. See `examples/vexiiriscv/rvw/reset64.json` for project data.
