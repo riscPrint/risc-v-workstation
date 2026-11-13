@@ -1,0 +1,476 @@
+{
+  "schema": "rvw.cached-smp/1",
+  "status": "pass",
+  "harts": 2,
+  "seed": 17,
+  "lsu_sets": 64,
+  "lsu_ways": 1,
+  "cycles": "686",
+  "grants": 10,
+  "shrinks": 7,
+  "retirements": [
+    "56",
+    "43"
+  ],
+  "cache_events": {
+    "invalidate": 1,
+    "read": 2,
+    "store": 2,
+    "fill": 3,
+    "writeback": 2
+  },
+  "scope": "RTL cached cores and coherent hub; permission observer; independent bytes on the selected handoff line",
+  "program": {
+    "source_sha256": "0eabbb157a5a4a76b8775c01cc57872df280379ff8d66cafbbf278b1e35dc0e2",
+    "elf_sha256": "6908a726f031b1c244e30e414f33dda53c3212eb220d26d63b15225809bb7eb1",
+    "data_address": "0x80080000",
+    "expected_writes": {
+      "0": 37,
+      "1": 85
+    },
+    "scope": "two-way shared-line handoff; flags on a separate line"
+  },
+  "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+  "tools_dirty": true,
+  "sources": {
+    "examples/smp/rvw/src/main/scala/rvwsmp/CachedDataObserver.scala": "da6b32762cbd90d983ca168d017b87387a4ed0a7d59850fe024e3d723eb85c6b",
+    "examples/smp/rvw/src/main/scala/rvwsmp/CachedLineTap.scala": "a1e9d670888f15d0a78a64a2349573a3fa54659bf3214e92019d016c63c62a59",
+    "examples/smp/rvw/src/main/scala/rvwsmp/CachedSmp.scala": "cb72d67e0e1c7d87d878b464c5e047c54f3cc7c53d930cc40a3c85eb7433576a"
+  },
+  "rtl_sha256": "d52d48d57a31a6a9bc2325a3e4b6aef06de8be92ad408e209f930a66a617d60e",
+  "projection_sha256": "97a9d818e966e2450334d6857ac99fab222109cec72ca426888796a1b4c94db1",
+  "binding": {
+    "schema": "rvw.tlc-monitor/1",
+    "status": "generated",
+    "monitor": "monitors/rvw_tlc_monitor.sv",
+    "bind": "monitors/rvw_tlc_bind.sv",
+    "executed": false,
+    "permission_model": {
+      "source_sha256": "a7ef6e01e0f757fbb6c1c25bc3faef02f6abf5aed2267ddb5a4d95ed72928ff2",
+      "model_states": 141,
+      "model_edges": 218,
+      "states": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "edges": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      ],
+      "scope": "permission projection only; not channel/data refinement"
+    },
+    "fairness": "finite cache handoff, no channel stalls injected; 10000-cycle service bound",
+    "beats_per_line": 8,
+    "bus_type_evidence": [
+      "declared-family-and-channel-structure",
+      "declared-family-and-channel-structure"
+    ],
+    "scope": "two-client single-line complete accepted messages; bounded progress",
+    "profile": "monitors/profile.json"
+  },
+  "monitor_replay": {
+    "schema": "rvw.cached-monitor-replay/1",
+    "status": "pass",
+    "samples": 688,
+    "reset_samples": 1,
+    "control": {
+      "returncode": 0,
+      "timed_out": false,
+      "monitor_violation": false
+    },
+    "fault": {
+      "returncode": 1,
+      "timed_out": false,
+      "monitor_violation": true
+    },
+    "scope": "generated monitor replay of sampled RTL line projection; bind file generated, in-simulation bind NOT RUN"
+  },
+  "driver_sources": {
+    "examples/smp/rvw/cached.sh": "0fd0a4fa872fd6256b4f59a554f9b7d2a5eebd5b1e56bec461bf5aaef484ced9",
+    "examples/smp/rvw/cached_bind.py": "74af80c33dac6439c0263f7050bebcf056a7d57ac3c9253314a4b021501bc664",
+    "examples/smp/rvw/cached_monitor_replay.py": "725ed3b76443daac946d70c75140998ec19a688c41a1fbb0086aa2a407085b95",
+    "examples/smp/rvw/cached_program.py": "ece30275e713e5293791500a93e46feb1d007aff4a37ff0a51db502f2a6c67a6"
+  },
+  "design_db_sha256": "540f8d7100ef762fcbb85af5075a6f5ce01c694de14ab7b646ffd3a62462318d"
+}

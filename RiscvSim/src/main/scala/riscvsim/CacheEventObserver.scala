@@ -6,7 +6,7 @@ import scala.collection.mutable
   * Expected bytes are supplied independently before the corresponding cache event. */
 final class CacheEventObserver(oracle: MemoryImage, harts: Set[Int], lineBytes: Int,
     sets: Int, ways: Int, eventNames: Map[String, String], replacement: String = "any") {
-  private val kinds = Set("fill", "denied", "read", "store", "evict", "invalidate",
+  private val kinds = Set("fill", "denied", "read", "store", "evict", "invalidate", "writeback",
     "fetch_request", "fetch_reply", "fetch_consume", "fetch_discard", "publish", "sync")
   require(harts.nonEmpty && eventNames.nonEmpty && eventNames.values.forall(kinds))
   private val caches = harts.map(h => h -> new CacheScoreboard(oracle, lineBytes, sets, ways, replacement)).toMap
@@ -38,6 +38,7 @@ final class CacheEventObserver(oracle: MemoryImage, harts: Set[Int], lineBytes: 
       case "fill" => caches(hart).fill(address, bytes(e))
       case "denied" => caches(hart).fill(address, bytes(e), denied = true)
       case "read" => caches(hart).read(address, bytes(e))
+      case "writeback" => caches(hart).writeback(address, bytes(e))
       case "store" => caches(hart).store(address, bytes(e), BigInt(e("mask").str.stripPrefix("0x"), 16))
       case "evict" => caches(hart).evict(address, e.obj.get("bytes").map(_ => bytes(e)),
         e.obj.get("replacement").exists(_.bool))

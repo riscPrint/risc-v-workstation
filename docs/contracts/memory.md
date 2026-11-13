@@ -205,3 +205,25 @@ The SMP `serialized-retirement` adapter may accept several requests from one
 hart before their retirements. Another hart cannot issue during that interval.
 The adapter counts outstanding requests and checks each memory retirement's
 ownership. C2 per-hart retirement order still drives Spike's hart selection.
+
+## Cached handoff observer
+
+The cached SMP profile binds two real VexiiRiscv LSU L1 TileLink-C buses to
+permission observers. Its byte observer covers the line at `0x80080000`.
+Expected stores are fixed by the handoff program: hart 0 writes 37 and hart 1
+writes 85. Flag words use another line. A `writeback` cache event checks the
+whole resident line against the independent oracle and clears its dirty state.
+It retains the line after a downgrade. Invalidation remains a separate event.
+The generated TL-C monitor binds a passive projection of this one line. The
+projection tracks request sources and grant sinks. It never drives ready or
+valid into the core or fabric. Generation alone is not monitor execution.
+
+The selected-line byte observer uses offset zero for that physical line.
+Raw projection samples retain RTL signal names and complete clock samples.
+A generated-monitor replay checks these samples with the independent expected
+line input. It is separate from executing an SV bind inside the native model.
+
+Generated profiles retain bounded dimensions: up to eight source bits and ten
+sink bits. The cached hub uses nine sink bits. Singleton source IDs are exposed
+as a constant zero bit in the passive projection. The recorder includes async
+reset edges even when the clock is stopped. Replay preserves these reset events.

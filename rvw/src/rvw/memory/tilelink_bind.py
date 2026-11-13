@@ -163,7 +163,7 @@ def generate(database, profile, out):
         raise ValueError('power-of-two data beat width required')
     if config['line_bytes'].bit_length()-1 >= 1 << config['size_bits']:
         raise ValueError('line size does not fit the TL-C size field')
-    if not (1 <= config['source_bits'] <= 8 and 1 <= config['sink_bits'] <= 8 and config['bound_cycles'] > 0):
+    if not (1 <= config['source_bits'] <= 8 and 1 <= config['sink_bits'] <= 10 and config['bound_cycles'] > 0):
         raise ValueError('invalid bounded monitor dimensions')
     if len(config['clients']) != 2:
         raise ValueError('two project-selected TL-C clients required')

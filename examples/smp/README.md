@@ -323,3 +323,62 @@ synchronizations. Separate injected result faults were rejected on hart 0 and
 hart 1. See `rvw/full-replay-results.json`. The eight gate checks also passed.
 These are complete finite programs under serialized memory visibility.
 They do not qualify arbitrary concurrent weak-memory replay.
+
+## Cached SMP path
+
+`rvw/cached.sh ELF OUT` hosts two cached RV64IMA VexiiRiscv cores.
+It uses the pinned upstream TileLink coherent hub. Boot RAM has 64 KiB.
+Shared RAM has 4 KiB. The RAM, CLINT and PLIC use RTL. It is a separate native path. The `smpN` C1 profiles remain cacheless.
+The cached path uses `vex-mem`, `sbt-mem`, and the private source checkout.
+It does not edit core source. The project `SnapshotPlugins` wrapper gives the
+upstream TileLink plugin loop a fixed iteration snapshot. This avoids its
+Scala 2.13 mutable-buffer iteration failure. It does not change the plugin set.
+
+Build the fixed handoff with the workstation Python:
+
+```sh
+rvw/.venv/bin/python examples/smp/rvw/cached_program.py --out INPUTS
+examples/smp/rvw/cached.sh INPUTS/shared.elf RUN
+```
+
+Hart 0 writes 37. Hart 1 checks 37 and writes 85. Hart 0 then checks 85.
+Flags use a separate line. The byte observer checks fills, retired reads and
+stores, dirty transfers and invalidations for the line at `0x80080000`.
+Its expected bytes come from the fixed program. Permission observers consume
+accepted transactions from the real LSU TileLink-C buses. Same-cycle shrinks
+are processed before grants. They do not use CPU completion as a coherence
+oracle. Only the selected data line has an independent byte binding.
+
+The passive `observed0` and `observed1` bundles project this line. They track
+request sources and grant sinks. They do not control any core/fabric handshake.
+`expected_data` is an independent test input. The native runner writes
+`projected.jsonl` with clock samples for generated-monitor replay.
+
+The `db` sbt project provides `rvwsmp.CachedDatabase ELF DATABASE`. Run it with
+JDK 21, the same private source checkout, and the `sbt-mem` lock. Then use:
+
+```sh
+rvw/.venv/bin/python examples/smp/rvw/cached_bind.py --database DATABASE --out BINDING
+rvw/.venv/bin/python examples/smp/rvw/cached_monitor_replay.py --database DATABASE --binding BINDING --capture RUN/projected.jsonl --out REPLAY
+```
+
+The binder selects typed members from the extracted design database. It refuses
+missing, pruned or wrong-width fields. The replay uses Icarus to run the generated
+monitor. A separate corrupted GrantData beat must fail. This is monitor replay
+on RTL samples. Executing an SV bind inside the native model is a separate check.
+
+At seed 17, the cached handoff passed in 686 cycles with 99 retirements
+(56 on hart 0 and 43 on hart 1). The LSU caches use 64 sets and one way.
+The permission observer saw ten grants and seven shrinks. The byte observer
+checked three fills, two stores, two reads, two dirty writebacks and one actual
+invalidation. No-op acknowledgments do not count as invalidations.
+
+The generated monitor passed on 688 recorded clock/reset events, including the
+asynchronous reset assertion while the clock was stopped. A corrupted GrantData
+beat was rejected. The typed bind was generated from the real design database.
+The native bound-monitor regression also passed its control and rejected six
+planted defects. The cached model did not execute the SV bind in simulation.
+These finite checks cover data coherence on the selected handoff line.
+Instruction-cache visibility, replacement and reset during traffic remain open.
+See `rvw/cached-results.json` for hashes and separate evidence results.
+The generated monitor, bind and profile are in `rvw/monitors/`.

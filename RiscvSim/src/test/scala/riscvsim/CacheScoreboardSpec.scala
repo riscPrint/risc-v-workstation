@@ -18,6 +18,16 @@ class CacheScoreboardSpec extends AnyFunSuite {
     c.evict(0, Some(mem.read(0, 4))); c.fill(8, mem.read(8, 4))
     assert(!c.contains(0) && c.contains(8) && c.contains(4))
   }
+  test("dirty downgrade writeback retains a clean resident line") {
+    val mem = new MemoryImage(16); val cache = new CacheScoreboard(mem,4,1,1)
+    cache.fill(0,mem.read(0,4)); mem.write(0,Vector[Byte](37),1)
+    cache.store(0,Vector[Byte](37),1)
+    intercept[IllegalArgumentException](cache.writeback(0,Vector.fill[Byte](4)(0)))
+    cache.writeback(0,mem.read(0,4))
+    assert(cache.contains(0)); cache.read(0,Vector[Byte](37))
+    cache.invalidate(0); assert(!cache.contains(0))
+    intercept[IllegalArgumentException](cache.writeback(0,mem.read(0,4)))
+  }
   test("denied fills do not install; wrong data and invalid bounds fail") {
     val mem = new MemoryImage(16); val c = new CacheScoreboard(mem, 4, 1, 1)
     c.fill(0, Vector.fill[Byte](4)(0), denied = true)
