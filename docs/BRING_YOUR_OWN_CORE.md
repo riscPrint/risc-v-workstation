@@ -42,6 +42,11 @@ Select native tools with these flags:
 | `--with-typed-waves` | Pinned SpinalWaves checker and Surfer fork; requires Rust/Cargo |
 | `--all` | All optional tools |
 
+cocotb and pyuvm require Python 3.11 through 3.14. If `python3` is outside
+that range, the installer selects an installed `python3.11`, `python3.12`,
+`python3.13` or `python3.14` from `PATH`. It does not download a Python runtime
+for this selection. If none exists, install a compatible Python and retry.
+
 For private native workflow artifacts, use `--from-bundle --bundle-run RUN_ID`
 with the selected native flags. Use `--bundle-dir DIR` for saved artifacts.
 See the [native bundle guide](../scripts/README.md) for hosts and limits.

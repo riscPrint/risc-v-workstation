@@ -512,3 +512,29 @@ def test_install_does_not_prune_existing_extras(tmp_path):
     result = invoke('--profile', 'minimal', '--dry-run', '--prefix', tmp_path / 'install')
     assert result.returncode == 0, result.stderr
     assert 'uv sync --locked --inexact --no-dev --extra mcp' in result.stdout
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize('compatible', [True, False])
+def test_optional_python_selection_precedes_install(tmp_path, compatible):
+    import sys
+    binaries = tmp_path / 'bin'
+    binaries.mkdir()
+    for name in ('python3', 'python3.11', 'python3.12', 'python3.13', 'python3.14'):
+        allowed = name == 'python3.11' and compatible
+        path = binaries / name
+        path.write_text('#!/bin/sh\n'
+                        'if [ "$1" = --version ]; then echo "Python 3.15.2"; exit 0; fi\n'
+                        f'if [ "$1" = -c ]; then exit {0 if allowed else 1}; fi\n'
+                        f'exec {shlex.quote(sys.executable)} "$@"\n')
+        path.chmod(0o755)
+    result = invoke('--with-cocotb', '--dry-run', '--prefix', tmp_path / 'install',
+                    env={**os.environ, 'PATH': str(binaries) + ':' + os.environ['PATH']})
+    if compatible:
+        assert result.returncode == 0, result.stderr
+        assert '--python python3.11' in result.stdout
+    else:
+        assert result.returncode == 2
+        assert 'Python 3.11 through 3.14' in result.stderr
+        assert 'uv venv' not in result.stdout
+    assert not (tmp_path / 'install').exists()
