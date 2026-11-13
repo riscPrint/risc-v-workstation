@@ -11,10 +11,11 @@ import vexriscv.plugin._
   * `rv32im_jtag` adds the upstream `EmbeddedRiscvJtag` DTM with top-level `jtag_*` pins.
   * Both use the CSR plugin's official debug support (Debug 0.13, two execute triggers). */
 object VexDebug {
-  val configs = Seq("rv32im_dmi", "rv32im_jtag")
+  val configs = Seq("rv32im_dmi", "rv32im_jtag", "rv32im_trace")
 
   def configuration(config: String): VexRiscvConfig = config match {
     case "rv32im" => VexTop.configuration()
+    case "rv32im_trace" => VexRiscvConfig(plugins = VexTop.configuration().plugins :+ new TraceIngressPlugin)
     case "rv32im_dmi" | "rv32im_jtag" =>
       val plugins = VexTop.configuration().plugins.map {
         case _: CsrPlugin => new CsrPlugin(VexTop.csrConfig.copy(withPrivilegedDebug = true))

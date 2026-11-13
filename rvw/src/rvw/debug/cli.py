@@ -99,6 +99,17 @@ def register(subparsers):
     ncheck.set_defaults(func=_ntrace_check)
     nloss.add_argument('--at', type=int, action='append')
     nloss.set_defaults(func=_ntrace_loss)
+    ingress = sub.add_parser('ingress-check', help='check RTL trace ingress (te_ingress.csv) against C2; '
+                             'trace the run from it with N-Trace, and E-Trace with --reference')
+    ingress.add_argument('--ingress', required=True, type=Path, help='te_ingress.csv from RiscvSim --trace-ingress')
+    ingress.add_argument('--rvfi', required=True, type=Path)
+    ingress.add_argument('--elf', required=True, type=Path)
+    ingress.add_argument('--out', required=True, type=Path)
+    ingress.add_argument('--mode', choices=('htm', 'btm'), default='htm')
+    ingress.add_argument('--sync-period', type=int, default=0)
+    for option in ('reference', 'static-config', 'user-config', 'toolchain'):
+        ingress.add_argument('--' + option, type=Path, help='E-Trace reference flow (all four together)')
+    ingress.set_defaults(func=_ingress_check)
     adapter = sub.add_parser('trace-adapter', help='check a vendor trace adapter against its known packet vectors')
     adapter.add_argument('adapter', type=Path)
     adapter.set_defaults(func=_trace_adapter)
@@ -243,6 +254,23 @@ def _ntrace_check(args):
         result = {'status': 'inconclusive', 'reason': str(exc)}
     print(json.dumps({k: v for k, v in result.items() if k != 'windows'}, sort_keys=True))
     return {'flow_match': 0, 'mismatch': 1, 'leak': 1}.get(result['status'], 3)
+
+
+def _ingress_check(args):
+    from . import api
+    try:
+        result = api.ingress_check(args.out, args.ingress, args.rvfi, args.elf, mode=args.mode,
+                                   sync_period=args.sync_period, reference=args.reference,
+                                   static_config=args.static_config, user_config=args.user_config,
+                                   toolchain=args.toolchain)
+    except (OSError, ValueError, KeyError) as exc:
+        result = {'status': 'inconclusive', 'reason': str(exc)}
+    summary = {k: v for k, v in result.items() if k not in ('ntrace', 'etrace')}
+    for key in ('ntrace', 'etrace'):
+        if key in result:
+            summary[key] = {k: v for k, v in result[key].items() if k != 'windows'}
+    print(json.dumps(summary, sort_keys=True))
+    return {'match': 0, 'mismatch': 1}.get(result['status'], 3)
 
 
 def _ntrace_loss(args):

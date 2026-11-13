@@ -19,6 +19,11 @@ def _interop(job, **arguments):
     return run_function(job, 'rvw.debug.api', 'interop_run', arguments)
 
 
+def _ingress(**arguments):
+    from . import api
+    return api.ingress_check(**arguments)
+
+
 def _list():
     from . import api
     return {'checks': api.list_checks()}
@@ -42,6 +47,12 @@ def mcp_tools():
                  schema({'out': S, 'elf': S, 'port': {'type': 'integer'}, 'profile': S,
                          'reset_pc': {'type': 'integer'}, 'idcode': {'type': 'integer'}, 'openocd': S, 'gdb': S,
                          'timeout': {'type': 'number'}}, ['out', 'elf']), _interop, long=True),
+        ToolSpec('debug_ingress_check', 'Compare RTL trace-encoder ingress (te_ingress.csv from RiscvSim '
+                 '--trace-ingress) with C2, then trace the run from it with N-Trace and, given the pinned reference '
+                 'checkout, E-Trace. match only when every part matches; ingress is not encoder evidence.',
+                 schema({'out': S, 'ingress': S, 'rvfi': S, 'elf': S, 'mode': S, 'sync_period': {'type': 'integer'},
+                         'reference': S, 'static_config': S, 'user_config': S, 'toolchain': S},
+                        ['out', 'ingress', 'rvfi', 'elf']), _ingress, side_effects='writes-files', native_tools=()),
         ToolSpec('debug_checks', 'List the Debug Specification compliance checks and the rule each one tests.',
                  schema({}), _list, annotations={'readOnlyHint': True}),
     ]

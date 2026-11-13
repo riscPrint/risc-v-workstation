@@ -27,9 +27,13 @@ JUMPS = {'jalr', 'c.jr', 'c.jalr'}
 
 
 # -- C2 with trap causes -------------------------------------------------------------
-def retirement(path):
+def retirement(path, code=None):
     """C2 retirement rows. Exception rows get `exc=(cause, tval)`; the first row after an
-    interrupt gets `irq=cause`. Returns (rows, complete, xlen)."""
+    interrupt gets `irq=cause`. Returns (rows, complete, xlen).
+
+    Some adapters write a trap event without a retirement row for the trapping instruction.
+    With `code` (an object with `insn(pc)`, from the ELF), that row is rebuilt at the previous
+    row's `pc_next`, flagged `rebuilt`. Without `code` such a trace is refused."""
     try:
         trace = Trace(path)
     except StopIteration as exc:
@@ -48,6 +52,11 @@ def retirement(path):
                 pending_irq = record['cause'] & ~(1 << (xlen - 1))
             else:
                 trapped = next((r for r in reversed(rows) if r.get('trap')), None)
+                if (trapped is None or 'exc' in trapped) and code is not None and rows:
+                    pc = rows[-1]['pc_next']
+                    trapped = {'pc': pc, 'insn': code.insn(pc), 'mode': rows[-1]['mode'], 'trap': True,
+                               'pc_next': None, 'rebuilt': True}
+                    rows.append(trapped)
                 if trapped is None or 'exc' in trapped:
                     raise ValueError('trap event without a trapping instruction')
                 trapped['exc'] = (record['cause'], record['tval'])
@@ -59,7 +68,11 @@ def retirement(path):
             row['irq'] = pending_irq
             pending_irq = None
         rows.append(row)
-    for row in rows:
+    for index, row in enumerate(rows):
+        if row.get('rebuilt'):
+            if index + 1 >= len(rows):
+                raise ValueError('rebuilt trapping instruction has no handler retirement')
+            row['pc_next'] = rows[index + 1]['pc']
         if row.get('trap') and 'exc' not in row:
             raise ValueError(f'trapping instruction at 0x{row["pc"]:x} has no trap event cause')
     complete = bool(records and records[-1].get('event') == 'end' and records[-1].get('status') == 'pass')

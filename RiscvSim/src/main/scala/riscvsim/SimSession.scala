@@ -190,6 +190,7 @@ object SimSession {
           ctl.start()
           FaultInjector.forJob(job).foreach(_.attach(dut, ctl))
           DebugPort.forRun(job, ctx).foreach(_.attach(dut, ctl))
+          TraceIngress.forRun(job).foreach(_.attach(dut, ctl))
           body(dut, ctl)
         }
         None

@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding")
+    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -126,6 +126,7 @@ object Cli {
       hartImages = m.get("hart-images").map(file(cwd, _)),
       bootPayloads = m.get("boot-payloads").map(file(cwd, _)), irqSchedule = schedule, elfLoadBias = long(m, "elf-load-bias", min = 0).getOrElse(0L), socMap = m.get("soc-map").map(p => SimMap.load(file(cwd, p))),
       fault = m.get("fault").map(p => FaultFile.load(file(cwd, p))),
+      traceIngress = m.get("trace-ingress").map(p => IngressBinding.load(file(cwd, p))),
       debug = m.get("debug").map { d =>
         val binding = DebugBinding.load(file(cwd, m.getOrElse("debug-binding", throw new UsageError("--debug needs --debug-binding"))))
         try DebugMode(d, binding) catch { case e: IllegalArgumentException => throw new UsageError(e.getMessage) }
@@ -144,7 +145,8 @@ object Cli {
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
       |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON]
-      |                  [--debug dmi|jtag:PORT --debug-binding rvw.debug-binding/1 JSON] [--json]
+      |                  [--debug dmi|jtag:PORT --debug-binding rvw.debug-binding/1 JSON]
+      |                  [--trace-ingress rvw.trace-ingress-binding/1 JSON] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--persistent] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]

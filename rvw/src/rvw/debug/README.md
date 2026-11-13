@@ -252,6 +252,35 @@ lost the start) and `truncate`, at sampled positions (`--at`). A test passes whe
 every observed window matches C2 and the lost span is reported as unknown. Results
 are C3 (`etrace-loss`). Resynchronization at trap syncs (subformat 1) is not used.
 
+## Trace ingress from a core
+
+A core declares its E-Trace encoder ingress port in project data
+(`rvw.trace-ingress-binding/1`). RiscvSim samples it into `te_ingress.csv` with
+`run --trace-ingress FILE` (see "RiscvSim harness hooks" in
+`docs/contracts/c2-rvfi-trace.md`). Then:
+
+```sh
+rvw debug ingress-check --ingress run/te_ingress.csv --rvfi run/rvfi.jsonl --elf prog.elf --out /tmp/ingress \
+  [--reference /tmp/etrace-reference --static-config enc.scf --user-config dec.ucf --toolchain /path/to/toolchain]
+```
+
+The check has three parts. `ingress` compares every RTL row with the row derived
+from C2 (`match` or the first differing row and fields). `ntrace` rebuilds the
+retirement stream from the ingress addresses and the ELF, encodes it with the
+rvw N-Trace codec, decodes it with the ELF and compares the PC flow with C2. It
+checks the address flow; the `itype` field is checked by `ingress`. `etrace`
+(with `--reference`) encodes the RTL ingress with the pinned reference encoder and
+decodes the packets. `status` is `match` (exit 0) only when every part matches;
+`mismatch` exits 1; anything else is `inconclusive` (exit 3). A match shows that
+the ingress port carries enough to trace the run. It is not evidence of a hardware
+encoder.
+
+Measured on 2026-11-13 with the VexRiscv `rv32im_trace` configuration (smoke,
+trap, `rv32ui-p-beq`, `rv32ui-p-jalr`): all four `match` (ingress rows 17, 12,
+334 and 158; N-Trace and E-Trace `flow_match`). One changed branch outcome in the
+`beq` ingress gives `mismatch` at that row. VexRiscv C2 has no retirement row for
+a trapping instruction; the check rebuilds it from the ELF (`rebuilt_trap_rows`).
+
 ## N-Trace
 
 N-Trace support is separate from E-Trace (#194). An E-Trace result never counts
@@ -358,7 +387,7 @@ Open items:
 - #168: context changes (no C2 context field) and options beyond the baseline encoder are not tested.
 - #172: recovery at trap syncs and DUT overflow markers other than qual_status 2 are not used.
 - #195: authentication controls and encoder-side trigger inputs are not modelled.
-- #194: timestamps, multiple sources (SRC), data trace and repeat-branch messages are not modelled; no RTL N-Trace encoder capture exists yet.
+- #194: timestamps, multiple sources (SRC), data trace and repeat-branch messages are not modelled; RTL ingress is checked, but no RTL N-Trace encoder capture exists yet.
 - #207: no vendor adapter with vendor vectors is bundled.
 
 ## Decisions and sources

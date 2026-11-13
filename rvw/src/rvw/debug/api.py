@@ -147,3 +147,19 @@ def trace_adapter(path):
     return {'name': adapter['name'], 'vendor': adapter['vendor'], 'verified': adapter['verified'],
             'vectors': adapter['vectors'], 'sha256': adapter['sha256'], 'specification': adapter['specification']}
 
+
+
+def ingress_check(out, ingress, rvfi, elf, mode='htm', sync_period=0, reference=None, static_config=None,
+                  user_config=None, toolchain=None):
+    """Compare RTL trace ingress with C2 and trace the run from it (N-Trace; E-Trace with reference)."""
+    import json
+    from . import ingress_check as ic
+    if reference is not None and not (static_config and user_config and toolchain):
+        raise ValueError('E-Trace needs static_config, user_config and toolchain with reference')
+    result = ic.check(ingress, rvfi, elf, ntrace_profile={'mode': mode, 'sync_period': sync_period},
+                      reference=reference, static_config=static_config, user_config=user_config, toolchain=toolchain)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+    result['result'] = str(out / 'result.json')
+    return result

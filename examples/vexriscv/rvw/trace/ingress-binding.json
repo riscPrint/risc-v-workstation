@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.trace-ingress-binding/1",
+  "sources": [
+    {"valid": "trace_trap", "fields": {"itype_0": "trace_trap_itype", "cause": "trace_trap_cause",
+      "tval": "trace_trap_tval", "priv": 3, "iaddr_0": "trace_trap_iaddr", "iretire_0": 0, "ilastsize_0": 1}},
+    {"valid": "trace_retire", "fields": {"itype_0": "trace_itype", "priv": 3, "iaddr_0": "trace_iaddr",
+      "iretire_0": 1, "ilastsize_0": 1}}
+  ]
+}
