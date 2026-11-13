@@ -31,6 +31,7 @@ object CsrChecksRuntime {
     require(Set("none", "read")(args(2)))
     val fault = args(2) == "read"
     val allChecks = sys.env.get("RVW_CHECKS_ISA").contains("1")
+    val backpressure = sys.env.get("RVW_CHECKS_BACKPRESSURE").contains("1")
     require(!allChecks || !fault, "qualification requires clean observations")
     var campaignFailed = false
     val (config, checks) = SpinalChecks.install(VexiiTop.spinalConfig.copy(targetDirectory = new File(out,"rtl").getPath,
@@ -97,6 +98,8 @@ object CsrChecksRuntime {
         cd.forkStimulus(10);cd.waitSampling(10)
         while(cycle < 20000 && done.forall(cycle < _+20)) {
           cd.waitFallingEdge()
+          ibus.cmd.ready #= !backpressure || cycle % 8 == 0
+          dbus.cmd.ready #= !backpressure || cycle % 8 == 0
           ibus.rsp.valid #= fetch.nonEmpty
           fetch.headOption.foreach { case(v,id)=>ibus.rsp.word #= v;ibus.rsp.id #= id }
           dbus.rsp.valid #= data.nonEmpty
