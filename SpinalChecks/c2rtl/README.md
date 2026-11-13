@@ -366,3 +366,12 @@ hashes. See [NaxRiscv's runner and width ledger](../../examples/naxriscv/formal/
 These checks do not cover instruction decode or complete core pipelines.
 Unrestricted 32-bit arithmetic remains open. The optional VexiiRiscv bitpasta
 IPC fault remains a confirmed counterexample in the separate findings.
+
+## Arithmetic composition
+
+The [composition checks](README-composition.md) now close the unrestricted
+VexiiRiscv split-multiplier composition at RTL word-operator level. This trusts
+RTL `$mul` semantics. It is separate from the CBMC gate-level timeout.
+The actual NaxRiscv 32-bit divider base, active-step and progress lemmas close.
+Its complete transaction composition remains open. Negative result and
+remainder mutants produce counterexamples. No complete-core pass follows.

@@ -1,0 +1,101 @@
+{
+  "schema": "rvw.arithmetic-composition/1",
+  "multiplier": {
+    "schema": "rvw.vexii-mul-composition/1",
+    "status": "composition_proved",
+    "rtl_sha256": "edc05c46807a217cecf2e43fad35ecc56a52aaa6ef01e7b8b9ff767784221063",
+    "scope": "unrestricted signed 33x33 product modulo 2^64; actual helper adder network; RTL operator semantics",
+    "trusted_primitive": "Yosys signed/unsigned $mul word semantics; not a technology-mapped gate proof",
+    "partial_products": {
+      "lh": {
+        "width": 34,
+        "binding": "exact source operand slices and signedness"
+      },
+      "hl": {
+        "width": 34,
+        "binding": "exact source operand slices and signedness"
+      },
+      "hh": {
+        "width": 32,
+        "binding": "exact source operand slices and signedness"
+      },
+      "ll": {
+        "width": 34,
+        "binding": "exact source operand slices and signedness"
+      }
+    },
+    "closed_lemmas": true
+  },
+  "divider": {
+    "schema": "rvw.nax-div-step/1",
+    "width": 32,
+    "rtl_sha256": "098680ebeb017f14c7970f6b72a2fa5153cdad0ea8a8adc1c5cf2b0dcb8d6278",
+    "status": "step_proved",
+    "scope": "local active transition lemma only; not a complete arithmetic proof",
+    "preconditions": [
+      "busy and not done",
+      "no reset or flush",
+      "nonzero W-bit divisor",
+      "remainder below divisor",
+      "stored triple equals three times divisor"
+    ]
+  },
+  "negative_controls": {
+    "multiplier": {
+      "schema": "rvw.vexii-mul-composition/1",
+      "status": "counterexample",
+      "rtl_sha256": "21da6ddebfc4c37b6ad6cfab361886762fd3c2a1dd0a3a6629f29cb8b7c2256a",
+      "scope": "unrestricted signed 33x33 product modulo 2^64; actual helper adder network; RTL operator semantics",
+      "trusted_primitive": "Yosys signed/unsigned $mul word semantics; not a technology-mapped gate proof",
+      "partial_products": {
+        "lh": {
+          "width": 34,
+          "binding": "exact source operand slices and signedness"
+        },
+        "hl": {
+          "width": 34,
+          "binding": "exact source operand slices and signedness"
+        },
+        "hh": {
+          "width": 32,
+          "binding": "exact source operand slices and signedness"
+        },
+        "ll": {
+          "width": 34,
+          "binding": "exact source operand slices and signedness"
+        }
+      },
+      "closed_lemmas": true
+    },
+    "divider": {
+      "schema": "rvw.nax-div-step/1",
+      "width": 32,
+      "rtl_sha256": "12e5b29602ca07a8ef392ad768d5d9f83c3f073ddb3490bb1249d7d30a045524",
+      "status": "counterexample",
+      "scope": "local active transition lemma only; not a complete arithmetic proof",
+      "preconditions": [
+        "busy and not done",
+        "no reset or flush",
+        "nonzero W-bit divisor",
+        "remainder below divisor",
+        "stored triple equals three times divisor"
+      ]
+    }
+  },
+  "divider_math": {
+    "status": "lemmas_proved",
+    "lemmas": [
+      "radix-4 prefix recurrence",
+      "32-bit quotient bound",
+      "Euclidean quotient and remainder uniqueness"
+    ],
+    "smt_sha256": "b79cd14e17217c8db6f8d8816e61463d864748041d653ad1d1837f8f2511339f",
+    "solver": "Z3",
+    "answers": [
+      "unsat",
+      "unsat",
+      "unsat"
+    ]
+  },
+  "remaining": "Complete divider transaction composition, including zero divisor, is not automatically proved by this local-step receipt. No complete-core or mapped-multiplier gate proof."
+}

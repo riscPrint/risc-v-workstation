@@ -435,3 +435,15 @@ per-width arithmetic proof outcomes. `rvw.confirmed-datapaths/1` records the
 reviewed Vex binding, input domain, proof-input hashes and native outcome.
 Restricted operand domains and result slices remain explicit. Neither ledger
 establishes instruction control or whole-core correctness.
+
+## Arithmetic lemma receipts
+
+`rvw.vexii-mul-composition/1` uses `composition_proved` only after exact
+partial-product slice binding, integer range and expansion proofs, and the
+actual RTL adder composition proof. `trusted_primitive` states its RTL `$mul`
+word-semantics boundary. It is not a technology-mapped multiplier proof.
+`rvw.nax-div-step/1` uses `step_proved` for local base, reset, active-step and
+progress obligations. It records the active-step preconditions. This status
+is not a complete divide transaction proof. Mutants can return `counterexample`.
+`rvw.arithmetic-composition/1` collects these receipts and separate arithmetic
+lemma outcomes. It retains remaining transaction-composition obligations.
