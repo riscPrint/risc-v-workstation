@@ -30,15 +30,51 @@
     "schema": "rvw.nax-div-step/1",
     "width": 32,
     "rtl_sha256": "098680ebeb017f14c7970f6b72a2fa5153cdad0ea8a8adc1c5cf2b0dcb8d6278",
-    "status": "step_proved",
-    "scope": "local active transition lemma only; not a complete arithmetic proof",
+    "status": "transaction_proved",
+    "scope": "unrestricted unsigned 32-bit quotient and remainder at first response; compositional induction on actual RTL transitions",
     "preconditions": [
       "busy and not done",
       "no reset or flush",
       "nonzero W-bit divisor",
       "remainder below divisor",
       "stored triple equals three times divisor"
-    ]
+    ],
+    "response_binding": {
+      "io_rsp_valid": 1,
+      "io_rsp_payload_result": 35,
+      "io_rsp_payload_remain": 33
+    },
+    "step_status": "step_proved",
+    "certificate": {
+      "kind": "unsigned one-request DIVU and REMU",
+      "contract": [
+        "one public synchronous reset clock",
+        "one request with stable operands",
+        "no reset or flush before first completion",
+        "first response only"
+      ],
+      "proof_chain": [
+        "reset to idle",
+        "request base and skipped-zero prefix",
+        "active radix-4 step",
+        "prefix recurrence and width bounds",
+        "counter progress to completion",
+        "response-state binding",
+        "Euclidean uniqueness or zero-divisor convention"
+      ],
+      "obligations": {
+        "division-math.smt2": {
+          "closed": true,
+          "expected_unsat": 6,
+          "sha256": "256558059c7219703f406c3392f11318922bccae802001cf5ae562b9d11e3064"
+        },
+        "prefix.smt2": {
+          "closed": true,
+          "expected_unsat": 48,
+          "sha256": "4ef238ff644c160d1b7b4f09cba12fc770df7509f691fafae0fed0dcd60703fa"
+        }
+      }
+    }
   },
   "negative_controls": {
     "multiplier": {
@@ -79,7 +115,12 @@
         "nonzero W-bit divisor",
         "remainder below divisor",
         "stored triple equals three times divisor"
-      ]
+      ],
+      "response_binding": {
+        "io_rsp_valid": 1,
+        "io_rsp_payload_result": 35,
+        "io_rsp_payload_remain": 33
+      }
     }
   },
   "divider_math": {
@@ -87,15 +128,21 @@
     "lemmas": [
       "radix-4 prefix recurrence",
       "32-bit quotient bound",
-      "Euclidean quotient and remainder uniqueness"
+      "Euclidean quotient and remainder uniqueness",
+      "34-bit transition sum bounds",
+      "nonwrapping residue equality",
+      "counter termination rank"
     ],
-    "smt_sha256": "b79cd14e17217c8db6f8d8816e61463d864748041d653ad1d1837f8f2511339f",
+    "smt_sha256": "256558059c7219703f406c3392f11318922bccae802001cf5ae562b9d11e3064",
     "solver": "Z3",
     "answers": [
+      "unsat",
+      "unsat",
+      "unsat",
       "unsat",
       "unsat",
       "unsat"
     ]
   },
-  "remaining": "Complete divider transaction composition, including zero divisor, is not automatically proved by this local-step receipt. No complete-core or mapped-multiplier gate proof."
+  "remaining": "Signed operand conversion, core pipeline integration and technology-mapped multiplier qualification remain outside these helper certificates."
 }

@@ -32,13 +32,13 @@ def test_partial_products_require_exact_slices_and_signedness():
 
 def state_design():
     widths=dict(counter=2,busy=1,done=1,shifter=8,numerator=8,result=8,div1=10,div3=10)
-    mod={'ports':{},'netnames':{},'cells':{}}
+    mod={'ports':{'clk':{'direction':'input','bits':[1]}},'netnames':{},'cells':{}}
     at=2
     for name,width in widths.items():
         q=list(range(at,at+width)); at+=width
         d=list(range(at,at+width)); at+=width
         mod['netnames'][name]={'bits':q,'attributes':{'init':'0'}}
-        mod['cells'][name]={'type':'$dff','connections':{'Q':q,'D':d}}
+        mod['cells'][name]={'type':'$dff','parameters':{'CLK_POLARITY':'1'},'connections':{'Q':q,'D':d,'CLK':[1]}}
     return {'modules':{'DivRadix4':mod}}
 
 
@@ -49,4 +49,17 @@ def test_every_state_cell_must_be_accounted_for():
     design=state_design();step['cut_state'](design,8)
     mod=design['modules']['DivRadix4']
     assert not mod['cells']
-    assert set(mod['ports'])=={'state_'+n for n in step['NAMES']} | {'next_'+n for n in step['NAMES']}
+    assert set(mod['ports'])-{'clk'}=={'state_'+n for n in step['NAMES']} | {'next_'+n for n in step['NAMES']}
+
+
+def test_state_cut_refuses_another_clock():
+    design=state_design()
+    design['modules']['DivRadix4']['cells']['result']['connections']['CLK']=[999]
+    with pytest.raises(ValueError,match='public rising-edge'):
+        step['cut_state'](design,8)
+
+
+def test_prefix_certificate_checks_each_counter_value():
+    text=step['prefix_lemmas'](32)
+    assert text.count('(check-sat)')==48
+    assert '(_ bv32 32)' in text and '(_ bv30 32)' in text
