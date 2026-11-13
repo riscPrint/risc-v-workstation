@@ -13,7 +13,11 @@
   "mmio": [],
   "pmp_regions": 0,
   "aligned_mem": false,
-  "irq_inputs": [],
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
   "privilege_modes": "M",
   "misaligned": {
     "load": "emulate",
@@ -47,7 +51,7 @@
     "base": {
       "mtvec": {
         "vectored": {
-          "supported": false
+          "supported": true
         }
       }
     }

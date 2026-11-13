@@ -26,6 +26,6 @@ def test_platform_declares_only_supported_machine_features():
     platform = json.loads((ROOT / 'rvw/platform.json').read_text())
     assert platform['xlen'] == 32
     assert platform['privilege_modes'] == 'M'
-    assert platform['irq_inputs'] == []
+    assert platform['irq_inputs'] == [3, 7, 11]
     assert platform['misaligned']['load'] == 'emulate'
     assert platform['misaligned']['store'] == 'emulate'

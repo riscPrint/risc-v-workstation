@@ -30,6 +30,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val slotWidth = log2Up(entries)
   val io = new Bundle {
     val boot = in UInt(32 bits)
+    val interrupts = in Bits(32 bits)
+    val interruptTaken = out Bool()
+    val interruptCause = out Bits(32 bits)
     val fetch = out UInt(32 bits)
     val instruction = in Bits(32 bits)
     val loadAddress = out UInt(32 bits)
@@ -98,9 +101,20 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val read1 = opcode === B(0x33,7 bits) || opcode === B(0x13,7 bits) || opcode === B(3,7 bits) || opcode === B(0x23,7 bits) || opcode === B(0x63,7 bits) || opcode === B(0x67,7 bits) || (opcode === B(0x73,7 bits) && !instruction(14))
   val read2 = opcode === B(0x33,7 bits) || opcode === B(0x23,7 bits) || opcode === B(0x63,7 bits)
   val writeRd = rd =/= 0 && (opcode === B(0x33,7 bits) || opcode === B(0x13,7 bits) || opcode === B(3,7 bits) || opcode === B(0x37,7 bits) || opcode === B(0x17,7 bits) || opcode === B(0x6f,7 bits) || opcode === B(0x67,7 bits) || (opcode === B(0x73,7 bits) && instruction(14 downto 12) =/= 0))
-  val pop = started && count =/= 0 && done(head)
+  val pendingInterrupts = io.interrupts & mie & B(0x888,32 bits)
+  val interruptCode = UInt(5 bits)
+  interruptCode := 7
+  when(pendingInterrupts(3)) { interruptCode := 3 }
+  when(pendingInterrupts(11)) { interruptCode := 11 }
+  // Select a boundary before the completed head. No instruction retires on this edge.
+  val interrupt = started && count =/= 0 && done(head) && mstatus(3) && pendingInterrupts.orR
+  io.interruptTaken := interrupt
+  io.interruptCause := B(0x80000000L,32 bits) | interruptCode.asBits.resize(32)
+  val interruptTarget = (mtvec.asUInt & U(0xfffffffcL,32 bits)) +
+    Mux(mtvec(1 downto 0) === B(1,2 bits),(interruptCode.resize(32) << 2).resize(32),U(0,32 bits))
+  val pop = started && count =/= 0 && done(head) && !interrupt
   val fenceInstruction = insn(head)(6 downto 0) === B(0xf,7 bits) && insn(head)(14 downto 12) === B(1,3 bits)
-  val redirect = pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction)
+  val redirect = interrupt || (pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction))
   val push = started && count < entries && (!writeRd || free.orR) && !redirect
   val allocatedMask = Mux(push && writeRd, B(1,physicalCount bits) |<< allocation, B(0,physicalCount bits))
   val releasedMask = Mux(pop && writes(head) && !faults(head), B(1,physicalCount bits) |<< old(head), B(0,physicalCount bits))
@@ -249,7 +263,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     is(0x300) { csrRead := mstatus }; is(0x301) { csrRead := B(0x40001100L,32 bits) }
     is(0x304) { csrRead := mie }; is(0x305) { csrRead := mtvec }; is(0x340) { csrRead := mscratch }
     is(0x341) { csrRead := mepc }; is(0x342) { csrRead := mcause }; is(0x343) { csrRead := mtval }
-    is(0x344,0xf11,0xf12,0xf13,0xf14,0x3a0,0x3a1,0x3a2,0x3a3,0x3b0,0x3b1,0x3b2,0x3b3,0x3b4,0x3b5,0x3b6,0x3b7,0x3b8,0x3b9,0x3ba,0x3bb,0x3bc,0x3bd,0x3be,0x3bf) { csrRead := 0 }
+    is(0x344) { csrRead := io.interrupts & B(0x888,32 bits) }
+    is(0xf11,0xf12,0xf13,0xf14,0x3a0,0x3a1,0x3a2,0x3a3,0x3b0,0x3b1,0x3b2,0x3b3,0x3b4,0x3b5,0x3b6,0x3b7,0x3b8,0x3b9,0x3ba,0x3bb,0x3bc,0x3bd,0x3be,0x3bf) { csrRead := 0 }
     is(0xc00,0xb00) { csrRead := cycles(31 downto 0).asBits }
     is(0xc80,0xb80) { csrRead := cycles(63 downto 32).asBits }
     is(0xc02,0xb02) { csrRead := retiredCount(31 downto 0).asBits }
@@ -276,7 +291,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
       execution := csrRead
       when(funct === 0) {
         when(inst === B(0x30200073L,32 bits)) { target := mepc.asUInt }
-        .elsewhen(inst === B(0x10500073L,32 bits)) { } // WFI is a hint without interrupts.
+        .elsewhen(inst === B(0x10500073L,32 bits)) { } // WFI may complete as a hint; enabled pending interrupts still trap.
         .otherwise { exception := True; cause := Mux(inst(20),U(3,5 bits),U(11,5 bits)) }
       } otherwise {
         when(!csrKnown || (csr(11 downto 10) === 3 && csrWillWrite)) { exception := True; cause := 2; tval := inst }
@@ -369,7 +384,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     when(csrWrite(head) && !faults(head)) {
       switch(csrAddress(head)) {
         is(0x300) { mstatus := (csrData(head) & B(0x88,32 bits)) | B(0x1800,32 bits) }; is(0x304) { mie := csrData(head) }
-        is(0x305) { mtvec := csrData(head) }; is(0x340) { mscratch := csrData(head) }
+        is(0x305) { mtvec := (csrData(head) & B(0xfffffffcL,32 bits)) | Mux(csrData(head)(1 downto 0) === B(1,2 bits),B(1,32 bits),B(0,32 bits)) }; is(0x340) { mscratch := csrData(head) }
         is(0x341) { mepc := csrData(head) & B(0xfffffffcL,32 bits) }
         is(0x342) { mcause := csrData(head) }; is(0x343) { mtval := csrData(head) }
       }
@@ -388,10 +403,15 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   for (i <- 0 until 32) recoveryMap(i) := Mux(pop && writes(head) && !faults(head) && rds(head) === i,dest(head),committed(i))
   val live = recoveryMap.map(t => B(1,physicalCount bits) |<< t).reduce(_ | _)
   when(redirect) {
-    pc := r.pc_wdata; head := 0; tail := 0; count := 0
+    pc := Mux(interrupt,interruptTarget,r.pc_wdata); head := 0; tail := 0; count := 0
     free := ~live
     for (i <- 0 until 32) map(i) := recoveryMap(i)
     for (i <- 0 until entries) { valid(i) := False; done(i) := False; issued(i) := False }
+  }
+  when(interrupt) {
+    mepc := pcs(head).asBits; mcause := io.interruptCause; mtval := 0
+    mstatus(7) := mstatus(3); mstatus(3) := False
+    handlerPending := True
   }
   assert(count <= entries, "ROB occupancy")
   assert(!free(0), "x0 must never be free")
@@ -417,6 +437,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     "issue_live" -> (!issue || (valid(selected) && !issued(selected))),
     "issue_operands" -> (!issue || (ready(src1(selected)) && ready(src2(selected)))),
     "commit_ready" -> (!pop || (valid(head) && done(head) && issued(head))),
+    "interrupt_precise" -> (!interrupt || (!pop && !io.store && !push && !issue)),
     "store_precise" -> (!io.store || (pop && isStore(head) && !faults(head))),
     "map_owned" -> !map.map(t => free(t)).reduce(_ || _)
   ).map { case(name,condition) =>
@@ -441,8 +462,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   for (cause <- Seq("memory_order_violation", "store_forward_miss", "cache_miss_retry", "tlb_miss"))
     Probe.lsuRetry(cause,False,ids(selected),cause)
   Probe.retire("commit",pop && !faults(head),ids(head))
-  Probe.flushYounger("recovery",redirect,ids(head),faults(head))
-  Probe.custom("flush_reason",redirect,"reason" -> Mux(faults(head),U(1,2 bits),U(2,2 bits)))
+  Probe.flushYounger("recovery",redirect,ids(head),faults(head) || interrupt)
+  Probe.custom("flush_reason",redirect,"reason" -> Mux(interrupt,U(3,2 bits),Mux(faults(head),U(1,2 bits),U(2,2 bits))))
+  Probe.custom("interrupt",interrupt,"cause" -> io.interruptCause,"pc" -> pcs(head),"occupancy" -> count)
   Probe.branch("predictor",pop && isBranch(head) && !faults(head),pcs(head),takenDirections(head),nextPc(head),
     predictedTaken = Some(predictedDirections(head)),predictedTarget = Some(predicted(head)),id = Some(ids(head)))
   Probe.custom("occupancy",True,"rob" -> count,"iq" -> CountOne((0 until entries).map(i => valid(i) && !issued(i))),
