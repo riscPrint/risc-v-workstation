@@ -262,7 +262,8 @@ class JobManager:
                 job.status = "cancelled" if job.cancelled else "failed"
                 job.exception = e
                 job.error = f"{type(e).__name__}: {e}"
-                job.log(traceback.format_exc())
+                from .spec import ToolError
+                job.log(str(e) if isinstance(e, ToolError) else traceback.format_exc())
             finally:
                 job.finished = time.time()
                 job.done.set()
