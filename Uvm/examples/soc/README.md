@@ -72,3 +72,7 @@ Native Verilator 5.049 results on 2026-11-13: seeds 1 and 7 each checked
 returned 2 passed, 0 skipped. The composition unit tests returned 4 passed.
 This qualifies the stated bus-master example. CPU boot, bus error handling,
 reset during traffic and C4 acceptance remain outside this run.
+
+See [the virtual sequence library](SCENARIOS.md) for boot, interrupt-storm,
+bus-error and reset-during-traffic callbacks in Python/pyuvm and SV UVM.
+The native connected example uses its boot sequence for peripheral bring-up.
