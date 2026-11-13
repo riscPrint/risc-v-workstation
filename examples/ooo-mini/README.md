@@ -159,3 +159,14 @@ Implementation and evidence were merged in
 [#1187](https://github.com/riscPrint/risc-v-workstation/pull/1187),
 [#1203](https://github.com/riscPrint/risc-v-workstation/pull/1203), and
 [#1245](https://github.com/riscPrint/risc-v-workstation/pull/1245).
+
+## Typed LSU retry smoke
+
+[The retry receipt](retry-results.json) retains capture hashes, live-ID checks,
+retry-to-completion histograms and a complete Spike match. The retire probe
+count equals C1 `instret`. Cache retry uses the explicit LSU response.
+The mini core declares four zero-valid retry probes because it has no
+rejected LSU attempts. Zero activation is not exercised retry behavior.
+Only the NaxRiscv cache cause activates in these two short runs. Other
+causes still need directed captures. Completion spans include queue and
+service time. They are not isolated replay penalties.

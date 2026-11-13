@@ -1,0 +1,69 @@
+{
+  "schema": "rvw.lsu-retry-statistics/1",
+  "status": "observed",
+  "causes": {
+    "cache_miss_retry": {
+      "counts": {
+        "attempts": 6922,
+        "linked": 6922,
+        "reused": 1,
+        "rejected_again": 1740,
+        "flushed": 3
+      },
+      "retry_to_completion_histogram": {
+        "5": 4,
+        "7": 27,
+        "8": 124,
+        "9": 344,
+        "10": 537,
+        "11": 651,
+        "12": 722,
+        "13": 765,
+        "14": 490,
+        "15": 483,
+        "16": 358,
+        "17": 196,
+        "18": 301,
+        "19": 120,
+        "21": 49,
+        "23": 7
+      }
+    },
+    "memory_order_violation": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    },
+    "store_forward_miss": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    },
+    "tlb_miss": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    }
+  },
+  "findings": [],
+  "limits": [
+    "completion spans include service and queue waits; they are not isolated recovery costs",
+    "flushed, repeated and incomplete attempts do not supply a completion span"
+  ],
+  "core": "naxriscv",
+  "rtl": {
+    "status": "pass",
+    "cycles": 26692,
+    "instret": 31185
+  },
+  "retire_probe_count": 31185,
+  "captures": {
+    "probe-events.jsonl": "18c86a39be54d543e4ad6b27394f22b5d25e1a8433aeea99387cf0bfff15e826",
+    "rvfi.jsonl": "4eefcba59c7da03fb33ff8f6ab838d0508e8735f99bf8c0505f04356abf74720",
+    "result.json": "389c4db89e62471bfc6eaba74f0c050d4fbddef55b66b5d66d05a10e5314a880"
+  },
+  "spike": {
+    "status": "match",
+    "instructions": 31185,
+    "trace_complete": true,
+    "synchronized": 6
+  },
+  "seed": 2115683952
+}

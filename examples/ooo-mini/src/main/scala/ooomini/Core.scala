@@ -435,6 +435,11 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   Probe.stageAt("rename","Rn",push,nextId,Some(pc),first = true)
   Probe.stageAt("issue","Is",issue,ids(selected),Some(pcs(selected)))
   Probe.stageAt("commit","Cm",pop,ids(head),Some(pcs(head)))
+  // No LSU attempt can be rejected: loads wait before issue, byte forwarding always
+  // merges, RAM is combinational, and there is no translation. Declare zero support
+  // explicitly. Do not turn pre-issue waits into retry events.
+  for (cause <- Seq("memory_order_violation", "store_forward_miss", "cache_miss_retry", "tlb_miss"))
+    Probe.lsuRetry(cause,False,ids(selected),cause)
   Probe.retire("commit",pop && !faults(head),ids(head))
   Probe.flushYounger("recovery",redirect,ids(head),faults(head))
   Probe.custom("flush_reason",redirect,"reason" -> Mux(faults(head),U(1,2 bits),U(2,2 bits)))

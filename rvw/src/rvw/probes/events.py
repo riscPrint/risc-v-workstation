@@ -8,7 +8,7 @@ from pathlib import Path
 
 SCHEMA = "rvw.probe-events/1"
 KINDS = ("branch", "cache", "bus", "tlb", "walk", "stage", "retire", "flush", "stall", "csr", "interrupt",
-         "trace", "counter", "fault", "custom", "dependency")
+         "trace", "counter", "fault", "custom", "dependency", "lsuretry")
 
 
 @dataclass
@@ -58,6 +58,12 @@ def _open(path: Path):
 def parse_probe(d: dict) -> Probe:
     if d.get("kind") not in KINDS:
         raise ValueError(f"unknown probe kind {d.get('kind')!r}")
+    if d["kind"] == "lsuretry":
+        if (d.get("meta") or {}).get("cause") not in (
+                "memory_order_violation", "store_forward_miss", "cache_miss_retry", "tlb_miss"):
+            raise ValueError("unknown LSU retry cause")
+        if [n for n, _ in d["fields"]] != ["id"]:
+            raise ValueError("LSU retry requires only the instruction id field")
     return Probe(int(d["id"]), d["kind"], str(d["name"]), [(str(n), int(w)) for n, w in d["fields"]],
                  dict(d.get("meta") or {}))
 
