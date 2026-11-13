@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT] [--json]
-    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,replay-pack,replay,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
     ...
 ```
 
@@ -399,7 +399,8 @@ usage: rvw checks generate [-h] --all [--json] [--manifest MANIFEST] [--out
 
 ```text
 usage: rvw checks report [-h] --inventory INVENTORY [--run RUN] [--formal
-    FORMAL] --out OUT [--project PROJECT] [--json]
+    FORMAL] [--dispositions DISPOSITIONS] --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw cosim`
@@ -716,7 +717,7 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 
 ```text
 usage: rvw debug [-h] [--project PROJECT] [--json]
-    {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss,ntrace-check,ntrace-loss,trace-adapter}
+    {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss,ntrace-check,ntrace-loss,ingress-check,trace-adapter}
     ...
 ```
 
@@ -807,6 +808,15 @@ usage: rvw debug ntrace-check [-h] --rvfi RVFI --elf ELF --out OUT [--mode
 usage: rvw debug ntrace-loss [-h] --rvfi RVFI --elf ELF --out OUT [--mode
     {htm,btm}] [--sync-period SYNC_PERIOD] [--adapter ADAPTER] [--at AT]
     [--project PROJECT] [--json]
+```
+
+### `rvw debug ingress-check`
+
+```text
+usage: rvw debug ingress-check [-h] --ingress INGRESS --rvfi RVFI --elf ELF
+    --out OUT [--mode {htm,btm}] [--sync-period SYNC_PERIOD] [--reference
+    REFERENCE] [--static-config STATIC_CONFIG] [--user-config USER_CONFIG]
+    [--toolchain TOOLCHAIN] [--project PROJECT] [--json]
 ```
 
 ### `rvw debug trace-adapter`
@@ -1000,7 +1010,7 @@ usage: rvw fault report [-h] [--project PROJECT] [--json] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT] [--json]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-state,strategy,sva-inspect,uf-prove}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-m,sail-state,strategy,sva-inspect,uf-prove}
     ...
 ```
 
@@ -1152,7 +1162,7 @@ usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
-    [--json] [--project PROJECT] [manifest]
+    [--json] [--proof-cache PROOF_CACHE] [--project PROJECT] [manifest]
 ```
 
 ### `rvw formal properties`
@@ -1546,6 +1556,15 @@ usage: rvw formal cover-hunt [-h] --manifest MANIFEST --out OUT [--budget
     BUDGET] [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
+### `rvw formal equiv-partitions`
+
+```text
+usage: rvw formal equiv-partitions [-h] --gold GOLD [GOLD ...] --gate GATE
+    [GATE ...] --top TOP [--clock CLOCK] [--reset RESET] [--reset-cycles
+    RESET_CYCLES] [--settle SETTLE] [--max-partitions MAX_PARTITIONS]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+```
+
 ### `rvw formal ic3-lemmas`
 
 ```text
@@ -1601,6 +1620,13 @@ usage: rvw formal revision-bench [-h] --base BASE --revised REVISED --out OUT
 ```text
 usage: rvw formal riscv-proof [-h] --out OUT [--checks CHECKS] [--engines
     ENGINES] [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw formal sail-m`
+
+```text
+usage: rvw formal sail-m [-h] --model MODEL [--compiler COMPILER] --out OUT
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw formal sail-state`
@@ -1819,7 +1845,7 @@ usage: rvw probes [-h] [--project PROJECT] [--json]
 
 ```text
 usage: rvw probes check [-h] (--db DB | --events EVENTS) [--require REQUIRE]
-    [--json] [--project PROJECT]
+    [--validate] [--c2 C2] [--json] [--project PROJECT]
 ```
 
 ### `rvw probes list`
@@ -2332,6 +2358,20 @@ usage: rvw regress plan [-h] --features FEATURES [--catalog CATALOG] [--json]
     [--project PROJECT]
 ```
 
+### `rvw replay-pack`
+
+```text
+usage: rvw replay-pack [-h] --recipe RECIPE --out OUT [--checkpoint-cycle
+    CHECKPOINT_CYCLE] [--project PROJECT] [--json] run_dir
+```
+
+### `rvw replay`
+
+```text
+usage: rvw replay [-h] --out OUT [--timeout TIMEOUT] [--lock LOCK] [--project
+    PROJECT] [--json] archive
+```
+
 ### `rvw sec`
 
 ```text
@@ -2660,9 +2700,11 @@ usage: rvw uvm qualification [-h] --cpu-results CPU_RESULTS --probes PROBES
 ### `rvw uvm new`
 
 ```text
-usage: rvw uvm new [-h] --db DB --soc SOC --out OUT [--language {pyuvm,sv}]
-    [--profile {auto,cpu,apb,axi,axi-lite,tilelink,axis,uart,spi,i2c}]
-    [--adapter ADAPTER] [--rtl RTL [RTL ...]] [--project PROJECT] [--json]
+usage: rvw uvm new [-h] (--db DB | --composition COMPOSITION) [--soc SOC]
+    --out OUT [--language {pyuvm,sv}] [--profile
+    {auto,cpu,apb,axi,axi-lite,tilelink,axis,uart,spi,i2c}] [--adapter
+    ADAPTER] [--port-map PORT_MAP] [--rtl RTL [RTL ...]] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw uvm features`
@@ -2743,14 +2785,15 @@ usage: rvw vip list [-h] [--project PROJECT] [--json]
 ### `rvw vip buses`
 
 ```text
-usage: rvw vip buses [-h] --db DB [--project PROJECT] [--json]
+usage: rvw vip buses [-h] [--port-map PORT_MAP] --db DB [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw vip bench`
 
 ```text
-usage: rvw vip bench [-h] --db DB [--bus BUS] --out OUT [--clock CLOCK]
-    [--reset RESET] [--project PROJECT] [--json]
+usage: rvw vip bench [-h] [--port-map PORT_MAP] --db DB [--bus BUS] --out OUT
+    [--clock CLOCK] [--reset RESET] [--project PROJECT] [--json]
 ```
 
 ### `rvw wave`
@@ -3281,7 +3324,7 @@ Starts a background job: yes.
 
 Count generated, bound, proven, bounded, fired and unbound checks. Missing evidence stays null.
 
-Arguments: `inventory` (required), `runs`, `formal`.
+Arguments: `inventory` (required), `runs`, `formal`, `dispositions`.
 
 Starts a background job: no.
 
@@ -3541,6 +3584,14 @@ Arguments: none.
 
 Starts a background job: no.
 
+### `debug_ingress_check`
+
+Compare RTL trace-encoder ingress (te_ingress.csv from RiscvSim --trace-ingress) with C2, then trace the run from it with N-Trace and, given the pinned reference checkout, E-Trace. match only when every part matches; ingress is not encoder evidence.
+
+Arguments: `out` (required), `ingress` (required), `rvfi` (required), `elf` (required), `mode`, `sync_period`, `reference`, `static_config`, `user_config`, `toolchain`.
+
+Starts a background job: no.
+
 ### `debug_interop`
 
 Run OpenOCD and GDB against a remote_bitbang target (or the reference model for a profile): load, register and memory writes, breakpoints, stepping, watchpoint and reset-halt, checked by effect. Records client versions. Writes C3.
@@ -3617,7 +3668,7 @@ Starts a background job: yes.
 
 Write filtered C3/C4 history. Missing evidence remains visible.
 
-Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate`, `run`.
+Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate`, `run`, `run_id`.
 
 Starts a background job: yes.
 
@@ -3901,6 +3952,14 @@ Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (r
 
 Starts a background job: yes.
 
+### `formal_equiv_partitions`
+
+Prove matched register observations in independent closed cones. No internal cut equality assumptions.
+
+Arguments: `gold` (required), `gate` (required), `top` (required), `clock`, `reset`, `reset_cycles`, `settle`, `max_partitions`, `timeout`, `out` (required).
+
+Starts a background job: yes.
+
 ### `formal_from_sim`
 
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
@@ -4033,7 +4092,7 @@ Starts a background job: yes.
 
 Run declared SBY property tasks with a CPU worker cap. Return conditional C3 and JUnit observations.
 
-Arguments: `manifest`, `project`, `out` (required), `jobs`, `timeout`.
+Arguments: `manifest`, `project`, `out` (required), `proof_cache`, `jobs`, `timeout`.
 
 Starts a background job: yes.
 
@@ -4104,6 +4163,14 @@ Starts a background job: yes.
 ### `formal_sail_bitmanip`
 
 Compile pinned Sail RV32 binary Zba/Zbb/Zbs/Zbc result checks. Full-machine and disabled-extension traps are excluded.
+
+Arguments: `model` (required), `compiler`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_sail_m`
+
+Compile pinned Sail RV32 M arithmetic expressions. Generation is not a core proof.
 
 Arguments: `model` (required), `compiler`, `out` (required).
 
@@ -4463,9 +4530,9 @@ Starts a background job: yes.
 
 ### `probes_check`
 
-Name missing required probe kinds or kind/name bindings. Presence is not runtime correctness.
+Name missing required probe kinds or kind/name bindings. With validate (or c2), also validate an event stream against the contract (fields, end record, counters, instruction IDs, walk grouping; retired-event probes against C2) and name each misplaced probe. Clean is not a wiring proof.
 
-Arguments: `db`, `events`, `require`.
+Arguments: `db`, `events`, `require`, `c2`, `validate`.
 
 Starts a background job: no.
 
@@ -4813,6 +4880,22 @@ Arguments: `model` (required), `work_dir` (required), `sail_endpoint` (required)
 
 Starts a background job: yes.
 
+### `replay_pack`
+
+Pack a conclusive failing C1/C2 run, ELF, stimulus, pinned sources and a from-reset trace checkpoint into one offline archive.
+
+Arguments: `run_dir` (required), `recipe` (required), `out` (required), `checkpoint_cycle`.
+
+Starts a background job: yes.
+
+### `replay_run`
+
+Rebuild an offline replay archive and verify failure signature, RTL, complete C2 and trace-checkpoint prefix/suffix. Live native state portability is not implied.
+
+Arguments: `archive` (required), `out` (required), `timeout`, `lock`.
+
+Starts a background job: yes.
+
 ### `rvw_doctor`
 
 Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.
@@ -4969,7 +5052,7 @@ Starts a background job: no.
 
 Check complete declared bindings and export structural SoC checks. No proof result is inferred.
 
-Arguments: `source` (required), `db_path` (required), `bindings` (required), `out` (required).
+Arguments: `source` (required), `db_path`, `bindings` (required), `out` (required), `db`.
 
 Starts a background job: yes.
 
@@ -4993,7 +5076,7 @@ Starts a background job: no.
 
 Link external reports to RTL and Scala. Imported claims only.
 
-Arguments: `db_path` (required), `source` (required), `out` (required).
+Arguments: `db_path`, `source` (required), `out` (required), `db`.
 
 Starts a background job: no.
 
@@ -5001,7 +5084,7 @@ Starts a background job: no.
 
 Export captured implementation inputs. This is not signoff evidence.
 
-Arguments: `db_path` (required), `out` (required), `settings`.
+Arguments: `db_path`, `out` (required), `settings`, `db`.
 
 Starts a background job: no.
 
@@ -5009,7 +5092,7 @@ Starts a background job: no.
 
 Export memory BIST intent and unrun functional isolation obligations.
 
-Arguments: `db_path` (required), `source` (required), `out` (required).
+Arguments: `db_path`, `source` (required), `out` (required), `db`.
 
 Starts a background job: no.
 
@@ -5105,7 +5188,7 @@ Starts a background job: no.
 
 Generate a database-selected project profile or an automatic APB reset bench.
 
-Arguments: `db` (required), `soc` (required), `out` (required), `rtl`, `language`, `profile`, `adapter`.
+Arguments: `db`, `soc`, `out` (required), `rtl`, `language`, `profile`, `port_map`, `adapter`, `composition`.
 
 Starts a background job: no.
 
@@ -5153,7 +5236,7 @@ Starts a background job: no.
 
 Generate a bound cocotb skeleton. It requires project stimulus and expectations.
 
-Arguments: `db` (required), `out` (required), `bus`, `clock`, `reset`.
+Arguments: `db` (required), `out` (required), `bus`, `clock`, `reset`, `port_map`.
 
 Starts a background job: no.
 
@@ -5161,7 +5244,7 @@ Starts a background job: no.
 
 List supported typed buses from SpinalDB.
 
-Arguments: `db` (required).
+Arguments: `db` (required), `port_map`.
 
 Starts a background job: no.
 
