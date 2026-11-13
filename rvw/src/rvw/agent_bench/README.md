@@ -91,3 +91,33 @@ an inconclusive outcome. A correct arithmetic patch cannot earn a repair result
 when required evidence is missing. A claimed fix counts as a false fix in that
 case. The report retains the required and preserved inconclusive counts.
 These are declared fixture defects. They do not validate real wave or ELF files.
+
+## Bounded external client trials
+
+```sh
+rvw agent-bench trial --pack examples/agent-bench/tasks.json --task task-03 \
+  --out /tmp/external-baseline --budget-s 30 --max-calls 32 --repeats 2 \
+  --model 'scripted MCP baseline' -- python -m rvw.agent_bench.external_client
+```
+
+Replace the client argv after `--` with the external agent CLI. Configure that
+client to use only the supplied MCP endpoint. Disable its other tools.
+The runner passes `RVW_BENCH_MCP_URL` and `RVW_BENCH_MCP_TOKEN` in the child
+environment. It does not pass a task pack path or hidden checks to the client.
+The child starts in an empty trial directory. The evaluator serves only the
+fixture tool allowlist. The runner does not grant shell or file tools over MCP.
+It is not an OS sandbox. An independently configured CLI still has its host
+permissions. Hostile clients are outside C8 scope.
+
+The runner stops the process group at the wall-time limit. The evaluator owns
+the session and retains partial transcripts on timeout, disconnect or a missing
+client executable. Its call limit includes invalid and rejected requests.
+Each repetition records the command, model label, machine, budget, wall time,
+exit code, task pack digest, scores and denominators. The token is not stored.
+`results.json` is updated after each repetition. Incomplete trials stay in the
+denominator. Existing output directories are refused.
+
+MCP tool: `agent_bench_trial`. The scripted client uses the same external MCP
+path as other clients. `careless`, `disconnect` and `timeout` arguments exercise
+negative paths. No LLM trial is implied by a scripted result. This command uses
+the fixture track. It cannot earn native repair acceptance or replace review.
