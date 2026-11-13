@@ -558,7 +558,7 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 
 ```text
 usage: rvw debug [-h] [--project PROJECT]
-    {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss}
+    {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss,ntrace-check,ntrace-loss,trace-adapter}
     ...
 ```
 
@@ -631,6 +631,28 @@ usage: rvw debug etrace-check [-h] --reference REFERENCE --static-config
 usage: rvw debug etrace-loss [-h] --reference REFERENCE --static-config
     STATIC_CONFIG --user-config USER_CONFIG --toolchain TOOLCHAIN --rvfi RVFI
     --out OUT [--packets PACKETS] [--at AT] [--project PROJECT]
+```
+
+### `rvw debug ntrace-check`
+
+```text
+usage: rvw debug ntrace-check [-h] --rvfi RVFI --elf ELF --out OUT [--mode
+    {htm,btm}] [--sync-period SYNC_PERIOD] [--adapter ADAPTER] [--packets
+    PACKETS] [--filter FILTER] [--loss-at LOSS_AT] [--project PROJECT]
+```
+
+### `rvw debug ntrace-loss`
+
+```text
+usage: rvw debug ntrace-loss [-h] --rvfi RVFI --elf ELF --out OUT [--mode
+    {htm,btm}] [--sync-period SYNC_PERIOD] [--adapter ADAPTER] [--at AT]
+    [--project PROJECT]
+```
+
+### `rvw debug trace-adapter`
+
+```text
+usage: rvw debug trace-adapter [-h] [--project PROJECT] adapter
 ```
 
 ### `rvw doctor`

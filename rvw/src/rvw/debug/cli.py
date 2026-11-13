@@ -84,6 +84,25 @@ def register(subparsers):
             cmd.add_argument('--at', type=int, action='append', help='packet index to damage (repeatable)')
             cmd.set_defaults(func=_etrace_loss)
 
+    ncheck = sub.add_parser('ntrace-check', help='expected N-Trace stream from C2; compare a capture (separate from E-Trace)')
+    nloss = sub.add_parser('ntrace-loss', help='N-Trace loss and resynchronization campaign (C3)')
+    for cmd in (ncheck, nloss):
+        cmd.add_argument('--rvfi', required=True, type=Path)
+        cmd.add_argument('--elf', required=True, type=Path, help='program image for the decoder')
+        cmd.add_argument('--out', required=True, type=Path)
+        cmd.add_argument('--mode', choices=('htm', 'btm'), default='htm')
+        cmd.add_argument('--sync-period', type=int, default=0, help='periodic ProgTraceSync after N address messages')
+        cmd.add_argument('--adapter', type=Path, help='rvw.trace-adapter/1 file (overrides --mode and --sync-period)')
+    ncheck.add_argument('--packets', type=Path, help='captured encoder bytes (MDO/MSEO)')
+    ncheck.add_argument('--filter', type=Path)
+    ncheck.add_argument('--loss-at', type=int, action='append', default=[], help='message index after a known gap')
+    ncheck.set_defaults(func=_ntrace_check)
+    nloss.add_argument('--at', type=int, action='append')
+    nloss.set_defaults(func=_ntrace_loss)
+    adapter = sub.add_parser('trace-adapter', help='check a vendor trace adapter against its known packet vectors')
+    adapter.add_argument('adapter', type=Path)
+    adapter.set_defaults(func=_trace_adapter)
+
 
 def _profile(path):
     from . import profile
@@ -208,3 +227,40 @@ def _etrace_loss(args):
         result = {'status': 'inconclusive', 'reason': str(exc), 'exit': 3}
     print(json.dumps(result, sort_keys=True))
     return result['exit']
+
+
+
+def _ntrace_args(args):
+    return dict(mode=args.mode, sync_period=args.sync_period, adapter=args.adapter)
+
+
+def _ntrace_check(args):
+    from . import api
+    try:
+        result = api.ntrace_check(args.out, args.rvfi, args.elf, packets=args.packets, filter_path=args.filter,
+                                  losses=args.loss_at, **_ntrace_args(args))
+    except (OSError, ValueError, KeyError) as exc:
+        result = {'status': 'inconclusive', 'reason': str(exc)}
+    print(json.dumps({k: v for k, v in result.items() if k != 'windows'}, sort_keys=True))
+    return {'flow_match': 0, 'mismatch': 1, 'leak': 1}.get(result['status'], 3)
+
+
+def _ntrace_loss(args):
+    from . import api
+    try:
+        result = api.ntrace_loss(args.out, args.rvfi, args.elf, positions=args.at, **_ntrace_args(args))
+    except (OSError, ValueError, KeyError) as exc:
+        result = {'status': 'inconclusive', 'reason': str(exc), 'exit': 3}
+    print(json.dumps(result, sort_keys=True))
+    return result['exit']
+
+
+def _trace_adapter(args):
+    from . import api
+    try:
+        result = api.trace_adapter(args.adapter)
+    except (OSError, ValueError) as exc:
+        print(json.dumps({'status': 'error', 'reason': str(exc)}))
+        return 2
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result['verified'] else 1

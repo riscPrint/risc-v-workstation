@@ -1,0 +1,34 @@
+# Trace adapter template (rvw.trace-adapter/1). Copy it for a vendor encoder.
+# Replace `specification` with the vendor document, version and URL, `license` with its
+# usage terms, the [ntrace] parameters with the documented values, and the vectors with
+# packet bytes and messages taken from that document or from a qualified capture.
+# The vectors below come from the rvw codec itself: they pin the rvw layout only.
+# They are not vendor evidence. A vendor name alone is never accepted.
+schema = "rvw.trace-adapter/1"
+name = "rvw-nexus-htm-template"
+vendor = "none"
+codec = "rvw-ntrace/1"
+specification = "rvw codec rvw-ntrace/1 (rvw/src/rvw/debug/ntrace.py); not a vendor specification"
+license = "same terms as this repository"
+
+[ntrace]
+mode = "htm"
+src_bits = 0
+hist_bits = 31
+sync_period = 2
+
+[[vectors]]
+bytes = "24 05 00 00 00 00 00 07"
+messages = [{tcode = "ProgTraceSync", sync = 1, icnt = 0, faddr = 1073741824}]
+
+[[vectors]]
+bytes = "70 71 b1 17"
+messages = [{tcode = "IndirectBranchHist", btype = 0, icnt = 7, uaddr = 44, hist = 5}]
+
+[[vectors]]
+bytes = "20 03 6c c4 fc 07"
+messages = [{tcode = "Error", etype = 0, ecode = 0}, {tcode = "ResourceFull", rcode = 1, rdata = 511}]
+
+[[vectors]]
+bytes = "84 50 0d 07"
+messages = [{tcode = "ProgTraceCorrelation", evcode = 4, cdf = 1, icnt = 3, hist = 1}]
