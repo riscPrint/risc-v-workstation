@@ -85,7 +85,7 @@ def assess(output, returncode, timed_out, *, expect_reset, allowed_unsupported=(
         status = 'fail'
     elif timed_out or not complete or 'RVW_CONNECTED' not in output:
         status = 'inconclusive'
-    elif checks != expected:
+    elif returncode or checks != expected:
         status = 'fail'
     else:
         status = 'pass'
@@ -163,6 +163,10 @@ def write_c3(summary, out):
             test.update(status='error', signature='inconclusive',
                         inconclusive='not reached: ' + ('; '.join(summary['failures']) or 'campaign incomplete'))
         tests.append(test)
+    if summary['status'] != 'pass' and all(t['status'] == 'pass' for t in tests):
+        tests.append({'id': 'interop.campaign', 'status': 'error', 'signature': 'inconclusive',
+                      'inconclusive': f"client campaign did not pass: returncode={summary['returncode']}, "
+                                      f"timed_out={summary['timed_out']}"})
     results = {'schema': 'rvw.results/1', 'run_id': f'{created.replace(":", "-")}-debug-interop',
                'suite': 'debug-interop', 'core': summary['target'], 'config': 'openocd-gdb', 'created': created,
                'source': {}, 'tests': tests,
