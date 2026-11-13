@@ -113,7 +113,7 @@ object RiscvSimConfig {
       val hash = ElfFile.sha256(java.nio.file.Files.readAllBytes(source.toPath))
       cfg.addSimulatorFlag(s"-CFLAGS -DRVW_COSIM_DPI_$hash")
     }
-    if (key.wave) cfg.withVcdWave
+    if (key.wave) cfg.withFstWave
     // Fault models write registers from outside; Verilator must re-evaluate their readers.
     if (key.faults) cfg.addSimulatorFlag("--public-flat-rw")
     if (key.coverage) {
@@ -166,7 +166,7 @@ class SimControl(val job: RunJob, val wall: WallClock = WallClock.none) {
 
 object SimSession {
   /** Wave file name Spinal writes in the run directory. */
-  val waveFile = "wave.vcd"
+  val waveFile = "wave.fst"
   val coverageFile = "coverage.dat"
 
   /**

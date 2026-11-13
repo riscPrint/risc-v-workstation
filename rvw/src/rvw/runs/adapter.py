@@ -299,9 +299,12 @@ def _collect(d: Path, started: float, cmd: Command | None = None) -> tuple[Run |
 
 
 def execute(cmd: Command, out: Path, core: str | None = None, log: Path | None = None,
-            timeout: float | None = None, lock: bool = True) -> Attempt:
+            timeout: float | None = None, lock: bool = True, server: str | None = None) -> Attempt:
     """Run `cmd` with `--out` set to a fresh directory derived from `out` (see `fresh_dir`).
     `timeout` starts once the core lock is held."""
+    if server is not None:
+        from rvw.sim.server import execute as execute_server
+        return execute_server(server, cmd, out, timeout)
     d = fresh_dir(out)
     c = cmd.set(out=str(d))
     resolution_error = c.env.get('RVW_ADAPTER_RESOLUTION_ERROR')

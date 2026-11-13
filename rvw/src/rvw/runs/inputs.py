@@ -111,6 +111,33 @@ class DebugInputs(WaveInputs):
             self.adapter_registry = self.adapter_registry_tree.copy / original.name
         return cfg, path
 
+    def live_command(self, run):
+        """Capture request bytes for the original live session, without a source checkout.
+
+        The bundle separately requires the original session and RTL identity.
+        No adapter executable or copied source tree is launched on this path.
+        """
+        from . import adapter
+        import hashlib
+        cmd = adapter.command_for(run, root=self.root)
+        if cmd.sub != 'run':
+            raise ValueError('live rerun requires a single-run command')
+        cmd = cmd.set(elf=str(snapshot_elf(run, self.capture.root.parent, self.capture, root=self.root)))
+        for name in ('boot_payloads', 'hart_images', 'fault'):
+            if cmd.get(name) is not None:
+                raise ValueError('live bundle does not capture this structured input: ' + name)
+        if cmd.get('soc_map') is not None:
+            original = run.artifact('soc_map')
+            if original is None:
+                raise ValueError('live bundle needs the captured simulation map')
+            saved = self.file(original)
+            expected = run.get('soc_map_sha256')
+            if not expected or hashlib.sha256(saved.read_bytes()).hexdigest() != expected:
+                raise ValueError('captured simulation map digest differs')
+            cmd = cmd.set(soc_map=str(saved))
+        cmd.inputs = self
+        return cmd
+
     def command(self, run, cfg, *, source=True):
         from . import adapter
         cmd = adapter.command_for(run, root=self.root)

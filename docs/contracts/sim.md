@@ -325,3 +325,32 @@ owns a fresh handle. The adapter serializes tick and MMIO calls at sampled
 boundaries and supplies all address and interrupt routing data. Libraries
 remain loaded for the process lifetime. Callback failure stops the operation.
 This binding does not provide checkpoint capture or restore.
+
+## Local live simulation service and FST
+
+Generic RiscvSim wave models now write `wave.fst` by default. The model key
+records `wave_format: fst` and uses a separate wave workspace name. Cycle
+windows still enable and disable capture inside the native simulator.
+
+`rvw sim server --socket PATH --command JSON` owns one native adapter process.
+JSON is an argument array ending in `serve`. The local Unix socket accepts
+one JSON job per connection and returns the adapter's `rvw.sim-server/1`
+reply. Jobs execute serially. An `op: shutdown` request ends the process.
+A native timeout or exit stops the service. A service owns its socket and
+refuses an existing socket or log. The adapter command retains responsibility
+for project locks, captured inputs and native identity.
+
+MCP `sim_server_request` submits jobs to this socket. `rvw bundle --sim-server
+PATH` requests wave/trace reruns through it. The bundle requires the original
+and rerun simulation-session IDs to match before using the rerun as reproduced
+evidence. Its existing ELF/options checks, failure signature and cycle checks
+still apply. Captured command inputs are verified. Unsupported historical
+adapter selections remain errors. Live requests do not change the already
+running adapter's source, native environment or build options.
+
+Live bundle reproduction also requires equal generated RTL hashes. The live
+path captures request ELF bytes and a captured simulation map. It does not
+launch or copy another core tree. Structured boot payloads, hart images and
+fault-file inputs currently refuse this live path. Normal process reruns keep
+the existing source-capture path. Live C5 replay scripts still require the
+original project setup; they are not standalone portable archives.

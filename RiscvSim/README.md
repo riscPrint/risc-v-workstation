@@ -140,7 +140,7 @@ required workloads visible; they cannot be replaced by faster passing workloads.
 | `run.log` | always | the run's harness lines, and native output (Verilator `$display`, simulator messages) printed while it was the only active run; output printed while other runs were active is left out (it is in the adapter's stderr), with one line saying so |
 | `run.concurrent.log` | see below | the first attempt's log of a failure that was rerun alone |
 | `rvfi.jsonl` | `--rvfi-trace` | C2 trace: header, one record per retirement in `order`, `trap` events, an `end` event |
-| `wave.vcd` | `--wave` | VCD of the whole design. With `--wave-from/--wave-to`, dumping is switched on and off at those cycles inside the simulator (not cut afterwards). Time of cycle N = `details.wave_time_of_cycle_1 + (N - 1) * details.wave_time_per_cycle`. |
+| `wave.fst` | `--wave` | FST of the whole design. With `--wave-from/--wave-to`, dumping is switched on and off at those cycles inside the simulator (not cut afterwards). Time of cycle N = `details.wave_time_of_cycle_1 + (N - 1) * details.wave_time_per_cycle`. |
 | `konata.log` | `--konata` | Konata pipeline log (spinal-boom's KonataTracer); `details.konata_desyncs` should be 0 |
 | `coverage.dat` | `--coverage` | Verilator coverage of this run only. Source paths point at `details.rtl_dir`, a stable copy of the generated Verilog, so `verilator_coverage` can merge runs and annotate. |
 
@@ -1145,3 +1145,11 @@ the map and implementation to the same settled RTL boundary. The
 fresh-process restore against complete C2 and UART output. This uses live
 bridge state. It does not serialize the JVM scheduler or qualify cross-build
 or cross-machine restore.
+
+## Default FST capture
+
+Generic wave models use FST. `--wave-from` and `--wave-to` still control native
+capture at simulation cycles. C1 records the FST artifact and model format.
+The [local service](../rvw/src/rvw/sim/README.md#live-server-and-failure-windows)
+lets `rvw bundle` request a failure window from the original live JVM.
+The VexRiscv adapter records its first sampled wave time and fixed clock period.

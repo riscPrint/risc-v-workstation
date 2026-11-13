@@ -74,12 +74,13 @@ object VexAdapter extends CoreAdapter {
     var markers = 0
     var roiActive = false
     var roiLoads, roiStores, roiBranches, roiRetired = 0L
+    var waveStart = -1L
     var retired = 0L
     var traps = 0L
     var nextOrder = BigInt(0)
     var handler = false
     val (status, code, message, cycles) = try {
-      val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
+      val result = SimSession.runCtl(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
         dut.lockstepDpi.foreach(_.initialize())
         val header = if (captureCsrs) ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
@@ -241,7 +242,8 @@ object VexAdapter extends CoreAdapter {
       if (!traceEnded && !sys.env.get("RVW_COSIM_DPI").contains("1"))
         writer.foreach(_.end(result._4, result._1.name))
       probes.foreach(_.close(result._4))
-      result
+      waveStart = result._5.timeOfCycle1
+      (result._1, result._2, result._3, result._4)
     } finally { writer.foreach(_.close()); capture.foreach(_.close()); probes.foreach(_.abandon()) }
     val metrics = ujson.Obj()
     bench.filter(_.complete).filter(_ => markers == 2).foreach { b =>
@@ -253,7 +255,9 @@ object VexAdapter extends CoreAdapter {
       metrics("roi_branches") = RvwJson.num(roiBranches)
     }
     RunOutcome(status, cycles, retired, code, message,
-      ujson.Obj("traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
+      ujson.Obj("wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(waveStart),
+        "wave_window" -> ujson.Obj("from" -> job.waveFrom.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null), "to" -> job.waveTo.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null)),
+        "traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
         "device_output" -> devices.map(_.outputs).getOrElse(ujson.Obj()), "rvfi_monitor" -> false, "memory_bytes" -> job.socMap.map(m => ujson.Str(m.regions.map(_.size).sum.toString)).getOrElse(ujson.Num(16777216)), "roi_markers" -> markers), metrics)
   }
 }

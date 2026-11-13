@@ -806,3 +806,16 @@ cover four packed command checks. No unbounded proof or activation evidence was
 obtained. Other design inputs remain arbitrary. The native run used a private
 Scala compile with cached dependency jars to avoid the shared sbt queue.
 See [the recorded summary](checks-qualification.json) for counts and limits.
+
+## FST failure windows on the live server
+
+The example records its sampled wave clock in C1 and has a minimal project
+debug configuration. Generic RiscvSim uses FST. `rvw bundle --sim-server PATH`
+can request the failure window from the same JVM that produced the failure.
+The test `rvw/tests/test_live_fst_bundle.py` requires the original session and
+RTL hash, an FST artifact and the bundle's selected VCD window.
+
+The native sample reproduced a deliberate tohost failure at cycle 9,023.
+It requested cycles 8,923 through 9,043. The same process and session supplied
+`wave.fst`, and the bundle produced `wave-window.vcd` with no notes. This is a
+fixture, not a newly found core defect. See [the sample](rvw/live-fst-results.json).

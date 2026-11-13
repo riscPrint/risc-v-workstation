@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.live-fst-sample/1",
+  "fixture": "deliberate tohost failure on real VexRiscv RTL",
+  "status": "fail",
+  "cycles": 9023,
+  "rerun_status": "fail",
+  "rerun_cycles": 9023,
+  "same_session": true,
+  "same_process": true,
+  "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+  "same_rtl": true,
+  "wave_format": "fst",
+  "wave_window": {
+    "from": 8923,
+    "to": 9043
+  },
+  "fst_bytes": 19511,
+  "bundle_reproduced": true,
+  "files": [
+    "retired",
+    "wave_window",
+    "replay",
+    "summary"
+  ]
+}

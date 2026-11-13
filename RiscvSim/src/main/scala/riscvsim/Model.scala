@@ -22,9 +22,9 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
                     konata: Boolean = false, spinaltrace: Boolean = false, probes: Boolean = false,
                     faults: Boolean = false) {
   def name: String = config + (if (rvfi) "_rvfi" else "") + (if (konata) "_konata" else "") +
-    (if (wave) "_wave" else "") + (if (coverage) "_cov" else "") + (if (spinaltrace) "_spinaltrace" else "") +
+    (if (wave) "_wave_fst" else "") + (if (coverage) "_cov" else "") + (if (spinaltrace) "_spinaltrace" else "") +
     (if (probes) "_probes" else "") + (if (faults) "_fault" else "")
-  def toJson: ujson.Obj = ujson.Obj("config" -> config, "rvfi" -> rvfi, "wave" -> wave, "coverage" -> coverage,
+  def toJson: ujson.Obj = ujson.Obj("config" -> config, "rvfi" -> rvfi, "wave" -> wave, "wave_format" -> (if (wave) ujson.Str("fst") else ujson.Null), "coverage" -> coverage,
     "coverage_types" -> (if (coverage) ujson.Arr.from(RiscvSimConfig.coverageTypes) else ujson.Arr()), "konata" -> konata, "spinaltrace" -> spinaltrace, "probes" -> probes, "faults" -> faults, "name" -> name)
 }
 
