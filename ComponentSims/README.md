@@ -28,6 +28,7 @@ rvw csim run STUDY.json TRACE... [--set KEY=VALUE] [--json]
 rvw csim sweep STUDY.json TRACE... --param branch.max_history=320,640 \
     --param branch.table_entries=1024,2048 --budget-kib 64 --metric direction_mpki
 rvw csim budget STUDY.json                        # storage per table, no trace
+rvw csim compare BASE.json CANDIDATE.json [--tolerance 0.02]   # per-trace deltas of two run reports
 rvw csim convert c2 rvfi.jsonl --out t.csim [--values]
 rvw csim convert bt9 trace.bt9.gz --out t.csim
 rvw csim compare-rtl STUDY.json --trace rvfi.jsonl --events EVENTS
@@ -39,8 +40,8 @@ rvw csim build                                    # engine and library paths
 ```
 
 The same operations are MCP tools: `csim_run`, `csim_sweep`, `csim_budget`,
-`csim_models`, `csim_convert`, `csim_qualify`, `csim_simpoint`, `csim_run_points`
-and `csim_compare_rtl`.
+`csim_models`, `csim_convert`, `csim_qualify`, `csim_simpoint`, `csim_run_points`,
+`csim_compare` and `csim_compare_rtl`.
 The first `rvw` call compiles the engine with the system C++17 compiler into
 `~/.cache/rvw/csim/<source hash>/` (`RVW_CSIM_CACHE` changes the place).
 

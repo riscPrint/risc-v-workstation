@@ -32,6 +32,11 @@ def _run_points(study, trace, points, job, **kw):
     return run_function(job, "rvw.csim.cli", "run_points_json", dict(study=study, trace=trace, points=points, **kw))
 
 
+def _compare_reports(base, candidate, tolerance=0.0):
+    from .cli import compare_reports_json
+    return compare_reports_json(base, candidate, tolerance)
+
+
 def _budget(study, sets=None):
     from .cli import _overrides
     from .study import budget
@@ -96,6 +101,9 @@ def mcp_tools():
                  schema({"study": S, "trace": S, "points": {"type": ["string", "object"]}, "warmup": {"type": "integer"},
                          "sets": SETS, "format": FMT}, ["study", "trace", "points"]),
                  _run_points, long=True, annotations={"readOnlyHint": True}),
+        ToolSpec("csim_compare", "Per-trace metric deltas (better/worse/same) between two rvw csim run reports, paired by "
+                 "trace hash.", schema({"base": S, "candidate": S, "tolerance": {"type": "number", "default": 0}}, ["base", "candidate"]),
+                 _compare_reports, annotations={"readOnlyHint": True}),
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
                  "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},

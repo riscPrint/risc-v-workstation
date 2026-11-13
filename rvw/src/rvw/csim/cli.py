@@ -91,6 +91,12 @@ def register(subparsers):
     q.add_argument("--out"); q.add_argument("--json", action="store_true")
     q.set_defaults(func=_qualify)
 
+    cp = sub.add_parser("compare", help="per-trace metric deltas between two rvw csim run reports")
+    cp.add_argument("base"); cp.add_argument("candidate")
+    cp.add_argument("--tolerance", type=float, default=0.0, help="relative change below which a metric is 'same'")
+    cp.add_argument("--out"); cp.add_argument("--json", action="store_true")
+    cp.set_defaults(func=_compare_reports)
+
     sp = sub.add_parser("simpoint", help="choose weighted simulation points (basic-block vectors + k-means)")
     sp.add_argument("trace"); sp.add_argument("--interval", type=int, required=True, help="instructions per interval")
     sp.add_argument("--max-k", type=int, default=10); sp.add_argument("--dims", type=int, default=15)
@@ -175,6 +181,16 @@ def _qualify(args):
     from . import qualify
     return qualify.qualify(args.reference, args.traces, args.study, args.format, args.tolerance,
                            Path(args.archive) if args.archive else None)
+
+
+@_guard
+def _compare_reports(args):
+    return compare_reports_json(args.base, args.candidate, args.tolerance)
+
+
+def compare_reports_json(base, candidate, tolerance=0.0):
+    from . import study
+    return study.compare(json.loads(Path(base).read_text()), json.loads(Path(candidate).read_text()), tolerance)
 
 
 @_guard

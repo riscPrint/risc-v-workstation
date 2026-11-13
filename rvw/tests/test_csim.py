@@ -219,3 +219,18 @@ def test_qualify_reference_table():
         else:
             with pytest.raises(ValueError, match="no matched csim study"):
                 qualify.default_study(name)
+
+
+def test_compare_reports(tmp_path, capsys):
+    t = alternating(tmp_path)
+    a = study.run({"name": "bim", "branch": {"model": "bimodal"}}, [t])
+    b = study.run({"name": "tage", "branch": {"model": "tage"}}, [t])
+    pa, pb = tmp_path / 'a.json', tmp_path / 'b.json'
+    pa.write_text(json.dumps(a)); pb.write_text(json.dumps(b))
+    assert main(["csim", "compare", str(pa), str(pb), "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    m = out["traces"][0]["metrics"]
+    assert m["direction_mpki"]["direction"] == "better" and m["storage_kib"]["direction"] == "worse"
+    assert out["missing_candidate_traces"] == 0
+    with pytest.raises(ValueError, match="expected"):
+        study.compare({"schema": "x"}, b)

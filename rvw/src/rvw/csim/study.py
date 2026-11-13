@@ -188,3 +188,42 @@ def sweep(study, trace_paths: list, params: dict[str, list], fmt: str = "auto", 
         out["pareto"] = {"metric": metric, "storage": skey, "lower_is_better": True, "rows": [r["parameters"] for r in front]}
         out["best"] = min(cands, key=lambda r: r["metrics"][metric])["parameters"]
     return out
+
+
+def compare(base: dict, cand: dict, tolerance: float = 0.0) -> dict:
+    """Per-trace metric deltas between two rvw.csim-study-report/1 documents.
+    Traces pair by input sha256 (or path when a hash is missing). Lower is
+    better for *_mpki, *_pki and storage; higher for accuracy, coverage and IPC."""
+    for d in (base, cand):
+        if d.get("schema") != REPORT:
+            raise ValueError(f"expected {REPORT} reports")
+
+    def key(r):
+        i = r.get("input", {})
+        return i.get("sha256") or i.get("path")
+
+    b = {key(r): r for r in base["results"]}
+    rows, unmatched = [], []
+    for r in cand["results"]:
+        k = key(r)
+        if k not in b:
+            unmatched.append(r.get("input", {}).get("path"))
+            continue
+        mb, mc = metrics(b[k]), metrics(r)
+        deltas = {}
+        for name in sorted(set(mb) & set(mc)):
+            x, y = mb[name], mc[name]
+            if x is None or y is None:
+                continue
+            lower = name.endswith(("_mpki", "_pki", "_kib", "false_dependences"))
+            change = y - x
+            rel = change / x if x else None
+            better = (change < 0) if lower else (change > 0)
+            significant = abs(rel) > tolerance if rel is not None else change != 0
+            deltas[name] = {"base": x, "candidate": y, "change": change, "relative": rel,
+                            "direction": "same" if not significant or change == 0 else ("better" if better else "worse")}
+        rows.append({"trace": r.get("input", {}).get("path"), "metrics": deltas})
+    return {"schema": "rvw.csim-compare/1", "status": "reported", "base_study": base.get("study"),
+            "candidate_study": cand.get("study"), "tolerance": tolerance, "traces": rows,
+            "unmatched_candidate_traces": unmatched, "missing_candidate_traces": len(b) - len(rows),
+            "note": "Magnitudes on the given traces only; no statistical significance."}
