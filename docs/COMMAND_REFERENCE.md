@@ -14,8 +14,21 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
+```
+
+### `rvw agent`
+
+```text
+usage: rvw agent [-h] [--project PROJECT] {guide} ...
+```
+
+### `rvw agent guide`
+
+```text
+usage: rvw agent guide [-h] [--workflow WORKFLOW] [--json] [--markdown]
+    [--write WRITE] [--project PROJECT]
 ```
 
 ### `rvw agent-bench`
@@ -42,8 +55,21 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {ooo-profile,ooo-diff,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch ooo-profile`
+
+```text
+usage: rvw arch ooo-profile [-h] [--elf ELF | --regions REGIONS] [--max-cycles
+    MAX_CYCLES] [--json] [--project PROJECT] config trace
+```
+
+### `rvw arch ooo-diff`
+
+```text
+usage: rvw arch ooo-diff [-h] [--json] [--project PROJECT] base candidate
 ```
 
 ### `rvw arch traffic`
@@ -982,7 +1008,8 @@ usage: rvw formal model-grid [-h] --manifest MANIFEST --out OUT [--json]
 ### `rvw formal security`
 
 ```text
-usage: rvw formal security [-h] [--project PROJECT] {pair,ift,contract} ...
+usage: rvw formal security [-h] [--project PROJECT] {pair,ift,prove,contract}
+    ...
 ```
 
 ### `rvw formal security pair`
@@ -997,6 +1024,13 @@ usage: rvw formal security pair [-h] --manifest MANIFEST --out OUT [--timeout
 ```text
 usage: rvw formal security ift [-h] --top TOP --out OUT [--project PROJECT]
     netlist
+```
+
+### `rvw formal security prove`
+
+```text
+usage: rvw formal security prove [-h] --rtl RTL --top TOP --policy POLICY
+    --out OUT [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw formal security contract`
@@ -1287,8 +1321,9 @@ usage: rvw formal equiv [-h] [--sampled-events] [--stable-at-edge INPUT]
     GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config
     CONFIG] --top TOP [--clock CLOCK] [--reset RESET] [--reset-active
     {high,low}] [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec]
-    [--pair GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
-    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+    [--pair GOLD=GATE] [--latency LATENCY] [--latency-map OUTPUT=CYCLES]
+    [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}] [--timeout
+    TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -1548,10 +1583,10 @@ usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
 
 ```text
 usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend
-    {yosys,slang,ghdl}] [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std
-    STD] [--slang SLANG] [--ghdl-plugin GHDL_PLUGIN] [--library LIBRARY]
-    [--yosys YOSYS] [--timeout TIMEOUT] [--json] [--project PROJECT] sources
-    [sources ...]
+    {yosys,slang,ghdl,chisel}] [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS]
+    [--std STD] [--slang SLANG] [--ghdl-plugin GHDL_PLUGIN] [--library
+    LIBRARY] [--firtool FIRTOOL] [--source-root SOURCE_ROOTS] [--yosys YOSYS]
+    [--timeout TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
 ```
 
 ### `rvw query info`
@@ -2361,6 +2396,14 @@ CLI commands without an MCP entry are CLI-only.
 Isolated calls can return a job after the sync timeout, even when
 they do not start a background job at once.
 
+### `agent_guide`
+
+Agent playbook: workflows (bring-up, a test fails, add coverage, prove a property, performance question) as ordered rvw CLI and MCP calls with decision points. Start here when you do not know which tool to call.
+
+Arguments: `workflow`.
+
+Starts a background job: no.
+
 ### `arch_build`
 
 Locate native gem5 and build bare-metal benchmarks with local GCC.
@@ -2422,6 +2465,22 @@ Starts a background job: yes.
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_ooo_diff`
+
+Model slot estimates; accuracy inconclusive.
+
+Arguments: `base` (required), `candidate` (required).
+
+Starts a background job: yes.
+
+### `arch_ooo_profile`
+
+Model slot estimates; accuracy inconclusive.
+
+Arguments: `config` (required), `trace` (required), `elf`, `regions`, `max_cycles`.
 
 Starts a background job: yes.
 
@@ -3141,7 +3200,7 @@ Starts a background job: yes.
 
 Prove closed RTL output cones. Blackbox models produce conditional evidence only.
 
-Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `sampled_events`, `stable_at_edge`, `timeout`.
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `latency_map`, `output_map`, `sampled_events`, `stable_at_edge`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3310,6 +3369,14 @@ Starts a background job: yes.
 Prove declared digital two-copy observation contracts or initial-state independence.
 
 Arguments: `manifest` (required), `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `formal_security_prove`
+
+Prove a source/sink IFT or static access isolation policy on exported RTL. Digital policy scope only.
+
+Arguments: `rtl` (required), `top` (required), `policy` (required), `out` (required), `timeout`.
 
 Starts a background job: yes.
 
@@ -3587,9 +3654,9 @@ Starts a background job: yes.
 
 ### `query_build_hdl`
 
-Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work library) with VHDL declaration and assignment lines.
+Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work library) with VHDL declaration and assignment lines; 'chisel' takes one FIRRTL file through firtool ($RVW_FIRTOOL), maps locations to Scala lines under source_roots, accepts Chisel names (io.a.valid) and stores the emitted Verilog and HGLDD.
 
-Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `timeout`.
+Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `source_roots`, `timeout`.
 
 Starts a background job: no.
 
