@@ -480,3 +480,14 @@ not C1 acceptance or complete boot qualification results.
 The legacy APB bridge accepts targets which omit `PSLVERROR`. Their response
 error is zero. The bridge still rejects partial writes before asserting the
 target select. The native errorless-target smoke checks both behaviors.
+
+## Native fabric component profile
+
+The native AXI4 crossbar preserves global target addresses and extends IDs for
+the master index. The native Get/Put TileLink crossbar uses local target window
+offsets and remaps source IDs. Both use aligned, disjoint power-of-two windows.
+The AXI width adapter accepts 32, 64 or 128 bits without exclusive accesses.
+It preserves original IDs and burst responses through ordered boundary
+adapters. Early narrow response errors contribute to the wide response.
+The fabric example records finite VIP endpoint checks and CPU/DMA completion.
+These records are C3 component evidence, not C1 acceptance.

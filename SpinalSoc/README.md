@@ -37,8 +37,9 @@ The existing map stays compatible with software, RAL and UVM consumers.
 ## Limits
 
 The executable stub example has a C1 runner. No production CPU is bundled.
-Generation does not establish a simulation pass. Native AXI4/TileLink crossbars,
-AXI width adaptation and arbitrary peripheral bus conversion remain open.
+Generation does not establish a simulation pass. The native fabric profile
+and its measured bounds are described below. Arbitrary peripheral bus conversion
+remains open.
 The software device tree is still a memory fragment. Peripheral pins need
 project exports. Debug reset is tied inactive until a project binds debug.
 
@@ -350,3 +351,19 @@ independent SPI monitor checked 20 wire words in each run. This is a composed
 CPU development simulation. C1 gate acceptance, XIP and hardware are unrun.
 The legacy APB bridge now handles a peripheral without PSLVERROR while still
 rejecting partial writes before target select. Its native smoke passed.
+
+## Native multi-master fabrics
+
+`NativeAxiCrossbar` and `NativeTileLinkCrossbar` compose SDK decoders and
+arbiters for N masters and M targets. `AxiDataWidth` converts AXI data widths
+without losing original IDs, burst framing or early narrow errors. These
+components are separate from the existing APB peripheral ingress. A project
+wrapper can place them before that ingress. See [the fabric example](examples/fabric/README.md)
+for the profile, commands and measured transaction table.
+
+At seed 31, native two-master/two-target AXI4 and TileLink tests passed with
+independent endpoint scoreboards. Native AXI4 conversion passed in both
+directions between 32 and 64 bits. A real composed CPU with an RTL DMA-style
+master passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read
+pairs. These are finite simulation results. Exclusive accesses and coherent
+TileLink are outside the profile. Native 128-bit conversion was NOT RUN.
