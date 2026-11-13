@@ -124,3 +124,43 @@ def test_observer_mode_limits_the_contract():
     plan = dict(contract='sandboxing', clauses=['pc'], observations=['t'])
     assert pairs.compare(a, b, plan)['status'] == 'ineligible'
     assert pairs.compare(a, b, dict(plan, observer_mode=0)) == dict(status='violation', channels=['t'])
+
+
+PROBED = """module Core (
+  input  wire          clk,
+  input  wire          reset
+);
+  wire                rvwprobe__branch__bp__valid;
+  wire       [31:0]   rvwprobe__branch__bp__pc;
+  wire                rvwprobe__branch__bp__taken;
+  wire                rvwprobe__interrupt__irq__valid_1;
+  wire                rvwprobe__counter__cycles__valid;
+  wire       [7:0]    rvwprobe__counter__cycles__inc;
+  wire                rvwprobe__stage__D__valid;
+endmodule
+"""
+
+
+def test_probe_sites_stream_and_channels(tmp_path):
+    from rvw.sec import probe_events
+    from rvw.probes.events import read
+    (tmp_path/'core.v').write_text(PROBED)
+    b = dict(rtl=[tmp_path/'core.v'], top='Core', probe_meta={'branch:bp': {'semantics': 'final-prediction'}},
+             events=[dict(kind='cache', name='l1', valid='hit_valid', fields={'address': ['hit_addr', 32]})])
+    sites = probe_events.discover(b)
+    assert [(s['kind'], s['name']) for s in sites] == [('branch', 'bp'), ('counter', 'cycles'), ('cache', 'l1')]
+    assert sites[0]['fields'] == [['pc', 32, 'rvwprobe__branch__bp__pc'], ['taken', 1, 'rvwprobe__branch__bp__taken']]
+    assert 'if (dut.rvwprobe__branch__bp__valid) $fdisplay(fd, "Q %0d 0 %0d %0d", cycle, dut.rvwprobe__branch__bp__pc' \
+        in probe_events.testbench_lines(sites)[0]
+    rows = [(3, 0, [0x80000000, 1]), (3, 1, [2]), (4, 1, [5]), (5, 2, [0x80000040])]
+    probe_events.write(tmp_path/'p.jsonl', sites, rows, 6, dict(core='c', config='x', elf='e'))
+    stream = read(tmp_path/'p.jsonl')
+    assert stream.end['counters'] == {'cycles': 7} and stream.probes[0].meta['semantics'] == 'final-prediction'
+    result = dict(retired=[dict(cycle=2, pc=1), dict(cycle=6, pc=2)], bus=[dict(cycle=3, bus='dbus', address=4, write=False)],
+                  responses=[dict(cycle=4, bus='dbus')], probe_sites=sites, probe_rows=rows, done=-1, tohost_address=0)
+    obs = core_adapter.observe(result, ['branch_events', 'cache_events', 'probe_counters', 'bus_handshakes'])
+    assert obs['branch_events'] == [dict(cycle=3, kind='branch', name='bp', pc=0x80000000, taken=1)]
+    assert obs['cache_events'][0]['address'] == 0x80000040 and obs['probe_counters'] == {'cycles': 7}
+    assert obs['bus_handshakes'] == [[3, 'dbus', 'cmd'], [4, 'dbus', 'rsp']]
+    with pytest.raises(ValueError, match='needs probe sites'):
+        core_adapter.observe(dict(result, probe_sites=[]), ['tlb_events'])
