@@ -58,7 +58,7 @@ def report(db=None, events=None) -> dict:
     return out
 
 
-def run_convert(events, to, out, c2=None, c1=None, probe=None, roi=None) -> dict:
+def run_convert(events, to, out, c2=None, c1=None, probe=None, roi=None, elf=None, geometry=None) -> dict:
     s = read(events)
     if to not in cv.CONVERTERS:
         raise ValueError(f"unknown target {to}; choose from {', '.join(sorted(cv.CONVERTERS))}")
@@ -72,6 +72,9 @@ def run_convert(events, to, out, c2=None, c1=None, probe=None, roi=None) -> dict
         return cv.kanata(s, out)
     if to == "cache":
         return cv.cache(s, out)
+    if to == "cache-check":
+        from . import cachecheck
+        return cachecheck.check(s, need(c2, "--c2"), out, elf=elf, geometry=cachecheck.parse_geometry(geometry))
     if to == "mmu":
         return cv.mmu(s, out, c2)
     if to == "counts":

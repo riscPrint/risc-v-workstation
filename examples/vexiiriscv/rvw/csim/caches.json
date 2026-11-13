@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "vexiiriscv-rv32im_cached-caches",
+  "description": "VexiiRiscv rv32im_cached L1s: 2 ways x 32 sets x 64-byte lines = 4 KiB each, tree PLRU (true LRU at 2 ways). The LSU L1 is write-back and allocates on a store miss.",
+  "source": {"fidelity": "approximate", "approximations": ["no wrong-path fetches in the model", "fixed latencies, not the RTL bus timing"]},
+  "memory": {
+    "dram_latency": 4,
+    "l1i": {"size_kib": 4, "ways": 2, "line_bytes": 64, "latency": 1, "replacement": "plru"},
+    "l1d": {"size_kib": 4, "ways": 2, "line_bytes": 64, "latency": 1, "replacement": "plru"}
+  }
+}

@@ -20,6 +20,10 @@ def _compare(study, trace, events, job, **kw):
     return run_function(job, "rvw.csim.cli", "compare_json", dict(study=study, trace=trace, events=events, **kw))
 
 
+def _compare_cache(study, trace, events, job, **kw):
+    return run_function(job, "rvw.csim.cli", "compare_cache_json", dict(study=study, trace=trace, events=events, **kw))
+
+
 def _qualify(traces, job, **kw):
     return run_function(job, "rvw.csim.cli", "qualify_json", dict(traces=traces, **kw))
 
@@ -107,6 +111,14 @@ def mcp_tools():
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
                  "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},
-                         "elf_sha256": S, "top": {"type": "integer", "default": 20}}, ["study", "trace", "events"]),
+                         "elf_sha256": S, "top": {"type": "integer", "default": 20}, "cache": S,
+                         "level": {**S, "enum": ["l1d", "l1i"]}, "trace_out": S}, ["study", "trace", "events"]),
                  _compare, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
+        ToolSpec("csim_compare_cache", "Compare a cache model (memory.l1d or memory.l1i of a study) with RTL cache probe "
+                 "access events (rvw.probe-events/1) on the same C2 run, access by access: per-access hit/miss "
+                 "agreement and miss-rate error. Misaligned or missing events give inconclusive. Runs as a job.",
+                 schema({"study": S, "trace": S, "events": S, "cache": {**S, "default": "dcache"},
+                         "level": {**S, "enum": ["l1d", "l1i"]}, "top": {"type": "integer", "default": 20},
+                         "trace_out": S}, ["study", "trace", "events"]),
+                 _compare_cache, long=True, annotations={"readOnlyHint": False}, side_effects='long-running; launches native component engine; builds engine cache if absent; trace_out writes a new file', native_tools=('native csim',)),
     ]

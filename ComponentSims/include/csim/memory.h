@@ -695,6 +695,8 @@ inline std::unique_ptr<Prefetcher> make_prefetcher(const Config& c) {
 class Cache {
 public:
     std::string name; uint64_t sets; unsigned ways, line_bits, latency, mshr; bool perfect;
+    bool write_allocate = true, write_back = true;  // false/false: write-through, no allocation on a store miss
+    uint64_t flushes = 0;
     std::vector<Line> lines; std::unique_ptr<Replacement> repl; std::vector<std::unique_ptr<Prefetcher>> pfs;
     Cache* next = nullptr; uint64_t memory_latency = 200;
     std::priority_queue<uint64_t, std::vector<uint64_t>, std::greater<uint64_t>> outstanding;
@@ -714,6 +716,7 @@ public:
         if (nlines % ways || !pow2(nlines / ways)) throw Error(n + ": size/line/ways must give a power-of-two set count");
         sets = nlines / ways; latency = unsigned(c.u("latency", def_lat, 0, 1000)); mshr = unsigned(c.u("prefetch_queue", 16, 1, 4096));
         perfect = c.flag("perfect", false);
+        write_allocate = c.flag("write_allocate", true); write_back = c.flag("write_back", true);
         pollution_cap = c.u("pollution_filter", 1024, 0, 1u << 20);
         lines.assign(nlines, Line());
         repl = make_replacement(c); repl->init(sets, ways);
@@ -742,7 +745,7 @@ public:
             if (pf && pollution_cap) { if (pollution.size() >= pollution_cap) pollution.erase(pollution.begin()); pollution[old.tag] = t; }
         }
         old = Line(); old.valid = true; old.tag = line; old.ready = ready; old.prefetched = pf; old.by_prefetch = pf;
-        old.fill_latency = uint32_t(ready > t ? ready - t : 0); old.dirty = ai.write;
+        old.fill_latency = uint32_t(ready > t ? ready - t : 0); old.dirty = ai.write && write_back;
         repl->fill(set, v, l, ai);
         for (auto& p : pfs) p->filled(line, ready, pf);
     }
@@ -760,9 +763,12 @@ public:
             if (!from_upper_pf) {
                 ++d_hit;
                 if (l->prefetched) { ++pf_useful; first_use = true; l->prefetched = false; if (l->ready > t + latency) ++d_late; }
-                if (write) l->dirty = true;
+                if (write && write_back) l->dirty = true;
             }
             repl->hit(set, way, &lines[set * ways], ai);
+        } else if (write && !write_allocate && !from_upper_pf) {
+            ++d_miss;  // the store goes to the next level; no line is installed
+            done = t + latency;
         } else {
             if (from_upper_pf) ++lower_miss;
             else {
@@ -785,6 +791,11 @@ public:
             }
         }
         return done;
+    }
+    // Invalidate every line (FENCE.I, cache maintenance). Dirty lines count as writebacks.
+    void flush() {
+        for (auto& l : lines) { if (l.valid && l.dirty) ++writebacks; l = Line(); }
+        ++flushes;
     }
     void issue(const PfCand& c, uint64_t pc, uint64_t t, Prefetcher& p) {
         ++pf_req;
@@ -822,6 +833,7 @@ public:
         j["demand_accesses"] = d_access; j["demand_hits"] = d_hit; j["demand_misses"] = d_miss;
         j["demand_mpki"] = per_kilo(d_miss, instructions); j["miss_rate"] = ratio(double(d_miss), double(d_access));
         j["average_latency"] = ratio(double(total_latency), double(d_access));
+        j["write_allocate"] = write_allocate; j["write_back"] = write_back; j["flushes"] = flushes;
         j["prefetch_requests_from_upper"] = lower_access; j["prefetch_misses_from_upper"] = lower_miss; j["writebacks"] = writebacks;
         Json p = Json::object();
         p["requested"] = pf_req; p["dropped_present"] = pf_present; p["dropped_queue_full"] = pf_full; p["issued"] = pf_issued; p["sent_to_lower"] = pf_lower;

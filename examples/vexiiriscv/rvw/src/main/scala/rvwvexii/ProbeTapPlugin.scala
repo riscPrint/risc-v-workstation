@@ -4,8 +4,8 @@ import spinal.core._
 import spinal.lib._
 import spinal.lib.misc.plugin.FiberPlugin
 import spinalprobes.Probe
-import vexiiriscv.execute.lsu.LsuCachelessPlugin
-import vexiiriscv.fetch.FetchCachelessPlugin
+import vexiiriscv.execute.lsu.{LsuCachelessPlugin, LsuL1Plugin, LsuPlugin}
+import vexiiriscv.fetch.{FetchCachelessPlugin, FetchL1Plugin}
 import vexiiriscv.memory.MmuPlugin
 import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 import vexiiriscv.test.WhiteboxerPlugin
@@ -58,6 +58,9 @@ class ProbeTapPlugin extends FiberPlugin {
         Probe.bus("ibus", cmd.fire, cmd.address)
       }
       Probe.faultSite("privilege", host[PrivilegedPlugin].logic.harts(0).privilege)
+
+      host.get[FetchL1Plugin].foreach(f => CacheProbes.fetch(f, wb.commits.ports.map(p => (p.valid, p.pc))))
+      host.get[LsuL1Plugin].foreach(l1 => CacheProbes.lsu(l1, host[LsuPlugin]))
 
       // Page-table walks: each PTE response of the refill state machine, then the walk result.
       host.get[MmuPlugin].foreach { mmu =>
