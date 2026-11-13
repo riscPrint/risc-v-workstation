@@ -269,6 +269,9 @@ class Graph:
             raise QueryError("synchronous memory dependency queries need rvw.designdb/17. Rebuild the database with the current SpinalDB.")
         self.db = db
         self.include_clock = include_clock
+        self._hdl_aliases = ({r[0] for r in db.q(
+            "SELECT target_id FROM assignments WHERE source='Yosys net alias'")}
+            if db.meta.get('frontend', '').startswith('yosys-') else set())
         self._memo: dict[tuple[int, str], dict[int, frozenset]] = {}
 
     def aggregate(self, s: Signal) -> bool:
@@ -298,6 +301,11 @@ class Graph:
             n, k = stack.pop()
             s = self.db.signal_by_id(n)
             if self.hidden(s):
+                # Cells connect directly to bit vertices. A hidden net alias
+                # adds no logic and must not become a feedback path through
+                # its two-way view links. It is still usable as a start node.
+                if n in self._hdl_aliases:
+                    continue
                 if (n, k) in seen:
                     continue
                 seen.add((n, k))
