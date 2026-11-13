@@ -30,8 +30,9 @@ done
 for wrapper in "$build_dir"/*__spinalWrapper.cpp; do
   [ -f "$wrapper" ] || continue
   perl -e '
+    use File::Glob qw(bsd_glob);
     my ($wrapper, $dir) = @ARGV; my %ids;
-    for my $h (glob("$dir/*.h")) {
+    for my $h (bsd_glob("$dir/*.h")) {
       open(my $f, "<", $h) or next; local $/; my $t = <$f>; close $f;
       $ids{$_} = 1 for ($t =~ /\b([A-Za-z_][A-Za-z0-9_]*)\b/g);
     }
