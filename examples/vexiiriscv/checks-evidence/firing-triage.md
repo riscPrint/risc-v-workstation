@@ -6,7 +6,7 @@ It includes one wave window per firing check, the core revision and ELF hashes.
 | Check | Events | Decision | Source |
 |---|---:|---|---|
 | PC payload stability | 103 | Tool false positive: the binding omitted current redirects. | `PcPlugin.scala:67-100` |
-| Divider response valid hold | 36 | Tool false positive: the binding omitted the previous flush. | `DivRadix2.scala:187-190`, `DivPlugin.scala:116-117` |
+| Divider response valid hold | 36 | Tool false positive: the binding omitted the previous flush. | `DivRadix.scala:113-116`, `DivPlugin.scala:116-117` |
 
 The PC window uses `rv32ui-p-add`. At 539 ps the old sequential offer is
 stalled. At 549 ps `forcedSpawn` selects the redirect. The stream still has

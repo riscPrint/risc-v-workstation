@@ -32,21 +32,20 @@ The 16-bit serial age can wrap. The short fixture runs do not qualify wraparound
 The fixture binds FIFO capacity, occupancy and order and arbiter checks from
 the library. Its free-list, operand, forwarding and map checks are explicit
 project declarations. It does not bind every microarchitecture template.
-The complete RecoveryChecks generation-tag and fence interface is not bound.
+The expanded version binds per-slot generation-aware RecoveryChecks and a
+draining fence. Replay and device effects remain inactive.
 The forwarding reference checks selection, not byte masks or a cache.
 
 Probes record rename, ROB and IQ occupancy and flush events. They are enabled
 only by the runner. The ROB head is also a fault site.
 A consumer can sample these with RiscvSim's ProbeCollector.
-`rvw perf` needs a Konata stage/retire stream; occupancy probes alone do not
-supply one. Add accepted rename, issue and retirement stage events before
-using this fixture for that consumer.
-The OoO timing model needs an instruction trace and a project timing model.
-This fixture has no ISA decoder or C2 trace, so direct timing correlation is
-not supported. `rvw fault` can select the probed ROB-head register after a
-design-database extraction; a simulation adapter must apply each fault.
+The expanded runner exports accepted rename, issue and retirement events for
+`rvw perf`. It supplies a declared command projection to the OoO timing model.
+It has no ISA decoder, so direct ISA timing correlation is not supported.
+The native adapter applies a ROB-head flip for `rvw fault`. See the expanded
+results below for measured counts and limitations.
 
-## Recorded native results
+## Historical native results before expansion
 
 `native-results.json` records all eight 1200-cycle runs. Clean has zero
 firings. Each negative variant fires its expected rule.

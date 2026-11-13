@@ -1152,32 +1152,57 @@ The new [activation campaign](../SpinalChecks/activation-results.json) is
 separate from the historical captures above. Every row keeps zero firings,
 trigger activation and formal outcomes separate.
 
-| Design | Programs | Bound | Simulation activated / no_activation / unmeasured | Fired IDs / events | Activated depth-4 bounded checks |
-|---|---:|---:|---|---:|---:|
-| VexRiscv | 49 | 57 | 37 / 20 / 0 | 0 / 0 | 2 |
-| VexiiRiscv | 51 | 25 | 7 / 18 / 0 | 2 / 139 | 1 |
+| Design | Clean ISA programs | Bound | Simulation activated / no_activation / unmeasured | Fired IDs / events |
+|---|---:|---:|---|---:|
+| VexRiscv | 49 | 57 | 37 / 20 / 0 | 0 / 0 |
+| VexiiRiscv after cancellation fixes | 51 | 25 | 6 / 19 / 0 | 0 / 0 |
+| NaxRiscv, nine declarations | 59 | 9 | not measured / not measured / 9 | 0 / 0 |
 
-All programs reached software pass. The 49 wider VexiiRiscv ISA runs failed
-the check gate. PC payload stability and divider valid hold remain open
-findings. All 82 bound checks now have trigger instrumentation. An unreached
-bounded cover is `no_activation`, not passing evidence.
+The [VexiiRiscv source and wave triage](../examples/vexiiriscv/checks-evidence/firing-triage.md)
+resolves the 139 historical events as incomplete cancellation bindings. A
+current redirect replaces the stalled PC offer. A previous flush clears the
+divider response. All 51 clean programs pass after the binding corrections.
+The [NaxRiscv rerun](../examples/naxriscv/checks-nine-rerun.json) captures all
+nine regenerated declarations on every one of the 59 passing programs.
+
+| Activation follow-up | Bound | Activated in clean or stress simulation | Proved unreachable | Current no_activation | Stress firing IDs |
+|---|---:|---:|---:|---:|---:|
+| VexRiscv | 57 | 48 | 5 | 4 | 3 |
+| VexiiRiscv | 25 | 15 | 8 | 2 | 4 |
+
+[The current summary](../SpinalChecks/current-results.json) lists the six
+remaining IDs. Of the original 38 misses, 20 now activate, 13 have conditional
+unreachability proofs and five remain no_activation. The corrected divider
+hold becomes one additional current miss. Backpressure exposes retained
+failures. Software pass does not override a failed check gate.
+
+All 82 checks have depth-16 trigger-cover observations. VexiiRiscv retries
+use depth 128 where needed. VexRiscv has 52 reached triggers and five proved
+unreachable. VexiiRiscv has 14 reached, eight proved unreachable and three
+inconclusive triggers. These are trigger results, not new safety proofs.
+Unreachability is conditional on the captured reset and async2sync single-clock
+model. The from-sim frontend refused the asynchronous-reset RTL.
 
 One enum instance per core has a conditional SMTBMC prove result and a reached
 depth-8 trigger. The [record](../SpinalChecks/activated-induction-results.json)
 also retains each inconclusive engine-race result. Full input closure and
 whole-core proof remain unmeasured.
 
-The [small OoO fixture](../SpinalChecks/examples/ooo/README.md) has 11 checks.
-All seven bug variants fire in simulation and fail their selected depth-16
-formal check. Clean free-list conservation remains inconclusive at depth 16;
-it passes at depth 8. Other clean checks pass depth 16. Full template binding
-and direct perf, timing-model and fault adapters remain incomplete.
-The NaxRiscv follow-up has nine generated rules, including ROB-pointer,
-free-list ghost-event and forwarding-window rules. All nine have a fixed-seed
-59-program native run with zero firings. Each new rule catches its private
-planted bug. The ghost checks tag-event consistency. Actual allocator RAM
-conservation, forwarded byte data and full recovery remain open. Unseeded
-directed-run firings remain unresolved. See the example's saved check results.
+The [small OoO fixture](../SpinalChecks/examples/ooo/README.md) now has 68
+checks. Clean simulation has zero firings. All seven planted variants fire
+their matching rules. Per-slot ExecutionChecks and generation-aware
+RecoveryChecks bind wake, issue, retirement, kill and a draining fence.
+
+| Consumer or proof | Short run result | Limit |
+|---|---|---|
+| Conservation plus five asserted helpers | ABC BMC3 passes depth 16 in 16 seconds; trigger reached | Induction and PDR remain inconclusive |
+| SpinalProbes to perf | 257 retired, 144 flushed, three open commands | No stall-cause or timing accuracy claim |
+| OoO timing model | 257 projected commands in 260 model cycles | C2 command projection, not an executed RISC-V ELF |
+| rvw fault | One confirmed native head flip, one detection | One sample does not establish a detection rate |
+
+NaxRiscv activation, allocator RAM-state conservation, forwarded byte data
+and full recovery remain unmeasured. The ghost rule tracks declared events.
+The forwarding rule checks selection. Neither closes those wider properties.
 
 The [kind-level induction samples](../SpinalChecks/kind-induction-results.json)
 select one instance of each bound kind. Only the selected enum sample closes
