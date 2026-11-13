@@ -144,3 +144,29 @@ Reproduce an instruction attempt with a generated project:
 The new native job trees were moved to the private evidence directory after
 the runs. Logs retain the original execution paths. Captured sources and hashes
 are unchanged.
+
+## Machine transition slices
+
+The machine generator run used the same FormalSimple RTL hash recorded above.
+It did not elaborate a CSR-enabled or interrupt-enabled core.
+
+| Check | Outcome | Bound | Engine |
+| --- | --- | --- | --- |
+| x0 operand and destination values | bounded PASS, trigger reached | 20 | abc bmc3 |
+| writeback slot is not flushed | bounded PASS, trigger reached | 20 | smtbmc bitwuzla |
+| exception entry, interrupt entry, return, CSR state | not applicable to this snapshot | none | none |
+| instruction memory | unsupported: compressed fetch pairing not bound | none | none |
+| PC chain across traps | unsupported: snapshot has terminal formal halts | none | none |
+
+The first flush assertion attempt with ABC returned ERROR because the property
+reduced to a combinational network. The explicit SMT retry passed. This is a
+check of the current writeback slot. It does not independently prove an
+instruction-ID kill tracker. The x0 check observes RVFI values, not a physical
+register that stores x0. These results do not complete machine-level signoff.
+
+Private evidence directories: `machine-v1` and `machine-flush-v2` under the
+worker's existing VexRiscv evidence directory. Each tree retains captured source,
+monitor, SBY job, check and cover logs. Reproduce with
+`rvw formal machine-checks --manifest examples/vexriscv/formal/machine.json
+--out OUT --run --timeout 150`, with `RISCV_FORMAL` set to the pinned private
+riscv-formal checkout. All native jobs used `nice -n 10` and `vex-conn`.

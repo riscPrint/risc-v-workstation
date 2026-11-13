@@ -21,7 +21,7 @@ def bounded_rows(suite):
     return rows
 
 
-def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',)):
+def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), machine=None):
     from .riscv import run as bounded
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
@@ -48,8 +48,14 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',)):
     else:
         rows.append(dict(check='instruction_checks', status='unsupported',
                          reason='Project has no riscv_formal section.'))
+    machine_rows = {}
+    if machine:
+        from .machine_checks import run as run_machine
+        path = Path(machine).resolve()
+        result = run_machine(json.loads(path.read_text()), path.parent, out / 'machine', timeout)
+        machine_rows = {r['check']: dict(r, evidence='machine/result.json') for r in result['rows']}
     for check in MACHINE_CHECKS:
-        rows.append(dict(check=check, status='unsupported', reason='No machine-state binding selected.'))
+        rows.append(machine_rows.get(check, dict(check=check, status='unsupported', reason='No machine-state binding selected.')))
     rows += [dict(check='sail_models', status='unsupported',
                   reason='Select generated models through riscv_formal.instruction_models.'),
              dict(check='adapter_conformance', status='unsupported',

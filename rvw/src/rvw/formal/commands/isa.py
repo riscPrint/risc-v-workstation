@@ -13,7 +13,7 @@ def main(args):
             raise ValueError('select a project with --project')
         with sigterm_raises():
             result = run(project.sections.get('riscv_formal'), args.out, args.timeout,
-                         project.name, unbounded=args.unbounded, engines=args.engines.split(','))
+                         project.name, unbounded=args.unbounded, engines=args.engines.split(','), machine=args.machine)
         print(json.dumps(result) if args.json else table(result))
         return 1 if result['status'] == 'fail' else 3
     except (ValueError, OSError, KeyError) as exc:
@@ -24,6 +24,7 @@ def main(args):
 def register(subparsers):
     p = subparsers.add_parser('isa', help='run the ISA proof kit and print its scoped signoff table')
     p.add_argument('--out', required=True)
+    p.add_argument('--machine', help='machine-checks manifest for the same project RTL')
     p.add_argument('--timeout', type=float, default=110)
     p.add_argument('--unbounded', action='store_true')
     p.add_argument('--engines', default='abc:pdr')
@@ -46,6 +47,6 @@ def mcp_run(job, **args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_isa', 'Run the ISA kit. Return per-check bounds, failures and unsupported gaps.',
-                     schema({'out': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0},
+                     schema({'out': {'type':'string'}, 'machine': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0},
                              'unbounded': {'type':'boolean'}, 'engines': {'type':'string'}}, ['out']),
                      mcp_run, long=True)]

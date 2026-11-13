@@ -1,0 +1,49 @@
+{
+  "schema": "rvw.machine-checks/1",
+  "xlen": 32,
+  "top": "VexRiscv",
+  "clock": "clk",
+  "reset": "reset",
+  "depth": 20,
+  "sources": [
+    "${RISCV_FORMAL}/cores/VexRiscv/VexRiscv.v"
+  ],
+  "checks": {
+    "x0": {
+      "signals": {
+        "retire": "rvfi_valid",
+        "rs1": "rvfi_rs1_addr",
+        "rs2": "rvfi_rs2_addr",
+        "rd": "rvfi_rd_addr",
+        "rs1_data": "rvfi_rs1_rdata",
+        "rs2_data": "rvfi_rs2_rdata",
+        "rd_data": "rvfi_rd_wdata"
+      }
+    },
+    "flush_retirement": {
+      "signals": {
+        "retire": "rvfi_valid",
+        "retired_killed": "writeBack_arbitration_isFlushed"
+      },
+      "engine": "smtbmc bitwuzla"
+    },
+    "exception_entry": {
+      "not_applicable": "FormalSimple has no CSR/trap controller; its trap output reports a terminal formal halt."
+    },
+    "interrupt_entry": {
+      "not_applicable": "FormalSimple drives rvfi_intr to zero and has no interrupt controller."
+    },
+    "csr_consistency": {
+      "not_applicable": "FormalSimple has no CSR bank."
+    },
+    "trap_return": {
+      "not_applicable": "FormalSimple has no privileged return controller."
+    },
+    "instruction_memory": {
+      "unsupported": "Compressed fetch-response address pairing needs a project tracker."
+    },
+    "trap_pc_chain": {
+      "unsupported": "FormalSimple reports terminal halts, not trap target and return transitions."
+    }
+  }
+}
