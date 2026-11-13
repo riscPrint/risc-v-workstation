@@ -2800,6 +2800,18 @@ A failed compile, failed run, timeout or missing completion marker gives error.
 Requirements and missing-tool errors occur before output creation (CLI exit 2).
 This format does not capture transitive file inputs or establish C8 reuse.
 
+## Open workload recipe capture
+
+`workloads list|build --recipe` selects a pinned open recipe. The same
+selection is available through the `workloads_list` and `workloads_build`
+MCP jobs. `workloads_verify` performs the existing reference checks.
+`rvw.workloads/1` accepts optional `dependencies` (source-relative Git paths
+to revisions) and `runtime_files` (workstation-relative runtime paths).
+Dependency archives join the source capture. Runtime copies join the assets
+capture. Both participate in existing hashes. CoreMark-derived smoke checks
+report no CoreMark score. zstd uses an exact round-trip self-check. These
+recipes issue no RTL accuracy or performance verdict.
+
 ## Workload reference flow
 
 `rvw workloads list|build|verify` uses `rvw.workloads/1` manifests.

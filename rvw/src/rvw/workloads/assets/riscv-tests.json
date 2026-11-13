@@ -1,0 +1,169 @@
+{
+  "schema": "rvw.workloads/1",
+  "suite": "riscv-tests-benchmarks",
+  "source_url": "https://github.com/riscv-software-src/riscv-tests",
+  "revision": "d7e86f701b929b5d801f8cda1a4871ab05f452bb",
+  "dependencies": {
+    "env": "6de71edb142be36319e380ce782c3d1830c65d68"
+  },
+  "runtime_files": [
+    "Arch/bench/Makefile",
+    "Arch/bench/rt/patch_syscalls.sh"
+  ],
+  "compiler_version": "riscv64-unknown-elf-gcc (g1b306039a) 15.1.0",
+  "workloads": [
+    {
+      "id": "median",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "median"
+      ]
+    },
+    {
+      "id": "qsort",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "qsort"
+      ]
+    },
+    {
+      "id": "rsort",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "rsort"
+      ]
+    },
+    {
+      "id": "towers",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "towers"
+      ]
+    },
+    {
+      "id": "vvadd",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "vvadd"
+      ]
+    },
+    {
+      "id": "memcpy",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "memcpy"
+      ]
+    },
+    {
+      "id": "multiply",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "multiply"
+      ]
+    },
+    {
+      "id": "dhrystone",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "dhrystone"
+      ]
+    },
+    {
+      "id": "spmv",
+      "mode": "bare",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "args": [],
+      "inputs": "pinned upstream embedded dataset",
+      "expected": "upstream checker and HTIF exit; console suppressed",
+      "build": [
+        "python3",
+        "{assets}/build_riscv_tests.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}",
+        "spmv"
+      ]
+    }
+  ]
+}

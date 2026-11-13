@@ -92,6 +92,22 @@ def version(path):
     return text.splitlines()[0]
 
 
+def archive_source(source, revision, destination):
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("source revision must be a full Git commit")
+    raw = command(["git", "-C", str(source), "archive", revision], text=False)
+    destination.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(fileobj=io.BytesIO(raw)) as tar:
+        tar.extractall(destination, filter="data")
+
+
+def recipe(name):
+    names = {"embench": "default.json", "riscv-tests": "riscv-tests.json", "coremark": "coremark.json", "zstd": "zstd.json"}
+    if name not in names:
+        raise ValueError("unknown workload recipe")
+    return ASSETS / names[name]
+
+
 def build(manifest, source, out, cc, bench=None):
     data = load(manifest)
     source, out = Path(source).resolve(), Path(out).resolve()
@@ -107,21 +123,28 @@ def build(manifest, source, out, cc, bench=None):
     out.mkdir(parents=True, exist_ok=False)
     captured = out / "source"
     if "revision" in data:
-        rev = data["revision"]
-        if not re.fullmatch(r"[0-9a-f]{40}", rev):
-            raise ValueError("source revision must be a full Git commit")
-        archive = command(["git", "-C", str(source), "archive", rev], text=False)
-        captured.mkdir()
-        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-            tar.extractall(captured, filter="data")
+        archive_source(source, data["revision"], captured)
     else:
         # Licensed sources need no Git repository. The caller pins their tree.
         expected = data["source_sha256"]
         if tree_hash(source) != expected:
             raise ValueError("source tree pin mismatch")
         shutil.copytree(source, captured, symlinks=True)
+    for relative, revision in data.get("dependencies", {}).items():
+        dependency = Path(relative)
+        if dependency.is_absolute() or ".." in dependency.parts:
+            raise ValueError("dependency paths must stay within the source tree")
+        archive_source(source / dependency, revision, captured / dependency)
     source_hash = tree_hash(captured)
     shutil.copytree(ASSETS, out / "assets")
+    root = Path(__file__).resolve().parents[4]
+    for relative in data.get("runtime_files", []):
+        runtime = Path(relative)
+        if runtime.is_absolute() or ".." in runtime.parts:
+            raise ValueError("runtime paths must stay within the workstation")
+        target = out / "assets/workstation" / runtime
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / runtime, target)
     records = []
     for w in rows:
         dest = out / w["id"]
