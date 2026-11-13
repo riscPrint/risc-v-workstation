@@ -1,0 +1,43 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "boom-tage-l",
+  "description": "BOOM v4 withTAGELBPD predictor sizes as a component study (all presets small..giga share it).",
+  "source": {
+    "core": "spinal-boom",
+    "revision": "0cb0b694413c6eba5837560536cde80dad62ca00",
+    "files": ["src/main/scala/boom/ifu/bpd/tage.scala", "src/main/scala/boom/ifu/bpd/loop.scala",
+              "src/main/scala/boom/ifu/bpd/bim.scala", "src/main/scala/boom/ifu/bpd/btb.scala",
+              "src/main/scala/boom/common/config-mixins.scala", "src/main/scala/boom/common/parameters.scala"],
+    "fidelity": "approximate",
+    "approximations": [
+      "TAGE index/tag hashing, allocation and u-bit clearing follow the generic csim TAGE, not BOOM's folded-history and wrbypass logic",
+      "BOOM predicts per fetch bank (bankWidth columns); csim predicts per branch instruction",
+      "BIM is modelled as one 2048-entry table; BOOM banks it by column",
+      "the FA2 micro BTB, slow BTB fill timing and banking are not modelled; the BTB is one 256-entry 2-way level",
+      "the loop predictor uses the Seznec rules with 3-bit confidence (BOOM threshold 7), not BOOM's exact update",
+      "history is speculative in BOOM and repaired; csim trains on the actual path with immediate update",
+      "RAS repair follows the csim pointer_top policy"
+    ]
+  },
+  "branch": {
+    "model": "ltage",
+    "pc_shift": 1,
+    "base_entries": 2048,
+    "base_ctr_bits": 2,
+    "ctr_bits": 3,
+    "u_bits": 2,
+    "u_reset_period": 2048,
+    "path_bits": 0,
+    "tables": [
+      {"entries": 128, "history": 2, "tag_bits": 7},
+      {"entries": 128, "history": 4, "tag_bits": 7},
+      {"entries": 256, "history": 8, "tag_bits": 8},
+      {"entries": 256, "history": 16, "tag_bits": 8},
+      {"entries": 128, "history": 32, "tag_bits": 9},
+      {"entries": 128, "history": 64, "tag_bits": 9}
+    ],
+    "loop": {"entries": 64, "ways": 4, "tag_bits": 10, "iter_bits": 10, "conf_bits": 3}
+  },
+  "btb": {"entries": 256, "ways": 2, "tag_bits": 13},
+  "ras": {"entries": 32, "repair": "pointer_top"}
+}

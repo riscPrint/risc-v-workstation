@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,csim,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -376,6 +376,65 @@ usage: rvw cov prove [-h] --config CONFIG --work-dir WORK_DIR [--timeout
 usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
     [--jobs JOBS] [--test TEST] [--equivalence-test EQUIVALENCE_TEST] [--json]
     [--out OUT] [--project PROJECT] project
+```
+
+### `rvw csim`
+
+```text
+usage: rvw csim [-h] [--project PROJECT]
+    {run,sweep,budget,convert,models,compare-rtl,build} ...
+```
+
+### `rvw csim run`
+
+```text
+usage: rvw csim run [-h] [--format {auto,csim,branch,c2,bt9,champsim}] [--set
+    KEY=VALUE] [--timeout TIMEOUT] [--out OUT] [--json] [--project PROJECT]
+    study traces [traces ...]
+```
+
+### `rvw csim sweep`
+
+```text
+usage: rvw csim sweep [-h] --param KEY=V1,V2 [--set KEY=VALUE] [--format
+    {auto,csim,branch,c2,bt9,champsim}] [--budget-kib BUDGET_KIB]
+    [--budget-scope {metadata,all}] [--metric METRIC] [--jobs JOBS] [--timeout
+    TIMEOUT] [--out OUT] [--json] [--project PROJECT] study traces [traces
+    ...]
+```
+
+### `rvw csim budget`
+
+```text
+usage: rvw csim budget [-h] [--set KEY=VALUE] [--json] [--project PROJECT]
+    study
+```
+
+### `rvw csim convert`
+
+```text
+usage: rvw csim convert [-h] --out OUT [--values] [--json] [--project PROJECT]
+    {c2,bt9} source
+```
+
+### `rvw csim models`
+
+```text
+usage: rvw csim models [-h] [--json] [--project PROJECT]
+```
+
+### `rvw csim compare-rtl`
+
+```text
+usage: rvw csim compare-rtl [-h] --trace TRACE --events EVENTS [--roi-start
+    ROI_START] [--roi-end ROI_END] [--elf-sha256 ELF_SHA256] [--top TOP]
+    [--json] [--project PROJECT] study
+```
+
+### `rvw csim build`
+
+```text
+usage: rvw csim build [-h] [--json] [--project PROJECT]
 ```
 
 ### `rvw debug`
@@ -1726,6 +1785,54 @@ Starts a background job: yes.
 Select regression tests covering Scala changes in BASE..HEAD. Uses BASE-side mappings and falls back to all tests when coverage cannot justify omissions. Runs as a job.
 
 Arguments: `database` (required), `diff` (required), `repo`.
+
+Starts a background job: yes.
+
+### `csim_budget`
+
+Storage accounting (bits/KiB per table) of a component study without running a trace.
+
+Arguments: `study` (required), `sets`.
+
+Starts a background job: no.
+
+### `csim_compare_rtl`
+
+Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata #rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.
+
+Arguments: `study` (required), `trace` (required), `events` (required), `roi_start`, `roi_end`, `elf_sha256`, `top`.
+
+Starts a background job: yes.
+
+### `csim_convert`
+
+Convert a C2 RVFI trace (optionally with register values) or a CBP 2016 BT9 trace into rvw.csim-trace/1.
+
+Arguments: `source_format` (required), `source` (required), `out` (required), `values`.
+
+Starts a background job: no.
+
+### `csim_models`
+
+List the component models and their study keys.
+
+Arguments: none.
+
+Starts a background job: no.
+
+### `csim_run`
+
+Run a trace-driven component study (direction predictors incl. TAGE-SC-L, BTB/RAS/ITTAGE, front-end FTQ model, caches, replacement, prefetchers, TLB, store sets, value prediction) on C2, CBP BT9, ChampSim or rvw.csim-trace/1 traces. Reports MPKI, coverage, accuracy and storage per trace. Runs as a job.
+
+Arguments: `study` (required), `traces` (required), `format`, `sets`, `timeout`.
+
+Starts a background job: yes.
+
+### `csim_sweep`
+
+Cartesian sweep of dotted study keys over traces, with storage-budget marking and a Pareto front on one lower-is-better metric (e.g. direction_mpki, l1d_mpki). Runs as a job.
+
+Arguments: `study` (required), `traces` (required), `params` (required), `format`, `sets`, `budget_kib`, `budget_scope`, `metric`, `jobs`, `timeout`.
 
 Starts a background job: yes.
 
