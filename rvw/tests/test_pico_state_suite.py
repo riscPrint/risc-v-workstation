@@ -34,3 +34,21 @@ def test_no_unearned_suite_match(monkeypatch):
     assert module.overall([{'status':'matched'},{'status':'inconclusive'}])=='inconclusive'
     assert module.overall([{'status':'matched'},{'status':'failed'}])=='failed'
     assert module.overall([{'status':'matched'}])=='matched'
+
+
+def test_terminal_traps_have_specific_profile_limits(monkeypatch):
+    module=helper(monkeypatch)
+    fence='TERMINAL_TRAP pc=80000050 insn=0000100f rs1=00000000 retirements=20'
+    misalign='TERMINAL_TRAP pc=80000010 insn=00141383 rs1=80000580 retirements=4'
+    assert module.simulation_outcome(0,False,fence)['status']=='unsupported'
+    assert 'Zifencei' in module.simulation_outcome(0,False,fence)['reason']
+    assert 'CATCH_MISALIGN' in module.simulation_outcome(0,False,misalign)['reason']
+    assert module.simulation_outcome(1,False,fence)['status']=='failed'
+    assert module.simulation_outcome(0,True,fence)['status']=='inconclusive'
+    assert module.overall([{'status':'matched'},{'status':'unsupported'}])=='inconclusive'
+
+
+def test_unknown_trap_and_missing_marker_do_not_match(monkeypatch):
+    module=helper(monkeypatch)
+    for text in ['','TERMINAL_TRAP pc=80000000 insn=ffffffff rs1=00000000 retirements=1']:
+        assert module.simulation_outcome(0,False,text)['status']=='inconclusive'

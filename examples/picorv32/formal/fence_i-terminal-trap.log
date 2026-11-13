@@ -1,0 +1,2 @@
+TERMINAL_TRAP pc=80000050 insn=0000100f rs1=00000000 retirements=20
+.local/pico-diagnose/tb-final.sv:19: $finish called at 776000 (1ps)

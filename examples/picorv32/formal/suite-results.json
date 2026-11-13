@@ -103,11 +103,21 @@
     {
       "test": "rv32ui-fence_i",
       "source_sha256": "0157ffb8d3b6a81811a2a0156fc75dabc8a53a55af1b574c7899f529b175f6e6",
-      "status": "inconclusive",
-      "reason": "cycle or wall limit",
-      "retirements": null,
-      "log": "fence_i-simulation.log",
-      "elf_sha256": "03628ed2477482b83e6990b50ccf9793377f05ba96109ce57e1c4014a3c0f422"
+      "status": "unsupported",
+      "reason": "Zifencei is not implemented by this PicoRV32 profile",
+      "retirements": 20,
+      "log": "fence_i-terminal-trap.log",
+      "elf_sha256": "03628ed2477482b83e6990b50ccf9793377f05ba96109ce57e1c4014a3c0f422",
+      "previous_attempt": {
+        "status": "inconclusive",
+        "reason": "cycle or wall limit"
+      },
+      "terminal_trap": {
+        "pc": 2147483728,
+        "insn": 4111,
+        "rs1_data": 0
+      },
+      "diagnostic_retry": "Same retained ELF and strict miter; harness stops one simulation time unit after terminal trap observation."
     },
     {
       "test": "rv32ui-jal",
@@ -193,11 +203,21 @@
     {
       "test": "rv32ui-ma_data",
       "source_sha256": "e2e322baa038958924eb6b16eae2198854107f8261cf64268c420fe2c69bce3b",
-      "status": "inconclusive",
-      "reason": "cycle or wall limit",
-      "retirements": null,
-      "log": "ma_data-simulation.log",
-      "elf_sha256": "6d1b5eaadc6e916d5395ef145cd61fab77358f6b484e5ffd4dd451073a9dd7f7"
+      "status": "unsupported",
+      "reason": "Misaligned data accesses trap in this CATCH_MISALIGN=1 profile",
+      "retirements": 4,
+      "log": "ma_data-terminal-trap.log",
+      "elf_sha256": "6d1b5eaadc6e916d5395ef145cd61fab77358f6b484e5ffd4dd451073a9dd7f7",
+      "previous_attempt": {
+        "status": "inconclusive",
+        "reason": "cycle or wall limit"
+      },
+      "terminal_trap": {
+        "pc": 2147483664,
+        "insn": 1315715,
+        "rs1_data": 2147485056
+      },
+      "diagnostic_retry": "Same retained ELF and strict miter; harness stops one simulation time unit after terminal trap observation."
     },
     {
       "test": "rv32ui-or",
@@ -406,5 +426,6 @@
     "frame_check": "failed",
     "destination_comparison": "failed",
     "time_ps": 115000
-  }
+  },
+  "diagnostic_scope": "Only the two timed-out programs were rerun. The 40 matched rows retain their earlier evidence."
 }

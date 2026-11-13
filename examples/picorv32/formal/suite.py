@@ -30,6 +30,37 @@ def overall(rows):
     return 'failed' if any(r['status']=='failed' for r in rows) else 'matched' if rows and all(r['status']=='matched' for r in rows) else 'inconclusive'
 
 
+
+def simulation_outcome(returncode, timed_out, text):
+    """A terminal trap is evidence of a profile limit, never a stream match."""
+    observed=re.search(r'MATCH retirements=(\d+)',text)
+    trap=re.search(r'TERMINAL_TRAP pc=([0-9a-fA-F]+) insn=([0-9a-fA-F]+) rs1=([0-9a-fA-F]+) retirements=(\d+)',text)
+    if timed_out or 'test timeout' in text:
+        return dict(status='inconclusive',reason='cycle or wall limit',retirements=None)
+    if returncode:
+        return dict(status='failed',reason='simulation or monitor failure',retirements=None)
+    if trap:
+        pc,insn,rs1,count=(int(trap[i],16 if i<4 else 10) for i in range(1,5))
+        reason='terminal core trap without test completion'
+        status='inconclusive'
+        if insn & 0x707f == 0x100f:
+            status='unsupported';reason='Zifencei is not implemented by this PicoRV32 profile'
+        elif insn & 0x7f in (0x03,0x23):
+            imm=insn>>20 if insn&0x7f==3 else ((insn>>25)<<5)|((insn>>7)&31)
+            imm=imm-4096 if imm&2048 else imm
+            address=(rs1+imm)&0xffffffff
+            size=(insn>>12)&3
+            valid_size = ((insn & 0x7f == 3 and (insn >> 12) & 7 in (1,2,5)) or
+                          (insn & 0x7f == 0x23 and (insn >> 12) & 7 in (1,2)))
+            if valid_size and address&((1<<size)-1):
+                status='unsupported';reason='Misaligned data accesses trap in this CATCH_MISALIGN=1 profile'
+        return dict(status=status,reason=reason,retirements=count,
+                    terminal_trap=dict(pc=pc,insn=insn,rs1_data=rs1))
+    return dict(status='matched' if observed else 'inconclusive',
+                reason='' if observed else 'missing completion observation',
+                retirements=int(observed[1]) if observed else None)
+
+
 def run(source, formal_root, out, prefix, tests=None):
     source=Path(source).resolve();out=Path(out).resolve()
     prepare(source,out,formal_root)
@@ -56,6 +87,10 @@ initial begin
 end
 always @(posedge clk) if(resetn) begin
  if(dut.rvfi_valid) count=count+1;
+ if(dut.trap) begin
+  $display("TERMINAL_TRAP pc=%h insn=%h rs1=%h retirements=%0d",dut.rvfi_pc_rdata,dut.rvfi_insn,dut.rvfi_rs1_rdata,count);
+  #1; $finish;
+ end
  if(completed && dut.rvfi_valid && |dut.rvfi_mem_wmask && dut.rvfi_mem_addr==tohost) begin
   #1; $display("MATCH retirements=%0d",count); $finish;
  end
@@ -92,8 +127,7 @@ endmodule
         hexfile=out/(name+'.hex');hexfile.write_text(relocate_hex(hexfile.read_text()))
         result=execute(['vvp','suite-sim','+hex='+name+'.hex','+tohost='+match[1]],name+'-simulation')
         text=(result.stdout or '')+(result.stderr or '')
-        observed=re.search(r'MATCH retirements=(\d+)',text)
-        row.update(status='matched' if result.returncode==0 and observed and not result.timed_out else 'inconclusive' if result.timed_out or 'test timeout' in text else 'failed',reason='cycle or wall limit' if result.timed_out or 'test timeout' in text else '',retirements=int(observed[1]) if observed else None,log=name+'-simulation.log')
+        row.update(simulation_outcome(result.returncode,result.timed_out,text),log=name+'-simulation.log')
     report=dict(schema='rvw.pico-state-suite/1',core_source=json.loads((out/'source.json').read_text()),rows=rows,status=overall(rows),test_selection='external rv32ui' if tests else 'PicoRV32 bundled RV32UI',limits=['RV32M tests are excluded.','Finite simulation comparison of all base RVFI fields; not formal equivalence.','Trap-write negative control and full bounded equivalence remain failed.'])
     (out/'suite-result.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report));return report
