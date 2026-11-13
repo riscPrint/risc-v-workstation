@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 import json
 from contextlib import closing
 
@@ -75,4 +76,4 @@ def test_clock_data_cli_mcp_parity(probe, capsys, operation, args, tool, kwargs)
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json(tool, {"db": db, **kwargs})
     assert not error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)

@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 """Round 23 query usability regressions."""
 from contextlib import closing
 import json
@@ -35,7 +36,7 @@ def test_invalid_regex_is_query_error(gcd_db, capsys, pattern):
     assert 'invalid regular expression' in cli['error']
     text, _, error = Registry(mcp_tools()).call_json(
         'query_search', {'db': str(gcd_db), 'pattern': pattern, 'regex': True})
-    assert error and cli == json.loads(text)
+    assert error and envelope(cli) == json.loads(text)
 
 
 @pytest.fixture(scope='session')

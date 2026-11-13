@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 import json
 from contextlib import closing
 
@@ -21,5 +22,5 @@ def test_untrusted_literal_diff_cli_mcp_parity(probe_db, capsys):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": a, "new": b})
     assert not error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
     assert cli["summary"]["identical"] is None

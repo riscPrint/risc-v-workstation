@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 """Round 24: conservative inout paths and bidirectional analog attachments."""
 from contextlib import closing
 import json
@@ -137,5 +138,5 @@ def test_old_incomplete_inout_graph_refuses(round24, tmp_path, capsys, src, dst)
         cli = json.loads(capsys.readouterr().out)
         text, _, error = Registry(mcp_tools()).call_json(
             'query_' + op, {**({'db': str(database)} if op != 'diff' else {}), **params})
-        assert error and json.loads(text) == cli
+        assert error and json.loads(text) == envelope(cli)
         assert 'incomplete inout dependency graph' in cli['error']

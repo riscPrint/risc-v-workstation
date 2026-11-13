@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 import json
@@ -27,7 +28,7 @@ def parity(capsys, database, operation, args, cli_args):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_" + operation, {"db": str(database), **args})
     assert not error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
     return cli
 
 
@@ -84,7 +85,7 @@ def test_simulation_only_include_diff_cli_mcp(probe_db, capsys):
     assert main(["query", "diff", str(old), str(new), "--json"]) == 0
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(old), "new": str(new)})
-    assert not error and cli == json.loads(text)
+    assert not error and envelope(cli) == json.loads(text)
     assert cli["summary"]["identical"] is False
 
 
@@ -93,7 +94,7 @@ def test_unknown_preprocessor_context_is_undetermined(probe_db, capsys):
     assert main(["query", "diff", str(database), str(database), "--json"]) == 0
     result = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(database), "new": str(database)})
-    assert not error and result == json.loads(text)
+    assert not error and envelope(result) == json.loads(text)
     assert result["summary"]["identical"] is None
     with closing(DesignDB(database)) as db:
         body, key = db.q("SELECT body_sha256, key FROM blackboxes")[0]
@@ -110,7 +111,7 @@ def test_schema16_diff_refused(gcd_db, tmp_path, capsys, old_side):
     assert main(["query", "diff", str(old), str(new), "--json"]) == 2
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(old), "new": str(new)})
-    assert error and cli == json.loads(text)
+    assert error and envelope(cli) == json.loads(text)
     assert "diff needs rvw.designdb/20" in cli["error"]
 
 
@@ -124,7 +125,7 @@ def test_legacy_sync_graph_refuses(cluster_db, tmp_path, capsys):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_path", {
         "db": str(database), "a": "io_rdAddr", "b": "io_rsp_payload"})
-    assert error and cli == json.loads(text)
+    assert error and envelope(cli) == json.loads(text)
     assert "synchronous memory dependency queries need rvw.designdb/17" in cli["error"]
 
 

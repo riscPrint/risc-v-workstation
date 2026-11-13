@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 from contextlib import closing
 import json
 import sqlite3
@@ -20,7 +21,7 @@ def test_diff_unknown_scope_cli_mcp(gcd_db, capsys):
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {
         "old": str(gcd_db), "new": str(gcd_db), "scope": "typo"})
     assert error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
 
 
 @pytest.mark.parametrize("reverse", [False, True])
@@ -66,7 +67,7 @@ def test_signal_subclass_diff_is_undetermined(probe_db, kind, capsys):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(old), "new": str(new)})
     assert not error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
     assert cli["summary"]["identical"] is None
 
 
@@ -83,7 +84,7 @@ def test_blackbox_clock_role_paths_drivers_loads(probe_db, capsys):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_path", {"db": str(path), "a": "clk", "b": "y"})
     assert not error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
     assert cli["found"]
 
 
@@ -99,7 +100,7 @@ def test_diff_schema15_refused_cli_mcp(gcd_db, tmp_path, capsys, old_side):
     assert "diff needs rvw.designdb/20" in cli["error"]
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(old), "new": str(new)})
     assert error
-    assert cli == json.loads(text)
+    assert envelope(cli) == json.loads(text)
 
 
 @pytest.mark.parametrize("name", ["r17_unused0"])

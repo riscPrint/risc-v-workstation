@@ -69,3 +69,14 @@ Profiles filter the loaded tools without renaming them. The all profile is the
 default. Core, job, search and describe tools remain available. Workflow filters
 use the agent playbook. Search returns purpose and profile; describe returns the
 input schema and declarations. Remote discovery cannot widen client allowlists.
+
+## Common result envelope
+
+MCP transport results add status, summary, artifacts, next and diagnostics.
+An explicit evidence verdict uses pass, fail, inconclusive, no_checks,
+unsupported, not_installed or error. Completion alone has no verdict.
+Legacy result fields remain at the top level. Non-object results use result.
+An older verdict outside this vocabulary moves to legacy_verdict and the common
+verdict is inconclusive. This does not change C4 CLI decisions or exit codes.
+The Python Registry.call API retains raw results. Registry.call_json and MCP
+apply the envelope. Artifacts and suggested next calls are empty if unknown.
