@@ -86,7 +86,8 @@ not copy core sources. Set `RVW_HOME` before use. Wiring supports a literal
 Spinal 1.15.0 build with Scala 2.13.14, the simulator's current versions.
 It uses `RVW_CORE_SOURCE` for captured core builds. It leaves the core's build intact and pins the local sbt launcher to 1.10.7.
 A dependency file is not a compiled adapter. The generated launcher uses the generic supervisor, native identity collector
-and source identity collector. It holds the core and sbt locks. Build and run
+and source identity collector. It holds the core and sbt locks. It streams sbt and lock messages to stderr
+while it captures the runtime classpath. Build and run
 reach the adapter skeleton, which throws until the real signals are mapped.
 The default scaffold without build wiring still returns exit 2 directly.
 

@@ -129,7 +129,7 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$RVW_CORE_SOURCE" "$repo" > "$launch_owner/source.json"
 output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
-  sbt -J-Xmx3g -batch 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
+  sbt -J-Xmx3g -batch 'root/compile' 'export root/Runtime/fullClasspath' 2>&1 | tee /dev/stderr)" || {
   echo "$output" >&2; exit 2;
 }
 cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
