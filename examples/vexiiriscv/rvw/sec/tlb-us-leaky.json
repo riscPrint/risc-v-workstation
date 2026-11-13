@@ -1,0 +1,52 @@
+{
+  "isolation_kind": "tlb-state",
+  "boundary": "U to S delegated system call, Sv32; U probes page_b after the call",
+  "contract": "sandboxing",
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "observations": [
+    "cycles",
+    "retire_cycles",
+    "tlb_events",
+    "bus_handshakes"
+  ],
+  "secrets": [
+    {
+      "t0": 0
+    },
+    {
+      "t0": 1
+    }
+  ],
+  "minimize_runs": 0,
+  "timeout": 1800,
+  "observer_mode": 0,
+  "policy": {
+    "denied_region": "S-mode scratch register and handler registers",
+    "cleanup": "S handler reads the user page that secret bit 0 selects (leak)"
+  },
+  "public": {
+    "reset": "cold",
+    "registers": {
+      "a0": 5
+    }
+  },
+  "program": [
+    "ecall"
+  ],
+  "adapter_command": [
+    "{python}",
+    "-m",
+    "rvw.sec.core_adapter",
+    "--binding",
+    "core-su.json",
+    "--template",
+    "tlb-us.S",
+    "{request}",
+    "{out}"
+  ],
+  "contract_start_pc": "0x80000200"
+}

@@ -16,7 +16,7 @@ example revisions (details in the sections below).
 | Unit IFT | `ift` | a secret input or register reaches a sink of a small unit under given stimulus | whole-core behavior; source-level provenance | seeded Verilog units |
 | Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv; cached VexRiscv: the same two results through the cache refill bus |
 | Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34); cached VexRiscv: a secret-indexed table lookup found through cache hit/miss events of public probe loads, a constant-time lookup clean |
-| Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`); with `pmp`, what a denied access exposes | ePMP; state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles). VexRiscv with PMP: a denied U-mode load never reaches the bus; a dependent load sees no secret (pairs and IFT clean) |
+| Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`); with `pmp`, what a denied access exposes | ePMP; state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles). VexiiRiscv `rv32imasu` U/S/M with Sv32: constant-time handlers clean across U-M, U-S and S-M, secret-dependent handlers flagged; a secret-selected S-mode page read is visible to U through TLB walks. VexRiscv with PMP: a denied U-mode load never reaches the bus; a dependent load sees no secret (pairs and IFT clean) |
 | Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb |
 | Campaign | `campaign` | new leak signatures from generated and mutated pairs, deduplicated | coverage of the whole input space; a clean campaign is bounded by its budget | VexiiRiscv: `remu` and `div` signatures in 24 pairs; VexRiscv: none in 24 pairs |
 | Model pre-check | `model-check` | predicted timing leakage of a planned unit before RTL | transient, cache or predictor leaks; exact cycle counts | predicts the direction of both cores' divide results |
@@ -168,7 +168,7 @@ checked through `sec contract` with a project timing observation channel.
 ## Isolation across a boundary
 
 `rvw sec isolation --manifest isolation.json --out out/isolation` uses the paired
-runner for `pmp`, `epmp`, `register-state`, `predictor-state` or `cache-state`.
+runner for `pmp`, `epmp`, `register-state`, `predictor-state`, `cache-state` or `tlb-state`.
 MCP tool: `sec_isolation`. Use the contract manifest above with these extra fields:
 
 ```
@@ -358,6 +358,12 @@ compared case (all C2 fields on VexRiscv; `pc` and `insn` on VexiiRiscv).
 | `ift-core` keystore | VexRiscv `rv32imu-pmp` | same sequence, keystore words as secrets | `no_leak_observed`; no tainted data left the keystore |
 | `spec-suite` | VexRiscv | v1, v2, rsb, v4 | `no_leak_observed` for all four |
 | `spec-suite` | VexRiscv patched | same | violation in `dbus_trace` for v1, v2 and rsb; v4 `no_leak_observed` |
+| `isolation` U-M | VexiiRiscv `rv32imasu` | `isolation-um-ct.json`: U ecalls, constant-time M handler on `mscratch` | `no_leak_observed`: 97 cycles per call for both secrets |
+| `isolation` U-M | VexiiRiscv `rv32imasu` | `isolation-um-leaky.json`: handler loop count from the secret (control) | violation: 124 against 232 cycles per call, reduced to `addi; ecall` |
+| `isolation` U-S, Sv32 | VexiiRiscv `rv32imasu` | `isolation-us-*.json`: delegated U ecalls, S handler on `sscratch` from a supervisor-only page | constant time: `no_leak_observed` (246 cycles); loop: violation in `cycles`, `retire_cycles` and `tlb_events` timing (300 against 516) |
+| `isolation` S-M, Sv32 | VexiiRiscv `rv32imasu` | `isolation-sm-*.json`: S-mode observer, M handler on `mscratch` | constant time: `no_leak_observed` (226 cycles); loop: violation (280 against 496) |
+| `isolation` tlb-state, Sv32 | VexiiRiscv `rv32imasu` | `tlb-us-leaky.json`: the S handler reads the user page that secret bit 0 selects; U then loads `page_b` and `page_a` | **violation** in `retire_cycles`, `tlb_events`, `bus_handshakes`: the U load of the page the handler did not read walks the page table (2 PTE reads, 25 cycles), the other hits (5 cycles) |
+| `isolation` tlb-state, Sv32 | VexiiRiscv `rv32imasu` | `tlb-us-ct.json`: the handler reads both pages | `no_leak_observed` (53 cycles) |
 | `contract` constant-time, cache channel | VexRiscv `rv32im_cached` | `cache-index.json`: a load from table line `secret & 32`, then public probe loads of both lines; window from the first probe | **violation** in `cache_events`, `probe_counters`, `cycles`, `retire_cycles`: for secret 0 the probe of line 1 misses and line 0 hits (8 cycles); for 32 the reverse (19 cycles, one fill) |
 | `contract` constant-time, cache channel | VexRiscv `rv32im_cached` | `cache-ct.json`: both lines loaded, the value selected with a mask; whole program | `no_leak_observed` (214 cycles, 3 D$ misses each) |
 | `ift-core`, secret memory words | VexRiscv `rv32im_cached` | `ct-xor` / `leak-index` with `ift/cache-policy.json` | `no_leak_observed`, 247 cycles / violation: D$ refill address tainted at cycle 167, then the fetch command at 178 (the secret decides hit or miss, so the stall timing) |
@@ -381,7 +387,10 @@ On both unpatched in-order cores, wrong-path loads never reach the bus.
 - `contract` shows a timing or bus difference between secrets with equal
   architectural traces. A clean result covers only the given secrets and program.
 - `isolation` with `observer_mode` compares only what the lower privilege
-  retires and sees. It does not check PMP, which these cores do not have.
+  retires and sees. The TLB case shows that VexiiRiscv keeps S-mode TLB entries
+  for user pages across `sret`; RISC-V does not require a flush there, so this is
+  expected behavior, and software that must hide such accesses needs
+  `sfence.vma` or separate ASIDs. Both are a true positive of the channel, not a core bug.
 - `spec-suite` gadgets are short; the receivers are the bus trace and timing.
   A cacheless core has no cache receiver. A clean result does not prove that the
   core never speculates.

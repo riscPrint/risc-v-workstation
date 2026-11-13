@@ -73,6 +73,9 @@ optionally `cmd_write`, `cmd_data`, `cmd_mask` or `cmd_size`, `cmd_id`,
 tied to zero or to `ties`. `retire` is `{"kind":"rvfi","prefix":...}` (RVFI
 ports) or `{"kind":"commit","valid":...,"pc":...}` (internal commit signals).
 `trap` optionally names `valid`, `cause`, `tval` and an internal `privilege`.
+Trap signals can be top-level ports or internal signals. `cause` is optional
+(0 when absent). An optional `epc` gives the PC of a trapped instruction that
+the commit port does not report; the C2 trace then gets that instruction.
 A commit-kind core declares only `pc` and `insn` as checked C2 fields.
 `link` (linker script, default `../programs/link.ld` relative to the binding)
 and `march` (default `rv32im_zicsr`) select how `rvw.sec.core_adapter` builds

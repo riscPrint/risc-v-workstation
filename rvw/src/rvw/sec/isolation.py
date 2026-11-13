@@ -4,13 +4,13 @@ from pathlib import Path
 from .pairs import run as run_pairs
 from .common import publish
 
-KINDS=('pmp','epmp','register-state','predictor-state','cache-state')
+KINDS=('pmp','epmp','register-state','predictor-state','cache-state','tlb-state')
 
 
 def run(manifest,out):
     source=Path(manifest).resolve();plan=json.loads(source.read_text())
     if plan.get('isolation_kind') not in KINDS:
-        raise ValueError('declare pmp, epmp, register-state, predictor-state or cache-state')
+        raise ValueError('declare pmp, epmp, register-state, predictor-state, cache-state or tlb-state')
     if not plan.get('program') or not plan.get('boundary'):
         raise ValueError('declare project program and privilege boundary')
     if plan['contract']!='sandboxing': raise ValueError('isolation requires sandboxing contract')
