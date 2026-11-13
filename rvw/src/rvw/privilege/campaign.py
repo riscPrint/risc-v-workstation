@@ -16,19 +16,28 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu':
         raise ValueError('control campaign requires supervisor support (msu)')
+    if raw.get('kind', 'controls') not in ('controls', 'wfi'):
+        raise ValueError('kind must be controls or wfi')
+    if raw.get('kind') == 'wfi':
+        from .wake import programs
+        programs(raw)
     return raw
 
 
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    rows = controls(config)
+    if config.get('kind') == 'wfi':
+        from .wake import programs
+        rows = programs(config)
+    else:
+        rows = controls(config)
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
@@ -48,6 +57,14 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     manifest = dict(schema='rvw.privilege-build/1', spec=SPEC, config=config,
                     description_sha256=digest(description), scenarios=rows)
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
+        {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
+         'domains': [['0x180', '0x300', '0x341', '0x342'], ['M', 'S', 'U']]},
+        {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
+         'when': {'event': 'trap', 'interrupt': False}, 'domains': [[2, 8, 9, 11], ['M']]},
+        {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
+         'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7], ['M']]},
+    ]}, indent=2) + '\n')
     # This fragment is merged into the project's regression config by the owner.
     (out / 'suite.toml').write_text('[suites.privilege]\nkind = "elf-dir"\ndir = "."\nglob = "*.elf"\n'
         'strip_suffix = ".elf"\nmax_cycles = 30000\ntimeout_s = 30\n')

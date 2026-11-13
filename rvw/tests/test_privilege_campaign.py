@@ -93,3 +93,25 @@ def test_c1_strict_evidence(tmp_path, monkeypatch, comparison, expected):
     checked = campaign.check(tmp_path, tmp_path, 'platform.json')
     assert checked['status'] == expected
     assert checked['groups'] == {'control.test': expected}
+
+
+def test_wfi_programs():
+    from rvw.privilege.wake import programs
+    config = {'timer': {'mtime': 0x200bff8, 'mtimecmp': 0x2004000, 'msip': 0x2000000, 'delta': 100}}
+    rows = programs(config)
+    assert len(rows) == 4
+    assert len({r['id'] for r in rows}) == 4
+    for row in rows:
+        text = row['assembly']
+        assert ' wfi\n' in text
+        assert 'bne s0, t0, fail' in text
+        assert 'bltu t0, t1, fail' in text and 'bgeu t0, t1, fail' in text
+        assert 'j wait_pending' in text if row['enabled'] else 'j check_state' in text
+
+
+@pytest.mark.parametrize('timer', [{}, {'mtime': 1, 'mtimecmp': 8, 'msip': 16, 'delta': 100},
+                                  {'mtime': 0, 'mtimecmp': 8, 'msip': 16, 'delta': 0}])
+def test_wfi_bad_config(timer):
+    from rvw.privilege.wake import programs
+    with pytest.raises(ValueError):
+        programs({'timer': timer})

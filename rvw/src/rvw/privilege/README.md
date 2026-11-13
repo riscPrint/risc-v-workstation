@@ -43,6 +43,29 @@ Emit a new output directory for each build to prevent stale ELF discovery.
 
 This increment does not close #139. SUM, MXR and MPRV campaigns remain in the
 existing MMU framework. Full disabled-feature combinations remain open. No RTL
-run was made. These programs do not test PLIC delivery, late WFI wake, reset,
+run was made. The control programs do not test PLIC delivery, late WFI wake, reset,
 Smrnmi, PMA, ePMP, AIA, CLIC, Sstc, state-enable, environment controls, CFI, RAS
 or DVFS. These need separate campaigns and project interfaces.
+
+## Timer and software WFI campaigns
+
+Set `kind` to `wfi` and supply `timer.mtime`, `timer.mtimecmp`, `timer.msip`
+and `timer.delta`. Addresses are integers. Delta is the future timer offset in
+ticks. `examples/privilege/spike-wfi.json` declares the native Spike CLINT map.
+Copy and change that data for the project's map. The generator does not choose
+addresses for a core.
+
+The four programs cross software/timer sources with global MIE clear/set.
+They enable the local source. They drive the software event or program a future
+timer compare. A masked case requires eventual pending and retained register
+state without trap entry. An enabled case checks interrupt cause, exception PC
+within the independent wait region, MIE clear on entry and retained state.
+Legal early WFI return is allowed. The external C1 cycle bound limits waiting.
+The programs restore the device interrupt state before reporting completion.
+These cases do not test physical clock stop, delayed external input or reset.
+They are a bounded increment for #149 and do not close that issue.
+
+Builds also write `functional-groups.json` for `rvw cov functional --config`.
+It describes CSR/mode, trap and interrupt observation domains. Observed bins
+measure trace activity. Use `privilege check` for architectural pass groups.
+An observed hit alone never establishes a correct outcome.

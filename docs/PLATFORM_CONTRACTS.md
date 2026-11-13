@@ -2975,3 +2975,11 @@ result by SHA-256. A group passes only if every member has a passing C1 result
 and a complete strict Spike match with a passing end event, positive instruction
 count and zero synchronizations. Missing or duplicate evidence is inconclusive.
 These artifacts do not change C1, C2 or C3 and do not grant C4 acceptance.
+
+The privilege description also accepts `kind = "wfi"` and a `timer` object with
+integer `mtime`, `mtimecmp`, `msip` and `delta`. The generator programs the
+project-owned timer/software device and crosses the two sources with MIE
+clear/set. The delta is in timer ticks. C1 execution bounds the wait. It makes
+no minimum sleep or physical clock-gating claim. Builds include
+`functional-groups.json` for C2 observation coverage. Observation hits do not
+grant the architectural pass groups from `privilege check`.
