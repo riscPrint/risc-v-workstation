@@ -10,6 +10,7 @@ import re
 import pytest
 
 from rvw.mcp.registry import Registry
+from rvw.mcp.envelope import envelope
 from test_debug_tools import CFG, FAKE, SYMS_ELF, fake_run
 from test_mcp_tools import call, wait_file
 from test_wave import VCD
@@ -83,13 +84,13 @@ def test_wave_cli_parity(registry, wave, rvw, tmp_path):
         assert expected[0] == 0
         actual = call(registry, f"wave_{action}", wave=wave, **arguments)
         # Registry wraps non-object CLI JSON under result per the MCP structured-content contract.
-        assert actual == (expected[2] if isinstance(expected[2], dict) else {"result": expected[2]})
+        assert actual == envelope(expected[2])
 
     out = str(tmp_path / "cut.vcd.gz")
     actual = call(registry, "wave_cut", wave=wave, out=out, t0="1c", t1="3c",
                   signals="count|valid", rebase=True)
-    assert actual == rvw("wave", "cut", wave, "--out", out, "--from", "1c", "--to", "3c",
-                         "--signals", "count|valid", "--rebase", "--json")[2]
+    assert actual == envelope(rvw("wave", "cut", wave, "--out", out, "--from", "1c", "--to", "3c",
+                                  "--signals", "count|valid", "--rebase", "--json")[2])
     assert call(registry, "wave_sample", wave=out, regex="count", at="0")["values"] == {"TOP.Top.count": "0x1"}
 
 

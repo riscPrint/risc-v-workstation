@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 import shutil
+import sys
 import time
 
 from rvw.common.proc import run_group
@@ -52,7 +53,7 @@ def run(args):
         from .datapath_kit import run as propose
         return propose(args)
     if not args.rtl or not args.model or args.width is None:
-        print('datapath proof requires --rtl, --model and --width')
+        print('datapath proof requires --rtl, --model and --width', file=sys.stderr)
         return 2
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)

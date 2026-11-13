@@ -167,7 +167,8 @@ def test_isolated_tool_answers_inline_and_keeps_errors(plain_module):
     assert r.call("t_double", {"x": 4}) == {"value": 8}
     assert r.call("job_list", {})["jobs"] == []        # inline answers leave no job behind
     _, err, is_error = r.call_json("t_boom", {})
-    assert is_error and err["error"] == "ValueError: bad input"
+    assert is_error and err["error"] == "bad input"
+    assert err["code"] == "invalid_input" and err["diagnostics"]
     _, err, is_error = r.call_json("t_double", {"y": 1})
     assert is_error and err["error"].startswith("bad arguments for t_double")
     r.jobs.shutdown(grace=0.1)
@@ -221,7 +222,7 @@ def test_wave_tools_run_in_a_worker_process(tmp_path, monkeypatch):
     real = run_function
 
     def spy(job, module, function, arguments, lock=None):
-        calls.append((module, function))
+        calls.append((module, function, arguments))
         return real(job, module, function, arguments, lock)
 
     monkeypatch.setattr("rvw.mcp.registry.worker.run_function", spy)
@@ -229,7 +230,8 @@ def test_wave_tools_run_in_a_worker_process(tmp_path, monkeypatch):
     from rvw.wave import mcp_tools as wave_tools
     assert json.loads(json.dumps(got, default=list)) == json.loads(json.dumps(
         wave_tools._changes(str(wave), "cnt"), default=list))
-    assert calls == [("rvw.wave.mcp_tools", "_changes")]
+    assert calls == [("rvw.mcp.execution", "run_discovered",
+                      {"tool_name": "wave_changes", "arguments": {"wave": str(wave), "regex": "cnt"}})]
     r.jobs.shutdown(grace=0.1)
 
 

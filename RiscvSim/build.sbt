@@ -22,6 +22,8 @@ lazy val riscvsim = (project in file("."))
     scalacOptions ++= Seq("-deprecation", "-feature", "-language:reflectiveCalls"),
     fork := true,
     Test / parallelExecution := false,
+    // Keep native test caches private to this checkout.
+    Test / envVars += "RISCVSIM_WORK" -> (baseDirectory.value / "target" / "test-work").getAbsolutePath,
     // What boom/run.sh passes to real runs, so the replay-path test runs in the plain suite.
     Test / javaOptions ++= Seq(
       s"-Driscvsim.script=${(baseDirectory.value / "boom" / "run.sh").getAbsolutePath}",

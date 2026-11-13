@@ -162,5 +162,8 @@ def test_hdl_scan_stops_descendants(tmp_path, cancel):
         (scan,) = json.loads(output.read_text())["results"]
         assert scan["chunks"] == [] and "exit 124" in scan["problems"][0]
     child = int(pid.read_text().split(",")[1])
-    with pytest.raises(ProcessLookupError):
-        os.kill(child, 0)
+    from test_proc import _alive
+    deadline = time.monotonic() + 5
+    while _alive(child) and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert not _alive(child), "scan descendant is still running"

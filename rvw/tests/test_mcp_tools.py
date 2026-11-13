@@ -12,6 +12,7 @@ import pytest
 
 from rvw.common.lock import status as lock_status
 from rvw.mcp.registry import Registry
+from rvw.mcp.envelope import envelope
 from rvw.results.generation import open_current
 from race_injection import race_injector
 
@@ -38,8 +39,8 @@ def test_regress_discovery_history_and_preview(registry, fake, rvw, tmp_path):
     core = str(fake.config)
     for options in ({}, {"suite": "isa"}):
         args = ["--suite", "isa"] if options else []
-        assert call(registry, "regress_list", core=core, **options) == rvw("regress", "list", "--core", core, *args, "--json")[2]
-    assert call(registry, "regress_history", core="fake", limit=2) == rvw("regress", "history", "--core", "fake", "--limit", 2, "--json")[2]
+        assert call(registry, "regress_list", core=core, **options) == envelope(rvw("regress", "list", "--core", core, *args, "--json")[2])
+    assert call(registry, "regress_history", core="fake", limit=2) == envelope(rvw("regress", "history", "--core", "fake", "--limit", 2, "--json")[2])
     out = str(tmp_path / "preview")
     actual = call(registry, "regress_run", core=core, suite="isa", out=out, dry_run=True, filter=["-p-"])
     expected = rvw("regress", "run", "--core", core, "--suite", "isa", "--out", out, "--dry-run", "--filter=-p-", "--json")[2]
@@ -60,8 +61,8 @@ def test_regress_run_compare_and_gate(registry, fake, rvw, tmp_path):
     result = call(registry, "regress_run", core=core, tier="quick", out=str(candidate), no_cache=True)
     assert not result["ok"]  # failing simulations still return the CLI JSON
     verdict = call(registry, "regress_compare", base=str(base), candidate=str(candidate), core=core)
-    assert verdict["verdict"] == "reject" and verdict["new_failures"][0]["id"] == "rv64ui-p-add"
-    assert verdict == rvw("regress", "compare", base, candidate, "--core", core, "--json")[2]
+    assert verdict["legacy_verdict"] == "reject" and verdict["new_failures"][0]["id"] == "rv64ui-p-add"
+    assert verdict == envelope(rvw("regress", "compare", base, candidate, "--core", core, "--json")[2])
     gate = call(registry, "regress_gate", core=core, base=str(base), cand=str(candidate))
     assert gate == rvw("regress", "gate", "--core", core, "--base", base, "--cand", candidate, "--json")[2]
     history = call(registry, "regress_history", core="fake")
@@ -82,7 +83,7 @@ def test_regress_known_tools(registry, fake, rvw):
                  signature="fail:7", reason="fixture failure", rev="abc")
     assert added["added"] == 1
     known = call(registry, "regress_known_list", core=core)
-    assert known == rvw("regress", "known", "list", "--core", core, "--json")[2]
+    assert known == envelope(rvw("regress", "known", "list", "--core", core, "--json")[2])
     assert known["known"][0] == added["entries"][0]
     removed = call(registry, "regress_known_remove", core=core, suite="isa", id="rv64ui-p-add")
     assert removed["removed"] == 1 and not call(registry, "regress_known_list", core=core)["known"]

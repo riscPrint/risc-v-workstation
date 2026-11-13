@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from rvw.cli import build_parser, main
+from rvw.common.proc import run_group
 from test_debug_tools import CFG, FAKE, fake_run, make_core
 
 
@@ -46,22 +47,32 @@ def json_commands(parser: argparse.ArgumentParser, path=()):
                     continue
                 seen.add(id(sub))
                 yield from json_commands(sub, path + (name,))
-    if "--json" in parser._option_string_actions:
+    requires_child = any(isinstance(a, argparse._SubParsersAction) and a.required
+                         for a in parser._actions)
+    if "--json" in parser._option_string_actions and not requires_child:
         yield path, parser
 
 
 def _value(action, tmp: Path) -> str:
     if action.choices:
         return str(next(iter(action.choices)))
-    if action.type in (int, float):
-        return "1"
-    return str(tmp / f"missing-{action.dest}")
+    value = str(tmp / f"missing-{action.dest}")
+    if action.type is not None:
+        try:
+            action.type(value)
+        except (ValueError, TypeError, argparse.ArgumentTypeError):
+            value = "1"
+            action.type(value)
+    return value
 
 
 def probe_argv(path, parser, tmp: Path) -> list[str]:
     """Arguments that get past argparse: required positionals and options get a missing path (or a
     number, or the first choice), so the command runs its error path."""
     argv = list(path)
+    def values(action):
+        count = action.nargs if isinstance(action.nargs, int) else 1
+        return [_value(action, tmp)] * count
     for action in parser._actions:
         if isinstance(action, (argparse._HelpAction, argparse._SubParsersAction)) \
                 or "--json" in action.option_strings:
@@ -69,22 +80,32 @@ def probe_argv(path, parser, tmp: Path) -> list[str]:
         if not action.option_strings:
             if action.nargs in ("?", "*"):
                 continue
-            argv.append(_value(action, tmp))
+            argv.extend(values(action))
         elif action.required:
             argv.append(action.option_strings[-1])
             if action.nargs != 0:
-                argv.append(_value(action, tmp))
+                argv.extend(values(action))
     for group in parser._mutually_exclusive_groups:
         if group.required and not any(a.option_strings[-1] in argv for a in group._group_actions):
             a = group._group_actions[0]
-            argv += [a.option_strings[-1]] + ([] if a.nargs == 0 else [_value(a, tmp)])
+            argv += [a.option_strings[-1]] + values(a)
     return argv + ["--json"]
 
 
 # Extra arguments a command needs so the probe runs it as a one-shot command.
-EXTRA = {("mcp",): ["--list"]}     # without --list, `rvw mcp` starts the stdio server
+EXTRA = {("mcp",): ["--list"],
+         # Exercise input errors, without starting native builds or downloading sources.
+         ("agent", "bringup-check"): ["--out", "."],
+         ("regress", "uvm"): ["--archive", "missing-archive.tar.gz"]}     # without --list, `rvw mcp` starts the stdio server
 
 COMMANDS = sorted(json_commands(build_parser()), key=lambda c: c[0])
+
+
+@pytest.mark.fast
+def test_probe_arguments_reach_handlers():
+    parser = build_parser()
+    for path, command in COMMANDS:
+        parser.parse_args(probe_argv(path, command, Path("missing-inputs")) + EXTRA.get(path, []))
 
 
 def test_the_probe_sees_the_known_json_commands():
@@ -100,8 +121,9 @@ def test_every_json_command_writes_one_document_or_nothing(path, parser, tmp_pat
     env = {**os.environ, "RVW_NO_LOCK": "1", "RVW_RESULTS": str(tmp_path / "results"),
            "RVW_LOCK_DIR": str(tmp_path / "locks"), "HOME": str(tmp_path / "home")}
     env.pop("RVW_CORE", None)
-    p = subprocess.run([sys.executable, "-m", "rvw", *argv], capture_output=True, text=True, env=env,
-                       stdin=subprocess.DEVNULL, timeout=300, cwd=tmp_path)
+    p = run_group([sys.executable, "-m", "rvw", *argv], capture=True, env=env,
+                  input=b"", timeout=60, cwd=tmp_path)
+    assert not p.timed_out, (argv, p.stderr)
     # The probe must reach the command, not stop in argparse.
     assert "usage:" not in p.stderr, (argv, p.stderr)
     assert_one_document_or_empty(p.stdout, " ".join(argv))
