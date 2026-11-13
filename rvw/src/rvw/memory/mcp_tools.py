@@ -2,10 +2,14 @@ from rvw.mcp.spec import ToolSpec, schema
 from .multihart import check, images
 from .axiomatic import check as axiomatic_check
 from .concurrent import generate
+from .tilelink_bind import generate as tilelink_bind
 
 
 def mcp_tools():
-    return [ToolSpec('memory_axiomatic', 'Search scalar RVWMO/Ztso execution graphs with complete dependency observations.',
+    return [ToolSpec('memory_tilelink_bind', 'Generate a bounded two-client single-beat TL-C monitor and bind from SpinalDB.',
+                     schema({'database': {'type': 'string'}, 'profile': {'type': 'string'}, 'out': {'type': 'string'}},
+                            required=['database', 'profile', 'out']), tilelink_bind),
+            ToolSpec('memory_axiomatic', 'Search scalar RVWMO/Ztso execution graphs with complete dependency observations.',
                      schema({'trace': {'type': 'string'}, 'reference': {'type': 'string'},
                              'model': {'type': 'string', 'default': 'rvwmo'}, 'limit': {'type': 'integer', 'default': 100000}},
                             required=['trace', 'reference']), axiomatic_check),

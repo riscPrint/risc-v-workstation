@@ -1076,8 +1076,8 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 ### `rvw memory`
 
 ```text
-usage: rvw memory [-h] [--project PROJECT] {images,check,axiomatic,generate}
-    ...
+usage: rvw memory [-h] [--project PROJECT]
+    {images,check,axiomatic,generate,tilelink-bind} ...
 ```
 
 ### `rvw memory images`
@@ -1105,6 +1105,13 @@ usage: rvw memory axiomatic [-h] --trace TRACE --reference REFERENCE [--model
 ```text
 usage: rvw memory generate [-h] [--seed SEED] [--harts HARTS] [--length
     LENGTH] [--project PROJECT]
+```
+
+### `rvw memory tilelink-bind`
+
+```text
+usage: rvw memory tilelink-bind [-h] --database DATABASE --profile PROFILE
+    --out OUT [--project PROJECT]
 ```
 
 ### `rvw ooo`
@@ -2731,6 +2738,14 @@ Starts a background job: no.
 Prepare pinned per-hart ELF inputs. Does not run a DUT.
 
 Arguments: `hart_images` (required).
+
+Starts a background job: no.
+
+### `memory_tilelink_bind`
+
+Generate a bounded two-client single-beat TL-C monitor and bind from SpinalDB.
+
+Arguments: `database` (required), `profile` (required), `out` (required).
 
 Starts a background job: no.
 

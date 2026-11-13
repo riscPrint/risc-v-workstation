@@ -135,6 +135,19 @@ ignored annotation. It returns a native C1 outcome. A compile-only result is
 not a run outcome. `physical_signoff` remains false. The simulation README
 lists exact fields. No standard-cell library or native gate backend is bundled.
 
+## Bounded TileLink-C monitor generation
+
+`rvw.tlc-bind/1` is a project profile for two typed Spinal TileLink Bus bundles
+and explicit channel signal IDs in one SpinalDB component. It declares bus
+widths, a single single-beat line address, a bounded service assumption and
+an independent expected-data signal. `rvw.tlc-monitor/1` reports generated
+monitor and bind paths with `executed:false`. Generation is not a monitor
+runtime pass. This profile rejects multi-beat, other-line and error traffic.
+Actual protocol refinement and project oracle independence remain separate
+obligations. The memory tool README defines profile fields and runtime limits.
+
+
+
 ## Layout
 
 | Path | What | Language |

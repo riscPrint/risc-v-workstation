@@ -87,3 +87,39 @@ initialize the shared 40 bytes and detect each completion symbol. Feed its
 captured C2/2 execution to the axiomatic checker. Generation does not run a
 DUT. The lock loops need declared fairness and a bounded watchdog. The project
 must collect complete dependencies to earn an axiomatic result.
+
+## Generated TileLink-C channel monitor
+
+`rvw memory tilelink-bind --database design.sqlite --profile tlc.json --out monitors`
+selects two `spinal.lib.bus.tilelink.Bus` bundles from SpinalDB and writes a
+SystemVerilog monitor and bind. Existing output files are not overwritten.
+The project profile uses `rvw.tlc-bind/1`. It supplies `source_bits`, `sink_bits`,
+`address_bits`, `data_bits`, `size_bits`, `line_bytes`, hex `line_address`,
+positive `bound_cycles`, and a named `fairness` service assumption. The line
+must fit in one beat. Multi-beat and other-line traffic are outside this profile.
+
+`clients` has two rows with `bundle_id` and a `signals` map from channel field
+name to SpinalDB signal ID. `FIELDS` in `tilelink_bind.py` lists every required
+field and width. Both bundles and all mapped signals must belong to the same
+bind component. The generator checks bundle types, signal widths and pruning.
+The profile also supplies signal IDs for active-high `clock` and `reset` and
+`expected_data`. Set `oracle_kind` to `independent-stimulus`. Expected data must
+come from a project stimulus/reference signal. It must not come from channel
+read data. The generator cannot prove that independence from a signal ID.
+
+The monitor checks accepted Acquire, Probe, ProbeAck, Release, Grant,
+ReleaseAck and GrantAck actions. It tracks source and sink lifetimes, probe
+responses, N/B/T permission safety, complete-line data and bounded outstanding
+ages. Set `trunk_dirty` only if the project model treats every Trunk copy as
+dirty. That policy requires data on a shrinking Trunk acknowledgment/release.
+Same-cycle shrinks precede grants in the observer. Reset clears all monitor
+state. Independent client resets and stalled-payload stability are not checked.
+Error responses are rejected by this success-only profile.
+
+The native test uses a scripted two-client channel fixture and a typed SQL
+fixture. Verilator elaborates the generated bind and runs five injected defects:
+early grant, stale grant data, lost GrantAck, missing grant and stale intervention
+data. This is monitor runtime evidence. It is not a real home/cache refinement
+proof or a production design-database integration result. Multi-beat channels,
+real coherent-fabric campaigns and independent protocol-model cross-checks
+remain open.
