@@ -78,6 +78,12 @@ class Adapter:
             address = min(end, (address//line+1)*line, (address//page+1)*page)
         return done-cycle
 
+    def prefetch(self, first, last, cycle):
+        line = self.description['memory']['l1i'].get('line_bytes', 64)
+        for block in range(first.pc // line, (last.pc + last.length - 1) // line + 1):
+            self.models.prefetch_instruction(cycle, first.pc, block * line)
+            self.events['fdip_line_requests'] += 1
+
     def fetch(self, op, cycle):
         if self.fetch_cycle != cycle:
             self.fetch_cycle, self.fetch_lines = cycle, {}
