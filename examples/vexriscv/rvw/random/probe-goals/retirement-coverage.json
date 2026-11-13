@@ -1,0 +1,590 @@
+{
+  "schema": "rvw.functional-coverage/1",
+  "config": {
+    "replace_defaults": true,
+    "groups": [
+      {
+        "name": "sequence",
+        "fields": [
+          "kind",
+          "distance"
+        ],
+        "when": {
+          "event": "sequence"
+        },
+        "bins": [
+          [
+            "RAW",
+            1
+          ],
+          [
+            "WAW",
+            1
+          ],
+          [
+            "WAR",
+            1
+          ],
+          [
+            "branch-after-load",
+            1
+          ],
+          [
+            "load-after-load",
+            1
+          ],
+          [
+            "store-after-load",
+            1
+          ],
+          [
+            "load-after-store",
+            1
+          ],
+          [
+            "store-after-store",
+            1
+          ],
+          [
+            "branch-after-branch",
+            1
+          ],
+          [
+            "jump-after-branch",
+            1
+          ],
+          [
+            "branch-after-jump",
+            1
+          ],
+          [
+            "jump-after-jump",
+            1
+          ],
+          [
+            "RAW",
+            2
+          ],
+          [
+            "WAW",
+            2
+          ],
+          [
+            "WAR",
+            2
+          ],
+          [
+            "branch-after-load",
+            2
+          ],
+          [
+            "load-after-load",
+            2
+          ],
+          [
+            "store-after-load",
+            2
+          ],
+          [
+            "load-after-store",
+            2
+          ],
+          [
+            "store-after-store",
+            2
+          ],
+          [
+            "branch-after-branch",
+            2
+          ],
+          [
+            "jump-after-branch",
+            2
+          ],
+          [
+            "branch-after-jump",
+            2
+          ],
+          [
+            "jump-after-jump",
+            2
+          ],
+          [
+            "RAW",
+            4
+          ],
+          [
+            "WAW",
+            4
+          ],
+          [
+            "WAR",
+            4
+          ],
+          [
+            "branch-after-load",
+            4
+          ],
+          [
+            "load-after-load",
+            4
+          ],
+          [
+            "store-after-load",
+            4
+          ],
+          [
+            "load-after-store",
+            4
+          ],
+          [
+            "store-after-store",
+            4
+          ],
+          [
+            "branch-after-branch",
+            4
+          ],
+          [
+            "jump-after-branch",
+            4
+          ],
+          [
+            "branch-after-jump",
+            4
+          ],
+          [
+            "jump-after-jump",
+            4
+          ]
+        ]
+      }
+    ],
+    "sequences": {
+      "distances": [
+        1,
+        2,
+        4
+      ]
+    }
+  },
+  "config_sha256": "c5c79563a365d49831204c81e7b859a8351874e9ae570ede80934a6aff24859d",
+  "traces": {
+    "41f733865d8caf3b111ff9f21644ad3ab06b4c1e846c2c1e7a0da075d7677d6c": {
+      "path": "$CHECKOUT/rvw/out/dv/source-vexriscv/add/rvfi.jsonl",
+      "header": {
+        "schema": "rvw.rvfi/2",
+        "xlen": 32,
+        "isa": "rv32im_zicsr_zifencei",
+        "core": "vexriscv",
+        "config": "rv32im",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/closure-baseline/elfs/rv32ui-p-add",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+        "source": {
+          "core_dirty": false,
+          "core_repo": "~/fun/saviour/wt/.vex/dv/vexriscv",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "4ea1d8f2ee0748053dbe506514e21e30469d8c53"
+        },
+        "seed": 1,
+        "elf_sha256": "ada87a7ca9607b505a16b8ece7138ebad5983b22298adf9c9a4864c8e396aa76",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "capabilities": [
+          "csr"
+        ]
+      },
+      "platform": "vexriscv",
+      "address_convention": "aligned_mem"
+    },
+    "46a0a826e0a1a2e71893753ff856a0f82849a485e88dff6422956aa121ea8f4c": {
+      "path": "$CHECKOUT/rvw/out/dv/source-vexriscv/beq/rvfi.jsonl",
+      "header": {
+        "schema": "rvw.rvfi/2",
+        "xlen": 32,
+        "isa": "rv32im_zicsr_zifencei",
+        "core": "vexriscv",
+        "config": "rv32im",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/closure-baseline/elfs/rv32ui-p-beq",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+        "source": {
+          "core_dirty": false,
+          "core_repo": "~/fun/saviour/wt/.vex/dv/vexriscv",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "4ea1d8f2ee0748053dbe506514e21e30469d8c53"
+        },
+        "seed": 1,
+        "elf_sha256": "df6c7261efc7e412c08581661fe3b7d8a48a31990f23a497a2faba8fbe549851",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "capabilities": [
+          "csr"
+        ]
+      },
+      "platform": "vexriscv",
+      "address_convention": "aligned_mem"
+    },
+    "9ca14bc113d493353662f3cc386cc69e0a9d09560f05009040c19bfbbafa83ee": {
+      "path": "$CHECKOUT/rvw/out/dv/source-vexriscv/lw/rvfi.jsonl",
+      "header": {
+        "schema": "rvw.rvfi/2",
+        "xlen": 32,
+        "isa": "rv32im_zicsr_zifencei",
+        "core": "vexriscv",
+        "config": "rv32im",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/closure-baseline/elfs/rv32ui-p-lw",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+        "source": {
+          "core_dirty": false,
+          "core_repo": "~/fun/saviour/wt/.vex/dv/vexriscv",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "4ea1d8f2ee0748053dbe506514e21e30469d8c53"
+        },
+        "seed": 1,
+        "elf_sha256": "48700e68f75b6bbf88d986131814701d453b583302d48a53fb835727c4e0cbdb",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "capabilities": [
+          "csr"
+        ]
+      },
+      "platform": "vexriscv",
+      "address_convention": "aligned_mem"
+    },
+    "3efab9d1c65249f72e24298c17785b53cbfddf66f720950258b2a6dc3643604b": {
+      "path": "$CHECKOUT/rvw/out/dv/source-vexriscv/sw/rvfi.jsonl",
+      "header": {
+        "schema": "rvw.rvfi/2",
+        "xlen": 32,
+        "isa": "rv32im_zicsr_zifencei",
+        "core": "vexriscv",
+        "config": "rv32im",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/closure-baseline/elfs/rv32ui-p-sw",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+        "source": {
+          "core_dirty": false,
+          "core_repo": "~/fun/saviour/wt/.vex/dv/vexriscv",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "4ea1d8f2ee0748053dbe506514e21e30469d8c53"
+        },
+        "seed": 1,
+        "elf_sha256": "f02d1fc81ee30c708aeadc9f6085bff123c4ad05ff4d66148b947b86afa858ba",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "capabilities": [
+          "csr"
+        ]
+      },
+      "platform": "vexriscv",
+      "address_convention": "aligned_mem"
+    }
+  },
+  "retired": 1713,
+  "groups": {
+    "sequence": {
+      "fields": [
+        "kind",
+        "distance"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "RAW",
+            1
+          ],
+          "count": 547
+        },
+        {
+          "bin": [
+            "RAW",
+            2
+          ],
+          "count": 310
+        },
+        {
+          "bin": [
+            "RAW",
+            4
+          ],
+          "count": 101
+        },
+        {
+          "bin": [
+            "WAR",
+            1
+          ],
+          "count": 26
+        },
+        {
+          "bin": [
+            "WAR",
+            2
+          ],
+          "count": 61
+        },
+        {
+          "bin": [
+            "WAR",
+            4
+          ],
+          "count": 117
+        },
+        {
+          "bin": [
+            "WAW",
+            1
+          ],
+          "count": 207
+        },
+        {
+          "bin": [
+            "WAW",
+            2
+          ],
+          "count": 21
+        },
+        {
+          "bin": [
+            "WAW",
+            4
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "branch-after-branch",
+            1
+          ],
+          "count": 18
+        },
+        {
+          "bin": [
+            "branch-after-branch",
+            2
+          ],
+          "count": 34
+        },
+        {
+          "bin": [
+            "branch-after-branch",
+            4
+          ],
+          "count": 17
+        },
+        {
+          "bin": [
+            "branch-after-load",
+            4
+          ],
+          "count": 11
+        },
+        {
+          "bin": [
+            "load-after-store",
+            1
+          ],
+          "count": 33
+        }
+      ],
+      "holes": [
+        [
+          "branch-after-jump",
+          1
+        ],
+        [
+          "branch-after-jump",
+          2
+        ],
+        [
+          "branch-after-jump",
+          4
+        ],
+        [
+          "branch-after-load",
+          1
+        ],
+        [
+          "branch-after-load",
+          2
+        ],
+        [
+          "jump-after-branch",
+          1
+        ],
+        [
+          "jump-after-branch",
+          2
+        ],
+        [
+          "jump-after-branch",
+          4
+        ],
+        [
+          "jump-after-jump",
+          1
+        ],
+        [
+          "jump-after-jump",
+          2
+        ],
+        [
+          "jump-after-jump",
+          4
+        ],
+        [
+          "load-after-load",
+          1
+        ],
+        [
+          "load-after-load",
+          2
+        ],
+        [
+          "load-after-load",
+          4
+        ],
+        [
+          "load-after-store",
+          2
+        ],
+        [
+          "load-after-store",
+          4
+        ],
+        [
+          "store-after-load",
+          1
+        ],
+        [
+          "store-after-load",
+          2
+        ],
+        [
+          "store-after-load",
+          4
+        ],
+        [
+          "store-after-store",
+          1
+        ],
+        [
+          "store-after-store",
+          2
+        ],
+        [
+          "store-after-store",
+          4
+        ]
+      ],
+      "expected_bins": 36,
+      "observed_bins": 14,
+      "expected_hit": 14
+    }
+  },
+  "unknown_encodings": {},
+  "notes": [
+    "Default domains are a coverage plan, not claims of ISA support or reachability.",
+    "C2 trap events without mode retain mode=unknown; mode is not inferred.",
+    "RVFI intr marks trap-handler entry, including synchronous traps; actual interrupt causes use C2 trap events.",
+    "retired counts C2 instruction records, including trap=true records.",
+    "CSR/mnemonic groups without declared bins report observations, not a completeness percentage.",
+    "rd_x0 records RVFI rd=0, which also denotes instructions without a destination.",
+    "dependency: an FP destination is the instruction encoding's rd (C2 rd is the integer write); when the trace reports an integer rd for an FP-destination instruction, the next instruction's back_to_back is undetermined.",
+    "Memory alignment uses each trace's platform address convention (aligned_mem: mem_addr plus the mask's lane offset); a lane-shifted mask under an unknown or byte convention is undetermined."
+  ],
+  "capture": {
+    "env": {
+      "DYLD_LIBRARY_PATH": null,
+      "HOME": "~",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "LD_LIBRARY_PATH": null,
+      "PATH": "/opt/homebrew/opt/riscv-gnu-toolchain/bin:$CHECKOUT/rvw/.venv/bin:~/opt/jdk21/bin:~/opt/oss-cad-suite/bin:~/fun/saviour/spinal-boom/../ref/sail/sail-riscv-Mac-arm64/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
+      "PYTHONHOME": null,
+      "PYTHONPATH": null,
+      "SYSTEMROOT": null,
+      "TEMP": null,
+      "TMP": null,
+      "TMPDIR": "/var/folders/s3/t4lhzzrj1qxfn3_y28334_340000gn/T/",
+      "YOSYS_DATDIR": null
+    },
+    "files": [
+      {
+        "copy": "files/36d5ba8a63dcdbb6d6732009a3c41d3bb5f49713764869ebe3a95fa335ba1847/platform.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/examples/vexriscv/rvw/platform.json",
+        "sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+        "size": 1115,
+        "source": "examples/vexriscv/rvw/platform.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/d55ba6424f0de2fa13d055f597497ce47260a5f61f11e5bbce51e3ee080fb29c/retirement-sequences.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/examples/vexriscv/rvw/random/probe-goals/retirement-sequences.json",
+        "sha256": "517d7bbfed8327a0fbfbcd87d6fd47bf181375ef043933387b70ef676e958e44",
+        "size": 120,
+        "source": "examples/vexriscv/rvw/random/probe-goals/retirement-sequences.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/b27f136f691caced830bb0fa6e44d51949267870345916cd54c9d203b063e195/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexriscv/add/rvfi.jsonl",
+        "sha256": "41f733865d8caf3b111ff9f21644ad3ab06b4c1e846c2c1e7a0da075d7677d6c",
+        "size": 196274,
+        "source": "rvw/out/dv/source-vexriscv/add/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/06db836a8d60014bd1733ada4297580bde514e0e3e17efbe42921940d75a40ef/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexriscv/beq/rvfi.jsonl",
+        "sha256": "46a0a826e0a1a2e71893753ff856a0f82849a485e88dff6422956aa121ea8f4c",
+        "size": 128512,
+        "source": "rvw/out/dv/source-vexriscv/beq/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/5af5292af3b38e7a54d3752943b5a79f3885b6d59ed82cec4e6077cc56a95a44/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexriscv/lw/rvfi.jsonl",
+        "sha256": "9ca14bc113d493353662f3cc386cc69e0a9d09560f05009040c19bfbbafa83ee",
+        "size": 129258,
+        "source": "rvw/out/dv/source-vexriscv/lw/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/d19f88dea948e47d3aa51f9d34f7caa72c075313306ed464d3a00e0e87556fcb/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexriscv/sw/rvfi.jsonl",
+        "sha256": "3efab9d1c65249f72e24298c17785b53cbfddf66f720950258b2a6dc3643604b",
+        "size": 222816,
+        "source": "rvw/out/dv/source-vexriscv/sw/rvfi.jsonl",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "cache_key": null
+}

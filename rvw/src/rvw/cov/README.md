@@ -1165,3 +1165,26 @@ coverage credit. A new qualified execution must measure each hit.
 Coverage elaboration enables Spinal source locations and generated line
 comments. Set `RISCVSIM_COVERAGE=line,toggle` for both native metric families.
 Default native kinds remain selected by the existing Verilator version gate.
+
+### Qualified probe event goals
+
+`rvw cov probe-goals --result run/result.json --plan probe-plan.json
+--platform platform.json --json` measures a project probe goal plan.
+MCP: `cov_probe_goals`. The command requires C1 pass, matching ELF and generated
+RTL identities, a complete probe stream, and a complete strict Spike match.
+Probe wiring remains a project obligation. Bus events can be speculative offers.
+
+Plans use `rvw.probe-goals/1`, `design`, `bins`, and optional `sequences`.
+Each bin has `id`, `kind`, `name`, and optional `fields`. A field maps to a list
+of integer values. Each sequence has `id`, `steps` with bin IDs, and a positive
+`max_gap` in cycles. Steps must occur on increasing cycles. Sequences do not
+correlate instruction IDs. Identical pending monitor states collapse.
+Counter-only probes have no cycle rows and cannot supply these event goals.
+Missing goals remain holes. Pending sequences do not count as completion.
+
+For controller feedback, set `probe_plan` and `recipes` in campaign settings.
+The existing UCB policy uses newly observed event or sequence IDs as reward.
+Set `coverage: true` when the plan comes from a coverage-instrumented model.
+The controller enables probes, binds the exact RTL and plan identities, and
+rejects repeated streams. Archived replay retains the same model options.
+ISA hits, C2 retirement pairs, and probe event goals keep separate denominators.

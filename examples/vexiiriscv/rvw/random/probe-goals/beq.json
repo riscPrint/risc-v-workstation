@@ -1,0 +1,119 @@
+{
+  "schema": "rvw.probe-coverage/1",
+  "status": "qualified",
+  "design": "8331253134645bfefb84171ce2da012e643ebe9e0aeed319c601c50c18948261",
+  "plan_sha256": "5edb8f49a0263a1abf866aa2ff929c08be844ac4b8c77b254d44837ea69bf5de",
+  "result_sha256": "335cd897a38399c86afac1ac6277e56718e87a4d1fe512049eaa9e013e9ef43f",
+  "events_sha256": "772cd873a2c460f504123854ab615ffad17f0f69f5f86168d158b162115cd4f5",
+  "trace_sha256": "5ba8b77a7ed4a5c658142ec5121218bab44773aed6cf76a4e33bbc28c9039d3a",
+  "comparison": {
+    "status": "match",
+    "instructions": 329,
+    "trace_complete": true,
+    "synchronized": 0,
+    "applied_masks": []
+  },
+  "bins": [
+    {
+      "id": "branch-probe-taken",
+      "count": 30
+    },
+    {
+      "id": "branch-probe-not-taken",
+      "count": 48
+    },
+    {
+      "id": "data-read-offer",
+      "count": 0
+    },
+    {
+      "id": "data-write-offer",
+      "count": 1
+    }
+  ],
+  "sequences": [
+    {
+      "id": "taken-then-not-taken",
+      "completed": 22,
+      "pending": 1
+    },
+    {
+      "id": "read-then-write-offer",
+      "completed": 0,
+      "pending": 0
+    }
+  ],
+  "holes": [
+    "data-read-offer",
+    "read-then-write-offer"
+  ],
+  "notes": [
+    "Probe definitions and source associations come from the project.",
+    "Sequences use increasing cycles and one common per-step max_gap.",
+    "Repeated identical pending states collapse; counts are completed monitor states, not all possible event tuples.",
+    "Qualification covers C1 and full C2/Spike execution. Probe wiring remains project-owned.",
+    "This report does not grant C4 acceptance or whole-core coverage."
+  ],
+  "capture": {
+    "env": {
+      "DYLD_LIBRARY_PATH": null,
+      "HOME": "~",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "LD_LIBRARY_PATH": null,
+      "PATH": "/opt/homebrew/opt/riscv-gnu-toolchain/bin:$CHECKOUT/rvw/.venv/bin:~/opt/jdk21/bin:~/opt/oss-cad-suite/bin:~/fun/saviour/spinal-boom/../ref/sail/sail-riscv-Mac-arm64/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
+      "PYTHONHOME": null,
+      "PYTHONPATH": null,
+      "SYSTEMROOT": null,
+      "TEMP": null,
+      "TMP": null,
+      "TMPDIR": "/var/folders/s3/t4lhzzrj1qxfn3_y28334_340000gn/T/",
+      "YOSYS_DATDIR": null
+    },
+    "files": [
+      {
+        "copy": "files/e778ab6011d81ac39c58d800da475b09e11d432bf864b956a6a313de134a483f/plan.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/examples/vexiiriscv/rvw/random/probe-goals/plan.json",
+        "sha256": "5edb8f49a0263a1abf866aa2ff929c08be844ac4b8c77b254d44837ea69bf5de",
+        "size": 1099,
+        "source": "examples/vexiiriscv/rvw/random/probe-goals/plan.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/ae9e2d5204b4b3fe34f6cab81fb8f965b9271e5ba3799e339d18405ea4764e7a/probe-events.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexiiriscv/beq/probe-events.jsonl",
+        "sha256": "772cd873a2c460f504123854ab615ffad17f0f69f5f86168d158b162115cd4f5",
+        "size": 13938,
+        "source": "$CHECKOUT/rvw/out/dv/source-vexiiriscv/beq/probe-events.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/7133f0637e8c48604c83e0f585fabe5a7ef4ef1af624c971388788c37992952a/result.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexiiriscv/beq/result.json",
+        "sha256": "335cd897a38399c86afac1ac6277e56718e87a4d1fe512049eaa9e013e9ef43f",
+        "size": 14659,
+        "source": "rvw/out/dv/source-vexiiriscv/beq/result.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/b053f868c1256f455db2c6f29f43765c88825c31e7501935c464458b6c867b15/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/source-vexiiriscv/beq/rvfi.jsonl",
+        "sha256": "5ba8b77a7ed4a5c658142ec5121218bab44773aed6cf76a4e33bbc28c9039d3a",
+        "size": 116354,
+        "source": "$CHECKOUT/rvw/out/dv/source-vexiiriscv/beq/rvfi.jsonl",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "cache_key": null,
+  "plan_id": "a761da830921dcd698e1bda7951d4677dea135d302bc26830ef68ef0dfb7bd6e"
+}

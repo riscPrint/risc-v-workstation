@@ -1,0 +1,64 @@
+{
+  "schema": "rvw.probe-goals/1",
+  "design": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+  "bins": [
+    {
+      "id": "branch-probe-taken",
+      "kind": "branch",
+      "name": "vex_static",
+      "fields": {
+        "taken": [
+          1
+        ]
+      }
+    },
+    {
+      "id": "branch-probe-not-taken",
+      "kind": "branch",
+      "name": "vex_static",
+      "fields": {
+        "taken": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "data-read-offer",
+      "kind": "bus",
+      "name": "dbus",
+      "fields": {
+        "write": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "data-write-offer",
+      "kind": "bus",
+      "name": "dbus",
+      "fields": {
+        "write": [
+          1
+        ]
+      }
+    }
+  ],
+  "sequences": [
+    {
+      "id": "taken-then-not-taken",
+      "steps": [
+        "branch-probe-taken",
+        "branch-probe-not-taken"
+      ],
+      "max_gap": 32
+    },
+    {
+      "id": "read-then-write-offer",
+      "steps": [
+        "data-read-offer",
+        "data-write-offer"
+      ],
+      "max_gap": 128
+    }
+  ]
+}

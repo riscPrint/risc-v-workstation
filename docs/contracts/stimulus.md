@@ -63,3 +63,31 @@ metric counts and functional denominators separately. It lists unmapped points
 and groups. `code_targets` names unhit native points for code-goal plans.
 `functional_targets` names unhit generator goals. Source links are project
 claims. They do not establish measured Scala statement coverage.
+
+## Probe goals and controller feedback
+
+`rvw.probe-goals/1` has `design`, nonempty `bins`, and optional `sequences`.
+Bins declare unique `id`, probe `kind` and `name`, and optional `fields` value
+lists. Sequences declare unique `id`, bin-ID `steps`, and positive `max_gap`.
+Steps advance on increasing cycles. Pending monitor states with the same step
+and last cycle collapse. Expired states do not count as pending or complete.
+
+`rvw.probe-coverage/1` records C1, C2, probe and plan hashes, canonical `plan_id`,
+`design`, event counts, completed/pending sequence counts, and holes. Its
+`qualified` status means that C1 and complete strict Spike execution passed.
+It does not prove probe wiring or architectural meaning. Event accounting,
+cycle bounds, field widths, ELF, seed, core/config and RTL identities must match.
+
+Campaign settings accept `probe_plan` with existing event recipes. Exactly one
+of `rtl_plan`, `code_plan`, or `probe_plan` can be selected. Optional boolean
+`coverage` retains the instrumented model used by the probe plan. Probe mode
+enables C1 probe capture. Code mode enables native coverage capture. Archived
+replay uses the same model options. Probe feedback validates its native stream
+against C1 and full C2/Spike before UCB reward. Code and sampled RTL feedback
+retain their existing exact receipt rules. Repeated streams earn no reward.
+
+The generic C1 driver records selected model flags under `options`, including
+coverage, probes and RVFI observation flags. This lets regression check the
+requested model without inferring options from artifact names. Missing or
+conflicting option receipts remain inconclusive. Native probe qualification
+never bypasses that regression check.

@@ -1,0 +1,129 @@
+{
+  "status": "inconclusive",
+  "identity": "da6944da4d64475a7d396cf3f0b0fcba821788f23a893840977d87eedf209cfc",
+  "implementation_sha256": "841a8388538d5b7c10a8adc51f567da9b06badb4d25c3bd533acebbddc439060",
+  "execution_identity": "54b4f6694dd54f357db089bf6d51a5e16265a276feee476f3c08346c0dd20fd7",
+  "supported_bins": 172,
+  "full_plan_bins": 4538,
+  "attempt_budget": 2,
+  "guidance_coverage": {
+    "kind": "probe",
+    "plan_id": "38364371933c12fef53032de2686b67ec0757b5d9262af579b525116bd402be6",
+    "design": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9",
+    "declared_bins": 6,
+    "full_input_bins": 6,
+    "observed": [
+      "branch-probe-taken",
+      "data-write-offer"
+    ],
+    "unobserved": [
+      "branch-probe-not-taken",
+      "data-read-offer",
+      "read-then-write-offer",
+      "taken-then-not-taken"
+    ],
+    "uncompleted_sequences": [
+      "read-then-write-offer",
+      "taken-then-not-taken"
+    ],
+    "last_sample_pending": {
+      "taken-then-not-taken": 2,
+      "read-then-write-offer": 0
+    },
+    "unsupported_targets": [
+      "data-read-offer",
+      "read-then-write-offer"
+    ]
+  },
+  "schema": "rvw.native-probe-controller/1",
+  "core": "vexiiriscv",
+  "state_generation": "ff54e4cce26b461495e79b02ba124c4e",
+  "attempts": [
+    {
+      "goal": "sequence:[\"RAW\",1]",
+      "seed": 71,
+      "status": "hit",
+      "new_hits": [
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_rs1:[\"zero\"]",
+        "sequence:[\"RAW\",1]"
+      ],
+      "elapsed_s": 107.02283895900473,
+      "controller_cpu_s": 3.8000000000000003,
+      "reaped_child_cpu_s": 16.89,
+      "trace_sha256": "6e5381a6e9df2908364a7b1375058d8b0cbd8ea033f6bd08f7a32592f3d26708",
+      "c1_sha256": "f30de5129bda58cee6dcedb153923391f838d2c81482551ac31295e9aaed6520",
+      "comparison": {
+        "status": "match",
+        "instructions": 10,
+        "trace_complete": true,
+        "synchronized": 0,
+        "applied_masks": []
+      },
+      "feedback": {
+        "status": "observed",
+        "new_events": [
+          "data-write-offer"
+        ],
+        "samples": [
+          "80700152e01d86bfcd774015a03d83807223b48f6845dabf36752275a1575ff7"
+        ],
+        "pending_sequences": {
+          "taken-then-not-taken": 0,
+          "read-then-write-offer": 0
+        },
+        "reason": null
+      }
+    },
+    {
+      "goal": "sequence:[\"branch-after-branch\",1]",
+      "seed": 72,
+      "status": "hit",
+      "new_hits": [
+        "sequence:[\"branch-after-branch\",1]"
+      ],
+      "elapsed_s": 104.30702333408408,
+      "controller_cpu_s": 3.6700000000000004,
+      "reaped_child_cpu_s": 15.71,
+      "trace_sha256": "d106a7f06945074b53cae00385bc45be95b957db3b686251bd5f2a16dd0983cf",
+      "c1_sha256": "03fd82821e78e2a16a447f737564b5b3f163658b10c6f1d7a07d1e0673a8cd18",
+      "comparison": {
+        "status": "match",
+        "instructions": 10,
+        "trace_complete": true,
+        "synchronized": 0,
+        "applied_masks": []
+      },
+      "feedback": {
+        "status": "observed",
+        "new_events": [
+          "branch-probe-taken"
+        ],
+        "samples": [
+          "af566718b36b18bba592a11e31b27b5f03d692d3fdaa9cfd48cef0a787860877"
+        ],
+        "pending_sequences": {
+          "taken-then-not-taken": 2,
+          "read-then-write-offer": 0
+        },
+        "reason": null
+      }
+    }
+  ],
+  "notes": [
+    "Two attempts and one seed base. No closure-rate gain or C4 acceptance is claimed.",
+    "ISA credit uses payload words. Probe credit covers the full program, including setup and termination.",
+    "CPU descendant completeness and CPU-hour rates remain unqualified.",
+    "The initial preflight rejected missing C1 coverage option receipts. It earned no feedback credit."
+  ],
+  "rejected_context": {
+    "raw": "rvw/out/dv/probe-loop-v2-vexiiriscv",
+    "reason": "probe goals need exact generated RTL identity",
+    "qualified_payloads": 2,
+    "observed_probe_feedback": 0,
+    "plan_design": "8331253134645bfefb84171ce2da012e643ebe9e0aeed319c601c50c18948261",
+    "controller_design": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9"
+  }
+}

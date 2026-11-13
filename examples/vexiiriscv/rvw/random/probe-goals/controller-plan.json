@@ -1,0 +1,64 @@
+{
+  "schema": "rvw.probe-goals/1",
+  "design": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9",
+  "bins": [
+    {
+      "id": "branch-probe-taken",
+      "kind": "branch",
+      "name": "learn0",
+      "fields": {
+        "taken": [
+          1
+        ]
+      }
+    },
+    {
+      "id": "branch-probe-not-taken",
+      "kind": "branch",
+      "name": "learn0",
+      "fields": {
+        "taken": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "data-read-offer",
+      "kind": "bus",
+      "name": "dbus",
+      "fields": {
+        "write": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "data-write-offer",
+      "kind": "bus",
+      "name": "dbus",
+      "fields": {
+        "write": [
+          1
+        ]
+      }
+    }
+  ],
+  "sequences": [
+    {
+      "id": "taken-then-not-taken",
+      "steps": [
+        "branch-probe-taken",
+        "branch-probe-not-taken"
+      ],
+      "max_gap": 32
+    },
+    {
+      "id": "read-then-write-offer",
+      "steps": [
+        "data-read-offer",
+        "data-write-offer"
+      ],
+      "max_gap": 128
+    }
+  ]
+}

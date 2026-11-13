@@ -1,0 +1,11 @@
+{
+  "replace_defaults": true,
+  "groups": [],
+  "sequences": {
+    "distances": [
+      1,
+      2,
+      4
+    ]
+  }
+}

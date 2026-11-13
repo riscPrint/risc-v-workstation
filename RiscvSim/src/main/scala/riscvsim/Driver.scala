@@ -293,6 +293,7 @@ class Driver(val adapter: CoreAdapter) {
       "elf" -> job.elf.getPath, "elf_sha256" -> elfSha, "elf_load_bias" -> job.elfLoadBias.toString,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
       "sim_threads" -> job.simThreads.map(n => ujson.Num(n)).getOrElse(ujson.Null),
+      "options" -> job.recordedOptions,
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
       "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),

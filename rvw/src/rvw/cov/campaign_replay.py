@@ -31,7 +31,8 @@ def replay_attempt(out,report,index,selected,data,manifest,source_root,platform)
     before,wall=os.times(),time.monotonic()
     try:
         suite=controller.Suite('closure',dir=elf.parent,glob='program.elf',strip_suffix='.elf',
-            timeout_s=data.get('timeout_s',60),max_cycles=data.get('max_cycles',100000))
+            timeout_s=data.get('timeout_s',60),max_cycles=data.get('max_cycles',100000),
+            options=controller.execution_options(data))
         controller.run_plan(selected,[controller.PlanItem(suite,data['config'])],directory/'run',
             controller.source_for(selected,None),controller.RunOptions(seeds=1,seed_base=attempt['seed'],
                 rvfi_trace=True,use_cache=False,jobs=1,index=False,tier='closure'))
