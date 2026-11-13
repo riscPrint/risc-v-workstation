@@ -84,7 +84,7 @@ def search(plan, out, project=None):
         vectors.append([index / max(1, len(parameters[key])-1) for key, index in zip(keys, indices)])
     if not isinstance(spec['traces'], list) or not spec['traces'] or len(spec['traces']) > 32:
         raise ValueError('traces must contain between 1 and 32 C2 files')
-    traces = [(str(name), _instructions((path.parent / name).read_bytes())) for name in spec['traces']]
+    traces = [(str(name), _instructions((path.parent / name).read_bytes(), baseline["custom_instructions"])) for name in spec['traces']]
     # Validate every candidate and cost before creating output or running timing.
     costs = [(cost(spec.get('area'), c), cost(spec.get('power'), c)) for c in candidates]
     out = Path(out).resolve()

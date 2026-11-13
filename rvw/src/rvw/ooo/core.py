@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field
 from hashlib import sha256
 from io import StringIO
 import json
+import re
 from pathlib import Path
 from time import perf_counter
 
@@ -34,8 +35,11 @@ class Config:
     execution: dict = field(default_factory=dict)
     translation: dict = field(default_factory=dict)
     rename: dict = field(default_factory=dict)
+    custom_instructions: list = field(default_factory=list)
 
     def __post_init__(self):
+        from .custom import validate as validate_custom
+        validate_custom(self.custom_instructions, self.latencies)
         from .rename import validate
         validate(self.rename)
         from .frontend import FrontendConfig
@@ -55,7 +59,7 @@ class Config:
         if not isinstance(self.latencies, dict) or not self.latencies:
             raise ValueError("latencies must be a nonempty object")
         for key, value in self.latencies.items():
-            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump"):
+            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump") and not re.fullmatch("custom_[a-zA-Z0-9_]+", key):
                 raise ValueError(f"unsupported latency class: {key}")
             if type(value) is not int or value < 1:
                 raise ValueError(f"invalid latency for {key}")
@@ -352,7 +356,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
     raise ValueError("model cycle budget exhausted")
 
 
-def _instructions(data):
+def _instructions(data, custom_instructions=()):
     trace = Trace(StringIO(data.decode()))
     try:
         if trace.multihart:
@@ -366,6 +370,13 @@ def _instructions(data):
                 continue
             if "event" in row or any(row[k] for k in ("trap", "intr", "halt", "mem_fault")):
                 raise ValueError("traps, interrupts and external events are unsupported")
+            from .custom import decode as decode_custom
+            custom = decode_custom(row, custom_instructions)
+            if custom is not None:
+                kind, sources, dest = custom
+                ops.append(Instruction(kind, sources, dest, row["pc"], row["pc_next"], 4,
+                                       encoding=row["insn"], mnemonic=kind))
+                continue
             decoded = decode(row["insn"], trace.header["xlen"])
             if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump") or decoded.dest_bank != "x" or any(bank != "x" for bank, _ in decoded.sources):
                 raise ValueError(f"unsupported instruction: {decoded.mnemonic}")
@@ -393,12 +404,12 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     configuration = check_configuration(config, effective_config) if effective_config else None
     if configuration and json.loads(trace_bytes.splitlines()[0])["config"] != configuration["config"]:
         raise ValueError("effective configuration does not match C2 selected config")
-    result = simulate(_instructions(trace_bytes), config, max_cycles)
+    result = simulate(_instructions(trace_bytes, config.custom_instructions), config, max_cycles)
     # Decoder and C2 parser are part of the model identity.
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

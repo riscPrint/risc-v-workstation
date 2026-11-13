@@ -318,3 +318,31 @@ before memory execution. A component request starts only after translation
 completes. Component callbacks therefore receive nondecreasing cycle times.
 Translation counters count attempts, including replays. Synthetic alias and
 non-alias tests check these policies. RTL correlation remains unmeasured.
+
+## Register-only custom instruction timing
+
+Add a `custom_instructions` list and one latency class per project operation:
+
+```json
+{
+  "latencies": {"alu": 1, "custom_mac": 3},
+  "custom_instructions": [
+    {"name": "custom_mac", "mask": 127, "match": 11,
+     "sources": ["rs1", "rs2"], "writes_rd": true}
+  ]
+}
+```
+
+This example selects the custom-0 major opcode. Use narrower masks to split
+operations. Rules must select a reserved custom major opcode. They cannot
+override standard instructions or overlap one another. C2 operand registers
+must agree with the encoding. A custom operation must fall through by four
+bytes and have no memory mask. Traps remain unsupported.
+
+The declared sources create normal dependencies. Execution ports can bind
+the custom latency class. `ooo-search` can sweep its latency and declared cost
+parameters on the fixed committed C2 path. This models timing only. It does
+not execute the operation, validate its semantics, estimate software effort,
+or infer physical PPA. Compare separately generated baseline and extension
+traces under one project workload and independent RTL checks. Custom memory,
+control-flow, FP and vector operations remain unsupported.
