@@ -40,12 +40,23 @@ def render(data):
         'No CPU, ISA, physical link or commercial VIP qualification follows from these results.', ''])
 
 
+def aliases(value,mapping):
+    if isinstance(value,str):
+        for source,target in mapping:
+            value=value.replace(source,target)
+        return value
+    if isinstance(value,list):return [aliases(v,mapping) for v in value]
+    if isinstance(value,dict):return {aliases(k,mapping):aliases(v,mapping) for k,v in value.items()}
+    return value
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('matrix', type=Path)
     p.add_argument('out', type=Path)
     p.add_argument('--merge', type=Path, action='append', default=[])
     p.add_argument('--json-out', type=Path)
+    p.add_argument('--path-alias',action='append',default=[],metavar='PATH=TOKEN')
     a = p.parse_args()
     data=json.loads(a.matrix.read_text())
     by_agent={row['agent']:(row,a.matrix.parent) for row in data['agents']}
@@ -68,6 +79,7 @@ if __name__ == '__main__':
             rows=[r for r in row['runs'] if r['negative']==negative]
             row[key]=bool(rows) and all(r['checked'] for r in rows)
     data['agents']=[by_agent[key][0] for key in sorted(by_agent)]
+    data=aliases(data,[entry.split('=',1) for entry in a.path_alias])
     a.out.write_text(render(data))
     if a.json_out:
         a.json_out.write_text(json.dumps(data,indent=2)+'\n')

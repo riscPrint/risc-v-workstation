@@ -22,6 +22,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 1,
@@ -33,6 +34,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 1,
@@ -45,6 +47,8 @@
           "log": "1-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -56,6 +60,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -67,6 +72,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -79,6 +85,8 @@
           "log": "2-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -90,6 +98,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -101,6 +110,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -113,6 +123,8 @@
           "log": "3-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb"
         }
       ],
       "build_command": [
@@ -135,6 +147,14 @@
         "$CHECKOUT/Uvm/vip/ahb/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/ahb/ahb_if.sv",
+        "$REPO/Uvm/vip/ahb/ahb_pkg.sv",
+        "$REPO/Uvm/vip/ahb/fixture.sv",
+        "$REPO/Uvm/vip/ahb/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/ahb/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -164,6 +184,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -175,6 +196,7 @@
           "timed_out": false,
           "log": "1-reset_abort.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -186,6 +208,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -197,6 +220,7 @@
           "timed_out": false,
           "log": "1-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -208,6 +232,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -219,6 +244,7 @@
           "timed_out": false,
           "log": "2-reset_abort.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -230,6 +256,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -241,6 +268,7 @@
           "timed_out": false,
           "log": "2-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -252,6 +280,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -263,6 +292,7 @@
           "timed_out": false,
           "log": "3-reset_abort.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -274,6 +304,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -285,6 +316,7 @@
           "timed_out": false,
           "log": "3-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/apb"
         }
       ],
       "build_command": [
@@ -307,6 +339,14 @@
         "$CHECKOUT/Uvm/vip/apb/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/apb/apb_if.sv",
+        "$REPO/Uvm/vip/apb/apb_pkg.sv",
+        "$REPO/Uvm/vip/apb/fixture.sv",
+        "$REPO/Uvm/vip/apb/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-recheck/apb/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -337,6 +377,8 @@
           "log": "1-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 1,
@@ -349,6 +391,8 @@
           "log": "1-buggy.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 1,
@@ -360,6 +404,7 @@
           "timed_out": false,
           "log": "1-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -372,6 +417,8 @@
           "log": "2-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -384,6 +431,8 @@
           "log": "2-buggy.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -395,6 +444,7 @@
           "timed_out": false,
           "log": "2-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -407,6 +457,8 @@
           "log": "3-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -419,6 +471,8 @@
           "log": "3-buggy.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -430,6 +484,7 @@
           "timed_out": false,
           "log": "3-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-recheck/axi"
         }
       ],
       "build_command": [
@@ -452,6 +507,14 @@
         "$CHECKOUT/Uvm/vip/axi/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/axi/axi_if.sv",
+        "$REPO/Uvm/vip/axi/axi_pkg.sv",
+        "$REPO/Uvm/vip/axi/fixture.sv",
+        "$REPO/Uvm/vip/axi/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-recheck/axi/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -481,6 +544,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 1,
@@ -492,6 +556,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 1,
@@ -503,6 +568,7 @@
           "timed_out": false,
           "log": "1-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -514,6 +580,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -525,6 +592,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -536,6 +604,7 @@
           "timed_out": false,
           "log": "2-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -547,6 +616,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -558,6 +628,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -569,6 +640,7 @@
           "timed_out": false,
           "log": "3-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/axis"
         }
       ],
       "build_command": [
@@ -591,6 +663,14 @@
         "$CHECKOUT/Uvm/vip/axis/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/axis/axis_if.sv",
+        "$REPO/Uvm/vip/axis/axis_pkg.sv",
+        "$REPO/Uvm/vip/axis/fixture.sv",
+        "$REPO/Uvm/vip/axis/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/axis/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -620,6 +700,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 1,
@@ -631,6 +712,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 2,
@@ -642,6 +724,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 2,
@@ -653,6 +736,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 3,
@@ -664,6 +748,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 3,
@@ -675,6 +760,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset"
         }
       ],
       "build_command": [
@@ -697,6 +783,14 @@
         "$CHECKOUT/Uvm/vip/clock_reset/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/clock_reset/clock_reset_if.sv",
+        "$REPO/Uvm/vip/clock_reset/clock_reset_pkg.sv",
+        "$REPO/Uvm/vip/clock_reset/fixture.sv",
+        "$REPO/Uvm/vip/clock_reset/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/clock_reset/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -726,6 +820,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 1,
@@ -737,6 +832,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 2,
@@ -748,6 +844,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 2,
@@ -759,6 +856,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 3,
@@ -770,6 +868,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 3,
@@ -781,6 +880,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent"
         }
       ],
       "build_command": [
@@ -803,6 +903,14 @@
         "$CHECKOUT/Uvm/vip/coherent/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/coherent/coherent_if.sv",
+        "$REPO/Uvm/vip/coherent/coherent_pkg.sv",
+        "$REPO/Uvm/vip/coherent/fixture.sv",
+        "$REPO/Uvm/vip/coherent/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/coherent/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -842,6 +950,14 @@
         "$CHECKOUT/Uvm/vip/dram/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/dram/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/dram/dram_if.sv",
+        "$REPO/Uvm/vip/dram/dram_pkg.sv",
+        "$REPO/Uvm/vip/dram/fixture.sv",
+        "$REPO/Uvm/vip/dram/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/dram/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -882,6 +998,14 @@
         "$CHECKOUT/Uvm/vip/ethernet/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ethernet/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/ethernet/ethernet_if.sv",
+        "$REPO/Uvm/vip/ethernet/ethernet_pkg.sv",
+        "$REPO/Uvm/vip/ethernet/fixture.sv",
+        "$REPO/Uvm/vip/ethernet/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/ethernet/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -912,6 +1036,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 1,
@@ -923,6 +1048,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 2,
@@ -934,6 +1060,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 2,
@@ -945,6 +1072,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 3,
@@ -956,6 +1084,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 3,
@@ -967,6 +1096,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio"
         }
       ],
       "build_command": [
@@ -989,6 +1119,14 @@
         "$CHECKOUT/Uvm/vip/gpio/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/gpio/gpio_if.sv",
+        "$REPO/Uvm/vip/gpio/gpio_pkg.sv",
+        "$REPO/Uvm/vip/gpio/fixture.sv",
+        "$REPO/Uvm/vip/gpio/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/gpio/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1018,6 +1156,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 1,
@@ -1029,6 +1168,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 2,
@@ -1040,6 +1180,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 2,
@@ -1051,6 +1192,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 3,
@@ -1062,6 +1204,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 3,
@@ -1073,6 +1216,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c"
         }
       ],
       "build_command": [
@@ -1095,6 +1239,14 @@
         "$CHECKOUT/Uvm/vip/i2c/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/i2c/i2c_if.sv",
+        "$REPO/Uvm/vip/i2c/i2c_pkg.sv",
+        "$REPO/Uvm/vip/i2c/fixture.sv",
+        "$REPO/Uvm/vip/i2c/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/i2c/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1124,6 +1276,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 1,
@@ -1135,6 +1288,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 2,
@@ -1146,6 +1300,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 2,
@@ -1157,6 +1312,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 3,
@@ -1168,6 +1324,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 3,
@@ -1179,6 +1336,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt"
         }
       ],
       "build_command": [
@@ -1201,6 +1359,14 @@
         "$CHECKOUT/Uvm/vip/interrupt/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/interrupt/interrupt_if.sv",
+        "$REPO/Uvm/vip/interrupt/interrupt_pkg.sv",
+        "$REPO/Uvm/vip/interrupt/fixture.sv",
+        "$REPO/Uvm/vip/interrupt/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/interrupt/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1230,6 +1396,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 1,
@@ -1241,6 +1408,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 2,
@@ -1252,6 +1420,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 2,
@@ -1263,6 +1432,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 3,
@@ -1274,6 +1444,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 3,
@@ -1285,6 +1456,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag"
         }
       ],
       "build_command": [
@@ -1307,6 +1479,14 @@
         "$CHECKOUT/Uvm/vip/jtag/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/jtag/jtag_if.sv",
+        "$REPO/Uvm/vip/jtag/jtag_pkg.sv",
+        "$REPO/Uvm/vip/jtag/fixture.sv",
+        "$REPO/Uvm/vip/jtag/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/jtag/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1346,6 +1526,14 @@
         "$CHECKOUT/Uvm/vip/pcie/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/pcie/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/pcie/pcie_if.sv",
+        "$REPO/Uvm/vip/pcie/pcie_pkg.sv",
+        "$REPO/Uvm/vip/pcie/fixture.sv",
+        "$REPO/Uvm/vip/pcie/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/pcie/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1386,6 +1574,14 @@
         "$CHECKOUT/Uvm/vip/rnm/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/rnm/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/rnm/rnm_if.sv",
+        "$REPO/Uvm/vip/rnm/rnm_pkg.sv",
+        "$REPO/Uvm/vip/rnm/fixture.sv",
+        "$REPO/Uvm/vip/rnm/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/rnm/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1416,6 +1612,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 1,
@@ -1427,6 +1624,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 1,
@@ -1438,6 +1636,7 @@
           "timed_out": false,
           "log": "1-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1449,6 +1648,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1460,6 +1660,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1471,6 +1672,7 @@
           "timed_out": false,
           "log": "2-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1482,6 +1684,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1493,6 +1696,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1504,6 +1708,7 @@
           "timed_out": false,
           "log": "3-bad_manager.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/spi"
         }
       ],
       "build_command": [
@@ -1526,6 +1731,14 @@
         "$CHECKOUT/Uvm/vip/spi/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/spi/spi_if.sv",
+        "$REPO/Uvm/vip/spi/spi_pkg.sv",
+        "$REPO/Uvm/vip/spi/fixture.sv",
+        "$REPO/Uvm/vip/spi/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/spi/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1555,6 +1768,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 1,
@@ -1566,6 +1780,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 2,
@@ -1577,6 +1792,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 2,
@@ -1588,6 +1804,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 3,
@@ -1599,6 +1816,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 3,
@@ -1610,6 +1828,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/sram"
         }
       ],
       "build_command": [
@@ -1632,6 +1851,14 @@
         "$CHECKOUT/Uvm/vip/sram/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/sram/sram_if.sv",
+        "$REPO/Uvm/vip/sram/sram_pkg.sv",
+        "$REPO/Uvm/vip/sram/fixture.sv",
+        "$REPO/Uvm/vip/sram/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/sram/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1661,6 +1888,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 1,
@@ -1672,6 +1900,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 2,
@@ -1683,6 +1912,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 2,
@@ -1694,6 +1924,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 3,
@@ -1705,6 +1936,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 3,
@@ -1716,6 +1948,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/stress"
         }
       ],
       "build_command": [
@@ -1738,6 +1971,14 @@
         "$CHECKOUT/Uvm/vip/stress/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/stress/stress_if.sv",
+        "$REPO/Uvm/vip/stress/stress_pkg.sv",
+        "$REPO/Uvm/vip/stress/fixture.sv",
+        "$REPO/Uvm/vip/stress/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/stress/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1768,6 +2009,8 @@
           "log": "1-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 355: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 355: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 1,
@@ -1779,6 +2022,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 1,
@@ -1791,6 +2035,8 @@
           "log": "1-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1803,6 +2049,8 @@
           "log": "2-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 325: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 325: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1814,6 +2062,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1826,6 +2075,8 @@
           "log": "2-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1838,6 +2089,8 @@
           "log": "3-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 335: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 335: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1849,6 +2102,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1861,6 +2115,8 @@
           "log": "3-bad_manager.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink"
         }
       ],
       "build_command": [
@@ -1883,6 +2139,14 @@
         "$CHECKOUT/Uvm/vip/tilelink/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/tilelink/tilelink_if.sv",
+        "$REPO/Uvm/vip/tilelink/tilelink_pkg.sv",
+        "$REPO/Uvm/vip/tilelink/fixture.sv",
+        "$REPO/Uvm/vip/tilelink/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/tilelink/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1913,6 +2177,8 @@
           "log": "1-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 1,
@@ -1924,6 +2190,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 1,
@@ -1936,6 +2203,8 @@
           "log": "1-errors.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1948,6 +2217,8 @@
           "log": "2-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1959,6 +2230,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1971,6 +2243,8 @@
           "log": "2-errors.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -1983,6 +2257,8 @@
           "log": "3-good.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -1994,6 +2270,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -2006,6 +2283,8 @@
           "log": "3-errors.log",
           "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $REPO/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/uart"
         }
       ],
       "build_command": [
@@ -2028,6 +2307,14 @@
         "$CHECKOUT/Uvm/vip/uart/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/uart/uart_if.sv",
+        "$REPO/Uvm/vip/uart/uart_pkg.sv",
+        "$REPO/Uvm/vip/uart/fixture.sv",
+        "$REPO/Uvm/vip/uart/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/uart/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -2057,6 +2344,7 @@
           "timed_out": false,
           "log": "1-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 1,
@@ -2068,6 +2356,7 @@
           "timed_out": false,
           "log": "1-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 2,
@@ -2079,6 +2368,7 @@
           "timed_out": false,
           "log": "2-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 2,
@@ -2090,6 +2380,7 @@
           "timed_out": false,
           "log": "2-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 3,
@@ -2101,6 +2392,7 @@
           "timed_out": false,
           "log": "3-good.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 3,
@@ -2112,6 +2404,7 @@
           "timed_out": false,
           "log": "3-buggy.log",
           "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone"
         }
       ],
       "build_command": [
@@ -2134,6 +2427,14 @@
         "$CHECKOUT/Uvm/vip/wishbone/test.sv",
         "--Mdir",
         "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone/build",
+        "+incdir+$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$REPO/Uvm/vip/wishbone/wishbone_if.sv",
+        "$REPO/Uvm/vip/wishbone/wishbone_pkg.sv",
+        "$REPO/Uvm/vip/wishbone/fixture.sv",
+        "$REPO/Uvm/vip/wishbone/test.sv",
+        "--Mdir",
+        "$VEXRISCV/uvm-runs/sv-vip-qualification/wishbone/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
