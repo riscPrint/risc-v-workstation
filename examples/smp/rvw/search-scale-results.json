@@ -1,0 +1,61 @@
+{
+  "schema": "rvw.search-scale/1",
+  "results": [
+    {
+      "seed": 1,
+      "seconds": 0.0029997919918969274,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    },
+    {
+      "seed": 7,
+      "seconds": 0.0019725830061361194,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 22,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies"
+    },
+    {
+      "seed": 17,
+      "seconds": 0.002607916947454214,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    },
+    {
+      "seed": 23,
+      "seconds": 0.0013077909825369716,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    }
+  ],
+  "synthetic": {
+    "events": 8000,
+    "harts": 4,
+    "seconds": 0.018229792010970414,
+    "status": "allowed",
+    "engine": "sc-witness",
+    "scope": "private locations; sufficient SC witness"
+  },
+  "validation": "38 targeted tests; six pinned litmus outcome sets in each model"
+}

@@ -254,8 +254,21 @@ retirements; IPI at 247/74; HSM at 1431/530. Spike matched all 38 instructions
 in a shared-RAM two-hart capture with zero masks and zero synchronizations.
 
 Generated seeds 7, 17 and 23 are allowed by the independent RVWMO checker after
-project dependency binding. Seed 1 remains inconclusive at 100000 candidates.
+project dependency binding. Seed 1 now has a sparse SC witness.
 The original captures retain unavailable dependency status. The binding writes
 a separate trace and records its input/source hashes. These are finite results.
 They do not qualify a coherent cache, complete RVWMO implementation or all SBI
 behavior. See the example's full counts, reproduction commands and JSON evidence.
+
+### Search scale
+
+The axiomatic checker first tries a sparse sequentially consistent witness.
+This path scales with the event count and hart count. A failed attempt falls
+back to a bounded RVWMO/Ztso search with per-hart store orders and incremental
+cycle checks. Limits still produce `inconclusive`. Equal-value stores retain
+their identities. General weak-order searches can still grow exponentially.
+
+The scale regression checks 8,000 events across four harts. The six pinned
+litmus outcome sets are checked for both models. On the saved SMP captures,
+seed 1 now returns allowed instead of reaching 100,000 candidates. See
+`examples/smp/rvw/search-scale-results.json`. No new RTL run is claimed.

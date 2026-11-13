@@ -176,3 +176,21 @@ consumes it. The three `RVW_SMP_*` timing variables are included in replay.
 They do not change the core source or the selected ISA. A replay claim requires
 actual equality of the captured streams under the same inputs and settings.
 These synchronous stalls do not qualify CDC or physical clock gating.
+
+## Sparse axiomatic witnesses
+
+The checker can emit `engine: sc-witness`. This is a sufficient sequential
+consistency witness for either selected model. `witness.global_order` lists
+every event. `witness.rf` lists the last preceding write for each read.
+`witness.co` contains adjacent edges per location, including the initial write.
+Its transitive closure gives coherence order. The checker uses observed read
+values and checks successful LR/SC pairs before it emits this witness.
+Failure to construct this witness does not reject an execution.
+
+The bounded fallback enumerates store orders that preserve per-hart order at
+each location. It filters read sources by address, size and observed value.
+It rejects partial cycles with incremental graphs. `branches` counts prefix
+search states. The limit bounds these states as well as complete candidates.
+A limit produces `inconclusive`, including when no complete candidate was tried.
+Independent enabled SC operations have one deterministic schedule. Stores with
+equal values are not merged because their identities can affect dependencies.
