@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 from .multihart import images, check
+from .axiomatic import check as axiomatic_check
+from .concurrent import generate
 
 
 def register(sub):
@@ -14,6 +16,17 @@ def register(sub):
     c.add_argument('--trace', required=True, type=Path)
     c.add_argument('--reference', required=True, type=Path)
     c.set_defaults(func=command_check)
+    a = commands.add_parser('axiomatic', help='search scalar RVWMO/Ztso candidate execution graphs')
+    a.add_argument('--trace', required=True, type=Path)
+    a.add_argument('--reference', required=True, type=Path)
+    a.add_argument('--model', choices=('rvwmo', 'ztso'), default='rvwmo')
+    a.add_argument('--limit', type=int, default=100000)
+    a.set_defaults(func=lambda args: emit(lambda: axiomatic_check(args.trace, args.reference, args.model, args.limit)))
+    g = commands.add_parser('generate', help='generate seeded RV64 concurrent program fragments')
+    g.add_argument('--seed', type=int, default=1)
+    g.add_argument('--harts', type=int, default=2)
+    g.add_argument('--length', type=int, default=16)
+    g.set_defaults(func=lambda args: emit(lambda: generate(args.seed, args.harts, args.length)))
 
 
 def command_images(args):
@@ -30,4 +43,4 @@ def emit(call):
     except (ValueError, OSError, KeyError, TypeError) as exc:
         result = {'status': 'inconclusive', 'reason': str(exc)}
     print(json.dumps(result, indent=2))
-    return {'mismatch': 1, 'inconclusive': 3}.get(result.get('status'), 0)
+    return {'mismatch': 1, 'forbidden': 1, 'inconclusive': 3}.get(result.get('status'), 0)

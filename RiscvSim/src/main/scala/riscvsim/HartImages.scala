@@ -48,16 +48,18 @@ object HartImages {
 }
 
 /** Shared adapter service: sample RVFI per hart, never sort different harts by order. */
-final class MultiHartSession(ctx: RunContext, probes: Map[Int, RvfiProbe]) extends AutoCloseable {
+final class MultiHartSession(ctx: RunContext, probes: Map[Int, RvfiProbe],
+    dependenciesComplete: Boolean = false,
+    annotate: (Int, RvfiRecord) => Option[ujson.Obj] = (_, _) => None) extends AutoCloseable {
   val images = ctx.hartImages.getOrElse(throw new IllegalArgumentException("hart images required"))
   require(probes.keySet == images.harts.map(_._1).toSet)
   private val trace = new MultiHartTrace(new File(ctx.job.out, "rvfi.jsonl"),
-    ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+ ("hart_images" -> images.identity)), probes.keys.toSeq.sorted)
+    ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+ ("hart_images" -> images.identity) :+ ("memory_dependencies" -> ujson.Str(if (dependenciesComplete) "complete" else "unavailable"))), probes.keys.toSeq.sorted)
   private val active = scala.collection.mutable.Set.empty[Int]
   private var retired = 0L
   def reset(hart: Int, cycle: Long): Unit = { trace.reset(hart, cycle); active += hart }
   def sample(cycle: Long): Unit = active.toSeq.sorted.foreach { h =>
-    probes(h).sample(cycle).foreach { r => trace.retire(h, r); retired += 1 }
+    probes(h).sample(cycle).foreach { r => trace.retire(h, r, annotate(h, r)); retired += 1 }
   }
   def complete(hart: Int, cycle: Long, status: Status): Unit = {
     trace.complete(hart, cycle, status); active -= hart
