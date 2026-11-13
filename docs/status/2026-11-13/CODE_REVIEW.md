@@ -3014,3 +3014,224 @@ Line counts refer to the listed files at the review snapshot, including the fixe
 | `rvw/tests/test_plan_probes.py` | 30 |
 | `rvw/tests/test_sound3_coverage.py` | 53 |
 | `rvw/tests/test_vplan.py` | 134 |
+## Regression, results, run inputs and debug tools review
+
+Read 85 assigned production Python files, 96 test files plus one supporting module and one suite requirement catalogue. The table gives the line counts at review time.
+
+| File read | Lines |
+|---|---:|
+| `rvw/src/rvw/bisect/__init__.py` | 1 |
+| `rvw/src/rvw/bisect/cli.py` | 72 |
+| `rvw/src/rvw/bisect/cli_declarations.py` | 2 |
+| `rvw/src/rvw/bisect/core.py` | 395 |
+| `rvw/src/rvw/bisect/mcp_tools.py` | 20 |
+| `rvw/src/rvw/bundle/__init__.py` | 2 |
+| `rvw/src/rvw/bundle/cli.py` | 60 |
+| `rvw/src/rvw/bundle/cli_declarations.py` | 2 |
+| `rvw/src/rvw/bundle/clock.py` | 144 |
+| `rvw/src/rvw/bundle/coreconf.py` | 20 |
+| `rvw/src/rvw/bundle/disasm.py` | 85 |
+| `rvw/src/rvw/bundle/handshakes.py` | 191 |
+| `rvw/src/rvw/bundle/make.py` | 650 |
+| `rvw/src/rvw/bundle/mcp_tools.py` | 21 |
+| `rvw/src/rvw/bundle/pdgdigest.py` | 62 |
+| `rvw/src/rvw/bundle/snapshot.py` | 172 |
+| `rvw/src/rvw/bundle/trace.py` | 130 |
+| `rvw/src/rvw/common/__init__.py` | 1 |
+| `rvw/src/rvw/common/budget.py` | 107 |
+| `rvw/src/rvw/common/bus_trace.py` | 26 |
+| `rvw/src/rvw/common/capture.py` | 493 |
+| `rvw/src/rvw/common/cli_json.py` | 35 |
+| `rvw/src/rvw/common/hdl_ports.py` | 87 |
+| `rvw/src/rvw/common/interpreter.py` | 61 |
+| `rvw/src/rvw/common/jsonout.py` | 32 |
+| `rvw/src/rvw/common/lock.py` | 581 |
+| `rvw/src/rvw/common/proc.py` | 266 |
+| `rvw/src/rvw/common/project.py` | 166 |
+| `rvw/src/rvw/common/riscv.py` | 367 |
+| `rvw/src/rvw/common/sby.py` | 21 |
+| `rvw/src/rvw/common/subcommands.py` | 39 |
+| `rvw/src/rvw/common/verdicts.py` | 20 |
+| `rvw/src/rvw/common/waivers.py` | 24 |
+| `rvw/src/rvw/reduce/__init__.py` | 1 |
+| `rvw/src/rvw/reduce/cli.py` | 93 |
+| `rvw/src/rvw/reduce/cli_declarations.py` | 2 |
+| `rvw/src/rvw/reduce/core.py` | 576 |
+| `rvw/src/rvw/reduce/device_rx.py` | 34 |
+| `rvw/src/rvw/reduce/hart_instructions.py` | 62 |
+| `rvw/src/rvw/reduce/mcp_tools.py` | 34 |
+| `rvw/src/rvw/reduce/reference.py` | 23 |
+| `rvw/src/rvw/reduce/streams.py` | 108 |
+| `rvw/src/rvw/regress/__init__.py` | 1 |
+| `rvw/src/rvw/regress/adapter_capture.py` | 42 |
+| `rvw/src/rvw/regress/captured.py` | 217 |
+| `rvw/src/rvw/regress/cli.py` | 463 |
+| `rvw/src/rvw/regress/cli_declarations.py` | 2 |
+| `rvw/src/rvw/regress/commands/__init__.py` | 1 |
+| `rvw/src/rvw/regress/commands/applicability.py` | 97 |
+| `rvw/src/rvw/regress/commands/instruction_feed.py` | 29 |
+| `rvw/src/rvw/regress/commands/mutation.py` | 26 |
+| `rvw/src/rvw/regress/commands/suite_cosim.py` | 163 |
+| `rvw/src/rvw/regress/compare.py` | 551 |
+| `rvw/src/rvw/regress/config.py` | 444 |
+| `rvw/src/rvw/regress/discover.py` | 80 |
+| `rvw/src/rvw/regress/findings.py` | 51 |
+| `rvw/src/rvw/regress/instruction_feed.py` | 24 |
+| `rvw/src/rvw/regress/known.py` | 189 |
+| `rvw/src/rvw/regress/mcp_tools.py` | 95 |
+| `rvw/src/rvw/regress/plan.py` | 249 |
+| `rvw/src/rvw/regress/remote_cache.py` | 118 |
+| `rvw/src/rvw/regress/routing.py` | 104 |
+| `rvw/src/rvw/regress/run_evidence.py` | 40 |
+| `rvw/src/rvw/regress/runner.py` | 1376 |
+| `rvw/src/rvw/regress/sail_tests.py` | 116 |
+| `rvw/src/rvw/regress/source.py` | 559 |
+| `rvw/src/rvw/regress/store.py` | 165 |
+| `rvw/src/rvw/regress/vector.py` | 78 |
+| `rvw/src/rvw/results/__init__.py` | 17 |
+| `rvw/src/rvw/results/generation.py` | 304 |
+| `rvw/src/rvw/results/junit.py` | 94 |
+| `rvw/src/rvw/results/schema.py` | 729 |
+| `rvw/src/rvw/results/signature.py` | 127 |
+| `rvw/src/rvw/runs/__init__.py` | 9 |
+| `rvw/src/rvw/runs/adapter.py` | 391 |
+| `rvw/src/rvw/runs/cli.py` | 37 |
+| `rvw/src/rvw/runs/cli_declarations.py` | 2 |
+| `rvw/src/rvw/runs/elf.py` | 102 |
+| `rvw/src/rvw/runs/hang.py` | 102 |
+| `rvw/src/rvw/runs/inputs.py` | 368 |
+| `rvw/src/rvw/runs/mcp_tools.py` | 25 |
+| `rvw/src/rvw/runs/portable.py` | 242 |
+| `rvw/src/rvw/runs/result.py` | 99 |
+| `rvw/src/rvw/runs/signature.py` | 43 |
+| `rvw/src/rvw/runs/versions.py` | 55 |
+| `rvw/tests/cosim/test_bitmanip_sources.py` | 129 |
+| `rvw/tests/test_adapter_versions.py` | 92 |
+| `rvw/tests/test_bisect_endpoints.py` | 20 |
+| `rvw/tests/test_capture.py` | 543 |
+| `rvw/tests/test_capture_round22.py` | 191 |
+| `rvw/tests/test_capture_round23.py` | 91 |
+| `rvw/tests/test_capture_round24.py` | 37 |
+| `rvw/tests/test_checks_dispositions.py` | 67 |
+| `rvw/tests/test_debug_adapter_layout.py` | 54 |
+| `rvw/tests/test_debug_capture.py` | 281 |
+| `rvw/tests/test_debug_elf_identity.py` | 177 |
+| `rvw/tests/test_debug_env.py` | 89 |
+| `rvw/tests/test_debug_launcher_capture.py` | 35 |
+| `rvw/tests/test_debug_python_environment.py` | 175 |
+| `rvw/tests/test_debug_runs.py` | 198 |
+| `rvw/tests/test_debug_shebang.py` | 92 |
+| `rvw/tests/test_debug_staging.py` | 109 |
+| `rvw/tests/test_debug_tools.py` | 1158 |
+| `rvw/tests/test_evidence_layers.py` | 104 |
+| `rvw/tests/test_generation.py` | 216 |
+| `rvw/tests/test_hdl_declared_ports.py` | 102 |
+| `rvw/tests/test_job_budget.py` | 79 |
+| `rvw/tests/test_json_stdout.py` | 246 |
+| `rvw/tests/test_lock.py` | 550 |
+| `rvw/tests/test_portable_replay.py` | 123 |
+| `rvw/tests/test_portable_replay_patch_bytes.py` | 19 |
+| `rvw/tests/test_proc.py` | 208 |
+| `rvw/tests/test_project.py` | 243 |
+| `rvw/tests/test_python_binding.py` | 131 |
+| `rvw/tests/test_reduce_device_rx.py` | 64 |
+| `rvw/tests/test_reduce_hart_instructions.py` | 54 |
+| `rvw/tests/test_reduce_optional_cycles.py` | 34 |
+| `rvw/tests/test_reduce_reference.py` | 69 |
+| `rvw/tests/test_reduce_streams.py` | 142 |
+| `rvw/tests/test_regress.py` | 1325 |
+| `rvw/tests/test_regress_adapter_capture.py` | 192 |
+| `rvw/tests/test_regress_applicability.py` | 57 |
+| `rvw/tests/test_regress_capture.py` | 114 |
+| `rvw/tests/test_regress_capture_boundaries.py` | 137 |
+| `rvw/tests/test_regress_commit_gate.py` | 138 |
+| `rvw/tests/test_regress_findings.py` | 58 |
+| `rvw/tests/test_regress_gate_clarity.py` | 184 |
+| `rvw/tests/test_regress_identity_migration.py` | 29 |
+| `rvw/tests/test_regress_native_adapter.py` | 46 |
+| `rvw/tests/test_regress_persistent.py` | 148 |
+| `rvw/tests/test_regress_replay_quoting.py` | 49 |
+| `rvw/tests/test_regress_review_metrics.py` | 76 |
+| `rvw/tests/test_regress_review_signatures.py` | 71 |
+| `rvw/tests/test_regress_round13.py` | 338 |
+| `rvw/tests/test_regress_round15.py` | 89 |
+| `rvw/tests/test_regress_round15_compare.py` | 183 |
+| `rvw/tests/test_regress_round15_runner.py` | 93 |
+| `rvw/tests/test_regress_round16_compare.py` | 52 |
+| `rvw/tests/test_regress_round16_runner.py` | 68 |
+| `rvw/tests/test_regress_round17_numeric.py` | 144 |
+| `rvw/tests/test_regress_round17_provenance.py` | 110 |
+| `rvw/tests/test_regress_round17_source.py` | 113 |
+| `rvw/tests/test_regress_round18_compare.py` | 150 |
+| `rvw/tests/test_regress_round18_jobs.py` | 159 |
+| `rvw/tests/test_regress_round18_results.py` | 166 |
+| `rvw/tests/test_regress_round19_build.py` | 145 |
+| `rvw/tests/test_regress_round19_core.py` | 108 |
+| `rvw/tests/test_regress_round20_identity.py` | 59 |
+| `rvw/tests/test_regress_round20_options.py` | 108 |
+| `rvw/tests/test_regress_round20_routing_edges.py` | 57 |
+| `rvw/tests/test_regress_round20_tree.py` | 49 |
+| `rvw/tests/test_regress_round21_inputs.py` | 63 |
+| `rvw/tests/test_regress_round21_output.py` | 44 |
+| `rvw/tests/test_regress_round21_plan.py` | 154 |
+| `rvw/tests/test_regress_round21_platform.py` | 34 |
+| `rvw/tests/test_regress_round22_origins.py` | 112 |
+| `rvw/tests/test_regress_round22_plan.py` | 30 |
+| `rvw/tests/test_regress_round22_selectors.py` | 55 |
+| `rvw/tests/test_regress_round22_syntax.py` | 81 |
+| `rvw/tests/test_regress_round23_replay.py` | 102 |
+| `rvw/tests/test_regress_round23_toolchain.py` | 100 |
+| `rvw/tests/test_regress_round24_known_core.py` | 52 |
+| `rvw/tests/test_regress_round24_known_imports.py` | 59 |
+| `rvw/tests/test_regress_round24_known_validation.py` | 59 |
+| `rvw/tests/test_regress_round24_selectors.py` | 41 |
+| `rvw/tests/test_regress_round24_signatures.py` | 56 |
+| `rvw/tests/test_regress_run_evidence.py` | 56 |
+| `rvw/tests/test_regress_source_modes.py` | 17 |
+| `rvw/tests/test_regress_subdirectory_checkout.py` | 35 |
+| `rvw/tests/test_regress_submodule_checkout.py` | 74 |
+| `rvw/tests/test_regress_suite_cosim.py` | 120 |
+| `rvw/tests/test_regress_test_sources.py` | 69 |
+| `rvw/tests/test_regress_vector.py` | 60 |
+| `rvw/tests/test_regress_worker_locks.py` | 49 |
+| `rvw/tests/test_remote_cache.py` | 139 |
+| `rvw/tests/test_replay_checkpoint.py` | 69 |
+| `rvw/tests/test_results.py` | 210 |
+| `rvw/tests/test_riscv.py` | 185 |
+| `rvw/tests/test_sby_execution.py` | 28 |
+| `rvw/tests/test_subcommands.py` | 64 |
+| `rvw/tests/test_word_bus_trace.py` | 24 |
+| `rvw/src/rvw/sim/persistent.py` | 34 |
+| `rvw/src/rvw/regress/suite_requirements.json` | 350 |
+
+Confirmed defects:
+
+- Native C1 adapters failed input capture when they did not support `--version`. PR https://github.com/riscPrint/risc-v-workstation/pull/1458.
+- Reducer trial ranking crashed on a matching C1 failure without an optional cycle count. PR https://github.com/riscPrint/risc-v-workstation/pull/1367.
+- Published replays kept deleted capture paths when the ELF argument used double quotes. PR https://github.com/riscPrint/risc-v-workstation/pull/1448.
+- Portable replay decoded Git patches as text and changed non-UTF-8 source bytes. A fixture replay still reported reproduction. PR https://github.com/riscPrint/risc-v-workstation/pull/1424.
+- Source hashes did not include execute bits for non-Git files and linked targets. A permission change could retain the same job identity. PR https://github.com/riscPrint/risc-v-workstation/pull/1398.
+
+Checks: 32 reducer checks, 15 source-identity checks, 11 portable replay checks, 23 replay publication checks, 28 native-adapter/input-capture checks and 161 decoder/result-format checks passed. The new tests failed before each fix. Required fast sets before the first four fixes: 3293 passed, 4 skipped, 7724 deselected and 1 unrelated failure; then 3359 passed, 4 skipped and 7729 deselected; then 3466 passed, 4 skipped and 7736 deselected; then 3536 passed, 4 skipped and 7744 deselected. The first failure was `rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`, which lacked a workflow entry for `cov_mutate_core`. The native-adapter fast set had 3562 passed, 4 skipped, 8167 deselected and 2 unrelated failures in `test_boot_profile.py::test_launcher_reaches_nice_ten_once[1-3]` and `[2-0]`. Both expect niceness 10 but inherit niceness 15 from the required test command. Some targeted and fast runs emitted temporary-directory cleanup warnings. No core build, RTL simulation or formal proof was run.
+
+Decoder review: checked opcode-table constants for I, M, A, F, D, Zicsr, Zifencei, Zba, Zbb and Zbs at each supported XLEN. Checked 13 explicit extension samples, including RV32 C.JAL and RV64 C.ADDIW. No tested non-compressed opcode constant differed. This is a sample check, not full ISA validation. Sources: [RISC-V opcode tables](https://github.com/riscv/riscv-opcodes/tree/master/extensions) and [RISC-V ISA specifications](https://docs.riscv.org/reference/isa/unpriv/unpriv-index.html).
+
+Unconfirmed findings: none. The suspected process-group record defect did not reproduce and was dropped.
+
+Not read in full: test files outside the table, `rvw/tests/conftest.py` was read in part. Documentation was not reviewed in full. Test-source review is partial. The MMU, privilege, memory-order, riscv-dv and ACT4 suite generators were excluded as assigned.
+
+The focused commands were:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_reduce_optional_cycles.py rvw/tests/test_reduce_streams.py rvw/tests/test_reduce_reference.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_regress_round15.py rvw/tests/test_regress_capture.py rvw/tests/test_regress_source_modes.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_portable_replay_patch_bytes.py rvw/tests/test_portable_replay.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_regress_replay_quoting.py rvw/tests/test_capture_round24.py rvw/tests/test_debug_runs.py rvw/tests/test_regress_round23_replay.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_regress_native_adapter.py rvw/tests/test_regress_round21_inputs.py rvw/tests/test_regress_adapter_capture.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_riscv.py rvw/tests/test_results.py rvw/tests/test_generation.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q
+```
+
+Scope incident: a positional stash pop selected another worker's stash from the shared Git stash list. The original stash entry was restored. The four unrelated paths were restored before commit. No unrelated files were included in the review PRs. Later stash access used an exact object ID.
+
+Report checks: release hygiene had 45 passed. The report fast set had 3568 passed, 4 skipped, 8167 deselected and the same two unrelated boot-profile niceness failures.
