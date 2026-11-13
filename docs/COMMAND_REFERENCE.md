@@ -944,7 +944,8 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 ### `rvw memory`
 
 ```text
-usage: rvw memory [-h] [--project PROJECT] {images,check} ...
+usage: rvw memory [-h] [--project PROJECT] {images,check,axiomatic,generate}
+    ...
 ```
 
 ### `rvw memory images`
@@ -958,6 +959,20 @@ usage: rvw memory images [-h] --hart-image HART=ELF [--project PROJECT]
 ```text
 usage: rvw memory check [-h] --trace TRACE --reference REFERENCE [--project
     PROJECT]
+```
+
+### `rvw memory axiomatic`
+
+```text
+usage: rvw memory axiomatic [-h] --trace TRACE --reference REFERENCE [--model
+    {rvwmo,ztso}] [--limit LIMIT] [--project PROJECT]
+```
+
+### `rvw memory generate`
+
+```text
+usage: rvw memory generate [-h] [--seed SEED] [--harts HARTS] [--length
+    LENGTH] [--project PROJECT]
 ```
 
 ### `rvw ooo`
@@ -2345,11 +2360,27 @@ Arguments: `settings` (required).
 
 Starts a background job: yes.
 
+### `memory_axiomatic`
+
+Search scalar RVWMO/Ztso execution graphs with complete dependency observations.
+
+Arguments: `trace` (required), `reference` (required), `model`, `limit`.
+
+Starts a background job: no.
+
 ### `memory_check`
 
 Check C2/2 serialized memory against independent stimulus bytes. No RVWMO proof.
 
 Arguments: `trace` (required), `reference` (required).
+
+Starts a background job: no.
+
+### `memory_generate`
+
+Generate seeded concurrent RV64 fragments. Does not execute them.
+
+Arguments: `seed`, `harts`, `length`.
 
 Starts a background job: no.
 

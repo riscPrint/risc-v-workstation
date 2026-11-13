@@ -43,3 +43,47 @@ read/write boundaries with at most XLEN bytes per event. It does not support
 combined atomic boundary events. It checks sampled actions only. Missing events
 need a project capture-completeness check. No production multi-image adapter
 or general multi-hart architectural reference is supplied.
+
+## Scalar axiomatic execution search
+
+`rvw memory axiomatic --trace rvfi.jsonl --reference initial.json --model rvwmo`
+searches candidate write orders and read-from choices. Select `ztso` for TSO.
+The checker builds co, rf, fr, po-loc and preserved program order. It checks
+coherence and model acyclicity and the RMW atomicity constraint. Preserved
+order includes address, data, control and pipeline dependencies, fences and
+acquire/release rules. The relation definitions follow herdtools7 7.58
+`herd/libdir/riscv.cat` and `riscv-defs.cat`. This implementation is independent
+Python code. It does not call herd7.
+
+The initial-state file has schema `rvw.axiomatic-initial/1` and `locations`.
+Each location has hex `address`, integer byte `size` and hex `value`.
+C2/2 must declare `memory_dependencies: complete`. Each retired memory action
+and FENCE must have a `memory_model` object with `id`, `hart`, integer `order`,
+`kind`, and complete `addr`, `data`, `ctrl` dependency ID lists. Dependencies
+name earlier memory events on that hart. Non-fence events need integer byte
+`address` and `size`, and integer `read` or `write` values. Kinds are R, W, LR,
+SC, AMO, FENCE. Successful SC also names its LR as `rmw`. The adapter must
+compute dependencies through intervening non-memory instructions. Empty
+lists are assertions that no such dependencies exist. Missing lists are not
+empty lists. RVFI bytes, masks, hart identity and instruction kind are checked
+against the annotation. aq/rl and fence domains come from the instruction.
+`MultiHartSession` can take a complete-dependency declaration and an annotation
+callback. Adapters without these observations get `inconclusive`.
+
+The supported profile has aligned scalar accesses with no mixed-size overlap,
+no memory faults, no external writers, and no device memory. Unsupported
+instructions and profiles are inconclusive. A candidate limit also gives
+inconclusive. `allowed` supplies a candidate witness under the declared
+dependencies. `forbidden` means every candidate was rejected for this finite
+execution. Neither result establishes full-core correctness or reference
+instruction semantics. No native herd differential validation is claimed.
+
+## Concurrent programs
+
+`rvw memory generate --seed 7 --harts 3 --length 20` returns independent RV64
+assembly fragments with races, lock loops, AMOs and fences. A project must
+define RVW_SHARED_BASE, link each fragment at a distinct executable address,
+initialize the shared 40 bytes and detect each completion symbol. Feed its
+captured C2/2 execution to the axiomatic checker. Generation does not run a
+DUT. The lock loops need declared fairness and a bounded watchdog. The project
+must collect complete dependencies to earn an axiomatic result.

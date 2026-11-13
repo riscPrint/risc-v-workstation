@@ -65,4 +65,17 @@ class MultiHartSpec extends AnyFunSuite {
     }
   }
 
+  test("memory model annotations remain attached to their hart retirement") {
+    val p = Files.createTempFile("multi-hart-memory-model", ".jsonl")
+    val w = new MultiHartTrace(p.toFile, ujson.Obj("memory_dependencies" -> "complete"), Seq(0, 1))
+    try {
+      w.reset(0, 0); w.reset(1, 0)
+      w.retire(1, record(0, 1), Some(ujson.Obj("id" -> "hart1-op0", "hart" -> 1, "order" -> 0)))
+    } finally w.close()
+    try {
+      val rows = Files.readAllLines(p)
+      assert(ujson.read(rows.get(3))("memory_model")("id").str == "hart1-op0")
+    } finally Files.delete(p)
+  }
+
 }

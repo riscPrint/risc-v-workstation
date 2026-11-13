@@ -36,11 +36,12 @@ final class MultiHartTrace(file: File, header: ujson.Obj, hartIds: Seq[Int]) ext
     nextOrder(h) = 0
     emit(c, ujson.Obj("event" -> "reset", "hart" -> h, "epoch" -> epoch(h)))
   }
-  def retire(h: Int, r: RvfiRecord): Unit = {
+  def retire(h: Int, r: RvfiRecord, memoryModel: Option[ujson.Obj] = None): Unit = {
     active(h)
     require(r.order >= 0 && r.order < (BigInt(1) << 64))
     require(r.order == nextOrder(h), s"hart $h retirement order gap")
     val fields = ujson.read(r.toJson).obj
+    memoryModel.foreach(m => fields("memory_model") = m)
     fields("hart") = ujson.Num(h)
     fields("epoch") = ujson.Num(epoch(h))
     // Keep full precision for RVFI's 64-bit order field.

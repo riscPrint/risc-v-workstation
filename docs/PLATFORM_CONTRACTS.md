@@ -3854,3 +3854,21 @@ Deadlocks are listed separately. A pass proves the supplied graph only under
 its declared justice assumptions. It does not certify an RTL translation.
 `model_sha256` identifies the exact captured model. CLI `model-live` and MCP
 `formal_model_live` return the same report. MCP `formal_swarm` runs replay.
+### Scalar axiomatic memory annotations
+
+C2/2 can declare `memory_dependencies: complete` and add `memory_model` to
+retirement records. This object identifies the event by string `id`, integer
+`hart` and integer per-hart `order`. It carries `kind` R/W/LR/SC/AMO/FENCE and
+complete dependency source ID arrays `addr`, `data`, `ctrl`. Scalar memory
+events carry integer byte `address`, `size` and integer `read` and/or `write`.
+A successful SC names its paired LR ID in `rmw`. Fences and aq/rl attributes
+are decoded from RVFI instructions. The checker validates annotated bytes
+against RVFI. Dependency completeness is a project observation contract.
+
+`rvw.axiomatic-initial/1` has `locations` with string hex `address`, integer
+byte `size` and string hex `value`. `rvw.axiomatic/1` reports allowed, forbidden
+or inconclusive, the model, candidate count and an optional witness. Results
+apply to one finite scalar execution under declared dependencies. Limits and
+unsupported profiles cannot produce allowed or forbidden. No full-core proof
+is implied. `rvw.concurrent-programs/1` contains seeded per-hart RV64 assembly
+fragments and project requirements. `executed:false` is mandatory at generation.
