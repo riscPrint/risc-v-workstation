@@ -1,7 +1,7 @@
 # SpinalSoc
 
 SpinalSoc composes small verification SoCs from project data. It uses SpinalHDL
-1.15.0 `Apb3Decoder` and `Apb3Router`. It does not implement a second bus fabric.
+1.15.0 `Apb3Decoder` and `Apb3Router` with optional bus ingress bridges.
 
 ```sh
 rvw soc compose SpinalSoc/examples/compose.json --out SpinalSoc/generated
@@ -29,7 +29,7 @@ memory window. The manifest records the input hashes. Memory windows have a
 
 ## Decisions
 
-The first profile uses one clock domain and full 32-bit APB3 word accesses.
+The original profile uses one clock domain and full 32-bit APB3 word accesses.
 The wrapper owns instruction/data arbitration. Clock frequency and reset kind
 are explicit. Missing decode windows return APB errors through the library.
 The existing map stays compatible with software, RAL and UVM consumers.
@@ -37,8 +37,8 @@ The existing map stays compatible with software, RAL and UVM consumers.
 ## Limits
 
 The executable stub example has a C1 runner. No production CPU is bundled.
-Generation does not establish a simulation pass. Byte writes, multiple clock
-domains, AXI4/TileLink composition and automatic bridge selection remain open.
+Generation does not establish a simulation pass. Native AXI4/TileLink crossbars,
+AXI width adaptation and arbitrary peripheral bus conversion remain open.
 The software device tree is still a memory fragment. Peripheral pins need
 project exports. Debug reset is tied inactive until a project binds debug.
 
@@ -107,3 +107,50 @@ On 2026-11-13 the scaffold compiled and elaborated in 13 seconds after it
 acquired the sbt lock. `dtc` accepted the composed board description. RISC-V
 GCC linked hello-world with the generated linker script. Startup code, drivers
 and a production core remain project work.
+
+## Bus ingress and clock domains
+
+`core.bus` can be `apb3`, `axi4`, `axi4-lite` or `tilelink`. The new wrapper
+traits are `AxiCoreWrapper`, `AxiLiteCoreWrapper` and `TileLinkCoreWrapper`.
+They keep the interrupt and debug-reset members of `CoreWrapper`. AXI ports
+have 32 data bits. TileLink uses negotiated Get/Put node parameters without
+BCE and accepts 32, 64 or 128 data bits through the library width adapter.
+AXI uses the library ID remover and burst splitter before AXI4-Lite conversion.
+All endpoints share the library APB decoder and router. These are bus ingress
+bridges, not native AXI or TileLink crossbars. Atomic and coherent accesses
+are outside this profile.
+
+The new ingress paths preserve byte strobes in memory. Read data uses bus
+lane positions. Legacy APB3 MMIO accepts only full-word writes. A partial
+write returns SLVERR before the peripheral sees PSEL. No read/modify/write
+operation is used. SpinalHDL 1.15.0 omits the optional strobe wires in its
+APB decoder and router. `Fabric` supplies those wires through `rework` and
+keeps the library address decode and error response logic.
+
+An optional `domains` object names peripheral clock domains:
+
+```json
+"domains": {"slow": {"clock_hz": 10000000, "reset": "async_high"}}
+```
+
+A device binder can select `"domain": "slow"`. The top exposes `slow_clk`
+and `slow_reset`. The core uses the default clock and reset. `BusClockCrossing`
+packs byte strobes with data through Spinal `Apb3CC`. Its underlying
+`FlowCCUnsafeByToggle` is a recognised `rvw lint` handshake primitive.
+Interrupt levels return through `BufferCC`. Hold interrupt levels until the
+core acknowledges them. Pulses can be lost. Assert both resets together and
+keep them asserted long enough for both clocks. Independent reset during a
+transaction is not supported. Structural CDC recognition is not a protocol
+proof or a reset-domain qualification result.
+
+Native checks: `runMain rvwsoc.BusSmoke` checks byte writes, halfword writes,
+zero strobes, MMIO rejection, decode errors and response backpressure with
+Verilator assertions. `runMain rvwsoc.BusElaborate` elaborates AXI, TileLink
+and CDC fixtures. Run sbt under the shared lock as shown above.
+
+On 2026-11-13 the bus fixtures compiled with SpinalHDL 1.15.0. AXI4,
+TileLink and CDC fixtures elaborated. A generated APB3 composition with a
+separate memory domain elaborated. `BusSmoke` passed at seed 31 with
+Verilator assertions, both on one clock and across periods 10 and 14.
+AXI/TileLink transaction simulation, wider TileLink simulation, structural
+lint extraction and formal CDC/reset checks were NOT RUN.

@@ -22,7 +22,7 @@ def configuration(source):
         path=source.resolve().parent/name
         raw=path.read_bytes()
         fragment=json.loads(raw)
-        keys(fragment,{'devices','core','clock_hz','reset'})
+        keys(fragment,{'devices','core','clock_hz','reset','domains'})
         hashes.append(dict(path=str(path),sha256=hashlib.sha256(raw).hexdigest()))
         merge(fragment)
     merge(local)

@@ -233,10 +233,10 @@ coverage README for the full sequence contract and native example.
 ## Explicit project binders
 
 `rvw.soc-compose/1` has `map` (relative to this file), `core` (`class` and
-`bus=apb3`), positive `clock_hz`, `reset` (`sync_high` or `async_high`), and
+`bus`), positive `clock_hz`, `reset` (`sync_high` or `async_high`), and
 `devices`. Devices map each region name to `type=ram|rom|project`. Project
-binders also require a qualified Scala `class`. The first profile requires
-32 address bits, RV32, a unified APB3 master and one clock domain.
+binders also require a qualified Scala `class`. All profiles require
+32 address bits and RV32. Bus and clock-domain extensions are specified below.
 
 The generated `rvw.soc-composed/1` manifest records profile, memory dimensions,
 clock/reset intent, bus paths, map/composition/ELF hashes and
@@ -308,3 +308,16 @@ script includes `memory.ld`. Startup code and driver policy remain project-owned
 `registers.svd` retains the existing CMSIS-SVD subset. Neither is a lossless
 full SoC interchange model. Scaffold output references the installed SpinalSoc
 source path and contains an explicitly idle project core wrapper.
+
+## Composition bus ingress and domains
+
+`rvw.soc-compose/1` accepts `core.bus` values `apb3`, `axi4`, `axi4-lite`
+and `tilelink`. Existing APB3 compositions retain word-only behavior.
+The other ingress profiles preserve byte strobes for memory and reject
+partial writes to legacy APB3 project peripherals before selection.
+`domains` is an optional dictionary. Each entry has `clock_hz` and `reset`
+with the same value rules as the root clock. A binder's optional `domain`
+selects that domain. The generated top exports `<name>_clk` and
+`<name>_reset`. Both source and destination resets must assert together.
+The manifest records domains and names the ingress profile. A generated
+manifest remains `generated_only`; it is not simulation or proof evidence.

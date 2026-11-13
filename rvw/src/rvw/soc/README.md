@@ -411,3 +411,12 @@ project work. The native test observes a small RTL bridge with a stalled
 request, a store and a load. It compares against separate expected memory
 effects. A corrupted read response produces a mismatch. This is a native
 bridge fixture test. It is not an ELF execution or a VexRiscv/BOOM capture.
+
+### Bus ingress and clock domains
+
+Composition accepts `apb3`, `axi4`, `axi4-lite` and noncoherent `tilelink`
+core buses. The new ingress profiles preserve memory byte strobes and reject
+partial writes to legacy APB3 peripherals. Device binders can select an
+explicit clock/reset domain through `domain`. See
+[SpinalSoc](../../../../SpinalSoc/README.md#bus-ingress-and-clock-domains)
+for the wrapper traits, library adapters, reset rules and current limits.
