@@ -3,6 +3,8 @@ import argparse
 
 
 def nodes(parser, path=()):
+    if hasattr(parser, "load"):
+        parser.load()
     yield path, parser
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):

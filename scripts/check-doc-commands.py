@@ -72,6 +72,8 @@ def symbolic_values(argv, parser):
         for action in node._actions:
             if isinstance(action, argparse._SubParsersAction) and token in action.choices:
                 node = action.choices[token]
+                if hasattr(node, "load"):
+                    node.load()
                 break
         actions.extend(node._actions)
     result = list(argv)
@@ -96,6 +98,8 @@ def validate_fragment(argv, parser):
             return None
         if re.search(r'[|/\[\]<>]|\.\.\.', token):
             return None
+        if hasattr(node, "load"):
+            node.load()
         children = next((a.choices for a in node._actions if isinstance(a, argparse._SubParsersAction)), {})
         if token in children:
             node = children[token]

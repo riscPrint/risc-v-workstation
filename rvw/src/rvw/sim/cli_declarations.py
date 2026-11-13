@@ -1,0 +1,2 @@
+"""Light CLI discovery metadata. Keep implementation imports in cli.py."""
+COMMANDS = [('sim', 'native simulation checkpoint control'), ('speed-compare', 'compare paired C1 speed after complete C2 equivalence'), ('speed-sweep', 'run bounded serial Verilator thread experiments'), ('backends', 'show native backend semantic capabilities'), ('uvm-ral', 'generate UVM register classes from rvw.soc/1'), ('uvm-cpu', 'check a complete C1 capture with native UVM and Spike DPI'), ('hdl', 'run a native HDL semantic component test'), ('cocotb', 'run a native cocotb component suite')]
