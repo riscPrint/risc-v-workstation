@@ -15,11 +15,14 @@ def invoke(*args, env=None, cwd=ROOT, script=SCRIPT):
                      env=env, input='', capture=True, timeout=30)
 
 
+@pytest.mark.fast
 def test_help():
     result = invoke('--help')
     assert result.returncode == 0
     for flag in ('--all', '--check', '--dry-run', '--source', '--shell-rc', '--with-gem5'):
         assert flag in result.stdout
+    assert 'Select the legacy tool set.' in result.stdout
+    assert '--profile all' in result.stdout
 
 
 @pytest.mark.parametrize('args', [
