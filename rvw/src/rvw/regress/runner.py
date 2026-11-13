@@ -225,7 +225,7 @@ class Runner:
         self.inputs = Inputs(core, source, capture=capture)
         self.env = dict(self.inputs.child_env)
         self.adapter = self.inputs.adapter
-        self.jobs = 1 if core.persistent else (opts.jobs or core.jobs)
+        self.jobs = opts.jobs or core.jobs
         # The server builds its first model inside run-many. Preserve the build
         # budget that the skipped pre-build process would have had.
         self.startup_s = core.startup_s + (core.build_timeout_s if core.persistent and core.build_first else 0)
@@ -1068,7 +1068,26 @@ os.execvpe(command[0], command, os.environ)
                 for j in pending:
                     self._synth(j, "error", msg, artifacts={})
                 return
-        rc, timed_out = self._run_many(pending, rdir, config, timeout, "all")
+        if self.core.persistent and self.jobs > 1:
+            from rvw.sim.persistent import run_workers
+            # Capture before starting threads. Each worker owns a separate JVM,
+            # manifest, watchdog and process group.
+            for j in pending:
+                self.inputs.elf(j.test.elf)
+
+            def worker(number, batch, cancel):
+                directory = rdir / f"worker-{number}"
+                directory.mkdir(exist_ok=True)
+                budget = self.startup_s + per_test * len(batch)
+                return self._run_many(batch, directory, config, budget, "all", cancel=cancel)
+
+            results = run_workers(pending, self.jobs, worker)
+            rc = next((code for code, _ in results if code != 0), 0)
+            timed_out = any(expired for _, expired in results)
+            log.write_text("Persistent worker logs:\n" + "".join(
+                f"worker-{n}/adapter.log\n" for n in range(len(results))))
+        else:
+            rc, timed_out = self._run_many(pending, rdir, config, timeout, "all")
         missing = [j for j in pending if not (j.dir / "result.json").is_file()]
         if missing and (timed_out or len(missing) < len(pending)):
             # Isolate the test that hung or crashed the batch: rerun the rest one by one.
@@ -1086,7 +1105,7 @@ os.execvpe(command[0], command, os.environ)
             for j in missing:
                 self._synth(j, "error", msg)
 
-    def _run_many(self, jobs: list[Job], rdir: Path, config: str, timeout: float, tag: str):
+    def _run_many(self, jobs: list[Job], rdir: Path, config: str, timeout: float, tag: str, cancel=None):
         """One `run-many` call. Besides the batch budget `timeout`, a watchdog stops the batch when no
         new result.json appears for `timeout_s` (+ margin) after the first `startup_s`: a hung test
         then costs about one test timeout, not the whole batch budget."""
@@ -1099,7 +1118,7 @@ os.execvpe(command[0], command, os.environ)
                 if self.core.wall_timeout:
                     line["wall_timeout"] = per_test
                 f.write(json.dumps(line) + "\n")
-        cmd = [*self.adapter, "run-many", "--manifest", str(manifest), "--jobs", str(min(self.jobs, len(jobs)))]
+        cmd = [*self.adapter, "run-many", "--manifest", str(manifest), "--jobs", str(1 if self.core.persistent else min(self.jobs, len(jobs)))]
         if self.core.persistent:
             cmd.append("--persistent")
         margin = watchdog_margin(per_test)
@@ -1107,6 +1126,8 @@ os.execvpe(command[0], command, os.environ)
         state = {"n": 0, "progress": t0}
 
         def watchdog():
+            if cancel is not None and cancel.is_set():
+                return "persistent worker pool cancelled"
             n = sum((j.dir / "result.json").is_file() for j in jobs)
             now = time.monotonic()
             if n != state["n"]:

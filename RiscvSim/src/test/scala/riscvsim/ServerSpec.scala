@@ -57,6 +57,8 @@ class ServerSpec extends AnyFunSuite {
       val sessions = replies.slice(1, 3).map(_("result")("details")("simulation_session"))
       assert(replies.slice(1, 3).forall(_("result")("execution_mode").str == "server"))
       assert(sessions(0)("id") == sessions(1)("id"))
+      assert(replies.slice(1, 3).forall(r =>
+        r("result")("details")("simulation_session")("rtl_sha256") == r("result")("rtl_sha256")))
       assert(sessions.map(_("model_run").num) == Seq(1.0, 2.0))
       assert(replies.last("shutdown").bool)
       val direct = driver.runOne(Cli.job(Map("elf" -> elf.getPath, "out" -> new File(dir, "direct").getPath), adapter, dir))

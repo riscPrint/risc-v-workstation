@@ -233,7 +233,8 @@ model run number and reset policy. RTL and native hashes still identify the mode
 An abandoned worker stops the batch before later requests and forces exit 2,
 including when no result exists for those requests. This is model reuse, not
 result reuse. Regression `[core] persistent = true` selects this mode and skips
-the separate pre-build process. It sets one worker for serial timeout budgets.
+the separate pre-build process. Each process has a serial timeout budget.
+Regression can start several isolated processes.
 
 Cosim reproduction metadata records `tools.spike_build.spike_identity` with the
 installed reference's version, source revision when supplied, and origin. The same
@@ -1937,7 +1938,8 @@ server with exit 2 after its timeout response. Other run failures do not end it.
 C1 `execution_mode` is `server` for server requests and `process` for ordinary
 runs. Error and abandoned results also retain this field.
 C1 `details.simulation_session` has `id` (process UUID), `model_run` (one-based
-completed-run number per model), `reset: "new-native-instance"` and
+completed-run number per model), `rtl_sha256` (the generated Verilog hash,
+null when unavailable), `reset: "new-native-instance"` and
 `verilator_cached` (native cache hit at model compilation). These fields are
 metadata. They do not prove reset equivalence. `details.execution_s` measures
 adapter execution after model readiness. Existing RTL, native and source
@@ -1950,6 +1952,18 @@ Native identity namespace `native-inputs-v27` also accepts numeric Verilator
 `--threads`, `--output-split` and `--output-split-cfuncs` options. Threads must be
 positive. Values contain at most nine decimal digits. Unknown options and file
 inputs still refuse capture. All exact option bytes remain identity inputs.
+
+### C1 regression persistent worker pool
+
+Regression defaults to persistent runs for `core.backend = "riscvsim-verilator"`.
+An explicit `core.persistent = false` disables this default. Other adapters stay
+opt-in. Each worker receives `run-many --persistent --jobs 1` and owns a separate
+process group. `core.jobs` or regression `--jobs` selects the pool size. Each
+process reuses its compiled models and requires the fresh-instance declaration.
+Crash or timeout results do not grant a pass. Regression retries missing results
+in a new process. Generated RTL identity remains required for result reuse.
+The direct RiscvSim `run-many --persistent` command remains serial.
+
 ### From-reset replay descriptor
 
 `rvw.replay-checkpoint/1` has `mode: "from-reset"`, a selected cycle, original
