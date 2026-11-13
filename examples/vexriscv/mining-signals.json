@@ -1,0 +1,34 @@
+{
+  "signals": {
+    "property_stage0_valid": 1,
+    "property_stage0_fire": 1,
+    "property_stage0_stuck": 1,
+    "property_stage0_pc": 32,
+    "property_stage1_valid": 1,
+    "property_stage1_fire": 1,
+    "property_stage1_stuck": 1,
+    "property_stage1_pc": 32,
+    "property_stage2_valid": 1,
+    "property_stage2_fire": 1,
+    "property_stage2_stuck": 1,
+    "property_stage2_pc": 32,
+    "property_stage3_valid": 1,
+    "property_stage3_fire": 1,
+    "property_stage3_stuck": 1,
+    "property_stage3_pc": 32,
+    "property_ibus_valid": 1,
+    "property_ibus_ready": 1,
+    "property_ibus_pc": 32,
+    "property_dbus_valid": 1,
+    "property_dbus_ready": 1,
+    "property_dbus_address": 32,
+    "property_dbus_write": 1,
+    "property_retire": 1
+  },
+  "onehot_sets": [
+    [
+      "property_stage0_fire",
+      "property_stage0_stuck"
+    ]
+  ]
+}

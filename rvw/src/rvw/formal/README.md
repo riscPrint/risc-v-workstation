@@ -3401,3 +3401,20 @@ an independent existential oracle. It also runs positive and negative
 liveness-to-safety jobs. This is a subset of nested composition. Nested until,
 unbounded sequence concatenation, disjunction of temporal operands, formal
 reset cancellation and multi-clock proof remain unsupported.
+
+### Mine candidates from simulation samples
+
+`rvw formal trace-mine --manifest signals.json --trace samples.jsonl --out OUT`
+checks finite samples and emits `MinedProperties.scala`. Repeat `--trace` for
+separate programs. The manifest declares `signals` as unsigned widths and can
+add `onehot_sets`. Each JSONL row supplies an integer for every declared signal.
+Use separate traces at reset boundaries. Missing, unknown and out-of-width
+values are errors.
+
+The miner checks Boolean implications, guarded next-sample stability, mutex
+pairs and declared one-hot-or-zero sets. It drops any candidate refuted by a
+supplied sample. `--minimum` sets the minimum activation count. Set candidates
+also need observations of every member. The default is two observations.
+Output rows remain candidates. Review them and use a fresh formal job before
+claiming an invariant. The emitted properties are assertions, not assumptions.
+See the [measured VexRiscv run](../../../../examples/vexriscv/mining-results.md).

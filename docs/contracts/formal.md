@@ -923,3 +923,16 @@ are accepted. The acceptance predicate uses a separate set of old obligations.
 It must hold infinitely often. These fields do not turn a finite observation
 or bounded pass into an unbounded proof. Other nested temporal operators and
 multi-clock proofs retain unsupported results.
+
+## Trace property candidates
+
+`rvw.trace-candidates/1` records the number of signal samples, trace boundaries,
+retained `observed_candidate` rows, refuted count and inactive count. Each row
+has a generated ID, kind, signal names, activation count and member hit counts.
+Supported kinds are guarded next-sample stability, Boolean implication, mutex
+pairs and declared one-hot-or-zero sets. Every supplied trace is checked.
+No transition crosses a trace boundary. Unknown or missing values are errors.
+Candidates with a refutation are omitted. Dead antecedents and insufficiently
+activated set members are omitted. The result is finite observation evidence.
+It is not a proof or a generated assumption. Review the emitted Scala DSL
+before it is added to a core's property set.
