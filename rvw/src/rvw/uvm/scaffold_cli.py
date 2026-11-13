@@ -6,7 +6,7 @@ from .scaffold import generate
 
 def command(args):
     try:
-        report = generate(args.db,args.soc,args.out,rtl=args.rtl,language=args.language,profile=args.profile,adapter=args.adapter,composition=args.composition)
+        report = generate(args.db,args.soc,args.out,rtl=args.rtl,language=args.language,profile=args.profile,adapter=args.adapter,composition=args.composition,port_map=args.port_map)
         print(json.dumps(report))
         return 2 if report.get('status') == 'unsupported' else 0
     except (OSError,ValueError,QueryError) as exc:
@@ -25,5 +25,6 @@ def register(commands):
     from .profiles import PROFILES
     parser.add_argument('--profile',choices=['auto',*PROFILES],default='auto')
     parser.add_argument('--adapter', type=Path, help='project-owned rvw.uvm-adapter/1 bus binding and scenario')
+    parser.add_argument('--port-map',type=Path)
     parser.add_argument('--rtl',nargs='+',type=Path)
     parser.set_defaults(func=command)

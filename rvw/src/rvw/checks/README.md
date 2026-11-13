@@ -131,3 +131,8 @@ and 2 for inconclusive, findings and input errors.
 register accesses from `rvw.soc/1`. It models read-clear, write-one-to-clear
 and byte masks. Unknown values remain unknown until an independent write or
 clear defines them. This oracle does not model autonomous peripheral changes.
+
+For plain HDL ready/valid channels, use a `buses` entry with `database` and
+`port_map` in the generation manifest. The `rvw.hdl-ports/1` declaration binds
+the stability monitor directly to top ports. No typed Spinal bundle is needed.
+Generation does not run a solver. See `docs/contracts/vip.md` for the format.

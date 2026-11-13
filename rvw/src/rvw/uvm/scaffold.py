@@ -13,7 +13,12 @@ def bus_type(class_name):
     return BUS_TYPES.get(leaf)
 
 
-def generate(db=None, soc=None, out=None, *, rtl=None, language='pyuvm', profile='auto', adapter=None, composition=None):
+def generate(db=None, soc=None, out=None, *, rtl=None, language='pyuvm', profile='auto', adapter=None, composition=None, port_map=None):
+    if port_map is not None:
+        if adapter is not None or composition is not None:
+            raise ValueError("port_map cannot be combined with adapter or composition")
+        from .declared import generate as declared
+        return declared(db,soc,out,rtl=rtl,language=language,profile=profile,port_map=port_map)
     if composition is not None:
         if db is not None or adapter is not None or language != 'pyuvm':
             raise ValueError('composition profile needs pyuvm without database or adapter')
