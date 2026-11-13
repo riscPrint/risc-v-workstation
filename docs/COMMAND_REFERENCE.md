@@ -713,7 +713,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,initial-split,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -735,6 +735,13 @@ usage: rvw formal upf [-h] --source SOURCE --bindings BINDINGS --out OUT
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+```
+
+### `rvw formal initial-split`
+
+```text
+usage: rvw formal initial-split [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw formal bug-hunt`
@@ -2612,6 +2619,14 @@ Starts a background job: yes.
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `trace` (required), `cycle`, `time`, `scope`, `memories`, `first_failure`.
+
+Starts a background job: yes.
+
+### `formal_initial_split`
+
+Split every initial value of an RTL variable while retaining full transitions.
+
+Arguments: `out` (required), `manifest` (required), `timeout`.
 
 Starts a background job: yes.
 
