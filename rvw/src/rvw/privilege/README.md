@@ -189,6 +189,11 @@ locked permission enforcement, locked address/config writes, TOR predecessor
 locking and overlapping-entry priority. Stores also check the resulting data.
 Denied accesses check cause, PC and mtval. The selected project must provide
 at least eight PMP entries and four-byte granularity for this matrix.
+An RV32 M/U core (no S-mode) uses `isa` `rv32...` and `priv = "mu"`; see
+`examples/privilege/pmp-rv32.json`. It needs four entries: the allow-all TOR
+fallback moves from entry 7 to entry 3 (the last entry in RV32 `pmpcfg0`).
+The default modes are M, U and MPRV-U, 242 programs. `rvw regress plan`
+selects `pmp-rv32` for `xlen:32`, `mode:U` and at least four PMP regions.
 
 `kind = "epmp"` requires Smepmp. Four separate programs check MMWP unmatched
 access denial, MML S/U-only and M-only rules, sticky security policy bits,

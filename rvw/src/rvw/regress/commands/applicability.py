@@ -33,6 +33,8 @@ def plan(features, catalog=None):
         raise ValueError('invalid PMP or hart count')
     if pmp:
         supported.add('pmp')
+    if pmp >= 4:
+        supported.add('pmp:4')
     if pmp >= 8:
         supported.add('pmp:8')
     if harts >= 2:

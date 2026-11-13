@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "pmp",
+  "isa": "rv32i_zicsr",
+  "priv": "mu",
+  "pmp": {
+    "entries": 4,
+    "granularity_bytes": 4
+  }
+}

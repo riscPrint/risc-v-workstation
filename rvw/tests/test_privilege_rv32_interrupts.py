@@ -44,3 +44,26 @@ def test_rv32_core_with_interrupts_gets_rv32_suites(tmp_path):
     applicable = {x['name'] for x in plan(features)['suites'] if x['applicable']}
     assert {'scheduled-wfi-rv32', 'wfi-clint-rv32'} <= applicable
     assert not {'scheduled-wfi', 'wfi-clint'} & applicable
+
+
+def test_rv32_mu_pmp_rows_use_four_entries():
+    from rvw.privilege.pmp import programs
+    rows = programs(campaign.load(ROOT / 'examples/privilege/pmp-rv32.json'))
+    assert len(rows) == 242
+    assert not {r['id'] for r in rows if '-s-' in r['id'] or 'mprv-s' in r['id']}
+    for row in rows:
+        text = row['assembly']
+        assert ' sd ' not in text and 'satp' not in text and 'medeleg' not in text
+        assert 'pmpaddr4' not in text and 'pmpaddr7' not in text and 'csrw pmpaddr3, t0' in text
+    with pytest.raises(ValueError, match='S-mode'):
+        programs({'isa': 'rv32i_zicsr', 'priv': 'mu', 'modes': ['S'], 'pmp': {'entries': 4}})
+    with pytest.raises(ValueError, match='four'):
+        programs({'isa': 'rv32i_zicsr', 'priv': 'mu', 'pmp': {'entries': 2}})
+
+
+def test_rv32_mu_core_with_four_pmp_entries_gets_pmp_rv32(tmp_path):
+    features = tmp_path / 'f.json'
+    features.write_text(json.dumps(dict(schema='rvw.regress-features/1', isa='rv32im_zicsr',
+        privilege_modes='MU', pmp_regions=4)))
+    applicable = {x['name'] for x in plan(features)['suites'] if x['applicable']}
+    assert 'pmp-rv32' in applicable and 'pmp' not in applicable

@@ -17,3 +17,14 @@ def test_rv32_wfi_clint_builds_and_passes_on_spike(tmp_path):
         result = subprocess.run(['spike', '--isa=rv32i_zicsr', '--priv=m', '-m128', str(elf)],
                                 capture_output=True, text=True, timeout=20)
         assert result.returncode == 0, (elf.name, result.stderr)
+
+
+@pytest.mark.skipif(not Path(GCC).exists() or not shutil.which('spike'), reason='needs RISC-V GCC and Spike')
+def test_rv32_mu_pmp_matrix_passes_on_spike(tmp_path):
+    campaign.build(ROOT / 'examples/privilege/pmp-rv32.json', tmp_path / 'pmp', gcc=GCC)
+    elfs = sorted((tmp_path / 'pmp').glob('*.elf'))
+    assert len(elfs) == 242
+    for elf in elfs:
+        result = subprocess.run(['spike', '--isa=rv32i_zicsr', '--priv=mu', '--pmpregions=4', '-m128', str(elf)],
+                                capture_output=True, text=True, timeout=20)
+        assert result.returncode == 0, (elf.name, result.stderr)
