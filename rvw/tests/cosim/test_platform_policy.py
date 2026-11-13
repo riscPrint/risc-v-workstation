@@ -246,3 +246,25 @@ def test_misaligned_failing_address_compares_strictly(tmp_path_factory, tmp_path
     result = run_check(tmp_path, rows, elf, platform)
     assert result['status'] == 'mismatch'
     assert 'tval' in result['mismatch']['differences']
+
+
+@pytest.mark.parametrize('grain', [0, 2, 12, True, '16', 1 << 64])
+def test_invalid_pmp_grain(tmp_path, grain):
+    config = json.loads((Path(__file__).parents[2] / 'src/rvw/cosim/configs/boom.json').read_text())
+    config['pmp_granularity'] = grain
+    path = tmp_path / 'platform.json'
+    path.write_text(json.dumps(config))
+    with pytest.raises(ValueError, match='pmp_granularity'):
+        Platform.load('test', path)
+
+
+def test_vex_declares_m_only():
+    root = Path(__file__).parents[3] / 'examples/vexriscv'
+    platform = Platform.load('vexriscv', root / 'rvw/platform.json')
+    assert platform.privilege_modes == 'M'
+    assert platform.pmp_regions == 0
+    assert platform.absent_pmp_csrs == 'read_zero_write_ignored'
+    assert platform.ecall_tval == 'insn'
+    source = (root / 'rvw/src/main/scala/rvwvex/VexTop.scala').read_text()
+    assert 'userGen = false, supervisorGen = false' in source
+    assert 'misaExtensionsInit = 0x1100' in source

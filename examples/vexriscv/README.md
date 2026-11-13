@@ -58,7 +58,7 @@ for normal use. The adapter defaults to its own core checkout.
 
 ## Design and limits
 
-The core is RV32IM with M/S/U CSRs, simple instruction and data buses, 16 MiB of
+The core is RV32IM with M-only CSRs, simple instruction and data buses, 16 MiB of
 RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or debug
 unit. SATP stays bare. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP, SEIP
 and MEIP. The adapter records changes in C2. See
@@ -194,3 +194,6 @@ speculative. Fetch acceptance does not establish instruction retirement.
 The example binds the design identity to the emitted RTL SHA-256.
 Sample the declared signals before each rising edge. Run `rvw cov rtl` on the
 plan and those samples. The exporter does not collect samples by itself.
+
+The cosim platform declares M-only privilege, no PMP, zero PMP CSR reads, and
+instruction-valued `mtval` on ECALL. The adapter uses the same choices.

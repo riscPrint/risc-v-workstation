@@ -5,7 +5,7 @@ import spinal.lib._
 import vexriscv.{VexRiscv, VexRiscvConfig}
 import vexriscv.plugin._
 
-/** Bare physical-memory RV32IM, with M/S/U CSRs and no caches, MMU or debug unit. */
+/** Bare physical-memory RV32IM, with M-only CSRs and no caches, MMU or debug unit. */
 object VexTop {
   def configuration(): VexRiscvConfig = VexRiscvConfig(plugins = List(
     new IBusSimplePlugin(resetVector = 0x80000000L, cmdForkOnSecondStage = false,
@@ -21,8 +21,8 @@ object VexTop {
       pessimisticAddressMatch = false),
     new MulSimplePlugin,
     new DivPlugin,
-    new CsrPlugin(CsrPluginConfig.all2(0x80000000L).copy(userGen = true,
-      misaExtensionsInit = 0x141100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true)),
+    new CsrPlugin(CsrPluginConfig.all2(0x80000000L).copy(userGen = false, supervisorGen = false,
+      misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true)),
     new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true),
     new FormalPlugin,
     new TrapProbePlugin))
@@ -62,7 +62,7 @@ class TrapProbePlugin extends Plugin[VexRiscv] {
     }
     cause = out(Bits(32 bits)).setName("trap_cause")
     tval = out(Bits(32 bits)).setName("trap_tval")
-    cause := (csr.privilege === 1) ? readCsr(0x142, "trap_scause") | readCsr(0x342, "trap_mcause")
-    tval := (csr.privilege === 1) ? readCsr(0x143, "trap_stval") | readCsr(0x343, "trap_mtval")
+    cause := readCsr(0x342, "trap_mcause")
+    tval := readCsr(0x343, "trap_mtval")
   }
 }

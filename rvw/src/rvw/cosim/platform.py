@@ -70,6 +70,7 @@ class Platform:
     endianness: dict = field(default_factory=lambda: {
         "instruction": "little", "data": "little", "page_table": "little", "device": "little"})
     absent_pmp_csrs: str = "trap"
+    pmp_granularity: int = 4  # minimum PMP region size in bytes
     ecall_tval: str = "zero"
 
     @classmethod
@@ -112,6 +113,10 @@ class Platform:
             raise ValueError("absent_pmp_csrs must be trap or read_zero_write_ignored")
         if p.absent_pmp_csrs != "trap" and p.pmp_regions != 0:
             raise ValueError("absent_pmp_csrs read_zero_write_ignored requires pmp_regions=0")
+        p.pmp_granularity = obj.get("pmp_granularity", 4)
+        if (type(p.pmp_granularity) is not int or not 4 <= p.pmp_granularity <= 1 << (p.xlen - 1)
+                or p.pmp_granularity & (p.pmp_granularity - 1)):
+            raise ValueError("pmp_granularity must be a power of two from 4 to 2^(XLEN-1) bytes")
         p.ecall_tval = obj.get("ecall_tval", "zero")
         if p.ecall_tval not in ("zero", "insn"):
             raise ValueError("ecall_tval must be zero or insn")

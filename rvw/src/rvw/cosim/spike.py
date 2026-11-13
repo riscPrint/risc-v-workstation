@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 5
+SHIM_VERSION = 6
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -187,7 +187,7 @@ class Spike:
         self.lib = lib = load_shim(shim)
         lib.rvw_error.restype = C.c_char_p
         lib.rvw_create.argtypes = [C.c_char_p, C.POINTER(C.c_uint64), C.c_size_t,
-                                  C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_char_p, C.c_int, C.c_int]
+                                  C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_uint64, C.c_char_p, C.c_int, C.c_int]
         lib.rvw_create.restype = C.c_void_p
         lib.rvw_destroy.argtypes = [C.c_void_p]
         lib.rvw_write.argtypes = [C.c_void_p, C.c_uint64, C.c_void_p, C.c_size_t]
@@ -210,7 +210,7 @@ class Spike:
             return (C.c_uint64 * (len(rs)*2))(*(v for r in rs for v in r))
         self.handle = lib.rvw_create((platform.reference_isa or platform.isa).encode(), array(platform.ram), len(platform.ram),
                                      array(platform.mmio), len(platform.mmio), platform.reset_pc,
-                                     platform.pmp_regions, platform.privilege_modes.encode(),
+                                     platform.pmp_regions, platform.pmp_granularity, platform.privilege_modes.encode(),
                                      int(platform.misaligned["load"] == "emulate"),
                                      int(platform.absent_pmp_csrs == "read_zero_write_ignored"))
         if not self.handle:

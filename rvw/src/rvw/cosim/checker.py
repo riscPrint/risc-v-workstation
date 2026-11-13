@@ -153,7 +153,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                                    "fault_access_steps": fault_access_steps},
                 "platform_policy": {key: getattr(platform, key) for key in
                                     ("privilege_modes", "misaligned", "endianness",
-                                     "absent_pmp_csrs", "ecall_tval")},
+                                     "absent_pmp_csrs", "ecall_tval", "pmp_granularity")},
                 "applied_masks": [{"reason": reason, "csr": hex(csr), "mask": hex(mask)}
                                   for (reason, csr), mask in sorted(applied_masks.items())],
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
