@@ -393,3 +393,17 @@ records cold/reuse median wall times, signed `saved_s` and their ratio.
 Failed or inconclusive trials cannot produce savings fields. The one-time
 library export is separate. Cone-matched helpers remain assertions and the
 target proof is fresh. Local timing does not predict another workload.
+
+## Live engine progress JSONL
+
+Engine-race results name `progress_events=progress.jsonl`.
+Each line has schema `rvw.formal-progress/1`, event `started|sample|finished`,
+`property_id`, `property_scope=manifest_problem`, `engine`, per-engine `sequence`,
+`elapsed_s`, `depth_reached`, `depth_meaning`, `pdr_frame`, `memory_bytes`,
+`memory_scope=sampled_process_group_rss`, `native_status` and
+`status_scope=native_engine_observation`. Native status is null before finish.
+Missing observations are null. The reported step has started, not necessarily
+completed. A PDR frame is not proof depth. RSS is a current group sample, not
+peak memory. One-second samples do not establish memory bounds. The manifest
+property can be a bundled problem. A native event cannot override conditional
+assumptions, disagreement or the final problem verdict.
