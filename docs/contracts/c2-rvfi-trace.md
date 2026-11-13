@@ -419,3 +419,21 @@ evidence makes the combined result inconclusive. A QEMU observation mismatch
 against a two-reference match produces disagreement. QEMU does not vote away
 an architectural mismatch. Full Linux boot, event injection and non-integer
 state remain unsupported by this first log adapter.
+
+## Ordered vector memory observations
+
+A C2/2 header can declare `vector_memory: true` with its `vector` state.
+Every retirement then includes `vector_accesses`, an ordered list, including
+an empty list for instructions with no vector memory effect. Each entry has
+`kind` (`read` or `write`), `address` (XLEN hex), `size` (1, 2, 4 or 8 bytes),
+and `data` (raw little-endian bytes as a hex integer that fits the size).
+The scalar memory masks stay zero for these vector operations. The checker
+compares the entire ordered list as well as full vector state. Missing reference
+observations are an error. Reference vector memory effects without declared
+DUT capture are also an error. No register or access is inferred from DUT data.
+
+The Spike shim currently supports successful vector memory operations in bare
+RAM only, without virtual translation or devices. Loads read the unchanged RAM
+bytes after execution. Stores use Spike's ordered commit log. Mixed read/write
+operations and partial fault effects are refused. This support does not cover
+fault-only-first completion, translated memory, or bus transactions.
