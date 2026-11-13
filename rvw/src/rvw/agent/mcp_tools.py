@@ -13,7 +13,7 @@ def mcp_tools():
     return [ToolSpec('agent_guide', 'Agent playbook: workflows (bring-up, a test fails, add coverage, prove a '
                      'property, performance question) as ordered rvw CLI and MCP calls with decision points. '
                      'Start here when you do not know which tool to call.',
-                     schema({'workflow': {'type': 'string'}}), _guide, annotations={'readOnlyHint': True})]
+                     schema({'workflow': {'type': 'string'}}), _guide, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=())]
 
 
 def mcp_resources():
