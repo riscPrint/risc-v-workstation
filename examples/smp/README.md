@@ -29,7 +29,7 @@ examples/smp/rvw/run.sh run --config smp2 \
   --out examples/smp/rvw/out/smoke-run --rvfi-trace --seed 17 --json
 ```
 
-The launcher takes the private `vex-mem` lock. Compilation takes the `sbt`
+The launcher takes the private `vex-mem` lock. Compilation takes the private `sbt-mem`
 lock. Outputs stay in this example or the private source directory.
 Select `smp3` through `smp8` and build the same number of hart images for N harts.
 Each entry must equal `0x80000000 + hart * 0x20000`.
@@ -266,3 +266,37 @@ All three clock-stall counters were zero. Native checks cover N=2 and N=3.
 N=4 through N=8 were NOT RUN. Clock enables test synchronous state stalls.
 Independent clock frequencies, CDC, physical clock gates, reset and power
 control remain outside this example's measured scope.
+
+## Fixed-budget SMP campaign
+
+`rvw/campaign.py prepare --out DIR --tests PINNED_TESTS` builds all six cases
+in the pinned litmus manifest, seeds 1..16 at 16 generated steps per hart,
+and LR/SC contention plus AMO suites for N=2, 3 and 4. The manifest has 28
+runs. The contention program increments one shared doubleword 32 times per
+hart. Each hart waits for all peers, then checks the exact shared total.
+The AMO matrix uses private targets. This distinction is retained in results.
+
+Run `rvw/run.sh run-many --manifest DIR/jobs.jsonl --jobs 1`, then
+`rvw/campaign.py summarize --out DIR`. Use the Python interpreter from the
+workstation environment for both campaign commands. The summary checks C1/C2
+counts and completion before it binds dependencies for each generated trace.
+It records each axiomatic verdict, branch count and checker time separately.
+Completion does not imply an allowed memory execution.
+
+For the pinned outcome checker, set `RVW_SMP_LITMUS_OUT=DIR` and
+`RVW_SMP_LITMUS_PREFIX=litmus-`. Use the pinned herd source and executable as
+shown above. The full applicable pinned manifest contains six tests. This is
+not the full upstream litmus repository.
+
+The 2026-11-13 default-timing budget completed 28/28 RTL runs. All 16 generated
+captures are allowed by the axiomatic checker. All six observed litmus outcomes
+are consistent with native pinned herd7. Each litmus has one captured outcome.
+These finite results do not establish complete outcome coverage.
+See `rvw/campaign-results.json` and `rvw/campaign-herd-results.json`.
+
+The same 28 jobs passed with delay 0..11, readiness 60% and clock enables 70%.
+All 16 stressed generated traces are allowed. All six stressed litmus outcomes
+are consistent with native herd7. The maximum checker time was 180 ms.
+See `rvw/campaign-stress-results.json` and
+`rvw/campaign-stress-herd-results.json`. No forbidden native execution was
+found in this budget. The negative controls are checker tests, not core bugs.

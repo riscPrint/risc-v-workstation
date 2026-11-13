@@ -194,3 +194,9 @@ search states. The limit bounds these states as well as complete candidates.
 A limit produces `inconclusive`, including when no complete candidate was tried.
 Independent enabled SC operations have one deterministic schedule. Stores with
 equal values are not merged because their identities can affect dependencies.
+
+When the greedy SC schedule stops, the checker can try bounded alternative
+SC schedules. It discards only repeated states with equal per-hart positions,
+last-write identities and LR sources. A successful certificate can include
+`scheduling_branches`. Exhausting this sufficient search does not reject an
+execution. The checker then uses the bounded axiomatic search.

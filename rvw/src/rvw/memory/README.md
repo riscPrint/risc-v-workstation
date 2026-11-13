@@ -272,3 +272,8 @@ The scale regression checks 8,000 events across four harts. The six pinned
 litmus outcome sets are checked for both models. On the saved SMP captures,
 seed 1 now returns allowed instead of reaching 100,000 candidates. See
 `examples/smp/rvw/search-scale-results.json`. No new RTL run is claimed.
+
+For longer concurrent captures, bounded SC scheduling can recover from a
+greedy overwrite dead end. It keeps write identities in its repeated-state
+key. It tries up to 20,000 states before the general search. Failure on this
+path proves nothing. The native SMP campaign uses this path on some captures.

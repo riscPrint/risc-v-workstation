@@ -37,7 +37,7 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
   exit 2
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$VEXIIRISCV" "$repo" > "$launch_owner/source.json"
-output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
+output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt-mem nice -n 10 \
   sbt -J-Xmx3g -batch -Dsbt.offline=true '++2.13.14!' 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
   echo "$output" >&2; exit 2;
 }

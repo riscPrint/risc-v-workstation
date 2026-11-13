@@ -71,3 +71,13 @@ def test_record_order_is_not_a_global_order():
     events = [event('r', 1, 1, 'R', 0, 7), event('w', 0, 8, 'W', 0, 7)]
     assert search(events, {(0, 8): 0})['status'] == 'allowed'
     assert search(list(reversed(events)), {(0, 8): 0})['status'] == 'allowed'
+
+
+def test_sc_scheduler_backtracks_after_conflicting_overwrite():
+    events=[event('a',0,0,'W',0,1),event('b',0,1,'R',0,1),
+            event('c',1,0,'W',0,2),event('d',1,1,'R',0,2)]
+    result=search(events,{(0,8):0})
+    assert result['status']=='allowed'
+    assert result['engine']=='sc-witness'
+    assert result['witness']['global_order']==['a','b','c','d']
+    assert result['witness']['scheduling_branches']>1
