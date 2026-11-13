@@ -1233,3 +1233,11 @@ Free-list masks, two-lane ROB conservation, store forwarding age/data and full
 recovery remain unbound. The RAM allocator and multi-lane ROB cannot be bound
 to a single-lane template by renaming signals. See the example README for
 its source-interface limits.
+
+### Which checks can bind
+
+`rvw checks plan --project PROJECT --json` lists generator templates, required
+ports or design-database types, current declarations and generation gaps.
+`--inventory CHECKS_JSON` adds native inserted IDs and signal roles from a
+checks inventory. The plan keeps generator output separate from native
+insertion. It does not run a simulation or proof. MCP exposes `checks_plan`.

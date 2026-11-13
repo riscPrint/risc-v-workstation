@@ -184,3 +184,10 @@ level handshakes. Both use `request`, `response` and `payload` port keys.
 See `docs/contracts/formal.md` for the sampled rules and their limits.
 The same monitors apply after Chisel or VHDL lowering. Generation does not
 establish a simulation pass or a formal proof.
+`rvw checks plan --project PROJECT --json` lists each generator template,
+its required signal names or design-database types, declared bindings and
+current generator status. Generation runs in a temporary directory. The
+project is unchanged. `generated` means checker source, not compiled RTL.
+Use `--inventory CHECKS_JSON` to add inserted native checks and their signal
+roles from an elaborated `rvw.checks/1` inventory. Relative inventory paths
+start at the project directory. MCP tool: `checks_plan`.
