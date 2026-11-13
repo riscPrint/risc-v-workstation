@@ -137,3 +137,27 @@ def test_cache_replacement_matches_reference(csim, tmp_path, policy, ref):
     rows = [f'L {i + 1} 40 {line * 64:x} 8' for i, line in enumerate(lines)]
     d = run(csim, tmp_path, f'memory.l1d.size_kib=8\nmemory.l1d.ways=4\nmemory.l1d.replacement={policy}\n', rows)
     assert d['memory']['l1d']['demand_misses'] == ref(lines, 8 * 1024 // 64 // 4, 4)
+
+
+def test_memory_access_spans_cache_lines_and_pages(csim, tmp_path):
+    config = ('memory.l1d.size_kib=1\nmemory.l1d.ways=1\n'
+              'memory.tlb.l1.entries=4\nmemory.tlb.l1.ways=1\n'
+              'memory.tlb.walk_through_cache=false\n')
+    report = run(csim, tmp_path, config, ['L 1 40 ffc 8', 'L 2 40 1000 4'])
+    cache = report['memory']['l1d']
+    assert cache['demand_accesses'] == 3
+    assert cache['demand_misses'] == 2
+    assert cache['demand_hits'] == 1
+    assert cache['demand_hits'] + cache['demand_misses'] == cache['demand_accesses']
+    assert report['memory']['tlb']['walks'] == 2
+
+
+def test_opt_refuses_cross_line_next_use_ambiguity(csim, tmp_path):
+    config = tmp_path / 'opt.kv'
+    config.write_text('memory.l1d.size_kib=1\nmemory.l1d.ways=1\n'
+                      'memory.l1d.replacement=opt\n')
+    result = subprocess.run([str(csim), str(config)],
+                            input='rvw.csim-trace/1\nL 1 40 3c 8\nEND 1\n',
+                            text=True, capture_output=True)
+    assert result.returncode == 2
+    assert 'cross-line' in result.stderr
