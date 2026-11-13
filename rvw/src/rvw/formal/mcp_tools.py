@@ -190,7 +190,7 @@ def mcp_tools():
         ToolSpec("formal_sva_lower", "Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.",
                  schema({"source": S, "out": S}, ["source", "out"]), _lower, long=True),
 
-        ToolSpec("formal_connectivity", "Resolve project connection tables, report undeclared drivers and optionally prove top-port contracts. Overall design acceptance remains incomplete.",
+        ToolSpec("formal_connectivity", "Resolve project connection tables, report undeclared drivers and optionally prove observed RTL contracts. Overall design acceptance remains incomplete.",
                  schema({"manifest": S, "db": S, "out": S, "run": B,
                          "proof_mode": {**S, "enum": ["bmc", "prove"]},
                          "clock": S, "reset": S, "depth": I, "max_nodes": I,

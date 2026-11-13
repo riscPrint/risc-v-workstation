@@ -2354,7 +2354,7 @@ Starts a background job: yes.
 
 ### `formal_connectivity`
 
-Resolve project connection tables, report undeclared drivers and optionally prove top-port contracts. Overall design acceptance remains incomplete.
+Resolve project connection tables, report undeclared drivers and optionally prove observed RTL contracts. Overall design acceptance remains incomplete.
 
 Arguments: `manifest` (required), `db` (required), `out` (required), `run`, `proof_mode`, `clock`, `reset`, `depth`, `max_nodes`, `engine`, `timeout`.
 

@@ -37,8 +37,7 @@ def test_reverse_finds_undeclared_input(gcd_db):
         report = reverse_check(db, rows)
         assert report['status'] == 'incomplete'
         assert any(r.get('driver') == 'io_b' for r in report['issues'])
-        # A declared destination boundary discharges no other destination.
-        assert all(r['destination'] == 'io_result' for r in report['issues'])
+        assert any(r['destination'] == 'io_resultIsValid' and 'no required source' in r['reason'] for r in report['issues'])
         assert reverse_check(db, rows, max_nodes=1)['status'] == 'incomplete'
         assert reverse_check(db, [dict(kind='required', source='missing', destination='io_result')])['status'] == 'incomplete'
     finally:
@@ -91,3 +90,15 @@ def test_soc_integration(gcd_db, tmp_path):
     assert result['connectivity']['connections'][0]['structural_status'] == 'dependency_found'
     assert result['connectivity']['reverse_check']['issues']
     assert len(result['connectivity']['database_sha256']) == 64
+
+
+def test_value_proof_cannot_replace_structural_dependency(gcd_db,tmp_path,monkeypatch):
+    path=tmp_path/'connections.json'
+    path.write_text(json.dumps({'connection':[dict(id='missing_path',source='io_result',destination='io_a')]}))
+    monkeypatch.setattr('rvw.formal.connectivity.campaign',lambda *a:dict(status='proven'))
+    out=tmp_path/'out'
+    assert main(['formal','connectivity',str(path),'--db',str(gcd_db),'--out',str(out),'--run'])==1
+    row=json.loads((out/'result.json').read_text())['connections'][0]
+    assert row['structural_status']=='dependency_absent'
+    assert row['semantic_status']=='proven'
+    assert row['status']=='incomplete'

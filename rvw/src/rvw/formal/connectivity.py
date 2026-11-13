@@ -107,7 +107,7 @@ def run(args):
     db = DesignDB(args.db, capture=capture)
     try:
         result = {'schema': 'rvw.connectivity/1', 'status': 'incomplete',
-                  'scope': 'captured SpinalDB graph with optional bounded top-port contracts; no design acceptance verdict',
+                  'scope': 'captured SpinalDB graph with optional observed RTL contracts; no design acceptance verdict',
                   'database_sha256': db.input.sha256, 'database_schema': db.schema,
                   'connections': [resolve(db, row, max_nodes=args.max_nodes) for row in rows],
                   'reverse_check': reverse_check(db, rows, max_nodes=args.max_nodes),
@@ -123,7 +123,11 @@ def run(args):
                     entry['semantic_status'] = entry['campaign']['status']
                     entry['status'] = ('contradicted' if entry['semantic_status'] == 'contradicted' else
                                        'proven' if entry['semantic_status'] == 'proven' else 'incomplete')
-                    entry['reason'] = 'captured top-port contract; see campaign scope and reverse check'
+                    entry['reason'] = 'captured RTL observation contract; see campaign scope and reverse check'
+                    if (entry['status'] == 'proven' and row['kind'] == 'required'
+                            and entry['structural_status'] != 'dependency_found'):
+                        entry['status'] = 'incomplete'
+                        entry['reason'] = 'value contract proved but required structural dependency is absent'
                 except (ValueError, QueryError) as exc:
                     entry['reason'] = str(exc)
         result['unproven'] = [r['id'] for r in result['connections'] if r['status'] == 'incomplete']
@@ -138,13 +142,13 @@ def run(args):
 
 
 def register(sub):
-    parser = sub.add_parser('connectivity', help='resolve SpinalDB connections and run bounded top-port contracts')
+    parser = sub.add_parser('connectivity', help='resolve SpinalDB connections and check observed RTL contracts')
     parser.add_argument('manifest', help='project TOML, JSON or CSV connection declarations')
     parser.add_argument('--db', required=True)
     parser.add_argument('--out', required=True)
     parser.add_argument('--max-nodes', type=int, default=200000)
     parser.add_argument('--json', action='store_true')
-    parser.add_argument('--run', action='store_true', help='also run bounded top-port contracts')
+    parser.add_argument('--run', action='store_true', help='also check observed RTL contracts')
     parser.add_argument('--proof-mode', choices=['bmc', 'prove'], default='bmc')
     parser.add_argument('--clock', default='clk')
     parser.add_argument('--reset', default='reset')
@@ -163,8 +167,8 @@ def cli_run(args):
         die(str(exc))
 
 
-def harness(db, declaration, *, clock='clk', reset='reset', activation=False):
-    """Bind top ports only. Internal signals need a future RTL binding backend.
+def harness(db, declaration, *, clock='clk', reset='reset', activation=False, ports=None):
+    """Bind top ports or captured internal observation ports.
 
     Forbidden connections use two copies with common inputs except source.
     Their initial state is independent. A pass is stronger than equal-state
@@ -174,22 +178,26 @@ def harness(db, declaration, *, clock='clk', reset='reset', activation=False):
     top = check_ident('database top', db.top)
     if top == 'rvw_connection_top':
         raise ValueError('reserved connectivity wrapper name')
-    signals = db.signals_where("s.direction IS NOT NULL AND s.pruned=0")
-    ports = {s.name: s for s in signals if db.component(s.component_id)['parent_id'] is None}
+    if ports is None:
+        from .connection_binding import top_ports
+        ports = top_ports(db)
     for name in ports:
         check_ident('port', name)
     for name in (clock, reset):
         if name not in ports or ports[name].direction != 'in' or ports[name].width != 1:
             raise ValueError('campaign needs declared one-bit top clock and reset inputs')
     bound = {k: db.resolve_one(declaration[k]) for k in ('source', 'destination', 'mode', 'enable') if k in declaration}
+    by_id = {p.id:p for p in ports.values()}
     for key, signal in bound.items():
-        if signal.id not in {p.id for p in ports.values()}:
+        if signal.id not in by_id:
             raise ValueError(f'{key}: internal RTL binding is not supported')
+        bound[key] = by_id[signal.id]
     source, destination = bound['source'], bound['destination']
-    if source.direction != 'in' or destination.direction != 'out':
-        raise ValueError('campaign needs input source and output destination')
+    forbidden = declaration['kind'] == 'forbidden'
+    if destination.direction != 'out' or (forbidden and source.direction != 'in'):
+        raise ValueError('campaign needs an observed destination; forbidden source must be an input')
     for key in ('mode', 'enable'):
-        if key in bound and (bound[key].direction != 'in' or bound[key].name == source.name):
+        if forbidden and key in bound and (bound[key].direction != 'in' or bound[key].name == source.name):
             raise ValueError('mode and enable must be common inputs distinct from source')
     if source.name in (clock, reset):
         raise ValueError('clock and reset cannot be data sources')
@@ -213,8 +221,10 @@ def harness(db, declaration, *, clock='clk', reset='reset', activation=False):
                 wire = 'alternate_source'
             conns.append(f'.{name}({wire})')
         lines.append(f'{top} dut_{side}(' + ', '.join(conns) + ');')
-    guard = ' && '.join(aliases[bound[k].name] for k in ('mode', 'enable') if k in bound) or "1'b1"
-    expected = aliases[source.name]
+    def observed(signal):
+        return aliases[signal.name] + ('_a' if signal.direction == 'out' else '')
+    guard = ' && '.join(observed(bound[k]) for k in ('mode', 'enable') if k in bound) or "1'b1"
+    expected = observed(source)
     if declaration.get('inversion', False):
         expected = f'~{expected}'
     valid = f'({guard})'
@@ -246,13 +256,15 @@ def campaign(db, declaration, out, capture, args):
         files.append(str(item.copy))
     if not files:
         raise ValueError('database has no RTL files')
+    from .connection_binding import expose
+    files, ports, binding = expose(db, declaration, files, out / 'binding', args.timeout)
     observations = {}
     for name in ('transfer', 'activation'):
         directory = out / name
         directory.mkdir()
         source = directory / 'connection.sv'
         source.write_text(harness(db, declaration, clock=args.clock, reset=args.reset,
-                                  activation=name == 'activation'))
+                                  activation=name == 'activation', ports=ports))
         mode = getattr(args, 'proof_mode', 'bmc') if name == 'transfer' else 'bmc'
         command = [sys.executable, '-m', 'rvw', 'formal', mode, '--verilog', *files, str(source),
                    '--top', 'rvw_connection_top', '--clock', 'clk', '--reset', 'reset',
@@ -265,10 +277,11 @@ def campaign(db, declaration, out, capture, args):
         status = result.get('status', 'error')
         expected_rc = {'pass': 0, 'fail': 1}.get(status)
         if (process.timed_out or result.get('assertions') != 1
+                or result.get('proof_kind') != ('unbounded' if mode == 'prove' else 'bounded')
                 or expected_rc is not None and process.returncode != expected_rc):
             status = 'incomplete'
         observations[name] = {'status': status, 'result': str(result_path),
-                              'returncode': process.returncode}
+                              'returncode': process.returncode, 'proof_kind': result.get('proof_kind')}
     transfer, activation = (observations[k]['status'] for k in ('transfer', 'activation'))
     status = 'incomplete'
     if activation == 'fail':
@@ -277,11 +290,11 @@ def campaign(db, declaration, out, capture, args):
         elif transfer == 'fail' and declaration['kind'] == 'required':
             status = 'contradicted'
     return {'status': status,
-            'depth': args.depth, 'observations': observations,
+            'depth': args.depth, 'observations': observations, 'binding': binding,
             'semantics': 'mode and enable sampled with source; fixed cycle latency; synchronous active-high reset',
             'initial_state': 'independent DUT copies for forbidden influence; counterexamples need state triage',
             'proof_kind': 'unbounded' if getattr(args, 'proof_mode', 'bmc') == 'prove' else 'bounded',
-            'scope': 'two-state top-port contract under captured DUT assumptions; no design acceptance verdict'}
+            'scope': 'two-state observed RTL contract under captured DUT assumptions; no design acceptance verdict'}
 
 
 def reverse_check(db, declarations, *, max_nodes=200000):
@@ -303,8 +316,14 @@ def reverse_check(db, declarations, *, max_nodes=200000):
                 for key in ('source', 'mode', 'enable'):
                     if key in row:
                         allowed.add(db.resolve_one(row[key]).id)
+        from .connection_binding import top_ports
+        for port in top_ports(db).values():
+            if port.direction == 'out':
+                if not destinations.get(port.id):
+                    issues.append(dict(destination=port.path, reason='top output has no required source declaration'))
+                destinations.setdefault(port.id,set())
     except QueryError as exc:
-        return dict(status='incomplete', issues=[dict(reason=str(exc))], scope='declared destinations')
+        return dict(status='incomplete', issues=[dict(reason=str(exc))], scope='declared destinations and all top outputs')
     for destination, allowed in destinations.items():
         queue = deque([destination])
         seen = set()
@@ -331,4 +350,4 @@ def reverse_check(db, declarations, *, max_nodes=200000):
                 if kind not in ('clock', 'reset', 'init'):
                     queue.append(src)
     return dict(status='incomplete' if issues else 'declared_boundaries_only', issues=issues,
-                scope='declared destinations; data, select, condition and inout edges; no semantic proof')
+                scope='declared destinations and all top outputs; data, select, condition and inout edges; no semantic proof')

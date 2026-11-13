@@ -4178,3 +4178,14 @@ Per-row `proven` requires an unbounded safety pass and a reachable activation.
 `connectivity` in `rvw.soc-check/1`. It retains connection-table and database
 SHA-256 values. This option does not launch a solver or change the existing
 map/bridge transaction verdict. Missing proof remains an explicit gap.
+
+Required connectivity campaigns can bind internal RTL observations with Yosys
+flatten/expose. No driver is cut or replaced. Database RTL paths and widths
+must match the flattened netlist. Top port names/types must match. Campaign
+`binding` records source hashes, transformed RTL hash and observation aliases.
+Internal forbidden influence remains incomplete. The reverse inventory also
+checks every top output and reports outputs with no required source declaration.
+
+A proved value contract cannot replace a missing required structural dependency.
+Such a row retains its semantic observation but remains incomplete. Native
+campaign observations retain and check the child result's proof kind.
