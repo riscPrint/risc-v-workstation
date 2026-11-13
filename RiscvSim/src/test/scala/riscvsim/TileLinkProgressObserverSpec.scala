@@ -74,7 +74,8 @@ class TileLinkProgressObserverSpec extends AnyFunSuite {
   test("a truncated ReleaseData cannot disappear before the complete-message callback") {
     var cycle = 0L
     val o = new TileLinkProgressObserver(10, 4, "service", () => cycle)
-    val first = c(true); first.beat=0
+    val first = c(true)
+    assert(SpinalCompat.intMember(first, "beat").forall(_ == 0))
     o.onBeatC(first); o.tick(); assert(o.outstanding==1)
     cycle=11; intercept[IllegalArgumentException](o.tick())
     cycle=0

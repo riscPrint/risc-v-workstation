@@ -28,7 +28,7 @@ class MultiHartExecutorSpec extends AnyFunSuite {
     val booted=scala.collection.mutable.Map.empty[Int,Long]
     val released=scala.collection.mutable.Set.empty[Int]
     val parked=scala.collection.mutable.Set.empty[Int]
-    val counts=scala.collection.mutable.Map.from(ids.map(_->0))
+    val counts=scala.collection.mutable.Map(ids.map(_->0): _*)
     var writes=0; var sharedLoaded=false
     val probes=ids.zipWithIndex.map { case (h,i) => h -> new RvfiProbe(Nil) {
       override def sample(cycle: Long): Seq[RvfiRecord] = {

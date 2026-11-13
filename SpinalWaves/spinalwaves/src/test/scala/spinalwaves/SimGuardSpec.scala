@@ -16,7 +16,7 @@ class SimGuardSpec extends AnyFunSuite {
       }
     }
     assert(String.valueOf(e.getMessage).contains("Timeout"), e)
-    val wave = Paths.get(sim.compiled.simConfig.getTestPath("hang")).resolve("wave.vcd")
+    val wave = SpinalCompat.waveFile(sim.compiled, "hang").toPath
     assert(Files.isRegularFile(wave) && Files.size(wave) < 1000000, s"VCD size ${Files.size(wave)}")
   }
 

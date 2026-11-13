@@ -491,7 +491,7 @@ object ExprText {
   /** Fields of Spinal's node and statement classes that are not behavior: naming, scope links, phase
     * bookkeeping, source traces, width inference state (the inferred width is keyed), tags (compared
     * where a tag can matter: signals, memories, ports). Audited against SpinalHDL 1.15.0. */
-  val InfraFields: Set[String] = Set("scalaTrace", "globalData", "algoInt", "algoIncremental", "inferredWidth",
+  val InfraFields: Set[String] = Set("scalaTrace", "globalData", "algoInt", "algoIncremental", "algoIncrementale", "inferredWidth",
     "widthWhenNotInferred", "parentScope", "instanceCounter", "spinal$core$Nameable$$mode", "refOwner", "nameableRef",
     "namePriority", "name", "lastScopeStatement", "nextScopeStatement", "dlcLast", "dlcHead", "dlceNext", "dlceLast",
     "compositeAssign", "MuxBuilderEnum$module", "elaborationReadBits", "parent", "_spinalTags", "locationString")

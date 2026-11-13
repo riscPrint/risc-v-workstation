@@ -54,7 +54,7 @@ class TypedCacheBindSpec extends AnyFunSuite with BeforeAndAfterAll {
   test("generated model projection binds to real typed cache channels") {
     DebugId.setup(16)
     val cfg = SpinalConfig(targetDirectory=new File(work,"rtl").getPath,
-      headerWithRepoHash=false, headerWithDate=false).includeSimulation
+      headerWithRepoHash=false, headerWithDate=false, noAssertAtTimeZero=true).includeSimulation
     cfg.addTransformationPhase(new SimVerilatorPhase)
     val report = SpinalDB.elaborate(cfg, traceNaming=false)(new TypedCacheTop)
     val database = new File(work,"design.sqlite")
@@ -112,7 +112,7 @@ class TypedCacheBindSpec extends AnyFunSuite with BeforeAndAfterAll {
     val compiled=SimConfig.withVerilator.workspacePath(new File(work,"sim").getPath).compile(report)
     val nodes=ArrayBuffer[Node](); val orderings=ArrayBuffer[OrderingTag]()
     report.toplevel.walkComponents(_.foreachTag {
-      case n: Node if !n.hasTag(tilelinkTesterExcluded) => nodes += n
+      case n: Node if !TileLinkSdkCompat.excluded(n) => nodes += n
       case o: OrderingTag => orderings += o
       case _ =>
     })
@@ -120,7 +120,7 @@ class TypedCacheBindSpec extends AnyFunSuite with BeforeAndAfterAll {
       implicit val ids: IdAllocator = new IdAllocator(DebugId.width)
       implicit val callback: IdCallback = new IdCallback
       for(i <- 0 until DebugId.space.reserved) ids.allocate(i)
-      val tb=new TilelinkTestbenchBase[TypedCacheTop](nodes.toSeq,orderings.toSeq,dut)
+      val tb=TileLinkSdkCompat.testbench(nodes.toSeq,orderings.toSeq,dut)
       nodes.map(_.clockDomain).distinct.foreach(_.forkStimulus(10))
       dut.io.expected_data #= 0
       tb.nodeToModel.values.foreach(_.write(0,Array.fill[Byte](4096)(0)))

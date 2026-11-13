@@ -17,7 +17,7 @@ object Round22Fixtures {
       public class UserPhase implements spinal.core.internals.Phase {
         public boolean hasNetlistImpact() { return true; }
         public void impl(spinal.core.internals.PhaseContext pc) {
-          pc.config().dontCareGenAsZero_$eq(Helper.value());
+          pc.config().genLineComments_$eq(Helper.value());
         }
       }
       class Helper { static boolean value() { return SETTING; } }

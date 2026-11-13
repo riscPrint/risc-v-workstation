@@ -1235,14 +1235,19 @@ object Extractor {
   private val Bitmap      = "bitmap\\$(?:trans\\$|init\\$)?\\d+".r
   private val BitmapTypes = Set[Class[_]](java.lang.Boolean.TYPE, java.lang.Byte.TYPE, java.lang.Short.TYPE, java.lang.Integer.TYPE, java.lang.Long.TYPE)
 
-  /** Match the Scala 2.13 compiler's exact name, modifiers and field type. */
+  private def scalaModule(c: Class[_]): Boolean = try {
+    val symbol = scala.reflect.runtime.universe.runtimeMirror(c.getClassLoader).classSymbol(c)
+    symbol.isModuleClass && !symbol.isJava
+  } catch { case NonFatal(_) | _: LinkageError => false }
+
+  /** Match compiler bookkeeping. Scala 2.12 MODULE$ is not final; require Scala module metadata. */
   def fieldRole(f: java.lang.reflect.Field): FieldRole = {
     import java.lang.reflect.Modifier._
     val n: String   = f.getName
     val m: Int      = f.getModifiers
     val c: Class[_] = f.getDeclaringClass
     val shaped = n match {
-      case "MODULE$"          => isPublic(m) && isStatic(m) && isFinal(m) && f.getType == c
+      case "MODULE$"          => isPublic(m) && isStatic(m) && f.getType == c && (isFinal(m) || scalaModule(c))
       case "serialVersionUID" => isPrivate(m) && isStatic(m) && isFinal(m) && f.getType == java.lang.Long.TYPE
       case Bitmap()           => isPrivate(m) && isVolatile(m) && !isFinal(m) && BitmapTypes(f.getType) &&
         isTransient(m) == n.startsWith("bitmap$trans$")
@@ -1299,5 +1304,5 @@ object Extractor {
   /** Mem fields from Spinal's naming, scoping and statement bookkeeping. */
   val MemInfra: Set[String] = Set("_spinalTags", "spinal$core$Nameable$$mode", "refOwner", "nameableRef", "namePriority",
     "name", "parentScope", "lastScopeStatement", "nextScopeStatement", "instanceCounter", "scalaTrace", "globalData",
-    "algoInt", "algoIncremental", "dlcHead", "dlcLast")
+    "algoInt", "algoIncremental", "algoIncrementale", "dlcHead", "dlcLast")
 }

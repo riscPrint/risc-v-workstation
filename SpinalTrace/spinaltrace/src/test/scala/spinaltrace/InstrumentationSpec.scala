@@ -69,6 +69,10 @@ class InstrumentationSpec extends AnyFunSuite {
   test("every predicate and probe signal of the PDG is present in the Verilator VCD") {
     for ((name, gen) <- designs) {
       val t = SpinalTraceSim.compile(SimConfig.workspacePath(simWorkspace), SpinalTraceSimOptions(extract = roots))(gen())
+      val stale = spinalwaves.SpinalCompat.waveFile(t.compiled, "vcd")
+      stale.getParentFile.mkdirs()
+      Files.writeString(stale.toPath, "stale waveform")
+      assert(t.waveFile("vcd").isEmpty, "an unstarted run exposed an old waveform")
       t.doSim("vcd") { dut =>
         dut.clockDomain.forkStimulus(10)
         dut match {

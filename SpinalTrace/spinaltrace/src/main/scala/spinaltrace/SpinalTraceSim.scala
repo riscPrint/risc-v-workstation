@@ -71,6 +71,7 @@ class SpinalTraceFailure(val cause: Throwable, val session: Option[TraceSession]
 /** Compiled design with SpinalTrace instrumentation, HGLDD (when available) and VCD tracing. */
 class TracedSim[T <: Component](val compiled: SimCompiled[T], val pdg: File, val hgldd: Option[File], opts: SpinalTraceSimOptions) {
   def workspace: File = compiled.compiledPath
+  private val waves = scala.collection.mutable.Map.empty[String, File]
 
   /** Run a simulation; on failure prepare (and depending on the options run) a SpinalTrace session. */
   def doSim(name: String = "test", seed: Int = 42)(body: T => Unit): Unit = {
@@ -78,24 +79,24 @@ class TracedSim[T <: Component](val compiled: SimCompiled[T], val pdg: File, val
       case Some(n) if n > 0 => s"${name}_$n"
       case _                => name
     }
+    val wave = spinalwaves.SpinalCompat.waveFile(compiled, allocated).getCanonicalFile
+    waves.retain((_, previous) => previous != wave)
+    java.nio.file.Files.deleteIfExists(wave.toPath)
     @volatile var lastTime = 0L
     try {
-      compiled.doSim(name, seed) { dut =>
+      try compiled.doSim(name, seed) { dut =>
         onSimEnd { lastTime = simTime() }
         spinalwaves.SimGuard.arm(opts.simTimeout)
         try body(dut)
         catch { case e: Throwable => lastTime = simTime(); throw e }
-      }
+      } finally { if (wave.isFile) waves(allocated) = wave }
     } catch {
       case e: Throwable => handleFailure(e, allocated, lastTime)
     }
   }
 
   /** VCD of a test, at SpinalSim's configured path (as SpinalWaves computes it). */
-  def waveFile(test: String): Option[File] = {
-    val prefix = spinalwaves.SpinalCompat.waveFilePrefix(compiled.simConfig).map(_.replace("$TEST", test) + "_").getOrElse("")
-    Some(new File(compiled.simConfig.getTestPath(test), prefix + "wave.vcd")).filter(_.isFile)
-  }
+  def waveFile(test: String): Option[File] = waves.get(test).filter(_.isFile)
 
   private def criterionFor(e: Throwable): Option[String] = e match {
     case x: ExpectationFailed => Some(s"signal:${x.signal}")
