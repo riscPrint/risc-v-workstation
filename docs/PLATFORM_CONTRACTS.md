@@ -3045,3 +3045,21 @@ attribution and non-vacuity are not certified. These rows cannot grant acceptanc
 C3 and JUnit retain that restriction. `rvw.formal-regress/1` in `result.json`
 has `status: unknown`, `suite`, `junit`, `workers`, and `properties`. Exit is 1
 for these conditional observations. MCP `formal_regress` returns this summary.
+
+### SVA intent generation
+
+`rvw formal properties SPEC.json [--channels CHECKS.json] --out FILE` writes
+module-body SVA snippets. MCP `formal_properties` returns the output path.
+Without `--channels`, the spec has a nonempty `properties` array with unique
+IDs. Supported `kind` values are `handshake`, `fifo`, `one-hot`,
+`arbiter-fairness`, `request-response`, `flow`. Each row declares exact RTL
+identifiers, an optional `clock` and optional active-high `reset`. The formal
+README defines each finite contract and its fields. No environment assumption
+is generated. Output generation is not a proof result.
+
+With `--channels`, CHECKS uses the existing `rvw.checks/1` channel list. SPEC
+maps each exact `path.object` to `id`, `clock`, optional `reset`, `width`, and
+`ports`. `ports` maps reported qualified signal names to local RTL identifiers.
+Flow also requires `max_value`. Missing clock/port bindings and composite
+payloads are unsupported. This explicit mapping preserves independent channel
+clocks without guessing domain semantics absent from the report.

@@ -1352,3 +1352,59 @@ The suite remains inconclusive and exits 1. JUnit records conditional observatio
 as errors, so CI cannot treat them as accepted design proofs. `result.json`
 is the summary returned by the `formal_regress` MCP tool. `formal_sva_lower`
 provides the lowering command through MCP.
+
+## Common SVA intents and typed channels
+
+`rvw formal properties intents.json --out checks.sv` writes SVA snippets for
+insertion inside the module that owns the declared signals. Feed the combined
+source to `sva-lower` or `bmc --frontend temporal`. MCP `formal_properties`
+provides the same operation. Generation does not prove the design.
+
+```json
+{"properties": [
+  {"id":"tx", "kind":"handshake", "clock":"clk", "reset":"rst",
+   "valid":"valid", "ready":"ready", "payload":"payload", "width":8},
+  {"id":"reply", "kind":"request-response", "request":"req",
+   "response":"ack", "minimum":1, "bound":8}
+]}
+```
+
+Available intents:
+
+| Kind | Contract and fields |
+|---|---|
+| `handshake` | Hold `valid` and `payload` after a stalled sample. Declare `valid`, `ready`, `payload`, `width`. |
+| `fifo` | Count range, overflow, underflow and exact count transition. Declare `count`, `push`, `pop`, `depth`, `width`. Push and pop mean accepted transfers. This does not check FIFO data order. |
+| `one-hot` | At most one bit. Declare `bits`; `allow_zero: false` also requires a bit set. |
+| `arbiter-fairness` | Every sampled `request` gets `grant` within `minimum..bound`. This is a finite response contract, not general fair liveness. |
+| `request-response` | Every sampled `request` gets `response` within `minimum..bound`. It does not match transaction IDs or count responses. |
+| `flow` | Payload is at most `max_value` when `valid`. Declare an explicit `max_value`. Flow has no backpressure, so no hold contract is inferred. |
+
+Each intent has an `id`, an optional `clock` (default `clk`), and an optional
+active-high `reset`. A delayed reset contract needs the asynchronous event model
+described above. Each intent can use a different clock. There is no cross-clock
+sequence or inferred relationship between clocks. Use existing periodic clock
+schedules to declare ratios and phases in global samples.
+
+`--channels top.checks.json` reads the actual Stream/Flow channel types from
+`rvw.checks/1`. The positional JSON file then maps each `path.object` to its
+reviewed clock, reset, local port mapping, payload width and intent ID:
+
+```json
+{"Top.io_tx": {"id":"tx", "clock":"tx_clk", "reset":"rst", "width":8,
+ "ports":{"Top.io_tx_valid":"valid", "Top.io_tx_ready":"ready",
+          "Top.io_tx_payload":"payload"}}}
+```
+
+The generator requires bindings because the channel report does not carry a
+unique domain or payload width. It does not infer a clock from signal suffixes.
+Missing bindings and multi-leaf payloads give named unsupported diagnostics.
+Flatten a composite payload explicitly before binding it. Existing SpinalChecks
+elaboration-time assertions remain available. This generator emits SVA from
+exported type metadata; it does not change Spinal RTL or assign a domain inside
+mixed-domain components.
+
+Native event tests include properties on two distinct sampled clocks and a
+reset pulse between rising edges, with pass/fail mutants. Multi-clock replay
+from simulation state, X analysis, mixed-domain elaboration metadata, raw async
+property events and additional async state types remain open under #46.

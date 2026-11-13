@@ -54,7 +54,7 @@ def observe(prop, directory, job, mode, tools, timeout, depth):
     text = log.read_text(errors='replace') if log.exists() else ''
     count = common.count_asserts(directory / 'sby' / 'model' / 'design_prep.il', prop['top'])
     status = common.final_status(rc, text, count)
-    if count != 1:
+    if count != 1 and status not in ('timeout', 'unknown'):
         status = 'error'
     try:
         tools.verify()

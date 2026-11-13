@@ -109,6 +109,10 @@ def mcp_tools():
                          "timeout": {"type": "number", "exclusiveMinimum": 0},
                          "mode": {**S, "enum": ["bmc", "prove"]}, "event_model": B, "async_reset": B},
                         ["manifest", "out"]), _runner("apps"), long=True),
+
+
+        ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
+                 schema({"spec": S, "channels": S, "out": S}, ["spec", "out"]), _properties, long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
@@ -176,4 +180,14 @@ def _lower(job, **args):
     code = job.run([sys.executable, "-m", "rvw", "formal", "sva-lower", args["source"], "--out", args["out"]])
     if code:
         raise ToolError("SVA lowering failed", {"exit_code": code, "log_tail": job.tail(30)})
+    return {"output": args["out"]}
+
+
+def _properties(job, **args):
+    argv = [sys.executable, "-m", "rvw", "formal", "properties", args["spec"], "--out", args["out"]]
+    if args.get("channels"):
+        argv += ["--channels", args["channels"]]
+    code = job.run(argv)
+    if code:
+        raise ToolError("SVA intent generation failed", {"exit_code": code, "log_tail": job.tail(30)})
     return {"output": args["out"]}

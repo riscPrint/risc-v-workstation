@@ -94,6 +94,13 @@ def register(sub) -> None:
     regress.add_argument("--json", action="store_true")
     regress.set_defaults(func=regression.run)
 
+    from . import property_library
+    library = s.add_parser("properties", help="generate SVA intents or typed Stream/Flow assertions")
+    library.add_argument("spec", help="JSON intent list or channel bindings")
+    library.add_argument("--channels", help="SpinalChecks rvw.checks/1 report")
+    library.add_argument("--out", required=True)
+    library.set_defaults(func=property_library.run)
+
     from . import temporal
     lowering = s.add_parser("sva-lower", help="lower finite temporal SVA to native Yosys assertions")
     lowering.add_argument("source")

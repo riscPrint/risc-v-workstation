@@ -408,7 +408,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,regress,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -443,6 +443,13 @@ usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
 ```text
 usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
     [--json] [--project PROJECT] [manifest]
+```
+
+### `rvw formal properties`
+
+```text
+usage: rvw formal properties [-h] [--channels CHANNELS] --out OUT [--project
+    PROJECT] spec
 ```
 
 ### `rvw formal sva-lower`
@@ -1257,7 +1264,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 89 built-in tools, including the four job tools.
+The default server exposes 90 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1581,6 +1588,14 @@ Starts a background job: yes.
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
 
 Arguments: `smt2` (required), `mapping` (required), `db`, `solver`, `timeout`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_properties`
+
+Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.
+
+Arguments: `spec` (required), `channels`, `out` (required).
 
 Starts a background job: yes.
 
