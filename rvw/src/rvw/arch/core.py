@@ -112,6 +112,13 @@ def validate_gem5(tool):
         raise ArchError('gem5 RISC-V support is required')
 
 
+def build_abi(isa):
+    if isa.startswith('rv32'):
+        return 'ilp32'
+    base = isa.split('_')[0][4:]
+    return 'lp64d' if 'd' in base or 'g' in base else 'lp64'
+
+
 def build(project=None, bench=None):
     p, _, desc = settings(project)
     names = selection(bench)
@@ -127,7 +134,7 @@ def build(project=None, bench=None):
         invoke(['make', '-C', ROOT / 'Arch/bench', 'bare',
                 f'SRC={p.get("arch", "sources")}', f'BARE_CC={cc}',
                 f'BUILD={out}', f'MARCH={desc["isa"]}',
-                f'ABI={"ilp32" if desc["isa"].startswith("rv32") else "lp64d"}', 'BENCHES=' + ' '.join(names)], out / 'build.log')
+                f'ABI={build_abi(desc["isa"])}', 'BENCHES=' + ' '.join(names)], out / 'build.log')
     files = []
     for name in names:
         path = out / f'{name}.riscv'
@@ -353,16 +360,18 @@ def inspect(elf, isa, kind, project=None):
     """Static compatibility only. This never runs a core or certifies an ISA."""
     if project is not None:
         load_project(project)
-    if isa not in ('rv32im', 'rv64gc', 'rv64gc_zba_zbb_zbs'):
+    if isa not in ('rv32i', 'rv64i', 'rv32im', 'rv64gc', 'rv64gc_zba_zbb_zbs'):
         raise ArchError('unsupported ISA selection')
     if kind not in ('o3', 'minor', 'timing'):
         raise ArchError('unsupported CPU selection: use o3, minor or timing')
-    xlen = 32 if isa == 'rv32im' else 64
+    xlen = 32 if isa.startswith('rv32') else 64
     path = Path(elf).resolve()
     symbols = runpy.run_path(str(ROOT / 'Arch/model.py'))['elf_symbols'](path, xlen=xlen)
     missing = []
     if (kind, isa) not in (("o3", "rv64gc"), ("o3", "rv64gc_zba_zbb_zbs"),
-                           ("minor", "rv32im"), ("timing", "rv32im")):
+                           ("minor", "rv32im"), ("timing", "rv32im"),
+                           ("minor", "rv32i"), ("timing", "rv32i"),
+                           ("minor", "rv64i"), ("timing", "rv64i"), ("o3", "rv64i")):
         missing.append("Unsupported CPU/ISA combination.")
     return {'schema': 'rvw.arch-compatibility/1',
             'status': 'unsupported' if missing else 'compatible',

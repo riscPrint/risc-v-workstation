@@ -63,7 +63,9 @@ def validate_description(d):
         if not isinstance(d[key], str) or not d[key].strip() or d[key] != d[key].strip():
             raise ValueError(f"description.{key} must be a nonempty string without outer whitespace")
     if (d["kind"], d["isa"]) not in (("o3", "rv64gc"), ("o3", "rv64gc_zba_zbb_zbs"),
-                                             ("minor", "rv32im"), ("timing", "rv32im")):
+                                             ("minor", "rv32im"), ("timing", "rv32im"),
+                                             ("minor", "rv32i"), ("timing", "rv32i"),
+                                             ("minor", "rv64i"), ("timing", "rv64i"), ("o3", "rv64i")):
         raise ValueError("unsupported CPU/ISA combination")
     for name in ("cpu", "icache", "dcache"):
         if d["kind"] != "o3" and ((name != "cpu" and d[name] is None) or (name == "cpu" and d[name] == {})):

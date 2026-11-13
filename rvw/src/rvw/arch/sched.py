@@ -30,7 +30,7 @@ def ident(value):
 def description(path):
     d = json.loads(Path(path).read_bytes())
     fields(d, 'schema name config isa entry issue_width buffer_size resources classes mca_cpu')
-    if d['schema'] != 'rvw.sched-core/1' or d['isa'] not in ('rv32im', 'rv64im'):
+    if d['schema'] != 'rvw.sched-core/1' or d['isa'] not in ('rv32i', 'rv64i', 'rv32im', 'rv64im'):
         raise ValueError('unsupported scheduling schema or ISA')
     for k in ('name', 'config'):
         ident(d[k])

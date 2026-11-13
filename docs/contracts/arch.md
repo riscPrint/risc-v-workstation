@@ -435,3 +435,9 @@ points that improve aggregate cycles. Fewer improvements remain explicit.
 All evidence is model-only. Function attribution uses the supplied ELF
 symbols. It is not hardware top-down measurement or a physical feasibility
 claim. Report creation supplies no fidelity verdict.
+## Base-I architecture selections
+
+Architecture descriptions and static inspection accept RV32I and RV64I for
+Minor/Timing; RV64I is also accepted for O3. Scheduling descriptions accept
+`rv32i` and `rv64i`. Preserve the declared ISA. This selection does not validate
+instruction behavior or exclude extra instructions supported by the gem5 backend.

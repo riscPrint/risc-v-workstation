@@ -797,3 +797,9 @@ cost remains a declared estimate. Missing RTL or PPA gives `no_checks`.
 Different baseline and extension ELFs can share a declared workload identity,
 but the command does not prove their program outputs equivalent. Independent
 extension execution and RTL/PPA measurements remain necessary under #196.
+
+Base-I projects can select `rv32i` or `rv64i` for Minor/Timing descriptions.
+RV64 O3 also accepts `rv64i`. Scheduling component descriptions accept both
+base-I selections without an M extension. Define only the core's actual classes
+and resources. These models do not enforce an instruction-extension boundary;
+use the declared ISA to build programs and use RTL/reference checks for behavior.
