@@ -601,3 +601,27 @@ instructions divided by total cycles. The ranking uses the largest absolute
 relative IPC change divided by the relative parameter change. Per-trace cycles
 and IPC remain in each result. This is local finite-difference sensitivity.
 It does not capture interactions, identify a global optimum or validate RTL.
+
+## Fit saved event evidence
+
+Run `rvw arch ooo-fit FIT_PLAN --out NEW_DIRECTORY --json`, or use
+`arch_ooo_fit`. A `rvw.ooo-fit-plan/1` object names `calibration_plan` and
+`parameters`, a map of numeric dot paths to candidate lists. Paths are relative
+to the fit plan. The full Cartesian grid must contain at most 32 candidates.
+The referenced plan uses the existing C1/C2 calibration format and separate
+training and held-out samples. Identity, input hashes, regions and split checks
+remain active.
+
+Use `rvw probes convert EVENTS --to counts --c1 RESULT --c2 TRACE --out COUNTS`
+for new probe streams. The calibration plan's `events` path accepts these saved
+counts. Each event mapping must declare matching model and RTL predicates.
+The command launches no RTL. Run it again with a new output directory when a
+new saved observation set is ready.
+
+Selection uses mean absolute relative cycle and mapped-event errors on training
+only. Zero measured counts use denominator one. Missing training counts stop
+fitting. Baseline validation reads all evidence, but held-out errors do not
+select the winner. Only the winner receives the final held-out calibration.
+Candidate configs, scores, the best config, and calibration evidence are saved.
+A finite grid cannot establish unique parameter identification or model fidelity.
+The report remains inconclusive about accuracy.
