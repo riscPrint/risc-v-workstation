@@ -1,0 +1,53 @@
+$timescale 1ns $end
+$scope module TOP $end
+$scope module dut $end
+$var wire 1 ! clk $end
+$var wire 1 " io_cmd_valid $end
+$var wire 1 # io_cmd_ready $end
+$var wire 8 $ io_cmd_payload [7:0] $end
+$var wire 1 % done $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0!
+0"
+0#
+b0 $
+0%
+$end
+#5
+1!
+1"
+b1 $
+#10
+0!
+#15
+1!
+1#
+#20
+0!
+#25
+1!
+b10 $
+0#
+#30
+0!
+#35
+1!
+b11 $
+1%
+#40
+0!
+#45
+1!
+0"
+1#
+0%
+#50
+0!
+#55
+1!
+#60
+0!

@@ -1813,7 +1813,7 @@ usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
 
 ```text
 usage: rvw wave [-h] [--project PROJECT]
-    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,info}
+    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,info}
     ...
 ```
 
@@ -1936,6 +1936,13 @@ usage: rvw wave session open [-h] [--root ROOT] [--json] [--project PROJECT]
 ```text
 usage: rvw wave value [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--indexed] --at AT [--db DB] [--dec] [--project PROJECT] wave name
+```
+
+### `rvw wave bench`
+
+```text
+usage: rvw wave bench [-h] [--var VAR] [--task TASK] [--timeout TIMEOUT]
+    [--json] [--project PROJECT] tasks
 ```
 
 ### `rvw wave info`
@@ -3237,6 +3244,14 @@ Generate unrun extension and envcfg cases from explicit versioned obligations.
 Arguments: `declaration` (required), `out` (required).
 
 Starts a background job: no.
+
+### `wave_bench`
+
+Run a debug task file (rvw.debug-tasks/1): each task's rvw command is timed and its JSON answer checked; recorded reference-tool results (e.g. Verdi) are compared when present.
+
+Arguments: `tasks` (required), `vars`, `only`, `timeout`.
+
+Starts a background job: yes.
 
 ### `wave_changes`
 
