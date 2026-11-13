@@ -183,3 +183,9 @@ are separate from those historical results.
 See [protection checks](rvw/protection.md) for 243 passing RTL cases with
 243 strict Spike matches, the matcher tests and one bounded isolation pair.
 These results are separate from the historical coverage and formal tables.
+
+## Bounded coverage extension
+
+The [306-program campaign](rvw/coverage.md) reaches 80.40% line and 85.63%
+branch coverage on the M/U PMP core. All runs pass with zero monitor firings.
+ACT4 and complete functional coverage of each logical OoO block remain open.
