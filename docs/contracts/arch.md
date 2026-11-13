@@ -312,3 +312,11 @@ not allocate a new physical register. Traced addresses are an early oracle.
 `memory_renamed_loads` counts aliases. Partial overlaps, barriers and unsupported
 widths stop lookup. Speculative dependence replay is refused. This policy has
 no failed alias prediction, fault recovery or predictor recovery evidence.
+
+## Own-model sensitivity
+
+`rvw.ooo-sensitivity-plan/1` selects a config, trace paths, numeric parameter
+paths, perturbation fraction and cycle budget. `rvw.ooo-sensitivity/1` records
+input hashes, baseline pooled IPC, per-trace runs, both perturbations, explicit
+invalid candidates and ranking by absolute IPC elasticity. Zero-valued switches
+and lists are excluded. Results measure local model effects, not RTL limits.

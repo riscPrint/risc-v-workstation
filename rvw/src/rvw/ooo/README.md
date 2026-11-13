@@ -584,3 +584,20 @@ patch are NOT RUN. Issue #362 remains open for that work.
 VexRiscv-class comparison point. Read `Arch/reference/README.md` before use.
 It identifies public anchors, assumed dimensions and limits. These are RISC-V
 experiments. Commercial names do not establish product accuracy or ISA support.
+
+## Parameter sensitivity
+
+Run `rvw arch ooo-sensitivity PLAN --out NEW_REPORT.json --json` or use
+`arch_ooo_sensitivity`. A `rvw.ooo-sensitivity-plan/1` plan has `config`,
+`traces`, optional `parameters` (numeric dot paths), `fraction` (default 0.1)
+and `max_cycles`. Paths are relative to the plan. Without `parameters`, all
+positive numeric scalar fields are selected. At most 128 paths are supported.
+Zero-valued switches, booleans and lists are not perturbed.
+
+The command runs the baseline, then changes each parameter down and up in
+isolation. Integer changes round to at least one. Invalid candidates remain
+explicit. Each run uses the same workload traces. Pooled IPC is total retired
+instructions divided by total cycles. The ranking uses the largest absolute
+relative IPC change divided by the relative parameter change. Per-trace cycles
+and IPC remain in each result. This is local finite-difference sensitivity.
+It does not capture interactions, identify a global optimum or validate RTL.
