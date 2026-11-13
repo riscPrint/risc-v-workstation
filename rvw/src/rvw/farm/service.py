@@ -89,9 +89,16 @@ class Queue:
             return job
 
     def cancel(self, job_id, owner):
-        job = next(j for j in self.jobs(owner) if j['id'] == job_id)
-        # Running jobs are acknowledged only by their executor after group cleanup.
-        return self.update(job_id, state='cancel_requested' if job['state'] == 'running' else ('cancelled' if job['state'] == 'queued' else job['state']))
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT data FROM jobs WHERE id=? AND owner=?', (job_id, owner)).fetchone()
+            if row is None:
+                raise StopIteration
+            job = json.loads(row[0])
+            # Running jobs are acknowledged only by their executor after group cleanup.
+            job['state'] = 'cancel_requested' if job['state'] == 'running' else ('cancelled' if job['state'] == 'queued' else job['state'])
+            self.save(db, job)
+            return job
 
     def recover(self, stale_after=30):
         recovered = []
