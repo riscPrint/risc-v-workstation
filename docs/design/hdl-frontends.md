@@ -93,6 +93,8 @@ logic; avoid optimization passes. No source text reconstruction is promised.
    tests against emitted RTL. Reject unresolved extern modules.
 4. GHDL adapter with source locations, memory semantics and a tested VHDL core.
    Specify scheduling and foreign interfaces separately from static queries.
+   Done: `--frontend ghdl` (plugin netlist plus `--file-to-xml` locations),
+   NEORV32 `neorv32_cpu`. Open: mixed-language designs, generic values per instance.
 5. Source debug and generated checks remain separate deliverables under #26.
 
 Follow-ups: [full SV and slang](https://github.com/riscPrint/risc-v-workstation/issues/370),

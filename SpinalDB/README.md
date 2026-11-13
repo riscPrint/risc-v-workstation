@@ -422,7 +422,9 @@ git clone https://github.com/olofk/serv.git ref/serv
 git -C ref/serv checkout f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8
 git clone https://github.com/lowRISC/ibex.git ref/ibex
 git -C ref/ibex checkout 2c72091c12187b5c7caf925aa911c94b806aab54
-RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py rvw/tests/test_query_slang.py -q
+git clone https://github.com/stnolting/neorv32.git ref/neorv32
+git -C ref/neorv32 checkout 7bd0858
+RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py rvw/tests/test_query_slang.py rvw/tests/test_query_ghdl.py -q
 ```
 
 ### Full SystemVerilog with slang
@@ -463,4 +465,44 @@ edges. Use the same graph limits as the native frontend. The register file
 and the instruction cache are outside `ibex_core`; `ibex_top` also needs the
 `prim` generic cells.
 
-See [the design](../docs/design/hdl-frontends.md) for Chisel and VHDL phases.
+### VHDL with GHDL
+
+`--frontend ghdl` analyzes and elaborates VHDL through the GHDL Yosys plugin
+(`ghdl --std=08 --work=LIB files -e TOP`). Pass `--library NAME` for the work
+library, `-G NAME=VALUE` for top generics and `--std 93|08` (default `08`).
+The plugin is `--ghdl-plugin PATH`, then `$RVW_GHDL_PLUGIN`, then the plugin
+that OSS CAD Suite ships beside Yosys. `GHDL_PREFIX` defaults to OSS CAD
+Suite's `lib/ghdl`. Some OSS CAD Suite builds ship a plugin made for another
+Yosys memory-cell API; VHDL memories then fail the Yosys cell check. Build a
+matching plugin outside the checkout with `scripts/build-ghdl-plugin.py`
+(pinned plugin revision, GHDL headers of the exact libghdl commit). It prints
+the `RVW_GHDL_PLUGIN` export.
+
+```sh
+python3 scripts/build-ghdl-plugin.py          # ~/.cache/rvw/lib/ghdl.so
+export RVW_GHDL_PLUGIN=~/.cache/rvw/lib/ghdl.so
+N=ref/neorv32
+rvw query build-hdl --frontend ghdl --library neorv32 --top neorv32_cpu --out cpu.db \
+  $(sed "s#\$NEORV32_HOME#$N#" $N/rtl/file_list_core.f)
+rvw query where cpu_regfile_inst.rf_we --db cpu.db   # neorv32_cpu_regfile.vhd:53
+```
+
+The plugin writes no source attributes. A second pass, `ghdl --file-to-xml`,
+reads the VHDL AST of the same captured files. It gives the line of each
+entity (component location), each port and signal declaration (signal
+location) and the first assignment statement to each signal (its assignment
+location). Bit nodes and lowered cells without a named target have no line.
+GHDL names a specialized architecture `<entity>_B<arch>...`; the component
+`module` is the entity. Record fields are separate nets (`dbus_req_o[addr]`).
+Generate instances keep GHDL's names: `g:1.u` is the first iteration of `g`,
+whatever its index value. GHDL inverts active-low resets for its flip-flops;
+clock-domain roots follow ports, aliases, buffers and inverters, so the
+domain reports the input's own polarity (`rstn_i`, active low). A control net
+that other logic derives is its own root.
+
+NEORV32 `neorv32_cpu` at `7bd0858` (9 components, 3 memories, 44k edges) builds
+in about 5 s of CPU. `meta.hdl_options` records the standard, library and
+generics; `meta.ghdl_version` and `meta.ghdl_plugin_sha256` the tools.
+Mixed-language designs and foreign VHDL attributes are not supported.
+
+See [the design](../docs/design/hdl-frontends.md) for the Chisel phase.

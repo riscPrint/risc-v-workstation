@@ -33,13 +33,16 @@ def register(subparsers) -> None:
     hdl.add_argument("sources", nargs="+")
     hdl.add_argument("--top", required=True)
     hdl.add_argument("--out", required=True)
-    hdl.add_argument("--frontend", choices=["yosys", "slang"], default="yosys",
-                     help="yosys: native read_verilog -sv subset; slang: full SystemVerilog through yosys-slang")
+    hdl.add_argument("--frontend", choices=["yosys", "slang", "ghdl"], default="yosys",
+                     help="yosys: native read_verilog -sv subset; slang: full SystemVerilog through yosys-slang; "
+                          "ghdl: VHDL through the GHDL Yosys plugin")
     hdl.add_argument("-I", "--include", action="append", default=[], dest="include_dirs", help="include directory (slang)")
     hdl.add_argument("-D", "--define", action="append", default=[], dest="defines", help="NAME[=VALUE] macro (slang)")
-    hdl.add_argument("-G", "--param", action="append", default=[], dest="parameters", help="NAME=VALUE top parameter (slang)")
-    hdl.add_argument("--std", help="language standard passed to slang (1800-2017, 1800-2023, latest)")
+    hdl.add_argument("-G", "--param", action="append", default=[], dest="parameters", help="NAME=VALUE top parameter (slang) or generic (ghdl)")
+    hdl.add_argument("--std", help="language standard: slang 1800-2017|1800-2023|latest; ghdl 93|08 (default 08)")
     hdl.add_argument("--slang", help="yosys-slang plugin (default $RVW_SLANG, then the plugin bundled with Yosys)")
+    hdl.add_argument("--ghdl-plugin", help="GHDL Yosys plugin (default $RVW_GHDL_PLUGIN, then the plugin bundled with Yosys)")
+    hdl.add_argument("--library", default="work", help="VHDL work library (ghdl)")
     hdl.add_argument("--yosys", default="yosys")
     hdl.add_argument("--timeout", type=int, default=120)
     hdl.add_argument("--json", action="store_true")
@@ -383,4 +386,5 @@ def _build_hdl(args):
     from .hdl import build_hdl
     return build_hdl(args.sources, args.top, args.out, yosys=args.yosys, timeout=args.timeout,
                      frontend=args.frontend, include_dirs=args.include_dirs, defines=args.defines,
-                     parameters=args.parameters, std=args.std, slang=args.slang)
+                     parameters=args.parameters, std=args.std, slang=args.slang,
+                     ghdl_plugin=args.ghdl_plugin, library=args.library)
