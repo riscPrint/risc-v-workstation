@@ -23,6 +23,24 @@ def register(subparsers):
     parser.add_argument('--fir', help='FIRRTL file the core build emits (--hdl chisel)')
     parser.add_argument('--source-root', action='append', default=[], dest='source_roots',
                         help='Scala source root (--hdl chisel; default src/main/scala)')
+    mapped = parser.add_argument_group('mapped adapter (a working C1 adapter from a port mapping)')
+    mapped.add_argument('--spinal-top', help='No-argument Spinal Component class of the core top')
+    mapped.add_argument('--verilog-top', help='Verilog module of the core top (ports read with Yosys)')
+    mapped.add_argument('--verilog', action='append', default=[], help='Verilog source file; repeatable')
+    mapped.add_argument('--define', action='append', default=[], help='Verilog define NAME[=VALUE]; repeatable')
+    mapped.add_argument('--param', action='append', default=[], help='Verilog parameter NAME=INT; repeatable')
+    mapped.add_argument('--clock', default='clk', help='Verilog clock port (default clk)')
+    mapped.add_argument('--reset', default='reset', help='Verilog reset port (default reset)')
+    mapped.add_argument('--reset-active', choices=('high', 'low'), default='high')
+    mapped.add_argument('--bus', action='append', default=[],
+                        help='NAME:PROTOCOL:key=port,... with PROTOCOL req-rsp or valid-ready; repeatable')
+    mapped.add_argument('--rvfi-prefix', help='Prefix of the riscv-formal RVFI ports (default rvfi_ when present)')
+    mapped.add_argument('--irq', action='append', default=[], help='MIP_BIT=port interrupt input; repeatable')
+    mapped.add_argument('--const', action='append', default=[], help='port=value constant input; repeatable')
+    mapped.add_argument('--ram', default='0x80000000:0x100000', help='RAM BASE:SIZE (default 0x80000000:0x100000)')
+    mapped.add_argument('--accept-platform-defaults', action='store_true',
+                        help='Write the cosim platform without review_required')
+    mapped.add_argument('--yosys', default='yosys')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--force', action='store_true')
     parser.add_argument('--json', action='store_true')
@@ -38,10 +56,22 @@ def run(args):
                                   fir=args.fir, source_roots=args.source_roots, force=args.force,
                                   dry_run=args.dry_run)
             return _print(args, result)
-        result = scaffold(args.path, isa=args.isa, xlen=args.xlen, name=args.name,
-                          dry_run=args.dry_run, force=args.force, wire_build=args.wire_build,
-                          sbt_project=args.sbt_project, linker_script=args.linker_script,
-                          ram_region=args.ram_region, reset_pc=args.reset_pc, db_top=args.db_top)
+        if args.spinal_top or args.verilog_top:
+            from .mapped import mapped_scaffold
+            if args.reset_pc is None:
+                raise ValueError('The mapped adapter needs --reset-pc from the core specification.')
+            result = mapped_scaffold(args.path, isa=args.isa, name=args.name, top=args.spinal_top,
+                                     verilog_top=args.verilog_top, verilog=args.verilog, defines=args.define,
+                                     params=args.param, clock=args.clock, reset=args.reset,
+                                     reset_active=args.reset_active, buses=args.bus, rvfi_prefix=args.rvfi_prefix,
+                                     irq=args.irq, constants=args.const, reset_pc=args.reset_pc, ram=args.ram,
+                                     sbt_project=args.sbt_project, accept_platform_defaults=args.accept_platform_defaults,
+                                     yosys=args.yosys, force=args.force, dry_run=args.dry_run)
+        else:
+            result = scaffold(args.path, isa=args.isa, xlen=args.xlen, name=args.name,
+                              dry_run=args.dry_run, force=args.force, wire_build=args.wire_build,
+                              sbt_project=args.sbt_project, linker_script=args.linker_script,
+                              ram_region=args.ram_region, reset_pc=args.reset_pc, db_top=args.db_top)
     except (OSError, ValueError) as exc:
         result = dict(schema='rvw.init/1', status='error', exit_code=2, error=str(exc))
     return _print(args, result)

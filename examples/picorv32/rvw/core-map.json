@@ -1,0 +1,339 @@
+{
+  "schema": "rvw.core-map/1",
+  "core": "picorv32",
+  "config": "default",
+  "isa": "rv32im",
+  "xlen": 32,
+  "top": {
+    "kind": "verilog",
+    "module": "picorv32",
+    "files": [
+      "../picorv32.v"
+    ],
+    "defines": {
+      "RISCV_FORMAL": ""
+    },
+    "parameters": {
+      "PROGADDR_RESET": 2147483648,
+      "PROGADDR_IRQ": 2147483664,
+      "ENABLE_MUL": 1,
+      "ENABLE_DIV": 1
+    },
+    "ports": [
+      {
+        "name": "clk",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "resetn",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "trap",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "mem_valid",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "mem_instr",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "mem_ready",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "mem_addr",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "mem_wdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "mem_wstrb",
+        "dir": "out",
+        "width": 4
+      },
+      {
+        "name": "mem_rdata",
+        "dir": "in",
+        "width": 32
+      },
+      {
+        "name": "mem_la_read",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "mem_la_write",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "mem_la_addr",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "mem_la_wdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "mem_la_wstrb",
+        "dir": "out",
+        "width": 4
+      },
+      {
+        "name": "pcpi_valid",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "pcpi_insn",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "pcpi_rs1",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "pcpi_rs2",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "pcpi_wr",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "pcpi_rd",
+        "dir": "in",
+        "width": 32
+      },
+      {
+        "name": "pcpi_wait",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "pcpi_ready",
+        "dir": "in",
+        "width": 1
+      },
+      {
+        "name": "irq",
+        "dir": "in",
+        "width": 32
+      },
+      {
+        "name": "eoi",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_valid",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "rvfi_order",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_insn",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_trap",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "rvfi_halt",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "rvfi_intr",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "rvfi_mode",
+        "dir": "out",
+        "width": 2
+      },
+      {
+        "name": "rvfi_ixl",
+        "dir": "out",
+        "width": 2
+      },
+      {
+        "name": "rvfi_rs1_addr",
+        "dir": "out",
+        "width": 5
+      },
+      {
+        "name": "rvfi_rs2_addr",
+        "dir": "out",
+        "width": 5
+      },
+      {
+        "name": "rvfi_rs1_rdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_rs2_rdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_rd_addr",
+        "dir": "out",
+        "width": 5
+      },
+      {
+        "name": "rvfi_rd_wdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_pc_rdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_pc_wdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_mem_addr",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_mem_rmask",
+        "dir": "out",
+        "width": 4
+      },
+      {
+        "name": "rvfi_mem_wmask",
+        "dir": "out",
+        "width": 4
+      },
+      {
+        "name": "rvfi_mem_rdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_mem_wdata",
+        "dir": "out",
+        "width": 32
+      },
+      {
+        "name": "rvfi_csr_mcycle_rmask",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_mcycle_wmask",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_mcycle_rdata",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_mcycle_wdata",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_minstret_rmask",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_minstret_wmask",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_minstret_rdata",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "rvfi_csr_minstret_wdata",
+        "dir": "out",
+        "width": 64
+      },
+      {
+        "name": "trace_valid",
+        "dir": "out",
+        "width": 1
+      },
+      {
+        "name": "trace_data",
+        "dir": "out",
+        "width": 36
+      }
+    ],
+    "clock": "clk",
+    "reset": "resetn",
+    "reset_active": "low"
+  },
+  "reset_pc": "0x80000000",
+  "ram": {
+    "base": "0x80000000",
+    "size": "0x100000"
+  },
+  "buses": [
+    {
+      "name": "mem",
+      "protocol": "valid-ready",
+      "signals": {
+        "valid": "mem_valid",
+        "ready": "mem_ready",
+        "address": "mem_addr",
+        "rdata": "mem_rdata",
+        "wdata": "mem_wdata",
+        "mask": "mem_wstrb"
+      },
+      "write_response": false
+    }
+  ],
+  "rvfi": {
+    "prefix": "rvfi_"
+  },
+  "irq": {},
+  "constants": {
+    "irq": "0x0",
+    "pcpi_rd": "0x0",
+    "pcpi_ready": "0x0",
+    "pcpi_wait": "0x0",
+    "pcpi_wr": "0x0"
+  }
+}
