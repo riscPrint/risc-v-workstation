@@ -2307,3 +2307,247 @@ CHECK
 | `scripts/riscv-dv-project.py` | 59 |
 | `scripts/riscv-dv-pygen.py` | 138 |
 | `scripts/riscv-dv/user_init.s` | 50 |
+
+## Query, extractors, lint, waves and language server
+
+Read all assigned Python modules, the SpinalDB Scala extractor and schema,
+the SpinalBlocks Scala extractor, and their test modules. The table records
+files read and physical line counts. Counts refer to the reviewed checkout,
+including the regression tests added in this review. The source review covers
+main through `1783f137`. Main was fetched before each fix. Reader changes from the large-wave worker were not overwritten.
+
+Confirmed defects:
+
+- Packed HDL bit names ignored the declared offset and direction, so queries on ascending or nonzero-based vectors could resolve the wrong bit or no bit. Fixed in [PR #1362](https://github.com/riscPrint/risc-v-workstation/pull/1362).
+- Hidden HDL scalar alias links produced false feedback in drivers, loads and path queries. Native Yosys and slang now return the expected dependencies for the same small module. Real cell feedback is retained. Fixed in [PR #1401](https://github.com/riscPrint/risc-v-workstation/pull/1401).
+- Short VCD X/Z values were zero-extended in bit-select expressions. This produced false zero matches on unknown high bits. Fixed in [PR #1425](https://github.com/riscPrint/risc-v-workstation/pull/1425).
+- Single-input wire cycles caused the CDC upstream/downstream walks and RDC reset-chain walk to run without termination. Fixed in [PR #1440](https://github.com/riscPrint/risc-v-workstation/pull/1440).
+
+Suspected but unconfirmed items: none retained. Other initial hypotheses were
+dropped because this review did not establish a failure.
+
+Validation:
+
+- Native packed-range and Yosys/slang parity tests passed. The tests use an expected driver/load map, not only equality between frontends.
+- Existing query and native HDL lint fixture tests: 232 passed.
+- Wave expression, search and sequence tests: 49 passed, 3 skipped. Wider wave tests: 186 passed.
+- Cycle regression and focused CDC/RDC tests: 97 passed, 2 skipped.
+- GHDL and FIRRTL fixture checks: 4 passed.
+- Required fast sets ran before pushes. The first run had 3292 passed, 4 skipped and one failure in the untouched `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`. Later runs had 3,353 passed and 4 skipped, then 3,496 passed and 4 skipped, then 3,539 passed and 4 skipped. The first failure was named in PR #1362. The required command was `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q`.
+- Final review-record fast run: 3,553 passed, 4 skipped and 2 failed. The untouched tests `test_boot_profile.py::test_launcher_reaches_nice_ten_once[1-3]` and `test_boot_profile.py::test_launcher_reaches_nice_ten_once[2-0]` expect nice level 10 but inherit the required level 15. These failures are outside this area.
+- Scala compilation and tests: NOT RUN. These projects depend on other Scala projects, so this review did not treat a compile as a cheap isolated check.
+- Core builds, long simulations, proofs and multi-GB wave measurements: NOT RUN. The large-wave measurement belongs to another worker.
+
+Not read: generated SQL database dumps and binary fixtures under
+`rvw/tests/data/`; SpinalBlocks viewer/host sources; the VS Code language-server
+client; shared dependencies outside the assigned directories. These are not
+included in the read counts. Shared test configuration was inspected only as
+needed and is not counted as a complete read. Native fixture results do not
+establish full frontend language coverage, CDC/RDC safety or core correctness.
+
+Files read: 202 files, 29,125 lines.
+
+| File | Lines |
+|---|---:|
+| `SpinalBlocks/README.md` | 289 |
+| `SpinalBlocks/docs/FORMAT.md` | 167 |
+| `SpinalBlocks/spinalblocks/build.sbt` | 25 |
+| `SpinalBlocks/spinalblocks/project/build.properties` | 1 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinal/core/SpinalBlocksAccess.scala` | 15 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/Extractor.scala` | 489 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/Fsms.scala` | 325 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/Main.scala` | 21 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/Model.scala` | 81 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/SpinalBlocks.scala` | 47 |
+| `SpinalBlocks/spinalblocks/src/main/scala/spinalblocks/examples/Demo.scala` | 103 |
+| `SpinalBlocks/spinalblocks/src/test/scala/spinalblocks/ExtractorSpec.scala` | 101 |
+| `SpinalDB/README.md` | 551 |
+| `SpinalDB/boom/build.sbt` | 21 |
+| `SpinalDB/boom/entry.sh` | 7 |
+| `SpinalDB/boom/project/build.properties` | 1 |
+| `SpinalDB/boom/src/main/scala/spinaldb/boom/BoomDB.scala` | 44 |
+| `SpinalDB/build-db.sh` | 63 |
+| `SpinalDB/debug.sh` | 6 |
+| `SpinalDB/scripts/hdl-deps.py` | 25 |
+| `SpinalDB/scripts/hdl_capture.py` | 248 |
+| `SpinalDB/spinaldb/build.sbt` | 32 |
+| `SpinalDB/spinaldb/project/build.properties` | 1 |
+| `SpinalDB/spinaldb/project/spinal-axis.sbt` | 2 |
+| `SpinalDB/spinaldb/src/main/scala-spinal-1.15/spinaldb/SpinalApi.scala` | 19 |
+| `SpinalDB/spinaldb/src/main/scala-spinal-legacy/spinaldb/SpinalApi.scala` | 29 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/CodeCapture.scala` | 122 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/DbWriter.scala` | 70 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/EmissionConfig.scala` | 145 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/ExprText.scala` | 713 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/Extractor.scala` | 1308 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/HdlDeps.scala` | 82 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/InlineCapture.scala` | 42 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/KeyEnc.scala` | 99 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/LibraryClasses.scala` | 35 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/Main.scala` | 64 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/Schema.scala` | 89 |
+| `SpinalDB/spinaldb/src/main/scala/spinaldb/SpinalDB.scala` | 86 |
+| `SpinalDB/spinaldb/src/test/java/spinaldb/FalseModule$.java` | 6 |
+| `SpinalDB/spinaldb/src/test/scala/scala/r14probe/FakeSeq.scala` | 9 |
+| `SpinalDB/spinaldb/src/test/scala/scala/r16probe/ConstTag.scala` | 4 |
+| `SpinalDB/spinaldb/src/test/scala/spinal/core/SpinalDBTestHooks.scala` | 33 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/BlockArtifactSpec.scala` | 62 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/CaptureFixtures.scala` | 50 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/CrossDesignSpec.scala` | 76 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/DebugArtifactSpec.scala` | 35 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/LintEnumFixture.scala` | 22 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/LintFixtures.scala` | 173 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/LintLibraryFixtures.scala` | 68 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/PeripheralExtractionSpec.scala` | 43 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round15Fixtures.scala` | 42 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round16Fixtures.scala` | 35 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round17BlackBoxSpec.scala` | 33 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round17Fixtures.scala` | 48 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round17Spec.scala` | 61 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round18Spec.scala` | 131 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round19Fixtures.scala` | 27 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round20Fixtures.scala` | 38 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round20Spec.scala` | 37 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round21Fixtures.scala` | 50 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round21PathFixtures.scala` | 27 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round22CollectionsSpec.scala` | 114 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round22Fixtures.scala` | 64 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round22Spec.scala` | 125 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round23ArraysSpec.scala` | 62 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/Round24Fixtures.scala` | 65 |
+| `SpinalDB/spinaldb/src/test/scala/spinaldb/SpinalDBSpec.scala` | 1328 |
+| `rvw/src/rvw/lint/README.md` | 796 |
+| `rvw/src/rvw/lint/__init__.py` | 1 |
+| `rvw/src/rvw/lint/cdc.py` | 391 |
+| `rvw/src/rvw/lint/cli.py` | 198 |
+| `rvw/src/rvw/lint/cli_declarations.py` | 2 |
+| `rvw/src/rvw/lint/compare.py` | 106 |
+| `rvw/src/rvw/lint/depth.py` | 189 |
+| `rvw/src/rvw/lint/emit.py` | 95 |
+| `rvw/src/rvw/lint/graph.py` | 168 |
+| `rvw/src/rvw/lint/mcp_tools.py` | 29 |
+| `rvw/src/rvw/lint/native.py` | 85 |
+| `rvw/src/rvw/lint/protocol.py` | 182 |
+| `rvw/src/rvw/lint/rdc.py` | 217 |
+| `rvw/src/rvw/lint/rules.py` | 323 |
+| `rvw/src/rvw/lint/sarif.py` | 49 |
+| `rvw/src/rvw/lint/sdc.py` | 331 |
+| `rvw/src/rvw/lint/structural.py` | 134 |
+| `rvw/src/rvw/lint/yosys.py` | 73 |
+| `rvw/src/rvw/lsp/README.md` | 40 |
+| `rvw/src/rvw/lsp/__init__.py` | 1 |
+| `rvw/src/rvw/lsp/cli.py` | 17 |
+| `rvw/src/rvw/lsp/cli_declarations.py` | 2 |
+| `rvw/src/rvw/lsp/mcp_tools.py` | 15 |
+| `rvw/src/rvw/lsp/server.py` | 178 |
+| `rvw/src/rvw/query/README.md` | 249 |
+| `rvw/src/rvw/query/__init__.py` | 1 |
+| `rvw/src/rvw/query/blocks.py` | 163 |
+| `rvw/src/rvw/query/build_cache.py` | 99 |
+| `rvw/src/rvw/query/cli.py` | 404 |
+| `rvw/src/rvw/query/cli_declarations.py` | 2 |
+| `rvw/src/rvw/query/commands/__init__.py` | 1 |
+| `rvw/src/rvw/query/commands/navigation.py` | 24 |
+| `rvw/src/rvw/query/commands/semantic.py` | 52 |
+| `rvw/src/rvw/query/db.py` | 505 |
+| `rvw/src/rvw/query/debug.py` | 90 |
+| `rvw/src/rvw/query/diff.py` | 507 |
+| `rvw/src/rvw/query/explain.py` | 151 |
+| `rvw/src/rvw/query/hdl.py` | 634 |
+| `rvw/src/rvw/query/hdl_chisel.py` | 152 |
+| `rvw/src/rvw/query/hdl_ghdl.py` | 113 |
+| `rvw/src/rvw/query/hdl_slang.py` | 72 |
+| `rvw/src/rvw/query/kinds.py` | 2 |
+| `rvw/src/rvw/query/mcp_tools.py` | 217 |
+| `rvw/src/rvw/query/navigation.py` | 43 |
+| `rvw/src/rvw/query/ops.py` | 709 |
+| `rvw/src/rvw/query/project.py` | 51 |
+| `rvw/src/rvw/query/schema.sql` | 76 |
+| `rvw/src/rvw/query/semantic.py` | 87 |
+| `rvw/src/rvw/query/session.py` | 232 |
+| `rvw/src/rvw/wave/README.md` | 323 |
+| `rvw/src/rvw/wave/__init__.py` | 1 |
+| `rvw/src/rvw/wave/capture.py` | 127 |
+| `rvw/src/rvw/wave/cli.py` | 596 |
+| `rvw/src/rvw/wave/cli_declarations.py` | 2 |
+| `rvw/src/rvw/wave/commands/__init__.py` | 0 |
+| `rvw/src/rvw/wave/commands/failure.py` | 37 |
+| `rvw/src/rvw/wave/expr.py` | 254 |
+| `rvw/src/rvw/wave/failure.py` | 154 |
+| `rvw/src/rvw/wave/index.py` | 381 |
+| `rvw/src/rvw/wave/mcp_tools.py` | 270 |
+| `rvw/src/rvw/wave/ops.py` | 265 |
+| `rvw/src/rvw/wave/search.py` | 286 |
+| `rvw/src/rvw/wave/session.py` | 109 |
+| `rvw/src/rvw/wave/symbols.py` | 110 |
+| `rvw/src/rvw/wave/tasks.py` | 105 |
+| `rvw/src/rvw/wave/temporal.py` | 232 |
+| `rvw/src/rvw/wave/typed.py` | 133 |
+| `rvw/src/rvw/wave/vcd.py` | 324 |
+| `rvw/src/rvw/wave/wdiff.py` | 198 |
+| `rvw/src/rvw/wave/why.py` | 265 |
+| `rvw/tests/lint_builder.py` | 70 |
+| `rvw/tests/test_hdl_comment_guard.py` | 13 |
+| `rvw/tests/test_hdl_declared_ports.py` | 102 |
+| `rvw/tests/test_hdl_identity.py` | 40 |
+| `rvw/tests/test_hdl_semantics.py` | 131 |
+| `rvw/tests/test_lint.py` | 333 |
+| `rvw/tests/test_lint_alias_fanout.py` | 27 |
+| `rvw/tests/test_lint_cdc.py` | 278 |
+| `rvw/tests/test_lint_compare.py` | 91 |
+| `rvw/tests/test_lint_cycles.py` | 73 |
+| `rvw/tests/test_lint_depth.py` | 198 |
+| `rvw/tests/test_lint_extracted.py` | 138 |
+| `rvw/tests/test_lint_generated_advice.py` | 45 |
+| `rvw/tests/test_lint_generated_native.py` | 17 |
+| `rvw/tests/test_lint_generated_scope.py` | 28 |
+| `rvw/tests/test_lint_grouping.py` | 34 |
+| `rvw/tests/test_lint_hdl.py` | 82 |
+| `rvw/tests/test_lint_hdl_latch.py` | 17 |
+| `rvw/tests/test_lint_hdl_reset.py` | 16 |
+| `rvw/tests/test_lint_protocol.py` | 74 |
+| `rvw/tests/test_lint_rdc.py` | 132 |
+| `rvw/tests/test_lint_rules.py` | 235 |
+| `rvw/tests/test_lint_sdc.py` | 146 |
+| `rvw/tests/test_lint_yosys.py` | 66 |
+| `rvw/tests/test_lsp.py` | 55 |
+| `rvw/tests/test_query.py` | 1186 |
+| `rvw/tests/test_query_blocks.py` | 75 |
+| `rvw/tests/test_query_build_cache.py` | 62 |
+| `rvw/tests/test_query_capture.py` | 398 |
+| `rvw/tests/test_query_chisel.py` | 148 |
+| `rvw/tests/test_query_debug.py` | 84 |
+| `rvw/tests/test_query_explain.py` | 50 |
+| `rvw/tests/test_query_frontend_review.py` | 61 |
+| `rvw/tests/test_query_ghdl.py` | 278 |
+| `rvw/tests/test_query_hdl.py` | 232 |
+| `rvw/tests/test_query_hdl_aliases.py` | 36 |
+| `rvw/tests/test_query_navigation.py` | 31 |
+| `rvw/tests/test_query_port_bindings.py` | 42 |
+| `rvw/tests/test_query_round16.py` | 79 |
+| `rvw/tests/test_query_round16_literals.py` | 26 |
+| `rvw/tests/test_query_round17.py` | 115 |
+| `rvw/tests/test_query_round18.py` | 169 |
+| `rvw/tests/test_query_round19.py` | 118 |
+| `rvw/tests/test_query_round20.py` | 147 |
+| `rvw/tests/test_query_round21.py` | 32 |
+| `rvw/tests/test_query_round21_path.py` | 50 |
+| `rvw/tests/test_query_round22.py` | 103 |
+| `rvw/tests/test_query_round23.py` | 65 |
+| `rvw/tests/test_query_round24.py` | 143 |
+| `rvw/tests/test_query_semantic.py` | 64 |
+| `rvw/tests/test_query_slang.py` | 293 |
+| `rvw/tests/test_wave.py` | 429 |
+| `rvw/tests/test_wave_array_names.py` | 105 |
+| `rvw/tests/test_wave_capture.py` | 78 |
+| `rvw/tests/test_wave_failure.py` | 76 |
+| `rvw/tests/test_wave_fourstate.py` | 42 |
+| `rvw/tests/test_wave_index.py` | 122 |
+| `rvw/tests/test_wave_search.py` | 200 |
+| `rvw/tests/test_wave_session.py` | 50 |
+| `rvw/tests/test_wave_symbols.py` | 55 |
+| `rvw/tests/test_wave_tasks.py` | 35 |
+| `rvw/tests/test_wave_temporal.py` | 191 |
+| `rvw/tests/test_wave_typed.py` | 113 |
+| `rvw/tests/test_wave_why.py` | 136 |
+| `rvw/tests/test_waves_package.py` | 99 |
