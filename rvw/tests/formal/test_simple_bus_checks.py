@@ -72,3 +72,12 @@ def test_apb_unselected_peripheral_can_observe_shared_enable(tmp_path):
     ports = 'reg select=0,enable=0,ready=1,error=0; reg [7:0] request=0;'
     drive = 'enable=1; request=5; #20; request=9; #10; enable=0;'
     assert not simulate(tmp_path, 'apb', ports, drive)
+
+
+@pytest.mark.parametrize('fault', ['none', 'orphan', 'overlap'])
+def test_pulse_request_response(tmp_path, fault):
+    ports='reg request=0,response=0; reg [7:0] payload=0;'
+    drive = {'none':'request=1; #10; request=0; #20; response=1; #10; response=0; #10; request=1; response=1;',
+             'orphan':'response=1;',
+             'overlap':'request=1; #20; request=0;'}[fault]
+    assert simulate(tmp_path, 'req_rsp', ports, drive) == (fault != 'none')

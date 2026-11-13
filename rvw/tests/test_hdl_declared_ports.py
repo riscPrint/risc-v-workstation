@@ -64,3 +64,30 @@ def test_declared_uvm_skeleton(declared,tmp_path):
     assert load_bench(Path(result['manifest']))['test_module']=='test_generated'
     ast.parse((tmp_path/'uvm/test_generated.py').read_text())
     assert 'NotImplementedError' in (tmp_path/'uvm/scenario.py').read_text()
+
+
+def test_declared_request_response(declared,tmp_path):
+    db,path=declared
+    spec=json.loads(path.read_text())
+    bus=spec['buses'][0];bus['protocol']='req_rsp'
+    bus['ports']=dict(request='req_valid',response='req_ready',payload=['request'])
+    path.write_text(json.dumps(spec))
+    result=checks(db,path,tmp_path/'checks')
+    assert result['buses'][0]['kind']=='req_rsp'
+    source=(tmp_path/'checks/monitors.sv').read_text()
+    assert 'if(response) assert(pending || request)' in source
+    assert 'if(request) assert(!pending || response)' in source
+    assert '.response(req_ready)' in (tmp_path/'checks/binds.sv').read_text()
+    # Existing ready/valid agents must not silently reinterpret pulse protocols.
+    with pytest.raises(ValueError,match='unsupported declared protocol'):
+        skeleton(db,tmp_path/'bench.py',port_map=path)
+
+
+def test_declared_request_ack_uses_stability(declared,tmp_path):
+    db,path=declared
+    spec=json.loads(path.read_text());bus=spec['buses'][0]
+    bus.update(protocol='req_ack',ports=dict(request='req_valid',response='req_ready',payload=['request']))
+    path.write_text(json.dumps(spec))
+    checks(db,path,tmp_path/'checks')
+    assert '.ready(req_ready)' in (tmp_path/'checks/binds.sv').read_text()
+    assert 'assert(payload == previous_payload)' in (tmp_path/'checks/monitors.sv').read_text()

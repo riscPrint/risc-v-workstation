@@ -178,3 +178,9 @@ Activation rows in `checks report` separate simulation counts from formal
 cover results. Zero counts mean `no_activation`. Missing counters stay
 `unmeasured`. Formal bounded and proven totals require a reached cover attached
 to the assertion result. Simulation activation cannot substitute for that cover.
+
+Plain HDL port maps also support `req_rsp` pulse transactions and `req_ack`
+level handshakes. Both use `request`, `response` and `payload` port keys.
+See `docs/contracts/formal.md` for the sampled rules and their limits.
+The same monitors apply after Chisel or VHDL lowering. Generation does not
+establish a simulation pass or a formal proof.

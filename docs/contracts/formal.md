@@ -988,3 +988,18 @@ The API runs jobs in sequence. It does not grant whole-bank signoff.
 `rvw formal isa --machine SLICES.json` accepts this slice manifest and prints
 one `csr_consistency:NAME` row for each catalog entry. The aggregate CSR row
 stays inconclusive while any binding or composition evidence is missing.
+
+## Declared pulse request/response checks
+
+`rvw.hdl-ports/1` accepts `req_rsp` for check generation. Its ports are
+`request`, `response` and a nonempty `payload` list. The request is a
+one-cycle issue pulse. Only one transaction can be outstanding. A response
+must have an outstanding request or a request on the same edge. A new request
+can replace a transaction that completes on that edge. Reset cancels tracking.
+This monitor checks transaction counts. It does not check data or liveness.
+
+`req_ack` uses the same port keys. The request and payload stay stable until
+acknowledgment. An acknowledgment without a request is permitted. This is a
+level handshake, so its monitor uses the existing ready/valid stability rule.
+The project must choose the protocol from its interface specification.
+VIP and UVM ready/valid agents still reject these two new protocol names.
