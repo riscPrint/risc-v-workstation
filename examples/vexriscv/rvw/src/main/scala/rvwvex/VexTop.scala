@@ -32,7 +32,8 @@ object VexTop {
       midelegAccess = CsrAccess.NONE)),
     new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true),
     new FormalPlugin,
-    new TrapProbePlugin))
+    new TrapProbePlugin,
+    new ProbePlugin))
 
   def spinalConfig: SpinalConfig = SpinalConfig(defaultConfigForClockDomains =
     ClockDomainConfig(resetKind = spinal.core.SYNC, resetActiveLevel = HIGH))

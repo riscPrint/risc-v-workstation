@@ -675,3 +675,40 @@ the counter program. Clean execution requires all nine CSR/HPM monitors to
 remain clear. The program must execute at least eight counter-half reads.
 These aliases are exercised from M mode. Lower-mode counter-enable rules
 and programmable event selectors remain outside this example.
+
+## Probes
+
+`rvw/src/main/scala/rvwvex/ProbePlugin.scala` attaches
+[SpinalProbes](../../SpinalProbes/README.md) to existing VexRiscv signals. It changes no core
+source and adds no hardware unless the run uses C1 `--probes`.
+
+| Probe | Signals |
+|-------|---------|
+| `branch vex_static` | write-back firing, `BRANCH_CTRL != INC`; predicted = `BRANCH_DO xor BRANCH_COND_RESULT` (STATIC prediction) |
+| `stage D/X/M/W`, `flush *_remove`, `retire wb` | stage `isValid`, `removeIt`, write-back `isFiring`; one ID per instruction that leaves decode |
+| `stall` (evidence `inferred`) | stage `haltItself` and `haltByOther`, split by instruction class; an empty decode stage is `fetch/empty` |
+| `counter` | cycles, retired, branches, mispredicts (HPM 3), loads (HPM 4), stores (HPM 5), wait and flush cycles |
+| `interruptTaken irq` | registered CSR jump strobe with `mcause` and `mepc` |
+
+Results on VexRiscv `baf7dc82` (core sources), `rv32im` config, seed 1, random memory timing:
+
+```sh
+examples/vexriscv/rvw/run.sh run --elf rvw/out/programs/branches --out RUN --probes --rvfi-trace
+rvw probes convert RUN/probe-events.jsonl --to bp-events --c2 RUN/rvfi.jsonl --out RUN/bp.jsonl
+rvw csim compare-rtl rvw/probes/btfn.json --trace RUN/rvfi.jsonl --events RUN/bp.jsonl
+```
+
+- `branches` (35659 instructions, 195928 cycles): 9002 branch events, 6001 conditional.
+  `btfn.json` agrees with the core on all 6001 directions (3355 misses each).
+  `gshare.json` (1024 entries, 10 history bits) agrees on 44.3 % and misses 1199 times
+  (33.6 MPKI against the core's 94.1).
+- `rvw probes convert --to kanata` then `rvw perf` gives IPC 0.182, with an exact cycle
+  and instret match to `result.json`; 160269 cycles have an empty decode stage (inferred
+  `fetch/empty`).
+- `irqs` with `--irq-schedule '1:0x0,2000:0x80,2200:0x0,4000:0x800,4200:0x0,6000:0x80,6200:0x0'`:
+  `--to interrupts` finds 3 probe events and 3 C2 interrupts, consistent. `--to counts` and
+  `--to hpm` give the counter totals (3 HPM bindings).
+
+The first BTFN comparison found one disagreement at the loop exit. The C2 trace converter
+wrote the fall-through as the target of a not-taken branch, so the model's BTFN rule saw
+a forward branch. The converter now writes the decoded target (see `docs/contracts/csim.md`).

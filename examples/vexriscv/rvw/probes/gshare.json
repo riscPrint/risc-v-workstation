@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "gshare-1k",
+  "description": "A 1024-entry gshare with 10 history bits, to compare a dynamic predictor with the core's static one on the same retired branches.",
+  "source": {"fidelity": "unqualified"},
+  "branch": {"model": "gshare", "entries": 1024, "history": 10}
+}

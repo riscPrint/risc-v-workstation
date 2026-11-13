@@ -66,7 +66,7 @@ def test_c2_conversion(tmp_path):
     rows = [
         (0x1000, 0x1004, LW, 5, {"mem_addr": "0x2000", "mem_rmask": 15, "rd_wdata": "0x7"}),
         (0x1004, 0x100c, BEQ_8, 0, {}),
-        (0x100c, 0x1010, BEQ_8, 0, {}),          # not taken: next is the fall-through
+        (0x100c, 0x1010, BEQ_8, 0, {}),          # not taken: the row keeps the decoded target
         (0x1010, 0x1020, JAL_RA_16, 1, {"rd_wdata": "0x1014"}),
         (0x1020, 0x1024, SW, 0, {"mem_addr": "0x2008", "mem_wmask": 15}),
         (0x1024, 0x1028, MV, 6, {"rd_wdata": "0x7"}),
@@ -81,7 +81,7 @@ def test_c2_conversion(tmp_path):
     assert text[0] == "rvw.csim-trace/1"
     body = [line for line in text if not line.startswith('#')]
     assert "L 1 1000 2000 4" in body and "W 1 1000 5 7 l" in body
-    assert "B 2 1004 cond 1 100c 4" in body and "B 3 100c cond 0 1010 4" in body
+    assert "B 2 1004 cond 1 100c 4" in body and "B 3 100c cond 0 1014 4" in body
     assert "B 4 1010 call 1 1020 4" in body and "S 5 1020 2008 4" in body
     assert "W 6 1024 6 7 m" in body and "W 7 1028 6 0 z" in body
     assert "B 8 102c ret 1 1014 4" in body and body[-1] == "END 9"
@@ -142,6 +142,21 @@ core   0: 3 0x0000000080000014 (0x00000463)
 core   0: exception trap_illegal_instruction, epc 0x0000000080000018
 core   0: 3 0x0000000080000100 (0x00000013) x0  0x0000000000000000
 """
+
+
+def test_cond_target_decodes_backward_and_compressed_branches():
+    assert traces.cond_target(0x8000006c, 0xfa0416e3, 32) == 0x80000018  # bnez s0, -0x54
+    assert traces.cond_target(0x1000, BEQ_8) == 0x1008
+    assert traces.cond_target(0x1000, 0xdc7d) == 0x0ffe  # c.beqz s0, -2
+    assert traces.cond_target(0x1000, 0xe011) == 0x1004  # c.bnez s0, +4
+
+
+def test_not_taken_backward_branch_feeds_btfn_its_decoded_target(tmp_path):
+    """A loop exit (backward, not taken) must keep its backward target in the trace."""
+    rows = [(0x1010, 0x1014, 0xfe0418e3, 0, {})]  # bnez s0, -16, not taken
+    out = tmp_path / 't.csim'
+    traces.from_c2(c2(tmp_path, rows), out)
+    assert "B 1 1010 cond 0 1000 4" in out.read_text().splitlines()
 
 
 def test_spike_commit_log_conversion(tmp_path):
