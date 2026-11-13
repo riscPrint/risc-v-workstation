@@ -528,7 +528,7 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT] [--json]
-    {probe-goals,source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {probe-goals,smoke,source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
 ```
 
@@ -537,6 +537,13 @@ usage: rvw cov [-h] [--project PROJECT] [--json]
 ```text
 usage: rvw cov probe-goals [-h] --result RESULT --plan PLAN --platform
     PLATFORM [--json] [--project PROJECT]
+```
+
+### `rvw cov smoke`
+
+```text
+usage: rvw cov smoke [-h] --database DATABASE --budget-s BUDGET_S [--startup-s
+    STARTUP_S] [--run] [--work-dir WORK_DIR] [--json] [--project PROJECT]
 ```
 
 ### `rvw cov source-report`
@@ -1297,7 +1304,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] [--json] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT] [--json]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,axis,apb,ahb_lite,req_rsp}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,rob_pointers,freelist_ghost,store_forward_window,axis,apb,ahb_lite,req_rsp}
 ```
 
 ### `rvw formal contracts`
@@ -1514,10 +1521,11 @@ usage: rvw formal datapath [-h] [--unit
     [--db DB] [--binding BINDING] [--rtl RTL] [--model MODEL] [--width
     {8,16,32,64}] [--max-latency MAX_LATENCY] [--latency LATENCY] [--unwind
     UNWIND] [--case {all,finite,normal,nan,infinity,zero,subnormal}]
-    [--case-width {16,32,64}] [--rounding {0,1,2,3,4}] [--reference-tree
-    REFERENCE_TREE] [--reference-source REFERENCE_SOURCE] [--reference-include
-    REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT [--json] [--project
-    PROJECT]
+    [--case-width {16,32,64}] [--operand-prefix-bits OPERAND_PREFIX_BITS]
+    [--operand-prefix OPERAND_PREFIX] [--rounding {0,1,2,3,4}]
+    [--reference-tree REFERENCE_TREE] [--reference-source REFERENCE_SOURCE]
+    [--reference-include REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw formal equiv`
@@ -3680,6 +3688,14 @@ Arguments: `database` (required), `diff` (required), `repo`.
 
 Starts a background job: yes.
 
+### `cov_smoke`
+
+Minimise measured coverage and select a budgeted suite; optional C1 deadline.
+
+Arguments: `database` (required), `budget_s` (required), `startup_s`, `run`, `project`, `work_dir`.
+
+Starts a background job: no.
+
 ### `cov_source_report`
 
 Join native counters and project-declared functional source links.
@@ -4124,7 +4140,7 @@ Starts a background job: yes.
 
 Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.
 
-Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `case_width`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
+Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `case_width`, `operand_prefix_bits`, `operand_prefix`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
 
 Starts a background job: yes.
 
