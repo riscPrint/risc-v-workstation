@@ -132,3 +132,41 @@ jobs:
         env:
           JOB_STATUS: ${{ job.status }}
         run: echo "Job status = $JOB_STATUS. Test counts require a completed test report." >> "$GITHUB_STEP_SUMMARY"
+  linux:
+    # Untested. Enable both Linux definitions with this one repository variable.
+    if: vars.RVW_LINUX_CI == 'enabled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 125
+    strategy:
+      fail-fast: false
+      matrix:
+        tier: [native-light, examples, nightly]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install Python setup tool
+        run: |
+          python3 -m venv "$RUNNER_TEMP/rvw-ci-setup"
+          "$RUNNER_TEMP/rvw-ci-setup/bin/python" -m pip install 'uv==0.13.6'
+          echo "$RUNNER_TEMP/rvw-ci-setup/bin" >> "$GITHUB_PATH"
+      - name: Install inventory apt packages (untested)
+        env:
+          CI_TIER: ${{ matrix.tier }}
+        run: |
+          echo 'Linux recipe is untested. Source-only tools can skip.' >> "$GITHUB_STEP_SUMMARY"
+          packages=$(python3 scripts/ci-linux-plan.py --tier "$CI_TIER" --packages)
+          if [ -n "$packages" ]; then
+            sudo apt-get update
+            sudo apt-get install -y $packages
+          fi
+      - name: Run tier (untested)
+        env:
+          CI_PYTHON: python3
+          CI_TIER: ${{ matrix.tier }}
+        run: scripts/ci-local.sh --tier "$CI_TIER"
+      - name: Job result
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: echo "Linux untested definition. Job status = $JOB_STATUS." >> "$GITHUB_STEP_SUMMARY"

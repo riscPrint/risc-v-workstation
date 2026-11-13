@@ -71,13 +71,13 @@ REPO = Path(__file__).resolve().parents[2]
 
 
 def test_automatic_workflows_use_only_local_runner():
-    """An automatic check must not consume private hosted-runner minutes."""
+    """Hosted runners require the single disabled Linux switch."""
     for name in ('ci.yml', 'conventional.yml', 'nightly.yml'):
         text = (REPO / '.github/workflows' / name).read_text()
         runners = [line.strip() for line in text.splitlines()
                    if line.strip().startswith('runs-on:')]
         assert runners, name
-        assert all(line == 'runs-on: [self-hosted, macOS, ARM64, rvw-local]'
+        assert all(line in ('runs-on: [self-hosted, macOS, ARM64, rvw-local]', 'runs-on: ubuntu-latest')
                    for line in runners), name
         assert 'cancel-in-progress:' in text
         assert 'scripts/ci-local.sh ' in text
@@ -158,3 +158,23 @@ def test_local_tier_dispatch_without_running_tools(tier, count):
     assert result.returncode == 0, result.stderr
     assert result.stdout.count('CALLED ') == count
     assert '--tier ' + tier in result.stdout
+
+
+def test_linux_ci_has_one_disabled_switch_and_inventory_recipe():
+    for name in ('ci.yml', 'nightly.yml'):
+        text = (REPO / '.github/workflows' / name).read_text().split('  linux:')[1]
+        assert "if: vars.RVW_LINUX_CI == 'enabled'" in text
+        assert 'runs-on: ubuntu-latest' in text
+        assert 'scripts/ci-linux-plan.py' in text
+        assert 'untested' in text.lower()
+
+
+def test_linux_apt_packages_come_from_inventory():
+    import json
+    import runpy
+    data = json.loads((REPO / 'rvw/src/rvw/doctor/tools.json').read_text())
+    packages = runpy.run_path(str(REPO / 'scripts/ci-linux-plan.py'))['packages']
+    allowed = {p for tool in data['tools'] for p in tool['install']['apt'].split()}
+    for tier in ('fast', 'native-light', 'examples', 'nightly'):
+        assert set(packages(tier)) <= allowed
+    assert packages('fast') == []
