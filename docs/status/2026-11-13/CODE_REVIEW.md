@@ -2551,3 +2551,274 @@ Files read: 202 files, 29,125 lines.
 | `rvw/tests/test_wave_typed.py` | 113 |
 | `rvw/tests/test_wave_why.py` | 136 |
 | `rvw/tests/test_waves_package.py` | 99 |
+## Probes, traces, waves, blocks and extension review
+
+The source pass began at `f422ed3dbd9dd165c40302833524e338ae4a8127`.
+It covered the Scala probe API and its disabled elaboration path, all probe converters,
+Kanata writing and reading, Scala wave and trace instrumentation, the Rust trace engine,
+the wave translator sources, the block viewer engine and web host, and every extension feature.
+The review checked required fields, event order, retirement bindings, speculative events,
+ID reuse, tail flushes, counter totals, memory dependencies and bit ranges.
+The relevant contract sections in `docs/contracts/` were used to check the parsers.
+The file table below lists source and test files read. Line counts are from the report snapshot.
+Changed source in these areas was checked again during the fix rebases.
+The table was recorded at `95c04fa7162866d47942cfcfa68fd9301b5a197b`.
+
+Confirmed defects:
+
+- The counts and HPM converters accepted missing counter totals, and HPM reported zero. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1369.
+- Static slices removed predicate entries without remapping retained CFG references. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1396.
+- VCD rewriting lost all changes at the final timestamp. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1414.
+- VCD rewriting updated only the first field when fields shared one VCD code. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1432.
+- The extension test command succeeded with zero tests after a fresh install. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1441.
+- Repeated first-stage occupancy reset an instruction lifetime and discarded its pending retry span. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1450.
+
+Unconfirmed items: none retained as findings. Multiple simultaneous stage lanes for one
+instruction were not exercised. This remains a validation limit, not a confirmed defect.
+
+Validation:
+
+- Each code defect has a regression that failed before the fix. The extension test command
+  was reproduced with zero tests before the fix. Its existing suite then ran 41 tests.
+- Targeted probe checks passed. The final retry selection passed 31 tests. Exact fast-set counts are in each fix PR.
+- `cargo test -p spinaltrace-rs` passed 30 tests after integration of the digital VCD reader.
+- The final translator suite passed 38 tests and one doctest. Source package hash checks passed.
+- The SpinalBlocks engine passed type checking and all 16 tests.
+- The extension passed `npm ci`, type checking and all 41 unit tests.
+- The required Python fast set ran before each push. The first run had 3304 passes,
+  four skips and one failure in `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`.
+  The missing workflow was `cov_mutate_core`, outside this review. Several later runs passed.
+  The extension, retry and review-record runs each had two unrelated `test_boot_profile.py::test_launcher_reaches_nice_ten_once`
+  failures because the test expected nice level 10 and inherited the required level 15.
+  Each PR records its own fast-set counts and any unrelated failures.
+- Scala compilation and Scala test suites were NOT RUN. Core builds, long simulations,
+  proofs, Surfer, and VS Code GUI tests were NOT RUN. Unit results do not qualify a core.
+
+Not read: the excluded Surfer fork under `SpinalWaves/surfer-tywaves/`, the SpinalTrace GUI,
+the SpinalBlocks Scala extractor, dependency sources, generated outputs, binary assets,
+and the individual JSON/VCD/HGLDD data fixtures. Test code and expected-value Rust helpers
+are included in the source table. Documentation was read as needed for the contracts;
+the table counts source and tests only. Later unrelated changes on main are outside this pass.
+
+The source table has 217 files and 26217 lines. Six defects were fixed.
+No unconfirmed defect is retained.
+
+| File | Lines |
+|---|---:|
+| `SpinalBlocks/engine/bench/layout-bench.ts` | 25 |
+| `SpinalBlocks/engine/build.mjs` | 12 |
+| `SpinalBlocks/engine/src/core.ts` | 8 |
+| `SpinalBlocks/engine/src/core/fsm.ts` | 183 |
+| `SpinalBlocks/engine/src/core/graph.ts` | 411 |
+| `SpinalBlocks/engine/src/core/layout.ts` | 234 |
+| `SpinalBlocks/engine/src/core/locate.ts` | 70 |
+| `SpinalBlocks/engine/src/core/model.ts` | 211 |
+| `SpinalBlocks/engine/src/core/scene.ts` | 90 |
+| `SpinalBlocks/engine/src/core/view.ts` | 53 |
+| `SpinalBlocks/engine/src/elk-main.ts` | 7 |
+| `SpinalBlocks/engine/src/elk.ts` | 15 |
+| `SpinalBlocks/engine/src/engine.ts` | 459 |
+| `SpinalBlocks/engine/src/fsm-view.ts` | 161 |
+| `SpinalBlocks/engine/src/index.ts` | 31 |
+| `SpinalBlocks/engine/src/render/canvas.ts` | 438 |
+| `SpinalBlocks/engine/src/render/fsm-svg.ts` | 391 |
+| `SpinalBlocks/engine/src/render/svg.css.ts` | 216 |
+| `SpinalBlocks/engine/src/render/svg.ts` | 566 |
+| `SpinalBlocks/engine/src/render/types.ts` | 85 |
+| `SpinalBlocks/engine/test/core.test.ts` | 119 |
+| `SpinalBlocks/engine/test/fsm-render.test.ts` | 129 |
+| `SpinalBlocks/engine/test/render.test.ts` | 190 |
+| `SpinalBlocks/hosts/web/build.mjs` | 11 |
+| `SpinalBlocks/hosts/web/serve.mjs` | 46 |
+| `SpinalBlocks/hosts/web/src/main.ts` | 450 |
+| `SpinalKonata/boom/src/main/scala/spinalkonata/boom/BenchTrace.scala` | 81 |
+| `SpinalKonata/boom/src/main/scala/spinalkonata/boom/BoomKonataTracer.scala` | 151 |
+| `SpinalKonata/boom/src/main/scala/spinalkonata/boom/InputCapture.scala` | 133 |
+| `SpinalKonata/boom/src/main/scala/spinalkonata/boom/ProbeRun.scala` | 112 |
+| `SpinalKonata/inputs/src/test/scala/spinalkonata/boom/BenchStubs.scala` | 33 |
+| `SpinalKonata/inputs/src/test/scala/spinalkonata/boom/BenchTraceSpec.scala` | 72 |
+| `SpinalKonata/inputs/src/test/scala/spinalkonata/boom/ElfInputSpec.scala` | 56 |
+| `SpinalKonata/scripts/captured.py` | 45 |
+| `SpinalKonata/scripts/collect.py` | 77 |
+| `SpinalKonata/scripts/roi_observations.py` | 98 |
+| `SpinalKonata/scripts/trace_report.py` | 47 |
+| `SpinalKonata/src/main/scala/spinalkonata/Demo.scala` | 64 |
+| `SpinalKonata/src/main/scala/spinalkonata/KanataWriter.scala` | 149 |
+| `SpinalKonata/src/main/scala/spinalkonata/PipelineTags.scala` | 75 |
+| `SpinalKonata/src/test/scala/spinalkonata/TraceSpec.scala` | 127 |
+| `SpinalProbes/src/main/scala/spinalprobes/Probe.scala` | 217 |
+| `SpinalProbes/src/test/scala/spinalprobes/ProbeSafetySpec.scala` | 90 |
+| `SpinalProbes/src/test/scala/spinalprobes/ProbeSpec.scala` | 57 |
+| `SpinalTrace/cli/src/main.rs` | 178 |
+| `SpinalTrace/examples/src/spinaltrace/examples/AccuracyCases.scala` | 88 |
+| `SpinalTrace/examples/src/spinaltrace/examples/Features.scala` | 215 |
+| `SpinalTrace/examples/src/spinaltrace/examples/Gcd.scala` | 60 |
+| `SpinalTrace/scripts/pdg_dump.py` | 16 |
+| `SpinalTrace/spinaltrace-rs/src/conversion.rs` | 677 |
+| `SpinalTrace/spinaltrace-rs/src/errors.rs` | 41 |
+| `SpinalTrace/spinaltrace-rs/src/graphbuilder.rs` | 740 |
+| `SpinalTrace/spinaltrace-rs/src/lib.rs` | 11 |
+| `SpinalTrace/spinaltrace-rs/src/pdg_spec.rs` | 316 |
+| `SpinalTrace/spinaltrace-rs/src/pipeline.rs` | 205 |
+| `SpinalTrace/spinaltrace-rs/src/sim_data_injection.rs` | 422 |
+| `SpinalTrace/spinaltrace-rs/src/slicing.rs` | 199 |
+| `SpinalTrace/spinaltrace-rs/src/util.rs` | 17 |
+| `SpinalTrace/spinaltrace-rs/src/vcd_input.rs` | 53 |
+| `SpinalTrace/spinaltrace-rs/src/viewer_ids.rs` | 35 |
+| `SpinalTrace/spinaltrace-rs/tests/accuracy.rs` | 133 |
+| `SpinalTrace/spinaltrace-rs/tests/engine.rs` | 125 |
+| `SpinalTrace/spinaltrace-rs/tests/slice_predicates.rs` | 17 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinal/core/SpinalTraceAccess.scala` | 11 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/Netlist.scala` | 144 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/PdgExtractor.scala` | 674 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/PdgModel.scala` | 164 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/ProbeNamingPhase.scala` | 80 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/SourceInfo.scala` | 13 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/SpinalTrace.scala` | 47 |
+| `SpinalTrace/spinaltrace/src/main/scala/spinaltrace/SpinalTraceSim.scala` | 213 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/AccuracySpec.scala` | 63 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/CallerLocationSpec.scala` | 21 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/ExamplesTraceSpec.scala` | 375 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/FileSymbolSpec.scala` | 19 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/FixtureGen.scala` | 106 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/InstrumentationSpec.scala` | 184 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/TraceTestKit.scala` | 72 |
+| `SpinalTrace/spinaltrace/src/test/scala/spinaltrace/file-symbol-design.scala` | 14 |
+| `SpinalWaves/scripts/package-app.py` | 54 |
+| `SpinalWaves/scripts/package-source.py` | 45 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/HglNaming.scala` | 55 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/HglddEmitter.scala` | 169 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SimGuard.scala` | 24 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SimLayout.scala` | 29 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SourceLocator.scala` | 54 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SpinalCompat.scala` | 35 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SpinalWaves.scala` | 38 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/SpinalWavesSim.scala` | 85 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/TypeInfo.scala` | 89 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/examples/Designs.scala` | 147 |
+| `SpinalWaves/spinalwaves/src/main/scala/spinalwaves/examples/GcdDemo.scala` | 32 |
+| `SpinalWaves/spinalwaves/src/test/scala/spinalwaves/EmitterSpec.scala` | 117 |
+| `SpinalWaves/spinalwaves/src/test/scala/spinalwaves/IntegrationSpec.scala` | 319 |
+| `SpinalWaves/spinalwaves/src/test/scala/spinalwaves/NamingSpec.scala` | 43 |
+| `SpinalWaves/spinalwaves/src/test/scala/spinalwaves/ReviewRegressionSpec.scala` | 181 |
+| `SpinalWaves/spinalwaves/src/test/scala/spinalwaves/SimGuardSpec.scala` | 46 |
+| `SpinalWaves/third_party/tywaves-rs/src/hgldd/mod.rs` | 4 |
+| `SpinalWaves/third_party/tywaves-rs/src/hgldd/reader.rs` | 268 |
+| `SpinalWaves/third_party/tywaves-rs/src/hgldd/spec.rs` | 440 |
+| `SpinalWaves/third_party/tywaves-rs/src/lib.rs` | 11 |
+| `SpinalWaves/third_party/tywaves-rs/src/tyvcd/builder.rs` | 861 |
+| `SpinalWaves/third_party/tywaves-rs/src/tyvcd/mod.rs` | 6 |
+| `SpinalWaves/third_party/tywaves-rs/src/tyvcd/spec.rs` | 521 |
+| `SpinalWaves/third_party/tywaves-rs/src/tyvcd/trace_pointer.rs` | 94 |
+| `SpinalWaves/third_party/tywaves-rs/src/vcd_rewrite.rs` | 558 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/bar.rs` | 90 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/foo.rs` | 234 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/mod.rs` | 5 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/vec_multi_dim_test.rs` | 640 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/vec_test.rs` | 508 |
+| `SpinalWaves/third_party/tywaves-rs/tests/expected_tyvcd/with_bundles_and_vecs.rs` | 333 |
+| `SpinalWaves/third_party/tywaves-rs/tests/hgldd.rs` | 128 |
+| `SpinalWaves/third_party/tywaves-rs/tests/spinal_field_path.rs` | 56 |
+| `SpinalWaves/third_party/tywaves-rs/tests/spinal_instance_overrides.rs` | 136 |
+| `SpinalWaves/third_party/tywaves-rs/tests/tyvcd.rs` | 196 |
+| `SpinalWaves/third_party/tywaves-rs/tests/vcd_rewrite.rs` | 66 |
+| `SpinalWaves/tools/spinalwaves-check/src/main.rs` | 629 |
+| `SpinalWaves/tools/spinalwaves-check/tests/cli.rs` | 273 |
+| `rvw/src/rvw/perf/kanata.py` | 153 |
+| `rvw/src/rvw/probes/__init__.py` | 2 |
+| `rvw/src/rvw/probes/api.py` | 97 |
+| `rvw/src/rvw/probes/cachecheck.py` | 198 |
+| `rvw/src/rvw/probes/check.py` | 45 |
+| `rvw/src/rvw/probes/checks.py` | 193 |
+| `rvw/src/rvw/probes/cli.py` | 103 |
+| `rvw/src/rvw/probes/cli_declarations.py` | 2 |
+| `rvw/src/rvw/probes/consumers.py` | 103 |
+| `rvw/src/rvw/probes/convert.py` | 413 |
+| `rvw/src/rvw/probes/events.py` | 104 |
+| `rvw/src/rvw/probes/mcp_tools.py` | 53 |
+| `rvw/src/rvw/probes/records.py` | 100 |
+| `rvw/src/rvw/probes/retries.py` | 73 |
+| `rvw/src/rvw/probes/validate.py` | 190 |
+| `rvw/tests/cov/test_probe_goals.py` | 94 |
+| `rvw/tests/test_causal_probes.py` | 41 |
+| `rvw/tests/test_mapped_probe_endpoint.py` | 29 |
+| `rvw/tests/test_plan_probes.py` | 30 |
+| `rvw/tests/test_probe_retries.py` | 78 |
+| `rvw/tests/test_probes.py` | 192 |
+| `rvw/tests/test_probes_cache.py` | 152 |
+| `rvw/tests/test_probes_check.py` | 18 |
+| `rvw/tests/test_probes_checks.py` | 124 |
+| `rvw/tests/test_probes_counter_totals.py` | 20 |
+| `rvw/tests/test_probes_kanata_predictions.py` | 47 |
+| `rvw/tests/test_probes_records.py` | 116 |
+| `rvw/tests/test_probes_rob_kanata.py` | 55 |
+| `rvw/tests/test_probes_time_window.py` | 27 |
+| `rvw/tests/test_probes_validate.py` | 141 |
+| `rvw/tests/test_spinalkonata_evidence_capture.py` | 177 |
+| `vscode/build.mjs` | 35 |
+| `vscode/features/arch/src/feature.ts` | 8 |
+| `vscode/features/arch/src/model.ts` | 10 |
+| `vscode/features/arch/test/model.test.ts` | 25 |
+| `vscode/features/cosim/src/feature.ts` | 15 |
+| `vscode/features/cosim/src/model.ts` | 15 |
+| `vscode/features/cosim/test/model.test.ts` | 5 |
+| `vscode/features/coverage/src/feature.ts` | 4 |
+| `vscode/features/coverage/src/lines.ts` | 15 |
+| `vscode/features/coverage/src/overlays.ts` | 19 |
+| `vscode/features/coverage/test/lines.test.ts` | 5 |
+| `vscode/features/coverage/test/model.test.ts` | 18 |
+| `vscode/features/coverage/test/producers.test.ts` | 42 |
+| `vscode/features/debug/src/feature.ts` | 32 |
+| `vscode/features/debug/src/protocol.ts` | 19 |
+| `vscode/features/debug/src/wave.ts` | 18 |
+| `vscode/features/debug/src/webview.ts` | 128 |
+| `vscode/features/debug/test/benchmark.py` | 51 |
+| `vscode/features/debug/test/browser.mjs` | 102 |
+| `vscode/features/debug/test/protocol.test.ts` | 24 |
+| `vscode/features/formal/src/feature.ts` | 23 |
+| `vscode/features/formal/src/model.ts` | 7 |
+| `vscode/features/formal/test/model.test.ts` | 5 |
+| `vscode/features/lint/src/feature.ts` | 120 |
+| `vscode/features/lint/src/model.ts` | 111 |
+| `vscode/features/lint/test/groups.test.ts` | 5 |
+| `vscode/features/lint/test/model.test.ts` | 44 |
+| `vscode/features/lsp/src/feature.ts` | 32 |
+| `vscode/features/navigation/src/feature.ts` | 30 |
+| `vscode/features/navigation/src/model.ts` | 6 |
+| `vscode/features/navigation/test/model.test.ts` | 12 |
+| `vscode/features/perf/src/feature.ts` | 4 |
+| `vscode/features/perf/src/pipeline.ts` | 23 |
+| `vscode/features/perf/src/window.ts` | 11 |
+| `vscode/features/perf/test/model.test.ts` | 16 |
+| `vscode/features/perf/test/pipeline.test.ts` | 5 |
+| `vscode/features/project/src/feature.ts` | 26 |
+| `vscode/features/project/src/model.ts` | 13 |
+| `vscode/features/project/test/model.test.ts` | 5 |
+| `vscode/features/regress/src/feature.ts` | 2 |
+| `vscode/features/regress/test/host.test.ts` | 103 |
+| `vscode/features/regress/test/model.test.ts` | 57 |
+| `vscode/features/spinalblocks/src/designs.ts` | 78 |
+| `vscode/features/spinalblocks/src/feature.ts` | 289 |
+| `vscode/features/spinalblocks/src/fsm-webview.ts` | 112 |
+| `vscode/features/spinalblocks/src/html.ts` | 16 |
+| `vscode/features/spinalblocks/src/protocol.ts` | 83 |
+| `vscode/features/spinalblocks/src/webview.ts` | 180 |
+| `vscode/features/spinalblocks/test/integration.ts` | 312 |
+| `vscode/features/spinalblocks/test/protocol.test.ts` | 50 |
+| `vscode/features/spinalblocks/test/run.cjs` | 132 |
+| `vscode/features/wave/src/feature.ts` | 170 |
+| `vscode/features/wave/src/model.ts` | 140 |
+| `vscode/features/wave/test/model.test.ts` | 51 |
+| `vscode/features/workstation/src/feature.ts` | 26 |
+| `vscode/features/workstation/src/model.ts` | 7 |
+| `vscode/features/workstation/test/model.test.ts` | 5 |
+| `vscode/scripts/features.mjs` | 71 |
+| `vscode/scripts/manifest.mjs` | 22 |
+| `vscode/scripts/producer-samples.py` | 62 |
+| `vscode/src/api.ts` | 46 |
+| `vscode/src/extension.ts` | 52 |
+| `vscode/src/features.ts` | 34 |
+| `vscode/src/results/contracts.ts` | 12 |
+| `vscode/src/results/feature.ts` | 96 |
+| `vscode/src/results/html.ts` | 3 |
+| `vscode/src/results/model.ts` | 86 |
