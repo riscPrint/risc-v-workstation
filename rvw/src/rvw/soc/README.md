@@ -284,3 +284,17 @@ are not in the database; the bundle states that gap. The bundle preserves
 database metadata and file hashes. It is an implementation input package,
 not physical implementation, timing signoff or tape-out evidence. Keep
 bundles outside version control.
+
+## External implementation feedback
+
+`rvw soc feedback --db design.db --source feedback.json --out NEW_JSON`
+imports external report links. MCP: `soc_feedback`. Input schema
+`rvw.soc-feedback/1` requires `database_sha256`, `tool`, `scope`, `constraints`,
+`reports` (paths relative to the input) and `findings`. Each finding has `kind`
+(`timing`, `area`, `cdc`, `dft`), `endpoint`, `message` and `report`.
+
+The database hash must match. The importer hashes reports and resolves signal
+names with the existing design query reader. It preserves unmatched or
+ambiguous names with diagnostics. Matched rows retain RTL paths and Scala
+file/line links. Output is `imported_claims`. It does not validate the report's
+analysis or promote an external signoff claim to a workstation result.
