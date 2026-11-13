@@ -61,3 +61,13 @@ valid UTC date. Expired metadata is an error before backend execution. The
 existing exact finding hash and stale-waiver errors still apply. Shared policy
 code also validates generated check dispositions. Version 1 keeps its legacy
 waiver format and makes no owner or expiry claim.
+
+## Generated source-scope assignments
+
+The database rule backend keeps a generated signal with one full-width,
+conditional assignment in `unresolved` when only source-scope condition evidence
+is available. Spinal can hoist an expression temporary into unconditional RTL.
+The database condition alone does not prove that the emitted RTL infers a latch.
+Each unresolved row has `rule`, `endpoint`, and `reason`. The backend remains
+`inconclusive` while any such row exists. Named partial assignments retain the
+`lint.latch` finding. This does not certify the unresolved temporary as latch-free.

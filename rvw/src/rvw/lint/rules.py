@@ -106,6 +106,7 @@ def analyze(db, config=None):
     conf = settings(config)
     design = Design(db.conn)
     d, findings = design, []
+    unresolved = []
 
     def severity(rule):
         return conf.get(rule, {}).get('severity', RULES[rule][0])
@@ -155,7 +156,14 @@ def analyze(db, config=None):
         if data and d.is_top_input(t):
             emit('lint.input_driven', t)
         if s['kind'] == 'wire' and data and all(a['cond_id'] is not None for a in data) and t not in role:
-            emit('lint.latch', t)
+            if s.get('generated') and len(data) == 1 and data[0]['range'] is None:
+                # Spinal can hoist generated expression temporaries out of their
+                # source scope. A condition in this database is not a lowered
+                # RTL enable, so it cannot establish latch inference.
+                unresolved.append(dict(rule='lint.latch', endpoint=s['path'],
+                    reason='Generated full-width expression has only source-scope condition evidence; inspect lowered RTL.'))
+            else:
+                emit('lint.latch', t)
         for a in data:
             for m in RESIZE.finditer(a['key'] or ''):
                 target, source = int(m.group(1)), int(m.group(3))
@@ -223,7 +231,8 @@ def analyze(db, config=None):
             for state in row['unreachable']:
                 emit('lint.fsm_unreachable', d.by_path[row['register']],
                      f"State {state} is never assigned to {row['register']}.", state=state)
-    return dict(status='inconclusive' if d.blackbox_edges else 'completed', findings=findings,
+    return dict(status='inconclusive' if d.blackbox_edges or unresolved else 'completed', findings=findings,
+                unresolved=unresolved,
                 rules=[dict(id=r, severity=severity(r)) for r in sorted(RULES)], fsm=fsm,
                 scope='design-database lint rules; no simulation or synthesis')
 
