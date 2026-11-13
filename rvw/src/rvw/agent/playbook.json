@@ -817,6 +817,7 @@
         "cov_report",
         "cov_rtl",
         "cov_select",
+        "cov_smoke",
         "cov_source_report",
         "csr_describe",
         "fault_report",

@@ -1188,3 +1188,20 @@ Set `coverage: true` when the plan comes from a coverage-instrumented model.
 The controller enables probes, binds the exact RTL and plan identities, and
 rejects repeated streams. Archived replay retains the same model options.
 ISA hits, C2 retirement pairs, and probe event goals keep separate denominators.
+
+### Measured smoke suites
+
+`rvw cov smoke --database code.json --budget-s 180 --startup-s 120 --json`
+returns exact set-cover minimisation for at most 20 tests and a greedy cost
+selection. Larger inputs use the existing inclusion-minimal greedy reduction.
+MCP: `cov_smoke`. Costs come from C1 `wall_s`. Unknown costs do not become free
+runs. The startup allowance is a project declaration. This estimate does not
+prove the best suite under a time budget.
+
+Add `--run --project PROJECT --work-dir NEW_DIRECTORY` to run the selected
+ELFs through C1 with the recorded seed/config and coverage modes. A process
+deadline includes lock wait, adapter startup, build and program execution.
+Timeout remains timeout, even if all C1 files already exist. Cleanup can add
+time after the deadline. The result keeps historical signature coverage and
+new C1 status separate. Execution earns no new Spike or coverage credit.
+The full native point denominator stays visible.

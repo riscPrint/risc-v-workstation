@@ -100,3 +100,20 @@ execution, positive instruction count, complete trace, and zero masks and
 synchronization. Probe and sampled RTL contexts stay distinct. Negative or
 duplicate counts are invalid. Uncompleted sequences remain holes. These
 references preserve the recorded model identity and do not grant C4 acceptance.
+
+## Budgeted measured smoke suites
+
+`rvw.coverage-smoke/1` pins the input database and native point universe. It
+records full native points, observed signature targets, selected tests, covered
+point count/hash, measured C1 costs, startup allowance, and minimisation scope.
+Exact minimisation covers at most 20 measured tests. The time selector is greedy.
+Missing cost excludes a test from budget selection. It does not imply zero cost.
+
+Optional execution runs project C1 jobs with a process deadline. The deadline
+covers lock acquisition and adapter execution. Termination cleanup can add time.
+`timed_out` never becomes pass because output files exist. Passing execution
+requires every selected C1 result, matching job identity/model flags and no
+inconclusive C1 record. `new_execution_coverage_credit` stays false. These runs
+do not repeat strict reference qualification or establish C4 acceptance.
+Conclusive C1 fail/assert observations remain failures. A process error or
+missing result remains inconclusive unless the deadline fired.

@@ -1,0 +1,93 @@
+{
+  "schema": "rvw.coverage-smoke/1",
+  "status": "pass",
+  "database_sha256": "4d3175bcf7c3165be409209cabf07f5246121876a774d737b716a52f21fbb7e1",
+  "point_universe": "fc64dc8043aa7cc9fcbc759791bcb3915f3f6ccc3efdae92412840ffb5b181aa",
+  "budget_s": 180.0,
+  "startup_s": 120.0,
+  "selected": [
+    "rv32ui-p-lw",
+    "rv32ui-p-sw"
+  ],
+  "estimated_test_s": 6.109999999999999,
+  "estimated_total_s": 126.11,
+  "unknown_costs": [],
+  "notes": [
+    "Costs are recorded C1 wall seconds plus the declared startup allowance.",
+    "Selection is greedy. It does not prove the best coverage under the time budget.",
+    "The estimate is not a runtime guarantee."
+  ],
+  "minimisation": {
+    "schema": "rvw.coverage-rank/1",
+    "algorithm": "exact-set-cover",
+    "optimal": true,
+    "inclusion_minimal": true,
+    "selected": [
+      "rv32ui-p-lw",
+      "rv32ui-p-sw"
+    ],
+    "ranking": [
+      {
+        "test": "rv32ui-p-sw",
+        "new_points": 17912,
+        "covered_points": 17912,
+        "unique_points": 7
+      },
+      {
+        "test": "rv32ui-p-lw",
+        "new_points": 3,
+        "covered_points": 17908,
+        "unique_points": 3
+      }
+    ],
+    "redundant": [
+      "rv32ui-p-add",
+      "rv32ui-p-beq"
+    ],
+    "contribution": {
+      "rv32ui-p-add": {
+        "covered_points": 17367,
+        "unique_points": 0
+      },
+      "rv32ui-p-beq": {
+        "covered_points": 17367,
+        "unique_points": 0
+      },
+      "rv32ui-p-lw": {
+        "covered_points": 17908,
+        "unique_points": 3
+      },
+      "rv32ui-p-sw": {
+        "covered_points": 17912,
+        "unique_points": 7
+      }
+    }
+  },
+  "measured_target_points": 17915,
+  "new_execution_coverage_credit": false,
+  "covered_points": 17915,
+  "covered_sha256": "8bb92cdbf057002519b3d1a0f37f93cc18d0493bc0feea09ddf2395b34970963",
+  "native_point_denominator": 21429,
+  "execution": {
+    "elapsed_s": 88.32037070801016,
+    "timed_out": false,
+    "returncode": 0,
+    "observations": [
+      {
+        "test": "rv32ui-p-lw",
+        "status": "pass",
+        "inconclusive": null,
+        "sha256": "858d017dc684728b6d0bb444ca682c2f00f6f790302dcae821cfaaa785b1513f",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58"
+      },
+      {
+        "test": "rv32ui-p-sw",
+        "status": "pass",
+        "inconclusive": null,
+        "sha256": "d8b56d6508e4ce9e5aa8ac16304ed942b2b07741554779d9628857f3f72cebbd",
+        "rtl_sha256": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58"
+      }
+    ],
+    "scope": "C1 only; no new Spike comparison or coverage credit"
+  }
+}
