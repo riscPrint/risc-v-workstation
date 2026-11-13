@@ -67,29 +67,31 @@ still needs a complete C1 implementation and input audit before regression.
 
 This table reports the named dry runs. It does not transfer a result to every
 core in that language. Unsupported by this record means that these runs
-do not establish the capability. Spinal and SystemVerilog cells use the two earlier
-reports. Chisel and VHDL cells use the second pass linked below. A generated
+do not establish the capability. Spinal cells use the earlier report.
+SystemVerilog cells name PicoRV32 and Ibex separately. Chisel and VHDL cells
+use the second pass linked below. A generated
 monitor is not a proof. A diagram export is not a rendered-view check.
 
 | Tool or step | Spinal | SystemVerilog | Chisel | VHDL |
 | --- | --- | --- | --- | --- |
-| Doctor / init | Works: Wired scaffold tested | Works: Native scaffold tested | Works: FIRRTL scaffold and doctor tested | Works: GHDL scaffold tested |
-| Native C1 simulation | Works: Whole core tested | Works: PicoRV32 tested | Works: riscv-mini tested | Works: NEORV32 tested |
-| C2 capture | Works: Project RVFI | Works: Core RVFI | Works: Generated state monitor | Works: Core trace port |
-| Regression | Works: 42 RV32UI programs pass | Works: 46 programs pass | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs |
-| Spike cosim | Works: 41 matches; split-access refusal | Works: 46 matches | Works: 41 matches, one fault-read refusal; 11,807 matched instructions | Works: 41 matches, one fault-record mismatch; 12,090 matched instructions |
-| Failure bundle | Works: Native planted fault | Works: Native failure | Works: Native planted fault | Works: Native planted fault |
-| Design query | Works: SpinalDB; Scala locations | Works: Yosys; HDL locations | Works: FIRRTL; Scala locations | Works: GHDL; VHDL locations |
-| Diagram export | Works: Export tested | Works: Export tested | Works: Export tested | Works: Export tested |
-| Lint / CDC | Works: Reports; no signoff | Works: Reports; no signoff | Works: Reports; no signoff | Works: Reports; no signoff |
-| Structural coverage | Works: C1 merge/report tested | Works: C1 merge/report tested | Works: 6,562/9,716 points linked to 121 Scala lines on original RTL | Works: 2,777/57,336 points linked to 343 VHDL lines |
-| Declared bus checks | Works: Explicit bindings required | Works with declared port map: ready/valid native run | Works with declared port map: two request/acknowledgment buses; native bound add pass; 24-step replay SAT | Works with declared port map: two single-outstanding pulse buses; native bound add pass; 24-step replay SAT |
-| Bounded formal | Works: one property at depth 6; overall inconclusive | Works: three SVA properties at depth 8; activation unmeasured | Works with declared port map: two monitor replays at depth 24 | Works with declared port map: two monitor replays at depth 24 |
-| State-monitor generation | Works: Available; not needed in this run | Works: generation; comparison has an open mismatch | Works: Generated and simulated on riscv-mini | Unsupported by this record: native trace port selected |
-| Committed gate | Unsupported by this record: not measured in the Spinal dry run | Works: Accept and reject tested | Works: Accept and reject tested | Works: Accept and reject tested |
+| Doctor / init | Works: Wired scaffold tested | PicoRV32: native scaffold tested; Ibex: core-owned project | Works: FIRRTL scaffold and doctor tested | Works: GHDL scaffold tested |
+| Native C1 simulation | Works: Whole core tested | PicoRV32 and Ibex: native builds and runs | Works: riscv-mini tested | Works: NEORV32 tested |
+| C2 capture | Works: Project RVFI | PicoRV32 and Ibex: core RVFI | Works: Generated state monitor | Works: Core trace port |
+| Regression | Works: 42 RV32UI programs pass | PicoRV32: 46/46 ISA passes; Ibex: 51/51 ISA passes | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs |
+| Spike cosim | Works: 41 matches; split-access refusal | PicoRV32: 46 complete ISA matches; Ibex: 51 complete ISA matches | Works: 41 matches, one fault-read refusal; 11,807 matched instructions | Works: 41 matches, one fault-record mismatch; 12,090 matched instructions |
+| Failure bundle | Works: Native planted fault | PicoRV32: native failure; Ibex: bundle NOT RUN | Works: Native planted fault | Works: Native planted fault |
+| Design query | Works: SpinalDB; Scala locations | PicoRV32: Yosys HDL locations; Ibex: slang, 41 components and 41,387 signals with SV locations | Works: FIRRTL; Scala locations | Works: GHDL; VHDL locations |
+| Diagram export | Works: Export tested | PicoRV32 and Ibex: export tested; rendered view NOT RUN | Works: Export tested | Works: Export tested |
+| Lint / CDC | Works: Reports; no signoff | PicoRV32: reports, no signoff; Ibex: 732 active findings, no signoff | Works: Reports; no signoff | Works: Reports; no signoff |
+| Structural coverage | Works: C1 merge/report tested | PicoRV32: C1 merge/report; Ibex: 22,237/42,700 ISA points | Works: 6,562/9,716 points linked to 121 Scala lines on original RTL | Works: 2,777/57,336 points linked to 343 VHDL lines |
+| Declared bus checks | Works: Explicit bindings required | PicoRV32: ready/valid native run; Ibex: two request/grant checks generated, execution NOT RUN | Works with declared port map: two request/acknowledgment buses; native bound add pass; 24-step replay SAT | Works with declared port map: two single-outstanding pulse buses; native bound add pass; 24-step replay SAT |
+| Bounded formal | Works: one property at depth 6; overall inconclusive | PicoRV32: three SVA properties at depth 8, activation unmeasured; Ibex: RVFI ISA at depth 16, ADD activation incomplete, overall inconclusive | Works with declared port map: two monitor replays at depth 24 | Works with declared port map: two monitor replays at depth 24 |
+| State-monitor generation | Works: Available; not needed in this run | PicoRV32: generation with open comparison mismatch; Ibex: native RVFI selected, monitor NOT RUN | Works: Generated and simulated on riscv-mini | Unsupported by this record: native trace port selected |
+| Committed gate | Unsupported by this record: not measured in the Spinal dry run | PicoRV32 and Ibex: accept and planted-fault reject measured | Works: Accept and reject tested | Works: Accept and reject tested |
 
 See [the Spinal report](DRY_RUN_2026-11-13.md),
-[the SystemVerilog report](DRY_RUN_VERILOG_2026-11-13.md) and
+[the PicoRV32 report](DRY_RUN_VERILOG_2026-11-13.md),
+[the Ibex project](../examples/ibex/README.md) and
 [the Chisel/VHDL report](DRY_RUN_CHISEL_VHDL_2026-11-13.md) for pins,
 commands, native evidence and limits. Full ISA and whole-core proof remain
 open. The first pass used add, beq, lw and sw. The second pass runs the complete
@@ -214,8 +216,15 @@ source pins, per-extension records and minimal reproductions.
 | NaxRiscv RV64IMA machine instruction profile | 98 / 98 | 98 / 0 | 98 | 0 |
 | NaxRiscv RV64IMA M/S/U, machine instruction boot | 98 / 98 | 98 / 0 | 98 | 0 |
 | PicoRV32 mapped RV32IM instruction profile | 51 / 51 | 50 / 1 | 50 | 1 |
+| Ibex RV32IMC machine and user, standard Sm boot | 148 / 148 | 148 / 0 | 0 | 148 |
 | BOOM small instructions | 378 / 378 | 376 / 2 | 0 | 2 |
 | BOOM small M/S/U, Sv39 | 232 / 232 | 196 / 36 | 0 | 36 |
+
+Ibex retains the standard Sm bootstrap. All 148 self-checking programs pass.
+All 148 strict Spike comparisons stop at the first bootstrap `mtvec` read:
+Ibex returns `0x80000001`; Spike returns zero. The rest of each trace is not
+strictly compared. The [Ibex findings](../examples/ibex/FINDINGS.md) give a
+minimal reproduction. PMP is absent from this configuration.
 
 The instruction profiles use project bootstraps. They do not establish
 standard Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
