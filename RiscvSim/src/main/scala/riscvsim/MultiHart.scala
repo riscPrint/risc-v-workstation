@@ -49,6 +49,16 @@ final class MultiHartTrace(file: File, header: ujson.Obj, hartIds: Seq[Int]) ext
     emit(r.cycle, ujson.Obj.from(fields))
     nextOrder(h) += 1
   }
+  /** Interrupt and trap observations retain their hart and reset epoch. */
+  def irq(h: Int, c: Long, levels: BigInt): Unit = {
+    active(h)
+    emit(c, ujson.Obj("event" -> "irq", "hart" -> h, "epoch" -> epoch(h), "levels" -> Hex(levels)))
+  }
+  def trap(h: Int, c: Long, cause: BigInt, tval: BigInt, intr: Boolean): Unit = {
+    active(h)
+    emit(c, ujson.Obj("event" -> "trap", "hart" -> h, "epoch" -> epoch(h),
+      "cause" -> Hex(cause), "tval" -> Hex(tval), "intr" -> intr))
+  }
   /** Captures an accepted external action. Payload must include address, data, mask and source. */
   def memory(c: Long, id: String, action: String, payload: ujson.Obj): Unit = {
     require(id.nonEmpty && !eventIds(id) && Set("read", "write", "atomic", "irq", "maintenance").contains(action))
