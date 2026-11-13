@@ -43,6 +43,7 @@ def _load():
             "csim_ind_predict": (u64, [vp, u64, ctypes.POINTER(u64)]),
             "csim_ind_update": (i, [vp, u64, u64]),
             "csim_mem_access": (u64, [vp, u64, u64, u64, i, i]),
+            "csim_ooo_service": (None, [vp, u64, i, ctypes.POINTER(u64), ctypes.POINTER(ctypes.c_int64)]),
             "csim_reset_stats": (None, [vp]),
             "csim_stats": (ctypes.c_size_t, [vp, u64, ctypes.c_char_p, ctypes.c_size_t]),
         }

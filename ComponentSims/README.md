@@ -246,3 +246,13 @@ python3 ComponentSims/spike.py --verify verify.json --workload crc32 --engine /t
 The Spike adapter reads one successful `rvw workloads verify --trace` row,
 checks the evidence hashes and writes `trace.txt` and `report.json`. Its
 `trace.txt` is also valid input for `rvw csim run` (direction models only).
+
+### Native OoO issue service
+
+`capi.cc` exports `csim_ooo_service` for a native timing scheduler. It combines
+issue-time branch prediction and actual-path training, or one data-memory
+service request split at cache-line and page boundaries. The OoO adapter uses
+this C entry point directly. It shares the same component handle, parameters
+and statistics as `rvw.csim.lib.Components`. It does not add wrong-path
+execution, speculative history repair or instruction-cache invalidation.
+The call layout is defined in `docs/contracts/arch.md`.

@@ -68,3 +68,33 @@ def test_mixed_native_parity(library, monkeypatch):
         expected = simulate(ops, c, 100000, backend='python')
         expected.pop('backend')
         assert native.simulate(ops, c, 100000) == expected
+
+
+@pytest.mark.parametrize('speculate', [False, True])
+def test_component_native_parity(library, monkeypatch, speculate):
+    monkeypatch.setenv('RVW_OOO_NATIVE', str(library))
+    components = {'branch': {'model': 'bimodal', 'entries': 64},
+                  'btb': {'levels': [{'entries': 8, 'ways': 2, 'latency': 0},
+                                     {'entries': 32, 'ways': 2, 'latency': 2}]},
+                  'ras': {'entries': 8}, 'indirect': {'model': 'btb'},
+                  'memory': {'dram_latency': 20,
+                             'l1d': {'size_kib': 1, 'ways': 1, 'latency': 2},
+                             'tlb': {'page_bits': 10, 'levels': 2,
+                                     'l1': {'entries': 4, 'ways': 1}}}}
+    c = Config(4, 16, 4, 32, 4, 16, 8, 8, 4,
+               dict(zip(native.KINDS, [1, 3, 12, 1, 1, 1, 1])),
+               components=components, branch_penalty=4, branch_speculation=speculate)
+    rng = random.Random(123)
+    ops = []
+    for i in range(200):
+        kind = rng.choice(native.KINDS)
+        ops.append(Instruction(kind, (rng.randrange(32),), rng.randrange(32),
+                               pc=0x100 + (i % 8)*4,
+                               next_pc=0x100 if i % 3 else 0x104 + (i % 8)*4,
+                               address=1022 + (i % 3)*1024, size=8,
+                               encoding=0x63 if kind == 'branch' else 0x6f))
+    expected = simulate(ops, c, 100000, backend='python')
+    actual = simulate(iter(ops), c, 100000, backend='native')
+    expected.pop('backend')
+    actual.pop('backend')
+    assert actual == expected
