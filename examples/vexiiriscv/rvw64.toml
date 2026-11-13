@@ -247,3 +247,6 @@ configs = ["rv64imasu"]
 max_cycles = 2000000
 timeout_s = 120
 mem_latency = 0
+
+[debug]
+config = "rvw/linux/debug.toml"

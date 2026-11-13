@@ -946,3 +946,63 @@ The test compares the complete final state and RAM entries, not only counts.
 It took 274.42 seconds including three launcher invocations and native builds.
 These short slices are correctness evidence. They are not boot throughput
 measurements. A completed Linux boot remains unproved by this check.
+
+## Minimal Linux workload and shutdown
+
+The [Linux recipe](rvw/linux/README.md) builds a static init and a built-in
+initramfs from pinned Linux v6.6.60. Init prints `RVW_LINUX_USERSPACE` and calls
+power-off. The `--resumable` preparation profile uses 32 MiB RAM, a 1 MHz
+simulation clock and a syscon power-off register. Build OpenSBI with `--linux`
+for the matching clock and SBI reset device. The standard preparation map is
+preserved when `--resumable` is absent.
+
+```sh
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/build.py \
+  --source OPENSBI_SOURCE --out "$RUN_ROOT/opensbi" --llvm-prefix LLVM_BIN --linux
+examples/vexiiriscv/rvw/linux/build.sh LINUX_SOURCE "$RUN_ROOT/kernel"
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/prepare.py \
+  --firmware "$RUN_ROOT/opensbi/platform/rvw/firmware/fw_jump.bin" \
+  --kernel "$RUN_ROOT/kernel/arch/riscv/boot/Image" --resumable --out "$RUN_ROOT/inputs"
+RVW_BOOT_SECONDS=600 SPINAL_VERILATOR_FLAGS='-CFLAGS -O3' \
+  examples/vexiiriscv/rvw/boot-slices.sh "$RUN_ROOT/inputs/reset.elf" \
+  "$RUN_ROOT/inputs/payloads.json" "$RUN_ROOT/inputs/devices.json" \
+  "$RUN_ROOT/slice-1" "$RUN_ROOT/boot.zip" fresh 100000000
+```
+
+Set the compiler, linker, GNU sed, Flex and Bison paths as described in the
+recipe. Keep sources, build trees and run directories outside the repository.
+Restore into a new output directory with `restore` in place of `fresh`.
+The stop cycle is cumulative. Each successful slice replaces the checkpoint.
+
+| Native check | Cycles | Instructions retired | Wall seconds | Instructions/s |
+|---|---:|---:|---:|---:|
+| Current ISA properties, minimal kernel, first bounded slice | 3,201,024 | 1,171,289 | 600.94 | 1,949.09 |
+| Fresh-process continuation of an earlier Linux checkpoint | 65,536 additional | 19,218 additional | 16.49 | 1,165.26 |
+
+The current first slice printed ISA and ELF capabilities `acim`. It retired
+129,728 machine instructions and 1,041,561 supervisor instructions. It had no
+user retirements. Its final PC was `0xffffffff8005ef86`, in
+`should_skip_region` in `memblock.c`. The last trap was supervisor ecall cause
+9 at `0xffffffff800041d0`. The driven interrupt levels were zero. It stopped
+at the harness wall limit. This is memory-setup progress, not evidence of a
+core hang. Userspace and shutdown remain unproved by this first slice. The
+continuation row uses a different earlier kernel image and is restore evidence.
+It is not a paired throughput comparison.
+
+The native run used the source pins from the boot-slice equality check above.
+The Linux pin is `9b5aad3a7498c261116a0251fe57f14ba9c4c6cf`. OpenSBI is pinned
+to `bd613dd92113f683052acfb23d9dc8ba60029e0a`. The kernel Image is about 2 MiB.
+On this case-insensitive macOS filesystem, Linux's case-clashing network and
+litmus files mark the checkout dirty. This profile does not compile those files.
+
+The live UART now supports the FIFO and loopback discovery accesses that the
+Linux 8250 driver uses. The current DTB ISA properties work with legacy ISA
+fallback disabled. The power-off model latches only its configured command.
+The native device and RAM tests passed all 10 checks. Six fast recipe and debug
+conversion tests passed. A diagnostic C1 view produced an `rvw bundle` without
+a trace or wave. It reports the missing evidence and remains inconclusive for
+C1 replay and regression acceptance. See the recipe for the exact commands.
+
+The launcher currently applies nice priority twice. The measured run had
+niceness 20. Correcting that launch profile and measuring throughput is the
+next speed item. No trace or wave was written for these boot slices.

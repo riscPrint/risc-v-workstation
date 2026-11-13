@@ -1,0 +1,4 @@
+[core]
+name = "vexiiriscv"
+source_env = "VEXIIRISCV"
+period = 11
