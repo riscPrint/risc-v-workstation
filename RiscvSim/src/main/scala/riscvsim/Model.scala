@@ -30,7 +30,7 @@ case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false
 case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: Boolean, maxCycles: Long,
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
-                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None) {
+                  wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace)
 }
 
@@ -51,6 +51,8 @@ trait CoreAdapter {
     * Persistent serve refuses adapters that do not make this declaration. */
   def freshInstancePerRun: Boolean = false
   def supportsBootPayloads: Boolean = false
+  /** Opt in only when the adapter uses shared memory and per-hart RVFI. */
+  def hartIds(config: String): Seq[Int] = Nil
   def core: String
   def configs: Seq[String]
   def defaultConfig: String = configs.head
@@ -98,7 +100,9 @@ trait RunContext {
   /** The ELF captured before compilation. Use it for loading, symbols and disassembly.
     * `job.elf` is the original path for metadata only; never reopen it during this run. */
   def elf: ElfFile
-  def loadMemory(write: (Long, Array[Byte]) => Unit): Unit = elf.load(write)
+  def hartImages: Option[HartImages] = None
+  def loadMemory(write: (Long, Array[Byte]) => Unit): Unit =
+    hartImages match { case Some(h) => h.load(write); case None => elf.load(write) }
   /** A line for this run's run.log (also echoed to stderr). */
   def log(line: String): Unit
   /** RVFI trace header fields (core, config, elf, isa, xlen); the writer adds the schema. */

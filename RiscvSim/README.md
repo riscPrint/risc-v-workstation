@@ -828,3 +828,25 @@ No CSR state is copied from the reference. Core adapters must expose the
 per-slot signals. This API does not add those signals to a core. The existing
 BOOM adapter does not yet select these observations. Sail full-state CSR
 snapshots remain unavailable through its current public write log.
+
+### Per-hart ELF inputs
+
+An adapter can override `hartIds(config)` with its supported hart IDs. Pass
+`--hart-images images.json` to `run` or in a run-many manifest. Generate that
+file with `rvw memory images --hart-image 0=hart0.elf --hart-image 1=hart1.elf`.
+The existing `--elf` selects the primary image for legacy C1 metadata. Each
+hart starts at the entry of its captured ELF. The driver captures and checks
+all image hashes before compilation. `ctx.loadMemory` loads all segments into
+one shared memory. Identical shared segments load once. Conflicting segments,
+including BSS, fail before memory writes. Boot payloads cannot be combined.
+
+Use `ctx.hartImages` for per-hart entries. Construct `MultiHartSession` with
+one `RvfiProbe` per hart. Call `reset` when each hart resets. Call `sample`
+once per cycle, then `complete` for each hart result. Forward accepted memory
+actions with `memory`. Return `outcome` when the run ends. Close the session
+on all paths. Missing completion gives timeout. Different harts have separate
+RVFI orders. Capture order is not memory order.
+
+This is an opt-in generic adapter path. Existing single-hart adapters reject
+these inputs. No production core integration or multi-hart ISA result is
+claimed by the driver tests.

@@ -3247,3 +3247,16 @@ C safety failures, unwinding failures, missing tools and timeouts are
 `inconclusive`, exit 3. This is not a C4 acceptance result. The `properties`
 array retains CBMC property descriptions, statuses and available traces.
 The reference model and dependencies are trusted specification inputs.
+
+### Generic multi-hart harness inputs
+
+C1 adapters can declare `hartIds(config)` and accept `--hart-images PATH`.
+The file uses `rvw.hart-images/1` from `rvw memory images`. Each row must match
+one declared hart and its captured ELF hash. Relative ELF paths resolve beside
+the manifest. The driver captures all images before compilation. Shared
+segments must have identical address, file bytes and memory size. All other
+segments must be disjoint, including BSS. `--boot-payloads` is incompatible.
+The primary `--elf` remains the legacy C1 identity. `details.hart_images` holds
+all captured identities and entries. Replay includes the manifest path.
+`MultiHartSession` writes one C2/2 trace with per-hart retirement orders,
+reset epochs and completion. It does not infer a memory order from capture.
