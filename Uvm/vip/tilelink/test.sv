@@ -10,6 +10,9 @@ package tilelink_test;
       source=new("source",this); sc=new("sc",this);
     endfunction
     function void connect_phase(uvm_phase phase); source.m.ap.connect(sc.input_port); endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);
+      set_report_severity_action_hier(UVM_FATAL,UVM_DISPLAY|UVM_STOP);
+    endfunction
     task run_phase(uvm_phase phase);
       directed ds=new(); random_sequence rs=new(); error_sequence es=new();
       phase.raise_objection(this); ds.uh=!$test$plusargs("ul");
