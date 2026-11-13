@@ -316,20 +316,23 @@ class Hart:
     def run_debug(self, words, base):
         """Execute program-buffer words in Debug Mode. Returns None on ebreak, or the exception."""
         assert self.debug_mode
-        code = {}
-        for i, word in enumerate(words):
-            code[base + 4 * i] = word
+        code = b''.join(word.to_bytes(4, 'little') for word in words)
         pc = base
         for _ in range(64):
-            if pc not in code:
+            offset = pc - base
+            if pc & 1 or not 0 <= offset <= len(code) - 2:
                 return Trap(FETCH_FAULT, pc)
-            insn = code[pc]
-            if insn == 0x00100073 or insn & 0xffff == 0x9002:   # ebreak / c.ebreak
+            insn = int.from_bytes(code[offset:offset + 2], 'little')
+            length = 2 if insn & 3 != 3 else 4
+            if offset + length > len(code):
+                return Trap(FETCH_FAULT, pc)
+            insn = int.from_bytes(code[offset:offset + length], 'little')
+            if insn in (0x00100073, 0x9002):   # ebreak / c.ebreak
                 return None
-            self.next_pc = pc + (2 if insn & 3 != 3 else 4)
+            self.next_pc = pc + length
             self.pc = pc
             try:
-                self.execute(insn if insn & 3 == 3 else insn & 0xffff, 4 if insn & 3 == 3 else 2)
+                self.execute(insn, length)
             except Trap as trap:
                 return trap
             except DebugEntry:
