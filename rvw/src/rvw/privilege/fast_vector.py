@@ -51,9 +51,11 @@ def programs(config):
 vector_wait:
  j vector_wait
 validation:
+vector_cause_read:
  csrr t0, mcause
  li t1, {cause}
  bne t0, t1, fail
+vector_mepc_read:
  csrr t0, mepc
  la t1, vector_wait
  bne t0, t1, fail
@@ -62,7 +64,8 @@ validation:
                 # External priority was programmed to 0x48. Major default priorities
                 # are implementation-selected AIA values, so do not invent one here.
                 if minor is not None:code+=' li t1, 72\n bne t0, t1, fail\n'
-                code+=f''' csrr t0, 0x346
+                code+=f'''vector_previous_read:
+ csrr t0, 0x346
  srli t0, t0, 8
  andi t0, t0, 511
  li t1, 256
@@ -90,7 +93,8 @@ common_handler:
                 name=f'fast-vector-{major}-{shift}-{low}'
                 events=[baseline(),dict(step=2,kind='fast-source',major=major,minor=minor,level=True,when_pc='vector_wait'),
                         dict(step=3,kind='fast-source',major=major,minor=minor,level=False)]
-                rows.append(dict(id=name,family='smijt',assembly=code,bins=[f'{name}.ialign{ialign}'],events=events,
+                bindings=observation_bindings(dict(major=major,minor=minor))
+                rows.append(dict(id=name,reference_mode='model-observations',model_bindings=bindings,model_required_pcs=[hex(target)],family='smijt',assembly=code,bins=[f'{name}.ialign{ialign}'],events=events,
                     spec_version=FAST,link_options=[f'-Wl,--section-start=.jump_table={base-1024:#x}',
                         f'-Wl,--section-start=.fast_handler={handler:#x}',f'-Wl,--section-start=.fast_common={common:#x}'],
                     reference_model=dict(kind='fast-vector',base=hex(base),shift=shift,major=major,minor=minor,
@@ -105,3 +109,17 @@ def reference(scenario):
     actual=dict(address=hex(address),target=hex(target))
     expected=dict(address=p['address'],target=p['target'])
     return dict(id=scenario['id'],status='pass' if actual==expected else 'fail',evidence='model-based',actual=actual,expected=expected)
+
+
+def observation_bindings(plan):
+    major,minor=plan['major'],plan['minor']
+    cause=(1<<63)|minor if minor is not None else (-major)&((1<<64)-1)
+    return [dict(symbol='vector_cause_read',kind='csr',csr='0x342',expected=[hex(cause)]),
+            dict(symbol='vector_mepc_read',kind='csr',csr='0x341',expected=[{'symbol':'vector_wait'}]),
+            dict(symbol='vector_previous_read',kind='csr',csr='0x346',mask='0x1ff00',expected=['0x10000'])]
+
+
+def observation_pcs(plan):
+    _,target=resolve(int(plan['base'],0),plan['shift'],plan['major'],plan['minor'],
+                     int(plan['entry'],0),int(plan['common'],0),plan['ialign'])
+    return [hex(target)]

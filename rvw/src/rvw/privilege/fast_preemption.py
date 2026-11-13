@@ -30,19 +30,23 @@ main_wait:
 main_done:
  csrw mie, zero
  csrci mstatus, 8
+final_threshold_read:
  csrr t0, 0x347
  li t1, 256
  bne t0, t1, fail
  li t0, 0x12345
  bne s1, t0, fail
+final_top_read:
  csrr t0, 0x348
  bnez t0, fail
  j pass
 irq_handler:
+irq_status_read:
  csrr t0, mstatus
  andi t0, t0, 136
  li t1, 128
  bne t0, t1, fail
+irq_cause_read:
  csrr t0, mcause
  li t1, 0x8000000000000001
  beq t0, t1, outer_handler
@@ -52,9 +56,11 @@ inner_handler:
  li t0, '''+str(1 if preempts else 2)+f'''
  bne s0, t0, fail
  bnez s2, fail
+inner_threshold_read:
  csrr t0, 0x347
  li t1, {inner}
  bne t0, t1, fail
+inner_previous_read:
  csrr t0, 0x346
  srli t0, t0, 8
  andi t0, t0, 511
@@ -65,12 +71,14 @@ inner_handler:
 outer_handler:
  bnez s0, fail
  li s0, 1
+outer_previous_read:
  csrr s4, 0x346
  csrr s6, mepc
  la t0, main_wait
  bltu s6, t0, fail
  la t0, main_done
  bgeu s6, t0, fail
+outer_threshold_read:
  csrr t0, 0x347
  li t1, 72
  bne t0, t1, fail
@@ -110,7 +118,8 @@ stimulus_ack: .dword 0
 '''
             name=f'fast-preemption-{group}-{inner}'
             events=[baseline(),dict(step=2,kind='aclic-edge',source=1,when_pc='main_wait'),dict(step=3,kind='aclic-edge',source=2)]
-            rows.append(dict(id=name,family='smnip',assembly=code,events=events,bins=[name],spec_version=FAST,
+            bindings=observation_bindings(dict(group=group,inner=inner))
+            rows.append(dict(id=name,reference_mode='model-observations',model_bindings=bindings,family='smnip',assembly=code,events=events,bins=[name],spec_version=FAST,
                              reference_model=dict(kind='fast-preemption',group=group,inner=inner,preempts=preempts),
                              reference_unavailable='Spike has no v0.20 ACLIC/Smnip entry model'))
     return rows
@@ -124,3 +133,16 @@ def reference(scenario):
     m.restore_previous(saved);m.ret()
     return dict(id=scenario['id'],status='pass' if eligible==p['preempts'] and restored and m.threshold==256 else 'fail',
                 evidence='model-based',preempts=eligible,outer_threshold_restored=restored,final_threshold=m.threshold)
+
+
+def observation_bindings(plan):
+    inner=plan['inner'];m=NestedPriority(8,plan['group']);m.trap(0x48);preempts=m.eligible(inner)
+    bindings=[dict(symbol='final_threshold_read',kind='csr',csr='0x347',expected=['0x100']),
+        dict(symbol='final_top_read',kind='csr',csr='0x348',expected=['0x0']),
+        dict(symbol='irq_status_read',kind='csr',csr='0x300',mask='0x88',expected=['0x80','0x80']),
+        dict(symbol='irq_cause_read',kind='csr',csr='0x342',expected=['0x8000000000000001','0x8000000000000002']),
+        dict(symbol='inner_threshold_read',kind='csr',csr='0x347',expected=[hex(inner)]),
+        dict(symbol='inner_previous_read',kind='csr',csr='0x346',mask='0x1ff00',expected=[hex((0x48 if preempts else 256)<<8)]),
+        dict(symbol='outer_previous_read',kind='csr',csr='0x346',mask='0x1ff00',expected=['0x10000']),
+        dict(symbol='outer_threshold_read',kind='csr',csr='0x347',expected=['0x48'])]
+    return bindings

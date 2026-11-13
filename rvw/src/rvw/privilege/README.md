@@ -617,3 +617,31 @@ complete long window with missing edges fails. Handshake order and voltage-state
 checks remain required, as does the strict C1 architectural gate. Reports bind
 the edge-capture hash. This checks sampled digital behavior. It cannot detect
 sub-tick pulses or qualify analog voltage, physical timing or PLL behavior.
+
+## Model-based C2 observation groups
+
+Fast-preemption, fast-vector and RERI transaction builds now name their model
+observation sites in the ELF. `privilege check` can compare the C2 values at
+those sites with the pinned Python model. It checks read type, address/CSR,
+privilege mode, mask, count and ordered values. Vector cases also require the
+selected handler address to execute. Each checked instruction must match the
+ELF bytes. A complete C2 end status and matching ELF/core/config identity are
+required. Reference traces are rejected for C1 observation groups.
+
+Results put these checks in `model_subset`, `model_groups` and `model_counts`.
+They say evidence=model-based and bind trace/model-source hashes. Every group
+member must have a conclusive observation result. Missing reads or required PCs,
+unknown versions, changed bindings and incomplete traces remain inconclusive.
+A known value mismatch or failed C1 self-check fails. These groups cover the
+listed reads and code addresses. They do not compare all instructions.
+
+Architectural `groups`, `counts` and overall pass retain the complete strict
+ISA-reference requirement. A passing model group leaves architectural status
+inconclusive when that reference is unavailable. The checker does not run an
+unsupported Spike extension model and mislabel its illegal CSR response as a
+DUT architecture mismatch. Consumers must select the evidence scope they need.
+
+Native Spike/Python-device runs also write `*.reference.jsonl` C2 traces with
+explicit reference/model-based tags. They support oracle smoke tests. They
+cannot earn C1 observation groups. Native backend registration is kept separate
+from campaign-kind lists and has routing regression tests.

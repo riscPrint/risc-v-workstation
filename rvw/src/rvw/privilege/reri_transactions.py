@@ -38,7 +38,7 @@ def programs(config):
     for name,(seed,control,actions) in cases.items():
         all_actions=[('control',(1<<48)|(1<<49)),('status',seed),('control',control)]+actions
         all_actions+=[('control',control|(1<<48)|(1<<49))]
-        code=HEAD;model=Record();events=[];plan=[];expected=[]
+        code=HEAD;model=Record();events=[];plan=[];expected=[];bindings=[]
         for index,(kind,value) in enumerate(all_actions):
             action=dict(kind=kind,value=hex(value),observe=index>0);apply(model,action);plan.append(action)
             if kind=='error':
@@ -50,7 +50,10 @@ def programs(config):
                 code+=f' li a0, {address}\n li a1, {value}\n sd a1, 0(a0)\n fence iorw, iorw\n'
             if not action['observe']:continue
             status=model.status&mask;expected.append(hex(status))
+            label=f'reri_read_{index}'
+            bindings.append(dict(symbol=label,kind='load',address=hex(base+72),width=8,mask=hex(mask),expected=[hex(status)]))
             code+=f''' li a0, {base+72}
+{label}:
  ld t0, 0(a0)
  li t1, {mask}
  and t0, t0, t1
@@ -64,7 +67,7 @@ stimulus_step: .dword 0
 stimulus_ack: .dword 0
 '''
         rows.append(dict(id='reri-transactions-'+name,family='reri',assembly=code,
-            events=events,bins=['reri.transactions.'+name],spec_version=VERSION,
+            events=events,reference_mode='model-observations',model_bindings=bindings,bins=['reri.transactions.'+name],spec_version=VERSION,
             spec='https://github.com/riscv-non-isa/riscv-ras-eri/tree/'+REVISION,
             reference_model=dict(kind='reri-transactions',base=base,actions=plan,mask=hex(mask),expected=expected)))
     return rows
@@ -95,3 +98,13 @@ class Device:
     def event(self,event):
         if event['kind']!='reri-error' or event['record']!=0:raise ValueError('unsupported RERI hardware event')
         self.record.log(event['status'])
+
+
+def observation_bindings(plan):
+    m=Record();bindings=[];mask=int(plan['mask'],0)
+    for index,action in enumerate(plan['actions']):
+        apply(m,action)
+        if action.get('observe',True):
+            bindings.append(dict(symbol=f'reri_read_{index}',kind='load',address=hex(plan['base']+72),
+                                 width=8,mask=hex(mask),expected=[hex(m.status&mask)]))
+    return bindings

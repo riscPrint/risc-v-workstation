@@ -115,8 +115,9 @@ def reference(directory, spike='spike', timeout=2):
         models=[import_module('rvw.privilege.controllers')];rows=[]
         backend=manifest['config']['reference_backend']
         native=backend!='python'
-        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions','spike_reri')}
-        if native and manifest['config'].get('kind')!=native_modules[backend][0]:
+        native_modules={'spike-python-plic':dict(kind='plic-delivery',module='spike_plic'),
+                        'spike-python-reri':dict(kind='reri-transactions',module='spike_reri')}
+        if native and manifest['config'].get('kind')!=native_modules[backend]['kind']:
             raise ValueError('native device backend differs from the selected campaign kind')
         if native and not manifest['config'].get('reference_shim'):
             raise ValueError('native device execution requires reference_shim')
@@ -127,7 +128,7 @@ def reference(directory, spike='spike', timeout=2):
             from rvw.cosim.spike import capture_shim
             capture=Capture(Path(tempfile.mkdtemp(prefix='reference-inputs-',dir=directory))/'inputs')
             shim_inputs=capture_shim(capture,manifest['config']['reference_shim'])
-            native_runner=import_module('rvw.privilege.'+native_modules[backend][1])
+            native_runner=import_module('rvw.privilege.'+native_modules[backend]['module'])
             models.extend([native_runner,import_module('rvw.privilege.spike_device'),import_module('rvw.privilege.events')])
             models.extend(import_module('rvw.cosim.'+n) for n in ('spike','elf','platform'))
         for scenario in manifest['scenarios']:
@@ -203,11 +204,14 @@ def check(directory, results, platform, timeout=10):
             and (not scenario.get('stimulus_sha256') or getattr(r,'extra',{}).get('stimulus_sha256')==scenario['stimulus_sha256'])]
         row = dict(id=scenario['id'], status='inconclusive', bins=scenario['bins'],
                    reason='need one conclusive C1 result', comparison=None)
+        if scenario.get('reference_mode')=='model-observations':
+            row['model_subset']=dict(status='inconclusive',evidence='model-based',reason='need conclusive C1 and complete model observations')
         if len(candidates) == 1:
             run = candidates[0]
             row['c1_sha256'] = digest(run.path / 'result.json')
             if not run.why_inconclusive and run.status != 'pass':
                 row.update(status='fail', reason='C1 self-check failed')
+                if 'model_subset' in row:row['model_subset'].update(status='fail',reason='C1 self-check failed')
                 rows.append(row)
                 continue
             if scenario.get('timer_contract'):
@@ -294,6 +298,17 @@ def check(directory, results, platform, timeout=10):
                     row.update(status=observed['status'], reason=observed['reason'])
                     rows.append(row)
                     continue
+            if scenario.get('reference_mode')=='model-observations':
+                if not run.why_inconclusive:
+                    trace=run.artifacts.get('rvfi_trace')
+                    if trace and (run.path/trace).is_file():
+                        from .model_observe import observe
+                        observed=observe(elf,scenario,run.path/trace,c1_identity=dict(core=getattr(run,'core',None),config=getattr(run,'config',None)))
+                        row['model_subset']=observed
+                        if observed['status']=='fail':row.update(status='fail',reason='model-based observation mismatch')
+                        else:row['reason']='complete ISA reference unavailable; see separately scoped model_subset'
+                rows.append(row)
+                continue
             if not run.why_inconclusive and run.status != 'pass':
                 row.update(status='fail', reason='C1 self-check failed')
             elif not run.why_inconclusive:
@@ -318,6 +333,11 @@ def check(directory, results, platform, timeout=10):
     groups = {}
     for name in sorted({b for r in rows for b in r['bins']}):
         groups[name] = verdict([r for r in rows if name in r['bins']])
+    model_groups={}
+    for name in sorted({b for r in rows if 'model_subset' in r for b in r['bins']}):
+        model_groups[name]=verdict([r.get('model_subset',dict(status='inconclusive')) for r in rows if name in r['bins']])
     return dict(schema='rvw.privilege-check/1', manifest_sha256=digest(directory / 'manifest.json'),
-                status=verdict(rows), scenarios=rows, groups=groups,
+                status=verdict(rows), scenarios=rows, groups=groups,model_groups=model_groups,
+                model_scope='model-based CSR/MMIO observations only; no complete ISA comparison',
+                model_counts={s:list(model_groups.values()).count(s) for s in ('pass','fail','inconclusive')},
                 counts={status: list(groups.values()).count(status) for status in ('pass', 'fail', 'inconclusive')})
