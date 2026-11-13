@@ -21,7 +21,7 @@ object SmpAdapter extends CoreAdapter {
   override def hartIds(config: String) = 0 until VexiiTop.count(config)
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath, "RVW_VEX_LOCK" -> "vex-mem") ++
-    Seq("RVW_SMP_MAX_DELAY", "RVW_SMP_READY_PERCENT", "RVW_SMP_CLOCK_PERCENT")
+    Seq("RVW_SMP_MAX_DELAY", "RVW_SMP_READY_PERCENT", "RVW_SMP_CLOCK_PERCENT", "RVW_SMP_PLIC_SOURCE_MASK")
       .flatMap(name => sys.env.get(name).map(name -> _))
   private def report(key: ModelKey, work: File) = RiscvSimConfig.elaborate(key, work,
     VexiiTop.spinalConfig, sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new SmpTop(key.config))
@@ -43,6 +43,10 @@ object SmpAdapter extends CoreAdapter {
     val maxDelay = setting("RVW_SMP_MAX_DELAY", 3, 0, 1024)
     val readyPercent = setting("RVW_SMP_READY_PERCENT", 100, 1, 100)
     val clockPercent = setting("RVW_SMP_CLOCK_PERCENT", 100, 1, 100)
+    val plicMask = setting("RVW_SMP_PLIC_SOURCE_MASK", 0, 0, 254)
+    require((plicMask & 1) == 0, "PLIC source zero is reserved")
+    val plicClaims = Array.fill(hartIds(job.config).size)(0L)
+    val plicCompletions = Array.fill(hartIds(job.config).size)(0L)
     val ids = hartIds(job.config)
     val clockStalls = Array.fill(ids.size)(0L)
     val hsmMode = job.config == "hsm2"
@@ -85,6 +89,7 @@ object SmpAdapter extends CoreAdapter {
       val random = new scala.util.Random(job.seed)
       def selected(percent: Int): Boolean = percent == 100 || random.nextInt(100) < percent
       val devices = new Devices(ids.size)
+      (1 to 7).foreach(i => devices.source(i,(plicMask & (1 << i)) != 0))
       val privs = top.cores.map(_.host[PrivilegedPlugin].logic)
       case class Response(due: Long, data: BigInt, error: Boolean, id: Int, miss: Boolean = false)
       val fetchQueues = ids.map(_ => mutable.Queue.empty[Response])
@@ -148,6 +153,7 @@ object SmpAdapter extends CoreAdapter {
       cd.onSamplings {
         cycle = ctl.cycle + 1
         devices.time += 1
+        ids.foreach { h => plicClaims(h)=devices.claims(h); plicCompletions(h)=devices.completions(h) }
         val enabled = top.enables.toBigInt
         for(h <- random.shuffle(ids.toList)) {
           val dut = top.cores(h)
@@ -287,6 +293,9 @@ object SmpAdapter extends CoreAdapter {
     details("memory_dependencies") = "unavailable"
     details("memory_service") = "simulation"
     details("cache_coherence") = "not_present"
+    details("plic") = ujson.Obj("source_mask"->plicMask,
+      "claims"->ujson.Arr.from(plicClaims.toSeq.map(v=>ujson.Num(v.toDouble))), "completions"->ujson.Arr.from(plicCompletions.toSeq.map(v=>ujson.Num(v.toDouble))),
+      "scope"->"simulation PLIC model; CPU MMIO claim/complete")
     details("timing") = ujson.Obj("seed" -> job.seed, "random_max_delay" -> maxDelay,
       "ready_percent" -> readyPercent, "clock_enable_percent" -> clockPercent,
       "fixed_latency" -> job.memLatency.map(v => ujson.Num(v)).getOrElse(ujson.Null),

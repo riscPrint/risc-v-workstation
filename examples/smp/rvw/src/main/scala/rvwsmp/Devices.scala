@@ -6,6 +6,8 @@ class Devices(harts: Int) {
   val msip = Array.fill(harts)(false)
   val compare = Array.fill(harts)(mask64)
   var time = BigInt(0)
+  val claims = Array.fill(harts)(0L)
+  val completions = Array.fill(harts)(0L)
   val priority = Array.fill(8)(0)
   val enable = Array.fill(harts)(0)
   val threshold = Array.fill(harts)(0)
@@ -29,7 +31,7 @@ class Devices(harts: Int) {
       val h=((a-0xc200000L)/0x1000).toInt
       (a-0xc200000L)%0x1000 match {
         case 0 => BigInt(threshold(h))
-        case 4 => val id=claim(h); if(claimRead && id!=0) busy(id)=true; BigInt(id)
+        case 4 => val id=claim(h); if(claimRead && id!=0) { busy(id)=true; claims(h)+=1 }; BigInt(id)
         case _ => BigInt(0)
       }
     } else BigInt(0)
@@ -55,7 +57,7 @@ class Devices(harts: Int) {
         val h=((a-0xc200000L)/0x1000).toInt
         (a-0xc200000L)%0x1000 match {
           case 0 => threshold(h)=(d&7).toInt
-          case 4 => if(d>=1 && d<=7 && (enable(h)&(1 << d.toInt))!=0) busy(d.toInt)=false
+          case 4 => if(d>=1 && d<=7 && busy(d.toInt) && (enable(h)&(1 << d.toInt))!=0) { busy(d.toInt)=false; completions(h)+=1 }
           case _ =>
         }
       }

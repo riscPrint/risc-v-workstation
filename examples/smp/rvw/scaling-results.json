@@ -1,0 +1,888 @@
+{
+  "schema": "rvw.smp-scaling/1",
+  "runs": [
+    {
+      "run": "smoke-2-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 144,
+      "instret": 23,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "0682180b45256e52c7b948b5a83d95a1734bf5f193e69e31462b4073e3390dbf",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 145,
+        "clock_stall_edges": {
+          "0": 37,
+          "1": 39
+        }
+      },
+      "c1_wall_s": 35.31,
+      "simulation_wall_s": 0.9645710000000001
+    },
+    {
+      "run": "plic-race-2-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 1979,
+      "instret": 485,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 236,
+        "1": 249
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "a7c59329ad4f0a92ccf745bee56f3f343934a372fe83606cb4cf78b0f1da28d9",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          3,
+          5
+        ],
+        "completions": [
+          3,
+          5
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 1980,
+        "clock_stall_edges": {
+          "0": 584,
+          "1": 584
+        }
+      },
+      "c1_wall_s": 3.98,
+      "simulation_wall_s": 3.968668
+    },
+    {
+      "run": "smoke-3-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 157,
+      "instret": 35,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "b3f7fe7748da19ff3ec859bb2ec735848093510d6edc25f4b6157aba57548bd3",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass"
+      },
+      "trace_sha256": "0cf7aee256c5e138cd70e0886048d06bcb3ae6ce36598fa0073afdd0c0d21d4d",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 158,
+        "clock_stall_edges": {
+          "0": 36,
+          "1": 43,
+          "2": 38
+        }
+      },
+      "c1_wall_s": 26.48,
+      "simulation_wall_s": 0.529412
+    },
+    {
+      "run": "plic-race-3-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 1930,
+      "instret": 697,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "b3f7fe7748da19ff3ec859bb2ec735848093510d6edc25f4b6157aba57548bd3",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 229,
+        "1": 237,
+        "2": 231
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass"
+      },
+      "trace_sha256": "63c8f94b403192b69609017d5dfce4b9e82c05d3d1651343c66a0769da91f942",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          2,
+          4,
+          2
+        ],
+        "completions": [
+          2,
+          4,
+          2
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 1931,
+        "clock_stall_edges": {
+          "0": 575,
+          "1": 558,
+          "2": 597
+        }
+      },
+      "c1_wall_s": 1.27,
+      "simulation_wall_s": 1.263995
+    },
+    {
+      "run": "smoke-4-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 141,
+      "instret": 45,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "551037b7592a5e220a26f5d06550eed6e6be20a1a397494d3a993214398b4085",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 11,
+        "3": 11
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass"
+      },
+      "trace_sha256": "c7b6707430e6fa0dab1381ce1e91539875faf3a38e39ec6e6e5fa021c285d905",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 142,
+        "clock_stall_edges": {
+          "0": 44,
+          "1": 41,
+          "2": 41,
+          "3": 32
+        }
+      },
+      "c1_wall_s": 29.81,
+      "simulation_wall_s": 0.5313049999999999
+    },
+    {
+      "run": "plic-race-4-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 1908,
+      "instret": 914,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "551037b7592a5e220a26f5d06550eed6e6be20a1a397494d3a993214398b4085",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 224,
+        "1": 228,
+        "2": 228,
+        "3": 234
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass"
+      },
+      "trace_sha256": "db59240582cbb7f70e2d06f709f2c786f9587e58aa40aa91de40aff6b9c41772",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          1,
+          2,
+          2,
+          3
+        ],
+        "completions": [
+          1,
+          2,
+          2,
+          3
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 1909,
+        "clock_stall_edges": {
+          "0": 569,
+          "1": 576,
+          "2": 550,
+          "3": 557
+        }
+      },
+      "c1_wall_s": 2.47,
+      "simulation_wall_s": 2.463466
+    },
+    {
+      "run": "smoke-5-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 153,
+      "instret": 59,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "50f6976660d28385ded1b8384c87bf0285567e3e944744bbd1df3ba8631deee2",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 12,
+        "3": 12,
+        "4": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass"
+      },
+      "trace_sha256": "1676146e26318548bd2a6706d6b3f7524b4dfb2c01ac88065fb5ab1f08726d05",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 154,
+        "clock_stall_edges": {
+          "0": 40,
+          "1": 45,
+          "2": 35,
+          "3": 42,
+          "4": 43
+        }
+      },
+      "c1_wall_s": 34.26,
+      "simulation_wall_s": 0.43443400000000004
+    },
+    {
+      "run": "plic-race-5-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2014,
+      "instret": 1177,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "50f6976660d28385ded1b8384c87bf0285567e3e944744bbd1df3ba8631deee2",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 239,
+        "1": 234,
+        "2": 231,
+        "3": 233,
+        "4": 240
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass"
+      },
+      "trace_sha256": "637cdb5f379476c5559f612832f47c8e341b215c5b302ba493f44df7a47bd85d",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          2,
+          2,
+          1,
+          1,
+          2
+        ],
+        "completions": [
+          2,
+          2,
+          1,
+          1,
+          2
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2015,
+        "clock_stall_edges": {
+          "0": 590,
+          "1": 605,
+          "2": 585,
+          "3": 609,
+          "4": 599
+        }
+      },
+      "c1_wall_s": 1.43,
+      "simulation_wall_s": 1.429486
+    },
+    {
+      "run": "smoke-6-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 140,
+      "instret": 71,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "e1afdfe60cd5ea2eff47064126b9adf7d705048f79a66866a84d474fd9b2a750",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 12,
+        "3": 12,
+        "4": 12,
+        "5": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass"
+      },
+      "trace_sha256": "1aef95f00649d5274db63e5cb09e43395d8d3a6c09248fdce997161607035bc6",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 141,
+        "clock_stall_edges": {
+          "0": 40,
+          "1": 38,
+          "2": 39,
+          "3": 43,
+          "4": 40,
+          "5": 33
+        }
+      },
+      "c1_wall_s": 36.39,
+      "simulation_wall_s": 0.255801
+    },
+    {
+      "run": "plic-race-6-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2043,
+      "instret": 1406,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "e1afdfe60cd5ea2eff47064126b9adf7d705048f79a66866a84d474fd9b2a750",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 245,
+        "1": 240,
+        "2": 240,
+        "3": 225,
+        "4": 231,
+        "5": 225
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass"
+      },
+      "trace_sha256": "11d51fd82bfd90a953b1dac8f7db6e36485d0f1e4638be5b5ef9d18bd1f1d296",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          2,
+          2,
+          2,
+          0,
+          2,
+          0
+        ],
+        "completions": [
+          2,
+          2,
+          2,
+          0,
+          2,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2044,
+        "clock_stall_edges": {
+          "0": 593,
+          "1": 572,
+          "2": 594,
+          "3": 579,
+          "4": 630,
+          "5": 605
+        }
+      },
+      "c1_wall_s": 2.81,
+      "simulation_wall_s": 2.812017
+    },
+    {
+      "run": "smoke-7-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 148,
+      "instret": 83,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "efe1096fa96aa7dd2e0af3fd2803fcc24c837748e24b89d8465ef6b0afa65b28",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 12,
+        "3": 12,
+        "4": 12,
+        "5": 12,
+        "6": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass",
+        "6": "pass"
+      },
+      "trace_sha256": "9f83492c0e10821d579a95c9a28294f255d1202525ea80095fead6aaf6e6fbfc",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 149,
+        "clock_stall_edges": {
+          "0": 40,
+          "1": 37,
+          "2": 44,
+          "3": 37,
+          "4": 46,
+          "5": 37,
+          "6": 39
+        }
+      },
+      "c1_wall_s": 32.4,
+      "simulation_wall_s": 0.33681700000000003
+    },
+    {
+      "run": "plic-race-7-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2115,
+      "instret": 1679,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "efe1096fa96aa7dd2e0af3fd2803fcc24c837748e24b89d8465ef6b0afa65b28",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 245,
+        "1": 240,
+        "2": 234,
+        "3": 228,
+        "4": 240,
+        "5": 246,
+        "6": 246
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass",
+        "6": "pass"
+      },
+      "trace_sha256": "bc77b21e019eb155d8db03bd1f14f7efb2fa22b15c0eef0512d9a78801b2a16a",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          2,
+          1,
+          0,
+          0,
+          0,
+          3,
+          2
+        ],
+        "completions": [
+          2,
+          1,
+          0,
+          0,
+          0,
+          3,
+          2
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2116,
+        "clock_stall_edges": {
+          "0": 662,
+          "1": 632,
+          "2": 649,
+          "3": 597,
+          "4": 628,
+          "5": 629,
+          "6": 618
+        }
+      },
+      "c1_wall_s": 0.67,
+      "simulation_wall_s": 0.667691
+    },
+    {
+      "run": "smoke-8-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 163,
+      "instret": 95,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "512d6263a181906e83647def581c4ddb65344aa47442222312edaadc0ea75c8e",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 11,
+        "1": 12,
+        "2": 12,
+        "3": 13,
+        "4": 11,
+        "5": 12,
+        "6": 12,
+        "7": 12
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass",
+        "6": "pass",
+        "7": "pass"
+      },
+      "trace_sha256": "7423ac8b4e165b65e2a6d34f608c06b8e24777a7e37730551278f4df5b4d7a5e",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "completions": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 164,
+        "clock_stall_edges": {
+          "0": 40,
+          "1": 53,
+          "2": 44,
+          "3": 41,
+          "4": 51,
+          "5": 40,
+          "6": 50,
+          "7": 43
+        }
+      },
+      "c1_wall_s": 39.29,
+      "simulation_wall_s": 0.05709
+    },
+    {
+      "run": "plic-race-8-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2148,
+      "instret": 1938,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "85fcf772927baa20ec6e8af4e4d5e06f4c4b5a9b",
+      "tools_dirty": true,
+      "rtl_sha256": "512d6263a181906e83647def581c4ddb65344aa47442222312edaadc0ea75c8e",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 239,
+        "1": 244,
+        "2": 237,
+        "3": 240,
+        "4": 240,
+        "5": 246,
+        "6": 237,
+        "7": 255
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass",
+        "2": "pass",
+        "3": "pass",
+        "4": "pass",
+        "5": "pass",
+        "6": "pass",
+        "7": "pass"
+      },
+      "trace_sha256": "16e85a3ea0e53501f365a845b9a18fc749fed0d48b123daca23e991c8efb01a7",
+      "plic": {
+        "source_mask": 2,
+        "claims": [
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          3
+        ],
+        "completions": [
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          3
+        ],
+        "scope": "simulation PLIC model; CPU MMIO claim/complete"
+      },
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2149,
+        "clock_stall_edges": {
+          "0": 641,
+          "1": 630,
+          "2": 614,
+          "3": 621,
+          "4": 634,
+          "5": 610,
+          "6": 629,
+          "7": 670
+        }
+      },
+      "c1_wall_s": 1.21,
+      "simulation_wall_s": 1.173628
+    }
+  ],
+  "scope": "finite cacheless RTL runs; PLIC is a simulation model; simulation time excludes model build"
+}
