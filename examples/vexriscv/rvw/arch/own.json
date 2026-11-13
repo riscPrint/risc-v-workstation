@@ -1,0 +1,54 @@
+{
+  "ram_bytes": 16777216,
+  "schema": "rvw.arch-core/1",
+  "kind": "minor",
+  "config": "rv32im",
+  "isa": "rv32im",
+  "cpu": {
+    "executeIssueLimit": 1,
+    "executeCommitLimit": 1
+  },
+  "queues": [],
+  "predictor": null,
+  "icache": null,
+  "dcache": null,
+  "itlb_entries": 1,
+  "dtlb_entries": 1,
+  "line_bytes": 64,
+  "bus_bytes": 4,
+  "memory_latency": 1,
+  "ooo": {
+    "fetch_width": 1,
+    "fetch_entries": 2,
+    "rename_width": 1,
+    "rob_entries": 5,
+    "issue_width": 1,
+    "issue_entries": 2,
+    "load_entries": 1,
+    "store_entries": 1,
+    "commit_width": 1,
+    "issue_order": "in_order",
+    "latencies": {
+      "alu": 1,
+      "multiply": 3,
+      "divide": 34,
+      "load": 3,
+      "store": 1,
+      "branch": 2,
+      "jump": 2,
+      "csr": 1,
+      "fence": 1,
+      "system": 1
+    },
+    "branch_penalty": 3,
+    "frontend": {
+      "decode_width": 1,
+      "decode_entries": 2,
+      "decode_latency": 1,
+      "fetch_latency": 3,
+      "ftq_entries": 2,
+      "block_bytes": 4,
+      "predictor_latency": 1
+    }
+  }
+}

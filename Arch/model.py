@@ -51,8 +51,8 @@ def validate_description(d):
     _keys({k: v for k, v in d.items() if k not in ("soc", "ram_bytes", "ooo")}, ("schema", "config", "isa", "kind", "cpu", "queues", "predictor",
               "icache", "dcache", "itlb_entries", "dtlb_entries", "line_bytes",
               "bus_bytes", "memory_latency"), "description")
-    if "ooo" in d and (not isinstance(d["ooo"], dict) or d.get("kind") != "o3"):
-        raise ValueError("ooo parameters require an O3 description and an object")
+    if "ooo" in d and (not isinstance(d["ooo"], dict) or d.get("kind") not in ("o3", "minor")):
+        raise ValueError("ooo parameters require an O3 or Minor description and an object")
     ram_bytes = d.get("ram_bytes", RAM_SIZE)
     _integer(ram_bytes, "ram_bytes")
     if ram_bytes > RAM_SIZE or ram_bytes % 4096:

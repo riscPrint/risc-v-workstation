@@ -1,0 +1,351 @@
+{
+  "schema": "rvw.arch-rtl-correlation-sample/1",
+  "conditions": {
+    "seed": 1,
+    "mem_latency": 0,
+    "region": "whole-program",
+    "vexriscv_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+    "vexriscv_core_sources": "unchanged from baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+    "vexiiriscv_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "training": [
+      "chain",
+      "multiply",
+      "memory"
+    ],
+    "heldout": [
+      "independent",
+      "divide",
+      "branch"
+    ]
+  },
+  "results": {
+    "vexriscv": {
+      "best": {
+        "id": 15,
+        "values": {
+          "branch_penalty": 7,
+          "frontend.fetch_latency": 4
+        },
+        "score": 0.0164925783397471
+      },
+      "samples": [
+        {
+          "id": "chain",
+          "split": "training",
+          "instret": 1010,
+          "rtl_cycles": 3638,
+          "rtl_ipc": 0.27762506871907644,
+          "baseline_cycles": 2417,
+          "baseline_ipc": 0.4178733967728589,
+          "baseline_ipc_error_percent": 50.51717004551095,
+          "fitted_cycles": 3518,
+          "fitted_ipc": 0.2870949403069926,
+          "fitted_ipc_error_percent": 3.4110289937464344,
+          "hashes": {
+            "c1": "69c27875fd02eae9d10a8eacc12b44acd527fb86af21e13d023c3e611fd74ee8",
+            "elf": "9c022c106352ed42d5c04395c678391d94bdc77b2f82f9fe94971cf942a59f46",
+            "events": "c8bad24aa426a76ab83adb0a40a0a536841605fe3f5fa57606eb38a3bcac2687",
+            "trace": "495508c349aedf726a66f5812a4414da5cea5a638d1f07013ad59c20c437f794"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 200,
+              "modeled": 200,
+              "status": "reported"
+            }
+          }
+        },
+        {
+          "id": "multiply",
+          "split": "training",
+          "instret": 1010,
+          "rtl_cycles": 3638,
+          "rtl_ipc": 0.27762506871907644,
+          "baseline_cycles": 2417,
+          "baseline_ipc": 0.4178733967728589,
+          "baseline_ipc_error_percent": 50.51717004551095,
+          "fitted_cycles": 3518,
+          "fitted_ipc": 0.2870949403069926,
+          "fitted_ipc_error_percent": 3.4110289937464344,
+          "hashes": {
+            "c1": "9232b49f4597866467b011b2d2376a09722c4afc0b7f0b232a3681b2628b5349",
+            "elf": "b13624e45d55d2682cb91862b887d42eb3ccffc045de15452f644fa6c508228e",
+            "events": "66e04d4431d31cc236754fee339b912a6adcee739081b2b72a12b0f6a29d9f15",
+            "trace": "841a6f9f354cb5bb72487bbe7fa41db8b2238795af2bddad01f42421423cbc69"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 200,
+              "modeled": 200,
+              "status": "reported"
+            }
+          }
+        },
+        {
+          "id": "memory",
+          "split": "training",
+          "instret": 1010,
+          "rtl_cycles": 3638,
+          "rtl_ipc": 0.27762506871907644,
+          "baseline_cycles": 2417,
+          "baseline_ipc": 0.4178733967728589,
+          "baseline_ipc_error_percent": 50.51717004551095,
+          "fitted_cycles": 3518,
+          "fitted_ipc": 0.2870949403069926,
+          "fitted_ipc_error_percent": 3.4110289937464344,
+          "hashes": {
+            "c1": "21692b7d49fb35647e69e0197ddb24e2b63507e2dcd8561f380220fb0a777129",
+            "elf": "9a1a7bcbc88503ab9f3d3d69aed84f7860fd300c32dd8239e2fcbe26d3bc65bf",
+            "events": "cb0d0be46ee859f6dd029ed92870da5d7cd1890bc8f01555f15ab3dc841a8744",
+            "trace": "d2447935037c7bec225d71c7a5505bc189c06c28fe0681273bce6896b85c3594"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 200,
+              "modeled": 200,
+              "status": "reported"
+            }
+          }
+        },
+        {
+          "id": "independent",
+          "split": "heldout",
+          "instret": 1010,
+          "rtl_cycles": 3638,
+          "rtl_ipc": 0.27762506871907644,
+          "baseline_cycles": 2417,
+          "baseline_ipc": 0.4178733967728589,
+          "baseline_ipc_error_percent": 50.51717004551095,
+          "fitted_cycles": 3518,
+          "fitted_ipc": 0.2870949403069926,
+          "fitted_ipc_error_percent": 3.4110289937464344,
+          "hashes": {
+            "c1": "cc0423d96d84e26223e836cf475851e63034c22c255227a9fd5aa69bf2fbdd03",
+            "elf": "42daacf6ab47f9e2e0158c7167b1072aafa2d4e0160684bed8bdfd78770ce896",
+            "events": "0dff138ca35d4516ea9eb23828d390515de2caaa98ccb723df9859d5151821d6",
+            "trace": "0fc526f7c89bd1a950cc588e9e321cbbbf0cd6c14596e23cb15a02f5f7df594b"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 200,
+              "modeled": 200,
+              "status": "reported"
+            }
+          }
+        },
+        {
+          "id": "divide",
+          "split": "heldout",
+          "instret": 1010,
+          "rtl_cycles": 10038,
+          "rtl_ipc": 0.10061765291890815,
+          "baseline_cycles": 8216,
+          "baseline_ipc": 0.12293086660175268,
+          "baseline_ipc_error_percent": 22.17624148003896,
+          "fitted_cycles": 9016,
+          "fitted_ipc": 0.11202307009760426,
+          "fitted_ipc_error_percent": 11.335403726708071,
+          "hashes": {
+            "c1": "bc28f86e593f7970cbe7829e3855339700d00ae078017b695a2c7b07090fc1f4",
+            "elf": "af27283845e0e20f20a6e5049720d0b03288ff50b4a88e884c9601311c252793",
+            "events": "786a07f17bb48f3481415b90485b8c4bf885abeccc81102248823241fa43af65",
+            "trace": "1df80241bbb5c13d40c210ffda890c731074401787fa2747f2783e57fbcec6af"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 200,
+              "modeled": 200,
+              "status": "reported"
+            }
+          }
+        },
+        {
+          "id": "branch",
+          "split": "heldout",
+          "instret": 1110,
+          "rtl_cycles": 4238,
+          "rtl_ipc": 0.26191599811231714,
+          "baseline_cycles": 3167,
+          "baseline_ipc": 0.3504894221660878,
+          "baseline_ipc_error_percent": 33.817492895484705,
+          "fitted_cycles": 4518,
+          "fitted_ipc": 0.2456839309428951,
+          "fitted_ipc_error_percent": -6.197432492253208,
+          "hashes": {
+            "c1": "180e62ab0fa701b4474159b8f679999a4f365c8a49cd595d40658df106bfe1c4",
+            "elf": "4d035169f41d0bb36d1dea35be3d2f1c658f0fbee915a625bd1e401847f16ec9",
+            "events": "c772920e4aea0d4e13606f65cc67f5b59364a6e376ce7b759964e506536ae71d",
+            "trace": "2b5711f4a2bcbe27f1fbe3c7607a4815baa68610c83305d4f89075a212640e03"
+          },
+          "rtl_events": {
+            "branches": {
+              "error_percent": 0.0,
+              "measured": 400,
+              "modeled": 400,
+              "status": "reported"
+            }
+          }
+        }
+      ],
+      "budgets": {
+        "ipc_percent": 10,
+        "nonzero_event_percent": 15,
+        "observed_events_within_budget": true,
+        "observed_ipc_within_budget": false,
+        "sufficient_coverage": false
+      },
+      "baseline_engine_sha256": "1a7bdc1a1e4b93fcfc16302669038108f3a061699e8e94aa10d0e0c583143a9b"
+    },
+    "vexiiriscv": {
+      "best": {
+        "id": 14,
+        "values": {
+          "branch_penalty": 7,
+          "frontend.fetch_latency": 3
+        },
+        "score": 0.09118915673600266
+      },
+      "samples": [
+        {
+          "id": "chain",
+          "split": "training",
+          "instret": 1011,
+          "rtl_cycles": 4058,
+          "rtl_ipc": 0.2491375061606703,
+          "baseline_cycles": 2420,
+          "baseline_ipc": 0.4177685950413223,
+          "baseline_ipc_error_percent": 67.68595041322311,
+          "fitted_cycles": 3216,
+          "fitted_ipc": 0.314365671641791,
+          "fitted_ipc_error_percent": 26.18159203980097,
+          "hashes": {
+            "c1": "f5eda2ea4ef4435eea490828dff28dc1b02e9638fd953fc6320a501359c5a04a",
+            "elf": "9c022c106352ed42d5c04395c678391d94bdc77b2f82f9fe94971cf942a59f46",
+            "events": "39d6e9e1448d3681f9a797c52bbc2a7d50fbbaae28d11cb68f72c54117e02511",
+            "trace": "3252411a2757cab9b4fa28ab99429054530a4918e570ef64b69631d874237c30"
+          },
+          "rtl_events": {}
+        },
+        {
+          "id": "multiply",
+          "split": "training",
+          "instret": 1011,
+          "rtl_cycles": 3058,
+          "rtl_ipc": 0.33060824068018313,
+          "baseline_cycles": 2420,
+          "baseline_ipc": 0.4177685950413223,
+          "baseline_ipc_error_percent": 26.363636363636367,
+          "fitted_cycles": 3216,
+          "fitted_ipc": 0.314365671641791,
+          "fitted_ipc_error_percent": -4.912935323383094,
+          "hashes": {
+            "c1": "3dfac5693bce169c40a4e5978f0ee0da033f2b6486ec11c392d688ff55d58356",
+            "elf": "b13624e45d55d2682cb91862b887d42eb3ccffc045de15452f644fa6c508228e",
+            "events": "dad7ba7c1b09dc6abeceed68a5815c628a008253614665c240a040ee533867db",
+            "trace": "eb0df9239fe520648c095e63a65d43daf00beb71e5a334ffea634873d3f48f26"
+          },
+          "rtl_events": {}
+        },
+        {
+          "id": "memory",
+          "split": "training",
+          "instret": 1011,
+          "rtl_cycles": 3262,
+          "rtl_ipc": 0.3099325567136726,
+          "baseline_cycles": 2419,
+          "baseline_ipc": 0.4179412980570484,
+          "baseline_ipc_error_percent": 34.849111202976445,
+          "fitted_cycles": 3215,
+          "fitted_ipc": 0.3144634525660964,
+          "fitted_ipc_error_percent": 1.4618973561430826,
+          "hashes": {
+            "c1": "2ed17d5e33db4a317116ce7baf61ef1ca48295e4aa432bbb8677d2ce77087ae5",
+            "elf": "9a1a7bcbc88503ab9f3d3d69aed84f7860fd300c32dd8239e2fcbe26d3bc65bf",
+            "events": "ec325dfd5367d7f4a1076c4f262e63e213636f67aacf1c33e6f4a414cf603151",
+            "trace": "f548654557194bac163a7dd76ee2abd6fd5e909d373939a04f5ac91245057d71"
+          },
+          "rtl_events": {}
+        },
+        {
+          "id": "independent",
+          "split": "heldout",
+          "instret": 1011,
+          "rtl_cycles": 2458,
+          "rtl_ipc": 0.4113100081366965,
+          "baseline_cycles": 2420,
+          "baseline_ipc": 0.4177685950413223,
+          "baseline_ipc_error_percent": 1.5702479338842945,
+          "fitted_cycles": 3216,
+          "fitted_ipc": 0.314365671641791,
+          "fitted_ipc_error_percent": -23.56965174129354,
+          "hashes": {
+            "c1": "c7747a860abfdf7de7765ebacc20bba6303652186f66018473b082f0fae41924",
+            "elf": "42daacf6ab47f9e2e0158c7167b1072aafa2d4e0160684bed8bdfd78770ce896",
+            "events": "f3c626eb5f4aec3b32f13b86ef20545e5b7cb884c204c2cfbd6970544ca8fa3f",
+            "trace": "2bca9c0965ca11c96d43a005e412124008152d1adf647d5632acdc4875ad6dea"
+          },
+          "rtl_events": {}
+        },
+        {
+          "id": "divide",
+          "split": "heldout",
+          "instret": 1011,
+          "rtl_cycles": 6298,
+          "rtl_ipc": 0.16052715147665925,
+          "baseline_cycles": 8218,
+          "baseline_ipc": 0.12302263324409832,
+          "baseline_ipc_error_percent": -23.36334874665369,
+          "fitted_cycles": 9014,
+          "fitted_ipc": 0.1121588639893499,
+          "fitted_ipc_error_percent": -30.130907477257594,
+          "hashes": {
+            "c1": "220b8fc23418f03199d227df24f907a75f9a5a75a24b78e5e53f336f571fe44f",
+            "elf": "af27283845e0e20f20a6e5049720d0b03288ff50b4a88e884c9601311c252793",
+            "events": "f22ffda2558771ee5df36d5df13c75171d1ad1c5b7c08eea5e1193e5cf2b5d21",
+            "trace": "4e7e44f7ad84bb707bad713d2b1d787ad03e894cc5be0b1bf1fa04d3b199e152"
+          },
+          "rtl_events": {}
+        },
+        {
+          "id": "branch",
+          "split": "heldout",
+          "instret": 1111,
+          "rtl_cycles": 4158,
+          "rtl_ipc": 0.2671957671957672,
+          "baseline_cycles": 3170,
+          "baseline_ipc": 0.3504731861198738,
+          "baseline_ipc_error_percent": 31.167192429022084,
+          "fitted_cycles": 4366,
+          "fitted_ipc": 0.2544663307375172,
+          "fitted_ipc_error_percent": -4.764086120018329,
+          "hashes": {
+            "c1": "dac926625830c1ef3a68c1326e10ede571fb13c7316bad7b61fe6ff2e8f5a594",
+            "elf": "4d035169f41d0bb36d1dea35be3d2f1c658f0fbee915a625bd1e401847f16ec9",
+            "events": "ff6da44abacad4a82f678eda899d860efebf72ddfaea228ea0cbb697d9207d3f",
+            "trace": "14ea8ac4b3900eaf0e34a96e4d0760f512bc229ea548f33e553b22936e3dd1b5"
+          },
+          "rtl_events": {}
+        }
+      ],
+      "budgets": {
+        "ipc_percent": 10,
+        "nonzero_event_percent": 15,
+        "observed_events_within_budget": false,
+        "observed_ipc_within_budget": false,
+        "sufficient_coverage": false
+      },
+      "baseline_engine_sha256": "1a7bdc1a1e4b93fcfc16302669038108f3a061699e8e94aa10d0e0c583143a9b"
+    }
+  },
+  "limits": [
+    "six small synthetic RV32IM programs; not application qualification",
+    "one native run per program; repeatability is unmeasured",
+    "VexiiRiscv has no SpinalProbes binding; its event map is empty",
+    "the fit grid changes fetch delay and branch penalty only"
+  ]
+}

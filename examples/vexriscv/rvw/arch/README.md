@@ -68,3 +68,20 @@ and other event errors are measurements of model gaps. They are not a general
 fidelity verdict. Cache misses, speculative work, stall causes and replay
 causes remain unsupported. BOOM needs optional core probes tracked by
 riscPrint/spinal-boom #12 and #13. No BOOM tuning is supplied here.
+
+## In-order own-model description
+
+`own.json` also uses `rvw.arch-core/1` with kind `minor`. Its explicit `ooo`
+table selects single-issue in-order scheduling in the trace-driven model.
+This mode does not use gem5. Latencies and queue sizes are approximations.
+They are not an elaborated snapshot.
+
+```sh
+rvw ooo rvw/arch/own.json RUN/rvfi.jsonl --json
+```
+
+See [the RTL correlation experiment](../../../../Arch/ooo/correlation/README.md)
+for actual C1 cycle counts, converted SpinalProbes totals, a training-only
+parameter fit and held-out IPC errors. The model uses sequential branch
+prediction. The RTL uses STATIC prediction. Fitted recovery cost can absorb
+that policy difference.
