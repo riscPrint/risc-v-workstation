@@ -73,6 +73,38 @@ Generic changes this needed (all version-neutral; the release axis still compile
 
 SpinalDB and SpinalChecks do not compile on this axis yet.
 
+## Run from the core project
+
+```sh
+rvw regress list
+rvw regress run --suite isa --rvfi-trace --out rvw/out/isa --no-index --json
+rvw/run.sh run --elf rvw/out/isa/rv32ui-p-add --out rvw/out/add --seed 1 --mem-latency 0 --rvfi-trace --json
+rvw cosim check --elf rvw/out/isa/rv32ui-p-add --trace rvw/out/add/rvfi.jsonl --json
+```
+
+From the workstation checkout, also pass `--source "$NAXRISCV"` to
+`rvw regress run`. `quick` selects `add`, `beq`, `lw` and `sw`. `full` selects
+the 59 ISA programs (rv32ui-p without `ma_data`, rv32um-p, rv32ua-p) and two
+local programs. The adapter holds the `nax` lock (`RVW_NAX_LOCK`); its sbt
+compile holds `sbt-nax` (`RVW_NAX_SBT_LOCK`). Use private names with a private
+checkout.
+
+## Measured results (2026-11-13, macOS arm64, Verilator 5.049)
+
+- Build: elaboration 2.4 s, Verilator model 8 to 10 s. The first sbt compile of
+  the pinned SpinalHDL and NaxRiscv takes about 2 minutes.
+- `rvw regress run --suite isa`: 59 pass, 0 fail, 0 skip. 86,309 cycles and
+  24,801 retired instructions in total (IPC 0.29 on these short, trap-heavy
+  tests with cold caches). `--suite smoke`: 2 pass.
+- `rvw cosim check` with Spike: all 59 ISA traces and both smoke traces match:
+  24,801 + 28 instructions, 177 + 1 traps, no synchronization, no applied masks.
+- Random memory timing (seeds 3 and 7, zero to three wait cycles per refill) on
+  `lw`, `sb`, `div`, `amoadd_w`, `lrsc` and `fence_i`: 12 pass, 12 match.
+- No negative control was run.
+
+These checks do not prove full ISA, privileged-mode, interrupt, MMU, formal or
+hardware correctness. They apply only to this configuration.
+
 ## Design
 
 The configuration `rv32imasu` is the upstream `naxriscv.Gen` configuration
