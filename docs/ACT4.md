@@ -90,6 +90,8 @@ These are native RTL simulations. Core sources were not changed.
 |---|---:|---:|---:|---:|---:|---:|
 | VexRiscv RV32IM instruction profile | 58 | 58 | 52 | 6 | 52 | 6 |
 | VexiiRiscv RV32IM instruction profile | 58 | 58 | 58 | 0 | 58 | 0 |
+| VexiiRiscv RV64IMA machine instruction profile | 98 | 98 | 98 | 0 | 98 | 0 |
+| VexiiRiscv RV64IMA M/S/U, Sv39 | 302 | 302 | 0 | 302 | 0 | 302 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 | 270 | 0 | 270 | 0 | 270 |
 | NaxRiscv RV32IMA instruction profile | 69 | 69 | 69 | 0 | 69 | 0 |
 | PicoRV32 RV32IM mapped Verilog profile | 51 | 51 | 50 | 1 | 50 | 1 |
@@ -187,3 +189,10 @@ The BOOM profile has configuration and unit tests only. Its ACT4 compilation,
 elaboration, simulation and reference comparison were NOT RUN. Historical
 BOOM results do not qualify it. No full Python suite or GitHub CI run is
 claimed for this work. riscv-dv and TestRIG are separate integrations.
+
+The [RV64 machine record](../examples/vexiiriscv/rvw/act4-64m/README.md)
+retains all 98 strict matches and extension counts. It uses reduced CSR boot.
+The [RV64 supervisor profile](../examples/vexiiriscv/rvw/act4-64su/README.md)
+keeps standard boot and the explicit missing `mhpmevent3` finding. All 302 cases fail at the standard boot write to `mhpmevent3`, before their
+test bodies. No complete strict match is claimed. This is one compatibility
+finding across 302 cases. Its PMP granularity is 16 bytes and NA4 is absent.

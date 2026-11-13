@@ -1,0 +1,34 @@
+{
+  "scope": "Native unchanged rv64imasu. menvcfg control passes; absent mhpmevent3 traps.",
+  "rows": [
+    {
+      "program": "envcfg",
+      "c1_status": "pass",
+      "strict_spike_status": "match",
+      "mismatch": {}
+    },
+    {
+      "program": "event",
+      "c1_status": "fail",
+      "strict_spike_status": "mismatch",
+      "mismatch": {
+        "pc": "0x80000010",
+        "disassembly": "csrw    mhpmevent3, zero",
+        "differences": {
+          "cause": {
+            "expected": "0x0",
+            "actual": "0x2"
+          },
+          "tval": {
+            "expected": "0x0",
+            "actual": "0x32301073"
+          },
+          "trap": {
+            "expected": false,
+            "actual": true
+          }
+        }
+      }
+    }
+  ]
+}
