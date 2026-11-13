@@ -370,3 +370,17 @@ and captured by the project. Collect with `--action collect --root
 /shared/campaign`. A local fake-adapter test executes both planned shards,
 collects both C1 cells and renders their cluster Jobs. No cluster or native RTL
 parity is claimed. Gate publication and automatic tool-image builds remain open.
+
+### Costs by recorded verdict
+
+`farm budget` reports each attempt's charge beside original C4 verdict links
+when `verdict.json` exists under that attempt directory. It checks the C4 schema
+and records the path and SHA-256 without rewriting the report. Each attempt is
+charged once. Missing C4 is not_recorded. Invalid or multiple verdict files are
+ambiguous; their charges are not assigned to an invented verdict. Each row also
+retains execution state and optional declared `category`, for example build or
+simulation. Recorded verdict grouping does not establish current acceptance.
+Budget or cleanup failures remain visible beside the original C4 observation.
+
+Budget admission skips exhausted owners so other projects can run. A job blocked
+only by an active reservation stays queued until that reservation is released.

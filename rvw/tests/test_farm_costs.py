@@ -31,3 +31,4 @@ def test_active_reservation_prevents_parallel_overspend(tmp_path):
     q.submit('a', ['true'], timeout=1)
     assert q.claim()['state'] == 'running'
     assert q.claim() is None
+    assert q.jobs()[1]['state'] == 'queued'

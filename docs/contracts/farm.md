@@ -71,3 +71,12 @@ Additional identity claims cannot override manifest identities. Local and cluste
 executors consume the same command/result plan. Shared PVC paths must match the
 collector path. Collection never promotes process success to a DUT/gate verdict.
 
+
+## C4 cost attribution
+
+Queue cost reports attribute each attempt once to schema-checked recorded C4
+reports within its attempt directory. Links retain original paths and SHA-256.
+Missing C4 is not_recorded; invalid or multiple reports are ambiguous. Execution
+state stays separate from the recorded verdict. No acceptance is inferred.
+Active budget reservations can keep work queued; permanently exhausted scopes
+cannot block another owner's admissible work.
