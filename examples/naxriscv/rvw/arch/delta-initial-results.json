@@ -1,0 +1,693 @@
+{
+  "schema": "rvw.nax-delta-table/1",
+  "source_sha256": "6387635f6d71f6f1517fa9d4e833695b13386e60bcd67ff5a6b328da2cfa237d",
+  "calibration_sha256": "fc4d76da3603f625f08d3c427a47aae9543db93f8be27cb2daede355526e8e88",
+  "config_sha256": "38705ffd470accdb93462ac76889b48db5ae344aef58266f64d60716a8eca7d5",
+  "engine_sha256": "ea2fd6a2c718d1ab63c1d4b0956e0245364ee41f8b55d74058f63aa9382b61a9",
+  "variants": [
+    {
+      "changes": {
+        "issue_entries": 16
+      },
+      "id": "iq16"
+    },
+    {
+      "changes": {
+        "rob_entries": 128
+      },
+      "id": "rob128"
+    },
+    {
+      "changes": {
+        "load_entries": 8
+      },
+      "id": "lq8"
+    },
+    {
+      "changes": {
+        "store_entries": 8
+      },
+      "id": "sq8"
+    }
+  ],
+  "summary": {
+    "pairs": 24,
+    "wrong_deltas": 14
+  },
+  "rows": [
+    {
+      "program": "median",
+      "variant": "iq16",
+      "measured_delta": -0.016820903647250973,
+      "predicted_delta": -7.475517679600419e-05,
+      "sign_match": true,
+      "absolute_error_pp": 1.674614847045497,
+      "relative_error": 0.9955558168357845,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.5898344499197166,
+      "rtl_variant_ipc": 0.5799129014697877,
+      "hashes": {
+        "c1": "d5ec196d3f40785621613a7e7e9421782a96d6b53108ad842a693cf0fb6ca0e3",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "08f7f2a4a42ac75189e238d505ac903e238beffc32858d3ec45764cee8342469"
+      },
+      "base_hashes": {
+        "c1": "01c8aabcc65b8697530c8ea3a1630a9858434251968e0c66cfe5a2eacad75ab5",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "e21408b1bb4f2f4f3fbcf092a41e0c38a2a1f311837052e6f9b0e1bff78575e7"
+      },
+      "model_base_ipc": 0.7964264354066986,
+      "model_variant_ipc": 0.7963668984077147,
+      "model_base_cycles": 13376,
+      "model_variant_cycles": 13377
+    },
+    {
+      "program": "median",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 0.5898344499197166,
+      "rtl_variant_ipc": 0.5898344499197166,
+      "hashes": {
+        "c1": "700fba97f2f4aac87754aeba6a3969723837c5b42e89a5af5001b7d8bdffaebd",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "aba651c29d47dcd2630e3ce026033feac44cec02e416b04d136f6ffbc5828871"
+      },
+      "base_hashes": {
+        "c1": "01c8aabcc65b8697530c8ea3a1630a9858434251968e0c66cfe5a2eacad75ab5",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "e21408b1bb4f2f4f3fbcf092a41e0c38a2a1f311837052e6f9b0e1bff78575e7"
+      },
+      "model_base_ipc": 0.7964264354066986,
+      "model_variant_ipc": 0.7964264354066986,
+      "model_base_cycles": 13376,
+      "model_variant_cycles": 13376
+    },
+    {
+      "program": "median",
+      "variant": "lq8",
+      "measured_delta": -0.010573025090391153,
+      "predicted_delta": 0.0,
+      "sign_match": false,
+      "absolute_error_pp": 1.0573025090391153,
+      "relative_error": 1.0,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.5898344499197166,
+      "rtl_variant_ipc": 0.5835981154815383,
+      "hashes": {
+        "c1": "24baf44e3a8d312147e675aa3b8da6cbfc8ce675dc431c7edbc9124c1c4860a2",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "38b90aa8927be03bb1774b6339c797618fad964c2c219497aff12e30b422a040"
+      },
+      "base_hashes": {
+        "c1": "01c8aabcc65b8697530c8ea3a1630a9858434251968e0c66cfe5a2eacad75ab5",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "e21408b1bb4f2f4f3fbcf092a41e0c38a2a1f311837052e6f9b0e1bff78575e7"
+      },
+      "model_base_ipc": 0.7964264354066986,
+      "model_variant_ipc": 0.7964264354066986,
+      "model_base_cycles": 13376,
+      "model_variant_cycles": 13376
+    },
+    {
+      "program": "median",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 0.5898344499197166,
+      "rtl_variant_ipc": 0.5898344499197166,
+      "hashes": {
+        "c1": "0eb51a5f02ce25893868222d7f318067061d33388fee60317d97d70a003e3a14",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "5a44eec657ab5b6ab7b59ee820d3d7be53cdc2ceae11a244ef3eb3da4dd7faad"
+      },
+      "base_hashes": {
+        "c1": "01c8aabcc65b8697530c8ea3a1630a9858434251968e0c66cfe5a2eacad75ab5",
+        "elf": "5958f34e33799bc76d54e29bb19f4df2f2a8f53dfff701c882202aaf8d1fef86",
+        "trace": "e21408b1bb4f2f4f3fbcf092a41e0c38a2a1f311837052e6f9b0e1bff78575e7"
+      },
+      "model_base_ipc": 0.7964264354066986,
+      "model_variant_ipc": 0.7964264354066986,
+      "model_base_cycles": 13376,
+      "model_variant_cycles": 13376
+    },
+    {
+      "program": "qsort",
+      "variant": "iq16",
+      "measured_delta": -0.006173968408789143,
+      "predicted_delta": -0.0001711076367686415,
+      "sign_match": true,
+      "absolute_error_pp": 0.6002860772020502,
+      "relative_error": 0.9722856313088587,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.7703587335448409,
+      "rtl_variant_ipc": 0.7656025630605001,
+      "hashes": {
+        "c1": "33d3eb44e46972673ec0c3e86d1bab8a300bf9db8acb4877e3c442e8bdd61feb",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "0bd8f0ed84181ad5ab903e52e9a5baeefbf086e9d372f2e3dd4f08c424056148"
+      },
+      "base_hashes": {
+        "c1": "9869b9f95495a102d03c1f5188ec96301f3260207e659a66e672dd6e571a539e",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "ef9e9ff45ea344b91046e331ec03a6d36c05c61fd58d7349de5e4ffe6f25e9b2"
+      },
+      "model_base_ipc": 0.7585761408289067,
+      "model_variant_ipc": 0.7584463426581404,
+      "model_base_cycles": 298007,
+      "model_variant_cycles": 298058
+    },
+    {
+      "program": "qsort",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 0.7703587335448409,
+      "rtl_variant_ipc": 0.7703587335448409,
+      "hashes": {
+        "c1": "ff03eb03f03a8917a11975b556d8fa56c8ff1b05ff3acfe140fbe43ca1280087",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "febdb9c8e651f4a80a6b17d4bf8c77b96ea9cd399a7c2d41461a1d958c6d1ab0"
+      },
+      "base_hashes": {
+        "c1": "9869b9f95495a102d03c1f5188ec96301f3260207e659a66e672dd6e571a539e",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "ef9e9ff45ea344b91046e331ec03a6d36c05c61fd58d7349de5e4ffe6f25e9b2"
+      },
+      "model_base_ipc": 0.7585761408289067,
+      "model_variant_ipc": 0.7585761408289067,
+      "model_base_cycles": 298007,
+      "model_variant_cycles": 298007
+    },
+    {
+      "program": "qsort",
+      "variant": "lq8",
+      "measured_delta": -0.003585677662518494,
+      "predicted_delta": 0.0,
+      "sign_match": false,
+      "absolute_error_pp": 0.3585677662518494,
+      "relative_error": 1.0,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.7703587335448409,
+      "rtl_variant_ipc": 0.7675964754418431,
+      "hashes": {
+        "c1": "c2eabc345154630b0e858a0bc938d65a30fa4b8ad18747d3a6c4b1dfb54eeb0b",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "113f8ded219b1abaabdf41f0f68d1334a63118a04ec914a068f745adb14191f7"
+      },
+      "base_hashes": {
+        "c1": "9869b9f95495a102d03c1f5188ec96301f3260207e659a66e672dd6e571a539e",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "ef9e9ff45ea344b91046e331ec03a6d36c05c61fd58d7349de5e4ffe6f25e9b2"
+      },
+      "model_base_ipc": 0.7585761408289067,
+      "model_variant_ipc": 0.7585761408289067,
+      "model_base_cycles": 298007,
+      "model_variant_cycles": 298007
+    },
+    {
+      "program": "qsort",
+      "variant": "sq8",
+      "measured_delta": -0.0029356501411762492,
+      "predicted_delta": 0.0,
+      "sign_match": false,
+      "absolute_error_pp": 0.2935650141176249,
+      "relative_error": 1.0,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.7703587335448409,
+      "rtl_variant_ipc": 0.7680972298199535,
+      "hashes": {
+        "c1": "57703eb7de704fb3e910241c5d3ce5ebc40cb3fe6563d7518484a489a7c22393",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "e6ec62572bbcad1dbcd0a171cfae631622ebd74fb4c106c930e8c0d369e375b5"
+      },
+      "base_hashes": {
+        "c1": "9869b9f95495a102d03c1f5188ec96301f3260207e659a66e672dd6e571a539e",
+        "elf": "d1d2744817950034f2e8bf659f4d63eb728d507f41aa254408b02f5c65fc3226",
+        "trace": "ef9e9ff45ea344b91046e331ec03a6d36c05c61fd58d7349de5e4ffe6f25e9b2"
+      },
+      "model_base_ipc": 0.7585761408289067,
+      "model_variant_ipc": 0.7585761408289067,
+      "model_base_cycles": 298007,
+      "model_variant_cycles": 298007
+    },
+    {
+      "program": "multiply",
+      "variant": "iq16",
+      "measured_delta": -0.0030269029042611084,
+      "predicted_delta": -0.00026304540821364686,
+      "sign_match": true,
+      "absolute_error_pp": 0.27638574960474616,
+      "relative_error": 0.91309750707783,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.4211008453948228,
+      "rtl_variant_ipc": 1.4167993111186494,
+      "hashes": {
+        "c1": "398c21fb90e5b6e26aef4543b34006d044c5ae2b29b26bea8d43c94e60f8c75d",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "3b1b073c4bae4ab7b7ea431c35767d1d0f148cbd2ec16a4342cf974664ea4559"
+      },
+      "base_hashes": {
+        "c1": "30a18e91ffdfb9ec9e374e7dad0438fb96c95422fa48ea5e3a76c284ae62740c",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "964f9d3ec065db37cfaf596758390d84c8e7ee25cde8320be1c5898949c1a2ce"
+      },
+      "model_base_ipc": 1.7857589212300609,
+      "model_variant_ipc": 1.7852891855456547,
+      "model_base_cycles": 30405,
+      "model_variant_cycles": 30413
+    },
+    {
+      "program": "multiply",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 1.4211008453948228,
+      "rtl_variant_ipc": 1.4211008453948228,
+      "hashes": {
+        "c1": "c17aac88d3b9b6a92dec68f64cfc42a4eed189afd9e1e000a0ecc5c9834adae5",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "5540df183f4d88726b2d9841081d74bbdd535ed8b9a8cacd85b3cd371fbf98e1"
+      },
+      "base_hashes": {
+        "c1": "30a18e91ffdfb9ec9e374e7dad0438fb96c95422fa48ea5e3a76c284ae62740c",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "964f9d3ec065db37cfaf596758390d84c8e7ee25cde8320be1c5898949c1a2ce"
+      },
+      "model_base_ipc": 1.7857589212300609,
+      "model_variant_ipc": 1.7857589212300609,
+      "model_base_cycles": 30405,
+      "model_variant_cycles": 30405
+    },
+    {
+      "program": "multiply",
+      "variant": "lq8",
+      "measured_delta": -0.00020934188146015664,
+      "predicted_delta": 0.0,
+      "sign_match": false,
+      "absolute_error_pp": 0.020934188146015664,
+      "relative_error": 1.0,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.4211008453948228,
+      "rtl_variant_ipc": 1.4208033494701033,
+      "hashes": {
+        "c1": "fa2bf03d90dc2c61a36453a02e8ef1e75b96533612da968e1c681581893ce5db",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "b4c706fbe7a5d5cd540d9b09a6a5fdf57095d9b06813bfa7f79a64459d90bb99"
+      },
+      "base_hashes": {
+        "c1": "30a18e91ffdfb9ec9e374e7dad0438fb96c95422fa48ea5e3a76c284ae62740c",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "964f9d3ec065db37cfaf596758390d84c8e7ee25cde8320be1c5898949c1a2ce"
+      },
+      "model_base_ipc": 1.7857589212300609,
+      "model_variant_ipc": 1.7857589212300609,
+      "model_base_cycles": 30405,
+      "model_variant_cycles": 30405
+    },
+    {
+      "program": "multiply",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 1.4211008453948228,
+      "rtl_variant_ipc": 1.4211008453948228,
+      "hashes": {
+        "c1": "661f5cc850b2640f842aa62fcaf2ddd272c9aa3892bc08d9f88d92754b94aaff",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "8a7147061ce47e270f9a737c7eb7b897b2ee954f607774d3cdd05ee8d20b5baa"
+      },
+      "base_hashes": {
+        "c1": "30a18e91ffdfb9ec9e374e7dad0438fb96c95422fa48ea5e3a76c284ae62740c",
+        "elf": "2541c73a52b82fb5979423d27362f2d390b873cb5096a330f26bb4d0067a8432",
+        "trace": "964f9d3ec065db37cfaf596758390d84c8e7ee25cde8320be1c5898949c1a2ce"
+      },
+      "model_base_ipc": 1.7857589212300609,
+      "model_variant_ipc": 1.7857589212300609,
+      "model_base_cycles": 30405,
+      "model_variant_cycles": 30405
+    },
+    {
+      "program": "towers",
+      "variant": "iq16",
+      "measured_delta": -0.006266786034019645,
+      "predicted_delta": -0.0013668671405140387,
+      "sign_match": true,
+      "absolute_error_pp": 0.4899918893505606,
+      "relative_error": 0.7818870577208294,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.8190315315315315,
+      "rtl_variant_ipc": 0.8138988361683079,
+      "hashes": {
+        "c1": "fae1df370839864c72614b064430313afb35160ed2b3608aa9748ea68271288f",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "e31ab7a9a8623ec7bf69f49468bcc430d68792f57a6f0213e55b817ce11b9871"
+      },
+      "base_hashes": {
+        "c1": "aab3f0f96e27890945b36e925cc6f2c86b6e01d96817b2e9e4a3c6a04f1c82e3",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "d4e7e2c9bfd0d8d8d1b789c5e1f7df1aec9e2b6f2749aecaa756f9d25e137ff0"
+      },
+      "model_base_ipc": 0.9954831645223104,
+      "model_variant_ipc": 0.99412247129579,
+      "model_base_cycles": 7306,
+      "model_variant_cycles": 7316
+    },
+    {
+      "program": "towers",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 0.8190315315315315,
+      "rtl_variant_ipc": 0.8190315315315315,
+      "hashes": {
+        "c1": "84c13626bb5bff02b8a449bf344ca9092498f32225edbdb8d969d603b88e4d5c",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "ced63af8134b9b117890644a77ca827a2dcfe1ed5a317bd68cb5af83b272d5aa"
+      },
+      "base_hashes": {
+        "c1": "aab3f0f96e27890945b36e925cc6f2c86b6e01d96817b2e9e4a3c6a04f1c82e3",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "d4e7e2c9bfd0d8d8d1b789c5e1f7df1aec9e2b6f2749aecaa756f9d25e137ff0"
+      },
+      "model_base_ipc": 0.9954831645223104,
+      "model_variant_ipc": 0.9954831645223104,
+      "model_base_cycles": 7306,
+      "model_variant_cycles": 7306
+    },
+    {
+      "program": "towers",
+      "variant": "lq8",
+      "measured_delta": -0.013881177123820088,
+      "predicted_delta": -0.000957199507725992,
+      "sign_match": true,
+      "absolute_error_pp": 1.2923977616094096,
+      "relative_error": 0.9310433474634194,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.8190315315315315,
+      "rtl_variant_ipc": 0.8076624097723487,
+      "hashes": {
+        "c1": "3023a8d91daf41af5bed86497d0b5c2fc8da2faf30d791418747f077fd7da371",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "ee3a694a17efdec9d3641edb24a071ac1eac93efbcbde99b2e880063aa81a1a0"
+      },
+      "base_hashes": {
+        "c1": "aab3f0f96e27890945b36e925cc6f2c86b6e01d96817b2e9e4a3c6a04f1c82e3",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "d4e7e2c9bfd0d8d8d1b789c5e1f7df1aec9e2b6f2749aecaa756f9d25e137ff0"
+      },
+      "model_base_ipc": 0.9954831645223104,
+      "model_variant_ipc": 0.9945302885272802,
+      "model_base_cycles": 7306,
+      "model_variant_cycles": 7313
+    },
+    {
+      "program": "towers",
+      "variant": "sq8",
+      "measured_delta": -0.043927648578811374,
+      "predicted_delta": -0.0010937927262784086,
+      "sign_match": true,
+      "absolute_error_pp": 4.2833855852532965,
+      "relative_error": 0.9751001302900151,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 0.8190315315315315,
+      "rtl_variant_ipc": 0.7830534022394487,
+      "hashes": {
+        "c1": "40efdf76e950578b8ccf4a548b1398b26ecd9e20bddadd36283d303162135a40",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "3d72b1cdfc2285931008b9676fd54f2b14f7cd4f6c72580864058aee9a8407e1"
+      },
+      "base_hashes": {
+        "c1": "aab3f0f96e27890945b36e925cc6f2c86b6e01d96817b2e9e4a3c6a04f1c82e3",
+        "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+        "trace": "d4e7e2c9bfd0d8d8d1b789c5e1f7df1aec9e2b6f2749aecaa756f9d25e137ff0"
+      },
+      "model_base_ipc": 0.9954831645223104,
+      "model_variant_ipc": 0.9943943122778234,
+      "model_base_cycles": 7306,
+      "model_variant_cycles": 7314
+    },
+    {
+      "program": "vvadd",
+      "variant": "iq16",
+      "measured_delta": -0.08243979609773244,
+      "predicted_delta": -0.0018390804597702148,
+      "sign_match": true,
+      "absolute_error_pp": 8.060071563796223,
+      "relative_error": 0.9776918363845783,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.2432950191570882,
+      "rtl_variant_ipc": 1.1407980312884514,
+      "hashes": {
+        "c1": "d0e199997c4e3bff92f73b5f7892844731a083aafc31da56fdbce16637299727",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "beb1f20023aac1626ef753449adc9a426cdcbf324be93d19c4f571a1d54d4e78"
+      },
+      "base_hashes": {
+        "c1": "0624dbaa799105f46e0113e037f55452f8fb32f50de209f2908e82bfd5203ee6",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "a286eb5d10a98e532bca4bc1321f0d9ec2e2aa777d87ef76a4fdd1a01deb1b49"
+      },
+      "model_base_ipc": 1.4947029018885307,
+      "model_variant_ipc": 1.4919540229885058,
+      "model_base_cycles": 4342,
+      "model_variant_cycles": 4350
+    },
+    {
+      "program": "vvadd",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 1.2432950191570882,
+      "rtl_variant_ipc": 1.2432950191570882,
+      "hashes": {
+        "c1": "e67083de62190d70fcd7e962c752caa18605ab4f9a7ed81fa5b68fbaaff82d46",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "6182029ce159bc302e9c83ce481970bcf1ae13945a94666795176691456fd411"
+      },
+      "base_hashes": {
+        "c1": "0624dbaa799105f46e0113e037f55452f8fb32f50de209f2908e82bfd5203ee6",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "a286eb5d10a98e532bca4bc1321f0d9ec2e2aa777d87ef76a4fdd1a01deb1b49"
+      },
+      "model_base_ipc": 1.4947029018885307,
+      "model_variant_ipc": 1.4947029018885307,
+      "model_base_cycles": 4342,
+      "model_variant_cycles": 4342
+    },
+    {
+      "program": "vvadd",
+      "variant": "lq8",
+      "measured_delta": -0.029017857142857095,
+      "predicted_delta": -0.00023025558369804688,
+      "sign_match": true,
+      "absolute_error_pp": 2.878760155915905,
+      "relative_error": 0.9920650383464058,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.2432950191570882,
+      "rtl_variant_ipc": 1.2072172619047619,
+      "hashes": {
+        "c1": "b4bc63437e23fd7a57123cefe028ba9e53bb66b39cb6542638f6928db57b83e8",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "41b071bc665c33401292b28f70867ee2d2e5885c28ec4a8df43f332d7c7ba9b0"
+      },
+      "base_hashes": {
+        "c1": "0624dbaa799105f46e0113e037f55452f8fb32f50de209f2908e82bfd5203ee6",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "a286eb5d10a98e532bca4bc1321f0d9ec2e2aa777d87ef76a4fdd1a01deb1b49"
+      },
+      "model_base_ipc": 1.4947029018885307,
+      "model_variant_ipc": 1.4943587381994012,
+      "model_base_cycles": 4342,
+      "model_variant_cycles": 4343
+    },
+    {
+      "program": "vvadd",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 1.2432950191570882,
+      "rtl_variant_ipc": 1.2432950191570882,
+      "hashes": {
+        "c1": "c40a4640728d0bca36373ae8a89f2164638eb9dac97fe021c2aea310f1cf727d",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "62f50c33ec6dbdb1d6415e22679cec77649fde700022d9b60a12324250bc9a81"
+      },
+      "base_hashes": {
+        "c1": "0624dbaa799105f46e0113e037f55452f8fb32f50de209f2908e82bfd5203ee6",
+        "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+        "trace": "a286eb5d10a98e532bca4bc1321f0d9ec2e2aa777d87ef76a4fdd1a01deb1b49"
+      },
+      "model_base_ipc": 1.4947029018885307,
+      "model_variant_ipc": 1.4947029018885307,
+      "model_base_cycles": 4342,
+      "model_variant_cycles": 4342
+    },
+    {
+      "program": "memcpy",
+      "variant": "iq16",
+      "measured_delta": -0.12496982654574296,
+      "predicted_delta": -3.658581202203859e-05,
+      "sign_match": true,
+      "absolute_error_pp": 12.493324073372092,
+      "relative_error": 0.9997072428358645,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.2289655172413794,
+      "rtl_variant_ipc": 1.0753819097210249,
+      "hashes": {
+        "c1": "58b8646fff973fa32d211ade4b896d341f5f8c4a4bc645b47f6e4104ac5f78d4",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "f46f2651d36fc865fb13ea58acece7c1f91719e1fe86ef68dfb101211b1bbfe9"
+      },
+      "base_hashes": {
+        "c1": "63b2bffc69412ed976cf207b944ebfbd1729ec7791daac74a58f7b9a1f38c721",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "baed01901758edbb443c22f6cd736ac3ef9bf5f48214c7020ee3dc669c254b76"
+      },
+      "model_base_ipc": 1.1409702912337187,
+      "model_variant_ipc": 1.140928547909121,
+      "model_base_cycles": 27332,
+      "model_variant_cycles": 27333
+    },
+    {
+      "program": "memcpy",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "sign_match": true,
+      "absolute_error_pp": 0.0,
+      "relative_error": null,
+      "wrong_delta": false,
+      "status": "zero_measured_delta",
+      "rtl_base_ipc": 1.2289655172413794,
+      "rtl_variant_ipc": 1.2289655172413794,
+      "hashes": {
+        "c1": "d80839b036e4fa5c8d293cab321f604990cf4c77ce46611aba8b1639b0f96a6a",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "3f011fe42b4d1c2a26f47b5ebc2a47ba79f736cde29ec70c529de5216514ca12"
+      },
+      "base_hashes": {
+        "c1": "63b2bffc69412ed976cf207b944ebfbd1729ec7791daac74a58f7b9a1f38c721",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "baed01901758edbb443c22f6cd736ac3ef9bf5f48214c7020ee3dc669c254b76"
+      },
+      "model_base_ipc": 1.1409702912337187,
+      "model_variant_ipc": 1.1409702912337187,
+      "model_base_cycles": 27332,
+      "model_variant_cycles": 27332
+    },
+    {
+      "program": "memcpy",
+      "variant": "lq8",
+      "measured_delta": -0.07988251504822685,
+      "predicted_delta": -0.04329868038783291,
+      "sign_match": true,
+      "absolute_error_pp": 3.6583834660393943,
+      "relative_error": 0.4579704912684267,
+      "wrong_delta": false,
+      "status": "reported",
+      "rtl_base_ipc": 1.2289655172413794,
+      "rtl_variant_ipc": 1.130792660816593,
+      "hashes": {
+        "c1": "a4e012765789a0b141b06eaa3bef6eda4ae86ed468922664eb20a2628f55d940",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "6c8c84e9b0be322a7a974adc5b6186d56c33444e17cf818c2fed249e82c63b27"
+      },
+      "base_hashes": {
+        "c1": "63b2bffc69412ed976cf207b944ebfbd1729ec7791daac74a58f7b9a1f38c721",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "baed01901758edbb443c22f6cd736ac3ef9bf5f48214c7020ee3dc669c254b76"
+      },
+      "model_base_ipc": 1.1409702912337187,
+      "model_variant_ipc": 1.0915677832615773,
+      "model_base_cycles": 27332,
+      "model_variant_cycles": 28569
+    },
+    {
+      "program": "memcpy",
+      "variant": "sq8",
+      "measured_delta": -0.1090238764044944,
+      "predicted_delta": -0.03515955944648397,
+      "sign_match": true,
+      "absolute_error_pp": 7.386431695801043,
+      "relative_error": 0.6775058766390134,
+      "wrong_delta": true,
+      "status": "reported",
+      "rtl_base_ipc": 1.2289655172413794,
+      "rtl_variant_ipc": 1.0949789325842696,
+      "hashes": {
+        "c1": "6ebcd923abb83a9a2de55779798e7f52b2bc4dfba2f21d74fa10aba4df71ba3c",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "486b0d3595fec99680de746286e2c901593985400f9ce26cbdd88c852dbb2d0c"
+      },
+      "base_hashes": {
+        "c1": "63b2bffc69412ed976cf207b944ebfbd1729ec7791daac74a58f7b9a1f38c721",
+        "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+        "trace": "baed01901758edbb443c22f6cd736ac3ef9bf5f48214c7020ee3dc669c254b76"
+      },
+      "model_base_ipc": 1.1409702912337187,
+      "model_variant_ipc": 1.1008542784524147,
+      "model_base_cycles": 27332,
+      "model_variant_cycles": 28328
+    }
+  ],
+  "limits": [
+    "retrospective paired timing comparison; no new RTL or Spike run",
+    "one base calibration; base committed stream reused for all predictions",
+    "zero measured delta has no relative error; exact sign comparison",
+    "no fidelity verdict; top-down predicates require separate semantic checks"
+  ]
+}

@@ -530,3 +530,17 @@ structure, point identity and instruction count once. A raw trace hash check
 precedes each reuse. Each project description must match the C2 selection.
 Each model creates fresh timing state. Distinct custom definitions get separate validation. The
 `rvw.ooo-sampled/1` report format and timing semantics stay unchanged.
+
+## Paired OoO deltas
+
+`rvw.ooo-delta-plan/1` names a frozen base configuration and calibration,
+one-field numeric variants, and paired whole-program C1/C2/ELF captures.
+Every sample includes the base and every variant. Paired captures must have
+equal core, ELF hash, seed, memory timing and decoded instruction streams.
+Each C1 must pass and agree with its complete C2 identity and count.
+`rvw.ooo-delta/1` retains base and variant model reports, input hashes,
+measured and predicted relative IPC changes, sign agreement and errors.
+Relative change is variant IPC divided by base IPC minus one.
+A wrong delta has a wrong sign or an error greater than half the measured
+change. Zero measured changes have null relative error.
+The report does not claim a Spike match or a fidelity pass.
