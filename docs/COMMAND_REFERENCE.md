@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,csim,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -207,6 +207,39 @@ usage: rvw bisect [-h] --good GOOD [--bad BAD] [--core-repo CORE_REPO]
     {skip,good,bad}] [--max-cycles MAX_CYCLES] [--hang-cycles HANG_CYCLES]
     [--no-verify] [--remove-clone] [--timeout TIMEOUT] [--json] [--project
     PROJECT] run_dir
+```
+
+### `rvw bugmem`
+
+```text
+usage: rvw bugmem [-h] [--project PROJECT] {add,match,list,evaluate} ...
+```
+
+### `rvw bugmem add`
+
+```text
+usage: rvw bugmem add [-h] --cause CAUSE [--fix FIX] [--scope SCOPE] [--label
+    LABEL] [--store STORE] [--json] [--project PROJECT] report
+```
+
+### `rvw bugmem match`
+
+```text
+usage: rvw bugmem match [-h] [--top TOP] [--min-score MIN_SCORE] [--store
+    STORE] [--json] [--project PROJECT] report
+```
+
+### `rvw bugmem list`
+
+```text
+usage: rvw bugmem list [-h] [--store STORE] [--json] [--project PROJECT]
+```
+
+### `rvw bugmem evaluate`
+
+```text
+usage: rvw bugmem evaluate [-h] [--top TOP] [--store STORE] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw bundle`
@@ -1847,6 +1880,38 @@ Find the core revision introducing a failure signature, testing revisions in a p
 Arguments: `project`, `run_dir` (required), `good` (required), `bad`, `core_repo`, `core_env`, `workdir`, `signature`, `other`, `max_cycles`, `hang_cycles`, `no_verify`, `remove_clone`, `timeout`.
 
 Starts a background job: yes.
+
+### `bugmem_add`
+
+Store a failure report (bundle summary or C1 result) with its root cause, fix and verified scope in the bug-pattern memory.
+
+Arguments: `report` (required), `cause` (required), `fix`, `scope`, `label`, `store`.
+
+Starts a background job: no.
+
+### `bugmem_evaluate`
+
+Leave-one-out matching accuracy over labelled stored failures.
+
+Arguments: `top`, `store`.
+
+Starts a background job: no.
+
+### `bugmem_list`
+
+List the stored failure signatures and causes.
+
+Arguments: `store`.
+
+Starts a background job: no.
+
+### `bugmem_match`
+
+Rank stored failures by signature similarity to a new failure report; returns shared features and the stored cause/fix. A candidate is a lead, not a diagnosis.
+
+Arguments: `report` (required), `top`, `min_score`, `store`.
+
+Starts a background job: no.
 
 ### `bundle_make`
 
