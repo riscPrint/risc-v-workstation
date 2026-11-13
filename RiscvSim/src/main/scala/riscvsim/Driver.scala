@@ -362,11 +362,11 @@ class Driver(val adapter: CoreAdapter) {
         job.wallTimeoutS.map(w => f" wall_timeout=$w%.0fs").getOrElse(""))
       val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias), _ => new ElfFile(job.elf, job.elfLoadBias))
       elfSha = elf.sha256
-      require(elf.xlen == adapter.xlen,
-        s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen} (${adapter.core}/${job.config})")
+      require(elf.xlen == adapter.xlen(job.config),
+        s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen(job.config)} (${adapter.core}/${job.config})")
       job.hartImages.foreach { manifest =>
         require(adapter.hartIds(job.config).size >= 2 && job.bootPayloads.isEmpty, "unsupported multi-hart inputs")
-        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen))
+        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen(job.config)))
       }
       job.bootPayloads.foreach { manifest =>
         require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
@@ -376,7 +376,7 @@ class Driver(val adapter: CoreAdapter) {
       built = Some(b)
       st.wall.start()
       val mark = NativeOutput.mark()
-      val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
+      val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen(job.config), "isa" -> adapter.isa(job.config),
         "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
         "source" -> source, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall,
         hartImages = Option(capturedHartImages.get(job)), bootImage = Option(capturedBootImages.get(job)), requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
@@ -523,7 +523,7 @@ class Driver(val adapter: CoreAdapter) {
         _ => new ElfFile(job.elf, job.elfLoadBias))
       job.hartImages.foreach { manifest =>
         require(adapter.hartIds(job.config).size >= 2 && job.bootPayloads.isEmpty, "unsupported multi-hart inputs")
-        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen))
+        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen(job.config)))
       }
       job.bootPayloads.foreach { manifest =>
         require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")

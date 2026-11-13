@@ -369,7 +369,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
         configs=configs,
         default_config=c.get("default_config", configs[0] if configs else "default"),
         backend=c.get("backend"),
-        lock=c.get("lock"),
+        lock=expand(c["lock"], environment) if c.get("lock") else None,
         lock_dir=_path(c["lock_dir"], base, environment) if c.get("lock_dir") else None,
         source_repo=(_path(c["source_repo"], base, environment) if c.get("source_repo")
                      else project_config.root if project_config else None),

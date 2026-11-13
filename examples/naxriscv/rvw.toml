@@ -7,9 +7,9 @@ root = "."
 backend = "riscvsim-verilator"
 name = "naxriscv"
 adapter = "./rvw/run.sh"
-configs = ["rv32imasu", "rv32imasu-iq16"]
+configs = ["rv32imasu", "rv32imasu-iq16", "rv64ima", "rv64imasu"]
 default_config = "rv32imasu"
-lock = "nax"                     # same default lock as run.sh (RVW_NAX_LOCK)
+lock = "${RVW_NAX_LOCK:-nax}"                     # same default lock as run.sh (RVW_NAX_LOCK)
 source_repo = "."
 source_env = "NAXRISCV"
 cache_paths = ["rvw/classpath-cache.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/scripts/sbt", "${RVW_HOME}/SpinalProbes/src", "${RVW_HOME}/SpinalProbes/build.sbt", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
@@ -93,5 +93,15 @@ glob = "**/*.elf"
 strip_suffix = ".elf"
 configs = ["rv32imasu"]
 max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0
+
+[suites.isa64]
+description = "rv64ui-p, rv64um-p and rv64ua-p aligned physical-memory tests"
+dir = "rvw/out/isa64"
+include = ['^rv64u[ima]-p-']
+exclude = ['\.dump$', '^rv64ui-p-ma_data$']
+configs = ["rv64ima", "rv64imasu"]
+max_cycles = 200000
 timeout_s = 120
 mem_latency = 0

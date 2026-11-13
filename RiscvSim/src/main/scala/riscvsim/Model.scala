@@ -88,6 +88,8 @@ trait CoreAdapter {
   /** ISA string for the RVFI trace header. */
   def isa(config: String): String
   def xlen: Int
+  /** Architectural width of the selected configuration. */
+  def xlen(config: String): Int = xlen
   /** Number of byte lanes in the store data bus. Override when it differs from XLEN. */
   def busBytes: Int = xlen / 8
   /** The core's source checkout, for `source.core_repo/core_rev/core_dirty`. */

@@ -4,14 +4,16 @@ import spinal.core._
 import spinal.core.sim._
 import naxriscv.{Config, NaxRiscv}
 import naxriscv.compatibility.MultiPortWritesSymplifier
-import naxriscv.misc.PrivilegedPlugin
+import naxriscv.misc.{PrivilegedPlugin, StaticAddressTranslationPlugin}
 import naxriscv.utilities.Plugin
 
 /** The upstream `naxriscv.Gen` configuration without RVC, FPU or debug: RV32IMA with M/S/U modes,
   * Sv32 MMU, two-wide decode and commit, two ALUs, one shared EU (mul/div/branch/CSR), Lsu2 with
   * 16-entry load and store queues, a 64-entry ROB, BTB, GShare, and 64-byte-line I$ and D$. */
 object NaxTop {
-  val configs = Seq("rv32imasu", "rv32imasu-iq16", "rv32imasu-rob128", "rv32imasu-lq8", "rv32imasu-sq8")
+  val configs = Seq("rv32imasu", "rv32imasu-iq16", "rv32imasu-rob128", "rv32imasu-lq8", "rv32imasu-sq8", "rv64ima", "rv64imasu")
+
+  def xlen(config: String): Int = if (config.startsWith("rv64")) 64 else 32
 
   def plugins(config: String, probeTap: Boolean = true) = {
     require(configs.contains(config), s"unknown NaxRiscv config $config")
@@ -22,7 +24,10 @@ object NaxTop {
       decodeCount = 2,
       robSize = if (config == "rv32imasu-rob128") 128 else 64,
       withRvc = false,
-      withMmu = true,
+      xlen = xlen(config),
+      withMmu = config != "rv64ima",
+      withSupervisor = config != "rv64ima",
+      withUser = config != "rv64ima",
       withDebug = false,
       withFloat = false,
       withDouble = false,
@@ -30,6 +35,9 @@ object NaxTop {
       lqSize = if (config == "rv32imasu-lq8") 8 else 16,
       sqSize = if (config == "rv32imasu-sq8") 8 else 16,
       ioRange = a => a(31 downto 28) === 0x1)
+    // With XLEN=64, the static translator requires equal pre/physical widths.
+    // Set its public configuration parameter before the core is elaborated.
+    if (config == "rv64ima") l.collect { case p: StaticAddressTranslationPlugin => p.physicalWidth = 64 }
     l += new TapPlugin
     if (probeTap) l += new ProbeTapPlugin
     l

@@ -175,3 +175,11 @@ change without a source timestamp change. A successful incremental make would
 then leave an old executable. The generated builder recompiles before saving
 new identity claims. Project launchers that skip an unchanged build must first
 compare the complete saved claims with current claims.
+
+## Configurations with different XLEN values
+
+A Scala `CoreAdapter` can override `xlen(config)` when its named configurations
+use different architectural widths. The default returns `xlen` for compatibility.
+The driver checks ELF width and writes the C2 header with the selected width.
+The adapter must use that width for its own store lanes and trace conversion.
+The adapter description's scalar `xlen` still describes the default configuration.

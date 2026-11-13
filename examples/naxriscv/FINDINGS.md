@@ -53,3 +53,18 @@ load replaced by `nop`, is `no_leak_observed`. The rsb and v4 gadgets were
 This is the expected behavior of an out-of-order core without speculation
 barriers. Code that indexes memory with secrets behind a bounds check needs
 a software or hardware mitigation on this core.
+
+## RV64 configuration limits
+
+| Finding | Minimal reproduction | Observed result | Scope |
+|---|---|---|---|
+| RV64 static translation does not elaborate | Pinned `naxriscv.Config.plugins(xlen = 64, withMmu = false, withSupervisor = false, withUser = false, withRvc = false, withFloat = false, withDouble = false)` | `StaticAddressTranslationPlugin.scala:50` assigns a 34-bit pre-translation address to a 32-bit translated address. Fetch and Lsu2 fail `PhaseNormalizeNodeInputs`. | Core elaboration difference. No RTL simulation or Spike result. |
+| MMU plugin requires supervisor mode | `Config.plugins(xlen = 64, withMmu = true, withSupervisor = false, withUser = false)` | Null dereference at `MmuPlugin.scala:208` when the SATP callback reads the absent `mstatus.tvm` field | Core elaboration difference. This setup is not offered. |
+| Upstream commit observer assumes S exists | Construct `NaxriscvProbe` on M-only RTL | Null dereference at `NaxriscvProbe.scala:142` for `ioInt.supervisor.external`; no instruction executes | Simulation observer limitation. The integration generates `CommitProbe` from the pinned observer with this optional interrupt checker guarded. Wide wire reads also use the generic `SimEncoding.longBits` helper. Core source stays unchanged. |
+
+Pin: `9f452d50560d02fb391bc8039f5453c54e0911af`.
+SpinalHDL: `c362657003fa178350d6955055867e9ab363c44a`.
+The project leaves upstream source unchanged. The M-only RV64 config sets
+the static translator's public `physicalWidth` parameter to 64 before
+elaboration. Its pre-translation and physical widths then agree.
+The Sv39 config keeps the upstream 32-bit physical address limit.

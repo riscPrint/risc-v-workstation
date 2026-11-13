@@ -9,7 +9,6 @@ import naxriscv.fetch.FetchCachePlugin
 import naxriscv.lsu.DataCachePlugin
 import naxriscv.lsu2.Lsu2Plugin
 import naxriscv.misc.{CommitPlugin, PrivilegedPlugin}
-import naxriscv.platform.NaxriscvProbe
 import scala.collection.mutable
 
 /** C1 adapter for the NaxRiscv out-of-order core. It drives the core's native refill buses
@@ -19,9 +18,10 @@ class NaxAdapter extends CoreAdapter {
   override def freshInstancePerRun = true
   type Model = SimCompiled[NaxRiscv]
   val xlen = 32
+  override def xlen(config: String): Int = NaxTop.xlen(config)
   def core = "naxriscv"
   val configs = NaxTop.configs
-  def isa(config: String) = "rv32ima_zicsr_zifencei"
+  def isa(config: String) = s"rv${xlen(config)}ima_zicsr_zifencei"
   def sourceDir = new File(sys.env("NAXRISCV")).getCanonicalFile
   override def replayEnv = Seq("NAXRISCV" -> sourceDir.getPath) ++
     Seq("RVW_NAX_LOCK", "RVW_SPINAL_SOURCE").flatMap(name => sys.env.get(name).map(name -> _))
@@ -57,6 +57,8 @@ class NaxAdapter extends CoreAdapter {
       .filter(f => f.getName.endsWith(".v") || f.getName.endsWith(".sv"))
 
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
+    val xlen = NaxTop.xlen(job.model.config)
+    val busBytes = xlen / 8
     require(!job.rvfiCheck, "NaxRiscv adapter has no riscv-formal monitor; use --rvfi-trace")
     require(job.socMap.isEmpty, "NaxRiscv adapter does not support --soc-map")
     require(job.irqSchedule.isEmpty, "NaxRiscv adapter does not drive interrupt schedules")
@@ -136,7 +138,7 @@ class NaxAdapter extends CoreAdapter {
         // xepc of the next trap: the ROB pc of the latest commit-time reschedule with `trap` set.
         // Some of them are not traps (a satp write flushes this way), so only the latest one counts.
         var epc = Option.empty[BigInt]
-        var probe: NaxriscvProbe = null
+        var probe: CommitProbe = null
 
         cd.onSamplings {
           ctl.tick()
@@ -146,14 +148,14 @@ class NaxAdapter extends CoreAdapter {
             epc = Some(BigInt(probe.robArray(reschedule.robId.toInt).pc) & ((BigInt(1) << xlen) - 1))
 
           if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean)
-            fetchPending = Some((ibus.cmd.address.toLong & ~(ibus.p.lineSize - 1L), ibeats, cycle + latency()))
+            fetchPending = Some((SimEncoding.longBits(ibus.cmd.address) & ~(ibus.p.lineSize - 1L), ibeats, cycle + latency()))
           if (dmem.read.cmd.valid.toBoolean && dmem.read.cmd.ready.toBoolean) {
             val id = if (dmem.p.readIdWidth > 0) dmem.read.cmd.id.toInt else 0
-            reads.enqueue((id, dmem.read.cmd.address.toLong & ~(dmem.p.lineSize - 1L), dbeats, cycle + latency()))
+            reads.enqueue((id, SimEncoding.longBits(dmem.read.cmd.address) & ~(dmem.p.lineSize - 1L), dbeats, cycle + latency()))
           }
           if (dmem.write.cmd.valid.toBoolean && dmem.write.cmd.ready.toBoolean) {
             val f = dmem.write.cmd.fragment
-            if (writeBeat == 0) writeAddress = f.address.toLong & ~(dmem.p.lineSize - 1L)
+            if (writeBeat == 0) writeAddress = SimEncoding.longBits(f.address) & ~(dmem.p.lineSize - 1L)
             val ok = inRam(writeAddress, dmem.p.lineSize)
             write(ram, writeAddress + writeBeat * dbytes, dbytes, f.data.toBigInt)
             writeBeat += 1
@@ -212,7 +214,7 @@ class NaxAdapter extends CoreAdapter {
               case None =>
             }
           })
-        probe = new NaxriscvProbe(dut, 0)
+        probe = new CommitProbe(dut, 0)
         probe.add(backend, isa(job.model.config))
         fork {
           while (true) {

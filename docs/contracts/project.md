@@ -270,3 +270,9 @@ query and formal entries have `status`, `checks`, `fixes` and
 `gate:tier:TIER` keys. Missing optional suite inputs and
 uncommitted files do not block unrelated workflows. A skipped adapter info
 check stays inconclusive. Setup readiness does not establish runtime success.
+## Private regression locks
+
+`core.lock` accepts `${VAR}` and `${VAR:-default}` with the same captured
+environment expansion as adapter paths. A project can use the launcher's
+lock variable to select one private lock for both regression and C1 launch.
+A literal lock name keeps its current behavior.
