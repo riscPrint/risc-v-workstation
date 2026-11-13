@@ -2975,3 +2975,18 @@ and public interned names from Yosys 0.70. It resolves `leaf` and `suffix`
 entries in the `twines` table. Missing name entries cannot qualify a pass.
 The pinned-suite counter relation and seeded bad increment both passed their
 expected-outcome tests on 2026-11-13: six targeted tests passed in 6.99 s.
+
+### Native backend failure classes
+
+The pinned macOS ARM64 Avy crashes with SIGSEGV on the two HWMCC problems
+whose folded AIG has zero latches. It also crashes on the PicoRV32 bundle
+with 23 outputs. Portfolio error rows now retain the exact AIG dimensions and
+these observed input classes. These observations do not identify the internal
+Avy fault or establish support for other AIG shapes. Errors remain errors.
+
+The pinned rIC3 1.5.2 `rlive` path calls its own removed
+`--no-ic3-pred-prop` option. This is an internal CLI incompatibility on the
+native justice input path. Its result records `unsupported_backend_cli`.
+Use `l2s` or `k-live` for the existing checked reductions. No fallback result
+is substituted. The pinned darwin-arm64 suite has no suprove executable.
+Its portfolio status remains `not_installed`.

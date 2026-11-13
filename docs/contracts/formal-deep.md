@@ -343,3 +343,12 @@ A native pass with unchecked source assumptions remains inconclusive and does
 not count as solved. `conditional_passes` records native passes that did not
 earn a problem pass. `bounded_passes` remains a separate observation count.
 Agreement compares observed native answers and is not a proof verdict.
+
+## Native engine failure diagnostics
+
+Portfolio Avy error rows can add `reason=avy_sigsegv`, `aiger_shape`,
+`observed_input_classes` and `unsupported_input`. These describe a failed
+native invocation. They do not qualify a proof or claim a root cause.
+Native AIGER rlive rows can record `reason=unsupported_backend_cli` and
+`unsupported_input_class=native_rlive_with_internal_no_ic3_pred_prop`.
+The problem remains inconclusive. Raw stdout and stderr remain evidence.
