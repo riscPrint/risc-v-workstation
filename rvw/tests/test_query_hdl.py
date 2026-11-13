@@ -112,6 +112,13 @@ def _yosys_graph(sources, top, tmp_path):
                         continue
                     target = ins if cell['port_directions'][port]=='input' else outs
                     target.update(node(b) for b in bb if isinstance(b,int))
+                if cell['type'].startswith(('$memwr', '$memrd')):
+                    # A memory links its write-port inputs to its read-port outputs.
+                    mem = (scope, 'mem', cell['parameters']['MEMID'])
+                    if cell['type'].startswith('$memwr'):
+                        outs = {mem}
+                    else:
+                        ins = ins | {mem}
                 for a in ins:
                     graph[a].update(outs)
     visit(top,'')

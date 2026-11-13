@@ -91,6 +91,8 @@ logic; avoid optimization passes. No source text reconstruction is promised.
    Open: statement-level precision, exact edges, IP model contracts.
 3. Chisel FIRRTL/CIRCT adapter with source maps, configuration identity and
    tests against emitted RTL. Reject unresolved extern modules.
+   Done: `--frontend chisel` (firtool split Verilog, HGLDD names, Scala line
+   rebinding, sync resets). Open: a second real Chisel design, extern modules.
 4. GHDL adapter with source locations, memory semantics and a tested VHDL core.
    Specify scheduling and foreign interfaces separately from static queries.
    Done: `--frontend ghdl` (plugin netlist plus `--file-to-xml` locations),

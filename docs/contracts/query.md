@@ -26,3 +26,14 @@ iterations from 1). In every `yosys-*` frontend a clock or reset root follows
 ports, aliases, buffers and inverters only; each inverter flips the recorded
 edge or polarity. A register net's `reset_value` is the concatenation of its own
 bits' reset values, NULL when a bit has none.
+
+## C6 HDL front ends: Chisel (firtool)
+
+`build-hdl --frontend chisel` writes `meta.frontend=yosys-firtool`,
+`meta.firtool_version`, `meta.firtool_options` (JSON list) and `meta.hdl_options`
+(`source_roots`). `input_files` holds the FIRRTL file and each Scala file that a
+firtool location names and a source root holds. Database locations point at
+those Scala files only; none points at emitted Verilog. Artifacts: `rtl/<file>`
+(emitted Verilog, media type `text/x-systemverilog`), `hgldd/<module>.dd`
+(firtool HGLDD) and `hdl/source-map.json` (`{rtl file: {verilog line: ["file:line", ...]}}`).
+`spinal_path` holds the Chisel name from HGLDD when it differs from the Verilog name.

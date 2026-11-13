@@ -146,8 +146,9 @@ database from Verilog and the native Yosys SV subset. `--frontend slang` takes
 full SystemVerilog through yosys-slang (`-I`, `-D`, `-G`, `--std`) and adds
 per-instance parameters (shown by `component`) and declared SV types.
 `--frontend ghdl` takes VHDL through the GHDL Yosys plugin (`--library`, `-G`
-generics, `--std`) with VHDL declaration and assignment lines. MCP:
-`query_build_hdl`. `--yosys PATH` selects the
+generics, `--std`) with VHDL declaration and assignment lines.
+`--frontend chisel` takes one FIRRTL file through firtool, maps locations to
+Scala lines (`--source-root`) and accepts Chisel names. MCP: `query_build_hdl`. `--yosys PATH` selects the
 native tool. `--timeout SECONDS` bounds elaboration. Drivers, loads and paths use
 the same reader. HDL graphs are conservative and semantic diff is inconclusive.
 See [the frontend limits](../../../../../SpinalDB/README.md#verilog-and-systemverilog-navigation).
