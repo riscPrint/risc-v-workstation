@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
 ```
 
@@ -688,6 +688,25 @@ usage: rvw debug trace-adapter [-h] [--project PROJECT] adapter
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
     [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
     [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
+```
+
+### `rvw evidence`
+
+```text
+usage: rvw evidence [-h] [--project PROJECT] {index,query} ...
+```
+
+### `rvw evidence index`
+
+```text
+usage: rvw evidence index [-h] --root ROOT --db DB [--project PROJECT]
+```
+
+### `rvw evidence query`
+
+```text
+usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
+    [--project PROJECT]
 ```
 
 ### `rvw farm`
@@ -2715,6 +2734,22 @@ Check a remote_bitbang JTAG TAP and RISC-V DTM: TAP resets, IR capture, IDCODE, 
 Arguments: `port` (required), `out` (required), `host`, `irlen`, `busy_probe`.
 
 Starts a background job: yes.
+
+### `evidence_index`
+
+Index C1/C3/C4/C5, formal, coverage and lint report references without rewriting originals.
+
+Arguments: `root` (required), `db` (required).
+
+Starts a background job: yes.
+
+### `evidence_query`
+
+Find original observations, configuration, assumptions and invalidating dependencies. No verdict is inferred.
+
+Arguments: `db` (required), `text`, `schema`.
+
+Starts a background job: no.
 
 ### `farm_batch`
 
