@@ -1,0 +1,62 @@
+{
+  "schema": "rvw.fault-plan/1",
+  "seed": 1,
+  "kinds": [
+    "flip"
+  ],
+  "window": [
+    150,
+    151
+  ],
+  "duration": null,
+  "sites": [
+    {
+      "path": "CommitPlugin_logic_ptr_alloc",
+      "width": 7,
+      "clock_domain": 1
+    },
+    {
+      "path": "CommitPlugin_logic_ptr_commit",
+      "width": 7,
+      "clock_domain": 1
+    },
+    {
+      "path": "CommitPlugin_logic_ptr_free",
+      "width": 7,
+      "clock_domain": 1
+    }
+  ],
+  "site_bits": 21,
+  "population": {
+    "flip": 21
+  },
+  "population_total": 21,
+  "sampling": "uniform-random",
+  "faults": [
+    {
+      "id": "f00000",
+      "kind": "flip",
+      "site": "CommitPlugin_logic_ptr_commit",
+      "bit": 6,
+      "cycle": 150,
+      "duration": 1
+    },
+    {
+      "id": "f00001",
+      "kind": "flip",
+      "site": "CommitPlugin_logic_ptr_alloc",
+      "bit": 6,
+      "cycle": 150,
+      "duration": 1
+    },
+    {
+      "id": "f00002",
+      "kind": "flip",
+      "site": "CommitPlugin_logic_ptr_free",
+      "bit": 0,
+      "cycle": 150,
+      "duration": 1
+    }
+  ],
+  "design_db_sha256": "24df2018de67a9493767f1d2667f796cd7e2443324d5813c92a679d99877a4d5"
+}

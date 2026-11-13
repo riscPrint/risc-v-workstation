@@ -1,0 +1,13 @@
+diff --git a/src/main/scala/naxriscv/execute/IntAluPlugin.scala b/src/main/scala/naxriscv/execute/IntAluPlugin.scala
+index ac10b7f..2e5d6e7 100644
+--- a/src/main/scala/naxriscv/execute/IntAluPlugin.scala
++++ b/src/main/scala/naxriscv/execute/IntAluPlugin.scala
+@@ -91,7 +91,7 @@ class IntAluPlugin(val euId : String,
+ 
+     val writeback = new ExecuteArea(writebackAt) {
+       import stage._
+-      wb.payload := ALU_RESULT
++      wb.payload := stage(ALU_RESULT) ^ B(if(sys.env.get("RVW_NAX_PLANT").contains("alu")) 1 else 0, XLEN bits)
+     }
+   }
+ }

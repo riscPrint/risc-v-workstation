@@ -453,3 +453,31 @@ An attempted 32-entry ROB with a 32-entry issue queue failed elaboration on
 the pinned core. Its pointer-width error is recorded and that configuration
 is not offered. The IQ16 variant has only this benchmark result. It has no
 59-test ISA or generated-check qualification.
+
+## ISA negative control and register faults (2026-11-13)
+
+A private integer ALU mutation flips result bit zero. On `rv32ui-p-add` with
+seed 1, Spike finds the first wrong architectural write at order 1, PC
+`0x80000050`: `li ra, 0` writes 1. Spike expects 0. The earlier boot jump
+matches. No masks or synchronization hide the error. The native trace later
+ends on an assertion at cycle 381. Co-simulation stops at the first mismatch;
+it does not claim a complete mutant-trace match.
+
+The unmodified golden run passes and matches all 501 instructions and 3 trap
+events. The private mutation is in `rvw/plants/isa-negative.patch`. Set
+`RVW_NAX_PLANT=alu` only for that control. The project captures this environment
+variable in its input identity.
+
+`rvw fault` also applied three seed-1 bit flips at cycle 150, one each in
+`CommitPlugin_logic_ptr_alloc`, `CommitPlugin_logic_ptr_commit` and
+`CommitPlugin_logic_ptr_free`. All three have explicit applied receipts and
+are classified as detected by existing native assert/fail statuses. There are
+zero not-injected or inconclusive cases. The sample covers three of 21
+bit/cycle positions in that declared one-cycle window. It is not safety or
+broad diagnostic-coverage qualification. No watchdog was declared.
+
+See [`rvw/plants/negative-control.json`](rvw/plants/negative-control.json),
+[`rvw/plants/fault-results.json`](rvw/plants/fault-results.json) and the commands
+in [`rvw/plants/README.md`](rvw/plants/README.md). The saved adapter fixes the
+native seed and memory wait across golden and faulty runs. The earlier seed-7
+sample touched only the free pointer and is recorded separately.
