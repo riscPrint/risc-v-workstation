@@ -393,6 +393,53 @@ IRQ, MMIO and unspecified-reset synchronizations retain the limits in the
 linked family READMEs. The PLIC reference cannot observe the harness-written
 acknowledgement. It does not earn a complete Spike match.
 
+
+
+### Detailed family results (2026-11-13)
+
+The matrix and ordering rows below split the retained RTL campaign. They are
+subsets of the aggregate rows above. Do not add them to those totals.
+The eight random privilege runs are new RTL captures. All eight match Spike
+strictly with zero synchronizations and no masks. Each crosses 32 seeded
+M/S/U transitions, traps, delegation and returns. The planner selects these
+families, and `prepare-suites.py` now builds them under `random-privilege`.
+The project files select all four ELFs per XLEN with `--suite random-privilege`.
+
+| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Vexii RV32 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
+| Vexii RV32 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
+| Vexii RV32 | Translation matrix beyond walk levels | 533 | 128 | 128 | 126 | 2 | 126 | 2 |
+| Vexii RV32 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV32 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV32 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV32 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV32 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV64 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
+| Vexii RV64 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
+| Vexii RV64 | Translation matrix beyond walk levels | 533 | 133 | 133 | 131 | 2 | 131 | 2 |
+| Vexii RV64 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV64 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV64 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV64 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
+| Vexii RV32 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
+| Vexii RV64 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
+| Vexii RV64 | Reset events | 3 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+[The family record](../examples/vexiiriscv/family-results.json) retains the random run identities and
+names every matrix subset member. Matrix generated counts span all four satp
+modes. The A/D generated count includes hardware-update cases. These profiles
+use Svade, so only the two fault-on-clear A/D cases per profile apply.
+Hardware A/D updates are not tested. TLB/ASID and fence programs check
+architectural results; they do not observe internal TLB hits.
+
+Reset programs require project-driven cold, warm and local reset pulses with
+RAM retained. The current adapters cannot serve those events or record the
+required reset-state observations. The planner lists `reset-rv64` with missing
+`harness:reset-events`. This is a harness limit, not a core finding or a pass.
+Initial simulation reset is not evidence for these repeated reset programs.
+
 ## Fresh Verilog project results
 
 The [2026-11-13 second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass) records commands, fixes

@@ -131,3 +131,31 @@ def test_prepare_rv32_pmp_uses_declared_profile(tmp_path, monkeypatch, modes, ex
     assert family['source'] == 'examples/privilege/pmp-rv32.json'
     assert family['generated'] == family['applicable'] == expected_count
     assert family['excluded'] == []
+
+@pytest.mark.parametrize('bits', [32, 64])
+def test_prepare_random_privilege_selected_family(tmp_path, monkeypatch, bits):
+    import runpy
+    import sys
+    from rvw.privilege import campaign
+    from rvw.regress.commands import applicability
+    module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
+    features = EXAMPLE / f'rvw/features{bits}.json'
+    selection = applicability.plan(features)
+    assert not next(r for r in selection['suites'] if r['name'] == 'reset-rv64')['applicable']
+    selection['suites'] = [r for r in selection['suites'] if r['name'] == f'random-privilege-rv{bits}']
+    monkeypatch.setattr(applicability, 'plan', lambda path: selection)
+    seen = []
+    def capture(description, out, gcc):
+        config = campaign.load(description)
+        assert config['isa'].startswith(f'rv{bits}')
+        rows = campaign.scenarios(config)
+        assert len(rows) == 4
+        seen.append(out.name)
+        return dict(scenarios=rows)
+    monkeypatch.setattr(campaign, 'build', capture)
+    monkeypatch.setenv('RVW_HOME', str(EXAMPLE.parents[1]))
+    monkeypatch.setattr(sys, 'argv', ['prepare', '--features', str(features), '--out', str(tmp_path / 'build')])
+    assert module['main']() == 0
+    assert seen == ['random-privilege']
+    family = json.loads((tmp_path / 'build/selection.json').read_text())['families'][0]
+    assert family['generated'] == family['applicable'] == 4

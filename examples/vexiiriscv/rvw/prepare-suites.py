@@ -85,6 +85,13 @@ def main():
     if 'privilege-controls' in applicable:
         privilege_build(root / 'examples/privilege/controls.json', out / 'privilege', args.gcc)
         families.append(dict(family='privilege', source='examples/privilege/controls.json'))
+    random_name = f'random-privilege-rv{xlen}'
+    random_row = next((r for r in selection['suites'] if r['applicable'] and r['name'] == random_name), None)
+    if random_row:
+        built = privilege_build(root / random_row['source'], out / 'random-privilege', args.gcc)
+        count = len(built['scenarios'])
+        families.append(dict(family='random-privilege', source=random_row['source'],
+                             generated=count, applicable=count, excluded=[]))
     if 'pmp-rv32' in applicable:
         granularity = next((int(c.split(':')[1]) for c in capabilities if c.startswith('pmp-granularity:')), 4)
         config = json.loads((root / 'examples/privilege/pmp-rv32.json').read_text())

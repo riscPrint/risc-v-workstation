@@ -338,5 +338,13 @@
       "mode:U",
       "pmp"
     ]
+  },
+  {
+    "name": "reset-rv64",
+    "source": "examples/privilege/reset.json",
+    "requires": [
+      "xlen:64",
+      "harness:reset-events"
+    ]
   }
 ]

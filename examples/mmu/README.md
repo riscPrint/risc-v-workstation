@@ -130,3 +130,10 @@ independent walker. See the
 [VexiiRiscv README](../vexiiriscv/README.md#generated-suites-on-rtl-2026-11-13)
 for the commands, the exclusions and the inconclusive cases. Sv48, Sv57, H,
 pointer masking, NAPOT, PBMT and shootdown suites have no RTL target yet.
+
+The matrix subsets are now counted separately in the
+[detailed family table](../vexiiriscv/README.md#detailed-family-results-2026-11-13).
+Per profile, both applicable Svade programs and all ten TLB/ASID/fence programs
+pass RTL and match Spike. The remaining translation programs have the two
+PMP-denied-walk findings. Their [triage](../vexiiriscv/findings/ptw-pmp/README.md)
+confirms a core defect with a directed program and a short wave window.
