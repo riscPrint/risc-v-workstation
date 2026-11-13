@@ -886,6 +886,15 @@ reference still matches the DUT prefix. Different expected values produce
 value at the same boundary, the result is `mismatch`. The first version does not
 reduce the trace or assign a specification rule to the disagreement.
 
+### C2 optional CHERI assessment hook
+
+A cosim platform may declare `cheri` with `repository`, a full 40-character
+`revision`, and `capability_bits` (64, 128 or 256). This records an optional
+architecture selection. It does not declare a standard RISC-V profile.
+Stock comparison refuses this selection with `unsupported_reference:cheri`.
+No C2 capability-state format or reference implementation is enabled by it.
+See `Cosim/CHERI.md` for the pinned candidate and required state observations.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

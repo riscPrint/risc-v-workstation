@@ -91,6 +91,8 @@ def differences(actual, expected, fields):
 def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_events=False):
     """Compare a C2 trace with `model`. `sync` lists the enabled synchronization kinds
     (SYNC_KINDS); sync=() turns all of them off."""
+    if platform.cheri is not None:
+        raise ValueError("CHERI capability comparison is not implemented")
     enabled = set(sync)
     if enabled - set(SYNC_KINDS):
         raise ValueError(f"unknown synchronization kinds {sorted(enabled - set(SYNC_KINDS))}")
