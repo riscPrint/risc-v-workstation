@@ -10,7 +10,14 @@ rvw wave list    WAVE [REGEX]                  # signal names and widths
 rvw wave changes WAVE REGEX [--from T] [--to T] [--limit N] [--dec]  # N defaults to 10000; 0 = all
 rvw wave sample  WAVE REGEX --at T|end [--dec] # value of each matching signal at T
 rvw wave cut     WAVE --from T [--to T] [--signals REGEX] [--rebase] -o OUT.{vcd,vcd.gz,fst}
+rvw wave find    WAVE EXPR [--from T] [--to T] [--limit N]   # first/last/all intervals where EXPR holds
+rvw wave edges   WAVE REGEX [--from T] [--to T]               # changes, rising/falling, x/z per signal
+rvw wave index   WAVE -o OUT.rvwi [--reader auto|vcd|wellen]  # build an indexed snapshot
+rvw wave verify  OUT.rvwi [--source WAVE]                     # full SHA-256 check; exit 1 when stale
 ```
+
+Every query command takes `--indexed`: it queries a cached index of the wave and builds
+it on first use (see "Indexed snapshots").
 
 All commands take `--json`: stdout is then one JSON document. Wave and argument errors return
 `{"error": "message"}` with exit 2. Capture and JSON serialization errors leave stdout empty.
@@ -31,6 +38,26 @@ Errors also print a message on stderr.
   start, then the changes up to `--to`. Combined with `--signals` this turns a multi-GB BOOM wave into
   something Surfer or an agent can open. FST input and output go through GTKWave's `fst2vcd`/`vcd2fst`
   (on `PATH`).
+
+## Expression search
+
+`find` evaluates an expression at the window start and after all changes at each time where
+a referenced signal changes. It returns `first` (first time true), `last` (the last true
+interval), `matches` (intervals `{start, end}`; `end` null means true through the window end),
+`count`, `true_time`, `steps` and `unknown_steps`. Syntax:
+
+- signal names: a dotted path, or a unique suffix (`valid`, `rob.head`); quote other names in
+  backticks (`` `TOP.mem[3]` ``). An ambiguous or unknown name is an error.
+- operators: `&& || !` (or `and or not`), `== != < <= > >=`, `+ - * // % & | ^ ~ << >>`,
+  bit selects `sig[7:0]`, `sig[3]`, integer literals (`0x2a`).
+- functions: `rose(s)`, `fell(s)`, `changed(s)`, `stable(s)` (against the previous evaluation
+  point), `known(s)`.
+- x/z bits make a value unknown; a bit select keeps known bits known. An unknown result is
+  never a match and counts in `unknown_steps`.
+
+`edges` counts value changes per signal (a repeated dump of the same value is not a change,
+the first value is not a change), rising and falling edges for 1-bit signals, and transitions
+to or from x/z under `unknown`. Both read only the referenced signals' rows from an index.
 
 Python API (used by `rvw bundle`): `rvw.wave.ops.{list_signals, changes, changes_page, sample, sample_raw,
 cut, info, detect_period}` (`changes` has no default limit; `changes_page` has the CLI's).
@@ -87,6 +114,18 @@ rvw wave sample large.rvwi 'unit.data' --at end --json
 rvw wave cut large.rvwi --from 1000000 --to 1000100 -o window.vcd
 ```
 
+`--reader wellen` (default for FST when the `waves` extra is installed:
+`uv pip install -e 'rvw[waves]'`) reads the wave with wellen, the Rust reader
+Surfer uses, through pywellen. FST input is read natively, one signal at a time,
+with no `fst2vcd` conversion. Up to 256 decoded signals stay in memory; a new
+reader drops the previous batch. For VCD input wellen parses the whole file into
+memory first, so the default VCD reader stays the streaming one.
+
+Cached indexes: `--indexed` on any query (MCP `indexed: true`) keeps one index per
+absolute wave path in `RVW_WAVE_INDEX_DIR` (default `~/.cache/rvw/wave-index`).
+The index records the wave's size and mtime; when they differ, the query rebuilds
+the index first. `rvw wave verify` compares the full SHA-256 for a stronger check.
+
 The SQLite index stores raw values, aliases, declaration ranges, timescale,
 ordered records and the captured input's SHA-256 and size. It is an explicit
 snapshot. It does not follow changes to the source. Use a new output path to
@@ -108,7 +147,7 @@ memory includes the header and returned rows. `changes --limit 0` is unbounded.
 The limit is a row limit, not a process memory cap. This format uses signed 64-bit
 timestamps. Larger VCD times fail indexing. VCD, gzip and FST input use the current
 reader during index creation. FST still needs a full `fst2vcd` conversion once.
-Direct native FST range reads are not implemented.
+Without pywellen, FST still needs one full `fst2vcd` conversion.
 
 `test_wave_index.py` compares queries and cuts with the streaming reader. It
 checks aliases, x/z bits, same-time updates, real/string values, empty ranges,
@@ -127,4 +166,12 @@ The default fixture has 524,288 changes to one 4096-bit signal. Its VCD is
 process RSS for each operation. It returns an error if measured RSS exceeds
 the selected limit. This is a measured limit for this fixture, not an enforced
 process allocation cap. Headers with many signals and longer tokens need
-separate measurements. Direct native FST seeking remains open work.
+separate measurements.
+
+Measured on this host (macOS arm64, `nice -n 10`): a synthetic 500-signal wave,
+2.4 million records, 65 MB VCD / 9 MB FST. FST index build with the wellen
+reader: 51 s wall, 145 MB peak RSS. The same through fst2vcd: 50 s, 145 MB.
+SQLite insertion dominates both; wellen removes the converter and its temporary
+VCD, not the insert cost. On that index, `find 'sig3 == sig4 || sig7[3:0] == 5'`
+took 1.6 s and 48 MB RSS (the streamed VCD: 13.8 s, same 175 intervals);
+`edges 'sig1$'` took 0.6 s.

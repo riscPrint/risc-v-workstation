@@ -11,6 +11,7 @@ dependencies = ["jsonschema>=4.18"]
 mcp = ["mcp>=1.0"]
 dev = ["pytest>=8"]
 cocotb = ["cocotb>=2.0,<3"]
+waves = ["pywellen==0.25.7"]
 
 [project.urls]
 Source = "https://github.com/riscPrint/risc-v-workstation"

@@ -111,9 +111,12 @@ def captured(fn):
             if out and os.path.exists(out) and os.path.samefile(path, out):
                 from .vcd import WaveError
                 raise WaveError(f'{out} is the input wave; cut to a different file')
-        if str(path).endswith('.rvwi') and fn.__name__ not in ('changes_page',):
-            from .index import query
-            return query(fn.__name__, str(path), *args, **kwargs)
+        if str(path).endswith('.rvwi'):
+            if fn.__module__ in ('rvw.wave.ops', 'rvw.wave.vcd') and fn.__name__ != 'changes_page':
+                from .index import query
+                return query(fn.__name__, str(path), *args, **kwargs)
+            # Wrappers (MCP handlers, changes_page) call the public operations, which dispatch.
+            return fn(str(path), *args, **kwargs)
         with wave_input(path) as saved:
             result = fn(saved, *args, **kwargs)
             if fn.__name__ == 'info':

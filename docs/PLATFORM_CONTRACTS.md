@@ -1309,6 +1309,20 @@ open a read-only SQLite transaction without a full source scan or capture-copy.
 Publishers must not edit an index in place. Querying a snapshot establishes no
 new simulator result or verdict. Unknown values retain their VCD meaning.
 
+Optional metadata fields (older indexes lack them): `source_stat` (`size` and
+`mtime_ns` of the source when indexing started; the build fails if they change
+before publication) and `reader` (`vcd` or `wellen`). The `wellen` reader reads
+FST natively through pywellen; its `tools.pywellen.version` records the library.
+It writes change rows with `seq` at or above 2^40 in signal order, then one
+timestamp row per distinct time with a smaller `seq`. Readers order by
+`(t, seq)`; the order of different signals at one time is not significant for FST.
+
+The cached form (`--indexed`, MCP `indexed`) keeps one index per absolute source
+path under `RVW_WAVE_INDEX_DIR` (default `~/.cache/rvw/wave-index`). An entry
+whose `source_stat` differs from the source is stale and is rebuilt before the
+query. `rvw wave verify INDEX [--source WAVE]` compares full SHA-256 and returns
+`fresh` true only on an exact match (exit 1 when stale).
+
 ## Pipeline cause event extension
 
 Kanata 0004 traces can carry version 1 `#rvw` comment records. Fields use literal
