@@ -1319,3 +1319,214 @@ No suspected code defect remains unconfirmed. The two CSR reference catalogues w
 | `rvw/tests/test_formal_timeout_rerun.py` | 99 |
 | `rvw/tests/test_sail_m.py` | 68 |
 | `rvw/tests/test_sail_zicond.py` | 124 |
+
+## Cosim code review
+
+Read 168 files. Fixed five confirmed code defects. No unconfirmed defect is retained.
+The initial review used `f3606ad0650861a3d8a3764c2ec0cbd8fecf182f`.
+The review also checked the later changes to this area through `41d6eefa`.
+Line counts identify the reviewed file versions. The five fixes below are included.
+
+### Confirmed defects
+
+- DPI nested verdicts could return continue or complete match for a failed top-level report. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1383.
+- Synchronized negative RV32 GPR values lacked sign extension in Spike and gave wrong signed arithmetic. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1381.
+- RVVI import rejected its own multi-hart export because decimal C2 order strings were compared with integers. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1380.
+- Spike commit-log import discarded hart identity conflicts with embedded C2 state. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1382.
+
+- Doctor marked complete multi-hart traces as incomplete because it ignored per-hart end records. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1426.
+
+Each defect has a test that failed before the fix. All five PRs are merged.
+The README now states the CLI's existing prefix rule: inconclusive, exit 3.
+No CLI name, MCP name, contract format or verdict rule was changed.
+
+### Validation and limits
+
+- `nice -n 15 Cosim/build.sh`: passed with installed Spike.
+- `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_exchange.py rvw/tests/cosim/test_exchange_hart.py -q`: 14 passed.
+- `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_review_rv32_sync.py -q`: 5 passed, including the native SLT reproduction.
+- `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/cosim/test_dpi_client.py -q`: 10 passed with the compiled DPI client.
+- Parser/state checks in `test_formats.py`, `test_c2_combined.py`, `test_csr_capability.py`, `test_fault_attempts.py`, `test_sail_fault_observations.py`, `test_vh_state.py`, and `test_translation.py`, with `-k 'not native and not spike_only'`: 96 passed, 4 deselected.
+- Native counter/MMIO synchronization, upper-lane MMIO sign extension and shared multi-hart checks: 3 passed.
+- Doctor completion checks: 7 passed.
+- Later fast sets: 3436 passed with 4 skipped before the report update; 3478 passed with 4 skipped before the doctor push.
+- Post-merge selected cosim and release-hygiene checks: 69 passed.
+- Required fast set before the code push: 3298 passed, 4 skipped, 1 failed, 7725 deselected. The failure was `rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`. The missing workflow entry was `cov_mutate_core`, outside this area. The brief permits delivery with that failure.
+
+Native checks used reference fixtures. No RTL or whole-core qualification is claimed.
+Core builds, RTL simulations, long proofs, full Python testing and broad native Sail campaigns were NOT RUN.
+Suspected but unconfirmed items: none retained.
+Not read: other main changes after `41d6eefa` except these fixes; upstream Spike/Sail implementation code, core RTL, and other tool areas beyond the listed support files.
+
+### Files read
+
+| File read | Lines |
+|---|---:|
+| `Cosim/CHERI.md` | 32 |
+| `Cosim/README.md` | 922 |
+| `Cosim/build.sh` | 6 |
+| `Cosim/lockstep_dpi.cc` | 92 |
+| `Cosim/replay-build.sh` | 15 |
+| `Cosim/smoke.py` | 96 |
+| `Cosim/spike_replay.cc` | 126 |
+| `Cosim/spike_shim.cc` | 535 |
+| `Cosim/tests/custom_extension.cc` | 17 |
+| `Cosim/tests/test_memory_log.py` | 65 |
+| `Cosim/tests/test_replay_addon.py` | 95 |
+| `Cosim/tests/test_replay_native.py` | 56 |
+| `Cosim/vector-slice.py` | 62 |
+| `examples/ibex/rvw/platform.json` | 25 |
+| `examples/naxriscv/rvw/act4/platform-machine.json` | 36 |
+| `examples/naxriscv/rvw/platform-rv64ima.json` | 35 |
+| `examples/naxriscv/rvw/platform-rv64imasu.json` | 36 |
+| `examples/naxriscv/rvw/platform.json` | 36 |
+| `examples/ooo-mini/rvw/platform.json` | 60 |
+| `examples/picorv32/rvw/cosim.json` | 17 |
+| `examples/smp/rvw/platform.json` | 6 |
+| `examples/vexiiriscv/rvw/platform.json` | 35 |
+| `examples/vexiiriscv/rvw/platform32.json` | 36 |
+| `examples/vexiiriscv/rvw/platform64-devices.json` | 46 |
+| `examples/vexiiriscv/rvw/platform64.json` | 36 |
+| `examples/vexiiriscv/rvw/platform64m.json` | 35 |
+| `examples/vexriscv/rvw/platform-linux.json` | 64 |
+| `examples/vexriscv/rvw/platform.json` | 60 |
+| `examples/vexriscv/rvw/sec/platform-mu-pmp.json` | 60 |
+| `examples/vexriscv/rvw/sec/platform-mu.json` | 60 |
+| `rvw/src/rvw/cosim/README.md` | 215 |
+| `rvw/src/rvw/cosim/__init__.py` | 1 |
+| `rvw/src/rvw/cosim/adjudicate.py` | 85 |
+| `rvw/src/rvw/cosim/build.py` | 151 |
+| `rvw/src/rvw/cosim/checker.py` | 500 |
+| `rvw/src/rvw/cosim/cheri.py` | 21 |
+| `rvw/src/rvw/cosim/cli.py` | 175 |
+| `rvw/src/rvw/cosim/cli_declarations.py` | 2 |
+| `rvw/src/rvw/cosim/configs/boom.json` | 486 |
+| `rvw/src/rvw/cosim/custom.py` | 35 |
+| `rvw/src/rvw/cosim/debug_state.py` | 19 |
+| `rvw/src/rvw/cosim/devices.py` | 261 |
+| `rvw/src/rvw/cosim/dii.py` | 181 |
+| `rvw/src/rvw/cosim/dii_cli.py` | 82 |
+| `rvw/src/rvw/cosim/doctor.py` | 117 |
+| `rvw/src/rvw/cosim/elf.py` | 61 |
+| `rvw/src/rvw/cosim/environment.py` | 52 |
+| `rvw/src/rvw/cosim/exchange.py` | 178 |
+| `rvw/src/rvw/cosim/exchange_cli.py` | 47 |
+| `rvw/src/rvw/cosim/extensions.py` | 141 |
+| `rvw/src/rvw/cosim/external_interrupts.py` | 42 |
+| `rvw/src/rvw/cosim/external_plic.py` | 150 |
+| `rvw/src/rvw/cosim/fault.py` | 65 |
+| `rvw/src/rvw/cosim/fp_scope.py` | 15 |
+| `rvw/src/rvw/cosim/generate.py` | 70 |
+| `rvw/src/rvw/cosim/hypervisor_cases.py` | 45 |
+| `rvw/src/rvw/cosim/inputs.py` | 175 |
+| `rvw/src/rvw/cosim/lockstep.py` | 58 |
+| `rvw/src/rvw/cosim/mcp_tools.py` | 46 |
+| `rvw/src/rvw/cosim/multihart.py` | 114 |
+| `rvw/src/rvw/cosim/online.py` | 222 |
+| `rvw/src/rvw/cosim/platform.py` | 280 |
+| `rvw/src/rvw/cosim/qemu.py` | 115 |
+| `rvw/src/rvw/cosim/reset.py` | 57 |
+| `rvw/src/rvw/cosim/reset_events.py` | 68 |
+| `rvw/src/rvw/cosim/reset_fp.py` | 14 |
+| `rvw/src/rvw/cosim/reset_scratch.py` | 52 |
+| `rvw/src/rvw/cosim/sail.py` | 496 |
+| `rvw/src/rvw/cosim/sail_config.py` | 161 |
+| `rvw/src/rvw/cosim/spike.py` | 426 |
+| `rvw/src/rvw/cosim/trace.py` | 260 |
+| `rvw/src/rvw/cosim/translation.py` | 60 |
+| `rvw/src/rvw/cosim/vector_source.py` | 69 |
+| `rvw/tests/cosim/conftest.py` | 85 |
+| `rvw/tests/cosim/cosim_build.py` | 25 |
+| `rvw/tests/cosim/model_fixtures.py` | 72 |
+| `rvw/tests/cosim/program.S` | 65 |
+| `rvw/tests/cosim/program.ld` | 8 |
+| `rvw/tests/cosim/program_csr.S` | 27 |
+| `rvw/tests/cosim/program_fetch_fault.S` | 22 |
+| `rvw/tests/cosim/program_hypervisor.S` | 24 |
+| `rvw/tests/cosim/program_hypervisor_walk.S` | 47 |
+| `rvw/tests/cosim/program_irq.S` | 26 |
+| `rvw/tests/cosim/program_mip.S` | 37 |
+| `rvw/tests/cosim/program_mul.S` | 21 |
+| `rvw/tests/cosim/program_outside_ram.S` | 27 |
+| `rvw/tests/cosim/program_pmp_counts.S` | 23 |
+| `rvw/tests/cosim/program_rv32_cfp.S` | 28 |
+| `rvw/tests/cosim/program_sail.S` | 52 |
+| `rvw/tests/cosim/program_sail_ad.S` | 46 |
+| `rvw/tests/cosim/program_seip.S` | 22 |
+| `rvw/tests/cosim/program_ssip.S` | 29 |
+| `rvw/tests/cosim/program_traps.S` | 47 |
+| `rvw/tests/cosim/program_umode.S` | 23 |
+| `rvw/tests/cosim/program_vector.S` | 21 |
+| `rvw/tests/cosim/test_adjudicate.py` | 58 |
+| `rvw/tests/cosim/test_adjudicate_native.py` | 36 |
+| `rvw/tests/cosim/test_benchmark_native.py` | 38 |
+| `rvw/tests/cosim/test_bitmanip_sources.py` | 129 |
+| `rvw/tests/cosim/test_blocking_transport.py` | 65 |
+| `rvw/tests/cosim/test_build_capture.py` | 187 |
+| `rvw/tests/cosim/test_c2_combined.py` | 44 |
+| `rvw/tests/cosim/test_capture_doctor.py` | 91 |
+| `rvw/tests/cosim/test_capture_inputs.py` | 208 |
+| `rvw/tests/cosim/test_check_prefix_inconclusive.py` | 32 |
+| `rvw/tests/cosim/test_cheri_config.py` | 21 |
+| `rvw/tests/cosim/test_csr_capability.py` | 44 |
+| `rvw/tests/cosim/test_custom_extensions.py` | 69 |
+| `rvw/tests/cosim/test_debug_entry_state.py` | 58 |
+| `rvw/tests/cosim/test_dii.py` | 111 |
+| `rvw/tests/cosim/test_dii_native.py` | 76 |
+| `rvw/tests/cosim/test_dpi_client.py` | 60 |
+| `rvw/tests/cosim/test_environment_policy.py` | 35 |
+| `rvw/tests/cosim/test_exchange.py` | 72 |
+| `rvw/tests/cosim/test_exchange_hart.py` | 13 |
+| `rvw/tests/cosim/test_fault_attempts.py` | 42 |
+| `rvw/tests/cosim/test_fault_native.py` | 104 |
+| `rvw/tests/cosim/test_formats.py` | 138 |
+| `rvw/tests/cosim/test_fp_reset.py` | 56 |
+| `rvw/tests/cosim/test_fp_reset_native.py` | 17 |
+| `rvw/tests/cosim/test_fp_rounding.py` | 114 |
+| `rvw/tests/cosim/test_hypervisor_cases.py` | 30 |
+| `rvw/tests/cosim/test_illegal_memory_preflight.py` | 44 |
+| `rvw/tests/cosim/test_lockstep.py` | 348 |
+| `rvw/tests/cosim/test_mcp_cosim.py` | 155 |
+| `rvw/tests/cosim/test_mscratch_reset.py` | 178 |
+| `rvw/tests/cosim/test_online_launch.py` | 142 |
+| `rvw/tests/cosim/test_ordering_reference.py` | 34 |
+| `rvw/tests/cosim/test_pie_elf.py` | 53 |
+| `rvw/tests/cosim/test_platform_policy.py` | 276 |
+| `rvw/tests/cosim/test_pmp_geometry.py` | 131 |
+| `rvw/tests/cosim/test_policy_audit.py` | 75 |
+| `rvw/tests/cosim/test_qemu_observations.py` | 79 |
+| `rvw/tests/cosim/test_reference_mmu.py` | 88 |
+| `rvw/tests/cosim/test_review10_fixes.py` | 242 |
+| `rvw/tests/cosim/test_review12_irq.py` | 96 |
+| `rvw/tests/cosim/test_review12_sail.py` | 73 |
+| `rvw/tests/cosim/test_review15_fixes.py` | 90 |
+| `rvw/tests/cosim/test_review16_sail.py` | 198 |
+| `rvw/tests/cosim/test_review2_fixes.py` | 316 |
+| `rvw/tests/cosim/test_review4_fixes.py` | 169 |
+| `rvw/tests/cosim/test_review_fixes.py` | 242 |
+| `rvw/tests/cosim/test_review_rv32_sync.py` | 42 |
+| `rvw/tests/cosim/test_sail_fault_observations.py` | 95 |
+| `rvw/tests/cosim/test_sail_machine_policy.py` | 50 |
+| `rvw/tests/cosim/test_sail_page_writes.py` | 140 |
+| `rvw/tests/cosim/test_scalar_split_ram.py` | 79 |
+| `rvw/tests/cosim/test_shared_multihart.py` | 74 |
+| `rvw/tests/cosim/test_smoke_capture.py` | 57 |
+| `rvw/tests/cosim/test_sound3_fp_scope.py` | 43 |
+| `rvw/tests/cosim/test_state.py` | 271 |
+| `rvw/tests/cosim/test_translation.py` | 28 |
+| `rvw/tests/cosim/test_unread_csr.py` | 71 |
+| `rvw/tests/cosim/test_vector_memory.py` | 94 |
+| `rvw/tests/cosim/test_vector_source.py` | 30 |
+| `rvw/tests/cosim/test_vh_state.py` | 194 |
+| `rvw/tests/devices/conftest.py` | 23 |
+| `rvw/tests/devices/spike_devices.cc` | 45 |
+| `rvw/tests/devices/test_linux_platform.py` | 116 |
+| `rvw/tests/devices/test_plic.py` | 94 |
+| `rvw/tests/devices/test_reset.py` | 53 |
+| `rvw/tests/devices/test_timer.py` | 81 |
+| `rvw/tests/devices/test_wfi_runtime.py` | 51 |
+| `rvw/tests/test_cosim_bus_reads.py` | 42 |
+| `rvw/tests/test_cosim_environment.py` | 77 |
+| `rvw/tests/test_cosim_reset_events.py` | 80 |
+| `rvw/tests/test_cosim_retirement_counts.py` | 50 |
+| `rvw/tests/test_vex_cosim_isa.py` | 58 |
