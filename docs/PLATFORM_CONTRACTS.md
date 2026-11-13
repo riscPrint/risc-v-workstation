@@ -3261,6 +3261,18 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core memory-dependence replay
+
+`memory_policy=speculate` enables a bounded load/store PC-pair predictor.
+`dependence_entries` is its capacity. `replay_penalty` is its recovery delay.
+Both are positive integer configuration fields. A violating issued load
+causes younger ROB work to execute again without changing retirement order.
+Events count speculative loads, violations, store-triggered recoveries and
+replayed instructions. `issued` includes reexecution. This policy is not
+memory renaming. Translation precedes component service in cycle order.
+Completed or pending component requests are not cancelled by replay.
+Accuracy remains inconclusive. See `rvw/ooo/README.md` for limits.
+
 ### Own-core rename policies
 
 The optional `rename` configuration object enables bounded move elimination,
@@ -3302,7 +3314,7 @@ The additional `topdown` object gives `unit=commit_slots`, `total_slots`,
 width. This is a model partition, not a hardware top-down measurement.
 Events include uop-cache block hits/misses, FTQ stalls, predictor delay cycles,
 shared-port stalls, per-port issued counts, TLB hits/misses, page walks and
-walker-capacity stalls. Translation events count admitted memory operations;
+walker-capacity stalls. Translation events count admitted translation attempts, including replay;
 walker-full counts failed admission attempts. Wrong-path fetch slots are a
 penalty-based estimate. No wrong-path instructions execute. Accuracy remains
 inconclusive. Native speed and RTL correlation are not established.

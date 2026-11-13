@@ -27,6 +27,8 @@ class Config:
     physical_registers: int = 0
     branch_penalty: int = 0
     memory_policy: str = "ordered"
+    dependence_entries: int = 1024
+    replay_penalty: int = 5
     forwarding_latency: int = 1
     frontend: dict = field(default_factory=dict)
     execution: dict = field(default_factory=dict)
@@ -67,8 +69,11 @@ class Config:
             raise ValueError("physical_registers must be zero (unbounded) or at least 33")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
             raise ValueError("branch_penalty must be nonnegative")
-        if self.memory_policy not in ("ordered", "disambiguate"):
+        if self.memory_policy not in ("ordered", "disambiguate", "speculate"):
             raise ValueError("unsupported memory_policy")
+        for key in ("dependence_entries", "replay_penalty"):
+            if type(getattr(self, key)) is not int or getattr(self, key) < 1:
+                raise ValueError(f"{key} must be positive")
         if type(self.forwarding_latency) is not int or self.forwarding_latency < 1:
             raise ValueError("forwarding_latency must be positive")
 
@@ -94,6 +99,7 @@ class Entry:
     done: int | None = None
     bypass_ready: int = 0
     register: bool = True
+    translation_ready: int | None = None
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
@@ -112,7 +118,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             raise ValueError(f"unsupported instruction class: {op.kind}")
         if any(type(r) is not int or not 0 <= r < 32 for r in op.sources):
             raise ValueError("invalid source register")
-        if (config.memory_policy == "disambiguate" or config.translation or memory is not None) and op.kind in ("load", "store"):
+        if (config.memory_policy in ("disambiguate", "speculate") or config.translation or memory is not None) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
                 raise ValueError("disambiguate requires memory address and size")
         if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 32):
@@ -144,6 +150,8 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
     predictor = predictor or StaticPredictor()
 
     from .rename import elimination, fuses
+    from .dependence import Dependence
+    dependence = Dependence(config.dependence_entries)
     for cycle in range(max_cycles):
         for entry in rob:
             if entry.bypass_ready and entry.done is None and all(dep.done is not None for dep in entry.deps):
@@ -208,10 +216,12 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                 elif kind == "load":
                     # Addresses are available only when the older store's inputs are ready.
                     stores_before = [p for p in older if p.insn.kind == "store"]
-                    if any(p.done is None for p in stores_before):
+                    unknown = [p for p in stores_before if p.done is None]
+                    if unknown and (config.memory_policy != "speculate" or
+                                    any(dependence.waits(entry.insn, p.insn) for p in unknown)):
                         events["store_address_blocked"] += 1
                         continue
-                    overlapping = [p for p in stores_before if
+                    overlapping = [p for p in stores_before if p.done is not None and
                         p.insn.address < entry.insn.address + entry.insn.size and
                         entry.insn.address < p.insn.address + p.insn.size]
                     if overlapping:
@@ -227,11 +237,13 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                 elif any(p.done is None or p.done > cycle for p in older):
                     continue
             if kind in ("load", "store") and translation:
-                delay = translation.access(entry.insn.address, entry.insn.size, cycle)
-                if delay is None:
+                if entry.translation_ready is None:
+                    delay = translation.access(entry.insn.address, entry.insn.size, cycle)
+                    if delay is None:
+                        continue
+                    entry.translation_ready = cycle + delay
+                if entry.translation_ready > cycle:
                     continue
-            else:
-                delay = 0
             if not execution.reserve(kind, cycle):
                 continue
             if forwarded:
@@ -239,11 +251,10 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             if kind in ("load", "store") and memory is not None and not forwarded:
                 # The component owner supplies access(address, size, write, cycle).
                 # It returns an additional service delay in model cycles.
-                service = memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle + delay)
+                service = memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle)
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
                 latency += service
-            latency += delay
             if kind in ("branch", "jump"):
                 predicted = predictor.predict(entry.insn.pc, entry.insn.pc + entry.insn.length)
                 predictor.update(entry.insn.pc, entry.insn.next_pc)
@@ -253,6 +264,28 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                     blocked_until = max(blocked_until, cycle + latency + config.branch_penalty)
                     events["wrong_path_fetch_slots_estimate"] += config.branch_penalty * config.fetch_width
                 unresolved_branch = entry
+            if config.memory_policy == "speculate" and kind == "load":
+                if any(p.insn.kind == "store" and p.done is None for p in list(rob)[:list(rob).index(entry)]):
+                    events["speculative_loads"] += 1
+            if config.memory_policy == "speculate" and kind == "store":
+                entries = list(rob)
+                younger = entries[entries.index(entry)+1:]
+                violations = dependence.violations(entry.insn, younger)
+                if violations:
+                    events["memory_order_replays"] += 1
+                    events["memory_order_violations"] += len(violations)
+                    events["replayed_instructions"] += len(younger)
+                    for victim in younger:
+                        victim.done = None
+                        victim.translation_ready = None
+                    younger_set = set(younger)
+                    waiting[:] = [item for item in waiting if item not in younger_set]
+                    waiting.extend(item for item in younger if not item.bypass_ready)
+                    # Keep oldest-ready arbitration after rebuilding the queue.
+                    order = {item: index for index, item in enumerate(rob)}
+                    waiting.sort(key=order.__getitem__)
+                    unresolved_branch = None
+                    blocked_until = max(blocked_until, cycle + config.replay_penalty)
             entry.done = cycle + latency
             used_ports[kind] += 1
             waiting.remove(entry)
@@ -365,7 +398,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
