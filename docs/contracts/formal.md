@@ -951,3 +951,19 @@ with width two. The check asserts the MPP update as well as privilege, PC,
 MIE and MPIE. `least_privileged_mode` is 0 by default. Set it to 3 for a
 machine-only profile. Other values are rejected. This additional observation
 is required on old manifests too; a missing observation is an error.
+
+## Global-step two-clock proof
+
+`formal cross-prove` prepares one C3 property job with `multiclock on` and a
+separate bounded obligation cover. Both use global-step pre-update sampling.
+The two scalar top-level property clock inputs start low. No fairness is added.
+A pending request is checked at its nearest eligible target-clock event.
+Simultaneous events follow overlapped or nonoverlapped implication semantics.
+C3 retains the engine mode, depth, assumptions and separate activation result.
+An unbounded engine result applies only to this discrete global-step model.
+It does not prove that a target event will eventually occur or model transitions
+between samples. Other SVA composition and full simulator scheduling remain
+outside this subset.
+Replay metadata for this subset also retains the Boolean `antecedent` and
+`consequent` expressions. These fields describe the parsed operands. They do
+not indicate that replay or proof ran.

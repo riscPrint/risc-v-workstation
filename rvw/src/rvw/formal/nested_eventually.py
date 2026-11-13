@@ -1,18 +1,24 @@
 """Ordered eventual Boolean milestones with overlapping obligations."""
+import re
+
 from .temporal import Unsupported, split, unwrap
+
+
+EVENT = re.compile(r's_eventually\s+')
 
 
 def milestones(text):
     """Accept F(a && F(b && F(c))), without imposing a finite deadline."""
     text = unwrap(text)
-    if not text.startswith('s_eventually '):
+    event = EVENT.match(text)
+    if not event:
         return None
-    body = unwrap(text[len('s_eventually '):])
-    if body.startswith('s_eventually '):
+    body = unwrap(text[event.end():])
+    if EVENT.match(body):
         rest = milestones(body)
         return ['1'] + rest
     parts = split(body, r'&&')
-    if len(parts) >= 3 and unwrap(parts[-1]).startswith('s_eventually '):
+    if len(parts) >= 3 and EVENT.match(unwrap(parts[-1])):
         rest = milestones(parts[-1])
         return [' && '.join(parts[::2][:-1])] + rest
     return [body]
