@@ -51,3 +51,9 @@ See [the continuation results](NATIVE_SECURITY.md) for fresh RV32IM and PMP
 exports. The new script accepts `--csr-source CsrPlugin_mscratch` and defaults
 to bounded IFT at `--depth`. Use `--ift-mode prove` for unbounded IFT.
 The older results above remain historical attempts.
+
+## M unit and Sail UF route
+
+See [M_ROUTE.md](M_ROUTE.md) for the product-mode adapter, reduced divider
+operand domains and pinned Sail MUL/MULHU checks with abstract multiplication.
+Reduced-domain proofs do not establish unrestricted RV32 instruction signoff.

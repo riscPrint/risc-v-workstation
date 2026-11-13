@@ -13,6 +13,12 @@ INPUTS={'clk':1,'reset':1,'execute_RS1':32,'execute_RS2':32,'execute_INSTRUCTION
 OUTPUTS={'memory_DivPlugin_div_result':32,'memory_DivPlugin_div_done':1}
 
 
+def operand(name,bits,signed):
+    if bits==32: return name
+    fill=f"{name}[{bits-1}]" if signed else "1'b0"
+    return "{{"+str(32-bits)+"{"+fill+"}},"+name+f"[{bits-1}:0]"+"}"
+
+
 def adapter(operation,divisor):
     funct3={'div':4,'divu':5,'rem':6,'remu':7}[operation]
     signed=int(operation in ('div','rem'))
@@ -52,12 +58,18 @@ def closed_cone(module):
 def main():
     p=argparse.ArgumentParser(__doc__)
     p.add_argument('--rtl',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--top',default='VexTop')
+    p.add_argument('--operand-bits',type=int,choices=[8,16,32],default=32)
     p.add_argument('--divisor',choices=['full','zero','minus-one'],default='full')
     p.add_argument('--operations',default='div,divu,rem,remu');p.add_argument('--timeout',type=float,default=90)
-    a=p.parse_args();root=Path(__file__).resolve().parents[3];out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
-    raw=a.rtl.read_bytes();(out/'core.v').write_bytes(raw)
+    a=p.parse_args()
+    operations=a.operations.split(',')
+    if not operations or len(set(operations))!=len(operations) or set(operations)-{'div','divu','rem','remu'}:
+        raise ValueError('select distinct divider operations')
+    root=Path(__file__).resolve().parents[3];out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
+    raw=a.rtl.read_bytes();(out/'core.v').write_text(raw.decode().replace('module '+a.top+' (','module VexTop ('))
     def execute(cmd,name):
-        proc=run_group([str(root/'scripts/with-lock.sh'),'vex-equiv','nice','-n','10',*cmd],cwd=out,timeout=a.timeout+10,capture=True)
+        proc=run_group([str(root/'scripts/with-lock.sh'),'vex-conn','nice','-n','15',*cmd],cwd=out,timeout=a.timeout+10,capture=True)
         (out/(name+'.log')).write_text((proc.stdout or '')+(proc.stderr or ''))
         if proc.returncode:raise ValueError(name+' failed; see log')
     script='read_verilog core.v\nhierarchy -check -top VexTop\nproc\nflatten\n'
@@ -96,24 +108,33 @@ def main():
     (out/'selected.json').write_text(json.dumps(design)+'\n')
     (out/'export.ys').write_text('read_json selected.json\nopt_clean -purge\ncheck -assert\nwrite_verilog -noattr plugin.v\n')
     execute(['yosys','-Q','-s','export.ys'],'export')
-    summary={'rtl_sha256':hashlib.sha256(raw).hexdigest(),'fresh_elaboration':False,'divisor':a.divisor,
+    summary={'rtl_sha256':hashlib.sha256(raw).hexdigest(),'fresh_elaboration':False,'divisor':a.divisor,'operand_bits':a.operand_bits,
        'scope':'isolated real plugin; fixed opcode; stable operands; first transaction; stage validity and stall supplied by the adapter',
        'boundary':wanted,'results':[]}
-    for op in a.operations.split(','):
+    for op in operations:
         directory=out/op;directory.mkdir()
-        (directory/'dut.v').write_text((out/'plugin.v').read_text()+adapter(op,a.divisor))
+        wrapper=adapter(op,a.divisor)
+        for name in ('a','b'):
+            wrapper=wrapper.replace('.execute_RS'+('1' if name=='a' else '2')+'('+name+')', '.execute_RS'+('1' if name=='a' else '2')+'('+operand(name,a.operand_bits,op in ('div','rem'))+')')
+        (directory/'dut.v').write_text((out/'plugin.v').read_text()+wrapper)
         models=root/'SpinalChecks/c2rtl/models'
         body=(models/(op+'32.c')).read_text().replace('#include "riscv_m.h"','')
+        if a.operand_bits<32:
+            mask=(1<<a.operand_bits)-1; sign=1<<(a.operand_bits-1)
+            for name in ('a','b'):
+                expr=f'({name} & {mask}ULL)'
+                if op in ('div','rem'): expr=f'((({expr} ^ {sign}ULL)-{sign}ULL)&0xffffffffULL)'
+                body=body.replace('return rvw_m(',f'{name}={expr}; return rvw_m(')
         if a.divisor!='full':
             literal='0ULL' if a.divisor=='zero' else '4294967295ULL'
             body=re.sub(r'(rvw_m\(\d+, 32, a, )b(\))',lambda m:m[1]+literal+m[2],body)
         (directory/'model.c').write_text((models/'riscv_m.h').read_text()+body)
         cmd=[str(root/'rvw/.venv/bin/rvw'),'formal','datapath','--rtl',str(directory/'dut.v'),'--model',str(directory/'model.c'),
              '--width','32','--max-latency','64','--timeout',str(a.timeout),'--out',str(directory/'proof'),'--json']
-        process=run_group([str(root/'scripts/with-lock.sh'),'vex-equiv','nice','-n','10',*cmd],cwd=out,timeout=a.timeout+10,capture=True)
+        process=run_group([str(root/'scripts/with-lock.sh'),'vex-conn','nice','-n','15',*cmd],cwd=out,timeout=a.timeout+10,capture=True)
         (directory/'proof.log').write_text((process.stdout or '')+(process.stderr or ''))
         report=json.loads((directory/'proof/result.json').read_text()) if (directory/'proof/result.json').exists() else {}
-        summary['results'].append({'operation':op,'status':report.get('status','inconclusive'),'reason':report.get('reason'),'wall_s':report.get('wall_s')})
+        summary['results'].append({'operation':op,'status':report.get('status','inconclusive'),'reason':report.get('reason') or ('process timeout before result capture; inspect proof.log for lock wait or frontend stage' if process.timed_out else 'no native result' if not report else None),'wall_s':report.get('wall_s')})
         (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
         print(json.dumps(summary['results'][-1]),flush=True)
 

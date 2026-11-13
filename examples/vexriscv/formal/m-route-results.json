@@ -1,0 +1,176 @@
+{
+  "schema": "rvw.vex-m-route/1",
+  "date": "2026-11-13",
+  "multiplier": [
+    {
+      "operation": "mul",
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "operand_bits": 8,
+      "result_bits": 32,
+      "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+      "inputs": {
+        "dut.v": "edad471460c0e8dfe84b2c560ac3451a98e6837391738ec8eb5fac5b74b2037b",
+        "reference.c": "56be04aff2e22aad0d1629ebc6a964165727d2be8e7b77d7924d70f9405b677a"
+      },
+      "wall_s": 30.326,
+      "definedness": "not_checked"
+    },
+    {
+      "operation": "mulh",
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "operand_bits": 8,
+      "result_bits": 32,
+      "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+      "inputs": {
+        "dut.v": "5bed97a060d694968f48ec3604c19e62d20a43f850304086d78b97f1d83bb87a",
+        "reference.c": "f41b75497b2f6e9927c345c67c67ba5773184f84116668c789ec0d0b29e03e6b"
+      },
+      "wall_s": 60.431,
+      "definedness": "not_checked"
+    },
+    {
+      "operation": "mulhsu",
+      "status": "proved",
+      "reason": null,
+      "operand_bits": 8,
+      "result_bits": 32,
+      "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+      "inputs": {
+        "dut.v": "43c237875f41cdaffa3b6eef3fb601570b4cf64fd82ee1700aa1c35e4677e67d",
+        "reference.c": "e978b91b2c13118e510b0e0f3c058901c54e075377562606dd77151f5817c62f"
+      },
+      "wall_s": 22.82,
+      "definedness": "proved"
+    },
+    {
+      "operation": "mulhu",
+      "status": "proved",
+      "reason": null,
+      "operand_bits": 8,
+      "result_bits": 32,
+      "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+      "inputs": {
+        "dut.v": "6318bb85335e46eef26167385aca25592da26b986cfa17cf0d50dc2b7f93f409",
+        "reference.c": "02eb7016041cb6e2f605bf17b69b58acde41147a5db0030d22919d617b3d081b"
+      },
+      "wall_s": 28.342,
+      "definedness": "proved"
+    }
+  ],
+  "uf_instruction_checks": [
+    {
+      "check": "insn_mul_ch0",
+      "status": "inconclusive",
+      "native_status": "fail",
+      "rewritten_operations": 2,
+      "functions": [
+        {
+          "operator": "bvmul",
+          "width": 128,
+          "function": "rvw_uf_bvmul_128",
+          "occurrences": 1
+        },
+        {
+          "operator": "bvmul",
+          "width": 64,
+          "function": "rvw_uf_bvmul_64",
+          "occurrences": 1
+        }
+      ],
+      "source_sha256": [
+        "467e54006ef5e664f4c9eac2071bec0fb41985d5e2553f364eaabb149813cb19"
+      ]
+    },
+    {
+      "check": "insn_mulhu_ch0",
+      "status": "inconclusive",
+      "native_status": "fail",
+      "rewritten_operations": 2,
+      "functions": [
+        {
+          "operator": "bvmul",
+          "width": 128,
+          "function": "rvw_uf_bvmul_128",
+          "occurrences": 1
+        },
+        {
+          "operator": "bvmul",
+          "width": 64,
+          "function": "rvw_uf_bvmul_64",
+          "occurrences": 1
+        }
+      ],
+      "source_sha256": [
+        "c778ee255b9b6463587774f3865c8c24220ecb380b956ea5dc25e54a2296c20c"
+      ]
+    }
+  ],
+  "divider": {
+    "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+    "fresh_elaboration": false,
+    "divisor": "full",
+    "operand_bits": 8,
+    "scope": "isolated real plugin; fixed opcode; stable operands; first transaction; stage validity and stall supplied by the adapter",
+    "boundary": {
+      "clk": 1,
+      "reset": 1,
+      "execute_RS1": 32,
+      "execute_RS2": 32,
+      "execute_INSTRUCTION": 32,
+      "execute_IS_RS1_SIGNED": 1,
+      "execute_IS_RS2_SIGNED": 1,
+      "execute_IS_DIV": 1,
+      "memory_INSTRUCTION": 32,
+      "memory_IS_DIV": 1,
+      "memory_arbitration_isValid": 1,
+      "memory_arbitration_isStuck": 1,
+      "memory_DivPlugin_div_result": 32,
+      "memory_DivPlugin_div_done": 1
+    },
+    "results": [
+      {
+        "operation": "div",
+        "status": "inconclusive",
+        "reason": "private lock wait exhausted first capture budget",
+        "wall_s": null
+      },
+      {
+        "operation": "divu",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 30.363
+      },
+      {
+        "operation": "rem",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 30.418
+      },
+      {
+        "operation": "remu",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 30.391
+      },
+      {
+        "operation": "div",
+        "attempt": "isolated retry",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "inputs": {
+          "dut.v": "e7ce1e3b3c2ca49659ab198127bdde6868df35fca8387316ad26311df5ebf8a1",
+          "reference.c": "c26f2cf1620f88b966a8221bf88ccad83d93388832353a4cf2a36d3e27c8a2f5"
+        },
+        "wall_s": 30.604
+      }
+    ]
+  },
+  "limits": [
+    "Reduced operand domains only; not unrestricted RV32 arithmetic.",
+    "Product-cell proof excludes plugin control.",
+    "Divider covers one transaction with completion within 64 clocks.",
+    "UF counterexamples do not establish core defects."
+  ]
+}
