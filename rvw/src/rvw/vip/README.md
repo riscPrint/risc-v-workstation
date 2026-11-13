@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.rnm` | Real-number boundary stub contract only | `Uvm/vip/rnm/` |
 | `rvw.vip.ethernet` | Optional MAC client-packet model, descriptors, DMA and interrupts | `Uvm/vip/ethernet/` |
 | `rvw.vip.pcie` | Optional transaction-model adapter, windows, completions and DMA | `Uvm/vip/pcie/` |
 | `rvw.vip.dram` | Optional digital DRAM model contract and reduced command checker | `Uvm/vip/dram/` |
