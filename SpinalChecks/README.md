@@ -19,7 +19,7 @@ TODO FV items 5 and 7. Generic for any Spinal design; BOOM is one user (`boom/`)
 
 ## Scala property builder
 
-`spinalchecks.Sva` builds finite properties beside a Spinal design and emits
+`spinalchecks.Sva` builds properties beside a Spinal design and emits
 ordinary SVA for the shared frontend. Signal references use final local RTL
 names. Render the properties after Spinal finishes generation.
 
@@ -42,6 +42,28 @@ and repetition, sequence composition, implication, assert, assume and cover.
 `assertOn`, `assumeOn` and `coverOn` accept an optional reset expression.
 Use `Some(!Sva.signal("rst_n"))` for active-low reset. Invalid identifiers and
 unsupported bounds are errors. An unnamed Spinal signal cannot be rendered.
+
+Unbounded builders use explicit sequence strength. `b.eventually` emits
+`s_eventually (b)`. `a.until(b)` and `a.untilWith(b)` are weak by default.
+Pass `strong = true` to emit `s_until` or `s_until_with`.
+`sequence.implies(property, overlap = false)` supports a delayed activation.
+
+`thenEventually(minimum, other)` emits an unbounded delay. `repeatForever`
+emits consecutive repetition with no upper bound. `gotoRepeat` and
+`nonConsecutive` accept a count or a literal minimum and maximum.
+Use `.strong` or `.weak` to turn these sequences into properties:
+
+```scala
+val eventualResponse = Sva.signal("req").sequence.implies(Sva.signal("ack").eventually)
+val twoEvents = Sva.signal("ack").sequence.gotoRepeat(2).strong
+val responseAfterEvents = Sva.signal("req").sequence.implies(twoEvents)
+```
+
+The builder emits syntax. The selected frontend and engine must support its
+composition. The local unbounded route accepts Boolean operands and its stated
+capacity limits. It does not accept all nested sequence combinations. A weak
+unbounded sequence does not require eventual completion. Simulation reports
+pending eventual-response obligations as inconclusive.
 
 The output is a module-local snippet. Include it in a project-owned module or
 checker wrapper before verification. The API does not inject assertions into

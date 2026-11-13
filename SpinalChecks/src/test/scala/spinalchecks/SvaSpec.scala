@@ -35,6 +35,22 @@ class SvaSpec extends AnyFunSuite {
     intercept[IllegalArgumentException](a.repeat(0))
     intercept[IllegalArgumentException](a.thenAfter(65, a))
   }
+  test("emit explicit unbounded strength and until completion semantics") {
+    val a = signal("a")
+    val b = signal("b")
+    assert(a.eventually.render == "s_eventually (a)")
+    assert(a.until(b).render == "(a) until (b)")
+    assert(a.untilWith(b, strong = true).render == "(a) s_until_with (b)")
+    assert(a.sequence.implies(b.eventually, overlap = false).render == "(a) |=> (s_eventually (b))")
+    assert(a.sequence.thenEventually(2, b.sequence).strong.render == "strong((a) ##[2:$] (b))")
+    assert(a.sequence.repeatForever().weak.render == "weak((a)[*0:$])")
+    assert(a.sequence.gotoRepeat(1, 3).render == "(a)[->1:3]")
+    assert(a.sequence.nonConsecutive(2).render == "(a)[=2:2]")
+    intercept[IllegalArgumentException](a.sequence.gotoRepeat(0))
+    intercept[IllegalArgumentException](a.sequence.nonConsecutive(3, 2))
+    intercept[IllegalArgumentException](a.sequence.repeatForever(65))
+    intercept[IllegalArgumentException](a.sequence.thenEventually(-1, b.sequence))
+  }
 }
 
 /** Run without sbt after Test/compile, for a small native emission smoke. */
@@ -46,5 +62,25 @@ object SvaEmitSmoke {
     write(java.nio.file.Paths.get(args(0)), Seq(
       req.implies(ack, overlap = false).assertOn("response", signal("clk")),
       signal("data").stable.sequence.property.coverOn("stable_data", signal("clk"))))
+  }
+}
+
+/** Emit the unbounded forms through the public API for native frontend tests. */
+object SvaUnboundedEmitSmoke {
+  def main(args: Array[String]): Unit = {
+    import Sva._
+    val req = signal("req").sequence
+    val a = signal("a")
+    val b = signal("b")
+    val clock = signal("clk")
+    write(java.nio.file.Paths.get(args(0)), Seq(
+      req.implies(b.eventually).assertOn("eventual", clock),
+      req.implies(a.until(b)).assertOn("weak_until", clock),
+      req.implies(a.untilWith(b, strong = true)).assertOn("strong_until_with", clock),
+      req.implies(literal(true).sequence.thenEventually(1, b.sequence).strong).assertOn("delay", clock),
+      req.implies(a.sequence.repeatForever(1).thenAfter(1, b.sequence).strong).assertOn("consecutive", clock),
+      req.implies(b.sequence.gotoRepeat(1, 2).thenAfter(1, a.sequence).strong).assertOn("goto_range", clock),
+      req.implies(b.sequence.nonConsecutive(1, 2).thenAfter(1, a.sequence).strong).assertOn("nonconsecutive_range", clock),
+      req.implies(b.sequence.gotoRepeat(2).weak).assertOn("weak_count", clock)))
   }
 }

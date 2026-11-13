@@ -121,6 +121,12 @@ def emit(text, clock, prefix):
         monitor.guard = f'({monitor.guard}) && ({guard})' if monitor.guard is not None else guard
         rhs = unwrap(parts[2])
 
+    # Sequence builders retain parentheses around a repeated prefix. Remove
+    # only that whole-prefix grouping, without changing its internal operators.
+    completion = split(rhs, r'##\s*1\b')
+    if len(completion) == 3:
+        rhs = unwrap(completion[0]) + ' ##1 ' + completion[2]
+
     # One Boolean prefix followed by an unbounded delay and Boolean endpoint.
     delay = split(rhs, r'##\s*\[\s*\d+\s*:\s*\$\s*\]')
     if len(delay) == 3:

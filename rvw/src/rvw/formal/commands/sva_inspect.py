@@ -25,4 +25,5 @@ def mcp_tools():
                     schema({'verilog':{'type':'array','items':string,'minItems':1},
                             'top':string,'out':string,'plugin':string,
                             'timeout':{'type':'number','exclusiveMinimum':0}},['verilog','top','out']),
-                    _runner('sva-inspect'),long=True)]
+                    _runner('sva-inspect'),long=True,
+                    side_effects='writes-files',native_tools=('Yosys','yosys-slang'))]

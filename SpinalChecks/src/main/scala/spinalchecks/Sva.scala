@@ -37,6 +37,11 @@ object Sva {
     def changed: Expr = new Expr(() => s"$$changed(${render})")
     def sequence: Sequence = new Sequence(() => render)
     def throughout(other: Sequence): Sequence = new Sequence(() => s"(${render}) throughout (${other.render})")
+    def eventually: Property = new Property(() => s"s_eventually (${render})")
+    def until(other: Expr, strong: Boolean = false): Property =
+      new Property(() => s"(${render}) ${if (strong) "s_until" else "until"} (${other.render})")
+    def untilWith(other: Expr, strong: Boolean = false): Property =
+      new Property(() => s"(${render}) ${if (strong) "s_until_with" else "until_with"} (${other.render})")
   }
 
   final class Sequence private[Sva] (private val value: () => String) {
@@ -50,12 +55,33 @@ object Sva {
       require(minimum >= 1 && minimum <= maximum && maximum <= 64, "repetition must be in 1..64")
       new Sequence(() => s"(${render})[*$minimum:$maximum]")
     }
+    def thenEventually(minimum: Int, other: Sequence): Sequence = {
+      delay(minimum)
+      new Sequence(() => s"(${render}) ##[$minimum:$$] (${other.render})")
+    }
+    def repeatForever(minimum: Int = 0): Sequence = {
+      delay(minimum)
+      new Sequence(() => s"(${render})[*$minimum:$$]")
+    }
+    private def counted(operator: String, minimum: Int, maximum: Int): Sequence = {
+      require(minimum >= 1 && minimum <= maximum && maximum <= 64, "repetition must be in 1..64")
+      new Sequence(() => s"(${render})[$operator$minimum:$maximum]")
+    }
+    def gotoRepeat(count: Int): Sequence = gotoRepeat(count, count)
+    def gotoRepeat(minimum: Int, maximum: Int): Sequence = counted("->", minimum, maximum)
+    def nonConsecutive(count: Int): Sequence = nonConsecutive(count, count)
+    def nonConsecutive(minimum: Int, maximum: Int): Sequence = counted("=", minimum, maximum)
     def or(other: Sequence): Sequence = new Sequence(() => s"(${render}) or (${other.render})")
     def intersect(other: Sequence): Sequence = new Sequence(() => s"(${render}) intersect (${other.render})")
     def within(other: Sequence): Sequence = new Sequence(() => s"(${render}) within (${other.render})")
     def firstMatch: Sequence = new Sequence(() => s"first_match(${render})")
     def implies(other: Sequence, overlap: Boolean = true): Property =
       new Property(() => s"(${render}) ${if (overlap) "|->" else "|=>"} (${other.render})")
+    def implies(other: Property): Property = implies(other, overlap = true)
+    def implies(other: Property, overlap: Boolean): Property =
+      new Property(() => s"(${render}) ${if (overlap) "|->" else "|=>"} (${other.render})")
+    def strong: Property = new Property(() => s"strong(${render})")
+    def weak: Property = new Property(() => s"weak(${render})")
     def property: Property = new Property(() => render)
   }
 
