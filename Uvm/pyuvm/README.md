@@ -37,3 +37,7 @@ The runner emitted C3. Unit tests cover missing/unexpected/mismatched data,
 empty evidence, byte enables, bounds, retirement order and RAL mirror failure.
 This fixture does not exercise CPU instructions, exceptions, interrupts, debug
 mode, live Spike comparison or CPU RAL pins. Those remain open under #296.
+
+See [solver and coverage probes](../probes/README.md) for optional Z3
+constraints, observed functional coverage, native RTL evidence and
+`rvw cov exchange` export. It records a measured SV transition-bin gap.

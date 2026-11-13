@@ -1,0 +1,5 @@
+{
+ "schema":"rvw.cocotb/1", "name":"pyuvm-constraints", "backend":"verilator",
+ "top":"parity", "sources":["parity.sv"], "test_module":"constraint_test",
+ "python_paths":["."], "requires":["two_state","timer"]
+}
