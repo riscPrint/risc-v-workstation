@@ -805,3 +805,9 @@ prepares reset firmware, kernel, initramfs and a final DTB for `--boot-payloads`
 A separate fixed-image QEMU check uses the same payload bytes. The project
 software device composition does not connect the BOOM RTL bus. A startup
 prefix comparison must not be reported as a Linux RTL boot.
+
+`PersistentNativeSpec` tests a tiny accumulator with one reused compiled model.
+It checks fresh DUT, PRNG, tohost device and progress-monitor state after three
+injected simulation failures and across repeated successful requests. It is a
+bounded native test. It does not qualify all core devices, native process
+cancellation, coverage reset or long-lived resource use.
