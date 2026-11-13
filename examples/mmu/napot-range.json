@@ -1,0 +1,89 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "sv39-napot-range-all",
+      "mode": "sv39",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "all",
+      "bins": [
+        "sv39.napot-range.all"
+      ]
+    },
+    {
+      "id": "sv39-napot-range-va",
+      "mode": "sv39",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "va",
+      "bins": [
+        "sv39.napot-range.va"
+      ]
+    },
+    {
+      "id": "sv48-napot-range-all",
+      "mode": "sv48",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "all",
+      "bins": [
+        "sv48.napot-range.all"
+      ]
+    },
+    {
+      "id": "sv48-napot-range-va",
+      "mode": "sv48",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "va",
+      "bins": [
+        "sv48.napot-range.va"
+      ]
+    },
+    {
+      "id": "sv57-napot-range-all",
+      "mode": "sv57",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "all",
+      "bins": [
+        "sv57.napot-range.all"
+      ]
+    },
+    {
+      "id": "sv57-napot-range-va",
+      "mode": "sv57",
+      "napot": true,
+      "napot_remap": true,
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "fence": "va",
+      "bins": [
+        "sv57.napot-range.va"
+      ]
+    }
+  ]
+}

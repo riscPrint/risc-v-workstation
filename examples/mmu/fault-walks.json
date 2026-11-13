@@ -5,7 +5,7 @@
       "id": "sv32-pte-fault-level-0-load",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -18,7 +18,7 @@
       "id": "sv32-walk-deny-level-0-load",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -31,7 +31,7 @@
       "id": "sv32-pte-fault-level-0-store",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -44,7 +44,7 @@
       "id": "sv32-walk-deny-level-0-store",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -54,10 +54,36 @@
       "walk_deny_level": 0
     },
     {
+      "id": "sv32-pte-fault-level-0-fetch",
+      "mode": "sv32",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv32.pte_fault_level",
+        "sv32.pte_fault_level.0.fetch"
+      ],
+      "pte_fault_level": 0
+    },
+    {
+      "id": "sv32-walk-deny-level-0-fetch",
+      "mode": "sv32",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv32.walk_deny_level",
+        "sv32.walk_deny_level.0.fetch"
+      ],
+      "walk_deny_level": 0
+    },
+    {
       "id": "sv32-pte-fault-level-1-load",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -70,7 +96,7 @@
       "id": "sv32-walk-deny-level-1-load",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -83,7 +109,7 @@
       "id": "sv32-pte-fault-level-1-store",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -96,7 +122,7 @@
       "id": "sv32-walk-deny-level-1-store",
       "mode": "sv32",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -106,10 +132,36 @@
       "walk_deny_level": 1
     },
     {
+      "id": "sv32-pte-fault-level-1-fetch",
+      "mode": "sv32",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv32.pte_fault_level",
+        "sv32.pte_fault_level.1.fetch"
+      ],
+      "pte_fault_level": 1
+    },
+    {
+      "id": "sv32-walk-deny-level-1-fetch",
+      "mode": "sv32",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv32.walk_deny_level",
+        "sv32.walk_deny_level.1.fetch"
+      ],
+      "walk_deny_level": 1
+    },
+    {
       "id": "sv39-pte-fault-level-0-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -122,7 +174,7 @@
       "id": "sv39-walk-deny-level-0-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -135,7 +187,7 @@
       "id": "sv39-pte-fault-level-0-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -148,7 +200,7 @@
       "id": "sv39-walk-deny-level-0-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -158,10 +210,36 @@
       "walk_deny_level": 0
     },
     {
+      "id": "sv39-pte-fault-level-0-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.pte_fault_level",
+        "sv39.pte_fault_level.0.fetch"
+      ],
+      "pte_fault_level": 0
+    },
+    {
+      "id": "sv39-walk-deny-level-0-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv39.walk_deny_level",
+        "sv39.walk_deny_level.0.fetch"
+      ],
+      "walk_deny_level": 0
+    },
+    {
       "id": "sv39-pte-fault-level-1-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -174,7 +252,7 @@
       "id": "sv39-walk-deny-level-1-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -187,7 +265,7 @@
       "id": "sv39-pte-fault-level-1-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -200,7 +278,7 @@
       "id": "sv39-walk-deny-level-1-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -210,10 +288,36 @@
       "walk_deny_level": 1
     },
     {
+      "id": "sv39-pte-fault-level-1-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.pte_fault_level",
+        "sv39.pte_fault_level.1.fetch"
+      ],
+      "pte_fault_level": 1
+    },
+    {
+      "id": "sv39-walk-deny-level-1-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv39.walk_deny_level",
+        "sv39.walk_deny_level.1.fetch"
+      ],
+      "walk_deny_level": 1
+    },
+    {
       "id": "sv39-pte-fault-level-2-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -226,7 +330,7 @@
       "id": "sv39-walk-deny-level-2-load",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -239,7 +343,7 @@
       "id": "sv39-pte-fault-level-2-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -252,7 +356,7 @@
       "id": "sv39-walk-deny-level-2-store",
       "mode": "sv39",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -262,10 +366,36 @@
       "walk_deny_level": 2
     },
     {
+      "id": "sv39-pte-fault-level-2-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv39.pte_fault_level",
+        "sv39.pte_fault_level.2.fetch"
+      ],
+      "pte_fault_level": 2
+    },
+    {
+      "id": "sv39-walk-deny-level-2-fetch",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv39.walk_deny_level",
+        "sv39.walk_deny_level.2.fetch"
+      ],
+      "walk_deny_level": 2
+    },
+    {
       "id": "sv48-pte-fault-level-0-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -278,7 +408,7 @@
       "id": "sv48-walk-deny-level-0-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -291,7 +421,7 @@
       "id": "sv48-pte-fault-level-0-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -304,7 +434,7 @@
       "id": "sv48-walk-deny-level-0-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -314,10 +444,36 @@
       "walk_deny_level": 0
     },
     {
+      "id": "sv48-pte-fault-level-0-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv48.pte_fault_level",
+        "sv48.pte_fault_level.0.fetch"
+      ],
+      "pte_fault_level": 0
+    },
+    {
+      "id": "sv48-walk-deny-level-0-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv48.walk_deny_level",
+        "sv48.walk_deny_level.0.fetch"
+      ],
+      "walk_deny_level": 0
+    },
+    {
       "id": "sv48-pte-fault-level-1-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -330,7 +486,7 @@
       "id": "sv48-walk-deny-level-1-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -343,7 +499,7 @@
       "id": "sv48-pte-fault-level-1-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -356,7 +512,7 @@
       "id": "sv48-walk-deny-level-1-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -366,10 +522,36 @@
       "walk_deny_level": 1
     },
     {
+      "id": "sv48-pte-fault-level-1-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv48.pte_fault_level",
+        "sv48.pte_fault_level.1.fetch"
+      ],
+      "pte_fault_level": 1
+    },
+    {
+      "id": "sv48-walk-deny-level-1-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv48.walk_deny_level",
+        "sv48.walk_deny_level.1.fetch"
+      ],
+      "walk_deny_level": 1
+    },
+    {
       "id": "sv48-pte-fault-level-2-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -382,7 +564,7 @@
       "id": "sv48-walk-deny-level-2-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -395,7 +577,7 @@
       "id": "sv48-pte-fault-level-2-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -408,7 +590,7 @@
       "id": "sv48-walk-deny-level-2-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -418,10 +600,36 @@
       "walk_deny_level": 2
     },
     {
+      "id": "sv48-pte-fault-level-2-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv48.pte_fault_level",
+        "sv48.pte_fault_level.2.fetch"
+      ],
+      "pte_fault_level": 2
+    },
+    {
+      "id": "sv48-walk-deny-level-2-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv48.walk_deny_level",
+        "sv48.walk_deny_level.2.fetch"
+      ],
+      "walk_deny_level": 2
+    },
+    {
       "id": "sv48-pte-fault-level-3-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -434,7 +642,7 @@
       "id": "sv48-walk-deny-level-3-load",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -447,7 +655,7 @@
       "id": "sv48-pte-fault-level-3-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -460,7 +668,7 @@
       "id": "sv48-walk-deny-level-3-store",
       "mode": "sv48",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -470,10 +678,36 @@
       "walk_deny_level": 3
     },
     {
+      "id": "sv48-pte-fault-level-3-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv48.pte_fault_level",
+        "sv48.pte_fault_level.3.fetch"
+      ],
+      "pte_fault_level": 3
+    },
+    {
+      "id": "sv48-walk-deny-level-3-fetch",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv48.walk_deny_level",
+        "sv48.walk_deny_level.3.fetch"
+      ],
+      "walk_deny_level": 3
+    },
+    {
       "id": "sv57-pte-fault-level-0-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -486,7 +720,7 @@
       "id": "sv57-walk-deny-level-0-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -499,7 +733,7 @@
       "id": "sv57-pte-fault-level-0-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -512,7 +746,7 @@
       "id": "sv57-walk-deny-level-0-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -522,10 +756,36 @@
       "walk_deny_level": 0
     },
     {
+      "id": "sv57-pte-fault-level-0-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv57.pte_fault_level",
+        "sv57.pte_fault_level.0.fetch"
+      ],
+      "pte_fault_level": 0
+    },
+    {
+      "id": "sv57-walk-deny-level-0-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv57.walk_deny_level",
+        "sv57.walk_deny_level.0.fetch"
+      ],
+      "walk_deny_level": 0
+    },
+    {
       "id": "sv57-pte-fault-level-1-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -538,7 +798,7 @@
       "id": "sv57-walk-deny-level-1-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -551,7 +811,7 @@
       "id": "sv57-pte-fault-level-1-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -564,7 +824,7 @@
       "id": "sv57-walk-deny-level-1-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -574,10 +834,36 @@
       "walk_deny_level": 1
     },
     {
+      "id": "sv57-pte-fault-level-1-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv57.pte_fault_level",
+        "sv57.pte_fault_level.1.fetch"
+      ],
+      "pte_fault_level": 1
+    },
+    {
+      "id": "sv57-walk-deny-level-1-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv57.walk_deny_level",
+        "sv57.walk_deny_level.1.fetch"
+      ],
+      "walk_deny_level": 1
+    },
+    {
       "id": "sv57-pte-fault-level-2-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -590,7 +876,7 @@
       "id": "sv57-walk-deny-level-2-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -603,7 +889,7 @@
       "id": "sv57-pte-fault-level-2-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -616,7 +902,7 @@
       "id": "sv57-walk-deny-level-2-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -626,10 +912,36 @@
       "walk_deny_level": 2
     },
     {
+      "id": "sv57-pte-fault-level-2-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv57.pte_fault_level",
+        "sv57.pte_fault_level.2.fetch"
+      ],
+      "pte_fault_level": 2
+    },
+    {
+      "id": "sv57-walk-deny-level-2-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv57.walk_deny_level",
+        "sv57.walk_deny_level.2.fetch"
+      ],
+      "walk_deny_level": 2
+    },
+    {
       "id": "sv57-pte-fault-level-3-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -642,7 +954,7 @@
       "id": "sv57-walk-deny-level-3-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -655,7 +967,7 @@
       "id": "sv57-pte-fault-level-3-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -668,7 +980,7 @@
       "id": "sv57-walk-deny-level-3-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
@@ -678,10 +990,36 @@
       "walk_deny_level": 3
     },
     {
+      "id": "sv57-pte-fault-level-3-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv57.pte_fault_level",
+        "sv57.pte_fault_level.3.fetch"
+      ],
+      "pte_fault_level": 3
+    },
+    {
+      "id": "sv57-walk-deny-level-3-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv57.walk_deny_level",
+        "sv57.walk_deny_level.3.fetch"
+      ],
+      "walk_deny_level": 3
+    },
+    {
       "id": "sv57-pte-fault-level-4-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "page-fault",
       "bins": [
@@ -694,7 +1032,7 @@
       "id": "sv57-walk-deny-level-4-load",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "load",
       "expect": "access-fault",
       "bins": [
@@ -707,7 +1045,7 @@
       "id": "sv57-pte-fault-level-4-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "page-fault",
       "bins": [
@@ -720,12 +1058,38 @@
       "id": "sv57-walk-deny-level-4-store",
       "mode": "sv57",
       "level": 0,
-      "flags": "VRWAD",
+      "flags": "VRWXAD",
       "access": "store",
       "expect": "access-fault",
       "bins": [
         "sv57.walk_deny_level",
         "sv57.walk_deny_level.4.store"
+      ],
+      "walk_deny_level": 4
+    },
+    {
+      "id": "sv57-pte-fault-level-4-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "page-fault",
+      "bins": [
+        "sv57.pte_fault_level",
+        "sv57.pte_fault_level.4.fetch"
+      ],
+      "pte_fault_level": 4
+    },
+    {
+      "id": "sv57-walk-deny-level-4-fetch",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWXAD",
+      "access": "fetch",
+      "expect": "access-fault",
+      "bins": [
+        "sv57.walk_deny_level",
+        "sv57.walk_deny_level.4.fetch"
       ],
       "walk_deny_level": 4
     }

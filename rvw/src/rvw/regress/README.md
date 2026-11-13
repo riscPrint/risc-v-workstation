@@ -860,6 +860,12 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+The `examples/mmu/napot-range.json` campaign primes and remaps each page in a
+64 KiB NAPOT range. It uses either a global fence or one fence per page before
+checking new data. It does not require one address-specific fence to invalidate
+an entire range. The per-level fault campaign also includes fetch faults.
+Use the existing C1 build/reference/check/report commands for both campaigns.
+
 `mmu report` also checks optional C2 `mmu_nested_walks`. It compares VS/G
 levels, physical PTE addresses, returned values and final results with the
 independent nested walker. Reference tables come from the generated source.

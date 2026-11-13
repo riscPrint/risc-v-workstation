@@ -61,8 +61,8 @@ See the [pointer-masking specification](https://docs.riscv.org/reference/isa/pri
 Instruction-fetch, U-mode Ssnpm, M-mode Smmpm, debug and guest interactions
 remain open. The installed Spike must support Smnpm for this campaign.
 
-`fault-walks.json` adds 56 short cases. Each mode tests an invalid PTE and a
-PMP-denied table read at every level, for loads and stores. Build these with
+`fault-walks.json` adds 84 short cases. Each mode tests an invalid PTE and a
+PMP-denied table read at every level, for loads, stores and fetches. Build these with
 `rvw regress mmu build` and use the same C1 suite pattern. Select the scenarios
 for the project's XLEN before building. `mmu report` also accepts ordered C2
 `mmu_walks` records. Its independent checker supports faulting walks and fenced
@@ -96,3 +96,8 @@ All MMU builds also write `functional-groups.json` for `rvw cov functional`.
 C2/2 multi-hart coverage keeps separate histories per hart and epoch. Groups
 need actual walk, protocol, pointer, hypervisor or IOMMU capture fields. Missing
 fields produce holes. Coverage observations do not establish correctness.
+
+`napot-range.json` has six full-range remap programs. Each primes all 16 pages
+of a 64 KiB NAPOT mapping, changes all PTEs and checks all new values after a
+global fence or 16 per-page fences. It makes no internal cache-granularity
+claim. The per-level fault matrix now includes instruction-fetch cases.

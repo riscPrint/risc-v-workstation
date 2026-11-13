@@ -3541,6 +3541,20 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### NAPOT range remapping
+
+`napot_remap = true` selects a complete 64 KiB NAPOT range remap. It requires
+RV64, a level-zero successful load, `napot = true`, `flags = "VRWAD"`, and
+`fence` of all or va. The program primes all 16 pages, rewrites all 16 NAPOT
+PTEs and checks every page's new data. An all fence invalidates globally. A va
+campaign fences every 4 KiB page. It does not assume that one address-specific
+fence invalidates an entire range cached as smaller entries. Missing DUT probe
+observations remain inconclusive. This is an architectural remap check, not
+proof of internal translation-cache granularity.
+
+The per-level fault campaign now includes fetch as well as load and store.
+Each mode checks invalid PTEs and PMP-denied PTE reads at every walk level.
+
 ### Nested C2 walk captures
 
 C2 retirements may contain `mmu_nested_walks`. Each record gives `access_id`,
