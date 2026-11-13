@@ -11,12 +11,12 @@ does not infer their cancellation signals from their names.
 Run `python3 SpinalChecks/boom/stream-dispositions.py` to regenerate the
 source review. This does not elaborate BOOM, run checks or run formal.
 
-The historical issue reports 24 fired check IDs. The committed reviewed
-stream file identifies 20. Three more IDs are in the TileLink waiver list. One historical
-ID is not mapped by these files.
-The report retains that gap. It does not invent a complete firing inventory.
+The historical issue reports 24 fired check IDs. The source review now has
+24 named dispositions. One is the later FetchBuffer alias. The other 23
+have historical names. One original ID is still absent from the available
+inventory. Equal row counts do not establish a complete historical mapping.
 
-Five of the 23 have an explicit Queue `io_flush` binding in `BoomChecks`:
+Five reviewed IDs have an explicit Queue `io_flush` binding in `BoomChecks`:
 f3, f3_bpd_queue, f4, f4_bpd_queue and stq_execute_queue dequeue valid.
 `ChiselUtil.scala:39-44` clears occupancy on the flush edge. The binding
 uses the previous sample. These five no longer have a blanket valid waiver
@@ -61,3 +61,19 @@ unaccepted offers. TileLink A also permits pre-acceptance replacement under
 its protocol. These cases are not all registered flushes. The review keeps
 them separate from cancellation, and keeps accepted-burst checks and retained
 TileLink findings active. Issue #5 and riscPrint/spinal-boom#7 remain open.
+
+## Internal TileLink A stage
+
+The [original core issue](https://github.com/riscPrint/spinal-boom/issues/7)
+names `stream.payload_stable:arbiter.ups_0_a`. This is a separate stage from
+`arbiter.io_ups_0_a`. Spinal 1.15.0 `Arbiter.scala:35-50` creates internal
+`ups` from `io.ups` through `Bus.withSourceOffset`.
+`Bus.scala:456-465` forwards the handshake and payload, then replaces the
+source field. Port zero has offset zero. The receiver forwards the current
+selected A payload on acceptance. The BOOM producer uses `TLArbiter` in
+`mshrs.scala:719`, which can replace an offer before acceptance.
+
+This supports a source disposition for legal pre-acceptance replacement.
+It does not permit an accepted burst to change. The disposition adds no
+entry to `streams.txt` or `waivers.txt`. It claims no new native check pass.
+The exact historical inventory remains incomplete. Refs: #5.

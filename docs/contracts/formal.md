@@ -1003,3 +1003,12 @@ acknowledgment. An acknowledgment without a request is permitted. This is a
 level handshake, so its monitor uses the existing ready/valid stability rule.
 The project must choose the protocol from its interface specification.
 VIP and UVM ready/valid agents still reject these two new protocol names.
+
+## BOOM source disposition inventory
+
+`SpinalChecks/boom/stream-dispositions.json` is a source review, not a native
+check result. `source_dispositions` counts all named rows.
+`historical_named_dispositions` excludes the IDs in `later_aliases`.
+`unmapped_historical_checks` compares only those historical names with the
+reported original total. A later alias cannot fill an original inventory gap.
+`native_validation` remains `NOT RUN` until separate native evidence exists.
