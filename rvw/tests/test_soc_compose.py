@@ -64,3 +64,19 @@ def test_mcp(tmp_path):
     p, _ = setup(tmp_path)
     tool = mcp_tools()[0]
     assert tool.handler(source=str(p), out=str(tmp_path/'out'))['status'] == 'generated'
+
+
+def test_pin_and_irq_binders(tmp_path):
+    from rvw.soc.peripherals import peripheral
+    p, spec = setup(tmp_path)
+    obj = json.loads((tmp_path/'soc.json').read_text())
+    device = peripheral('clint','clint',0x2000000)
+    obj['regions'].append(device['region'])
+    obj['interrupts'] = [dict(name='soft',region='clint',register='msip',cause=3)]
+    (tmp_path/'soc.json').write_text(json.dumps(obj))
+    spec['devices']['clint'] = dict(device['binder'], irq={'soft':'softwareIrq'}, exports=['softwareIrq'])
+    p.write_text(json.dumps(spec))
+    compose(p,tmp_path/'out')
+    text=(tmp_path/'out/ComposedSoc.scala').read_text()
+    assert 'core.interrupts(3) := clint.io.softwareIrq' in text
+    assert 'clint.io.softwareIrq.toIo()' in text

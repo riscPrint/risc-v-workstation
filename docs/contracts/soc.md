@@ -241,3 +241,11 @@ binders also require a qualified Scala `class`. The first profile requires
 The generated `rvw.soc-composed/1` manifest records profile, memory dimensions,
 clock/reset intent, bus paths, map/composition/ELF hashes and
 `validation=generated_only`. This is generation metadata, not C1 evidence.
+
+## Peripheral binders
+
+Composition project binders can add `exports`, a list of IO member names to
+export at the top, and `irq`, an interrupt-name to IO-member dictionary.
+The default interrupt member is `irq`. `soc_peripheral` returns `region` in
+the existing map format and `binder` for the composition file. This metadata
+covers register addresses. It does not describe every dynamic device effect.
