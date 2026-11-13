@@ -32,10 +32,9 @@ coverage only after the final store passes Spike. `spike-capture-PROGRAM` retain
 the captured reference inputs. C3 source identity remains incomplete.
 This example does not earn C4 acceptance.
 
-The profile uses scalar RV32IM retirements, RAM and M-mode. It supplies no
-interrupt or debug stimulus. The selected VexTop has no debug unit.
-Architectural IRQ/debug checks, SoC peripheral integration and full ISA
-qualification remain open. The RAM-only binding reports no data faults.
+The profile uses scalar RV32IM retirements, RAM and M-mode. It supplies optional seeded interrupt stimulus. It supplies
+no debug stimulus. The selected VexTop has no debug unit.
+Full interrupt qualification, debug checks and full ISA qualification remain open. The RAM-only binding reports no data faults.
 It does not qualify access-fault behavior.
 
 Use the current generated RTL directory recorded in a C1 `result.json`
@@ -53,7 +52,7 @@ checks cause and tval before the next retirement. This covers synchronous
 trap synchronization in ISA bootstrap code. `CpuEvents` also supplies a
 requested-IRQ check and independent debug halt-state comparison. Those API
 checks have unit tests. They do not qualify architectural IRQ/debug behavior
-on this core. The live example drives no interrupts or debug requests.
+on this core. The optional event program below drives interrupts. It drives no debug requests.
 
 ## Native results on 2026-11-13
 
@@ -84,3 +83,45 @@ Local evidence is under
 The runs used the private `vex-uvm` lock. The binding has no supervisor
 interrupt port because the selected RTL is M-only. These six tests do not
 establish full ISA coverage, interrupt/debug support or C4 acceptance.
+
+## Native interrupt and CSR sequences
+
+```sh
+Uvm/examples/vexriscv/build-events.sh /tmp/vex-events-new
+RVW_VEX_EVENTS_DIR=/tmp/vex-events-new scripts/with-lock.sh vex-uvm nice -n 10 \
+ rvw/.venv/bin/python -m pytest rvw/tests/test_uvm_events_native.py -q
+```
+
+Set `RVW_CPU_SHIM` and generate the matching VexTop RTL first. Put the
+RISC-V compiler on PATH. Use `RISCV_PREFIX` for another compiler prefix.
+The build refuses an existing output directory.
+
+The interrupt program enables MSIP, MTIP and MEIP, sets an M-mode handler,
+then waits for eight interrupts. The environment chooses request causes
+and gaps from its seed. It holds each request until a real trap pulse.
+`CpuEvents` verifies the cause was requested and checks cause/tval with
+independently stepped Spike. The handler executes `mret`. Every retirement
+also passes the ordinary Spike scoreboard. Completion requires eight
+interrupt checks and a checked `tohost=1` store.
+
+The CSR program comes from the standard catalog selection in `csr.json`.
+It initializes unknown-reset `mscratch`, reads it, and tests zero, all ones,
+walking ones and seeded random writes with readback. It restores zero.
+The native collector records actual CSR retirements. `CsrQualification`
+then checks those responses against the independent catalog model. It also
+checks each instruction's CSR address, operation and source write data.
+Spike checks the complete instruction stream independently.
+Only present, permitted M-mode CSR operations use this collector. Denied
+accesses require a separate trap collector and are refused during planning.
+
+Native results on 2026-11-13 with Verilator 5.049:
+
+- IRQ seeds 1 and 3: eight synchronized interrupt events per run.
+- CSR seed 1: 88 catalog checks and 145 Spike retirement comparisons.
+- Opt-in event tests: 3 passed, 0 skipped.
+
+The selected M-only VexTop has no debug unit or debug request port.
+Native random debug-request tests cannot run on this configuration.
+A debug-enabled project configuration and matching architectural reference
+are still required. These IRQ and CSR runs do not establish debug support,
+all CSR semantics or C4 acceptance.
