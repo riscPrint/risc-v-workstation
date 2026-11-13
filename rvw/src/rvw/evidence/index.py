@@ -5,7 +5,8 @@ import sqlite3
 from pathlib import Path
 from rvw.results import validate_run, validate_results, validate_verdict
 
-PREFIXES = ('rvw.run/', 'rvw.results/', 'rvw.verdict/', 'rvw.bundle/', 'rvw.formal', 'rvw.coverage', 'rvw.lint/')
+PREFIXES = ('rvw.run/', 'rvw.results/', 'rvw.verdict/', 'rvw.bundle/', 'rvw.formal', 'rvw.coverage', 'rvw.lint/',
+            'rvw.functional-coverage/', 'rvw.rtl-coverage/', 'rvw.probe-coverage/')
 
 
 def sha(path):
