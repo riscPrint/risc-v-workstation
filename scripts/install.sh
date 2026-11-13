@@ -452,6 +452,8 @@ if [ "$local_uv" = 1 ]; then
   run mkdir -p "$tools/bin"
   run ln -sf "$HOME/.local/bin/uv" "$tools/bin/uv"
 fi
+# Validate the lock before uv can replace an existing development environment.
+run uv lock --check --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_home/rvw/.venv"
 run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
