@@ -286,3 +286,8 @@ New argument names can use schema `x-rvw-path: true` or `format: path`.
 Path arguments require a bound project. Local stdio paths are unchanged.
 This is not an OS sandbox. Project data, plugins, commands, encoded JSON and
 environment defaults remain trusted under C8. Use OS isolation for untrusted users.
+
+Path admission preserves URLs, image names, regexes and revision selectors.
+The slow socket tests also check project ownership. The fast registry test
+tries traversal through every discovered string and array argument before
+any handler or job can run.

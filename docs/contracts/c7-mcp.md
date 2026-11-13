@@ -207,3 +207,7 @@ This is argument admission, not an OS sandbox. Trusted project files, tool
 code, command arrays, encoded JSON strings, environment defaults and referenced
 file contents can name other files. C8 still excludes hostile inputs and races.
 Do not expose execution tools to mutually untrusted tenants without OS isolation.
+
+Path admission preserves non-path strings such as image names, endpoints,
+regular expressions and revision selectors. Slash characters still receive
+an escape check. Only declared filesystem arguments are made absolute.
