@@ -79,3 +79,21 @@ Automatic bench generation requires supported typed bus metadata. A database
 with plain Verilog ports returns `status: unsupported` and writes no bench.
 The CLI exits 2. MCP returns the same status. Supply a project-owned bench
 and explicit protocol pin bindings. Port names alone do not establish a bus.
+
+## Declared plain HDL channels
+
+`rvw.hdl-ports/1` supplies `top`, `clock`, `reset` with `signal` and integer
+`active`, and `buses`. Each bus has a unique `name`, `protocol: "ready_valid"`,
+and `ports` with scalar `valid`, scalar `ready`, and an ordered `payload` list.
+The selected database must contain each port on the declared top with known
+width. No Spinal class metadata is needed or inferred.
+
+`rvw vip buses` and `bench` accept `--port-map FILE`. `rvw uvm new` accepts the
+same option for a pyuvm skeleton. Its scenario must start the clock, reset the
+DUT, drive stimulus and check positive expected results. It must complete a
+transfer. These commands generate skeletons, not passing DUT evidence.
+
+`rvw checks generate` accepts `buses: {"database": "design.db", "port_map":
+"ports.json"}` in its generation manifest. The emitted monitor checks that
+valid and payload stay stable while stalled. Reset polarity is explicit.
+No memory response, bus role, fairness or completion property is inferred.

@@ -75,3 +75,8 @@ Automatic bench generation requires supported typed bus metadata. A database
 with plain Verilog ports returns `status: unsupported` and writes no bench.
 The CLI exits 2. MCP returns the same status. Supply a project-owned bench
 and explicit protocol pin bindings. Port names alone do not establish a bus.
+
+Plain HDL projects can pass `--port-map ports.json` to `vip buses` and `vip
+bench`. The `rvw.hdl-ports/1` declaration lists the top, clock, reset polarity,
+and a `ready_valid` channel with valid, ready and payload port names. The HDL
+database validates the ports and widths. See `docs/contracts/vip.md`.

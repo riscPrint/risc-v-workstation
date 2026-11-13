@@ -17,6 +17,10 @@ def generate(kind,entry,base,out):
         contracts=json.loads((base/entry['contracts']).read_text()) if entry.get('contracts') else {}
         result=generate_streams(base/entry['database'],report,contracts,out)
         return dict(status=result['status'],instances=result['channels'])
+    if kind=='buses' and 'port_map' in entry:
+        from rvw.common.hdl_ports import checks
+        result=checks(base/entry['database'],base/entry['port_map'],out)
+        return dict(status=result['status'],instances=result['buses'])
     if kind=='buses':
         if set(entry)-{'database','depth','max_beats','type_report','clocks'} or 'database' not in entry:
             raise ValueError('buses needs database and optional tracker depth/max_beats')

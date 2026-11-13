@@ -11,9 +11,9 @@ def register(sub):
     q=commands.add_parser('list',help='list protocol agents and supported Spinal bus types')
     q.set_defaults(func=_run)
     q=commands.add_parser('buses',help='list supported typed buses in a design database')
-    q.add_argument('--db',required=True); q.set_defaults(func=_run)
+    q.add_argument('--port-map'); q.add_argument('--db',required=True); q.set_defaults(func=_run)
     q=commands.add_parser('bench',help='generate a cocotb bench skeleton for one typed bus')
-    q.add_argument('--db',required=True); q.add_argument('--bus')
+    q.add_argument('--port-map'); q.add_argument('--db',required=True); q.add_argument('--bus')
     q.add_argument('--out',required=True); q.add_argument('--clock',default='clk'); q.add_argument('--reset',default='reset_n')
     q.set_defaults(func=_run)
 
@@ -21,8 +21,8 @@ def register(sub):
 def _run(a):
     try:
         if a.vip_command=='list': result=agents()
-        elif a.vip_command=='buses': result=buses(a.db)
-        else: result=skeleton(a.db,a.out,a.bus,a.clock,a.reset)
+        elif a.vip_command=='buses': result=buses(a.db,port_map=a.port_map)
+        else: result=skeleton(a.db,a.out,a.bus,a.clock,a.reset,port_map=a.port_map)
         print(json.dumps(result,indent=2)); return 2 if result.get('status') == 'unsupported' else 0
     except (QueryError,OSError,ValueError) as exc:
         print('rvw vip: '+str(exc),file=sys.stderr); return 2

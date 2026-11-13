@@ -32,7 +32,10 @@ def _buses(db):
             for p,t in db.conn.execute('SELECT path,class_name FROM bundles ORDER BY path') if t in TYPES]
 
 
-def buses(db):
+def buses(db, port_map=None):
+    if port_map:
+        from rvw.common.hdl_ports import load
+        return {'buses': load(db,port_map)['buses'], 'source': 'project-declared ports'}
     def inventory(design):
         found = _buses(design)
         return {'buses': found} if found else unsupported()
@@ -45,7 +48,10 @@ def unsupported():
 
 
 
-def skeleton(db, out, bus=None, clock='clk', reset='reset_n'):
+def skeleton(db, out, bus=None, clock='clk', reset='reset_n', port_map=None):
+    if port_map:
+        from .declared import skeleton as declared
+        return declared(db,out,port_map,bus)
     def generate(design):
         available = _buses(design)
         if not available:

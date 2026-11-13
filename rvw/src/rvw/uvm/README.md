@@ -182,3 +182,10 @@ one failed `ma_data` program. Neither campaign establishes a full suite pass.
 The capture checker validates zero IRQ observations, checked trap/handler
 markers, a unique completion store and all captured suffix retirements.
 Active IRQ stimulus remains unsupported in that replay profile.
+
+`rvw uvm new --db design.db --soc soc.json --port-map ports.json --rtl top.v
+--out bench` generates a plain HDL ready/valid pyuvm skeleton. The port map
+uses `rvw.hdl-ports/1`. The project must implement `scenario.py`, including
+clock/reset, stimulus and positive expected-result checks. Generation is not
+native verification. The declared path currently supports one ready/valid
+channel and pyuvm. See `docs/contracts/vip.md`.
