@@ -62,6 +62,7 @@ private[spinalchecks] object ProtocolChecks {
       val cLast = last(c)
       val cBeat = RegInit(False)
       when(c.fire) { cBeat := !cLast }
+      TileLinkProbeChecks(bus, !cBeat, emit)
       val release = Opcode.C.isRelease(c.opcode)
       val releaseAck = d.opcode === Opcode.D.RELEASE_ACK
       val releases = Vec.fill(n)(RegInit(False))
@@ -88,7 +89,7 @@ private[spinalchecks] object ProtocolChecks {
     val op = a.opcode
     val legalParam = (Opcode.A.isGetPut(op) && a.param === 0) ||
       (Bool(p.withBCE) && Opcode.A.isAcquire(op) && a.param.asUInt <= 2 &&
-        (op =/= Opcode.A.ACQUIRE_PERM || a.param =/= 0))
+        (op =/= Opcode.A.ACQUIRE_PERM || a.param =/= 0) && a.size >= log2Up(p.dataBytes))
     val alignMask = ((U(1, p.addressWidth + 1 bits) |<< a.size) - 1).resize(p.addressWidth)
     val badMask = if (p.withDataA) {
       val masks = (0 to p.sizeMax).map(sz => B((BigInt(1) << scala.math.min(1 << sz, p.dataBytes)) - 1, p.dataBytes bits))
@@ -96,6 +97,7 @@ private[spinalchecks] object ProtocolChecks {
       val access = if (p.dataBytes == 1) base else (base |<< a.address(log2Up(p.dataBytes) - 1 downto 0)).resized
       ((op === Opcode.A.GET || op === Opcode.A.PUT_FULL_DATA) && a.mask =/= access) ||
         (op === Opcode.A.PUT_PARTIAL_DATA && (a.mask & ~access) =/= 0) ||
+        (Opcode.A.isAcquire(op) && a.mask =/= B((BigInt(1) << p.dataBytes) - 1, p.dataBytes bits)) ||
         (op === Opcode.A.GET && a.corrupt)
     } else False
     emit("tilelink.request_legal", "_a", a.valid.isInput, "Spinal TileLink A opcode, parameter, size and alignment",
@@ -105,6 +107,7 @@ private[spinalchecks] object ProtocolChecks {
         (grant && d.param.asUInt > 1) || (!grant && d.param =/= 0) ||
         (Bool(!p.withBCE) && (grant || d.opcode === Opcode.D.RELEASE_ACK)) ||
         (d.opcode === Opcode.D.RELEASE_ACK && d.denied) ||
+        ((grant || d.opcode === Opcode.D.RELEASE_ACK) && d.size < log2Up(p.dataBytes)) ||
         (if (p.withDataD) ((!Opcode.D.isData(d.opcode) && d.corrupt) ||
           (Opcode.D.isData(d.opcode) && d.denied && !d.corrupt)) else False)))
   }

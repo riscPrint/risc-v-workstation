@@ -34,7 +34,7 @@ def render(kind, signals, name):
         if signals[channel+'.valid'][3] != 1 or signals[channel+'.ready'][3] != 1:
             raise ValueError('channel valid and ready must be one bit')
         keys = sorted(k for k in signals if k.startswith(channel+'.payload.'))
-        if not keys:
+        if not keys and not (kind=='tilelink' and channel=='e'):
             raise ValueError('missing complete payload for '+channel)
         nets = {k: field(k) for k in keys}
         payload = '{'+', '.join(nets.values())+'}'

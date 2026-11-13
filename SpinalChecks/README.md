@@ -924,3 +924,14 @@ component path, live local RTL signals and library width/options. This permits
 exact type binding when a design database stores only the simple class `Bus`.
 Use the report with `rvw formal buses --type-report` or a project bus
 `type_report` entry. No class is inferred from port spelling.
+
+### Coherent probe checks
+
+Native TileLink checks match B probes to C ProbeAck messages by source and
+address. They check size, permission cap, ProbePerm no-data responses,
+reserved parameters and coherent transfer alignment. Different addresses
+can share a source. The native tracker has 16 pending-pair slots. The
+`tilelink.probe_capacity` check reports that instrumentation limit. It does
+not define a TileLink protocol limit. Cache data and permission state need
+an independent project model. The procedural database generator exposes
+its separate probe capacity with `formal buses --depth`.

@@ -141,3 +141,18 @@ an ambiguous database `Bus` only when top, component path and the full live
 signal-name set match exactly one inventory row. Missing or duplicate matches
 remain unsupported. The type report does not establish capture equivalence
 or protocol correctness.
+
+## TileLink transaction safety profile
+
+A generated bus row can set `protocol_profile=tilelink-uh-probe-c`,
+`coverage=transaction_safety`, `probe_tracker_depth` and `check_groups`.
+A/D source state is independent of DUT storage. Accepted beats start bursts.
+Headers stay fixed inside a burst. A stalled beat inside a burst retains
+valid and payload. Unaccepted first offers can change.
+The profile checks Get, Put, ArithmeticData, LogicalData and Hint matching.
+Coherent channels add Acquire/Grant, Release/ReleaseAck, GrantAck sinks and
+Probe/ProbeAck pairs. Probe keys contain source and address. Capacity is
+an instrumentation bound. Coherent B supports probes only. Negotiated
+address regions, operation capabilities, cache permissions, data state and
+forward progress are outside the profile. Zero-width source and sink fields
+require exact library options from a matching type inventory.
