@@ -90,8 +90,19 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
     if machine:
         from .machine_checks import run as run_machine
         path = Path(machine).resolve()
-        result = run_machine(json.loads(path.read_text()), path.parent, out / 'machine', timeout)
-        machine_rows = {r['check']: dict(r, evidence='machine/result.json') for r in result['rows']}
+        plan = json.loads(path.read_text())
+        if plan.get('schema') == 'rvw.csr-slices/1':
+            from .csr_slices import execute
+            result = execute(plan, path.parent, out / 'machine', timeout)
+            rows.extend(dict(r, check='csr_consistency:' + r['csr'],
+                             evidence='machine/result.json') for r in result['rows'])
+            machine_rows['csr_consistency'] = dict(check='csr_consistency',
+                status='failed' if result['status'] == 'fail' else 'inconclusive',
+                reason='Per-CSR inventory; local cuts require pipeline composition.',
+                evidence='machine/result.json')
+        else:
+            result = run_machine(plan, path.parent, out / 'machine', timeout)
+            machine_rows = {r['check']: dict(r, evidence='machine/result.json') for r in result['rows']}
     for check in MACHINE_CHECKS:
         rows.append(machine_rows.get(check, dict(check=check, status='unsupported', reason='No machine-state binding selected.')))
     rows += [dict(check='sail_models', status='unsupported',

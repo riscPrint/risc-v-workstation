@@ -967,3 +967,24 @@ outside this subset.
 Replay metadata for this subset also retains the Boolean `antecedent` and
 `consequent` expressions. These fields describe the parsed operands. They do
 not indicate that replay or proof ran.
+
+## CSR slice contracts
+
+`rvw.csr-slices/1` supplies implemented `addresses`, project `bindings` keyed
+by catalog CSR name, and a base `machine` plan in `rvw.machine-checks/1` format.
+The shared catalog resolves every address. Missing bindings stay unsupported.
+Each binding uses the existing CSR consistency signal map and write mask.
+Optional `cone_cuts` names local RTL nets. Yosys must find exactly one net for
+each cut. It replaces the driver with an unconstrained symbolic value.
+Project assumptions must state the boundary contract in the captured source.
+
+`rvw.csr-slice-results/1` has one row per implemented address, the pinned
+catalog revision, and native check and cover tokens. A passing cut job reports
+`local_status: bounded`, `status: inconclusive`, and scope `local cone contract`.
+This result requires separate pipeline composition evidence. A failing cut job
+is a local contract counterexample. It does not by itself establish a core bug.
+The API runs jobs in sequence. It does not grant whole-bank signoff.
+
+`rvw formal isa --machine SLICES.json` accepts this slice manifest and prints
+one `csr_consistency:NAME` row for each catalog entry. The aggregate CSR row
+stays inconclusive while any binding or composition evidence is missing.

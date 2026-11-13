@@ -1,0 +1,153 @@
+{
+  "schema": "rvw.csr-slice-results/1",
+  "status": "inconclusive",
+  "rows": [
+    {
+      "csr": "mstatus",
+      "address": 768,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "misa",
+      "address": 769,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mie",
+      "address": 772,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mtvec",
+      "address": 773,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mscratch",
+      "address": 832,
+      "status": "inconclusive",
+      "manifest": "$RUN_ROOT/jobs/mscratch/machine.json",
+      "cone_cuts": [
+        "execute_SRC1"
+      ],
+      "scope": "local cone contract",
+      "native": {
+        "check": "PASS",
+        "cover": "PASS"
+      },
+      "depth": 25,
+      "local_status": "bounded",
+      "reason": "Local cone contract passed; pipeline composition is not established."
+    },
+    {
+      "csr": "mepc",
+      "address": 833,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mcause",
+      "address": 834,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mtval",
+      "address": 835,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mip",
+      "address": 836,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mcycle",
+      "address": 2816,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "minstret",
+      "address": 2818,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mcycleh",
+      "address": 2944,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "minstreth",
+      "address": 2946,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "cycle",
+      "address": 3072,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "instret",
+      "address": 3074,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "cycleh",
+      "address": 3200,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "instreth",
+      "address": 3202,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mvendorid",
+      "address": 3857,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "marchid",
+      "address": 3858,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mimpid",
+      "address": 3859,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    },
+    {
+      "csr": "mhartid",
+      "address": 3860,
+      "status": "unsupported",
+      "reason": "Needs an independent WARL, hardware-update or read-only binding."
+    }
+  ],
+  "catalog_revision": "176fc36018be56925061566447a656b93eba0ddb",
+  "limits": [
+    "Local cone contracts require separate pipeline composition evidence.",
+    "Unsupported CSR rows are gaps, not passes."
+  ],
+  "source_sha256": {
+    "input0.sv": "f5b19ae2e1e8313407317ffe88dc430eb6366e530c9312a3c116c53b7d9b1777"
+  },
+  "rtl_sha256": "420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37",
+  "task_timeout_seconds": 50
+}
