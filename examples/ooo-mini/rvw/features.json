@@ -1,10 +1,16 @@
 {
   "schema": "rvw.regress-features/1",
   "isa": "rv32im_zicsr_zifencei",
-  "privilege_modes": "M",
+  "privilege_modes": "MU",
   "satp_modes": [],
-  "pmp_regions": 0,
+  "pmp_regions": 4,
   "harts": 1,
-  "irq_inputs": [3, 7, 11],
-  "capabilities": []
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
+  "capabilities": [
+    "pmp-granularity:4"
+  ]
 }

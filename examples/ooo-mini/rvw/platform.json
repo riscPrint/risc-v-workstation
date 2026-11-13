@@ -11,14 +11,14 @@
     }
   ],
   "mmio": [],
-  "pmp_regions": 0,
+  "pmp_regions": 4,
   "aligned_mem": false,
   "irq_inputs": [
     3,
     7,
     11
   ],
-  "privilege_modes": "M",
+  "privilege_modes": "MU",
   "misaligned": {
     "load": "emulate",
     "store": "emulate",
@@ -32,7 +32,6 @@
     "page_table": "little",
     "device": "little"
   },
-  "absent_pmp_csrs": "read_zero_write_ignored",
   "ecall_tval": "zero",
   "sail_overrides": {
     "platform": {

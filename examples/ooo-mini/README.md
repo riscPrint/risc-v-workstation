@@ -19,7 +19,7 @@ The instruction port supplies one word at `fetch`. The data port supplies four
 little-endian bytes starting at `loadAddress`, including unaligned addresses.
 RAM must respond without a wait state. There are no caches, translation,
 compressed instructions, atomics or floating-point instructions.
-The machine CSR bank supports the selected tests. Full privileged ISA compliance
+The M/U CSR bank and four PMP entries support the selected tests. Full privileged ISA compliance
 has not been established. The fixture supplied the committed-map recovery pattern;
 its two-register payload interface is not a component of this core.
 
@@ -177,3 +177,9 @@ The core now has MSIP, MTIP and MEIP inputs with commit-boundary recovery.
 See [interrupt checks](rvw/interrupts.md) for the commands and limits.
 The measured tables above predate this extension. New runtime measurements
 are separate from those historical results.
+
+## U-mode and PMP extension
+
+See [protection checks](rvw/protection.md) for 243 passing RTL cases with
+243 strict Spike matches, the matcher tests and one bounded isolation pair.
+These results are separate from the historical coverage and formal tables.
