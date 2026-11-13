@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'nmi-matrix':'rnmi', 'nmi-return':'rnmi', 'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -107,11 +107,11 @@ def reference(directory, spike='spike', timeout=2):
         from importlib import import_module
         modules={'imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway',
                  'aclint':'fast_interrupts','smnip':'fast_interrupts',
-                 'reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
+                 'rnmi':'rnmi','reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
         models=[import_module('rvw.privilege.controllers')];rows=[]
         backend=manifest['config']['reference_backend']
         native=backend!='python'
-        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('reri-transactions','spike_reri')}
+        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('nmi-matrix', 'nmi-return', 'reri-transactions','spike_reri')}
         if native and manifest['config'].get('kind')!=native_modules[backend][0]:
             raise ValueError('native device backend differs from the selected campaign kind')
         if native and not manifest['config'].get('reference_shim'):

@@ -534,3 +534,28 @@ Error events call the model's hardware-error entry. They do not emulate hardware
 injection by writing status. All seven self-checks pass with the example's
 nonzero initial state. Reports remain model-based. They make no RAS signal-
 delivery, poison-propagation, physical correction or DUT recovery claim.
+
+## Smrnmi entry state and MNRET
+
+`kind = "nmi-return"` pins `spec_version = "Smrnmi-1.0"` and runs six native
+MNRET programs. They write a return PC and M/S/U mode, check that software cannot
+clear NMIE, and execute MNRET with MPRV set. After a checked ECALL, they verify
+NMIE set, exact return PC, retained registers and MPRV cleared for lower-mode
+return. These test the return instruction. They do not inject an RNMI.
+
+`kind = "nmi-matrix"` emits 12 project-driven entry programs with the full
+example. It crosses M/S/U, ordinary exception nesting and an ordinary MSIP
+pending during the RNMI. It checks saved MNPP, mnepc, mncause and NMIE. A PMP region that denies S/U access checks that NMIE=0 makes MPRV ineffective in the handler.
+Ordinary pending interrupts must wait until MNRET returns. Their handler checks
+that the exception PC lies in the resumed program. Nested exceptions preserve
+the RNMI frame. The project declares the RNMI vector and either a distinct
+`exception_vector` or `exception_uses_mtvec = true`. The generator does not
+assume those implementation-defined vectors are the same.
+
+The entry profile requires eight PMP entries and grain at most 16 bytes.
+The example declares both. It follows Smrnmi without Smdbltrp. Double-trap,
+guest and CFI RNMI frames need separate profiles. Native Spike does not model
+external RNMI entry or these project exception vectors. Entry reference results
+come from the small Python state model and remain model-based. Compilation,
+model checks and native MNRET success do not establish DUT RNMI entry, reset
+interaction or machine-error recovery.
