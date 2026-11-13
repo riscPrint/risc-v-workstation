@@ -5,10 +5,11 @@ complete single-hart C2 trace. This engine does not use gem5. Spike traces
 must first be exported as C2. RTL cycle timestamps are validated but do not
 drive the prediction. The full trace is the measured region.
 
-The latest NaxRiscv drain study has 10 wrong structure deltas out of 24.
-Five of 15 nonzero RTL changes meet the error criterion. The earlier
-PR #1218 result was two of 15. See [the drain stage](#resource-study-drain)
-and [PR #1231](https://github.com/riscPrint/risc-v-workstation/pull/1231).
+The latest NaxRiscv retry stage meets the criterion on 9 of 24 total pairs
+and 1 of 15 nonzero RTL changes. Training/held-out IPC MAE is 9.46%/9.54%.
+The earlier drain stage reached 5 of 15; PR #1218 reached 2 of 15. See
+[the retry stage](#resource-study-replay) and
+[PR #1238](https://github.com/riscPrint/risc-v-workstation/pull/1238).
 Structure-size choices still need RTL measurements.
 See the measured structure-delta section below.
 

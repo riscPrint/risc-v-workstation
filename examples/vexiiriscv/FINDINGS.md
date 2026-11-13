@@ -32,8 +32,8 @@ and [#1171](https://github.com/riscPrint/risc-v-workstation/pull/1171).
 
 ## Other tools
 
-The collected formal, security and debug records do not establish another
-VexiiRiscv core defect. Export limits, bounded passes and missing bindings
+The collected security and debug records do not establish another
+VexiiRiscv core defect. The optional divider finding is listed below. Export limits, bounded passes and missing bindings
 remain evidence limits. Reset stimulus was a harness gap in #1128, not a
 core finding. Device and C2 capture bugs fixed in #1147 are tool defects.
 
@@ -65,3 +65,13 @@ The reset gap recorded in #1128 is resolved for the one-hart RV64 main pin.
 three fresh RTL passes and strict Spike matches across nine repeated pulses.
 The initial timeout was a harness sampling defect. It is not a core finding.
 Separate SoC reset domains, device reset and debug reset remain untested.
+
+## VEXII-DIVZERO-IPC-001
+
+Confirmed core defect on the optional bitpasta IPC configuration.
+DIV and DIVU return `0x808080ab` for division by zero. The M extension
+requires an all-one quotient. The default and area configurations pass the
+four measured division/remainder programs. No upstream patch was applied.
+
+[Minimal assembly, runner and native receipts](findings/bitpasta-div-zero/README.md).
+Source: [#1170](https://github.com/riscPrint/risc-v-workstation/pull/1170).
