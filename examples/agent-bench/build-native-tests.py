@@ -35,9 +35,9 @@ for name in tests:
         '-I' + str(env / 'p'), '-I' + str(source / 'isa/macros/scalar'),
         '-T', str(env / 'p/link.ld'), str(source / 'isa' / family / (test + '.S')),
         '-o', str(a.out / name)], check=True)
-print(f'Built {len(tests)} programs from {PIN}; first instruction initializes mscratch')
 
 subprocess.run(['nice', '-n', '15', 'riscv64-unknown-elf-gcc', '-march=rv32im_zicsr_zifencei',
     '-mabi=ilp32', '-nostdlib', '-nostartfiles', '-Wl,--build-id=none',
     '-T', str(env / 'p/link.ld'), str(Path(__file__).with_name('agent-control.S')),
     '-o', str(a.out / 'agent-control')], check=True)
+print(f'Built {len(tests)} programs from {PIN}; first instruction initializes mscratch')

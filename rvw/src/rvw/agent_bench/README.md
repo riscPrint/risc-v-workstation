@@ -200,3 +200,38 @@ separate from the failing ISA body. Native runs stop after 10,000 cycles.
 A complete C2 cycle-limit run can detect a seeded fault only when strict Spike
 comparison has an explicit architectural mismatch. A wall timeout, missing end
 or matching prefix remains inconclusive. Raw C1 timeout status is retained.
+
+## Actual native evidence admission
+
+`rvw agent-bench audit-run --run-dir RUN --elf ELF --expected IDENTITY.json`
+checks actual C1/C2 files against task-owned identities. MCP tool:
+`agent_bench_audit_run`. Use `--require coverage.dat` to require that artifact.
+Presence does not establish coverage completeness. A consistent old C1/C2 pair
+needs the intended task identity to be rejected as stale. Admission cannot earn
+repair credit. The independent repair checker still judges the candidate.
+
+On 2026-11-13, replay from a real VexRiscv C1/C2 capture gave these results.
+The original 527-retirement capture passed C1 and strictly matched Spike after
+an explicit first-instruction `mscratch` write. The misleading cases edit copied
+metadata or omit evidence. They do not execute a second core simulation.
+
+| Input | Admission | Repair claimed |
+|---|---|---|
+| Consistent native pair | evidence_consistent | No |
+| Old RTL pair against the seeded task hash | inconclusive | No |
+| Different real ISA ELF | inconclusive | No |
+| Unsupported C2 capability | inconclusive | No |
+| Required coverage artifact missing | inconclusive | No |
+| Native run end removed | inconclusive | No |
+
+Regenerate these cases with a retained native capture:
+
+```sh
+nice -n 15 rvw/.venv/bin/python examples/agent-bench/audit-misleading.py \
+  --run-dir BASELINE_RUN --elf MATCHING_ELF --wrong-elf OTHER_ELF \
+  --stale-rtl SEEDED_RTL_SHA256 --out /path/outside/repository/new-audit
+```
+
+A controlled repair-runner test also checks a candidate that passes its named
+program and fails a hidden independent program. It earns `repair_rejected`.
+A native core run of that wrong-fix case remains NOT RUN.

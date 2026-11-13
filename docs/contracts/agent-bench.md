@@ -248,3 +248,16 @@ qualify a seeded failure when its strict Spike result has an explicit mismatch.
 This rule applies only to fail-to-pass seeds. Controls and repairs must pass.
 A wall timeout, missing end or matching prefix stays inconclusive. Raw C1
 status is never changed in the report.
+
+## Native evidence admission
+
+`agent-bench audit-run` and MCP `agent_bench_audit_run` return
+`rvw.agent-evidence-audit/1`. They validate actual C1/C2 syntax, identity equality,
+ELF bytes, a nonempty trace and its end status. Optional `expected_identity`
+checks task-owned RTL, ELF, source, seed or config values. Without this input,
+a consistent old C1/C2 pair is not bound to a current task. `task_identity_fields`
+records which task fields were checked. Optional relative `required_artifacts`
+checks file presence only. It does not check coverage completeness or properties.
+`evidence_consistent` is an admission result, never a repair or C4 verdict.
+Missing or mismatched inputs are `inconclusive`. Both results retain `repair:
+NOT CLAIMED` and `c4_acceptance: NOT CLAIMED`.

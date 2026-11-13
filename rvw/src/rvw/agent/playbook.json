@@ -1294,6 +1294,7 @@
       "when": "Measure a bounded fixture or native repair task with independent checks.",
       "profile": "verification",
       "tools": [
+        "agent_bench_audit_run",
         "agent_bench_evidence_solve",
         "agent_bench_native_qualify",
         "agent_bench_repair_check",
