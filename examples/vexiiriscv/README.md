@@ -403,6 +403,10 @@ declares; see the device binding below (4/4 match). NMI, AIA, Sstc, state-enable
 are not in the requirement catalog and need extensions or devices this core
 does not have.
 
+The 19 denied-walk failures have one confirmed core cause: PTE reads bypass PMP.
+See [the per-program triage, directed Spike reproduction and wave window](findings/ptw-pmp/README.md).
+The fetch-fault reference-plan gap is fixed. No failed run becomes a pass.
+
 ### Page-walk observations
 
 C2 `mmu_walks` come from the MMU refill state machine (`WalkTap` and

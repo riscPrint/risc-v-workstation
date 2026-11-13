@@ -154,7 +154,7 @@ def check_c2(path, accesses, identity=None):
 
 
 def scenario_accesses(s):
-    """Build independent snapshots for bounded MPRV data scenarios.
+    """Build independent snapshots for bounded MPRV data and fetch-fault scenarios.
 
     Root switching and unfenced alternatives need a project-owned access plan.
     Empty plans must not earn a comparison verdict.
@@ -167,7 +167,8 @@ def scenario_accesses(s):
         g = geometry(s)
         memory = {ROOT + d * 4096 + i * g.width: value for d, table in enumerate(p['tables']) for i, value in enumerate(table)}
         return [dict(mode=s['mode'], root=ROOT, va=0x40000000 + a['page'] * 4096, access=a['access'], memory=memory) for a in p['accesses']]
-    if any(k in s for k in ('control', 'guest', 'shootdown', 'pointer_mask', 'pbmt', 'napot', 'ad_expect')) or s.get('access') not in ('load', 'store') or s.get('root_switch') or s.get('switch_asid') or s.get('unfenced') or s.get('mode_switch') or s.get('satp_mode') == 'bare' or not s.get('mprv', True):
+    fetch_fault = s.get('access') == 'fetch' and ('pte_fault_level' in s or 'walk_deny_level' in s)
+    if any(k in s for k in ('control', 'guest', 'shootdown', 'pointer_mask', 'pbmt', 'napot', 'ad_expect')) or (s.get('access') not in ('load', 'store') and not fetch_fault) or s.get('root_switch') or s.get('switch_asid') or s.get('unfenced') or s.get('mode_switch') or s.get('satp_mode') == 'bare' or not s.get('mprv', True):
         return []
     g = geometry(s)
     flags = sum(FLAGS[f] for f in set(s['flags']))
