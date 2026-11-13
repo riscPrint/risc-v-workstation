@@ -9,14 +9,15 @@ API_VERSION = 1
 MANIFEST = '.rvw-adapters.json'
 
 
-def resolve(source: Path, revision: str | None):
+def resolve(source: Path, revision: str | None, *, manifest: Path | None = None):
     """Return None for legacy projects, or an identity and captured command.
 
     A project can select exact revision entries or read a version marker from
     the captured core tree. No Git lookup or mutable checkout is needed.
     """
     source = Path(source).resolve()
-    path = source / MANIFEST
+    path = Path(manifest).resolve(strict=True) if manifest is not None else source / MANIFEST
+    adapter_root = path.parent if manifest is not None else source
     if not path.exists():
         return None
     raw = path.read_bytes()
@@ -38,11 +39,11 @@ def resolve(source: Path, revision: str | None):
         raise ValueError('adapter command must be a nonempty argv list')
     # Commands are captured scripts/executables, not shell strings. Interpreter
     # selection remains the launcher's responsibility; scripts use a shebang.
-    executable = _inside(source, command[0])
+    executable = _inside(adapter_root, command[0])
     if not executable.is_file():
         raise ValueError('selected adapter executable is missing')
     identity = dict(schema='rvw.adapter-selection/1', api=API_VERSION, version=version,
-                    revision=revision, manifest_sha256=hashlib.sha256(raw).hexdigest(),
+                    revision=revision, manifest_scope='project' if manifest is not None else 'source', manifest_sha256=hashlib.sha256(raw).hexdigest(),
                     executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest())
     return [str(executable), *command[1:]], identity
 

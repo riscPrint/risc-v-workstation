@@ -500,3 +500,13 @@ runs each matched 50 instructions, one interrupt trap and a complete trace.
 The two negative runs each stopped at the interrupt trap with `tval`: expected
 0, actual 7. Input deassertion at cycle 220 was present in both complete traces.
 The core revision was `a62c145aa042a5de874344e0a7683bd7c8c8c870`.
+
+## Native history bisect
+
+The [history recipe](rvw/history/README.md) executes real historical
+`VexTop.scala` revisions with captured per-revision project adapters. Native
+`rvw bisect` identified the expected M/S/U-to-M-only change at `6c891a76`.
+Both adjacent endpoints were checked. The older configuration passed the
+supervisor-CSR compatibility program. The newer configuration deliberately
+failed that old expectation. C1 records the selected adapter and source hashes.
+This is a known compatibility transition, not a new core bug or BOOM result.
