@@ -20,9 +20,11 @@ def instrument(source, statements):
     counters = []
     for prop in properties:
         prefix = prop['monitor']
-        for outcome in ('pass', 'fail', 'cover', 'miss'):
+        for outcome in ('pass', 'fail', 'cover', 'miss', 'activated'):
             name = prefix + '_' + outcome
             action = f'$display("RVW_SVA {prefix} {prop["kind"]} {outcome}");'
+            if outcome == 'activated':
+                action = f'$display("RVW_ACTIVATE {prefix}");'
             if action in model:
                 model = model.replace(action, name + ' <= ' + name + ' + 1;')
             counters += [f'reg [63:0] {name} = 0;',
@@ -64,9 +66,9 @@ def run(rtl, programs, out):
         text = (directory / 'run.log').read_text()
         observations = {}
         for monitor, outcome, value in re.findall(r'RVW_COUNT (\w+) (\w+) (\d+)', text):
-            observations.setdefault(monitor, {})[{'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed'}[outcome]] = int(value)
-        checks = [dict(id=p['id'], kind=p['kind'], **observations.get(p['monitor'], {})) for p in props]
-        complete = all(set(observations.get(p['monitor'], {})) == {'passed', 'failed', 'covered', 'missed'} for p in props)
+            observations.setdefault(monitor, {})[{'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed', 'activated': 'activated'}[outcome]] = int(value)
+        checks = [dict(id=p['id'], kind=p['kind'], source=p.get('source'), **observations.get(p['monitor'], {})) for p in props]
+        complete = all(set(observations.get(p['monitor'], {})) == {'passed', 'failed', 'covered', 'missed', 'activated'} for p in props)
         failed = sum(p.get('failed', 0) for p in checks if p['kind'] == 'assert')
         totals = re.search(r'RVW_PROGRAM (\d+) (\d+) (\d+)', text)
         result = dict(schema='rvw.run/1', core='vexriscv', config='rv32im-dsl',

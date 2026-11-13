@@ -940,8 +940,9 @@ The simulation memory model returns ordered responses with one pending request
 per bus. It stops on a nonzero `tohost` store. It has no interrupt stimulus.
 Formal assumes two initial reset clocks and leaves other inputs arbitrary.
 A bounded pass does not prove later behavior. Assertion pass counts include
-false antecedents. Antecedent reachability and complete DSL source attribution
-remain unmeasured. The fetched-instruction identity and eventual retirement or
+false antecedents. Finite simulation reports each matched antecedent. Separate formal cover jobs
+report bounded antecedent reachability. DSL source locations are retained in C1
+and C3. Complete transitive source closure remains uncertified. The fetched-instruction identity and eventual retirement or
 flush property is not implemented in this campaign. No liveness proof is claimed.
 
 ## Single-file failing-run replay

@@ -7,527 +7,736 @@
     "pass": 49
   },
   "source": {
-    "rtl_sha256": "d3c6b83df5577408bc495011244f9219e30ebf98ea2a95d47771cbec7a213bd8"
+    "rtl_sha256": "7a32d9e2e2d94c4648ecefd581b021150470da8f2702687731ed4e38d0b479c9"
   },
   "properties": [
     {
       "property": "stage0_fire_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 38
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17931
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage0_fire_not_stuck",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 39
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17931
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage0_fire_not_removed",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 40
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17931
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage0_stall_pc",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 41
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 1546
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage1_fire_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 38
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17735
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage1_fire_not_stuck",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 39
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17735
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage1_fire_not_removed",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 40
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17735
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage1_stall_pc",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 41
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 588
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage2_fire_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 38
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage2_fire_not_stuck",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 39
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage2_fire_not_removed",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 40
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage2_stall_pc",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 41
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 1188
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage3_fire_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 38
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage3_fire_not_stuck",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 39
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage3_fire_not_removed",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 40
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "stage3_stall_pc",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 41
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "not_reached_within_bound",
+        "activation_depth": 12
       }
     },
     {
       "property": "pc_chain_0",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 45
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17931
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "pc_chain_1",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 45
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17735
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "pc_chain_2",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 45
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "ibus_hold_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 49
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 19737
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "ibus_hold_pc",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 50
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 19737
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "ibus_pc_aligned",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 51
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 40196
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "dbus_hold_valid",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 58
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "dbus_hold_address",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 59
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "dbus_hold_data",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 60
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "dbus_hold_write",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 61
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "dbus_hold_size",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 62
+      },
       "simulation": {
         "passed": 42720,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 0
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "x0_write_zero",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 66
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 4747
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "retire_machine",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 67
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "retire_rv32",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 68
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "retire_pc_aligned",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 69
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 17686
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "trap_mie_clear",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 78
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 196
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "trap_mpp_machine",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 79
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 196
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "trap_mepc_aligned",
       "kind": "assert",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 80
+      },
       "simulation": {
         "passed": 42769,
         "failed": 0,
         "covered": 0,
-        "missed": 0
+        "missed": 0,
+        "activated": 196
       },
       "formal": {
         "status": "bounded-pass",
         "depth": 12,
-        "cache_hit": true
+        "activation": "reached",
+        "activation_depth": 12
       }
     },
     {
       "property": "retirement_reached",
       "kind": "cover",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 81
+      },
       "simulation": {
         "passed": 0,
         "failed": 0,
         "covered": 17686,
-        "missed": 25083
+        "missed": 25083,
+        "activated": 0
       },
       "formal": {
         "status": "not_run",
@@ -537,11 +746,16 @@
     {
       "property": "trap_reached",
       "kind": "cover",
+      "source": {
+        "file": "CoreProperties.scala",
+        "line": 82
+      },
       "simulation": {
         "passed": 0,
         "failed": 0,
         "covered": 196,
-        "missed": 42573
+        "missed": 42573,
+        "activated": 0
       },
       "formal": {
         "status": "not_run",
@@ -549,10 +763,11 @@
       }
     }
   ],
+  "prior_safety_campaign_cache_hits": 34,
   "limits": [
     "finite simulation",
     "formal bound 12",
-    "antecedent reachability not measured",
+    "bounded antecedent cover is not universal activation",
     "instruction-identity liveness not implemented",
     "formal inputs arbitrary after startup reset"
   ]

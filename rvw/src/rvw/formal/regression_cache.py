@@ -70,6 +70,11 @@ def restore(root, value, directory):
         tools_directory = directory / 'sby'
         shutil.copytree(entry / 'sby', tools_directory)
         shutil.copyfile(entry / 'run.log', directory / 'run.log')
+        if isinstance(observation.get('activation'), dict):
+            if not {'activation-sby/model/design_prep.il', 'activation-sby/logfile.txt', 'activation.log'} <= record['files'].keys():
+                return None
+            shutil.copytree(entry / 'activation-sby', directory / 'activation-sby')
+            shutil.copyfile(entry / 'activation.log', directory / 'activation.log')
         return observation
     except (OSError, ValueError, KeyError, TypeError):
         return None
@@ -88,6 +93,9 @@ def publish(root, value, directory, observation):
         entry.mkdir()
         shutil.copytree(directory / 'sby', entry / 'sby')
         shutil.copyfile(directory / 'run.log', entry / 'run.log')
+        if (directory / 'activation-sby').exists():
+            shutil.copytree(directory / 'activation-sby', entry / 'activation-sby')
+            shutil.copyfile(directory / 'activation.log', entry / 'activation.log')
         (entry / 'observation.json').write_text(json.dumps(observation))
         files = {p.relative_to(entry).as_posix(): digest(p) for p in entry.rglob('*') if p.is_file()}
         (entry / 'entry.json').write_text(json.dumps(dict(identity=value, files=files)))

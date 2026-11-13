@@ -1045,3 +1045,10 @@ The helper requires formal-mode RTL and a one-bit local fail signal. It removes
 native assertions before loading the separate selected assertion. The regression
 runner checks that one assertion remains. The current helper uses rising clocks
 and depth 4 by default. It does not infer asynchronous or analog behavior.
+
+The Scala SVA builder appends a `rvw-source` comment with the statement's Scala
+file and line. The temporal frontend retains this location for result reports.
+The source file name is a basename. Helper functions can pass `sourceDepth = 1`
+to `assertOn`, `assumeOn` or `coverOn` to use their caller's source location.
+Finite temporal simulation measures antecedent matches separately from vacuous
+implication passes. See the formal README for separate activation-cover jobs.
