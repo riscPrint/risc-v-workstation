@@ -75,8 +75,8 @@ endmodule
 '''
 
 
-def generate(model, compiler, out):
-    rules = extract(model)
+def generate(model, compiler, out, *, rules=None, metadata=None):
+    rules = extract(model) if rules is None else rules
     compiler = shutil.which(str(compiler))
     if not compiler:
         raise ValueError('native Sail compiler required')
@@ -96,25 +96,43 @@ def generate(model, compiler, out):
                     lowerings=['32-bit zeros() to 0x00000000', 'bitvector inequality to negated equality'],
                     implementation_options=dict(xlen=32, extension='Zicond', enabled=True,
                                                 memory=False, privilege=False), files={})
+    if metadata:
+        manifest.update(metadata)
     for name, rule in rules.items():
         source = out / f'{name}.sail'
-        source.write_text('default Order dec\n$include <prelude.sail>\n'
+        source.write_text(rule.get('prelude', 'default Order dec\n$include <prelude.sail>\n') +
                           'val main : (bits(32), bits(32)) -> bits(32)\n'
                           f'function main(a, b) = {rule["expression"]}\n')
         args = [compiler, '--no-memo-z3', '--sv', '--sv-comb', '--sv-no-strings', '--sv-specialize', '2', str(source), '-o', str(out / name)]
         with (out / f'{name}.log').open('w') as log:
-            process = run_group(args, cwd=out, stdout=log, stderr=log, timeout=30)
+            process = run_group(args, cwd=out, stdout=log, stderr=log, timeout=110)
         if process.timed_out or process.returncode:
             raise ValueError('Sail backend failed: ' + name)
         raw = out / f'{name}.sv'
-        modules = [m for m in re.finditer(r'(?ms)^module (\w+).*?^endmodule', raw.read_text())
-                   if m[1] not in ('initialize_registers', 'sail_toplevel')]
+        available = {m[1]: m for m in re.finditer(r'(?ms)^module (\w+).*?^endmodule', raw.read_text())}
+        pending, reachable = ['main'], set()
+        while pending:
+            current = pending.pop()
+            if current in reachable:
+                continue
+            if current not in available:
+                raise ValueError('missing Sail entry module')
+            reachable.add(current)
+            for candidate in available:
+                if candidate != current and re.search(r'\b' + candidate + r'\s+\w+\s*\(', available[current][0]):
+                    pending.append(candidate)
+        modules = [module for key, module in available.items() if key in reachable]
         lowered = '\n'.join(m[0] for m in modules)
         for module in modules:
             lowered = re.sub(r'\b' + module[1] + r'\b', 'sail_' + name + ('_' + module[1] if module[1] != 'main' else ''), lowered)
-        result_ports = re.findall(r'output logic \[31:0\] (sail_return_[0-9]+)', lowered)
+        entry = re.search(r'(?ms)^module sail_' + name + r'\s*\(.*?^endmodule', lowered)
+        result_ports = re.findall(r'output logic \[31:0\] (sail_return_[0-9]+)', entry[0] if entry else '')
         if len(result_ports) != 1:
             raise ValueError('unsupported Sail result interface')
+        # Yosys accepts a sized cast where Sail emits a slice of a temporary
+        # concatenation. Both forms retain the low N bits of the expression.
+        lowered = re.sub(r'= \{([^\n]+)\}\[([0-9]+):0\];',
+                         lambda m: '= ' + str(int(m[2])+1) + "'(" + m[1] + ');', lowered)
         target = out / f'insn_{name}.v'
         target.write_text(lowered + '\n' + instruction_shell(name, rule['match'], result_ports[0]))
         manifest['files'][name] = dict(source_sha256=sha(source), raw_sv_sha256=sha(raw),
