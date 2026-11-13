@@ -11,3 +11,16 @@ def test_reset_inside_ram(tmp_path,offset,valid):
     if valid: assert selection(p)['isa']=='rv32im_zicsr_zifencei'
     else:
         with pytest.raises(ValueError,match='containing reset_pc'):selection(p)
+
+
+def test_udb_cache_name_tracks_architecture():
+    from rvw.regress.act4 import architecture_config
+    data={'extensions':{'i':'= 2.1','sm':'= 1.12.0'},'params':{'MXLEN':32}}
+    first=architecture_config(data)
+    assert first['name']==architecture_config(data)['name']
+    assert first['name'].startswith('rvw-act4-')
+    data['params']['MXLEN']=64
+    assert architecture_config(data)['name']!=first['name']
+    data['params']['MXLEN']=32
+    data['extensions']['m']='= 2.0'
+    assert architecture_config(data)['name']!=first['name']

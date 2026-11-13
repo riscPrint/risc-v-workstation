@@ -15,6 +15,11 @@ project inputs:
 - A Sail configuration, linker script and `rvmodel_macros.h`.
 - `tohost-1-3`: 1 means pass and 3 means fail.
 
+The UDB architecture name includes a hash of the declared extensions and
+parameters. The test configuration name remains `rvw-act4`. This prevents
+UDB's shared named cache from supplying another architecture's generated
+headers. A stale RV64/F header was observed during the RV32IMC Ibex build.
+
 The platform supplies ISA and privilege selection. UDB parameters describe
 settings that an ISA string cannot express. The linker and macros supply
 the RAM, reset, signature and halt conventions. Review all inputs against
