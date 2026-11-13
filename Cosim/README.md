@@ -860,3 +860,11 @@ Native validation on 2026-11-13 used source revision
 and compared 2,536 vector memory accesses. Fresh-Spike strict C2 replay matched
 the complete trace with zero synchronizations. VLEN was 128 and ELEN was 64.
 This result is not a vector DUT result.
+
+### Native DPI mailbox
+
+The generic Spinal/Verilator harness can link `lockstep_dpi.cc` with
+`RVW_COSIM_DPI=1`. Adapters expose `riscvsim.LockstepDpi` and send C2 through
+its `observe` callback while the core clock is stopped. See the VexRiscv native
+lockstep test in `examples/vexriscv/rvw/tests/test_lockstep_native.py`.
+The existing Scala socket transport remains the default.

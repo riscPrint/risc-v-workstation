@@ -16,7 +16,9 @@ object VexAdapter extends CoreAdapter {
   def xlen = 32
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
-  override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath)
+  override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK").flatMap(
+      name => sys.env.get(name).map(name -> _))
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
     require(!key.konata, "VexRiscv adapter does not support Konata")
@@ -58,8 +60,8 @@ object VexAdapter extends CoreAdapter {
       v | (BigInt(memory.getOrElse((addr & ~3L) + i, 0)) << (8 * i))
     }
     val capture = job.socMap.map(m => new MapCapture(m, job, ctx))
-    val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
-      ("csr_snapshot" -> ujson.Arr("0x340"))))) else None
+    var writer = Option.empty[RvfiTraceWriter]
+    var traceEnded = false
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val marker = ctx.elf.symbol("setStats")
     var markers = 0
@@ -72,6 +74,14 @@ object VexAdapter extends CoreAdapter {
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
+        dut.lockstepDpi.foreach(_.initialize())
+        val header = ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
+          ("csr_snapshot" -> ujson.Arr("0x340")))
+        writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(
+          new File(job.out, "rvfi.jsonl"), header,
+          observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+            .map(m => (line: String) => m.observe(line)))) else None
+
         dut.csr.timerInterrupt #= false
         dut.csr.softwareInterrupt #= false
         dut.csr.externalInterrupt #= false
@@ -138,7 +148,9 @@ object VexAdapter extends CoreAdapter {
           }
         }
         var irqLevels = BigInt(-1)
-        cd.onSamplings {
+        fork {
+          while (true) {
+          cd.waitSampling()
           ctl.tick()
           val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(BigInt(0))
           dut.csr.timerInterrupt #= levels.testBit(7)
@@ -153,8 +165,12 @@ object VexAdapter extends CoreAdapter {
             handler = true
           }
           if (dut.rvfi.valid.toBoolean) {
-            val r = record(dut.rvfi, ctl.cycle, handler).copy(
+            val sampled = record(dut.rvfi, ctl.cycle, handler).copy(
               csrState = Map(0x340 -> dut.traps.scratch.toBigInt))
+            val r = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(sampled.order.toString)) {
+              require(sampled.rd != 0, "fault target must write a GPR")
+              sampled.copy(rdWdata = sampled.rdWdata ^ 1)
+            } else sampled
             handler = false
             require(r.order == nextOrder, s"RVFI order ${r.order}, expected $nextOrder")
             nextOrder += 1
@@ -181,16 +197,22 @@ object VexAdapter extends CoreAdapter {
               require(Set(1, 2, 4)(count), "unsupported RVFI store mask")
               bench.foreach(_.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata))
               tohost.onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata) match {
-                case Some(ToHost.Pass) => ctl.finish(Status.Pass)
-                case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
+                case Some(ToHost.Pass) =>
+                  writer.foreach(_.end(ctl.cycle, "pass")); traceEnded = true
+                  ctl.finish(Status.Pass)
+                case Some(f: ToHost.Fail) =>
+                  writer.foreach(_.end(ctl.cycle, "fail")); traceEnded = true
+                  ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
                 case None =>
               }
             }
           }
         }
+        }
         cd.waitSamplingWhere(false)
       }
-      writer.foreach(_.end(result._4, result._1.name))
+      if (!traceEnded && !sys.env.get("RVW_COSIM_DPI").contains("1"))
+        writer.foreach(_.end(result._4, result._1.name))
       result
     } finally { writer.foreach(_.close()); capture.foreach(_.close()) }
     val metrics = ujson.Obj()

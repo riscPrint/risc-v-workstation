@@ -988,3 +988,12 @@ a 12-fault seeded plan over the design database (`--exclude '*FORMAL*'`, window 
 seed 7) applied and confirmed 11 faults. Results: 2 detected (simulation asserts),
 4 timeouts, 5 safe, 1 `not_injected` (`CsrPlugin_satp_PPN`, absent from the current
 M-only model because the database came from an older configuration).
+### Native co-simulation transport
+
+An adapter can expose `LockstepDpi` and use its `observe` method as the
+`RvfiTraceWriter` callback. Set `RVW_COSIM_DPI=1` when compiling and running
+that adapter. The generic Verilator configuration links the native C2 client.
+The callback must run in a simulation thread, outside a clock-edge callback.
+The core clock must remain stopped until the callback returns. Send the end
+record before the native simulation closes. `rvw cosim live --lockstep` owns
+the reference connection. The default writer still uses the Scala transport.

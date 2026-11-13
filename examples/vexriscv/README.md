@@ -431,3 +431,42 @@ concretizations. It shows recovery after the explicit known reset for this
 program. It does not prove that arbitrary reset release or unknown state is
 safe. BOOM, gate-level timing and a production four-state C1 adapter remain
 outside this probe.
+## Native DPI lockstep
+
+Set `RVW_COSIM_DPI=1` to expose the generic DPI mailbox and link its C++ client
+into the Verilator harness. Run `rvw cosim live --lockstep` with `rvw/run.sh`
+as the simulator command. Keep `--rvfi-trace` enabled. Each C2 record blocks
+until Spike checks it. The end record is sent before the native model closes.
+
+`rvw/tests/test_lockstep_native.py` passed on 2026-11-13 with the private core
+revision recorded above. The clean six-instruction program matched completely.
+`RVW_COSIM_FAULT_ORDER=1` flipped bit 0 of the observed GPR writeback at order 1.
+Spike reported the first `rd_wdata` difference at that order. The saved C2
+prefix contained only orders 0 and 1. This is an explicit adapter fault. It does
+not claim to test every RTL fault. Both controls default to off.
+
+Run the overhead probe with the native environment, private core and lock set:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/rvw/measure-lockstep.py rvw/out/dpi-overhead
+```
+
+The probe warms both paths, then alternates two baseline runs and two checked
+runs. Both paths use the same DPI-enabled RTL, fixed memory latency and trace
+capture. It saves `details.execution_s` from C1. This time includes adapter and
+artifact work but excludes model setup. Startup time is not a DPI throughput
+measurement. Interrupt synchronization has a separate validation scope.
+
+Measured on 2026-11-13 on the shared macOS arm64 host, with the private core
+revision above, SpinalHDL 1.15.0 and Verilator 5.049:
+
+| Measured pair | Baseline execution | DPI checked execution |
+|---|---:|---:|
+| 1 | 6.522 s | 25.777 s |
+| 2 | 5.154 s | 35.186 s |
+
+Each run retired 6,006 instructions in 24,026 cycles. Both checked measured
+runs matched Spike completely. Total checked execution time divided by total
+baseline execution time was 5.22. This is measured adapter overhead
+for this loop. Other workers were active. It is not a stable host benchmark,
+a universal slowdown factor or a measurement of hardware speed.

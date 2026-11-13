@@ -2,6 +2,7 @@ package rvwvex
 
 import spinal.core._
 import spinal.lib._
+import spinal.core.sim._
 import vexriscv.{VexRiscv, VexRiscvConfig}
 import vexriscv.plugin._
 
@@ -38,6 +39,11 @@ object VexTop {
 }
 
 class VexTop extends VexRiscv(VexTop.configuration()) {
+  val lockstepDpi = if (sys.env.get("RVW_COSIM_DPI").contains("1")) {
+    val mailbox = new riscvsim.LockstepDpi
+    mailbox.io.simPublic()
+    Some(mailbox)
+  } else None
   def ibus: IBusSimpleBus = config.get(classOf[IBusSimplePlugin]).iBus
   def dbus: DBusSimpleBus = config.get(classOf[DBusSimplePlugin]).dBus
   def csr: CsrPlugin = config.get(classOf[CsrPlugin])

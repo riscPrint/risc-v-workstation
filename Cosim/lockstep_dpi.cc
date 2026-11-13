@@ -6,12 +6,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <regex>
+#include <cstdio>
 static int rvw_socket = -1;
 extern "C" void rvw_cosim_close() {
   if (rvw_socket >= 0) close(rvw_socket);
   rvw_socket = -1;
 }
-// 0: continue, 1: final report or mismatch, -1: transport error.
+// 0: continue, 1: complete match, 2: comparison stopped, -1: transport error.
 // The full report is printed to stderr by the Python launcher/CLI.
 extern "C" int rvw_cosim_observe(const char* c2) {
   if (rvw_socket < 0) {
@@ -36,7 +38,14 @@ extern "C" int rvw_cosim_observe(const char* c2) {
   std::string response;
   char c;
   while (recv(rvw_socket, &c, 1, 0) == 1) {
-    if (c == '\n') return response == "{\"status\": \"continue\"}" ? 0 : 1;
+    if (c == '\n') {
+      if (std::regex_search(response, std::regex(R"rx("status"\s*:\s*"continue")rx"))) return 0;
+      std::fprintf(stderr, "%s\n", response.c_str());
+      rvw_cosim_close();
+      if (std::regex_search(response, std::regex(R"rx("status"\s*:\s*"match")rx")) &&
+          std::regex_search(response, std::regex(R"rx("trace_complete"\s*:\s*true)rx"))) return 1;
+      return 2;
+    }
     response += c;
   }
   rvw_cosim_close(); return -1;

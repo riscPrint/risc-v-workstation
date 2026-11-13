@@ -99,8 +99,9 @@ class RvfiProbe(channels: Seq[Bundle], csrSlots: Seq[Map[Int, Data]] = Seq.empty
  */
 class RvfiTraceWriter(file: File, header: ujson.Obj,
                       flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1"),
-                      resume: Option[ujson.Value] = None) extends AutoCloseable {
-  require(resume.isEmpty || !sys.env.contains("RVW_COSIM_PORT"),
+                      resume: Option[ujson.Value] = None,
+                      observe: Option[String => Unit] = None) extends AutoCloseable {
+  require(resume.isEmpty || (!sys.env.contains("RVW_COSIM_PORT") && observe.isEmpty),
     "lockstep cannot resume without a reference checkpoint")
   // Validate the captured prefix before opening or replacing the output.
   private val restored = resume.map(RvfiWriterCheckpoint.decode(_, header))
@@ -108,11 +109,12 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
   restored.foreach(s => java.nio.file.Files.write(file.toPath, s.prefix))
   private val w = new PrintWriter(new java.io.OutputStreamWriter(
     new java.io.FileOutputStream(file, restored.nonEmpty), java.nio.charset.StandardCharsets.UTF_8))
-  private val lockstep = sys.env.get("RVW_COSIM_PORT").map(p => new Lockstep(p.toInt))
+  private val lockstep = sys.env.get("RVW_COSIM_PORT").filter(_ => observe.isEmpty).map(p => new Lockstep(p.toInt))
   private def emit(line: String): Unit = {
     w.println(line)
-    if (flushEachRecord || lockstep.nonEmpty) w.flush()
+    if (flushEachRecord || lockstep.nonEmpty || observe.nonEmpty) w.flush()
     lockstep.foreach(_.observe(line))
+    observe.foreach(_(line))
   }
   private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
   private val schema = if (snapshot.nonEmpty) "rvw.rvfi/2" else "rvw.rvfi/1"
