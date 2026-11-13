@@ -56,7 +56,7 @@ def hdl_native_records(records, hdl):
             else record for record in records]
 
 
-def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None, conformance=False):
+def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None, conformance=False, skip_adapter_info=False):
     checks = []
     try:
         selected_project = load_project(project)
@@ -70,6 +70,8 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         installing = list(tool_inventory()['profiles']['all']) if install == 'all' else globals()['features'](install) if install is not None else []
         if any(x not in NATIVE_FEATURES for x in installing):
             raise ValueError('GUI installation is manual. --install supports native features only.')
+        if skip_adapter_info and smoke_elf is not None:
+            raise ValueError('--skip-adapter-info cannot be combined with --smoke-elf')
         options = smoke_options(smoke_flags)
         if (options or smoke_platform) and smoke_elf is None:
             raise ValueError('--smoke-options and --smoke-platform need --smoke-elf')
@@ -121,7 +123,8 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         native_ready = done.returncode == 0 or (hdl in ('sv','vhdl') and applicable_ready)
         result['native_output'] = (done.stdout or '') + (done.stderr or '')
         add('native', 'ready' if native_ready else 'error', f'Installer check exit {done.returncode}',
-            'Source env.sh. Use --install FEATURES for missing tools.')
+            'rvw doctor --install ' + ','.join(x for x in selected if x in NATIVE_FEATURES) + '; source env.sh; repeat rvw doctor --json.'
+            if any(x in NATIVE_FEATURES for x in selected) else 'scripts/install.sh; source env.sh; rvw doctor --json.')
     except OSError as exc:
         add('native', 'error', str(exc), 'Set RVW_HOME to the workstation checkout.')
     if 'formal' in selected and os.environ.get('RVW_SLANG'):
@@ -137,6 +140,10 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                         'cosim': ['reference_comparison'], 'formal': ['formal_checks'],
                         'gem5': ['architecture_model']})
     native_status = next(c['status'] for c in checks if c['name'] == 'native')
+    feature_tools = {feature: {t['name'] for t in tool_inventory()['tools'] if t['flag'] == feature}
+                     for feature in NATIVE_FEATURES}
+    feature_tools.setdefault('sim', set()).update(('javac', 'make', 'C++'))
+    feature_tools.setdefault('cosim', set()).update(('Spike shim', 'or unusable Spike shim'))
     for feature in FEATURES:
         if feature not in selected:
             backend = dict(feature=feature, status='skipped', reason='Feature not requested.')
@@ -144,7 +151,13 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             backend = backends.probe(feature)
             add('backend.' + feature, backend['status'], backend, backend['reason'])
         else:
-            backend = dict(feature=feature, status=native_status,
+            records = [r for r in result.get('native', [])
+                       if r['tool'] in feature_tools.get(feature, set())]
+            status = ('error' if any(r['status'] == 'error' for r in records) else
+                      'ready' if records else 'inconclusive')
+            add('native.' + feature, status, records,
+                'rvw doctor --install ' + feature + '; source env.sh; repeat rvw doctor --features ' + feature)
+            backend = dict(feature=feature, status=status,
                            capabilities=capabilities.get(feature, []), qualification='version_probe_only',
                            reason='Aggregate requested native installer check. See native records.')
         result['backends'].append(backend)
@@ -155,11 +168,16 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         cfg = load_config(project=config_project.path)
         add('project', 'ready', str(config_project.path), '')
     except (ValueError, OSError, TypeError) as exc:
-        add('project', 'error', str(exc), 'Run rvw init or fix the selected rvw.toml.')
+        missing_env = re.search(r'environment variable (\w+) is not set', str(exc))
+        fix = ('export ' + missing_env[1] + '=/path/to/core; rvw doctor --project ' + str(project)
+               if missing_env else 'Run rvw init or fix the selected rvw.toml; then run rvw doctor --json.')
+        add('project', 'error', str(exc), fix)
         cfg = None
     if cfg:
         info = {}
         try:
+            if skip_adapter_info:
+                raise ValueError('Not run: --skip-adapter-info avoids launcher compilation.')
             # A mapped launcher compiles before it answers info; allow the project's startup time.
             limit = max(30.0, float(getattr(cfg, 'startup_s', 30.0)))
             done = run_group([*cfg.adapter, 'info', '--json'], cwd=cfg.path.parent, timeout=limit, capture=True)
@@ -173,7 +191,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                      and all(isinstance(info['isa'].get(c), str) and info['isa'][c] for c in cfg.configs))
             add('adapter.info', 'ready' if valid else 'error', info, 'Implement C1 info --json for the selected core and configs.')
         except (OSError, ValueError) as exc:
-            add('adapter.info', 'error', str(exc), 'Make the adapter executable and implement info --json.')
+            add('adapter.info', 'inconclusive' if skip_adapter_info else 'error', str(exc), 'Make the adapter executable and implement info --json.')
         if not isinstance(info, dict):
             info = {}
         if smoke_elf is None:
@@ -220,14 +238,14 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         for name, suite in cfg.suites.items():
             tests = []
             try:
-                tests = discover(suite) if suite.kind == 'elf-dir' else []
-                valid = bool(tests) and all(t.elf.open('rb').read(4) == b'\x7fELF' for t in tests)
+                tests = discover(suite)
+                valid = bool(tests) and all(t.elf is None or t.elf.open('rb').read(4) == b'\x7fELF' for t in tests)
             except (OSError, ValueError):
                 valid = False
-            add('suite.' + name, 'ready' if valid else 'error', f'{len(tests)} selected test files; ELF magic checked only.',
-                'Build the test ELFs and check suite selection, ISA and link addresses.')
+            add('suite.' + name, 'ready' if valid else 'warning', f'{len(tests)} selected tests; ' + ('build-only suite; execution not checked.' if suite.kind == 'build' else 'ELF magic checked only.'),
+                f'Build the ELFs for suite {name}; then run rvw regress list --suite {name}.')
         if not cfg.suites:
-            add('suites', 'error', 'No test suites.', 'Add a suite and build its ELFs.')
+            add('suites', 'warning', 'No test suites.', 'Add a suite and build its ELFs.')
         add('gate.inputs', 'ready' if cfg.input_complete and cfg.identity and cfg.identity_capture else 'inconclusive',
             {'input_complete': cfg.input_complete, 'identity': cfg.identity, 'identity_capture': cfg.identity_capture},
             'Review all result-changing inputs and implement identity capture before enabling these claims.')
@@ -244,6 +262,42 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         'requested_checks': ('error' if any(c['status'] == 'error' for c in suite) else
                              'inconclusive' if any(c['status'] != 'ready' for c in suite) else 'ready') if suite else 'not_run',
         'checks': [c for c in checks if c['name'].startswith(('adapter.', 'conformance'))]}
-    ready = all(c['status'] == 'ready' for c in checks)
+    result['workflows'] = workflow_readiness(checks, config_project if cfg else None, selected, cfg)
+    blocking = [c for c in checks if not c['name'].startswith(('suite.', 'suites', 'gate.'))
+                and (c['name'] != 'adapter.build_run' or smoke_elf is not None)]
+    ready = all(c['status'] == 'ready' for c in blocking)
     result.update(status='ready' if ready else 'not_ready', exit_code=0 if ready else 1)
+    return result
+
+
+def workflow_readiness(checks, project, selected, config=None):
+    """Report setup preconditions separately from execution and acceptance evidence."""
+    rows = {c['name']: c for c in checks}
+    common = ['python', 'project']
+    requirements = {
+        'run': [*common, 'native.sim', 'adapter.info'],
+        'regress': [*common, 'native.sim', 'adapter.info'],
+        'gate': [*common, 'native.sim', 'adapter.info', *[n for n in rows if n.startswith('gate.')]],
+        'cosim': [*common, 'native.cosim', *(['spike_shim'] if 'spike_shim' in rows else [])],
+        'query': common,
+        'formal': [*common, 'native.formal'],
+    }
+    for suite_name in rows:
+        if suite_name.startswith('suite.'):
+            requirements['regress:' + suite_name[6:]] = [*common, 'native.sim', 'adapter.info', suite_name]
+    for tier, data in getattr(config, 'tiers', {}).items():
+        suite_checks = ['suite.' + run.suite for run in data.runs]
+        requirements['regress:tier:' + tier] = [*requirements['regress'], *suite_checks]
+        requirements['gate:tier:' + tier] = [*requirements['gate'], *suite_checks]
+    result = {}
+    for name, names in requirements.items():
+        problems = [rows[n] for n in names if n in rows and rows[n]['status'] != 'ready']
+        section = {'query': 'query', 'formal': 'formal', 'cosim': 'cosim'}.get(name)
+        configured = project is not None and (section is None or bool(getattr(project, 'sections', {}).get(section)))
+        requested = ('sim' in selected if (name in ('run', 'regress', 'gate') or name.startswith(('regress:', 'gate:'))) else name in selected if name in ('cosim', 'formal') else True)
+        status = ('not_ready' if project is None else 'not_configured' if not configured else 'not_checked' if not requested else
+                  'not_ready' if any(p['status'] in ('error', 'warning') for p in problems) else
+                  'inconclusive' if problems else 'ready')
+        result[name] = dict(status=status, qualification='setup_preconditions_only', checks=names,
+                            fixes=[p['fix'] for p in problems if p['fix']])
     return result

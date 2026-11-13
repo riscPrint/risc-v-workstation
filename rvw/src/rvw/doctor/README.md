@@ -9,7 +9,8 @@ rvw doctor --install sim,riscv-gcc --dry-run --json
 rvw doctor --install sim,riscv-gcc
 ```
 
-Default features are `sim,riscv-gcc`. `all` adds cosim, formal and gem5.
+Default features are `sim,riscv-gcc`. Use `rvw doctor --help` for the complete
+feature list. `all` selects that list, including optional tools and GUI backends.
 Sail is checked by the installer when `RVW_SAIL` is set.
 Native checks call `scripts/install.sh --check`. The installer owns minimum
 versions and warnings against `docs/TOOL_VERSIONS.md`. Doctor preserves its
@@ -76,8 +77,9 @@ a tested flow. Warnings outside the tested table do not
 mean unsupported. Installer version refusals are errors. No complete native
 combination is qualified by doctor. Skipped backends are outside the request.
 
-Exit 0 means all requested checks are ready. Exit 1 means setup is not ready,
-including a skipped build/run conformance check. Exit 2 means invalid options.
+Exit 0 means requested setup checks are ready. It does not prove build/run conformance. Exit 1 means setup is not ready,
+for the requested setup checks. Optional suites, dirty trees and an unrequested
+smoke test do not block unrelated workflows. Exit 2 means invalid options.
 Malformed selected projects appear as failed checks with exit 1.
 `rvw_doctor` exposes the same diagnostic JSON through MCP. It accepts `project`
 and `features`. It cannot install tools or start a smoke build.
@@ -167,3 +169,20 @@ MCP `rvw_doctor` stays read-only. Use `doctor_smoke` for the native `rvw doctor 
 A missing or stale Spike shim adds a `spike_shim` diagnostic with the exact
 `nice -n 10 .../Cosim/build.sh` repair command. Doctor does not rebuild it
 without an installation request. Repeat doctor after repair.
+
+
+## Workflow readiness
+
+JSON `workflows` separates `run`, `regress`, `gate`, `cosim`, `query` and
+`formal`. Each entry names its checks and repair steps. `ready` means setup
+preconditions only. It is not a simulation pass, reference match or proof.
+Missing suite ELFs affect their suite and tier checks. JSON adds
+`regress:SUITE`, `regress:tier:TIER` and `gate:tier:TIER` entries. An absent
+optional suite does not block a tier that does not use it. Dirty trees and incomplete
+input declarations affect gate checks. The build/run conformance record stays
+inconclusive until an explicit smoke request succeeds.
+
+Use `rvw doctor --skip-adapter-info --json` for a report that cannot start an
+adapter launcher build. Adapter info then stays inconclusive. Use this mode
+for heavy projects when no native build is authorized. This option cannot be
+combined with `--smoke-elf`.

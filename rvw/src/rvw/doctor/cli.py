@@ -1,10 +1,11 @@
 import json
-from .check import diagnose
+from .check import diagnose, FEATURES
 
 
 def register(subparsers):
     parser = subparsers.add_parser('doctor', help='Check setup and show required fixes')
-    parser.add_argument('--features', default='sim,riscv-gcc', help='all or comma-separated sim,riscv-gcc,cosim,formal,gem5,waves,ide')
+    parser.add_argument('--skip-adapter-info', action='store_true', help='Skip adapter info, which can compile a launcher')
+    parser.add_argument('--features', default='sim,riscv-gcc', help='all or comma-separated ' + ','.join(FEATURES))
     parser.add_argument('--smoke-elf', help='Explicitly build and run this ELF for C1 conformance')
     parser.add_argument('--smoke-options', default='', help='Comma-separated rvfi,wave,coverage,konata,spinaltrace')
     parser.add_argument('--smoke-platform', help='Reviewed platform JSON for an independent Spike C2 mapping check')
@@ -20,7 +21,7 @@ def register(subparsers):
 def run(args):
     result = diagnose(project=getattr(args, 'project', None), features=args.features,
                       install=args.install, yes=args.yes, dry_run=args.dry_run, smoke_elf=args.smoke_elf, smoke_flags=args.smoke_options, smoke_platform=args.smoke_platform,
-                      conformance=args.conformance)
+                      conformance=args.conformance, skip_adapter_info=args.skip_adapter_info)
     if args.json:
         print(json.dumps(result, indent=2))
     else:
@@ -31,6 +32,8 @@ def run(args):
             print(f"{check['status']} {check['name']}: {check['detail']}")
             if check['status'] != 'ready':
                 print('  Fix: ' + check['fix'])
+        for name, workflow in result.get('workflows', {}).items():
+            print(f"{name}: {workflow['status']} (setup preconditions only)")
         for item in result.get('tool_inventory', []):
             print(f"{item['area']}: {item['status']} {item['name']} ({item['install_command']})")
         for item in result.get('native', []):
