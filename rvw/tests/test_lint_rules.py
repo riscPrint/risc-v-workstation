@@ -204,3 +204,22 @@ def test_each_bit_needs_complete_assignment(tmp_path):
     with sqlite3.connect(db) as c:
         c.execute("DELETE FROM assignments WHERE range='(1)' AND cond_id=2")
     assert ('lint.latch', 'mask') in found(lint(db))
+
+def test_hashed_enum_literal_is_not_absence_evidence(tmp_path):
+    b = base(tmp_path)
+    b.reg('state', 1, type_='State@seq[1]{idle=0,run=1}', init='idle')
+    b.assign('state', ' := h:abc123')
+    r = lint(b.done())
+    assert r['fsm'][0]['status'] == 'inconclusive'
+    assert not [f for f in r['findings'] if f['rule'] == 'lint.fsm_unreachable']
+
+
+
+def test_hashed_enum_source_keeps_exact_literals(tmp_path):
+    b = base(tmp_path)
+    b.reg('state', 1, type_='State@seq[2]{idle=0,run=1,lost=2}', width=2, init='idle')
+    b.assign('state', ' := h:abc', source='State.idle')
+    b.assign('state', ' := h:def', source='State.run', cond=1)
+    r = lint(b.done())
+    assert r['fsm'][0]['status'] == 'checked'
+    assert r['fsm'][0]['unreachable'] == ['lost']

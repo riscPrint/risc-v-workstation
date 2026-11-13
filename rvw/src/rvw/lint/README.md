@@ -585,3 +585,11 @@ because their assignments have that same condition. They remain unresolved
 until lowered RTL is checked. The rules backend now detects actual Yosys
 `$dlatch` and `$adlatch` assignments. This also catches missing switch defaults
 that infer a latch in imported HDL. Native Verilator remains a separate check.
+
+### Hashed enum expressions
+
+A missing enum literal in a hashed expression is not evidence that a state is
+unreachable. The FSM check reads exact enum literals from the readable source
+when their enum type matches. An opaque assignment keeps the FSM and rules
+report inconclusive. The long-enum Spinal fixture exercises this boundary.
+It does not prove reachability of a state hidden by the hash.
