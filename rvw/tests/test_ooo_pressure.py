@@ -111,3 +111,64 @@ def test_partial_overlap_waits_for_undrained_store():
     reads = [cycle for _,write,cycle in memory.requests if not write]
     assert len(writes) == len(reads) == 1
     assert reads[0] >= writes[0] + 12
+
+
+def test_cache_retry_holds_queue_until_response():
+    from rvw.ooo.core import _simulate
+    class Miss:
+        def __init__(self): self.calls = 0
+        def access(self, *args):
+            self.calls += 1
+            return 15 if self.calls == 1 else 1
+    c = config(cache_miss_replay=True, issue_queue_policy='compacting',
+               components={'memory': {'l1d': {'size_kib': 16, 'ways': 4, 'latency': 1}}})
+    ops = [Instruction('load', dest=1, address=128, size=4)] + [Instruction('alu', sources=(1,), dest=2)]*4
+    memory = Miss()
+    result = _simulate(ops, c, backend='python', memory=memory)
+    assert result['instret'] == len(ops)
+    assert result['events']['cache_miss_replays'] == 1
+    assert result['events']['issued'] > len(ops)
+    assert memory.calls == 2
+    assert result['cycles'] >= 15 + c.replay_penalty
+
+
+def test_retry_window_readmission_respects_issue_capacity():
+    from rvw.ooo.core import _simulate
+    class Miss:
+        def __init__(self): self.calls = 0
+        def access(self, *args):
+            self.calls += 1
+            return 20 if self.calls == 1 else 1
+    c = replace(config(cache_miss_replay=True,
+               components={'memory': {'l1d': {'size_kib': 16, 'ways': 4, 'latency': 1}}}), issue_entries=2)
+    ops = [Instruction('load', dest=1, address=128, size=4)] + [Instruction('alu') for _ in range(10)]
+    result = _simulate(ops, c, backend='python', memory=Miss())
+    assert result['events']['cache_miss_replays'] == 1
+    assert result['events']['replay_readmitted'] > c.issue_entries
+    assert result['max_occupancy']['issue_entries'] <= c.issue_entries
+    assert result['max_occupancy']['replay_pending'] > c.issue_entries
+
+
+def test_cache_retry_requires_explicit_cache():
+    with pytest.raises(ValueError, match='memory.l1d'):
+        config(cache_miss_replay=True)
+
+
+def test_retry_squashes_wrong_work_before_queue_readmission():
+    from rvw.ooo.core import _simulate
+    class Miss:
+        def __init__(self): self.calls = 0
+        def access(self, *args):
+            self.calls += 1
+            return 20 if self.calls == 1 else 1
+    c = replace(config(cache_miss_replay=True, wrong_path_occupancy=True,
+                       issue_queue_policy='compacting',
+                       components={'memory': {'l1d': {'size_kib': 16, 'ways': 4, 'latency': 1}}}),
+                latencies=dict(alu=1, branch=30, load=2, store=2))
+    ops = [Instruction('load', address=128, size=4),
+           Instruction('branch', pc=4, next_pc=100)] + [Instruction('alu') for _ in range(10)]
+    result = _simulate(ops, c, max_cycles=1000, backend='python', memory=Miss())
+    assert result['instret'] == len(ops)
+    assert result['events']['cache_miss_replays'] == 1
+    assert result['events']['wrong_path_squashed'] == result['events']['wrong_path_renamed']
+    assert result['max_occupancy']['issue_entries'] <= c.issue_entries

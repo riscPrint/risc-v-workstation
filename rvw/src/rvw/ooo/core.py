@@ -36,6 +36,7 @@ class Config:
     store_policy: str = "ordered"
     wrong_path_occupancy: bool = False
     store_drain_width: int = 0
+    cache_miss_replay: bool = False
     dependence_entries: int = 1024
     replay_penalty: int = 5
     forwarding_latency: int = 1
@@ -105,6 +106,10 @@ class Config:
             raise ValueError("unsupported branch_prediction")
         if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
             raise ValueError("select static prediction or component prediction")
+        if type(self.cache_miss_replay) is not bool:
+            raise ValueError("cache_miss_replay must be boolean")
+        if self.cache_miss_replay and not self.components.get("memory", {}).get("l1d"):
+            raise ValueError("cache_miss_replay requires component memory.l1d")
         if type(self.store_drain_width) is not int or self.store_drain_width < 0:
             raise ValueError("store_drain_width must be nonnegative")
         if self.store_drain_width and self.store_policy != "buffered":
@@ -153,6 +158,8 @@ class Entry:
     predicted_correct: bool | None = None
     data_producer: object = None
     wrong_parent: object = None
+    replay_at: int | None = None
+    cache_replayed: bool = False
     prediction: int | None = None
     prediction_ticket: object = None
     prediction_delay: int = 0
@@ -244,7 +251,9 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     wrong_parent = fetch_guard = None
     wrong_fetched = deque()
     draining = deque()
+    replay_pending = deque()
     drain_ready = None
+    squash_requested = False
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
     from .structures import StaticPredictor, BackwardPredictor
     predictor = predictor or (BackwardPredictor() if config.branch_prediction == "static_btfn" else StaticPredictor())
@@ -278,8 +287,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             stores -= 1
             events['stores_drained'] += 1
             drain_ready = None
-        if wrong_parent is not None and wrong_parent.done is not None and wrong_parent.done <= cycle:
-            removed = {e for e in rob if e.wrong_parent is wrong_parent}
+        if squash_requested or (wrong_parent is not None and wrong_parent.done is not None and wrong_parent.done <= cycle):
+            removed = {e for e in rob if e.wrong_parent is not None}
             rob = deque(e for e in rob if e not in removed)
             waiting[:] = [e for e in waiting if e not in removed]
             for victim in removed:
@@ -295,8 +304,32 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             events['wrong_path_squashed'] += len(removed)
             if issue_window:
                 issue_window.drop(removed)
+            replay_pending = deque(e for e in replay_pending if e not in removed)
             wrong_fetched.clear()
             wrong_parent = None
+            squash_requested = False
+        # A missed load retains its queue line while the request is pending.
+        # At response, replay the load and its younger execution window.
+        for trigger in list(rob):
+            if trigger.replay_at is None or trigger.replay_at > cycle:
+                continue
+            trigger.replay_at = None
+            victims = list(rob)[list(rob).index(trigger):]
+            unresolved_branch = None
+            squash_requested = True
+            events['cache_miss_replays'] += 1
+            events['replayed_instructions'] += len(victims)
+            for victim in victims:
+                victim.done = None
+                victim.replay_at = None
+                victim.translation_ready = None
+                victim.predicted_correct = None
+            waiting[:] = [e for e in waiting if e not in victims]
+            replay_pending = deque(e for e in rob if e in replay_pending or (e in victims and not e.bypass_ready))
+            blocked_until = max(blocked_until, cycle + config.replay_penalty)
+            if issue_window:
+                issue_window.drop(set(victims))
+            break
         for entry in rob:
             if entry.bypass_ready and entry.done is None and all(dep.done is not None for dep in entry.deps):
                 entry.done = max([entry.bypass_ready] + [dep.done for dep in entry.deps])
@@ -337,11 +370,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             return dict(backend="python", cycles=cycles, instret=retired, ipc=retired / cycles,
                         events=dict(events), max_occupancy=dict(peaks),
                         topdown=attribution.report())
-        if unresolved_branch is not None and unresolved_branch.done <= cycle:
+        if unresolved_branch is not None and unresolved_branch.done is not None and unresolved_branch.done <= cycle:
             unresolved_branch = None
         issued, dependency_blocked = 0, False
         used_ports = Counter()
         for entry in list(waiting):
+            if entry not in waiting:
+                continue
             if config.issue_order == "in_order" and entry is not waiting[0]:
                 break
             if issued >= config.issue_width:
@@ -358,7 +393,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     break
                 if (previous.insn.kind in ("branch", "jump") or previous.insn.kind in SERIAL) and previous.wrong_parent is None and previous is not entry.wrong_parent:
                     older_branches.append(previous)
-            if (cycle < blocked_until and wrong_path is None) or any((p.done is None or p.done > cycle) and not (config.branch_speculation and p.insn.kind in ("branch", "jump") and p.predicted_correct is True) for p in older_branches):
+            if (cycle < blocked_until and entry.wrong_parent is None) or any((p.done is None or p.done > cycle) and not (config.branch_speculation and p.insn.kind in ("branch", "jump") and p.predicted_correct is True) for p in older_branches):
                 continue
             speculating = config.branch_speculation and any(p.insn.kind in ("branch", "jump") and p.predicted_correct is True and p.done is not None and p.done > cycle for p in older_branches)
             kind = entry.insn.kind
@@ -373,6 +408,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if not execution.reserve(kind, cycle, commit=False):
                 continue
             latency = config.latencies[kind]
+            cache_replay_delay = None
             forwarded = False
             if kind in ("load", "store"):
                 older = list(draining)
@@ -430,6 +466,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                            memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle))
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
+                hit = config.components.get('memory', {}).get('l1d', {}).get('latency')
+                if (config.cache_miss_replay and kind == 'load' and entry.wrong_parent is None
+                        and not entry.cache_replayed and hit is not None and service > hit):
+                    cache_replay_delay = service
+                    entry.cache_replayed = True
                 if kind == "store" and config.store_policy == "buffered":
                     # The store buffer writes after commit; the access only updates cache state.
                     events["buffered_store_service_cycles"] += service
@@ -475,22 +516,30 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 younger = entries[entries.index(entry)+1:]
                 violations = dependence.violations(entry.insn, younger)
                 if violations:
+                    squash_requested = True
                     events["memory_order_replays"] += 1
                     events["memory_order_violations"] += len(violations)
                     events["replayed_instructions"] += len(younger)
                     for victim in younger:
                         victim.done = None
+                        victim.replay_at = None
                         victim.translation_ready = None
                         victim.predicted_correct = None
+                    if issue_window:
+                        issue_window.drop(set(younger))
                     younger_set = set(younger)
                     waiting[:] = [item for item in waiting if item not in younger_set]
-                    waiting.extend(item for item in younger if not item.bypass_ready)
+                    replay_pending = deque(e for e in rob if e in replay_pending or (e in younger_set and not e.bypass_ready))
                     # Keep oldest-ready arbitration after rebuilding the queue.
                     order = {item: index for index, item in enumerate(rob)}
                     waiting.sort(key=order.__getitem__)
                     unresolved_branch = None
                     blocked_until = max(blocked_until, cycle + config.replay_penalty)
             entry.done = cycle + latency
+            if cache_replay_delay is not None:
+                entry.replay_at = cycle + cache_replay_delay
+                # Block retirement and consumers until the retry issues.
+                entry.done = None
             used_ports[kind] += 1
             waiting.remove(entry)
             issued += 1
@@ -501,8 +550,26 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         events["dependency_blocked"] += dependency_blocked
         if issue_window:
             issue_window.advance(cycle)
+        replay_admitted = 0
         for _ in range(config.rename_width):
-            if wrong_parent is None or not wrong_fetched or wrong_fetched[0][1] > cycle:
+            if not replay_pending or cycle < blocked_until:
+                break
+            entry = replay_pending[0]
+            if (len(waiting) >= config.issue_entries or
+                    (issue_window is not None and issue_window.full()) or
+                    execution.queue_full(entry.insn.kind, waiting)):
+                events['replay_queue_blocked'] += 1
+                break
+            replay_pending.popleft()
+            waiting.append(entry)
+            if issue_window:
+                issue_window.append(entry)
+            order = {e: i for i, e in enumerate(rob)}
+            waiting.sort(key=order.__getitem__)
+            events['replay_readmitted'] += 1
+            replay_admitted += 1
+        for _ in range(config.rename_width):
+            if replay_pending or squash_requested or wrong_parent is None or not wrong_fetched or wrong_fetched[0][1] > cycle:
                 break
             op = wrong_fetched[0][0]
             if (len(rob) >= config.rob_entries or len(waiting) >= config.issue_entries or
@@ -527,8 +594,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 issue_window.append(entry)
             loads += op.kind == 'load'; stores += op.kind == 'store'
             events['wrong_path_renamed'] += 1
-        for _ in range(config.rename_width):
-            if cycle < blocked_until or unresolved_branch is not None or wrong_parent is not None:
+        for _ in range(config.rename_width - replay_admitted):
+            if cycle < blocked_until or unresolved_branch is not None or wrong_parent is not None or replay_pending:
                 break
             if frontend:
                 if not frontend.ready(cycle):
@@ -607,7 +674,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         if frontend:
             frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None or wrong_parent is not None, memory=instruction_memory)
         for _ in range(0 if frontend else config.fetch_width):
-            if cycle < blocked_until or unresolved_branch is not None or fetch_guard is not None or wrong_parent is not None:
+            if cycle < blocked_until or unresolved_branch is not None or fetch_guard is not None or wrong_parent is not None or replay_pending:
                 break
             if pc == len(instructions) or len(fetched) == config.fetch_entries:
                 break
@@ -620,6 +687,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                                 fetch_entries=len(frontend.fetch) if frontend else len(fetched),
                                 decode_entries=len(frontend.decoded) if frontend else 0).items():
             peaks[name] = max(peaks[name], count)
+        if config.cache_miss_replay or config.memory_policy == "speculate":
+            peaks["replay_pending"] = max(peaks["replay_pending"], len(replay_pending))
         if config.store_drain_width:
             peaks["undrained_stores"] = max(peaks["undrained_stores"], len(draining))
     raise ValueError("model cycle budget exhausted")

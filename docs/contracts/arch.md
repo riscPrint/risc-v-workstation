@@ -572,3 +572,12 @@ requires buffered stores. Committed stores retain their existing shared
 store-queue slots until FIFO cache acceptance. Additional service beyond
 component L1 hit latency blocks drain. The positive width limits accepted
 stores per cycle. The measured region still ends at final retirement.
+
+## Bounded memory retries
+
+`cache_miss_replay` is Boolean, default false. True requires explicit component
+`memory.l1d`. Responses above hit latency trigger at most one retry per dynamic
+load. The load and younger ROB window re-enter finite issue capacity after
+`replay_penalty`. Memory-order recoveries use the same pending admission queue.
+Reports distinguish cache retries from memory-order recoveries. Mixed RTL
+reschedule totals are not treated as typed LSU events or exact replay evidence.
