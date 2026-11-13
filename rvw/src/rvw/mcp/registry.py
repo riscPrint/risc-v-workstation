@@ -206,20 +206,27 @@ class Registry:
             return None
         module, qual = getattr(spec.handler, "__module__", None), getattr(spec.handler, "__qualname__", "")
         if not module or not qual.isidentifier():
-            return None  # closures and methods cannot be named in another process: run in-process
+            return self._discovered_target(spec)  # resolve packaged closures by tool name
         try:
             if getattr(importlib.import_module(module), qual) is not spec.handler:
-                return None
+                return self._discovered_target(spec)
         except (ImportError, AttributeError):
-            return None
+            return self._discovered_target(spec)
         return module, qual
+
+    def _discovered_target(self, spec):
+        if spec.name in self.source_tools and getattr(spec.handler, "__module__", "").startswith("rvw."):
+            return "rvw.mcp.execution", "run_discovered"
+        return None
 
     def _call_isolated(self, spec: ToolSpec, args: dict, module: str, function: str) -> Any:
         """Run in a worker process as a job. Answer inline if it ends within `sync_s`; otherwise
         hand back the job id, so a slow call can be followed and cancelled (job_cancel)."""
-        inspect.signature(spec.handler).bind(**args)  # bad arguments fail here, as in-process
+        inspect.signature(spec.handler, follow_wrapped=False).bind(**args)  # bad arguments fail here, as in-process
+        payload = ({"tool_name": spec.name, "arguments": args}
+                   if (module, function) == ("rvw.mcp.execution", "run_discovered") else args)
         job = self.jobs.submit(spec.name, args,
-                               lambda job: worker.run_function(job, module, function, args), quick=True)
+                               lambda job: worker.run_function(job, module, function, payload), quick=True)
         if not job.done.wait(self.sync_s):
             return {"job_id": job.id, "status": job.state,
                     "note": f"{spec.name} took longer than {self.sync_s:g} s and continues as a background "
