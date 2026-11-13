@@ -156,6 +156,14 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=_session_open)
 
+    q = w.add_parser("value", help="typed value of a signal, Bundle, Stream, Vec or Area at T (needs --db)")
+    common(q, regex=False)
+    q.add_argument("name", help="signal or Bundle/Area path in the design database")
+    q.add_argument("--at", required=True, help=TIME_HELP + "; 'end' for the last timestamp")
+    q.add_argument("--db", help="SpinalDB design database (default: RVW_DESIGNDB)")
+    q.add_argument("--dec", action="store_true", help="decimal instead of hex")
+    q.set_defaults(func=_value)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -307,6 +315,37 @@ def _edges(a):
         for s in r['signals']:
             extra = f" rising {s['rising']} falling {s['falling']}" if 'rising' in s else ''
             print(f"{s['signal']}: changes {s['changes']}{extra} unknown {s['unknown']}")
+    return 0
+
+
+@_wrap
+def _value(a):
+    from .typed import value
+    from .vcd import end_time
+    from ..query.db import default_db
+    database = a.db or default_db()
+    if not database:
+        raise WaveError("no design database: pass --db or set RVW_DESIGNDB")
+    t = end_time(a.wave) if a.at == "end" else _t(a, a.at)
+    r = value(database, a.wave, a.name, t, "dec" if a.dec else "hex")
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# {r['name']} ({r['type']}) @ {t}" + (f"  fire={r['fire']}" if 'fire' in r else ""))
+
+        def show(node, pad):
+            if 'value' in node and 'wave' in node:
+                print(f"{pad}= {node['value']}" + (f" ({node['enum']})" if 'enum' in node else ""))
+                return
+            for k, v in node.items():
+                if 'wave' in v:
+                    print(f"{pad}{k} = {v['value']}" + (f" ({v['enum']})" if 'enum' in v else ""))
+                else:
+                    print(f"{pad}{k}:")
+                    show(v, pad + "  ")
+        show(r['value'], "  ")
+        if r['missing_in_wave']:
+            print(f"# not in the wave: {', '.join(r['missing_in_wave'][:8])}")
     return 0
 
 

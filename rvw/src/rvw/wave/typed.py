@@ -76,3 +76,58 @@ def annotate_sample(values: dict, info: dict[str, dict]) -> dict:
         if name is not None:
             out[k] = name
     return out
+
+
+def value(database: str, wave: str, name: str, t: int, radix: str = 'hex') -> dict:
+    """Typed value of a signal, Bundle, Stream/Flow, Vec or Area at time t.
+
+    Leaves are nested by their Spinal path below NAME (`payload.0`), with enum element names.
+    A Stream gets `fire` (valid && ready) when both are known.
+    """
+    from ..query.db import DesignDB, QueryError
+    from ..query import ops as qops
+    from . import ops
+    try:
+        db = DesignDB(database)
+    except QueryError as exc:
+        raise WaveError(f'cannot open design database: {exc}') from exc
+    try:
+        try:
+            sigs = db.resolve(name, allow_group=True)
+        except QueryError as exc:
+            raise WaveError(str(exc)) from exc
+        bundle = qops.bundle(db, name)
+        base = (bundle or {}).get('path') or (sigs[0].spinal_path if len(sigs) == 1 else db.normalize(name))
+        leaves = [(s, db.wave_path(s.path), parse_enum(s.type)) for s in sigs if not s.pruned]
+        types = {s.path: s.type for s, _, _ in leaves}
+    finally:
+        db.close()
+    names = [w for _, w, _ in leaves]
+    raw = ops.sample(wave, None, t, radix, vars=[v for v in ops.list_signals(wave) if v.name in set(names)])
+    tree: dict = {}
+    missing = []
+    for s, w, enum in leaves:
+        sp = s.spinal_path or s.path
+        rel = sp[len(base) + 1:] if sp.startswith(base + '.') else (sp if sp != base else '')
+        if w not in raw:
+            missing.append(w)
+        v = raw.get(w)
+        leaf = {'value': v, 'type': types[s.path], 'wave': w}
+        el = label(enum, v)
+        if el is not None:
+            leaf['enum'] = el
+        if not rel:
+            tree = leaf
+            continue
+        node = tree
+        parts = rel.split('.')
+        for p in parts[:-1]:
+            node = node.setdefault(p, {})
+        node[parts[-1]] = leaf
+    out = {'name': name, 'time': t, 'type': (bundle or {}).get('type') or (leaves[0][0].type if len(leaves) == 1 else None),
+           'value': tree, 'missing_in_wave': missing,
+           'binding': 'unverified: wave and database selected by the caller; names joined by wave path'}
+    if out['type'] == 'Stream' and isinstance(tree.get('valid'), dict) and isinstance(tree.get('ready'), dict):
+        v, r = tree['valid']['value'], tree['ready']['value']
+        out['fire'] = None if v not in ('0', '1') or r not in ('0', '1') else (v == '1' and r == '1')
+    return out

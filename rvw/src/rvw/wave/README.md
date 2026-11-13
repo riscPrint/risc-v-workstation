@@ -85,6 +85,12 @@ output prints `0x1 (run)`. In expressions an enum signal compares with a string 
 Values that are not an element (or have x/z bits) get no name. The wave signal is matched
 by the database's wave path; the pairing of wave and database is the caller's choice.
 
+`rvw wave value WAVE NAME --at T --db DESIGN.db` (MCP `wave_value`) gives the typed value of a
+signal, Bundle, Stream/Flow, Vec or Area: leaves nested by Spinal path below NAME
+(`payload.0`), each with value, database type, wave name and enum element. A Stream also gets
+`fire` (valid && ready; null when either is unknown). Leaves absent from the wave are listed
+in `missing_in_wave`.
+
 ## Active drivers (`why`)
 
 `why` joins the wave with a SpinalDB database (`--db` or `RVW_DESIGNDB`). For the signal it
