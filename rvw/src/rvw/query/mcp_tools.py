@@ -51,6 +51,12 @@ def _diff(old: str, new: str, scope: str | None = None, limit: int = 200, connec
         raise ToolError(str(e), {k: v for k, v in e.to_json().items() if k != "error"}) from None
 
 
+def _explain(old: str, new: str, coverage: str | None = None, effect: str | None = None,
+             scope: str | None = None, limit: int = 500) -> dict:
+    from .explain import explain
+    return explain(old, new, coverage, effect, scope=scope, limit=limit)
+
+
 def entries(root: Path | None = None) -> list[str]:
     """Named design entries of build-db.sh: directories SpinalDB/<entry> with build.sbt and entry.sh."""
     base = (root or repo_root()) / "SpinalDB"
@@ -144,6 +150,14 @@ def mcp_tools() -> list[ToolSpec]:
                          "limit": {"type": "integer", "default": 200},
                          "connections": {"type": "boolean", "default": True}}, ["old", "new"]),
                  _diff, annotations=RO),
+        ToolSpec("query_explain", "Explain a design diff: each hardware difference with its Scala locations, the "
+                 "tests that hit base coverage points on those lines (coverage: rvw.coverage/1 of the OLD revision), "
+                 "and a measured effect of the whole change (effect: perf/arch compare JSON). Uncertain items make "
+                 "the test selection 'all'.",
+                 schema({"old": {"type": "string"}, "new": {"type": "string"}, "coverage": {"type": "string"},
+                         "effect": {"type": "string"}, "scope": {"type": "string"},
+                         "limit": {"type": "integer", "default": 500}}, ["old", "new"]),
+                 _explain, annotations=RO),
         ToolSpec("query_export", "Write an artifact stored in the database to a file: `blocks` (SpinalBlocks "
                  "diagram JSON), `pdg` (SpinalTrace PDG JSON), `hgldd` (SpinalWaves HGLDD for Surfer).",
                  schema({**DB, "artifact": {"type": "string"}, "out": {"type": "string"}}, ["artifact", "out"]),

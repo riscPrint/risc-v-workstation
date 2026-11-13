@@ -1070,7 +1070,7 @@ usage: rvw privilege check [-h] --results RESULTS --platform PLATFORM
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff}
     ...
 ```
 
@@ -1169,6 +1169,13 @@ usage: rvw query regs [-h] [--db DB] [--json] [-r] [--include-generated]
 ```text
 usage: rvw query export [-h] [--db DB] [--json] [--project PROJECT] artifact
     out
+```
+
+### `rvw query explain`
+
+```text
+usage: rvw query explain [-h] [--json] [--coverage COVERAGE] [--effect EFFECT]
+    [--scope SCOPE] [--limit LIMIT] [--project PROJECT] old new
 ```
 
 ### `rvw query diff`
@@ -2587,6 +2594,14 @@ Starts a background job: no.
 What drives a signal: every assignment with its source expression, when/switch conditions, enables, Scala location; for registers the clock, reset signal/kind/value; for memories the ports. Assignments are in elaboration order (later wins).
 
 Arguments: `project`, `db`, `signal` (required).
+
+Starts a background job: no.
+
+### `query_explain`
+
+Explain a design diff: each hardware difference with its Scala locations, the tests that hit base coverage points on those lines (coverage: rvw.coverage/1 of the OLD revision), and a measured effect of the whole change (effect: perf/arch compare JSON). Uncertain items make the test selection 'all'.
+
+Arguments: `old` (required), `new` (required), `coverage`, `effect`, `scope`, `limit`.
 
 Starts a background job: no.
 
