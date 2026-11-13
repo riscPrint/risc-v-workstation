@@ -66,3 +66,16 @@ counts potential generator goals. `generation_groups` records declared and
 supported counts per ISA/sequence group. Generation support is the intersection
 of the candidate profile and declared semantic plan. No native qualification or
 comparative closure rate follows from these controller reports.
+
+## GHDL source line navigation
+
+The native-point mapper accepts a GHDL `/* path.vhd:line:column */` locator
+immediately before an `assign`, `wire`, `reg` or `always` statement. A blank
+line or unrelated statement breaks this pair. It does not search backward
+for the nearest locator. `.vhdl` paths are also accepted.
+
+The existing `scala` point field and `scala_line_metrics` report key retain
+their names for compatibility. These source links can also name VHDL files.
+Each line group retains the native metric and point denominator. A source
+link does not establish that an individual original-language statement ran.
+Stripped models need explicit maps. Missing locations remain unmapped.
