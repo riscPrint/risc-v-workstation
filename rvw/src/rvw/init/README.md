@@ -58,7 +58,9 @@ Files: `rvw.toml` (with `[query] build = ["./rvw/build-db.sh"]` and
 build-hdl` command; `$RVW` selects the `rvw` executable), `rvw/run.sh` (C1
 launcher: `info` works; `build` compiles the design with Verilator and
 `rvw/sim/harness.cpp`, through GHDL+Yosys for VHDL and firtool for Chisel;
-`run` exits 2), `rvw/sim/harness.cpp` (compiles for any top, maps nothing,
+`run` exits 2). The build creates its output directory before Verilator runs.
+It passes an absolute harness path to the generated makefile. Build does not
+require an earlier query build. Other files are `rvw/sim/harness.cpp` (compiles for any top, maps nothing,
 exits 2), `rvw/.gitignore` and `rvw/README.md`. Every `rvw query` and `rvw
 lint` command works after `rvw query build`. C1 runs need the bus, ELF and
 completion mapping in the harness. The same conflict and `--force` rules apply.
