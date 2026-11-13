@@ -1,0 +1,3114 @@
+{
+  "cache_key": null,
+  "capture": {
+    "env": {
+      "DYLD_LIBRARY_PATH": null,
+      "HOME": "~",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "LD_LIBRARY_PATH": null,
+      "PATH": "/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
+      "PYTHONHOME": null,
+      "PYTHONPATH": null,
+      "SYSTEMROOT": null,
+      "TEMP": null,
+      "TMP": null,
+      "TMPDIR": "/var/folders/s3/t4lhzzrj1qxfn3_y28334_340000gn/T/",
+      "YOSYS_DATDIR": null
+    },
+    "files": [
+      {
+        "copy": "files/dc8a3852b8232f344cbc3bfc75db744374ec201e3b84ec0f08ba363afe5913a9/platform32.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/examples/vexiiriscv/rvw/platform32.json",
+        "sha256": "c3c732c020664b9802a7612aef941ce4f0aac3b0604976841d918f7d5a876835",
+        "size": 650,
+        "source": "$CHECKOUT/examples/vexiiriscv/rvw/platform32.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/069a23404715aec42e7202e530fc0b67752486b2716a3490ba873314a69daf09/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-add/rvfi.jsonl",
+        "sha256": "a4ea3d9bef21f80088c95e3a73c70b587f7ee86c38fc9c80b60bdc89f5abc37c",
+        "size": 178149,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-add/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/301f86b2570e99f9370e72ebbffad0b2374326e7950505264f56d47d0d08b267/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-addi/rvfi.jsonl",
+        "sha256": "0734e4fb5362722300e51436518637c1ae442e1259799375801e01d987260f9e",
+        "size": 99972,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-addi/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/8cdae0929332761f3f0d6df055218668e699ab13ddde47b1b6dcedf0d1ba738f/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-and/rvfi.jsonl",
+        "sha256": "1e53a10c653acd99e95f88e809e4239fac5e663443be12a5aa959990fa585877",
+        "size": 187273,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-and/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/358abc1bd8fb4237964b947e522c2eef5989b3698a7a1f158ef1c85cd65566f7/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-andi/rvfi.jsonl",
+        "sha256": "80bf0505d72708862c83f3aa62fe4d6258cc8fae46c3f7988ec477172aa29518",
+        "size": 84550,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-andi/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/95c819a706e58cfe755a126c6fc7778e2f242bae7c526706594c323c51eee561/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-auipc/rvfi.jsonl",
+        "sha256": "82b4a78cdf792954c91bc5132abc7a9e1e7f326619e140780f710d5f70323f7a",
+        "size": 35175,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-auipc/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/54573f86173992d2d7b7ba88ab6b19c85a2065419df5ace8428cf153b6372aa8/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-beq/rvfi.jsonl",
+        "sha256": "fe792c100726eaff0d7b1893c735ab85d5cd101e9c9c3c3e84f35d889f526a1e",
+        "size": 116626,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-beq/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f3699f86ef148f137f3acac8552974f433f2dc72db0f1e21e8c9a14fbbc6f359/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bge/rvfi.jsonl",
+        "sha256": "a5ae7749f72c02615f6666bb2ad350b4df84b57e3517d906d850028840dec862",
+        "size": 123060,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bge/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/489b6c5974be6c5ad1a10fd700f5f9b7497cfcdbf8e29e92646d015da5e7f9b6/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bgeu/rvfi.jsonl",
+        "sha256": "efb4799b5395a826fcbe8447f41308e8a1309463c5fb8dd67ab6eca611cbd5ea",
+        "size": 132702,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bgeu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/a98e595d3666f51c5ebe20cf31392b2d84dfbc79db255b010887425f0acd6299/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-blt/rvfi.jsonl",
+        "sha256": "2a067ea33830ab28ef4e3afc3e5e1b6ef9682aabd7e41567e0b0413edc56436e",
+        "size": 116705,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-blt/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/5ab7282eaa71de08c235d18ba977e930c9df35b1f205210c92d8a135b04dc3fa/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bltu/rvfi.jsonl",
+        "sha256": "3ef44137d87c0e904bfc255b4447701cfe230ce48687c3e7a3fc0c33588ead38",
+        "size": 126347,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bltu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/50546d5864ccd3b21763bba99af412b04eefe19695c03341ef4928cbc47323a9/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bne/rvfi.jsonl",
+        "sha256": "045a1a867196a4812a82c73caa976fe5f4e0d35ef554a45fb4eba5180cacd057",
+        "size": 116171,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bne/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2d24fea98bc286a74a3e6073d50c9aff4c874aecf9988ba0d6c76b8feb18c46c/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-fence_i/rvfi.jsonl",
+        "sha256": "f293815fe12f0042cb39270962385dde6c4b9449e8eb2837dfb21772f2573b2d",
+        "size": 119377,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-fence_i/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/5ca46521a91349bd3072186543f409538276dbfbe2693a49c3fe926ab8023b2a/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jal/rvfi.jsonl",
+        "sha256": "06dc35cbe927eb6fa35531095fa13e77c889220411aca93bc35145cd4b025d53",
+        "size": 33996,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jal/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f4b8aaa7049a2ea619341ed86266bbd8a0de5a4ba15838fc7e21cbfca4238810/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jalr/rvfi.jsonl",
+        "sha256": "b6dff5082d7e5fa4ede1cb4fd639c8708834982dabd5c873e2c21f1b452d76ac",
+        "size": 55227,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jalr/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/fcffb20c98ad812ce0d854eb37e37475ad5045291a609c961ec87504bfc28e08/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lb/rvfi.jsonl",
+        "sha256": "8f58ccf530574604297025750185838af31e331060976d4e4c62892f91276291",
+        "size": 104348,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lb/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2a0d2d28de56de9cf004720aae34d7bf42a58f3c956c1489a227c165796f341e/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lbu/rvfi.jsonl",
+        "sha256": "4946d3132d662d3696cad7ecfcaeb5c7fa025214b2506d49bf98e8bfd82d540c",
+        "size": 104060,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lbu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/86de37497fee4440eac8af2bb1e5bbea2acf9db625f2e71e5ad42e8820efb45d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ld_st/rvfi.jsonl",
+        "sha256": "be1ae5554a5cdc8e3fa0b4efd83ac8781ed2fb88b9dbcc796dcaea2240e72983",
+        "size": 365825,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ld_st/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/371951d93bbbbe6f5c3522ee17a11c7051cb4f02a62b00722752bdd6f85a454f/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lh/rvfi.jsonl",
+        "sha256": "7bab0a21c3c50643c4c5cd12111cbc6f3f252fc6de08ff7f2275492bdedfa586",
+        "size": 110407,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lh/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/42812d1f7c7811186720ffae2bac3dbb96bf73f581c5f0a74ac7b025e8d332a2/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lhu/rvfi.jsonl",
+        "sha256": "8ae5a7548a61c3cd193da0923e0613a9ff968d189da7ce69c46136529ee3ffdf",
+        "size": 113282,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lhu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/9e5a5045efdf7d831d7d0c47fad7d4bc2e617e1ef97da364c387d5f8a191694b/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lui/rvfi.jsonl",
+        "sha256": "57d5024aef7677247b01174f3d9e8b717b07aee9145495673e6a212345a29553",
+        "size": 37559,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lui/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/8f633aaada7b6a51eaa1f01e4fdbb9cc45f50a038809d0a1b596528015b8117e/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lw/rvfi.jsonl",
+        "sha256": "4905197de6ed0af2f4ed716a3a48d29410bb42efad16b7af0e2917baf4cb0fd6",
+        "size": 115897,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lw/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e20e9176ac7c60a97cd14cce9ffb92e970008e678cc45bb0ea0e543bef660a64/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-or/rvfi.jsonl",
+        "sha256": "16ad8ca5a86b0908ef122261d75b9abfc6bf1328933b860c6bc1c85fe2f41745",
+        "size": 188716,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-or/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/794b52054c646f95eae2d07eb34232ab064dca71b8a01c97ad0df1a842c2e0bb/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ori/rvfi.jsonl",
+        "sha256": "08ddf1a71eee5243bff4f60a5d3cd388c7c539bf8e565e59063255f6aff0f7f3",
+        "size": 87356,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ori/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/32ef5cf1a6d3def4c15e1b2375d115460219a3c2e38df32aeda65fa225853727/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sb/rvfi.jsonl",
+        "sha256": "1d7c146a865a86e3b0d892c11f1d8a53bc279afb02542c17d8f118946be2de6e",
+        "size": 176382,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sb/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/b61cdf19fac49cd774370e79ee38340d9901eae9873ab8118a014c6a9ad1b1f7/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sh/rvfi.jsonl",
+        "sha256": "e4beb42e90f8df182be5e959ce77fc175851acec0858b9047e0479180c0d11c7",
+        "size": 195932,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sh/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/53d89c6150dc5be78d27d14aa1b5e5afc2d9785a8f5c4386050d4f7f3f0fc81c/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-simple/rvfi.jsonl",
+        "sha256": "7ec1e9c7ca68f3a01f304465dd3e1fe3f4eb5e4b9bf4ed8386f89d2f79a9a945",
+        "size": 29086,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-simple/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/3da826db2b658c412a0905344e5b23f323c421b673a0ec684cac2ef7e5465fa2/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sll/rvfi.jsonl",
+        "sha256": "e046b5d7ba214ecd37fe8f9273d201ea56df8f66fdcb90645eeb83459c7732c9",
+        "size": 188576,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sll/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/9c0f45b245dbaf3d2d61626b9c57b859122cb5930d3def27345e4423010509b6/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slli/rvfi.jsonl",
+        "sha256": "1c5f4853d4774f5bbb2bb5c53de4d7ae1b49bfc780bb18baca61516747873814",
+        "size": 99768,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slli/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/da264a2ebb78eb7f54ebcb5db9b31d976ca54b9d8570d134d0f39bce37958fe5/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slt/rvfi.jsonl",
+        "sha256": "df2a631ed874f43cf91fdca406d31adf4b19398b05aadc68a7d413e2eec451b8",
+        "size": 175506,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slt/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/136ae0d241c2d7878653ff896b55963c51bcadab0cf6b290b1c9ec81c2656400/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slti/rvfi.jsonl",
+        "sha256": "4ae15c78a243be82e5de43acc844627d6e6ea5d32b6192bd499da99bafc10e9e",
+        "size": 97747,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slti/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2776a88aa5711660c5e070f0f4a0282e8f3d7c435e537c0970306af0583389f2/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltiu/rvfi.jsonl",
+        "sha256": "6576bb5393ed8ced69e5486c699d7c4e326f0321a0e74ad375b0838aa0ded449",
+        "size": 97751,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltiu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/5d0aa6f5fa4a05a78b52cb93fd44268bff99f670c3280ec7949c43bcb632c25d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltu/rvfi.jsonl",
+        "sha256": "3eeaeea44fd1784296924445209a5ca6d59ad44a7912891f776a9b1aaf61946d",
+        "size": 175507,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/05ba4788a5ccf208aa851b867ec3fc9564bab82233a2f09612e9afc0463a5cff/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sra/rvfi.jsonl",
+        "sha256": "d6c3b12617ddb5a5c03e9734b028a97e69d3fc5a967a43d7764850e257dc18ab",
+        "size": 196638,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sra/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/5405f5fe9e8a854379c004f42e9b25ea48a299adea38974d2c19f4c751f8f873/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srai/rvfi.jsonl",
+        "sha256": "12b73f4a7755b7509a0f5191c1e050199f002c4813aa6a134ead0e12e0dc2223",
+        "size": 105750,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srai/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/dd602c7bbe3d0dff1f669da1e5a5cf2a84c92bff9b370f3e2a6b1e9a3ac89381/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srl/rvfi.jsonl",
+        "sha256": "43cf7e60d6cd30ea1a90a657e7d8be67b2d99e6ff75a76c27cbbec48907b75d8",
+        "size": 193745,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srl/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/8e90afd983ed3607d888f29d97be26d3a233a5794d03494c976a0cdc4835eca0/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srli/rvfi.jsonl",
+        "sha256": "aa4d762b23b010d64a1bb00c232ba8af4fda36af2dbd8d34d9c8ccc179044122",
+        "size": 103257,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srli/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/c16487bd793b4f97d6350ad3b70090388968dfa5d864ab220cd157a07a72f69a/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-st_ld/rvfi.jsonl",
+        "sha256": "375a892e1429d19a19270da9a1b20558b3a45191ecb9c15db86e4555d02f3618",
+        "size": 188535,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-st_ld/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/9111bb374ef447663a1616acd0580d225c994e72f8492e5e506b6b27373902aa/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sub/rvfi.jsonl",
+        "sha256": "142c20c388bde83ca81ffba8b195edf7d2d3ad06f264c4c6fe75fe4757aa2e4e",
+        "size": 175259,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sub/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f144ff3850434157b59b53dc5c134d15fb4f043373e880675f1b3506e37a99d6/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sw/rvfi.jsonl",
+        "sha256": "a739d842bfdc56ee85e0e5415bfdbb5f24b306f648e066b951512691060a3f18",
+        "size": 199461,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sw/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/a3cf91a50be73eb952e619708b149315f9cbece6b8f27fff038c61ed1f70166d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xor/rvfi.jsonl",
+        "sha256": "3ab6d0bacd2b980f35ce771514cd30af39cf22ccaea9f5be638f5bf4c4d2c795",
+        "size": 188288,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xor/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/8ecb81802d357f539a17e88b3969ce3acf93f546b9d8fcc5c7e37e9935d0c5b8/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xori/rvfi.jsonl",
+        "sha256": "45dcf9dda571a6701afda6938e43323ddf1288745b4e74b72c8c12c666f6ee06",
+        "size": 88059,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xori/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2ae41959bbc8e67276245fab1a8b743aecca98e8d61d9be01b3dedd71f664c8b/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-div/rvfi.jsonl",
+        "sha256": "b84ea91bd7a088b2e577e80ba8e83ed7be38634992fda02333623adc1f11a40c",
+        "size": 48662,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-div/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e48d1068e3bf8e427c6a63438ed5a1ebe9b3a981152dae1a37d697c96341f18d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-divu/rvfi.jsonl",
+        "sha256": "b84de6fb236bc3d37f86201e74613b928a005830b0c7829ae9e7c0170d03113e",
+        "size": 48959,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-divu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/dce9fb7066f8d56c1ef9dbbf6a7b77ea96d1a4e92357a154a5658914a40b19c9/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mul/rvfi.jsonl",
+        "sha256": "b850328a98bcf986c71cd99430f53cf038f0c0b26fff0dd7d40202749dc5d67d",
+        "size": 175872,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mul/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/45b775295cd68a85a2b74de215351f382a96edb2b1fe795ece2b381a63dacb4f/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulh/rvfi.jsonl",
+        "sha256": "7544976e24ceead9ac0cac8835c881b6ab770197d169a696354d148c0171e003",
+        "size": 176780,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulh/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/4ec29413d52700c17b5017e5cf1352d86a7f89c533558e3dfd7a8f4c0b48dc22/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhsu/rvfi.jsonl",
+        "sha256": "2e8aceec42487322b77ca333441748f2acf8e4fd34a407e2e2830a8d596b91fe",
+        "size": 176797,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhsu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/99ad0e4d1301ac3f04bcba4308bfed36f1fa8b96e03dca98f5569695e83dd9be/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhu/rvfi.jsonl",
+        "sha256": "e5668e704a1c6ab570b5d0590d973a890bb60b553a273191c4415e7dba8e6a73",
+        "size": 176743,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhu/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/121f74128b98e8c36743ec5e5f6fa132fbc5ef6efd497e94910dd6a7164009be/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-rem/rvfi.jsonl",
+        "sha256": "36c229633e8475a0614e30eaa8429a25dbbe3bd55010e158937e1c144e2de60e",
+        "size": 48533,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-rem/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/093c3e8233bc8b0f064b3db9fdc1d2e506b87a720a153cf928d5c9ba7a4be8dc/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-remu/rvfi.jsonl",
+        "sha256": "24a22b1c9dcbb0aa30f09bf48e6845d98cecad75f6ab9313c814f7b92e408d08",
+        "size": 48542,
+        "source": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-remu/rvfi.jsonl",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "config": {
+    "groups": [
+      {
+        "domains": [
+          [
+            "alu",
+            "load",
+            "store",
+            "branch",
+            "jump",
+            "multiply",
+            "divide",
+            "atomic",
+            "csr",
+            "system",
+            "fence",
+            "float"
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "class",
+          "mode"
+        ],
+        "name": "class_mode"
+      },
+      {
+        "fields": [
+          "mnemonic",
+          "mode"
+        ],
+        "name": "mnemonic_mode"
+      },
+      {
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "name": "trap_cause_mode",
+        "when": {
+          "event": "trap",
+          "interrupt": false
+        }
+      },
+      {
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "name": "interrupt_cause_mode",
+        "when": {
+          "event": "trap",
+          "interrupt": true
+        }
+      },
+      {
+        "domains": [
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "mode"
+        ],
+        "name": "handler_entry",
+        "when": {
+          "intr": true
+        }
+      },
+      {
+        "domains": [
+          [
+            "read",
+            "write"
+          ],
+          [
+            1,
+            2,
+            4,
+            8
+          ],
+          [
+            "aligned",
+            "misaligned"
+          ]
+        ],
+        "fields": [
+          "access",
+          "bytes",
+          "alignment"
+        ],
+        "name": "memory",
+        "when": {
+          "event": "memory"
+        }
+      },
+      {
+        "fields": [
+          "csr",
+          "csr_access",
+          "mode"
+        ],
+        "name": "csr",
+        "when": {
+          "class": "csr"
+        }
+      },
+      {
+        "domains": [
+          [
+            true,
+            false
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "branch_taken",
+          "mode"
+        ],
+        "name": "branch",
+        "when": {
+          "class": "branch"
+        }
+      },
+      {
+        "fields": [
+          "rd_x0",
+          "class"
+        ],
+        "name": "rd_x0"
+      },
+      {
+        "fields": [
+          "back_to_back",
+          "class"
+        ],
+        "name": "dependency"
+      }
+    ]
+  },
+  "config_sha256": "3c037df8835f25d08e20107bd2f134fa3d6b79d585390e66e74b2d0e005740f4",
+  "groups": {
+    "branch": {
+      "expected_bins": 6,
+      "expected_hit": 4,
+      "fields": [
+        "branch_taken",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            false,
+            "U"
+          ],
+          "count": 1737
+        },
+        {
+          "bin": [
+            true,
+            "M"
+          ],
+          "count": 147
+        },
+        {
+          "bin": [
+            true,
+            "U"
+          ],
+          "count": 656
+        }
+      ],
+      "holes": [
+        [
+          false,
+          "S"
+        ],
+        [
+          true,
+          "S"
+        ]
+      ],
+      "observed_bins": 4
+    },
+    "class_mode": {
+      "expected_bins": 36,
+      "expected_hit": 14,
+      "fields": [
+        "class",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "alu",
+            "M"
+          ],
+          "count": 2597
+        },
+        {
+          "bin": [
+            "alu",
+            "U"
+          ],
+          "count": 10476
+        },
+        {
+          "bin": [
+            "branch",
+            "M"
+          ],
+          "count": 196
+        },
+        {
+          "bin": [
+            "branch",
+            "U"
+          ],
+          "count": 2393
+        },
+        {
+          "bin": [
+            "csr",
+            "M"
+          ],
+          "count": 784
+        },
+        {
+          "bin": [
+            "divide",
+            "U"
+          ],
+          "count": 36
+        },
+        {
+          "bin": [
+            "fence",
+            "U"
+          ],
+          "count": 51
+        },
+        {
+          "bin": [
+            "jump",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "jump",
+            "U"
+          ],
+          "count": 41
+        },
+        {
+          "bin": [
+            "load",
+            "U"
+          ],
+          "count": 466
+        },
+        {
+          "bin": [
+            "multiply",
+            "U"
+          ],
+          "count": 198
+        },
+        {
+          "bin": [
+            "store",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "store",
+            "U"
+          ],
+          "count": 350
+        },
+        {
+          "bin": [
+            "system",
+            "M"
+          ],
+          "count": 49
+        }
+      ],
+      "holes": [
+        [
+          "alu",
+          "S"
+        ],
+        [
+          "atomic",
+          "M"
+        ],
+        [
+          "atomic",
+          "S"
+        ],
+        [
+          "atomic",
+          "U"
+        ],
+        [
+          "branch",
+          "S"
+        ],
+        [
+          "csr",
+          "S"
+        ],
+        [
+          "csr",
+          "U"
+        ],
+        [
+          "divide",
+          "M"
+        ],
+        [
+          "divide",
+          "S"
+        ],
+        [
+          "fence",
+          "M"
+        ],
+        [
+          "fence",
+          "S"
+        ],
+        [
+          "float",
+          "M"
+        ],
+        [
+          "float",
+          "S"
+        ],
+        [
+          "float",
+          "U"
+        ],
+        [
+          "jump",
+          "S"
+        ],
+        [
+          "load",
+          "M"
+        ],
+        [
+          "load",
+          "S"
+        ],
+        [
+          "multiply",
+          "M"
+        ],
+        [
+          "multiply",
+          "S"
+        ],
+        [
+          "store",
+          "S"
+        ],
+        [
+          "system",
+          "S"
+        ],
+        [
+          "system",
+          "U"
+        ]
+      ],
+      "observed_bins": 14
+    },
+    "csr": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "csr",
+        "csr_access",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "0x180",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x300",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x302",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x303",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x304",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x305",
+            "write",
+            "M"
+          ],
+          "count": 245
+        },
+        {
+          "bin": [
+            "0x341",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x342",
+            "read",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x3a0",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0x3b0",
+            "write",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "0xf14",
+            "read",
+            "M"
+          ],
+          "count": 98
+        }
+      ],
+      "holes": [],
+      "observed_bins": 11
+    },
+    "dependency": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "back_to_back",
+        "class"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "alu"
+          ],
+          "count": 10642
+        },
+        {
+          "bin": [
+            false,
+            "branch"
+          ],
+          "count": 265
+        },
+        {
+          "bin": [
+            false,
+            "csr"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            false,
+            "fence"
+          ],
+          "count": 51
+        },
+        {
+          "bin": [
+            false,
+            "jump"
+          ],
+          "count": 83
+        },
+        {
+          "bin": [
+            false,
+            "load"
+          ],
+          "count": 361
+        },
+        {
+          "bin": [
+            false,
+            "multiply"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            false,
+            "store"
+          ],
+          "count": 60
+        },
+        {
+          "bin": [
+            false,
+            "system"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            true,
+            "alu"
+          ],
+          "count": 2431
+        },
+        {
+          "bin": [
+            true,
+            "branch"
+          ],
+          "count": 2324
+        },
+        {
+          "bin": [
+            true,
+            "csr"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            true,
+            "divide"
+          ],
+          "count": 36
+        },
+        {
+          "bin": [
+            true,
+            "jump"
+          ],
+          "count": 7
+        },
+        {
+          "bin": [
+            true,
+            "load"
+          ],
+          "count": 105
+        },
+        {
+          "bin": [
+            true,
+            "multiply"
+          ],
+          "count": 146
+        },
+        {
+          "bin": [
+            true,
+            "store"
+          ],
+          "count": 339
+        }
+      ],
+      "holes": [],
+      "observed_bins": 17
+    },
+    "handler_entry": {
+      "expected_bins": 3,
+      "expected_hit": 1,
+      "fields": [
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "M"
+          ],
+          "count": 98
+        }
+      ],
+      "holes": [
+        [
+          "S"
+        ],
+        [
+          "U"
+        ]
+      ],
+      "observed_bins": 1
+    },
+    "interrupt_cause_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "cause",
+        "mode"
+      ],
+      "hits": [],
+      "holes": [],
+      "observed_bins": 0
+    },
+    "memory": {
+      "expected_bins": 16,
+      "expected_hit": 6,
+      "fields": [
+        "access",
+        "bytes",
+        "alignment"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "read",
+            1,
+            "aligned"
+          ],
+          "count": 155
+        },
+        {
+          "bin": [
+            "read",
+            2,
+            "aligned"
+          ],
+          "count": 156
+        },
+        {
+          "bin": [
+            "read",
+            4,
+            "aligned"
+          ],
+          "count": 155
+        },
+        {
+          "bin": [
+            "write",
+            1,
+            "aligned"
+          ],
+          "count": 109
+        },
+        {
+          "bin": [
+            "write",
+            2,
+            "aligned"
+          ],
+          "count": 111
+        },
+        {
+          "bin": [
+            "write",
+            4,
+            "aligned"
+          ],
+          "count": 179
+        }
+      ],
+      "holes": [
+        [
+          "read",
+          1,
+          "misaligned"
+        ],
+        [
+          "read",
+          2,
+          "misaligned"
+        ],
+        [
+          "read",
+          4,
+          "misaligned"
+        ],
+        [
+          "read",
+          8,
+          "aligned"
+        ],
+        [
+          "read",
+          8,
+          "misaligned"
+        ],
+        [
+          "write",
+          1,
+          "misaligned"
+        ],
+        [
+          "write",
+          2,
+          "misaligned"
+        ],
+        [
+          "write",
+          4,
+          "misaligned"
+        ],
+        [
+          "write",
+          8,
+          "aligned"
+        ],
+        [
+          "write",
+          8,
+          "misaligned"
+        ]
+      ],
+      "observed_bins": 6
+    },
+    "mnemonic_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "mnemonic",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "add",
+            "U"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "addi",
+            "M"
+          ],
+          "count": 2107
+        },
+        {
+          "bin": [
+            "addi",
+            "U"
+          ],
+          "count": 7834
+        },
+        {
+          "bin": [
+            "and",
+            "U"
+          ],
+          "count": 41
+        },
+        {
+          "bin": [
+            "andi",
+            "U"
+          ],
+          "count": 19
+        },
+        {
+          "bin": [
+            "auipc",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "auipc",
+            "U"
+          ],
+          "count": 419
+        },
+        {
+          "bin": [
+            "beq",
+            "M"
+          ],
+          "count": 98
+        },
+        {
+          "bin": [
+            "beq",
+            "U"
+          ],
+          "count": 39
+        },
+        {
+          "bin": [
+            "bge",
+            "U"
+          ],
+          "count": 45
+        },
+        {
+          "bin": [
+            "bgeu",
+            "U"
+          ],
+          "count": 45
+        },
+        {
+          "bin": [
+            "blt",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "blt",
+            "U"
+          ],
+          "count": 39
+        },
+        {
+          "bin": [
+            "bltu",
+            "U"
+          ],
+          "count": 39
+        },
+        {
+          "bin": [
+            "bne",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "bne",
+            "U"
+          ],
+          "count": 2186
+        },
+        {
+          "bin": [
+            "csrrs",
+            "M"
+          ],
+          "count": 147
+        },
+        {
+          "bin": [
+            "csrrw",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "csrrwi",
+            "M"
+          ],
+          "count": 245
+        },
+        {
+          "bin": [
+            "div",
+            "U"
+          ],
+          "count": 9
+        },
+        {
+          "bin": [
+            "divu",
+            "U"
+          ],
+          "count": 9
+        },
+        {
+          "bin": [
+            "fence",
+            "U"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "fence.i",
+            "U"
+          ],
+          "count": 2
+        },
+        {
+          "bin": [
+            "jal",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "jal",
+            "U"
+          ],
+          "count": 28
+        },
+        {
+          "bin": [
+            "jalr",
+            "U"
+          ],
+          "count": 13
+        },
+        {
+          "bin": [
+            "lb",
+            "U"
+          ],
+          "count": 107
+        },
+        {
+          "bin": [
+            "lbu",
+            "U"
+          ],
+          "count": 48
+        },
+        {
+          "bin": [
+            "lh",
+            "U"
+          ],
+          "count": 108
+        },
+        {
+          "bin": [
+            "lhu",
+            "U"
+          ],
+          "count": 48
+        },
+        {
+          "bin": [
+            "lui",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "lui",
+            "U"
+          ],
+          "count": 1511
+        },
+        {
+          "bin": [
+            "lw",
+            "U"
+          ],
+          "count": 155
+        },
+        {
+          "bin": [
+            "mret",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "mul",
+            "U"
+          ],
+          "count": 51
+        },
+        {
+          "bin": [
+            "mulh",
+            "U"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "mulhsu",
+            "U"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "mulhu",
+            "U"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "or",
+            "U"
+          ],
+          "count": 41
+        },
+        {
+          "bin": [
+            "ori",
+            "U"
+          ],
+          "count": 19
+        },
+        {
+          "bin": [
+            "rem",
+            "U"
+          ],
+          "count": 9
+        },
+        {
+          "bin": [
+            "remu",
+            "U"
+          ],
+          "count": 9
+        },
+        {
+          "bin": [
+            "sb",
+            "U"
+          ],
+          "count": 109
+        },
+        {
+          "bin": [
+            "sh",
+            "U"
+          ],
+          "count": 111
+        },
+        {
+          "bin": [
+            "sll",
+            "U"
+          ],
+          "count": 56
+        },
+        {
+          "bin": [
+            "slli",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "slli",
+            "U"
+          ],
+          "count": 30
+        },
+        {
+          "bin": [
+            "slt",
+            "U"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "slti",
+            "U"
+          ],
+          "count": 30
+        },
+        {
+          "bin": [
+            "sltiu",
+            "U"
+          ],
+          "count": 30
+        },
+        {
+          "bin": [
+            "sltu",
+            "U"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "sra",
+            "U"
+          ],
+          "count": 57
+        },
+        {
+          "bin": [
+            "srai",
+            "U"
+          ],
+          "count": 33
+        },
+        {
+          "bin": [
+            "srl",
+            "U"
+          ],
+          "count": 57
+        },
+        {
+          "bin": [
+            "srli",
+            "U"
+          ],
+          "count": 30
+        },
+        {
+          "bin": [
+            "sub",
+            "U"
+          ],
+          "count": 53
+        },
+        {
+          "bin": [
+            "sw",
+            "M"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            "sw",
+            "U"
+          ],
+          "count": 130
+        },
+        {
+          "bin": [
+            "xor",
+            "U"
+          ],
+          "count": 41
+        },
+        {
+          "bin": [
+            "xori",
+            "U"
+          ],
+          "count": 19
+        }
+      ],
+      "holes": [],
+      "observed_bins": 60
+    },
+    "rd_x0": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "rd_x0",
+        "class"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "alu"
+          ],
+          "count": 12032
+        },
+        {
+          "bin": [
+            false,
+            "csr"
+          ],
+          "count": 147
+        },
+        {
+          "bin": [
+            false,
+            "divide"
+          ],
+          "count": 36
+        },
+        {
+          "bin": [
+            false,
+            "jump"
+          ],
+          "count": 15
+        },
+        {
+          "bin": [
+            false,
+            "load"
+          ],
+          "count": 466
+        },
+        {
+          "bin": [
+            false,
+            "multiply"
+          ],
+          "count": 194
+        },
+        {
+          "bin": [
+            true,
+            "alu"
+          ],
+          "count": 1041
+        },
+        {
+          "bin": [
+            true,
+            "branch"
+          ],
+          "count": 2589
+        },
+        {
+          "bin": [
+            true,
+            "csr"
+          ],
+          "count": 637
+        },
+        {
+          "bin": [
+            true,
+            "fence"
+          ],
+          "count": 51
+        },
+        {
+          "bin": [
+            true,
+            "jump"
+          ],
+          "count": 75
+        },
+        {
+          "bin": [
+            true,
+            "multiply"
+          ],
+          "count": 4
+        },
+        {
+          "bin": [
+            true,
+            "store"
+          ],
+          "count": 399
+        },
+        {
+          "bin": [
+            true,
+            "system"
+          ],
+          "count": 49
+        }
+      ],
+      "holes": [],
+      "observed_bins": 14
+    },
+    "trap_cause_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "cause",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            2,
+            "unknown"
+          ],
+          "count": 49
+        },
+        {
+          "bin": [
+            8,
+            "unknown"
+          ],
+          "count": 49
+        }
+      ],
+      "holes": [],
+      "observed_bins": 2
+    }
+  },
+  "notes": [
+    "Default domains are a coverage plan, not claims of ISA support or reachability.",
+    "C2 trap events without mode retain mode=unknown; mode is not inferred.",
+    "RVFI intr marks trap-handler entry, including synchronous traps; actual interrupt causes use C2 trap events.",
+    "retired counts C2 instruction records, including trap=true records.",
+    "CSR/mnemonic groups without declared bins report observations, not a completeness percentage.",
+    "rd_x0 records RVFI rd=0, which also denotes instructions without a destination.",
+    "dependency: an FP destination is the instruction encoding's rd (C2 rd is the integer write); when the trace reports an integer rd for an FP-destination instruction, the next instruction's back_to_back is undetermined.",
+    "Memory alignment uses each trace's platform address convention (aligned_mem: mem_addr plus the mask's lane offset); a lane-shifted mask under an unknown or byte convention is undetermined."
+  ],
+  "retired": 17735,
+  "schema": "rvw.functional-coverage/1",
+  "traces": {
+    "045a1a867196a4812a82c73caa976fe5f4e0d35ef554a45fb4eba5180cacd057": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "10e1442eb9df70d345e375e909638a8210ccae4ea11c7a2c05a69ebb8e2cebfd",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bne/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "06dc35cbe927eb6fa35531095fa13e77c889220411aca93bc35145cd4b025d53": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "7d14af241a0f8cc073d4611114a3263de68ea1571257a9f2f7801e365870b356",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jal/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "0734e4fb5362722300e51436518637c1ae442e1259799375801e01d987260f9e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "b1c43f26eeac51f73f0a722f850eb3f9c22336a50f3c0c508d7dd54ef07f8a36",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-addi/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "08ddf1a71eee5243bff4f60a5d3cd388c7c539bf8e565e59063255f6aff0f7f3": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "9a6e3ace90475abb8b043b970003d35fc64b1516497ed2e0addc044ebc621287",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ori/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "12b73f4a7755b7509a0f5191c1e050199f002c4813aa6a134ead0e12e0dc2223": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "face19aae9e0e5c7a59eb352fce2b4aebda00354aafcc7fe319c7ab4397e79f5",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srai/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "142c20c388bde83ca81ffba8b195edf7d2d3ad06f264c4c6fe75fe4757aa2e4e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "27168cf428b6a8c469008c53a804b92a93391b616ece6c944275f2f45ca39836",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sub/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "16ad8ca5a86b0908ef122261d75b9abfc6bf1328933b860c6bc1c85fe2f41745": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "484d35af48421d9d3979fb06c8dfb1a519a45914efd3fcf1c2a16865efc18582",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-or/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "1c5f4853d4774f5bbb2bb5c53de4d7ae1b49bfc780bb18baca61516747873814": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "f520da0e0049675113916749c7506a9eca4bdddbeb639a0f4b7dbe26971d711e",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slli/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "1d7c146a865a86e3b0d892c11f1d8a53bc279afb02542c17d8f118946be2de6e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "e346bb7b8281be4eef9614a0de6f16d24a0c360ec4ad0b01c160041339e46c22",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sb/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "1e53a10c653acd99e95f88e809e4239fac5e663443be12a5aa959990fa585877": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "28783d8dc7d7df5dcb47f3c126bd2f4d89cd363d500730bdc1b883e9e98f22a0",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-and/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "24a22b1c9dcbb0aa30f09bf48e6845d98cecad75f6ab9313c814f7b92e408d08": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "050958dc76a8433d3ffbe9c93f9a82894526297597e991f23b15bbec3c0f4c97",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-remu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "2a067ea33830ab28ef4e3afc3e5e1b6ef9682aabd7e41567e0b0413edc56436e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "76b669fc7b9cc56b9e2986f00c6acb1c6490bc3239b88ed09c34e5599aad0ce6",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-blt/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "2e8aceec42487322b77ca333441748f2acf8e4fd34a407e2e2830a8d596b91fe": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "ce6636d12a6077c197d31de3424f60c30f3b717e8370c0dc0b68b5f792c209d5",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhsu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "36c229633e8475a0614e30eaa8429a25dbbe3bd55010e158937e1c144e2de60e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "0a2e53133489f0eb29fdc21bff97ca762973bd5c48fe605de58f5b8126c65afa",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-rem/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "375a892e1429d19a19270da9a1b20558b3a45191ecb9c15db86e4555d02f3618": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "e2e58c6b6eac75fb75e19cef40617cf635d74fe09e8612d301ae785a43d36841",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-st_ld/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "3ab6d0bacd2b980f35ce771514cd30af39cf22ccaea9f5be638f5bf4c4d2c795": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "9fa9d9c7b975caa7d4b0ccf687219a60382f3920181e030d728a8aefa2f6df1d",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xor/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "3eeaeea44fd1784296924445209a5ca6d59ad44a7912891f776a9b1aaf61946d": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "36f1b9cf476fdbe049f082a3babddb6fd0f9b99cb6e013057205cc72b392788e",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "3ef44137d87c0e904bfc255b4447701cfe230ce48687c3e7a3fc0c33588ead38": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "9280d7c03cb044587ec1f3c449a11101d1d1786307e8fc8e7ce1b996a81c70da",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bltu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "43cf7e60d6cd30ea1a90a657e7d8be67b2d99e6ff75a76c27cbbec48907b75d8": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "71c2042568a42c5a44b71bc6229d11f5ec18099ad7608afc1cf29f2c9479b3db",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srl/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "45dcf9dda571a6701afda6938e43323ddf1288745b4e74b72c8c12c666f6ee06": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "1cd3dab71511cecfaaaabe8a744c5295561b020d63a16158c1e66be47430cc43",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-xori/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "4905197de6ed0af2f4ed716a3a48d29410bb42efad16b7af0e2917baf4cb0fd6": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "68b1d003c9c9d411510a5a772130ef999a86227c897726e02f92cfaef1991bcb",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lw/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "4946d3132d662d3696cad7ecfcaeb5c7fa025214b2506d49bf98e8bfd82d540c": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "7cbb370b8bda574e756c94b96d444673dd89d65d07f8ec670d770d5da11badbb",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lbu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "4ae15c78a243be82e5de43acc844627d6e6ea5d32b6192bd499da99bafc10e9e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "0885401f665764a0a53487968e741da462ff46506c56a1553a82e5de48e323ba",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slti/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "57d5024aef7677247b01174f3d9e8b717b07aee9145495673e6a212345a29553": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "39e9264e10d4d76f44ba1a6360f44eb9842657c204bfff530f139c3a44758370",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lui/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "6576bb5393ed8ced69e5486c699d7c4e326f0321a0e74ad375b0838aa0ded449": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "54b3650d6b2bc797f87a095d1e8f1577913f26021044183b9e6270b02f48a295",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sltiu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "7544976e24ceead9ac0cac8835c881b6ab770197d169a696354d148c0171e003": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "944ba02dd225f2526e8ce3a3e32be34ccc68924d58d72065035d51b6d007a0af",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulh/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "7bab0a21c3c50643c4c5cd12111cbc6f3f252fc6de08ff7f2275492bdedfa586": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "84eed93fc888795f6075b4a79056b5a0049ba498bfe5d07cce677e7b6c963049",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lh/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "7ec1e9c7ca68f3a01f304465dd3e1fe3f4eb5e4b9bf4ed8386f89d2f79a9a945": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "fd2bcbfe8cc705f51e0f69323a0e39dad4f564c358b3859e26d58e7b348dee26",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-simple/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "80bf0505d72708862c83f3aa62fe4d6258cc8fae46c3f7988ec477172aa29518": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "7703e50ddb54f1155edc8bee296ddf52745466d147186726a7da78c5efea333b",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-andi/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "82b4a78cdf792954c91bc5132abc7a9e1e7f326619e140780f710d5f70323f7a": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "77ade4542d845445f88ca404e07962b15661b3feb0d6c3dd0bf36911b403663d",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-auipc/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "8ae5a7548a61c3cd193da0923e0613a9ff968d189da7ce69c46136529ee3ffdf": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "67252c608c04c8f19c1ff47a63c8e8f044e285b6b69ed0e6f51746fba9af5cb1",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lhu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "8f58ccf530574604297025750185838af31e331060976d4e4c62892f91276291": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "50027455e5ea4f333f5ff48bb5a49791eb5385efa73f1f50769ee69c05311bf8",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-lb/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "a4ea3d9bef21f80088c95e3a73c70b587f7ee86c38fc9c80b60bdc89f5abc37c": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "ee3f14a553c45cea13d0cf6beea9d13f71b5949854804a00b8478e9099da5086",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-add/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "a5ae7749f72c02615f6666bb2ad350b4df84b57e3517d906d850028840dec862": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "adb3257a2240a0b713e1d19fe6099151bd4c173099b758f757aea05c3784c1e3",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bge/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "a739d842bfdc56ee85e0e5415bfdbb5f24b306f648e066b951512691060a3f18": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "4fa9b2fedc0354c6ccb395067cbf7854358d690201af45312d8610bed244ce9e",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sw/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "aa4d762b23b010d64a1bb00c232ba8af4fda36af2dbd8d34d9c8ccc179044122": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "99db1ab9ee20b2867e7c7fddac8df5a25370b7b2c77dea623ea417b35857dcbe",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-srli/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "b6dff5082d7e5fa4ede1cb4fd639c8708834982dabd5c873e2c21f1b452d76ac": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "ac8f8c50d1bb0d41fd74af6851d4dc1833a28df498dfbd63326813f007d97d47",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-jalr/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "b84de6fb236bc3d37f86201e74613b928a005830b0c7829ae9e7c0170d03113e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "d23139e9d507560f92b7270e745d9ada03e68f3637fda822791caaf38da7caa9",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-divu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "b84ea91bd7a088b2e577e80ba8e83ed7be38634992fda02333623adc1f11a40c": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "31545c65e5f0d02441c81a8ec997335341e9a5fc508d19b4ce54a9f4578ff295",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-div/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "b850328a98bcf986c71cd99430f53cf038f0c0b26fff0dd7d40202749dc5d67d": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "47aad230cb1af242befeba52fb95665f999b7b14b182de2df7c864965fd34b9a",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mul/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "be1ae5554a5cdc8e3fa0b4efd83ac8781ed2fb88b9dbcc796dcaea2240e72983": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "be6efd7715be7e6c3441ad0666db72a49951b942c0fcb01a95af5cb660d6bf8a",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-ld_st/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "d6c3b12617ddb5a5c03e9734b028a97e69d3fc5a967a43d7764850e257dc18ab": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "02b7b05fcdd1c4e514d777e18682182db38f2ceb3336af6ff4770d7ece8345a2",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sra/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "df2a631ed874f43cf91fdca406d31adf4b19398b05aadc68a7d413e2eec451b8": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "2ffba66cdf5d7aa139e6fc9b85d33cdd68787cda34f0977386ca8af91589b07d",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-slt/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "e046b5d7ba214ecd37fe8f9273d201ea56df8f66fdcb90645eeb83459c7732c9": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "4320d40581b6e6c95aecf0daac51780fb0345048802ca05f5282fbf9f1a8d76c",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sll/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "e4beb42e90f8df182be5e959ce77fc175851acec0858b9047e0479180c0d11c7": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "df924e15d0f54794e5c4f359eca684008ef322d87fde8d6bbff450162e5665f2",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-sh/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "e5668e704a1c6ab570b5d0590d973a890bb60b553a273191c4415e7dba8e6a73": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "bea096844ca2d208609c3588442dd9e54e3e0fda8c562c350626468ddf5d9025",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32um-p-mulhu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "efb4799b5395a826fcbe8447f41308e8a1309463c5fb8dd67ab6eca611cbd5ea": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "83449c46f4d5dfb9f4cd1571c1ec450d726ccedc9944c8e22b4cd54f80e65b12",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-bgeu/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "f293815fe12f0042cb39270962385dde6c4b9449e8eb2837dfb21772f2573b2d": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "d38ef2220ef4b3578a5fd871ffea22608f67777ef370a3241c345d546329c73c",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-fence_i/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    },
+    "fe792c100726eaff0d7b1893c735ab85d5cd101e9c9c3c3e84f35d889f526a1e": {
+      "address_convention": "byte",
+      "header": {
+        "config": "rv32imasu",
+        "core": "vexiiriscv",
+        "elf": "$CAPTURE",
+        "elf_sha256": "d1c8d606336b4aa40239f2f5f03dd1aa98b644a93486f1d74355c3b6d46640f8",
+        "isa": "rv32ima_zicsr_zifencei",
+        "rtl_sha256": "a2a3f25ef73192ecc572c845c5570ce636c31bbb3a75447900b30f74ca7ddc00",
+        "schema": "rvw.rvfi/1",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "2ba7b941b95bdb88c57148022f8c6ea039277c31ea23bab2fd96f0f9226ec9a4",
+          "core_repo": "~/fun/saviour/wt/.vex/lint-vexii",
+          "core_rev": "9f70315",
+          "core_rev_full": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "5115192865cf4f249a53793c638102d437b2e840"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-vexii-supervisor-isa/generations/830b48f8111a47f08dd3bda24f91e49f/isa/rv32imasu/tests/rv32ui-p-beq/rvfi.jsonl",
+      "platform": "vexiiriscv"
+    }
+  },
+  "unknown_encodings": {}
+}

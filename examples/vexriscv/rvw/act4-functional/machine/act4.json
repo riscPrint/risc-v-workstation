@@ -1,0 +1,3749 @@
+{
+  "cache_key": null,
+  "capture": {
+    "env": {
+      "DYLD_LIBRARY_PATH": null,
+      "HOME": "~",
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "LD_LIBRARY_PATH": null,
+      "PATH": "/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
+      "PYTHONHOME": null,
+      "PYTHONPATH": null,
+      "SYSTEMROOT": null,
+      "TEMP": null,
+      "TMP": null,
+      "TMPDIR": "/var/folders/s3/t4lhzzrj1qxfn3_y28334_340000gn/T/",
+      "YOSYS_DATDIR": null
+    },
+    "files": [
+      {
+        "copy": "files/66f2cf3daffc0820494a9fd46a41749d3a0d351c8e02efdf2e70a50990771e14/platform.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/examples/vexriscv/rvw/platform.json",
+        "sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+        "size": 1115,
+        "source": "$CHECKOUT/examples/vexriscv/rvw/platform.json",
+        "symlinks": []
+      },
+      {
+        "copy": "files/c32f2fb2b96356ccc44749d12e2c2ba6087956fb8107196ac695474599ec8122/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-add-00/rvfi.jsonl",
+        "sha256": "29b821bde8cbd16ab276bd30540f7d0160a565c516cc008a5c788731e146c2f2",
+        "size": 1506196,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-add-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/9e395748a149a855a8eea85669e21e576db44493181ba021a072be8b8174d747/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-addi-00/rvfi.jsonl",
+        "sha256": "7782cc4494dcd6d5df2a7432945e6b5c18a0737eb25f376c1170bfe39c24e280",
+        "size": 1097642,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-addi-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/a595fb432be804fda33915caf77233965e650473b2208db248396533e7765f8f/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-and-00/rvfi.jsonl",
+        "sha256": "29c29e0ded690abc70cd3f2e2c977c8a8f180734a58c5e6c8aaa5866b434bd45",
+        "size": 1505969,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-and-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/bdad19ba1687031f3c1b27dcd3f73cd4680c9961c85be1cd1b901742e54d4272/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-andi-00/rvfi.jsonl",
+        "sha256": "17fe295f5524f3addbde78baabb5bd34064a5108dbba4ffd09bd5391c520a4fa",
+        "size": 1085939,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-andi-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/345a20a520b7b553da8e2c1053e54dbc6646f1dadaf8fa803dec9140bc797790/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-auipc-00/rvfi.jsonl",
+        "sha256": "4e8cc7fd5c568d29965769f01f640a90f1935f0a616916a8215f411c33151f14",
+        "size": 268133,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-auipc-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/819601cfb89995d19c9d3f14de6741bce51956e4e7c20e0b59f441883588184d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-beq-00/rvfi.jsonl",
+        "sha256": "c6fb22372f8b114666662f0075d2f38ac823472ee5aa4afe94f9c5732af6ca31",
+        "size": 1616244,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-beq-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/179da797e8c93f5ffe404ee824ef5295a6ff98f08bdd92c6abd601d179ed10da/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bge-00/rvfi.jsonl",
+        "sha256": "d8efc2ed486bb9a445179f56724fd483b4d93c49b308632754769fe75280b438",
+        "size": 1623638,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bge-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/9f4d5ac7a687ef2b7199262a2d3f69b14e2d45fc06184ebd93b3b8fc82fafdfe/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bgeu-00/rvfi.jsonl",
+        "sha256": "7c10c2cb328162158ffbf9da92f12f1277f62601a8efa7f6e9b968d16bc8ab00",
+        "size": 1623575,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bgeu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/b7981347e4d4988a6e8d4f6c856977786d32524962fba1fe672e5d69b86b1329/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-blt-00/rvfi.jsonl",
+        "sha256": "39977c3c6aa92cc8c76f1f78b70da1b315795653edb2bc2b0280796f6c28cf1e",
+        "size": 1628875,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-blt-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f58ee1e393015a354512fb894734e71a4c2f93cd047c7f7eb906bad0808a02b7/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bltu-00/rvfi.jsonl",
+        "sha256": "6b8929670815223eac9b917ab6b21834e51986d5936d5a2df58759f186d77797",
+        "size": 1629843,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bltu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/936ee78b71b5b7e2b402dbab6c3b52fe4c3011f12a9996cdea59e23134342546/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bne-00/rvfi.jsonl",
+        "sha256": "f75666feab772079bbadd97baf20e29ff6bfd465c2a64966c121d3441c3e201c",
+        "size": 1640335,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bne-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e7ba951ed2bc1392453ee3dae46e4c330f8eaa87a98d65cafb8ed3c7ba5e944f/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-fence-00/rvfi.jsonl",
+        "sha256": "e532453b092307cb722d3fc7ea7aabd6552c3e639585e8a51229be6552d33b27",
+        "size": 279308,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-fence-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/d2f96e070f747a654a4f87af575c213305fb89c946e23333ce54cb34c990c7f8/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jal-00/rvfi.jsonl",
+        "sha256": "7dfea6f9f254a958fe5fbd71e8f8f66f9a7099197548de19e4c15518de5f98e8",
+        "size": 6486084,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jal-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/0a46128d1a97c52d936cd70f1f2a1781126a485acb8128b7ad4bb05bd4ec9b99/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jalr-00/rvfi.jsonl",
+        "sha256": "e31b483d6fbb14e8e58e4ba7096a9dccfca8f960a8af3d024dbd8066bd60a57f",
+        "size": 1383790,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jalr-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/6ae0456355d551e390d6ad23aab911e28f74b68fd8f21c316c1b3afc1291a070/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lb-00/rvfi.jsonl",
+        "sha256": "8a4402ce35d8658d6286bcfc2082194a920379c3b8da7684d8faa667fdaa9168",
+        "size": 541093,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lb-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/db44f50d89e77dd0a06a306f9ba90cbd86a7e23507cf27c5c3eeb81048c26d51/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lbu-00/rvfi.jsonl",
+        "sha256": "65ba547a3a63fc58262c482cbe98ee1e9a71abc4bf0a307d5271757d86abf904",
+        "size": 537265,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lbu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/dbdd9dd18402b2e2fed825a5bcf09a7a3ebbf926aedcfa4e2921fdd8bded0530/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lh-00/rvfi.jsonl",
+        "sha256": "5432bd2e7628983d90160f50bb01fb087070d7887febd409baf7027a7196d927",
+        "size": 508344,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lh-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/970506d544e82aa8ae06ba332704566a808b2b9597318f8fdfe69de8192fa6bd/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lhu-00/rvfi.jsonl",
+        "sha256": "c628ffcd24118430a4b14f59e367de16ab36599a9efe303e19418e0726429c50",
+        "size": 506097,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lhu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/bc23396049302b62793bbd6d60a9e753609a1edd672a9b7ad1e6305e8f595ef0/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lui-00/rvfi.jsonl",
+        "sha256": "c1160dc45ac4c7a9087d7f4570d5c0d75e28bf4924b88758d82b7018ea81665b",
+        "size": 266736,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lui-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f6093826854bb217b04d39e0b2bf05b0805887eedc1b7c8890dea764227a11dd/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lw-00/rvfi.jsonl",
+        "sha256": "8b5ea3f489bb51dffdd152078a00e86cc5a399d47f0ba85efdf3899c7e33258e",
+        "size": 493936,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lw-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2a9fa08e3a268495a1476f83999928c4573d0e9c67217c5368a44c74e284f3fd/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-nop-00/rvfi.jsonl",
+        "sha256": "bea1d537da5fa68ad9df6c07b79b37466c0747f3dae41fb3357424addc6768c4",
+        "size": 164844,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-nop-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f50a4ea1cd38e26d0a3f8da29f53138ab1e550ef7c4c1068331a02c98e6d4bbc/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-or-00/rvfi.jsonl",
+        "sha256": "8a475d57c77f15f70e554896bdfd53ffc96208adf18d2c279d4ec71c0618811a",
+        "size": 1510643,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-or-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/970b326b0f02767025afce2d6d0ae321f82de1337d44d25669670686221e2e15/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-ori-00/rvfi.jsonl",
+        "sha256": "83d5869f1742d9db06578770aadc7b44a147739e7ca78953b9d8cfbf284be63a",
+        "size": 1099095,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-ori-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/2bf7394aa2b57a8673ed726b49b598a9dc4f2243a8907dee0fb97a5a6aecc825/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sb-00/rvfi.jsonl",
+        "sha256": "d8a9e3f1e4d370b5da6d92d78c2c2c4c03adb17c51492cc5ce953a74a9b369b7",
+        "size": 1083701,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sb-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/872d9106629b1bc6a18e49f9384f8f48d5f4c26735d38f56f321da191b7ce177/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sh-00/rvfi.jsonl",
+        "sha256": "d00e6f5102ebe04a7d19b699772b0e9b5aa464e4217a1ac9c9aa88430022056e",
+        "size": 1040044,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sh-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/ef5414a16b1c0b144e089767533f443e690a7ae6689d65db6075d93be90bf17a/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sll-00/rvfi.jsonl",
+        "sha256": "4fc0830cb801d40cac1221f9e50d84df10c4de5ed022c3fcd327469f887f2c18",
+        "size": 1499031,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sll-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/a80e9bb71a9cb4639cfcf996ee9354cd598e398a0622f28e93d7cc5c1a487d32/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slli-00/rvfi.jsonl",
+        "sha256": "adef9af0c70202050aa95c19d2a544097abba6629cc6a63f779ab8dfe406fadc",
+        "size": 670272,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slli-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/7bda0d0f8fbf77d250204ccb66dc8085b7264fa42a4247a16910d3e1946ee9fe/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slt-00/rvfi.jsonl",
+        "sha256": "0fc661cf0ab4a6c3857390826c7d50380f61d8ddcba26f122757315e2a8cdfef",
+        "size": 1469310,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slt-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f9dc95c652c00be2d17c9d59589ead71b96a095cad6a43c7faaef564cafc233e/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slti-00/rvfi.jsonl",
+        "sha256": "98fbd909ec649845ca0b18909fde05c1898424963d4bdfee4de9ced5488c88a1",
+        "size": 1074477,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slti-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/173bc3347be2041399acc6253017d0eb0227bf7c7692f28a7fadb42e7cb65698/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltiu-00/rvfi.jsonl",
+        "sha256": "f4f3ae8d5a0f6cf57c58d89af701c80789940db112f3a42c5ba074fdfaafb0a0",
+        "size": 1073828,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltiu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/90702c3ddb8dfb9c62dfbb9eba97a9dd8983d9043f9e1807966a00ed95cebd86/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltu-00/rvfi.jsonl",
+        "sha256": "885d1b0ab7798af2430e000035b7c0d01db06f5319cc9f4cab715052444978c8",
+        "size": 1473300,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/3887a121045619c28c90837b5a83abad4566d46fcf4dc5c3da5b7b575067a560/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sra-00/rvfi.jsonl",
+        "sha256": "3d31bfdf90982a3c98949c08496398e045d2a98d071f5bcbfcd843463fb6ad58",
+        "size": 1498901,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sra-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/ddb0ffb632f57288ef0d9f448a66368c5338b1e0eee07978f0c13bf7852d31b5/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srai-00/rvfi.jsonl",
+        "sha256": "a560758e310f6630111675d95e053ca747d127e56327e6a1b117f3d451f31218",
+        "size": 671043,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srai-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/4808bfebfe3f6547751ecd67dd331537d3e5cd3d80d4f7cba962f336a9dbf057/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srl-00/rvfi.jsonl",
+        "sha256": "c07bd7a513a9c943734bdf0f49b41b477b3f85698b47dd72ef516283852a8977",
+        "size": 1498041,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srl-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/fb6405b4282358cff91181c19f7fb6644140928144137bf7dcb273070ab822ed/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srli-00/rvfi.jsonl",
+        "sha256": "32d5874537ebe6f38743ff203c42c6f414e00c836f5d09ba4792114fc4481d38",
+        "size": 668560,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srli-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e46ec13bcd31936c45166ce49100eec30575abc661f6ed5101cf2aafb5fdc1ee/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sub-00/rvfi.jsonl",
+        "sha256": "3811504aa8fb6dddbe57834a301aa90bc14d82db01e8e576ef9bf4f245e91527",
+        "size": 1503909,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sub-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/25cab5e181afff74b955cd42f7be4c8f40cfe552cf88a08925148805dbc208d3/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sw-00/rvfi.jsonl",
+        "sha256": "a049671a21be707a553b09072a980ccd56fad027fa3a04e41c11b7d49bcbe3a6",
+        "size": 1018838,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sw-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/7336e93d43bafa47b58c4123847b713758c532e73c0604c6788d45188310d494/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xor-00/rvfi.jsonl",
+        "sha256": "f0d829539f0f6b9dd0d40fc43d6e44fc171cbe1bf998df9b946edead373da2ed",
+        "size": 1503619,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xor-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/f77658d2874be07cadff914aa43e902769cf8006e4440d22228f6ae6374256a5/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xori-00/rvfi.jsonl",
+        "sha256": "8176e1ebae0c9bc62165c09db11b8d675eff07f180b10fdc8320f5b894e1e644",
+        "size": 1099651,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xori-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/d629cd00ee8a761a0bcdef0551da7cf1283c750f666dc7b0672b764eddf8af53/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-div-00/rvfi.jsonl",
+        "sha256": "1d4adf8b4fcec3b01b9e95f21620c5dd64265e44890c69542b0c793fba2dd633",
+        "size": 1493703,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-div-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/ab1887c87fffafe3ff650418d6c261c6acbe7eeedf369c2a42b0018b8d92aff4/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-divu-00/rvfi.jsonl",
+        "sha256": "3477ccef17c5c901d461b9e9451fd88ce44cd74d057447ac1470c682fdab676f",
+        "size": 1489926,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-divu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e1d6ac955b468d4715ef319ecec9cb014fcd263603eacb0a7a6564aa6dfe4621/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mul-00/rvfi.jsonl",
+        "sha256": "0a62cc7e63f07821d4b07e806b5763940cc02a9b02c396b0aba085c681e5b6bd",
+        "size": 1509726,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mul-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/780d3243f2e5c04060022b7b7343605f8f91a613e7d6b88312d7db15127bd081/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulh-00/rvfi.jsonl",
+        "sha256": "d919a193ff8730bfad5dee7aa122660252982b59a1f11eb156b5889a04fafe4f",
+        "size": 1505715,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulh-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/a2f92028d5ea8d56a6f7c09f47001163814da3f5b49ddff3e2eac8e919ee254d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhsu-00/rvfi.jsonl",
+        "sha256": "f551eb0daf3f8a4e8160fc4b895d957001c3c447b73202e9a69001e1f368c5ba",
+        "size": 1507023,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhsu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/58b947b9a921e646df1715b2f46383e38308ba6c4d3241fac3c37722f373b3d9/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhu-00/rvfi.jsonl",
+        "sha256": "cf15076b319958054001ca6b02e7f9cca19e6bd0b87bb12ce88f31dea35ba469",
+        "size": 1504823,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/501ad8d884323f7c71f3ea1ab9943dad37a547eecbb5bfb8a1e2068be9fd073d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-rem-00/rvfi.jsonl",
+        "sha256": "871fd076d590878518ebd0174714046cf126c952ae382a9142a4243ac1356aaf",
+        "size": 1499768,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-rem-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/0e2b50202f6a2105d138d1e3093bd8c6128d4b1df57605c99fb720562afa7240/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-remu-00/rvfi.jsonl",
+        "sha256": "82dc9490ba13caf18c54a1b5e3f3d861b3d73cff10d2651d9c8d09243a0cd7d5",
+        "size": 1497701,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-remu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/c245176c192b22c00c3100f2f2e980d85c5c8659e9294408fd4bbe060a92ebfc/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrc-00/rvfi.jsonl",
+        "sha256": "f8f6eea8802982178eaf4117dce2a16b0696e5ebeec826417861820b6d96e025",
+        "size": 416451,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrc-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/0b916fe0a3fe56b5e8ed965b05a54cedde89ebd21a4233c6aeb8709664479222/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrci-00/rvfi.jsonl",
+        "sha256": "7dcbee1d7af2bce2e97c98fede72cbfb70f2a47840cdf9c8119c96b18f1d368f",
+        "size": 415914,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrci-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/36aec3d7d59db698e38705da862c9534df185cddeef61de169919c57ea43568a/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrs-00/rvfi.jsonl",
+        "sha256": "d940267c11818846d645ec3c2e65f26c3f5b6d78ef0449768658c1bfb5e7dab5",
+        "size": 410745,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrs-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/4e753a79ba5d3d28e61f92bb785cf13583e03357be766c9e8a81ccdc56f2e667/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrsi-00/rvfi.jsonl",
+        "sha256": "b88cecb0f1221955da03a1b574be7254f40060f53e13d1345145ff599d40d5a1",
+        "size": 417500,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrsi-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/493950a07064c5cf9adb9ab83204a7dae3d63c42d455eaa29396e71ca1aabd51/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrw-00/rvfi.jsonl",
+        "sha256": "9383bb715991cc7d4787f8e28baf6301a48bd11cd4e5ee5b6ce188030d836702",
+        "size": 414757,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrw-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/02a57079ceaca49e96624850a1fe0fe39472526e752ac7417c7c8e6ffd0f0828/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrwi-00/rvfi.jsonl",
+        "sha256": "e71f0c2b2b3b40ae0d22049688234f478788f4ea26f9e4457d1b972c841ca106",
+        "size": 422038,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrwi-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/00cde98ca4f73a638545b8a84d06b20f4be11c081339be388519eb22b505d9b9/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zifencei/Zifencei-fence.i-00/rvfi.jsonl",
+        "sha256": "78b77e05d753b09f0216494f69198b29ea73a1ccf4125364ed1e4d18ed3bb978",
+        "size": 212916,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zifencei/Zifencei-fence.i-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/d07171f8dfa58295f9c7857ea22ab3345acf1ac89418584dc6879eb9c8be1f96/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mul-00/rvfi.jsonl",
+        "sha256": "14ccb2b87cb53c597e94a8ea2e0af99cb01ce5549860b438398faa4c6e1c5cd9",
+        "size": 1509697,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mul-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e62ea16a1644e9f2c89903664e61dca31f03de708cb32a66a856cf420a4f4b85/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulh-00/rvfi.jsonl",
+        "sha256": "eed9abe3b04b1565294c3ec474bd74f0fd1fe03bef8b7a1379dcfa8d896f8ce3",
+        "size": 1505708,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulh-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/e53dc97ea9bebc10a812c52d21b67c9a7440679dccdf2d1bec06b556b012431d/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhsu-00/rvfi.jsonl",
+        "sha256": "d88cc688560e76e78faa945f2e0d25a37e9473200864838081d3976d09a2e296",
+        "size": 1507027,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhsu-00/rvfi.jsonl",
+        "symlinks": []
+      },
+      {
+        "copy": "files/42ff51fcca252fb58c64bc3ee2419edb6720b7d30b9ab830ba7a82c41d4cab00/rvfi.jsonl",
+        "executable": 0,
+        "resolved": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhu-00/rvfi.jsonl",
+        "sha256": "328851f998bf358445d5a63d0e6deb0b0a2357c0165ce910d66e4f2bfa878fc0",
+        "size": 1504847,
+        "source": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhu-00/rvfi.jsonl",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "config": {
+    "groups": [
+      {
+        "domains": [
+          [
+            "alu",
+            "load",
+            "store",
+            "branch",
+            "jump",
+            "multiply",
+            "divide",
+            "atomic",
+            "csr",
+            "system",
+            "fence",
+            "float"
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "class",
+          "mode"
+        ],
+        "name": "class_mode"
+      },
+      {
+        "fields": [
+          "mnemonic",
+          "mode"
+        ],
+        "name": "mnemonic_mode"
+      },
+      {
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "name": "trap_cause_mode",
+        "when": {
+          "event": "trap",
+          "interrupt": false
+        }
+      },
+      {
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "name": "interrupt_cause_mode",
+        "when": {
+          "event": "trap",
+          "interrupt": true
+        }
+      },
+      {
+        "domains": [
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "mode"
+        ],
+        "name": "handler_entry",
+        "when": {
+          "intr": true
+        }
+      },
+      {
+        "domains": [
+          [
+            "read",
+            "write"
+          ],
+          [
+            1,
+            2,
+            4,
+            8
+          ],
+          [
+            "aligned",
+            "misaligned"
+          ]
+        ],
+        "fields": [
+          "access",
+          "bytes",
+          "alignment"
+        ],
+        "name": "memory",
+        "when": {
+          "event": "memory"
+        }
+      },
+      {
+        "fields": [
+          "csr",
+          "csr_access",
+          "mode"
+        ],
+        "name": "csr",
+        "when": {
+          "class": "csr"
+        }
+      },
+      {
+        "domains": [
+          [
+            true,
+            false
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ],
+        "fields": [
+          "branch_taken",
+          "mode"
+        ],
+        "name": "branch",
+        "when": {
+          "class": "branch"
+        }
+      },
+      {
+        "fields": [
+          "rd_x0",
+          "class"
+        ],
+        "name": "rd_x0"
+      },
+      {
+        "fields": [
+          "back_to_back",
+          "class"
+        ],
+        "name": "dependency"
+      }
+    ]
+  },
+  "config_sha256": "3c037df8835f25d08e20107bd2f134fa3d6b79d585390e66e74b2d0e005740f4",
+  "groups": {
+    "branch": {
+      "expected_bins": 6,
+      "expected_hit": 2,
+      "fields": [
+        "branch_taken",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "M"
+          ],
+          "count": 1452
+        },
+        {
+          "bin": [
+            true,
+            "M"
+          ],
+          "count": 16642
+        }
+      ],
+      "holes": [
+        [
+          false,
+          "S"
+        ],
+        [
+          false,
+          "U"
+        ],
+        [
+          true,
+          "S"
+        ],
+        [
+          true,
+          "U"
+        ]
+      ],
+      "observed_bins": 2
+    },
+    "class_mode": {
+      "expected_bins": 36,
+      "expected_hit": 10,
+      "fields": [
+        "class",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "alu",
+            "M"
+          ],
+          "count": 96941
+        },
+        {
+          "bin": [
+            "branch",
+            "M"
+          ],
+          "count": 18094
+        },
+        {
+          "bin": [
+            "csr",
+            "M"
+          ],
+          "count": 1242
+        },
+        {
+          "bin": [
+            "divide",
+            "M"
+          ],
+          "count": 1568
+        },
+        {
+          "bin": [
+            "fence",
+            "M"
+          ],
+          "count": 321
+        },
+        {
+          "bin": [
+            "jump",
+            "M"
+          ],
+          "count": 1971
+        },
+        {
+          "bin": [
+            "load",
+            "M"
+          ],
+          "count": 41256
+        },
+        {
+          "bin": [
+            "multiply",
+            "M"
+          ],
+          "count": 3136
+        },
+        {
+          "bin": [
+            "store",
+            "M"
+          ],
+          "count": 1976
+        },
+        {
+          "bin": [
+            "system",
+            "M"
+          ],
+          "count": 52
+        }
+      ],
+      "holes": [
+        [
+          "alu",
+          "S"
+        ],
+        [
+          "alu",
+          "U"
+        ],
+        [
+          "atomic",
+          "M"
+        ],
+        [
+          "atomic",
+          "S"
+        ],
+        [
+          "atomic",
+          "U"
+        ],
+        [
+          "branch",
+          "S"
+        ],
+        [
+          "branch",
+          "U"
+        ],
+        [
+          "csr",
+          "S"
+        ],
+        [
+          "csr",
+          "U"
+        ],
+        [
+          "divide",
+          "S"
+        ],
+        [
+          "divide",
+          "U"
+        ],
+        [
+          "fence",
+          "S"
+        ],
+        [
+          "fence",
+          "U"
+        ],
+        [
+          "float",
+          "M"
+        ],
+        [
+          "float",
+          "S"
+        ],
+        [
+          "float",
+          "U"
+        ],
+        [
+          "jump",
+          "S"
+        ],
+        [
+          "jump",
+          "U"
+        ],
+        [
+          "load",
+          "S"
+        ],
+        [
+          "load",
+          "U"
+        ],
+        [
+          "multiply",
+          "S"
+        ],
+        [
+          "multiply",
+          "U"
+        ],
+        [
+          "store",
+          "S"
+        ],
+        [
+          "store",
+          "U"
+        ],
+        [
+          "system",
+          "S"
+        ],
+        [
+          "system",
+          "U"
+        ]
+      ],
+      "observed_bins": 10
+    },
+    "csr": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "csr",
+        "csr_access",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "0x300",
+            "read",
+            "M"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "0x300",
+            "read_write",
+            "M"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "0x300",
+            "write",
+            "M"
+          ],
+          "count": 58
+        },
+        {
+          "bin": [
+            "0x304",
+            "write",
+            "M"
+          ],
+          "count": 58
+        },
+        {
+          "bin": [
+            "0x305",
+            "read",
+            "M"
+          ],
+          "count": 116
+        },
+        {
+          "bin": [
+            "0x305",
+            "write",
+            "M"
+          ],
+          "count": 168
+        },
+        {
+          "bin": [
+            "0x340",
+            "read_write",
+            "M"
+          ],
+          "count": 162
+        },
+        {
+          "bin": [
+            "0x340",
+            "write",
+            "M"
+          ],
+          "count": 168
+        },
+        {
+          "bin": [
+            "0x341",
+            "read",
+            "M"
+          ],
+          "count": 58
+        },
+        {
+          "bin": [
+            "0x341",
+            "read_write",
+            "M"
+          ],
+          "count": 5
+        },
+        {
+          "bin": [
+            "0x341",
+            "write",
+            "M"
+          ],
+          "count": 119
+        },
+        {
+          "bin": [
+            "0x342",
+            "read",
+            "M"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "0x342",
+            "write",
+            "M"
+          ],
+          "count": 58
+        },
+        {
+          "bin": [
+            "0x343",
+            "write",
+            "M"
+          ],
+          "count": 58
+        },
+        {
+          "bin": [
+            "0x344",
+            "write",
+            "M"
+          ],
+          "count": 58
+        }
+      ],
+      "holes": [],
+      "observed_bins": 15
+    },
+    "dependency": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "back_to_back",
+        "class"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "alu"
+          ],
+          "count": 89474
+        },
+        {
+          "bin": [
+            false,
+            "branch"
+          ],
+          "count": 2752
+        },
+        {
+          "bin": [
+            false,
+            "csr"
+          ],
+          "count": 976
+        },
+        {
+          "bin": [
+            false,
+            "divide"
+          ],
+          "count": 1568
+        },
+        {
+          "bin": [
+            false,
+            "fence"
+          ],
+          "count": 321
+        },
+        {
+          "bin": [
+            false,
+            "jump"
+          ],
+          "count": 1447
+        },
+        {
+          "bin": [
+            false,
+            "load"
+          ],
+          "count": 28887
+        },
+        {
+          "bin": [
+            false,
+            "multiply"
+          ],
+          "count": 3136
+        },
+        {
+          "bin": [
+            false,
+            "store"
+          ],
+          "count": 1023
+        },
+        {
+          "bin": [
+            false,
+            "system"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            true,
+            "alu"
+          ],
+          "count": 7467
+        },
+        {
+          "bin": [
+            true,
+            "branch"
+          ],
+          "count": 15342
+        },
+        {
+          "bin": [
+            true,
+            "csr"
+          ],
+          "count": 266
+        },
+        {
+          "bin": [
+            true,
+            "jump"
+          ],
+          "count": 524
+        },
+        {
+          "bin": [
+            true,
+            "load"
+          ],
+          "count": 12369
+        },
+        {
+          "bin": [
+            true,
+            "store"
+          ],
+          "count": 953
+        }
+      ],
+      "holes": [],
+      "observed_bins": 16
+    },
+    "handler_entry": {
+      "expected_bins": 3,
+      "expected_hit": 1,
+      "fields": [
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "M"
+          ],
+          "count": 52
+        }
+      ],
+      "holes": [
+        [
+          "S"
+        ],
+        [
+          "U"
+        ]
+      ],
+      "observed_bins": 1
+    },
+    "interrupt_cause_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "cause",
+        "mode"
+      ],
+      "hits": [],
+      "holes": [],
+      "observed_bins": 0
+    },
+    "memory": {
+      "expected_bins": 16,
+      "expected_hit": 6,
+      "fields": [
+        "access",
+        "bytes",
+        "alignment"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "read",
+            1,
+            "aligned"
+          ],
+          "count": 254
+        },
+        {
+          "bin": [
+            "read",
+            2,
+            "aligned"
+          ],
+          "count": 306
+        },
+        {
+          "bin": [
+            "read",
+            4,
+            "aligned"
+          ],
+          "count": 40696
+        },
+        {
+          "bin": [
+            "write",
+            1,
+            "aligned"
+          ],
+          "count": 419
+        },
+        {
+          "bin": [
+            "write",
+            2,
+            "aligned"
+          ],
+          "count": 99
+        },
+        {
+          "bin": [
+            "write",
+            4,
+            "aligned"
+          ],
+          "count": 1458
+        }
+      ],
+      "holes": [
+        [
+          "read",
+          1,
+          "misaligned"
+        ],
+        [
+          "read",
+          2,
+          "misaligned"
+        ],
+        [
+          "read",
+          4,
+          "misaligned"
+        ],
+        [
+          "read",
+          8,
+          "aligned"
+        ],
+        [
+          "read",
+          8,
+          "misaligned"
+        ],
+        [
+          "write",
+          1,
+          "misaligned"
+        ],
+        [
+          "write",
+          2,
+          "misaligned"
+        ],
+        [
+          "write",
+          4,
+          "misaligned"
+        ],
+        [
+          "write",
+          8,
+          "aligned"
+        ],
+        [
+          "write",
+          8,
+          "misaligned"
+        ]
+      ],
+      "observed_bins": 6
+    },
+    "mnemonic_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "mnemonic",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "add",
+            "M"
+          ],
+          "count": 410
+        },
+        {
+          "bin": [
+            "addi",
+            "M"
+          ],
+          "count": 82034
+        },
+        {
+          "bin": [
+            "and",
+            "M"
+          ],
+          "count": 496
+        },
+        {
+          "bin": [
+            "andi",
+            "M"
+          ],
+          "count": 776
+        },
+        {
+          "bin": [
+            "auipc",
+            "M"
+          ],
+          "count": 1974
+        },
+        {
+          "bin": [
+            "beq",
+            "M"
+          ],
+          "count": 15247
+        },
+        {
+          "bin": [
+            "bge",
+            "M"
+          ],
+          "count": 417
+        },
+        {
+          "bin": [
+            "bgeu",
+            "M"
+          ],
+          "count": 417
+        },
+        {
+          "bin": [
+            "blt",
+            "M"
+          ],
+          "count": 621
+        },
+        {
+          "bin": [
+            "bltu",
+            "M"
+          ],
+          "count": 481
+        },
+        {
+          "bin": [
+            "bne",
+            "M"
+          ],
+          "count": 911
+        },
+        {
+          "bin": [
+            "csrrc",
+            "M"
+          ],
+          "count": 1
+        },
+        {
+          "bin": [
+            "csrrci",
+            "M"
+          ],
+          "count": 1
+        },
+        {
+          "bin": [
+            "csrrs",
+            "M"
+          ],
+          "count": 329
+        },
+        {
+          "bin": [
+            "csrrsi",
+            "M"
+          ],
+          "count": 1
+        },
+        {
+          "bin": [
+            "csrrw",
+            "M"
+          ],
+          "count": 907
+        },
+        {
+          "bin": [
+            "csrrwi",
+            "M"
+          ],
+          "count": 3
+        },
+        {
+          "bin": [
+            "div",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "divu",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "fence",
+            "M"
+          ],
+          "count": 265
+        },
+        {
+          "bin": [
+            "fence.i",
+            "M"
+          ],
+          "count": 56
+        },
+        {
+          "bin": [
+            "jal",
+            "M"
+          ],
+          "count": 1300
+        },
+        {
+          "bin": [
+            "jalr",
+            "M"
+          ],
+          "count": 671
+        },
+        {
+          "bin": [
+            "lb",
+            "M"
+          ],
+          "count": 127
+        },
+        {
+          "bin": [
+            "lbu",
+            "M"
+          ],
+          "count": 127
+        },
+        {
+          "bin": [
+            "lh",
+            "M"
+          ],
+          "count": 123
+        },
+        {
+          "bin": [
+            "lhu",
+            "M"
+          ],
+          "count": 183
+        },
+        {
+          "bin": [
+            "lui",
+            "M"
+          ],
+          "count": 562
+        },
+        {
+          "bin": [
+            "lw",
+            "M"
+          ],
+          "count": 40696
+        },
+        {
+          "bin": [
+            "mret",
+            "M"
+          ],
+          "count": 52
+        },
+        {
+          "bin": [
+            "mul",
+            "M"
+          ],
+          "count": 784
+        },
+        {
+          "bin": [
+            "mulh",
+            "M"
+          ],
+          "count": 784
+        },
+        {
+          "bin": [
+            "mulhsu",
+            "M"
+          ],
+          "count": 784
+        },
+        {
+          "bin": [
+            "mulhu",
+            "M"
+          ],
+          "count": 784
+        },
+        {
+          "bin": [
+            "or",
+            "M"
+          ],
+          "count": 2104
+        },
+        {
+          "bin": [
+            "ori",
+            "M"
+          ],
+          "count": 368
+        },
+        {
+          "bin": [
+            "rem",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "remu",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "sb",
+            "M"
+          ],
+          "count": 419
+        },
+        {
+          "bin": [
+            "sh",
+            "M"
+          ],
+          "count": 99
+        },
+        {
+          "bin": [
+            "sll",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "slli",
+            "M"
+          ],
+          "count": 1864
+        },
+        {
+          "bin": [
+            "slt",
+            "M"
+          ],
+          "count": 388
+        },
+        {
+          "bin": [
+            "slti",
+            "M"
+          ],
+          "count": 366
+        },
+        {
+          "bin": [
+            "sltiu",
+            "M"
+          ],
+          "count": 366
+        },
+        {
+          "bin": [
+            "sltu",
+            "M"
+          ],
+          "count": 388
+        },
+        {
+          "bin": [
+            "sra",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "srai",
+            "M"
+          ],
+          "count": 204
+        },
+        {
+          "bin": [
+            "srl",
+            "M"
+          ],
+          "count": 584
+        },
+        {
+          "bin": [
+            "srli",
+            "M"
+          ],
+          "count": 1898
+        },
+        {
+          "bin": [
+            "sub",
+            "M"
+          ],
+          "count": 615
+        },
+        {
+          "bin": [
+            "sw",
+            "M"
+          ],
+          "count": 1458
+        },
+        {
+          "bin": [
+            "xor",
+            "M"
+          ],
+          "count": 392
+        },
+        {
+          "bin": [
+            "xori",
+            "M"
+          ],
+          "count": 368
+        }
+      ],
+      "holes": [],
+      "observed_bins": 54
+    },
+    "rd_x0": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "rd_x0",
+        "class"
+      ],
+      "hits": [
+        {
+          "bin": [
+            false,
+            "alu"
+          ],
+          "count": 62864
+        },
+        {
+          "bin": [
+            false,
+            "csr"
+          ],
+          "count": 443
+        },
+        {
+          "bin": [
+            false,
+            "divide"
+          ],
+          "count": 1542
+        },
+        {
+          "bin": [
+            false,
+            "jump"
+          ],
+          "count": 547
+        },
+        {
+          "bin": [
+            false,
+            "load"
+          ],
+          "count": 40858
+        },
+        {
+          "bin": [
+            false,
+            "multiply"
+          ],
+          "count": 3082
+        },
+        {
+          "bin": [
+            true,
+            "alu"
+          ],
+          "count": 34077
+        },
+        {
+          "bin": [
+            true,
+            "branch"
+          ],
+          "count": 18094
+        },
+        {
+          "bin": [
+            true,
+            "csr"
+          ],
+          "count": 799
+        },
+        {
+          "bin": [
+            true,
+            "divide"
+          ],
+          "count": 26
+        },
+        {
+          "bin": [
+            true,
+            "fence"
+          ],
+          "count": 321
+        },
+        {
+          "bin": [
+            true,
+            "jump"
+          ],
+          "count": 1424
+        },
+        {
+          "bin": [
+            true,
+            "load"
+          ],
+          "count": 398
+        },
+        {
+          "bin": [
+            true,
+            "multiply"
+          ],
+          "count": 54
+        },
+        {
+          "bin": [
+            true,
+            "store"
+          ],
+          "count": 1976
+        },
+        {
+          "bin": [
+            true,
+            "system"
+          ],
+          "count": 52
+        }
+      ],
+      "holes": [],
+      "observed_bins": 16
+    },
+    "trap_cause_mode": {
+      "expected_bins": 0,
+      "expected_hit": 0,
+      "fields": [
+        "cause",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            11,
+            "unknown"
+          ],
+          "count": 52
+        }
+      ],
+      "holes": [],
+      "observed_bins": 1
+    }
+  },
+  "notes": [
+    "Default domains are a coverage plan, not claims of ISA support or reachability.",
+    "C2 trap events without mode retain mode=unknown; mode is not inferred.",
+    "RVFI intr marks trap-handler entry, including synchronous traps; actual interrupt causes use C2 trap events.",
+    "retired counts C2 instruction records, including trap=true records.",
+    "CSR/mnemonic groups without declared bins report observations, not a completeness percentage.",
+    "rd_x0 records RVFI rd=0, which also denotes instructions without a destination.",
+    "dependency: an FP destination is the instruction encoding's rd (C2 rd is the integer write); when the trace reports an integer rd for an FP-destination instruction, the next instruction's back_to_back is undetermined.",
+    "Memory alignment uses each trace's platform address convention (aligned_mem: mem_addr plus the mask's lane offset); a lane-shifted mask under an unknown or byte convention is undetermined."
+  ],
+  "retired": 166557,
+  "schema": "rvw.functional-coverage/1",
+  "traces": {
+    "0a62cc7e63f07821d4b07e806b5763940cc02a9b02c396b0aba085c681e5b6bd": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "bb92bd31ba81f8a6e9700a9624c71d35d9e68f19e53bc8ce8b62989fd7d65691",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mul-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "0fc661cf0ab4a6c3857390826c7d50380f61d8ddcba26f122757315e2a8cdfef": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "689e20f0b31cfac9642586c55394959a76a81e4d14388ae38d6203192e97b346",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slt-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "14ccb2b87cb53c597e94a8ea2e0af99cb01ce5549860b438398faa4c6e1c5cd9": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "fd1dd979d67f5c8302f8936d5436965096cd8fdf25777d21706fdeb888a8979c",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mul-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "17fe295f5524f3addbde78baabb5bd34064a5108dbba4ffd09bd5391c520a4fa": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "fcaa1604160792a6235c762e41a32df02897e3d847b031661b88cb5cdc77ff78",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-andi-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "1d4adf8b4fcec3b01b9e95f21620c5dd64265e44890c69542b0c793fba2dd633": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "f541d8b53653c6ee5010b56965c8872cfe384039af777e9f79500154ee0afa3e",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-div-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "29b821bde8cbd16ab276bd30540f7d0160a565c516cc008a5c788731e146c2f2": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "716639c32ae6a20c710cfc557e8ff77946bdda426f859af30f0d87521f8c0fa3",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-add-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "29c29e0ded690abc70cd3f2e2c977c8a8f180734a58c5e6c8aaa5866b434bd45": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "b341090bd3b8496c3993674e7b061120c358345fed5da6d3f18430a4d3f69cf3",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-and-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "328851f998bf358445d5a63d0e6deb0b0a2357c0165ce910d66e4f2bfa878fc0": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "c9b95289765c83affcfc44835d5be850ecf669b50fd25eb34b40fa8e45db8c50",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "32d5874537ebe6f38743ff203c42c6f414e00c836f5d09ba4792114fc4481d38": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "ca019f512aca0dfd2b332c7b1b6ed6de063307491aebb6db48b17b05184797e3",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srli-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "3477ccef17c5c901d461b9e9451fd88ce44cd74d057447ac1470c682fdab676f": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "1cf5650d5c1ff2df04de5295667f4c4dc56bc4cbbd5f80446468aa642d2328f3",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-divu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "3811504aa8fb6dddbe57834a301aa90bc14d82db01e8e576ef9bf4f245e91527": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "67e542fdcc469672ee3bfbb260009be4ad937fd9953ce44e43bac45824329624",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sub-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "39977c3c6aa92cc8c76f1f78b70da1b315795653edb2bc2b0280796f6c28cf1e": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "599400b2cc71e18866ffc3476bfa469188e9fb42c537aeec4f41fa25ae43492f",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-blt-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "3d31bfdf90982a3c98949c08496398e045d2a98d071f5bcbfcd843463fb6ad58": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "50501dae28ac47ddf7709eb363037fbd9b4f454eed4788cf76b598725376b474",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sra-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "4e8cc7fd5c568d29965769f01f640a90f1935f0a616916a8215f411c33151f14": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "7700f3119efdec0082210abea36020f8fa6c6b2be3bd4b169a40807f4ca4258f",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-auipc-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "4fc0830cb801d40cac1221f9e50d84df10c4de5ed022c3fcd327469f887f2c18": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "80e29e91ed1920b55162a74aff20391fe2a4755e234add76b4b2237d32ee127e",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sll-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "5432bd2e7628983d90160f50bb01fb087070d7887febd409baf7027a7196d927": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "231edadfe5a47288dced49dd4c2d67acdb72961dded6b0ce7979f45ca859eb78",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lh-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "65ba547a3a63fc58262c482cbe98ee1e9a71abc4bf0a307d5271757d86abf904": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "bc6e551ca0d2256cfc24937e4597e5831c28e856294052cac1f8bf78ebeae8c0",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lbu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "6b8929670815223eac9b917ab6b21834e51986d5936d5a2df58759f186d77797": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "76ca0e00fa185248fafa2c63225657e06a41127d5317f67c26957964fef9a9b9",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bltu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "7782cc4494dcd6d5df2a7432945e6b5c18a0737eb25f376c1170bfe39c24e280": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "13f3c0fa4ccbfbf1b105bbb74e689e0c5e1197d9e73860e0300b0877d8b108a4",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-addi-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "78b77e05d753b09f0216494f69198b29ea73a1ccf4125364ed1e4d18ed3bb978": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "d7ef6ddd721dbe05eed74175f4e9e1f3d65f33256f7a2c713b6a7ec885c798b5",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zifencei/Zifencei-fence.i-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "7c10c2cb328162158ffbf9da92f12f1277f62601a8efa7f6e9b968d16bc8ab00": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "77c302312dd2604ab1f63b130acb9df957cf00af216fb718e3bf6f1f7daef7d9",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bgeu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "7dcbee1d7af2bce2e97c98fede72cbfb70f2a47840cdf9c8119c96b18f1d368f": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "5aabfa33859a9e250ad5563a1fe583e96940a426beafafa29b5a0d5f70e2b7f8",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrci-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "7dfea6f9f254a958fe5fbd71e8f8f66f9a7099197548de19e4c15518de5f98e8": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "6ab6119d2d67048bb3d4aeda704fb4dca686a011b8546d4acc78c02c747da658",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jal-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "8176e1ebae0c9bc62165c09db11b8d675eff07f180b10fdc8320f5b894e1e644": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "3c45d7e7bd809a7c0c620d5d8aaa301639490ac7f22bcb93ab970332a10d4c47",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xori-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "82dc9490ba13caf18c54a1b5e3f3d861b3d73cff10d2651d9c8d09243a0cd7d5": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "59e16a33aa97ca024239aa4b0f9f6c6b8b678a8e80ea287ef488ea9e95bc5162",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-remu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "83d5869f1742d9db06578770aadc7b44a147739e7ca78953b9d8cfbf284be63a": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "32921e6cd5fbb1bf50f17100770a47414bef8944b12a6492ba577ae327bcbe3b",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-ori-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "871fd076d590878518ebd0174714046cf126c952ae382a9142a4243ac1356aaf": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "34dc1d989c44142d8d6753c88608d834db78f52717543b61be3aa846ad8cb42c",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-rem-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "885d1b0ab7798af2430e000035b7c0d01db06f5319cc9f4cab715052444978c8": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "fd735556b2d9aeeafa71bf815933b67b12ea89855948841658e7d0c99a714c5a",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "8a4402ce35d8658d6286bcfc2082194a920379c3b8da7684d8faa667fdaa9168": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "534be8ec9aa2d7ebbd25ac05e7c32157fccd219e728fb146e214bbbbba4bf923",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lb-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "8a475d57c77f15f70e554896bdfd53ffc96208adf18d2c279d4ec71c0618811a": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "53e53146d998fabfd6a077bdcddeb48d2b6dbfb173f8bcdeab29648086b92f4a",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-or-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "8b5ea3f489bb51dffdd152078a00e86cc5a399d47f0ba85efdf3899c7e33258e": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "960f6eddf1925f0f93c44309ae4352d104714061cae8f1c99632950ce77e9c9f",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lw-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "9383bb715991cc7d4787f8e28baf6301a48bd11cd4e5ee5b6ce188030d836702": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "c34fd470dc2cd1776fc3b0062f284855c437460b95165700f682958d400fd17f",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrw-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "98fbd909ec649845ca0b18909fde05c1898424963d4bdfee4de9ced5488c88a1": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "8f7ea9d72683ff2f316f31ae69071064e9b2c2e822a3343674ff65925c5840e2",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slti-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "a049671a21be707a553b09072a980ccd56fad027fa3a04e41c11b7d49bcbe3a6": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "94f65166d3e340b1d75975d615d4c0bf6935230706716116d755ad23283315cb",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sw-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "a560758e310f6630111675d95e053ca747d127e56327e6a1b117f3d451f31218": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "89e3ed4084365fd39658569209271be965d9cbdf0f7e5a87a923a593ca27c21e",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srai-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "adef9af0c70202050aa95c19d2a544097abba6629cc6a63f779ab8dfe406fadc": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "53973cf2e075825927bad425039513c26f8a19983233097d193c845a6d3bd446",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-slli-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "b88cecb0f1221955da03a1b574be7254f40060f53e13d1345145ff599d40d5a1": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "00afb6560fa200ade23dabc8f5ceae5351cbacb49c68e5fe7b569eb73055321d",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrsi-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "bea1d537da5fa68ad9df6c07b79b37466c0747f3dae41fb3357424addc6768c4": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "491966652d934f20c5d745c84a5552139dd549a8917b15a99518261d8709e1f6",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-nop-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "c07bd7a513a9c943734bdf0f49b41b477b3f85698b47dd72ef516283852a8977": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "d5146430c2af978bd46003d8e0607380a89e1bab1dc38a9c7204d6f746bbe962",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-srl-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "c1160dc45ac4c7a9087d7f4570d5c0d75e28bf4924b88758d82b7018ea81665b": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "ae0d3348f19e1b54296537d6a94a492ba45ed90336bd86eb829bfe11a1ddb3b4",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lui-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "c628ffcd24118430a4b14f59e367de16ab36599a9efe303e19418e0726429c50": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "8f7df4662fb0308023f35916a76871c90d6e9ac5242a96d596604d7fef799c65",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-lhu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "c6fb22372f8b114666662f0075d2f38ac823472ee5aa4afe94f9c5732af6ca31": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "43c5543e70d872742dc8ef15b2d498ff88d14d2df7c180cc17d3245469734968",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-beq-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "cf15076b319958054001ca6b02e7f9cca19e6bd0b87bb12ce88f31dea35ba469": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "521745cca36272aa7a4c5426df4b611c7e0476b6a39c586d9218cb47526b6992",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d00e6f5102ebe04a7d19b699772b0e9b5aa464e4217a1ac9c9aa88430022056e": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "11641768e467b47eb9c6342aab19a3f241be733acf69f04ae7029e0c265b3b40",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sh-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d88cc688560e76e78faa945f2e0d25a37e9473200864838081d3976d09a2e296": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "92de9193a743c277c70aae5b5e0edbf9f41fe49566c9747daaafe20a8354df71",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulhsu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d8a9e3f1e4d370b5da6d92d78c2c2c4c03adb17c51492cc5ce953a74a9b369b7": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "0a377920f080d32e07d0b31f8d4ed3676577b3bdd93946a9be3b8b2a03c46a64",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sb-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d8efc2ed486bb9a445179f56724fd483b4d93c49b308632754769fe75280b438": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "dec872e8e1e1928ea0c5b17ab2d76d4df1cbc0aa28a83af61062d721ae7ce1a2",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bge-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d919a193ff8730bfad5dee7aa122660252982b59a1f11eb156b5889a04fafe4f": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "55aa3e976b60a0eb0960e4d269dc556abcbc9723d6c395a3fdf6197c5d3e1819",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulh-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "d940267c11818846d645ec3c2e65f26c3f5b6d78ef0449768658c1bfb5e7dab5": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "b7f1991843afa51a3f7230b66fee2a3af7c01fe2dd768b83af0155d134cdeb49",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrs-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "e31b483d6fbb14e8e58e4ba7096a9dccfca8f960a8af3d024dbd8066bd60a57f": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "dd44e4ab47cf4e735e9db7e56be142d8c8fa96cdbd18b6fdb9fb3910a8503343",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-jalr-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "e532453b092307cb722d3fc7ea7aabd6552c3e639585e8a51229be6552d33b27": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "3467663e3e1dfd17a7a305bdea061cb958cadf18f149a2f2750479c43c8e3b3b",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-fence-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "e71f0c2b2b3b40ae0d22049688234f478788f4ea26f9e4457d1b972c841ca106": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "de654eeac83218ae0a8e8f6e4106e161f727ef49adca63df088e4f8364606910",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrwi-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "eed9abe3b04b1565294c3ec474bd74f0fd1fe03bef8b7a1379dcfa8d896f8ce3": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "c494ee0284931bf3a74a1f5f926ef0e715352ed56588a78689df17bc16f20d4b",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zmmul/Zmmul-mulh-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "f0d829539f0f6b9dd0d40fc43d6e44fc171cbe1bf998df9b946edead373da2ed": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "8382006e2c8be271fb684c41850cc6ff7797a861a288163abd8269ce9469733c",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-xor-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "f4f3ae8d5a0f6cf57c58d89af701c80789940db112f3a42c5ba074fdfaafb0a0": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "585b2784f9dec9e7a27744162c36713bdced7ec2258c2eb51373e76cb75b921b",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-sltiu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "f551eb0daf3f8a4e8160fc4b895d957001c3c447b73202e9a69001e1f368c5ba": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "e4990fdbf5a809a0710985045a5d0c1983622fd074b5ee9c10d0a74a018c97c4",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/M/M-mulhsu-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "f75666feab772079bbadd97baf20e29ff6bfd465c2a64966c121d3441c3e201c": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "d7ac21dee7bc776331304d63ed311bc5594a80b2933fa1ad6fc0e75143016c4e",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/I/I-bne-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    },
+    "f8f6eea8802982178eaf4117dce2a16b0696e5ebeec826417861820b6d96e025": {
+      "address_convention": "aligned_mem",
+      "header": {
+        "capabilities": [
+          "csr"
+        ],
+        "config": "rv32im",
+        "core": "vexriscv",
+        "csr_snapshot": [
+          "0x340"
+        ],
+        "elf": "$CAPTURE",
+        "elf_sha256": "6d8863de3bfc4716b1eb84a937fd7c35fdd62cae32b4879c7bc433bbeba60b60",
+        "isa": "rv32im_zicsr_zifencei",
+        "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+        "schema": "rvw.rvfi/2",
+        "seed": 1,
+        "source": {
+          "core_dirty": true,
+          "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+          "core_repo": "~/fun/saviour/wt/.vex/lint",
+          "core_rev": "baf7dc8",
+          "core_rev_full": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+          "tools_dirty": true,
+          "tools_repo": "$CHECKOUT",
+          "tools_rev": "ad698434729f1d5eb8a74304fee415c398db5696"
+        },
+        "xlen": 32
+      },
+      "path": "/tmp/lint-act4-vex-run3/generations/74c09b5dbfb24af9b922672dac087fdc/act4/rv32im/tests/rv32i/Zicsr/Zicsr-csrrc-00/rvfi.jsonl",
+      "platform": "vexriscv"
+    }
+  },
+  "unknown_encodings": {}
+}
