@@ -31,8 +31,9 @@ sby -f miter.sby cover
 ```
 
 The three programs cover dependent arithmetic, memory operations, shifts and
-branches. Each simulation compares all RVFI fields for 30 retirements.
-Formal compares validity on every active cycle and all fields on a valid cycle.
+branches. Each simulation compares the base RVFI fields for 30 retirements.
+Formal compares validity on every active cycle and the base fields on a valid cycle.
+Optional CSR channels are not part of this profile.
 The monitor also checks the architectural register frame. Reachability asks
 for a fourth retirement. Source reset and memory-service restrictions remain
 visible in the generated SBY model.

@@ -536,3 +536,99 @@ The CPU example links a separate matched ABI 6 Spike DPI bridge. This does
 not enable or qualify Accellera HDL backdoors. Standalone C3 source identity
 remains incomplete. Only the recorded committed CPU bench gate earns the
 stated C4 acceptance. Keep failed, unsupported and unmeasured profiles open.
+
+## Prove your core against the ISA
+
+Start with the ISA and privilege modes of the elaborated RTL. Pin the core
+revision. Keep the source outside the workstation repository. Use a private
+source copy and a private lock for native runs.
+
+1. Export retirement-aligned RVFI through project-owned elaboration code.
+   Observe operands, writes, memory effects and next PC at the correct event.
+   A later commit PC needs a model for intervening traps. A simulation callback
+   cannot supply hardware inputs to a formal job.
+2. For a core without RVFI, map architectural snapshots with
+   `rvw formal state-generate MAP.json --out MONITOR`. The snapshots must span
+   one instruction event. Include trapping instruction records when required. Compare the generated stream with an independent
+   observation in simulation. Run bounded equivalence. Keep a mismatch as a
+   failure until its cause is resolved.
+3. For native RVFI, generate the project wrapper with
+   `rvw formal rvfi-generate BINDING.json --out PROJECT`. The state generator
+   already writes a project. Declare source files, signal maps, ISA, retirement
+   channels, checks and cycle settings in project data. Declare bus service
+   assumptions explicitly. Do not assume the property under test.
+4. Run `rvw formal isa --project PROJECT --out OUT --timeout 150`. This runs the
+   selected bounded instruction and consistency checks. It also runs an
+   instruction-specific activation cover. It lists unselected instructions
+   and missing retirement-channel checks as unsupported gaps. A general
+   retirement cover cannot qualify an unreachable instruction check.
+5. Add `--machine MACHINE.json` for the generated RV32 machine transition
+   properties. Bind entry and return events, CSR before and after values,
+   fetch responses, killed instruction state and trap redirects. The project
+   must supply aligned observations. The current writeback flush flag alone
+   does not prove that an earlier killed instruction cannot retire.
+6. Select generated Sail models through `riscv_formal.instruction_models`.
+   `rvw formal sail-m --model MODEL --compiler SAIL --out MODELS` generates
+   RV32 M arithmetic slices. Keep `RISCV_FORMAL_ALTOPS` disabled for actual M
+   arithmetic. Keep source, compiler, primitive-binding and final model hashes.
+   Expression slices do not independently verify full machine state.
+7. Add `--unbounded` to run the original instruction proof portfolio. Use
+   `--abstraction MAP.json` for a separate conditional single-flight and RAM
+   experiment. Keep the original result. An abstraction proof has its own
+   scope. An abstract counterexample needs refinement. An unclosed activation
+   obligation remains inconclusive.
+
+The ISA and instruction-proof MCP tools accept `project` for call-level
+selection. CLI commands and MCP tools retain the same result files.
+Use a new output directory for each run. Keep native task trees, source hashes,
+engine logs, assumptions and cover traces. Do not combine different
+elaborations into one uniform campaign.
+
+The result table distinguishes proven, bounded with a cycle bound, failed,
+unsupported, not applicable and inconclusive. A timeout is inconclusive.
+A reached cover is reachability evidence. It is not a proof of the property.
+A not-applicable row needs an explicit project feature boundary. Check every
+unsupported row before claiming signoff.
+
+### Measured kit status
+
+These results were measured on 2026-11-13. They apply to the named snapshots
+and checks. Full core ISA signoff remains incomplete.
+
+| Core and check | Result | Scope |
+| --- | --- | --- |
+| VexRiscv FormalSimple, 37 selected instruction checks | bounded PASS | Depth 20; earlier recorded campaign |
+| VexRiscv FormalSimple, liveness with declared bus service | bounded PASS | Depth 30; finite-service assumptions |
+| VexRiscv FormalSimple, RVFI x0 values | bounded PASS | Depth 20; trigger reached |
+| VexRiscv FormalSimple, current writeback flush slot | bounded PASS | Depth 20; SMT retry; no instruction-ID kill history |
+| VexRiscv FormalSimple, CSR and interrupt transitions | not applicable | This snapshot has no corresponding controllers |
+| VexRiscv FormalSimple, instruction-memory pairing and trap PC chain | unsupported | Project observations are missing |
+| PicoRV32 architectural monitor, three simulation programs | matched sampled streams | 30 retirements per program |
+| PicoRV32 base-RVFI bounded stream comparison | FAIL | Depth 35; misaligned JAL trap/write difference at step 10 |
+| PicoRV32 fourth-retirement cover | reached | Step 18 |
+| VexiiRiscv hardware observer | prototype; unsupported for signoff | Hardware elaboration passed; memory and trap alignment remain incomplete |
+| VexiiRiscv ADD and LUI diagnostic checks | timeout | Depth 60; 150 seconds per job; retirement cover reached |
+| Sail RV32 M model preparation | generated and Yosys checked | Eight arithmetic slices; 392 corner comparisons passed |
+| VexRiscv RV32IM, eight Sail M assertion jobs | timeout | Depth 60; 90 seconds per job |
+| VexRiscv RV32IM, four multiply retries | timeout | Depth 20; 120 seconds per job; all four target covers reached |
+| VexRiscv LUI, all-word RAM abstraction and single-flight restriction | PDR PASS | Conditional unbounded model proof; 107.4 seconds; concrete cover reached |
+| VexRiscv ADD and AND, all-word RAM abstraction | abstract counterexamples | SMT witnesses; not core failures |
+| VexRiscv ADD, AND and LUI, word zero retained | timeout | 180 seconds per PDR job; concrete covers reached |
+
+The older FormalSimple profile is RV32IC. The new M profile is RV32IM with a
+CSR controller. Its complete-machine checks were not run. The eight generated
+machine transition rules have native Yosys preparation evidence. Their current
+VexRiscv binding covers only x0 values and the writeback slot check.
+
+The PicoRV32 comparison failure remains unresolved. The VexiiRiscv observer
+needs completion, memory and trap alignment before qualification. The Sail M
+assertion jobs did not close. The conditional LUI proof does not establish
+unrestricted pipeline behavior, assumption activation or adapter conformance.
+The ISA command retains these gaps in its table.
+
+See [the VexRiscv records](../examples/vexriscv/formal/GENERATED_RESULTS.md),
+[the PicoRV32 comparison](../examples/picorv32/formal/README.md),
+[the VexiiRiscv observer](../examples/vexiiriscv/formal-observer.md),
+[the Sail M campaign](../examples/vexriscv/formal/SAIL_M.md) and
+[the conditional proof records](../examples/vexriscv/formal/ABSTRACT_RESULTS.md)
+for source pins, measured variants, limits and reproduction commands.
