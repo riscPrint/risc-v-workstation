@@ -96,7 +96,7 @@ def test_model_pass_does_not_earn_complete_architectural_groups(tmp_path,monkeyp
     assert campaign.check(tmp_path,tmp_path,'platform.json')['model_counts']['fail']==1
 
 
-@pytest.mark.parametrize('backend,profile,module',[('spike-python-reri','reri-transactions','spike_reri'),('spike-python-plic','plic-delivery','spike_plic'),('spike-python-aplic','aplic','spike_aplic'),('spike-python-aplic','aplic-delegation','spike_aplic')])
+@pytest.mark.parametrize('backend,profile,module',[('spike-python-reri','reri-transactions','spike_reri'),('spike-python-plic','plic-delivery','spike_plic'),('spike-python-aplic','aplic','spike_aplic'),('spike-python-aplic','aplic-delegation','spike_aplic'),('spike-python-aplic','aplic-priority','spike_aplic')])
 def test_native_device_backend_routes_to_its_own_module(tmp_path,monkeypatch,backend,profile,module):
     import importlib
     import rvw.cosim.spike
@@ -207,4 +207,11 @@ def test_aplic_delegation_named_ownership_and_claims(tmp_path,monkeypatch):
     assert model_observe.observe(elf,s,path)['status']=='pass'
     assert len(s['model_bindings'])==24
     rows[1]['rd_wdata']='0x1';rows[1]['mem_rdata']='0x1';write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'
+
+
+def test_aplic_priority_warl_observations(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'aplic-priority')
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    rows[0]['rd_wdata']='0x0';rows[0]['mem_rdata']='0x0';write()
     assert model_observe.observe(elf,s,path)['status']=='fail'

@@ -383,8 +383,8 @@ and named-observation evidence. They do not establish full ISA or device state.
 
 ## Native APLIC register reference
 
-`reference_backend = "spike-python-aplic"` accepts `aplic` and
-`aplic-delegation` campaigns with AIA 1.0 and a supported document revision.
+`reference_backend = "spike-python-aplic"` accepts `aplic`,
+`aplic-delegation` and `aplic-priority` campaigns with AIA 1.0 and a supported document revision.
 `reference_shim` selects a captured Spike library. Its C8 input record, library
 hash and shim manifest hash accompany native results. The shared runner accepts
 an absent mailbox event list for programs that use CPU MMIO only.
@@ -392,7 +392,24 @@ an absent mailbox event list for programs that use CPU MMIO only.
 The Python register model covers little-endian aligned 32-bit direct/Detached
 transactions, ownership, source bitmaps, targets and per-context claims. It
 maps 32 KiB per domain and supports context indices 0..511. Priority/threshold
-fields use eight bits. Unsupported behavior and uninitialized target values
+fields use `aplic.priority_bits` (1..8, default 8). Unsupported behavior and uninitialized target values
 produce an error or inconclusive result. IRQ injection is disabled. Status and
 normalized reference C2 traces are marked model-based. They do not establish
 IRQ-line delivery, a hardware controller, DUT coverage or complete C1 agreement.
+
+
+## APLIC priority width and conversion
+
+`aplic.priority_bits` is the implemented IPRIOLEN (1..8, default 8). Normal
+direct campaigns use priorities and legal thresholds that fit this field.
+`kind = "aplic-priority"` also declares `base`, optional `context`,
+`implemented_sources` and `source_id`. It uses AIA 1.0 and a supported document
+revision. Plans record raw priority writes, legal threshold writes, injections
+and ordered target/threshold/claim observations. Expected target conversion
+masks the implemented low bits and maps zero to one. Threshold zero permits
+all priorities; nonzero threshold equality suppresses the source.
+
+The native APLIC register backend honors the same width. Named load bindings
+check the complete target/threshold/claim values and read counts. Results earn
+only model-based subset groups. The plan does not predict writes of reserved
+WLRL threshold values or establish physical IRQ delivery.

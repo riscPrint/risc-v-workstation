@@ -7,6 +7,12 @@ REVISION='20318d1b03f0ac8253458b82f8244d0d0db074e9'
 REVISIONS=(REVISION,'f24dd483d50e6a1448116dcf88b8b08e0863512c')
 
 
+def priority_bits(options):
+    bits=options.get('priority_bits',8)
+    if type(bits) is not int or not 1<=bits<=8:raise ValueError('priority_bits must be 1..8')
+    return bits
+
+
 def revision(config):
     selected=config.get('spec_revision',REVISION)
     if selected not in REVISIONS:raise ValueError('unsupported AIA document revision')
@@ -94,9 +100,11 @@ def programs(config):
                 reference_model=dict(kind='imsic',file=file,identities=identities,peer_identities=peer_identities,delivery=delivery,threshold=threshold,enable=enable,inject=[2,1],irq=expected_irq,expected=expected)))
     else:
         base=config['aplic']['base'];context=config['aplic'].get('context',0)
+        bits=priority_bits(config['aplic']);maximum=(1<<bits)-1
         if base < 0 or base % 4096 or context < 0:raise ValueError('invalid APLIC domain map')
         for name,p1,p2,threshold,enable in [('tie',1,1,0,6),('priority',3,1,0,6),
                 ('threshold',1,2,2,6),('disabled',1,2,0,0)]:
+            p1=(p1&maximum) or 1;p2=(p2&maximum) or 1;threshold=min(threshold,maximum)
             model=Aplic();model.configure(1,1);model.configure(2,1)
             model.enabled={i for i in (1,2) if enable&(1<<i)};model.priority={1:p1,2:p2};model.threshold=threshold
             idc=base+0x4000+context*32
@@ -111,9 +119,9 @@ def programs(config):
                 source=model.claim();expected.append(source)
                 value=(source<<16)|model.priority[source] if source else 0
                 code+=f' li a0, {idc+0x1c}\n'+check_value('lw t0, 0(a0)',value,f'aplic_claim_{index}')
-            rows.append(dict(id='aplic-'+name,family='aplic',bins=['aplic.'+name],
+            rows.append(dict(id='aplic-'+name,family='aplic',bins=['aplic.'+name,f'aplic.priority-bits.{bits}'],
                 assembly=code+' j pass\n'+TAIL,
-                reference_model=dict(kind='aplic',priority=[p1,p2],threshold=threshold,enable=enable,pending_address=base+0x1c00,claim_address=idc+0x1c,expected=expected)))
+                reference_model=dict(kind='aplic',priority_bits=bits,priority=[p1,p2],threshold=threshold,enable=enable,pending_address=base+0x1c00,claim_address=idc+0x1c,expected=expected)))
     for row in rows:
         row.update(spec='https://github.com/riscv/riscv-aia/tree/'+selected_revision,spec_version=VERSION,spec_revision=selected_revision,
                    reference_mode='model-observations',model_bindings=observation_bindings(row['reference_model']))
@@ -128,6 +136,9 @@ def reference(scenario):
         m.enabled={i for i in (1,2) if plan['enable']&(1<<i)}
         for i in plan['inject']:m.inject(i)
     else:
+        maximum=(1<<priority_bits(plan))-1
+        if any(not 1<=p<=maximum for p in plan['priority']) or not 0<=plan['threshold']<=maximum:
+            raise ValueError('priority plan exceeds IPRIOLEN')
         m=Aplic();m.configure(1,1);m.configure(2,1);m.pending={1,2}
         m.enabled={i for i in (1,2) if plan['enable']&(1<<i)}
         m.priority=dict(enumerate(plan['priority'],1));m.threshold=plan['threshold']

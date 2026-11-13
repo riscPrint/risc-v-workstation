@@ -1,6 +1,6 @@
 """Native Spike ISA plus a bounded APLIC direct/Detached register model."""
 from .controllers import Aplic
-from .aia import VERSION,revision
+from .aia import VERSION,revision,priority_bits
 from .spike_device import run as run_device
 
 
@@ -10,6 +10,7 @@ class Device:
         if config.get('spec_version')!=VERSION:raise ValueError('APLIC reference requires AIA-1.0')
         revision(config)
         options=config['aplic'];delegated=config['kind']=='aplic-delegation'
+        self.priority_mask=(1<<priority_bits(options))-1
         self.count=options.get('implemented_sources',2);self.child_index=options.get('child_index',0)
         self.bases={'root':options['parent_base'] if delegated else options['base']}
         if delegated:self.bases['child']=options['child_base']
@@ -113,11 +114,12 @@ class Device:
                 return
         if 0x3004<=offset<=0x3ffc:
             source=(offset-0x3000)//4
-            if self.active(name,source):self.targets[name][source]=((value>>18)&0x3fff,max(1,value&255))
+            if self.active(name,source):self.targets[name][source]=((value>>18)&0x3fff,(value&self.priority_mask) or 1)
             return
         if 0x4000<=offset<0x8000:
             index,register=divmod(offset-0x4000,32);ctx=self.context(name,index)
-            if register in (0,4,8):ctx[{0:'delivery',4:'force',8:'threshold'}[register]]=value&(255 if register==8 else 1);return
+            if register==8 and value&~self.priority_mask:raise ValueError('unmodeled WLRL threshold write')
+            if register in (0,4,8):ctx[{0:'delivery',4:'force',8:'threshold'}[register]]=value&(self.priority_mask if register==8 else 1);return
             if register in (0x18,0x1c):return
         raise ValueError('unmodeled APLIC register write')
 

@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "aplic-priority",
+  "isa": "rv64im_zicsr_zifencei",
+  "spec_version": "AIA-1.0",
+  "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9",
+  "reference_backend": "python",
+  "aplic": {
+    "base": 218103808,
+    "implemented_sources": 2,
+    "source_id": 1,
+    "context": 0,
+    "priority_bits": 8,
+    "poll_iterations": 1000
+  }
+}
