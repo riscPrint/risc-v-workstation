@@ -287,3 +287,17 @@ native`. Unsupported policies use Python in auto mode. Explicit native mode
 refuses them. Rebuild the library with `scripts/install.sh --with-ooo` after
 an ABI change. Component algorithms remain in ComponentSims. Benchmarks report
 kernel and Python-call times separately; neither includes C2 parsing.
+
+## OoO slot profiles
+
+`rvw.ooo-profile/1` holds trace, configuration and region-map hashes, cycles,
+instret, IPC, the model result and attribution. Attribution uses five disjoint
+commit-slot categories: retiring, frontend_bound, bad_speculation,
+backend_memory_bound and backend_core_bound. Each region has slot counts and
+fractions. Region totals equal the run total. ELF symbols or explicit half-open
+PC ranges define regions. Unmapped PCs remain explicit.
+
+`rvw.ooo-profile-diff/1` requires identical trace and region-map hashes and
+retirement counts. It gives base minus candidate cycles saved, candidate minus
+base IPC and slots, base/candidate cycle speedup and per-region slot deltas.
+These are model estimates. They do not establish hardware top-down accuracy.

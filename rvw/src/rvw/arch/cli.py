@@ -77,6 +77,8 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.arch', sub)
     for action, fields in (('traffic', ('plan',)),
                            ('ooo-search', ('plan',)),
                            ('ooo-calibrate', ('plan',)),
@@ -173,3 +175,4 @@ def register(subparsers):
     p.add_argument('--llvm', action='store_true', help='build OpenSBI with native LLVM tools')
     p.add_argument('--cross-compile', default='riscv64-unknown-elf-')
     p.add_argument('--json', action='store_true')
+

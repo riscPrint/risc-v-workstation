@@ -122,9 +122,9 @@ class Entry:
     predicted_correct: bool | None = None
 
 
-def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
+def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None):
     if not config.components:
-        return _simulate(instructions, config, max_cycles, predictor, memory, backend)
+        return _simulate(instructions, config, max_cycles, predictor, memory, backend, observer=observer)
     if predictor is not None or memory is not None or backend == "native":
         raise ValueError("component configuration requires its own Python timing adapters")
     from .components import Adapter
@@ -133,7 +133,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
         result = _simulate(instructions, config, max_cycles,
                            predictor=adapter if branch else None,
                            memory=adapter if "memory" in config.components else None,
-                           backend="python", instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
+                           backend="python", observer=observer, instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
         result["events"].update(adapter.events)
         result["components"] = adapter.stats(result["instret"])
         from .component_events import counters
@@ -141,7 +141,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
         return result
 
 
-def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", instruction_memory=None):
+def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", instruction_memory=None, observer=None):
     """Commit, issue, rename, fetch. Latency 1 completes next cycle.
 
     Memory instructions issue only after older memory instructions complete.
@@ -168,6 +168,10 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             raise ValueError("invalid destination register")
     if backend not in ("auto", "python", "native"):
         raise ValueError("backend must be auto, python or native")
+    if observer is not None:
+        if backend == "native":
+            raise ValueError("region attribution requires Python timing")
+        backend = "python"
     if backend != "python" and predictor is None and memory is None:
         from .native import simulate as native_simulate
         result = native_simulate(instructions, config, max_cycles)
@@ -201,10 +205,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if entry.bypass_ready and entry.done is None and all(dep.done is not None for dep in entry.deps):
                 entry.done = max([entry.bypass_ready] + [dep.done for dep in entry.deps])
         committed = 0
+        committed_entries = [] if observer is not None else None
         for _ in range(config.commit_width):
             if not rob or rob[0].done is None or rob[0].done > cycle:
                 break
             entry = rob.popleft()
+            if observer is not None:
+                committed_entries.append(entry)
             retired += 1
             committed += 1
             if entry.register and entry.insn.dest:
@@ -215,6 +222,10 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             loads -= entry.insn.kind == "load"
             stores -= entry.insn.kind == "store"
         attribution.observe(committed, cycle < blocked_until, bool(rob))
+        if observer is not None:
+            observer.cycle = cycle
+            observer.observe(committed_entries, rob, cycle < blocked_until,
+                             instructions[retired].pc if retired < len(instructions) else None)
         if retired == len(instructions):
             if frontend:
                 events.update(frontend.events)
@@ -484,7 +495,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

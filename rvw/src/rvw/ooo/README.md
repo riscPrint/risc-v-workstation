@@ -517,3 +517,31 @@ Front-end events also report `decode_output_full`, `decode_input_not_ready`,
 They sample the named phase and can overlap. Reports name the optional decode
 phase in `cycle_order`. These are model predicates, not measured hardware
 stall classifications.
+
+## Region profiles and configuration differences
+
+Use `rvw arch ooo-profile CONFIG TRACE --elf PROGRAM.elf --json > base.json`.
+The cancellable MCP tool is `arch_ooo_profile`. An ELF join uses sized symbols
+from executable sections. Aliases share one name. Overlapping ranges are refused.
+Zero-sized symbols and stripped addresses remain `<unmapped>`. Inlined functions
+are not split. PCs must use the ELF link addresses. No relocation is inferred.
+Alternatively, `--regions ranges.json` reads a list such as
+`[{"start":4096,"end":8192,"name":"kernel"}]`. Ranges are half open.
+
+The report partitions commit slots into retiring, front-end bound, bad
+speculation, back-end memory bound and back-end core bound. Retiring slots
+use the retiring PC. Unused slots use the oldest remaining ROB PC, or the
+next unretired PC when the ROB is empty. Recovery takes priority. An unfinished
+memory operation at the head or in its dependency chain gives memory bound.
+Other nonempty ROB states give core bound. This includes commit-width limits.
+Slots with no remaining PC use `<pipeline-empty>`. Region counts sum to run
+counts. These are model predicates, not hardware top-down counters or a causal
+measurement of each independent bottleneck. Detailed profiling uses Python,
+including when shared components are selected.
+
+Run both configurations on the same C2 trace and region map. Then use
+`rvw arch ooo-diff base.json candidate.json --json` or `arch_ooo_diff`.
+The report gives cycles saved, IPC gain, speedup, and slot changes per region.
+Slot changes are candidate minus base. Negative stall slots mean fewer stalls.
+Changed program paths require separate workload comparison. They are refused
+by this same-trace command. Reports keep input hashes. Accuracy stays inconclusive.
