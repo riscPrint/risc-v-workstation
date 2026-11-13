@@ -514,6 +514,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 
 | Tool or flow | Recorded scope | Evidence and remaining limit |
 |---|---|---|
+| [OoO Mini](../examples/ooo-mini/README.md) | Native RV32IM core on SpinalHDL 1.15.0 | 50 strict ISA matches and three directed matches. Native probes, 19 monitors and eight SV binds run. Five depth-8 engine observations are recorded. Timing, four faults, coverage and committed gate controls have measured results. ISA proof and lint closure remain open. |
 | init | Plain HDL identity capture; run mapping is project work | [Verilog second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass): native identity and good/bad smoke gates work with the project C++ adapter. The generated stub still refuses run until mapped. |
 | sim / arcilator | Ran on RTL | [#654](https://github.com/riscPrint/risc-v-workstation/pull/654): bounded VexRiscv C1/C2 comparison; BOOM, checkpoints and broader engine options NOT RUN. |
 | regress privilege extensions | Spike only | [#552](https://github.com/riscPrint/risc-v-workstation/pull/552): 81 programs; RTL and independent nested-pointer model remain open. The base privilege, PMP and WFI families now have RTL rows below. |
