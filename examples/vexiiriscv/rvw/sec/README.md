@@ -13,3 +13,8 @@ VexiiRiscv has no RVFI port. `core.json` takes the commit PC from the upstream
 WhiteboxerPlugin, so only `pc` and `insn` are compared with Spike. CSRs live in a
 RAM, so there is no single `mscratch` source signal for `ift-core`.
 The constant-time run finds data-dependent divide latency (`DivRadix2`).
+
+Also here: `campaign.json`, `probe-ct.json`, `model-precheck.json` and
+`model-precheck-mul.json` (a planned early-out multiplier), `soc-sec.json` and
+`ift/auto-policy.json`. `core.json` declares the Whiteboxer prediction-learn
+port as a branch probe event.

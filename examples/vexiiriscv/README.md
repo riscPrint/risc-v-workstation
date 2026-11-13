@@ -328,3 +328,10 @@ result is fail and its disposition remains open. One external fetch-command
 check passed BMC through depth 4. No activation or unbounded proof was measured.
 See [the record](checks-qualification.json). Set `RVW_CHECKS_FORMAL=1` as well
 to emit formal RTL without simulating. This opt-in path keeps the default adapter.
+
+## Security runs
+
+`rvw/sec/` holds the project data for `rvw sec` native runs on this core: core
+binding, case templates, IFT programs and policies, contract, campaign and
+model pre-check manifests. See [its README](rvw/sec/README.md) and the
+results in [`rvw/src/rvw/sec/README.md`](../../rvw/src/rvw/sec/README.md).
