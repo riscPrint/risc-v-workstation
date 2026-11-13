@@ -58,3 +58,11 @@ def test_published_matrix_parses_and_detection_has_a_passing_baseline():
             good=[r for r in row['runs'] if r['fault']=='']
             corrupt=[r for r in row['runs'] if r['fault']=='buggy']
             assert good and corrupt and all(r['checked'] for r in good+corrupt)
+
+
+def test_reactive_fixtures_leave_phase_dispatch_to_uvm():
+    # Root components participate in UVM phasing without manual dispatch.
+    for agent in ('axi','tilelink','uart'):
+        source=(ROOT/'Uvm/vip'/agent/'fixture.sv').read_text()
+        assert '.run_phase(' not in source
+        assert '.build_phase(' not in source

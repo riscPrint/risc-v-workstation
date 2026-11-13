@@ -23,3 +23,10 @@ This agent does not replace those campaigns or qualify boundary cells.
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_jtag.py -q`.
 Lint all four SV files with pinned UVM. UVM runtime builds and JTAG
 cocotb RTL qualification were not run for this change.
+
+## Measured SV campaign
+
+The [dated SV matrix](../qualification/native-2026-11-13.md) records this
+fixture's compile and runtime status on Verilator 5.052. All declared normal and fault cases passed at seeds 1, 2 and 3.
+Earlier lint/unit-only notes describe the initial test set. The dated matrix
+gives the current SV result and its limits. Cocotb evidence is separate.

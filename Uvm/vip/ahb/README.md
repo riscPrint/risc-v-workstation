@@ -89,3 +89,10 @@ runtime qualification.
 The Python reactive subordinate also passed a bounded real RTL-manager
 read with seeded waits. A corrupted subordinate was detected. See
 `Uvm/vip/reactive/README.md` for the command and remaining scope.
+
+## Measured SV campaign
+
+The [dated SV matrix](../qualification/native-2026-11-13.md) records this
+fixture's compile and runtime status on Verilator 5.052. All declared normal and fault cases passed at seeds 1, 2 and 3.
+Earlier lint/unit-only notes describe the initial test set. The dated matrix
+gives the current SV result and its limits. Cocotb evidence is separate.
