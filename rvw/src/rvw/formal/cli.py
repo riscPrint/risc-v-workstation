@@ -286,6 +286,12 @@ def register(sub) -> None:
     sail.add_argument("--json", action="store_true")
     from .sail_zicond import main as sail_main
     sail.set_defaults(func=sail_main)
+    custom = s.add_parser("custom-isa", help="export pure R-type custom instruction interfaces and tests")
+    custom.add_argument("manifest")
+    custom.add_argument("--out", required=True)
+    custom.add_argument("--json", action="store_true")
+    from .custom_isa import main as custom_main
+    custom.set_defaults(func=custom_main)
     r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
     r.add_argument("--out", required=True)
     r.add_argument("--timeout", type=float, default=60, help="seconds per check")

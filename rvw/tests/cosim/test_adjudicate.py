@@ -48,8 +48,11 @@ def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch):
     from model_fixtures import generate
     from rvw.cosim.platform import Platform
     from rvw.cosim.adjudicate import execute_json
-    sail = Path('/Users/mahir/fun/saviour/ref/sail/sail-riscv-Mac-arm64/bin/sail_riscv_sim')
-    if not sail.exists():
+    import os
+    import shutil
+    selected = os.environ.get('RVW_SAIL') or shutil.which('sail_riscv_sim')
+    sail = Path(selected) if selected else None
+    if sail is None or not sail.is_file():
         pytest.skip('native Sail executable not installed')
     monkeypatch.setenv('RVW_SAIL', str(sail))
     source = tmp_path/'both.S'
