@@ -325,3 +325,43 @@ and `rvw.micro-checks/1` bindings.
 - `rvw query build` sets `NAXRISCV` to the project root. Keep the project files in
   the NaxRiscv checkout, or call `rvw/build-db.sh rv32imasu rvw/out/nax.db` with
   `NAXRISCV` set.
+
+## Memory-model follow-up (2026-11-13)
+
+The description now uses speculative load issue, buffered stores and one shared
+load/store/multiply/divide/CSR issue port. Lsu2 can feed a ready store before an
+older load completes. The old model made every store wait for all older memory
+operations. Buffered stores remove that wait and count cache service without
+adding it to store execution latency. This is an approximation: stores update
+cache state at issue, and the model has no finite store buffer or drain.
+
+The saved RTL counters separate two cases. `memcpy` has 1,009 data-cache refills
+and 2,982 full-store-queue cycles. `dhrystone` has 28 refills and 6,942 full-store-queue
+cycles. The new model has 1,007 and 27 demand misses, respectively. These close
+counts do not validate refill latency. With the other settings held fixed,
+buffered stores reduce `memcpy` from 33,751 to 31,252 model cycles and `dhrystone`
+from 172,514 to 170,721. Thus this policy explains part of the gap. It does not
+explain all of it. Memory replay events remain approximate.
+
+Training-only selection chose branch penalty 8 and load latency 2. Mean absolute
+IPC error is **20.7% on training**, worse than the earlier 14.3%. It is **13.0%
+on the original five held-out programs**, down from 24.9%. With `spmv` added,
+it is **12.4% across six held-out programs**. No held-out result selected a
+parameter. The calibration plan now sets a 5,000,000-cycle budget. `spmv`
+finishes in 1,087,327 model cycles, against 986,710 RTL cycles.
+
+| Program | Split | IPC error |
+|---|---|---:|
+| median | training | +35.0% |
+| qsort | training | -1.5% |
+| multiply | training | +25.7% |
+| towers | held out | +21.5% |
+| vvadd | held out | +20.2% |
+| rsort | held out | +3.6% |
+| memcpy | held out | -7.2% |
+| dhrystone | held out | -12.3% |
+| spmv | held out | -9.3% |
+
+[Saved counts, trace hashes and ablation](rvw/arch/memory-results-2026-11-13.json).
+This is mixed timing evidence, not a model fidelity pass. The earlier table
+records the previous description and remains for comparison.

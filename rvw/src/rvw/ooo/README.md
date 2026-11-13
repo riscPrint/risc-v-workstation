@@ -119,6 +119,8 @@ paths and each sample's `elf`, `trace`, `c1` and `events` paths resolve beside
 PLAN. Each sample also has a unique `id` and `split` (`training` or `heldout`).
 Both splits must be nonempty. Equal ELF or trace hashes across splits are
 errors. This command scores a frozen configuration. It does not fit settings.
+Optional `max_cycles` (default 1,000,000) bounds each model run of the plan and
+of `rvw arch ooo-fit` on it; long programs need a larger value.
 
 The event map is an object keyed by report event name. Each value defines
 `model_event`, `rtl_event`, `edge`, `unit`, `identity`, `family` and
@@ -328,8 +330,24 @@ issued loads), `memory_order_replays` (store-triggered recoveries), and
 slots enter the approximate `bad_speculation` category. TLB walks start
 before memory execution. A component request starts only after translation
 completes. Component callbacks therefore receive nondecreasing cycle times.
+
 Translation counters count attempts, including replays. Synthetic alias and
-non-alias tests check these policies. RTL correlation remains unmeasured.
+non-alias tests check these policies.
+
+## Buffered stores
+
+`store_policy` is `ordered` (default) or `buffered`. An `ordered` store issues
+only after every older load and store completes, and a component memory
+service delay is added to its completion. A `buffered` store issues when its
+inputs are ready, in any order with other memory operations. Its component
+access still updates cache state, but the service delay is not added: a store
+buffer writes the line after commit. The counter
+`buffered_store_service_cycles` sums the hidden delay. `buffered` needs
+`memory_policy` `disambiguate` or `speculate`. The model has no store-buffer
+drain: a store queue entry is free at commit. The Python engine runs this
+policy. NaxRiscv's Lsu2 is an example (see `examples/naxriscv/README.md`).
+This is a timing approximation. It does not model a finite store buffer or
+prove memory-order correctness.
 
 ## Register-only custom instruction timing
 

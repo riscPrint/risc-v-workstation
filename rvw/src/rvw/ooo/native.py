@@ -45,7 +45,7 @@ KINDS = ("alu", "multiply", "divide", "load", "store", "branch", "jump")
 
 def supported(config):
     return not (config.branch_prediction != "sequential" or config.issue_order != "out_of_order" or config.memory_rename or config.frontend or config.execution or config.translation
-                or config.rename or config.memory_policy != "ordered" or config.custom_instructions
+                or config.rename or config.memory_policy != "ordered" or config.store_policy != "ordered" or config.custom_instructions
                 or any(k not in ('branch', 'btb', 'ras', 'indirect', 'memory') for k in config.components)
                 or config.components.get('memory', {}).get('l1i'))
 
