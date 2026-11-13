@@ -1,0 +1,89 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "sv39-atomic-ad",
+      "mode": "sv39",
+      "atomic_ad": true,
+      "level": 0,
+      "flags": "VRW",
+      "access": "store",
+      "expect": "success",
+      "bins": [
+        "sv39.atomic-ad"
+      ]
+    },
+    {
+      "id": "sv39-ipi",
+      "mode": "sv39",
+      "shootdown": true,
+      "ipi": {
+        "msip": "0x2000000",
+        "stride": 4
+      },
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.ipi"
+      ]
+    },
+    {
+      "id": "sv48-atomic-ad",
+      "mode": "sv48",
+      "atomic_ad": true,
+      "level": 0,
+      "flags": "VRW",
+      "access": "store",
+      "expect": "success",
+      "bins": [
+        "sv48.atomic-ad"
+      ]
+    },
+    {
+      "id": "sv48-ipi",
+      "mode": "sv48",
+      "shootdown": true,
+      "ipi": {
+        "msip": "0x2000000",
+        "stride": 4
+      },
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv48.ipi"
+      ]
+    },
+    {
+      "id": "sv57-atomic-ad",
+      "mode": "sv57",
+      "atomic_ad": true,
+      "level": 0,
+      "flags": "VRW",
+      "access": "store",
+      "expect": "success",
+      "bins": [
+        "sv57.atomic-ad"
+      ]
+    },
+    {
+      "id": "sv57-ipi",
+      "mode": "sv57",
+      "shootdown": true,
+      "ipi": {
+        "msip": "0x2000000",
+        "stride": 4
+      },
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv57.ipi"
+      ]
+    }
+  ]
+}

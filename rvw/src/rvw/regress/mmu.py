@@ -56,7 +56,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -135,6 +135,11 @@ def validate(s):
         raise ValueError('asid must fit 16 bits')
     if s.get('ad_mode', 'hardware') not in ('hardware', 'svade'):
         raise ValueError('ad_mode must be hardware or svade')
+    if 'ipi' in s and not s.get('shootdown'):
+        raise ValueError('ipi requires shootdown')
+    if 'atomic_ad' in s:
+        from .mmu_atomic import validate as validate_atomic
+        validate_atomic(s)
     if 'pointer_mask' in s:
         from .mmu_pointer import validate as validate_pointer
         validate_pointer(s)
@@ -152,6 +157,9 @@ def assembly(s):
     if 'control' in s:
         return control_assembly(s)
     validate(s)
+    if s.get('atomic_ad'):
+        from .mmu_atomic import assembly as atomic_assembly
+        return atomic_assembly(s)
     if s.get('shootdown'):
         from .mmu_shootdown import assembly as shootdown_assembly
         return shootdown_assembly(s)
@@ -531,7 +539,7 @@ def build(description, out, gcc, pma=None):
         source.write_text(assembly(s))
         from .mmu_paging import geometry
         g = geometry(s)
-        command = [gcc, f'-march=rv{g.xlen}im' + ('h' if s.get('guest') else '') + '_zicsr_zifencei', '-mabi=' + ('ilp32' if g.xlen == 32 else 'lp64'), '-nostdlib', '-nostartfiles',
+        command = [gcc, f'-march=rv{g.xlen}im' + ('a' if s.get('atomic_ad') else '') + ('h' if s.get('guest') else '') + '_zicsr_zifencei', '-mabi=' + ('ilp32' if g.xlen == 32 else 'lp64'), '-nostdlib', '-nostartfiles',
                    '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'), '-o', str(elf), str(source)]
         result = run_group(command, capture=True, timeout=60)
         if result.returncode:
@@ -566,7 +574,11 @@ def reference(directory, spike, timeout):
         if s.get('guest'):
             isa = isa.replace('im_', 'imh_')
         command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
-        if s.get('shootdown'):
+        if s.get('atomic_ad'):
+            command[1] = command[1].replace('im_', 'ima_')
+            if '_svadu' not in command[1]:
+                command[1] += '_svadu'
+        if s.get('shootdown') or s.get('atomic_ad'):
             command.insert(1, '-p2')
         r = run_group(command, capture=True, timeout=timeout)
         status = ('inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else
@@ -643,7 +655,7 @@ def check(directory, results, platform, model, timeout, sail=None):
             'scenarios': rows}
 
 
-def report(directory, results, checked=None):
+def report(directory, results, checked=None, protocol_config=None):
     """Report the scenario denominator. Never infer coverage from an ELF or bus activity."""
     from rvw.results import load_run
     directory = Path(directory).resolve()
@@ -674,6 +686,7 @@ def report(directory, results, checked=None):
                         or events[0].get('elf_sha256') != s['elf_sha256']):
                     raise ValueError('invalid observation header')
                 from .mmu_observe import check_walk, check_pma
+                from .mmu_protocol import configured_check
                 identity = events[0].get('identity', {})
                 bound = bool(identity.get('rtl_sha256')) and all(
                     k in identity and identity[k] == raw.get(k)
@@ -684,6 +697,7 @@ def report(directory, results, checked=None):
                     c1_sha256=digest(run.path / 'result.json'),
                     walk_check=check_walk(s, events[1:]) if bound else unbound,
                     pma_check=check_pma(s, events[1:], (manifest.get("pma") or {}).get("regions")) if bound else unbound,
+                    protocol_check=configured_check(events[1:], protocol_config) if bound else unbound,
                     counts={k: sum(e.get('kind') == k for e in events[1:])
                             for k in ('walk_request', 'walk_response', 'bus_a')})
             from .mmu_walk import check_c2, scenario_accesses
@@ -730,6 +744,7 @@ def register(sub):
     coverage.add_argument('directory', type=Path)
     coverage.add_argument('--results', type=Path, required=True)
     coverage.add_argument('--checked', type=Path)
+    coverage.add_argument('--protocol-config', type=Path, help='project translation probe and memory-type policy')
     for p in (b, r, c, coverage):
         p.add_argument('--json', action='store_true')
         p.set_defaults(func=main)
@@ -745,7 +760,7 @@ def main(args):
         elif args.mmu_action == 'reference':
             result = reference(args.directory, args.spike, args.timeout)
         elif args.mmu_action == 'report':
-            result = report(args.directory, args.results, args.checked)
+            result = report(args.directory, args.results, args.checked, args.protocol_config)
         else:
             result = check(args.directory, args.results, args.platform, args.model, args.timeout, args.sail)
         print(json.dumps(result, allow_nan=False))

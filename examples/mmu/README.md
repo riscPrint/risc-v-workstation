@@ -68,3 +68,12 @@ for the project's XLEN before building. `mmu report` also accepts ordered C2
 `mmu_walks` records. Its independent checker supports faulting walks and fenced
 leaf changes with preset A/D bits. The older raw-request checker retains its
 successful immutable scope. No DUT walk result is claimed from Spike alone.
+
+`protocol.json` has three two-hart A/D versus RSW cases and three IPI shootdown
+cases. The interrupt map is project data and must match the adapter. Spike
+uses its standard MSIP map. The final full PTE must preserve both updates.
+Reference interleaving does not prove physical overlap. `probes.json` shows
+the optional project probe and PBMT policy declaration for `mmu report
+--protocol-config`. Replace all probe paths with the project's capture points.
+No type policy means no PBMT transaction verdict. Missing protocol evidence
+remains inconclusive. Ordering and shared-TLB hardware validation remain open.
