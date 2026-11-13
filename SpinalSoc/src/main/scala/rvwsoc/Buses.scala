@@ -130,7 +130,8 @@ object BusIngress {
     target.PWDATA := bus.PWDATA
     bus.PRDATA := target.PRDATA
     bus.PREADY := partial || target.PREADY
-    bus.PSLVERROR := partial || target.PSLVERROR
+    val targetError = if(target.config.useSlaveError) target.PSLVERROR else False
+    bus.PSLVERROR := partial || targetError
   }
 }
 

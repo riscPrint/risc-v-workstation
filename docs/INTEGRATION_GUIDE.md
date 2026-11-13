@@ -834,8 +834,16 @@ loopback. This is a directed development result, not complete compliance.
 The combined Vex table still uses the original subset. The full-register
 profile has this separate UART campaign. See [the UART example](../SpinalSoc/examples/uart16550/README.md).
 
-Boot-from-flash,
-native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
+The [SPI flash example](../SpinalSoc/examples/flash/README.md) boots the real
+composed core from a ROM stub. The stub reads the payload through SPI, copies
+it into RAM and jumps to it. At seed 31, the 16-byte payload passed in 5,150
+cycles and 573 retired instructions. A corrupted payload bit produced
+finisher code 3 in 5,130 cycles. Each run checked 20 SPI wire words. Only the
+ROM was preloaded. The generated RAM image is empty, and a read-only runtime
+observation checked RAM word zero before boot. This is component simulation
+evidence. C1 acceptance, XIP, program/erase modeling and hardware boot are unrun.
+
+Native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
 external-IP import and composed debug-module integration remain separate work.
 The existing standalone SMP example is unchanged.
 ## Write properties for your core
