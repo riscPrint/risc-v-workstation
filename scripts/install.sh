@@ -562,6 +562,13 @@ if [ "$cosim" = 1 ] && [ "$bundle" = 0 ]; then
   export PATH="$SPIKE_PREFIX/bin:$PATH"
   run env PATH="$rvw_home/rvw/.venv/bin:$PATH" SPIKE_PREFIX="$SPIKE_PREFIX" nice "$rvw_home/Cosim/build.sh"
 fi
+if [ "$ric3" = 1 ]; then
+  case "$pm" in
+    brew) packages gmp mpfr ;;
+    apt) packages libgmp-dev libmpfr-dev ;;
+    dnf) packages gmp-devel mpfr-devel ;;
+  esac
+fi
 for optional_engine in ric3 ebmc; do
   case "$optional_engine" in ric3) selected="$ric3" ;; ebmc) selected="$ebmc" ;; esac
   if [ "$selected" = 1 ]; then

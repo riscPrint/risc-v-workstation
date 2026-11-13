@@ -4,6 +4,7 @@ import argparse
 import os
 from pathlib import Path
 import shlex
+import sys
 import subprocess
 
 RIC3_REV = '02c12ff1407b3474b7eb85c4531a06ad2eb86933'
@@ -28,6 +29,9 @@ def install(engine, prefix, dry=False):
         else:
             rustc = subprocess.check_output(['rustup', 'which', '--toolchain', NIGHTLY, 'rustc'], text=True).strip()
         env = {**os.environ, 'RUSTC': rustc, 'CARGO_TARGET_DIR': str(prefix / 'ric3-target')}
+        if sys.platform == 'darwin':
+            brew = '/opt/homebrew' if dry else subprocess.check_output(['brew', '--prefix'], text=True).strip()
+            env['LIBRARY_PATH'] = brew + '/lib' + (':' + env['LIBRARY_PATH'] if env.get('LIBRARY_PATH') else '')
         run('nice', '-n', '10', 'rustup', 'run', NIGHTLY, 'cargo', 'install', '--git',
             'https://github.com/gipsyh/rIC3', '--rev', RIC3_REV, '--locked', '--root', prefix,
             '-j', '2', env=env)
