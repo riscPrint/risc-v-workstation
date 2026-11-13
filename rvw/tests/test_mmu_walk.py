@@ -108,3 +108,15 @@ def test_identity_allows_runner_source_fields_only():
     assert not same_run(dict(header, source=None), c1)
     assert not same_run(header, dict(c1, rtl_sha256=None))
     assert not same_run(dict(header, seed=2), c1)
+
+
+@pytest.mark.parametrize('mode', ['sv32', 'sv39'])
+def test_fetch_fault_reference_plan(mode):
+    from rvw.regress.mmu_walk import scenario_accesses
+    for scenario in fault_matrix([mode]):
+        plans = scenario_accesses(scenario)
+        assert len(plans) == 1
+        expected = walk(**plans[0])
+        assert expected['status'] == scenario['expect']
+        assert expected['reads'][-1]['level'] == scenario.get('walk_deny_level', scenario.get('pte_fault_level'))
+    assert scenario_accesses(dict(mode=mode, access='fetch', flags='VRWXAD', level=0)) == []

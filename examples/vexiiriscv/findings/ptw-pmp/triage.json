@@ -1,0 +1,1194 @@
+{
+  "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "source": "retained RTL captures; direct walker check includes failed C1 runs",
+  "counts": {
+    "sv39": 11,
+    "sv32": 8,
+    "distinct_causes": 1
+  },
+  "rows": [
+    {
+      "id": "sv39-load-walk-denied",
+      "xlen": 64,
+      "trace_sha256": "2e3815637a0c5c50994fb71a26fdc1f56d35a8d0a8cf507f1db7d610a7c2ed62",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147549192
+      ]
+    },
+    {
+      "id": "sv39-store-walk-denied",
+      "xlen": 64,
+      "trace_sha256": "7a9d1aae8a8719348a2798cb37892be8429f194af9603a9a5c753edfea0e09ab",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147549192
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-0-load",
+      "xlen": 64,
+      "trace_sha256": "dacc736f7c435a2b0c5b057ebbecb2907fb96b835dad65c913a846f99d489976",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "data": 536889345,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147557376,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147557376
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-0-store",
+      "xlen": 64,
+      "trace_sha256": "c3b1aa9af869cd1870bb5c7adea8ffdfd66f97b620730c956190442101e440b2",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "data": 536889345,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147557376,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147557376
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-0-fetch",
+      "xlen": 64,
+      "trace_sha256": "3b2e9d792a05bf1aee67f04b097b0e4efaf986f21af1e3a7b3c473e91d063ce2",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "fetch",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "data": 536889345,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147557376,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147557376
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-1-load",
+      "xlen": 64,
+      "trace_sha256": "e340883252e6a28cedbd969feadb6dfcf6ec423d34adf6cba718363d8e631d9f",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-1-store",
+      "xlen": 64,
+      "trace_sha256": "d44e0b1fbc42fb36e390f28604f2b9ed0a44a08d9de4b38fb952804f75bbd51e",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-1-fetch",
+      "xlen": 64,
+      "trace_sha256": "7a1541ec689af85b550b2b7f2cf3f6db31d3a1406a48c619d445094938156a69",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "fetch",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 1,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-2-load",
+      "xlen": 64,
+      "trace_sha256": "afc7d0bb7c0dedb58c3ba8d845606469e9fa827bf56190a0ccb0289a4e7c51c7",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147549192
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-2-store",
+      "xlen": 64,
+      "trace_sha256": "ed16dad7fdb7e051ece9f2f9ccb222b3719fcf596b25cc89e28c898296f62f34",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147549192
+      ]
+    },
+    {
+      "id": "sv39-walk-deny-level-2-fetch",
+      "xlen": 64,
+      "trace_sha256": "020e577b9a38042b44c41ca573c8fdb03d93660e78a54eb4dac33c8e0bb06675",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "fetch",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 2,
+            "address": 2147549192,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147549192
+      ]
+    },
+    {
+      "id": "sv32-load-walk-denied",
+      "xlen": 32,
+      "trace_sha256": "455377e69ddb0897498889a6de2a6c53d1f07ff7204b80c2b92dc4d94cecea52",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147550208
+      ]
+    },
+    {
+      "id": "sv32-store-walk-denied",
+      "xlen": 32,
+      "trace_sha256": "c48098443bb44df24f5656572d6c41c35a70dbf36257538b33375c2c1c209c57",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147550208
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-0-load",
+      "xlen": 32,
+      "trace_sha256": "645eb03f9edce758b9dabbe04e6558b61c5fe25ba7fda1c9542d96220ad081b0",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-0-store",
+      "xlen": 32,
+      "trace_sha256": "c1e4b75a56135cccf197e7d502fd07765487e7063a491b8ffe92a609b7f8bd15",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-0-fetch",
+      "xlen": 32,
+      "trace_sha256": "453daf6e77d50bed5b38e8b0f7e400097771a4dce5b8330f37ed288b6e52e4fe",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "fetch",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "data": 536888321,
+            "fault": false
+          },
+          {
+            "level": 0,
+            "address": 2147553280,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147553280
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-1-load",
+      "xlen": 32,
+      "trace_sha256": "5a3d664223ac6e8e1c78cfbd73735b29163a06e675195c6a7624d1c5491e51f9",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147550208
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-1-store",
+      "xlen": 32,
+      "trace_sha256": "1ccccd12a62ee551ae18ae8e0fb0f5346b599c6e16583f5ccbdf6c998e92b527",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "store",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147550208
+      ]
+    },
+    {
+      "id": "sv32-walk-deny-level-1-fetch",
+      "xlen": 32,
+      "trace_sha256": "cffbc858b1f1cefa4923b25f194002565b8e8b181402ae07773daf9ffdb6029f",
+      "dut": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv32",
+          "access": "fetch",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 1,
+              "address": "0x80010400",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 0,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x200800cf"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "reference": {
+        "status": "access-fault",
+        "reads": [
+          {
+            "level": 1,
+            "address": 2147550208,
+            "fault": true
+          }
+        ]
+      },
+      "comparison": {
+        "status": "mismatch",
+        "checked": 1,
+        "expected": 1,
+        "errors": [
+          "access 0: PTE levels, addresses, data or faults differ",
+          "access 0: wrong walk result"
+        ]
+      },
+      "disposition": "core-finding",
+      "cause": "PTE read bypasses PMP",
+      "denied_pte_addresses": [
+        2147550208
+      ]
+    }
+  ]
+}

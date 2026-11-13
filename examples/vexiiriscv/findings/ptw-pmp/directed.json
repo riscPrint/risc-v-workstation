@@ -1,0 +1,102 @@
+{
+  "runs": [
+    {
+      "status": "fail",
+      "cycles": 375,
+      "instret": 39,
+      "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+      "seed": 1,
+      "config": "rv64imasu",
+      "tohost": "0x3",
+      "traps": 0,
+      "walks": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "hashes": {
+        "rvfi.jsonl": "0cf347cb58d6027589bea8d34560edebad93477e82c6227027233ee5c937a16e",
+        "wave.fst": "9d93203adf8ce9678d88ec778ee5b3c001e17e13f76da4e0ff5aad93365d1c2f"
+      }
+    },
+    {
+      "status": "fail",
+      "cycles": 375,
+      "instret": 39,
+      "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+      "seed": 1,
+      "config": "rv64imasu",
+      "tohost": "0x3",
+      "traps": 0,
+      "walks": [
+        {
+          "kind": "mmu_walk",
+          "access_id": 0,
+          "mode": "sv39",
+          "access": "load",
+          "va": "0x40000000",
+          "root": "0x80010000",
+          "status": "success",
+          "reads": [
+            {
+              "level": 2,
+              "address": "0x80010008",
+              "fault": false,
+              "data": "0x20004401"
+            },
+            {
+              "level": 1,
+              "address": "0x80011000",
+              "fault": false,
+              "data": "0x20004801"
+            },
+            {
+              "level": 0,
+              "address": "0x80012000",
+              "fault": false,
+              "data": "0x200800c7"
+            }
+          ],
+          "pa": "0x80200000"
+        }
+      ],
+      "hashes": {
+        "rvfi.jsonl": "b8c078f09b0fc0723a6ceeaec5063b4406a004e88f3652b87f146900238e0ce6",
+        "wave.fst": "2be8330e9901c87c37203a16efd25f4ba129f6dfbccff4b2f59ec998d602fbf5"
+      }
+    }
+  ],
+  "spike": {
+    "status": "load-access-fault",
+    "pc": "0x80000078",
+    "tval": "0x40000000",
+    "elf_sha256": "ad3faa1d626a2e3446a160044931e18fb91fe7e0c980a155cf1851e502bd3efa"
+  }
+}
