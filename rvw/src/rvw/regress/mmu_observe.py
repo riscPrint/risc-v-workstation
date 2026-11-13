@@ -108,7 +108,7 @@ def check_pma(s, events, regions):
         if type(size) is not int or not 0 <= size <= 6:
             raise ValueError('unsupported TileLink size')
         width = 1 << size
-        if width != s.get('access_width', 8) or width not in region['widths']:
+        if width != s.get('access_width', geometry(s).width) or width not in region['widths']:
             errors.append('device transfer width differs from scenario or PMA declaration')
         if physical + width > number(region['start']) + number(region['size']):
             errors.append('device transfer crosses a declared PMA boundary')
