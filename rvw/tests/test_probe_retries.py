@@ -61,3 +61,18 @@ def test_distinct_cause_supersedes_wait_without_counting_same_retry():
     assert r['cache_miss_retry']['counts']['superseded']==1
     assert 'rejected_again' not in r['cache_miss_retry']['counts']
     assert r['store_forward_miss']['retry_to_completion_cycles']==[1]
+
+
+def test_repeated_first_stage_occupancy_preserves_retry_span():
+    s = stream([(0, 0, [1]), (1, 1, [1]), (2, 0, [1]), (3, 2, [1])])
+    c = retry_statistics(s)['causes']['cache_miss_retry']
+    assert c['retry_to_completion_cycles'] == [2]
+    assert 'reused' not in c['counts']
+
+
+def test_first_stage_reentry_after_progress_starts_a_new_lifetime():
+    s = stream([(0, 0, [1]), (1, 5, [1]), (2, 1, [1]), (3, 0, [1]), (4, 2, [1])])
+    s.probes.append(Probe(5, 'stage', 'load', [('id', 4)], dict(stage='Ls')))
+    c = retry_statistics(s)['causes']['cache_miss_retry']
+    assert c['counts']['reused'] == 1
+    assert c['retry_to_completion_cycles'] == []
