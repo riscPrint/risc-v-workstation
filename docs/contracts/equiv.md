@@ -240,3 +240,16 @@ recorded steps. Initial attributes and unsupported cells remain incomplete.
 `inputs`, `tool`, the copied RTL, Yosys script, mapped JSON and log retain the
 experimental input/tool identities. `restrictions` records clock, reset,
 polarity, bounds and the initial/input contract. No solver proof is implied.
+
+## Exact finite-memory lowering
+
+`rvw formal equiv --memory-map` requires `--unmatched-state prove`. It lowers
+finite memory cells with Yosys `memory_map -formal` before the state inventory
+and equivalence proof. Mapping failure or a remaining memory cell is inconclusive.
+Both sides retain independent initial state and RTL initialization attributes.
+No relation between RAM words is assumed. The output latency contract also
+applies to mapped read ports. It is a fixed-cycle observation shift, not a
+transaction abstraction. `memory_mapping.gold` and `.gate` record the backend,
+semantics and `state_bits`, which counts all mapped register Q bits. The field
+does not measure memory capacity. Legal aliases replace debug names with array
+subscripts. Bit wiring and net attributes are preserved.

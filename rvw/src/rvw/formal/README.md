@@ -3026,3 +3026,23 @@ is distinct from bounded success. A portfolio with source assumptions remains
 inconclusive under the portfolio activation policy. The command exits 1 for a portfolio failure. Otherwise it exits 3 and does
 not grant ISA signoff. Run retirement cover with `formal riscv`
 separately. The capture itself does not establish adapter conformance.
+### Finite-memory equivalence
+
+`formal equiv --memory-map --unmatched-state prove` lowers finite RAMs to registers
+with Yosys `memory_map -formal`. Use this when one implementation uses RAM and
+the other uses explicit register words. It retains RTL read/write and initial
+value semantics. It adds no storage equality assumptions. Each RAM word remains
+part of a closed output cone. This can increase solver cost substantially.
+
+Use `--latency-map read_data=1` for a candidate with one additional fixed read
+cycle. This compares the delayed reference observation. It does not infer a
+transaction protocol or ignore invalid payload values. Do not apply a global
+latency shift to a write acknowledgement unless that signal also moves.
+
+The result records `memory_mapping` for both sides. `state_bits` counts all
+mapped register Q bits, including non-memory state. Array and temporary net names
+receive legal inventory aliases. Their bit connections and initialization
+attributes remain intact. The default still refuses memories. Native controls
+prove a four-word RAM against registers with zero and one read cycle of lag.
+A changed data bit produces a counterexample. These controls do not prove a
+cache, a memory macro or automatic internal cut-point matching.
