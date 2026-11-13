@@ -88,7 +88,7 @@ def test_rich_paging_selection_excludes_other_modes_and_hardware_ad():
 def test_plan_selects_profile_families():
     from rvw.regress.commands.applicability import plan
     for name, expected in (('features64.json', {'mmu-sv39', 'privilege-controls', 'pmp', 'scheduled-wfi', 'fence-i-rv64'}),
-                           ('features32.json', {'mmu-sv32', 'amo-rv32', 'fence-rv32', 'scheduled-wfi-rv32'})):
+                           ('features32.json', {'mmu-sv32', 'amo-rv32', 'fence-rv32', 'scheduled-wfi-rv32', 'pmp-rv32'})):
         rows = plan(EXAMPLE / 'rvw' / name)['suites']
         applicable = {r['name'] for r in rows if r['applicable']}
         assert expected <= applicable

@@ -80,6 +80,15 @@ max_cycles = 200000
 timeout_s = 60
 mem_latency = 0
 
+[suites.pmp]
+dir = "../../rvw/out/suites32/pmp"
+glob = "*.elf"
+strip_suffix = ".elf"
+configs = ["rv32imasu"]
+max_cycles = 200000
+timeout_s = 60
+mem_latency = 0
+
 [suites.ordering]
 dir = "../../rvw/out/suites32/ordering"
 glob = "*.elf"
