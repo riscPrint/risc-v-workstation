@@ -92,7 +92,7 @@ usage: rvw agent-bench trial [-h] --pack PACK --task TASK --out OUT
 
 ```text
 usage: rvw arch [-h] [--project PROJECT] [--json]
-    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,ooo-what-if,ooo-wrong-path,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-delta,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,ooo-what-if,ooo-wrong-path,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -121,6 +121,12 @@ usage: rvw arch custom-tradeoff [-h] --out OUT [--json] [--project PROJECT]
 ```text
 usage: rvw arch gem5-export [-h] --out OUT [--json] [--project PROJECT]
     description
+```
+
+### `rvw arch ooo-delta`
+
+```text
+usage: rvw arch ooo-delta [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch ooo-designer`
@@ -1525,28 +1531,29 @@ usage: rvw formal internal-path [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ```text
 usage: rvw formal datapath [-h] [--unit
     {mul,mulh,mulhu,mulhsu,div,divu,rem,remu,fpu-add,fpu-mul,fpu-fma,fpu-div,fpu-sqrt,fpu-convert}]
-    [--db DB] [--binding BINDING] [--rtl RTL] [--model MODEL] [--width
-    {8,16,32,64}] [--max-latency MAX_LATENCY] [--latency LATENCY] [--unwind
-    UNWIND] [--case {all,finite,normal,nan,infinity,zero,subnormal}]
-    [--case-width {16,32,64}] [--operand-prefix-bits OPERAND_PREFIX_BITS]
-    [--operand-prefix OPERAND_PREFIX] [--rounding {0,1,2,3,4}]
-    [--reference-tree REFERENCE_TREE] [--reference-source REFERENCE_SOURCE]
-    [--reference-include REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT
-    [--json] [--project PROJECT]
+    [--confirm] [--component COMPONENT] [--db DB] [--binding BINDING] [--rtl
+    RTL] [--model MODEL] [--width {8,16,32,64}] [--max-latency MAX_LATENCY]
+    [--latency LATENCY] [--unwind UNWIND] [--case
+    {all,finite,normal,nan,infinity,zero,subnormal}] [--case-width {16,32,64}]
+    [--operand-prefix-bits OPERAND_PREFIX_BITS] [--operand-prefix
+    OPERAND_PREFIX] [--rounding {0,1,2,3,4}] [--reference-tree REFERENCE_TREE]
+    [--reference-source REFERENCE_SOURCE] [--reference-include
+    REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] [--memory-map] [--sampled-events]
-    [--stable-at-edge INPUT] [--state-encoding STATE_ENCODING]
-    [--blackbox-contract BLACKBOX_CONTRACT] [--gold GOLD [GOLD ...]] [--gate
-    GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config
-    CONFIG] --top TOP [--clock CLOCK] [--reset RESET] [--reset-active
-    {high,low}] [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec]
-    [--pair GOLD=GATE] [--latency LATENCY] [--latency-map OUTPUT=CYCLES]
-    [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}] [--timeout
-    TIMEOUT] --out OUT [--json] [--project PROJECT]
+usage: rvw formal equiv [-h] [--memory-spec MEMORY_SPEC] [--memory-map]
+    [--sampled-events] [--stable-at-edge INPUT] [--state-encoding
+    STATE_ENCODING] [--blackbox-contract BLACKBOX_CONTRACT] [--gold GOLD [GOLD
+    ...]] [--gate GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV]
+    [--config CONFIG] --top TOP [--clock CLOCK] [--reset RESET]
+    [--reset-active {high,low}] [--reset-cycles RESET_CYCLES] [--settle
+    SETTLE] [--dsec] [--pair GOLD=GATE] [--latency LATENCY] [--latency-map
+    OUTPUT=CYCLES] [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -3302,6 +3309,14 @@ Arguments: `observations` (required), `project`.
 
 Starts a background job: yes.
 
+### `arch_ooo_delta`
+
+Score paired RTL IPC changes using a fixed base calibration.
+
+Arguments: `plan` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `arch_ooo_designer`
 
 Write JSON and Markdown workload designer reports; model evidence only.
@@ -4176,9 +4191,9 @@ Starts a background job: yes.
 
 ### `formal_datapath_kit`
 
-Propose datapath port bindings from SpinalDB. Designer confirmation is required. No proof runs.
+Propose datapath port bindings from SpinalDB. Designer confirmation is required. Use confirm with RTL and a C model to run a reviewed binding.
 
-Arguments: `unit` (required), `db`, `width`, `out` (required).
+Arguments: `unit` (required), `db`, `confirm`, `component`, `binding`, `rtl`, `model`, `latency`, `max_latency`, `timeout`, `width`, `out` (required).
 
 Starts a background job: yes.
 
@@ -4226,7 +4241,7 @@ Starts a background job: yes.
 
 Prove closed RTL output cones. Blackbox models produce conditional evidence only.
 
-Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `state_encoding`, `latency_map`, `output_map`, `memory_map`, `sampled_events`, `stable_at_edge`, `timeout`.
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `state_encoding`, `latency_map`, `output_map`, `memory_spec`, `memory_map`, `sampled_events`, `stable_at_edge`, `timeout`.
 
 Starts a background job: yes.
 
