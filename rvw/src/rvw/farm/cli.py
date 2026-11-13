@@ -25,6 +25,13 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    planning = commands.add_parser("plan")
+    for name in ("manifest", "adapter", "root", "image", "claim"):
+        planning.add_argument("--" + name, required=True)
+    planning.add_argument("--shards", type=int, default=1)
+    planning.add_argument("--jobs", type=int, default=1)
+    planning.add_argument("--identity", default="{}", help="JSON expected nested C1 identity claims")
+    planning.set_defaults(func=plan_command)
     live = commands.add_parser("live")
     live.add_argument("--root", required=True)
     live.add_argument("--owner", required=True)
@@ -155,3 +162,8 @@ def live_command(args):
     from .live import snapshot
     from .service import Queue
     print(json.dumps(snapshot(Queue(args.root), args.owner)))
+
+
+def plan_command(args):
+    from .shard_plan import plan
+    print(json.dumps(plan(args.manifest, json.loads(args.adapter), args.root, args.image, args.claim, args.shards, args.jobs, json.loads(args.identity))))

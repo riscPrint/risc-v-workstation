@@ -34,7 +34,12 @@ def mcp_tools():
     from .triage import triage
     from .selection import select
     from .workflows import workflow
-    return [ToolSpec("farm_live", "Read owner-scoped runs, trends, test history and failure clusters.",
+    from .shard_plan import plan
+    return [ToolSpec("farm_plan", "Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.",
+                 schema({"manifest": string, "adapter": array, "root": string, "image": string, "claim": string,
+                         "shards": {"type": "integer", "minimum": 1}, "jobs": {"type": "integer", "minimum": 1},
+                         "identity": {"type": "object"}, "resources": {"type": "object"}, "timeout": {"type": "number", "exclusiveMinimum": 0}},
+                        ["manifest", "adapter", "root", "image", "claim"]), plan, long=True), ToolSpec("farm_live", "Read owner-scoped runs, trends, test history and failure clusters.",
                  schema({"root": string, "owner": string}, ["root", "owner"]), live_json, long=True), ToolSpec("farm_workflow", "Create, resume or inspect a command dependency plan. Completion is execution state, not verification.",
                  schema({"root": string, "action": string, "plan": {"type": "object"}, "workflow_id": string, "owner": string}, ["root"]),
                  workflow, long=True), ToolSpec("farm_select", "Advisory source-impact selection within a time budget. Unknown impacts keep tests mandatory.",
