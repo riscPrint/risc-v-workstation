@@ -883,3 +883,36 @@ A failed combined query reports `inconclusive` and keeps its traces. An invalid
 mapping can fail even when original outputs agree. Rerun without the table and
 with `--unmatched-state prove` to classify an original output difference. The
 mapping is finite and explicit. This is not automatic state recoding inference.
+
+### Internal reset audit
+
+Run a conservative reset analysis without a solver:
+
+```sh
+rvw formal reset-audit --rtl unit.v --top Unit --clock clk --reset reset \
+  --cycles 4 --out /tmp/unit-reset-audit
+```
+
+The MCP tool is `formal_reset_audit`. `--reset-active low` selects active-low
+synchronous reset. Yosys maps the retained design to Boolean gates and registers.
+Every register starts arbitrary. The analysis applies one reset clock. It reports
+which retained register bits then have fixed zero or one values. Each bit also
+records possible dependencies on initial register bits and literal X/Z values.
+A data-dependent reset value can be nonconstant and still have no initial-state
+dependency. The denominator contains only registers retained after mapping.
+
+The report follows initial-state dependencies to each output at reset release
+and for `--cycles 0..64` further clocks. Reset stays deasserted during these
+steps. Other inputs are arbitrary at every step. Controlling Boolean values
+remove masked dependencies. Reconvergent and correlated paths can remain in
+the report. A listed path is possible influence in this abstraction. It is not
+a reachable counterexample. A missing path is a conservative dependency result
+for the mapped model and stated steps. No activation or whole-design reset
+correctness claim is made.
+
+`analysis_status: complete` means the inventory finished. Overall `status`
+remains `inconclusive`, with exit 1. The tool does not emit C1/C4 acceptance.
+Use the initialization kind of `rvw formal security pair` for a native proof
+that independent initial states cannot change declared outputs after reset.
+The reset audit refuses latches, other clocks, clock-as-data logic, memories,
+blackboxes, embedded formal properties and explicit initial attributes.
