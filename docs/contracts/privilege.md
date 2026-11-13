@@ -380,3 +380,19 @@ check delegated parent masking, revoked child state, sourcecfg reset on new
 delegation, pending updates and direct claims. Pending/enable observations mask
 only the selected source bit. Model groups require the existing complete C1
 and named-observation evidence. They do not establish full ISA or device state.
+
+## Native APLIC register reference
+
+`reference_backend = "spike-python-aplic"` accepts `aplic` and
+`aplic-delegation` campaigns with AIA 1.0 and a supported document revision.
+`reference_shim` selects a captured Spike library. Its C8 input record, library
+hash and shim manifest hash accompany native results. The shared runner accepts
+an absent mailbox event list for programs that use CPU MMIO only.
+
+The Python register model covers little-endian aligned 32-bit direct/Detached
+transactions, ownership, source bitmaps, targets and per-context claims. It
+maps 32 KiB per domain and supports context indices 0..511. Priority/threshold
+fields use eight bits. Unsupported behavior and uninitialized target values
+produce an error or inconclusive result. IRQ injection is disabled. Status and
+normalized reference C2 traces are marked model-based. They do not establish
+IRQ-line delivery, a hardware controller, DUT coverage or complete C1 agreement.

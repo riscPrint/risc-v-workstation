@@ -18,7 +18,7 @@ def load(path):
         raise ValueError('expected rvw.privilege/1')
     if set(raw) - {'random_transitions', 'reference_shim', 'plic_delivery', 'pmp', 'stateen', 'landing', 'epmp', 'disabled', 'reri', 'dvfs', 'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision', 'envcfg', 'sstc'}:
         raise ValueError('unknown campaign field')
-    if raw.get('reference_backend','spike') not in ('spike','python','spike-python-plic','spike-python-reri'):
+    if raw.get('reference_backend','spike') not in ('spike','python','spike-python-plic','spike-python-reri','spike-python-aplic'):
         raise ValueError('unsupported reference_backend')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
@@ -110,7 +110,7 @@ def reference(directory, spike='spike', timeout=2):
     manifest = json.loads((directory / 'manifest.json').read_text())
     if manifest['schema'] != 'rvw.privilege-build/1':
         raise ValueError('expected privilege build manifest')
-    if manifest['config'].get('reference_backend') in ('python','spike-python-plic','spike-python-reri'):
+    if manifest['config'].get('reference_backend') in ('python','spike-python-plic','spike-python-reri','spike-python-aplic'):
         from importlib import import_module
         modules={'aplic-delegation':'aplic_delegation','imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway',
                  'aclint':'fast_interrupts','smnip':'fast_interrupts',
@@ -119,9 +119,12 @@ def reference(directory, spike='spike', timeout=2):
         backend=manifest['config']['reference_backend']
         native=backend!='python'
         native_modules={'spike-python-plic':dict(kind='plic-delivery',module='spike_plic'),
-                        'spike-python-reri':dict(kind='reri-transactions',module='spike_reri')}
-        if native and manifest['config'].get('kind')!=native_modules[backend]['kind']:
-            raise ValueError('native device backend differs from the selected campaign kind')
+                        'spike-python-reri':dict(kind='reri-transactions',module='spike_reri'),
+                        'spike-python-aplic':dict(kinds=['aplic','aplic-delegation'],module='spike_aplic')}
+        if native:
+            allowed=native_modules[backend].get('kinds') or [native_modules[backend]['kind']]
+            if manifest['config'].get('kind') not in allowed:
+                raise ValueError('native device backend differs from the selected campaign kind')
         if native and not manifest['config'].get('reference_shim'):
             raise ValueError('native device execution requires reference_shim')
         capture=None;shim_inputs=None

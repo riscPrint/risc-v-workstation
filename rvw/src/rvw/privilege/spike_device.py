@@ -13,10 +13,10 @@ from rvw.cosim.spike import Spike
 
 def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,scope):
     model=device
-    platform=Platform(name='project-plic-reference',xlen=64,isa=config.get('isa','rv64im_zicsr_zifencei'),reset_pc=0x80000000,
+    platform=Platform(name='project-device-reference',xlen=64,isa=config.get('isa','rv64im_zicsr_zifencei'),reset_pc=0x80000000,
                       ram=[(0x80000000,128<<20)],mmio=mmio,privilege_modes='MSU')
     cpu=Spike(platform,Path(directory)/scenario['elf'],shim=shim_inputs)
-    driver=MailboxDriver(scenario['events']);symbols=cpu.elf.symbols;pending_ack=[]
+    driver=MailboxDriver(scenario.get('events',[]));symbols=cpu.elf.symbols;pending_ack=[]
     status='inconclusive';reason='reference instruction or time bound reached';count=0;traps=[]
     trace_path=Path(directory)/(scenario['id']+'.reference.jsonl')
     trace=trace_path.open('w')
@@ -31,7 +31,7 @@ def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,sc
         raw=value.to_bytes(8,'little')
         if cpu.lib.rvw_write(cpu.handle,address,raw,8):raise ValueError(cpu.error())
     def ack(step):
-        event=scenario['events'][len(driver.done)]
+        event=driver.events[len(driver.done)]
         pending_ack.append((count+event.get('settle_ticks',4),step))
     deadline=time.monotonic()+timeout;pc=cpu.elf.entry
     try:
@@ -56,13 +56,14 @@ def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,sc
             if effect['mem_rmask'] and not effect['mem_fault'] and injected:
                 size=effect['mem_rmask'].bit_count()
                 actual=model.read(effect['mem_addr'],size)
-                if actual!=injected[1]:raise ValueError('PLIC read changed between preview and execution')
+                if actual!=injected[1]:raise ValueError('device read changed between preview and execution')
             if effect['mem_wmask'] and not effect['mem_fault']:
                 address=effect['mem_addr'];size=effect['mem_wmask'].bit_count()
                 if any(base<=address and address+size<=base+length for base,length in mmio):
                     model.write(address,effect['mem_wdata']&((1<<(8*size))-1),size)
-            request=read(symbols['stimulus_step'])
-            driver.service(request,drive,ack)
+            if driver.events:
+                request=read(symbols['stimulus_step'])
+                driver.service(request,drive,ack)
             tohost=read(symbols['tohost'])
             if tohost:
                 status='pass' if tohost==1 and driver.complete and not pending_ack else 'fail'
