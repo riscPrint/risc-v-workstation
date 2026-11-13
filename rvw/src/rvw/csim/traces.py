@@ -130,10 +130,15 @@ def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
             rd = int(r.get("rd", 0))
             kind = branch_kind(insn, rd, xlen)
             rmask, wmask = int(r.get("mem_rmask", 0)), int(r.get("mem_wmask", 0))
-            if rmask:
-                out.write(f"L {ordinal} {pc:x} {_hex(r['mem_addr']):x} {bin(rmask).count('1')}\n"); mem += 1
-            if wmask:
-                out.write(f"S {ordinal} {pc:x} {_hex(r['mem_addr']):x} {bin(wmask).count('1')}\n"); mem += 1
+            for tag, mask in (("L", rmask), ("S", wmask)):
+                address = _hex(r["mem_addr"])
+                while mask:
+                    offset = (mask & -mask).bit_length() - 1
+                    remaining = mask >> offset
+                    size = (remaining ^ (remaining + 1)).bit_length() - 1
+                    out.write(f"{tag} {ordinal} {pc:x} {address + offset:x} {size}\n")
+                    mem += 1
+                    mask &= ~(((1 << size) - 1) << offset)
             if values and rd:
                 out.write(f"W {ordinal} {pc:x} {rd} {_hex(r['rd_wdata']):x} {_flags(insn, xlen)}\n")
             if kind:
