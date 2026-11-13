@@ -3467,3 +3467,10 @@ See the ISA combinational RAM environment in `docs/contracts/formal.md`.
 Use full transfer masks with the upstream byte-addressed instruction models.
 An aligned RVFI adapter needs the corresponding checker configuration.
 Do not constrain DUT addresses to hide an adapter mismatch.
+
+Split integer datapath jobs with `--operand-prefix-bits N --operand-prefix K`.
+This fixes the high N bits of `b`. Enumerate K from zero through `2**N-1` to
+cover the full operand domain. Each result names its exact interval. A subset
+of passing partitions is a partial proof. For a specific divisor in a 16-bit
+unit, use N=16 and K equal to that divisor. Check every remaining divisor
+before claiming a whole-unit proof.

@@ -1062,3 +1062,15 @@ separate model. This environment does not certify RVFI export correctness.
 a fault, even when the core suppresses its bus request. The upstream checks
 then check trap behavior and suppressed writes. This does not independently
 prove the project's protection policy; machine-state checks must do that.
+
+## Integer operand partitions for datapath proofs
+
+`formal datapath --operand-prefix-bits N --operand-prefix K` fixes the high
+N bits of operand `b` to K. The low bits and other operands keep their full
+domains. N is in 1..width. K is in 0..2**N-1. The same fields are available
+through MCP. The runner substitutes the prefix before it builds the SAT job.
+It records the exact interval, partition index and partition count under
+`operand_partition`. A `proved` result covers only that partition.
+`complete_domain` remains false. All partitions must pass under the same
+inputs, settings and reference before a full-domain claim is possible.
+Timeouts remain inconclusive and retain the native stage name in `reason`.

@@ -302,6 +302,7 @@ def mcp_tools():
                          "out": S, "latency": I, "unwind": I,
                          "case": {**S, "enum": ["all", "finite", "normal", "nan", "infinity", "zero", "subnormal"]},
                          "case_width": {"type":"integer", "enum":[16,32,64]},
+                         "operand_prefix_bits": I, "operand_prefix": I,
                          "rounding": {"type": "integer", "enum": [0,1,2,3,4]},
                          "reference_tree": S, "reference_source": {"type": "array", "items": S},
                          "reference_include": {"type": "array", "items": S},
