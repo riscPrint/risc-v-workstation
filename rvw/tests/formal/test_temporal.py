@@ -20,7 +20,7 @@ def test_paths():
 @pytest.mark.parametrize('expression,diagnostic', [
     ('a ##[1:$] b', 'unbounded_range'), ('a[*0:2]', 'empty_repetition'),
     ('a[->2]', 'sequence_operator'), ('s_eventually a', 's_eventually'),
-    ('a throughout b', 'throughout'), ('$past(a)', 'sampled_function'),
+    ('(a ##1 b) throughout b', 'throughout_expression'),
     ('a ##100 b', 'range_limit')])
 def test_unsupported(expression, diagnostic):
     with pytest.raises(Unsupported, match=f'unsupported:{diagnostic}'):

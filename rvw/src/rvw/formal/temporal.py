@@ -74,11 +74,60 @@ def concat(left, right, delay):
 def sequence(text, names=None, stack=()):
     names = names or {}
     text = unwrap(text)
+    first = re.match(r'first_match\s*\(', text)
+    if first:
+        body, end = _group(text, first.end() - 1)
+        if end != len(text):
+            raise Unsupported('first_match_action')
+        paths = sequence(body, names, stack)
+        result = []
+        for path in paths:
+            candidates = [path]
+            # Exclude every earlier endpoint. Distribute each negated prefix
+            # into paths, so the existing Boolean history monitor can use it.
+            for earlier in paths:
+                if len(earlier) >= len(path):
+                    continue
+                expanded = []
+                for candidate in candidates:
+                    for i, atom in enumerate(earlier):
+                        row = list(candidate)
+                        row[i] = f'({row[i]}) && !({atom})'
+                        expanded.append(tuple(row))
+                candidates = checked(expanded)
+            result.extend(candidates)
+            checked(result)
+        return result
     if text.startswith('##'):
         text = '1 ' + text
     parts = split(text, r'\bor\b')
     if len(parts) > 1:
         return checked([p for item in parts[::2] for p in sequence(item, names, stack)])
+    # These operators bind less tightly than concatenation. Each path keeps
+    # its endpoint. In particular intersect requires the same endpoint.
+    for operator in ('within', 'intersect', 'throughout'):
+        parts = split(text, rf'\b{operator}\b')
+        if len(parts) > 1:
+            if len(parts) != 3:
+                raise Unsupported('sequence_association', text)
+            left, right = (sequence(item, names, stack) for item in parts[::2])
+            result = []
+            for a, b in itertools.product(left, right):
+                if operator == 'throughout':
+                    if len(a) != 1:
+                        raise Unsupported('throughout_expression')
+                    result.append(tuple(f'({a[0]}) && ({x})' for x in b))
+                elif operator == 'intersect':
+                    if len(a) == len(b):
+                        result.append(tuple(f'({x}) && ({y})' for x, y in zip(a, b)))
+                else:
+                    for offset in range(len(b) - len(a) + 1):
+                        padded = ('1',) * offset + a + ('1',) * (len(b) - len(a) - offset)
+                        result.append(tuple(f'({x}) && ({y})' for x, y in zip(padded, b)))
+                checked(result)
+            # No equal-length intersection means the sequence never matches.
+            return result or [('0',)]
+
     parts = split(text, r'##\s*(?:\[[^\]]*\]|\d+)')
     if len(parts) > 1:
         paths = sequence(parts[0], names, stack)
@@ -115,9 +164,44 @@ def sequence(text, names=None, stack=()):
         _expression(text)
     except ValueError as error:
         raise Unsupported('expression', str(error)) from error
-    if '$' in text:
-        raise Unsupported('sampled_function', text)
     return [(text,)]
+
+
+def sampled(expression, clock, prefix):
+    """Sample full vectors; edge functions compare only the least significant bit.
+
+    History has no forced initial value. A reference before the first clock is
+    unconstrained in formal, as is an uninitialized sampled design expression.
+    """
+    lines = []
+    count = 0
+    def replace(match):
+        nonlocal count
+        body, end = _group(expression, match.end() - 1)
+        if '$' in body or ',' in body:
+            raise Unsupported('nested_sampled_function')
+        name = f'{prefix}_{count}'
+        count += 1
+        lines.extend([f'wire [$bits({body})-1:0] {name}_now = ({body});',
+                      f'reg [$bits({body})-1:0] {name}_old;',
+                      f'always @(posedge {clock}) {name}_old <= {name}_now;'])
+        kind = match[1]
+        value = {'past': f'{name}_old',
+                 'rose': f'({name}_now[0] && !{name}_old[0])',
+                 'fell': f'(!{name}_now[0] && {name}_old[0])',
+                 'stable': f'({name}_now == {name}_old)',
+                 'changed': f'({name}_now != {name}_old)'}[kind]
+        return end, value
+    output, start = '', 0
+    pattern = re.compile(r'\$(past|rose|fell|stable|changed)\s*\(')
+    while match := pattern.search(expression, start):
+        end, value = replace(match)
+        output += expression[start:match.start()] + value
+        start = end
+    output += expression[start:]
+    if '$' in output:
+        raise Unsupported('sampled_function', output)
+    return output, lines
 
 
 @dataclass
@@ -139,7 +223,9 @@ class Property:
         atoms = sorted({x for p in branches + self.consequents for x in p})
         lines = []
         for i, atom in enumerate(atoms):
-            lines.append(f'wire {prefix}_a{i} = !!({atom});')
+            lowered, declarations = sampled(atom, self.clock, f'{prefix}_s{i}')
+            lines.extend(declarations)
+            lines.append(f'wire {prefix}_a{i} = !!({lowered});')
             if horizon:
                 lines += [f'reg [{horizon-1}:0] {prefix}_h{i};',
                           f'always @(posedge {self.clock}) {prefix}_h{i} <= '
