@@ -25,9 +25,11 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   val ramBase = 0x80000000L
   val ramSize = 0x1000000L
 
-  private def report(key: ModelKey, work: File): SpinalReport[VexiiRiscv] =
+  override def supportsProbes = true
+  private def report(key: ModelKey, work: File): SpinalReport[VexiiRiscv] = spinalprobes.Probe.enabled(key.probes) {
     RiscvSimConfig.elaborate(key, work, VexiiTop.spinalConfig,
       sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(VexiiTop(key.config))
+  }
   override def elaborate(key: ModelKey, work: File): Seq[File] =
     report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
   def compile(key: ModelKey, work: File, cache: File): Model =
@@ -72,6 +74,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val konataLog = if (job.konata) Some(new konata.Backend(new File(job.out, "konata.log"))) else None
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
+    var probes = Option.empty[ProbeCollector]
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
@@ -81,6 +84,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"),
           ctx.rvfiHeader, observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
+        probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
         val tap = dut.host[TrapTapPlugin].logic
         val ibus = dut.host[FetchCachelessPlugin].logic.bus
@@ -109,6 +113,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         cd.onSamplings {
           ctl.tick()
           val cycle = ctl.cycle
+          probes.foreach(_.sample(cycle))
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
           val deviceLevels = devices.map(_.tick(cycle)).getOrElse(BigInt(0))
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(deviceLevels)
@@ -204,8 +209,10 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         }
         cd.waitSamplingWhere(false)
       }
+      probes.foreach(_.close(result._4))
       result
     } finally {
+      probes.foreach(_.abandon())
       devices.foreach(_.close())
       if (backend != null) backend.drain()
       konataLog.foreach(_.close())

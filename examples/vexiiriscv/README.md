@@ -111,6 +111,45 @@ disassembly (the rvls disassembler is not loaded). `--rvfi-check` and
 These checks do not prove full ISA, privileged-mode, interrupt, formal or
 hardware correctness. They apply only to this configuration.
 
+## Probes
+
+`rvw/src/main/scala/rvwvexii/ProbeTapPlugin.scala` is the second user of
+[SpinalProbes](../../SpinalProbes/README.md), after the VexRiscv example. It taps existing
+signals only and adds nothing unless the run uses C1 `--probes`.
+
+| Probe | Signals |
+|-------|---------|
+| `branch learn0` (`cond`) | upstream whitebox learn port: `pcOnLastSlice`, `taken`, `pcTarget`; predicted = `taken xor wasWrong` (no BTB or GShare: the sequential PC) |
+| `counter` | cycles, retired (commit ports), branches, cond_branches, mispredicts (HPM 3), loads (HPM 4), stores (HPM 5), flushes |
+| `csrWrite csr` | whitebox CSR access port with `writeDone` |
+| `interruptTaken irq` | trap whitebox `trap && interrupt`, code, pending PC |
+| `bus dbus`, `bus ibus` | `LsuCachelessPlugin` and `FetchCachelessPlugin` bus commands |
+| `faultSite privilege` | `PrivilegedPlugin` privilege register |
+| `pageWalk ptw response`, `walkResult ptw` | MMU refill state machine: PTE response in `RSP(level)`, then the refill port response (configs with an MMU) |
+
+Results on VexiiRiscv `9f70315d`, seed 1, random memory timing, with the VexRiscv example's
+`branches`, `memcsr` and `irqs` ELFs (`rv32im`) and three `rvw regress mmu build` Sv32
+programs (`rv32imasu`):
+
+- `branches`: 6001 branch events align one to one with C2 conditional branches
+  (`--to bp-events`). 4853 direction misses, equal to the taken count (the core predicts
+  not taken). `gshare.json` agrees on 20.1 %.
+- `memcsr`: `--to bus` consistent (61 writes, 60 reads, no unretired read); `--to csr-writes`
+  consistent (122 events, 122 values checked). VexiiRiscv does not strobe the CSR write port
+  for the illegal `csrw satp`; VexRiscv does. Both are consistent with C2.
+- `irqs` with the same `--irq-schedule` as VexRiscv: `--to interrupts` consistent (3 and 3).
+- `--to fault-sites`: `PrivilegedPlugin_logic_harts_0_privilege` (2 bits). `--to counts`
+  writes the calibration counts.
+- Sv32 MMU (`--to mmu-walks`, then `rvw.regress.mmu_walk.check_c2` with
+  `scenario_accesses`): a level-0 load walk and a level-0 PTE page fault are `consistent`
+  with the independent walker (levels, PTE addresses, PTE data, result, PA). A level-1 store
+  scenario failed in the program: its leaf maps a misaligned megapage (PA `0x80201000`), so
+  the core's page fault is correct. The reference walker gives the same page fault, and the
+  DUT walk record matches it. The scenario expectation was wrong, not the core.
+
+Limit: the `retired` counter of `branches` is 35658; C2 has 35660. The last two commits share
+the end cycle and are not counted. The cause in the sampling order is not established.
+
 ## Limits
 
 - Compressed, FPU and cached configurations have no validated trace mapping.
