@@ -3197,3 +3197,7 @@ not change the trap rule: a trapping instruction has no destination write, and
 the register frame must stay unchanged. The PicoRV32 example has measured
 simulation comparisons and a retained bounded equivalence failure. See
 `examples/picorv32/formal/README.md` before using that map for signoff.
+
+`rvw formal sva-lower` returns exit 2 and structured `status: unsupported`
+for unsupported source constructs. Preprocess macro-bearing RTL first. Input
+or output file errors return `status: error`. Neither result writes lowered RTL.

@@ -356,7 +356,15 @@ def lower(source, simulation=False):
 
 def run(args):
     import json
-    output, properties = lower(Path(args.source).read_text())
-    Path(args.out).write_text(output)
+    try:
+        output, properties = lower(Path(args.source).read_text())
+        Path(args.out).write_text(output)
+    except Unsupported as exc:
+        print(json.dumps({'schema': 'rvw.sva-lowering/1', 'status': 'unsupported',
+                          'error': str(exc), 'construct': exc.construct}))
+        return 2
+    except OSError as exc:
+        print(json.dumps({'schema': 'rvw.sva-lowering/1', 'status': 'error', 'error': str(exc)}))
+        return 2
     print(json.dumps({'schema': 'rvw.sva-lowering/1', 'properties': properties}, indent=2))
     return 0
