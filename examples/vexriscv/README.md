@@ -595,3 +595,12 @@ A separate zero-ECALL-value profile was also checked on the real `add` trace.
 Both references reported the actual `0x73` trap value as a mismatch against
 zero. The declared policy is therefore part of these results, rather than a
 claim of standard zero-valued ECALL behavior.
+
+## Native instruction and IRQ reduction
+
+[The reduction recipe](rvw/reduction/README.md) runs the existing `rvw reduce`
+instruction and IRQ modes on captured whole-core RTL. Native trials reduced
+eight replaceable instruction slots to one and six removable IRQ events to
+one. Both have a passing empty control and a fresh failing confirmation.
+C1 and complete C2 files are validated for every reported trial. These are
+deliberate failing fixtures. They do not identify a new core defect.

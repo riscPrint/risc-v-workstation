@@ -1,0 +1,48 @@
+{
+  "schema": "rvw.native-history-sample/1",
+  "first_bad": "6c891a7615b843308e94efb4b4ff5551177f3bda",
+  "report_sha256": "6a8532c1c8aa8e3596af664ccbaa8a4346dfa85c3d9b789ac2f36052acccbf45",
+  "rows": [
+    {
+      "rev": "6c891a7615b843308e94efb4b4ff5551177f3bda",
+      "verdict": "bad",
+      "cycles": 36,
+      "wall_s": 5.9,
+      "signature": "fail:1",
+      "instret": 9,
+      "trace_sha256": "043a5813cd12da2a37bd52205b70efb33c85eaa9f458401838151d8f7dfb3e51",
+      "c2_schema_validated": true,
+      "historical_source_sha256": "987738a2ca7112a6f9b5d052ab4538992b8dabbf1d31881c9b1640b0144fcd96",
+      "adapter_selection": {
+        "api": 1,
+        "executable_sha256": "81cce64dcfe3a8e814e068dfb31552f871ddb7c15ecc26a1411fe820e227683b",
+        "manifest_scope": "project",
+        "manifest_sha256": "05343542d1157f79b780577a15dd5836ab1bc1dbc80a315eda6a9d35d035142c",
+        "revision": "6c891a7615b843308e94efb4b4ff5551177f3bda",
+        "schema": "rvw.adapter-selection/1",
+        "version": "m-only"
+      }
+    },
+    {
+      "rev": "78ba8c540cb0f81030936cefce2faaf6abd65fd7",
+      "verdict": "good",
+      "cycles": 38,
+      "wall_s": 5.5,
+      "signature": "pass",
+      "instret": 13,
+      "trace_sha256": "f3e5d39770554702aa5aac8a94d4eb6febfce6cc5adcbb2d33e97ab3eb2a32d3",
+      "c2_schema_validated": true,
+      "historical_source_sha256": "c59c16bf029ec3ea8a394c6a5871e3e3541bc18584754dd5ab9cae99e35e9a9a",
+      "adapter_selection": {
+        "api": 1,
+        "executable_sha256": "ab67d1095a8a6ea7a71d6c022ea558034ba47c2394eef4bb2ed20e0619d45acb",
+        "manifest_scope": "project",
+        "manifest_sha256": "05343542d1157f79b780577a15dd5836ab1bc1dbc80a315eda6a9d35d035142c",
+        "revision": "78ba8c540cb0f81030936cefce2faaf6abd65fd7",
+        "schema": "rvw.adapter-selection/1",
+        "version": "legacy"
+      }
+    }
+  ],
+  "scope": "intentional adjacent M/S/U to M-only compatibility change, not a new core defect"
+}

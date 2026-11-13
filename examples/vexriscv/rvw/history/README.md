@@ -76,9 +76,12 @@ remains in place for ordinary smoke runs.
 ## Measured evidence and limits
 
 On 2026-11-13, `rvw bisect` found the exact expected first changed commit.
-The legacy endpoint passed: 13 retirements, 38 cycles, 15.7 seconds of adapter
+The legacy endpoint passed: 13 retirements, 38 cycles, 5.5 seconds of adapter
 run time. The M-only endpoint reproduced `fail:1`: 9 retirements, 36 cycles,
-9.2 seconds. Both recorded their correct project adapter selection in C1.
+5.9 seconds. Both recorded their correct project adapter selection in C1.
+The shared C2 parser validates both complete traces, including trap records.
+[measurements.json](measurements.json) records the new sample. It replaces
+the earlier sample that had incomplete trace headers.
 There were no skipped endpoints. The two revisions are adjacent, so no
 intermediate search trial was needed. The report contains the real Git IDs,
 C8 source capture, generated RTL hashes, commands, C1 files and C2 files.

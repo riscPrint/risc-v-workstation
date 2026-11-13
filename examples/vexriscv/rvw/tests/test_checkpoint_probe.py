@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from rvw.common.proc import run_group
+from rvw.cosim.trace import Trace
 
 EXAMPLE = Path(__file__).resolve().parents[1]
 
@@ -22,6 +23,12 @@ def test_live_checkpoint_in_new_process(tmp_path):
             str(tmp_path / mode), str(state), mode, '8'], timeout=600,
             capture=True, text=True)
         assert result.returncode == 0, result.stdout + result.stderr
+    for mode in ('save', 'restore'):
+        checked = Trace(tmp_path / mode / 'rvfi.jsonl')
+        try:
+            assert list(checked)
+        finally:
+            checked.close()
     original = (tmp_path / 'save/rvfi.jsonl').read_bytes()
     resumed = (tmp_path / 'restore/rvfi.jsonl').read_bytes()
     assert original == resumed

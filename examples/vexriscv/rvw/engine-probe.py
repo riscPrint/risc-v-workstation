@@ -21,6 +21,14 @@ def run(args):
             for i,b in enumerate(elf.data[s['off']:s['off']+s['filesz']]):memory[s['paddr']+i]=b
     tohost=elf.symbols()['tohost'].value
     ports=json.loads(args.ports.read_text())
+    irq_text=getattr(args,'irq_schedule',None)
+    schedule=None
+    if irq_text:
+        from rvw.reduce.streams import irq_entries
+        schedule=[(int(entry.split(':')[0]),int(entry.split(':')[1],16)) for entry in irq_entries(irq_text)]
+        allowed=0x888 | (0x200 if 'externalInterruptS' in ports else 0)
+        if any(levels & ~allowed for cycle,levels in schedule):raise ValueError('IRQ schedule requests an absent input')
+    allow_traps=getattr(args,'allow_traps',False) or schedule is not None
     model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'),profile=getattr(args,'build_profile',None))
     if model.profile and model.profile.request.get('compiler_pgo')=='generate':
         if model.profile.record['binding']['training_elf_sha256']!=hashlib.sha256(args.elf.read_bytes()).hexdigest():
@@ -31,9 +39,10 @@ def run(args):
     def read(n):return model.read(n)
     def word(a):return sum(memory.get((a&~3)+i,0)<<(8*i) for i in range(4))
     def mapped(a):return 0x80000000<=a<0x81000000
-    rows=[dict(schema='rvw.rvfi/1',xlen=32,core='vexriscv',isa='rv32im_zicsr_zifencei')]
+    rows=[dict(schema='rvw.rvfi/1',xlen=32,core='vexriscv',config='rv32im',elf=str(args.elf.resolve()),isa='rv32im_zicsr_zifencei')]
     rng=random.Random(args.seed)
     ip=dp=None
+    irq_levels=None
     def inputs():
         put(iBus_cmd_ready=rng.randrange(2),iBus_rsp_valid=int(ip is not None),
             iBus_rsp_payload_inst=ip[0] if ip else 0,iBus_rsp_payload_error=int(ip[1]) if ip else 0,
@@ -49,6 +58,13 @@ def run(args):
         for _ in range(5):put(clk=1);put(clk=0)
         put(reset=0)
         for cycle in range(1,args.max_cycles+1):
+            if schedule is not None:
+                levels=next((value for at,value in reversed(schedule) if at<=cycle),0)
+                values=dict(softwareInterrupt=int(bool(levels&8)),timerInterrupt=int(bool(levels&128)),externalInterrupt=int(bool(levels&2048)))
+                if 'externalInterruptS' in ports:values['externalInterruptS']=int(bool(levels&512))
+                put(**values)
+                if levels!=irq_levels:
+                    rows.append(dict(event='irq',cycle=cycle,levels=hex(levels)));irq_levels=levels
             inputs()
             ni=(word(read('iBus_cmd_payload_pc')),not mapped(read('iBus_cmd_payload_pc'))) if read('iBus_cmd_valid') and read('iBus_cmd_ready') else None
             nd=None
@@ -61,9 +77,9 @@ def run(args):
                         if mask>>i&1:memory[a+i]=value>>(8*i)&255
                 else:nd=(word(a),not mapped(a))
             if read('trap_valid'):
-                if not args.allow_traps:raise ValueError('trap state is outside this bounded probe')
+                if not allow_traps:raise ValueError('trap state is outside this bounded probe')
                 cause=read('trap_cause')
-                rows.append(dict(event='trap',cycle=cycle,cause=hex(cause),tval=hex(read('trap_tval')),interrupt=bool(cause>>31)))
+                rows.append(dict(event='trap',cycle=cycle,cause=hex(cause),tval=hex(read('trap_tval')),intr=bool(cause>>31)))
                 handler=True
             if read('rvfi_valid'):
                 if read('rvfi_order')!=count:raise ValueError('RVFI order discontinuity')
@@ -81,14 +97,18 @@ def run(args):
             put(clk=1);put(clk=0);ip,dp=ni,nd
         rows.append(dict(event='end',cycle=cycle,status=status))
         (args.out/'rvfi.jsonl').write_text(''.join(json.dumps(row,sort_keys=True)+'\n' for row in rows))
+        from rvw.cosim.trace import Trace
+        checked=Trace(args.out/'rvfi.jsonl')
+        try:list(checked)
+        finally:checked.close()
         result=dict(schema='rvw.run/1',core='vexriscv',config='rv32im',elf=str(args.elf.resolve()),
             elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),seed=args.seed,max_cycles=args.max_cycles,
             mem_latency=1,status=status,fail_code=None if status=='pass' else 1,cycles=cycle,instret=count,
             wall_s=time.monotonic()-start,source={},tools={},artifacts={'rvfi_trace':'rvfi.jsonl'},
-            details={'execution_s':time.monotonic()-execution_start,'model_compile_s':model.build_seconds,
+            details={'c2_schema_validated':True,'execution_s':time.monotonic()-execution_start,'model_compile_s':model.build_seconds,
                      'child_peak_rss_bytes':model.child_peak_rss_bytes,'native_profile':model.profile.record if model.profile else None,
-                     'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
-                     'scope':'bounded seeded-ready, fixed-response-latency probe; no interrupts, wave, CSR snapshot or C4 acceptance'})
+                     'irq_schedule':irq_text,'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
+                     'scope':'bounded seeded-ready, fixed-response-latency probe; optional project IRQ schedule; no wave, CSR snapshot or C4 acceptance'})
         save_run(RunResult.from_dict(result),args.out/'result.json')
         print(json.dumps(result))
         return 0 if status=='pass' else 1
@@ -101,6 +121,7 @@ def main():
  p.add_argument('--backend',choices=['arcilator','verilator'],default=os.environ.get('RVW_NATIVE_ENGINE','arcilator'))
  p.add_argument('--build-profile',type=Path)
  p.add_argument('--ports',type=Path,default=Path(__file__).with_name('engine-ports.json'))
+ p.add_argument('--irq-schedule')
  p.add_argument('--allow-traps',action='store_true')
  p.add_argument('--rtl',type=Path,required=True);p.add_argument('--elf',type=Path,required=True)
  p.add_argument('--out',type=Path,required=True);p.add_argument('--seed',type=int,default=1)

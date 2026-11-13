@@ -23,8 +23,9 @@ user's global ccache configuration.
 ## Recorded sample
 
 On 2026-11-13, all eight profiles passed 17 instructions in 81 cycles with
-seed 7. Every complete C2 file was byte-identical to the earlier independent
-Arcilator reference. The native runtime archive is linked directly. Compiler
+seed 7. Every complete C2 file was parsed with the shared C2 validator and was
+byte-identical to an independent Arcilator reference. This sample replaces
+the earlier sample whose trace headers lacked `config` and `elf`. The native runtime archive is linked directly. Compiler
 PGO includes all runtime units, including zero-count DPI functions. Missing or
 outdated profile diagnostics remain errors. A first training path omitted an
 unused runtime unit and was rejected. The archive linkage fixed that cause.
@@ -37,16 +38,16 @@ hashes, exact counters and measurements.
 
 | Profile | Build and setup s | Execution and trace ms | Child peak RSS MiB | Complete C2 equal |
 |---|---:|---:|---:|---|
-| flat | 13.790 | 1.564 | 208.3 | yes |
-| ccache-cold | 15.221 | 1.753 | 208.9 | yes |
-| ccache-warm | 4.429 | 1.772 | 129.9 | yes |
-| threads-2 | 13.504 | 33.617 | 208.2 | yes |
-| threads-4 | 11.631 | 447.705 | 207.7 | yes |
-| hierarchy | 16.225 | 3.875 | 207.8 | yes |
-| pgo-train | 6.114 | 2.507 | 216.9 | yes |
-| pgo-use | 10.719 | 1.744 | 215.4 | yes |
+| flat | 4.218 | 3.802 | 209.7 | yes |
+| ccache-cold | 8.197 | 5.380 | 206.9 | yes |
+| ccache-warm | 3.833 | 5.996 | 130.6 | yes |
+| threads-2 | 4.230 | 4.459 | 210.7 | yes |
+| threads-4 | 4.052 | 49.608 | 208.4 | yes |
+| hierarchy | 5.480 | 4.013 | 206.5 | yes |
+| pgo-train | 6.443 | 4.177 | 215.5 | yes |
+| pgo-use | 3.849 | 4.150 | 216.6 | yes |
 
-The cold ccache sample took 15.221 s. The warm sample took 4.429 s and had
+The cold ccache sample took 8.197 s. The warm sample took 3.833 s and had
 three direct hits and one miss. These are individual build observations.
 Execution times are too short to qualify throughput. They include the Python
 port bridge and trace output. Peak RSS is the maximum reported for child build

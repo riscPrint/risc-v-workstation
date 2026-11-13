@@ -9,6 +9,7 @@ import re
 import shutil
 import sys
 from rvw.common.proc import run_group
+from rvw.cosim.trace import Trace
 
 
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
@@ -55,7 +56,10 @@ def main():
         if r.returncode==0 and not r.timed_out and (out/'result.json').is_file():
             result=json.loads((out/'result.json').read_text());trace=out/'rvfi.jsonl'
             digest=sha(trace);rows=[json.loads(line) for line in trace.read_text().splitlines()]
-            complete=bool(rows and rows[0].get('schema')=='rvw.rvfi/1' and rows[-1].get('event')=='end' and rows[-1].get('status')=='pass')
+            checked=Trace(trace)
+            try:list(checked)
+            finally:checked.close()
+            complete=bool(result['details'].get('c2_schema_validated') and rows[-1].get('event')=='end' and rows[-1].get('status')=='pass')
             if reference is None and result['status']=='pass' and complete:reference=digest
             item.update(status=result['status'] if complete else 'inconclusive',c2_complete=complete,c2_equal=complete and digest==reference,
                 trace_sha256=digest,cycles=result['cycles'],instret=result['instret'],

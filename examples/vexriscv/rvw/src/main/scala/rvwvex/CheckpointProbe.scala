@@ -39,7 +39,7 @@ object CheckpointProbe {
     elf.load { (address, bytes) => bytes.indices.foreach(i => memory(address + i) = bytes(i) & 255) }
     var cycle = 0L; var retired = 0L; var handler = false
     var ip = Option.empty[(BigInt, Boolean)]; var dp = Option.empty[(BigInt, Boolean)]
-    val header = ujson.Obj("xlen" -> 32, "core" -> "vexriscv", "isa" -> "rv32im_zicsr_zifencei")
+    val header = ujson.Obj("xlen" -> 32, "core" -> "vexriscv", "config" -> "rv32im", "elf" -> elfFile.getCanonicalPath, "isa" -> "rv32im_zicsr_zifencei")
     val writer = new RvfiTraceWriter(new File(out, "rvfi.jsonl"), header, resume = saved.map(_("writer")))
     def read(a: Long): BigInt = (0 until 4).foldLeft(BigInt(0))((v, i) => v | (BigInt(memory.getOrElse(a + i, 0)) << (8*i)))
     def mapped(a: Long): Boolean = a >= 0x80000000L && a < 0x81000000L
