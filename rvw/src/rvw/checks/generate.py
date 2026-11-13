@@ -72,9 +72,20 @@ def generate(project, out, manifest=None):
     for row in rows:
         if row['status']!='generated' and 'reason' not in row:
             row['reason']='no recognized bindable instances' if not row.get('instances') else 'see per-instance binding reasons'
+    unbound=[]
+    for row in rows:
+        instances=row.get('instances',[])
+        if row['status']!='generated' and not instances:
+            unbound.append(dict(kind=row['kind'],reason=row['reason']))
+        for instance in instances:
+            name=instance.get('id',instance.get('path'))
+            if instance['status']!='generated':
+                unbound.append(dict(kind=row['kind'],instance=name,reason=instance.get('reason','no bound monitor')))
+            for gap in instance.get('unbound_checks',[]):
+                unbound.append(dict(kind=row['kind'],instance=name,check=gap['kind'],reason=gap['reason']))
     result=dict(schema='rvw.check-generation-summary/1',
                 status='generated' if any(r['status']=='generated' for r in rows) else 'no_checks',
-                complete=all(r['status']=='generated' and all(i['status']=='generated' for i in r.get('instances',[])) for r in rows),
+                complete=all(r['status']=='generated' for r in rows) and not unbound,unbound=unbound,
                 project=str(selected),checks=rows,
                 limitations=['Generation does not compile RTL or run proofs.',
                              'Declared instance bindings require project review.'])

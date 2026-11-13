@@ -164,3 +164,18 @@ It adds `elf`, `elf_sha256`, `observation_fault`, `cycles` and `retired` metadat
 `observation_fault` is `none`, `csr` or `hpm`. Seeded observation failures keep
 run status `fail`. The fixture process can exit successfully only after the
 expected firing is observed. This is test-fixture completion, not a core pass.
+
+## Project resource bindings and incomplete summaries
+
+`rvw.micro-checks/1` rules also accept `allocation_pool`,
+`freelist_conservation`, `rob`, `credit`, `freelist`, `cam_match` and
+`counter_bounds`. Port names are listed in the checks README. Resource
+ownership rules accept a literal `initial_live` bitmap.
+`freelist_conservation` also accepts `usable`. The two bitmaps fit `entries`,
+and initial ownership must be a subset of usable tags. Free and live bitmaps
+partition usable tags. Independent accepted allocation and release events
+update expected live ownership. Recovery events remain project declarations.
+`rvw.check-generation-summary/1` includes an `unbound` list with kind, optional
+instance/check and reason. Per-instance `unbound_checks` prevent `complete`,
+even when the instance's channel monitor was generated. This is binding
+completeness, not a verification verdict.

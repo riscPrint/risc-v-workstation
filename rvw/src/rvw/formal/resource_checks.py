@@ -1,15 +1,17 @@
 """Declared resource intent. No register names or reset ownership are inferred."""
-NAMES = ('allocation_pool', 'cam_match', 'counter_bounds')
+NAMES = ('allocation_pool', 'freelist_conservation', 'cam_match', 'counter_bounds')
 
 
 def render(kind, width, entries):
     if kind not in NAMES or not 1 <= width <= 64 or not 1 <= entries <= 1024:
         raise ValueError('invalid resource check parameters')
     head = f'module rvw_{kind}('
-    if kind == 'allocation_pool':
+    if kind in ('allocation_pool','freelist_conservation'):
         if entries > 1 << width:
             raise ValueError('tag width cannot represent all entries')
-        head = f"module rvw_{kind} #(parameter [{entries-1}:0] INITIAL_LIVE = {entries}'d0)("
+        params=f"parameter [{entries-1}:0] INITIAL_LIVE = {entries}'d0"
+        if kind=='freelist_conservation':params+=f", parameter [{entries-1}:0] USABLE = {entries}'d{(1<<entries)-1}"
+        head = f"module rvw_{kind} #({params})("
         ports = f'''input clk, reset, input [{entries-1}:0] live,
 input alloc0_valid, alloc1_valid, free0_valid, free1_valid,
 input [{width-1}:0] alloc0, alloc1, free0, free1'''
@@ -33,6 +35,16 @@ always @(posedge clk) begin
   expected <= (expected & ~releases) | allocations;
  end
 end'''
+        if kind=='freelist_conservation':
+            ports=f'input [{entries-1}:0] free_bits, '+ports
+            body+='''
+always @(posedge clk) if(!reset) begin
+ assert((free_bits & live)==0);
+ assert((free_bits | live)==USABLE);
+ if(alloc0_valid && alloc0 < ENTRIES) assert(USABLE[alloc0]);
+ if(alloc1_valid && alloc1 < ENTRIES) assert(USABLE[alloc1]);
+end
+'''.replace('ENTRIES',str(entries))
     elif kind == 'cam_match':
         ports = f'input clk, reset, active, require_match, input [{entries-1}:0] match_bits'
         body = '''always @(posedge clk) if(!reset && active) begin

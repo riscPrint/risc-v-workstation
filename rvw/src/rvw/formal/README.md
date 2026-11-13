@@ -2858,3 +2858,14 @@ did not resolve the top and reported an error. The counter certificate stayed
 inconclusive. The runner needs this format support before that command can
 qualify with this suite. Its earlier Yosys 0.64 native result remains separate.
 Raw checks: `/tmp/deep-{final,pinned}-native/`.
+
+### Free-list partition checks
+
+`formal template freelist_conservation` adds a free-bit partition to the
+existing independent allocation-pool model. `free_bits` and `live` must be
+disjoint and cover exactly `USABLE`. Accepted allocation/release events update
+expected live ownership. `INITIAL_LIVE` and `USABLE` are literal project
+parameters. The project microarchitecture document can bind this rule, ROB
+count conservation and the other resource templates by named signals. See
+`rvw/src/rvw/checks/README.md` for port names. This does not infer flush or
+rename-recovery semantics.
