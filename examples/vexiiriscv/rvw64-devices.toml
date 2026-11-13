@@ -12,7 +12,7 @@ default_config = "rv64imasu"
 lock = "vex-suites"                     # suite lock; run.sh takes RVW_VEX_LOCK (use another name)
 source_repo = "."
 source_env = "VEXIIRISCV"
-cache_paths = ["rvw/classpath-cache.py", "rvw/devices64.json", "rvw/clint64.json", "${RVW_DEVICE_LIBRARY}", "${RVW_HOME}/rvw/src/rvw/cosim/devices.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
+cache_paths = ["../../rvw/out/suites64d/plic", "../../rvw/out/suites64d/plic-delivery", "rvw/classpath-cache.py", "rvw/devices64.json", "rvw/clint64.json", "${RVW_DEVICE_LIBRARY}", "${RVW_HOME}/rvw/src/rvw/cosim/devices.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
 identity = true                   # generated RTL and native tool identity
 # The launcher binds the generated RTL, harness revision and native tool record.
 input_complete = true
@@ -88,6 +88,153 @@ strip_suffix = ".elf"
 configs = ["rv64imasu"]
 max_cycles = 30000
 timeout_s = 30
+
+# PLIC programs: stimulus_file paths are relative to the rvw regress working directory
+# (run from the workstation root, or rewrite them).
+
+[suites.plic-contexts]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-contexts.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-contexts.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-contexts.stimulus.json"
+
+[suites.plic-disabled]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-disabled.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-disabled.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-disabled.stimulus.json"
+
+[suites.plic-gateway]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-gateway.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-gateway.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-gateway.stimulus.json"
+
+[suites.plic-priority]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-priority.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-priority.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-priority.stimulus.json"
+
+[suites.plic-threshold-claim]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-threshold-claim.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-threshold-claim.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-threshold-claim.stimulus.json"
+
+[suites.plic-tie]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic"
+glob = "plic-tie.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-tie.options]
+stimulus_file = "rvw/out/suites64d/plic/plic-tie.stimulus.json"
+
+[suites.plic-delivery-m-0-global]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-m-0-global.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-m-0-global.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-m-0-global.stimulus.json"
+
+[suites.plic-delivery-m-0-local]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-m-0-local.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-m-0-local.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-m-0-local.stimulus.json"
+
+[suites.plic-delivery-m-0-threshold]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-m-0-threshold.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-m-0-threshold.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-m-0-threshold.stimulus.json"
+
+[suites.plic-delivery-s-1-global]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-s-1-global.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-s-1-global.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-s-1-global.stimulus.json"
+
+[suites.plic-delivery-s-1-local]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-s-1-local.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-s-1-local.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-s-1-local.stimulus.json"
+
+[suites.plic-delivery-s-1-threshold]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/plic-delivery"
+glob = "plic-delivery-s-1-threshold.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
+
+[suites.plic-delivery-s-1-threshold.options]
+stimulus_file = "rvw/out/suites64d/plic-delivery/plic-delivery-s-1-threshold.stimulus.json"
 
 [cosim]
 platform = "rvw/platform64-devices.json"

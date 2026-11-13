@@ -80,6 +80,10 @@ size_t snapshot(void* p, uint8_t* out, size_t capacity) {
   else if (out) size = 0;
   Py_DECREF(r); return size;
 }
+int set_input(void* p, uint32_t input, uint32_t level) {
+  Gil gil; auto r = call(static_cast<PyObject*>(p), "set_level", Py_BuildValue("(IO)", input, level ? Py_True : Py_False));
+  if (!r) return 1; Py_DECREF(r); return 0;
+}
 int restore(void* p, const uint8_t* data, size_t size) {
   Gil gil;
   auto bytes = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(data), size);
@@ -89,6 +93,6 @@ int restore(void* p, const uint8_t* data, size_t size) {
 }
 }
 extern "C" const DeviceApiV1* rvw_device_plugin_v1() {
-  static const DeviceApiV1 api{1, create, destroy, read, write, tick, irq, snapshot, restore};
+  static const DeviceApiV1 api{2, create, destroy, read, write, tick, irq, snapshot, restore, set_input};
   return &api;
 }

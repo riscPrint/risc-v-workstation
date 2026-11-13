@@ -94,3 +94,19 @@ def test_allowed_sync_kinds_only(tmp_path, monkeypatch, comparison, allow, statu
 def test_unknown_sync_kind_is_refused(tmp_path):
     with pytest.raises(ValueError):
         suite_cosim.check_run(tmp_path, 'p.json', allow=('counter',))
+
+
+def test_stimulus_ack_read_is_inconclusive_not_a_finding(tmp_path, monkeypatch):
+    from rvw.runs import elf as elf_module
+    monkeypatch.setattr(elf_module, 'Elf', lambda path: SimpleNamespace(
+        symbols=lambda: {'stimulus_ack': SimpleNamespace(value=0x80001008)}))
+    def mismatch(address, fields=('mem_rdata', 'rd_wdata')):
+        return dict(GOOD, status='mismatch', mismatch=dict(differences=dict.fromkeys(fields, {}),
+                    actual=dict(mem_addr=hex(address), mem_rmask=255, mem_wmask=0)))
+    for comparison, extra, status in ((mismatch(0x80001008), {'stimulus_sha256': 'a'}, 'inconclusive'),
+                                      (mismatch(0x80001008), {}, 'mismatch'),
+                                      (mismatch(0x80001010), {'stimulus_sha256': 'a'}, 'mismatch'),
+                                      (mismatch(0x80001008, ('pc',)), {'stimulus_sha256': 'a'}, 'mismatch')):
+        root = tmp_path / str(len(list(tmp_path.iterdir())))
+        runs(root, monkeypatch, [comparison], extra=extra)
+        assert suite_cosim.check_run(root, 'p.json')['counts'] == {status: 1}

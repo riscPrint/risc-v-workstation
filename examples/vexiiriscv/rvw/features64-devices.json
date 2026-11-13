@@ -17,6 +17,7 @@
     "ad:fault",
     "asid:16",
     "pmp-granularity:16",
-    "device:clint"
+    "device:clint",
+    "device:plic"
   ]
 }

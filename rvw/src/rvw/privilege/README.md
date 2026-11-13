@@ -121,6 +121,7 @@ loads, which the Spike shim does not model):
 | VexiiRiscv `rv64imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
 | VexiiRiscv `rv32imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
 | VexiiRiscv `rv64imasu` + CLINT model | WFI (`spike-wfi.json`) | 4 | 4 | 4 | 4 | 0 |
+| VexiiRiscv `rv64imasu` + PLIC model | `plic` and `plic-delivery` | 12 | 12 | 12 | inconclusive (12) | 0 |
 | VexRiscv `rv32im` (M only) | scheduled WFI | 6 | 6 | 6 | 3 | 3 |
 
 The VexRiscv finding: an interrupt trap keeps the old `mtval`. See
@@ -148,6 +149,9 @@ check priority, tie order, claim despite threshold, shared contexts, gateway
 completion and enable changes. The existing independent PLIC model derives
 expected claim IDs. The known native Spike threshold discrepancy remains a
 failure; it is not used as a replacement rule.
+
+A strict mismatch at a load of the stimulus run's `stimulus_ack` word is
+reference-blind: `check` reports it as inconclusive, not as a failure.
 
 Each source event uses RAM symbols `stimulus_step` and `stimulus_ack`. Generated
 `rvw.stimulus/1` files carry the event payload. A project adapter must read the

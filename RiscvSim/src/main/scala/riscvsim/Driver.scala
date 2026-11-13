@@ -227,6 +227,7 @@ class Driver(val adapter: CoreAdapter) {
       job.debug.toSeq.flatMap(m => Seq("--debug", m.text, "--debug-binding", m.binding.file.getPath)) ++
       job.traceIngress.toSeq.flatMap(b => Seq("--trace-ingress", b.file.getPath)) ++
       job.simThreads.toSeq.flatMap(n => Seq("--sim-threads", n.toString)) ++
+      job.stimulus.toSeq.flatMap(s => Seq("--stimulus-file", s.file.getPath)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -295,6 +296,8 @@ class Driver(val adapter: CoreAdapter) {
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
       "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
+      "stimulus_file" -> job.stimulus.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
+      "stimulus_sha256" -> job.stimulus.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "status" -> status.name,
       "fail_code" -> failCode.map(c => ujson.Num(c.toDouble)).getOrElse(ujson.Null),
       "message" -> message.map(ujson.Str).getOrElse(ujson.Null),

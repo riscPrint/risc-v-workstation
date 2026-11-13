@@ -150,6 +150,9 @@ def test_built_library_needs_no_python_environment(tmp_path):
 int main(int n, char** a) {
   riscvsim::DevicePlugin p(a[1], "{\\"model\\":\\"ns16550\\"}", 1);
   assert(p.read(5,1)==0x60);
+  riscvsim::DevicePlugin plic(a[1], "{\\"model\\":\\"plic\\",\\"map\\":{\\"priority\\":0,\\"pending\\":4096,\\"enable\\":8192,\\"enable_stride\\":128,\\"context\\":2097152,\\"context_stride\\":4096,\\"sources\\":2,\\"contexts\\":1}}", 1);
+  plic.setInput(1, true); plic.tick(1);
+  assert(plic.read(4096, 4) == 2);
 }''')
     exe = tmp_path/'test'
     env = {k: v for k, v in os.environ.items() if k not in ('PYTHONHOME', 'PYTHONPATH')}

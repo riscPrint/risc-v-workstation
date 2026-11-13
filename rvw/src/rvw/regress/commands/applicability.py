@@ -40,8 +40,8 @@ def plan(features, catalog=None):
     if harts >= 2:
         supported.add('harts:2')
     for bit in declared.get('irq_inputs', []):
-        if bit in (3, 7, 11):
-            supported.add({3: 'irq:msip', 7: 'irq:mtip', 11: 'irq:meip'}[bit])
+        if bit in (3, 7, 9, 11):
+            supported.add({3: 'irq:msip', 7: 'irq:mtip', 9: 'irq:seip', 11: 'irq:meip'}[bit])
     if len([x for x in supported if x.startswith('xlen:')]) > 1:
         raise ValueError('contradictory XLEN declarations')
     source = Path(catalog) if catalog else Path(__file__).parents[1] / 'suite_requirements.json'

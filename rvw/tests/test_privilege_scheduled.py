@@ -35,3 +35,18 @@ def test_missing_pending_and_resume():
             row[field] = False if field == 'pending' else 4
         assert clock_check(rows, {'x': 0xff})['status'] == 'inconclusive'
     assert clock_check([], {'x': 1})['status'] == 'inconclusive'
+
+
+def test_stimulus_ack_read_is_reference_blind_only_for_that_word(tmp_path):
+    import json
+    from rvw.privilege.campaign import reference_blind
+    platform = tmp_path / 'p.json'
+    platform.write_text(json.dumps({'irq_inputs': [], 'mmio': []}))
+    def comparison(address, fields=('mem_rdata', 'rd_wdata')):
+        return {'mismatch': {'differences': dict.fromkeys(fields, {}),
+                             'actual': {'insn': '0x2b303', 'rd_wdata': '0xa', 'mem_addr': hex(address)},
+                             'expected': {'rd_wdata': '0x0'}}}
+    assert 'stimulus_ack' in reference_blind(comparison(0x80001008), platform, 0x80001008)
+    assert reference_blind(comparison(0x80001008), platform) is None
+    assert reference_blind(comparison(0x80001010), platform, 0x80001008) is None
+    assert reference_blind(comparison(0x80001008, ('pc',)), platform, 0x80001008) is None

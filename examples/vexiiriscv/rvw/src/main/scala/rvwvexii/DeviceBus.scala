@@ -5,19 +5,20 @@ import riscvsim.PluginDevice
 
 /** Project device map. DeviceApiV1 has no core-specific address or interrupt routing. */
 final class DeviceBus(description: File, library: File, seed: Long) extends AutoCloseable {
-  private case class Region(base: Long, size: Long, routes: Seq[(Int, Int)], model: PluginDevice)
+  private case class Region(base: Long, size: Long, routes: Seq[(Int, Int)], model: PluginDevice, kind: String)
   private val descriptionJson = ujson.read(java.nio.file.Files.readString(description.toPath))
   private def number(value: ujson.Value): Long = value match {
     case ujson.Str(text) => java.lang.Long.decode(text)
     case _ => value.num.toLong
   }
   private val regions = descriptionJson("devices").arr.map { row =>
-    Region(number(row("base")), number(row("size")), row("irq_map").arr.map { pair =>
-      pair(0).num.toInt -> pair(1).num.toInt
-    }.toSeq, new PluginDevice(library, row("config") match {
+    val config = row("config") match {
       case ujson.Str(path) => java.nio.file.Files.readString(new File(description.getParentFile, path).toPath)
       case value => ujson.write(value)
-    }, seed))
+    }
+    Region(number(row("base")), number(row("size")), row("irq_map").arr.map { pair =>
+      pair(0).num.toInt -> pair(1).num.toInt
+    }.toSeq, new PluginDevice(library, config, seed), ujson.read(config)("model").str)
   }.toSeq
   private def region(address: Long, bytes: Int) =
     regions.find(r => address >= r.base && address + bytes <= r.base + r.size)
@@ -35,6 +36,11 @@ final class DeviceBus(description: File, library: File, seed: Long) extends Auto
     levels | region.routes.foldLeft(BigInt(0)) { case (bits, (source, target)) =>
       if (outputs.testBit(source)) bits.setBit(target) else bits
     }
+  }
+  /** Drive input `input` of the one device of model `kind` (for example a PLIC source). */
+  def setInput(kind: String, input: Int, level: Boolean): Unit = regions.filter(_.kind == kind) match {
+    case Seq(r) => r.model.setInput(input, level)
+    case found => throw new IllegalArgumentException(s"stimulus needs exactly one $kind device, found ${found.size}")
   }
   def close(): Unit = regions.foreach(_.model.close())
 }

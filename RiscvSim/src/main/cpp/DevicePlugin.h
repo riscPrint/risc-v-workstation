@@ -11,6 +11,8 @@ namespace riscvsim {
 // harness at settled cycle boundaries. Addresses are device-relative bytes.
 // The byte mask selects little-endian lanes. Models must never retain pointers
 // to buffers passed by the harness. Nonzero status means failure.
+// ABI 2 appends set_input: the harness drives one numbered device input (for
+// example a PLIC gateway source) to a level. Hosts read it only when abi >= 2.
 struct DeviceApiV1 {
   uint32_t abi;
   void* (*create)(const char* projectJson, uint64_t seed);
@@ -22,6 +24,7 @@ struct DeviceApiV1 {
   // snapshot(nullptr,0) returns the exact size. Zero means not restorable.
   size_t (*snapshot)(void*, uint8_t* destination, size_t capacity);
   int (*restore)(void*, const uint8_t* source, size_t size);
+  int (*set_input)(void*, uint32_t input, uint32_t level);  // abi >= 2 only
 };
 
 class DevicePlugin {
@@ -37,7 +40,7 @@ public:
     if (!library) throw std::runtime_error("cannot load device plugin: " + std::string(dlerror()));
     auto entry = reinterpret_cast<const DeviceApiV1* (*)()>(dlsym(library, "rvw_device_plugin_v1"));
     api = entry ? entry() : nullptr;
-    if (!api || api->abi != 1 || !api->create || !api->destroy || !api->read ||
+    if (!api || (api->abi != 1 && api->abi != 2) || (api->abi == 2 && !api->set_input) || !api->create || !api->destroy || !api->read ||
         !api->write || !api->tick || !api->interrupts || !api->snapshot || !api->restore) {
       dlclose(library); library = nullptr;
       throw std::runtime_error("unsupported device plugin ABI");
@@ -59,6 +62,10 @@ public:
   }
   void tick(uint64_t cycle) { checked(api->tick(device, cycle)); }
   uint64_t interrupts() { return api->interrupts(device); }
+  void setInput(uint32_t input, bool level) {
+    if (api->abi < 2) throw std::runtime_error("device plugin has no inputs (ABI 1)");
+    checked(api->set_input(device, input, level ? 1 : 0));
+  }
   std::vector<uint8_t> snapshot() {
     const size_t size = api->snapshot(device, nullptr, 0);
     if (!size) throw std::runtime_error("device has non-restorable external effects");

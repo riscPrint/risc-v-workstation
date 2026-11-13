@@ -110,6 +110,14 @@ def main():
         description.write_text(json.dumps(config) + '\n')
         privilege_build(description, out / 'wfi-clint', args.gcc)
         families.append(dict(family='wfi-clint', source=clint['source']))
+    for name in ('plic', 'plic-delivery'):
+        row = next((r for r in selection['suites'] if r['applicable'] and r['name'] == name), None)
+        if row:
+            # Each program gets an rvw.stimulus/1 file; the adapter serves it through the mailbox.
+            description = out / f'{name}.json'
+            description.write_text(json.dumps(dict(json.loads((root / row['source']).read_text()), isa=features['isa'])) + '\n')
+            privilege_build(description, out / name, args.gcc)
+            families.append(dict(family=name, source=row['source']))
     names = [n for n in ('lrsc', 'amo', 'amo-fault', 'fence', 'fence-i', 'zacas', 'cache-block')
              if f'{n}-rv{xlen}' in applicable]
     if names:

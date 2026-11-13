@@ -42,3 +42,16 @@ def test_declared_isa_and_privilege_fields_and_xlen_conflict(tmp_path):
     features.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='XLEN'):
         plan(features)
+
+
+def test_plic_families_need_the_device_and_the_supervisor_external_input(tmp_path):
+    features = tmp_path / 'features.json'
+    data = dict(schema='rvw.regress-features/1', isa='rv64ima_zicsr_zifencei', privilege_modes='MSU',
+                irq_inputs=[3, 7, 11], capabilities=['device:plic'])
+    features.write_text(json.dumps(data))
+    applicable = {x['name'] for x in plan(features)['suites'] if x['applicable']}
+    assert 'plic' in applicable and 'plic-delivery' not in applicable
+    data['irq_inputs'].append(9)
+    features.write_text(json.dumps(data))
+    applicable = {x['name'] for x in plan(features)['suites'] if x['applicable']}
+    assert {'plic', 'plic-delivery'} <= applicable

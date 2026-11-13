@@ -35,7 +35,8 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
                   wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None, probes: Boolean = false,
                   fault: Option[FaultFile] = None, debug: Option[DebugMode] = None,
-                  traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None) {
+                  traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None,
+                  stimulus: Option[StimulusFile] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty, simThreads = simThreads)
 }
 
@@ -58,6 +59,8 @@ trait CoreAdapter {
   /** Opt in when compile uses RiscvSimConfig and honors its explicit thread override. */
   def supportsSimThreads: Boolean = false
   def supportsBootPayloads: Boolean = false
+  /** True when the adapter serves `rvw.stimulus/1` mailbox events (`--stimulus-file`). */
+  def supportsStimulus: Boolean = false
   /** True when the adapter elaborates with `spinalprobes.Probe.enabled(key.probes)` and writes
     * `probe-events.jsonl` through `ProbeCollector.open`. */
   def supportsProbes: Boolean = false

@@ -58,6 +58,26 @@ error. Snapshot size zero declares non-restorable effects. Store versioned
 payloads under native envelope devices and bind library/configuration hashes.
 DPI-C wrappers never propagate C++ exceptions. Null handles and nonzero status
 must stop the run. Device maps, Linux behavior and TLM timing are not inferred.
+ABI number 2 appends one callback, `set_input(handle, input, level)`, which
+drives one numbered device input (for example a PLIC gateway source) to 0 or 1.
+Hosts accept ABI 1 and 2 and read `set_input` only for ABI 2; driving an input
+of an ABI 1 library is an error. `PythonDevices.cpp` exports ABI 2 and maps it
+to `Device.set_level`. When built by `RiscvSim/scripts/build-devices.py`, it
+embeds its interpreter home and `rvw/src` and starts an isolated interpreter
+that ignores `PYTHONHOME` and `PYTHONPATH`.
+
+## Mailbox stimulus option
+
+`run --stimulus-file F` (manifest key `stimulus_file`) loads `rvw.stimulus/1`.
+Only adapters that declare `supportsStimulus` accept it. Event payload steps
+are positive and strictly increasing, and every event uses the
+`stimulus_step`/`stimulus_ack` RAM mailbox. RiscvSim `StimulusMailbox` serves
+the next event when the program stores its step to `stimulus_step`, then
+writes the step to `stimulus_ack` after `settle_ticks` cycles. The adapter
+supplies the device action for each payload `kind`. C1 records
+`stimulus_file` (the value as given) and `stimulus_sha256`. Option files must
+lie under a declared input root (for example a `cache_paths` entry), or
+regress capture refuses them.
 See `RiscvSim/src/main/cpp/DEVICES.md` for exact ABI and DPI declarations.
 
 ## Simulation cost report
@@ -176,7 +196,7 @@ functional coverage plans or establish closure.
 
 ## Standard device checkpoint payload
 
-The optional `PythonDevices.cpp` library implements `DeviceApiV1` unchanged.
+The optional `PythonDevices.cpp` library implements `DeviceApiV1` (ABI 2).
 Its snapshot bytes contain UTF-8 JSON with schema `rvw.standard-device/1`.
 Fields are `schema`, `config`, `cycle` and `state`. Restore requires equal
 configuration and the same model state inventory. Byte arrays use a `bytes`
@@ -330,7 +350,7 @@ Execution CPU time, when present in the example's C1 details, includes the
 Python adapter and C2 write/validation. It does not isolate generated RTL code.
 ## Host device plugins
 
-The Scala `PluginDevice` binding uses the existing DeviceApiV1 ABI. Each run
+The Scala `PluginDevice` binding uses DeviceApiV1 ABI 1 or 2 (`setInput` needs 2). Each run
 owns a fresh handle. The adapter serializes tick and MMIO calls at sampled
 boundaries and supplies all address and interrupt routing data. Libraries
 remain loaded for the process lifetime. Callback failure stops the operation.

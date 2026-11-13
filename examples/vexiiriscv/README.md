@@ -328,8 +328,26 @@ matched Spike with `rvw regress cosim --allow-sync irq,mmio`: the Spike shim
 has no CLINT state, so `mtime` loads and asserted `mip` bits take DUT values
 (one or two synchronizations per program). Narrow MMIO stores now pass only
 their own byte lanes to the device model; before, a 4-byte MSIP write carried
-the replicated upper word and the model refused it. PLIC families need the
-`rvw.stimulus/1` mailbox in this adapter and are not run yet.
+the replicated upper word and the model refused it.
+
+The adapter serves `rvw.stimulus/1` files (`--stimulus-file`, suite option
+`stimulus_file`). When the program stores a step to `stimulus_step`, the
+next event drives the PLIC source level through DeviceApiV1 ABI 2
+(`set_input`), and the adapter writes the step to `stimulus_ack` after
+`settle_ticks`. A passing program that left events unserved becomes C1
+`error`. `features64-devices.json` also declares `device:plic` and the SEIP
+input (9), so the plan selects `plic` and `plic-delivery`. The PLIC stimulus
+paths in `rvw64-devices.toml` are relative to the workstation root, and the
+build directories are `cache_paths` entries so regress captures the files.
+
+On 2026-11-13 all 12 PLIC programs (priority, tie, threshold claim, shared
+contexts, gateway completion, enable changes; M- and S-context delivery with
+global, local and threshold masking) passed C1. Each program checks claim
+IDs that the independent PLIC model derived. Spike agreed for the first 56 to
+61 instructions of each program, up to the first `stimulus_ack` read. The
+reference cannot see that harness-written RAM word, so `rvw regress cosim`
+and `rvw regress privilege check` report these runs as inconclusive with that
+reason, not as a match or a finding.
 
 ### Generated suites on RTL (2026-11-13)
 
