@@ -1233,6 +1233,12 @@ This command accepts a single non-incremental SMT query exported by a solver
 flow. It does not convert arbitrary AIGER proofs or infer an induction query from
 an SBY PASS. Unsatisfiability applies to this query only. It does not authorize
 coverage exclusions. Use `rvw cov prove` for the existing guarded UNR export.
+`rvw formal power --intent intent.json --out generated [--db design.db]`
+generates sampled clock-gating, isolation, retention, test isolation and supply
+transition checks. `formal_power` is the MCP entry point. It can resolve declared
+DFT access paths from SpinalDB. Read [the intent contract and limits](../../../../SpinalChecks/power/README.md).
+Generation does not run proofs, ATPG or physical power analysis.
+
 `rvw formal csr --model project-csr.json --out generated` writes CSR formal
 monitors, optional project-bound SBY jobs, directed assembly and functional
 coverage groups. `formal_csr` exposes the same generator through MCP.

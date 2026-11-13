@@ -88,6 +88,12 @@ def register(sub) -> None:
     upf.add_argument("--bindings", required=True)
     upf.add_argument("--out", required=True)
     upf.set_defaults(func=upf_subset.run)
+    from . import power_intent
+    power = s.add_parser("power", help="generate sampled checks from project low-power intent")
+    power.add_argument("--intent", required=True)
+    power.add_argument("--db")
+    power.add_argument("--out", required=True)
+    power.set_defaults(func=power_intent.run)
 
     from . import csr
     c = s.add_parser("csr", help="generate project CSR checks, assembly and coverage")
