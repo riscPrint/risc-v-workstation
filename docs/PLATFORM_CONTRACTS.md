@@ -1453,6 +1453,16 @@ It restores the source credit. One request can be active per line.
 The project owns licensed-bus translation. There is no CHI conformance
 verdict, dirty forwarding or native backend qualification in this format.
 
+### DRAM native model integration
+
+`rvw.vip.dram-model/1` declares model name/version, functional or timing
+mode and a positive clock period in picoseconds. The project backend
+receives commands with integer cycle, operation, bank, row, column and
+64-bit data. A read returns data and, in timing mode, its response cycle.
+Missing models or response evidence are errors. The reduced independent
+checker covers ACT/PRE/RD/WR/REF and declared cycle timing. Mock callbacks
+qualify only the contract. No native-model, JEDEC or board signoff follows.
+
 ## C7. MCP tools (`rvw mcp`)
 
 `rvw mcp` is one stdio MCP server for every rvw tool. Each subpackage plugs in without editing
