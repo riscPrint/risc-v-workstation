@@ -18,7 +18,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   override def irqInputMask: BigInt = if (xlen == 64) 0xa88 else 0x888
   def core = "vexiiriscv"
   val configs = VexiiTop.configs.filter(_.startsWith(s"rv$xlen"))
-  def isa(config: String) = s"rv${xlen}im${if (VexiiTop.supervisor(config) || config == "rv64ima" || VexiiTop.floating(config)) "a" else ""}${if (VexiiTop.floating(config)) (if (xlen == 64) "fd" else "f") else ""}${if (VexiiTop.compressed(config)) "c" else ""}_zicsr_zifencei"
+  def isa(config: String) = s"rv${xlen}im${if (VexiiTop.supervisor(config) || config == "rv64ima" || VexiiTop.floating(config)) "a" else ""}${if (VexiiTop.floating(config)) (if (xlen == 64) "fd" else "f") else ""}${if (VexiiTop.compressed(config)) "c" else ""}_zicsr_zifencei${if (config.endsWith("_linux")) "_zicntr" else ""}"
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath) ++
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_XLEN", "RVW_VEX_DEVICE_MAP", "RVW_DEVICE_LIBRARY").flatMap(
