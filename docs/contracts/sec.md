@@ -59,3 +59,28 @@ IFT treats X/Z constants as unknown Boolean values with taint set. Reports name
 this policy in `unknown_constants`. Z does not model electrical high impedance.
 Unsupported state cells refuse instrumentation before native simulation with a
 hint to rebuild every flow from the same project-owned SYNC elaboration entry.
+
+## Core binding for native runs
+
+`rvw.sec-core/1` is project data. It names `rtl` (Verilog paths; environment
+variables allowed, relative to the file), `top`, `clock`, active-high `reset`,
+`reset_cycles`, `ram` (`base`, `size`), `max_cycles`, the Spike `platform` JSON
+and `buses`. Each bus has `name`, `kind` (`fetch` or `data`), `latency` and the
+port names `cmd_valid`, `cmd_ready`, `cmd_address`, `rsp_valid`, `rsp_data`, and
+optionally `cmd_write`, `cmd_data`, `cmd_mask` or `cmd_size`, `cmd_id`,
+`rsp_error`, `rsp_id`, `write_response`. Responses come in request order after
+`latency` cycles. Data is read when the command is accepted. Other inputs are
+tied to zero or to `ties`. `retire` is `{"kind":"rvfi","prefix":...}` (RVFI
+ports) or `{"kind":"commit","valid":...,"pc":...}` (internal commit signals).
+`trap` optionally names `valid`, `cause`, `tval` and an internal `privilege`.
+A commit-kind core declares only `pc` and `insn` as checked C2 fields.
+
+## Case request extensions
+
+`rvw.sec-case/1` requests also carry `observations` (the declared channel
+names), `contract_start_pc` and `observer_mode`. A response may name
+`c2_keys`, the C2 retirement fields its RTL trace carries. The runner then
+checks only those fields against the reference and reports them as
+`architectural_keys`. `observer_mode` limits the contract projection, and the
+adapter's observations, to retirements in that privilege mode. In
+`adapter_command`, `{python}` is the running interpreter.

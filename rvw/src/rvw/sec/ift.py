@@ -19,7 +19,7 @@ def shadow(design, top, policy, mode='precise'):
             raise ValueError('clock, reset and declassifier must be scalar public inputs')
     if clock == reset:
         raise ValueError('clock must differ from reset')
-    if not policy['sources'] or not policy['sinks']:
+    if not (policy['sources'] or policy.get('allow_memory_sources')) or not policy['sinks']:
         raise ValueError('nonempty sources and sinks required')
     nets = mod['netnames']
     sources = set()

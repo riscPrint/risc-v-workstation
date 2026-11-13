@@ -222,6 +222,86 @@ It does not mean secure. Fault checks can satisfy a declared detection contract
 without establishing absence of earlier leakage. The suite does not combine
 several incomplete techniques into a security proof or a release approval.
 
+## Native runs on a whole core
+
+A project binds its core once in `rvw.sec-core/1` JSON (see `docs/contracts/sec.md`).
+The generic harness (`rtl.py`) compiles the core's exported Verilog with a
+testbench that owns RAM, in-order bus responses, C2 capture and cycle-stamped
+observations. Builds are cached under `RVW_SEC_WORK` (default `~/.cache/rvw/sec`).
+`python -m rvw.sec.core_adapter` is a ready `adapter_command` for `sec contract`
+and `sec isolation`: it renders the case into a project template (fixed-length
+`lui`/`addi` secret setup, so the public instruction stream does not change),
+builds the ELF, makes the Spike reference with `rvw cosim generate`, runs the RTL
+and writes the observations `cycles`, `retire_cycles`, `dbus_trace`,
+`ibus_trace`, `dbus_addresses` and `bus_timing`.
+
+```
+rvw sec ift-core --binding core.json --policy memory-policy.json --asm prog.S --out out/ift
+rvw sec contract --manifest examples/vexriscv/rvw/sec/constant-time.json --out out/ct
+rvw sec isolation --manifest examples/vexriscv/rvw/sec/isolation-leaky.json --out out/iso
+rvw sec spec-suite --binding core.json --template spec.S --out out/spec
+```
+
+`ift-core` maps the core to a Yosys gate netlist (`async2sync`, X and dangling
+bits to zero) and adds the Boolean taint shadow. RAM keeps a taint mask per
+word: a load returns it and a store writes the stored data's taint. A policy
+names `memory_regions` (ELF symbol or address, size), register `sources` (a
+netname such as a CSR register) and `sinks` (top-level outputs, each with an
+optional `when` valid signal). The first tainted sink sample, its cycle count and
+the last retired PC are reported up to the retirement of the `tohost` store.
+MCP: `sec_ift_core`, `sec_spec_suite`.
+
+`spec-suite` runs four RV32 gadgets (`v1` forward branch, `v2` indirect jump,
+`rsb` return, `v4` store bypass) under `speculative-constant-time`. The secret
+is x7. Architectural code only does register arithmetic with it. The wrong-path
+load uses a secret-derived address. The receivers are the paired data bus trace
+and retirement timing. There is no cache receiver on these cacheless cores.
+
+### Results on the example cores (2026-11-13, Verilator 5.049, Spike)
+
+Each row is one command on RTL generated from the pinned example revisions
+(`examples/*/rvw/sec/build-rtl.sh`). The RTL traces matched Spike in every
+compared case (all C2 fields on VexRiscv; `pc` and `insn` on VexiiRiscv).
+
+| Technique | Core | Case | Result |
+|---|---|---|---|
+| `ift-core`, secret memory words | VexRiscv | `ct-xor` (load key, XOR, store) | `no_leak_observed`, 70 cycles |
+| `ift-core`, secret memory words | VexRiscv | `leak-branch` | violation: fetch address tainted at cycle 11, data bus at 15 |
+| `ift-core`, secret memory words | VexRiscv | `leak-index` (table lookup) | violation: data bus address tainted at cycle 13 |
+| `ift-core`, secret CSR `mscratch` | VexRiscv | `csr-ct` / `csr-index` | `no_leak_observed` / violation at cycle 10 |
+| `ift-core`, secret memory words | VexiiRiscv | `ct-xor` | `no_leak_observed`, 184 cycles |
+| `ift-core`, secret memory words | VexiiRiscv | `leak-branch` / `leak-index` | violation at cycle 58 (fetch) / 69 (LSU address) |
+| `contract` constant-time | VexRiscv | div, divu, rem, remu, mul, mulh, mulhu | `no_leak_observed`: every divide takes 34 cycles |
+| `contract` constant-time | VexiiRiscv | same program | **violation**, reduced to one `remu x13, x6, x7`: 14 cycles for 7 % 3, 38 cycles for 0x7fffffff % 1. The full program took 113 against 209 cycles. |
+| `isolation` M/U | VexRiscv `rv32imu` | U-mode `ecall`s, constant-time M handler with a `div` on the secret | `no_leak_observed`: 68 cycles per call for both secrets |
+| `isolation` M/U | VexRiscv `rv32imu` | handler loop count from the secret (control) | violation: 48 against 84 cycles per call, reduced to `add; ecall` |
+| `spec-suite` | VexRiscv | v1, v2, rsb, v4 | `no_leak_observed` for all four |
+| `spec-suite` | VexRiscv patched | same | violation in `dbus_trace` for v1, v2 and rsb; v4 `no_leak_observed` |
+
+The VexiiRiscv result is a true positive: its radix-2 divider (`DivRadix2`)
+skips zero quotient bits, so divide and remainder latency depends on the
+operands. Do not use VexiiRiscv division on secrets in constant-time code
+with this configuration. VexRiscv's `MulDivIterativePlugin` divider has a fixed
+count. The patched VexRiscv lets flushed loads issue on the data bus
+(`examples/vexriscv/rvw/sec/leaky-transient-load.patch`). It exists only to show
+that the speculative receiver path detects a transient secret-dependent access.
+On both unpatched in-order cores, wrong-path loads never reach the bus.
+
+### What each native technique can and cannot show
+
+- `ift-core` shows that a secret word or register influenced a sink in this
+  run, with the cycle. It cannot show which source statement caused it. A clean
+  run covers only this program and these sinks. Gate-level taint can over-taint
+  at reconvergence. Async reset is modeled as synchronous; X becomes 0.
+  A core that keeps CSRs in RAM (VexiiRiscv) has no single CSR source name.
+- `contract` shows a timing or bus difference between secrets with equal
+  architectural traces. A clean result covers only the given secrets and program.
+- `isolation` with `observer_mode` compares only what the lower privilege
+  retires and sees. It does not check PMP, which these cores do not have.
+- `spec-suite` gadgets are short; the receivers are the bus trace and timing.
+  A cacheless core has no cache receiver. A clean result does not prove that the
+  core never speculates.
+
 ## Remaining integration work
 
 The default pair generator is a small seeded ALU grammar. Broader instruction,

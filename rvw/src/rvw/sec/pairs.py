@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import random
+import sys
 from rvw.cosim.trace import Trace
 from .common import native, publish
 
@@ -60,7 +61,11 @@ def compare(a,b,plan):
         for i,row in enumerate(rows):
             if row['pc']==start: return rows[i:]
         raise ValueError('contract start PC was not reached')
-    if projection(region(a['reference']),clauses) != projection(region(b['reference']),clauses):
+    def observer(rows):
+        # An observer mode limits the contract to that privilege's retirements.
+        mode=plan.get('observer_mode')
+        return rows if mode is None else [r for r in rows if r.get('mode')==mode]
+    if projection(observer(region(a['reference'])),clauses) != projection(observer(region(b['reference'])),clauses):
         return dict(status='ineligible', channels=[])
     channels = [k for k in plan['observations'] if a['observations'][k] != b['observations'][k]]
     return dict(status='violation' if channels else 'no_leak_observed',channels=channels)
@@ -76,14 +81,15 @@ def run(manifest, out):
     if not plan.get('adapter_command') or not isinstance(plan['adapter_command'],list):
         raise ValueError('adapter_command must be an argv list')
     timeout = plan.get('timeout',90)
-    if not 0 < timeout <= 120: raise ValueError('timeout must be in (0,120]')
+    if not 0 < timeout <= 1800: raise ValueError('timeout must be in (0,1800]')
     def invoke(program,secret,label):
         folder = out/label; folder.mkdir()
         request = dict(schema='rvw.sec-case/1', program=program,secret=secret,
-                       public=plan['public'],contract=plan['contract'])
+                       public=plan['public'],contract=plan['contract'],observations=plan['observations'],
+                       contract_start_pc=plan.get('contract_start_pc'),observer_mode=plan.get('observer_mode'))
         (folder/'request.json').write_text(json.dumps(request))
         argv = [s.replace('{request}',str(folder/'request.json')).replace('{out}',str(folder))
-                for s in plan['adapter_command']]
+                .replace('{python}',sys.executable) for s in plan['adapter_command']]
         log = native(argv,manifest.parent,timeout)
         (folder/'adapter.log').write_text(log)
         r = json.loads((folder/'response.json').read_text())
@@ -94,6 +100,11 @@ def run(manifest, out):
         reference = trace(local('reference_c2'))
         rtl = trace(local('rtl_c2'))
         keys = ('pc','insn','rd','rd_wdata','mem_addr','mem_rmask','mem_wmask','mem_wdata','trap','mode')
+        if r.get('c2_keys') is not None:
+            # A core without RVFI can declare a smaller retirement field set. The report keeps it.
+            if 'pc' not in r['c2_keys'] or not set(r['c2_keys']) <= set(keys):
+                raise ValueError('c2_keys must include pc and name C2 retirement fields')
+            keys = tuple(r['c2_keys']); checked_keys.add(keys)
         if [[x.get(k) for k in keys] for x in reference] != [[x.get(k) for k in keys] for x in rtl]:
             raise ValueError('RTL differs from independent reference')
         if set(r['observations']) != set(plan['observations']):
@@ -105,7 +116,7 @@ def run(manifest, out):
     program = plan.get('program',generate(plan.get('seed',1),count))
     secrets = plan['secrets']
     if len(secrets)!=2 or secrets[0]==secrets[1]: raise ValueError('two different secrets required')
-    findings=[]; errors=[]; comparison={}; calls=0
+    findings=[]; errors=[]; comparison={}; calls=0; checked_keys=set(); rejected=[]
     def pair(p,label):
         nonlocal calls
         calls+=2
@@ -124,7 +135,8 @@ def run(manifest, out):
                     c=pair(trial,f'reduce-{attempts}')
                     if c['status']=='violation': program=trial; comparison=c; continue
                 except (ValueError,OSError,KeyError) as e:
-                    errors.append(str(e))
+                    # A failed trial only rejects that deletion; the witness keeps its evidence.
+                    rejected.append(str(e)[-300:])
                 index+=1
             counterexample=dict(program=program,secrets=secrets,public=plan['public'],comparison=comparison)
             (out/'counterexample.json').write_text(json.dumps(counterexample,indent=2)+'\n')
@@ -132,5 +144,6 @@ def run(manifest, out):
     except (ValueError,OSError,KeyError) as e:
         errors.append(str(e))
     return publish(out,'contract',findings,comparison.get('status') in ('violation','no_leak_observed') and not errors,
-                   comparison=comparison, errors=errors, adapter_runs=calls,
+                   comparison=comparison, errors=errors, adapter_runs=calls, rejected_trials=rejected,
+                   architectural_keys=[list(k) for k in sorted(checked_keys)] or 'all',
                    manifest_sha256=hashlib.sha256(manifest.read_bytes()).hexdigest())

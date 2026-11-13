@@ -1,0 +1,10 @@
+{
+  "memory_regions": [{"symbol": "secret_key", "size": 16}],
+  "sources": [],
+  "sinks": [
+    {"signal": "LsuCachelessPlugin_logic_bus_cmd_payload_address", "when": "LsuCachelessPlugin_logic_bus_cmd_valid"},
+    {"signal": "LsuCachelessPlugin_logic_bus_cmd_valid"},
+    {"signal": "FetchCachelessPlugin_logic_bus_cmd_payload_address", "when": "FetchCachelessPlugin_logic_bus_cmd_valid"},
+    {"signal": "FetchCachelessPlugin_logic_bus_cmd_valid"}
+  ]
+}

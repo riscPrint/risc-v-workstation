@@ -1,0 +1,16 @@
+{
+  "isolation_kind": "register-state",
+  "boundary": "U to M system call and back (mscratch secret)",
+  "contract": "sandboxing",
+  "clauses": ["pc", "memory", "branch"],
+  "observer_mode": 0,
+  "contract_start_pc": "0x80000040",
+  "policy": {"denied_region": "M-mode mscratch and handler registers", "cleanup": "deliberate secret-dependent handler loop (control)"},
+  "observations": ["cycles", "retire_cycles"],
+  "public": {"reset": "cold", "registers": {"a0": 5}},
+  "program": ["addi a1, a0, 1", "ecall", "add a2, a1, a0", "ecall", "add a3, a2, a1"],
+  "secrets": [{"t0": 3}, {"t0": 1048575}],
+  "minimize_runs": 8,
+  "timeout": 1800,
+  "adapter_command": ["{python}", "-m", "rvw.sec.core_adapter", "--binding", "core-mu.json", "--template", "isolation-leaky.S", "{request}", "{out}"]
+}
