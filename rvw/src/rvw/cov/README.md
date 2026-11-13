@@ -1111,3 +1111,5 @@ This command is not the random baseline and is not a PSS implementation.
 
 See [the campaign interface](CAMPAIGN.md) for `rvw cov campaign`, its project
 settings, payload sampling, resume checks and unqualified CPU accounting.
+
+See [bounded sequence actions](SEQUENCES.md) for `cov actions` and the execution-loop sequence settings.

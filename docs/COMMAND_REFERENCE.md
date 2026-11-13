@@ -270,7 +270,7 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-    {campaign,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {campaign,actions,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
 ```
 
@@ -279,6 +279,14 @@ usage: rvw cov [-h] [--project PROJECT]
 ```text
 usage: rvw cov campaign [-h] --settings SETTINGS --work-dir WORK_DIR
     [--resume] [--json] [--project PROJECT]
+```
+
+### `rvw cov actions`
+
+```text
+usage: rvw cov actions [-h] --goal GOAL --work-dir WORK_DIR --registers
+    REGISTERS [--distances DISTANCES [DISTANCES ...]] [--memory] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw cov generate`
@@ -1561,6 +1569,14 @@ Starts a background job: yes.
 Generate a C2 trace from Spike for an ELF, for reference fixtures or later comparison. Writes out (refused if out is the ELF or an existing file that is not a C2 trace) and returns reproduction metadata; runs as a cancellable job.
 
 Arguments: `project`, `elf` (required), `core`, `platform`, `out` (required), `max_instructions`.
+
+Starts a background job: yes.
+
+### `cov_actions`
+
+Generate bounded retirement sequence candidates with action graphs. Memory needs a declared writable data resource. Generation earns no hits or pipeline hazard evidence.
+
+Arguments: `goal` (required), `work_dir` (required), `registers` (required), `distances`, `memory`.
 
 Starts a background job: yes.
 

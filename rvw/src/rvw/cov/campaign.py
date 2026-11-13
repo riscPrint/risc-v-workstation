@@ -30,24 +30,27 @@ def payload(elf_path, candidate):
     """Bind the solved word to the executable, never to assembler source alone."""
     elf = Elf(elf_path)
     start, end = (elf.symbols[k] for k in ('rvw_payload_start', 'rvw_payload_end'))
-    if end-start != 4 or start % 4 or elf.xlen != candidate['xlen']:
+    expected = candidate.get('instructions', [candidate.get('model',{}).get('instruction')])
+    if end-start != 4*len(expected) or start % 4 or elf.xlen != candidate['xlen']:
         raise ValueError('invalid ELF payload range or XLEN')
     words = [data[start-base:end-base] for base, data, _ in elf.segments
              if base <= start and end <= base+len(data)]
-    if len(words) != 1 or int.from_bytes(words[0], 'little') != candidate['model']['instruction']:
+    if len(words) != 1 or words[0] != b''.join(w.to_bytes(4,'little') for w in expected):
         raise ValueError('ELF payload differs from solved instruction')
     return {'elf_sha256': digest(elf_path), 'ranges': [[start, end]], 'policy': 'payload-pc-v1'}
 
 
-def qualify(elf, results, platform, manifest, source_root, candidate):
+def qualify(elf, results, platform, manifest, source_root, candidate, coverage_plan=None):
     region = payload(elf, candidate)
     matches = [r for p in Path(results).rglob('result.json')
                if (r := load_run(p)).elf_sha256 == region['elf_sha256']]
     if len(matches) != 1:
         return {'status': 'adapter_error', 'new_hits': []}
     run = matches[0]
-    if run.why_inconclusive or run.status != 'pass':
-        return {'status': 'core_failure' if run.status == 'fail' else 'inconclusive', 'new_hits': []}
+    if run.why_inconclusive:
+        return {'status':'inconclusive', 'new_hits':[]}
+    if run.status != 'pass':
+        return {'status':'core_failure', 'new_hits':[]}
     trace = run.artifact('rvfi_trace')
     if trace is None:
         return {'status': 'trace_error', 'new_hits': []}
@@ -56,9 +59,11 @@ def qualify(elf, results, platform, manifest, source_root, candidate):
         return {'status': 'mismatch' if comparison.get('status') == 'mismatch' else 'inconclusive',
                 'comparison': comparison, 'new_hits': []}
     coverage = functional([trace], platform=platform, manifest=manifest, source_root=source_root,
-                          payload_regions={digest(trace): region})
-    if coverage['retired'] != 1:
-        return {'status': 'inconclusive', 'reason': 'payload must retire exactly once', 'new_hits': []}
+                          payload_regions={digest(trace): region}, config=coverage_plan)
+    visits = next(iter(coverage['traces'].values())).get('payload_visits',{})
+    expected_visits = {hex(pc):1 for start,end in region['ranges'] for pc in range(start,end,4)}
+    if coverage['retired'] != len(candidate.get('instructions', [0])) or visits != expected_visits:
+        return {'status': 'inconclusive', 'reason': 'each payload instruction must retire exactly once', 'new_hits': []}
     return {'status': 'qualified', 'comparison': comparison, 'coverage': coverage,
             'region': region, 'trace_sha256': digest(trace), 'c1_sha256': digest(run.path/'result.json')}
 
@@ -70,7 +75,7 @@ def campaign(settings, work_dir, resume=False):
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
                 'runtime', 'linker', 'platform', 'compiler', 'isa', 'abi', 'attempts', 'seed'}
-    optional = {'timeout_s', 'max_cycles', 'timeout_ms'}
+    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory'}
     if data.keys()-required-optional or required-data.keys() or data['schema'] != 'rvw.stimulus-loop/1':
         raise ValueError('expected rvw.stimulus-loop/1 with declared fields')
     if type(data['attempts']) is not int or not 1 <= data['attempts'] <= 1000:
@@ -81,6 +86,12 @@ def campaign(settings, work_dir, resume=False):
     manifest, root = path('manifest'), path('source_root')
     pinned = plan(manifest, root)
     supported = set(profile(pinned['isa_plan']))
+    sequence_settings = data.get('sequences')
+    sequence_groups = []
+    if sequence_settings is not None:
+        from .sequence import groups
+        sequence_groups = groups(sequence_settings)
+        supported.update('sequence:'+json.dumps(b,separators=(',',':')) for b in sequence_groups[0]['bins'])
     runtime = captured.read_text(path('runtime'))
     if runtime.count('{payload}') != 1:
         raise ValueError('runtime must contain exactly one {payload} marker')
@@ -92,7 +103,7 @@ def campaign(settings, work_dir, resume=False):
     identity = sha256(json.dumps([data, inputs, pinned], sort_keys=True).encode()).hexdigest()
     out = Path(work_dir).resolve()
     report = {'schema': 'rvw.stimulus-loop/1', 'identity': identity, 'attempts': [], 'hits': [],
-              'supported_bins': len(supported), 'full_plan_bins': sum(len(g.get('bins', [])) for g in pinned['groups']),
+              'supported_bins': len(supported), 'full_plan_bins': sum(len(g.get('bins', [])) for g in pinned['groups']+sequence_groups),
               'status': 'inconclusive', 'cpu_accounting': 'inconclusive', 'bins_per_cpu_hour': None,
               'notes': ['os.times includes reaped child CPU; descendant completeness is not qualified.',
                         'No C4 acceptance or comparative closure rate is granted.']}
@@ -117,7 +128,7 @@ def campaign(settings, work_dir, resume=False):
         publish(out/'state', lambda directory: (directory/'report.json').write_text(json.dumps(report, indent=2)+'\n'))
     save()
     for index in range(len(report['attempts']), data['attempts']):
-        holes = sorted(supported-hits-attempted)
+        holes = sorted(supported-hits-attempted, key=lambda goal: (not goal.startswith('sequence:'),goal))
         if not holes:
             break
         goal = holes[0]
@@ -133,8 +144,14 @@ def campaign(settings, work_dir, resume=False):
         report['attempts'].append(attempt)
         before, wall = os.times(), time.monotonic()
         try:
-            candidate = generate(manifest, root, goal, directory/'candidate', data['registers'],
-                                 attempt['seed'], data.get('timeout_ms', 1000))
+            if goal.startswith('sequence:'):
+                from .actions import generate as generate_actions
+                candidate = generate_actions(goal,directory/'candidate',data['registers'],
+                    sequence_settings.get('distances',[1,2,4]),data.get('memory',False))
+                candidate['xlen'] = int(data['isa'][2:4])
+            else:
+                candidate = generate(manifest, root, goal, directory/'candidate', data['registers'],
+                                     attempt['seed'], data.get('timeout_ms', 1000))
             attempt['candidate'] = candidate
             attempt['status'] = candidate['status']
             if candidate['status'] == 'generated':
@@ -155,7 +172,11 @@ def campaign(settings, work_dir, resume=False):
                     run_plan(selected, [PlanItem(suite, data['config'])], directory/'run', source_for(selected,None),
                              RunOptions(seeds=1,seed_base=attempt['seed'],rvfi_trace=True,use_cache=False,
                                         jobs=1,index=False,tier='closure'))
-                    evidence = qualify(elf, directory/'run', path('platform'), manifest, root, candidate)
+                    coverage_plan = None
+                    if sequence_settings is not None:
+                        coverage_plan = directory/'coverage-plan.json'
+                        coverage_plan.write_text(json.dumps({'groups':[], 'sequences':sequence_settings}))
+                    evidence = qualify(elf, directory/'run', path('platform'), manifest, root, candidate, coverage_plan)
                     attempt.update(evidence)
                     if evidence['status'] == 'qualified':
                         measured = identifiers(evidence['coverage']) & supported

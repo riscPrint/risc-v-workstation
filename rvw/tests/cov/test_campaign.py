@@ -95,3 +95,28 @@ def test_payload_word_is_checked_in_executable(tmp_path, monkeypatch):
     assert c.payload(elf,{'xlen':32,'model':{'instruction':0x33}})['ranges'] == [[256,260]]
     with pytest.raises(ValueError, match='differs'):
         c.payload(elf,{'xlen':32,'model':{'instruction':0x13}})
+
+
+@pytest.mark.parametrize('status',['fail','assert','rvfi_error','timeout'])
+def test_conclusive_c1_failures_stop_campaign(tmp_path,monkeypatch,status):
+    result=tmp_path/'run/result.json';result.parent.mkdir();result.write_text('{}')
+    run=SimpleNamespace(elf_sha256='a'*64,status=status,why_inconclusive=None)
+    monkeypatch.setattr(c,'payload',lambda *a:{'elf_sha256':'a'*64})
+    monkeypatch.setattr(c,'load_run',lambda *a:run)
+    assert c.qualify('elf',result.parent,'platform','manifest','root',{})['status']=='core_failure'
+
+
+def test_sequence_settings_use_same_verifier_and_keep_denominator(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch)
+    data=json.loads(settings.read_text());data.update(sequences={'distances':[1],'kinds':['RAW']},attempts=1)
+    settings.write_text(json.dumps(data))
+    seen=[]
+    def qualify(*args):
+        seen.append(args[5])
+        assert args[6].is_file()
+        return {'status':'qualified','coverage':{'groups':{}}}
+    monkeypatch.setattr(c,'qualify',qualify)
+    result=c.campaign(settings,tmp_path/'out')
+    assert result['attempts'][0]['goal']=='sequence:["RAW",1]'
+    assert len(seen[0]['instructions'])==2
+    assert result['full_plan_bins']==4 and result['supported_bins']==3

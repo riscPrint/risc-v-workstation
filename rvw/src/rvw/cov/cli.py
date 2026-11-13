@@ -188,6 +188,8 @@ def register(subparsers):
     sub = parser.add_subparsers(dest='cov_command', required=True)
     from .campaign_cli import register as register_campaign
     register_campaign(sub)
+    from .action_cli import register as register_actions
+    register_actions(sub)
     generate = sub.add_parser('generate', help='solve one pinned integer ISA coverage goal; no coverage credit')
     generate.add_argument('--manifest', required=True)
     generate.add_argument('--source-root', required=True)

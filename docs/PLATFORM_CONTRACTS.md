@@ -110,6 +110,17 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Bounded sequence candidates
+
+`rvw cov actions` and `cov_actions` emit `rvw.sequence-candidate/1` reports.
+The report contains a goal, kind, distance, ordered action graph, preconditions,
+exact instruction words, source hash and payload symbols. Memory requires an
+explicit writable program-data declaration. Generation grants no measured hits.
+The stimulus loop accepts optional `sequences` and `memory` settings. It retains
+all declared pairs in the denominator. The full C1/Spike verifier checks payload
+bytes and samples the existing retirement observer. Each action retires once.
+Retirement pairs remain separate from pipeline hazard and stall evidence.
+
 ### Bounded candidate execution loop
 
 `rvw cov campaign` and `cov_campaign` use `rvw.stimulus-loop/1` settings and

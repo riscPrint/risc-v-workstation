@@ -33,6 +33,10 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_actions", "Generate bounded retirement sequence candidates with action graphs. Memory needs a declared writable data resource. Generation earns no hits or pipeline hazard evidence.",
+                 schema({"goal": S, "work_dir": S, "registers": {"type":"array","items":I,"minItems":3,"maxItems":3},
+                         "distances":{"type":"array","items":I}, "memory":B}, ["goal","work_dir","registers"]),
+                 handler("rvw.cov.action_cli", "actions"), long=True),
         ToolSpec("cov_campaign", "Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.",
                  schema({"settings": S, "work_dir": S, "resume": B}, ["settings", "work_dir"]),
                  handler("rvw.cov.campaign_cli", "campaign"), long=True),
