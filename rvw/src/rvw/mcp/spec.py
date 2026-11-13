@@ -35,6 +35,10 @@ class ToolSpec:
     annotations: dict = field(default_factory=dict)
     isolate: bool = False
 
+    side_effects: str | None = None
+    native_tools: tuple[str, ...] | None = None
+    result_envelope: bool = False
+
     @property
     def wants_job(self) -> bool:
         try:
@@ -53,7 +57,7 @@ class ToolError(Exception):
 
 def schema(properties: dict, required: list[str] | None = None) -> dict:
     """Small helper for `input_schema`."""
-    s = {"type": "object", "properties": properties, "additionalProperties": False}
+    s = {"type": "object", "properties": properties, "required": required or [], "additionalProperties": False}
     if required:
         s["required"] = required
     return s
