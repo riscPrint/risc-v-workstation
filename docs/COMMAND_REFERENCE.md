@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -1222,6 +1222,26 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
     TRANSACTIONS] [--json] [--project PROJECT] map
 ```
 
+### `rvw verification-plan`
+
+```text
+usage: rvw verification-plan [-h] [--project PROJECT] {generate,check} ...
+```
+
+### `rvw verification-plan generate`
+
+```text
+usage: rvw verification-plan generate [-h] --out OUT [--project PROJECT]
+    declaration
+```
+
+### `rvw verification-plan check`
+
+```text
+usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
+    observations
+```
+
 ### `rvw wave`
 
 ```text
@@ -1359,7 +1379,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 101 built-in tools, including the four job tools.
+The default server exposes 105 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -2083,6 +2103,22 @@ Starts a background job: yes.
 Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.
 
 Arguments: `project`, `features`.
+
+Starts a background job: no.
+
+### `verification_plan_check`
+
+Compare supplied observations with separately authored reference vectors as bounded C3 evidence.
+
+Arguments: `plan` (required), `observations` (required), `out` (required).
+
+Starts a background job: no.
+
+### `verification_plan_generate`
+
+Generate unrun extension and envcfg cases from explicit versioned obligations.
+
+Arguments: `declaration` (required), `out` (required).
 
 Starts a background job: no.
 
