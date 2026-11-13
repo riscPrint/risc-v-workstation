@@ -58,3 +58,25 @@ constraints through the native compiler, then supply concrete actions to this
 planner or use native backend output. Native compiler integration, symbolic
 constraints, random scenario generation and real model/RTL/FPGA execution remain
 open under #150.
+
+## Literal MMIO execution sources
+
+`formal scenario-compile --source FILE --finisher ADDRESS --out NEW_DIR`
+compiles two selected backend plans. Defaults are `baremetal` and `pyuvm`.
+MCP: `formal_scenario_compile`. Both plans must use cycles and the same action
+order. Bind operations to `read32` or `write32`. Supply aligned 32-bit literal
+`args.address`, a write `args.value`, and each read's `expect.value`.
+
+The command emits `program.S`, `scenario_sequence.py`, the two plans and
+`operations.json`. `result.json` uses `rvw.scenario-compiled/1` and reports
+`status=generated`. It does not run a compiler, simulator or checker.
+The virtual sequence expects a project port with async `start`, `observe` and
+`finish` methods. This route starts a CPU image and observes its transfers.
+It is not an independent bus-master backend. Dynamic data flow needs a project
+execution binding and is refused by this compiler.
+
+The [real VexRiscv SoC example](../../../../examples/vexriscv/scenarios/README.md)
+executes a 12-action scenario in native RTL. Bare-metal APB capture and the
+CPU-backed pyuvm sequence each recorded 12 matching values. Both records pass
+through the existing scenario checker. Read the example's limits and measured
+inputs before using this as execution evidence.

@@ -1,0 +1,251 @@
+{
+  "schema": "rvw.scenario/1",
+  "resources": {
+    "cpu": 1,
+    "mmio": 1
+  },
+  "actions": [
+    {
+      "id": "uart_0",
+      "kind": "write32",
+      "after": [],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 268435484,
+        "value": 90
+      },
+      "expect": {
+        "value": 90
+      }
+    },
+    {
+      "id": "uart_1",
+      "kind": "read32",
+      "after": [
+        "uart_0"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 268435484,
+        "value": 90
+      },
+      "expect": {
+        "value": 90
+      }
+    },
+    {
+      "id": "uart_2",
+      "kind": "write32",
+      "after": [
+        "uart_1"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 268435484,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    },
+    {
+      "id": "uart_3",
+      "kind": "read32",
+      "after": [
+        "uart_2"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 268435484,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    },
+    {
+      "id": "clint_4",
+      "kind": "write32",
+      "after": [
+        "uart_3"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 33554432,
+        "value": 1
+      },
+      "expect": {
+        "value": 1
+      }
+    },
+    {
+      "id": "clint_5",
+      "kind": "read32",
+      "after": [
+        "clint_4"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 33554432,
+        "value": 1
+      },
+      "expect": {
+        "value": 1
+      }
+    },
+    {
+      "id": "clint_6",
+      "kind": "write32",
+      "after": [
+        "clint_5"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 33554432,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    },
+    {
+      "id": "clint_7",
+      "kind": "read32",
+      "after": [
+        "clint_6"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 33554432,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    },
+    {
+      "id": "plic_8",
+      "kind": "write32",
+      "after": [
+        "clint_7"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 201326596,
+        "value": 1
+      },
+      "expect": {
+        "value": 1
+      }
+    },
+    {
+      "id": "plic_9",
+      "kind": "read32",
+      "after": [
+        "plic_8"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 201326596,
+        "value": 1
+      },
+      "expect": {
+        "value": 1
+      }
+    },
+    {
+      "id": "plic_10",
+      "kind": "write32",
+      "after": [
+        "plic_9"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 201326596,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    },
+    {
+      "id": "plic_11",
+      "kind": "read32",
+      "after": [
+        "plic_10"
+      ],
+      "claims": {
+        "cpu": 1,
+        "mmio": 1
+      },
+      "args": {
+        "address": 201326596,
+        "value": 0
+      },
+      "expect": {
+        "value": 0
+      }
+    }
+  ],
+  "backends": {
+    "baremetal": {
+      "unit": "cycles",
+      "bindings": {
+        "write32": {
+          "operation": "write32",
+          "duration": 1
+        },
+        "read32": {
+          "operation": "read32",
+          "duration": 1
+        }
+      }
+    },
+    "pyuvm": {
+      "unit": "cycles",
+      "bindings": {
+        "write32": {
+          "operation": "write32",
+          "duration": 1
+        },
+        "read32": {
+          "operation": "read32",
+          "duration": 1
+        }
+      }
+    }
+  }
+}
