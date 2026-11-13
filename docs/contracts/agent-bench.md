@@ -19,6 +19,17 @@ C4 acceptance. The dedicated stdio server exposes only fixture tools and rvw job
 status tools, not the normal rvw tool registry or plugins. See
 [the benchmark guide](../rvw/src/rvw/agent_bench/README.md).
 
+### Agent guide
+
+`rvw.agent-guide/1` (`rvw agent guide --json`, MCP `agent_guide`, resource
+`rvw://agent/guide`) has `conventions` and `workflows`. A workflow has `id`,
+`title`, `when` and ordered `steps`. A step has `id`, `do`, an rvw argument list
+`cli` or `manual: true`, an optional `mcp` object with `tool` and `arguments`, an
+optional `optional` flag and `decide` rules (`if`, `then`, optional `note`).
+`then` is a step id of the same workflow, another workflow id, `done` or `stop`.
+Angle-bracket arguments are placeholders. The guide is not evidence. See
+[the playbook README](../../rvw/src/rvw/agent/README.md).
+
 ### C2/2 V and H observations
 
 An ISA declaring V requires a `vector: {"vlen": 128, "elen": 64}` header.

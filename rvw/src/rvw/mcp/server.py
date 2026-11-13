@@ -12,7 +12,8 @@ INSTRUCTIONS = (
     "RISC-V Workstation tools. Design questions (what drives a signal, what reads it, paths between "
     "signals, hierarchy, registers, what an edit changed) go to the query_* tools, which read a SpinalDB "
     "design database (argument `db`, default $RVW_DESIGNDB). Names may be Verilog paths, waveform paths "
-    "(TOP.<top>....) or Spinal paths (bundle fields, Areas, Vec indexes). Long-running tools return a "
+    "(TOP.<top>....) or Spinal paths (bundle fields, Areas, Vec indexes). For workflows, start with agent_guide or the resource rvw://agent/guide. "
+    "Long-running tools return a "
     "job_id: poll job_status (wait_s blocks up to 60 s)."
 )
 
@@ -39,6 +40,13 @@ def build_server(registry: Registry):
             kw["structuredContent"] = structured
         return types.CallToolResult(**kw)
 
+    def resource_list():
+        return [types.Resource(uri=uri, name=name, description=description, mimeType="application/json")
+                for uri, (name, description, _) in registry.resources.items()]
+
+    def resource_text(uri):
+        return registry.read_resource(str(uri))
+
     params = inspect.signature(Server.__init__).parameters
     if "on_call_tool" in params:  # SDK 2.x
         async def on_list_tools(ctx, params):
@@ -47,13 +55,32 @@ def build_server(registry: Registry):
         async def on_call_tool(ctx, params):
             return result(*await run_tool(params.name, params.arguments))
 
-        return Server("rvw", instructions=INSTRUCTIONS, on_list_tools=on_list_tools, on_call_tool=on_call_tool)
+        async def on_list_resources(ctx, params):
+            return types.ListResourcesResult(resources=resource_list())
+
+        async def on_read_resource(ctx, params):
+            return types.ReadResourceResult(contents=[types.TextResourceContents(
+                uri=params.uri, mimeType="application/json", text=resource_text(params.uri))])
+
+        kw = {}
+        if registry.resources:
+            kw = {"on_list_resources": on_list_resources, "on_read_resource": on_read_resource}
+        return Server("rvw", instructions=INSTRUCTIONS, on_list_tools=on_list_tools, on_call_tool=on_call_tool, **kw)
 
     server = Server("rvw", instructions=INSTRUCTIONS) if "instructions" in params else Server("rvw")  # SDK 1.x
 
     @server.list_tools()
     async def _list_tools():
         return tool_list()
+
+    if registry.resources:
+        @server.list_resources()
+        async def _list_resources():
+            return resource_list()
+
+        @server.read_resource()
+        async def _read_resource(uri):
+            return resource_text(uri)
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict):
