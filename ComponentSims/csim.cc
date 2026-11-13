@@ -11,13 +11,15 @@ using namespace csim;
 
 struct Study {
     Config cfg;
-    uint64_t warmup, limit;
+    uint64_t warmup, limit, skip;
     std::unique_ptr<BranchStudy> br; std::unique_ptr<MemoryStudy> mem; std::unique_ptr<Frontend> fe;
     std::unique_ptr<StoreSets> mdp; std::unique_ptr<ValuePredictor> vp; std::unique_ptr<AddressPredictor> lap;
     bool measuring = false; uint64_t last_ord = 0, contexts = 0;
     explicit Study(const Config& c) : cfg(c) {
         warmup = c.u("warmup_instructions", 0);
         limit = c.u("simulation_instructions", 0);
+        skip = c.u("skip_instructions", 0);
+        if (skip > warmup) throw Error("skip_instructions must not exceed warmup_instructions");
         br = std::make_unique<BranchStudy>(c);
         mem = std::make_unique<MemoryStudy>(c);
         if (c.at("frontend").any()) {
@@ -53,6 +55,7 @@ struct Study {
     bool step(const Rec& r, uint64_t next_use) {
         if (limit && r.ord > warmup + limit) return false;
         last_ord = r.ord;
+        if (r.ord <= skip) { if (fe) fe->prev_ord = r.ord; return true; }  // fast-forward: no state change
         bool m = r.ord > warmup;
         if (m && !measuring) {
             measuring = true;
@@ -85,7 +88,7 @@ struct Study {
         if (fe) fe->finish(total);
         Json j = Json::object();
         j["schema"] = "rvw.csim-report/1"; j["status"] = "reported";
-        Json t = Json::object(); t["format"] = rd.format(); t["instructions"] = total; t["warmup_instructions"] = warmup;
+        Json t = Json::object(); t["format"] = rd.format(); t["instructions"] = total; t["warmup_instructions"] = warmup; t["skipped_instructions"] = skip;
         t["measured_instructions"] = measured; t["limited"] = limited; t["context_changes"] = contexts; j["trace"] = t;
         if (br->active()) j["branch"] = br->report(measured);
         if (fe) j["frontend"] = fe->report(measured);

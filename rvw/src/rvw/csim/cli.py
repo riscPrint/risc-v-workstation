@@ -91,6 +91,20 @@ def register(subparsers):
     q.add_argument("--out"); q.add_argument("--json", action="store_true")
     q.set_defaults(func=_qualify)
 
+    sp = sub.add_parser("simpoint", help="choose weighted simulation points (basic-block vectors + k-means)")
+    sp.add_argument("trace"); sp.add_argument("--interval", type=int, required=True, help="instructions per interval")
+    sp.add_argument("--max-k", type=int, default=10); sp.add_argument("--dims", type=int, default=15)
+    sp.add_argument("--seed", type=int, default=1); sp.add_argument("--format", choices=FORMATS, default="auto")
+    sp.add_argument("--out"); sp.add_argument("--json", action="store_true")
+    sp.set_defaults(func=_simpoint)
+
+    rp = sub.add_parser("run-points", help="run a study on simulation points and weight the results")
+    rp.add_argument("study"); rp.add_argument("trace"); rp.add_argument("--points", required=True)
+    rp.add_argument("--warmup", type=int, help="instructions of functional warming before each point (default: all)")
+    rp.add_argument("--set", action="append", metavar="KEY=VALUE"); rp.add_argument("--format", choices=FORMATS, default="auto")
+    rp.add_argument("--out"); rp.add_argument("--json", action="store_true")
+    rp.set_defaults(func=_run_points)
+
     e = sub.add_parser("build", help="build the native engine and library; print their paths")
     e.add_argument("--json", action="store_true")
     e.set_defaults(func=_build)
@@ -164,6 +178,18 @@ def _qualify(args):
 
 
 @_guard
+def _simpoint(args):
+    return simpoint_json(args.trace, args.interval, args.max_k, args.dims, args.seed, args.format)
+
+
+@_guard
+def _run_points(args):
+    from . import simpoint
+    points = json.loads(Path(args.points).read_text())
+    return simpoint.run_points(_overrides(args.study, args.set), args.trace, points, args.warmup, args.format)
+
+
+@_guard
 def _build(args):
     from . import engine
     return {"engine": str(engine.build("cli")), "library": str(engine.build("lib")), **engine.identity()}
@@ -189,3 +215,24 @@ def compare_json(study, trace, events, roi_start=None, roi_end=None, elf_sha256=
 def qualify_json(traces, reference="cbp2016-tage-sc-l-64kb", study=None, format="auto", tolerance=0.10, archive=None):
     from . import qualify
     return qualify.qualify(reference, traces, study, format, tolerance, Path(archive) if archive else None)
+
+
+def simpoint_json(trace, interval, max_k=10, dims=15, seed=1, format="auto"):
+    import tempfile
+    from . import simpoint, study
+    if interval < 1:
+        raise ValueError("interval must be positive")
+    with tempfile.TemporaryDirectory(prefix="rvw-csim-sp-") as tmp:
+        path, fmt, info = study.prepare(Path(trace), format, Path(tmp))
+        if fmt != "csim":
+            raise ValueError("simpoint needs a text trace (csim, c2, spike or bt9)")
+        out = simpoint.choose(path, interval, max_k, dims, seed)
+    out["trace"] = str(trace)
+    return out
+
+
+def run_points_json(study, trace, points, warmup=None, sets=None, format="auto"):
+    from . import simpoint
+    if isinstance(points, str):
+        points = json.loads(Path(points).read_text())
+    return simpoint.run_points(_overrides(study, sets), trace, points, warmup, format)

@@ -450,7 +450,8 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw csim [-h] [--project PROJECT]
-    {run,sweep,budget,convert,models,compare-rtl,qualify,build} ...
+    {run,sweep,budget,convert,models,compare-rtl,qualify,simpoint,run-points,build}
+    ...
 ```
 
 ### `rvw csim run`
@@ -506,6 +507,22 @@ usage: rvw csim qualify [-h] [--reference REFERENCE] [--study STUDY] [--format
     {auto,csim,branch,c2,bt9,spike,champsim}] [--tolerance TOLERANCE]
     [--archive ARCHIVE] [--out OUT] [--json] [--project PROJECT] traces
     [traces ...]
+```
+
+### `rvw csim simpoint`
+
+```text
+usage: rvw csim simpoint [-h] --interval INTERVAL [--max-k MAX_K] [--dims
+    DIMS] [--seed SEED] [--format {auto,csim,branch,c2,bt9,spike,champsim}]
+    [--out OUT] [--json] [--project PROJECT] trace
+```
+
+### `rvw csim run-points`
+
+```text
+usage: rvw csim run-points [-h] --points POINTS [--warmup WARMUP] [--set
+    KEY=VALUE] [--format {auto,csim,branch,c2,bt9,spike,champsim}] [--out OUT]
+    [--json] [--project PROJECT] study trace
 ```
 
 ### `rvw csim build`
@@ -2258,6 +2275,22 @@ Starts a background job: yes.
 Run a trace-driven component study (direction predictors incl. TAGE-SC-L, BTB/RAS/ITTAGE, front-end FTQ model, caches, replacement, prefetchers, TLB, store sets, value prediction) on C2, CBP BT9, ChampSim or rvw.csim-trace/1 traces. Reports MPKI, coverage, accuracy and storage per trace. Runs as a job.
 
 Arguments: `study` (required), `traces` (required), `format`, `sets`, `timeout`.
+
+Starts a background job: yes.
+
+### `csim_run_points`
+
+Run a component study on simulation points (rvw.csim-simpoints/1 path or object) and weight the metrics by the point weights. Runs as a job.
+
+Arguments: `study` (required), `trace` (required), `points` (required), `warmup`, `sets`, `format`.
+
+Starts a background job: yes.
+
+### `csim_simpoint`
+
+Choose weighted simulation points of a trace (basic-block vectors per interval, random projection, k-means with BIC). Writes rvw.csim-simpoints/1. Runs as a job.
+
+Arguments: `trace` (required), `interval` (required), `max_k`, `dims`, `seed`, `format`.
 
 Starts a background job: yes.
 
