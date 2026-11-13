@@ -149,3 +149,44 @@ def test_invalid_latency_cannot_publish_equivalence(tmp_path, latency):
     assert main(['formal', 'equiv', '--gold', 'missing.v', '--gate', 'missing.v', '--top', 'top',
                  '--latency', str(latency), '--out', str(out)]) == 1
     assert json.loads((out / 'result.json').read_text())['status'] == 'inconclusive'
+
+@pytest.mark.skipif(not TOOLS, reason='needs native formal tools')
+def test_per_output_latency_and_names(tmp_path):
+    gold, gate = tmp_path/'a.v', tmp_path/'b.v'
+    gold.write_text('module top(input clk, input [3:0] a, output reg [3:0] q, output [3:0] direct); always @(posedge clk) q <= a; assign direct = a; endmodule')
+    gate.write_text('module top(input clk, input [3:0] a, output reg [3:0] renamed, output [3:0] direct); reg [3:0] p; always @(posedge clk) begin p <= a; renamed <= p; end assign direct = a; endmodule')
+    out = tmp_path/'out'
+    assert main(['formal', 'equiv', '--gold', str(gold), '--gate', str(gate), '--top', 'top',
+                 '--latency-map', 'q=1', '--output-map', 'q=renamed', '--settle', '2',
+                 '--unmatched-state', 'prove', '--out', str(out)]) == 0
+    result = json.loads((out/'result.json').read_text())
+    assert result['restrictions']['latency_map'] == {'q': 1, 'direct': 0}
+    assert len(result['partitions']) == 2
+
+
+@pytest.mark.skipif(not TOOLS, reason='needs native formal tools')
+def test_state_encoding_relation_proven_without_assumptions(tmp_path):
+    gold, gate = tmp_path/'a.v', tmp_path/'b.v'
+    gold.write_text('module top(input clk, reset, en, output q); reg [1:0] s; always @(posedge clk) if(reset) s<=0; else if(en) s <= s==2 ? 0 : s+1; assign q = s==2; endmodule')
+    gate.write_text('module top(input clk, reset, en, output q); reg [2:0] s; always @(posedge clk) if(reset) s<=1; else if(en) s <= {s[1:0],s[2]}; assign q = s[2]; endmodule')
+    out = tmp_path/'out'
+    assert main(['formal', 'equiv', '--gold', str(gold), '--gate', str(gate), '--top', 'top',
+                 '--reset', 'reset', '--unmatched-state', 'prove', '--out', str(out)]) == 0
+
+
+def test_output_map_refuses_unknown_and_aliases():
+    from rvw.formal.equiv import output_contract
+    from rvw.formal.common import Port
+    ports = [Port('q', 'output', 1), Port('r', 'output', 1)]
+    for latency, names in [(['missing=1'], []), (['q=65'], []), ([], ['q=r'])]:
+        with pytest.raises(ValueError):
+            output_contract(ports, 0, latency, names)
+
+
+def test_equiv_mcp_arguments():
+    from rvw.formal.mcp_tools import _argv, mcp_tools
+    assert 'formal_equiv' in {t.name for t in mcp_tools()}
+    argv = _argv('equiv', {'gold': ['a.v', 'b.v'], 'gate': ['c.v'], 'dsec': True,
+                           'latency_map': ['q=-1', 'r=2']})
+    assert argv[5:8] == ['--gold', 'a.v', 'b.v']
+    assert '--dsec' in argv

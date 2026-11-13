@@ -261,6 +261,7 @@ def mcp_tools():
                          "reset_active":{**S,"enum":["high","low"]},"reset_cycles":I,"settle":I,
                          "latency":I,"dsec":B,"pair":{"type":"array","items":S},
                          "unmatched_state":{**S,"enum":["refuse","prove"]},"blackbox_contract":S,
+                         "latency_map":{"type":"array","items":S},"output_map":{"type":"array","items":S},
                          "sampled_events":B,"stable_at_edge":{"type":"array","items":S},
                          "timeout":{"type":"number","exclusiveMinimum":0}},["top","out"]), _runner("equiv"), long=True),
         ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",

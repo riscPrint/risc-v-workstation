@@ -32,6 +32,10 @@ def register(sub):
                    help='pair flattened register names; widths must agree')
     p.add_argument('--latency', type=int, default=0,
                    help='candidate output lags reference by this many clocks (0..64)')
+    p.add_argument('--latency-map', action='append', default=[], metavar='OUTPUT=CYCLES',
+                   help='override output lag in -64..64; negative means reference lags')
+    p.add_argument('--output-map', action='append', default=[], metavar='GOLD=GATE',
+                   help='rename candidate outputs at the comparison boundary')
     p.add_argument('--unmatched-state', choices=['refuse', 'prove'], default='refuse',
                    help='prove all internal state without name pairing; no state equality assumptions')
     p.add_argument('--timeout', type=float, default=60, help='total proof budget in seconds')
@@ -95,7 +99,33 @@ def mapping(gold, gate, pairs):
     return result, missing
 
 
-def harness(args, ports, *, delay=0):
+def output_contract(ports, latency, entries, renames):
+    outputs = {p.name for p in ports if p.direction == 'output'}
+    delays = {name: latency for name in outputs}
+    aliases = {}
+    for rows, target, numeric in ((entries, delays, True), (renames, aliases, False)):
+        seen = set()
+        for row in rows:
+            name, sep, value = row.partition('=')
+            if not sep or name not in outputs or name in seen:
+                raise ValueError('output mappings require distinct declared OUTPUT=VALUE entries')
+            seen.add(name)
+            if numeric:
+                value = int(value)
+                if not -64 <= value <= 64:
+                    raise ValueError('output latency must be in -64..64')
+            else:
+                common.check_ident('candidate output', value)
+            target[name] = value
+    names = [aliases.get(name, name) for name in outputs]
+    if len(set(names)) != len(names):
+        raise ValueError('output mapping must be one-to-one')
+    return delays, aliases
+
+
+def harness(args, ports, *, delay=0, delays=None, aliases=None):
+    delays = delays or {}
+    aliases = aliases or {}
     decl, connect, assigns = [], [], []
     for p in ports:
         if p.name == args.reset:
@@ -105,16 +135,16 @@ def harness(args, ports, *, delay=0):
         if p.direction == 'output':
             assigns.append(f'wire [{p.width-1}:0] rvw_raw_{p.name};')
             observed = f'rvw_raw_{p.name}'
-            for index in range(delay):
+            for index in range(delays.get(p.name, delay)):
                 stage = f'rvw_delay_{p.name}_{index}'
                 assigns.append(f'reg [{p.width-1}:0] {stage};')
                 assigns.append(f'always @(posedge {args.clock}) {stage} <= {observed};')
                 observed = stage
             assigns.append(f'assign {p.name} = rvw_ready ? {observed} : {p.width}\'b0;')
-            connect.append(f'.{p.name}(rvw_raw_{p.name})')
+            connect.append(f'.{aliases.get(p.name, p.name)}(rvw_raw_{p.name})')
         else:
             connect.append(f'.{p.name}({p.name})')
-    limit = (args.reset_cycles if args.reset else 0) + args.settle + args.latency
+    limit = (args.reset_cycles if args.reset else 0) + args.settle + getattr(args, "_max_latency", args.latency)
     if limit:
         width = max(1, limit.bit_length())
         control = (f'reg [{width-1}:0] rvw_count = 0;\n'
@@ -214,6 +244,7 @@ def _run(args):
                 raise ValueError('RTL inputs must be outside --out')
         common.clear_outputs(out, 'gold', 'gate', 'eqy', 'equiv.eqy', 'eqy.log')
         bodies, portsets = [], []
+        delays, aliases = {}, {}
         for side in ('gold', 'gate'):
             directory = out / side
             directory.mkdir()
@@ -245,8 +276,20 @@ def _run(args):
                 raise ValueError('no output obligations')
             if args.reset and not any(p.name == args.reset and p.direction == 'input' and p.width == 1 for p in ports):
                 raise ValueError('reset must be a one-bit input on both designs')
+            if side == 'gold':
+                delays, aliases = output_contract(ports, args.latency,
+                    getattr(args, 'latency_map', []), getattr(args, 'output_map', []))
+                args._max_latency = max(abs(v) for v in delays.values())
+                result['output_mapping'] = aliases
+                result['restrictions']['latency_map'] = delays
+            else:
+                inverse = {value: key for key, value in aliases.items()}
+                ports = [common.Port(inverse.get(p.name, p.name) if p.direction == 'output' else p.name,
+                                     p.direction, p.width, p.signed) for p in ports]
             portsets.append(ports)
-            (directory / 'wrapper.v').write_text(harness(args, ports, delay=args.latency if side == 'gold' else 0))
+            side_delays = {name: max(0, lag if side == 'gold' else -lag) for name, lag in delays.items()}
+            (directory / 'wrapper.v').write_text(harness(args, ports, delays=side_delays,
+                                                       aliases=aliases if side == 'gate' else {}))
             snapshot.seal(directory / 'wrapper.v')
         if portsets[0] != portsets[1]:
             raise ValueError('design port interfaces differ')

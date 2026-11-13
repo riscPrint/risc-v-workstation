@@ -2170,3 +2170,15 @@ A conditional counterexample can use the existing `formal cex` simulation path. 
 `formal_equiv` MCP tool exposes both options. Advisory dsec is refused in this
 mode. Asynchronous state controls remain refused. Default equivalence and other
 formal commands keep their existing latch and generated-clock rejection.
+### Output latency and mapping
+
+`formal equiv` accepts `--latency-map q=2 --latency-map flags=0`.
+A positive value delays the reference output. A negative value delays the candidate.
+Each value must be in -64..64. The common startup interval includes the largest
+absolute delay. `--output-map q=result` binds a changed output name. All outputs
+remain obligations. eqy builds separate closed output partitions. Every partition
+must pass with no internal crossbits before the result can be `equivalent`.
+`--unmatched-state prove` permits state encoding changes. It does not assume a
+state relation. The solver must prove the relation through the outputs.
+MCP tool `formal_equiv` exposes the same controls and source revision export.
+Blackboxes, memory mappings and generated clocks remain unsupported.
