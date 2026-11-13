@@ -133,7 +133,12 @@ struct Machine : simif_t {
       insn_t insn(e.insn);
       unsigned op=e.insn&0x7f, f=(e.insn>>12)&7, width=0, rs=0;
       int64_t offset=0;
-      if((e.insn&3)==3 && (op==3 || op==7 || op==0x23 || op==0x27)) {
+      // An illegal integer memory encoding has no memory access to preflight.
+      // Let Spike execute it and report the architectural illegal-instruction trap.
+      bool legal_integer_width = (op!=3 && op!=0x23) ||
+        (op==3 && (f<=2 || f==4 || f==5 || (cpu->get_xlen()==64 && (f==3 || f==6)))) ||
+        (op==0x23 && (f<=2 || (cpu->get_xlen()==64 && f==3)));
+      if((e.insn&3)==3 && legal_integer_width && (op==3 || op==7 || op==0x23 || op==0x27)) {
         width=1u<<(f&3); rs=insn.rs1();
         offset=(op==3 || op==7) ? insn.i_imm() : insn.s_imm();
       } else if((e.insn&3)!=3) {
