@@ -75,6 +75,7 @@ if __name__ == '__main__':
                     if ('UVM_FATAL ' in line and ':    0' not in line) or '%Fatal' in line or '%Error' in line)[-2000:]
             run['evidence_directory']=str(folder/row['agent'])
         row.update(assessment(row['runs']))
+        row.pop('catches_bad',None)
         for key,negative in [('all_good_cases',False),('all_fault_cases',True)]:
             rows=[r for r in row['runs'] if r['negative']==negative]
             row[key]=bool(rows) and all(r['checked'] for r in rows)

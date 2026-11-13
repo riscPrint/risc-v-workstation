@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -59,10 +60,21 @@ def configure(build_dir, source_repo, out, *, seeds=(1,3)):
     build_dir,source_repo,out=map(lambda p:Path(p).resolve(),(build_dir,source_repo,out))
     seeds=list(seeds)
     digest,built=identity(build_dir,source_repo,source_repo,seeds)
+    original_build=build_dir
+    # Adapter directory arguments are captured as trees. Compiler outputs can
+    # exceed the tree limit; stage only the immutable runtime inputs.
+    runtime=out.with_name(out.name+'.runtime')
+    (runtime/'obj').mkdir(parents=True,exist_ok=False)
+    shutil.copy2(build_dir/'build.json',runtime/'build.json')
+    shutil.copy2(build_dir/'obj/simulation',runtime/'obj/simulation')
+    if (build_dir/'library').is_dir():
+        shutil.copytree(build_dir/'library',runtime/'library')
+    build_dir=runtime
     module=Path(__file__).resolve()
     package=module.parents[1]
     adapter=module.with_name('gate_adapter.py')
     paths=[package,build_dir/'build.json',build_dir/'obj/simulation',
+           original_build/'build.json',original_build/'obj/simulation',
            *map(Path,built['input_sha256']), *map(Path,built.get('native_dependency_sha256', {}))]
     # Capture all generated library bytes as well as the binary and source inputs.
     if (build_dir/'library').is_dir(): paths.append(build_dir/'library')

@@ -97,3 +97,19 @@ def test_changed_native_dependency_cannot_launch_or_create_run(tmp_path):
     with pytest.raises(ValueError,match='native dependency changed'):
         run(build,out,test='smoke')
     assert not out.exists()
+
+
+def test_gate_runtime_bundle_omits_compiler_intermediates(tmp_path):
+    from rvw.regress.config import load_config
+    repo,src,build,data=fixture(tmp_path)
+    (build/'obj/large-generated.cpp').write_text('compiler intermediate')
+    (build/'library').mkdir();(build/'library/LICENSE.txt').write_text('license')
+    config=tmp_path/'core.toml';configure(build,repo,config)
+    runtime=tmp_path/'core.toml.runtime'
+    assert (runtime/'build.json').read_bytes()==(build/'build.json').read_bytes()
+    assert (runtime/'obj/simulation').read_bytes()==(build/'obj/simulation').read_bytes()
+    assert (runtime/'library/LICENSE.txt').read_text()=='license'
+    assert not (runtime/'obj/large-generated.cpp').exists()
+    loaded=load_config(str(config))
+    assert str(runtime) in loaded.adapter and str(build) not in loaded.adapter
+    assert build/'obj/simulation' in loaded.cache_paths

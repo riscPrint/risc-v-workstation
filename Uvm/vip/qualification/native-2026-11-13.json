@@ -160,7 +160,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": false,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": false
@@ -352,7 +351,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -520,7 +518,6 @@
       ],
       "compiles": true,
       "runs_good": false,
-      "catches_bad": false,
       "catches_bad_dut": false,
       "all_good_cases": false,
       "all_fault_cases": false
@@ -676,7 +673,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": false,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -796,7 +792,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -916,7 +911,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1132,7 +1126,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1252,7 +1245,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1372,7 +1364,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1492,7 +1483,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1744,7 +1734,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1864,7 +1853,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -1984,7 +1972,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
@@ -2152,7 +2139,6 @@
       ],
       "compiles": true,
       "runs_good": false,
-      "catches_bad": false,
       "catches_bad_dut": false,
       "all_good_cases": false,
       "all_fault_cases": false
@@ -2320,7 +2306,6 @@
       ],
       "compiles": true,
       "runs_good": false,
-      "catches_bad": true,
       "catches_bad_dut": false,
       "all_good_cases": false,
       "all_fault_cases": true
@@ -2440,7 +2425,6 @@
       ],
       "compiles": true,
       "runs_good": true,
-      "catches_bad": true,
       "catches_bad_dut": true,
       "all_good_cases": true,
       "all_fault_cases": true
