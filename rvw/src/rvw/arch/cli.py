@@ -5,6 +5,10 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action in ('ooo-calibrate', 'ooo-predict', 'ooo-score'):
+        from rvw.ooo.evidence import calibrate, predict, score_prediction
+        return {'ooo-calibrate': calibrate, 'ooo-predict': predict,
+                'ooo-score': score_prediction}[action](**kw)
     if action in ('sched-generate', 'sched-measure'):
         from .sched import generate, measure
         return (generate if action == 'sched-generate' else measure)(**kw)
@@ -58,6 +62,15 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
+    for action, fields in (('ooo-calibrate', ('plan',)),
+                           ('ooo-predict', ('calibration', 'config', 'trace')),
+                           ('ooo-score', ('prediction', 'c1'))):
+        p = sub.add_parser(action)
+        p.set_defaults(func=_run)
+        for field in fields:
+            p.add_argument(field)
+        p.add_argument('--out', required=True)
+        p.add_argument('--json', action='store_true')
     for action in ('sched-generate', 'sched-measure'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)

@@ -16,11 +16,11 @@ Create CONFIG in your core project. This generic example is not a core preset:
 }
 ```
 
-All fields are required. Unknown fields are errors. Sizes, widths and latencies
+The fields in the example are required. Unknown fields are errors. Sizes, widths and latencies
 must be positive integers. These latency classes support decoded integer
 instructions only. Compressed integer instructions use the shared decoder.
-Branches, jumps, fences, atomics, privileged, FP and vector operations are
-unsupported. The engine rejects their traces. A missing or unsuccessful end
+Fences, atomics, privileged, FP and vector operations are
+unsupported. Branches and jumps need explicit latency classes. The engine rejects their traces. A missing or unsuccessful end
 marker is an error. An exhausted model cycle budget is an error.
 
 ## Decisions
@@ -46,14 +46,13 @@ This phase-sampled counter is not a hardware stall-cause measurement.
 `rvw.ooo-run/1` is an experimental C9 extension. Report creation exits zero.
 Bad input or budget exhaustion exits two with a JSON error. Success does not
 establish core correctness, configuration agreement or model accuracy.
-`accuracy_status` is always `inconclusive`. `configuration_status` is always
-`unchecked`. No native RTL speedup has been measured. The 50x and accuracy
+`accuracy_status` is always `inconclusive`. `configuration_status` is `unchecked` unless an exported snapshot is checked. No native RTL speedup has been measured. The 50x and accuracy
 budgets in the design note are targets.
 
-The engine uses fixed latencies. It does not model branch prediction, caches,
-TLBs, wrong-path work, replay, functional unit ports or physical registers.
-It retains the full trace in memory. Core configuration export, calibration,
-held-out RTL correlation, prediction ledgers and MCP jobs are later phases.
+The engine uses fixed latencies. It does not model caches, TLBs, wrong-path
+work, replay or shared functional unit arbitration.
+It retains the full trace in memory. Core elaboration export, calibration, held-out RTL correlation and prediction
+ledgers remain separate work.
 Do not use the existing gem5 report readers to certify this model.
 
 Run targeted tests from the workstation root:
@@ -65,3 +64,80 @@ PYTHONPATH=rvw/src python -m pytest rvw/tests/test_ooo.py -q
 See [the design](../../../../docs/design/own-core-model.md) for phases,
 contracts, prior art and acceptance targets. Keep tuned core values in the
 core project. Store measured evidence outside the repository.
+
+## Optional timing structures
+
+Configuration also accepts `ports` (per-class pipelined issue counts),
+`physical_registers` (total integer registers, zero means unbounded),
+`branch_penalty` (extra cycles after branch completion), `memory_policy`
+(`ordered` or `disambiguate`), and `forwarding_latency` (default one cycle).
+The original required fields remain required. Add `branch` and `jump` to
+`latencies` to enable those decoded classes.
+
+The branch policy predicts the sequential PC. Python callers can pass a
+predictor with `predict(pc, fallthrough)` and `update(pc, actual_next)` methods
+to `simulate`. Prediction and update occur at issue. Younger instructions wait
+for the branch to complete. A miss also stops issue, rename and fetch for the
+recovery interval. The model does not execute wrong-path instructions or model
+speculative predictor history. These costs are an approximation.
+
+Disambiguation lets loads pass older loads and issued non-aliasing stores.
+A load waits until all older stores issue. At that point traced addresses
+are available. The youngest overlapping store forwards a fully covered load.
+Partial coverage waits for overlapping stores to finish. Stores stay ordered
+behind older memory operations. This policy has no speculative dependence
+prediction, replay, cache hierarchy or store drain buffer.
+
+Use `--effective-config FILE` to compare every model field with a project-owned
+snapshot. The snapshot has schema `rvw.ooo-effective/1`, `source_revision`
+(full 40-character revision), `config` (selected preset), `parameters`
+(the complete normalized configuration including defaults), `extraction_keys`
+(one nonempty source key for each parameter), and `required_structures`.
+Supported required structures are `integer`, `branches`, `ports`, `registers`
+and `address_disambiguation`. Other required structures cause an error.
+The core's own exporter must produce this file. This repository does not
+elaborate the core or verify the exporter. A successful comparison reports
+`configuration_status: snapshot_checked`. It does not certify RTL agreement.
+The snapshot hash and source keys are retained in the report.
+
+`ooo_run` exposes the same operation as a cancellable MCP job. Tests use small
+synthetic schedules. No RTL accuracy or native speed qualification was run.
+
+## Saved calibration and predictions
+
+```
+rvw arch ooo-calibrate PLAN --out calibration.json --json
+rvw arch ooo-predict calibration.json CONFIG TRACE --out prediction.json --json
+rvw arch ooo-score prediction.json LATER_C1 --out score.json --json
+```
+
+All output files must be new. The matching MCP jobs are `ooo_calibrate`,
+`ooo_predict` and `ooo_score_prediction`. They support cancellation.
+
+PLAN uses schema `rvw.ooo-calibration-plan/1`. Its `config` and `event_map`
+paths and each sample's `elf`, `trace`, `c1` and `events` paths resolve beside
+PLAN. Each sample also has a unique `id` and `split` (`training` or `heldout`).
+Both splits must be nonempty. Equal ELF or trace hashes across splits are
+errors. This command scores a frozen configuration. It does not fit settings.
+
+The event map is an object keyed by report event name. Each value defines
+`model_event`, `rtl_event`, `edge`, `unit`, `identity`, `family` and
+`region: whole-program`. The producer must use equivalent event predicates.
+The RTL event file has `c1_sha256`, `trace_sha256` and a `counts` object keyed
+by RTL event name. Missing counts and zero denominators stay explicit.
+Correlation needs at least three nonconstant samples. Coverage needs five
+held-out samples and three declared event families. Per-workload IPC errors
+and per-event errors are compared with 10% and 15% budgets. The result retains
+raw input hashes. Budget comparisons do not certify fidelity.
+
+Only complete whole-program regions are supported. C1 must be a conclusive
+pass with the captured ELF hash. C1/C2 core, config, ELF identity and retired
+instruction count must match. ROI slicing and event-map semantic verification
+are not implemented. Event counts remain producer declarations.
+
+Predictions use a frozen held-out trace, configuration and engine. Scores go
+in separate files. Scoring rechecks calibration captures, prediction hashes,
+C1 identity, seed, memory timing and instruction count. The later C1 file must
+have a local modification time after prediction creation. Local times are
+not trusted chronology. A later C2 stream comparison, later event scoring,
+three-repeat native speed qualification and hardware accuracy remain open.
