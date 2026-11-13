@@ -5,6 +5,59 @@ import riscvsim.RvfiRecord
 import scala.collection.mutable.ArrayBuffer
 
 class C2BackendSpec extends AnyFunSuite {
+  test("late RTL FP flag writeback belongs to its FP retirement only") {
+    val rows = ArrayBuffer.empty[RvfiRecord]
+    val backend = new C2Backend(64, () => 1L, () => 3, () => (BigInt(0), BigInt(0)),
+      r => rows += r, (_, _, _, _) => (), (_, _, _) => (),
+      fpSnapshot = Some(() => (BigInt(0x60), BigInt(0x1800))), lateFlags = () => BigInt(1))
+    backend.commit(0, 0x80000000L, 0x00000053L)
+    backend.commit(0, 0x80000004L, 0x13L)
+    backend.drain()
+    assert(rows.head.fpState.get.fcsr == 0x61)
+    assert(rows(1).fpState.get.fcsr == 0x60)
+  }
+
+  test("mret CSR state comes from the later observed return apply edge") {
+    val rows = ArrayBuffer.empty[RvfiRecord]
+    val backend = new C2Backend(64, () => 1L, () => 3, () => (BigInt(0), BigInt(0)),
+      r => rows += r, (_, _, _, _) => (), (_, _, _) => (),
+      fpSnapshot = Some(() => (BigInt(0), BigInt(0x1800))))
+    backend.commit(0, 0x80000000L, 0x30200073L)
+    backend.returnStatus(BigInt(0x1880))
+    backend.commit(0, 0x80000004L, 0x13L)
+    assert(rows.head.csrState(0x300) == 0x1880)
+    assertThrows[IllegalStateException](backend.returnStatus(BigInt(0)))
+  }
+
+  test("compressed encoding keeps the expanded probe destination and raw instruction length") {
+    val rows = ArrayBuffer.empty[RvfiRecord]
+    val backend = new C2Backend(64, () => 1L, () => 3, () => (BigInt(0), BigInt(0)),
+      r => rows += r, (_, _, _, _) => (), (_, _, _) => (), instructionAt = Some(_ => 0x4085L))
+    backend.writeRf(0, 0, 32, Array[Byte](1, 0, 0, 0, 0, 0, 0, 0))
+    backend.commit(0, 0x80000000L, 0x00100093L)
+    backend.drain()
+    assert(rows.head.insn == 0x4085 && rows.head.rd == 1 && rows.head.rdWdata == 1)
+    assert(rows.head.pcNext == BigInt("80000002", 16))
+  }
+
+  test("FP writes include f0 and keep boxed 64-bit values on RV32") {
+    val rows = ArrayBuffer.empty[RvfiRecord]
+    var fcsr = BigInt(0x61)
+    val backend = new C2Backend(32, () => 1L, () => 3, () => (BigInt(0), BigInt(0)),
+      r => rows += r, (_, _, _, _) => (), (_, _, _) => (),
+      fpSnapshot = Some(() => (fcsr, BigInt(0x6000))))
+    backend.writeRf(0, 1, 32, Array[Byte](0, 0, -128, 63, -1, -1, -1, -1))
+    backend.commit(0, 0x80000000L, 0x00000053L)
+    fcsr = 0
+    backend.commit(0, 0x80000004L, 0x13L)
+    backend.drain()
+    val fp = rows.head.fpState.get
+    assert(fp.valid && fp.destination == 0 && fp.data == BigInt("ffffffff3f800000", 16))
+    assert(fp.flags == 1 && fp.fcsr == 0x61)
+    assert(rows.head.rd == 0 && rows.head.csrState(0x300) == 0x6000)
+    assert(!rows(1).fpState.get.valid && rows(1).fpState.get.fcsr == 0)
+  }
+
   test("lookahead holds the current cycle until the observed next PC arrives") {
     var cycle = 1L
     val rows = ArrayBuffer.empty[RvfiRecord]
