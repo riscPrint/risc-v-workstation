@@ -127,3 +127,18 @@ FP records are buffered for one bounded run. Streaming DPI is not bound.
 Overlapping CSR and FP writes without separate physical snapshots stop
 capture. Final projected state must equal final actual storage. These are
 capture limits, not waived comparisons or core qualification.
+
+## Isolated FP unit transactions
+
+The example's FP datapath harness imports the real pinned Vexii plugins.
+It drives one execution-lane transaction per reset. Inputs stay stable until
+done. Source-bank and source-enable metadata match the selected instruction.
+Fetch, front decode, dispatch, RF storage, privilege checks and flushes are
+outside this boundary. The real lane decode, unpack, arithmetic, pack,
+writeback and stored FCSR flags remain in the checked path.
+
+The native runner checks full result bits and flags against SoftFloat and
+optional saved Spike cases. The formal runner specializes the operation and
+RM before extraction, then uses an explicit binding with `rvw formal datapath`.
+Case proofs, unrestricted operation proofs, native vectors and whole-core
+results remain separate. See the FP datapath README for the measured limits.
