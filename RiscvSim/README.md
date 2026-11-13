@@ -949,3 +949,13 @@ adapter samples them with `ProbeCollector` in its cycle loop and writes
 `probe-events.jsonl` (`rvw.probe-events/1`, C1 artifact `probe_events`). See
 [SpinalProbes](../SpinalProbes/README.md) for the API and `rvw probes` for the converters.
 An adapter declares `supportsProbes`; otherwise the flag is refused.
+
+## SystemC and TLM memory target
+
+`src/main/cpp/TlmMemory.h` provides a blocking TLM-2 memory target with byte
+enables and range checks. The [native example](examples/systemc/README.md)
+builds an RTL requester with Verilator `--sc` and connects it through a
+SystemC initiator bridge. The target annotates delay. The caller consumes it.
+The example uses one outstanding transaction and explicit clock-edge sampling.
+Its native test passed with SystemC 3.0.2 and Verilator 5.049. This is a small
+partition example. It provides no whole-core or timing qualification.
