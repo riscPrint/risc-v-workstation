@@ -18,11 +18,17 @@ TYPES = {
 PATH = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 
 
-def generate(db, out, depth=4, max_beats=256, type_report=None):
+def generate(db, out, depth=4, max_beats=256, type_report=None, clocks=None):
     if type(depth) is not int or not 1<=depth<=64:
         raise ValueError("AXI tracker depth must be in 1..64")
     if type(max_beats) is not int or not 1<=max_beats<=256:
         raise ValueError("AXI write strobe history must be in 1..256 beats")
+    clock_map={}
+    if clocks is not None:
+        intent=json.loads(Path(clocks).read_text())
+        if intent.get('schema')!='rvw.bus-clocks/1' or not isinstance(intent.get('instances'),dict):
+            raise ValueError('expected rvw.bus-clocks/1 with instances')
+        clock_map=intent['instances']
     rows, sources, binds = [], [], []
     with_db = DesignDB(db)
     try:
@@ -49,6 +55,10 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
                     continue
             row = dict(path=path, component_id=cid, class_name=cls, kind=kind, status='unsupported')
             if type_info: row.update(recorded_class=recorded_class,type_source=str(type_report),options=type_info.get('options',{}))
+            comp = with_db.component(cid)
+            component_path=comp['path']
+            instance_path=path if not component_path or path.startswith(component_path+'.') else component_path+'.'+path
+            row['instance_path']=instance_path
             rows.append(row)
             try:
                 sigs = c.execute('SELECT name,path,spinal_path,width,clock_domain_id,pruned FROM signals WHERE component_id=?', (cid,)).fetchall()
@@ -56,9 +66,21 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
                 if not signals:
                     raise ValueError('no unpruned typed signal paths')
                 domains = {s[4] for s in signals.values() if s[4] is not None}
-                if len(domains) != 1:
-                    raise ValueError('bus signals need one recorded clock domain')
-                domain = with_db.clock_domain(next(iter(domains)))
+                declaration=clock_map.get(instance_path)
+                if declaration is not None:
+                    if not isinstance(declaration,dict) or set(declaration)!={'clock','reset'}:
+                        raise ValueError('bus clock declaration needs exactly clock and reset paths')
+                    matches=with_db.q('SELECT id FROM clock_domains WHERE clock=? AND reset=?',
+                                      (declaration['clock'],declaration['reset']))
+                    if len(matches)!=1:raise ValueError('declared controls need one matching database clock domain')
+                    domain_id=matches[0][0]
+                    if domains and domains!={domain_id}:raise ValueError('declared clock contradicts recorded bus signal domains')
+                    row['clock_source']='project'
+                else:
+                    if len(domains)!=1:raise ValueError('bus signals need one recorded clock domain or explicit bus clock declaration')
+                    domain_id=next(iter(domains));row['clock_source']='database'
+                row['clock_domain_id']=domain_id
+                domain = with_db.clock_domain(domain_id)
                 if not domain or not domain.get('reset') or domain.get('edge') != 'RISING' or domain.get('clock_enable') or domain.get('soft_reset'):
                     raise ValueError('requires rising clock, reset, and no clock-enable/soft-reset')
                 def ident(s):
@@ -142,14 +164,20 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
                 name = f'rvw_bus_{bid}'
                 sources.append(source if source is not None else render(kind,width,4).replace('module rvw_'+kind+'(', 'module '+name+'('))
                 comp = with_db.component(cid)
-                target = ident(with_db.top + ('.'+comp['path'] if comp['path'] else ''))
+                target_instance = ident(with_db.top + ('.'+comp['path'] if comp['path'] else ''))
+                unique_module=with_db.q('SELECT COUNT(*) FROM components WHERE module=?',(comp['module'],))[0][0]==1
+                target = ident(comp['module']) if unique_module else target_instance
+                row.update(target_instance=target_instance,bind_scope='unique_module' if unique_module else 'instance')
                 binds.append(f'bind {target} {name} {name}_instance('+', '.join(f'.{k}({v})' for k,v in ports.items())+');')
                 row.update(status='generated', width=width, ports=ports, target=target)
             except (ValueError, KeyError, TypeError, QueryError) as exc:
                 row['reason'] = str(exc)
+        used_paths={r.get('instance_path',r['path']) for r in rows}
+        rows.extend(dict(path=key,kind='clock_binding',status='unsupported',reason='clock declaration has no matching bus instance')
+                    for key in sorted(set(clock_map)-used_paths))
         report = dict(schema='rvw.bus-checks/1', status='generated' if binds else 'no_checks',
                       buses=rows, complete=bool(binds) and all(r['status'] == 'generated' and not r.get('unbound_checks') for r in rows),
-                      database=with_db.capture_record(),
+                      database=with_db.capture_record(),clock_declarations=clock_map,
                       limits=['No compiler, solver or simulator was run.',
                               'Transaction checks require complete fields. Partial bindings retain per-instance reasons.',
                               'Instance bind syntax requires a frontend with SystemVerilog bind support.',
@@ -166,7 +194,7 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
 
 def run(args):
     try:
-        result = generate(args.db,args.out,getattr(args,'depth',4),getattr(args,'max_beats',256),getattr(args,'type_report',None))
+        result = generate(args.db,args.out,getattr(args,'depth',4),getattr(args,'max_beats',256),getattr(args,'type_report',None),getattr(args,'clocks',None))
         print(json.dumps(result))
         return 0 if result['status'] == 'generated' else 3
     except (ValueError, OSError, QueryError) as exc:

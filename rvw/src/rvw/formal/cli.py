@@ -101,6 +101,7 @@ def register(sub) -> None:
     buses.add_argument("--depth", type=int, default=4, help="AXI per-ID and address/data tracker slots (1..64)")
     buses.add_argument("--max-beats", type=int, default=256, help="AXI write strobe history per packet (1..256)")
     buses.add_argument("--type-report", help="matching SpinalChecks report for ambiguous bus classes")
+    buses.add_argument("--clocks", help="project per-instance bus clock declarations")
     buses.set_defaults(func=bus_bindings.run)
 
     from . import csr
