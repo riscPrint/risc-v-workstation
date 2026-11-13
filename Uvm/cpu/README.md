@@ -8,7 +8,7 @@ counts a check only after the comparator succeeds.
 
 Compile the interface before `rvw_cpu_pkg.sv`. Link `Uvm/spike_bridge.cpp`.
 Generate `spike_effect.h` from the current shim fields. Initialize Spike
-before `run_test`. Supply a matched, captured ABI 6 shim and the same ELF
+before `run_test`. Supply a matched, captured ABI 8 shim and the same ELF
 image as the DUT. See `../examples/cpu/run.py` for the setup. Set `vif` in
 `uvm_config_db` for the environment and monitor. The project owns core pins,
 clock generation, reset polarity conversion, bus handshakes and test end.

@@ -90,7 +90,7 @@ def prepare(inputs, out):
  initial begin #10000000; $fatal(1,"watchdog"); end
 endmodule
 ''')
-    if SHIM_VERSION != 7:
+    if SHIM_VERSION != 8:
         raise ValueError('update the native DPI ABI profile')
     (out / 'spike_effect.h').write_text('#include <cstdint>\nstruct Effect {\n' + ''.join(
         f' uint64_t {name};\n' for name in FIELDS) + ' uint64_t regs[32]; char disasm[256];\n};\n')

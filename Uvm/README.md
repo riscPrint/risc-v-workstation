@@ -216,8 +216,8 @@ physical peripheral. The standard access sequence reports
 See [the CPU environment](cpu/README.md) for live RVFI monitoring, independent
 Spike DPI checks, shared memory response services, control sequences, Python
 services and a bounded RV32I_Zicsr ADDI/MISA fixture. The bridge uses the current Spike
-shim ABI 6 and passes the platform PMP granularity. The previous ABI 5 setup
-cannot initialize a current shim.
+shim ABI 8 and passes the platform PMP granularity. Rebuild the selected shim
+with `Cosim/build.sh`.
 
 The fixture also has a cocotb path on Icarus. It uses the same independent
 Spike comparator and Python memory services. Neither fixture establishes a

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded live ADDI/MISA Spike smoke; use an existing matched ABI 6 shim."""
+"""Bounded live ADDI/MISA Spike smoke; use an existing matched ABI 8 shim."""
 import argparse
 import json
 import datetime as dt
@@ -14,7 +14,7 @@ from rvw.results import write_json
 
 
 def run(out, shim, archive, *, build_timeout=600):
-    if SHIM_VERSION != 6:
+    if SHIM_VERSION != 8:
         raise ValueError('unsupported:live_cpu_spike_abi')
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
