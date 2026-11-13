@@ -1003,9 +1003,10 @@ binding fails elaboration. See the three VexRiscv project bindings in
 
 These native results were recorded on 2026-11-13. Bound means that the check
 was compiled into the simulation. Fired counts check IDs, then total events.
-Unbound means a generated check had no native binding. All 99 generated check
-IDs passed BMC through depth 4 with two initial reset samples. No activation
-measurement or unbounded proof was obtained.
+Unbound means a generated check had no native binding. The three retained
+formal captures contain 99 check IDs. All 99 passed depth-4 BMC with two initial
+reset samples. No activation measurement or unbounded proof was obtained.
+The later 33-check native capture has no formal run.
 
 | Design and programs | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
@@ -1014,10 +1015,15 @@ measurement or unbounded proof was obtained.
 | VexiiRiscv, nine catalog CSR programs | 33 | 33 | NOT RUN | NOT RUN | 0 / 0 | 0; accepted CSR interface, including RAM |
 | Composed SoC, RV32 stub hello | 17 | 17 | 0 | 17 | 0 / 0 | 0; all native bindings present |
 
+The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
+eight Spike passes and one retained `marchid` configuration mismatch. The new
+33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
+
 VexRiscv has 49 C1 passes. VexiiRiscv has two C1 passes after the exact
 PC hold cancellation binding. The two original PC valid-hold firings are tool
 false positives: the registered hold withdraws the offer. Both wave windows and
-the original finding remain in [the evidence](../examples/vexiiriscv/checks-evidence/pc-hold-wave.json). The composed SoC has one C1 pass and
+the original finding remain in [the evidence](../examples/vexiiriscv/checks-evidence/pc-hold-wave.json).
+The composed SoC has one C1 pass and
 its UART output is `hello\n`. These captures use different cores and programs.
 They do not transfer ISA support or check coverage between designs.
 
@@ -1107,9 +1113,23 @@ same-cycle cancellation, reuse, early fences and lifecycle errors. This is a
 native template test. No BOOM or other core binding, instruction-level recovery
 proof, byte-data check or full memory-order qualification is claimed.
 
-The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
-eight Spike passes and one retained `marchid` configuration mismatch. The new
-33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
+### Measured model and template results
+
+These results were recorded on 2026-11-13. They are separate from the connected
+core table above. A passing fixture does not establish a core binding.
+
+| Capability | Measured test | Result | Remaining binding limit |
+|---|---|---|---|
+| Recovery, killed effects and fence drain | Verilator; 1 test with 15 scenarios | Legal flow has zero firings; 14 fault scenarios detected | Independent core event and age bindings NOT RUN |
+| Programmable HPM and five mode filters | Verilator; 1 test with 3 scenarios | Legal flow has zero firings; selector and count faults detected | Core binding, OF and unsupported-mode legalization NOT RUN |
+| Coherent cache and reservation | Scala; 3 model tests | Dirty data, wire parameters, ack matching, reservation loss and capability limits checked | RTL cache binding and concurrent coherence races NOT RUN |
+| Dynamic IMSIC CSR windows | Python; 11 model cases | Selector/file routing and partial known-state expectations checked | Core binding, denial, arbitration and delivery timing NOT RUN |
+| UPF companion clock gates | 6 generation cases; 4 Icarus cases | Legal wake passes; phase, off-edge and late-wake faults detected | Core and physical gate bindings NOT RUN; Tcl gate commands unsupported |
+
+See the [model validation record](model-validation-results.json) for source
+hashes and limits. No new formal result is claimed for these models. The
+[recovery fixture](src/test/scala/spinalchecks/RecoveryChecksSpec.scala) retains
+its independent event requirements.
 
 ### Programmable HPM events and mode filters
 
