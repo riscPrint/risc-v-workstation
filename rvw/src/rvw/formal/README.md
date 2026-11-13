@@ -428,8 +428,17 @@ Each payload includes every recorded sideband. AXI4 checks burst encodings,
 FIXED length limits and WRAP length/alignment. AXI-Lite rejects EXOKAY responses.
 TileLink checks channel opcode encodings only. Pre-acceptance offers can change. Hierarchical instances use local
 clock/reset ports. Missing fields and unresolved controls stay unsupported.
-These rows report `coverage=channel_safety`. They do not check beat counts,
-ID response order, exclusive operations or coherence state. #66 remains open.
+Complete AXI fields also enable independent transaction trackers. These rows
+report `coverage=transaction_safety`. The trackers check per-ID read bursts,
+RLAST, write address/data order, WLAST, response IDs and EXOKAY lock flags.
+W data can arrive before AW. Reads can interleave across IDs. WSTRB checks
+use the paired AW geometry for FIXED, INCR and WRAP bursts, including unaligned
+first beats. They also check 4 KiB boundaries and exclusive request options.
+`--depth 4` limits pending descriptors and `--max-beats 256` limits write
+strobe history. Capacity assertions describe instrumentation limits, not AXI
+protocol violations. The MCP tool exposes both controls. Generation does not
+run a solver. Memory data and exclusive reservation state remain project
+obligations. TileLink transaction and coherence tracking remain open.
 
 ## Resource safety templates
 
@@ -455,8 +464,9 @@ No database inference, fairness, full ROB recovery or real-core proof is claimed
 `rvw formal upf --source intent.upf --bindings bindings.json --out generated`
 imports a literal UPF 2.1 domain/isolation subset and generates sampled isolation
 checks. MCP: `formal_upf`. See `SpinalChecks/upf/README.md` for exact commands,
-binding fields, event semantics and unsupported constructs. Retention, supply
-state tables, clock gating and general Tcl remain unsupported. No verification
+binding fields, event semantics and unsupported constructs. Literal retention, supply tables and power-switch gating are also supported.
+See the UPF README for their explicit binding maps. Clock-gate import and
+general Tcl remain unsupported. No verification
 runs during generation.
 ## Simple bus protocol generation
 
@@ -479,16 +489,14 @@ and formal engines. They do not run either engine during generation.
 `AhbLite3` and `Axi4Stream` bundle types. MCP: `formal_buses`. It derives ports
 and packed payloads from typed signal paths. It writes `monitors.sv`,
 `binds.sv`, and `result.json`. Load both SV files with the DUT in a frontend
-that supports instance `bind`. Only top-component buses with one recorded
+that supports instance `bind`. Top and nested component buses with one recorded
 rising clock, reset, and no clock enable or soft reset are supported. APB
 requires one select bit. Missing fields, missing clock associations and other
 unsupported cases stay named in the report. No bindings gives `no_checks`
 and exit 3. Generation is not evidence of compilation or verification.
 
-These additions do not complete #66. AXI4-Lite, AXI4 and coherent TileLink
-continue to use their existing monitors. Automatic database binding for those
-bus types, deeper hierarchy, full AHB burst/data checks and complete protocol
-compliance remain open. Native seeded simple-bus tests check monitor behavior;
+These additions do not complete #66. Full TileLink coherence, full AHB
+burst/data checks and complete protocol compliance remain open. Native seeded simple-bus tests check monitor behavior;
 they do not establish real-device correctness or database-to-RTL integration.
 
 ## SBY campaigns and property history
@@ -2700,3 +2708,7 @@ at depth 20. Its impossible value-16 cover stayed inconclusive. A deliberately
 failing source assertion did not count as a hit. rIC3 used seeds 0 and 1 at
 the shallow bound. Both native tests passed in 5.99 s with 6 s stage timeouts.
 Results are under `/tmp/deep-cover-native4/`. No capacity improvement is claimed.
+The AXI slow tests run independent good traces and seeded bad traces through
+SBY in prove mode. They use Yices for AXI4 and ABC PDR for AXI4-Lite. Each
+expected fault must return FAIL. Tool errors do not count as detected faults.
+These small fixtures prove monitor behavior, not a connected design.

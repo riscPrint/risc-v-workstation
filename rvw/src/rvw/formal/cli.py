@@ -98,6 +98,8 @@ def register(sub) -> None:
     buses = s.add_parser("buses", help="generate typed simple-bus monitors and instance binds from SpinalDB")
     buses.add_argument("--db", required=True)
     buses.add_argument("--out", required=True)
+    buses.add_argument("--depth", type=int, default=4, help="AXI per-ID and address/data tracker slots (1..64)")
+    buses.add_argument("--max-beats", type=int, default=256, help="AXI write strobe history per packet (1..256)")
     buses.set_defaults(func=bus_bindings.run)
 
     from . import csr
