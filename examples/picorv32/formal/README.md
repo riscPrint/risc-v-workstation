@@ -126,8 +126,8 @@ register reset state, immediate memory service, no interrupts and no PCPI.
 The ELF uses the existing project linker script and no-CSR test environment.
 The assembler enables Zifencei so `fence_i` can build. This does not add that
 extension to the RTL. Each test has a one-million-cycle RTL limit and a
-90-second host limit. A terminal trap without a test completion remains
-inconclusive; it is not a stream match.
+90-second host limit. A terminal trap without a test completion gets a separate diagnosis.
+It is not a stream match.
 
 ### Measured upstream result
 
@@ -149,3 +149,31 @@ hashes directly on future runs. Private native evidence is in
 `pico-upstream-final` under the local run directory. The earlier 37-program
 bundled-test run stopped at the completion bus request, before the final
 store retired. It is not substituted for the final upstream run.
+
+
+### Terminal-trap diagnosis
+
+The two timeouts were replayed with the same retained ELFs and strict miter on
+2026-11-13. The harness now stops one simulation time unit after a terminal trap.
+It waits for the monitor assertions before it stops. It records PC, instruction,
+source operand and retirement count. It does not report a trap as a match.
+
+| Program | Terminal PC | Instruction | Retirements | Result |
+| --- | --- | --- | --- | --- |
+| fence_i | 0x80000050 | 0x0000100f, FENCE.I | 20 | unsupported profile |
+| ma_data | 0x80000010 | 0x00141383, LH at x8+1 | 4 | unsupported profile |
+
+PicoRV32 decodes FENCE with funct3=0. It does not implement Zifencei in this
+profile. The source operand for the LH was 0x80000580. The effective address
+was 0x80000581. CATCH_MISALIGN=1 traps that access. The upstream ma_data test
+expects misaligned loads and stores to complete. This harness has no trap
+emulator. These are profile limits, not solver timeouts or monitor mismatches.
+No RTL feature was enabled and no comparison was weakened.
+
+The suite count stays 42: 40 earlier stream matches and two unsupported
+programs. Its overall result stays inconclusive. The 40 matching programs
+were not rerun for this diagnosis. suite-results.json retains the original
+timeout outcomes under previous_attempt. Adjacent terminal-trap logs record
+these two native retries. The exact trap-write negative-control limit above
+is unchanged. Other terminal traps remain inconclusive unless the observed
+instruction and operand establish one of these profile limits.
