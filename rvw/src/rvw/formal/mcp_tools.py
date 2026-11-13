@@ -74,7 +74,9 @@ def _command_error(job, code, context):
 def _runner(command):
     def run(job, **args):
         code = job.run([*_argv(command, args), "--json"])
-        result = Path(args["out"]) / "result.json"
+        proposal = command == "datapath" and args.get("unit") and not args.get("confirm")
+        result = Path(args["out"]) / ("proposal.json" if proposal else
+                    "proof/result.json" if command == "datapath" and args.get("unit") else "result.json")
 
         def error(why):
             return ToolError(f"rvw formal {command}: {why} (exit {code})",
@@ -94,6 +96,8 @@ def _runner(command):
             "equiv-partitions": {"equivalent"}, "cover-hunt": {"covered"},
             "trace-mine": {"candidates", "no_candidates"}, "scenario-compile": {"generated"},
         }.get(command, {"pass"})
+        if proposal:
+            successes = {"needs_confirmation", "no_candidates"}
         if (code == 0) != (data.get("status") in successes):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
