@@ -237,7 +237,8 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
                         'emission_config': '$incomplete:hdl-navigation-only',
                         'input_capture': json.dumps(capture.record()),
                         'graph_semantics': 'conservative signal and whole-cell dependencies; register stage counts can include state aliases',
-                        'yosys_version': tool.version.strip()}
+                        'yosys_version': tool.version.strip(),
+                        'hdl_port_connection_coverage': 'all-instance-ports'}
                 if frontend == 'chisel':
                     meta.update({'firtool_version': fir_tool.version.strip(),
                                  'firtool_options': json.dumps(hdl_chisel.FIRTOOL_OPTIONS),
@@ -426,14 +427,16 @@ class _Writer:
                 child_bits = self.instance(typ,prefix+name,cid,depth+1,name)
                 bindings = []
                 self.port_connections[prefix + name] = bindings
-                for port, parent_bits in ports.items():
-                    bindings.append({'name': port, 'direction': self.modules[typ]['ports'][port]['direction'],
-                                     'width': len(parent_bits),
+                for port, child_port in self.modules[typ]['ports'].items():
+                    parent_bits = ports.get(port, [])
+                    bindings.append({'name': port, 'direction': child_port['direction'],
+                                     'width': len(child_port['bits']),
                                      'status': ('unconnected' if not parent_bits else
                                                 'tied' if all(b in ('0', '1') for b in parent_bits) else
                                                 'unknown' if any(isinstance(b, str) for b in parent_bits) else 'connected'),
                                      'bits_lsb_first': [b if isinstance(b, str) else None for b in parent_bits]})
-                    child_port = self.modules[typ]['ports'][port]
+                    if not parent_bits:
+                        continue
                     if len(parent_bits) != len(child_port['bits']):
                         raise ValueError('port width mismatch')
                     for pb, cb in zip(parent_bits,child_port['bits']):

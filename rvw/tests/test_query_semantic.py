@@ -57,6 +57,8 @@ def test_changed_hierarchy_and_port_bindings(cluster_db, tmp_path):
     assert compare(str(cluster_db), str(other))['changed'][0]['path'] == 'fifo'
     db = DesignDB(other)
     try:
-        assert semantic.port_status(db, 'fifo')['ports'][0]['status'] == 'tied'
+        status = semantic.port_status(db, 'fifo')
+        assert status['ports'][0]['status'] == 'tied'
+        assert status['coverage'] == 'legacy-connections-only'
     finally:
         db.close()
