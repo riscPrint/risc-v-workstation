@@ -7,7 +7,7 @@ root = "."
 backend = "riscvsim-verilator"
 name = "vexiiriscv"
 adapter = "./rvw/run.sh"
-configs = ["rv32im", "rv32imasu"]
+configs = ["rv32im", "rv32imasu", "rv32im_cached"]
 default_config = "rv32im"
 lock = "vex"                     # same lock as run.sh (the brief shares it with VexRiscv)
 source_repo = "."
@@ -69,6 +69,16 @@ dir = "rvw/out/programs"
 include = ['^(smoke|trap)$']
 configs = ["rv32im"]
 max_cycles = 10000
+timeout_s = 60
+mem_latency = 0
+
+[suites.isa-cached]
+description = "rv32ui-p and rv32um-p on the L1 config (4 KiB fetch and LSU L1, BTB/GShare/RAS)"
+dir = "rvw/out/isa"
+include = ['^rv32u[im]-p-']
+exclude = ['\.dump$', '^rv32ui-p-ma_data$']
+configs = ["rv32im_cached"]
+max_cycles = 200000
 timeout_s = 60
 mem_latency = 0
 

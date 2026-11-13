@@ -48,6 +48,8 @@ class VexTop(cfg: VexRiscvConfig = VexTop.configuration()) extends VexRiscv(cfg)
   } else None
   def ibus: IBusSimpleBus = config.get(classOf[IBusSimplePlugin]).iBus
   def dbus: DBusSimpleBus = config.get(classOf[DBusSimplePlugin]).dBus
+  def icached: Option[IBusCachedPlugin] = config.plugins.collectFirst { case p: IBusCachedPlugin => p }
+  def dcached: Option[DBusCachedPlugin] = config.plugins.collectFirst { case p: DBusCachedPlugin => p }
   def csr: CsrPlugin = config.get(classOf[CsrPlugin])
   def rvfi: RvfiPort = config.get(classOf[FormalPlugin]).rvfi
   def traps: TrapProbePlugin = config.get(classOf[TrapProbePlugin])

@@ -12,9 +12,9 @@ object VexAdapter extends CoreAdapter {
   type Model = SimCompiled[VexTop]
   override def irqInputMask: BigInt = 0x888
   def core = "vexriscv"
-  val configs = Seq("rv32im") ++ VexDebug.configs
+  val configs = Seq("rv32im") ++ VexDebug.configs ++ VexCached.configs
   def xlen = 32
-  def isa(config: String) = "rv32im_zicsr_zifencei"
+  def isa(config: String) = VexCached.isa(config)
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
@@ -96,72 +96,79 @@ object VexAdapter extends CoreAdapter {
         dut.csr.softwareInterrupt #= false
         dut.csr.externalInterrupt #= false
         if (dut.csr.externalInterruptS != null) dut.csr.externalInterruptS #= false
-        dut.ibus.cmd.ready #= false
-        dut.ibus.rsp.valid #= false
-        dut.ibus.rsp.error #= false
-        dut.ibus.rsp.inst #= 0
-        dut.dbus.cmd.ready #= false
-        dut.dbus.rsp.ready #= false
-        dut.dbus.rsp.error #= false
-        dut.dbus.rsp.data #= 0
+        val cached = dut.icached.nonEmpty
+        require(!cached || job.socMap.isEmpty, "cached VexRiscv configs support bare RAM only (no --soc-map)")
+        if (!cached) {
+          dut.ibus.cmd.ready #= false
+          dut.ibus.rsp.valid #= false
+          dut.ibus.rsp.error #= false
+          dut.ibus.rsp.inst #= 0
+          dut.dbus.cmd.ready #= false
+          dut.dbus.rsp.ready #= false
+          dut.dbus.rsp.error #= false
+          dut.dbus.rsp.data #= 0
+        }
         cd.forkStimulus(10)
         // One outstanding response per bus. Fixed latency 0 has no extra wait.
         // Absent --mem-latency uses the recorded simulation seed.
         val random = new scala.util.Random(job.seed)
         def delay(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(4).toLong) + 1L
-        fork {
-          var pending = Option.empty[(Long, BigInt, Boolean)]
-          var cycle = 0L
-          while (true) {
-            cd.waitFallingEdge()
-            val respond = pending.exists(_._1 <= cycle)
-            dut.ibus.cmd.ready #= pending.isEmpty
-            dut.ibus.rsp.valid #= respond
-            pending.foreach { case (_, data, error) => dut.ibus.rsp.inst #= data; dut.ibus.rsp.error #= error }
-            cd.waitSampling()
-            cycle += 1
-            if (respond) pending = None
-            if (dut.ibus.cmd.valid.toBoolean && dut.ibus.cmd.ready.toBoolean) {
-              val addr = dut.ibus.cmd.pc.toLong
-              val selected = job.socMap.flatMap(_.region(BigInt(addr & ~3L), 4, 'x'))
-              capture.foreach(_.request(cycle, "ibus", BigInt(addr & ~3L), 4, false, selected))
-              pending = Some((cycle + delay(), readWord(addr), !inRam(addr & ~3L, 4, 'x')))
+        if (cached) CachedBuses.drive(dut, cd, delay, readWord, inRam(_, _, 'r'), memory)
+        else {
+          fork {
+            var pending = Option.empty[(Long, BigInt, Boolean)]
+            var cycle = 0L
+            while (true) {
+              cd.waitFallingEdge()
+              val respond = pending.exists(_._1 <= cycle)
+              dut.ibus.cmd.ready #= pending.isEmpty
+              dut.ibus.rsp.valid #= respond
+              pending.foreach { case (_, data, error) => dut.ibus.rsp.inst #= data; dut.ibus.rsp.error #= error }
+              cd.waitSampling()
+              cycle += 1
+              if (respond) pending = None
+              if (dut.ibus.cmd.valid.toBoolean && dut.ibus.cmd.ready.toBoolean) {
+                val addr = dut.ibus.cmd.pc.toLong
+                val selected = job.socMap.flatMap(_.region(BigInt(addr & ~3L), 4, 'x'))
+                capture.foreach(_.request(cycle, "ibus", BigInt(addr & ~3L), 4, false, selected))
+                pending = Some((cycle + delay(), readWord(addr), !inRam(addr & ~3L, 4, 'x')))
+              }
             }
           }
-        }
-        fork {
-          var pending = Option.empty[(Long, BigInt, Boolean)]
-          var cycle = 0L
-          while (true) {
-            cd.waitFallingEdge()
-            val respond = pending.exists(_._1 <= cycle)
-            dut.dbus.cmd.ready #= pending.isEmpty
-            dut.dbus.rsp.ready #= respond
-            pending.foreach { case (_, data, error) => dut.dbus.rsp.data #= data; dut.dbus.rsp.error #= error }
-            cd.waitSampling()
-            cycle += 1
-            if (respond) pending = None
-            if (dut.dbus.cmd.valid.toBoolean && dut.dbus.cmd.ready.toBoolean) {
-              val cmd = dut.dbus.cmd
-              val byteAddress = cmd.address.toLong
-              val addr = byteAddress & ~3L
-              val bytes = 1 << cmd.size.toInt
-              val lane = (byteAddress & 3).toInt
-              val permission = if (cmd.wr.toBoolean) 'w' else 'r'
-              val selected = job.socMap.flatMap(_.region(BigInt(byteAddress), bytes, permission))
-              capture.foreach(_.request(cycle, "dbus", BigInt(byteAddress), bytes, cmd.wr.toBoolean, selected))
-              val device = devices.filter(_.contains(byteAddress, bytes))
-              val valid = inRam(addr, 4, permission)
-              if (cmd.wr.toBoolean) {
-                val data = cmd.data.toBigInt
-                device match {
-                  case Some(d) => d.write(byteAddress, bytes, (data >> (8 * lane)) & ((BigInt(1) << (8 * bytes)) - 1))
-                  case None =>
-                    require(valid, f"store outside RAM at 0x$addr%x")
-                    for (i <- 0 until 4 if (cmd.mask.toInt & (1 << i)) != 0)
-                      memory(addr + i) = ((data >> (8 * i)) & 255).toInt
-                }
-              } else pending = Some((cycle + delay(), device.map(_.read(byteAddress, bytes) << (8 * lane)).getOrElse(readWord(addr)), !valid && device.isEmpty))
+          fork {
+            var pending = Option.empty[(Long, BigInt, Boolean)]
+            var cycle = 0L
+            while (true) {
+              cd.waitFallingEdge()
+              val respond = pending.exists(_._1 <= cycle)
+              dut.dbus.cmd.ready #= pending.isEmpty
+              dut.dbus.rsp.ready #= respond
+              pending.foreach { case (_, data, error) => dut.dbus.rsp.data #= data; dut.dbus.rsp.error #= error }
+              cd.waitSampling()
+              cycle += 1
+              if (respond) pending = None
+              if (dut.dbus.cmd.valid.toBoolean && dut.dbus.cmd.ready.toBoolean) {
+                val cmd = dut.dbus.cmd
+                val byteAddress = cmd.address.toLong
+                val addr = byteAddress & ~3L
+                val bytes = 1 << cmd.size.toInt
+                val lane = (byteAddress & 3).toInt
+                val permission = if (cmd.wr.toBoolean) 'w' else 'r'
+                val selected = job.socMap.flatMap(_.region(BigInt(byteAddress), bytes, permission))
+                capture.foreach(_.request(cycle, "dbus", BigInt(byteAddress), bytes, cmd.wr.toBoolean, selected))
+                val device = devices.filter(_.contains(byteAddress, bytes))
+                val valid = inRam(addr, 4, permission)
+                if (cmd.wr.toBoolean) {
+                  val data = cmd.data.toBigInt
+                  device match {
+                    case Some(d) => d.write(byteAddress, bytes, (data >> (8 * lane)) & ((BigInt(1) << (8 * bytes)) - 1))
+                    case None =>
+                      require(valid, f"store outside RAM at 0x$addr%x")
+                      for (i <- 0 until 4 if (cmd.mask.toInt & (1 << i)) != 0)
+                        memory(addr + i) = ((data >> (8 * i)) & 255).toInt
+                  }
+                } else pending = Some((cycle + delay(), device.map(_.read(byteAddress, bytes) << (8 * lane)).getOrElse(readWord(addr)), !valid && device.isEmpty))
+              }
             }
           }
         }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build rv32ui/rv32um p-environment ELFs outside the reference checkout.
+# Build rv32ui/rv32um/rv32ua p-environment ELFs outside the reference checkout.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="$(cd "${RISCV_TESTS_SOURCE:-${RVW_HOME:?Set RVW_HOME}/../ref/riscv-tests}" && pwd)"
@@ -8,7 +8,7 @@ command -v "${prefix}gcc" >/dev/null || { echo "set RISCV_PREFIX to a RISC-V too
 mkdir -p "$here/out/isa"
 cd "$here/out/isa"
 targets=()
-for group in ui um; do
+for group in ui um ua; do
   # RV32 test sources reuse RV64 tests through assembler includes.
   for file in "$source_dir/isa/rv32$group/"*.S; do
     targets+=("rv32$group-p-$(basename "$file" .S)")

@@ -5,7 +5,7 @@ import spinal.core._
 import spinal.core.sim._
 import riscvsim._
 import vexiiriscv.VexiiRiscv
-import vexiiriscv.execute.lsu.LsuCachelessPlugin
+import vexiiriscv.execute.lsu.{LsuCachelessPlugin, LsuPlugin}
 import vexiiriscv.fetch.FetchCachelessPlugin
 import vexiiriscv.misc.PrivilegedPlugin
 import vexiiriscv.test.{VexiiRiscvProbe, konata}
@@ -87,15 +87,15 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
         val tap = dut.host[TrapTapPlugin].logic
-        val ibus = dut.host[FetchCachelessPlugin].logic.bus
-        val dbus = dut.host[LsuCachelessPlugin].logic.bus
+        val ibusOpt = dut.host.get[FetchCachelessPlugin].map(_.logic.bus)
+        // With an LSU L1, the cacheless bus is the LSU plugin's I/O bus (uncached regions only).
+        val dbus = dut.host.get[LsuCachelessPlugin].map(_.logic.bus).getOrElse(dut.host[LsuPlugin].logic.bus)
         if (dut.host[PrivilegedPlugin].p.withSupervisor) priv.int.s.external #= false
         priv.int.m.timer #= false
         priv.int.m.software #= false
         priv.int.m.external #= false
         dut.host[PrivilegedPlugin].logic.rdtime #= 0
-        ibus.cmd.ready #= true
-        ibus.rsp.valid #= false
+        ibusOpt.foreach { ibus => ibus.cmd.ready #= true; ibus.rsp.valid #= false }
         dbus.cmd.ready #= true
         if (dbus.p.withAmo) dbus.rsp.scMiss #= false
         dbus.rsp.valid #= false
@@ -104,7 +104,8 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         def latency(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(4).toLong)
         val fetch = new Responder(() => latency())
         val lsu = new Responder(() => latency())
-        val ibytes = ibus.p.dataWidth / 8
+        val ibytes = ibusOpt.map(_.p.dataWidth / 8).getOrElse(4)
+        val l1 = new L1Buses(dut, memory, (a, n) => inRam(a, n), () => latency())
         val dbytes = dbus.p.dataWidth / 8
         var reservation = Option.empty[Long]
         val traps = mutable.Queue.empty[(BigInt, BigInt)]
@@ -124,9 +125,12 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           if (levels != irqLevels) { events += ((cycle, () => writer.foreach(_.irq(cycle, levels)))); irqLevels = levels }
           if (tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt, tap.tval.toBigInt))
 
-          if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) {
-            val addr = ibus.cmd.address.toLong & ~(ibytes - 1L)
-            fetch.accept(cycle, read(addr, ibytes), !inRam(addr, ibytes), ibus.cmd.id.toInt)
+          l1.tick(cycle)
+          ibusOpt.foreach { ibus =>
+            if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) {
+              val addr = ibus.cmd.address.toLong & ~(ibytes - 1L)
+              fetch.accept(cycle, read(addr, ibytes), !inRam(addr, ibytes), ibus.cmd.id.toInt)
+            }
           }
           if (dbus.cmd.valid.toBoolean && dbus.cmd.ready.toBoolean) {
             val cmd = dbus.cmd
@@ -159,9 +163,11 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               lsu.accept(cycle, if (atomic || !cmd.write.toBoolean) old else BigInt(0), !ok, cmd.id.toInt, scMiss)
             }
           }
-          fetch.next(cycle) match {
-            case Some((d, e, id, _)) => ibus.rsp.valid #= true; ibus.rsp.word #= d; ibus.rsp.error #= e; ibus.rsp.id #= id
-            case None => ibus.rsp.valid #= false
+          ibusOpt.foreach { ibus =>
+            fetch.next(cycle) match {
+              case Some((d, e, id, _)) => ibus.rsp.valid #= true; ibus.rsp.word #= d; ibus.rsp.error #= e; ibus.rsp.id #= id
+              case None => ibus.rsp.valid #= false
+            }
           }
           lsu.next(cycle) match {
             case Some((d, e, id, sc)) =>

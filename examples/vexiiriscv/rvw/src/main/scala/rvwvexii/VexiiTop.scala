@@ -9,9 +9,10 @@ import spinal.lib.misc.plugin.FiberPlugin
 import vexiiriscv.{ParamSimple, VexiiRiscv}
 import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 
-/** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit. */
+/** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit.
+  * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
-  val configs = Seq("rv32im", "rv32imasu", "rv64imasu")
+  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv32im_cached")
 
   def param(config: String): ParamSimple = {
     require(configs.contains(config), s"unknown VexiiRiscv config $config")
@@ -22,6 +23,13 @@ object VexiiTop {
       p.addISA("a", "s", "u")
       p.pmpParam.pmpSize = 8
       p.pmpParam.granularity = if (p.xlen == 64) 16 else 4
+    }
+    if (config.endsWith("_cached")) {
+      // Upstream L1s (64-byte lines, 2 ways x 32 sets = 4 KiB each; the LSU L1 is write-back)
+      // and the upstream predictor stack: BTB, GShare and RAS.
+      p.fetchL1Enable = true; p.fetchL1Sets = 32; p.fetchL1Ways = 2
+      p.lsuL1Enable = true; p.lsuL1Sets = 32; p.lsuL1Ways = 2
+      p.withBtb = true; p.withGShare = true; p.withRas = true
     }
     p.fixIsaParams()
     p
@@ -44,7 +52,9 @@ object VexiiTop {
     VexiiRiscv(plugins)
   }
 
-  def spinalConfig: SpinalConfig = SpinalConfig()
+  /** Memory initial values inline: the BTB, GShare and RAS RAMs get simulation init content,
+    * and RiscvSim's RTL identity needs one generated file. Configs without them are unchanged. */
+  def spinalConfig: SpinalConfig = SpinalConfig(inlineRom = true)
 }
 
 /** Exposes the values the trap state machine writes to xepc and xtval, and the privilege register.
