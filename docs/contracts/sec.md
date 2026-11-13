@@ -166,3 +166,25 @@ stderr and progress.json. A native timeout returns rvw.sec/1 inconclusive with
 the last phase and available cell/byte counts. Counts describe preparation
 cost. They do not predict runtime. Keep the work cache to reuse completed work.
 Scaffolds include flow.S, a short load from the declared scratch word.
+
+## C1 pair adapter
+
+`python -m rvw.sec.c1_adapter` is an adapter for the existing `rvw sec contract`
+command. Its `--binding` file uses `rvw.sec-c1/1`. Required fields are `platform`,
+`adapter`, `config` and `link`. Paths are relative to the binding file.
+`name` supplies the reference trace core label. The platform selects XLEN and
+ISA. The compiler uses ILP32 for RV32 and LP64 for RV64 integer programs.
+
+The template has `RVW_SETUP`, `RVW_PROGRAM` and `RVW_DATA` markers. It declares
+`case`, `case_end` and `tohost`. Setup has a fixed instruction count for each
+XLEN. RV64 setup retains all 64 secret bits. Put an initial instruction in the
+case window before the operation whose latency must be measured.
+
+Only `cycles` and `retire_cycles` observations are supported. Both come from
+observed C2 retirements between the two case symbols. Each side needs C1 pass,
+input closure and a complete strict Spike match with no masks or synchronization.
+The raw C2 trace stays intact. The adapter then writes a security trace through
+the actual passing `tohost` store. This omits post-completion drain instructions.
+The independent generated reference uses the same completion boundary. A missing
+or failing store is an error. No DUT register or memory value comes from the
+reference. The response records both raw and scoped trace paths.

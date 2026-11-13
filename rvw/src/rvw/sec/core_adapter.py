@@ -20,7 +20,9 @@ CHANNELS = ('cycles', 'retire_cycles', 'dbus_trace', 'ibus_trace', 'dbus_address
             'bus_handshakes', 'branch_events', 'cache_events', 'tlb_events', 'probe_events', 'probe_counters')
 
 
-def render(template, request):
+def render(template, request, xlen=32):
+    if xlen not in (32, 64):
+        raise ValueError("XLEN must be 32 or 64")
     secret, public = request['secret'], request.get('public', {})
     lines, data = [], []
     for source in (public.get('registers', {}), secret if isinstance(secret, dict) else {}):
@@ -29,6 +31,13 @@ def render(template, request):
                 data += [f'.globl {k[1:]}', '.balign 4', f'{k[1:]}:'] + [f'.word {int(w)}' for w in (v if isinstance(v, list) else [v])]
             else:
                 # Fixed length for every value: the public instruction stream must not depend on it.
+                if xlen == 64:
+                    # Fixed byte construction retains all bits and has constant length.
+                    value = int(v) & ((1 << 64) - 1)
+                    lines.append(f'addi {k}, x0, {(value >> 56) & 255}')
+                    for shift in range(48, -1, -8):
+                        lines += [f'slli {k}, {k}, 8', f'addi {k}, {k}, {(value >> shift) & 255}']
+                    continue
                 v = int(v) & 0xffffffff
                 hi, lo = (v + 0x800) >> 12 & 0xfffff, (v & 0xfff) - ((v & 0x800) << 1)
                 lines += [f'lui {k}, {hi}', f'addi {k}, {k}, {lo}']
@@ -49,7 +58,9 @@ def compile_elf(source, out, binding):
         raise ValueError('RISC-V GCC not found; set RISCV_PREFIX or PATH')
     link = binding['_dir']/binding.get('link', '../programs/link.ld')
     elf = out/'case.elf'
-    native([gcc, f'-march={binding.get("march", "rv32im_zicsr")}', '-mabi=ilp32', '-nostdlib', '-T', str(link),
+    march = binding.get('march', 'rv32im_zicsr')
+    abi = 'lp64' if march.lower().startswith('rv64') else 'ilp32'
+    native([gcc, f'-march={march}', f'-mabi={abi}', '-nostdlib', '-T', str(link),
             str(source), '-o', str(elf)], out)
     return elf
 

@@ -507,3 +507,19 @@ Precise mode is the default. Use `--timeout 110` for a finite preparation budget
 The progress report records netlist, shadow, compile and simulate phases.
 A timeout returns an inconclusive partial report. Cell and byte counts explain
 preparation cost. They are not a latency or leakage result.
+
+### C1 adapters and RV64 pairs
+
+Use `python -m rvw.sec.c1_adapter --binding core.json --template case.S REQUEST OUT`
+as the `adapter_command` of an existing contract manifest. This reuses a C1
+project at RV32 or RV64. It does not need the mapped security RTL harness.
+The binding and timing scope are in `docs/contracts/sec.md`, under C1 pair adapter.
+The VexiiRiscv example supplies `rvw/sec/core64-c1.json`, `case64.S` and
+`constant-time64.json`. Run the manifest with `rvw sec contract`.
+
+Each pair side must pass a complete strict Spike comparison before timing is
+eligible. The pair compares actual case-window retirement times. Its scoped
+trace ends at the observed passing store. The full raw trace is retained and
+strictly checked first. A fixed public setup length prevents operand magnitude
+from changing the setup instruction count. A reported timing violation is one
+witness under this contract. A pair without a violation is not a security proof.
