@@ -41,7 +41,7 @@ anchor. This fixes a recovery-window error. It does not establish restoration
 of the 7.47% held-out mean. No per-variant tuning is applied.
 
 [The retained data](absolute-diagnosis-results.json) gives each signed error,
-the added absolute error by stage, source hashes and model event pairs.
+the added absolute error by stage, source hashes and the branch-miss and issue-full counter pairs.
 Exact local retry overhead and speculative predictor history remain open.
 
 ## Commit waiting and remaining regression

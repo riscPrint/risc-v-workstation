@@ -5,9 +5,11 @@ complete single-hart C2 trace. This engine does not use gem5. Spike traces
 must first be exported as C2. RTL cycle timestamps are validated but do not
 drive the prediction. The full trace is the measured region.
 
-The final resource study meets the delta criterion on 15/24 pairs,
-including 6/15 nonzero changes. Structure-size choices still need RTL.
-See the resource-stage tables below and the final project summary.
+Two cores now have measured structure matrices. NaxRiscv meets the delta
+criterion on 15/24 pairs with typed immediate recovery, or 14/24 with
+commit-controlled recovery. ooo-mini meets it on 35/36 pairs. Structure-size
+choices still need RTL. Read [the current comparison](#current-cross-core-results).
+The older resource-stage tables below remain historical observations.
 
 Create CONFIG in your core project. This generic example is not a core preset:
 
@@ -1123,12 +1125,13 @@ released, so their operations wait outside the IQ until readmission has space.
 `replay_pending` peak distinguish these costs from ordinary branch recovery.
 
 This policy is an approximation. A long response can include contention or a
-TLB walk. It does not prove that RTL replays every cache miss. The retained
-execute and commit reschedule counters combine branch, trap and LSU causes.
-They do not identify a typed LSU retry window. The existing penalty of five
-cycles stays fixed. It was not derived from those mixed counters. Exact
-probe-driven replay is **not implemented or validated**. Typed reason and
-instruction-linked retry events are needed before that claim can be made.
+TLB walk. It does not prove that RTL replays every cache miss. The historical
+captures' execute and commit reschedule counters combine branch, trap and
+LSU causes. Those counters do not identify a typed retry
+window. The historical policy used a fixed five-cycle penalty. The new typed
+probe and commit-controlled experiments below replace that evidence gap in
+a directed base capture. Exact local cost isolation and retry predicate
+agreement remain unqualified.
 
 A memory retry also squashes active wrong-path filler. It must not occupy the
 IQ while older correct-path instructions wait for readmission. The legacy
@@ -1454,3 +1457,89 @@ The cost from the directed base capture is one cycle from flush to rename,
 rather than seven cycles from detection. This removes commit waiting from
 the fixed cost. It requires speculative memory and `replay_window: true`.
 Wrong-path LSU recovery remains unmodeled by this policy.
+
+## Current cross-core results
+
+A pair meets the criterion when direction matches and error is at most half
+of the measured IPC change. A zero RTL change requires a zero prediction.
+Each core uses its own fixed base calibration. Variant results do not select
+parameters. NaxRiscv and ooo-mini share six delta programs. The mini-core
+matrix adds three held-out pressure programs. Absolute held-out sets differ.
+Do not use the difference between their absolute errors as a core comparison.
+
+| Core and policy | Within | Nonzero within | Training MAE (%) | Held-out MAE (%) |
+|---|---:|---:|---:|---:|
+| NaxRiscv typed immediate | 15/24 | 6/15 | 7.31 | 9.05 |
+| NaxRiscv commit-controlled | 14/24 | 5/15 | 7.31 | 8.82 |
+| NaxRiscv typed immediate plus local cache retry, disabled | 12/24 | 3/15 | 7.39 | 7.52 |
+| NaxRiscv commit-controlled plus local cache retry, disabled | 11/24 | 2/15 | 7.39 | 7.29 |
+| ooo-mini fixed base fit | 35/36 | 9/10 | 3.17 | 1.23 |
+
+NaxRiscv reuses 30 passing RTL runs with complete Spike matches. The delta
+set has six programs. The absolute fit uses three training and six held-out
+programs. The directed retry base run also passes with 40 Spike matches.
+It observes all four causes with live instruction IDs. The separate mini-core
+matrix has 45 passing RTL runs and 45 complete Spike matches. It uses three
+base training and six held-out programs. All variant predictions use their
+core's frozen base C2. RTL cycle stamps do not drive model timing.
+
+### Direction and size by structure
+
+All, some and none describe the measured programs only. A general accuracy
+claim also needs other workloads and steps. Not measured is not a failure.
+
+| Structure | NaxRiscv typed immediate | NaxRiscv commit-controlled | ooo-mini |
+|---|---|---|---|
+| ROB | All, 6/6; 64 to 128; all zero | All, 6/6; all zero | All, 9/9; 8 to 16; 3 nonzero |
+| Issue queue | Some, 3/6; 32 to 16 | Some, 3/6 | All, 9/9; 8 to 4; 1 nonzero |
+| Load queue | Some, 2/6; 16 to 8 | Some, 1/6 | Not measured |
+| Store queue | Some, 4/6; 16 to 8 | Some, 4/6 | All, 9/9; 8 to 4; 1 nonzero |
+| Predictor | Not measured | Not measured | Some, 8/9; 16 to 4; 5 nonzero |
+
+All 36 mini-core directions match. Predictor median underestimates the IPC
+loss. The three pressure programs produce nonzero capacity results. The
+other 26 mini-core pairs have zero change. The zero NaxRiscv ROB results do
+not validate shrinkage. The mini core is scalar and cacheless. Its results
+do not qualify cache, MMU or wide-core behavior. Its predictor trains at
+commit, while the component predictor trains at issue.
+
+### Retry and absolute-error limits
+
+Typed LSU probes now provide cause, instruction ID and cycle. The external
+NaxRiscv tap observes memory-order violation, store-forward miss, cache retry
+and TLB miss. The mini core declares the same probes natively. It emits zero
+retry events because those mechanisms are absent. Event statistics guide
+base-only cost extraction. The model detects causes itself. It never copies
+dynamic RTL retry events into a prediction.
+
+One base memory-order observation gives seven cycles from detection to new
+rename. Six include commit waiting and flush timing. The commit-controlled
+policy predicts the wait and charges only the one-cycle restart. Local extra
+costs remain assumed zero to avoid counting service waiting twice. This is
+not a measurement of zero retry overhead. Exact local cost isolation, cache
+retry predicate agreement and speculative predictor history remain open.
+
+The earlier occupancy policy also changed prediction timing. Together they
+raised held-out MAE from 7.47% to 9.11%. Most added error occurs in spmv,
+vvadd and memcpy. Finite drain leaves the rounded mean unchanged. The old
+order window reduces it to 9.08%. Commit-controlled recovery improves towers
+but does not fix vvadd or memcpy. It loses the LQ8 towers delta. The full
+cache-disabled absolute-error regression remains unresolved.
+
+Local cache retry lowers absolute error but loses delta coverage. It stays
+disabled. There is no measured policy here that improves both scores. No
+variant receives separate tuning. The historical stage ablations share one
+recorded engine. New policy records identify their engine snapshots. These
+retrospective comparisons reuse frozen RTL inputs.
+
+Use the model to rank candidates and inspect pressure. Keep one base fit for
+all variants. Measure the top few candidates on RTL with complete Spike
+matches before choosing a structure size. Check both delta and absolute
+errors. No structure is qualified for general sizing decisions.
+
+Read [NaxRiscv's per-program diagnosis](../../../../examples/naxriscv/rvw/arch/absolute-diagnosis.md),
+[typed immediate records](../../../../examples/naxriscv/rvw/arch/typed-replay-results.json),
+[commit recovery records](../../../../examples/naxriscv/rvw/arch/commit-replay-results.json)
+and [the mini-core matrix](../../../../examples/ooo-mini/README.md#current-structure-matrix).
+[Mini-core model records](../../../../examples/ooo-mini/rvw/arch/model-results.json)
+retain every pair, the fixed fit and source identity.

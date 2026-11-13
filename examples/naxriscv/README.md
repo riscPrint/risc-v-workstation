@@ -839,8 +839,9 @@ Do not claim that all cache misses require an RTL replay.
 
 The resource configuration is [ooo-resource.json](rvw/arch/ooo-resource.json).
 It enables occupancy, finite drain and the memory-order retry window.
-It leaves the cache-response retry heuristic disabled because typed RTL
-retry evidence is absent. That separate experiment is retained as
+It leaves the historical cache-response retry heuristic disabled. Typed RTL
+retry evidence was absent in that historical study. New directed evidence
+and policy results are below. That separate experiment is retained as
 [ooo-retry-experimental.json](rvw/arch/ooo-retry-experimental.json). The original
 [ooo-measured.json](rvw/arch/ooo-measured.json) stays as the frozen baseline.
 The [model README](../../rvw/src/rvw/ooo/README.md) contains each stage's
@@ -1005,3 +1006,27 @@ and defaults are unchanged.
 | Memory API | The compatibility layer has no `MemReadAsyncWrite` in the old API. It does not invent such ports. Mixed-width memory writes remain unmodelled in the PDG. |
 | Causal accuracy | Artifact export does not establish a complete dynamic chain. Source locations, memory modelling and clock-domain limits remain explicit. |
 | Retirement binding | C2 comes from the upstream commit probe. There is no native RVFI port. A packed two-lane formal binding must not be treated as a simulation signal binding. |
+
+## Cross-core sizing guidance
+
+The [current cross-core table](../../rvw/src/rvw/ooo/README.md#current-cross-core-results)
+compares this matrix with ooo-mini. It separates the 15/24 typed immediate
+result from the 14/24 commit-controlled result. Use the model to rank
+candidates. Measure the top few on RTL before choosing a structure size.
+
+The typed and commit policy receipts retain compact summaries below 20 KB.
+They retain every delta and per-program absolute error, input hashes and
+selected mechanism counters. Full model events stay outside Git. Regenerate
+full reports with workstation Python from the repository root:
+
+```sh
+rvw/.venv/bin/python examples/naxriscv/rvw/arch/resource-study.py CALIBRATION_PLAN DELTA_PLAN examples/naxriscv/rvw/arch/ooo-typed.json NEW_TYPED_OUTPUT
+rvw/.venv/bin/python examples/naxriscv/rvw/arch/resource-study.py CALIBRATION_PLAN DELTA_PLAN examples/naxriscv/rvw/arch/ooo-typed-cache.json NEW_TYPED_CACHE_OUTPUT
+rvw/.venv/bin/python examples/naxriscv/rvw/arch/resource-study.py CALIBRATION_PLAN DELTA_PLAN examples/naxriscv/rvw/arch/ooo-commit-replay.json NEW_COMMIT_OUTPUT
+rvw/.venv/bin/python examples/naxriscv/rvw/arch/resource-study.py CALIBRATION_PLAN DELTA_PLAN examples/naxriscv/rvw/arch/ooo-commit-cache.json NEW_COMMIT_CACHE_OUTPUT
+```
+
+`CALIBRATION_PLAN` and `DELTA_PLAN` point to the saved frozen capture plans.
+The receipts retain their hashes. Keep new output directories outside Git.
+Use each receipt's recorded engine revision for a historical reproduction.
+These commands do not rebuild RTL or select parameters from variant results.
