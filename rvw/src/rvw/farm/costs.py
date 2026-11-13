@@ -79,9 +79,21 @@ def report(queue, scope):
         item['core_hours'] += usage([job], scope)['core_hours']
     from .verdict_costs import costs_by_verdict
     attribution = costs_by_verdict(queue, scope)
+    from .outcome_costs import outcomes
+    recorded = outcomes(queue, scope)
+    cost = totals['core_hours'] * config['rate'] if config['rate'] is not None else None
+    gate_count = sum(row['attempts'] for verdict, row in attribution['by_recorded_verdict'].items()
+                     if verdict in ('accept', 'reject', 'inconclusive'))
+    per_gate = cost/gate_count if cost is not None and gate_count else None
+    per_dut = cost/recorded['conclusive_observations'] if cost is not None and recorded['conclusive_observations'] else None
+    for verdict, row in attribution['by_recorded_verdict'].items():
+        row['cost'] = row['core_hours']*config['rate'] if config['rate'] is not None else None
+        row['cost_per_report'] = row['cost']/row['attempts'] if row['cost'] is not None and verdict in ('accept','reject','inconclusive') else None
     return dict(**attribution, schema='rvw.queue-cost/1', scope=scope, limits=config['limits'], usage=totals,
                 by_execution_state=verdicts, rate_per_core_hour=config['rate'],
-                cost=totals['core_hours'] * config['rate'] if config['rate'] is not None else None,
+                cost=cost, recorded_dut_outcomes=recorded, recorded_gate_reports=gate_count,
+                cost_per_recorded_gate_report=per_gate, cost_per_conclusive_dut_observation=per_dut,
+                cost_per_verdict_basis='all scope charges divided by recorded reports or conclusive observations; caller rate units',
                 cpu_basis='declared cores times wall time; includes cleanup; not measured CPU',
                 dut_verdict='not inferred')
 

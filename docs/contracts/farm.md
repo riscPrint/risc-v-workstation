@@ -138,3 +138,12 @@ metadata. Unknown observations omit `signals`. The selector keeps them
 mandatory. Signal activity includes reset and boot. It is partial evidence,
 not functional coverage or gate acceptance. Coverage selection `tests` remain
 mandatory regardless of the time budget. Unknown required test IDs are errors.
+
+## Recorded outcome unit costs
+
+`rvw.queue-cost/1` adds recorded C1/C3 outcome counts and C4 report counts.
+The two scope unit-cost fields divide all charged scope attempts by conclusive
+DUT observations or by unambiguous recorded C4 reports. Repeated executions
+count separately. Per-C4 group costs cover only attempts owning those reports.
+Missing rates and zero denominators produce null. These fields do not infer
+DUT pass, C4 acceptance, measured CPU use or an external provider bill.
