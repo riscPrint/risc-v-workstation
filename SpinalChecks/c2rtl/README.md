@@ -187,3 +187,31 @@ Omitted ports retain their canonical names. Every port still passes the existing
 width and direction checks. A binding cannot hide extra ports or add assumptions.
 The `rvw.formal.datapath_binding.bind` function supplies the same rename operation
 for Python callers. `formal_datapath` accepts `binding` and `max_latency`.
+
+### Bit manipulation and scalar hash models
+
+`models/riscv_zb.h` supplies 32-bit and 64-bit models for `andn`, `orn`, `xnor`,
+`rol`, `ror`, `cpop`, `clz`, `ctz`, signed and unsigned min/max, `rev8`, `orcb`,
+`clmul`, `clmulh`, `clmulr`, `sextb`, `sexth` and `zexth`. Use the named width
+wrapper, for example `andn32.c`, with `--reference-tree models --reference-include .`.
+These names select a unit operation. They are not instruction decoders.
+
+`riscv_hash.h` supplies SHA-256 sigma/sum and SM3 P0/P1 at XLEN 32 and 64.
+It supplies SHA-512 sigma/sum at XLEN 64. The SHA-256 and SM3 RV64 wrappers
+sign-extend the low-word result. The source is the
+[RISC-V scalar crypto 1.0.1 specification](https://docs.riscv.org/reference/isa/v20240411/unpriv/scalar-crypto.html).
+Use wrappers such as `sha256sig0_32.c` or `sha512sum0_64.c`.
+AES, SM4, RV32 split SHA-512 instructions and the remaining Zb instructions are
+not supplied by this increment. Functional models do not check execution time.
+
+SoftFloat compare wrappers add `f32_eq`, `f32_lt`, `f32_le` and their F64 forms.
+The result is 0 or 1 in the selected datapath width. Exception flags come from
+SoftFloat. EQ uses quiet comparison. LT and LE use signaling comparison.
+These wrappers do not use host floating-point arithmetic.
+
+The compare model tests use `RVW_TEST_SOFTFLOAT` for the pinned external tree.
+They check F32/F64 EQ/LT/LE on signed zeros, infinities, NaNs, subnormals and
+exception flags. A native symbolic F32 EQ fixture checks result and flags over
+all operand bits. An invalid-flag mutant must produce a counterexample.
+This fixture does not qualify project FPU add, multiply, FMA, divide, square root
+or conversion RTL. Those operations retain their separate proof obligations.
