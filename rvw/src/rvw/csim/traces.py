@@ -76,7 +76,8 @@ def _flags(insn: int, xlen: int) -> str:
 def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
     """Convert one single-hart C2 trace. Trapped instructions get no branch row."""
     src, dst = Path(src), Path(dst)
-    count = traps = branches = mem = 0
+    count = traps = branches = mem = contexts = 0
+    mode = None
     xlen = 64
     first_order = None
     prev_order = None
@@ -106,6 +107,10 @@ def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
             count += 1
             ordinal = order - first_order + 1
             pc, nxt, insn = _hex(r["pc"]), _hex(r["pc_next"]), _hex(r["insn"])
+            if "mode" in r and r["mode"] != mode:  # first row gives the initial context
+                out.write(f"X {ordinal} {int(r['mode']):x}\n")
+                contexts += mode is not None
+                mode = r["mode"]
             if r.get("trap"):
                 traps += 1
                 continue
@@ -127,7 +132,8 @@ def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
         if not count:
             raise ValueError("empty C2 trace")
         out.write(f"END {count}\n")
-    return {"format": "c2", "instructions": count, "branches": branches, "memory_rows": mem, "traps_skipped": traps}
+    return {"format": "c2", "instructions": count, "branches": branches, "memory_rows": mem, "traps_skipped": traps,
+            "context_changes": contexts}
 
 
 COMMIT = re.compile(r"core\s+(\d+):\s+(\d)\s+0x([0-9a-fA-F]+)\s+\(0x([0-9a-fA-F]+)\)(.*)$")
@@ -148,7 +154,8 @@ def from_spike(src: Path, dst: Path, values: bool = False) -> dict:
     """Convert a Spike `-l --log-commits` log of one hart. Every commit line is one
     instruction. A branch whose successor follows an exception line gets no row."""
     src, dst = Path(src), Path(dst)
-    count = branches = mem = skipped = 0
+    count = branches = mem = skipped = contexts = 0
+    mode = None
     hart = None
     prev = None  # (ordinal, pc, insn, rd, exception_after)
     with _open_text(src) as stream, dst.open("x") as out:
@@ -185,6 +192,11 @@ def from_spike(src: Path, dst: Path, values: bool = False) -> dict:
             if prev is not None:
                 emit_branch(prev, pc)
             count += 1
+            priv = int(m.group(2))
+            if priv != mode:  # first commit gives the initial context
+                out.write(f"X {count} {priv:x}\n")
+                contexts += mode is not None
+                mode = priv
             d = decode(insn)
             rd = 0
             if insn & 127 in (0x6f, 0x67):
@@ -206,7 +218,8 @@ def from_spike(src: Path, dst: Path, values: bool = False) -> dict:
         if prev is not None and branch_kind(prev[2], prev[3]):
             skipped += 1  # final branch without a successor
         out.write(f"END {count}\n")
-    return {"format": "spike", "instructions": count, "branches": branches, "memory_rows": mem, "branches_skipped": skipped}
+    return {"format": "spike", "instructions": count, "branches": branches, "memory_rows": mem, "branches_skipped": skipped,
+            "context_changes": contexts}
 
 
 _BT9_KIND = {("JMP", "DIR", "CND"): "cond", ("JMP", "IND", "CND"): "cond",

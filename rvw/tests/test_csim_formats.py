@@ -77,7 +77,7 @@ def test_c2_conversion(tmp_path):
     out = tmp_path / 't.csim'
     info = traces.from_c2(c2(tmp_path, rows), out, values=True)
     text = out.read_text().splitlines()
-    assert info == {"format": "c2", "instructions": 9, "branches": 4, "memory_rows": 2, "traps_skipped": 1}
+    assert info == {"format": "c2", "instructions": 9, "branches": 4, "memory_rows": 2, "traps_skipped": 1, "context_changes": 0}
     assert text[0] == "rvw.csim-trace/1"
     body = [line for line in text if not line.startswith('#')]
     assert "L 1 1000 2000 4" in body and "W 1 1000 5 7 l" in body
@@ -149,8 +149,22 @@ def test_spike_commit_log_conversion(tmp_path):
     out = tmp_path / 's.csim'
     info = traces.from_spike(src, out, values=True)
     body = [line for line in out.read_text().splitlines() if not line.startswith('#')]
-    assert info == {"format": "spike", "instructions": 7, "branches": 3, "memory_rows": 2, "branches_skipped": 1}
-    assert body[1:] == ["L 1 80000000 80001000 4", "W 1 80000000 5 7 l", "B 2 80000004 cond 1 8000000c 4",
+    assert info == {"format": "spike", "instructions": 7, "branches": 3, "memory_rows": 2, "branches_skipped": 1,
+                    "context_changes": 0}
+    assert body[1:] == ["X 1 3", "L 1 80000000 80001000 4", "W 1 80000000 5 7 l", "B 2 80000004 cond 1 8000000c 4",
                         "S 3 8000000c 80001008 4", "W 4 80000010 1 80000014 -", "B 4 80000010 call 1 80000020 4",
                         "B 5 80000020 ret 1 80000014 4", "END 7"]
     assert traces.detect(src) == "spike"
+
+
+def test_mode_changes_become_context_rows(tmp_path):
+    rows = [(0x10, 0x14, LW, 5, {"mode": 3}), (0x14, 0x18, LW, 5, {"mode": 0}), (0x18, 0x1c, LW, 5, {"mode": 0}),
+            (0x1c, 0x20, LW, 5, {"mode": 3})]
+    out = tmp_path / 'c.csim'
+    info = traces.from_c2(c2(tmp_path, rows), out)
+    assert info["context_changes"] == 2
+    assert [l for l in out.read_text().splitlines() if l.startswith("X")] == ["X 1 3", "X 2 0", "X 4 3"]
+    src = tmp_path / 'spike.log'
+    src.write_text(SPIKE_LOG.replace("core   0: 3 0x000000008000000c", "core   0: 0 0x000000008000000c"))
+    info = traces.from_spike(src, tmp_path / 's.csim')
+    assert info["context_changes"] == 2

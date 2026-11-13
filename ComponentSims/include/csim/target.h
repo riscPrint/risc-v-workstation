@@ -15,11 +15,13 @@ public:
     };
     std::vector<Level> levels; unsigned shift; uint64_t clock = 0; unsigned target_bits;
     bool alloc_not_taken;
+    std::string context_policy; uint64_t ctx_hash = 0; uint64_t context_flushes = 0;
 
     explicit Btb(const Config& c) {
         shift = unsigned(c.u("pc_shift", 1, 0, 63));
         target_bits = unsigned(c.u("target_bits", 32, 1, 64));
         alloc_not_taken = c.flag("allocate_not_taken", false);
+        context_policy = c.choice("context", "shared", {"shared", "flush", "tagged"});
         size_t n = c.list("levels");
         auto add = [&](const Config& l, uint64_t def_entries, unsigned def_ways, unsigned def_lat) {
             Level v; uint64_t entries = l.u("entries", def_entries, 1, 1u << 24); v.ways = unsigned(l.u("ways", def_ways, 1, 64));
@@ -32,7 +34,8 @@ public:
     }
     uint64_t tag_of(const Level& l, uint64_t pc) const {
         uint64_t t = (pc >> shift) >> log2u(l.sets);
-        return l.tag_bits ? (t ^ (t >> l.tag_bits)) & mask(l.tag_bits) : t;
+        if (l.tag_bits) return (t ^ (t >> l.tag_bits) ^ ctx_hash) & mask(l.tag_bits);
+        return t ^ (ctx_hash << 44);
     }
     Way* find(Level& l, uint64_t pc) {
         uint64_t set = (pc >> shift) & (l.sets - 1), tag = tag_of(l, pc);
@@ -73,6 +76,11 @@ public:
         }
         for (auto& l : levels) fill(l, pc, taken ? target : 0, kind);
     }
+    // A context change (privilege mode, address space): flush, or tag entries by context.
+    void context(uint64_t ctx) {
+        if (context_policy == "flush") { for (auto& l : levels) for (auto& w : l.w) w.valid = false; ++context_flushes; }
+        else if (context_policy == "tagged") ctx_hash = mix64(ctx + 1) & mask(16);
+    }
     Storage storage() const {
         Storage s;
         for (size_t i = 0; i < levels.size(); ++i) {
@@ -86,7 +94,8 @@ public:
         Json a = Json::array();
         for (auto& l : levels) {
             Json j = Json::object(); j["entries"] = uint64_t(l.w.size()); j["ways"] = l.ways; j["latency"] = l.latency;
-            j["lookups"] = l.lookups; j["hits"] = l.hits; j["fills"] = l.fills; j["evictions"] = l.evictions; a.push(j);
+            j["lookups"] = l.lookups; j["hits"] = l.hits; j["fills"] = l.fills; j["evictions"] = l.evictions;
+            j["context"] = context_policy; j["context_flushes"] = context_flushes; a.push(j);
         }
         return a;
     }
@@ -95,12 +104,13 @@ public:
 class Ras {
 public:
     enum Repair { NONE, POINTER, POINTER_TOP, FULL };
-    std::vector<uint64_t> st; size_t top = 0, count = 0; Repair repair;
+    std::vector<uint64_t> st; size_t top = 0, count = 0; Repair repair; bool flush_on_context = false; uint64_t context_flushes = 0;
     uint64_t pushes = 0, pops = 0, overflows = 0, underflows = 0, repairs = 0;
     explicit Ras(const Config& c) {
         st.assign(c.u("entries", 32, 1, 1u << 16), 0);
         std::string r = c.choice("repair", "pointer_top", {"none", "pointer", "pointer_top", "full"});
         repair = r == "none" ? NONE : r == "pointer" ? POINTER : r == "pointer_top" ? POINTER_TOP : FULL;
+        flush_on_context = c.choice("context", "shared", {"shared", "flush"}) == "flush";
     }
     void push(uint64_t a) {
         ++pushes; top = (top + 1) % st.size(); st[top] = a;
@@ -111,6 +121,7 @@ public:
         if (!count) { ++underflows; a = 0; return false; }
         a = st[top]; top = (top + st.size() - 1) % st.size(); --count; return true;
     }
+    void context() { if (flush_on_context) { count = 0; ++context_flushes; } }
     struct Checkpoint { size_t top = 0, count = 0; uint64_t value = 0; std::vector<uint64_t> full; };
     Checkpoint save() const {
         Checkpoint c; c.top = top; c.count = count; c.value = st[top];
@@ -129,6 +140,7 @@ public:
         Json j = Json::object(); j["entries"] = uint64_t(st.size());
         const char* names[] = {"none", "pointer", "pointer_top", "full"}; j["repair"] = names[repair];
         j["pushes"] = pushes; j["pops"] = pops; j["overflows"] = overflows; j["underflows"] = underflows; j["repairs"] = repairs;
+        j["context"] = flush_on_context ? "flush" : "shared"; j["context_flushes"] = context_flushes;
         return j;
     }
 };

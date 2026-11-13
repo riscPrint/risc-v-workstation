@@ -153,6 +153,10 @@ section. No result is a match or fidelity verdict.
   Bubble categories can overlap.
 - The memory dependence model has no timing: every older store inside
   `unresolved_window` instructions is unresolved when the load issues.
+- Context rows (`X`) mark privilege-mode or address-space changes. The BTB can
+  share entries, flush or tag them by context (`btb.context`); the RAS can flush
+  (`ras.context`); TLBs and walk caches can flush or tag by ASID
+  (`memory.tlb.context`). Direction predictors always share state.
 - RISC-V call and return classes follow the return-address hints (x1/x5). A
   coroutine swap counts as a push. ChampSim call sizes are learned at returns.
 
@@ -160,7 +164,9 @@ section. No result is a match or fidelity verdict.
 
 - TAGE-SC-L is qualified against the pinned CBP 2016 reference on short
   benchmark traces only (see above). Other models are checked by hand-derived
-  cases, a scalar perceptron reference and the legacy bimodal/gshare engine.
+  cases, the legacy bimodal/gshare engine and separate scalar Python references
+  (perceptron, set-associative LRU BTB, circular RAS, LRU and SRRIP caches;
+  `tests/test_csim_reference.py`), which match exactly on random traces.
   MPKI numbers are for comparison between models on the same traces, not for
   RTL claims.
 - BOOM settings are approximate (see the study file). No RTL fidelity claim.

@@ -14,7 +14,7 @@ struct Study {
     uint64_t warmup, limit;
     std::unique_ptr<BranchStudy> br; std::unique_ptr<MemoryStudy> mem; std::unique_ptr<Frontend> fe;
     std::unique_ptr<StoreSets> mdp; std::unique_ptr<ValuePredictor> vp;
-    bool measuring = false; uint64_t last_ord = 0;
+    bool measuring = false; uint64_t last_ord = 0, contexts = 0;
     explicit Study(const Config& c) : cfg(c) {
         warmup = c.u("warmup_instructions", 0);
         limit = c.u("simulation_instructions", 0);
@@ -65,6 +65,11 @@ struct Study {
         } else if (r.kind == K_LOAD || r.kind == K_STORE) {
             if (mem->l1d && mem->active) mem->data(r, next_use);
             if (mdp) { if (r.kind == K_LOAD) mdp->load(r.ord, r.pc, r.addr, r.size, m); else mdp->store(r.ord, r.pc, r.addr, r.size, m); }
+        } else if (r.kind == K_CONTEXT) {
+            if (m) ++contexts;
+            if (br->btb) br->btb->context(r.value);
+            if (br->ras) br->ras->context();
+            if (mem->mmu) mem->mmu->context(r.value);
         } else if (r.kind == K_VALUE) {
             if (vp) vp->value(r.pc, r.value, r.is_load, r.is_move, r.is_zero, m);
         }
@@ -78,7 +83,7 @@ struct Study {
         Json j = Json::object();
         j["schema"] = "rvw.csim-report/1"; j["status"] = "reported";
         Json t = Json::object(); t["format"] = rd.format(); t["instructions"] = total; t["warmup_instructions"] = warmup;
-        t["measured_instructions"] = measured; t["limited"] = limited; j["trace"] = t;
+        t["measured_instructions"] = measured; t["limited"] = limited; t["context_changes"] = contexts; j["trace"] = t;
         if (br->active()) j["branch"] = br->report(measured);
         if (fe) j["frontend"] = fe->report(measured);
         if (mem->active || mem->l1i) j["memory"] = mem->report(measured);

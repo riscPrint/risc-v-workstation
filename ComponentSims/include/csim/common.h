@@ -216,9 +216,9 @@ struct Folded {
 };
 
 // Branch and memory event kinds shared by trace readers and models.
-enum Kind : uint8_t { K_NONE, K_COND, K_JUMP, K_IJUMP, K_CALL, K_ICALL, K_RET, K_LOAD, K_STORE, K_VALUE };
+enum Kind : uint8_t { K_NONE, K_COND, K_JUMP, K_IJUMP, K_CALL, K_ICALL, K_RET, K_LOAD, K_STORE, K_VALUE, K_CONTEXT };
 inline const char* kind_name(int k) {
-    static const char* n[] = {"none", "cond", "jump", "ijump", "call", "icall", "ret", "load", "store", "value"};
+    static const char* n[] = {"none", "cond", "jump", "ijump", "call", "icall", "ret", "load", "store", "value", "context"};
     return n[k];
 }
 inline bool is_branch(int k) { return k >= K_COND && k <= K_RET; }
