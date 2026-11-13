@@ -75,7 +75,7 @@ object VexAdapter extends CoreAdapter {
         dut.csr.timerInterrupt #= false
         dut.csr.softwareInterrupt #= false
         dut.csr.externalInterrupt #= false
-        dut.csr.externalInterruptS #= false
+        if (dut.csr.externalInterruptS != null) dut.csr.externalInterruptS #= false
         dut.ibus.cmd.ready #= false
         dut.ibus.rsp.valid #= false
         dut.ibus.rsp.error #= false
@@ -144,7 +144,7 @@ object VexAdapter extends CoreAdapter {
           dut.csr.timerInterrupt #= levels.testBit(7)
           dut.csr.softwareInterrupt #= levels.testBit(3)
           dut.csr.externalInterrupt #= levels.testBit(11)
-          dut.csr.externalInterruptS #= levels.testBit(9)
+          if (dut.csr.externalInterruptS != null) dut.csr.externalInterruptS #= levels.testBit(9)
           if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
           if (dut.traps.valid.toBoolean) {
             traps += 1
