@@ -33,6 +33,9 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_exchange", "Export/import the declared UCIS counter profile, or export native DAT/LCOV with metadata. Native metric kinds and exclusions are transported, never promoted to proof exclusions.",
+                 schema({"database":S,"destination":S,"format":{"type":"string","enum":["ucis","import-ucis","dat","lcov"]}},["database","destination"]),
+                 handler("rvw.cov.exchange_cli","exchange"),long=True),
         ToolSpec("cov_actions", "Generate bounded retirement sequence candidates with action graphs. Memory needs a declared writable data resource. Generation earns no hits or pipeline hazard evidence.",
                  schema({"goal": S, "work_dir": S, "registers": {"type":"array","items":I,"minItems":3,"maxItems":3},
                          "distances":{"type":"array","items":I}, "memory":B}, ["goal","work_dir","registers"]),

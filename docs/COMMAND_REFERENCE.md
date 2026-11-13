@@ -318,7 +318,7 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-    {campaign,actions,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {campaign,actions,exchange,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
 ```
 
@@ -335,6 +335,13 @@ usage: rvw cov campaign [-h] --settings SETTINGS --work-dir WORK_DIR
 usage: rvw cov actions [-h] --goal GOAL --work-dir WORK_DIR --registers
     REGISTERS [--distances DISTANCES [DISTANCES ...]] [--memory] [--json]
     [--project PROJECT]
+```
+
+### `rvw cov exchange`
+
+```text
+usage: rvw cov exchange [-h] --destination DESTINATION [--format
+    {ucis,import-ucis,dat,lcov}] [--json] [--project PROJECT] database
 ```
 
 ### `rvw cov generate`
@@ -2017,6 +2024,14 @@ Starts a background job: yes.
 List unhit bins with project-declared candidate tests. Suggestions are not hits.
 
 Arguments: `database` (required), `candidates` (required), `exclusions`, `out`.
+
+Starts a background job: yes.
+
+### `cov_exchange`
+
+Export/import the declared UCIS counter profile, or export native DAT/LCOV with metadata. Native metric kinds and exclusions are transported, never promoted to proof exclusions.
+
+Arguments: `database` (required), `destination` (required), `format`.
 
 Starts a background job: yes.
 
