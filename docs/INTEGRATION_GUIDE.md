@@ -626,6 +626,7 @@ and checks. Full core ISA signoff remains incomplete.
 | Sail RV32 M model preparation | generated and Yosys checked | Eight arithmetic slices; 392 corner comparisons passed |
 | VexRiscv RV32IM, eight Sail M assertion jobs | timeout | Depth 60; 90 seconds per job |
 | VexRiscv RV32IM, four multiply retries | timeout | Depth 20; 120 seconds per job; all four target covers reached |
+| VexRiscv RV32IM, Sail MUL and MULHU with Bitwuzla | timeout | Depth 20; 150 seconds per job; both target covers reached |
 | VexRiscv LUI, all-word RAM abstraction and single-flight restriction | PDR PASS | Conditional unbounded model proof; 107.4 seconds; concrete cover reached |
 | VexRiscv ADD and AND, all-word RAM abstraction | abstract counterexamples | SMT witnesses; not core failures |
 | VexRiscv ADD, AND and LUI, word zero retained | timeout | 180 seconds per PDR job; concrete covers reached |
