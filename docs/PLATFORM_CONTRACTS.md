@@ -41,6 +41,28 @@ the full compared commit IDs in `base_revision` and `head_revision`. Each distin
 once. Both Git diffs use those IDs. Different refs are resolved in sequence; this does not claim
 an atomic snapshot of all refs. Later branch moves do not change the recorded selection.
 
+### C2 writer state for live native checkpoints
+
+`rvw.rvfi-writer/1` is the `rvfi` component of a native checkpoint. It contains
+header, base64 prefix, SHA-256, decimal byte position, decimal counters
+`records`, `traps`, `gaps`, `next_order`, `last_cycle`, and `pending`.
+`pending` is null or `[cycle, cause, intr]`, with decimal strings for integers.
+The prefix is flushed before capture. Restore validates it before output opens.
+The outer native checkpoint binds the writer to model and harness identity.
+A writer snapshot alone does not restore a model or establish replay equality.
+
+### Project native snapshot port control
+
+`rvw.snapshot-adapter/1` supplies a trusted project Python `module`, optional
+`options`, and ordered `identity_files` lists for the four native identities.
+Hash each identity as concatenated 8-byte big-endian lengths and file contents.
+The harness digest additionally binds the port source and exact manifest bytes.
+The port implements native snapshot methods, `advance(unit, target)`,
+`position(unit)`, `finish(out)` and `close()`. Advancement must stop at the
+requested cycle or retired-instruction count. An inexact boundary is refused.
+Restore uses a fresh port. `restored` is not an equivalence verdict. Exact C2
+suffix comparison requires matching prefixes and complete end events.
+
 ## Layout
 
 | Path | What | Language |

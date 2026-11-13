@@ -22,6 +22,22 @@ The optional [medium thread profile](boom/benchmarks/README.md#opt-in-medium-lau
 selects two runtime threads through the normal captured launcher. Use its
 qualification limits before selecting it.
 
+### Native checkpoint integration
+
+`src/main/cpp/Checkpoint.h` saves a direct Verilator model and its context with
+adapter-owned harness state. Build with `--savable`. Implement both `transfer`
+overloads for all memory, devices, pending requests, RNG and monitor counters.
+Call only after a settled edge. External host effects cause refusal. Validate
+the Python native envelope before restore. Discard the model on restore errors.
+This helper does not add save/restore to the Spinal JNI bridge or JVM scheduler.
+
+`RvfiTraceWriter.checkpoint()` flushes and captures C2 prefix bytes, position,
+digest, counters, order tracking and pending late-tval traps. Pass the decoded
+JSON to the writer's `resume` argument in a fresh harness. The writer validates
+header, position and digest before opening the destination. Resume into a new
+run directory. The model and writer snapshots must come from the same stopped
+boundary. The outer native envelope must bind the writer state to the model.
+
 ## Quick start
 
 ```sh

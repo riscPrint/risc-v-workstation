@@ -1,6 +1,7 @@
 """Direct Verilator snapshot smoke. This does not use the Spinal bridge or a core."""
 import hashlib
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -17,18 +18,23 @@ CPP = r'''
 #include "VSnapshotTop.h"
 #include "verilated.h"
 #include "verilated_save.h"
+#include "Checkpoint.h"
 #include <iostream>
 #include <string>
+struct State {
+  uint32_t cycle = 0, rng = 317, memory = 0, monitor = 0;
+  void transfer(VerilatedSerialize& s) { s << cycle << rng << memory << monitor; }
+  void transfer(VerilatedDeserialize& s) { s >> cycle >> rng >> memory >> monitor; }
+};
 int main(int argc, char** argv) {
   VerilatedContext context;
   VSnapshotTop top{&context};
-  uint32_t cycle = 0, rng = 317, memory = 0, monitor = 0;
+  State harness;
+  auto& cycle = harness.cycle; auto& rng = harness.rng;
+  auto& memory = harness.memory; auto& monitor = harness.monitor;
   bool restoring = std::string(argv[1]) == "restore";
   if (restoring) {
-    VerilatedRestore stream;
-    stream.open(argv[2]);
-    stream >> &context >> top >> cycle >> rng >> memory >> monitor;
-    stream.close();
+    riscvsim::restore(argv[2], context, top, harness, true);
   } else {
     top.clk = 0; top.reset = 1; top.data = 0; top.eval();
     top.clk = 1; context.timeInc(1); top.eval();
@@ -42,10 +48,7 @@ int main(int argc, char** argv) {
     top.clk = 0; context.timeInc(1); top.eval();
     ++cycle; ++monitor;
     if (cycle == 8 && !restoring) {
-      VerilatedSave stream;
-      stream.open(argv[2]);
-      stream << &context << top << cycle << rng << memory << monitor;
-      stream.close();
+      riscvsim::save(argv[2], context, top, harness, true);
       std::cout << "state " << cycle << " " << rng << " " << memory << " " << monitor << "\n";
     }
     if (cycle > 8) std::cout << cycle << " " << top.value << " " << rng << " " << memory << " " << monitor << "\n";
@@ -64,7 +67,7 @@ def test_fresh_native_restore_matches_uninterrupted_suffix(tmp_path):
     obj = tmp_path / 'obj'
     built = run_group(['nice', '-n', '10', verilator, '--cc', '--exe', '--build',
         '--savable', '--top-module', 'SnapshotTop', '--Mdir', str(obj),
-        str(rtl), str(cpp), '-o', 'snapshot'], timeout=120, capture=True, text=True)
+        str(rtl), str(cpp), '-CFLAGS', '-I' + str(Path(__file__).resolve().parents[2] / 'RiscvSim/src/main/cpp'), '-o', 'snapshot'], timeout=120, capture=True, text=True)
     assert built.returncode == 0, built.stdout + built.stderr
     binary = obj / 'snapshot'
     native = tmp_path / 'native.bin'

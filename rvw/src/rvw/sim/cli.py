@@ -16,6 +16,8 @@ def capabilities(a):
 
 
 def register(sub):
+    from rvw.sim.live import register as register_live
+    register_live(sub)
     from pathlib import Path
     from rvw.sim.speed import command, sweep_command
     speed = sub.add_parser('speed-compare', help='compare paired C1 speed after complete C2 equivalence')
