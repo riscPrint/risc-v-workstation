@@ -1,0 +1,120 @@
+[
+  {
+    "name": "mmu-sv39",
+    "source": "examples/mmu/matrix.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "satp:sv39",
+      "ad:fault"
+    ]
+  },
+  {
+    "name": "mmu-extensions",
+    "source": "examples/mmu/extensions.json",
+    "requires": [
+      "xlen:64",
+      "satp:sv39",
+      "ext:svnapot",
+      "ext:svpbmt"
+    ]
+  },
+  {
+    "name": "hypervisor",
+    "source": "examples/mmu/hypervisor-matrix.json",
+    "requires": [
+      "xlen:64",
+      "ext:h",
+      "mode:S",
+      "mode:U"
+    ]
+  },
+  {
+    "name": "shootdown",
+    "source": "examples/mmu/shootdown.json",
+    "requires": [
+      "xlen:64",
+      "harts:2",
+      "satp:sv39"
+    ]
+  },
+  {
+    "name": "privilege-controls",
+    "source": "examples/privilege/controls.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U"
+    ]
+  },
+  {
+    "name": "scheduled-wfi",
+    "source": "examples/privilege/scheduled-wfi.json",
+    "requires": [
+      "xlen:64",
+      "irq:msip",
+      "irq:mtip",
+      "irq:meip"
+    ]
+  },
+  {
+    "name": "pmp",
+    "source": "examples/privilege/pmp.json",
+    "requires": [
+      "xlen:64",
+      "mode:U",
+      "pmp",
+      "pmp:8"
+    ]
+  },
+  {
+    "name": "lrsc-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-fault-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a",
+      "pmp"
+    ]
+  },
+  {
+    "name": "fence-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64"
+    ]
+  },
+  {
+    "name": "fence-i-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:zifencei"
+    ]
+  },
+  {
+    "name": "random-privilege-rv64",
+    "source": "examples/privilege/random-transitions.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U"
+    ]
+  }
+]

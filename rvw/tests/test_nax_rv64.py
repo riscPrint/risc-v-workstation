@@ -33,3 +33,19 @@ def test_project_lock_uses_captured_environment(monkeypatch, value, expected):
     monkeypatch.setenv('RVW_HOME', str(ROOT.parents[1]))
     config = load_config(project=ROOT / 'rvw.toml')
     assert config.lock == expected
+
+
+def test_supervisor_campaign_has_honest_plan_and_irq_inputs(monkeypatch):
+    from rvw.regress.commands.applicability import plan
+    features = ROOT / 'rvw/supervisor/features.json'
+    result = plan(features, ROOT / 'rvw/supervisor/catalog.json')
+    selected = {r['name'] for r in result['suites'] if r['applicable']}
+    assert selected == {'mmu-sv39', 'privilege-controls', 'random-privilege-rv64',
+                        'scheduled-wfi', 'lrsc-rv64', 'amo-rv64', 'fence-rv64', 'fence-i-rv64'}
+    project = tomllib.loads((ROOT / 'rvw64.toml').read_text())
+    assert project['core']['default_config'] == 'rv64imasu'
+    for cause in (3, 7, 11):
+        for enabled in (0, 1):
+            options = project['suites'][f'scheduled-wfi-{cause}-{enabled}']['options']
+            assert options['probes'] is True
+            assert options['irq_schedule'] == f'1:0x0,1000:0x{1 << cause:x},20000:0x0'
