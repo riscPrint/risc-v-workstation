@@ -837,3 +837,35 @@ configurations. It retains source hash checks. Project descriptions must still
 match the C2 selection.
 It resets timing and component state for each model. This reduces repeated C2
 validation. It does not reuse warmed hardware state or change sampling accuracy.
+
+## Paired structure deltas
+
+`rvw arch ooo-delta PLAN --out NEW_DIRECTORY --json` compares measured
+and predicted IPC changes. MCP `arch_ooo_delta` runs the same command.
+The plan uses schema `rvw.ooo-delta-plan/1`. Paths resolve beside the plan.
+It names `config`, a saved base `calibration`, optional `max_cycles`,
+`variants` and `samples`. Each variant has a unique `id` and a `changes`
+object with exactly one numeric parameter path, such as
+`{"id":"small-iq","changes":{"issue_entries":16}}`.
+Each sample has `id`, `base` and `variants`. The base and each variant
+capture contain `elf`, `c1` and `trace` paths. Sample variant keys must
+match the declared IDs.
+
+The command checks conclusive C1 passes, ELF hashes, C1/C2 identity, complete
+traces and equal decoded instruction and address streams. Each pair must use the
+same seed and memory timing. It checks the saved calibration captures and
+the base configuration and engine hashes. It does not fit any parameter.
+Every model variant uses the base instruction stream.
+
+Changes are `variant_ipc/base_ipc - 1`. A wrong delta has a wrong sign or
+an absolute prediction error greater than half the measured change.
+The report gives percentage-point error and relative error separately.
+A zero measured change has no relative error. Its exact sign is still
+checked. This is a retrospective comparison. The command does not run RTL
+or Spike and does not establish predictive fidelity.
+
+The [initial NaxRiscv delta table](../../../../examples/naxriscv/rvw/arch/delta-initial-results.json)
+records all 24 program/variant pairs. Fourteen fail the sign or half-size
+criterion. All nine zero RTL changes are predicted correctly. Only one
+of the 15 nonzero changes meets the criterion. This table uses one fixed
+base fit. It does not establish reliable structure-size predictions.
