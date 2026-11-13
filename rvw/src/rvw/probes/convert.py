@@ -126,13 +126,14 @@ def kanata(stream: Stream, out) -> dict:
     live: dict[int, str] = {}
     latest: dict[int, int] = {}
     current: dict[str, tuple[str, str]] = {}
-    order = {"stage": 0, "stall": 1, "branch": 2, "retire": 3, "flush": 4}
+    order = {"stage": 0, "stall": 1, "branch": 2, "dependency": 2, "retire": 3, "flush": 4}
     gated = any(p.meta.get("first") == "true" for p in stream.of_kind("stage"))
     by_cycle = defaultdict(list)
-    for cycle, p, v in stream.events("stage", "stall", "branch", "retire", "flush"):
+    for cycle, p, v in stream.events("stage", "stall", "branch", "dependency", "retire", "flush"):
         if p.kind == "branch" and ("id" not in v or "predicted_taken" not in v):
             continue  # a prediction record needs the instruction ID and the prediction
         by_cycle[cycle].append((order[p.kind], p.id, p, v))
+    dependencies = 0
     serial = retired = flushed = stalls = predictions = orphans = unanchored = stale = 0
     lines = ["Kanata\t0004"]
     last = None
@@ -174,6 +175,13 @@ def kanata(stream: Stream, out) -> dict:
                 stalls += 1
                 continue
             ident = v["id"]
+            if p.kind == "dependency":
+                producer = v.get('producer')
+                if ident not in live or producer not in latest:
+                    raise ValueError(f"dependency probe {p.name}: unknown consumer or producer at cycle {cycle}")
+                lines.append(f"W\t{live[ident]}\t{latest[producer]}\t0")
+                dependencies += 1
+                continue
             if p.kind == "flush" and p.meta.get("range") == "younger":
                 anchor = latest.get(ident)
                 if anchor is None:
@@ -220,6 +228,8 @@ def kanata(stream: Stream, out) -> dict:
         f.write("\n".join(lines) + "\n")
     result = {"format": "Kanata 0004", "instructions": serial, "retired": retired, "flushed": flushed,
               "stall_samples": stalls, "predictions": predictions, "open": len(live)}
+    if stream.of_kind("dependency"):
+        result["dependencies"] = dependencies
     if gated:
         result["orphan_events"] = orphans
         result["stale_closed"] = stale

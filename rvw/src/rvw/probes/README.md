@@ -109,3 +109,8 @@ The validator uses the same lifetime conversion for this explicit mode.
 Orphan stage events are warnings. Orphan retirements, stale replacements and
 unknown flush anchors remain errors. Sampling bounds in newer end records
 preserve startup and trailing idle cycles in `rvw perf`.
+
+Use `rvw probes check --events EVENTS --consumer perf-causal --json` to name
+missing stage, retirement, reason and dependency bindings for a causal report.
+`Probe.dependency` records an observed producer. Explicit `Probe.stall` reason
+samples identify blocked cycles. Dependency edges alone do not identify causes.

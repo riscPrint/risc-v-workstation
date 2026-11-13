@@ -168,6 +168,10 @@ object Probe {
     site("stall", s"${scope}_$cause", valid, Nil, Map("scope" -> scope, "cause" -> cause, "evidence" -> evidence))
   }
 
+  /** An observed data producer for an instruction. This does not assert a stall cause. */
+  def dependency(name: String, valid: Bool, id: Data, producer: Data): Unit =
+    site("dependency", name, valid, Seq("id" -> id, "producer" -> producer))
+
   /** One accepted request on a memory bus at the core's load/store or fetch port (before any
     * cache): `address`, optional `write`, `data`, byte-lane `mask` and log2 `size` in bytes. */
   def bus(bus: String, valid: Bool, address: Data, write: Option[Bool] = None, data: Option[Data] = None,

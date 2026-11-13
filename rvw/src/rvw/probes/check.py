@@ -4,15 +4,15 @@ from . import api
 from .events import KINDS
 
 
-def check(db=None, events=None, require=None, c2=None, validate=False):
+def check(db=None, events=None, require=None, c2=None, validate=False, consumer=None):
     """Presence of required probes. With `validate` (or `c2`), also validate the event stream."""
     validate = validate or c2 is not None
     if validate and events is None:
         raise ValueError('stream validation needs an event stream (--events)')
-    if require is None and not validate:
+    if require is None and not validate and not consumer:
         require = ['stage', 'retire', 'flush', 'stall']
     requirements = require or []
-    if not requirements and not validate:
+    if not requirements and not validate and not consumer:
         raise ValueError('at least one required probe is needed')
     report = api.report(db=db, events=events)
     missing = []
@@ -22,9 +22,17 @@ def check(db=None, events=None, require=None, c2=None, validate=False):
             raise ValueError('expected probe kind or kind/name: ' + entry)
         if not any(p['kind'] == kind and (not name or p['name'] == name) for p in report['probes']):
             missing.append(entry)
+    if consumer:
+        rows = report['consumers']
+        selected = next((r for r in rows if r['consumer'] == consumer), None)
+        if selected is None:
+            raise ValueError('unknown probe consumer: ' + consumer)
+        missing += selected['missing']
     result = dict(schema='rvw.probes-check/1', status='inconclusive' if missing else 'present',
                   missing_probes=missing, required=requirements, source=report['source'],
                   note='Probe presence only. Wiring, activation and pipeline completeness need runtime checks.')
+    if consumer:
+        result['consumer'] = selected
     if validate:
         from .validate import validate as run
         stream = run(events, c2)
