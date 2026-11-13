@@ -337,8 +337,8 @@
     },
     "pc_fwd_ch0": {
       "cycles": [
-        10,
-        30
+        5,
+        15
       ],
       "engine": "btor btormc"
     },
