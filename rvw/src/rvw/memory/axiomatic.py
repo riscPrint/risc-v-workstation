@@ -3,7 +3,8 @@
 Relations follow herdtools7 7.58 riscv.cat and riscv-defs.cat. Dependencies
 must be complete project observations. Capture order is never global order.
 """
-from itertools import permutations, product
+from rvw.memory.sc_witness import sc_witness
+from rvw.memory.search_graph import OrderGraph
 import json
 import re
 from pathlib import Path
@@ -47,7 +48,7 @@ def search(events, initial, model='rvwmo', limit=100000):
     accesses and device memory are outside this profile.
     """
     report = {'schema': 'rvw.axiomatic/1', 'status': 'inconclusive',
-              'model': model, 'candidates': 0, 'exhaustive_proof': False,
+              'model': model, 'candidates': 0, 'branches': 0, 'exhaustive_proof': False,
               'scope': 'scalar execution under declared complete dependencies'}
     if model not in ('rvwmo', 'ztso') or limit < 1:
         raise ValueError('invalid model or candidate limit')
@@ -83,6 +84,20 @@ def search(events, initial, model='rvwmo', limit=100000):
             if (a, size) != (b, other) and a < b + other and b < a + size:
                 return report | {'reason': 'mixed-size overlapping accesses are unsupported'}
     by_id = {e['id']: e for e in rows}
+    if any(location not in initial for location in locations):
+        return report | {'reason': 'initial bytes missing for accessed location'}
+    # A complete SC witness is also an RVWMO and Ztso witness. Try it before
+    # constructing the quadratic preserved-order relations. Failure proves nothing.
+    witness = sc_witness(rows, initial)
+    if witness is not None:
+        return report | {'status': 'allowed', 'candidates': 1,
+                         'engine': 'sc-witness', 'witness': witness}
+    values = {(e['address'], e['size'], e['write']) for e in rows
+              if e['kind'] in ('W', 'SC', 'AMO')}
+    values |= {(a, size, value) for (a, size), value in initial.items()}
+    for e in rows:
+        if e['kind'] in ('R', 'LR', 'AMO') and (e['address'], e['size'], e['read']) not in values:
+            return report | {'status': 'forbidden', 'reason': f"no read-from source for {e['id']}"}
     po = {(a['id'], b['id']) for a in rows for b in rows
           if a['hart'] == b['hart'] and a['order'] < b['order']}
     deps = {}
@@ -157,18 +172,66 @@ def search(events, initial, model='rvwmo', limit=100000):
         if not candidates:
             return report | {'status': 'forbidden', 'reason': f'no read-from source for {r}'}
         sources.append(candidates)
+    class SearchLimit(Exception):
+        pass
+
+    def tick():
+        report['branches'] += 1
+        if report['branches'] > limit:
+            raise SearchLimit
+
     # Recursive lazy product avoids materializing factorial-sized permutation pools.
     def orders(index=0, co=frozenset()):
         if index == len(groups):
             yield set(co)
         else:
             init, ws = groups[index]
-            for perm in permutations(ws):
-                order = (init,) + perm
-                edges = {(a, b) for i, a in enumerate(order) for b in order[i+1:]}
-                yield from orders(index+1, co | edges)
-    for co in orders():
-        for selection in product(*sources):
+            # Enumerate linear extensions, not permutations that reverse a hart's
+            # stores. Prefix checks reject cycles before completing the order.
+            predecessors = {w: {a for a in ws if (a, w) in po_loc} for w in ws}
+            stack = [((), frozenset(ws), set(co))]
+            while stack:
+                prefix, remaining, edges = stack.pop()
+                tick()
+                if not remaining:
+                    yield from orders(index+1, frozenset(edges))
+                    continue
+                for w in sorted(remaining, reverse=True):
+                    if predecessors[w] & remaining:
+                        continue
+                    added = {(a, w) for a in (init,) + prefix}
+                    if cyclic(edges | added | fixed):
+                        continue
+                    stack.append((prefix+(w,), remaining-{w}, edges | added))
+    def selections(co):
+        if cyclic(co | po_loc) or cyclic(co | fixed):
+            return
+        stack = [(0, (), OrderGraph(co | po_loc), OrderGraph(co | fixed))]
+        while stack:
+            index, chosen, sc_graph, model_graph = stack.pop()
+            if index == len(read_ids):
+                yield chosen
+                continue
+            tick()
+            r = read_ids[index]
+            for w in reversed(sources[index]):
+                extra_fr = {(r, b) for a, b in co if a == w and r != b}
+                next_sc, next_model = sc_graph.copy(), model_graph.copy()
+                external = by_id[w]['hart'] != by_id[r]['hart']
+                ok = next_sc.add({(w, r)} | extra_fr)
+                ok = next_model.add(extra_fr | ({(w, r)} if external else set())) and ok
+                if not ok and index+1 < len(read_ids):
+                    continue
+                # Complete candidates still pass through the full axiom check.
+                stack.append((index+1, chosen+(w,), next_sc, next_model))
+
+    def candidates():
+        for co in orders():
+            for selection in selections(co):
+                yield co, selection
+
+    try:
+        for co, selection in candidates():
             if report['candidates'] >= limit:
                 return report | {'reason': 'candidate limit reached'}
             report['candidates'] += 1
@@ -190,6 +253,8 @@ def search(events, initial, model='rvwmo', limit=100000):
             if cyclic(co | rf | fr | po_loc) or cyclic(co | rfe | fr | ppo):
                 continue
             return report | {'status': 'allowed', 'witness': {'co': sorted(co), 'rf': sorted(rf), 'ppo': sorted(ppo)}}
+    except SearchLimit:
+        return report | {'reason': 'search branch limit reached'}
     return report | {'status': 'forbidden', 'reason': 'all candidates violate the model axioms'}
 
 

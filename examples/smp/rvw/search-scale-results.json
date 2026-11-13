@@ -1,0 +1,62 @@
+{
+  "schema": "rvw.search-scale/1",
+  "differential_cases": 2000,
+  "seed": 187,
+  "results": [
+    {
+      "seed": 1,
+      "seconds": 0.002843540976755321,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    },
+    {
+      "seed": 7,
+      "seconds": 0.0016807499341666698,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 22,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies"
+    },
+    {
+      "seed": 17,
+      "seconds": 0.0008200830779969692,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    },
+    {
+      "seed": 23,
+      "seconds": 0.0011460420209914446,
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "branches": 0,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
+    }
+  ],
+  "synthetic": {
+    "events": 8000,
+    "harts": 4,
+    "seconds": 0.01694220898207277,
+    "status": "allowed",
+    "engine": "sc-witness",
+    "scope": "private locations; sufficient SC witness"
+  }
+}
