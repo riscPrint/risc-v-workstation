@@ -944,3 +944,10 @@ number of eventual-release requests still open when simulation ends. Nonzero
 pending counts give `inconclusive`, even if the program writes its passing
 finisher value. `passed` counts completed requests. `activated` counts started
 requests. These finite observations do not prove infinite-trace liveness.
+## Machine-return MPP observation
+
+`rvw.machine-checks/1` trap-return bindings now require `previous_mode_after`
+with width two. The check asserts the MPP update as well as privilege, PC,
+MIE and MPIE. `least_privileged_mode` is 0 by default. Set it to 3 for a
+machine-only profile. Other values are rejected. This additional observation
+is required on old manifests too; a missing observation is an error.
