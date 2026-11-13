@@ -1,0 +1,3031 @@
+{
+  "date": "2026-11-13",
+  "schema": "rvw.formal-core-capacity/1",
+  "baseline_timeout_s": 8,
+  "variant_timeout_s": 4,
+  "max_parallel": 3,
+  "priority": "nice -n 10",
+  "baseline": [
+    {
+      "case": "causal_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.092238124925643,
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "causal_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04784908297006,
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "causal_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.05646637501195,
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_add_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.05606508301571,
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_add_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.06335199996829,
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_add_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.051308499998413,
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_addi_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.083553583011962,
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_addi_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.092023083008826,
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_addi_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.099049792042933,
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_and_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.106921583064832,
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_and_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.090920457965694,
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_and_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.083319041063078,
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_andi_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.139017791952938,
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_andi_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.054987084004097,
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_andi_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.700718250009231,
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.096031875000335,
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04231383302249,
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.039023916935548,
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_beq_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.035867083002813,
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_beq_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.078447500010952,
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_beq_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.06828312505968,
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bge_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.213106042006984,
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bge_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.09630770899821,
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bge_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.240745333954692,
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.072150208055973,
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.037299250019714,
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.051137167029083,
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_blt_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.071650750003755,
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_blt_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.042730250046588,
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_blt_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.043233082978986,
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.032358957920223,
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.075636917026713,
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.458667999948375,
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bne_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.049562125001103,
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bne_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.044780124910176,
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_bne_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.075529500027187,
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jal_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.09077095799148,
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jal_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.054822375066578,
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jal_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.730357917025685,
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.076581166009419,
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.038591583026573,
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.090143750072457,
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lb_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.106379458098672,
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lb_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.045406416989863,
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lb_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.109560000011697,
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.100804749992676,
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.093724250094965,
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.076566792093217,
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lh_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.159135541063733,
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lh_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04861912492197,
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lh_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.172721249982715,
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.083100916002877,
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.059013250051066,
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.053847375093028,
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lui_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.10665400000289,
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lui_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.053569958079606,
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lui_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.116052375058644,
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lw_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.060804040986113,
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lw_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.070529959048145,
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_lw_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.064640958909877,
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_or_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.083927875035442,
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_or_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04770091699902,
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_or_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.064873290946707,
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_ori_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.033781416947022,
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_ori_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.020162582979538,
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_ori_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.5118136670207605,
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sb_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.107553042005748,
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sb_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.033075583982281,
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sb_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.316604624968022,
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sh_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.064835708937608,
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sh_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.045181459048763,
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sh_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.763038499979302,
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sll_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.025722917052917,
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sll_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.025803457945585,
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sll_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.655292292009108,
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slli_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.072460625087842,
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slli_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.072845999966376,
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slli_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.027439041994512,
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slt_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.05599775002338,
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slt_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.040558833978139,
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slt_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.088957707979716,
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slti_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04933158296626,
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slti_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.057085582986474,
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_slti_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.091064834035933,
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.101106125046499,
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.071966125047766,
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.166610416024923,
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.030240583000705,
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.04702279099729,
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.749381083995104,
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sra_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.029993542004377,
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sra_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.049942124984227,
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sra_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.042134499992244,
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srai_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.132245625020005,
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srai_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.062793958000839,
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srai_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.063982374966145,
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srl_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.07519666699227,
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srl_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.152000666013919,
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srl_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.02757658297196,
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srli_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.10349887504708,
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srli_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.151977792032994,
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_srli_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.105855416040868,
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sub_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.073552625020966,
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sub_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.03984937502537,
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sub_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.076687666005455,
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sw_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.063993584015407,
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sw_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.061627416987903,
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_sw_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.048657375038601,
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xor_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.104123375029303,
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xor_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.061849666992202,
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xor_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.048984333057888,
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xori_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.085617292090319,
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xori_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.064527875045314,
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "insn_xori_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.069957625004463,
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "liveness_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.046857999986969,
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "liveness_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.059573583072051,
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "liveness_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.031682541943155,
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.116982833016664,
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.038817000109702,
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.033063667011447,
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.043911749962717,
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.044058167026378,
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.03768108296208,
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "reg_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.052236167015508,
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "reg_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.230799500015564,
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "reg_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 7.303979750024155,
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "unique_ch0",
+      "engine": "abc:pdr",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.033301834017038,
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "unique_ch0",
+      "engine": "aiger:rIC3",
+      "native_status": "timeout",
+      "status": "inconclusive",
+      "wall_s": 8.028413290972821,
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    },
+    {
+      "case": "unique_ch0",
+      "engine": "smtbmc:yices",
+      "native_status": "inconclusive",
+      "status": "inconclusive",
+      "wall_s": 6.218135875067674,
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "reason": "source_environment_and_bounded_check_cycle_not_qualified"
+    }
+  ],
+  "variants": [
+    {
+      "case": "causal_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "native_status": "timeout",
+      "wall_s": 4.264162416919135,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "causal_ch0",
+      "variant": "counter",
+      "selected_cells": 11,
+      "status": "inconclusive",
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "native_status": "timeout",
+      "wall_s": 4.25087066704873,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "causal_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "causal_ch0",
+      "variant": "cut-points",
+      "selected_cells": 122,
+      "status": "inconclusive",
+      "source_sha256": "636c21406b9c18d1ba895e5f2104c5e0f3e0f0fc4cb77758cf5eb475b6dacd3a",
+      "native_status": "fail",
+      "wall_s": 2.6870974169578403,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_add_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "native_status": "timeout",
+      "wall_s": 4.148250041063875,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_add_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "native_status": "timeout",
+      "wall_s": 4.475428375066258,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_add_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_add_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "7e75a4f57c26661380a79dc883575c13feb94604a1f9c3f7dafb5de4fa53c37c",
+      "native_status": "error",
+      "wall_s": 3.282807125011459,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_addi_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "native_status": "timeout",
+      "wall_s": 4.2876282499637455,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_addi_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "native_status": "timeout",
+      "wall_s": 4.201536832959391,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_addi_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_addi_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "8c0b76acdcb980dd738ac5452cf8ffc479f3964249803369afbc9c08a05cb769",
+      "native_status": "error",
+      "wall_s": 2.4537662090733647,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_and_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "native_status": "timeout",
+      "wall_s": 4.2730854590190575,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_and_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "native_status": "timeout",
+      "wall_s": 4.26213554199785,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_and_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_and_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "012a700334f8eec01275e301879c2bdaa6dac92d236e421305953beb02971c4b",
+      "native_status": "error",
+      "wall_s": 3.1027824580669403,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_andi_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "native_status": "timeout",
+      "wall_s": 4.269351708004251,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_andi_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "native_status": "timeout",
+      "wall_s": 4.181899709044956,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_andi_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_andi_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "a06ec906796d3967ce4eb581114a38d4df848bb65616dc84578f7d95acab448b",
+      "native_status": "error",
+      "wall_s": 2.6565803330158815,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "native_status": "timeout",
+      "wall_s": 4.181448874995112,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "native_status": "timeout",
+      "wall_s": 4.159989999956451,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_auipc_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "f48efbfa61cf7cadc85ce4dadb3dd189f55cd30a3db44affaf5ce494482e31b9",
+      "native_status": "error",
+      "wall_s": 1.9888435000320897,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_beq_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "native_status": "timeout",
+      "wall_s": 4.141836917027831,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_beq_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "native_status": "timeout",
+      "wall_s": 4.1756843329640105,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_beq_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_beq_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "de196e6faa5cde232bbdad76d78a2a5583d67c8bd0100da1cb1625bb2ff24cb5",
+      "native_status": "error",
+      "wall_s": 2.8352916670264676,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bge_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "native_status": "timeout",
+      "wall_s": 4.208051916095428,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bge_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "native_status": "timeout",
+      "wall_s": 4.200652083964087,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bge_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_bge_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "cedbd46cfa367c2db56210a1712904d5f36d8780ca4a0dc27b407123a845446e",
+      "native_status": "error",
+      "wall_s": 2.7648617919767275,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "native_status": "timeout",
+      "wall_s": 4.263069666107185,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "native_status": "timeout",
+      "wall_s": 4.3345195420552045,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_bgeu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "741786ac9edd5ebaf0b99e38313112d58240ebe54d74c68279d89ee7ff05e30a",
+      "native_status": "error",
+      "wall_s": 3.3250450419727713,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_blt_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "native_status": "timeout",
+      "wall_s": 4.309695541975088,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_blt_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "native_status": "timeout",
+      "wall_s": 4.2738227089867,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_blt_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_blt_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "a174e964df8acb81041d194b08891b51d5d2e4a506b79659b929bdfbad2f7ce6",
+      "native_status": "error",
+      "wall_s": 3.1850516659906134,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "native_status": "timeout",
+      "wall_s": 4.33620320900809,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "native_status": "timeout",
+      "wall_s": 4.393995582940988,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_bltu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "2af9a300a489ffeba0d8b452e8ff944ebbf35055161b477171ad2ee8b04b39a8",
+      "native_status": "error",
+      "wall_s": 2.817598666995764,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bne_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "native_status": "timeout",
+      "wall_s": 4.137076791957952,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bne_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "native_status": "timeout",
+      "wall_s": 4.161056625074707,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_bne_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_bne_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "0535b86fea5501dca09514f59e1a5df2ec77aa172db5f37dfdb3d99d2d9ed94e",
+      "native_status": "error",
+      "wall_s": 1.7728786669904366,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jal_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "native_status": "timeout",
+      "wall_s": 4.207406624918804,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jal_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "native_status": "timeout",
+      "wall_s": 4.21683866600506,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jal_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_jal_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "c770bb6c7093e80dce5c68c381d4467f8abbbb36a46cd36a33f4d7da46ddd102",
+      "native_status": "error",
+      "wall_s": 1.916384166921489,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "native_status": "timeout",
+      "wall_s": 4.11265983292833,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "native_status": "timeout",
+      "wall_s": 4.163141334080137,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_jalr_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "b668d6a8d4fb9e4708bcc3ff0361ce8651ebdba210caf55e7164665d0cf378b8",
+      "native_status": "error",
+      "wall_s": 1.625115542090498,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lb_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "native_status": "timeout",
+      "wall_s": 4.137174417031929,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lb_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "native_status": "timeout",
+      "wall_s": 4.118100915919058,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lb_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.392807584023103,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "eb76203f160ac80a099646f2eb104611efd2b485ced59e4eed7f03cff6268ce9",
+          "transformed_sha256": "eb76203f160ac80a099646f2eb104611efd2b485ced59e4eed7f03cff6268ce9"
+        }
+      ]
+    },
+    {
+      "case": "insn_lb_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "014281f2d4518340599de266b360b240d0709860ae1cad246de8cf8f768fd3e0",
+      "native_status": "error",
+      "wall_s": 2.38540174998343,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "native_status": "timeout",
+      "wall_s": 4.4241208750754595,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "native_status": "timeout",
+      "wall_s": 4.34175437502563,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.605299084098078,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "22ab0313503d36dae40317240316f5a7129d01aa6c4cb1c0e2981ca60b0e1c28",
+          "transformed_sha256": "22ab0313503d36dae40317240316f5a7129d01aa6c4cb1c0e2981ca60b0e1c28"
+        }
+      ]
+    },
+    {
+      "case": "insn_lbu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "6bfe8f6b9e934232aa231d17676fa6f84fe44b540d8803d6978c7299010e4492",
+      "native_status": "error",
+      "wall_s": 2.1002478330628946,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lh_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "native_status": "timeout",
+      "wall_s": 4.152101665968075,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lh_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "native_status": "timeout",
+      "wall_s": 4.1666160830063745,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lh_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.404472667025402,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "5208f2b7151bd83fb1b9a7fc7f3018062e8f8bec406d3462d1e0eca4a0739961",
+          "transformed_sha256": "5208f2b7151bd83fb1b9a7fc7f3018062e8f8bec406d3462d1e0eca4a0739961"
+        }
+      ]
+    },
+    {
+      "case": "insn_lh_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "2320dcf618ce33deb8bc39c619fddf94dcf3f734ae935e3ab226d2ac0a442e86",
+      "native_status": "error",
+      "wall_s": 2.1618299999972805,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "native_status": "timeout",
+      "wall_s": 4.155076917028055,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "native_status": "timeout",
+      "wall_s": 4.196421374916099,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.4860639160033315,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "a04d3871210454e144183752f79ac6b329765fa7e2ee545eae0a4137dea289ad",
+          "transformed_sha256": "a04d3871210454e144183752f79ac6b329765fa7e2ee545eae0a4137dea289ad"
+        }
+      ]
+    },
+    {
+      "case": "insn_lhu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "8b83d79498e32f3d3ed75cf875af1524c6dd4f4b5c9ca5fec547fe4c511fecbf",
+      "native_status": "error",
+      "wall_s": 2.6685571250272915,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lui_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "native_status": "timeout",
+      "wall_s": 4.200006500002928,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lui_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "native_status": "timeout",
+      "wall_s": 4.1975042909616604,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lui_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_lui_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "0a709a04976bf06a6f6ffcbe0e997f44f746788b09bbd98444bf9fdab029d6b1",
+      "native_status": "error",
+      "wall_s": 3.267670208006166,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lw_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "native_status": "timeout",
+      "wall_s": 4.319548540981486,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lw_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "native_status": "timeout",
+      "wall_s": 4.250634333002381,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_lw_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.455124708008952,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "139e76a99385f0bea4437519a17292875cad4324aa317c92dde67bd2c6dcf8d0",
+          "transformed_sha256": "139e76a99385f0bea4437519a17292875cad4324aa317c92dde67bd2c6dcf8d0"
+        }
+      ]
+    },
+    {
+      "case": "insn_lw_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "e521db406f795fa2c740e96880a17a43aa69f509daac70e87c582cde30c1838a",
+      "native_status": "error",
+      "wall_s": 2.390470499987714,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_or_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "native_status": "timeout",
+      "wall_s": 4.170615500072017,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_or_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "native_status": "timeout",
+      "wall_s": 4.30785708304029,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_or_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_or_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "f09d8fd8ba66b4d6cfb4900c64025e6e35417fb279bc2119e8a4290bccceef41",
+      "native_status": "error",
+      "wall_s": 2.3877999999094754,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_ori_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "native_status": "timeout",
+      "wall_s": 4.240522040985525,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_ori_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "native_status": "timeout",
+      "wall_s": 4.196833083056845,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_ori_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_ori_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "54751a2332069b7dc9d57b3c817ad509c7c7c9fbcaf4a859295c77ab9ac17693",
+      "native_status": "error",
+      "wall_s": 2.255336291040294,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sb_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "native_status": "timeout",
+      "wall_s": 4.152660166961141,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sb_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "native_status": "timeout",
+      "wall_s": 4.118536000023596,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sb_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.508871917030774,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "451e68022901b8de86b229e2460277281229eded46d0be81fbeef91e557fbea4",
+          "transformed_sha256": "451e68022901b8de86b229e2460277281229eded46d0be81fbeef91e557fbea4"
+        }
+      ]
+    },
+    {
+      "case": "insn_sb_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "b37396dc86b548b561f9bdf4f7c2842fc442c6bd5cfad4097d70ea7a5f2945fc",
+      "native_status": "error",
+      "wall_s": 3.3694964590249583,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sh_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "native_status": "timeout",
+      "wall_s": 4.263863291940652,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sh_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "native_status": "timeout",
+      "wall_s": 4.254026709008031,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sh_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.407456416054629,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "3f3c47e8ce85e4dc4c06ff981ffdb906c8d20a1bb7a64e0d078421db86c73e24",
+          "transformed_sha256": "3f3c47e8ce85e4dc4c06ff981ffdb906c8d20a1bb7a64e0d078421db86c73e24"
+        }
+      ]
+    },
+    {
+      "case": "insn_sh_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "5eacbe2565216c2db748c291739a5c3011e3faff2e9c46135a96563f64a1ed41",
+      "native_status": "error",
+      "wall_s": 2.075583124998957,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sll_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "native_status": "timeout",
+      "wall_s": 4.136474041966721,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sll_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "native_status": "timeout",
+      "wall_s": 4.143956791027449,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sll_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_sll_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "4fc405454487d1cff6fa702724f1f5a04b67d121f0233c14233676b13d604b07",
+      "native_status": "error",
+      "wall_s": 2.309296792023815,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slli_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "native_status": "timeout",
+      "wall_s": 4.176185750053264,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slli_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "native_status": "timeout",
+      "wall_s": 4.155379458912648,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slli_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_slli_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "eeefc8187b4f5b600df920d0fbf8f52b1d1ac9a34c48f0461f9c62c98231c2ab",
+      "native_status": "error",
+      "wall_s": 2.119958416908048,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slt_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "native_status": "timeout",
+      "wall_s": 4.151398334070109,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slt_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "native_status": "timeout",
+      "wall_s": 4.4050498340511695,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slt_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_slt_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "3f6300f48fdf738df4b257a104d58b2867cb272eac78d6a88bcaf8f4f0f8f46a",
+      "native_status": "error",
+      "wall_s": 2.908983875066042,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slti_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "native_status": "timeout",
+      "wall_s": 4.220695250085555,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slti_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "native_status": "timeout",
+      "wall_s": 4.217272792011499,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_slti_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_slti_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "5880f4e4d739d9fab39572052ef8653f9a7a2f4734d1fb772efb63708579a4d5",
+      "native_status": "error",
+      "wall_s": 1.5347083329688758,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "native_status": "timeout",
+      "wall_s": 4.287690250086598,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "native_status": "timeout",
+      "wall_s": 4.251056667068042,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_sltiu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "38790481faa09f2815f53ee975444bc23bd5e450cecaf24dbe7e7917d56570eb",
+      "native_status": "error",
+      "wall_s": 1.6548164580017328,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "native_status": "timeout",
+      "wall_s": 4.114033415913582,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "native_status": "timeout",
+      "wall_s": 4.207185541046783,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_sltu_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "48f875b245d100459a64d6d00eb3e6a9f7902fbed9ffad2ef94253f35e7f0487",
+      "native_status": "error",
+      "wall_s": 2.0626494160387665,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sra_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "native_status": "timeout",
+      "wall_s": 4.191162499948405,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sra_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "native_status": "timeout",
+      "wall_s": 4.168111791019328,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sra_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_sra_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "cd4c8e62829edd7280e51805d2caf44b4ee4b4a6c7b757e167463be943c9b620",
+      "native_status": "error",
+      "wall_s": 2.068823792040348,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srai_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "native_status": "timeout",
+      "wall_s": 4.231553790974431,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srai_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "native_status": "timeout",
+      "wall_s": 4.204464416950941,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srai_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_srai_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "673abc6812d7007b24c7d7cec7c45ae65c2b7d477fd7aa4864cbf0cd87abe8e8",
+      "native_status": "error",
+      "wall_s": 1.7043627499369904,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srl_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "native_status": "timeout",
+      "wall_s": 4.339951333007775,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srl_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "native_status": "timeout",
+      "wall_s": 4.136195749975741,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srl_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_srl_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "75e280e079f26435e406a5b29a09046d0b1196af44081fa180d618bb56a9871b",
+      "native_status": "error",
+      "wall_s": 3.053525625029579,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srli_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "native_status": "timeout",
+      "wall_s": 4.243925958056934,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srli_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "native_status": "timeout",
+      "wall_s": 4.172307583037764,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_srli_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_srli_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "eb019bb65e025b5635089edf3514a30e155890f7865e75cf4f2aae27707d09e2",
+      "native_status": "error",
+      "wall_s": 2.4020713329082355,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sub_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "native_status": "timeout",
+      "wall_s": 4.253555292030796,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sub_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "native_status": "timeout",
+      "wall_s": 4.230640583089553,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sub_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_sub_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "a0d2345fa98643341a892859a4257fb7ebbac6355069d3b68e802bc1bfbf7125",
+      "native_status": "error",
+      "wall_s": 3.169282832997851,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sw_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "native_status": "timeout",
+      "wall_s": 4.245935374987312,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sw_ch0",
+      "variant": "counter",
+      "selected_cells": 13,
+      "status": "inconclusive",
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "native_status": "timeout",
+      "wall_s": 4.246515792096034,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_sw_ch0",
+      "variant": "uf",
+      "selected_cells": 1,
+      "status": "inconclusive",
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "native_status": "inconclusive",
+      "reason": "source_conditions_and_check_cycle_unqualified",
+      "wall_s": 4.60973541601561,
+      "rewritten_operations": null,
+      "smt_models": [
+        {
+          "engine": "smtbmc:yices",
+          "path": "native/smtbmc_yices/problem/model/design_smt2.smt2.rvw-uf.json",
+          "schema": "rvw.formal-smt-uf/1",
+          "functions": [],
+          "operators": [
+            "bvmul",
+            "bvudiv",
+            "bvsdiv"
+          ],
+          "transformer_sha256": "3a66b5469b9334270608a0c40994f9c66956db325ac07d95156332ffb93aed40",
+          "original_sha256": "34fc7949a8c05155898800f6007e8b235ca0fbec5f591a0dbdf6ca18560a0a86",
+          "transformed_sha256": "34fc7949a8c05155898800f6007e8b235ca0fbec5f591a0dbdf6ca18560a0a86"
+        }
+      ]
+    },
+    {
+      "case": "insn_sw_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "f8ca91ee65686ec66238ab449e8f1e9e3742d3944cb6af3f8340bc1297117aa5",
+      "native_status": "error",
+      "wall_s": 3.151063167024404,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xor_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "native_status": "timeout",
+      "wall_s": 4.2748238750500605,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xor_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "native_status": "timeout",
+      "wall_s": 4.28500749997329,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xor_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_xor_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "3f61e8ea815a9315ee94d88d21f9b10b4e3af23c9a5184a6965ed152e8401814",
+      "native_status": "error",
+      "wall_s": 2.033974958001636,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xori_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "native_status": "timeout",
+      "wall_s": 4.2469873749651015,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xori_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "native_status": "timeout",
+      "wall_s": 4.216172624961473,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "insn_xori_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "insn_xori_ch0",
+      "variant": "cut-points",
+      "selected_cells": 121,
+      "status": "inconclusive",
+      "source_sha256": "a099d800f1f41734d1effda2cf34b981ab097a3858d9e4eb29d5f4204470f4d8",
+      "native_status": "error",
+      "wall_s": 2.0895887919468805,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "liveness_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "native_status": "timeout",
+      "wall_s": 4.158645999967121,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "liveness_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "native_status": "timeout",
+      "wall_s": 4.268920292030089,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "liveness_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "liveness_ch0",
+      "variant": "cut-points",
+      "selected_cells": 122,
+      "status": "inconclusive",
+      "source_sha256": "98a6d7d2141b5db775856d2453f0639834a5f1a9a54b4abdf0022b6d173705dd",
+      "native_status": "error",
+      "wall_s": 2.4420290420530364,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "native_status": "timeout",
+      "wall_s": 4.295520832994953,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "variant": "counter",
+      "selected_cells": 12,
+      "status": "inconclusive",
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "native_status": "timeout",
+      "wall_s": 4.302447958965786,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "pc_bwd_ch0",
+      "variant": "cut-points",
+      "selected_cells": 123,
+      "status": "inconclusive",
+      "source_sha256": "8195a354ee668d7d3e2f52ce9d9028e28cabac19bbe54bd7a5b35f59739dd8c0",
+      "native_status": "fail",
+      "wall_s": 2.366801999974996,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "native_status": "timeout",
+      "wall_s": 4.251643165946007,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "variant": "counter",
+      "selected_cells": 11,
+      "status": "inconclusive",
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "native_status": "timeout",
+      "wall_s": 4.195904374937527,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "pc_fwd_ch0",
+      "variant": "cut-points",
+      "selected_cells": 123,
+      "status": "inconclusive",
+      "source_sha256": "54ac8a3c9bebfd5a810e14fcc98757d4729f6242a5bdcf2bd58126fa9d3ad389",
+      "native_status": "fail",
+      "wall_s": 2.5318249580450356,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "reg_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "native_status": "timeout",
+      "wall_s": 4.240931208012626,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "reg_ch0",
+      "variant": "counter",
+      "selected_cells": 11,
+      "status": "inconclusive",
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "native_status": "timeout",
+      "wall_s": 4.23814791708719,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "reg_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "reg_ch0",
+      "variant": "cut-points",
+      "selected_cells": 123,
+      "status": "inconclusive",
+      "source_sha256": "c838026cf9422ad191d78dd630713bc831630f67f462f99c6a984055e7240a41",
+      "native_status": "fail",
+      "wall_s": 2.1147421669447795,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "unique_ch0",
+      "variant": "ram",
+      "selected_cells": 2,
+      "status": "inconclusive",
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "native_status": "timeout",
+      "wall_s": 4.166312083019875,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "unique_ch0",
+      "variant": "counter",
+      "selected_cells": 11,
+      "status": "inconclusive",
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "native_status": "timeout",
+      "wall_s": 4.255024000070989,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    },
+    {
+      "case": "unique_ch0",
+      "variant": "uf",
+      "selected_cells": 0,
+      "status": "inconclusive",
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "native_status": "not_applicable",
+      "wall_s": 0,
+      "reason": "no_matching_cells"
+    },
+    {
+      "case": "unique_ch0",
+      "variant": "cut-points",
+      "selected_cells": 122,
+      "status": "inconclusive",
+      "source_sha256": "962958bfd7e5941d9369f77498daff27a6b383e9727ce115d6248d527a2eb901",
+      "native_status": "fail",
+      "wall_s": 1.9801095839357004,
+      "limits": "RAM cuts free complete memory outputs. Counter cuts free all adder outputs, not a quotient. State cuts free selected flip-flop outputs. No automatic refinement. Failures are abstraction observations only. Source assumptions remain."
+    }
+  ],
+  "raw_artifacts": "out/deep-capacity",
+  "qualification": "Source assumptions and fixed check-cycle activation remain unqualified. All problem verdicts remain inconclusive. Native abstract failures are not concrete DUT failures."
+}

@@ -362,3 +362,13 @@ and `enable_bits`. These bit identifiers refer to the captured `design.json`.
 Engine benchmark rows retain these assumptions and the model reference.
 A conditional native pass remains inconclusive. Recording a condition does not
 prove its feasibility, activation or match to the intended environment.
+
+## Compiled portfolio sources
+
+Portfolio source entries accept `format=rtlil`, with the same path and SHA-256
+pin as Verilog. Snapshot files use `.il` and `read_rtlil`. Mixed source entries
+are read in manifest order. EBMC returns `unsupported_input` with reason
+`ebmc_does_not_read_rtlil`. At most three engine workers run concurrently.
+Compiled variant plans retain the original model hash, variant kind and
+transformed model hash. They are overapproximations. Failed variant answers
+are not concrete failures of the original problem.
