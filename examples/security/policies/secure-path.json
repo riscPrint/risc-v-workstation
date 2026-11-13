@@ -1,0 +1,9 @@
+{
+  "kind": "secure_path",
+  "clock": "clk",
+  "reset": "reset",
+  "sources": ["secret"],
+  "sinks": ["sink"],
+  "adversary": "Controls all data inputs after public synchronous reset.",
+  "unmodeled_channels": ["Power", "Physical timing", "Shared memory and caches outside this module"]
+}

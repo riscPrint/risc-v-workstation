@@ -1,0 +1,10 @@
+{
+  "kind": "constant_time",
+  "clock": "clk",
+  "reset": "reset",
+  "sources": ["operand_a", "operand_b"],
+  "sinks": ["done", "ready"],
+  "operations": ["project-declared Zkt operation subset"],
+  "adversary": "Controls operand values and all public inputs after reset.",
+  "unmodeled_channels": ["Result data is not a timing channel", "Power", "Physical timing", "Core scheduling outside this module"]
+}

@@ -659,3 +659,16 @@ The report records source and flattened-netlist hashes. A witness is a sequence
 of bit IDs and cells. It is not a Boolean sensitization or transfer proof.
 Exit 0 means no path in this captured conservative graph. Exit 1 means a path
 was found. Exit 3 means incomplete evidence. No design acceptance is granted.
+
+## Secure path policy proofs
+
+`rvw.secure-path/1` records a project-owned source/sink or resolved static
+isolation policy. It retains the RTL hash, mapping tool identity, explicit
+unmodeled channels and nested C7 proof. `pass` exits 0 only when the assertion
+flow exits 0 with status pass. `fail` requires a failing C7 result. Missing or
+incomplete evidence is inconclusive, exit 1. This result grants no C4 acceptance.
+IFT sink checks start after public synchronous reset. An optional public
+`declassifier` disables sink checks only while asserted. Constant-time policies
+check declared timing sinks on every cycle. Static isolation policies check
+observed grants against priority byte ranges and explicit master/privilege
+permissions. CSR policy derivation and dynamic policy updates remain unmodeled.
