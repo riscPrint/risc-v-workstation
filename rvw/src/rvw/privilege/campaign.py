@@ -16,7 +16,7 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
@@ -59,7 +59,7 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
         name = row['id']
         source, elf = out / (name + '.S'), out / (name + '.elf')
         source.write_text(row.pop('assembly'))
-        command = [gcc, '-march=' + config.get('isa', 'rv64im_zicsr_zifencei'), '-mabi=lp64',
+        command = [gcc, '-march=' + config.get('compiler_isa', config.get('isa', 'rv64im_zicsr_zifencei')), '-mabi=lp64',
                    '-nostdlib', '-nostartfiles', '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'),
                    *row.get('link_options', []), '-o', str(elf), str(source)]
         result = run_group(command, capture=True, timeout=30)

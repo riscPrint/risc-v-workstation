@@ -3219,6 +3219,10 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+`compiler_isa` optionally selects compiler instruction parsing. `isa` still
+selects the reference model architecture. Numeric encodings can therefore be
+compiled with a base assembler without claiming extension model support.
+
 Kinds `plic`, `reset` and `nmi` emit `rvw.stimulus/1` device events. Each
 payload has a positive `step`, request/ack ELF symbols and project event data.
 The adapter applies events in order and acknowledges each step after driving

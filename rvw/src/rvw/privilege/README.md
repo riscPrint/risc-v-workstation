@@ -141,3 +141,8 @@ The supplied examples declare fixture addresses and contracts. Replace them
 with project data. Spike CLI cannot inject these mailbox events. Their reference
 self-checks are inconclusive until a project reference adapter supplies them.
 No DUT run, NMI injection or physical reset is claimed by a generated file.
+
+`compiler_isa` can select a compiler ISA string separate from the reference
+`isa`. The Smrnmi example uses numeric CSR and MNRET encodings because the
+installed assembler does not recognize the Smrnmi ISA name. This does not
+change the reference or DUT extension requirement.
