@@ -16,4 +16,6 @@ def execute(a):
 
 def mcp_tools():
     return [ToolSpec('sec_suite','Collect executed digital security reports as honest C3 outcomes.',
-                    schema({'reports':{'type':'array','items':{'type':'string'}},'out':{'type':'string'}},['reports','out']),collect)]
+                    schema({'reports':{'type':'array','items':{'type':'string'}},'out':{'type':'string'}},['reports','out']),collect,
+        side_effects='writes collected C3 evidence under out', native_tools=(),
+        )]

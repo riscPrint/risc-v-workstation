@@ -42,19 +42,5 @@
   "farm_workflow:native_tools:Declare inventory tool ids, or an empty tuple.",
   "farm_workflow:side_effects:Declare read-only or writes-files.",
   "reduce_run:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "reduce_run:side_effects:Declare read-only or writes-files.",
-  "sec_contract:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_contract:side_effects:Declare read-only or writes-files.",
-  "sec_fault:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_fault:side_effects:Declare read-only or writes-files.",
-  "sec_gadgets:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_gadgets:side_effects:Declare read-only or writes-files.",
-  "sec_ift:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_ift:side_effects:Declare read-only or writes-files.",
-  "sec_isolation:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_isolation:side_effects:Declare read-only or writes-files.",
-  "sec_latency:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_latency:side_effects:Declare read-only or writes-files.",
-  "sec_suite:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "sec_suite:side_effects:Declare read-only or writes-files."
+  "reduce_run:side_effects:Declare read-only or writes-files."
 ]

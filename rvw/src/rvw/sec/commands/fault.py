@@ -18,4 +18,6 @@ def execute(a):
 
 def mcp_tools():
     return [ToolSpec('sec_fault','Run single-bit critical-register faults using rvw fault and digital observations.',
-                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True)]
+                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
+        side_effects='long-running; launches configured native fault adapter; writes fault evidence under out', native_tools=(),
+        )]

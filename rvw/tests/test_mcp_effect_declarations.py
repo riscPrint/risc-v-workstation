@@ -129,3 +129,10 @@ def test_memory_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert tool.native_tools is not None
+
+
+@pytest.mark.parametrize('name', ['sec_ift', 'sec_contract', 'sec_fault', 'sec_gadgets', 'sec_isolation', 'sec_latency', 'sec_suite'])
+def test_sec_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert tool.native_tools is not None

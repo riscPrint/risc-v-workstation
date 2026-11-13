@@ -18,4 +18,6 @@ def execute(a):
 
 def mcp_tools():
     return [ToolSpec('sec_latency','Measure operand-paired declared instruction or crypto-unit latency.',
-                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True)]
+                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
+        side_effects='long-running; launches Yosys and Verilator; writes latency evidence under out', native_tools=('Verilator', 'Yosys'),
+        )]

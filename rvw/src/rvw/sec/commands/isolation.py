@@ -18,4 +18,6 @@ def execute(a):
 
 def mcp_tools():
     return [ToolSpec('sec_isolation','Run declared PMP/ePMP or privilege-boundary paired leakage tests.',
-                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True)]
+                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
+        side_effects='long-running; launches configured native RTL adapter; writes paired evidence under out', native_tools=(),
+        )]
