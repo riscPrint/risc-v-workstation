@@ -943,3 +943,25 @@ A bounded pass does not prove later behavior. Assertion pass counts include
 false antecedents. Antecedent reachability and complete DSL source attribution
 remain unmeasured. The fetched-instruction identity and eventual retirement or
 flush property is not implemented in this campaign. No liveness proof is claimed.
+
+## Single-file failing-run replay
+
+`rvw/replay.json` supplies the portable adapter command and source-input roots.
+It keeps core bindings in project data. With a conclusive failing C1/C2 run:
+
+```sh
+rvw replay-pack failed-run --recipe examples/vexriscv/rvw/replay.json --out failure.rvw
+rvw replay failure.rvw --out new-reproduction --lock vex-simsrv
+```
+
+The archive contains the ELF, stimulus/options, a from-reset trace checkpoint
+and offline Git source bundles with patches and declared extra inputs.
+The target still needs JDK 21, Scala dependencies, Verilator and native build
+tools. `JAVA_HOME` and `PATH` bind to that target's configured tools.
+Live-state cross-machine restore is outside this command.
+
+The native sample rebuilt the captured core and adapter sources in a new
+location. It reproduced fail code 3 at cycle 9,023 with 2,005 retirements.
+All sixteen checks passed. The trace checkpoint was cycle 4,500. The archive
+was about 33.6 MB. This is local relocation evidence. Native execution on a
+second machine was NOT RUN. See [the sample](rvw/replay-results.json).

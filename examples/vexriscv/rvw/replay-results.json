@@ -1,0 +1,58 @@
+{
+  "schema": "rvw.portable-replay-native-sample/1",
+  "validation": "local source relocation and rebuild, not a second machine",
+  "archive_sha256": "607fb1be245b186cdcb7efcb4eac0200acc28286f64c59f75e3f270ebb337056",
+  "archive_bytes": 33700006,
+  "revisions": {
+    "tools": "929d4cf64cc9dd409ae13211f95bc2c8e36fa88f",
+    "core": "a62c145aa042a5de874344e0a7683bd7c8c8c870"
+  },
+  "checkpoint": {
+    "schema": "rvw.portable-trace-checkpoint/1",
+    "mode": "from-reset",
+    "cycle": 4500,
+    "prefix_sha256": "cad120d036825da4b2fe0da4ae85960c4106edacc3b2397c14d3b102e36b60bb",
+    "suffix_sha256": "ca5340dec7e2b1346a4317a81575c769e8e5a4ac00ec7ae6989b39060fab130b"
+  },
+  "replay": {
+    "schema": "rvw.portable-replay-result/1",
+    "status": "reproduced",
+    "checks": {
+      "config": true,
+      "core": true,
+      "cycles": true,
+      "elf_sha256": true,
+      "fail_code": true,
+      "instret": true,
+      "max_cycles": true,
+      "mem_latency": true,
+      "rtl_sha256": true,
+      "seed": true,
+      "status": true,
+      "failure_signature": true,
+      "c2_header": true,
+      "complete_c2": true,
+      "checkpoint_prefix": true,
+      "checkpoint_suffix": true
+    },
+    "adapter_revision": "929d4cf64cc9dd409ae13211f95bc2c8e36fa88f",
+    "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+    "execution": "from-reset",
+    "source_patches": {
+      "tools": "a44daec85f32499c13eaee7bfed9181ffb04c1c28d3cd7389379d19fee53fc92",
+      "core": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "result": "run/result.json"
+  },
+  "terminal": {
+    "status": "fail",
+    "cycles": 9023,
+    "instret": 2005,
+    "fail_code": 3
+  },
+  "limits": [
+    "from-reset trace checkpoint, not live state restore",
+    "target tools and cached dependencies required",
+    "cross-machine native execution NOT RUN"
+  ]
+}
