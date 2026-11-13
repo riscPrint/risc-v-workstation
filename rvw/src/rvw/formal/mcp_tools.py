@@ -243,7 +243,6 @@ def mcp_tools():
                  schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),
         ToolSpec("formal_buses", "Generate typed simple-bus monitors and instance binds from SpinalDB. No proof run.",
                  schema({"db": S, "out": S}, ["db", "out"]), _buses, long=True),
-    return [
         ToolSpec("formal_security_prove", "Prove a source/sink IFT or static access isolation policy on exported RTL. Digital policy scope only.",
                  schema({"rtl": S, "top": S, "policy": S, "out": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "top", "policy", "out"]),
