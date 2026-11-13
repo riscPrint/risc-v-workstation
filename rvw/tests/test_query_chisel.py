@@ -115,3 +115,34 @@ def test_chisel_refusals(tmp_path):
     with pytest.raises(ValueError, match='no include directories'):
         build_hdl([bad], 'Top', out, yosys=YOSYS, frontend='chisel', defines=['A'])
     assert out.read_bytes() == b'previous database'
+
+
+@needs_firtool
+def test_standard_chisel_queue(tmp_path):
+    """A real Chisel standard-library Queue, not a replacement FIFO model."""
+    from test_query_hdl import _yosys_graph
+    library = Path(os.environ.get('RVW_CHISEL_SOURCE', Path(__file__).parents[3] / 'ref/chisel-6.5.0'))
+    roots = [DATA, library]
+    out = tmp_path / 'queue.db'
+    build_hdl([DATA / 'QueueTop.fir'], 'QueueTop', out, yosys=YOSYS, frontend='chisel',
+              firtool=FIRTOOL, source_roots=roots)
+    db = DesignDB(out)
+    try:
+        assert ops.where(db, 'io.in.bits')['signal']['loc'] == f'{DATA}/Queue.scala:8'
+        assert db.q('SELECT count(*) FROM memories')[0][0] == 1
+        assert ops.drivers(db, 'io_out_q.enq_ptr_value')['register']['reset']['kind'] == 'SYNC'
+        counter = library / 'src/main/scala/chisel3/util/Counter.scala'
+        if counter.is_file():
+            assert ops.where(db, 'io_out_q.enq_ptr_value')['signal']['loc'] == f'{counter}:61'
+        rtl = []
+        for name, content in db.q("SELECT name,content FROM artifacts WHERE name LIKE 'rtl/%'"):
+            path = tmp_path / Path(name).name
+            path.write_bytes(content)
+            rtl.append(path)
+        oracle = _yosys_graph(sorted(rtl), 'QueueTop', tmp_path)
+        for a in ('io_in_bits', 'io_in_valid', 'io_out_ready'):
+            for b in ('io_out_bits', 'io_out_valid', 'io_in_ready'):
+                assert ops.path(db, a, b)['found'] == oracle(a, b), (a, b)
+        print('Queue counts:', ops.info(db)['counts'])
+    finally:
+        db.close()
