@@ -376,6 +376,17 @@ checks for the six property intents. These tests use Yices and are slow tests.
 them on M-only Spike. This tests the software reference, not VexRiscv RTL.
 Missing native tools cause a skip. No skipped test supplies verification evidence.
 
+### Typed multichannel bus safety
+
+`formal buses` also generates AXI4 and AXI4-Lite five-channel stall monitors.
+It supports qualified TileLink bus types, including B/C/E channels when present.
+Each payload includes every recorded sideband. AXI4 checks burst encodings,
+FIXED length limits and WRAP length/alignment. AXI-Lite rejects EXOKAY responses.
+TileLink checks channel opcode encodings. Hierarchical instances use local
+clock/reset ports. Missing fields and unresolved controls stay unsupported.
+These rows report `coverage=channel_safety`. They do not check beat counts,
+ID response order, exclusive operations or coherence state. #66 remains open.
+
 ## Resource safety templates
 
 `rvw formal template allocation_pool --entries 4 --width 3 --out pool.sv`
