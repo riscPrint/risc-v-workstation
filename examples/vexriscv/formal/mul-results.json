@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-13",
+  "runs": [
+    {
+      "rtl_sha256": "1a791f8d828a42b774181017108324ef23675253056effdb53c405b695f33415",
+      "fresh_elaboration": false,
+      "cell": "$mul$core.v:1499$4",
+      "cell_type": "$mul",
+      "cell_attributes": {
+        "src": "core.v:1499.30-1499.79"
+      },
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "scope": "RV32 low multiply product cell only; zero-extended operands; no plugin decode, pipeline or core proof",
+      "remaining": [
+        "mulh signed modes",
+        "divider plugin transactions",
+        "VexiiRiscv units",
+        "FPU versus SoftFloat"
+      ],
+      "symbolic_operand_bits": 32,
+      "observed_result_bits": 32
+    },
+    {
+      "rtl_sha256": "1a791f8d828a42b774181017108324ef23675253056effdb53c405b695f33415",
+      "fresh_elaboration": false,
+      "symbolic_operand_bits": 8,
+      "observed_result_bits": 8,
+      "cell": "$mul$core.v:1499$4",
+      "cell_type": "$mul",
+      "cell_attributes": {
+        "src": "core.v:1499.30-1499.79"
+      },
+      "status": "proved",
+      "reason": null,
+      "scope": "RV32 product cell with restricted zero-extended operands and low result bits; no plugin decode, pipeline or core proof",
+      "remaining": [
+        "mulh signed modes",
+        "divider plugin transactions",
+        "VexiiRiscv units",
+        "FPU versus SoftFloat"
+      ]
+    }
+  ]
+}
