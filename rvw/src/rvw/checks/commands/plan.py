@@ -8,6 +8,7 @@ from rvw.common.project import load_project
 
 def plan(project, manifest=None, inventory=None):
     from rvw.formal.micro_checks import PORTS
+    from rvw.formal.ooo_checks import PORTS as OOO_PORTS
     loaded=load_project(project)
     if loaded is None:
         raise ValueError('select a project with rvw.toml')
@@ -68,7 +69,9 @@ def plan(project, manifest=None, inventory=None):
                        missing=sorted(required-set(r.get('ports',{}))),
                        status=instances.get(r['id'],{}).get('status','unbound'),
                        reason=instances.get(r['id'],{}).get('reason')) for r in matches]
-        rows.append(dict(kind=kind,needs=sorted(required),declared=bool(matches),
+        from rvw.checks.declarations import template
+        rows.append(dict(kind=kind,needs=sorted(required),declaration=template(kind),
+                         declaration_file='rvw/templates/checks.micro.json' if kind in PORTS or kind in OOO_PORTS else None,declared=bool(matches),
                          bindings=bindings,status='generated' if any(b['status']=='generated' for b in bindings) else 'unbound',
                          reason=None if matches else 'no project signal binding supplied'))
     if inventory is not None:
@@ -86,6 +89,7 @@ def plan(project, manifest=None, inventory=None):
                          declared=True,status='unbound')
                 rows.append(row)
                 by_kind[check['kind']]=row
+            row.setdefault('declaration', 'Call spinalchecks.DeclaredChecks.rule with this kind, a name, a meaning, an activation trigger and a failing condition in the sampling clock domain.')
             row.setdefault('native_bindings',[]).append(dict(id=check['id'],status=check['status'],
                 signals=check.get('signals',{}),trigger_signal=check.get('trigger_signal')))
             row['native_inserted']=sum(c['status']=='inserted' for c in row['native_bindings'])

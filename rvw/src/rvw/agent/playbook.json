@@ -95,7 +95,7 @@
         },
         {
           "id": "init",
-          "do": "Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook.",
+          "do": "Write rvw.toml, rvw/run.sh and the core playbook. Mapped RV32 req/rsp init with RVFI also writes formal and security bindings. Export fresh RTL with rvw/export-rtl.sh before native consumers.",
           "cli": [
             "init",
             "--isa",
@@ -940,7 +940,7 @@
         },
         {
           "id": "riscv",
-          "do": "Optional: run the declared riscv-formal checks.",
+          "do": "Optional: run the declared riscv-formal checks. Mapped single-bus Spinal RV32 init supplies a bounded formal isa kit. Review its symbolic memory assumptions. Timeouts and machine-state gaps remain inconclusive.",
           "cli": [
             "formal",
             "riscv",
@@ -1077,7 +1077,7 @@
       "steps": [
         {
           "id": "konata",
-          "do": "Run the workload with a Konata pipeline log (adapter option --konata).",
+          "do": "Run the workload with a Konata pipeline log (adapter option --konata). The mapped adapter collects declared probes and converts them. Compare retirement counts with C1 and C2.",
           "manual": true,
           "decide": [
             {

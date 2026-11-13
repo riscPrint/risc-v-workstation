@@ -1672,8 +1672,9 @@ Set `pmp_regions` to the core's actual count. Rebuild the shim after a workstati
 update. A split-access refusal can indicate a missing opt-in or an unsupported
 access. Inspect the access and these conditions before changing the platform.
 
-The mapped adapter supports probe capture. It does not support `--konata`.
-Bind actual stage and retirement events, run with `--probes`, then convert:
+The mapped adapter supports probe capture and `--konata`. Bind actual stage
+and retirement events. `--konata` enables probe collection and writes the
+converted pipeline log. For an existing `--probes` run, convert it directly:
 
 ```sh
 rvw probes convert run/probe-events.jsonl --to kanata --out run/konata.log
@@ -1885,3 +1886,18 @@ project smoke ELF, drives RAM responses and checks every retirement with
 Spike until the passing tohost store. Set `RVW_ELF` to select another finite
 program. The VIP command also writes a `.bench.json` file beside its test.
 Extra protocols and extended architectural observations still need bindings.
+
+## Check declarations and shim repair
+
+`rvw checks plan` lists the exact signal roles and a declaration template for
+each rule. Mapped init writes review-only micro-check and Scala declaration
+stubs under `rvw/templates`. Replace each `REPLACE_` value. Set the top,
+width and entries from the design. Select reviewed rules through the
+`queues` path in `checks.generate.json`. Do not enable all placeholders.
+Native elaborated checks outside that catalogue need a `DeclaredChecks.rule`
+call with an actual activation trigger and a failing condition. The supplied
+Scala stub shows that call. A declaration is not monitor execution evidence.
+
+If the installed Spike shim is stale, `rvw doctor --features cosim` now gives
+one exact `nice -n 10 .../Cosim/build.sh` command in its `spike_shim` check.
+Run that command, then repeat doctor. Rebuilding does not qualify the core.

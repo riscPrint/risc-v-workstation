@@ -1208,3 +1208,8 @@ records each receipt under a declared `rvw.reset-events/1` header.
 Offline Spike comparison checks receipts and resets its processor with RAM
 retained. It does not use DUT memory as expected state. Missing observations
 prevent a match. See `examples/vexiiriscv/rvw/reset64.json` for project data.
+
+Mapped adapters accept `--konata` for cores with declared pipeline probes.
+The flag enables probe capture and uses the workstation's Kanata converter.
+The terminal completion cycle is sampled before a tohost store ends the run.
+The probe stream and pipeline log retain the final retirement.

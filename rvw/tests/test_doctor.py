@@ -150,3 +150,13 @@ def test_info_waits_for_the_project_startup_time(tmp_path, monkeypatch):
     info = next(c for c in report['checks'] if c['name'] == 'adapter.info')
     assert seen['timeout'] == 300.0
     assert info['status'] == 'error' and 'core.startup_s' in info['detail']
+
+
+def test_stale_shim_has_one_rebuild_command(tmp_path, monkeypatch):
+    monkeypatch.setattr(check, 'run_group', lambda *a, **k: SimpleNamespace(
+        returncode=1, stdout='MISSING or unusable Spike shim: stale source\n', stderr=''))
+    result=check.diagnose(project=tmp_path,features='cosim')
+    row=next(r for r in result['checks'] if r['name']=='spike_shim')
+    assert row['status']=='error'
+    assert row['fix'].startswith('nice -n 10 ')
+    assert row['fix'].endswith('/Cosim/build.sh')

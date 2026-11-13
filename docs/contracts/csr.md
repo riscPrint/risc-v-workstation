@@ -458,3 +458,12 @@ portfolio outcome and its refusal to certify input closure.
 `rvw.check-kind-induction/1` records one selected instance per bound kind.
 Its passing conditional evidence requires both `proven` and a reached trigger.
 It does not transfer that result to the other instances of the kind.
+
+
+## New-project declaration stubs
+
+Check-plan rule rows can include `declaration` and `declaration_file`.
+Mapped init emits review-only micro-check and Scala declaration stubs.
+Unfilled placeholders are not selected automatically. Native inventory rows
+name the explicit DeclaredChecks rule API. Actual triggers and failure
+conditions remain project declarations. No monitor execution is inferred.

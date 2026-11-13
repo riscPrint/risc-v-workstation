@@ -527,7 +527,7 @@ Optional tool set: 22 tools. Load MCP profile `core` with `rvw_tools_load`. Read
 3. **init-plan**: Plan the project files. Read every planned file. `rvw init --isa <ISA> --wire-build --dry-run --json` / MCP `init_scaffold`
    - If exit 2: go to `stop`. Fix the reported input (ISA, sbt project, linker script).
    - If exit 0: go to `init`.
-4. **init**: Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook. `rvw init --isa <ISA> --wire-build --json` / MCP `init_scaffold`
+4. **init**: Write rvw.toml, rvw/run.sh and the core playbook. Mapped RV32 req/rsp init with RVFI also writes formal and security bindings. Export fresh RTL with rvw/export-rtl.sh before native consumers. `rvw init --isa <ISA> --wire-build --json` / MCP `init_scaffold`
    - If exit 0: go to `map-adapter`.
 5. **map-adapter**: Use init_scaffold with spinal_top, reset_pc, buses and rvfi_prefix for a mapped adapter. Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF. (manual)
    - If the adapter compiles: go to `smoke`.
@@ -621,7 +621,7 @@ Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Re
    - If fail: go to `cex`.
    - If timeout or unknown (exit 3): go to `stop`. Bounded and inconclusive. Not a proof.
    - If pass: go to `riscv`.
-3. **riscv** (optional): Optional: run the declared riscv-formal checks. `rvw formal riscv --out <OUT> --json` / MCP `formal_riscv`
+3. **riscv** (optional): Optional: run the declared riscv-formal checks. Mapped single-bus Spinal RV32 init supplies a bounded formal isa kit. Review its symbolic memory assumptions. Timeouts and machine-state gaps remain inconclusive. `rvw formal riscv --out <OUT> --json` / MCP `formal_riscv`
    - If fail: go to `cex`.
    - If pass: go to `done`. A bounded pass is not a full ISA proof.
 4. **cex**: Explain the counterexample and replay it in simulation. `rvw formal cex --result <OUT> --out <CEX> --json` / MCP `formal_cex`
@@ -634,7 +634,7 @@ The question is cycles, IPC or where a pipeline stalls.
 
 Optional tool set: 56 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
-1. **konata**: Run the workload with a Konata pipeline log (adapter option --konata). (manual)
+1. **konata**: Run the workload with a Konata pipeline log (adapter option --konata). The mapped adapter collects declared probes and converts them. Compare retirement counts with C1 and C2. (manual)
    - If a Konata log: go to `report`.
 2. **report**: Report IPC, stalls and the top stall causes. `rvw perf <LOG> --json` / MCP `perf_report`
    - If a change to compare: go to `compare`.

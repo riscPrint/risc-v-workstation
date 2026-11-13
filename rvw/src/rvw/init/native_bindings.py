@@ -24,7 +24,18 @@ cd "$here"
 : "${RVW_HOME:?Set RVW_HOME}"
 exec "$RVW_HOME/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt-CORE}" nice -n 10 sbt "runMain RvwExport"
 '''.replace('sbt-CORE', 'sbt-' + core['core'])
-    return {'rvw/src/main/scala/RvwExport.scala': export, 'rvw/export-rtl.sh': script}
+    from rvw.checks.declarations import scaffold
+    return {'rvw/src/main/scala/RvwExport.scala': export, 'rvw/export-rtl.sh': script,
+            'rvw/templates/checks.micro.json': json.dumps(scaffold(),indent=2)+'\n',
+            'rvw/templates/DeclaredCoreChecks.scala': '''// Review-only stub. Add a call in the sampling domain and enable SpinalChecks.
+// Supply real conditions. Do not tie the trigger or failure to constants.
+import spinal.core._
+import spinalchecks.DeclaredChecks
+object DeclaredCoreChecks {
+  def bind(kind: String, name: String, meaning: String, active: Bool, failed: Bool): Unit =
+    DeclaredChecks.rule(kind, name, meaning, trigger = active)(failed)
+}
+''' }
 
 
 def security(core):
