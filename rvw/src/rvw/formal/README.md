@@ -2470,3 +2470,44 @@ and a revision with an unrelated output counter. A faulty transition changed
 the cone, excluded the entry, and failed the fresh target proof. A source
 assumption was refused. Each stage used a 12 s timeout. Raw results are under
 `/tmp/deep-ic3-native-tests/`. This is small-design reuse evidence.
+# Sail FP, CSR and privileged entry slices
+
+`rvw formal sail-state --model SAIL_RISCV --compiler SAIL --out DIR` compiles
+18 kernels from hash-pinned Sail rules. MCP tool: `formal_sail_state`.
+Use Sail 0.20.1 and sail-riscv commit
+`549e723031b34b5ffea5bbb56367be15c7a38a9e`.
+
+The generated SystemVerilog includes a typed result module and a checker.
+Connect the checker to decoded operands and the observed result in a project
+wrapper. `valid` must identify the selected retired operation. FP checkers also
+check the instruction encoding. No core binding or core proof is implied.
+
+| Kernels | Inputs | Output |
+| --- | --- | --- |
+| FSGNJ/FSGNJN/FSGNJX, H/S/D | Decoded 16/32/64-bit FP operands `a,b` | Raw FP result bits |
+| CSRRW/CSRRS/CSRRC write value | `a` is the CSR read value; `b` is the source value | Proposed 32-bit CSR write value |
+| CSRRW/CSRRS/CSRRC access | Low five bits of `a` are rd; low five bits of `b` are rs1 index or immediate | Bit 1 is read; bit 0 is write |
+| MRET/SRET/WFI entry | Control fields below | Two-bit entry decision |
+
+CSR immediate forms use a zero-extended immediate as the source value. An rs1
+register that holds zero still causes a write when its index is not zero.
+The proposed CSR write value applies only when the generated write intent is
+set. Projects must check both signals. Supply the CSR read-modify-write value,
+which can differ from the destination value for `mip` and `sip`.
+
+Privileged inputs use `a[2:0]` for privilege: U=0, S=1, M=3, VU=4, VS=5.
+Other privilege codes disable the checker. `a[3]` is TSR. `a[4]` is VTSR.
+`a[5]` is TW. `a[6]` is the platform user-mode WFI option. `b[0]` is the
+extension return-privilege check. `b[1]` says S is enabled. Decisions are
+0 for allowed entry, 1 for illegal instruction, 2 for virtual instruction,
+and 3 for extension return-privilege failure. WFI allowed entry means entry
+to the wait state. It does not mean eventual completion.
+
+These exports need no SoftFloat library. FP register zero is writable.
+NaN payload and sign bits are preserved by the sign rules. Inputs are after
+register unboxing. Arithmetic, rounding, flags, register boxing, CSR legality,
+WARL effects, CSR destination values, return-state updates, return targets,
+and WFI timeout/wakeup are excluded. FCLASS calls a model/compiler helper
+outside this extracted slice. No arithmetic or full-machine proof is claimed.
+The manifest records source hashes, exact source text and lines, lowerings,
+compiler/library identities, excluded effects and generated hashes.
