@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
     ...
 ```
 
@@ -34,7 +34,8 @@ usage: rvw agent guide [-h] [--workflow WORKFLOW] [--json] [--markdown]
 ### `rvw agent-bench`
 
 ```text
-usage: rvw agent-bench [-h] [--project PROJECT] {dry-run,serve} ...
+usage: rvw agent-bench [-h] [--project PROJECT]
+    {dry-run,serve,native-qualify,repair-prepare,repair-check,trial} ...
 ```
 
 ### `rvw agent-bench dry-run`
@@ -49,6 +50,35 @@ usage: rvw agent-bench dry-run [-h] --pack PACK --out OUT [--agent
 ```text
 usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
     PROJECT]
+```
+
+### `rvw agent-bench native-qualify`
+
+```text
+usage: rvw agent-bench native-qualify [-h] --pack PACK --source SOURCE --out
+    OUT [--task TASK] [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw agent-bench repair-prepare`
+
+```text
+usage: rvw agent-bench repair-prepare [-h] --pack PACK --task TASK --source
+    SOURCE --out OUT [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw agent-bench repair-check`
+
+```text
+usage: rvw agent-bench repair-check [-h] --challenge CHALLENGE --out OUT
+    [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw agent-bench trial`
+
+```text
+usage: rvw agent-bench trial [-h] --pack PACK --task TASK --out OUT
+    [--budget-s BUDGET_S] [--max-calls MAX_CALLS] [--repeats REPEATS] [--model
+    MODEL] [--project PROJECT] command [command ...]
 ```
 
 ### `rvw arch`
@@ -348,7 +378,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw checks`
 
 ```text
-usage: rvw checks [-h] [--project PROJECT] {generate} ...
+usage: rvw checks [-h] [--project PROJECT] {generate,report} ...
 ```
 
 ### `rvw checks generate`
@@ -356,6 +386,13 @@ usage: rvw checks [-h] [--project PROJECT] {generate} ...
 ```text
 usage: rvw checks generate [-h] --all [--json] [--manifest MANIFEST] [--out
     OUT] [--project PROJECT]
+```
+
+### `rvw checks report`
+
+```text
+usage: rvw checks report [-h] --inventory INVENTORY [--run RUN] [--formal
+    FORMAL] --out OUT [--project PROJECT]
 ```
 
 ### `rvw cosim`
@@ -774,7 +811,8 @@ usage: rvw debug trace-adapter [-h] [--project PROJECT] adapter
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
     [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
-    [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
+    [--conformance] [--install FEATURES] [--yes] [--dry-run] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw evidence`
@@ -948,7 +986,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,lazy-ram,reset-audit,sail-state,uf-prove}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-state,strategy,uf-prove}
     ...
 ```
 
@@ -977,7 +1015,8 @@ usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
 
 ```text
 usage: rvw formal buses [-h] --db DB --out OUT [--depth DEPTH] [--max-beats
-    MAX_BEATS] [--type-report TYPE_REPORT] [--project PROJECT]
+    MAX_BEATS] [--type-report TYPE_REPORT] [--clocks CLOCKS] [--project
+    PROJECT]
 ```
 
 ### `rvw formal csr`
@@ -1142,6 +1181,13 @@ usage: rvw formal scenario plan [-h] --out OUT --backend BACKEND [--project
 ```text
 usage: rvw formal scenario check [-h] --out OUT --observed OBSERVED [--project
     PROJECT] source
+```
+
+### `rvw formal psl`
+
+```text
+usage: rvw formal psl [-h] [--clock CLOCK] --out OUT [--project PROJECT]
+    source
 ```
 
 ### `rvw formal sva-lower`
@@ -1378,14 +1424,15 @@ usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] [--sampled-events] [--stable-at-edge INPUT]
-    [--state-encoding STATE_ENCODING] [--blackbox-contract BLACKBOX_CONTRACT]
-    [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]] [--gold-rev GOLD_REV]
-    [--gate-rev GATE_REV] [--config CONFIG] --top TOP [--clock CLOCK] [--reset
-    RESET] [--reset-active {high,low}] [--reset-cycles RESET_CYCLES] [--settle
-    SETTLE] [--dsec] [--pair GOLD=GATE] [--latency LATENCY] [--latency-map
-    OUTPUT=CYCLES] [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}]
-    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+usage: rvw formal equiv [-h] [--memory-map] [--sampled-events]
+    [--stable-at-edge INPUT] [--state-encoding STATE_ENCODING]
+    [--blackbox-contract BLACKBOX_CONTRACT] [--gold GOLD [GOLD ...]] [--gate
+    GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config
+    CONFIG] --top TOP [--clock CLOCK] [--reset RESET] [--reset-active
+    {high,low}] [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec]
+    [--pair GOLD=GATE] [--latency LATENCY] [--latency-map OUTPUT=CYCLES]
+    [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}] [--timeout
+    TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -1495,11 +1542,25 @@ usage: rvw formal initial-split [-h] --manifest MANIFEST --out OUT [--timeout
     TIMEOUT] [--json] [--project PROJECT]
 ```
 
+### `rvw formal isa`
+
+```text
+usage: rvw formal isa [-h] --out OUT [--machine MACHINE] [--timeout TIMEOUT]
+    [--unbounded] [--engines ENGINES] [--json] [--project PROJECT]
+```
+
 ### `rvw formal lazy-ram`
 
 ```text
 usage: rvw formal lazy-ram [-h] --manifest MANIFEST --out OUT [--timeout
     TIMEOUT] [--budget BUDGET] [--json] [--project PROJECT]
+```
+
+### `rvw formal machine-checks`
+
+```text
+usage: rvw formal machine-checks [-h] --manifest MANIFEST --out OUT [--run]
+    [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ### `rvw formal reset-audit`
@@ -1510,10 +1571,31 @@ usage: rvw formal reset-audit [-h] --rtl RTL --top TOP [--clock CLOCK] --reset
     --out OUT [--json] [--project PROJECT]
 ```
 
+### `rvw formal revision-bench`
+
+```text
+usage: rvw formal revision-bench [-h] --base BASE --revised REVISED --out OUT
+    [--timeout TIMEOUT] [--trials TRIALS] [--json] [--project PROJECT]
+```
+
+### `rvw formal riscv-proof`
+
+```text
+usage: rvw formal riscv-proof [-h] --out OUT [--checks CHECKS] [--engines
+    ENGINES] [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
 ### `rvw formal sail-state`
 
 ```text
 usage: rvw formal sail-state [-h] --model MODEL --compiler COMPILER --out OUT
+    [--json] [--project PROJECT]
+```
+
+### `rvw formal strategy`
+
+```text
+usage: rvw formal strategy [-h] --model MODEL [--history HISTORY] --out OUT
     [--json] [--project PROJECT]
 ```
 
@@ -1531,8 +1613,12 @@ usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
     [--sbt-project SBT_PROJECT] [--linker-script LINKER_SCRIPT] [--ram-region
     RAM_REGION] [--reset-pc RESET_PC] [--db-top DB_TOP] [--hdl
     {sv,vhdl,chisel}] [--top TOP] [--source SOURCE] [-I INCLUDE_DIRS]
-    [--library LIBRARY] [--fir FIR] [--source-root SOURCE_ROOTS] [--dry-run]
-    [--force] [--json] [--project PROJECT] [path]
+    [--library LIBRARY] [--fir FIR] [--source-root SOURCE_ROOTS] [--spinal-top
+    SPINAL_TOP] [--verilog-top VERILOG_TOP] [--verilog VERILOG] [--define
+    DEFINE] [--param PARAM] [--clock CLOCK] [--reset RESET] [--reset-active
+    {high,low}] [--bus BUS] [--rvfi-prefix RVFI_PREFIX] [--irq IRQ] [--const
+    CONST] [--ram RAM] [--accept-platform-defaults] [--yosys YOSYS]
+    [--dry-run] [--force] [--json] [--project PROJECT] [path]
 ```
 
 ### `rvw lint`
@@ -1544,11 +1630,20 @@ usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
     DIR] [--sarif PATH] [--json] [--project PROJECT]
 ```
 
+### `rvw lsp`
+
+```text
+usage: rvw lsp [-h] [--db DB] [--lint-settings LINT_SETTINGS] [--project
+    PROJECT]
+```
+
 ### `rvw mcp`
 
 ```text
-usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--transport {stdio,sse}]
-    [--clients CLIENTS] [--host HOST] [--port PORT] [--project PROJECT]
+usage: rvw mcp [-h] [--list] [--profile
+    {core,verification,formal,arch,debug,soc,all}] [--workflow WORKFLOW]
+    [--only ONLY] [--json] [--transport {stdio,sse}] [--clients CLIENTS]
+    [--host HOST] [--port PORT] [--project PROJECT] [{audit}]
 ```
 
 ### `rvw memory`
@@ -1707,16 +1802,16 @@ usage: rvw probes summary [-h] [--project PROJECT] events
 
 ```text
 usage: rvw probes convert [-h] --to
-    {bp-events,cache,counts,etrace-ingress,hpm,interrupts,kanata,mmu} --out
-    OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--json] [--project
-    PROJECT] events
+    {bp-events,bus,cache,counts,csr-writes,etrace-ingress,hpm,interrupts,kanata,mmu}
+    --out OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--json]
+    [--project PROJECT] events
 ```
 
 ### `rvw query`
 
 ```text
 usage: rvw query [-h] [--project PROJECT]
-    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff,definition,references,port-status,parameters,explain-module,type,hierarchy-diff}
     ...
 ```
 
@@ -1733,8 +1828,9 @@ usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
 usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend
     {yosys,slang,ghdl,chisel}] [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS]
     [--std STD] [--slang SLANG] [--ghdl-plugin GHDL_PLUGIN] [--library
-    LIBRARY] [--firtool FIRTOOL] [--source-root SOURCE_ROOTS] [--yosys YOSYS]
-    [--timeout TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
+    LIBRARY] [--firtool FIRTOOL] [--source-root SOURCE_ROOTS] [--cache-dir
+    CACHE_DIR] [--yosys YOSYS] [--timeout TIMEOUT] [--json] [--project
+    PROJECT] sources [sources ...]
 ```
 
 ### `rvw query info`
@@ -1834,6 +1930,50 @@ usage: rvw query diff [-h] [--json] [--scope SCOPE] [--limit LIMIT]
     [--no-connections] [--project PROJECT] old new
 ```
 
+### `rvw query definition`
+
+```text
+usage: rvw query definition [-h] [--db DB] [--json] [--project PROJECT] signal
+```
+
+### `rvw query references`
+
+```text
+usage: rvw query references [-h] [--db DB] [--json] [--project PROJECT] signal
+```
+
+### `rvw query port-status`
+
+```text
+usage: rvw query port-status [-h] [--db DB] [--json] [--project PROJECT]
+    [path]
+```
+
+### `rvw query parameters`
+
+```text
+usage: rvw query parameters [-h] [--db DB] [--json] [--project PROJECT] [path]
+```
+
+### `rvw query explain-module`
+
+```text
+usage: rvw query explain-module [-h] [--db DB] [--json] [--project PROJECT]
+    [path]
+```
+
+### `rvw query type`
+
+```text
+usage: rvw query type [-h] [--db DB] [--json] [--project PROJECT] expression
+```
+
+### `rvw query hierarchy-diff`
+
+```text
+usage: rvw query hierarchy-diff [-h] [--json] [--project PROJECT] old new
+```
+
 ### `rvw reduce`
 
 ```text
@@ -1849,7 +1989,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,plan}
     ...
 ```
 
@@ -2135,6 +2275,13 @@ usage: rvw regress history [-h] [--core CORE] [--rev REV] [--tier TIER]
 ```text
 usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
     PROJECT]
+```
+
+### `rvw regress plan`
+
+```text
+usage: rvw regress plan [-h] --features FEATURES [--catalog CATALOG] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw sec`
@@ -2495,6 +2642,31 @@ usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
     observations
 ```
 
+### `rvw vip`
+
+```text
+usage: rvw vip [-h] [--project PROJECT] {list,buses,bench} ...
+```
+
+### `rvw vip list`
+
+```text
+usage: rvw vip list [-h] [--project PROJECT]
+```
+
+### `rvw vip buses`
+
+```text
+usage: rvw vip buses [-h] --db DB [--project PROJECT]
+```
+
+### `rvw vip bench`
+
+```text
+usage: rvw vip bench [-h] --db DB [--bus BUS] --out OUT [--clock CLOCK]
+    [--reset RESET] [--project PROJECT]
+```
+
 ### `rvw wave`
 
 ```text
@@ -2682,6 +2854,38 @@ The default server exposes the built-in tools listed below, including the four j
 CLI commands without an MCP entry are CLI-only.
 Isolated calls can return a job after the sync timeout, even when
 they do not start a background job at once.
+
+### `agent_bench_native_qualify`
+
+Run seeded failures and repaired workloads. Retain C1/C2 identities. This does not score agent reasoning.
+
+Arguments: `pack` (required), `source` (required), `out` (required), `tasks`, `timeout`.
+
+Starts a background job: yes.
+
+### `agent_bench_repair_check`
+
+Independently check candidate source changes with fail-to-pass and pass-to-pass workloads. Retain a patch for human review.
+
+Arguments: `challenge` (required), `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `agent_bench_repair_prepare`
+
+Reproduce a seeded failure in a disposable core copy. Missing evidence is inconclusive.
+
+Arguments: `pack` (required), `task` (required), `source` (required), `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `agent_bench_trial`
+
+Launch a bounded external MCP fixture client. Retain partial attempts and independent fixture scores. Not a native repair result.
+
+Arguments: `pack` (required), `task` (required), `out` (required), `command` (required), `budget_s`, `max_calls`, `repeats`, `model`.
+
+Starts a background job: yes.
 
 ### `agent_guide`
 
@@ -2978,6 +3182,14 @@ Emit project checks and explicit missing-binding reasons. No proof run.
 Arguments: `project` (required), `out` (required), `manifest`.
 
 Starts a background job: yes.
+
+### `checks_report`
+
+Count generated, bound, proven, bounded, fired and unbound checks. Missing evidence stays null.
+
+Arguments: `inventory` (required), `runs`, `formal`.
+
+Starts a background job: no.
 
 ### `cosim_adjudicate`
 
@@ -3471,7 +3683,7 @@ Starts a background job: yes.
 
 Generate typed bus monitors and bounded AXI transaction trackers from SpinalDB. No proof run.
 
-Arguments: `db` (required), `out` (required), `depth`, `max_beats`, `type_report`.
+Arguments: `db` (required), `out` (required), `depth`, `max_beats`, `type_report`, `clocks`.
 
 Starts a background job: yes.
 
@@ -3583,7 +3795,7 @@ Starts a background job: yes.
 
 Prove closed RTL output cones. Blackbox models produce conditional evidence only.
 
-Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `state_encoding`, `latency_map`, `output_map`, `sampled_events`, `stable_at_edge`, `timeout`.
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `state_encoding`, `latency_map`, `output_map`, `memory_map`, `sampled_events`, `stable_at_edge`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3619,6 +3831,14 @@ Arguments: `source` (required), `destination` (required), `top` (required), `out
 
 Starts a background job: yes.
 
+### `formal_isa`
+
+Run the ISA kit. Return per-check bounds, failures and unsupported gaps.
+
+Arguments: `out` (required), `machine`, `timeout`, `unbounded`, `engines`.
+
+Starts a background job: yes.
+
 ### `formal_lazy_ram`
 
 Abstract untracked RAM words and restore addressed entries after abstract failures.
@@ -3632,6 +3852,14 @@ Starts a background job: yes.
 Lower supported unbounded SVA to native live jobs or finite-state liveness-to-safety. Engine passes remain inconclusive.
 
 Arguments: `source` (required), `top` (required), `out` (required), `run`, `backend`, `reset`, `engine`, `mode`, `depth`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_machine_checks`
+
+Generate project-bound RV32 machine transition properties and optionally run bounded checks.
+
+Arguments: `manifest` (required), `out` (required), `run`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3683,6 +3911,14 @@ Arguments: `spec` (required), `channels`, `db`, `out` (required).
 
 Starts a background job: yes.
 
+### `formal_psl`
+
+Translate the finite PSL subset to SVA. No verification run.
+
+Arguments: `source` (required), `out` (required), `clock`.
+
+Starts a background job: yes.
+
 ### `formal_recheck`
 
 Bounded solver what-if over a captured model with pinned signals and full-depth feasibility.
@@ -3715,11 +3951,27 @@ Arguments: `rtl` (required), `top` (required), `clock`, `reset` (required), `out
 
 Starts a background job: yes.
 
+### `formal_revision_bench`
+
+Measure fresh re-proofs with cone-matched lemmas. Report signed time saved.
+
+Arguments: `base` (required), `revised` (required), `out` (required), `timeout`, `trials`.
+
+Starts a background job: yes.
+
 ### `formal_riscv`
 
 Run selected project riscv-formal checks through SBY. Return C3 outcomes and a C4 verdict. Bounded passes cannot accept a core.
 
 Arguments: `project`, `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `formal_riscv_proof`
+
+Run unbounded RVFI instruction checks with the native engine portfolio.
+
+Arguments: `out` (required), `checks`, `engines`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3824,6 +4076,14 @@ Starts a background job: yes.
 Expose project architectural state without cuts and generate a one-retirement RVFI-like monitor. Generation is not conformance evidence.
 
 Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_strategy`
+
+Plan engine order and candidate abstractions. Runs no proof.
+
+Arguments: `model` (required), `history`, `out` (required).
 
 Starts a background job: yes.
 
@@ -3938,6 +4198,14 @@ Run native lint, design-database lint rules, structural CDC/RDC and SDC intent. 
 Arguments: `settings` (required), `sarif`.
 
 Starts a background job: yes.
+
+### `lsp_request`
+
+Query captured LSP navigation without an editor
+
+Arguments: `db` (required), `method` (required), `params` (required).
+
+Starts a background job: no.
 
 ### `memory_axiomatic`
 
@@ -4069,7 +4337,7 @@ Starts a background job: yes.
 
 ### `probes_convert`
 
-Convert a rvw.probe-events/1 stream into a consumer format: bp-events, cache, counts, etrace-ingress, hpm, interrupts, kanata, mmu. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
+Convert a rvw.probe-events/1 stream into a consumer format: bp-events, bus, cache, counts, csr-writes, etrace-ingress, hpm, interrupts, kanata, mmu. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
 
 Arguments: `events` (required), `to` (required), `out` (required), `c2`, `c1`, `probe`, `roi_start`, `roi_end`.
 
@@ -4103,7 +4371,7 @@ Starts a background job: yes.
 
 Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work library) with VHDL declaration and assignment lines; 'chisel' takes one FIRRTL file through firtool ($RVW_FIRTOOL), maps locations to Scala lines under source_roots, accepts Chisel names (io.a.valid) and stores the emitted Verilog and HGLDD.
 
-Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `source_roots`, `timeout`.
+Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `cache_dir`, `source_roots`, `timeout`.
 
 Starts a background job: no.
 
@@ -4112,6 +4380,14 @@ Starts a background job: no.
 One component: ports, interfaces (Stream/Flow/bundles), children, registers, memories, Areas, counts.
 
 Arguments: `project`, `db`, `path`.
+
+Starts a background job: no.
+
+### `query_definition`
+
+Captured design definition
+
+Arguments: `project`, `db`, `signal` (required).
 
 Starts a background job: no.
 
@@ -4136,6 +4412,14 @@ Starts a background job: no.
 Explain a design diff: each hardware difference with its Scala locations, the tests that hit base coverage points on those lines (coverage: rvw.coverage/1 of the OLD revision), and a measured effect of the whole change (effect: perf/arch compare JSON). Uncertain items make the test selection 'all'.
 
 Arguments: `old` (required), `new` (required), `coverage`, `effect`, `scope`, `limit`.
+
+Starts a background job: no.
+
+### `query_explain_module`
+
+Captured design explain-module
+
+Arguments: `project`, `db`, `path`.
 
 Starts a background job: no.
 
@@ -4171,6 +4455,14 @@ Arguments: `project`, `db`, `path`, `depth`.
 
 Starts a background job: no.
 
+### `query_hierarchy_diff`
+
+Compare structural hierarchy and parameters; no equivalence claim
+
+Arguments: `old` (required), `new` (required).
+
+Starts a background job: no.
+
 ### `query_info`
 
 What a design database holds: toplevel, configuration, counts, clock domains, artifacts (blocks, pdg, hgldd), RTL files, warnings.
@@ -4187,11 +4479,35 @@ Arguments: `project`, `db`, `signal` (required), `limit`.
 
 Starts a background job: no.
 
+### `query_parameters`
+
+Captured design parameters
+
+Arguments: `project`, `db`, `path`.
+
+Starts a background job: no.
+
 ### `query_path`
 
 Shortest dependency paths from `a` (read) to `b` (driven): each hop with the statement linking it and its Scala location, and the number of register stages. comb_only stops at registers, memories and synchronous read state; data_only ignores conditions and selects.
 
 Arguments: `project`, `db`, `a` (required), `b` (required), `comb_only`, `data_only`, `max_paths`.
+
+Starts a background job: no.
+
+### `query_port_status`
+
+Captured design port-status
+
+Arguments: `project`, `db`, `path`.
+
+Starts a background job: no.
+
+### `query_references`
+
+Captured design references
+
+Arguments: `project`, `db`, `signal` (required).
 
 Starts a background job: no.
 
@@ -4208,6 +4524,14 @@ Starts a background job: no.
 Find signals and components by name: substring, glob (*, ?) or regex; filter by kind (reg, wire, port, mem, component) and scope (component path).
 
 Arguments: `project`, `db`, `pattern` (required), `kind`, `regex`, `scope`, `include_generated`, `limit`.
+
+Starts a background job: no.
+
+### `query_type`
+
+Captured design type
+
+Arguments: `project`, `db`, `expression` (required).
 
 Starts a background job: no.
 
@@ -4299,6 +4623,14 @@ Arguments: `seed`, `mode`.
 
 Starts a background job: no.
 
+### `regress_plan`
+
+List generated suite applicability from explicit project capabilities. Missing declarations exclude suites. No DUT evidence is earned.
+
+Arguments: `features` (required), `catalog`.
+
+Starts a background job: no.
+
 ### `regress_privilege_build`
 
 Build self-checking privilege ELFs from project data.
@@ -4352,6 +4684,22 @@ Starts a background job: yes.
 Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.
 
 Arguments: `project`, `features`.
+
+Starts a background job: no.
+
+### `rvw_tools_describe`
+
+Describe a tool, its arguments, effects and loading profile.
+
+Arguments: `name` (required).
+
+Starts a background job: no.
+
+### `rvw_tools_search`
+
+Find tools by keywords and show their loading profiles.
+
+Arguments: `keyword` (required).
 
 Starts a background job: no.
 
@@ -4469,7 +4817,7 @@ Starts a background job: no.
 
 ### `soc_compose`
 
-Generate an APB3 RV32 Spinal top. Generation is not simulation evidence.
+Generate an RV32 Spinal top with bus ingress bridges. Generation is not simulation evidence.
 
 Arguments: `source` (required), `out` (required), `elf`.
 
@@ -4632,6 +4980,30 @@ Starts a background job: no.
 Generate unrun extension and envcfg cases from explicit versioned obligations.
 
 Arguments: `declaration` (required), `out` (required).
+
+Starts a background job: no.
+
+### `vip_bench`
+
+Generate a bound cocotb skeleton. It requires project stimulus and expectations.
+
+Arguments: `db` (required), `out` (required), `bus`, `clock`, `reset`.
+
+Starts a background job: no.
+
+### `vip_buses`
+
+List supported typed buses from SpinalDB.
+
+Arguments: `db` (required).
+
+Starts a background job: no.
+
+### `vip_list`
+
+List protocol agents and exact Spinal bus classes.
+
+Arguments: none.
 
 Starts a background job: no.
 
