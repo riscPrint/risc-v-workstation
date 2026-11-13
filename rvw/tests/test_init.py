@@ -193,7 +193,8 @@ def test_db_entry_forwards_arguments_without_sbt_command_injection(core, tmp_pat
     assert subprocess.run([str(core / 'rvw/build-db.sh'), 'other', str(output)], env=env).returncode == 2
 
 
-def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path):
+@pytest.mark.parametrize("build_fails", [False, True])
+def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path, build_fails):
     import os
     import subprocess
     import sys
@@ -212,7 +213,8 @@ def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path):
     binaries = tmp_path / 'bin'
     binaries.mkdir()
     sbt = binaries / 'sbt'
-    sbt.write_text('#!/bin/bash\necho /synthetic/scala-library.jar\n')
+    sbt.write_text('#!/bin/bash\necho compiling\n' +
+                   ('exit 7\n' if build_fails else 'echo /synthetic/scala-library.jar\n'))
     sbt.chmod(0o755)
     owner = tmp_path / 'owner'
     owner.mkdir()
@@ -220,7 +222,13 @@ def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path):
     env = dict(os.environ, RVW_HOME=str(workstation), RVW_PYTHON=sys.executable,
                LAUNCH_OWNER=str(owner), OUTPUT_ARGS=str(output), PATH=str(binaries) + ':' + os.environ['PATH'])
     env.pop('RISCVSIM_EXTRA_INPUTS', None)
-    done = subprocess.run([str(core / 'rvw/run.sh'), 'run', '--elf', 'path ; with spaces', '--out', 'out'], env=env)
+    done = subprocess.run([str(core / 'rvw/run.sh'), 'run', '--elf', 'path ; with spaces', '--out', 'out'], env=env, capture_output=True, text=True)
+    assert 'compiling' in done.stderr
+    assert '/synthetic/scala-library.jar' not in done.stdout
+    if build_fails:
+        assert done.returncode == 2
+        assert not output.exists()
+        return
     assert done.returncode == 0
     arguments = json.loads(output.read_text())
     assert arguments[-5:] == ['run', '--elf', 'path ; with spaces', '--out', 'out']
