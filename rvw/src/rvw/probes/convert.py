@@ -315,13 +315,21 @@ def mmu(stream: Stream, out, c2_path=None) -> dict:
     return {"format": "rvw.mmu-observations/1", "counts": dict(counts)}
 
 
+def _counter_totals(stream: Stream, probes) -> dict[str, int]:
+    totals = stream.counters
+    for p in probes:
+        if p.name not in totals:
+            raise ValueError(f"counter {p.name} has no total in the end record")
+    return totals
+
+
 def counts(stream: Stream, out, c1_path, c2_path) -> dict:
     """RTL event counts for `rvw arch ooo-calibrate`, bound to the run's C1 and C2 files."""
     if stream.end is None:
         raise ValueError("probe stream has no end record (incomplete run); counters are not totals")
     if not stream.of_kind("counter"):
         raise ValueError("probe stream has no counter probes")
-    data = {"c1_sha256": _sha(c1_path), "trace_sha256": _sha(c2_path), "counts": stream.counters,
+    data = {"c1_sha256": _sha(c1_path), "trace_sha256": _sha(c2_path), "counts": _counter_totals(stream, stream.of_kind("counter")),
             "cycles": int(stream.end.get("cycles", 0)), "source": "rvw.probe-events/1"}
     with Path(out).open("x") as f:
         json.dump(data, f, indent=1)
@@ -338,9 +346,9 @@ def hpm(stream: Stream, out) -> dict:
     selectors = [int(p.meta["hpm"]) for p in bound]
     if len(set(selectors)) != len(selectors):
         raise ValueError("two counter probes bind the same hpm selector")
-    totals = stream.counters
+    totals = _counter_totals(stream, bound)
     data = {"schema": "rvw.hpm-bindings/1", "identity": stream.identity, "cycles": int(stream.end.get("cycles", 0)),
-            "bindings": [{"selector": int(p.meta["hpm"]), "counter": p.name, "total": totals.get(p.name, 0)}
+            "bindings": [{"selector": int(p.meta["hpm"]), "counter": p.name, "total": totals[p.name]}
                          for p in sorted(bound, key=lambda p: int(p.meta["hpm"]))]}
     with Path(out).open("x") as f:
         json.dump(data, f, indent=1)
