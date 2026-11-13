@@ -1208,7 +1208,14 @@ usage: rvw regress [-h] [--project PROJECT]
 
 ```text
 usage: rvw regress sim [-h] [--project PROJECT]
-    {profile,checkpoint,resume,reverse-step,suffix-check} ...
+    {timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check} ...
+```
+
+### `rvw regress sim timing-handoff`
+
+```text
+usage: rvw regress sim timing-handoff [-h] --capabilities CAPABILITIES
+    [--project PROJECT] manifest
 ```
 
 ### `rvw regress sim profile`
@@ -1476,7 +1483,14 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 
 ```text
 usage: rvw sim [-h] [--project PROJECT]
-    {profile,checkpoint,resume,reverse-step,suffix-check} ...
+    {timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check} ...
+```
+
+### `rvw sim timing-handoff`
+
+```text
+usage: rvw sim timing-handoff [-h] --capabilities CAPABILITIES [--project
+    PROJECT] manifest
 ```
 
 ### `rvw sim profile`
@@ -2851,6 +2865,14 @@ Starts a background job: yes.
 Require identical C2 prefix and suffix bytes with end events. Does not establish ISA correctness.
 
 Arguments: `original` (required), `resumed` (required), `position` (required).
+
+Starts a background job: no.
+
+### `sim_timing_handoff`
+
+Check declared external gate-netlist/SDF cell, delay, timing-check and unknown behavior support. Interface readiness only; no native annotation or physical signoff.
+
+Arguments: `manifest` (required), `capabilities` (required).
 
 Starts a background job: no.
 
