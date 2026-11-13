@@ -91,3 +91,12 @@ def test_declared_request_ack_uses_stability(declared,tmp_path):
     checks(db,path,tmp_path/'checks')
     assert '.ready(req_ready)' in (tmp_path/'checks/binds.sv').read_text()
     assert 'assert(payload == previous_payload)' in (tmp_path/'checks/monitors.sv').read_text()
+
+
+def test_explicit_emitted_module_name(declared,tmp_path):
+    db,path=declared
+    spec=json.loads(path.read_text());spec['rtl_top']='EmittedTop';path.write_text(json.dumps(spec))
+    checks(db,path,tmp_path/'checks')
+    assert (tmp_path/'checks/binds.sv').read_text().startswith('bind EmittedTop ')
+    spec['rtl_top']='bad; module';path.write_text(json.dumps(spec))
+    with pytest.raises(ValueError,match='rtl_top'):load(db,path)

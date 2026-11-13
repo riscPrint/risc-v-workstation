@@ -1074,3 +1074,11 @@ It records the exact interval, partition index and partition count under
 `complete_domain` remains false. All partitions must pass under the same
 inputs, settings and reference before a full-domain claim is possible.
 Timeouts remain inconclusive and retain the native stage name in `reason`.
+## Declared emitted module name
+
+The optional `rtl_top` identifier in `rvw.hdl-ports/1` selects the emitted
+SystemVerilog bind module. `top` still has to match the design database.
+Use this explicit declaration when a frontend normalizes module case but a
+separate synthesis frontend preserves the source spelling. Port existence
+and widths remain checked against the database. Compilation must confirm
+that the emitted module has those ports. No module-name match is inferred.

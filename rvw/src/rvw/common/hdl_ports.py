@@ -15,6 +15,8 @@ def load(database, port_map, *, protocols=("ready_valid",)):
     spec = json.loads(Path(port_map).read_text())
     if spec.get('schema') != 'rvw.hdl-ports/1':
         raise ValueError('expected rvw.hdl-ports/1')
+    if 'rtl_top' in spec and (not isinstance(spec['rtl_top'],str) or not IDENT.fullmatch(spec['rtl_top'])):
+        raise ValueError('rtl_top must be an HDL module identifier')
     design = DesignDB(database)
     try:
         tops = design.q('SELECT id,module FROM components WHERE parent_id IS NULL')
@@ -73,7 +75,7 @@ def checks(database, port_map, out):
         else:
             for control in (('request','response') if kind == 'req_rsp' else ('valid','ready')):
                 ports[control]=pins[control]
-        binds.append('bind '+spec['top']+' '+module+' '+module+'_instance ('+
+        binds.append('bind '+spec.get('rtl_top',spec['top'])+' '+module+' '+module+'_instance ('+
                      ', '.join('.'+key+'('+value+')' for key,value in ports.items())+');')
         rows.append(dict(path=bus['name'],kind=bus['protocol'],status='generated',ports=ports))
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
