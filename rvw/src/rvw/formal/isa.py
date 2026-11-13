@@ -1,6 +1,7 @@
 """Run the available ISA kit and retain the scope of each result."""
 import json
 import math
+import re
 from pathlib import Path
 
 MACHINE_CHECKS = ('exception_entry', 'interrupt_entry', 'trap_return', 'csr_consistency',
@@ -21,10 +22,30 @@ def bounded_rows(suite):
     return rows
 
 
-def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), machine=None):
+
+def missing_checks(cfg):
+    """Keep unselected ISA instructions and retirement channels visible."""
+    if not cfg or 'root' not in cfg: return []
+    file=Path(cfg['root'])/'insns'/('isa_'+cfg['isa']+'.txt')
+    if not file.is_file():
+        return [dict(check='isa_inventory',status='unsupported',reason='The ISA instruction list is unavailable.')]
+    names={line.strip() for line in file.read_text().splitlines()
+           if re.fullmatch(r'[a-z0-9_]+',line.strip())}
+    names.update(cfg.get('instruction_models',{}))
+    required={'cover'}
+    for channel in range(cfg['nret']):
+        required.update(f'insn_{name}_ch{channel}' for name in names)
+        required.update(f'{kind}_ch{channel}' for kind in ('reg','pc_fwd','pc_bwd','liveness','unique','causal'))
+    return [dict(check=name,status='unsupported',reason='Check is not selected in the project.')
+            for name in sorted(required-set(cfg['checks']))]
+
+
+def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), machine=None, abstraction=None):
     from .riscv import run as bounded
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
+    if abstraction and not cfg:
+        raise ValueError('abstraction requires a riscv_formal project')
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     rows = []
@@ -50,6 +71,21 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
     else:
         rows.append(dict(check='instruction_checks', status='unsupported',
                          reason='Project has no riscv_formal section.'))
+    rows.extend(missing_checks(cfg))
+    if cfg and abstraction:
+        from .riscv_abstract import run as abstract
+        proof_cfg = dict(cfg)
+        proof_cfg['checks'] = [c for c in cfg['checks'] if c.startswith('insn_')] + ['cover']
+        proof_cfg['check_options'] = {k:v for k,v in cfg.get('check_options',{}).items() if k in proof_cfg['checks']}
+        plan = json.loads(Path(abstraction).read_text())
+        result = abstract(proof_cfg, plan, out / 'abstract', timeout=timeout, budget=2*timeout)
+        for row in result['rows']:
+            rows.append(dict(check=row['check'] + ':abstraction',
+                             status='failed' if row['status']=='fail' else 'inconclusive',
+                             conditional_native_proof=row.get('conditional_native_proof',False),
+                             reason='Native proof closed for the declared abstraction; full pipeline signoff is incomplete.'
+                             if row.get('conditional_native_proof') else 'The conditional abstraction did not close.',
+                             evidence='abstract/result.json'))
     machine_rows = {}
     if machine:
         from .machine_checks import run as run_machine

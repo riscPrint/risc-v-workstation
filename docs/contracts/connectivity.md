@@ -147,3 +147,24 @@ instruction rows. A reached activation needs native cover PASS and a trace.
 A missing activation changes a passing bounded instruction to inconclusive.
 The native cycle settings remain unchanged. Standalone `formal riscv` retains
 its earlier general retirement-cover policy.
+
+## Conditional instruction RAM abstraction
+
+`rvw.riscv-abstraction/1` declares module-local pipeline observations, a collected
+memory and proof engines. `rvw.riscv-abstract/1` retains the exact single-flight
+assumption, original source identity, RAM outcomes, optional RTLIL retry and
+concrete conditional cover. RAM word removal is an overapproximation. Failed
+abstract models require refinement. The report does not turn them into core
+failures. A native engine result remains conditional on the recorded source
+assumptions. Overall status is inconclusive unless a concrete failure is known.
+
+`keep_words` is an optional list of concrete word indices. The RTLIL retry
+retains those words through the shared word-abstraction function. It preserves
+their actual drivers and initial state. `watched` records the active retained
+words. `conditional_native_proof` reports a native engine proof under the
+recorded abstraction and assumptions. It does not grant full pipeline signoff.
+`formal isa --abstraction` exposes these rows with their separate scope.
+
+The ISA signoff table includes missing instruction checks from the declared
+upstream ISA list and unselected consistency checks for every retirement
+channel. Those rows have status unsupported. Missing inventory is also a gap.
