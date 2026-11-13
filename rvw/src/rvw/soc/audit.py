@@ -31,7 +31,7 @@ def audit(source,db_path,bindings,out):
                 raise ValueError('each APB3 endpoint needs all seven required pin paths')
             resolved = {k:db.resolve_one(v) for k,v in ports.items()}
             region = next((r for r in obj['regions'] if name == r['name']+'.io.bus'), None)
-            expected_widths = dict(PADDR=(region['size'].bit_length()-1 if region else obj['address_bits']), PSEL=1, PENABLE=1, PWRITE=1, PWDATA=obj['platform']['xlen'], PRDATA=obj['platform']['xlen'], PREADY=1)
+            expected_widths = dict(PADDR=(region['size'].bit_length()-1 if region else obj['address_bits']), PSEL=1, PENABLE=1, PWRITE=1, PWDATA=32, PRDATA=32, PREADY=1)
             if any(resolved[k].width != width for k,width in expected_widths.items()):
                 raise ValueError('fabric endpoint pin width differs: '+name)
             endpoints.append(dict(name=name,pins={k:v.path for k,v in resolved.items()},protocol_status='assertions_emitted_by_SpinalSoc; execution_not_established_by_audit'))
