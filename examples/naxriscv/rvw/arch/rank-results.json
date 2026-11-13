@@ -1,0 +1,45 @@
+{
+  "schema": "rvw.nax-sensitivity-rank/1",
+  "fraction": 0.125,
+  "config_sha256": "5efcbcd0efb7c0103df435f4864a9f67e017465e17ea078e7f641dc9d91f461c",
+  "rows": [
+    {
+      "variant": "iq16",
+      "parameter": "issue_entries",
+      "measured_ipc_change": -0.016170823759002362,
+      "measured_elasticity": 0.032341647518004724,
+      "model_sensitivity": 0.015493579174697736
+    },
+    {
+      "variant": "rob128",
+      "parameter": "rob_entries",
+      "measured_ipc_change": 0.0,
+      "measured_elasticity": 0.0,
+      "model_sensitivity": 0.0
+    },
+    {
+      "variant": "lq8",
+      "parameter": "load_entries",
+      "measured_ipc_change": -0.009520707092557812,
+      "measured_elasticity": 0.019041414185115624,
+      "model_sensitivity": 0.0
+    },
+    {
+      "variant": "sq8",
+      "parameter": "store_entries",
+      "measured_ipc_change": -0.011121302744880768,
+      "measured_elasticity": 0.022242605489761536,
+      "model_sensitivity": 0.0
+    }
+  ],
+  "concordant": 3,
+  "discordant": 0,
+  "model_ties": 3,
+  "rtl_ties": 0,
+  "kendall_tau_b": 0.7071067811865476,
+  "method": "instruction-pooled RTL IPC; absolute elasticity; local model sensitivity",
+  "limits": [
+    "RTL steps differ from local model steps",
+    "six whole-program samples; no uncertainty estimate"
+  ]
+}

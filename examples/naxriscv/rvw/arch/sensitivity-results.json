@@ -1,0 +1,419 @@
+{
+  "baseline": {
+    "cycles": 429796,
+    "instret": 335958,
+    "ipc": 0.7816685125036064,
+    "traces": [
+      {
+        "cycles": 15482,
+        "ipc": 0.6880893941351247,
+        "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+      },
+      {
+        "cycles": 337156,
+        "ipc": 0.6704937773612215,
+        "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+      },
+      {
+        "cycles": 37320,
+        "ipc": 1.454876741693462,
+        "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+      },
+      {
+        "cycles": 7379,
+        "ipc": 0.9856349098793874,
+        "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+      },
+      {
+        "cycles": 4834,
+        "ipc": 1.3425734381464625,
+        "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+      },
+      {
+        "cycles": 27625,
+        "ipc": 1.1288687782805429,
+        "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+      }
+    ]
+  },
+  "config_sha256": "5efcbcd0efb7c0103df435f4864a9f67e017465e17ea078e7f641dc9d91f461c",
+  "fraction": 0.125,
+  "limits": [
+    "local effects only; parameter interactions are not explored",
+    "zero-valued switches and lists are not perturbed",
+    "invalid candidates remain explicit; no RTL accuracy established"
+  ],
+  "method": "one parameter at a time; instruction-pooled IPC; rank absolute finite-difference elasticity",
+  "ranking": [
+    {
+      "baseline_value": 32,
+      "best_ipc_gain": 0.0006449074429768498,
+      "parameter": "issue_entries",
+      "sensitivity": 0.015493579174697736,
+      "trials": [
+        {
+          "cycles": 430630,
+          "elasticity": 0.015493579174697736,
+          "instret": 335958,
+          "ipc": 0.780154657130251,
+          "relative_ipc_change": -0.001936697396837217,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337173,
+              "ipc": 0.6704599715872861,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37322,
+              "ipc": 1.4547987782005252,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4905,
+              "ipc": 1.3231396534148827,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 28369,
+              "ipc": 1.0992632803412175,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 28
+        },
+        {
+          "cycles": 429519,
+          "elasticity": 0.005159259543814798,
+          "instret": 335958,
+          "ipc": 0.7821726163452606,
+          "relative_ipc_change": 0.0006449074429768498,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37318,
+              "ipc": 1.4549547135430623,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4799,
+              "ipc": 1.3523650760575119,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27385,
+              "ipc": 1.138762096037977,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 36
+        }
+      ]
+    },
+    {
+      "baseline_value": 16,
+      "best_ipc_gain": 0.0,
+      "parameter": "load_entries",
+      "sensitivity": 0.0,
+      "trials": [
+        {
+          "cycles": 429796,
+          "elasticity": -0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 14
+        },
+        {
+          "cycles": 429796,
+          "elasticity": 0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 18
+        }
+      ]
+    },
+    {
+      "baseline_value": 64,
+      "best_ipc_gain": 0.0,
+      "parameter": "rob_entries",
+      "sensitivity": 0.0,
+      "trials": [
+        {
+          "cycles": 429796,
+          "elasticity": -0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 56
+        },
+        {
+          "cycles": 429796,
+          "elasticity": 0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 72
+        }
+      ]
+    },
+    {
+      "baseline_value": 16,
+      "best_ipc_gain": 0.0,
+      "parameter": "store_entries",
+      "sensitivity": 0.0,
+      "trials": [
+        {
+          "cycles": 429796,
+          "elasticity": -0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 14
+        },
+        {
+          "cycles": 429796,
+          "elasticity": 0.0,
+          "instret": 335958,
+          "ipc": 0.7816685125036064,
+          "relative_ipc_change": 0.0,
+          "status": "reported",
+          "traces": [
+            {
+              "cycles": 15482,
+              "ipc": 0.6880893941351247,
+              "trace": "$RUN_ROOT/base/median/rvfi.jsonl"
+            },
+            {
+              "cycles": 337156,
+              "ipc": 0.6704937773612215,
+              "trace": "$RUN_ROOT/base/qsort/rvfi.jsonl"
+            },
+            {
+              "cycles": 37320,
+              "ipc": 1.454876741693462,
+              "trace": "$RUN_ROOT/base/multiply/rvfi.jsonl"
+            },
+            {
+              "cycles": 7379,
+              "ipc": 0.9856349098793874,
+              "trace": "$RUN_ROOT/base/towers/rvfi.jsonl"
+            },
+            {
+              "cycles": 4834,
+              "ipc": 1.3425734381464625,
+              "trace": "$RUN_ROOT/base/vvadd/rvfi.jsonl"
+            },
+            {
+              "cycles": 27625,
+              "ipc": 1.1288687782805429,
+              "trace": "$RUN_ROOT/base/memcpy/rvfi.jsonl"
+            }
+          ],
+          "value": 18
+        }
+      ]
+    }
+  ],
+  "schema": "rvw.ooo-sensitivity/1",
+  "status": "reported",
+  "trace_sha256": {
+    "$RUN_ROOT/base/median/rvfi.jsonl": "e21408b1bb4f2f4f3fbcf092a41e0c38a2a1f311837052e6f9b0e1bff78575e7",
+    "$RUN_ROOT/base/memcpy/rvfi.jsonl": "baed01901758edbb443c22f6cd736ac3ef9bf5f48214c7020ee3dc669c254b76",
+    "$RUN_ROOT/base/multiply/rvfi.jsonl": "964f9d3ec065db37cfaf596758390d84c8e7ee25cde8320be1c5898949c1a2ce",
+    "$RUN_ROOT/base/qsort/rvfi.jsonl": "ef9e9ff45ea344b91046e331ec03a6d36c05c61fd58d7349de5e4ffe6f25e9b2",
+    "$RUN_ROOT/base/towers/rvfi.jsonl": "d4e7e2c9bfd0d8d8d1b789c5e1f7df1aec9e2b6f2749aecaa756f9d25e137ff0",
+    "$RUN_ROOT/base/vvadd/rvfi.jsonl": "a286eb5d10a98e532bca4bc1321f0d9ec2e2aa777d87ef76a4fdd1a01deb1b49"
+  }
+}
