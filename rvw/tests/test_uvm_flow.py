@@ -139,3 +139,16 @@ def test_coverage_merge_command(tmp_path, monkeypatch):
     monkeypatch.setattr(flow, 'run_group', execute)
     assert flow.coverage_merge(inputs, out)['sha256'] == sha(out)
     with pytest.raises(ValueError, match='exists'): flow.coverage_merge(inputs, out)
+
+
+def test_regression_preserves_wall_timeout(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    build = binary_fixture(tmp_path)
+    def execute(command, **kwargs):
+        kwargs['stdout'].write('RVW_UVM_DONE smoke checks=8\n')
+        return SimpleNamespace(returncode=124,timed_out=True)
+    monkeypatch.setattr(flow,'run_group',execute)
+    report=flow.regress(build,tmp_path/'runs')
+    assert report['tests'][0]['status']=='timeout'
+    assert report['tests'][0]['wall_clock_timeout'] is True
+    assert report['tests'][0]['signature']=='timeout:wall-clock'

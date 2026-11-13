@@ -172,7 +172,8 @@ def regress(build_dir, out, *, tests=None, seeds=(1,), timeout=120):
             name = f'{test}-{seed}'
             result = run(build_dir, out / name, test=test, seed=seed, timeout=timeout)
             rows.append({'id': test, 'seed': seed, 'kind': 'uvm', 'status': result['status'],
-                         'signature': None if result['status'] == 'pass' else 'uvm:' + result['status'],
+                         'signature': None if result['status'] == 'pass' else ('timeout:wall-clock' if result['wall_clock_timeout'] else 'uvm:' + result['status']),
+                         'wall_clock_timeout': result['wall_clock_timeout'],
                          **({'inconclusive': result['inconclusive']} if 'inconclusive' in result else {}),
                          'artifacts': {'run': name + '/result.json', 'log': name + '/run.log'}})
     report = {'schema': 'rvw.results/1', 'suite': built['manifest']['name'],
