@@ -2937,3 +2937,10 @@ It is not a proof. Initial values remain. Reduction can stop at `max_checks`.
 The optional `testbench` field records generated model and stimulus paths. Its
 `status=generated` does not imply compilation or failure reproduction. The
 optional `why` field contains SpinalDB drivers, fan-in and staleness diagnostics.
+MMU scenarios may select `pointer_mask` as 0, 7 or 16. These bounded RV64
+Smnpm cases tag bit 63 of the tested data pointer. They set and read back
+menvcfg.PMM. They use MPRV with effective S privilege. Unmasked tags must
+fault. Enabled masking must recover the declared canonical address and value.
+The reference selects Smnpm explicitly. These cases do not check debug,
+instruction-fetch or guest pointer-masking interactions. Their independent
+walk and PMA checks remain inconclusive.

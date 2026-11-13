@@ -52,3 +52,10 @@ The remote hart fences before its acknowledgement. After completion, the
 remote hart must read the new page value. Select a two-hart C1 configuration.
 These tests use polling. They do not check interrupt delivery, OS scheduling,
 shared-TLB internals or hardware translation-request completion signals.
+
+`pointer.json` contains nine Smnpm cases across Sv39, Sv48 and Sv57. They
+check disabled masking and PMLEN 7/16 with a tagged data pointer. They use
+MPRV with effective S privilege and read menvcfg.PMM back before the access.
+See the [pointer-masking specification](https://docs.riscv.org/reference/isa/priv/zpm.html).
+Instruction-fetch, U-mode Ssnpm, M-mode Smmpm, debug and guest interactions
+remain open. The installed Spike must support Smnpm for this campaign.
