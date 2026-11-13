@@ -2156,3 +2156,127 @@ tests and counts of property detections before a reference mismatch remain
 open. These tables report missing evidence. They do not report zero test gaps
 or zero detection power. Project adapters for building the supplied mutant RTL
 and running the declared test tiers still need native qualification.
+## Run it as a service
+
+Install `rvw` with `cd rvw && uv pip install -e '.[dev,mcp]'`.
+Return to the checkout root. Set the tool paths:
+
+```sh
+export RVW_HOME="$PWD"
+export PATH="$RVW_HOME/rvw/.venv/bin:$PATH"
+```
+
+Use separate project and output directories for each token.
+Store the token files outside the checkout. Set their permissions to `0600`.
+Use long random tokens. The strings below are placeholders.
+
+```json
+{
+  "REPLACE_ALICE_TOKEN": {
+    "project": "/srv/projects/alice/rvw.toml",
+    "output": "/srv/results/alice",
+    "tools": ["regress_list", "regress_run"],
+    "budget": {"wall_seconds": 110, "job_count": 4}
+  },
+  "REPLACE_BOB_TOKEN": {
+    "project": "/srv/projects/bob/rvw.toml",
+    "output": "/srv/results/bob",
+    "tools": ["regress_list", "regress_run"],
+    "budget": {"wall_seconds": 110, "job_count": 2}
+  }
+}
+```
+
+Save that file as `/srv/private/mcp-clients.json`.
+Choose unused high ports. Bind each server to loopback.
+Use a service supervisor to stop its complete process tree on failure.
+
+```sh
+nice -n 15 rvw mcp --transport sse --host 127.0.0.1 --port 18766 \
+  --profile core --clients /srv/private/mcp-clients.json
+```
+
+Connect the official Python MCP client with `mcp.client.sse.sse_client` at
+`http://127.0.0.1:18766/sse`. Send `Authorization: Bearer TOKEN`.
+Initialize a `ClientSession`. Call `list_tools` for the selected profile.
+Call `job_status` with `wait_s` to follow jobs. Call `job_result` to fetch results.
+Call `job_cancel` to stop work. A disconnect leaves the token's job running.
+A graceful server stop cancels active jobs. Restart loses the in-memory job
+records. An old ID returns an explicit unknown or lost-job error.
+
+For the farm HTTP service, save a separate token-to-owner file:
+
+```json
+{"REPLACE_ALICE_TOKEN":"alice","REPLACE_BOB_TOKEN":"bob"}
+```
+
+```sh
+nice -n 15 rvw farm serve --root /srv/queue \
+  --tokens /srv/private/farm-tokens.json --host 127.0.0.1 --port 18765
+rvw farm budget --root /srv/queue --scope agent:alice --limits '{"jobs":20,"wall_seconds":3600}'
+rvw farm budget --root /srv/queue --scope agent:bob --limits '{"jobs":10,"wall_seconds":1800}'
+```
+
+Use `POST /runs` with a command argument array, timeout, retry count and priority.
+The token sets the owner. A body cannot change it.
+Use `GET /runs` and `GET /snapshot` with the same bearer token.
+The root page supplies the live dashboard. Run one queue attempt per worker:
+
+```sh
+nice -n 15 rvw farm queue --root /srv/queue --operation work
+rvw farm queue --root /srv/queue --operation recover
+```
+
+Repeat `work` under your supervisor when more jobs are queued.
+Keep native concurrency at the host's approved limit.
+Recovery waits for stale heartbeats and checks whether the controller still
+exists. It does not steal work from a live worker. A dead worker's recorded
+process group must be cleaned before retry. Retries consume budget units.
+Service restart keeps queue data. Queue workers are separate processes.
+
+Use `POST /workflows` to create or advance a plan.
+Read owner-scoped SSE replay with `GET /events`.
+Send `Last-Event-ID` on reconnect. The replay is finite and closes after its
+captured batch. Inspect or advance the workflow after jobs finish to record
+completion. Completion means execution completion. It does not mean DUT pass.
+
+The bearer token controls access to its MCP tool allowlist and job store.
+The farm token controls queue and workflow ownership. Path checks reject direct
+remote arguments outside the configured project and output roots. Relative
+paths resolve against the bound project. Stdio retains its local path behavior.
+Treat project files, plugins, command arrays and referenced file contents as
+trusted operator inputs. These checks are not an OS sandbox. They do not stop
+arbitrary commands, malicious tools, filesystem races or hostile projects.
+The farm API accepts executable commands. Its users must be trusted.
+MCP policy budgets apply to each job's supervised process tree.
+They are not cumulative token quotas. Farm scope budgets persist across attempts.
+Budgets are cooperative accounting, not kernel CPU, memory or disk quotas.
+Loopback HTTP has no TLS. For access from another host, use an authenticated
+TLS proxy or a secure tunnel. Protect tokens and redact request logs.
+Use separate containers or machines for users who do not trust each other.
+See [the C8 threat model](contracts/c8-capture.md) for the evidence boundary.
+
+| Measured check | Result and limit |
+|---|---|
+| CLI MCP server and official Python client | SSE initialization, tool listing and job calls pass with separate processes |
+| Two MCP tokens | Unique IDs, foreign job refusal and independent budgets pass |
+| Disconnect and graceful restart | Reconnect fetches jobs; restart reports old jobs as lost or unknown |
+| Remote paths | Traversal, absolute paths, symlink escapes and cross-project files are refused |
+| Farm HTTP and queue workers | Owner views, priority, budget admission, killed-worker recovery and event replay pass with Python child commands |
+| Native VexRiscv | Cold smoke setup hit its 115-second cap; MCP and both farm owners exhausted 110-second budgets; no completed RTL suite |
+| Kubernetes | Two existing shard Jobs validate offline; no cluster execution |
+
+Regenerate the core-free process checks from the checkout root:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest \
+  rvw/tests/test_remote_processes.py rvw/tests/test_mcp_remote_paths.py \
+  rvw/tests/test_farm_processes.py -q
+```
+
+The opt-in native driver is `rvw/tests/test_remote_native.py`.
+Its module docstring gives the private-core environment.
+Raw logs, queue data and native output belong outside the repository.
+
+For a single plan, use `GET /events?workflow_id=ID`. The server refuses
+another owner's plan. Each event retains its persistent sequence ID.

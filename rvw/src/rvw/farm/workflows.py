@@ -36,6 +36,7 @@ def workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
             validate(plan['nodes'])
             record = dict(id=uuid.uuid4().hex, owner=owner, nodes=plan['nodes'], state='planned', project=plan.get('project', 'default'))
             db.execute('INSERT INTO workflows VALUES (?,?,?)', (record['id'], owner, json.dumps(record)))
+            db.execute('INSERT INTO events(data) VALUES (?)', (json.dumps(dict(workflow_id=record['id'], owner=owner, state='planned')),))
             return record
         row = db.execute('SELECT data FROM workflows WHERE id=? AND owner=?', (workflow_id, owner)).fetchone()
     if row is None:

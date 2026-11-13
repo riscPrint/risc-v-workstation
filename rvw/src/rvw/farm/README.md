@@ -553,3 +553,86 @@ its root cause. The report states `root_cause: not_established`. Invalid or
 unbound trap evidence keeps the original signature and adds an issue. Passing
 trap tests do not create failure clusters. A representative C5 retains the
 original C1 failure signature even when its cluster uses a trap grouping key.
+
+## Real HTTP process checks
+
+Run `nice -n 15 rvw/.venv/bin/python -m pytest
+rvw/tests/test_farm_processes.py -q` from the checkout root.
+The slow driver starts the farm CLI service and queue worker processes on
+loopback. It uses the production HTTP API and SQLite queue with Python child
+commands. This test needs no core.
+
+| Check | Measured behavior |
+|---|---|
+| Two owners | Runs and dashboard snapshots retain token ownership |
+| Priority | The higher-priority queued job starts first |
+| Budget | An exhausted owner cannot start another attempt |
+| Worker SIGKILL | Checked recovery cleans the child group; a configured retry completes |
+| Accounting | Every attempt is charged once, including the killed attempt |
+| HTTP service restart | An independent active worker continues; queue state persists |
+| Plan events | Planned, pending, node progress and completion retain sequence order |
+| Plan subscription | `GET /events?workflow_id=ID` excludes sibling plans and refuses a foreign owner with HTTP 404 |
+| Reconnect | `Last-Event-ID` resumes after the recorded sequence |
+
+Event replay closes after its captured batch. Inspecting a workflow records
+completion after its jobs finish. These process checks do not establish native
+RTL, Linux or cluster behavior. Use the opt-in driver in
+`rvw/tests/test_remote_native.py` for a prepared private VexRiscv project.
+
+## First real cluster run
+
+Use a fresh campaign root. Render the same explicit shard plan for local and
+cluster execution. Validate before submission:
+
+```sh
+rvw farm batch --plan campaign/plan.json --action validate \
+  --openapi kubernetes-openapi-v2.json
+```
+
+Use the official Kubernetes v1.34.0 schema from commit
+`f28b4c9efbca5c5c0af716d9f2d5702667ee8a45`, file
+`api/openapi-spec/swagger.json`. Its SHA-256 is
+`d3b0cdc2fda15c753206d25ab459dc7c12df64e2fd652b6809687471ea751c37`.
+The two Jobs rendered from `examples/regression-scale/k8s-example/plan.json`
+passed this check in the remote-service test campaign. No API server ran.
+The missing-containers control failed validation. To regenerate both checks,
+set `RUN_ROOT` to a fresh directory outside the repository. Download the pinned
+schema to `$RUN_ROOT/kubernetes-openapi-v2.json`. Run:
+
+```sh
+rvw/.venv/bin/python examples/regression-scale/render_k8s.py --plan examples/regression-scale/k8s-example/plan.json --openapi "$RUN_ROOT/kubernetes-openapi-v2.json" --out "$RUN_ROOT/rendered"
+```
+
+The script writes manifests and the validation report. It does not copy ELFs
+or contact a cluster.
+
+| First cluster check | Evidence required |
+|---|---|
+| Image contents | Pin an image digest. Install the project adapter and `rvw` worker Python. Use `rvw/src/rvw/doctor/tools.json` to select JDK, sbt, Verilator, RISC-V GCC, C++ compiler, make and required shell tools. Run the selected inventory check inside the image. Add Spike only for co-simulation. The example image remains unbuilt. |
+| Platform | Build and run a Linux image for the node architecture. The prior native measurements used macOS. Record tool versions and native input hashes. |
+| Inputs | Mount project, adapter and hashed ELFs at the exact absolute paths in the plan. Verify every staged ELF hash before launch. |
+| Result volume | Bind the result PVC at the planned campaign path. Check user permissions and free space. Keep each shard's C1/C3 outputs separate. Check retry output policy before allowing retries. |
+| Cache volumes | Mount writable sbt, Ivy and Coursier caches for the image user. Check concurrent access, cold-cache builds and restart behavior. Check that cache contents do not change captured input identity. |
+| Admission | Check namespace, service account, image pull, resource requests, limits and quotas. Verify PVC access modes and node placement with concurrent pods. |
+| Collection | Save every submitted Job ID. Collect with `--executor k8s --ids SAVED_IDS`. Require complete Jobs and every planned C1/C3 cell. Compare identities, options and DUT outcomes with the same local shard plan. Missing files remain inconclusive. |
+| Failure | Kill a pod during a shard. Check Job retry policy, retained evidence, missing cells and budget accounting. A process exit alone cannot earn a DUT pass. |
+| Cancel | Cancel an active Job. Confirm foreground deletion, pod termination and no remaining descendants or writable result producers. Confirm collection remains incomplete. |
+| Recovery | Restart the submitting client and repeat status/collection from saved IDs. Check duplicate submission behavior before resuming a campaign. |
+
+Offline schema validation does not establish any of these cluster results.
+
+### Native remote attempt limits
+
+| Attempt | Observed result | Remaining work |
+|---|---|---|
+| Private VexRiscv smoke | Cold setup stopped at 115 seconds during sbt setup | Prepare native runtime within the approved build window |
+| Real MCP regression tool | Read-only suite listing completed; regression exhausted its 110-second budget | Complete and collect a native remote run |
+| Farm owner bob, priority 10 | One attempt; budget_exhausted at the 110-second allowance | Complete the 49-test suite |
+| Farm owner alice, priority 1 | One attempt; budget_exhausted at the 110-second allowance | Complete the 49-test suite |
+| Native cancel, worker crash and service restart | NOT RUN with a completed native suite | Repeat the core-free controls with prepared native execution |
+
+The fixture process checks above passed. They do not replace these missing
+native results. The opt-in native driver fails when a budget stops the run.
+It never promotes queue execution state into a DUT pass. The later driver
+sets different wall budgets for the two users. The recorded attempt used
+110 seconds for each. Generated logs and queue data stay outside the repository.
