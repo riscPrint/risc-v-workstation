@@ -1155,12 +1155,12 @@ usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]]
-    [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config CONFIG] --top TOP
-    [--clock CLOCK] [--reset RESET] [--reset-active {high,low}]
-    [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec] [--pair
-    GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
-    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+usage: rvw formal equiv [-h] [--blackbox-contract BLACKBOX_CONTRACT] [--gold
+    GOLD [GOLD ...]] [--gate GATE [GATE ...]] [--gold-rev GOLD_REV]
+    [--gate-rev GATE_REV] [--config CONFIG] --top TOP [--clock CLOCK] [--reset
+    RESET] [--reset-active {high,low}] [--reset-cycles RESET_CYCLES] [--settle
+    SETTLE] [--dsec] [--pair GOLD=GATE] [--latency LATENCY] [--unmatched-state
+    {refuse,prove}] [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -2879,6 +2879,14 @@ Starts a background job: yes.
 Report installed and missing native engine dependencies.
 
 Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `formal_equiv`
+
+Prove closed RTL output cones. Blackbox models produce conditional evidence only.
+
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `timeout`.
 
 Starts a background job: yes.
 

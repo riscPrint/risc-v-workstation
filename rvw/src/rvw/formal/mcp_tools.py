@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x"}
+FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x", "dsec"}
 
 
 def _argv(command, args):
@@ -39,7 +39,7 @@ def _argv(command, args):
         opt = "--" + key.replace("_", "-")
         if key in FLAGS:
             argv.append(opt)
-        elif key == "verilog":
+        elif key in ("verilog", "gold", "gate"):
             argv += [opt, *map(str, value)]
         elif isinstance(value, list):
             for v in value:
@@ -67,7 +67,7 @@ def _runner(command):
             raise error(f"unreadable result.json: {e}")
         if not isinstance(data, dict):
             raise error("result.json is not an object")
-        if (code == 0) != (data.get("status") == ("proved" if command == "datapath" else "pass")):
+        if (code == 0) != (data.get("status") == {"datapath":"proved", "equiv":"equivalent"}.get(command,"pass")):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
     return run
@@ -232,6 +232,13 @@ def mcp_tools():
         ToolSpec("formal_security_pair", "Prove declared digital two-copy observation contracts or initial-state independence.",
                  schema({"manifest": S, "out": S, "timeout": {"type":"number", "exclusiveMinimum":0}}, ["manifest","out"]),
                  _runner("security pair"), long=True),
+        ToolSpec("formal_equiv", "Prove closed RTL output cones. Blackbox models produce conditional evidence only.",
+                 schema({"project":S,"gold":{"type":"array","items":S},"gate":{"type":"array","items":S},
+                         "gold_rev":S,"gate_rev":S,"config":S,"top":S,"out":S,"clock":S,"reset":S,
+                         "reset_active":{**S,"enum":["high","low"]},"reset_cycles":I,"settle":I,
+                         "latency":I,"dsec":B,"pair":{"type":"array","items":S},
+                         "unmatched_state":{**S,"enum":["refuse","prove"]},"blackbox_contract":S,
+                         "timeout":{"type":"number","exclusiveMinimum":0}},["top","out"]), _runner("equiv"), long=True),
         ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",
                  schema({"rtl": S, "model": S, "binding": S, "max_latency": I, "width": {"type": "integer", "enum": [8,16,32,64]},
                          "out": S, "latency": I, "unwind": I,

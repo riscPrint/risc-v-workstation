@@ -655,7 +655,7 @@ until it writes the result. A new run removes the old result first.
 
 Each side uses the existing captured RTL frontend and tool bindings. Both designs
 must have the same ordered port interface. One rising-edge clock is supported.
-Async controls, latches, memories, blackboxes, design properties and explicit
+Async controls, latches, memories, unmodeled blackboxes, design properties and explicit
 nondeterministic cells are refused. State names must cover every register bit.
 The command pairs register names of equal width automatically.
 It then pairs unmatched registers with a unique leaf name and equal width.
@@ -1990,3 +1990,58 @@ project simulator or claim a whole-core reproduction. Source files are retained
 for inspection. Missing models or a nonfailed partition are refused.
 
 
+### Pinned solver rechecks
+
+`rvw formal recheck --result FAILED_RUN --pin bad=0 --out RECHECK`
+runs a bounded solver check over the captured RTLIL model. Repeat `--pin` for
+more signals. A pin uses an exact net name in the captured top module and an
+integer value. Pins can refer to inputs or internal nets exposed by that model.
+Each pin adds an equality assumption at every formal sample. The original
+drivers, state, assertions and assumptions remain in the captured model.
+
+The command first checks that the pinned model can reach the full requested
+depth. An inconsistent pin is `inconclusive`. A passing recheck is bounded and
+conditional on the original restrictions plus all pins. It does not establish
+that a source change fixes the design or authorize a coverage exclusion.
+`--depth` defaults to the original BMC depth. The minimum depth is two samples.
+The output retains both SBY jobs, their logs, the pinned model and captured
+inputs. The `formal_recheck` MCP tool has the same inputs. Native tests check a
+removed failure, a retained failure and an assumption conflict with Yosys/SBY/Z3.
+### Shortest solver counterexample
+
+`rvw formal shortest --result RUN --max-depth 20 --out DIR` checks increasing
+sample depths in a captured BMC model. The model must have exactly one assertion.
+The first FAIL is shortest only if all smaller depths passed. An unknown or
+failed solver invocation stops the search as inconclusive. Reaching the depth
+limit with PASS results also stays inconclusive. This is not an unbounded proof.
+The original assumptions and restrictions remain. Each SBY job and trace is
+retained. `formal_shortest` provides the same operation through MCP.
+
+When counterexample replay uses `--pdg`, successful SpinalTrace output also
+writes `explanation.json`. The agent-readable chain lists source locations,
+observed values, timestamps and dependencies. It keeps the dynamic graph's
+accuracy status. Missing accuracy is incomplete. The chain is observed trace
+evidence. It does not prove counterfactual causality or a source repair.
+### Explicit blackbox model contracts
+
+`formal equiv --blackbox-contract contract.json` can add trusted behavioral
+models to both RTL revisions. Unresolved blackboxes remain refused. The manifest
+uses paths relative to itself:
+
+```json
+{"schema":"rvw.equiv-blackbox/1", "models":["Primitive.v"],
+ "obligations":["The physical Primitive implements this behavioral model."]}
+```
+
+A model can replace a declared Verilog blackbox. It cannot use RTL assumptions
+or nondeterministic cells. The existing state and clock restrictions still apply.
+Both proof snapshots capture every model source. The result retains model and
+manifest hashes and the explicit unresolved obligations.
+
+A completed modeled run has `status: "conditional"` and `contract_verdict` of
+`equivalent` or `not_equivalent`. It always exits 1. Missing proof evidence stays
+`inconclusive`. The command proves behavior only under the supplied models.
+It does not prove those models against a physical blackbox or an independent
+implementation. No conditional result can grant unconditional equivalence.
+`formal_equiv` exposes the same source inputs, revision exports, state hints and
+blackbox contract. It returns conditional evidence without granting a pass.
