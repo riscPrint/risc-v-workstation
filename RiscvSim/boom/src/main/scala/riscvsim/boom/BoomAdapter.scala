@@ -36,7 +36,7 @@ import riscvsim._
 object BoomAdapter extends CoreAdapter {
   override def freshInstancePerRun = true
   override def supportsProbes = true
-  type Model = SimCompiled[BoomSimTop]
+  type Model = SimCompiled[BoomTop]
 
   val boomDir: File = new File(sys.props.getOrElse("riscvsim.boom.dir",
     sys.env.getOrElse("SPINAL_BOOM", "."))).getCanonicalFile
@@ -57,12 +57,12 @@ object BoomAdapter extends CoreAdapter {
     case "giga" => BoomConfigs.giga()
   }
 
-  private def report(key: ModelKey, work: File): SpinalReport[BoomSimTop] = {
+  private def report(key: ModelKey, work: File): SpinalReport[BoomTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
     val formal = new File(boomDir, "formal")
     spinalprobes.Probe.enabled(key.probes) { RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
-      val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
+      val top = new BoomTop(key, if (key.rvfi) Some(formal.getPath) else None)
       if (key.rvfi) {
         top.tile.core.dec_fire.foreach(_.simPublic())
         top.tile.core.dec_uops.foreach { u => u.debug_pc.simPublic(); u.debug_inst.simPublic() }
@@ -117,7 +117,12 @@ object BoomAdapter extends CoreAdapter {
     val tohost = new ToHost(tohostAddr, busBytes)
     // riscv-tests benchmarks store ROI cycles and instret here (see BenchmarksSpec)
     val benchStats = elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
-    val rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
+    val stateHeader = ujson.Obj.from(ctx.rvfiHeader.value.toSeq)
+    if (job.config == "small") {
+      stateHeader("capabilities") = ujson.Arr("state", "csr")
+      stateHeader("csr_snapshot") = ujson.Arr("0x340")
+    }
+    var rvfi = Option.empty[RvfiTraceWriter]
     val konataFile = new File(job.out, "konata.log")
     val observations = if (job.rvfiTrace) Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl"))) else None
     observations.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
@@ -135,6 +140,7 @@ object BoomAdapter extends CoreAdapter {
         "this configuration has no SEIP input")
       if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
         new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
+      rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), stateHeader)) else None
       probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
       val cd = dut.clockDomain
       cd.forkStimulus(10)
@@ -296,7 +302,7 @@ object BoomAdapter extends CoreAdapter {
         if (dut.io.interrupts.seip != null) dut.io.interrupts.seip #= seipLevel
 
         // A trap seen last cycle is written first (its tval arrives now), then this cycle's records.
-        for (w <- rvfi; p <- probe) w.cycle(p.sample(ctl.cycle), sext(trace.head.tval.toBigInt))
+        for (w <- rvfi; p <- probe) w.cycle(p.sample(ctl.cycle).map(r => dut.state.map(_.enrich(r)).getOrElse(r)), sext(trace.head.tval.toBigInt))
         for (t <- trace) {
           if (t.valid.toBoolean) {
             // BOOM's commit trace (like rocket's) reports ECALL/EBREAK as plain retirements; they
@@ -389,4 +395,10 @@ object BoomAdapter extends CoreAdapter {
 
 object Main {
   def main(args: Array[String]): Unit = new Driver(BoomAdapter).main(args)
+}
+
+/** Optional simulation additions stay in the adapter. */
+class BoomTop(key: ModelKey, monitor: Option[String])(implicit p: rocketchip.config.Parameters)
+    extends BoomSimTop(BoomSim.resetVector, monitor, key.konata) {
+  val state = if (key.rvfi && key.config == "small") Some(tile.core.rework { new BoomState(this) }) else None
 }

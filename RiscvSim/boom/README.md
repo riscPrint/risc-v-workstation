@@ -81,3 +81,42 @@ The first native capture stopped before retirement because an FP capture
 register was unnamed. A corrected capture variant passed. There were two
 native builds, one for each RTL variant. No regression suite or BOOM formal
 job was run. Raw evidence remains in the local adoption run directory.
+
+## C2 version 2 on small
+
+RVFI runs on `small` export raw IEEE FP destination writes, including f0,
+full `fflags` and `fcsr`, and the declared `mscratch` CSR snapshot at 0x340.
+The adapter uses the single retirement slot. It does not copy a shared CSR
+map into several slots. Wider presets retain C2/1 until per-slot state exists.
+FP registers, flags and scratch state are sampled from the DUT. No missing
+value is replaced with a zero constant.
+
+Before: cosim doctor rejects the stored add example at line 152 for an order
+gap. After: the fresh add capture is inspected as complete C2/2 with `state`
+and `csr`, 514 instruction records, two trap events and one IRQ-level event.
+Doctor marks FP and CSR comparison configured. It reports `compared: false`.
+This is capture evidence, not an independent state match.
+
+Only 0x340 is declared as a CSR snapshot. Other CSRs, wide-preset per-slot
+state and fault-access records remain open. FP reset state is not initialized
+by the adapter. Software and the reference policy must handle unspecified
+reset state without changing captured DUT values.
+
+The C2/2 `rv64uf-p-fadd` capture passed in 1790 cycles with 217 non-trapping
+retirements and 40 FP destination writes. A captured single-precision load
+writes raw boxed data `0xffffffff40200000` to f10. The five Scala mapping and
+state-encoding tests passed.
+
+Independent Spike comparison of the add capture stops at order 0: DUT
+`fflags=0x19`, `fcsr=0xd9`; reference values are zero. The core leaves these
+registers without reset. This is a reset-state integration mismatch, not
+proof of an ISA defect. The adapter preserves the values. No state match is
+claimed. Configure an explicit initialization policy before a wider state
+campaign.
+
+There were four native builds across three RTL hashes in this work session.
+The last capture rebuilt the same `f7fd1396...` RTL hash as the corrected add
+capture instead of reusing its cache. This violates the requested one-build
+limit for that variant. Cache identity/reuse needs follow-up. No further BOOM
+build was run. All five short jobs used `small`, the BOOM lock, two make jobs
+and `nice -n 15`. No regression suite or BOOM formal job was run.
