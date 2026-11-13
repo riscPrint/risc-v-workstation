@@ -1,6 +1,7 @@
 """Project-owned VexRiscv simple-bus binding for the shared CPU environment."""
 import json
 import os
+import random
 from pathlib import Path
 
 import cocotb
@@ -42,8 +43,18 @@ class VexEnvironment(LiveCpuEnvironment):
             await edge()
         d.reset.value = 0
         fetch, load = None, None
-        events = CpuEvents(self.config['reference'], xlen=32)
+        csr_records = []
+        events = CpuEvents(self.config['reference'], xlen=32, irq_inputs=(3,7,11))
+        irq_random = random.Random(self.config['seed'])
+        driven_irqs = 0
+        next_irq = 100
+        irq_pins = {3: 'softwareInterrupt',7: 'timerInterrupt',11: 'externalInterrupt'}
         for cycle in range(self.config['max_cycles']):
+            if os.environ.get('RVW_VEX_IRQ') == '1':
+                if not driven_irqs and events.interrupts < 8 and cycle >= next_irq:
+                    driven_irqs = 1 << irq_random.choice((3,7,11))
+                for cause, pin in irq_pins.items():
+                    getattr(d, pin).value = int(bool(driven_irqs & (1 << cause)))
             # Each port allows one pending response. Both ports share CpuMemory.
             d.iBus_cmd_ready.value = int(fetch is None)
             d.iBus_rsp_valid.value = int(fetch is not None and fetch[0] <= cycle)
@@ -90,20 +101,44 @@ class VexEnvironment(LiveCpuEnvironment):
                     print('RVW_ACTUAL', record)
                     print('RVW_REFERENCE', self.config['reference'].last_effect)
                     raise
+                if os.environ.get('RVW_VEX_CSR_SELECTION') and record['insn'] & 127 == 0x73 and record['insn'] >> 12 & 7:
+                    csr_records.append(record)
                 if record['mem_wmask'] and (record['mem_addr'] & ~3) == self.config['tohost']:
                     assert record['mem_wmask'] == 15 and record['mem_wdata'] == 1, 'ISA program failed'
+                    if os.environ.get('RVW_VEX_IRQ') == '1':
+                        assert events.interrupts == 8, 'missing requested interrupts'
                     self.scoreboard.finish(self.scoreboard.checks)
+                    csr_report = None
+                    if os.environ.get('RVW_VEX_CSR_SELECTION'):
+                        from rvw.uvm.csr_sequence import CsrQualification
+                        qualification = CsrQualification(os.environ['RVW_VEX_CSR_SELECTION'], seed=self.config['seed'])
+                        index = 0
+                        async def execute(address, transaction):
+                            nonlocal index
+                            assert index < len(csr_records), 'missing native CSR instruction'
+                            observed = csr_records[index]; index += 1
+                            insn = observed['insn']
+                            assert insn >> 20 == address, 'native CSR address'
+                            assert (insn >> 12 & 7) == (1 if transaction['write'] else 2), 'native CSR operation'
+                            if transaction['write']:
+                                assert observed['rs1_rdata'] == transaction['data'], 'native CSR write data'
+                            return dict(trap=False,read_data=observed['rd_wdata'])
+                        csr_report = await qualification.run(execute)
+                        assert index == len(csr_records), 'unexpected native CSR instructions'
                     self.done = True
                     summary = json.dumps({
                         'checks': self.scoreboard.checks, 'cycles': cycle + 1,
-                        'coverage': self.scoreboard.coverage.report(),
-                        'memory_transfers': self.memory.transfers, 'traps': events.traps}, indent=2)+'\n'
+                        'coverage': self.scoreboard.coverage.report(), 'csr_qualification': csr_report,
+                        'memory_transfers': self.memory.transfers, 'traps': events.traps, 'interrupts': events.interrupts}, indent=2)+'\n'
                     Path('cpu-checks.json').write_text(summary)
                     Path('cpu-checks-'+self.config['program']+'.json').write_text(summary)
                     return
             if int(d.trap_valid.value):
                 cause, tval = int(d.trap_cause.value), int(d.trap_tval.value)
-                events.trap(cause, tval)
+                events.trap(cause, tval, driven_irqs=driven_irqs)
+                if cause & (1 << 31):
+                    driven_irqs = 0
+                    next_irq = cycle + irq_random.randrange(40,100)
         raise AssertionError('CPU retirement watchdog expired before tohost pass')
 
     def check_phase(self):
