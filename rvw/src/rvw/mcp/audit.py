@@ -31,7 +31,7 @@ def audit(registry, problems=()):
             if not any(k in prop for k in ("type", "$ref", "anyOf", "oneOf", "enum")):
                 add("argument_schema", name)
         try:
-            sig = inspect.signature(tool.handler, follow_wrapped=False)
+            sig = inspect.signature(getattr(registry, "source_tools", {}).get(tool.name, tool).handler, follow_wrapped=False)
             if not any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values()):
                 for name in s.get("properties", {}):
                     if name not in sig.parameters:
