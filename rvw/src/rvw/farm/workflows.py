@@ -56,4 +56,4 @@ def workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
             record['state'] = state
             db.execute('UPDATE workflows SET data=? WHERE id=?', (json.dumps(record), workflow_id))
             db.execute('INSERT INTO events(data) VALUES (?)', (json.dumps(dict(workflow_id=workflow_id, owner=owner, state=state)),))
-    return dict(id=workflow_id, nodes=nodes, state=state, verification='not_inferred')
+    return dict(id=workflow_id, nodes=nodes, state=state, verification='not_inferred', verdict='inconclusive')

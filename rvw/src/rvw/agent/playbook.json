@@ -5,7 +5,8 @@
     "exit_codes": "0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.",
     "stop": "A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.",
     "locks": "Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.",
-    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core."
+    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core.",
+    "verdicts": "Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance."
   },
   "workflows": [
     {

@@ -508,6 +508,7 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 - Stop: A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.
 - Locks: Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.
 - Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core.
+- Verdicts: Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance.
 
 ### New core bring-up (`bring-up`)
 
@@ -589,7 +590,7 @@ Optional tool set: 55 tools. Load MCP profile `debug` with `rvw_tools_load`. Rea
 
 Tests pass, and the next question is what they do not exercise.
 
-Optional tool set: 79 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 80 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
    - If runs complete: go to `functional`.
