@@ -577,3 +577,10 @@ verification for predicted values. This model uses an oracle instead of its
 prediction mechanism. Tests cover dependent chains, nonaliases, partial aliases
 and rename widths eight and ten. Native gem5 comparison and an upstream engine
 patch are NOT RUN. Issue #362 remains open for that work.
+
+## Approximate starting descriptions
+
+`Arch/reference/` contains Zen-5-like, M1-like, BOOM large/mega and a serial
+VexRiscv-class comparison point. Read `Arch/reference/README.md` before use.
+It identifies public anchors, assumed dimensions and limits. These are RISC-V
+experiments. Commercial names do not establish product accuracy or ISA support.
