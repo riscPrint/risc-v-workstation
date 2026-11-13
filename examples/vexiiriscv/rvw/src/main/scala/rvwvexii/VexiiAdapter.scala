@@ -190,7 +190,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
             if (op == 3) reservation = None
             if (devices.exists(_.contains(cmd.address.toLong, width))) {
               require(!atomic, "device atomics are unsupported")
-              if (cmd.write.toBoolean) devices.get.write(cmd.address.toLong, width, cmd.data.toBigInt >> shift)
+              if (cmd.write.toBoolean) devices.get.write(cmd.address.toLong, width, (cmd.data.toBigInt >> shift) & fieldMask) // the bus replicates narrow data across lanes
               val result = if (cmd.write.toBoolean) BigInt(0) else devices.get.read(cmd.address.toLong, width) << shift
               lsu.accept(cycle, result, false, cmd.id.toInt)
             } else {

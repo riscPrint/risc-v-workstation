@@ -952,8 +952,10 @@ Hardware A/D writes, extension PTEs and root switches remain unsupported.
 (MCP `regress_cosim`) compares every C1 result of one `rvw regress run`
 directory with Spike. The default is strict mode. `--allow-sync` enables only
 the named synchronizations: `reset` takes the architecturally unspecified
-`mscratch` reset value from the C2 snapshot, and `irq` takes pending bits of
-inputs that C2 `irq` events show asserted (Spike has no input pins). Each test
+`mscratch` reset value from the C2 snapshot, `irq` takes pending bits of
+inputs that C2 `irq` events show asserted (Spike has no input pins), and
+`mmio` takes DUT data for loads from the platform's declared MMIO regions
+(the Spike shim has no device state). Each test
 gets one status:
 
 - `match`: C1 passed, the comparison is complete, the instruction counts

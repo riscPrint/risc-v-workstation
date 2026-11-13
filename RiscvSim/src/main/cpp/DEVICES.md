@@ -60,9 +60,12 @@ in every native run that loads it.
 ## Standard models through CPython
 
 `PythonDevices.cpp` exports the same ABI. It calls `rvw.sim.devices.Device`.
-Build it as a shared library with the selected CPython headers and shared
-library. Set `PYTHONHOME` to that Python installation. Put `rvw/src` on
-`PYTHONPATH`. Keep the interpreter alive until process exit. Calls acquire the
+Build it with `RiscvSim/scripts/build-devices.py --out LIB`. The script
+compiles in the interpreter home and this workstation's `rvw/src`, and the
+library starts an isolated interpreter: it ignores `PYTHONHOME`,
+`PYTHONPATH` and the user site. Leave both variables unset, so native
+identity capture stays complete; the library bytes record both paths. A
+library built without these defines still reads the environment. Keep the interpreter alive until process exit. Calls acquire the
 GIL. This is a reference bridge, with no throughput claim.
 
 The JSON `model` selects `ns16550`, `clint`, `aclint`, `plic`,

@@ -23,7 +23,7 @@ def _suite(path):
 
 
 # Allowed synchronization: checker kind to enable, and the only applied reason it may show.
-ALLOW = {'reset': ('csr', 'csr_reset_unknown'), 'irq': ('irq', 'irq')}
+ALLOW = {'reset': ('csr', 'csr_reset_unknown'), 'irq': ('irq', 'irq'), 'mmio': ('mmio', 'mmio')}
 
 
 def matched(comparison, run, allow):
@@ -32,9 +32,10 @@ def matched(comparison, run, allow):
     reason = lambda item: item.get('reason') if isinstance(item, dict) else None  # noqa: E731
     if any(reason(m) not in reasons for m in comparison.get('applied_masks', [])):
         return False
-    if comparison.get('synchronized', 0) and not comparison.get('applied_masks'):
-        return False
-    if any(reason(x) not in reasons for x in comparison.get('recent_synchronizations', [])):
+    recent = comparison.get('recent_synchronizations', [])
+    if comparison.get('synchronized', 0) > len(recent):
+        return False  # the history is truncated: some synchronizations cannot be checked
+    if any(reason(x) not in reasons for x in recent):
         return False
     return complete(dict(comparison, synchronized=0), run)
 
@@ -43,8 +44,9 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
     """Compare each owned C1 result of `run_dir` with the reference. Returns rows and counts.
 
     `allow` names synchronizations a match may use: `reset` (the architecturally unspecified
-    mscratch reset value from the C2 snapshot) and `irq` (pending bits of inputs that C2 `irq`
-    events show asserted; the reference has no input pins). Anything else keeps the row
+    mscratch reset value from the C2 snapshot), `irq` (pending bits of inputs that C2 `irq`
+    events show asserted; the reference has no input pins) and `mmio` (DUT data for loads from
+    the platform's declared MMIO regions; the reference has no device state). Anything else keeps the row
     inconclusive. A match row records its `synchronized` count."""
     allow = tuple(sorted(set(allow)))
     if set(allow) - set(ALLOW):
@@ -94,7 +96,7 @@ def register(commands):
     p.add_argument('--platform', type=Path, required=True, help='cosim platform JSON of the core profile')
     p.add_argument('--model', default='spike')
     p.add_argument('--allow-sync', default='', help='comma-separated: reset (unspecified mscratch reset value), '
-                   'irq (pending bits of asserted inputs); default none (strict)')
+                   'irq (pending bits of asserted inputs), mmio (loads from declared MMIO regions); default none (strict)')
     p.add_argument('--out', type=Path, help='write the full report here')
     p.add_argument('--json', action='store_true')
     def run(args):

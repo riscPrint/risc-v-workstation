@@ -9,7 +9,7 @@ name = "vexiiriscv"
 adapter = "./rvw/run64-devices.sh"
 configs = ["rv64imasu"]
 default_config = "rv64imasu"
-lock = "vex-suites"                     # same lock as run.sh (the brief shares it with VexRiscv)
+lock = "vex-suites"                     # suite lock; run.sh takes RVW_VEX_LOCK (use another name)
 source_repo = "."
 source_env = "VEXIIRISCV"
 cache_paths = ["rvw/classpath-cache.py", "rvw/devices64.json", "rvw/clint64.json", "${RVW_DEVICE_LIBRARY}", "${RVW_HOME}/rvw/src/rvw/cosim/devices.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
@@ -53,32 +53,41 @@ startup_s = 1200
 perf_tolerance = 0.01
 
 
-[suites.mmu]
-dir = "../../rvw/out/suites-mmu64"
-glob = "*.elf"
+[suites.wfi-software-mie-0]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/wfi-clint"
+glob = "wfi-software-mie-0.elf"
 strip_suffix = ".elf"
 configs = ["rv64imasu"]
-max_cycles = 200000
-timeout_s = 60
-mem_latency = 0
+max_cycles = 30000
+timeout_s = 30
 
-[suites.ordering]
-dir = "../../rvw/out/suites-ordering64"
-glob = "*.elf"
+[suites.wfi-software-mie-1]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/wfi-clint"
+glob = "wfi-software-mie-1.elf"
 strip_suffix = ".elf"
 configs = ["rv64imasu"]
-max_cycles = 200000
-timeout_s = 60
-mem_latency = 0
+max_cycles = 30000
+timeout_s = 30
 
-[suites.privilege]
-dir = "../../rvw/out/suites-privilege64"
-glob = "*.elf"
+[suites.wfi-timer-mie-0]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/wfi-clint"
+glob = "wfi-timer-mie-0.elf"
 strip_suffix = ".elf"
 configs = ["rv64imasu"]
-max_cycles = 200000
-timeout_s = 60
-mem_latency = 0
+max_cycles = 30000
+timeout_s = 30
+
+[suites.wfi-timer-mie-1]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64d/wfi-clint"
+glob = "wfi-timer-mie-1.elf"
+strip_suffix = ".elf"
+configs = ["rv64imasu"]
+max_cycles = 30000
+timeout_s = 30
 
 [cosim]
 platform = "rvw/platform64-devices.json"

@@ -111,7 +111,8 @@ exact requested input schedule. Spike CLI self-check is inconclusive because
 it cannot apply this external-input schedule. No program timeout becomes pass.
 
 RTL results on 2026-11-13 (strict `rvw regress cosim`, plus `--allow-sync irq`
-for programs that read `mip` while a pin is asserted):
+for programs that read `mip` while a pin is asserted and `mmio` for CLINT
+loads, which the Spike shim does not model):
 
 | Core | Family | Generated | Run | C1 pass | Spike match | Finding |
 |---|---|---|---|---|---|---|
@@ -119,6 +120,7 @@ for programs that read `mip` while a pin is asserted):
 | VexiiRiscv `rv64imasu` | PMP, 8 entries, 16-byte grain | 264 | 264 | 264 | 264 | 0 |
 | VexiiRiscv `rv64imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
 | VexiiRiscv `rv32imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
+| VexiiRiscv `rv64imasu` + CLINT model | WFI (`spike-wfi.json`) | 4 | 4 | 4 | 4 | 0 |
 | VexRiscv `rv32im` (M only) | scheduled WFI | 6 | 6 | 6 | 3 | 3 |
 
 The VexRiscv finding: an interrupt trap keeps the old `mtval`. See

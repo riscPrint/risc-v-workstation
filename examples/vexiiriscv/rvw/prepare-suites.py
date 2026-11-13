@@ -101,6 +101,15 @@ def main():
         description.write_text(json.dumps(config) + '\n')
         privilege_build(description, out / 'scheduled', args.gcc)
         families.append(dict(family='scheduled', source=scheduled['source']))
+    clint = next((r for r in selection['suites'] if r['applicable'] and r['name'] in ('wfi-clint', 'wfi-clint-rv32')), None)
+    if clint:
+        config = dict(json.loads((root / clint['source']).read_text()), isa=features['isa'])
+        if features['privilege_modes'] != 'M':
+            config.pop('priv', None)
+        description = out / 'wfi-clint.json'
+        description.write_text(json.dumps(config) + '\n')
+        privilege_build(description, out / 'wfi-clint', args.gcc)
+        families.append(dict(family='wfi-clint', source=clint['source']))
     names = [n for n in ('lrsc', 'amo', 'amo-fault', 'fence', 'fence-i', 'zacas', 'cache-block')
              if f'{n}-rv{xlen}' in applicable]
     if names:

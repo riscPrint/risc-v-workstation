@@ -83,6 +83,6 @@ has `suite`, `test`, `c1_status`, `cycles`, `instret` and `status`: `match`,
 `mismatch` (with the first `mismatch`), `fail`, `error` or `inconclusive`
 (with `reason`). `match` needs a passing C1 result and a complete
 comparison whose masks and synchronizations all have reasons allowed by
-`allow_sync` (`reset`: `csr_reset_unknown`; `irq`: `irq`). An empty
+`allow_sync` (`reset`: `csr_reset_unknown`; `irq`: `irq`; `mmio`: `mmio`). An empty
 `allow_sync` means strict mode. Match rows record `synchronized`. The exit
 code is 0 only when every row matches.

@@ -132,3 +132,30 @@ def test_device_maps_take_hex_strings_and_refuse_rounded_floats():
     with pytest.raises(ValueError, match='boolean'):
         device('plic', map=dict(priority=0, pending=0x1000, enable=0x2000, enable_stride=0x80,
                                 context=0x200000, context_stride=0x1000, sources=True, contexts=1))
+
+
+def test_built_library_needs_no_python_environment(tmp_path):
+    cc = shutil.which('c++')
+    if not cc: pytest.skip('C++ compiler required')
+    root = Path(__file__).resolve().parents[2]
+    plugin = tmp_path / 'devices.so'
+    built = run_group([sys.executable, str(root/'RiscvSim/scripts/build-devices.py'), '--out', str(plugin)],
+                      timeout=120, capture=True)
+    if built.returncode and 'shared CPython library required' in built.stderr:
+        pytest.skip('shared CPython library required')
+    assert built.returncode == 0, built.stdout + built.stderr
+    main = tmp_path/'main.cpp'
+    main.write_text('''#include "DevicePlugin.h"
+#include <cassert>
+int main(int n, char** a) {
+  riscvsim::DevicePlugin p(a[1], "{\\"model\\":\\"ns16550\\"}", 1);
+  assert(p.read(5,1)==0x60);
+}''')
+    exe = tmp_path/'test'
+    env = {k: v for k, v in os.environ.items() if k not in ('PYTHONHOME', 'PYTHONPATH')}
+    compiled = run_group([cc, '-std=c++17', '-I'+str(root/'RiscvSim/src/main/cpp'), str(main), '-o', str(exe),
+                          *(['-ldl'] if os.uname().sysname == 'Linux' else [])], env=env, timeout=60, capture=True)
+    assert compiled.returncode == 0, compiled.stderr
+    for extra in ({}, {'PYTHONHOME': str(tmp_path / 'absent'), 'PYTHONPATH': str(tmp_path / 'absent')}):
+        result = run_group([str(exe), str(plugin)], env=dict(env, **extra), timeout=30, capture=True)
+        assert result.returncode == 0, result.stdout + result.stderr
