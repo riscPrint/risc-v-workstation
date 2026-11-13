@@ -399,3 +399,8 @@ All long farm and evidence-index MCP calls now use the shared owned worker
 process path. Job cancellation and supervisor budgets apply to those calls in
 stdio as well as remote MCP. The local queue still records its own attempt and
 recovery state if its MCP worker stops.
+
+When both sides record full commit IDs, each triage cluster includes explicit
+`BASE..CANDIDATE` commit ranges. Unknown or short revisions do not create a
+range. Regression diffs still require matching test input identities; a range
+alone cannot establish a new failure or a fix.
