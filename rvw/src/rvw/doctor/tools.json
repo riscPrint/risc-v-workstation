@@ -74,7 +74,7 @@
       "install": {
         "macos": "openjdk@21",
         "apt": "openjdk-21-jdk-headless",
-        "dnf": "",
+        "dnf": "java-21-openjdk-devel",
         "source": "Temurin 21 fallback in scripts/install.sh",
         "linux_status": "untested"
       },
@@ -100,7 +100,7 @@
         "macos": "sbt",
         "apt": "",
         "dnf": "",
-        "source": "Pinned archive in scripts/install.sh",
+        "source": "SHA-256 pinned sbt 1.10.7 archive in scripts/install.sh",
         "linux_status": "untested"
       },
       "legacy": true,
@@ -588,7 +588,7 @@
         "macos": "ghdl",
         "apt": "ghdl",
         "dnf": "ghdl",
-        "source": "https://github.com/ghdl/ghdl-yosys-plugin; build plugin against selected Yosys",
+        "source": "python3 scripts/build-ghdl-plugin.py --prefix \"$HOME/.cache/rvw\"; default plugin pin 07a30ed39fb6a078f1bf7e9e88ce9ed712380ec2; match selected GHDL/Yosys ABI",
         "linux_status": "untested"
       },
       "legacy": false,
@@ -770,7 +770,7 @@
         "macos": "",
         "apt": "build-essential",
         "dnf": "gcc-c++",
-        "source": "Built on first rvw csim engine use; requires C++ compiler",
+        "source": "Install Xcode command line tools on macOS; apt build-essential or dnf gcc-c++ on Linux; engine builds on first use",
         "linux_status": "untested"
       },
       "legacy": false,

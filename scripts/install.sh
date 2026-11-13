@@ -405,7 +405,7 @@ python_cmd=python3
 if ! probe Python 3.11 python3 --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
   python_cmd=python3.11
 fi
-[ "$sail" = 0 ] || [ "$bundle" = 1 ] || fail '--with-sail needs --from-bundle'
+[ "$sail" = 0 ] || [ "$bundle" = 1 ] || [ "$check" = 1 ] || fail '--with-sail needs --from-bundle'
 if [ "$bundle" = 1 ] && [ "$check" = 0 ]; then
   [ -n "$bundle_run" ] || [ -n "$bundle_dir" ] || fail '--from-bundle needs --bundle-run or --bundle-dir'
 fi
@@ -477,7 +477,11 @@ run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_ho
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 if [ "${#extra_tools[@]}" -gt 0 ] && [ "$dry" = 0 ]; then
-  "$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --extra "${extra_tools[@]}" || exit $?
+  package_words=$("$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --packages "$pm" --extra "${extra_tools[@]}") || exit 2
+  package_args=()
+  while IFS= read -r word; do [ -z "$word" ] || package_args+=("$word"); done <<< "$package_words"
+  if [ "${#package_args[@]}" -gt 0 ]; then packages "${package_args[@]}"; fi
+  "$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --home "$rvw_home" --packages-done --extra "${extra_tools[@]}" || exit $?
 fi
 
 if [ "$dv" = 1 ]; then

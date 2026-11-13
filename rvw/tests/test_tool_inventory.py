@@ -40,3 +40,24 @@ def test_presence_is_not_qualification(monkeypatch):
 def test_generated_version_table_matches_inventory():
     done = subprocess.run(['python3', str(ROOT / 'scripts/generate-tool-docs.py'), '--check'], capture_output=True, text=True)
     assert done.returncode == 0
+
+
+@pytest.mark.parametrize('manager,expected', [('apt','openocd'),('dnf','openocd'),('brew','open-ocd')])
+def test_package_recipe_plan(manager, expected):
+    done=subprocess.run(['python3',str(ROOT/'scripts/tool-inventory.py'),'--packages',manager,'--extra','openocd'],capture_output=True,text=True)
+    assert done.returncode==0
+    assert done.stdout.splitlines()==[expected]
+
+
+def test_linux_plan_is_explicitly_untested():
+    done=subprocess.run(['python3',str(ROOT/'scripts/tool-inventory.py'),'--linux-plan','dnf','--extra','ghdl','pono'],capture_output=True,text=True)
+    assert done.returncode==0
+    assert 'Linux untested' in done.stdout and 'stanford-centaur/pono' in done.stdout
+
+
+def test_python_extras_share_one_locked_sync(tmp_path):
+    done=subprocess.run(['python3',str(ROOT/'scripts/tool-inventory.py'),'--home',str(tmp_path),'--dry-run','--extra','cocotb','pyuvm'],capture_output=True,text=True)
+    assert done.returncode==0
+    assert done.stdout.count('uv sync')==1
+    assert '--extra cocotb' in done.stdout and '--extra pyuvm' in done.stdout
+    assert str(tmp_path/'rvw') in done.stdout
