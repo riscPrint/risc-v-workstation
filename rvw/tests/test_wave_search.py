@@ -176,3 +176,25 @@ def test_cli_and_mcp(tmp_path, monkeypatch):
         assert not error and data['values'] == {'TOP.Top.count': '0x2'}
     finally:
         registry.jobs.shutdown()
+
+
+def test_native_fst_queries_match_vcd(tmp_path, monkeypatch):
+    pytest.importorskip('pywellen')
+    fst = _fst(tmp_path)
+    vcd_path = str(tmp_path / 'f.vcd')
+    from rvw.wave import temporal
+    calls = []
+    import rvw.wave.vcd as vcdmod
+    real = vcdmod.open_text
+    monkeypatch.setattr(vcdmod, 'open_text', lambda p, *a: calls.append(p) or real(p, *a))
+    for expr, bounds in [('valid && count == 1', (0, None)), ('rose(clk)', (0, 25)), ('count[0] == 0', (12, 35))]:
+        a, b = search.find(fst, expr, *bounds), search.find(vcd_path, expr, *bounds)
+        assert a['matches'] == b['matches'] and a['first'] == b['first']
+    assert len(calls) == 3 and not any(c.endswith('.fst') for c in calls)   # the FST was never converted
+    assert search.edges(fst, '.')['signals'] == search.edges(vcd_path, '.')['signals']
+    for seq in ['rose(valid) ##1 count == 1', 'rose(clk) ##[1:2] valid']:
+        a, b = temporal.sequence(fst, seq), temporal.sequence(vcd_path, seq)
+        assert (a['matched'], a['failed'], a['matches']) == (b['matched'], b['failed'], b['matches'])
+    monkeypatch.setenv('RVW_WAVE_FST_READER', 'vcd')
+    if __import__('shutil').which('fst2vcd'):
+        assert search.find(fst, 'valid')['matches'] == search.find(vcd_path, 'valid')['matches']
