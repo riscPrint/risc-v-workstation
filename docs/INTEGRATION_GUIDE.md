@@ -300,6 +300,25 @@ matched real VexRiscv RTL through the DPI path and detected its injected writeba
 fault at the first affected retirement. This does not change the vector row's
 Spike-only scope or qualify interrupts, extended CSR capture or a second core.
 
+## Out-of-order Spinal core (NaxRiscv, measured 2026-11-13)
+
+The [NaxRiscv example](../examples/naxriscv/README.md) is the first light
+out-of-order target: RV32IMA, M/S/U, Sv32, two-wide rename and commit, 64-entry
+ROB, Lsu2 with 16-entry load/store queues, GShare and BTB. The model builds in
+about 10 s. No NaxRiscv source is edited. What an out-of-order Spinal core
+project needs from each tool, and what the example measured:
+
+| Tool | What the core project supplies | Measured on NaxRiscv | Open |
+|---|---|---|---|
+| Build (`scripts/sbt/SpinalAxis.scala`) | `RVW_SPINAL_SOURCE` for a core that pins its own SpinalHDL; `'++V!'` for its Scala | Pinned SpinalHDL `c3626570`, Scala 2.12.18: RiscvSim, SpinalProbes, SpinalTrace, SpinalWaves, SpinalDB compile; release axis unchanged | SpinalChecks on the legacy axis |
+| C1/C2 (`rvw/run.sh`) | Bus models for the refill ports; C2 from the commit probe; xepc from the trapping ROB entry; instruction word from the committed memory image | 59/59 ISA, 2/2 smoke, 12/12 seeded memory timing, 9/9 benchmarks pass | interrupts, devices, RVC/FPU configs |
+| Cosim (`rvw cosim check`) | Platform JSON | Spike matched all 59 ISA traces (24,801 instructions, 177 traps) and nine benchmarks (2,464,620 instructions); no sync, no masks | negative control |
+| Query (`rvw query`, SpinalBlocks) | `build-db.sh` entry | 30 components, 8,278 signals, PDG, 24 block diagrams in 17 s | |
+| Probes (`rvw probes`, `rvw perf topdown`) | A tap plugin on existing ROB, rename, issue, LSQ, refill and branch-learn signals | Commit-slot top-down on nine programs, `retiring` = C2 = C1; branch events 1:1 with C2 | Kanata view for bulk ROB flushes; TLB events |
+| Predictor (`rvw csim compare-rtl`) | A study describing the core's predictor | Direction agreement 80.4 % to 99.8 % against a 16384-counter gshare | qualified study (reversed-PC hash, speculative history) |
+| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | `arch/ooo.json`; probe counts for event mapping | Mean absolute IPC error 14.3 % on three training and 24.9 % on five held-out programs (max 42.7 %, memcpy); `branches` event exact; top-down partitions side by side | memory-heavy code underpredicted; one event family only |
+| Generated checks (`rvw checks generate`) | `rvw.micro-checks/1` bindings; a check model in the adapter | 6 rules bound; 59 ISA runs, 0 firings; control fires | free-list/ROB conservation needs a live-tag mask; SpinalChecks |
+
 ## Fresh Verilog project results
 
 The [2026-11-13 second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass) records commands, fixes

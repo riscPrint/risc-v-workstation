@@ -207,7 +207,7 @@ the C2 conditional branches.
 Other counters: mean ROB occupancy 11 (median) to 32 (memcpy) of 64; mean
 issue-queue occupancy 2.3 to 13.3; the RTL `cond_mispredicts` count stays
 within 3 to 15 of the commit-time non-trap flush count; `branches` equals the
-model's `branches` count (checked on median; the calibration checks all programs). `freelist_free` minus
+model's `branches` count on the eight calibrated programs. `freelist_free` minus
 `freelist_alloc` ends at 31 or 32 on every program (the reset fill of the free
 list, less registers still allocated in flight).
 
@@ -305,6 +305,16 @@ conservation check instead: `freelist_free - freelist_alloc` ends at the reset
 fill less the registers in flight (31 or 32) on every benchmark. SpinalChecks
 (the Scala inserted checks behind `streams` and CSR models) does not compile on
 the legacy SpinalHDL axis yet (about 37 errors).
+
+## What an out-of-order core project needs
+
+The [integration guide](../../docs/INTEGRATION_GUIDE.md#out-of-order-spinal-core-naxriscv-measured-2026-11-13)
+lists, per tool, what an out-of-order Spinal core project supplies and what
+this example measured. In short: a SpinalHDL axis selection when the core pins
+its own SpinalHDL; bus models and a commit-probe-to-C2 backend (xepc from the
+trapping ROB entry); a tap plugin on existing ROB, rename, issue-queue, LSQ,
+refill and branch-learn signals; a predictor study; an OoO model description;
+and `rvw.micro-checks/1` bindings.
 
 ## Limits
 
