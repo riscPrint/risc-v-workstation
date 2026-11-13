@@ -116,7 +116,9 @@ def test_reset_order_reference(tmp_path, ordered):
         c.execute("UPDATE clock_domains SET reset_kind='SYNC',reset_key='resetB',reset='resetB' WHERE id=2")
     r = result(db, {'reset_order': [['resetA','resetB']] if ordered else []})
     assert ('rdc.release_order_unproved' in rules(r)) != ordered
-    assert r['depth']['reset_ordering'][0]['status'] == ('declared_source_before_destination' if ordered else 'unproved')
+    assert [x['status'] for x in r['depth']['reset_ordering']] == ([] if ordered else ['unproved'])
+    assert r['rdc']['crossings'][0]['status'] == ('protected' if ordered else 'finding')
+    assert r['rdc']['status'] == ('protected' if ordered else 'findings')
     assert 'rdc.release' in {x['id'] for x in r['rules']}
     with pytest.raises(ValueError, match='cycle'):
         result(db, {'reset_order': [['resetA','resetB'],['resetB','resetA']]})

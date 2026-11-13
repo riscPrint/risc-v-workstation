@@ -4,8 +4,9 @@ import re
 
 
 def analyze(c, regs, signals, domains, incoming, outgoing, crossings, reset_crossings, emit, intent):
-    if not isinstance(intent, dict) or set(intent) - {'protocols', 'reset_order', 'reconvergence_depth'}:
-        raise ValueError('intent must contain only protocols, reset_order and reconvergence_depth')
+    allowed = {'protocols', 'reset_order', 'reconvergence_depth', 'isolation', 'clocks', 'functional'}
+    if not isinstance(intent, dict) or set(intent) - allowed:
+        raise ValueError('intent keys must be in: ' + ', '.join(sorted(allowed)))
     limit = intent.get('reconvergence_depth', 1)
     if type(limit) is not int or not 1 <= limit <= 64:
         raise ValueError('reconvergence_depth must be 1..64 register boundaries')

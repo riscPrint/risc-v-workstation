@@ -1,7 +1,8 @@
 """Register-to-register paths. This is a structural inventory, not a proof."""
 from collections import defaultdict
 import sqlite3
-from . import depth
+from . import depth, rdc
+from .graph import Design
 
 
 UNRUN = ["cdc.protocol", "cdc.metastability", "cdc.pulse_loss", "cdc.reconvergence_protocol",
@@ -10,7 +11,7 @@ UNRUN = ["cdc.protocol", "cdc.metastability", "cdc.pulse_loss", "cdc.reconvergen
 
 def analyze(db, intent=None):
     c = db.conn
-    c.row_factory = sqlite3.Row
+    design = Design(c)
     domains = {r['id']: dict(r) for r in c.execute('SELECT * FROM clock_domains')}
     signals = {r['id']: dict(r) for r in c.execute(
         'SELECT s.*, f.path AS file FROM signals s LEFT JOIN files f ON f.id=s.file_id')}
@@ -68,9 +69,6 @@ def analyze(db, intent=None):
     for i in sorted(used, key=str):
         d = domains.get(i, {})
         representative = next(s for s in regs.values() if s['clock_domain_id'] == i)
-        if d.get('reset_kind') == 'ASYNC':
-            emit('rdc.async_release_unproved', None, representative,
-                 'Asynchronous reset exists. Synchronous release is not established.')
         if (((d.get('reset') or d.get('soft_reset')) and
                 d.get('reset_kind') not in {'BOOT', 'SYNC', 'ASYNC'}) or
                 (d.get('reset') and not d.get('reset_key')) or
@@ -95,13 +93,6 @@ def analyze(db, intent=None):
             for src_id in sorted(sources):
                 src = regs[src_id]
                 a, b = domains.get(src['clock_domain_id'], {}), domains.get(dst['clock_domain_id'], {})
-                if reset(a) != reset(b):
-                    reset_crossings.append(dict(source=src['path'], destination=dst['path'],
-                                                source_domain=src['clock_domain_id'],
-                                                destination_domain=dst['clock_domain_id'],
-                                                relationship='independent_or_unknown'))
-                    emit('rdc.independent_reset', src, dst,
-                         'State has different reset controls or modes. Reset ordering and isolation are unproved.')
                 if not a.get('clock_key') or not b.get('clock_key'):
                     continue
                 if clock(a) == clock(b):
@@ -119,6 +110,13 @@ def analyze(db, intent=None):
                 emit('cdc.' + kind, src, dst,
                      'Structural synchronizer candidate; protocol unproved.' if chain else
                      'Crossing needs synchronization or a verified gray/handshake protocol.')
+    reset_report = rdc.analyze(design, emit, {} if intent is None else intent)
+    for row in reset_report['crossings']:
+        if row['status'] == 'finding':
+            reset_crossings.append(dict(source=row['source'], destination=row['destination'],
+                                        source_domain=regs[by_path[row['source']]]['clock_domain_id'],
+                                        destination_domain=regs[by_path[row['destination']]]['clock_domain_id'],
+                                        relationship='independent_or_unknown'))
     details = depth.analyze(c, regs, signals, domains, incoming, outgoing, crossings,
                             reset_crossings, emit, {} if intent is None else intent)
     warnings = [dict(r) for r in c.execute('SELECT * FROM warnings')]
@@ -129,7 +127,7 @@ def analyze(db, intent=None):
         limitations.append('Incomplete structural evidence: blackbox edges, extractor warnings or no registers.')
     return dict(status='inconclusive', scope='register-boundary structural inventory',
                 registers=len(regs), domains=list(domains.values()), clock_count=len({clock(domains[i]) for i in used if i in domains}),
-                depth=details, crossings=crossings, reset_crossings=reset_crossings, reset_trees=reset_trees,
+                depth=details, rdc=reset_report, crossings=crossings, reset_crossings=reset_crossings, reset_trees=reset_trees,
                 findings=findings, extractor_warnings=warnings,
                 unclassified_inputs=unknown_inputs, limitations=limitations,
                 rules=[{'id': rule, 'status': 'not_run'} for rule in UNRUN],

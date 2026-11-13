@@ -1447,6 +1447,15 @@ Structural reports also retain `reset_trees` (control cones with unknown-control
 states) and `reset_crossings` (source and destination domain IDs). Different
 reset signatures are candidates even when clock identity matches. Reset release
 and reconvergence remain in the unrun rule inventory.
+The structural backend also has `rdc`: `status` (`findings`, `protected`,
+`inconclusive`, `no_crossings_found`; never `clean`), `domains` (reset
+signatures with source, kind, clocks, register count and `release`) and
+`crossings` (`source`, `destination`, reset domain IDs, `class`, `status`, and
+`protected_by`/`reason` for declared protection). Settings `intent.isolation`
+rows declare qualifiers with reasons. `waiver_findings` holds a
+`lint.stale_waiver` error for each waiver that matched nothing in a backend that
+ran; each waiver records `stale` (`true`, `false`, or `null` when its backend
+did not run).
 
 ## Native backend semantic profiles
 
