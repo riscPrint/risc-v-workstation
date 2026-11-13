@@ -120,10 +120,10 @@ def pack(run_dir, recipe, out, *, checkpoint_cycle=None):
             refs[kind] = git_bundle(repo, revisions[kind], bundle)
             add('sources/' + kind + '.bundle', bundle.read_bytes())
             # Binary tracked changes plus declared untracked source inputs.
-            patch = run_group(['git', '-C', str(repo), 'diff', '--binary', revisions[kind]], timeout=60, capture=True)
+            patch = run_group(['git', '-C', str(repo), 'diff', '--binary', revisions[kind]], timeout=60, capture=True, text=False)
             if patch.returncode:
                 raise ValueError('cannot capture source patch')
-            add('sources/' + kind + '.patch', patch.stdout.encode())
+            add('sources/' + kind + '.patch', patch.stdout)
             roots = data['source_inputs'][kind]
             for root in roots:
                 safe_name(root)
