@@ -3139,6 +3139,16 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+`kind = "scheduled-wfi"` emits per-program suites with C1 `irq_schedule`.
+`wake` declares assertion/clear cycles and optional retained-state masks in
+`clock_state`. The optional C1 artifact `privilege_clock` holds a JSON sample
+list: `tick` is the reference edge, `clock_running` is a Boolean, `state` maps
+names to integers, `retired` is cumulative retirement and `pending` is Boolean.
+Unknown values can be null. The checker requires a complete observed pause
+and restart, stable masked state and a pending event during the pause. It binds
+the artifact hash. A missing artifact is inconclusive. The artifact reports
+project harness observations; Spike CLI cannot supply clock-stop evidence.
+
 The optional `kind = "disabled"` selects FS-Off or absent-supervisor matrices.
 `priv = "mu"` selects absent supervisor operations. Otherwise FS-Off requires
 F in `isa`. The reference forwards `priv` to Spike. These cases use the same

@@ -16,14 +16,14 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled'):
+    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -33,7 +33,10 @@ def load(path):
 
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    if config.get('kind') == 'disabled':
+    if config.get('kind') == 'scheduled-wfi':
+        from .scheduled import programs
+        rows = programs(config)
+    elif config.get('kind') == 'disabled':
         from .disabled import programs
         rows = programs(config)
     elif config.get('kind') == 'wfi':
@@ -69,8 +72,15 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
          'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7], ['M']]},
     ]}, indent=2) + '\n')
     # This fragment is merged into the project's regression config by the owner.
-    (out / 'suite.toml').write_text('[suites.privilege]\nkind = "elf-dir"\ndir = "."\nglob = "*.elf"\n'
-        'strip_suffix = ".elf"\nmax_cycles = 30000\ntimeout_s = 30\n')
+    suites = []
+    for row in rows:
+        suites.append('[suites.' + row['id'] + ']\nkind = "elf-dir"\ndir = "."\n'
+            + 'glob = ' + json.dumps(row['elf']) + '\nstrip_suffix = ".elf"\n'
+            + 'max_cycles = 30000\ntimeout_s = 30\n')
+        if row.get('options'):
+            suites.append('[suites.' + row['id'] + '.options]\n')
+            suites.extend(key + ' = ' + json.dumps(value) + '\n' for key, value in row['options'].items())
+    (out / 'suite.toml').write_text('\n'.join(suites))
     return manifest
 
 
@@ -88,6 +98,10 @@ def reference(directory, spike='spike', timeout=2):
         elf = directory / scenario['elf']
         if digest(elf) != scenario['elf_sha256']:
             raise ValueError('ELF changed since build')
+        if scenario.get('reference_unavailable'):
+            rows.append(dict(id=scenario['id'], status='inconclusive',
+                             reason=scenario['reference_unavailable']))
+            continue
         command = ['nice', '-n', '10', executable, '--isa=' + manifest['config'].get('isa', 'rv64im_zicsr_zifencei'),
                    '--priv=' + manifest['config'].get('priv', 'msu'), '-m128', str(elf)]
         result = run_group(command, capture=True, timeout=timeout)
@@ -130,6 +144,22 @@ def check(directory, results, platform, timeout=10):
         if len(candidates) == 1:
             run = candidates[0]
             row['c1_sha256'] = digest(run.path / 'result.json')
+            if any(run.extra.get(k) != v for k, v in scenario.get('options', {}).items()):
+                row['reason'] = 'C1 stimulus options differ'
+                rows.append(row)
+                continue
+            if scenario.get('clock_state'):
+                from .scheduled import clock_check
+                artifact = run.artifacts.get('privilege_clock')
+                observed = clock_check(json.loads((run.path / artifact).read_text()) if artifact else [],
+                                       scenario['clock_state'])
+                row['clock'] = observed
+                if artifact:
+                    row['clock_sha256'] = digest(run.path / artifact)
+                if observed['status'] != 'pass':
+                    row.update(status=observed['status'], reason=observed['reason'])
+                    rows.append(row)
+                    continue
             if not run.why_inconclusive and run.status != 'pass':
                 row.update(status='fail', reason='C1 self-check failed')
             elif not run.why_inconclusive:
