@@ -132,7 +132,8 @@ class _Writer:
             (self.aid,target,cid,'data',source,'$incomplete:lowered-cell',self.aid,fid,line))
         for sid, kind in set(reads):
             self.c.execute('INSERT INTO assign_reads VALUES (?,?,?)', (self.aid,sid,kind))
-            self.edge(sid,target,kind)
+            # A cell that reads its own output is a real loop (SpinalDB keeps self-edges too).
+            self.c.execute('INSERT OR IGNORE INTO edges VALUES (?,?,?)', (sid,target,kind))
 
     def instance(self, module, path, parent):
         if module in self.active:
@@ -195,6 +196,12 @@ class _Writer:
                         if isinstance(pb,int) and isinstance(cb,int):
                             a,b = bitids[pb],child_bits[cb]
                             self.edge(a,b) if child_port['direction']=='input' else self.edge(b,a)
+                        elif child_port['direction']=='input' and isinstance(cb,int) and not isinstance(pb,int):
+                            # A constant on a child input: the child bit is tied.
+                            self.assignment(cid,child_bits[cb],[],f'Yosys constant {pb}',cell.get('attributes',{}))
+                        elif child_port['direction']=='output' and isinstance(pb,int) and not isinstance(cb,int):
+                            # A child output driven by a constant inside the child.
+                            self.assignment(cid,bitids[pb],[],f'Yosys constant {cb}',cell.get('attributes',{}))
                 continue
             base = typ.removeprefix('$')
             if not typ.startswith('$') or base not in COMB | STATE:
