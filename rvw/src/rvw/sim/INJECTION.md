@@ -39,3 +39,23 @@ Spike export/import, continuation comparison, full RAM inventory qualification,
 VexRiscv hooks, C1 sample completion, and native FP, VM and device profiles
 remain open. The assembler/linker smoke proves generated code links. It does
 not prove that RTL restores architectural state.
+
+## Native RV32IM bootstrap probe
+
+`spike_bootstrap.capture` steps the bound Spike shim to K retirements. It reads
+all GPRs, the project-declared CSR inventory and every byte of the declared RAM.
+It refuses traps, enabled interrupts, FP, devices and non-M-mode execution.
+The project supplies the inventory; it is not inferred from executed CSR reads.
+
+The VexRiscv example includes `bootstrap-profile.json` and a native transfer
+test. The test uses a complete 64 KiB physical RAM image. A reset trampoline
+jumps to unused RAM at `0x80008000`. The generated bootstrap restores CSRs and
+all GPRs, then jumps to the saved non-reset PC. The probe emits C2 from that PC.
+The test compares the remaining PCs, instructions, writebacks, loads, stores
+and branches with the original Spike continuation, with no reference resync.
+
+The bootstrap changes counters and overwrites its reserved code regions.
+It provides no pre-fetch register readback. Full checkpoint interchange,
+fresh-Spike import and C1 restore-port support remain open under #347.
+FP/system support remains fixture-level under #350; VexRiscv RV32IM cannot
+qualify FP, VM or Linux boot.

@@ -4523,3 +4523,12 @@ A baseline diff reports changed text, mandatory/optional category and activation
 affected checkers and missing tests. Test presence has hashes but implies no
 execution. Changes require explicit adoption. This command changes no source,
 pin or model. Valid reports exit 3 and remain inconclusive. Input errors exit 2.
+
+### VexRiscv bootstrap probe image
+
+`rvw.vex-bootstrap-image/1` is project data for the bounded native probe.
+`pc` is the unsigned decimal saved entry PC. `memory` is an ordered list of
+`address` integers and hexadecimal `hex` bytes. Later rows overlay earlier
+rows. The complete declared Spike RAM image comes first. The reset trampoline
+and reserved bootstrap code follow it. This is not `rvw.arch-checkpoint/1`.
+The producer owns the reserved regions and must exclude them from live data.
