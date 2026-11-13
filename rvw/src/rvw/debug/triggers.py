@@ -97,7 +97,10 @@ class TriggerUnit:
             if name == 'hit' and self.kind(slot) in (ITRIGGER, ETRIGGER):
                 return (slot.tdata1 >> (self.xlen - 6)) & 1
             return 0
-        return bits(slot.tdata1, *spec)
+        value = bits(slot.tdata1, *spec)
+        if name == 'size' and self.kind(slot) == MCONTROL and self.xlen == 64:
+            value |= bits(slot.tdata1, 22, 21) << 2
+        return value
 
     def set_hit(self, slot):
         kind = self.kind(slot)
@@ -167,6 +170,8 @@ class TriggerUnit:
         fields = {}
         for name, spec in MC_FIELDS[kind].items():
             fields[name] = bits(value, *spec)
+        if kind == MCONTROL and xl == 64:
+            fields['size'] |= bits(value, 22, 21) << 2
         if kind in (ITRIGGER, ETRIGGER):
             fields['hit'] = (value >> (xl - 6)) & 1
         fields['vs'] = fields['vu'] = 0
@@ -193,6 +198,8 @@ class TriggerUnit:
         result = self._make(kind, dmode, 0)
         for name, spec in MC_FIELDS[kind].items():
             result = put(result, *spec, fields.get(name, 0))
+        if kind == MCONTROL and xl == 64:
+            result = put(result, 22, 21, fields['size'] >> 2)
         if kind in (ITRIGGER, ETRIGGER) and fields['hit']:
             result |= 1 << (xl - 6)
         return result

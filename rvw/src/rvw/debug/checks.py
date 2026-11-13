@@ -724,6 +724,8 @@ def mc(ctx, kind, *, execute=0, load=0, store=0, match=0, action=1, chain=0, m=1
     value |= (select << (21 if kind == 6 else 19))
     if kind == 2:
         value |= (timing << 18) | ((size & 3) << 16)
+        if xl == 64:
+            value |= ((size >> 2) & 3) << 21
     else:
         value |= (size & 7) << 16
     return value
