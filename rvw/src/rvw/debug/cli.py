@@ -69,6 +69,21 @@ def register(subparsers):
     interop.add_argument('--timeout', type=float, default=120)
     interop.set_defaults(func=_interop)
 
+    for name, helptext in (('etrace-check', 'expected E-Trace stream from C2; compare encoder packets, windows, leaks'),
+                           ('etrace-loss', 'E-Trace loss and resynchronization campaign (C3)')):
+        cmd = sub.add_parser(name, help=helptext)
+        for option in ('reference', 'static-config', 'user-config', 'toolchain', 'rvfi', 'out'):
+            cmd.add_argument('--' + option, required=True, type=Path)
+        cmd.add_argument('--packets', type=Path, help='encoder output: .te_inst CSV or .te_inst_raw')
+        if name == 'etrace-check':
+            cmd.add_argument('--filter', type=Path, help='TOML trace filter: privileges, ranges, exclude, start, stop')
+            cmd.add_argument('--loss-at', type=int, action='append', default=[],
+                             help='packet index that follows a known gap (repeatable)')
+            cmd.set_defaults(func=_etrace_check)
+        else:
+            cmd.add_argument('--at', type=int, action='append', help='packet index to damage (repeatable)')
+            cmd.set_defaults(func=_etrace_loss)
+
 
 def _profile(path):
     from . import profile
@@ -170,3 +185,26 @@ def _interop(args):
         return 3
     print(json.dumps(result, sort_keys=True))
     return {'pass': 0, 'fail': 1}.get(result['status'], 3)
+
+
+
+def _etrace_check(args):
+    from . import api
+    try:
+        result = api.etrace_check(args.out, args.reference, args.rvfi, args.static_config, args.user_config,
+                                  args.toolchain, packets=args.packets, filter_path=args.filter, losses=args.loss_at)
+    except (OSError, ValueError, KeyError) as exc:
+        result = {'status': 'inconclusive', 'reason': str(exc)}
+    print(json.dumps({k: v for k, v in result.items() if k != 'windows'}, sort_keys=True))
+    return {'flow_match': 0, 'mismatch': 1, 'leak': 1}.get(result['status'], 3)
+
+
+def _etrace_loss(args):
+    from . import api
+    try:
+        result = api.etrace_loss(args.out, args.reference, args.rvfi, args.static_config, args.user_config,
+                                 args.toolchain, packets=args.packets, positions=args.at)
+    except (OSError, ValueError, KeyError) as exc:
+        result = {'status': 'inconclusive', 'reason': str(exc), 'exit': 3}
+    print(json.dumps(result, sort_keys=True))
+    return result['exit']

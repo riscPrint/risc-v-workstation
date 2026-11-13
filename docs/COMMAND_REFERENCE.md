@@ -505,7 +505,8 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 
 ```text
 usage: rvw debug [-h] [--project PROJECT]
-    {openocd,ingress,etrace,suite,tap,serve,interop} ...
+    {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss}
+    ...
 ```
 
 ### `rvw debug openocd`
@@ -560,6 +561,23 @@ usage: rvw debug serve [-h] [--profile PROFILE] [--host HOST] [--port PORT]
 usage: rvw debug interop [-h] [--port PORT] [--profile PROFILE] --elf ELF
     [--reset-pc RESET_PC] [--idcode IDCODE] [--openocd OPENOCD] [--gdb GDB]
     --out OUT [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw debug etrace-check`
+
+```text
+usage: rvw debug etrace-check [-h] --reference REFERENCE --static-config
+    STATIC_CONFIG --user-config USER_CONFIG --toolchain TOOLCHAIN --rvfi RVFI
+    --out OUT [--packets PACKETS] [--filter FILTER] [--loss-at LOSS_AT]
+    [--project PROJECT]
+```
+
+### `rvw debug etrace-loss`
+
+```text
+usage: rvw debug etrace-loss [-h] --reference REFERENCE --static-config
+    STATIC_CONFIG --user-config USER_CONFIG --toolchain TOOLCHAIN --rvfi RVFI
+    --out OUT [--packets PACKETS] [--at AT] [--project PROJECT]
 ```
 
 ### `rvw doctor`
