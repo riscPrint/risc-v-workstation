@@ -15,9 +15,13 @@ def what_if(config, trace, parameter, value, out, max_cycles=1000000):
     changed = deepcopy(base)
     node = changed
     parts = parameter.split('.')
-    for part in parts[:-1]:
-        node = node[part]
-    old = node[parts[-1]]
+    try:
+        for part in parts[:-1]:
+            node = node[part]
+        old = node[parts[-1]]
+    except (KeyError, TypeError):
+        raise ValueError(f'Unknown timing parameter {parameter!r}. Select an existing scalar '
+                         'in the model config; see docs/INTEGRATION_GUIDE.md#project-input-recipes.') from None
     if type(old) in (int, float):
         set_value(changed, parameter, value)
     elif type(old) in (bool, str) and type(value) is type(old):
