@@ -1,4 +1,4 @@
-"""Opt-in native Sail DII transport. This test does not execute a DUT."""
+"""Native Sail DII transport. This test does not execute a DUT."""
 import os
 from pathlib import Path
 import socket
@@ -7,16 +7,19 @@ import time
 
 import pytest
 
-from rvw.common.proc import kill_group
+from rvw.common.proc import kill_group, run_group
 from rvw.cosim.dii import Token, exchange
 
 
 @pytest.fixture
-def sail_connection(tmp_path):
-    executable = os.environ.get('RVW_TEST_DII_SAIL')
-    if not executable:
-        pytest.skip('set RVW_TEST_DII_SAIL to a native Sail with --rvfi-dii')
+def sail_connection(tmp_path, request):
+    executable = os.environ.get('RVW_TEST_DII_SAIL') or request.getfixturevalue('sail')
     assert Path(executable).is_file()
+    capability = run_group([executable, '--help'], timeout=10, capture=True)
+    assert capability.returncode == 0, capability.stderr
+    if '--rvfi-dii' not in (capability.stdout or '') + (capability.stderr or ''):
+        pytest.skip('Installed Sail lacks --rvfi-dii; install the pinned model with '
+                    'scripts/install.sh --with-sail --from-bundle --bundle-dir DIR')
     with socket.socket() as allocation:
         allocation.bind(('127.0.0.1', 0))
         port = allocation.getsockname()[1]
@@ -58,7 +61,7 @@ def test_pygen_runtime_overwrites_nonzero_inputs(sail_connection, tmp_path):
         pytest.skip('set RVW_TEST_DII_GCC to a RISC-V GCC')
     runtime = Path(__file__).resolve().parents[3]/'scripts/riscv-dv/user_init.s'
     obj, binary = tmp_path/'runtime.o', tmp_path/'runtime.bin'
-    result = run_group([compiler, '-march=rv64i', '-mabi=lp64', '-c',
+    result = run_group([compiler, '-march=rv64i_zicsr', '-mabi=lp64', '-c',
                         '-x', 'assembler', str(runtime), '-o', str(obj)], timeout=30, capture=True)
     assert result.returncode == 0, result.stderr
     result = run_group([compiler.removesuffix('gcc')+'objcopy', '-O', 'binary',
