@@ -15,6 +15,9 @@ def register(subparsers):
     src.add_argument("--db", type=Path)
     src.add_argument("--events", type=Path)
     check.add_argument("--require", action="append")
+    check.add_argument("--validate", action="store_true",
+                       help="validate the event stream against the contract (ordering, fields, counters, IDs)")
+    check.add_argument("--c2", type=Path, help="the run's rvfi.jsonl: also check retired-event probes against it")
     check.add_argument("--json", action="store_true")
     check.set_defaults(func=_check)
     ls = sub.add_parser("list", help="list probes from a design database or an event stream, with the consumers they enable")
@@ -87,8 +90,10 @@ def _convert(args):
 def _check(args):
     from .check import check
     try:
-        result = check(db=args.db, events=args.events, require=args.require)
+        result = check(db=args.db, events=args.events, require=args.require, c2=args.c2, validate=args.validate)
     except (ValueError, OSError) as exc:
         return _fail(exc)
     print(json.dumps(result, indent=2))
-    return 3 if result['missing_probes'] else 0
+    if result['status'] == 'violations':
+        return 1
+    return 3 if result['missing_probes'] or result['status'] == 'inconclusive' else 0

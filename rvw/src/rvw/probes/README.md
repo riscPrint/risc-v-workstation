@@ -61,6 +61,13 @@ The command returns 3 for missing probes. MCP `probes_check` returns the same
 report. `present` means declared presence only; it does not establish correct
 wiring, runtime activation or complete pipeline accounting.
 
+`--validate` also checks the event stream against the contract, and `--c2 rvfi.jsonl`
+(implies `--validate`) compares the probes that claim retired events with the run. Each
+finding names the probe (`kind/name`), the check and the first cycle: for example a retire
+probe that retires an ID no stage probe saw, a stage event after its retire (ID reuse), a
+1-bit counter whose total differs from its active cycles, or a branch probe with more events
+than C2 branch retirements (the probe is before the commit point). Exit 1 means violations.
+
 The init stub includes both younger-slot flushes for a simple three-stage
 pipeline. Its instruction IDs must follow actual pipeline slots. Stall probes
 use measured cause signals. A core with no wait mechanism can tie those inputs
