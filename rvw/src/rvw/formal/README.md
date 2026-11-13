@@ -3460,3 +3460,10 @@ C3 and JUnit come from the existing regression runner. BMC observations keep
 their bound. Induction observations are conditional proofs in this discrete
 model. No event between global samples, full SystemVerilog scheduling, analog
 clock behavior or metastability is modeled.
+
+For a zero-latency byte-addressed RAM interface, declare
+`[riscv_formal.memory]` and add `@MEMORY_ENVIRONMENT@` to the wrapper.
+See the ISA combinational RAM environment in `docs/contracts/formal.md`.
+Use full transfer masks with the upstream byte-addressed instruction models.
+An aligned RVFI adapter needs the corresponding checker configuration.
+Do not constrain DUT addresses to hide an adapter mismatch.
