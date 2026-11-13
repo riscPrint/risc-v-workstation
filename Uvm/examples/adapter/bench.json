@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.uvm/1",
+  "name": "adapter_fixture",
+  "top": "top",
+  "sources": ["../../base/rvw_base_pkg.sv", "top.sv"],
+  "tests": ["adapter_smoke"]
+}

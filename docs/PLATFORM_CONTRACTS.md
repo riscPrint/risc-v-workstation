@@ -1714,6 +1714,24 @@ startup. Unqualified requirements have `unsupported:uvm_*` diagnostics and
 named workarounds in `Uvm/FEATURES.md`. Unknown names are refused. These
 profile limits do not claim universal simulator language limitations.
 
+## UVM bench manifests and results
+
+`rvw.uvm/1` declares `name`, `top`, ordered `sources` and unique `tests`.
+Optional `include_dirs`, `defines`, `build_args` and `plusargs` are string
+lists. Paths are relative to the manifest. Optional `register_map` names an
+`rvw.soc/1` map. Optional `bindings` is an object owned by the project bench.
+The flow does not translate it to signal wiring. Accellera UVM is pinned by
+archive and licence hashes. `build.json` uses `rvw.uvm-build/1` and records
+resolved manifest data, commands, input hashes and binary hash.
+
+`rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
+counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
+`RVW_UVM_DONE TEST checks=N` line with the selected test and positive N.
+`rvw uvm regress` writes one C3 row per test/seed and links the corresponding
+C1 and log. `source.identity_complete` is false. These results are component
+checks, not a core gate identity. Native coverage merging does not merge
+functional coverage plans or establish closure.
+
 ## C9. Native architecture models
 
 These reports measure model performance. They do not produce C4 gate verdicts
@@ -4719,3 +4737,20 @@ exit zero reports `pass`; a legal BMC FAIL reports `fail`. All other outcomes
 are `inconclusive`. `proof_kind` is always `bounded`. The input capture binds the
 original result, captured model and tool identities. This schema does not
 replace `rvw.formal/1` and does not authorize coverage exclusions.
+## UVM bench manifests and results
+
+`rvw.uvm/1` declares `name`, `top`, ordered `sources` and unique `tests`.
+Optional `include_dirs`, `defines`, `build_args` and `plusargs` are string
+lists. Paths are relative to the manifest. Optional `register_map` names an
+`rvw.soc/1` map. Optional `bindings` is an object owned by the project bench.
+The flow does not translate it to signal wiring. Accellera UVM is pinned by
+archive and licence hashes. `build.json` uses `rvw.uvm-build/1` and records
+resolved manifest data, commands, input hashes and binary hash.
+
+`rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
+counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
+`RVW_UVM_DONE TEST checks=N` line with the selected test and positive N.
+`rvw uvm regress` writes one C3 row per test/seed and links the corresponding
+C1 and log. `source.identity_complete` is false. These results are component
+checks, not a core gate identity. Native coverage merging does not merge
+functional coverage plans or establish closure.
