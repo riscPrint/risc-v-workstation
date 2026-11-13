@@ -207,6 +207,8 @@ class Spike:
         lib.rvw_set_reg.argtypes = [C.c_void_p, C.c_uint, C.c_uint64]
         lib.rvw_set_trap_tval.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_set_mscratch.argtypes = [C.c_void_p, C.c_uint64]
+        if hasattr(lib, "rvw_seed_fcsr"):
+            lib.rvw_seed_fcsr.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
@@ -339,6 +341,11 @@ class Spike:
 
     def sync_instret(self, actual, expected):
         self.lib.rvw_sync_instret(self.handle, actual, expected)
+
+    def seed_fcsr(self, value):
+        if not hasattr(self.lib, 'rvw_seed_fcsr'):
+            raise ValueError('reference lacks FCSR reset alignment; rebuild with Cosim/build.sh')
+        self.lib.rvw_seed_fcsr(self.handle, value)
 
     def set_mscratch(self, value):
         self.lib.rvw_set_mscratch(self.handle, value)

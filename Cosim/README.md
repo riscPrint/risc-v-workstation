@@ -888,3 +888,10 @@ bus transactions, partial stores, page faults or fault order.
 
 Rebuild the Spike shim with `Cosim/build.sh` after updating the workstation.
 The shim behavior version is 7. Older libraries are refused.
+### Unspecified FCSR reset
+
+`fcsr_reset: "unspecified"` permits one initial reference alignment on a
+trace from reset. The first instruction must be an integer instruction
+that cannot change FCSR. The checker records the alignment. Later flags
+compare exactly. Strict mode disables it. BOOM declares this policy because
+its flags and rounding-mode registers have no reset assignment.

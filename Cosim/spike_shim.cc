@@ -335,6 +335,14 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
   auto* s=static_cast<Machine*>(m)->cpu->get_state();
   if(s->prv==PRV_M) s->mtval->write(value); else s->stval->write(value);
 }
+// Reset alignment must not set mstatus.FS dirty as an architectural CSR write does.
+void rvw_seed_fcsr(void* m,uint64_t value) {
+  auto* s=static_cast<Machine*>(m)->cpu->get_state();
+  const auto status = s->mstatus->read();
+  s->mstatus->write(status | MSTATUS_FS);
+  s->fflags->write(value & 31); s->frm->write((value >> 5) & 7);
+  s->mstatus->write(status);
+}
 void rvw_set_mscratch(void* m,uint64_t value) {
   static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
 }
