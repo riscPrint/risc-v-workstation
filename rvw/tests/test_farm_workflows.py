@@ -53,3 +53,16 @@ def test_event_stream_owner_filter_and_cursor(tmp_path):
         http.shutdown()
         thread.join()
         http.server_close()
+
+
+@pytest.mark.parametrize('verdict,state', [('reject', 'dut_failure'), ('inconclusive', 'inconclusive'), ('accept', 'complete')])
+def test_collected_gate_verdict_decides_dependency(tmp_path, verdict, state):
+    gate = [sys.executable, '-c', "import json;from pathlib import Path;Path('verdict.json').write_text("
+            f"json.dumps(dict(schema='rvw.verdict/2',verdict='{verdict}',tests='pass')))"]
+    record = workflow(tmp_path, 'create', dict(nodes=[dict(id='gate', command=gate),
+                                                      dict(id='merge', needs=['gate'], command=[sys.executable, '-c', 'pass'])]))
+    workflow(tmp_path, 'advance', workflow_id=record['id'])
+    Queue(tmp_path).work_once()
+    nodes = workflow(tmp_path, 'advance', workflow_id=record['id'])['nodes']
+    assert nodes[0]['state'] == state
+    assert (nodes[1]['state'] == 'queued') == (verdict == 'accept')

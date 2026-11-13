@@ -18,6 +18,12 @@ def validate(nodes):
         pending = {name: needs - ready for name, needs in pending.items() if name not in ready}
 
 
+def node_state(job):
+    """Queue state, except that a collected C4 report other than accept is not a completed dependency."""
+    gate = job['attempts'][-1].get('gate_verdict') if job['state'] == 'complete' and job['attempts'] else None
+    return {'reject': 'dut_failure', 'inconclusive': 'inconclusive'}.get(gate, job['state'])
+
+
 def workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
     if action == 'capabilities':
         from rvw.mcp.registry import discover
@@ -42,13 +48,13 @@ def workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
     for node in record['nodes']:
         job = jobs.get(node['id'])
         deps = [jobs.get(name) for name in node.get('needs', [])]
-        ready = all(j and j['state'] == 'complete' for j in deps)
+        ready = all(j and node_state(j) == 'complete' for j in deps)
         if action == 'advance' and not job and ready:
             job = queue.submit(owner, node['command'], retries=node.get('retries', 0), timeout=node.get('timeout', 600),
                                workflow=workflow_id, node=node['id'], project=plan.get('project', 'default') if plan else record.get('project', 'default'))
             jobs[node['id']] = job
         nodes.append(dict(id=node['id'], needs=node.get('needs', []), job_id=job['id'] if job else None,
-                          state=job['state'] if job else ('ready' if ready else 'blocked')))
+                          state=node_state(job) if job else ('ready' if ready else 'blocked')))
     states = {n['state'] for n in nodes}
     state = 'complete' if states == {'complete'} else ('failed' if states & {'dut_failure', 'error', 'timeout', 'inconclusive', 'cancelled', 'budget_exhausted', 'cleanup_required', 'infrastructure_error'} else 'pending')
     if state != record['state']:
