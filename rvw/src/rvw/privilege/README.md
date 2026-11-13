@@ -482,3 +482,31 @@ declared grain in alignment and address encoding. Spike smoke tests exercise
 the programs; they do not prove the declared hardware grain. The fallback TOR
 lower bound is initialized explicitly, so a stale pmpaddr6 cannot exclude the
 program from the fallback region.
+
+## PLIC interrupt delivery
+
+`kind = "plic-delivery"` selects project `plic_delivery.targets`. Each target
+supplies M/S mode and a context index in the existing `plic` register map.
+Six example programs cross M/S delivery with global masking, local masking and
+threshold blocking. Each establishes an inactive source baseline, asserts it,
+checks pending state while blocked, then unmasks delivery. The handler checks
+interrupt cause, exception-PC range, saved enable/privilege state and claim ID.
+It deasserts the source before completion, disables local delivery and returns.
+The main code checks retained registers and an empty claim. Supervisor success
+returns through a checked ECALL to M-mode before writing tohost.
+
+`settle_ticks` declares the adapter's source-settling delay before mailbox ack.
+A project source callback must honor it. Python-only reference results describe
+the controller expectations. They do not establish CPU execution.
+
+For short native execution, set `reference_backend = "spike-python-plic"` and
+`reference_shim` to a shim built by `Cosim/build.sh`. This backend runs the
+actual ELF in Spike and supplies PLIC MMIO/IRQ from the Python model. A claim
+read is previewed on a copy. Its side effect is committed only if the CPU
+executes the load, so an interrupt before the load cannot consume the claim.
+All requested mailbox events must complete before pass. Execution has time and
+instruction bounds. The shim and linked library use the existing input-capture
+contract. Reports bind native and Python source hashes. Their evidence remains
+model-based. Source settling uses instruction steps here and makes no clock
+latency claim. This backend does not qualify a native Spike PLIC or an RTL PLIC.
+Concurrent context races and real-core delivery still need project tests.
