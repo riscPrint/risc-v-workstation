@@ -18,6 +18,10 @@ CONSUMERS = [
          format="cache observer event JSONL", converter="cache", note="bytes are needed for the content scoreboard"),
     dict(id="mmu-protocol", tool="rvw regress mmu report --protocol-config", needs=[("tlb", ["va", "pa"])],
          format="rvw.mmu-observations/1", converter="mmu", note="tlb_fill, tlb_hit and tlb_invalidate rows"),
+    dict(id="mmu-walk-records", tool="rvw regress mmu report (C2 mmu_walks)",
+         needs=[("walk", ["level", "address"]), ("walk", ["va", "access", "root", "status", "pa"])],
+         format="C2 mmu_walks records", converter="mmu-walks",
+         note="response events grouped per walk up to Probe.walkResult, attached to retirements"),
     dict(id="mmu-walk-capture", tool="rvw regress mmu report (observations)", needs=[("walk", ["address"])],
          format="rvw.mmu-observations/1", converter="mmu", note="walk_request and walk_response rows"),
     dict(id="ooo-calibration", tool="rvw arch ooo-calibrate", needs=[("counter", ["inc"])],
@@ -39,9 +43,9 @@ CONSUMERS = [
     dict(id="cosim-csr-slots", tool="rvw cosim (per-slot CSR state)", needs=[("csr", ["address", "value"])],
          format="C2/2 csr_snapshot", converter=None,
          note="needs per-slot CSR state through RvfiProbe csrSlots; write events alone cannot fill a snapshot"),
-    dict(id="fault-sites", tool="rvw fault", needs=[("fault", ["value"])],
-         format="design database register sites", converter=None,
-         note="rvw fault reads register sites from the design database; the adapter must implement C1 --fault"),
+    dict(id="fault-sites", tool="rvw fault plan --sites", needs=[("fault", ["value"])],
+         format="rvw fault site list", converter="fault-sites",
+         note="register paths from Probe.faultSite; the adapter must implement C1 --fault"),
 ]
 
 

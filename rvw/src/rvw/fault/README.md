@@ -14,6 +14,10 @@ rvw fault run --plan plan.json --adapter './adapter.sh' --elf test.elf --out /tm
 rvw fault report /tmp/faults
 ```
 
+`rvw fault sites|plan --sites FILE` takes a site list (`{"sites": [{"path", "width"}]}`) in
+place of `--db`, for example `rvw probes convert EVENTS --to fault-sites` from
+`Probe.faultSite` probes. `--include`/`--exclude` still apply.
+
 ## Fault model
 
 - Sites: design database `signals` with `kind = 'reg'`, not pruned. Generated

@@ -72,6 +72,20 @@ def sites(db, *, include=('*',), exclude=(), generated=False):
     return sorted(out, key=lambda s: s['path'])
 
 
+def listed_sites(path, *, include=('*',), exclude=()):
+    """Register bit sites from a site list file ({"sites": [{"path", "width"}]})."""
+    data = json.loads(Path(path).read_text())
+    if not isinstance(data, dict) or not isinstance(data.get('sites'), list):
+        raise ValueError(f'{path}: expected {{"sites": [...]}}')
+    out = []
+    for s in data['sites']:
+        if not isinstance(s, dict) or not isinstance(s.get('path'), str) or type(s.get('width')) is not int or s['width'] <= 0:
+            raise ValueError(f'{path}: each site needs a path and a positive integer width')
+        if any(fnmatch.fnmatchcase(s['path'], g) for g in include) and not any(fnmatch.fnmatchcase(s['path'], g) for g in exclude):
+            out.append({'path': s['path'], 'width': s['width'], 'clock_domain': s.get('clock_domain')})
+    return sorted(out, key=lambda s: s['path'])
+
+
 # -- plan -----------------------------------------------------------------------------------
 def plan(site_list, *, kinds=KINDS, window=(0, 1000), samples=100, seed=1, duration=None, db_sha256=None):
     """Seeded sample of faults. Permanent stuck-at faults start at `window[0]` unless `duration`

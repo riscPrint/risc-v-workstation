@@ -83,7 +83,11 @@ object ProbeCollector {
     }
   def describe(s: ProbeSite): ujson.Obj = ujson.Obj("id" -> s.index, "kind" -> s.kind, "name" -> s.name,
     "fields" -> ujson.Arr.from(s.fields.map { case (n, d) => ujson.Arr(n, d.getBitsWidth) }),
-    "meta" -> ujson.Obj.from(s.meta.toSeq.sortBy(_._1).map { case (k, v) => k -> ujson.Str(v) }))
+    "meta" -> ujson.Obj.from((s.meta ++ faultPath(s)).toSeq.sortBy(_._1).map { case (k, v) => k -> ujson.Str(v) }))
+  /** A fault site's register path, as `--fault` resolves it (`FaultFile.path`). */
+  private def faultPath(s: ProbeSite): Map[String, String] = s.fields.collectFirst {
+    case ("value", bt: BaseType) if s.kind == "fault" => "path" -> FaultFile.path(bt)
+  }.toMap
   /** Identity fields copied from a C2 header so converters can bind the two streams. */
   def identity(c2Header: ujson.Obj): ujson.Obj =
     ujson.Obj.from(Seq("core", "config", "elf", "elf_sha256", "rtl_sha256", "seed").flatMap(k => c2Header.value.get(k).map(k -> _)))

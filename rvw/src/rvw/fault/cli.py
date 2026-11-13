@@ -38,13 +38,18 @@ def register(subparsers):
 
 
 def _site_args(parser):
-    parser.add_argument('--db', required=True, type=Path, help='design database (rvw.designdb)')
+    src = parser.add_mutually_exclusive_group(required=True)
+    src.add_argument('--db', type=Path, help='design database (rvw.designdb)')
+    src.add_argument('--sites', type=Path, help='site list JSON {"sites": [{"path", "width"}]}, '
+                     'for example from rvw probes convert --to fault-sites')
     parser.add_argument('--include', action='append', help='path glob (repeatable; default all)')
     parser.add_argument('--exclude', action='append', default=[])
     parser.add_argument('--generated', action='store_true', help='include generated registers')
 
 
 def _site_list(args):
+    if args.sites:
+        return campaign.listed_sites(args.sites, include=args.include or ['*'], exclude=args.exclude)
     return campaign.sites(args.db, include=args.include or ['*'], exclude=args.exclude, generated=args.generated)
 
 
@@ -64,7 +69,7 @@ def _plan(args):
         start, end = (int(v, 0) for v in args.window.split(':'))
         data = campaign.plan(_site_list(args), kinds=tuple(k for k in args.kinds.split(',') if k),
                              window=(start, end), samples=args.samples, seed=args.seed, duration=args.duration,
-                             db_sha256=hashlib.sha256(args.db.read_bytes()).hexdigest())
+                             db_sha256=hashlib.sha256((args.db or args.sites).read_bytes()).hexdigest())
     except (OSError, ValueError) as exc:
         print(json.dumps({'status': 'error', 'reason': str(exc)}))
         return 2

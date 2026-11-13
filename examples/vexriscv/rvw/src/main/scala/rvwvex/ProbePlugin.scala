@@ -95,6 +95,12 @@ class ProbePlugin extends Plugin[VexRiscv] {
     csr.csrMapping.onAnyWrite { csrWriting := True }
     Probe.csrWrite("csr", csrWriting, execute.input(INSTRUCTION)(31 downto 20), csr.csrMapping.writeDataSignal)
 
+    // A fault site for `rvw fault`: the mscratch storage register.
+    csr.csrMapping.mapping(0x340).collectFirst { case r: CsrRead => r.that }.foreach {
+      case reg: BaseType => Probe.faultSite("mscratch", reg)
+      case _ =>
+    }
+
     // Interrupt-taken: the registered trap strobe and actual mcause/mepc storage.
     def readCsr(address: Int): Bits = csr.csrMapping.mapping(address).collect {
       case r: CsrRead => (r.that.asBits.resize(32) << r.bitOffset).resize(32)

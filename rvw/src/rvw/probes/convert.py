@@ -213,6 +213,8 @@ def mmu(stream: Stream, out, c2_path=None) -> dict:
         f.write(json.dumps({"schema": "rvw.mmu-observations/1", "identity": identity,
                             "source": "rvw.probe-events/1"}) + "\n")
         for cycle, p, v in stream.events("tlb", "walk"):
+            if p.kind == "walk" and p.meta.get("event") == "result":
+                continue  # walk results feed `--to mmu-walks`
             if p.kind == "tlb":
                 kind = "tlb_" + p.meta["event"]
                 row = {"cycle": cycle, "kind": kind, "hart": 0}
@@ -330,4 +332,4 @@ def summary(stream: Stream) -> dict:
 
 
 CONVERTERS = {"bp-events", "kanata", "cache", "mmu", "counts", "hpm", "etrace-ingress", "interrupts", "bus",
-              "csr-writes"}
+              "csr-writes", "mmu-walks", "fault-sites"}

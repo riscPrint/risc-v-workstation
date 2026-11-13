@@ -80,6 +80,9 @@ def run_convert(events, to, out, c2=None, c1=None, probe=None, roi=None) -> dict
         return cv.hpm(s, out)
     if to == "etrace-ingress":
         return cv.etrace_ingress(s, out, probe=probe)
+    if to in ("mmu-walks", "fault-sites"):
+        from . import records
+        return records.mmu_walks(s, need(c2, "--c2"), out) if to == "mmu-walks" else records.fault_sites(s, out)
     if to in ("bus", "csr-writes"):
         from . import checks
         run = checks.bus if to == "bus" else checks.csr_writes
