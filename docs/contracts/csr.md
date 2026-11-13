@@ -310,3 +310,18 @@ Substitutions, nested braced lists and other backslash escapes remain errors.
 Each tokenized command still passes the supported UPF command and option checks.
 No Tcl interpreter runs. The normalized UPF schema and monitor bindings do not
 change. Clock-gate import and physical power behavior are not implied.
+
+## Recovery check bindings
+
+`RecoveryChecks.bind` emits `recovery.*` rules in the existing check inventory.
+Bindings declare up to 32 slots with equal-width generation tags on allocation,
+release, retirement and accepted device-effect events. Kill and fence masks
+must come from independent project intent. Missing bindings are elaboration
+errors. A slot stays owned until release, including after cancellation.
+
+Fence start captures selected pre-edge generations. Allocations at that edge
+are younger. Current-edge release or kill can drain a predecessor. Slot reuse
+does not add its new generation to a previous fence. The default device-effect
+policy requires retirement before or at the same edge; the check detail records
+an explicit project override. These are sampled template obligations. They do
+not infer branch age, architectural fence classes, data values or a core binding.
