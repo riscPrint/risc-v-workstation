@@ -474,10 +474,8 @@ project's tests and required checks. Use a fresh build and run directory:
 ```sh
 rvw uvm build bench.json --out /tmp/project-uvm-build --timeout 1800
 rvw uvm regress --build /tmp/project-uvm-build --seeds 1 3 --out /tmp/project-uvm-runs
-rvw uvm gate-config --build /tmp/project-uvm-build --source-repo "$PWD" \
- --out /tmp/project-uvm-core.toml --seeds 1 3
-rvw regress gate --core /tmp/project-uvm-core.toml --tier quick \
- --base-rev COMMIT --cand-rev COMMIT --no-cache --json
+rvw uvm gate-config --build /tmp/project-uvm-build --source-repo "$PWD" --out /tmp/project-uvm-core.toml --seeds 1 3
+rvw regress gate --core /tmp/project-uvm-core.toml --tier quick --base-rev COMMIT --cand-rev COMMIT --no-cache --json
 ```
 
 Commit the source before the gate. Use that revision for COMMIT.
