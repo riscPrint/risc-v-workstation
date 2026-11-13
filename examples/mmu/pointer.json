@@ -1,0 +1,122 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "sv39-pmlen-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pointer_mask": 0,
+      "bins": [
+        "sv39.pointer-mask",
+        "smnpm.pmlen-0"
+      ]
+    },
+    {
+      "id": "sv39-pmlen-7",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 7,
+      "bins": [
+        "sv39.pointer-mask",
+        "smnpm.pmlen-7"
+      ]
+    },
+    {
+      "id": "sv39-pmlen-16",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 16,
+      "bins": [
+        "sv39.pointer-mask",
+        "smnpm.pmlen-16"
+      ]
+    },
+    {
+      "id": "sv48-pmlen-0",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pointer_mask": 0,
+      "bins": [
+        "sv48.pointer-mask",
+        "smnpm.pmlen-0"
+      ]
+    },
+    {
+      "id": "sv48-pmlen-7",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 7,
+      "bins": [
+        "sv48.pointer-mask",
+        "smnpm.pmlen-7"
+      ]
+    },
+    {
+      "id": "sv48-pmlen-16",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 16,
+      "bins": [
+        "sv48.pointer-mask",
+        "smnpm.pmlen-16"
+      ]
+    },
+    {
+      "id": "sv57-pmlen-0",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pointer_mask": 0,
+      "bins": [
+        "sv57.pointer-mask",
+        "smnpm.pmlen-0"
+      ]
+    },
+    {
+      "id": "sv57-pmlen-7",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 7,
+      "bins": [
+        "sv57.pointer-mask",
+        "smnpm.pmlen-7"
+      ]
+    },
+    {
+      "id": "sv57-pmlen-16",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pointer_mask": 16,
+      "bins": [
+        "sv57.pointer-mask",
+        "smnpm.pmlen-16"
+      ]
+    }
+  ]
+}

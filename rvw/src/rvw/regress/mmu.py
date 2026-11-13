@@ -56,7 +56,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -129,6 +129,9 @@ def validate(s):
         raise ValueError('asid must fit 16 bits')
     if s.get('ad_mode', 'hardware') not in ('hardware', 'svade'):
         raise ValueError('ad_mode must be hardware or svade')
+    if 'pointer_mask' in s:
+        from .mmu_pointer import validate as validate_pointer
+        validate_pointer(s)
     if 'shootdown' in s:
         from .mmu_shootdown import validate as validate_shootdown
         validate_shootdown(s)
@@ -158,6 +161,8 @@ def assembly(s):
     g = geometry(s)
     tables, leaf = page_tables(s, ROOT, pa, sum(FLAGS[f] for f in set(s['flags'])))
     va += s.get('offset', 0)
+    if 'pointer_mask' in s:
+        va |= 1 << 63
     fault = s['expect'] != 'success'
     cause = {'page-fault': (13, 15), 'access-fault': (5, 7), 'misaligned': (4, 6), 'success': (0, 0)}[s['expect']][s['access'] == 'store']
     status = (int(s.get('mprv', True)) << 17) | ((1 if s.get('privilege', 'S') == 'S' else 0) << 11)
@@ -337,6 +342,9 @@ trap:
  bne t0, t1, fail
 ''' + (f' csrr t0, mtval\n li t1, {va}\n bne t0, t1, fail\n' if fault else '') + code[end:]
         code = code.replace('.section .data\n .dword 42\n .zero 4088\n .dword 43\n', '.section .data\n .word 0x00000073\n .word 0x0000006f\n')
+    if 'pointer_mask' in s:
+        from .mmu_pointer import setup as pointer_setup
+        code = code.replace(' sfence.vma x0, x0', ' ' + pointer_setup(s) + 'sfence.vma x0, x0', 1)
     from .mmu_extensions import setup
     code = code.replace(' sfence.vma x0, x0', ' ' + setup(s) + 'sfence.vma x0, x0', 1)
     if 'mode' in s and s.get('satp_mode') != 'bare':
@@ -545,6 +553,8 @@ def reference(directory, spike, timeout):
         isa = f'rv{geometry(s).xlen}im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
         from .mmu_extensions import isa as extension_isa
         isa += extension_isa(s)
+        if 'pointer_mask' in s:
+            isa += '_smnpm'
         if s.get('guest'):
             isa = isa.replace('im_', 'imh_')
         command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]

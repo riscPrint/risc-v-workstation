@@ -17,7 +17,7 @@ def check_walk(s, events):
     from .mmu_paging import geometry
     g = geometry(s)
     limit = 'successful immutable ' + s.get('mode', 'sv39') + ' mapping with preset A/D bits only'
-    if ('guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
+    if ('pointer_mask' in s or 'guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
             or s.get('satp_mode', 'sv39') != 'sv39' or not s.get('mprv', True)
             or s.get('walk_deny') or s.get('mode_switch') or 'pbmt' in s or s.get('napot') or not {'A', 'D'} <= set(s['flags'])):
         return dict(status='inconclusive', reason=limit)
@@ -78,7 +78,7 @@ def check_pma(s, events, regions):
     Declared PMA attributes are the oracle. Capture does not define attributes.
     """
     unknown = dict(status='inconclusive', reason='need one declared non-cacheable device access and independent state')
-    if ('guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
+    if ('pointer_mask' in s or 'guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
             or s.get('access') not in ('load', 'store') or not regions):
         return unknown
     pa = number(s.get('pa', DATA))

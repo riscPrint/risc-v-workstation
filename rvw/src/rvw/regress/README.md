@@ -854,3 +854,8 @@ See [the generic example](../../../../examples/mmu/README.md) for C1 suites,
 layout limits and coverage scope. Sv32 uses RV32IM, ILP32, 32-bit PTEs and the
 RV32 satp layout. Sv48 and Sv57 use four and five table levels. An explicit
 non-canonical VA is permitted only with a declared page-fault expectation.
+
+The optional `pointer_mask` scenario field selects bounded Smnpm tagged
+pointer cases. See `examples/mmu/pointer.json`. These run through the same
+build, reference, C1 suite and coverage paths. Keep each extension campaign
+outside default tiers until the selected project declares it supported.
