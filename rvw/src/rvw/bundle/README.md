@@ -466,3 +466,21 @@ A `one_minimal` result means no single group can be removed within these
 constraints. It does not establish a global minimum or verify the adapter's
 implementation of event semantics. Tests use fixture oracles. Real-core and
 arbitrary device schedule support remain open under #152.
+
+## Failure windows from a live server
+
+`--sim-server PATH` selects the local Unix socket of a running `rvw sim server`.
+The original failure must come from that server. The wave rerun must have the
+same simulation-session ID and generated RTL hash. The ELF and requested run
+options still pass the normal C1 checks. A mismatch stays inconclusive.
+
+The live path captures the ELF and any captured simulation map. It sends these
+request bytes to the existing process. It does not copy or launch another core
+source tree. Normal process reruns retain full source capture. Boot payloads,
+hart images and fault-file requests currently need the normal process path.
+The live bundle's replay script still requires the original project setup.
+A self-contained portable replay archive is a separate feature.
+
+Generic RiscvSim now supplies FST by default. The bundle reads that artifact
+and writes its existing selected VCD window. Capture bounds apply inside the
+native simulation. See [the simulation service](../sim/README.md#live-server-and-failure-windows).

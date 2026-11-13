@@ -433,3 +433,31 @@ Input writes invalidate it. `port_snapshot=False` selects direct reads for a
 paired control. See [the native speed sample](../../../../examples/vexriscv/rvw/native-speed/README.md)
 for the profile, alternating controls and the separate 49-test persistent-JVM
 comparison. Neither measurement qualifies a general core speed profile.
+
+## Live server and failure windows
+
+Start a local service around the selected project's captured native launcher:
+
+```sh
+rvw sim server --socket /tmp/new-sim.sock \
+  --command '["/path/to/project/rvw/run.sh", "serve"]'
+```
+
+Set the private core source, `RVW_VEX_LOCK` and `RISCVSIM_WORK` before launch.
+The adapter holds its project lock for the process lifetime. Submit JSON jobs
+through MCP `sim_server_request` or `rvw.sim.server.request`. Use an
+`{"op":"shutdown"}` request to stop the service. A timed-out native request
+stops the whole process group. The service does not attach to an unrelated JVM.
+
+A failure from this server can request its wave window through the same JVM:
+
+```sh
+rvw bundle /path/to/failed-run --sim-server /tmp/new-sim.sock \
+  --rerun-window 500 --no-spinaltrace
+```
+
+Generic RiscvSim now captures FST by default. C1 `artifacts.wave` names
+`wave.fst`. The bundle reads FST through the existing converter and writes its
+selected window in the bundle format. The original and rerun session IDs must
+match. A different server cannot supply reproduced evidence. The requested
+ELF, seed and run options still pass the normal C1 checks.

@@ -16,6 +16,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--cut-cycles", type=int, default=500, help="cycles of wave before the failure to keep (500)")
     p.add_argument("--no-rerun", action="store_true", help="never re-run the replay for a wave/trace")
     p.add_argument("--rerun-window", type=int, default=3000, help="cycles of wave to record when re-running (3000)")
+    p.add_argument("--sim-server", help="local socket of an already-running simulation server")
     p.add_argument("--konata", action="store_true", help="also ask the re-run for a Konata log")
     p.add_argument("--core-config", help="core debug description (default RiscvSim/<core>/debug.toml)")
     p.add_argument("--pdg", help="SpinalTrace pdg.json of an instrumented build of the same design")
@@ -30,9 +31,9 @@ def register(sub: argparse._SubParsersAction) -> None:
 
 def execute_json(run_dir: str, *, out=None, retired=64, cut_cycles=500, no_rerun=False,
                  rerun_window=3000, konata=False, core_config=None, pdg=None, trace_wave=None,
-                 trace_cycles=20, no_spinaltrace=False, timeout=None, project=None) -> dict:
+                 trace_cycles=20, no_spinaltrace=False, timeout=None, project=None, sim_server=None) -> dict:
     """Shared CLI/MCP entry point returning the C5 summary."""
-    o = Options(project=project, out=out, retired=retired, cut_cycles=cut_cycles, rerun=not no_rerun,
+    o = Options(sim_server=sim_server, project=project, out=out, retired=retired, cut_cycles=cut_cycles, rerun=not no_rerun,
                 rerun_window=rerun_window, konata=konata, core_config=core_config,
                 spinaltrace=not no_spinaltrace, timeout=timeout, pdg=pdg, trace_wave=trace_wave,
                 trace_cycles=trace_cycles)
@@ -41,7 +42,7 @@ def execute_json(run_dir: str, *, out=None, retired=64, cut_cycles=500, no_rerun
 
 def run(a) -> int:
     try:
-        S = execute_json(a.run_dir, project=getattr(a, "project", None), out=a.out, retired=a.retired, cut_cycles=a.cut_cycles,
+        S = execute_json(a.run_dir, sim_server=getattr(a, "sim_server", None), project=getattr(a, "project", None), out=a.out, retired=a.retired, cut_cycles=a.cut_cycles,
                          no_rerun=a.no_rerun, rerun_window=a.rerun_window, konata=a.konata,
                          core_config=a.core_config, no_spinaltrace=a.no_spinaltrace, timeout=a.timeout,
                          pdg=a.pdg, trace_wave=a.trace_wave, trace_cycles=a.trace_cycles)

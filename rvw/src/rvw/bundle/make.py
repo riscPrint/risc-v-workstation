@@ -35,6 +35,7 @@ class Options:
     core_config: str | None = None
     project: str | None = None
     spinaltrace: bool = True
+    sim_server: str | None = None
     timeout: float | None = None   # for the re-run
     pdg: str | None = None         # SpinalTrace pdg.json of an instrumented build
     trace_wave: str | None = None  # wave of the instrumented build (default: the run's wave)
@@ -65,7 +66,7 @@ def _make(run_dir: str, o: Options, inputs: DebugInputs) -> dict:
     out = Path(o.out)
     out.mkdir(parents=True, exist_ok=True)
     cfg, cfg_path = inputs.config(run.get("core"), o.core_config, project=o.project)
-    replay_cmd = inputs.command(run, cfg) if o.rerun or o.spinaltrace else None
+    replay_cmd = (inputs.live_command(run) if o.sim_server else inputs.command(run, cfg)) if o.rerun or o.spinaltrace else None
     elf = (Path(replay_cmd.get('elf')) if replay_cmd is not None else
            snapshot_elf(run, out, inputs.capture, root=inputs.root))
     o = dataclasses.replace(o)
@@ -129,7 +130,7 @@ def _make(run_dir: str, o: Options, inputs: DebugInputs) -> dict:
             cmd = replay_cmd.set(wave=True, wave_from=lo, wave_to=hi, rvfi_trace=with_rvfi or None,
                                                konata=o.konata or None)
             _say(o, f"re-running with wave cycles {lo}..{hi}: {cmd.set(out=str(out / name)).shell()}")
-            at = adapter.execute(cmd, out / name, core=run.get("core"), timeout=o.timeout)
+            at = adapter.execute(cmd, out / name, core=run.get("core"), timeout=o.timeout, server=o.sim_server)
             rr = at.run
             S[name] = {"command": cmd.set(out=str(at.dir)).shell(), "wall_s": round(at.wall, 1),
                        "dir": str(at.dir), "capture": rr.capture.record() if rr and rr.capture else None}
@@ -139,6 +140,9 @@ def _make(run_dir: str, o: Options, inputs: DebugInputs) -> dict:
                 break
             rsig = runs.signature(rr.data)
             rinc = rr.inconclusive
+            if o.sim_server:
+                from rvw.sim.server import identity_error
+                rinc = identity_error(run.data, rr.data) or rinc
             S[name].update({"status": rr.get("status"), "signature": rsig, "cycles": rr.get("cycles"),
                             "reproduced": rinc is None and rsig == sig and rr.get("cycles") == fail_cycle})
             if rinc:
@@ -363,7 +367,7 @@ def _spinaltrace(run, cfg: dict, S: dict, out: Path, wave: Path | None, o: Optio
             cmd = cmd.set(spinaltrace=True)
         tdir = out / "rerun-spinaltrace"
         say("bundle", f"re-running with the SpinalTrace model: {cmd.set(out=str(tdir)).shell()}")
-        at = adapter.execute(cmd, tdir, core=run.get("core"), timeout=o.timeout)
+        at = adapter.execute(cmd, tdir, core=run.get("core"), timeout=o.timeout, server=o.sim_server)
         tr = at.run
         R = S["rerun_spinaltrace"] = {"dir": str(at.dir), "wall_s": round(at.wall, 1),
                                       "signature": runs.signature(tr.data) if tr else None,

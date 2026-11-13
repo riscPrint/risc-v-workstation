@@ -107,6 +107,8 @@ def command(a):
 def register(sub):
     sim = sub.add_parser('sim', help='native simulation checkpoint control')
     commands = sim.add_subparsers(dest='snapshot_action', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.sim', commands)
     p = commands.add_parser('timing-handoff', help='check an external gate-netlist/SDF capability declaration')
     p.add_argument('manifest', type=Path)
     p.add_argument('--capabilities', type=Path, required=True)
