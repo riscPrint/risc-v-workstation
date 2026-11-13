@@ -79,3 +79,14 @@ events remain separate. This also works through the blocking DPI transport.
 Resume, debug ROM execution, triggers and automatic single-step transitions
 remain unsupported. The step bit is compared as state. A full halt/step campaign
 around WFI, interrupts and exceptions is not claimed.
+
+### Hypervisor delegation cases
+
+`rvw.cosim.hypervisor_cases.cases()` supplies three RV64H assembly programs:
+VS ECALL to HS, VU ECALL to HS, and delegated VU ECALL to VS followed by VS
+ECALL to HS. Each program includes literal expected privilege, cause and
+virtualization transitions. Core adapters can compile these programs and capture
+C2/2 `hypervisor` snapshots for the existing comparator. The native tests run
+these programs on Spike. They establish reference readiness, not an H-capable
+DUT result. Two-stage stores, fault precedence and full H interrupt campaigns
+remain outside these small cases.
