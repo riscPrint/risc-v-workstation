@@ -503,3 +503,23 @@ reads and writes increment `initiatorReads` and `initiatorWrites` by binding ID.
 The caller consumes the annotated delay. Completion times do not reorder memory
 effects. Calls at the same time use kernel process order. Arbitration, fairness,
 parallel host-thread access and separate kernels are outside this contract.
+
+## VexiiRiscv boot slices
+
+The project `boot-slices.sh` harness writes `rvw.vexii-boot-slice/1` in a ZIP
+file. It has `state.json` and dense `ram.bin` entries. The JSON envelope binds
+its state with SHA-256. The state binds the RAM digest, generated RTL, harness,
+bridge, memory and device class bytes, boot input digests and device map digest.
+The image is trusted same-build state. It is not a portable simulator image.
+
+Capture occurs after a settled falling edge. The state includes registers,
+memories, pending fetch and LSU responses, LR/SC reservation, cycle and
+retirement counters and live device state. Restore validates identity and RAM
+before it restores RTL. It reconstructs inputs before the next rising edge.
+No Scala scheduler or upstream retirement probe object is resumed. This path
+supports the project's single-clock cacheless RV64 supervisor profile only.
+
+`rvw.vexii-boot-slice-result/1` reports a bounded run. Its cycle and retirement
+counts are cumulative decimal strings. `slice_cycles` and `slice_retired` count
+only this process. Rates include the cycle loop, RTL restore and checkpoint writes. They exclude
+compilation and initial input and RAM loading. A bounded result does not establish Linux userspace or shutdown.

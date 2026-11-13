@@ -622,7 +622,8 @@ program pass from a Linux memory store. Preparation reserves the first 4 MiB
 for reset code and firmware. Use a 600-second
 wall limit for bounded Linux execution. No initramfs is included.
 
-The native Spinal adapter cannot save or restore Verilator and harness state.
+The standard C1 launcher cannot save or restore Verilator and harness state.
+The separate boot-slice harness below supplies a live bridge path.
 The loader captures boot bytes before compilation. Replay starts from reset
 and needs the original inputs. The VexRiscv checkpoint sample does not qualify VexiiRiscv restore.
 
@@ -630,7 +631,8 @@ The native OpenSBI control passed at cycle 304,429 with 126,162 retirements.
 It observed 14 supervisor instructions and a supervisor ecall. The C2 parser
 accepted the complete trace. The firmware reported no PMP configuration warning.
 See [the boot sample](rvw/opensbi/results.json) for hashes and source identity.
-Live VexiiRiscv checkpoint restore remains open.
+Live restore through the standard C1 launcher remains open. The boot-slice
+harness below has a separate short-run equality check.
 
 The 600-second Linux sample retired 1,726,669 instructions. Supervisor mode
 accounted for 1,597,511 of them. It observed 15 MMU walks and 328,491 translated
@@ -897,3 +899,50 @@ ISA proof remain open. The mapped RTL security harness and CSR bank remain
 RV32-only. The new security C1 adapter handles the RV64 pair.
 The standalone `rvw/run64.sh` default remains `rv64imasu`. Select
 `--config rv64ima` or the `rvw64m.toml` project for the machine profile.
+## Boot slices in a fresh process
+
+The project `rvw/boot-slices.sh` uses the live Spinal register and memory bridge.
+It saves a single-clock cacheless RV64 supervisor model at an exact cycle.
+It also saves RAM, devices, pending bus replies, the LR/SC reservation and
+retirement counters. It does not replay from reset. It uses fixed one-cycle
+bus replies. It does not start the upstream C2 probe or write a trace or wave.
+
+Set `RVW_HOME` to this checkout. Set `VEXIIRISCV` to a private pinned core copy.
+Source the native tool environment. Keep all output outside the repository:
+
+```sh
+rvw/boot-slices.sh RESET_ELF PAYLOADS_JSON DEVICES_JSON RUN_A CHECKPOINT_ZIP fresh 1000
+rvw/boot-slices.sh RESET_ELF PAYLOADS_JSON DEVICES_JSON RUN_B CHECKPOINT_ZIP restore 2000
+```
+
+The stop cycle is cumulative. Each output directory must be new. The checkpoint
+is replaced after each successful slice. An incomplete write has the suffix
+`.partial`. Keep the source inputs for the identity check on restore. Set
+`RVW_BOOT_WORK` to reuse the native build between processes. The launcher uses
+private `vex-linux` and `sbt-linux` locks and nice priority 10.
+
+Run `rvw/tests/test_boot_slices.py` from this example with the private core
+selected to compare fresh and resumed console output, retirements, final RTL
+state and RAM. A slice result has status `bounded`. It does not claim a Linux
+boot or shutdown. C2 capture, wave windows and Spike sampling are not yet bound
+to this harness. Checkpoints are trusted same-build data, not portable images.
+Set `RVW_BOOT_SECONDS=600` for a wall-time slice. The harness checks this limit
+every 1,024 cycles and saves the state at the next settled boundary. It excludes
+compilation from this limit. Restore with a stop cycle above the saved cycle.
+
+The native equality check used VexiiRiscv `9b63f47fe559dbba7874af9196746412fa1294c1`
+and SpinalHDL `de72faf6062206a89b445e5cc07e32ed982712c8`.
+It selected `rv64imacsu_linux`. It split at cycle 1,000 and ended at cycle 2,000.
+
+| Check | Straight run | Fresh-process restore |
+|---|---|---|
+| Final cycles | 2,000 | 2,000 |
+| Retired instructions | 441 | 441 |
+| UART output | `KKK` | `KKK` |
+| Final RTL registers and memories | Equal | Equal |
+| Final RAM, pending bus replies and devices | Equal | Equal |
+
+The test compares the complete final state and RAM entries, not only counts.
+It took 274.42 seconds including three launcher invocations and native builds.
+These short slices are correctness evidence. They are not boot throughput
+measurements. A completed Linux boot remains unproved by this check.
