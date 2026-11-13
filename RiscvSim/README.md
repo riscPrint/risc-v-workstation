@@ -959,3 +959,32 @@ SystemC initiator bridge. The target annotates delay. The caller consumes it.
 The example uses one outstanding transaction and explicit clock-edge sampling.
 Its native test passed with SystemC 3.0.2 and Verilator 5.049. This is a small
 partition example. It provides no whole-core or timing qualification.
+
+## Fault injection (`--fault`)
+
+`run --fault FILE` applies C1 faults (`rvw.fault/1`, see `rvw/src/rvw/fault/README.md`)
+in any adapter that runs through `SimSession`. The adapter needs no code for it.
+
+- The job uses a separate `_fault` model. Elaboration tags every register
+  `simPublic`, and Verilator builds with `--public-flat-rw`, so outside writes
+  re-evaluate the logic that reads the register. Golden runs keep the normal model.
+- `site` is the design database path: instance names below the toplevel, then the
+  Verilog signal name (`rvw fault sites --db DB`).
+- `stuck0`/`stuck1` set the bit after each clock edge from `cycle` for `duration`
+  cycles, or to the end. `flip` inverts it once at `cycle`. Cycles are the driver's
+  sampled-cycle count.
+- The injector reads the register back one time unit after the first write.
+  `details.fault` is `applied: true` only when the read-back shows the forced bit.
+  It records `applied_cycle`, `before`, `after` and `writes`. A missing site, an
+  enumeration register, a bit outside the register, a run that ends first or a
+  failed read-back gives `applied: false` with a reason.
+
+Faults on RVFI-only registers (for example VexRiscv `*FORMAL*` stage registers)
+change only the trace. Exclude them with `rvw fault plan --exclude` for functional
+estimates.
+
+Measured on 2026-11-13 with the VexRiscv example (`rv32im`, smoke program, 91 cycles):
+a 12-fault seeded plan over the design database (`--exclude '*FORMAL*'`, window 10:80,
+seed 7) applied and confirmed 11 faults. Results: 2 detected (simulation asserts),
+4 timeouts, 5 safe, 1 `not_injected` (`CsrPlugin_satp_PPN`, absent from the current
+M-only model because the database came from an older configuration).

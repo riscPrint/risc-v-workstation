@@ -205,6 +205,21 @@ mechanisms that fired. An adapter without `--fault` support must not claim it.
 `report.json` (`rvw.fault-report/1`) and C3 `results.json` with
 `suite: "fault-campaign"` (see `rvw/src/rvw/fault/README.md`).
 
+### RiscvSim harness hooks
+
+The generic RiscvSim driver implements these optional C1 options for any adapter that runs
+its simulation through `SimSession`. No adapter code names a signal.
+
+- `--fault FILE` builds a separate `_fault` model: every register is `simPublic`
+  and Verilator gets `--public-flat-rw`. The injector resolves `site` as the
+  design database path (instance names below the toplevel, then the signal name).
+  It writes the bit after each clock edge in the fault window and reads the
+  register back one time unit later. `details.fault` adds `applied_cycle`,
+  `before`, `after` (hex) and `writes`. Missing sites, enumeration registers,
+  bits outside the register, runs that end first and read-back mismatches give
+  `applied: false` with a reason. A file with several faults gives `applied` for
+  all of them and a `faults` list.
+
 ### Optional multi-hart extension (C1 and C2)
 
 C1 stays `rvw.run/1`. An adapter can opt in with `details.multihart`.
