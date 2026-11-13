@@ -161,8 +161,12 @@ programs (`rv32imasu`):
   the core's page fault is correct. The reference walker gives the same page fault, and the
   DUT walk record matches it. The scenario expectation was wrong, not the core.
 
-Limit: the `retired` counter of `branches` is 35658; C2 has 35660. The last two commits share
-the end cycle and are not counted. The cause in the sampling order is not established.
+The cacheless `branches` run has 35658 typed commits and 35660 C2 records.
+The typed counter reads the `trapAt` commit ports. C2 uses the upstream
+completion-based scheduler, which can emit instructions before those ports fire.
+The commit PCs equal the C2 prefix. The remaining records are at the tail.
+See [the source analysis and native evidence](rvw/csim/RETIREMENT.md).
+Performance reports retain this difference. No constant is added to either count.
 
 Synthesis safety: run `rvwvexii.ProbeSafety` from the adapter classpath. It elaborates the
 core with and without `ProbeTapPlugin` (probes off) and compares the Verilog SHA-256; it exits 1 when
