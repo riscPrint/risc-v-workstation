@@ -1,0 +1,5 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "stateen",
+  "isa": "rv64im_zicsr_zifencei_smstateen"
+}

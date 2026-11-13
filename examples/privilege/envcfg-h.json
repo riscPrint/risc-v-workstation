@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "envcfg",
+  "isa": "rv64imah_zicsr_zifencei_zicfilp",
+  "envcfg": {
+    "implemented_mask": 4,
+    "henvcfg_mask": 4
+  }
+}

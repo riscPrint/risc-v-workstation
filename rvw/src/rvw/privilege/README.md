@@ -245,3 +245,33 @@ check. It does not qualify analog voltage, PLL behavior or physical timing.
 
 The C1 checker gives a matching architectural self-check failure precedence over
 missing optional device observations. A model-based report cannot override it.
+
+## Timer, state-enable, environment and CFI controls
+
+All these campaigns pin the 20260120 privileged specification.
+
+- `sstc` crosses M/S/U access with STCE and counter-access enable. It also
+  observes STIP assertion and clearing after compare writes. It requires
+  `Zicntr` so the Spike reference has time support. The installed Spike crashes
+  on some Sstc accesses without that extension. `sstc.virtualization = true`
+  requires H and adds VS accesses across machine/hypervisor STCE and TM bits.
+  It distinguishes illegal-instruction from virtual-instruction traps.
+- `stateen` checks SSTATEEN access in M/S/U with MSTATEEN.SE0 clear/set.
+- `envcfg` checks declared implemented bits in MENVCFG and SENVCFG. Set
+  `envcfg.implemented_mask`. The example selects the Zicfilp LPE bit. An
+  optional `henvcfg_mask` and H ISA add machine/HS/user HENVCFG access tests.
+  Optional WARL bits must be declared from project support, not assumed.
+- `landing` crosses M-mode setup with S/U entry, LPE clear/set, valid/absent
+  landing pads and matching/mismatching nonzero labels. It checks software-check
+  cause and the landing-pad fault code.
+- `shadow` checks S/U push/pop, mismatched return values, read-only page recovery,
+  ordinary-page rejection, Bare-mode rejection and normal-store rejection on
+  shadow-stack pages. The small Sv39 fixture lives in this module. It does not
+  edit or replace the MMU campaign. The independent Stack model checks pointer
+  changes and mismatch atomicity. Programs check the architectural SSP and
+  actual pushed values through SSPOPCHK.
+
+Examples include `sstc-h.json` and `envcfg-h.json` for H profiles. These remain
+RV64 campaigns. RV32 split timer accesses, all extension-state gates, complete
+virtualization transitions, interrupted landing-pad sequences and guest shadow
+stacks remain open. No C1 or DUT result is inferred from a native Spike pass.

@@ -1,0 +1,5 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "shadow",
+  "isa": "rv64ima_zicsr_zifencei_zimop_zicfiss"
+}
