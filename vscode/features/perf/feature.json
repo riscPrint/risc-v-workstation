@@ -4,7 +4,8 @@
   "description": "Show saved rvw perf results.",
   "activationEvents": [
     "onCommand:perf.open",
-    "onView:perf.results"
+    "onView:perf.results",
+    "onCommand:perf.pipeline"
   ],
   "contributes": {
     "commands": [
@@ -35,6 +36,10 @@
       {
         "command": "perf.evidence",
         "title": "Performance: Open Selected Evidence"
+      },
+      {
+        "command": "perf.pipeline",
+        "title": "Performance: Open Pipeline Window"
       }
     ],
     "views": {
@@ -76,6 +81,11 @@
           "command": "perf.trace",
           "when": "view == perf.results",
           "group": "results"
+        },
+        {
+          "command": "perf.pipeline",
+          "when": "view == perf.results",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -116,7 +126,8 @@
   },
   "tests": {
     "unit": [
-      "test/model.test.ts"
+      "test/model.test.ts",
+      "test/pipeline.test.ts"
     ]
   }
 }

@@ -47,6 +47,7 @@
     "onCommand:navigation.loads",
     "onCommand:perf.open",
     "onView:perf.results",
+    "onCommand:perf.pipeline",
     "onCommand:project.refresh",
     "onCommand:project.open",
     "onView:project.results",
@@ -218,6 +219,10 @@
       {
         "command": "perf.evidence",
         "title": "Performance: Open Selected Evidence"
+      },
+      {
+        "command": "perf.pipeline",
+        "title": "Performance: Open Pipeline Window"
       },
       {
         "command": "project.refresh",
@@ -494,6 +499,11 @@
           "command": "perf.trace",
           "when": "view == perf.results",
           "group": "results"
+        },
+        {
+          "command": "perf.pipeline",
+          "when": "view == perf.results",
+          "group": "navigation"
         },
         {
           "command": "project.refresh",
