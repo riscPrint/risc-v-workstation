@@ -119,6 +119,14 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             'Source env.sh. Use --install FEATURES for missing tools.')
     except OSError as exc:
         add('native', 'error', str(exc), 'Set RVW_HOME to the workstation checkout.')
+    if 'formal' in selected and os.environ.get('RVW_SLANG'):
+        from rvw.formal.slang_capability import sva_unavailable
+        try:
+            reason = sva_unavailable(os.environ['RVW_SLANG'])
+            add('yosys-slang.clocked_sva', 'inconclusive' if reason else 'ready',
+                reason or 'Clocked SVA probe passed.', 'scripts/install.sh --with-formal' if reason else '')
+        except (OSError, RuntimeError) as exc:
+            add('yosys-slang.clocked_sva', 'error', str(exc), 'scripts/install.sh --with-formal')
     result['backends'] = []
     capabilities = dict(sim=['build', 'run'], **{'riscv-gcc': ['elf_build'],
                         'cosim': ['reference_comparison'], 'formal': ['formal_checks'],

@@ -9,6 +9,7 @@ import pytest
 
 from rvw.common.proc import run_group
 from rvw.formal.sva import validate_sources
+from rvw.formal.slang_capability import sva_unavailable
 
 
 @pytest.mark.parametrize('body', [
@@ -55,6 +56,9 @@ CASES = {
 def test_native_semantics(tmp_path, construct, negative, engine):
     if not os.environ.get('RVW_SLANG') or not shutil.which('sby'):
         pytest.skip('native tests need RVW_SLANG, Yosys, SBY and solvers')
+    reason = sva_unavailable(os.environ['RVW_SLANG'])
+    if reason:
+        pytest.skip(reason)
     source = tmp_path / 'top.sv'
     expr = CASES[construct][negative]
     body = f'count != 3 || ({expr})' if negative else f'count < 7 && ({expr})'
@@ -138,6 +142,9 @@ def test_native_frontend_boundary_without_local_guard(tmp_path, body, accepted):
     plugin = os.environ.get('RVW_SLANG')
     if not plugin or not shutil.which('yosys'):
         pytest.skip('needs source-built native slang')
+    reason = sva_unavailable(plugin)
+    if reason:
+        pytest.skip(reason)
     source = tmp_path / 'top.sv'
     source.write_text(f'module top(input clk,a,b); assert property (@(posedge clk) {body}); endmodule')
     result = run_group(['yosys', '-Q', '-T', '-m', plugin, '-p', f'read_slang --top top {source}'],
