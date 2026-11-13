@@ -8,13 +8,14 @@ def register(subparsers):
     parser.add_argument("config")
     parser.add_argument("trace")
     parser.add_argument("--max-cycles", type=int, default=1_000_000)
+    parser.add_argument("--effective-config", help="project-owned effective configuration snapshot")
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(func=command)
 
 
 def command(args):
     try:
-        result = run(args.config, args.trace, args.max_cycles)
+        result = run(args.config, args.trace, args.max_cycles, getattr(args, "effective_config", None))
     except (ValueError, OSError, KeyError, UnicodeError) as exc:
         print(json.dumps({"error": str(exc)}))
         return 2

@@ -687,8 +687,8 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 ### `rvw ooo`
 
 ```text
-usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--json] [--project PROJECT]
-    config trace
+usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--effective-config
+    EFFECTIVE_CONFIG] [--json] [--project PROJECT] config trace
 ```
 
 ### `rvw perf`
@@ -1692,6 +1692,14 @@ Starts a background job: no.
 Run native lint and structural CDC/RDC. Retain waivers and unrun checks. No signoff.
 
 Arguments: `settings` (required).
+
+Starts a background job: yes.
+
+### `ooo_run`
+
+Predict committed-path OoO timing. Accuracy remains inconclusive.
+
+Arguments: `config` (required), `trace` (required), `max_cycles`, `effective_config`.
 
 Starts a background job: yes.
 

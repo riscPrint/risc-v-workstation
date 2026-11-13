@@ -112,7 +112,7 @@ def test_reject_invalid_stream_and_config():
     with pytest.raises(ValueError, match="source register"):
         simulate([op((32,))], cfg())
     with pytest.raises(ValueError, match="latency"):
-        replace(cfg(), latencies={"branch": 1})
+        replace(cfg(), latencies={"vector": 1})
 
 
 def test_cli_error_and_success(tmp_path, capsys):

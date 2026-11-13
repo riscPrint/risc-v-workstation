@@ -2853,6 +2853,22 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core timing configuration snapshots
+
+`rvw.ooo-run/1` accepts optional timing policies for per-class issue counts,
+integer physical-register capacity, committed-path branch recovery and traced
+address disambiguation. These remain fixed-latency experiments. They do not
+supply RTL accuracy evidence or model wrong-path resource use.
+
+An optional `rvw.ooo-effective/1` snapshot contains `source_revision`, `config`,
+`parameters`, `extraction_keys` and `required_structures`. `parameters` must
+match every normalized model setting. Each setting needs an extraction key.
+Unsupported required structures are errors. `configuration_status` becomes
+`snapshot_checked` only after this comparison. `configuration_evidence` holds
+the snapshot SHA-256, revision, selected config and extraction keys. Exporter
+correctness and current RTL agreement remain unverified. `accuracy_status`
+remains `inconclusive`. Without a snapshot the configuration stays `unchecked`.
+
 ### Experimental trace-driven OoO timing reports
 
 `rvw ooo CONFIG TRACE --max-cycles N --json` is a separate native timing
@@ -2860,11 +2876,11 @@ experiment. It does not use gem5 or emit `rvw.arch-run/1`.
 CONFIG is explicit JSON with positive integer `fetch_width`, `fetch_entries`,
 `rename_width`, `rob_entries`, `issue_width`, `issue_entries`, `load_entries`,
 `store_entries`, `commit_width`, and a nonempty `latencies` map. Map keys are
-`alu`, `multiply`, `divide`, `load` and `store`; values are positive integer
+`alu`, `multiply`, `divide`, `load`, `store`, `branch` and `jump`; values are positive integer
 cycles. Unknown or missing fields are errors. Only configured classes can run.
 
 The input is complete single-hart C2. Traps, interrupts, external events,
-branches, jumps, atomics, fences, privileged, FP and vector operations are
+atomics, fences, privileged, FP and vector operations are
 unsupported. End status must be `pass`. C2 cycles do not enter prediction.
 The entire instruction stream defines the region. There is no ROI slicing.
 
