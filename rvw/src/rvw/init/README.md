@@ -67,7 +67,7 @@ Files: `rvw.toml` (with `[query] build = ["./rvw/build-db.sh"]` and
 `db = "rvw/out/design.db"`), `rvw/build-db.sh` (an explicit `rvw query
 build-hdl` command; `$RVW` selects the `rvw` executable), `rvw/run.sh` (C1
 launcher: `info` works; `build` compiles the design with Verilator and
-`rvw/sim/harness.cpp`, through GHDL+Yosys for VHDL and firtool for Chisel;
+`rvw/sim/harness.cpp`, through standalone GHDL synthesis for VHDL and firtool for Chisel;
 `run` exits 2). The build creates its output directory before Verilator runs.
 It passes an absolute harness path to the generated makefile. Build does not
 require an earlier query build. Other files are `rvw/sim/harness.cpp` (compiles for any top, maps nothing,
@@ -218,3 +218,8 @@ The plain HDL build forces make to recompile native objects. Make does not
 track changed compiler flags as object dependencies. This prevents a new
 identity from being attached to an old binary. A project launcher can skip a
 build only when its saved complete input identity is unchanged.
+
+VHDL simulation builds use `ghdl --synth --out=verilog`. This avoids the
+Yosys plugin ABI for simulation. Database extraction still needs a matching
+GHDL Yosys plugin. Set `RVW_GHDL_PLUGIN` to a rebuilt plugin if a bundled
+plugin reports invalid memory-cell parameters. See `scripts/build-ghdl-plugin.py`.
