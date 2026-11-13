@@ -40,11 +40,15 @@ The tested riscv-tests revision is `d7e86f701b929b5d801f8cda1a4871ab05f452bb`.
 
 ## Evidence status
 
-Implementation is in progress. An intermediate revision passed all 50 RV32UI/M
-programs. After the PMP CSR fix, `rv32ui-p-add` strictly matched Spike for 508
-instructions with zero synchronizations. The final iterative-divider revision
-is under validation. Formal proof, timing correlation, fault results and a
-committed gate remain unqualified. No whole-core proof is claimed.
+The native core passes all 50 RV32UI/M programs, including `ma_data`.
+All 50 C2 traces strictly match Spike with zero synchronizations.
+The suite retired 18,154 instructions. The separate multiply/divide unit test
+passes 456 directed and seeded random vectors. See [the result table](isa-results.json)
+for per-program cycles and instruction counts and the tested source hashes.
+
+Formal proof, timing correlation, fault results and a committed gate remain
+unqualified. No whole-core proof is claimed.
+
 
 ## Decisions
 
