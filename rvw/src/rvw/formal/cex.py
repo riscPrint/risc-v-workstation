@@ -104,16 +104,25 @@ def _run(args):
     capture = Capture(out / 'inputs')
     saved = capture.file(source).copy
     original = json.loads(saved.read_text())
-    if original.get('schema') != 'rvw.formal/1' or original.get('flow') != 'bmc' or original.get('status') != 'fail':
-        raise ValueError('replay requires a failing rvw formal bmc result')
+    equivalence = original.get('schema') == 'rvw.formal.equiv/1' and original.get('status') == 'not_equivalent'
+    if not equivalence and (original.get('schema') != 'rvw.formal/1' or original.get('flow') != 'bmc' or original.get('status') != 'fail'):
+        raise ValueError('replay requires a failing BMC or a not_equivalent result')
     traces = original.get('traces', [])
     if not 0 <= args.trace_index < len(traces):
         raise ValueError('--trace-index is out of range')
-    trace = capture.file(root / traces[args.trace_index]).copy
-    model = capture.file(root / 'sby/model/design.il').copy
+    original_trace = root / traces[args.trace_index]
+    trace = capture.file(original_trace).copy
+    if equivalence:
+        from .equiv_cex import model_for_trace
+        model = capture.file(model_for_trace(root, original_trace)).copy
+    else:
+        model = capture.file(root / 'sby/model/design.il').copy
     # Preserve the source/check snapshots, the wrapper, and every declared restriction.
-    for item in original['input_snapshot']['files'] + original['input_snapshot']['artifacts']:
-        capture.file(root / item['path'])
+    snapshots = [(root, original['input_snapshot'])] if not equivalence else [
+        (root / side, row['input_snapshot']) for side, row in zip(('gold','gate'), original['inputs'])]
+    for directory, snapshot in snapshots:
+        for item in snapshot['files'] + snapshot['artifacts']:
+            capture.file(directory / item['path'])
     yosys = capture.tool('yosys')
     converter = capture.tool('vcd2fst', identity_only=True)
     import os
@@ -169,9 +178,12 @@ def _run(args):
         baseline = replay(trace, 'baseline')
         changed = replay(edited, 'edited')
         result.update(baseline=baseline, edited=changed)
+        if equivalence:
+            result['source_flow'] = 'equiv'
+            result['scope'] = 'failed closed output partition; simulation replay is not a proof'
         properties = {x['property'] for x in original.get('failures', [])}
         failures = [x for x in baseline['assertions'] if x['type'] == '$assert'
-                    and scope + '.' + '.'.join(p.lstrip('\\') for p in x['path']) in properties]
+                    and (equivalence or scope + '.' + '.'.join(p.lstrip('\\') for p in x['path']) in properties)]
         assumptions = [x for x in changed['assertions'] if x['type'] == '$assume']
         same = [x for x in changed['assertions'] if x['type'] == '$assert'
                 and any(x['path'] == f['path'] and x.get('src') == f.get('src') for f in failures)]

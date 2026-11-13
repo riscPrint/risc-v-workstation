@@ -2193,3 +2193,21 @@ recommendations and implicit extension dependencies are not expanded. Conditions
 inside an obligation are retained as text for its reviewed proof mapping.
 This report never grants full profile compliance. It always exits 3 for a valid
 report. MCP tool `formal_profiles` returns the same result.
+### Equivalence counterexample replay
+
+`rvw formal cex --result EQUIV_RUN --out REPLAY --emit-testbench` also accepts
+`rvw.formal.equiv/1` results with status `not_equivalent`. The selected witness
+must belong to a failed native eqy partition. The command captures that
+partition's exact RTLIL model and both source snapshots. It uses the existing
+Yosys simulation, waveform editing, reduction and testbench export paths.
+
+`source_flow: "equiv"` marks these reports. A `reproduced` disposition requires
+an observed failing assertion in the baseline simulation and the same assertion
+in the edited simulation, with no assumption failure. The result remains
+`inconclusive` as proof evidence. Exit 1 retains the existing replay contract.
+Generated testbench files are not a separate reproduction result.
+
+The replay targets the failed closed output partition. Its input names come
+from the captured miter, such as `__pi_a`. It does not map a witness into a
+project simulator or claim a whole-core reproduction. Source files are retained
+for inspection. Missing models or a nonfailed partition are refused.
