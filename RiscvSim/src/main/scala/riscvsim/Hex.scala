@@ -4,6 +4,12 @@ package riscvsim
 object Hex {
   def apply(v: BigInt): String = "0x" + v.toString(16)
   def apply(v: Long): String = "0x" + java.lang.Long.toHexString(v)
+  /** Convert a signed hardware field to an unsigned XLEN bit pattern. */
+  def signExtend(value: BigInt, bits: Int, xlen: Int): BigInt = {
+    val low = value & ((BigInt(1) << bits) - 1)
+    val signed = if (low.testBit(bits - 1)) low - (BigInt(1) << bits) else low
+    signed & ((BigInt(1) << xlen) - 1)
+  }
   def parse(s: String): BigInt = {
     val t = s.trim.toLowerCase
     if (t.startsWith("0x")) BigInt(t.drop(2), 16) else BigInt(t)

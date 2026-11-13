@@ -97,7 +97,8 @@ These are native RTL simulations. Core sources were not changed.
 | NaxRiscv `rv64ima` instruction profile | 98 | 98 | 98 | 0 | 98 | 0 |
 | NaxRiscv `rv64imasu` instruction profile, M boot | 98 | 98 | 98 | 0 | 98 | 0 |
 | PicoRV32 RV32IM mapped Verilog profile | 51 | 51 | 50 | 1 | 50 | 1 |
-| Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+| Bundled BOOM small instructions | 378 | 378 | 376 | 2 | 0 | 2 |
+| Bundled BOOM small privileged | 232 | 232 | 196 | 36 | 0 | 36 |
 
 The two Vex instruction profiles use a reduced CSR boot. They retain every
 selected test body and signature check. They do not establish standard Sm
@@ -149,7 +150,7 @@ first differences, build inputs and minimal reproductions:
 - [VexiiRiscv supervisor profile](../examples/vexiiriscv/rvw/act4-supervisor/README.md).
 - [NaxRiscv instruction profile](../examples/naxriscv/rvw/act4/README.md).
 - [PicoRV32 mapped Verilog profile](../examples/picorv32/rvw/act4/README.md).
-- [BOOM configuration only](../rvw/configs/act4/boom/README.md).
+- [BOOM native execution and findings](../rvw/configs/act4/boom/README.md).
 
 ## Functional coverage and holes
 
@@ -187,9 +188,10 @@ and [VexiiRiscv reports](../examples/vexiiriscv/rvw/act4-functional/README.md).
 
 ## Limits
 
-The BOOM profile has configuration and unit tests only. Its ACT4 compilation,
-elaboration, simulation and reference comparison were NOT RUN. Historical
-BOOM results do not qualify it. No full Python suite or GitHub CI run is
+The BOOM profile built and ran 610 programs. Its 38 execution failures
+include 10 RVFI monitor errors. All strict Spike comparisons stop at
+unspecified reset FCSR state. No complete strict match is earned.
+See the [BOOM profile](../rvw/configs/act4/boom/README.md) and its findings. No full Python suite or GitHub CI run is
 claimed for this work. riscv-dv and TestRIG are separate integrations.
 
 The [RV64 machine record](../examples/vexiiriscv/rvw/act4-64m/README.md)

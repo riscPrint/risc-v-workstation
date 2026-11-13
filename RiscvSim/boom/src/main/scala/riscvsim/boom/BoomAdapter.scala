@@ -59,7 +59,7 @@ object BoomAdapter extends CoreAdapter {
 
   private def report(key: ModelKey, work: File): SpinalReport[BoomTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
-    val formal = new File(boomDir, "formal")
+    val formal = RiscvFormalModel.prepare(new File(boomDir, "formal"), new File(work, "rvfi-models"))
     val spinal = SpinalBoomConfig()
     if (key.probes) spinal.debugComponents += classOf[_root_.boom.exu.Rob]
     spinalprobes.Probe.enabled(key.probes) { RiscvSimConfig.elaborate(key, work, spinal,
@@ -233,7 +233,7 @@ object BoomAdapter extends CoreAdapter {
       val tvalBits = trace.head.tval.getBitsWidth
       // BOOM's trace drives tval one cycle after exception/cause (csr.io.tval is already a
       // cycle late, and the trace registers it again), so a trap event waits a cycle for it.
-      def sext(v: BigInt, bits: Int = tvalBits): BigInt = if (v.testBit(bits - 1)) (v - (BigInt(1) << bits)) & ((BigInt(1) << 64) - 1) else v
+      def sext(v: BigInt, bits: Int = tvalBits): BigInt = Hex.signExtend(v, bits, 64)
       val csrs = rvfi.map(_ => trapCsrs(dut))
       val epcs = rvfi.map(_ => trapEpcs(dut))
       var levels = BigInt(-1)
@@ -332,7 +332,7 @@ object BoomAdapter extends CoreAdapter {
                 val (cause, tval, epc) = if (toS) (scause, stval, sepc) else (mcause, mtval, mepc)
                 // The cause registers have no write strobe: xepc must hold this instruction's PC,
                 // or the cause read here could be left from an earlier trap.
-                val pc = t.iaddr.toBigInt & ((BigInt(1) << 64) - 1)
+                val pc = sext(t.iaddr.toBigInt, t.iaddr.getBitsWidth)
                 val epcValue = sext(epc.toBigInt, epc.getBitsWidth)
                 if (epcValue != pc)
                   finish(Status.Assert, message = Some(f"ECALL/EBREAK at pc 0x${pc}%x: ${if (toS) "sepc" else "mepc"} " +

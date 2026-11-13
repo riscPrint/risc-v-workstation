@@ -22,8 +22,9 @@ def description(path):
     root = path.parent
     platform = Platform.load(None, root / data['platform'])
     wanted = isa_extensions(platform.isa, platform.xlen)
+    reference = isa_extensions(platform.reference_isa or platform.isa, platform.xlen)
     versions = data['extensions']
-    allowed = wanted | {'sm'} | {m.lower() for m in platform.privilege_modes if m != 'M'}
+    allowed = wanted | reference | {'sm'} | {m.lower() for m in platform.privilege_modes if m != 'M'}
     # Privileged option extensions are explicit project settings, never inferred from a core name.
     allowed |= set(data.get('privileged_extensions', []))
     if not wanted - {'zmmul', 'zaamo', 'zalrsc', 'zca', 'zcf', 'zcd'} <= set(versions):

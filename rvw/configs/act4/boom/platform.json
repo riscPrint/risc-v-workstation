@@ -2,7 +2,7 @@
   "name": "boom",
   "fcsr_reset": "unspecified",
   "xlen": 64,
-  "isa": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs_zicntr_zihpm",
+  "isa": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs",
   "reset_pc": "0x80000000",
   "ram": [
     {

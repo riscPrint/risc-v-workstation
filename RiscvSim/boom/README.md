@@ -208,3 +208,18 @@ Select ELFs from `tier_plan(load_config('boom'), 'quick', None)` and
 and ae_ptw for the windows. Reuse the first run's `sim/.cache` directory
 for another output directory. These checks use the private clone's
 simulation harness; they do not capture C2 for an independent Spike run.
+
+## Generic ACT4 suite, 2026-11-13
+
+| Set | Built/run | Latest C1 pass | Self-check/assert fail | RVFI error | Strict Spike matches |
+|---|---:|---:|---:|---:|---:|
+| RV64 instructions | 378 | 376 | 2 | 0 | 0 |
+| M/S/U and Sv39 | 232 | 196 | 26 | 10 | 0 |
+
+Instruction tests ran first. Two false REMW/REMUW checker failures pass
+on rerun after a generic model correction. Two false canonical-PC adapter
+assertions also pass after sign extension. The table counts unique ELFs.
+All 610 strict checks stop at unspecified reset FCSR state. No mask or
+synchronization was used. These counts do not establish qualification.
+See the [profile and exact regeneration commands](../../rvw/configs/act4/boom/README.md)
+and [failure triage with minimal programs](../../examples/boom/FINDINGS.md).

@@ -104,3 +104,16 @@ def test_all_applicable_uses_udb_metadata(tmp_path):
     p.write_text(json.dumps(data))
     with pytest.raises(ValueError, match='mutually exclusive'):
         selection(p)
+
+
+def test_reference_extensions_can_differ_from_trace_isa(tmp_path):
+    p, data = profile(tmp_path)
+    platform_path = tmp_path / 'platform.json'
+    platform = json.loads(platform_path.read_text())
+    platform['reference_isa'] = platform['isa'] + '_zicntr'
+    platform_path.write_text(json.dumps(platform))
+    data['extensions']['zicntr'] = '= 2.0'
+    p.write_text(json.dumps(data))
+    _, loaded, selected = description(p)
+    assert loaded.isa == platform['isa']
+    assert 'zicntr' in selected
