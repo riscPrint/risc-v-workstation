@@ -1,4 +1,4 @@
-/* Reduced CSR profile. Test bodies keep all of their checks. */
+/* Standard Sm bootstrap. Test bodies keep all of their checks. */
 #define STANDARD_SM_SUPPORTED
 /* Define the input state before the trap prolog exchanges mscratch. */
 #define RVMODEL_BOOT csrw mscratch,zero
