@@ -25,6 +25,17 @@
     },
     "decode": {
       "classpath_file": "../../out/vex-cp.txt"
+    },
+    "uvm": {
+      "composition": "compose.json",
+      "classpath_file": "../../out/vex-cp.txt",
+      "build_args": [
+        "-Drvw.soc.vex=true"
+      ],
+      "idle_inputs": {
+        "uart_serial_rxd": 1,
+        "plic_sources": 0
+      }
     }
   }
 }

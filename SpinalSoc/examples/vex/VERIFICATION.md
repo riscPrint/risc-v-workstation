@@ -22,7 +22,7 @@ once, then runs the APB VIP and register oracle on sampled peripheral pins.
 | protocol | yes | yes | inconclusive |
 | registers | yes | yes | inconclusive |
 | vip | yes | yes | inconclusive |
-| uvm | no | no | inconclusive |
+| uvm | yes | yes | pass |
 | connectivity | no | no | inconclusive |
 | decode | yes | yes | proven |
 | cdc_rdc | no | no | inconclusive |
@@ -42,5 +42,9 @@ separate consumer. Native Spinal fabric assertions were enabled. The real fabric
 prove` and Yices in three seconds. A decoder mutant changed the UART
 selection address from `0x10000000` to `0x10000200`. It failed the same
 proof in 1.9 seconds. This proof covers the fabric instance with the map
-windows. It excludes core and peripheral state. The pyuvm SoC environment,
-formal connectivity and a multi-domain lint run were NOT RUN. The single-clock program cannot qualify CDC or RDC.
+windows. It excludes core and peripheral state. The separate pyuvm test-master harness passed 17 known-reset reads.
+Its passive APB environment independently checked the same 17 reads across
+UART, CLINT, PLIC and finisher. Every MMIO bus was exercised. This harness
+uses the same device map and simple-bus ingress. It excludes CPU execution.
+A wrong UART LCR reset expectation failed the native bench. Formal
+connectivity and a multi-domain lint run were NOT RUN. The single-clock program cannot qualify CDC or RDC.

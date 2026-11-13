@@ -207,3 +207,12 @@ After a private build, set `decode.classpath_file` in `rvw soc verify` to run
 this target through `rvw formal prove`. The Vex SoC map proved all seven
 assertions on 2026-11-13. An incorrect UART decode address failed the proof.
 This is a fabric-instance proof, not complete SoC correctness.
+
+## Independent verification master
+
+`VerificationCore` is a test wrapper over the existing `SimpleCpuBus` bridge.
+It does not execute instructions. The pyuvm composed profile uses it to drive
+the complete peripheral fabric through an exported `stimulus` port. Optional
+`core.exports` lists the wrapper IO members to expose with a `core_` prefix.
+The normal bus, interrupt vector and debug-reset port stay under composer
+control. Production wrappers do not need to use this option.

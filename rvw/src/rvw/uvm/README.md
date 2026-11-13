@@ -147,3 +147,24 @@ The [SV VexRiscv example](../../../../Uvm/examples/vexriscv/sv/README.md)
 records two live program runs, a PC-corruption control and a clean
 same-revision C4 `accept` at `b17abae9`. It covers a fixed generated CPU image
 and a bounded program. It is not changed-core or full-ISA acceptance.
+## Composed peripheral environment
+
+`rvw uvm new --composition compose.json --out NEW_DIR` generates a pyuvm
+RAL bench without a design database. MCP `uvm_new` accepts `composition`.
+It replaces the core only in the generated test harness. Production sources
+and the selected composition file remain unchanged. The test wrapper uses
+`SimpleCpuBus` and the existing composer ingress. Optional core `exports`
+exposes its `stimulus` port. No CPU instructions run in this harness.
+
+The bench reads known register resets through the entire fabric. A RAL
+mirror checks the reads. One passive APB VIP monitor per MMIO region feeds
+an independent side-effect oracle. The bench requires a checked read and a
+transfer on every MMIO bus. Read-clear registers get a second read. W1C
+registers get a clear write and a checked read. Unknown-reset and autonomous
+registers need separate directed scenarios. This profile supports one clock.
+It does not qualify serial behavior, all bus traffic, IRQ delivery or a CPU.
+
+`rvw soc verify` can generate, build and run this bench. Supply a `uvm` entry
+with `composition`, `classpath_file`, optional `build_args` for the private
+library build, and explicit `idle_inputs` for board pins. The private
+SpinalSoc build runs under `sbt-soc`. Verilator assertions stay enabled.

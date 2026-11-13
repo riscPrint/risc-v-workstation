@@ -22,7 +22,7 @@ def compose(source, out, elf=None):
     keys(spec, required | {'domains'}, required)
     if spec['schema'] != 'rvw.soc-compose/1':
         raise ValueError('unsupported composition schema')
-    keys(spec['core'], {'class', 'bus'}, {'class', 'bus'})
+    keys(spec['core'], {'class', 'bus', 'exports'}, {'class', 'bus'})
     core = scala_name(spec['core']['class'])
     bus = spec['core']['bus']
     if bus not in ('apb3', 'axi4', 'axi4-lite', 'tilelink', 'simple'):
@@ -76,6 +76,13 @@ def compose(source, out, elf=None):
              'import spinal.lib.bus.amba3.apb._', 'import spinal.lib.bus.misc.SizeMapping',
              'import rvwsoc._', 'class ComposedSoc extends Component {',
              f'  val core = new {core}()', '  core.debugReset := False']
+    exports = spec['core'].get('exports', [])
+    if not isinstance(exports, list):
+        raise ValueError('core exports must be a list of IO member names')
+    for port in exports:
+        if not isinstance(port, str) or not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*', port) or port in ('bus', 'interrupts', 'debugReset'):
+            raise ValueError('invalid exported core port')
+        lines += [f'  val core_{port} = core.io.{port}.toIo()']
     if byte_writes:
         lines += ['  val fabricBus = BusIngress(core.bus)']
     for name, domain in domains.items():
