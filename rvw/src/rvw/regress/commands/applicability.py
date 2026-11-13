@@ -84,4 +84,4 @@ def register(commands):
 def mcp_tools():
     return [ToolSpec('regress_plan', 'List generated suite applicability from explicit project capabilities. Missing declarations exclude suites. No DUT evidence is earned.',
                      schema({'features': {'type': 'string'}, 'catalog': {'type': 'string'}}, ['features']),
-                     plan, annotations={'readOnlyHint': True})]
+                     plan, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=())]

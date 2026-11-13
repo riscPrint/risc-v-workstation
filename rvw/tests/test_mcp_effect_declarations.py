@@ -73,3 +73,12 @@ def test_architecture_declarations_keep_inventory_gap_explicit(registry):
     assert registry.tools['csim_budget'].native_tools == ('native csim',)
     assert registry.tools['workloads_list'].native_tools == ()
     assert registry.tools['workloads_verify'].native_tools == ('Spike', 'QEMU')
+
+
+def test_regression_and_coverage_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith(('regress_', 'cov_'))]
+    assert tools and all(tool.side_effects for tool in tools)
+    assert {tool.name for tool in tools if tool.native_tools is None} == {'cov_mutate'}
+    assert 'MCY' in registry.tools['cov_mutate'].side_effects
+    assert registry.tools['regress_privilege_build'].native_tools == ('RISC-V GCC',)
+    assert registry.tools['cov_report'].native_tools == ()
