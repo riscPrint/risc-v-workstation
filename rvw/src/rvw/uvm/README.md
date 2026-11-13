@@ -71,3 +71,38 @@ engine support. The profile does not bypass those requirements.
 
 The [live VexRiscv binding](../../../../Uvm/examples/vexriscv/README.md#native-results-on-2026-11-13)
 has native Spike results for six RV32UI programs and six PC-corruption runs.
+
+## C4 adapter for a compiled SV bench
+
+```sh
+rvw uvm gate-config --build /tmp/bench-build --source-repo /path/to/bench-repo \
+ --out /tmp/uvm-core.toml --seeds 1 3
+rvw regress gate --core /tmp/uvm-core.toml --tier quick \
+ --base-rev COMMIT --cand-rev COMMIT --json
+```
+
+The existing C4 runner executes this as a build-suite job. The adapter runs
+all declared UVM tests and seeds. A build alone cannot pass that job.
+The runner captures the source revision, Python environment, adapter code,
+UVM source inputs, pinned library, build metadata and simulation executable.
+The adapter binds its C1 build claim to source hashes, executable hash,
+test matrix, seed matrix and the pinned Accellera identity.
+
+Every source input must be within `source_repo`. Each selected revision
+must match the compiled input bytes. A source change requires a fresh build.
+The initial bridge accepts pure SV sources with no custom `build_args`.
+DPI and custom native libraries require additional dependency capture and
+are refused. Failed, empty or incomplete matrices cannot pass. Existing C4
+dirty-source and incomplete-identity checks still apply.
+
+The native regression's full C1/C3 logs remain in the output path printed
+in the C1 build stdout. Standalone `uvm regress` retains its incomplete
+source identity. The C4 wrapper supplies the additional captured identity.
+This is acceptance for the selected bench, source and matrix. The adapter
+fixture is a component test. Its acceptance does not qualify a CPU or ISA.
+
+Native validation on 2026-11-13 built the adapter fixture on Verilator
+5.049. A clean committed same-revision gate returned `accept`. Base and
+candidate each ran `adapter_smoke` at seeds 1 and 3 through one build-suite
+job. The tested implementation commit was `6665411b`. This checks the gate
+integration. It does not test acceptance of a changed CPU revision.

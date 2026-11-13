@@ -71,3 +71,14 @@ Auto selection requires one recognized top-level bus. Output includes its
 port inventory, clock domains and project scenario hook. Profile generation
 is structural evidence only. Unbound and empty scenarios must fail. The
 default single-APB pyuvm path retains its automatic reset-read bench.
+
+## C4 compiled SV bench bridge
+
+`uvm gate-config` generates a standard regression build-suite config for a
+pure SV compiled bench. The build job must execute the complete declared
+test/seed matrix. Its adapter capture claim `build.uvm_identity_sha256`
+binds the source hashes, executable hash, matrix and pinned UVM identity.
+All source inputs must be within the selected source repository and match
+the selected revision. Existing C4 source and input capture rules apply.
+Standalone UVM C3 identity remains incomplete. The bridge does not grant
+CPU or ISA qualification from a component fixture.
