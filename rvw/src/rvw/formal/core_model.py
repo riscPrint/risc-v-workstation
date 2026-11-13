@@ -14,6 +14,7 @@ def query(model, top, depth, property_name=None):
         if property_name not in available:
             raise ValueError("property missing from captured top: " + property_name)
         accessor += " " + available[property_name]
+    assumptions = {index: name for index, name in re.findall(r"^; yosys-smt2-assume (\d+) (\S+)", model, re.M)}
     constraints = {}
     lines = [model]
     def add(label, term, kind, sample):
@@ -22,7 +23,8 @@ def query(model, top, depth, property_name=None):
     for step in range(depth):
         lines.append(f'(declare-fun s{step} () |{top}_s|)')
         add(f'hierarchy_{step}', f'(|{top}_h| s{step})', 'hierarchy', step)
-        add(f'assumptions_{step}', f'(|{top}_u| s{step})', 'assumptions', step)
+        if not assumptions:
+            add(f'assumptions_{step}', f'(|{top}_u| s{step})', 'assumptions', step)
         # Yosys uses is to distinguish initial from later samples.
         add(f'initial_flag_{step}', f'(|{top}_is| s{step})' if step == 0 else
             f'(not (|{top}_is| s{step}))', 'initial_flag', step)
@@ -30,6 +32,11 @@ def query(model, top, depth, property_name=None):
             add('initial_state', f'(|{top}_i| s0)', 'initial_state', step)
         else:
             add(f'transition_{step}', f'(|{top}_t| s{step-1} s{step})', 'transition', step)
+    for index, name in assumptions.items():
+        term = '(and ' + ' '.join(f'(|{top}_u {index}| s{i})' for i in range(depth)) + ')'
+        label = 'assumption_' + index
+        add(label, term, 'assumption', None)
+        constraints[label]['cell'] = name
     failures = ' '.join(f'(not (|{accessor}| s{i}))' for i in range(depth))
     add('failure', f'(or {failures})', 'any_assertion_failure', None)
     return '\n'.join(lines), {'schema': 'rvw.smt-bindings/1', 'property_id': f'{top}:{property_name or "all_assertions"}',
@@ -46,7 +53,7 @@ def export(result, out, capture, timeout, depth=None, property_name=None):
     source = capture.file(root.parent / 'sby/model/design.il').copy
     yosys = capture.tool('yosys')
     metadata, smt = out / 'model.json', out / 'model.smt2'
-    script = f'read_rtlil {json.dumps(str(source))}; chformal -lower; write_json {json.dumps(str(metadata))}; write_smt2 -wires {json.dumps(str(smt))}'
+    script = f'read_rtlil {json.dumps(str(source))}; flatten; chformal -lower; write_json {json.dumps(str(metadata))}; write_smt2 -wires {json.dumps(str(smt))}'
     proc = run_group([str(yosys.path), '-Q', '-T', '-p', script], capture=True, timeout=timeout)
     (out / 'export.log').write_text((proc.stdout or '') + (proc.stderr or ''))
     if proc.returncode:

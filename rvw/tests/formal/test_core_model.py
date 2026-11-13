@@ -63,3 +63,11 @@ def test_native_conflicting_environment(tmp_path):
     report = json.loads((out / 'result.json').read_text())
     assert report['status'] == 'inconclusive' and report['environment_core']
     assert report['bounded_model']['feasibility'] == 'unsat'
+
+
+def test_assumptions_group_all_samples_by_captured_cell():
+    model = '; yosys-smt2-assume 0 guard source\n; yosys-smt2-assume 1 unused source\n'
+    text, binding = query(model, 'top', 2)
+    assert '(and (|top_u 0| s0) (|top_u 0| s1))' in text
+    assert binding['constraints']['assumption_0']['cell'] == 'guard'
+    assert 'assumptions_0' not in binding['constraints']

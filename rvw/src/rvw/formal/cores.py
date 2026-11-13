@@ -124,9 +124,11 @@ def run(args):
     if exported:
         feasibility, conflict = solve(background, {k: v for k, v in assertions.items() if k != "failure"})
     if feasibility is not None and feasibility != "sat":
+        environment = extract(background, {k: v for k, v in assertions.items() if k != "failure"}, solve) if feasibility == "unsat" else None
         report = {"status": "inconclusive", "solver_status": feasibility, "labels": [],
                   "minimal": False, "reason": "bounded environment is not shown feasible",
-                  "environment_core": conflict}
+                  "environment_core": environment["labels"] if environment else conflict,
+                  "environment_minimal": environment["minimal"] if environment else False}
     else:
         report = extract(background, assertions, solve)
     report.update(schema='rvw.solver-core/1', property_id=bindings['property_id'],
@@ -135,6 +137,9 @@ def run(args):
                   constraints={k: bindings['constraints'][k] for k in report['labels']},
                   scope='One SMT query. Not an unbounded RTL proof or a coverage exclusion.')
     if exported:
+        selected = set(report.get('environment_core', report['labels']))
+        report['assumptions'] = [dict(binding, label=label, in_core=(label in selected if report["status"] == "pass" or "environment_core" in report and report["solver_status"] == "unsat" else None))
+            for label, binding in bindings['constraints'].items() if binding.get('kind') == 'assumption']
         report['bounded_model'] = {'top': exported['top'], 'depth': exported['depth'], 'feasibility': feasibility,
             'scope': 'Aggregate bounded assertion query from captured SBY RTLIL, including AIGER engine runs. Core units are sample constraints, not logic cells. No exclusion authority.'}
     if args.db:
