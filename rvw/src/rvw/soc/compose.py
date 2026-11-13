@@ -1,0 +1,116 @@
+"""Generate a bounded APB3 SoC from a validated software map and explicit binders."""
+import hashlib
+import struct
+import json
+import re
+from pathlib import Path
+
+from .model import dumps, generate, keys, load, number
+
+
+def scala_name(value):
+    if not isinstance(value, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z_0-9]*(\.[A-Za-z_][A-Za-z_0-9]*)*', value):
+        raise ValueError('invalid qualified Scala class name')
+    return value
+
+
+def compose(source, out, elf=None):
+    source = Path(source).resolve()
+    spec = json.loads(source.read_text())
+    required = {'schema', 'map', 'core', 'clock_hz', 'reset', 'devices'}
+    keys(spec, required, required)
+    if spec['schema'] != 'rvw.soc-compose/1':
+        raise ValueError('unsupported composition schema')
+    keys(spec['core'], {'class', 'bus'}, {'class', 'bus'})
+    core = scala_name(spec['core']['class'])
+    if spec['core']['bus'] != 'apb3':
+        raise ValueError('first composition profile requires a unified APB3 master')
+    if type(spec['clock_hz']) is not int or spec['clock_hz'] <= 0 or spec['reset'] not in ('sync_high', 'async_high'):
+        raise ValueError('positive clock_hz and sync_high or async_high reset required')
+    obj = load(source.parent / spec['map'])
+    if obj['address_bits'] != 32 or obj['platform']['xlen'] != 32:
+        raise ValueError('first composition profile requires RV32 and 32 address bits')
+    if not isinstance(spec['devices'], dict):
+        raise ValueError('devices must map every region name to a binder')
+    if set(spec['devices']) != {r['name'] for r in obj['regions']}:
+        raise ValueError('every region needs exactly one device binder')
+    images = {}
+    elf_hash = None
+    if elf:
+        raw = Path(elf).read_bytes()
+        elf_hash = hashlib.sha256(raw).hexdigest()
+        if len(raw) < 52 or raw[:7] != b'\x7fELF\x01\x01\x01':
+            raise ValueError('ELF must be little-endian RV32')
+        header = struct.unpack_from('<16sHHIIIIIHHHHHH', raw)
+        if header[2] != 243 or header[9] != 32:
+            raise ValueError('ELF must use RISC-V and 32-byte program headers')
+        for i in range(header[10]):
+            pos = header[5] + i * 32
+            if pos + 32 > len(raw):
+                raise ValueError('truncated ELF program header')
+            kind, offset, vaddr, base, filesz, size, flags, align = struct.unpack_from('<IIIIIIII', raw, pos)
+            if kind != 1 or not size:
+                continue
+            matches = [r for r in obj['regions'] if r['kind'] == 'ram' and r['base'] <= base and base + size <= r['base'] + r['size']]
+            if len(matches) != 1 or filesz > size or offset + filesz > len(raw):
+                raise ValueError('ELF load segment must fit one memory region and input')
+            r = matches[0]
+            if r['size'] > 1024 * 1024:
+                raise ValueError('bounded word-memory profile supports at most 1 MiB per window')
+            buf = images.setdefault(r['name'], bytearray(r['size']))
+            offset_in_region = base - r['base']
+            buf[offset_in_region:offset_in_region+size] = raw[offset:offset+filesz] + bytes(size - filesz)
+    lines = ['package generated', 'import spinal.core._', 'import spinal.lib._',
+             'import spinal.lib.bus.amba3.apb._', 'import spinal.lib.bus.misc.SizeMapping',
+             'import rvwsoc._', 'class ComposedSoc extends Component {',
+             f'  val core = new {core}()', '  core.debugReset := False']
+    targets, irq = [], []
+    memories = []
+    for r in obj['regions']:
+        name, size = r['name'], r['size']
+        if name in ('core', 'io'):
+            raise ValueError('region name conflicts with generated top member')
+        if size < 4 or size >= 1 << 32:
+            raise ValueError('APB3 windows must be 4 bytes to 2 GiB')
+        binder = spec['devices'][name]
+        keys(binder, {'type', 'class'}, {'type'})
+        if binder['type'] in ('ram', 'rom'):
+            if r['kind'] != 'ram' or ('w' in r['permissions']) != (binder['type'] == 'ram'):
+                raise ValueError('memory binder must match map permissions and kind')
+            if size > 1024 * 1024:
+                raise ValueError('bounded word-memory profile supports at most 1 MiB per window')
+            image = images.get(name, b'').rstrip(b'\0')
+            image += bytes((-len(image)) % 4)
+            values = ','.join(f'BigInt("{int.from_bytes(image[i:i+4], "little"):x}",16)' for i in range(0, len(image), 4))
+            lines += [f'  val {name} = new WordMemory({size.bit_length()-1}, {size//4}, {str(binder["type"] == "rom").lower()}, Seq({values}))']
+            memories.append(dict(name=name, width=32, depth=size//4, read_only=binder['type']=='rom'))
+        elif binder['type'] == 'project':
+            if r['kind'] != 'mmio':
+                raise ValueError('project peripheral needs an MMIO region')
+            lines += [f'  val {name} = new {scala_name(binder["class"])}()']
+        else:
+            raise ValueError('unsupported binder type')
+        targets.append(f'({name}.io.bus, SizeMapping(BigInt("{r["base"]:x}",16), BigInt("{size:x}",16)))')
+    for cause in range(32):
+        sources = [f'{i["region"]}.io.irq' for i in obj['interrupts'] if i['cause'] == cause]
+        irq += [f'  core.interrupts({cause}) := ' + (' || '.join(sources) or 'False')]
+    lines += irq + ['  Fabric.connect(core.bus, Seq(' + ','.join(targets) + '))', '}',
+                    'object Generate extends App {',
+                    f'  SpinalConfig(targetDirectory = args.headOption.getOrElse("rtl"), defaultClockDomainFrequency = FixedFrequency({spec["clock_hz"]} Hz), defaultConfigForClockDomains = ClockDomainConfig(resetKind = {"SYNC" if spec["reset"] == "sync_high" else "ASYNC"})).generateVerilog(new ComposedSoc)', '}']
+    target = Path(out)
+    if target.exists():
+        raise ValueError('output directory must be new')
+    # Validate software exports before publishing generated source.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        generate(source.parent / spec['map'], tmp)
+    target.mkdir(parents=True)
+    files = generate(source.parent / spec['map'], target)
+    (target / 'ComposedSoc.scala').write_text('\n'.join(lines) + '\n')
+    manifest = dict(schema='rvw.soc-composed/1', profile='apb3-rv32-word',
+                    clock_hz=spec['clock_hz'], reset=spec['reset'], memories=memories,
+                    map_sha256=hashlib.sha256((source.parent / spec['map']).read_bytes()).hexdigest(),
+                    composition_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), elf_sha256=elf_hash,
+                    validation='generated_only', bus_ports=['core.bus'] + [r['name']+'.io.bus' for r in obj['regions']])
+    (target / 'composition.json').write_text(dumps(manifest))
+    return dict(status='generated', files=sorted(files + ['ComposedSoc.scala', 'composition.json']), profile=manifest['profile'])
