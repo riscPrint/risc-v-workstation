@@ -80,3 +80,13 @@ and notices. IDL expressions and extension conditions remain data.
 legalization and side-effect overrides. It resolves field positions to
 `rvw.csr/1` before the existing generator runs. Unsupported alias, hypervisor
 and debug execution models are errors. Selection is not compliance evidence.
+
+## AIA field-layout supplement
+
+`rvw.csr-catalog/1` retains the base UDB revision and can expose a `supplements`
+list with independently pinned sources. Supplemental rows retain their own
+revision, source hashes and license notices. The AIA supplement fills the
+26 recorded layout gaps without changing the base UDB data. Definition flag
+`requires_environment_model` prevents simple CSR selection from discarding
+interrupt-controller side effects. Field availability does not establish
+behavioral or privilege coverage.
