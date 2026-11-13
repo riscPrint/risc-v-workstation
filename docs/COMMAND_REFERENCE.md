@@ -1528,15 +1528,15 @@ usage: rvw wave list [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw wave changes [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--dec] [--project
-    PROJECT] wave regex
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--dec] [--db DB]
+    [--project PROJECT] wave regex
 ```
 
 ### `rvw wave sample`
 
 ```text
 usage: rvw wave sample [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--indexed] --at AT [--dec] [--project PROJECT] wave regex
+    [--indexed] --at AT [--dec] [--db DB] [--project PROJECT] wave regex
 ```
 
 ### `rvw wave cut`
@@ -1551,8 +1551,8 @@ usage: rvw wave cut [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw wave find [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--project PROJECT] wave
-    expr
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--db DB] [--project
+    PROJECT] wave expr
 ```
 
 ### `rvw wave edges`
@@ -1574,8 +1574,8 @@ usage: rvw wave why [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw wave seq [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--project PROJECT] wave
-    sequence
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--db DB] [--project
+    PROJECT] wave sequence
 ```
 
 ### `rvw wave txn`
@@ -2587,7 +2587,7 @@ Starts a background job: no.
 
 Read changes of matching signals within a time window. Returns {changes, truncated, limit}; limit defaults to 10000 (0 = no limit) and truncated says more matched.
 
-Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`.
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`, `db`.
 
 Starts a background job: no.
 
@@ -2619,7 +2619,7 @@ Starts a background job: no.
 
 Find when an expression over several signals holds: first time, last interval and all intervals in a window. Syntax: && || ! == < + & bit selects sig[7:0], rose(s), fell(s), changed(s), stable(s), known(s); x/z make the result unknown, which never counts as true.
 
-Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `expr` (required), `limit`.
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `expr` (required), `db`, `limit`.
 
 Starts a background job: no.
 
@@ -2659,7 +2659,7 @@ Starts a background job: no.
 
 Read matching signal values at a wave time, cycle Nc, or end.
 
-Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `at` (required), `dec`.
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `at` (required), `dec`, `db`.
 
 Starts a background job: no.
 
@@ -2667,7 +2667,7 @@ Starts a background job: no.
 
 Match a clocked sequence 'a ##1 b ##[1:3] c' (SVA-like delays, ##[n:$] open) at each rising clock edge where the first expression holds; returns matches, failures and pending starts.
 
-Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `sequence` (required), `limit`.
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `sequence` (required), `db`, `limit`.
 
 Starts a background job: no.
 
