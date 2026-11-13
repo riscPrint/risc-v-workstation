@@ -89,3 +89,23 @@ def test_assertion_peak_and_active_snapshot_merge_semantics():
     assert counts['assertion:active']==1 and counts['assertion:pass']==4
     with pytest.raises(ValueError,match='active assertion snapshots'):
         merge_exchanges([report(3,1),report(5,2)])
+
+
+@pytest.mark.fast
+def test_classified_functional_reports_merge_measured_counts():
+    first = functional()
+    first['groups']['operand']['classifications'] = [
+        {'bin': ['zero'], 'status': 'legal', 'reason': 'Declared operand', 'count': 3},
+        {'bin': ['one'], 'status': 'legal', 'reason': 'Declared operand', 'count': 0}]
+    second = copy.deepcopy(first)
+    second['groups']['operand']['hits'][0]['count'] = 4
+    second['groups']['operand']['classifications'][0]['count'] = 4
+    merged = merge_exchanges([first, second])
+    zero = next(row for row in merged['rows'] if row['metadata']['bin'] == ['zero'])
+    assert zero['count'] == 7
+    assert zero['metadata']['classifications'][0]['count'] == 7
+    assert zero['metadata']['classifications'][1]['count'] == 0
+    assert import_ucis(export_ucis(merged)) == merged
+    second['groups']['operand']['classifications'][0]['status'] = 'illegal'
+    with pytest.raises(ValueError, match='incompatible'):
+        merge_exchanges([first, second])

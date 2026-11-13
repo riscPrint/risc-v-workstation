@@ -144,7 +144,14 @@ def merge_exchanges(reports):
     if not reports:
         raise ValueError('no exchange inputs')
     first=json.loads(canonical(reports[0]))
-    signature=lambda r:canonical([r['context'],[{k:v for k,v in row.items() if k!='count'} for row in r['rows']]])
+    def signature(report):
+        rows=json.loads(canonical(report['rows']))
+        for row in rows:
+            row.pop('count')
+            if row['kind']=='functional':
+                for classification in row['metadata'].get('classifications',[]):
+                    classification.pop('count',None)
+        return canonical([report['context'],rows])
     identity=signature(first)
     for other in reports[1:]:
         if signature(other)!=identity:
@@ -157,6 +164,15 @@ def merge_exchanges(reports):
                     raise ValueError('incompatible active assertion snapshots')
             else:
                 left['count']+=right['count']
+    # Classification counts repeat the measured bin counters; they are not semantics.
+    counts={(row['metadata']['group'],canonical(row['metadata']['bin'])):row['count']
+            for row in first['rows'] if row['kind']=='functional'}
+    for row in first['rows']:
+        if row['kind']=='functional':
+            for classification in row['metadata'].get('classifications',[]):
+                if 'count' in classification:
+                    classification['count']=counts.get(
+                        (row['metadata']['group'],canonical(classification['bin'])),0)
     return first
 
 
