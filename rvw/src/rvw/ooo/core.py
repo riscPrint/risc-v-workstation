@@ -31,6 +31,7 @@ class Config:
     branch_speculation: bool = False
     branch_prediction: str = "sequential"
     issue_order: str = "out_of_order"
+    issue_queue_policy: str = "associative"
     memory_policy: str = "ordered"
     store_policy: str = "ordered"
     dependence_entries: int = 1024
@@ -45,6 +46,10 @@ class Config:
     memory_rename: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        if self.issue_queue_policy not in ("associative", "compacting"):
+            raise ValueError("unsupported issue_queue_policy")
+        if self.issue_queue_policy == "compacting" and (self.issue_entries % self.rename_width or self.issue_entries < self.rename_width):
+            raise ValueError("compacting issue entries must contain whole rename lines")
         from rvw.csim.config import validate as validate_components
         if not isinstance(self.components, dict):
             raise ValueError("components must be an object")
@@ -215,6 +220,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     execution = Execution(config.execution)
     translation = Translation(config.translation) if config.translation else None
     attribution = Attribution(config.commit_width)
+    from .issue_window import IssueWindow
+    issue_window = IssueWindow(config.issue_entries, config.rename_width) if config.issue_queue_policy == "compacting" else None
     rob, fetched, waiting = deque(), deque(), []
     writers, events, peaks = {}, Counter(), Counter()
     pc = retired = loads = stores = allocated = allocated_float = 0
@@ -247,6 +254,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 if producer is None: writers.pop(reg, None)
                 else: writers[reg] = producer
             events['wrong_path_squashed'] += len(removed)
+            if issue_window:
+                issue_window.drop(removed)
             wrong_fetched.clear()
             wrong_parent = None
         for entry in rob:
@@ -434,11 +443,14 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if speculating:
                 events["correct_path_speculative_issues"] += 1
         events["dependency_blocked"] += dependency_blocked
+        if issue_window:
+            issue_window.advance(cycle)
         for _ in range(config.rename_width):
             if wrong_parent is None or not wrong_fetched or wrong_fetched[0][1] > cycle:
                 break
             op = wrong_fetched[0][0]
             if (len(rob) >= config.rob_entries or len(waiting) >= config.issue_entries or
+                (issue_window is not None and issue_window.full()) or
                 execution.queue_full(op.kind, waiting) or
                 (op.kind == 'load' and loads >= config.load_entries) or
                 (op.kind == 'store' and stores >= config.store_entries) or
@@ -455,6 +467,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if op.kind == 'store' and len(op.sources) == 2 and op.sources[1]:
                 entry.data_producer = writers.get(op.sources[1])
             rob.append(entry); waiting.append(entry)
+            if issue_window:
+                issue_window.append(entry)
             loads += op.kind == 'load'; stores += op.kind == 'store'
             events['wrong_path_renamed'] += 1
         for _ in range(config.rename_width):
@@ -473,7 +487,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             bypass = eliminated is not None or fused
             alias = memory_source(op, rob) if config.memory_rename else None
             blocked = ("rob_full" if len(rob) >= config.rob_entries else
-                       "issue_full" if not bypass and len(waiting) >= config.issue_entries else
+                       "issue_full" if not bypass and (len(waiting) >= config.issue_entries or (issue_window is not None and issue_window.full())) else
                        "distributed_issue_full" if not bypass and execution.queue_full(op.kind, waiting) else
                        "load_full" if op.kind == "load" and loads >= config.load_entries else
                        "store_full" if op.kind == "store" and stores >= config.store_entries else
@@ -513,6 +527,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 events["fused_immediates" if fused else eliminated + "_eliminated"] += 1
             else:
                 waiting.append(entry)
+                if issue_window:
+                    issue_window.append(entry)
             loads += op.kind == "load"
             stores += op.kind == "store"
         if frontend:
@@ -622,7 +638,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows", "issue_window"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     engine += Path(__file__).with_name("native_c2.c").read_bytes()
     engine += Path(__file__).with_name("native_decode.c").read_bytes()
