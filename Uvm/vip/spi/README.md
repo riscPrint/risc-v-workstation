@@ -54,3 +54,10 @@ in-flight sends during reset.
 
 UVM runtime builds, cocotb RTL runs and DUT FIFO tests were not run.
 Issue #204 remains open for native runtime and project FIFO qualification.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

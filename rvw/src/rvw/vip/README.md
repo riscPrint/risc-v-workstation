@@ -25,3 +25,7 @@ Each protocol owns its pin and transaction types. A callback connects
 observed transactions to a project scoreboard. There is no inferred SoC
 pass and no simulator dependency at package import. Native smoke results
 apply only to their declared profile and fixture.
+
+See `Uvm/vip/rtl/README.md` for bounded good/bad cocotb RTL campaigns for
+all agent modules. This evidence establishes real RTL adapter execution
+within the stated fixture scope. It does not qualify every protocol mode.

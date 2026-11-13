@@ -57,3 +57,10 @@ concurrent overlapping writes must supply its own visibility policy.
 SV and Python share the declared operations, but each runtime still needs
 qualification. UVM runtime builds and cocotb RTL runs were not run.
 Lint and Python cycle tests do not prove native subordinate behavior.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

@@ -33,3 +33,10 @@ Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_i2c.py -q`.
 Lint the four SV files with the pinned UVM package and Verilator.
 UVM runtime builds and cocotb RTL runs were not run for this change.
 Issue #205 remains open for reactive roles and runtime qualification.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

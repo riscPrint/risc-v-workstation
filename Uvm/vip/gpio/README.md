@@ -30,3 +30,10 @@ direction. It does not model tri-state resolution.
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_gpio.py -q`.
 Lint all four SV files against the pinned UVM library.
 UVM runtime builds and cocotb RTL simulation were not run for this change.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.
