@@ -292,3 +292,21 @@ unimplemented WARL bit need not retain the written value. Raw F/V encodings
 permit absent-extension tests without requiring that extension in the compiler
 or reference ISA. Only four masks per profile were selected for the short
 native smoke run. Those samples do not establish results for all 1152 programs.
+
+## Complete MML permission table
+
+`kind = "epmp-matrix"` expands all 16 L/R/W/X encodings from the pinned
+Smepmp 1.0 MML truth table. It checks reads, writes and instruction fetch in
+M/S/U, plus MPRV effective S/U data accesses. The 208 programs include shared
+code, shared data, inaccessible, mode-only and ordinary permission rules.
+Stores check their data before changing privilege. The bootstrap uses shared
+code and data rules so it does not mask target permissions. RLB is cleared
+before each probe. No base-PMP result counts as an MML result.
+
+All 208 programs pass short native Spike self-checks. This covers the MML
+permission matrix in the reference model. It does not replace reset/lock
+observation, all security-policy transition cases or DUT qualification.
+
+The MML matrix bootstrap requires `epmp.rlb_supported = true`. RLB is optional
+in Smepmp, so the generator does not treat its absence as a conformance failure.
+Programs check MML set and RLB clear before each permission probe.

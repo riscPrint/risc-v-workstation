@@ -4055,6 +4055,12 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+`kind = "epmp-matrix"` selects the complete 16-encoding MML permission table.
+Each scenario records `expected_allowed` and its pinned Smepmp specification
+URL. Separate bins cross L/R/W/X with actual/effective privilege and access
+kind. RLB is cleared before the access probe. Existing C1 and strict-reference
+requirements still apply.
+
 `kind = "disabled-matrix"` selects `disabled.feature` and all 64 requested
 six-control masks. Profiles cover disabled FS/VS state and absent F/V/S
 features. `requested_controls` in each scenario records the requested mstatus
