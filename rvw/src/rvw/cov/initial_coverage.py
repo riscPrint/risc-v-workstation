@@ -11,6 +11,7 @@ from .campaign_artifacts import execution_identity
 @captured.command
 def measure(paths, platform, manifest, source_root, core=None, config=None):
     traces, records, native = [], [], None
+    run_results = {}
     for path in paths:
         path = Path(path).resolve()
         captured.sha256(path)
@@ -35,7 +36,8 @@ def measure(paths, platform, manifest, source_root, core=None, config=None):
                         'elf_sha256':captured.sha256(elf), 'trace_sha256':captured.sha256(trace),
                         'instructions':comparison['instructions'], 'comparison':comparison})
         traces.append(trace)
+        run_results[str(Path(trace).resolve())] = path
     if not traces:
         raise ValueError('initial_results must name at least one C1 result')
-    coverage = functional(traces, platform=platform, manifest=manifest, source_root=source_root)
+    coverage = functional(traces, run_results=run_results, platform=platform, manifest=manifest, source_root=source_root)
     return {'records':records, 'execution_identity':native, 'coverage':coverage}

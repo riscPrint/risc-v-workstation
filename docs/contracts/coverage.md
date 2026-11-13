@@ -79,3 +79,14 @@ their names for compatibility. These source links can also name VHDL files.
 Each line group retains the native metric and point denominator. A source
 link does not establish that an individual original-language statement ran.
 Stripped models need explicit maps. Missing locations remain unmapped.
+
+## Functional run qualification
+
+Functional reports use `qualification_policy: c1-pass-complete-c2-v1`.
+Only a conclusive C1 pass with its bound, complete passing C2 trace earns
+`groups` hits. The ELF identity and retirement count must agree.
+The reader finds `result.json` beside the trace. Library callers can give
+`run_results`, a map from absolute trace paths to C1 result paths.
+Other observations appear in `unqualified` and never close bins.
+Each trace records its qualification and end status. Merge refuses reports
+without the qualification policy. Closure uses only qualified `groups`.

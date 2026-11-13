@@ -29,12 +29,12 @@ def test_capture_groups_and_hart_windows(tmp_path):
     trace = tmp_path / 'trace.jsonl'
     trace.write_text('\n'.join(json.dumps(r) for r in rows))
     report = functional([trace], config)
-    result = report['groups']
-    assert result['vm_mode_access_result']['hits'][0]['bin'] == ['sv39','load','success']
-    assert result['vm_pointer_control']['hits'][0]['bin'] == ['menvcfg',2,'M']
-    assert result['vm_two_stage']['hits'][0]['bin'] == [8,9,'load']
-    assert result['iommu_stage_access']['hits'][0]['bin'] == ['second','store','fault']
-    assert result['dependency_fixture']['hits'] == [dict(bin=[False],count=2)]
+    result = report['unqualified']
+    assert result['vm_mode_access_result'][0]['bin'] == ['sv39','load','success']
+    assert result['vm_pointer_control'][0]['bin'] == ['menvcfg',2,'M']
+    assert result['vm_two_stage'][0]['bin'] == [8,9,'load']
+    assert result['iommu_stage_access'][0]['bin'] == ['second','store','fault']
+    assert result['dependency_fixture'] == [dict(bin=[False],count=2)]
 
 
 def test_no_capture_no_hits(tmp_path):

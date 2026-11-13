@@ -6,7 +6,7 @@ from rvw.cov.cli import execute_json
 def test_closure_ranks_declared_tests_without_claiming_hits(tmp_path):
     r = tmp_path / 'report.json'
     c = tmp_path / 'candidates.json'
-    r.write_text(json.dumps({'schema': 'rvw.functional-coverage/1', 'groups': {
+    r.write_text(json.dumps({'schema': 'rvw.functional-coverage/1', 'qualification_policy': 'c1-pass-complete-c2-v1', 'groups': {
         'sem_add_rs1': {'holes': [['signed_min'], ['zero']]}}}))
     c.write_text(json.dumps({'schema': 'rvw.coverage-candidates/1', 'tests': [
         {'id': 'boundary', 'targets': ['sem_add*'], 'priority': 2, 'reason': 'Exercises integer boundaries'},

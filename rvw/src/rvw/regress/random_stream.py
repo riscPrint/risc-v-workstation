@@ -58,7 +58,7 @@ def verify(elf, results, platform, coverage_plan=None, test_id=None):
         return dict(evidence, status='mismatch', comparison=comparison)
     if not complete(comparison, run) or comparison.get('applied_masks'):
         return dict(evidence, status='cosim_error', comparison=comparison)
-    report = functional([trace], config=coverage_plan, platform=platform)
+    report = functional([trace], run_results={str(Path(trace).resolve()): run.path/'result.json'}, config=coverage_plan, platform=platform)
     return dict(evidence, status='pass', comparison=comparison, coverage=report,
                 trace_sha256=digest(trace))
 

@@ -30,6 +30,8 @@ def closure(report_path, candidates_path, exclusions=None):
     holes = []
     schema = report.get('schema')
     if schema == 'rvw.functional-coverage/1':
+        if report.get('qualification_policy') != 'c1-pass-complete-c2-v1':
+            raise ValueError('functional report has no run qualification')
         for group, data in report['groups'].items():
             for value in data['holes']:
                 holes.append({'id': group + ':' + json.dumps(value, separators=(',', ':')),
