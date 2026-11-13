@@ -69,7 +69,7 @@ integer fault;
 initial begin
   if(!$value$plusargs("FAULT=%d",fault)) fault=0;
   INIT
-  reset=1; expected_data=64'h1;
+  reset=(fault!=6); expected_data=64'h1;
   c0_a_ready=1;c0_b_ready=1;c0_c_ready=1;c0_d_ready=1;c0_e_ready=1;
   c1_a_ready=1;c1_b_ready=1;c1_c_ready=1;c1_d_ready=1;c1_e_ready=1;
   c0_a_size=3;c0_b_size=3;c0_c_size=3;c0_d_size=3;
@@ -95,10 +95,12 @@ end
                        '-Wno-fatal', '--Mdir', str(obj), '-o', 'smoke', result['monitor'], result['bind'], str(top)],
                       timeout=100, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert build.returncode == 0, build.stderr[-5000:]
-    for fault in range(6):
+    for fault in range(7):
         run = run_group(['nice', '-n', '10', str(obj/'smoke'), f'+FAULT={fault}'], cwd=tmp_path, timeout=5,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if fault:
+            if fault == 6:
+                assert "requires reset before clocks" in run.stdout+run.stderr
             assert run.returncode != 0 and 'RVW_DONE' not in run.stdout
             assert 'RVW' in run.stdout or 'rvw' in run.stdout + run.stderr
         else:

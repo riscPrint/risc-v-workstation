@@ -1025,3 +1025,18 @@ the reference connection. The default writer still uses the Scala transport.
 Sample all retirement, trap and CSR signals for an edge before calling the
 transport. The DPI callback can yield simulation time. Reading another signal
 after that call can combine values from different edges.
+
+## Typed cache bind from a real database
+
+`TypedCacheBindSpec` elaborates two real Spinal TileLink client ports with a
+`CacheFiber`. SpinalDB extracts the C6 database. The test selects channel
+signals by their emitted identities and runs `rvw memory tilelink-bind`.
+Verilator compiles the generated monitor and bind beside the cache RTL.
+The seeded run checks owner data intervention, shared reads, racing acquires,
+releases, GrantAcks and bounded service under backpressure.
+
+Run only this small test with `../scripts/with-lock.sh sbt nice -n 10 sbt
+"testOnly riscvsim.TypedCacheBindSpec"` from this directory. Set
+`RVW_TYPED_TLC_OUT` to a fresh directory to keep the C6 database and artifacts.
+The build uses SpinalDB only in the test configuration. The generated relation
+checks finite permission safety. It does not establish full protocol refinement.

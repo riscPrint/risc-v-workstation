@@ -26,7 +26,8 @@ def wrap(inner, fields, source_bits, sink_bits, address_bits, data_bits, size_bi
             opcode = f'{prefix}_opcode'
             has_data = f'{opcode}[0]' if channel == 'c' else f'({opcode}==5)'
             error = f'{prefix}_corrupt' if channel == 'c' else f'({prefix}_corrupt || {prefix}_denied)'
-            code += f'''integer {prefix}_count;
+            code += f'''reg {prefix}_reset_seen = 0;
+integer {prefix}_count;
 integer {prefix}_age;
 reg [{line_bits-1}:0] {prefix}_buffer;
 reg [{line_bits-1}:0] {prefix}_full;
@@ -36,9 +37,12 @@ always @* begin
   {prefix}_full={prefix}_buffer;
   {prefix}_full[{prefix}_count*{data_bits} +: {data_bits}]={data};
 end
-always @(posedge clock) begin
+always @(posedge clock or posedge reset) begin
   if(reset) begin
+    {prefix}_reset_seen<=1;
     {prefix}_count<=0; {prefix}_age<=0; {prefix}_buffer<=0; {prefix}_header<=0;
+  end else if(!{prefix}_reset_seen) begin
+    if($realtime>0) $fatal(1,"rvw TL-C collector requires reset before clocks");
   end else begin
     if({prefix}_count!=0) begin
       {prefix}_age<={prefix}_age+1;

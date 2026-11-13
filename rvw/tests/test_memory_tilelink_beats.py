@@ -28,7 +28,7 @@ integer fault,beat;
 initial begin
   if(!$value$plusargs("FAULT=%d",fault)) fault=0;
   INIT
-  reset=1; expected_data=512'hPATTERN;
+  reset=(fault!=7); expected_data=512'hPATTERN;
   c0_a_ready=1;c0_b_ready=1;c0_c_ready=1;c0_d_ready=1;c0_e_ready=1;
   c1_a_ready=1;c1_b_ready=1;c1_c_ready=1;c1_d_ready=1;c1_e_ready=1;
   c0_a_size=6;c0_b_size=6;c0_c_size=6;c0_d_size=6;
@@ -89,10 +89,12 @@ end
                        '--Mdir', str(obj), '-o', 'smoke', result['monitor'], result['bind'], str(top)],
                       timeout=100, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert build.returncode == 0, build.stderr[-5000:]
-    for fault in range(7):
+    for fault in range(8):
         run = run_group(['nice', '-n', '10', str(obj/'smoke'), f'+FAULT={fault}'], cwd=tmp_path, timeout=5,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if fault:
+            if fault == 7:
+                assert "requires reset before clocks" in run.stdout+run.stderr
             assert run.returncode != 0 and 'RVW_DONE' not in run.stdout, (fault, run.stdout, run.stderr)
             if fault == 4:
                 assert 'header changed' in run.stdout+run.stderr

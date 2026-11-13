@@ -94,7 +94,7 @@ must collect complete dependencies to earn an axiomatic result.
 ## Generated TileLink-C channel monitor
 
 `rvw memory tilelink-bind --database design.sqlite --profile tlc.json --out monitors`
-selects two `spinal.lib.bus.tilelink.Bus` bundles from SpinalDB and writes a
+selects two typed TileLink `Bus` bundles from SpinalDB and writes a
 SystemVerilog monitor and bind. Existing output files are not overwritten.
 The project profile uses `rvw.tlc-bind/1`. It supplies `source_bits`, `sink_bits`,
 `address_bits`, `data_bits`, `size_bits`, `line_bytes`, hex `line_address`,
@@ -105,7 +105,12 @@ outside this profile.
 `clients` has two rows with `bundle_id` and a `signals` map from channel field
 name to SpinalDB signal ID. `FIELDS` in `tilelink_bind.py` lists every required
 field and width. Both bundles and all mapped signals must belong to the same
-bind component. The generator checks bundle types, signal widths and pruning.
+bind component. The generator checks bundle types, signal widths and pruning. C6 can store
+the simple type name `Bus`. For that form, set `bus_family` to
+`spinal-tilelink`. The generator requires `ChannelA` through `ChannelE` below
+each bus and checks each mapped signal against its exact bus member path.
+Qualified `spinal.lib.bus.tilelink.Bus` records remain supported. All opcode
+and param carriers have three bits, including the B and D param fields.
 The profile also supplies signal IDs for active-high `clock` and `reset` and
 `expected_data`. Set `oracle_kind` to `independent-stimulus`. Expected data must
 come from a project stimulus/reference signal. It must not come from channel
@@ -121,15 +126,27 @@ responses, N/B/T permission safety, complete-line data and bounded outstanding
 ages. Set `trunk_dirty` only if the project model treats every Trunk copy as
 dirty. That policy requires data on a shrinking Trunk acknowledgment/release.
 Same-cycle shrinks precede grants in the observer. Reset clears all monitor
-state. Independent client resets and stalled-payload stability are not checked.
+state. The monitor accepts reset asynchronously. It ignores initial evaluation
+at time zero until reset arrives. A later clock without a prior reset is an
+error. Independent client resets and stalled-payload stability are not checked.
 Error responses are rejected by this success-only profile.
 
-The native test uses a scripted two-client channel fixture and a typed SQL
-fixture. Verilator elaborates the generated bind and runs five injected defects:
-early grant, stale grant data, lost GrantAck, missing grant and stale intervention
-data. This is monitor runtime evidence. It is not a real home/cache refinement
-proof or a production design-database integration result. Real coherent-fabric campaigns and independent protocol-model cross-checks
-remain open.
+The permission check is generated from the exhausted finite model in
+`SpinalChecks/coherence/model.py`. The result records its SHA256, state and
+edge counts and finite permission projection. The projection hides data,
+channels and request history. It is a permission safety check. It does not
+prove that channel RTL refines the full protocol model.
+
+`TypedCacheBindSpec` extracts a real C6 database from two Spinal TileLink
+client ports and a real `CacheFiber`. It generates the monitor and bind from
+that database, compiles both with the cache RTL, and runs seeded coherent
+traffic with backpressure. `RVW_TYPED_TLC_OUT` can retain the database, profile,
+RTL and generated monitor in a fresh directory. `RVW_TYPED_TLC_CORRUPT=1`
+changes a backing-memory byte before the first grant. Run that negative case
+in a separate JVM because a native monitor fatal stops the process.
+Scripted channel tests also check incomplete messages, changed headers,
+stale data, missing acknowledgments and missing reset. These runs do not
+prove full coherence refinement or qualify a production multicore design.
 
 ## Queued directory experiments
 
