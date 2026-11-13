@@ -237,3 +237,11 @@ reference check needs the reviewed `--smoke-platform`.
 `not_run`. `full_c1` and `full_c2` stay `inconclusive`: this bounded program set
 does not establish all-option or all-program conformance. A failed replay
 command is an error even if it leaves a passing result file.
+
+## Wired scaffold inputs
+
+`rvw init --wire-build` declares standard external Spinal launcher inputs and
+RTL identity capture. Custom adapter inputs must extend this declaration.
+The generated project owns `Elaboration.config` and `Elaboration.top()`.
+Simulation and database generation use this entry. Formal and lint use the
+RTL recorded in that database. Both RTL identity hooks remain required.
