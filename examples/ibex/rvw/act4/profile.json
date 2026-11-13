@@ -121,7 +121,7 @@
       false,
       false
     ],
-    "WFI_U_MODE": false,
+    "WFI_U_MODE": true,
     "ARCH_ID_VALUE": 22,
     "MTVEC_BASE_ALIGNMENT_VECTORED": 256,
     "UXLEN": [

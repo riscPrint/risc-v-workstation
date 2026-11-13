@@ -292,7 +292,7 @@
     "clock_frequency": 1000000000,
     "instructions_per_tick": 2,
     "wfi_is_nop": false,
-    "wfi_available_to_user_mode": false,
+    "wfi_available_to_user_mode": true,
     "max_time_to_wait": 10,
     "event_selectors": []
   },
