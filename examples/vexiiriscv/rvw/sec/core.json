@@ -83,5 +83,6 @@
         "covers": "cond,jump,ijump,call,icall,ret"
       }
     }
-  ]
+  ],
+  "soc": "soc-sec.json"
 }

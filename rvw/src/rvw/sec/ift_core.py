@@ -55,7 +55,7 @@ def netlist(binding, work):
     return design
 
 
-def run(binding_path, policy_path, elf, out, mode='precise', work=None):
+def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None):
     out = Path(out).resolve(); out.mkdir(parents=True, exist_ok=False)
     binding = rtl.load(binding_path)
     policy = json.loads(Path(policy_path).read_text())
@@ -72,8 +72,14 @@ def run(binding_path, policy_path, elf, out, mode='precise', work=None):
         for name in (s['signal'], s.get('when')):
             if name and (name not in mod['ports'] or mod['ports'][name]['direction'] != 'output'):
                 raise ValueError(f'sink {name} must be a top-level output port')
+    from . import bindings
+    policy['memory_regions'] = bindings.memory(policy, soc or binding.get('soc'))
+    q = {c['connections']['Q'][0] for c in mod['cells'].values() if c['type'] == '$_DFF_P_'}
+    flops = {n for n, d in mod['netnames'].items() if d['bits'] and all(b in q for b in d['bits'])}
+    csrs = bindings.csr_signals(policy.get('csrs', []), mod['netnames'], binding.get('csr_signals'), flops, set(mod['ports']))
+    sources = list(policy.get('sources', [])) + [n for n in csrs.values() if n not in policy.get('sources', [])]
     words = regions(policy, elf, binding)
-    shadow_policy = dict(clock=binding['clock'], reset=binding['reset'], sources=policy.get('sources', []),
+    shadow_policy = dict(clock=binding['clock'], reset=binding['reset'], sources=sources,
                          sinks=[s['signal'] for s in sinks], allow_memory_sources=bool(words))
     text, prefix = shadow(design, top, shadow_policy, mode)
     widths = {n: (p['direction'], len(p['bits'])) for n, p in mod['ports'].items()}
@@ -98,5 +104,9 @@ def run(binding_path, policy_path, elf, out, mode='precise', work=None):
     complete = status == 'pass' and end > 0
     return publish(out, 'ift-core', sorted(findings.values(), key=lambda f: f['first_cycle']), complete,
                    mode=mode, core=binding.get('name'), elf=str(elf), rtl_status=status,
-                   secret_words=len(words), sources=policy.get('sources', []), checked_cycles=end,
+                   secret_words=len(words), sources=sources, csrs=csrs, memory_regions=policy['memory_regions'],
+                   tainted_memory=dict(words=len(result['tainted_words']),
+                                       propagated=[[hex(binding['ram_base']+4*i), hex(m)]
+                                                   for i, m in result['tainted_words'] if i not in words][:64]),
+                   checked_cycles=end,
                    path_kind='dynamic Boolean taint at top-level sinks; no source-level provenance')
