@@ -86,6 +86,7 @@ def test_no_guessed_isa_or_non_spinal(tmp_path, core):
     assert scaffold(core, isa='rv64im')['xlen'] == 64
 
 
+@pytest.mark.fast
 def test_doctor_reports_remaining_actions(core, monkeypatch):
     scaffold(core)
     actual = check.run_group
@@ -99,7 +100,8 @@ def test_doctor_reports_remaining_actions(core, monkeypatch):
     assert checks['project']['status'] == 'ready'
     assert checks['adapter.info']['status'] == 'ready'
     assert checks['adapter.build_run']['status'] == 'inconclusive'
-    assert checks['suite.smoke']['status'] == 'error'
+    assert checks['suite.smoke']['status'] == 'warning'
+    assert result['workflows']['regress:smoke']['status'] == 'not_ready'
     assert checks['gate.inputs']['status'] == 'inconclusive'
     assert result['exit_code'] == 1
     result = check.diagnose(project=core, smoke_elf=core / 'missing.elf')
