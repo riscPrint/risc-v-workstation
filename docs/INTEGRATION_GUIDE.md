@@ -1056,42 +1056,27 @@ It keeps a nonzero exit code. Read the [measured record](../SpinalSoc/examples/v
 for the exact scopes. A new core, peripheral or clock configuration needs
 fresh evidence.
 
-The original UART profile remains a subset. The additive `uart16550-full`
-profile passed 240 directed checks and 28 UART VIP transmit frames at seed 31,
-both as native RTL and through its Spinal wrapper. It covers the register
-surface, FIFOs, interrupts, modem status, divisor, framing, DMA requests and
-loopback. This is a directed development result, not complete compliance.
-The combined Vex table still uses the original subset. The full-register
-profile has this separate UART campaign. See [the UART example](../SpinalSoc/examples/uart16550/README.md).
+The added profiles have these finite development results at seed 31. Each
+example documents its commands and limits. The [compact measurement record](../SpinalSoc/examples/MEASURED_RESULTS.json)
+retains observations and hashes of local captures. It is not a complete replay
+bundle or a committed-revision acceptance result.
 
-The [SPI flash example](../SpinalSoc/examples/flash/README.md) boots the real
-composed core from a ROM stub. The stub reads the payload through SPI, copies
-it into RAM and jumps to it. At seed 31, the 16-byte payload passed in 5,150
-cycles and 573 retired instructions. A corrupted payload bit produced
-finisher code 3 in 5,130 cycles. Each run checked 20 SPI wire words. Only the
-ROM was preloaded. The generated RAM image is empty, and a read-only runtime
-observation checked RAM word zero before boot. This is component simulation
-evidence. C1 acceptance, XIP, program/erase modeling and hardware boot are unrun.
+| Capability | Measured result | Limit |
+|---|---|---|
+| [Full-register 16550 UART](../SpinalSoc/examples/uart16550/README.md) | Native and Spinal wrapper: 240 checks, 28 TX frames | The original subset stays available; combined Vex verification still uses it |
+| [SPI flash boot](../SpinalSoc/examples/flash/README.md) | Initially empty RAM; 16-byte payload; 5,150 cycles and 573 retired; corrupt bit rejected with code 3 | ROM copy path; no XIP, erase/program or hardware boot |
+| [Native AXI4 and TileLink crossbars](../SpinalSoc/examples/fabric/README.md) | Two masters × two targets; 68 AXI and 48 TileLink client transactions; parallel banks exercised | TileLink Get/Put only; no BCE, atomics or fairness proof |
+| [AXI width conversion](../SpinalSoc/examples/fabric/README.md) | 32→64 and 64→32 bits; 36 client transactions each; early errors and response stalls checked | No exclusive accesses or native 128-bit conversion result |
+| [CPU and DMA](../SpinalSoc/examples/fabric/README.md) | Shared RAM; 2,135 cycles, 236 CPU retirements, 33 DMA write/read pairs | Directed component simulation |
+| [Optional SMP host](../SpinalSoc/examples/smp/README.md) | Both harts pass in 133 cycles; 21/22 retirements; two RTL GPIO accesses each | The standalone SMP path stays unchanged; external RAM/atomic service retained |
+| [External Verilog IP](../SpinalSoc/examples/import/README.md) | Pinned OpenCores UART through TOML/Wishbone import: 23 checks, two TX frames, one RX frame on Icarus | Declared ports and two register descriptions; no IP-XACT bus or full UART qualification |
+| [Composed debug](../SpinalSoc/examples/debug/README.md) | Existing rv32im_dmi/rv32im_jtag configs; halt/resume in 8 DMI accesses; public TAP CLI 9/9 pass | ndmreset needs a project reset controller; complete debug compliance and composed OpenOCD/GDB unrun |
 
-The [native fabric example](../SpinalSoc/examples/fabric/README.md) supplies
-N-master/M-target AXI4 and Get/Put TileLink components. Two-master/two-target
-tests passed with independent VIP endpoint models. AXI conversion passed
-from 32 to 64 bits and from 64 to 32 bits. A composed CPU and DMA-style master
-passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read pairs.
-The [optional SMP host](../SpinalSoc/examples/smp/README.md) keeps the existing
-cacheless hart and RAM interfaces. It routes 32-bit peripheral accesses through
-the composer. Host-owned RAM keeps its software map without a duplicate RTL
-memory. The [external-IP importer](../SpinalSoc/examples/import/README.md) uses an
-explicit TOML port/bus/register description. A pinned OpenCores UART passed
-23 checks, two transmit frames and one receive frame through the composer
-at seed 31 on Icarus. The [composed debug profiles](../SpinalSoc/examples/debug/README.md)
-reuse rv32im_dmi and rv32im_jtag. The native DMI test checked halt/resume in
-8 accesses. The public TAP CLI passed all nine checks through the real JTAG
-pins. The ndmreset request needs a project reset controller. Complete debug
-compliance and composed OpenOCD/GDB are unrun.
-The existing standalone SMP example is unchanged. The optional two-hart test
-passed in 133 cycles at seed 31. Retirements were 21 and 22. Each hart
-completed two RTL GPIO accesses and a RAM store/load before its own tohost.
+A fresh combined run after the implementation returned aggregate `findings`
+and exit code 3. All seven consumers generated and ran. None remained
+inconclusive. Structural findings still require review. This is not CDC/RDC
+acceptance or complete SoC qualification.
+
 ## Write properties for your core
 
 Keep signal bindings beside your elaboration code. Do not put core signal names

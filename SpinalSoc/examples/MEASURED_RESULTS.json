@@ -1,0 +1,332 @@
+{
+  "date": "2026-11-13",
+  "seed": 31,
+  "evidence_scope": "Local development observations; no complete reusable input capture, C1 acceptance, hardware qualification or transfer to other configurations.",
+  "vex_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+  "smp_dependencies": "Pinned private cached classes; core and Spinal source rebuild NOT RUN.",
+  "external_uart_revision": "2b0ad80d0968f201f95506854ad769c8a44abe2b",
+  "records": {
+    "uart_native": {
+      "local_capture": "SpinalSoc/out/full-uart-final/uart-checks.json",
+      "capture_sha256": "6f0a171675c544695dd28d41eaa0840d952ab951433e6686de5cdf55fd29c6ab",
+      "observations": {
+        "checks": 240,
+        "tx_frames": 28,
+        "half_stop_spacing_clocks": 361.0,
+        "seed": 31
+      }
+    },
+    "uart_wrapper": {
+      "local_capture": "SpinalSoc/out/full-uart-wrapper-final-native/uart-checks.json",
+      "capture_sha256": "6f0a171675c544695dd28d41eaa0840d952ab951433e6686de5cdf55fd29c6ab",
+      "observations": {
+        "checks": 240,
+        "tx_frames": 28,
+        "half_stop_spacing_clocks": 361.0,
+        "seed": 31
+      }
+    },
+    "flash_boot": {
+      "local_capture": "SpinalSoc/out/flash-boot-final/boot-checks.json",
+      "capture_sha256": "1db6fc113ec9b7271149ec8b8322f0eb57a55c2c042c5529e48cc1ef1c1bfd80",
+      "observations": {
+        "cycles": 5150,
+        "done": true,
+        "code": 1,
+        "retired": 573,
+        "ram_initial_word": 0,
+        "ram_word0": 268440247,
+        "corrupt": false,
+        "core_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+        "tools_revision": "1fe091b8fe2fae68808bdfaad627282a627d36c3",
+        "flash": {
+          "read_bytes": 16,
+          "transactions": 1,
+          "words": 20
+        },
+        "spi_words": 20,
+        "payload_sha256": "e31d9f53af486deaa57e4050e47d1ca1bc8474fb51c1f0a55c9d8f84d5ed9557",
+        "boot_sha256": "5cdd63e6380c0d4b3ca20a93800e4b94749fdccbc93b5ad8d04b4e13b86d7837"
+      }
+    },
+    "flash_corrupt": {
+      "local_capture": "SpinalSoc/out/flash-boot-corrupt/boot-checks.json",
+      "capture_sha256": "644c740a3d34f05be97068d6bca4fb337ad384b54eed4289476ebda031838192",
+      "observations": {
+        "cycles": 5130,
+        "done": true,
+        "code": 3,
+        "retired": 569,
+        "ram_initial_word": 0,
+        "ram_word0": 268440246,
+        "corrupt": true,
+        "core_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+        "tools_revision": "1fe091b8fe2fae68808bdfaad627282a627d36c3",
+        "flash": {
+          "read_bytes": 16,
+          "transactions": 1,
+          "words": 20
+        },
+        "spi_words": 20,
+        "payload_sha256": "e31d9f53af486deaa57e4050e47d1ca1bc8474fb51c1f0a55c9d8f84d5ed9557",
+        "boot_sha256": "5cdd63e6380c0d4b3ca20a93800e4b94749fdccbc93b5ad8d04b4e13b86d7837"
+      }
+    },
+    "axi_crossbar": {
+      "local_capture": "SpinalSoc/out/native-axi-matrix/fabric-checks.json",
+      "capture_sha256": "ca1f05148e81d159667fac3404201431a0c2eb468fc244d4314bc9f114bc1e61",
+      "observations": {
+        "kind": "NativeAxiFabricFixture",
+        "client_checks": [
+          34,
+          34
+        ],
+        "endpoint_checks": [
+          36,
+          32
+        ],
+        "response_stalls": 1048,
+        "parallel_cycles": 16,
+        "errors_checked": 0
+      }
+    },
+    "tilelink_crossbar": {
+      "local_capture": "SpinalSoc/out/native-tl-matrix/fabric-checks.json",
+      "capture_sha256": "5a402d7967d45a6fd5d82f6eacc5660055229d46b37bd58ba52bc86d4db4162b",
+      "observations": {
+        "kind": "NativeTlFabricFixture",
+        "client_checks": [
+          24,
+          24
+        ],
+        "endpoint_checks": [
+          24,
+          24
+        ],
+        "parallel_cycles": 42,
+        "unmapped_denied": true
+      }
+    },
+    "axi_width_down": {
+      "local_capture": "SpinalSoc/out/native-down-matrix/fabric-checks.json",
+      "capture_sha256": "1252fc69b033235208977276c6edcbcc6e7acb8f787fb39da7a0a3a8baec8f83",
+      "observations": {
+        "kind": "NativeWidthDownFixture",
+        "client_checks": [
+          36
+        ],
+        "endpoint_checks": [
+          247
+        ],
+        "response_stalls": 431,
+        "parallel_cycles": 0,
+        "errors_checked": 2
+      }
+    },
+    "axi_width_up": {
+      "local_capture": "SpinalSoc/out/native-up-matrix/fabric-checks.json",
+      "capture_sha256": "36881d81737567e2a4fa173c5eb510029a66007efa8d027622219802fe04fd7b",
+      "observations": {
+        "kind": "NativeWidthUpFixture",
+        "client_checks": [
+          36
+        ],
+        "endpoint_checks": [
+          124
+        ],
+        "response_stalls": 476,
+        "parallel_cycles": 0,
+        "errors_checked": 2
+      }
+    },
+    "cpu_dma": {
+      "local_capture": "SpinalSoc/out/composed-debug-default-run/cpu-dma-checks.json",
+      "capture_sha256": "c1ac73ec12349553f43fb82694359e09e2510f9812e71479d293cc9e3f3802b9",
+      "observations": {
+        "cycles": 2135,
+        "retired": 236,
+        "dma_writes": 33,
+        "dma_reads": 33,
+        "dma_done": true,
+        "dma_error": false,
+        "finisher": 1
+      }
+    },
+    "smp_host": {
+      "local_capture": "SpinalSoc/out/smp-host-final-run/smp-host-checks.json",
+      "capture_sha256": "cc5752fec428afd02a753304af60b76f2a1dd7856c4373508e7de8fc938575e0",
+      "observations": {
+        "cycles": 133,
+        "tohost": [
+          1,
+          1
+        ],
+        "retired": [
+          21,
+          22
+        ],
+        "mmio": [
+          2,
+          2
+        ],
+        "ram_data_requests": [
+          3,
+          3
+        ],
+        "gpio": [
+          305397760,
+          305397761
+        ]
+      }
+    },
+    "external_uart": {
+      "local_capture": "SpinalSoc/out/import-uart-icarus2/import-checks.json",
+      "capture_sha256": "ea415bf1d9172ea9b99927ca2b9ec547bbefcd1bead40bac3d0a834172a888fa",
+      "observations": {
+        "checks": 23,
+        "tx_frames": 2,
+        "rx_frames": 1,
+        "bus": "wishbone",
+        "cpu_executed": false
+      }
+    },
+    "debug_dmi": {
+      "local_capture": "SpinalSoc/out/composed-debug-dmi-run2/debug-checks.json",
+      "capture_sha256": "338d2d59b3ffbc533ea8d655b6367f934bb3fb673c9535495c13f62ebcc8e959",
+      "observations": {
+        "profile": "rv32im_dmi",
+        "accesses": 8,
+        "halted_retired": 23,
+        "resumed_retired": 26,
+        "gpio": 305419896,
+        "ndmreset_bound": false
+      }
+    },
+    "debug_jtag": {
+      "local_capture": "SpinalSoc/out/composed-debug-jtag-final/debug-checks.json",
+      "capture_sha256": "903c2e4e91e53f3f3919b77759bc09c747d68105e053381c720f02a54a84f03c",
+      "observations": {
+        "profile": "rv32im_jtag",
+        "commands": 5140,
+        "tap": {
+          "pass": 9,
+          "fail": 0,
+          "inconclusive": 0
+        },
+        "retired": 939,
+        "gpio": 305419896,
+        "ndmreset_bound": false
+      }
+    },
+    "verification": {
+      "local_capture": "SpinalSoc/out/integration-final-verify/result.json",
+      "capture_sha256": "063c6c252514cb4fd1278e226a9f6c3b31da7eea42d4f428d1128f13d44fdf41",
+      "aggregate_status": "findings",
+      "cli_exit": 3,
+      "rows": [
+        {
+          "kind": "protocol",
+          "generated": true,
+          "ran": true,
+          "result": "pass"
+        },
+        {
+          "kind": "registers",
+          "generated": true,
+          "ran": true,
+          "result": "pass"
+        },
+        {
+          "kind": "vip",
+          "generated": true,
+          "ran": true,
+          "result": "pass"
+        },
+        {
+          "kind": "uvm",
+          "generated": true,
+          "ran": true,
+          "result": "pass"
+        },
+        {
+          "kind": "connectivity",
+          "generated": true,
+          "ran": true,
+          "result": "proven"
+        },
+        {
+          "kind": "decode",
+          "generated": true,
+          "ran": true,
+          "result": "proven"
+        },
+        {
+          "kind": "cdc_rdc",
+          "generated": true,
+          "ran": true,
+          "result": "findings"
+        }
+      ],
+      "native_protocol_cases": 49,
+      "bounded_protocol_checks": 31,
+      "bounded_protocol_depth": 8,
+      "connectivity_rows": 4,
+      "decode_assertions": 7,
+      "register_reads": 10,
+      "vip_tests": 4,
+      "vip_reads": 17,
+      "uvm_reads": 17,
+      "cdc_rdc": {
+        "findings": {
+          "cdc.comb_before_sync": 7,
+          "cdc.sync_candidate": 2,
+          "rdc.async_assert_crossing": 1173,
+          "rdc.async_release_unsynchronized": 3,
+          "rdc.comb_reset_logic": 1,
+          "rdc.reconvergence": 148,
+          "rdc.release_order_unproved": 1173
+        },
+        "no_reset_hazard": 1561,
+        "protected": 2,
+        "reason": null,
+        "recognized_libraries": [
+          "BufferCC",
+          "FlowCCUnsafeByToggle"
+        ],
+        "scope": "Structural CDC/RDC findings and recognized protection; protocol and reset release remain unproved.",
+        "status": "findings"
+      },
+      "note": "Fresh combined consumer execution after all implementation items. Findings are structural review results, not acceptance.",
+      "connections": [
+        {
+          "id": "timer_irq",
+          "status": "proven",
+          "structural_status": "dependency_found",
+          "transfer_s": 1.8,
+          "activation_s": 1.0
+        },
+        {
+          "id": "external_irq",
+          "status": "proven",
+          "structural_status": "dependency_found",
+          "transfer_s": 1.8,
+          "activation_s": 1.0
+        },
+        {
+          "id": "core_reset",
+          "status": "proven",
+          "structural_status": "dependency_found",
+          "transfer_s": 1.4,
+          "activation_s": 0.8
+        },
+        {
+          "id": "fabric_clock",
+          "status": "proven",
+          "structural_status": "dependency_found",
+          "transfer_s": 1.6,
+          "activation_s": 0.7
+        }
+      ]
+    }
+  }
+}

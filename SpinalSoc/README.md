@@ -27,6 +27,32 @@ addresses. Unwritten bytes and BSS start at zero. Each segment must fit one
 memory window. The manifest records the input hashes. Memory windows have a
 1 MiB limit to keep this verification profile small.
 
+## Measured integration profiles
+
+These 2026-11-13 development runs used seed 31. Verilator assertions were
+enabled for the native SoC, fabric, UART, SMP and debug cases. The imported
+UART used Icarus to preserve its source delays. Each result applies only to
+the named profile. [The compact record](examples/MEASURED_RESULTS.json) retains
+observations and local capture hashes. It is not a complete replay bundle.
+
+| Profile | Measured result | Remaining boundary |
+|---|---|---|
+| [Vex verification](examples/vex/VERIFICATION.md#scoped-consumer-execution) | All seven consumers generated and ran; four pass, two proven, CDC/RDC findings | Declared scopes only; structural findings and temporal CDC/RDC obligations remain |
+| [Full-register UART](examples/uart16550/README.md) | 240 checks and 28 TX frames, native and Spinal wrapper | Directed register, FIFO, IRQ, modem and framing tests; no full compliance claim |
+| [SPI flash boot](examples/flash/README.md) | 16-byte payload: 5,150 cycles, 573 retired, finisher 1; corrupt bit: finisher 3 | ROM copy into initially empty RAM; no XIP, erase/program or hardware boot |
+| [Native AXI4 crossbar](examples/fabric/README.md) | 2 masters × 2 targets; 68 client transactions; 16 parallel target-read cycles | 32-bit test; no fairness or complete ordering proof |
+| [Native TileLink crossbar](examples/fabric/README.md) | 2 masters × 2 targets; 48 client transactions; 42 parallel target-request cycles | Get/Put through 64 bytes; no BCE/coherence or atomics |
+| [AXI4 width conversion](examples/fabric/README.md) | 32→64 and 64→32 bits; 36 client transactions each; errors and stalls checked | Native 128-bit conversion and exclusive accesses unrun |
+| [CPU plus DMA](examples/fabric/README.md) | 2,135 cycles; 236 CPU retirements; 33 DMA write/read pairs | Finite shared-RAM development test; no C1 acceptance |
+| [Optional SMP host](examples/smp/README.md) | Both harts pass in 133 cycles; 21/22 retirements; two RTL GPIO accesses each | Existing external RAM/atomic ports; no new atomic or coherence qualification |
+| [External UART import](examples/import/README.md) | 23 checks; 2 TX frames and 1 RX frame through composed RTL | Explicit TOML/Wishbone profile; no CPU, full map or IP-XACT bus import |
+| [Composed debug](examples/debug/README.md) | DMI: 8 accesses with halt/resume; public TAP CLI: 9/9 pass | ndmreset needs a project reset controller; complete debug compliance unrun |
+
+A fresh combined verification run after these changes returned aggregate
+`findings` and exit code 3. All seven consumers generated and ran. None
+remained inconclusive. The structural findings still require review. This
+result is not CDC/RDC acceptance or complete SoC qualification.
+
 ## Decisions
 
 The original profile uses one clock domain and full 32-bit APB3 word accesses.
@@ -43,10 +69,11 @@ remains open.
 The software device tree is still a memory fragment. Peripheral pins need
 project exports. Debug reset is tied inactive until a project binds debug.
 
-## Local evidence
+## Initial fixture evidence
 
 On 2026-11-13 the fixture compiled and elaborated with SpinalHDL 1.15.0 and
-JDK 21.0.13. The six composer Python tests passed. No CPU simulation was run.
+JDK 21.0.13. The six composer Python tests passed. That initial fixture run used no CPU.
+Later CPU and integration results are listed below.
 
 ## Peripheral profiles
 
@@ -154,8 +181,9 @@ On 2026-11-13 the bus fixtures compiled with SpinalHDL 1.15.0. AXI4,
 TileLink and CDC fixtures elaborated. A generated APB3 composition with a
 separate memory domain elaborated. `BusSmoke` passed at seed 31 with
 Verilator assertions, both on one clock and across periods 10 and 14.
-AXI/TileLink transaction simulation, wider TileLink simulation, structural
-lint extraction and formal CDC/reset checks were NOT RUN.
+Those initial ingress checks did not run AXI/TileLink transaction traffic,
+wider TileLink traffic, structural lint extraction or formal CDC/reset checks.
+The later scoped verification and native fabric sections have separate results.
 
 ## Real core wrappers
 
@@ -315,7 +343,18 @@ known-value reads. The separate pyuvm bench passed the same 17 reset reads.
 All four connection rows proved with activation witnesses. The decode target
 proved seven assertions. The multi-domain inventory retains 2,507 findings
 and recognizes BufferCC and FlowCCUnsafeByToggle. Temporal CDC/RDC rules
-remain unproved. See [the evidence scopes](examples/vex/VERIFICATION.md).
+remain unproved. See [the evidence scopes](examples/vex/VERIFICATION.md#scoped-consumer-execution).
+
+The final rerun used a structural pre-check and a source cut for each
+connection. Every transfer proved with a separate activation witness.
+The times below are solver wall times. They exclude extraction and setup.
+
+| Connection | Transfer proof, seconds | Activation witness, seconds |
+|---|---:|---:|
+| timer_irq | 1.8 | 1.0 |
+| external_irq | 1.8 | 1.0 |
+| core_reset | 1.4 | 0.8 |
+| fabric_clock | 1.6 | 0.7 |
 
 ## Full-register UART
 
