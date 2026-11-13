@@ -364,7 +364,8 @@ also bind a module without name hints.
 See `confirmed-bindings.json` for the reviewed Vex bindings and proof-input
 hashes. See [NaxRiscv's runner and width ledger](../../examples/naxriscv/formal/README.md).
 These checks do not cover instruction decode or complete core pipelines.
-Unrestricted 32-bit arithmetic remains open. The optional VexiiRiscv bitpasta
+Direct unrestricted 32-bit CBMC arithmetic checks remain inconclusive. The
+composition certificates below state their proof boundaries. The optional VexiiRiscv bitpasta
 IPC fault remains a confirmed counterexample in the separate findings.
 
 ## Arithmetic composition

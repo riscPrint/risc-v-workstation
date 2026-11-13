@@ -482,3 +482,18 @@ or unknown obligation cannot retain a successful complete-command exit.
 The unsigned quotient and remainder cover the first response, including
 zero divisors. Signed conversion, later requests and core writeback remain
 outside this helper certificate.
+
+## Closed-design isolation observations
+
+A `rvw.secure-path/1` isolation policy can declare Boolean `observed_access`.
+With true, every access role must bind to an output of the design. Clock and
+reset remain public scalar inputs. With false or absent, the original
+request-input/grant-output interface remains required. Observation binding
+does not remove a driver or add a free internal input.
+
+The example `rvw.vex-pmp-observation/1` receipt records the RTL hash, bound,
+starting-byte isolation result and separate pre-PMP attempted-access reach
+result. `not_reached_within_bound` is not unbounded unreachability. A timed-out
+reach query stays inconclusive. `rvw.vex-pmp-observation-cases/1` collects the
+measured bounds. No exercised or CSR-programmed PMP qualification follows
+when the intended U-mode attempt is not reached or remains inconclusive.

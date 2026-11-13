@@ -1,0 +1,40 @@
+{
+  "schema": "rvw.vex-pmp-observation-cases/1",
+  "cases": [
+    {
+      "schema": "rvw.vex-pmp-observation/1",
+      "rtl_sha256": "3823477129387a4d9030c3da74d84145434ee46af8e44b54447043b14f35dd99",
+      "status": "pass",
+      "depth": 8,
+      "reason": null,
+      "scope": "actual emitted data-command starting-byte isolation at depth 8; no cuts; not CSR-configured PMP qualification",
+      "user_keystore_reach": {
+        "status": "not_reached_within_bound",
+        "depth": 8,
+        "cycles": [],
+        "reason": null,
+        "backend_status": "pass",
+        "wall_s": 2.2
+      },
+      "proof_wall_s": 2.3
+    },
+    {
+      "schema": "rvw.vex-pmp-observation/1",
+      "rtl_sha256": "3823477129387a4d9030c3da74d84145434ee46af8e44b54447043b14f35dd99",
+      "status": "pass",
+      "depth": 16,
+      "reason": null,
+      "scope": "actual emitted data-command starting-byte isolation at depth 16; no cuts; not CSR-configured PMP qualification",
+      "user_keystore_reach": {
+        "status": "inconclusive",
+        "depth": 16,
+        "cycles": [],
+        "reason": "reachability time limit",
+        "backend_status": "timeout",
+        "wall_s": 59.6
+      },
+      "proof_wall_s": 41.6
+    }
+  ],
+  "limits": "Bounded starting-byte data-command checks. The depth-8 user attempt is not reached. The depth-16 attempt reach query times out. No exercised or CSR-configured PMP qualification."
+}

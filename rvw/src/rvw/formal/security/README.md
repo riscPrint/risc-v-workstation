@@ -290,3 +290,10 @@ clock and SYNC reset in the shared project elaboration configuration. Rebuild
 RTL and SpinalDB. Do not remove assertions or tie initial state to force a pass.
 The separate `formal bmc --async-reset` environment remains available for
 sampled asynchronous-reset checks outside this transform.
+
+An isolation policy can set `observed_access: true` for a full design. All
+access roles then bind to output observations. The tool preserves their
+original drivers. It does not turn internal observations into free inputs.
+The default interface still uses request inputs and a grant output. Keep a
+separate attempted-access reach check when a short pass might not exercise
+the protected path. A bounded pass alone does not qualify PMP setup.

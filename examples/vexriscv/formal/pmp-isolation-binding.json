@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.vex-pmp-observation/1",
+  "source_top": "VexTop",
+  "observation_top": "PmpObserved",
+  "signals": {
+    "obs_request": "dBus_cmd_valid",
+    "obs_grant": "dBus_cmd_valid",
+    "obs_address": "dBus_cmd_payload_address",
+    "obs_write": "dBus_cmd_payload_wr",
+    "obs_privilege": "CsrPlugin_privilege",
+    "obs_attempt": "DBusSimplePlugin_mmuBus_cmd_0_isValid",
+    "obs_virtual_address": "DBusSimplePlugin_mmuBus_cmd_0_virtualAddress"
+  },
+  "constants": {
+    "obs_execute": [
+      1,
+      0
+    ],
+    "obs_master": [
+      1,
+      0
+    ]
+  },
+  "reason": "Observe actual emitted data-bus commands and the privilege state used by PmpPluginNapot. No internal driver is removed. Request and grant both mean an emitted command."
+}

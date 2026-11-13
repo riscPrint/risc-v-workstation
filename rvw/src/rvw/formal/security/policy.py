@@ -67,12 +67,15 @@ def isolation(design, top, policy):
     signals=policy['signals']
     if len(set(signals.values())) != len(signals) or set(signals.values()) & {policy['clock'], policy['reset']}:
         raise ValueError('access signals must be distinct from each other and reset/clock')
+    observed=policy.get('observed_access',False)
+    if type(observed) is not bool:
+        raise ValueError('observed_access must be Boolean')
     required={'request':1,'grant':1,'write':1,'execute':1,'privilege':2}
     for key in (*required,'address','master'):
         name=signals[key]
         check_ident('isolation signal',name)
-        if name in ports and ports[name]['direction'] != ('output' if key == 'grant' else 'input'):
-            raise ValueError('access observations need request inputs and grant output')
+        if name in ports and ports[name]['direction'] != ('output' if observed or key == 'grant' else 'input'):
+            raise ValueError('access signals need outputs in observed_access mode; otherwise request inputs and grant output')
         if name not in ports or (key in required and len(ports[name]['bits'])!=required[key]):
             raise ValueError('missing or wrong-width isolation port: '+key)
     address_width=len(ports[signals['address']]['bits'])
