@@ -372,5 +372,28 @@
       ],
       "engine": "abc bmc3"
     }
+  },
+  "bus_environment": [
+    {
+      "protocol": "stream-response",
+      "valid": "iBus_cmd_valid",
+      "ready": "iBus_cmd_ready",
+      "response": "iBus_rsp_valid",
+      "service_bound": 2,
+      "max_pending": 8
+    },
+    {
+      "protocol": "stream-response",
+      "valid": "dBus_cmd_valid",
+      "ready": "dBus_cmd_ready",
+      "response": "dBus_rsp_ready",
+      "write": "dBus_cmd_payload_wr",
+      "service_bound": 2,
+      "max_pending": 8
+    }
+  ],
+  "environment_constants": {
+    "iBus_rsp_payload_error": 0,
+    "dBus_rsp_error": 0
   }
 }

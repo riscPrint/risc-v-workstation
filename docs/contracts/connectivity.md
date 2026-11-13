@@ -89,3 +89,14 @@ records the raw pin capture and C2 hashes. The existing pairing checker
 compares the events with independent C2 memory effects. Matching samples
 remain inconclusive. Generation is not execution. Packaging is not proof.
 Core-specific signal bindings and a matching C1/C2 capture remain required.
+
+## RVFI bus environment
+
+`rvw.rvfi-binding/1` accepts optional `bus_environment` and
+`environment_constants`. Generated `rvw.rvfi-generation/1` records both.
+`stream-response` entries bind `valid`, `ready`, `response`, optional `write`,
+`service_bound` and optional `max_pending`. Ports refer to the binding input and
+output maps. Environment assumptions bound service and prevent unsolicited
+responses. A capacity assertion checks outstanding requests. Constants constrain
+input ports only. These restrictions do not establish bus compliance or complete
+ISA signoff. Other protocols are refused.
