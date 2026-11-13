@@ -406,3 +406,18 @@ The HSM observer checks two starts and one stop. Shared-RAM Spike comparison
 matched 38 instructions with no masks or synchronizations. These captures are
 bounded RTL evidence. They do not turn the fixtures above into whole-core
 coherence proofs or establish complete outcome coverage.
+## RTL results
+
+On 2026-11-13 the single-hart programs ran on real RTL with seed 1 and were
+compared with Spike in strict mode (`rvw regress cosim`):
+
+| Core | Programs | Generated | C1 pass | Spike match | Finding |
+|---|---|---|---|---|---|
+| VexiiRiscv `rv64imasu` | LR/SC, AMO, AMO fault, FENCE, FENCE.I | 5 | 5 | 5 | 0 |
+| VexiiRiscv `rv32imasu` | LR/SC, AMO, AMO fault, FENCE, FENCE.I | 5 | 5 | 5 | 0 |
+| VexRiscv `rv32im` (no A) | FENCE, FENCE.I | 2 | 2 | 2 | 0 |
+
+The VexRiscv rows allow one synchronization of the unspecified `mscratch`
+reset value. Zacas, cache-block, litmus and multi-hart programs need features
+these cores do not declare. Single-hart results give no concurrent ordering
+evidence.

@@ -946,6 +946,29 @@ walker uses scenario memory snapshots. It checks changed leaves after fences.
 Missing records remain inconclusive. This check does not fill DUT bins.
 Hardware A/D writes, extension PTEs and root switches remain unsupported.
 
+## Strict reference check of a whole run
+
+`rvw regress cosim RUN_DIR --platform PLATFORM.json [--allow-sync reset,irq] [--out FILE] [--json]`
+(MCP `regress_cosim`) compares every C1 result of one `rvw regress run`
+directory with Spike. The default is strict mode. `--allow-sync` enables only
+the named synchronizations: `reset` takes the architecturally unspecified
+`mscratch` reset value from the C2 snapshot, and `irq` takes pending bits of
+inputs that C2 `irq` events show asserted (Spike has no input pins). Each test
+gets one status:
+
+- `match`: C1 passed, the comparison is complete, the instruction counts
+  agree, and every mask or synchronization has an allowed reason. The row
+  records its `synchronized` count.
+- `mismatch`: Spike differs. Record it as a finding with a reproduction, or
+  explain it. Never relax a mask to remove it.
+- `fail`: the program's own check failed (C1 `fail`). `error`: any other C1
+  status, such as a harness assertion or timeout.
+- `inconclusive`: missing trace, missing inputs or an incomplete comparison.
+
+The report gives counts per suite (the directory name of the result). The
+exit code is 0 only when every test matches. Selection with `rvw regress plan`
+and the match counts are separate evidence. Neither fills coverage bins.
+
 ## Privilege campaigns
 
 `rvw regress privilege build|reference|check` generates control programs, runs

@@ -1,18 +1,19 @@
-# VexiiRiscv project. Paths are relative to this file.
+# VexRiscv M-only generated suites (rvw/prepare-suites.py). Paths are relative to this file.
+# VexRiscv project. Paths are relative to this file.
 [project]
 schema = "rvw.project/1"
 root = "."
 # Uses the generic RiscvSim launch capture and generated RTL identity.
 [core]
 backend = "riscvsim-verilator"
-name = "vexiiriscv"
-adapter = "./rvw/run64.sh"
-configs = ["rv64imasu"]
-default_config = "rv64imasu"
-lock = "vex-suites"                     # same lock as run.sh (the brief shares it with VexRiscv)
+name = "vexriscv"
+adapter = "./rvw/run.sh"
+configs = ["rv32im"]
+default_config = "rv32im"
+lock = "vexm"                    # private suite lock; run.sh takes RVW_VEX_LOCK
 source_repo = "."
-source_env = "VEXIIRISCV"
-cache_paths = ["rvw/classpath-cache.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
+source_env = "VEXRISCV"
+cache_paths = ["${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
 identity = true                   # generated RTL and native tool identity
 # The launcher binds the generated RTL, harness revision and native tool record.
 input_complete = true
@@ -41,107 +42,99 @@ input_env = [
   "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
   "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
   "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
-  "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "VEXIIRISCV", "RVW_HOME", "SPINAL_MAKE_CMD",
+  "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "VEXRISCV", "RVW_HOME", "SPINAL_MAKE_CMD",
   "SPINAL_VERILATOR_FLAGS", "USER_CPPFLAGS", "USER_LDFLAGS", "USER_LDLIBS", "VERILATOR_BIN",
   "VERILATOR_FLAGS", "VERILATOR_GDB", "VERILATOR_GDBBT", "VERILATOR_NO_OPT", "VERILATOR_ROOT",
-  "VFLAGS", "_JAVA_OPTIONS", "RVW_VEX_LOCK", "RVW_VEX_XLEN", "RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER",
+  "VFLAGS", "_JAVA_OPTIONS", "RVW_VEX_LOCK", "RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE",
 ]
 wall_timeout = true               # RiscvSim stops (or abandons) a run after the suite's timeout_s
 jobs = 2
 build_timeout_s = 5400
-startup_s = 1200
+startup_s = 300
 perf_tolerance = 0.01
 
 
-[suites.pmp]
-dir = "../../rvw/out/suites-pmp64"
+[suites.ordering]
+description = "single-hart fence and FENCE.I programs selected by rvw regress plan"
+dir = "../../rvw/out/vexm-suites/ordering"
 glob = "*.elf"
 strip_suffix = ".elf"
-configs = ["rv64imasu"]
-max_cycles = 200000
-timeout_s = 60
-mem_latency = 0
-
-[suites.faultwalk]
-dir = "../../rvw/out/suites-faultwalk64"
-glob = "*.elf"
-strip_suffix = ".elf"
-configs = ["rv64imasu"]
+configs = ["rv32im"]
 max_cycles = 200000
 timeout_s = 60
 mem_latency = 0
 
 [suites.scheduled-wfi-3-0]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-3-0.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-3-0.options]
-
 irq_schedule = "1:0x0,1000:0x8,20000:0x0"
 
 [suites.scheduled-wfi-3-1]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-3-1.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-3-1.options]
-
 irq_schedule = "1:0x0,1000:0x8,20000:0x0"
 
 [suites.scheduled-wfi-7-0]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-7-0.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-7-0.options]
-
 irq_schedule = "1:0x0,1000:0x80,20000:0x0"
 
 [suites.scheduled-wfi-7-1]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-7-1.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-7-1.options]
-
 irq_schedule = "1:0x0,1000:0x80,20000:0x0"
 
 [suites.scheduled-wfi-11-0]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-11-0.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-11-0.options]
-
 irq_schedule = "1:0x0,1000:0x800,20000:0x0"
 
 [suites.scheduled-wfi-11-1]
 kind = "elf-dir"
-dir = "../../rvw/out/suites-scheduled64"
+dir = "../../rvw/out/vexm-suites/scheduled"
 glob = "scheduled-wfi-11-1.elf"
 strip_suffix = ".elf"
+configs = ["rv32im"]
 max_cycles = 30000
 timeout_s = 30
 
 [suites.scheduled-wfi-11-1.options]
-
 irq_schedule = "1:0x0,1000:0x800,20000:0x0"
 
 [cosim]
-platform = "rvw/platform64.json"
+platform = "rvw/platform.json"

@@ -282,21 +282,29 @@ used `vex-csr`. Formal was NOT RUN. See [the native record](csr-native-results.j
 with 4-byte regions. `rv64imasu` uses Sv39, 16 ASID bits and eight PMP entries with 16-byte regions.
 Both keep one hart, one lane and cacheless fetch and LSU buses. They do not
 implement Sv48, Sv57, H, pointer masking, PBMT or NAPOT page mappings.
+`rvw32.toml` and `rvw/platform32.json` select the RV32 profile; `rvw64.toml`
+and `rvw/platform64.json` select RV64.
 The adapter services LR/SC and AMO commands on the native LSU bus. C2 retains
 both observed AMO read and write effects. The RV64 profile uses `rvw64.toml`
 and `rvw/run64.sh`. The launcher selects XLEN before constructing the driver.
 A batch cannot mix XLEN values.
 
 Use a private core copy. Set `VEXIIRISCV`, `RVW_HOME`, `RVW_VEX_LOCK` and
-`RISCVSIM_WORK` as in the native setup. From this workstation checkout, also
+`RISCVSIM_WORK` as in the native setup. `RVW_VEX_LOCK` must differ from the
+project file's `lock`: `rvw regress run` holds that lock, and an adapter that
+asks for the same name waits for its own parent. From this workstation checkout, also
 pass `--source "$VEXIIRISCV"` to `rvw regress run`. The environment variable
 alone does not override the regression source checkout.
 
-`rvw/prepare-suites.py --out DIR` builds a selected Sv39 matrix, privilege
-controls and the five supported single-hart ordering programs. It records
-excluded MMU scenarios and their reasons. Update suite directories in a
-project copy of `rvw64.toml` to `DIR/mmu`, `DIR/privilege` and `DIR/ordering`.
-Use `rvw regress plan --features rvw/features64.json` to inspect requirements.
+`rvw/prepare-suites.py --features rvw/features64.json --out DIR` asks
+`rvw regress plan` which generated families apply to the declared features.
+It builds each applicable family with its shared generator: the paging
+matrix, fault walks and random programs for the declared satp mode, privilege
+controls, PMP, scheduled WFI and the single-hart ordering programs. It writes
+`DIR/selection.json` with generated, applicable and excluded counts and a
+reason for each exclusion. `rvw/features32.json` selects the Sv32 set. The
+project files expect `DIR` at `../../rvw/out/suites64` (or `suites32`) from
+this folder; change the suite `dir` values for another location.
 
 `rvw64-devices.toml` selects the optional DeviceApiV1 host binding. Build the
 library with `RiscvSim/scripts/build-devices.py`. Set `RVW_DEVICE_LIBRARY`,
@@ -307,8 +315,72 @@ The adapter ticks each model before MMIO on every sampled cycle. An explicit
 IRQ schedule replaces device input levels for that run. Each run gets fresh
 device handles. This path has no checkpoint binding or multi-hart claim.
 
-Current supervisor validation is in progress. No RTL pass count is claimed
-for these new configurations until the C1 runs and strict Spike checks finish.
+### Generated suites on RTL (2026-11-13)
+
+Core `9f70315deb3390b283995c5b8f1bd38215ecf52b`, seed 1, memory latency 0,
+Verilator 5.049. `rvw regress run --rvfi-trace`, then
+`rvw regress cosim RUN --platform rvw/platform64.json` (strict) and
+`rvw regress mmu report` for the page-walk check. "Generated" counts all
+scenarios of the shared description; the satp-mode subset is in parentheses.
+
+`rv64imasu` (Sv39):
+
+| Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+|---|---|---|---|---|---|---|---|
+| MMU matrix | 589 (147) | 145 | 145 | 143 | 2 | 143 | 2 |
+| MMU fault walks | 84 (18) | 18 | 18 | 9 | 9 | 9 | 9 |
+| MMU random programs | 8 (2) | 2 | 2 | 2 | 0 | 2 | 0 |
+| Privilege controls (TVM/TW/TSR) | 30 | 30 | 30 | 30 | 0 | 30 | 0 |
+| PMP (8 entries, 16-byte grain) | 264 | 264 | 264 | 264 | 0 | 264 | 0 |
+| Ordering (LR/SC, AMO, AMO fault, FENCE, FENCE.I) | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
+| Scheduled WFI (MSIP/MTIP/MEIP pins) | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+
+`rv32imasu` (Sv32):
+
+| Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+|---|---|---|---|---|---|---|---|
+| MMU matrix | 589 (142) | 140 | 140 | 138 | 2 | 138 | 2 |
+| MMU fault walks | 84 (12) | 12 | 12 | 6 | 6 | 6 | 6 |
+| MMU random programs | 8 (2) | 2 | 2 | 2 | 0 | 2 | 0 |
+| Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
+| Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+
+The two paging matrices exclude only the hardware A/D scenarios. Every C1
+failure is one finding: the page walker reads PTEs that PMP denies (all
+`walk-denied` and `walk-deny-level-*` programs). See
+[the reproduction](findings/ptw-pmp/load.S). The DUT walk records confirm it:
+each denied PTE read completes and the walk succeeds, where the reference
+walker reports an access fault. Three RV64 and three RV32 scheduled-WFI
+programs with the interrupt disabled read `mip` while the pin is asserted.
+Spike has no input pins, so they match only with `--allow-sync irq` (one
+synchronization each). All other matches are strict.
+
+Not applicable from the declared features: Sv48/Sv57, NAPOT/PBMT, H,
+pointer masking, Smepmp, Zacas, cache-block operations and two-hart families.
+The RV64 CLINT WFI family needs `device:clint`, which only the device profile
+declares; it was not run here. NMI, AIA, Sstc, state-enable and PLIC families
+are not in the requirement catalog and need extensions or devices this core
+does not have.
+
+### Page-walk observations
+
+C2 `mmu_walks` come from the MMU refill state machine (`WalkTap` and
+`WalkCapture`): the start request, each PTE read on the walker's bus port and
+the refill response. `rvw regress mmu report` compares them with the
+independent Python walker:
+
+| Profile | Family | Consistent | No reference access | C1 fail | Other |
+|---|---|---|---|---|---|
+| Sv39 | MMU matrix | 92 | 49 | 2 | 2 non-canonical: no walk record |
+| Sv39 | Fault walks | 6 | 3 (fetch) | 9 | 0 |
+| Sv32 | MMU matrix | 89 | 49 | 2 | 0 |
+| Sv32 | Fault walks | 4 | 2 (fetch) | 6 | 0 |
+
+The report keeps failed C1 runs inconclusive. A direct comparison of their
+walk records gives `mismatch` for every denied load and store walk. The
+checker cannot use random programs alone (it refuses a manifest without a
+standalone level-zero scenario). Fetch walks have no reference access plan.
+These checks do not cover TLB hits, fences without a walk, or hardware A/D.
 The database launcher also honors `RVW_VEX_LOCK`. Use a private checkout and
 set `RVW_VEX_LOCK=vex-vexii` for isolated extraction. This selects the core
 lock; the shared sbt lock still serializes library compilation.
@@ -350,12 +422,14 @@ binding, case templates, IFT programs and policies, contract, campaign and
 model pre-check manifests. See [its README](rvw/sec/README.md) and the
 results in [`rvw/src/rvw/sec/README.md`](../../rvw/src/rvw/sec/README.md).
 C2 memory addresses use the LSU's actual virtual address sampled when the
-native bus accepts the request. Micro-op tags bind that address to the probe's
+native bus accepts the request. An AMO's store half has a stale probe store id;
+it binds to the latest hart command at its physical address. C2 `tval` uses
+the core's own CSR write expression (`expendPc`, sign extension to XLEN). Micro-op tags bind that address to the probe's
 physical load/store observation. A physical-address mismatch rejects the
 binding. The adapter does not reconstruct this value from instruction operands
 or take it from Spike. C1 `details.translated_addresses` retains both addresses
 for requests where they differ. Completion still uses the physical store address.
-These records are not page-table-walk observations.
+Page-walk records are separate (see above).
 
 The initial Sv39 run used zero ASID bits. Eight root/remap cases failed their
 satp readback check because they request ASID 7. The rich profile now enables

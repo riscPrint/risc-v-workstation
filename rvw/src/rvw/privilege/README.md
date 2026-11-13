@@ -110,6 +110,24 @@ exception-PC interval and retained register state. The C1 checker requires the
 exact requested input schedule. Spike CLI self-check is inconclusive because
 it cannot apply this external-input schedule. No program timeout becomes pass.
 
+RTL results on 2026-11-13 (strict `rvw regress cosim`, plus `--allow-sync irq`
+for programs that read `mip` while a pin is asserted):
+
+| Core | Family | Generated | Run | C1 pass | Spike match | Finding |
+|---|---|---|---|---|---|---|
+| VexiiRiscv `rv64imasu` | controls | 30 | 30 | 30 | 30 | 0 |
+| VexiiRiscv `rv64imasu` | PMP, 8 entries, 16-byte grain | 264 | 264 | 264 | 264 | 0 |
+| VexiiRiscv `rv64imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
+| VexiiRiscv `rv32imasu` | scheduled WFI | 6 | 6 | 6 | 6 | 0 |
+| VexRiscv `rv32im` (M only) | scheduled WFI | 6 | 6 | 6 | 3 | 3 |
+
+The VexRiscv finding: an interrupt trap keeps the old `mtval`. See
+[the reproduction](../../../../examples/vexriscv/findings/interrupt-mtval/README.md).
+The per-core tables are in the
+[VexiiRiscv](../../../../examples/vexiiriscv/README.md#generated-suites-on-rtl-2026-11-13)
+and [VexRiscv](../../../../examples/vexriscv/README.md#generated-m-only-suites-on-rtl-2026-11-13)
+READMEs. Other privilege families need extensions or devices these cores lack.
+
 For a project clock-stop harness, set `wake.clock_state` to a map of retained
 state names to positive bit masks. Record a `privilege_clock` C1 artifact as a
 JSON list with `tick`, `clock_running`, `state`, `retired` and `pending` samples.

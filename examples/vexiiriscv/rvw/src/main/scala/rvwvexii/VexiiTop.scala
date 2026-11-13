@@ -67,13 +67,39 @@ class TrapTapPlugin extends FiberPlugin {
     awaitBuild()
     val trap = host[TrapPlugin].logic.harts(0).trap
     val epc = CombInit(trap.pending.pc).setName("rvw_trap_epc").simPublic()
-    val tval = CombInit(trap.fsm.buffer.trap.tval).setName("rvw_trap_tval").simPublic()
+    // The CSR write path widens the buffered tval with expendPc (sign extension above TVAL_WIDTH).
+    val tval = CombInit(vexiiriscv.Global.expendPc(trap.fsm.buffer.trap.tval.asUInt, vexiiriscv.riscv.Riscv.XLEN.get))
+      .setName("rvw_trap_tval").simPublic()
     val fire = CombInit(trap.whitebox.trap).setName("rvw_trap_fire").simPublic()
-    val lsu = host[vexiiriscv.execute.lsu.LsuCachelessPlugin].logic
-    val lsuVirtualAddress = CombInit(lsu.forkCtrl(lsu.onAddress.RAW_ADDRESS)).setName("rvw_lsu_va").simPublic()
+    // Cacheless LSU only: the address that its bus command carries before translation.
+    val lsuVirtualAddress = host.get[vexiiriscv.execute.lsu.LsuCachelessPlugin].map(_.logic).map(lsu =>
+      CombInit(lsu.forkCtrl(lsu.onAddress.RAW_ADDRESS)).setName("rvw_lsu_va").simPublic())
     val privilege = CombInit(host[PrivilegedPlugin].logic.harts(0).privilege).setName("rvw_privilege").simPublic()
+    val walk = host.get[vexiiriscv.memory.MmuPlugin].map(new WalkTap(_))
     buildBefore.release()
   }
+}
+
+/** Page-table walks of the MMU refill state machine: start (VA, requested permission, satp root),
+  * each PTE read on the walker's bus port, and the refill response (fault flags, physical address).
+  * The response already includes the walker's permission check. Only reads; no core behavior changes. */
+class WalkTap(mmu: vexiiriscv.memory.MmuPlugin) extends Area {
+  // No member holds `mmu.logic` itself: its inferred structural type breaks incremental compilation.
+  val start = CombInit(!mmu.logic.refill.busy && mmu.logic.refill.arbiter.io.output.valid).setName("rvw_walk_start").simPublic()
+  val va = CombInit(mmu.logic.refill.arbiter.io.output.address).setName("rvw_walk_va").simPublic()
+  val read = CombInit(mmu.logic.refill.arbiter.io.output.permission.read).setName("rvw_walk_read").simPublic()
+  val write = CombInit(mmu.logic.refill.arbiter.io.output.permission.write).setName("rvw_walk_write").simPublic()
+  val execute = CombInit(mmu.logic.refill.arbiter.io.output.permission.execute).setName("rvw_walk_execute").simPublic()
+  val rootPpn = CombInit(mmu.logic.satp.ppn).setName("rvw_walk_root_ppn").simPublic()
+  val pteCmd = CombInit(mmu.logic.accessBus.cmd.fire).setName("rvw_walk_pte_cmd").simPublic()
+  val pteAddress = CombInit(mmu.logic.accessBus.cmd.address).setName("rvw_walk_pte_address").simPublic()
+  val pteRsp = CombInit(mmu.logic.accessBus.rsp.valid).setName("rvw_walk_pte_rsp").simPublic()
+  val pteData = CombInit(mmu.logic.accessBus.rsp.data).setName("rvw_walk_pte_data").simPublic()
+  val pteError = CombInit(mmu.logic.accessBus.rsp.error.orR).setName("rvw_walk_pte_error").simPublic()
+  val done = CombInit(mmu.refillPorts.map(p => p.rsp.valid && p.rsp.ready).reduce(_ || _)).setName("rvw_walk_done").simPublic()
+  val pageFault = CombInit(mmu.refillPorts.head.rsp.pageFault).setName("rvw_walk_page_fault").simPublic()
+  val accessFault = CombInit(mmu.refillPorts.head.rsp.accessFault).setName("rvw_walk_access_fault").simPublic()
+  val address = CombInit(mmu.refillPorts.head.rsp.address).setName("rvw_walk_address").simPublic()
 }
 
 /** Project-owned exposure of the generic native transport. */

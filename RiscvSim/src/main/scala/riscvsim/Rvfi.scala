@@ -19,7 +19,9 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
                       rs1: Int, rs1Rdata: BigInt, rs2: Int, rs2Rdata: BigInt, rd: Int, rdWdata: BigInt,
                       pc: BigInt, pcNext: BigInt,
                       memAddr: BigInt, memRmask: Int, memWmask: Int, memRdata: BigInt, memWdata: BigInt,
-                      memFault: Boolean, csrState: Map[Int, BigInt] = Map.empty, fpState: Option[RvfiFpState] = None) {
+                      memFault: Boolean, csrState: Map[Int, BigInt] = Map.empty, fpState: Option[RvfiFpState] = None,
+                      extra: Seq[(String, ujson.Value)] = Nil) {
+  require(extra.forall { case (k, _) => k.nonEmpty && !k.contains('"') && !k.contains('\\') }, "invalid extra C2 field name")
   /** One C2 (`rvw.rvfi/1`) JSONL line. */
   def toJson: String = {
     val sb = new StringBuilder(400)
@@ -40,6 +42,12 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
         "\"" + Hex(BigInt(address)) + "\": \"" + Hex(value) + "\""
       }.mkString(", ")
       sb ++= "}}"
+    }
+    if (extra.nonEmpty) {
+      // Optional C2 fields that the adapter observed (for example `mmu_walks`), appended in order.
+      sb.setLength(sb.length - 1)
+      extra.foreach { case (k, v) => sb ++= ", \"" ++= k ++= "\": " ++= ujson.write(v) }
+      sb ++= "}"
     }
     fpState match {
       case None => sb.toString

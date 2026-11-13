@@ -368,6 +368,40 @@ and the end event. RTL SHA-256 was
 The two short runs do not establish a speed change, ISA correctness or BOOM
 support. Medium/large BOOM, interrupts, CSR snapshots, waves, runtime effects
 and native checkpoint support remain outside this probe.
+## Generated M-only suites on RTL (2026-11-13)
+
+`rvw/features.json` declares RV32IM, machine mode only, no PMP and the
+MSIP/MTIP/MEIP inputs. `rvw/prepare-suites.py --out DIR` asks
+`rvw regress plan` for the applicable generated families and builds them.
+`rvw-suites.toml` runs them from `../../rvw/out/vexm-suites` (change the suite
+`dir` values for another location). Use a private core copy and a private
+`RVW_VEX_LOCK` that differs from the file's `lock`.
+
+```sh
+rvw/prepare-suites.py --out ../../rvw/out/vexm-suites
+rvw regress run --project rvw-suites.toml --suite ordering,scheduled-wfi-3-0,... \
+  --rvfi-trace --out RUN --json
+rvw regress cosim RUN --platform rvw/platform.json --allow-sync reset,irq --json
+```
+
+Core `baf7dc82f855eddaf5b0a20a6802c526f127e38a`, seed 1:
+
+| Family | Generated | Applicable | Run | C1 pass | Spike match | Finding |
+|---|---|---|---|---|---|---|
+| Scheduled WFI (RV32, machine-only head) | 6 | 6 | 6 | 6 | 3 | 3 |
+| FENCE and FENCE.I (single hart) | 2 | 2 | 2 | 2 | 2 | 0 |
+
+Every match uses one synchronization of the unspecified `mscratch` reset
+value. The three interrupt-disabled WFI programs also take the asserted
+`mip` pin bit once. The three interrupt-enabled programs are one finding:
+an interrupt trap keeps the old `mtval`. See
+[the reproduction](findings/interrupt-mtval/README.md). The programs do not
+read `mtval`, so C1 passes; only the Spike comparison shows it.
+
+Not applicable: every MMU, S/U privilege, PMP, A-extension, Zacas,
+cache-block and multi-hart family. The CLINT WFI family needs a device
+binding that this example does not have.
+
 ## Native ISA co-simulation result
 
 On 2026-11-13, the private core at

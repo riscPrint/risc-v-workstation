@@ -75,8 +75,21 @@ pathlib.Path(args[1]).write_text('database fixture')
 def test_rich_paging_selection_excludes_other_modes_and_hardware_ad():
     import runpy
     module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
-    selected, excluded = module['mmu_selection'](EXAMPLE.parents[1])
+    root = EXAMPLE.parents[1]
+    selected, excluded = module['mmu_rows'](root, 'examples/mmu/matrix.json', 'sv39', {'ad:fault'})
     assert len(selected) == 145
     assert len(selected) + len(excluded) == 589
     assert all(row['mode'] == 'sv39' and row.get('ad_mode') != 'hardware' for row in selected)
     assert any('hardware A/D' in row['reason'] for row in excluded)
+    sv32, _ = module['mmu_rows'](root, 'examples/mmu/matrix.json', 'sv32', {'ad:fault'})
+    assert len(sv32) == 140 and all(row['mode'] == 'sv32' for row in sv32)
+
+
+def test_plan_selects_profile_families():
+    from rvw.regress.commands.applicability import plan
+    for name, expected in (('features64.json', {'mmu-sv39', 'privilege-controls', 'pmp', 'scheduled-wfi', 'fence-i-rv64'}),
+                           ('features32.json', {'mmu-sv32', 'amo-rv32', 'fence-rv32', 'scheduled-wfi-rv32'})):
+        rows = plan(EXAMPLE / 'rvw' / name)['suites']
+        applicable = {r['name'] for r in rows if r['applicable']}
+        assert expected <= applicable
+        assert not applicable & {'mmu-sv48', 'hypervisor', 'shootdown', 'memory-concurrent'}
