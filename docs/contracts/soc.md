@@ -266,3 +266,11 @@ and validation scope. `files.f` uses bundle-relative RTL paths. JSON inventories
 preserve database columns for clocks, frequencies, memories, ports, hierarchy
 and blackbox generics. The existing lint SDC backend generates constraints.
 Export does not establish constraint completeness or implementation readiness.
+
+## Imported implementation feedback
+
+`rvw.soc-feedback/1` binds an external tool, analysis scope, constraint list,
+report paths and typed findings to an exact database hash. Output schema
+`rvw.soc-feedback-links/1` retains report hashes, matched RTL/Scala links,
+unmatched diagnostics and `status=imported_claims`. It never reports a
+workstation timing, area, CDC or DFT pass from external claims.
