@@ -52,9 +52,14 @@ class InputSnapshot:
             combined = self.directory / 'temporal.sv'
             text = '\n'.join(path.read_text() for path in self.sources)
             if getattr(args, 'raw_events', False):
+                from .cross_clock import rewrite as cross_rewrite
+                text, self.cross_clock_properties = cross_rewrite(text, args.top)
                 from .raw_events import rewrite
-                text, self.raw_events = rewrite(text, args.top, force=getattr(args, 'raw_events_force', False))
+                text, self.raw_events = rewrite(text, args.top, force=(getattr(args, 'raw_events_force', False)
+                                                or bool(self.cross_clock_properties)))
             lowered, self.temporal_properties = lower(text)
+            if getattr(args, 'raw_events', False):
+                self.temporal_properties += self.cross_clock_properties
             combined.write_text(lowered)
             self.sources = [self.seal(combined)]
         if self.frontend == 'slang':

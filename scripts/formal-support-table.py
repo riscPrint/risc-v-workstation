@@ -25,4 +25,11 @@ features = ast.literal_eval(next(node.value for node in unbounded.body
                                         for t in node.targets)))
 rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; `formal liveness` |'
          for feature in features]
+cross = ast.parse((root / 'rvw/tests/formal/test_cross_clock.py').read_text())
+features = ast.literal_eval(next(node.value for node in cross.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature.replace("|", "&#124;")}` | positive and negative native case | finite native timed replay; two clocks |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')

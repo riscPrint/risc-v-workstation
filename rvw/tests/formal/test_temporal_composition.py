@@ -88,6 +88,11 @@ def test_support_table():
     assert features == [row[0] for row in pairs]
     rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; `formal liveness` |'
              for feature in features]
+    cross = ast.parse(Path('rvw/tests/formal/test_cross_clock.py').read_text())
+    features = ast.literal_eval(next(node.value for node in cross.body if isinstance(node, ast.Assign)
+        and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
+    rows += [f'| `{feature.replace("|", "&#124;")}` | positive and negative native case | finite native timed replay; two clocks |'
+             for feature in features]
     expected = '\n'.join(rows) + '\n'
     assert Path('rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').read_text() == expected
 

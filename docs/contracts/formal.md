@@ -718,6 +718,23 @@ suppression. Invalid privilege encodings disable privileged entry checks.
 Full CSR, privileged and FP state transitions remain excluded. A passing
 kernel oracle does not prove a core instruction implementation.
 
+## Boolean two-clock assertion replay
+
+Timed Icarus replay accepts inline top-module Boolean implication from one
+explicit input-clock edge to another. `|->` selects the nearest target event,
+including a simultaneous event. `|=>` selects the nearest strictly later event.
+The replay coordinator samples both domains before the timestamp input update.
+Its pending counter retains every request. One target event can check several
+obligations and produces one assertion observation per activated request.
+
+C1 `cross_clock_properties` records each property id, kind, `clock`,
+`target_clock`, `clock_events`, parsed `terms`, `monitor` and `overlap`.
+False or unknown antecedents do not activate requests. An unknown consequent
+fails an active assertion. Pending obligations at the trace end do not become
+passes. The route refuses sequences, sampled functions, non-top properties and
+implicit clocks. It does not enable cross-clock properties in formal lowering.
+
+
 ## Trace-selected timed replay state
 
 `rvw.formal-events/1` can contain `state` with `trace`, `time`, `scope` and

@@ -1889,6 +1889,30 @@ events on Verilator. General asynchronous formal semantics remain separate.
 The [event scheduling reference](https://dvcon-proceedings.org/wp-content/uploads/asynchronous-behaviors-meet-their-match-with-systemverilog-assertions.pdf)
 explains why concurrent assertions sample values before an asynchronous event.
 
+Icarus timed replay also accepts inline Boolean two-clock implication:
+
+```systemverilog
+p: assert property (@(posedge source_clk) request |=> @(posedge target_clk) response);
+```
+
+`|=>` checks the response at the first strictly later target-clock event.
+`|->` permits a target event at the same timestamp as the source event.
+Each accepted request retains its obligation. Several requests before the target
+event produce separate pass or fail counts. The simulation samples both operands
+before the event inputs change. An unknown antecedent does not start an attempt.
+An unknown consequent fails an active assertion. Assume and cover forms use the
+same event mapping. Counts report activated obligations. They do not count a
+false antecedent as a passing attempt.
+
+This subset requires one scalar input edge per clock, a Boolean antecedent and
+a Boolean consequent. Either edge can be posedge or negedge. It requires inline
+properties in the top module. Named cross-clock properties, sequence operands,
+sampled functions and disable cancellation remain refused. It is a finite native
+simulation route. Formal lowering keeps its cross-clock refusal. C1
+`cross_clock_properties` records the clocks, terms, operator and monitor id.
+The rules for simultaneous and strictly later events follow IEEE 1800-2017
+clause 16.13, [multiclocked properties](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf).
+
 The same finite SVA set runs as simulation monitors on either backend. This
 includes separate checker files and properties clocked by an asynchronous input.
 The runner records assertion pass/fail and cover hit/miss counts per property.

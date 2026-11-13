@@ -41,7 +41,7 @@ def events(data, inputs, clocks):
     return scale, rows
 
 
-def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None):
+def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cross_steps=None):
     lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
     inputs = [p for p in ports if p.direction == 'input']
     outputs = [p for p in ports if p.direction == 'output']
@@ -55,7 +55,11 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None):
             lines.append(f'#{at-previous};')
         # Pulse before updating design inputs. #0 lets all monitors sample the
         # preceding settled values, including the old value of the event input.
-        triggered = raw_pulses[index] if raw_pulses else []
+        triggered = list(raw_pulses[index]) if raw_pulses else []
+        if cross_steps:
+            signals,ticks=cross_steps[index]
+            lines += [f'dut.{name} = {value};' for name,value in signals.items()]
+            triggered += ticks
         if triggered:
             lines += [f'dut.{name} = 1;' for name in triggered]
             lines += ['#0;']
@@ -105,12 +109,14 @@ def run(args):
         if any(p.direction == 'inout' for p in ports):
             raise ValueError('event replay refuses inout ports')
         inputs = {p.name: p.width for p in ports if p.direction == 'input'}
+        cross = snap.cross_clock_properties
         bindings = snap.raw_events
         from .raw_events import validate, rewrite, pulses
         validate(bindings, inputs)
-        if bindings and args.backend != 'icarus':
+        if (bindings or cross) and args.backend != 'icarus':
             raise ValueError('raw property event replay requires Icarus')
         clocks = {p['clock'] for p in snap.temporal_properties} - {b['clock'] for b in bindings} | set(event_data.get('clocks', []))
+        clocks |= {p['target_clock'] for p in cross}
         clocks |= {term['signal'] for binding in bindings for term in binding['terms'] if term['edge'] != 'change'}
         if not clocks <= inputs.keys() or any(inputs[c] != 1 for c in clocks):
             raise ValueError('property clocks must be scalar top-level inputs')
@@ -128,12 +134,15 @@ def run(args):
         if args.backend == 'verilator' and (args.check_x or any(set(v.lower()) & set('xz') for _, row in rows for v in row.values())):
             raise ValueError('four-state replay and --check-x require Icarus')
         original = '\n'.join((out / r['frontend']).read_text() for r in snap.files if r['kind'] == 'source')
-        original, _ = rewrite(original, args.top, force=state is not None)
+        from .cross_clock import rewrite as cross_rewrite, schedule
+        original, cross = cross_rewrite(original,args.top,simulation=True)
+        original, _ = rewrite(original, args.top, force=state is not None or bool(cross))
         simulation, properties = lower(original, simulation=True)
+        properties += cross
         model = out / 'simulation.sv'
         model.write_text(simulation)
         bench = out / 'testbench.sv'
-        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state))
+        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state, schedule(rows,cross,inputs)))
         snap.seal(model); snap.seal(bench)
         result = RunResult(status='error', config='formal-event-simulation',
                            source={'model_sha256': digest(model)},
@@ -181,7 +190,7 @@ def run(args):
                 (out / 'coverage.dat').write_text('\n'.join(coverage) + '\n')
         result.update(wall_s=time.monotonic()-started, backend=args.backend, x_semantics='four-state' if args.backend == 'icarus' else 'two-state; X not measured',
                       event_capture=spec_capture.record(), tools={'backend': args.backend},
-                      state_load=state, property_events=bindings, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
+                      state_load=state, property_events=bindings, cross_clock_properties=cross, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
         snap.finish(result)
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2))

@@ -26,3 +26,5 @@
 | `[=N]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
 | `strong / weak` | positive and negative native case | infinite trace, single clock; `formal liveness` |
 | `unbounded first_match` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `multi-clock overlapped implication` | positive and negative native case | finite native timed replay; two clocks |
+| `multi-clock nonoverlapped implication` | positive and negative native case | finite native timed replay; two clocks |
