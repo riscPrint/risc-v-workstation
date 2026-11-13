@@ -29,6 +29,9 @@ int main(int argc, char **argv) {
   trace << "{\"schema\":\"rvw.rvfi/1\",\"core\":\"ibex\",\"config\":\"default\",\"xlen\":32,\"isa\":\"rv32imc_zicsr_zifencei\"}\n";
   d.boot_addr_i=0x80000000; d.hart_id_i=0; d.fetch_enable_i=5;
   d.test_en_i=1; d.scan_rst_ni=1; d.rst_ni=0;
+  d.irq_software_i=0; d.irq_timer_i=0; d.irq_external_i=0;
+  d.irq_fast_i=0; d.irq_nm_i=0; d.debug_req_i=0;
+  d.instr_rdata_intg_i=0; d.data_rdata_intg_i=0; d.scramble_key_valid_i=0;
   d.clk_i=0; d.eval();
   for(int i=0;i<8;i++) { d.clk_i=1; d.eval(); context.timeInc(1); d.clk_i=0; d.eval(); context.timeInc(1); }
   d.rst_ni=1;
