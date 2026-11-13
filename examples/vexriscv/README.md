@@ -271,3 +271,16 @@ the original Spike instance through the final `tohost` store. The bootstrap
 uses `0x80008000` and replaces the reset instruction with a direct jump.
 Programs must not use those reserved bytes after transfer. Counter equivalence,
 pre-fetch readback, C1 integration and fresh-Spike import remain open.
+
+## Per-retirement CSR capture
+
+The RV32IM adapter captures actual `mscratch` storage for its single RVFI slot.
+The C2/2 header declares `capabilities: ["csr"]` and `csr_snapshot: ["0x340"]`.
+Each retirement carries that snapshot. This does not declare FP capture.
+The checker compares defined bits and reports any synchronization of unspecified
+reset bits. No other CSR snapshot is claimed. This example has no debug module,
+so debug-entry comparison is not available.
+
+`rvw/tests/test_csr_capture.py` checks two consecutive CSR values in native RTL.
+The wiring compiles. Native timing validation is still required before this
+capture can support an RTL CSR comparison claim.

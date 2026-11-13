@@ -58,7 +58,8 @@ object VexAdapter extends CoreAdapter {
       v | (BigInt(memory.getOrElse((addr & ~3L) + i, 0)) << (8 * i))
     }
     val capture = job.socMap.map(m => new MapCapture(m, job, ctx))
-    val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
+    val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
+      ("csr_snapshot" -> ujson.Arr("0x340"))))) else None
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val marker = ctx.elf.symbol("setStats")
     var markers = 0
@@ -152,7 +153,8 @@ object VexAdapter extends CoreAdapter {
             handler = true
           }
           if (dut.rvfi.valid.toBoolean) {
-            val r = record(dut.rvfi, ctl.cycle, handler)
+            val r = record(dut.rvfi, ctl.cycle, handler).copy(
+              csrState = Map(0x340 -> dut.traps.scratch.toBigInt))
             handler = false
             require(r.order == nextOrder, s"RVFI order ${r.order}, expected $nextOrder")
             nextOrder += 1

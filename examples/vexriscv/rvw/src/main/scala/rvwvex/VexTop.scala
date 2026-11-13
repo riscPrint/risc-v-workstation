@@ -50,7 +50,7 @@ class VexTop extends VexRiscv(VexTop.configuration()) {
   * The registered strobe lets the simulator read the values written at trap entry. */
 class TrapProbePlugin extends Plugin[VexRiscv] {
   var valid: Bool = null
-  var cause, tval: Bits = null
+  var cause, tval, scratch: Bits = null
 
   override def build(pipeline: VexRiscv): Unit = {
     val csr = pipeline.config.get(classOf[CsrPlugin])
@@ -66,6 +66,7 @@ class TrapProbePlugin extends Plugin[VexRiscv] {
       for (r <- fields) value(r.bitOffset, r.that.getBitsWidth bits) := r.that.asBits
       value
     }
+    scratch = out(readCsr(0x340, "snapshot_mscratch"))
     cause = out(Bits(32 bits)).setName("trap_cause")
     tval = out(Bits(32 bits)).setName("trap_tval")
     cause := readCsr(0x342, "trap_mcause")
