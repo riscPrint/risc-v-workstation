@@ -257,3 +257,12 @@ and serialized run-many. It supports fixed APB word latency only. C1 results
 report the bounded instruction profile and the scheduled PLIC source event.
 UART hello checks use actual TX pin samples. These fixture results do not
 qualify an ISA or provide C2 retirement traces.
+
+## Implementation handoff bundle
+
+`rvw.soc-handoff/1` records the captured database hash, design metadata,
+source-to-bundle file records with hashes, unresolved blackboxes, SDC findings
+and validation scope. `files.f` uses bundle-relative RTL paths. JSON inventories
+preserve database columns for clocks, frequencies, memories, ports, hierarchy
+and blackbox generics. The existing lint SDC backend generates constraints.
+Export does not establish constraint completeness or implementation readiness.
