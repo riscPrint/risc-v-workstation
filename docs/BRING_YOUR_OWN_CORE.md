@@ -502,6 +502,14 @@ copy, test build script and commands for a separate core repository. Copy its
 core root. The launchers use `RVW_HOME` for installed libraries and `VEXRISCV`
 for revision selection. Leave `VEXRISCV` unset for normal use.
 
+## Checked VexiiRiscv project
+
+The [VexiiRiscv example](../examples/vexiiriscv/README.md) is a core with no RVFI
+port and git submodules. Its adapter maps the upstream commit probe to C2. Its
+build compiles the core's pinned SpinalHDL source instead of the release.
+Gate checkouts include the submodules that the core repository has initialized.
+`VEXIIRISCV` selects the revision. Leave it unset for normal use.
+
 ## Architecture exploration
 
 Add `[arch]` with `description`, `sources`, and `benchmarks` paths. The
