@@ -9,7 +9,7 @@ name = "vexriscv"
 adapter = "./rvw/run.sh"
 configs = ["rv32im", "rv32im_dmi", "rv32im_jtag", "rv32im_trace", "rv32im_cached", "rv32ima_linux"]
 default_config = "rv32im"
-lock = "vex"                     # same lock as run.sh
+lock = "${RVW_VEX_LOCK:-vex}"                     # same lock as run.sh
 source_repo = "${VEXRISCV:-.}"
 source_env = "VEXRISCV"
 cache_paths = ["${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
@@ -132,3 +132,18 @@ configs = ["rv32im"]
 max_cycles = 2000000
 timeout_s = 120
 mem_latency = 0
+
+# Opt in with --tier bench. Link rvw/out/bench to an external workload run.
+[suites.bench]
+dir = "rvw/out/bench/build"
+glob = "*/workload.elf"
+strip_suffix = "/workload.elf"
+include = ['^(median|vvadd|multiply)$']
+max_cycles = 2000000
+timeout_s = 110
+mem_latency = 0
+perf_metrics = ["cycles"]
+
+[tiers.bench]
+description = "fixed self-checked IPC regression subset; disabled in quick/full"
+runs = [{suite = "bench"}]

@@ -9,7 +9,7 @@ configs = ["default", "rob16", "iq4", "sq4", "predictor4"]
 default_config = "default"
 source_repo = "."
 source_env = "OOO_MINI_SOURCE"
-lock = "ooo-mini-mem"
+lock = "${RVW_OOO_LOCK:-ooo-mini-mem}"
 jobs = 1
 input_complete = true
 identity = false
@@ -46,6 +46,8 @@ input_env = [
 ]
 
 wall_timeout = true
+perf_tolerance = 0.01
+
 [suites.smoke]
 dir = "rvw/out/programs"
 include = ['^(smoke|fence-selfmod|illegal)$']
@@ -66,3 +68,18 @@ runs = [{suite = "isa"}]
 [cosim]
 platform = "rvw/platform.json"
 
+
+# Opt in with --tier bench. Link rvw/out/bench to an external workload run.
+[suites.bench]
+dir = "rvw/out/bench/build"
+glob = "*/workload.elf"
+strip_suffix = "/workload.elf"
+include = ['^(median|vvadd|multiply)$']
+max_cycles = 2000000
+timeout_s = 110
+mem_latency = 0
+perf_metrics = ["cycles"]
+
+[tiers.bench]
+description = "fixed self-checked IPC regression subset; disabled in quick/full"
+runs = [{suite = "bench"}]

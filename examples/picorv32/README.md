@@ -59,3 +59,33 @@ and uses no CSRs.
 - C2 has trap records but no trap events, so cosim does not check `cause`.
 - The parameterized query build needs the slang plugin and keeps the selected defines and parameters.
 - The query database is the Yosys navigation subset (see C6 in the contracts).
+
+## Benchmark regression tier
+
+The `bench` tier is off in `quick` and `full`. It selects median, vvadd and
+multiply. C1 self-checks must pass. The gate compares cycles for the full run of
+these fixed instruction streams. Project `core.perf_tolerance` is 0.01.
+The tolerance is an allowed increase in cycles. It is not host timing noise.
+
+Recorded baseline: MacBookPro, 2026-11-13, default config, seed 1, added memory
+latency 0. These are RTL simulation counts. They are not physical core scores.
+
+| Program | Instructions | Cycles | IPC | Cycle tolerance |
+|---|---:|---:|---:|---:|
+| median | 10609 | 60166 | 0.176329 | 1% |
+| vvadd | 6446 | 35356 | 0.182317 | 1% |
+| multiply | 54252 | 380298 | 0.142657 | 1% |
+
+Use a fresh external `RUN_ROOT`. The link path must not exist.
+Set the project's source environment and private locks as described above.
+
+```sh
+nice -n 15 rvw workloads run --project "$PROJECT" --source "$RISCV_TESTS" --out "$RUN_ROOT"
+mkdir -p "$PROJECT/rvw/out"
+ln -s "$RUN_ROOT" "$PROJECT/rvw/out/bench"
+nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-rev "$BASE" --cand-rev "$CANDIDATE"
+```
+
+The gate measures both committed revisions. The table is a dated reference;
+it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
+to override the project policy explicitly. Keep all generated results out of Git.

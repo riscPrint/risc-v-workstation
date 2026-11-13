@@ -116,3 +116,17 @@ configs = ["rv64ima", "rv64imasu"]
 max_cycles = 2000000
 timeout_s = 120
 mem_latency = 0
+# Opt in with --tier bench. Link rvw/out/bench to an external workload run.
+[suites.bench]
+dir = "rvw/out/bench/build"
+glob = "*/workload.elf"
+strip_suffix = "/workload.elf"
+include = ['^(median|vvadd|multiply)$']
+max_cycles = 2000000
+timeout_s = 110
+mem_latency = 0
+perf_metrics = ["cycles"]
+
+[tiers.bench]
+description = "fixed self-checked IPC regression subset; disabled in quick/full"
+runs = [{suite = "bench"}]

@@ -1181,3 +1181,47 @@ See [the commands and scope](rvw/csim/README.md),
 [the native misplaced-probe test](rvw/tests/test_probe_misplaced.py).
 These are selected simulation results. They do not qualify other configs
 or establish hardware correctness.
+
+## Benchmark regression tier
+
+The `bench` tier is off in `quick` and `full`. It selects median, vvadd and
+multiply. C1 self-checks must pass. The gate compares cycles for the full run of
+these fixed instruction streams. Project `core.perf_tolerance` is 0.01.
+The tolerance is an allowed increase in cycles. It is not host timing noise.
+
+Recorded baseline: MacBookPro, 2026-11-13, default config, seed 1, added memory
+latency 0. These are RTL simulation counts. They are not physical core scores.
+
+| Program | Instructions | Cycles | IPC | Cycle tolerance |
+|---|---:|---:|---:|---:|
+| median | 10653 | 39887 | 0.267079 | 1% |
+| vvadd | 6490 | 21824 | 0.297379 | 1% |
+| multiply | 54296 | 184742 | 0.293902 | 1% |
+
+Use a fresh external `RUN_ROOT`. The link path must not exist.
+Set the project's source environment and private locks as described above.
+
+```sh
+nice -n 15 rvw workloads run --project "$PROJECT" --source "$RISCV_TESTS" --out "$RUN_ROOT"
+mkdir -p "$PROJECT/rvw/out"
+ln -s "$RUN_ROOT" "$PROJECT/rvw/out/bench"
+nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-rev "$BASE" --cand-rev "$CANDIDATE"
+```
+
+The gate measures both committed revisions. The table is a dated reference;
+it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
+to override the project policy explicitly. Keep all generated results out of Git.
+
+Same-revision native control, 2026-11-13, core
+`baf7dc82f855eddaf5b0a20a6802c526f127e38a` on both sides, `--no-cache`:
+
+| Program | Base cycles | Candidate cycles | Cycle change |
+|---|---:|---:|---:|
+| median | 39887 | 39887 | 0% |
+| multiply | 184742 | 184742 | 0% |
+| vvadd | 21824 | 21824 | 0% |
+
+The gate returned `accept`; all six C1 runs passed. This checks the selected
+programs and policy. It does not qualify the core. A test fixture also checks
+that a 2% cycle increase is rejected at 1% tolerance. No deliberately slower
+native core revision was run.

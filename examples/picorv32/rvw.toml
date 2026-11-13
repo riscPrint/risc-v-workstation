@@ -10,7 +10,7 @@ configs = ["default"]
 default_config = "default"
 source_repo = "."
 source_env = "RVW_CORE_SOURCE"
-lock = "picorv32"
+lock = "${RVW_CORE_LOCK:-picorv32}"
 # The generic mapped adapter's inputs: the map, the launcher and build, RiscvSim and the native tools.
 cache_paths = ["rvw/core-map.json", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh", "${RVW_HOME}/rvw/src/rvw/sim"]
 identity = true
@@ -48,6 +48,8 @@ wall_timeout = true
 jobs = 2
 build_timeout_s = 3600
 startup_s = 300
+
+perf_tolerance = 0.01
 
 [suites.smoke]
 dir = "rvw/out/programs"
@@ -87,3 +89,18 @@ configs = ["default"]
 max_cycles = 2000000
 timeout_s = 120
 mem_latency = 0
+
+# Opt in with --tier bench. Link rvw/out/bench to an external workload run.
+[suites.bench]
+dir = "rvw/out/bench/build"
+glob = "*/workload.elf"
+strip_suffix = "/workload.elf"
+include = ['^(median|vvadd|multiply)$']
+max_cycles = 2000000
+timeout_s = 110
+mem_latency = 0
+perf_metrics = ["cycles"]
+
+[tiers.bench]
+description = "fixed self-checked IPC regression subset; disabled in quick/full"
+runs = [{suite = "bench"}]
