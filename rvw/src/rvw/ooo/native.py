@@ -38,7 +38,7 @@ def build(path):
 
 
 def simulate(ops, config, max_cycles):
-    if (config.frontend or config.execution or config.translation or config.rename or config.ports or
+    if (config.components or config.frontend or config.execution or config.translation or config.rename or config.ports or
         any(op.kind not in ('alu', 'multiply', 'divide') or len(op.sources) > 2 for op in ops)):
         return None
     if os.environ.get('RVW_OOO_NATIVE') == '0' or not library_path().is_file():

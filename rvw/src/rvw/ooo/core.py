@@ -36,8 +36,17 @@ class Config:
     translation: dict = field(default_factory=dict)
     rename: dict = field(default_factory=dict)
     custom_instructions: list = field(default_factory=list)
+    components: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        from rvw.csim.config import validate as validate_components
+        if not isinstance(self.components, dict):
+            raise ValueError("components must be an object")
+        validate_components(self.components)
+        if self.components.get("memory", {}).get("l1i") and not self.frontend:
+            raise ValueError("component instruction cache requires explicit frontend timing")
+        if self.translation and self.components.get("memory", {}).get("tlb"):
+            raise ValueError("select own translation or component TLB timing, not both")
         from .custom import validate as validate_custom
         validate_custom(self.custom_instructions, self.latencies)
         from .rename import validate
@@ -107,6 +116,23 @@ class Entry:
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
+    if not config.components:
+        return _simulate(instructions, config, max_cycles, predictor, memory, backend)
+    if predictor is not None or memory is not None or backend == "native":
+        raise ValueError("component configuration requires its own Python timing adapters")
+    from .components import Adapter
+    with Adapter(config.components) as adapter:
+        branch = any(key in config.components for key in ("branch", "btb", "ras", "indirect"))
+        result = _simulate(instructions, config, max_cycles,
+                           predictor=adapter if branch else None,
+                           memory=adapter if "memory" in config.components else None,
+                           backend="python", instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
+        result["events"].update(adapter.events)
+        result["components"] = adapter.stats(result["instret"])
+        return result
+
+
+def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", instruction_memory=None):
     """Commit, issue, rename, fetch. Latency 1 completes next cycle.
 
     Memory instructions issue only after older memory instructions complete.
@@ -255,13 +281,19 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             if kind in ("load", "store") and memory is not None and not forwarded:
                 # The component owner supplies access(address, size, write, cycle).
                 # It returns an additional service delay in model cycles.
-                service = memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle)
+                service = (memory.access_instruction(entry.insn, cycle) if hasattr(memory, "access_instruction") else
+                           memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle))
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
                 latency += service
             if kind in ("branch", "jump"):
-                predicted = predictor.predict(entry.insn.pc, entry.insn.pc + entry.insn.length)
-                predictor.update(entry.insn.pc, entry.insn.next_pc)
+                if hasattr(predictor, "predict_instruction"):
+                    predicted = predictor.predict_instruction(entry.insn)
+                    latency += predictor.last_delay
+                    predictor.update_instruction(entry.insn)
+                else:
+                    predicted = predictor.predict(entry.insn.pc, entry.insn.pc + entry.insn.length)
+                    predictor.update(entry.insn.pc, entry.insn.next_pc)
                 events["branches"] += 1
                 if predicted != entry.insn.next_pc:
                     events["branch_misses"] += 1
@@ -340,7 +372,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             loads += op.kind == "load"
             stores += op.kind == "store"
         if frontend:
-            frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None)
+            frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None, memory=instruction_memory)
         for _ in range(0 if frontend else config.fetch_width):
             if cycle < blocked_until or unresolved_branch is not None:
                 break
@@ -413,11 +445,14 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
         engine += library_path().read_bytes()
+    if config.components:
+        from rvw.csim.engine import source_hash
+        engine += source_hash().encode()
     return dict(schema="rvw.ooo-run/1", **result, config=asdict(config),
                 config_sha256=sha256(config_bytes).hexdigest(),
                 trace_sha256=sha256(trace_bytes).hexdigest(),

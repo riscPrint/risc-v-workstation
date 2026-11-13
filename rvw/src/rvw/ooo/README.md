@@ -194,8 +194,8 @@ permissions, reproduce page faults, or model physical placement.
 Python callers can pass `memory=` to `simulate`. Its interface is
 `access(address, size, write, cycle) -> additional_cycles`. This boundary is
 for the component library. Forwarded loads do not request that service.
-The CLI has no cache provider yet. L1/L2/L3 cache policies, prefetch, memory
-interconnect contention, and component-library adapters remain open.
+The CLI can select the shared component provider described below. Detailed
+interconnect contention and protocol behavior remain separate work.
 
 `topdown` partitions commit slots. Retired instructions use `retiring` slots.
 Remaining slots use `bad_speculation` during recovery, then `backend_bound`
@@ -370,3 +370,57 @@ engines. The projected issue capacity is a unified capacity unless separate
 own-model class limits are supplied. Equal dimensions do not imply equal
 microarchitecture or timing fidelity. The report keeps the normalized own
 configuration so these assumptions remain visible.
+
+## Shared native component models
+
+The optional `components` object uses the in-process `rvw.csim.lib.Components`
+API. It accepts the component study's `branch`, `btb`, `ras`, `indirect`, and
+`memory` sections. For example:
+
+```json
+{
+  "components": {
+    "branch": {"model": "bimodal", "entries": 1024},
+    "btb": {"levels": [
+      {"entries": 64, "ways": 2, "latency": 0},
+      {"entries": 2048, "ways": 4, "latency": 2}
+    ]},
+    "ras": {"entries": 32},
+    "memory": {
+      "dram_latency": 200,
+      "l1d": {"size_kib": 32, "ways": 8, "latency": 4},
+      "l2": {"size_kib": 512, "ways": 8, "latency": 12},
+      "llc": {"size_kib": 4096, "ways": 16, "latency": 40},
+      "tlb": {"levels": 3, "l1": {"entries": 32, "ways": 4}}
+    }
+  }
+}
+```
+
+The component worker owns these algorithms and their parameter validation.
+The library builds on first use when a native C++ compiler is available.
+`rvw csim build` can build it in advance. See `ComponentSims/README.md` for
+models, prefetch policies, supported configurations and fidelity limits.
+This adapter does not copy cache replacement or predictor implementations.
+
+Data cache service begins after own-model translation completes. A component
+TLB and the own `translation` object cannot both be selected. Component cache
+and translation latency is added to the own execution latency. Set the own
+load/store latency to the core execution cost that excludes memory service.
+Cross-line and cross-page operations issue one component access per segment.
+Forwarded loads bypass data cache service. Replay retains component requests
+already made and their cache effects.
+
+Declare `memory.l1i` to add instruction cache service. This requires an explicit
+own `frontend` object. Fetch coalesces requests to the same line within a
+cycle and handles instructions that cross a line boundary. Native instruction
+prefetch policies can operate on this traffic. The interface does not expose
+FTQ-directed prefetch requests or instruction TLB walks.
+
+Branch lookup uses the shared direction model, multi-level BTB, indirect
+predictor and RAS when configured. Actual-path history and training occur at
+issue. BTB lookup delay adds to the modeled branch resolution delay. This is
+a committed-path approximation. Speculative history repair and fetch-time
+prediction remain open. The report's `components` object retains native
+statistics. Own branch and recovery events remain in `events`. Component
+execution uses the Python timing loop. No RTL fidelity is established.
