@@ -134,3 +134,10 @@ at most 90 seconds bounds compiler, adapter and checker subprocesses. An
 `allowed` result requires a passing C1, valid capture, and an allowed answer
 from the selected model with a matching process exit. This is finite ordering
 evidence. Project architectural and production qualification remain separate.
+
+## SMP interrupt capture
+
+The C2/2 writer can emit `irq` and `trap` events for an active hart.
+Each event has that hart's current reset epoch and the common capture sequence.
+The event payload uses the existing C2 IRQ or trap fields. File order remains
+capture order. It does not establish cross-hart memory order.

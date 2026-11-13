@@ -78,4 +78,25 @@ class MultiHartSpec extends AnyFunSuite {
     } finally Files.delete(p)
   }
 
+  test("IRQ and trap events retain independent hart epochs") {
+    val p = Files.createTempFile("multi-hart-irqs", ".jsonl")
+    val w = new MultiHartTrace(p.toFile, ujson.Obj("xlen" -> 64), Seq(0, 1))
+    try {
+      intercept[IllegalArgumentException](w.irq(1, 0, 8))
+      w.reset(0, 0); w.reset(1, 0)
+      w.irq(1, 1, 8)
+      w.reset(1, 2)
+      w.trap(1, 3, (BigInt(1) << 63) | 3, 0, true)
+      w.complete(1, 4, Status.Pass)
+      intercept[IllegalArgumentException](w.irq(1, 5, 0))
+    } finally w.close()
+    try {
+      val rows = Files.readAllLines(p)
+      assert(ujson.read(rows.get(3))("hart").num == 1)
+      assert(ujson.read(rows.get(3))("epoch").num == 0)
+      assert(ujson.read(rows.get(5))("epoch").num == 1)
+      assert(ujson.read(rows.get(5))("cause").str == "0x8000000000000003")
+    } finally Files.delete(p)
+  }
+
 }

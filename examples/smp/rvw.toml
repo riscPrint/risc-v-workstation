@@ -1,0 +1,20 @@
+[project]
+schema = "rvw.project/1"
+root = "."
+[core]
+name = "smp"
+backend = "riscvsim-verilator"
+adapter = "./rvw/run.sh"
+configs = ["smp2", "smp3", "smp4", "smp5", "smp6", "smp7", "smp8"]
+default_config = "smp2"
+lock = "vex-mem"
+source_repo = "."
+source_env = "VEXIIRISCV"
+identity = true
+input_complete = false
+wall_timeout = true
+jobs = 1
+build_timeout_s = 5400
+startup_s = 300
+[cosim]
+platform = "rvw/platform.json"
