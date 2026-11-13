@@ -84,3 +84,33 @@ its declared fairness assumptions. This is weak fairness on the finite model.
 It does not establish unbounded RTL liveness. Channel queues, multiple active
 transactions, MESI/MOESI directory profiles, TLC/Murphi cross-checks and actual
 TileLink-C refinement remain open.
+
+## Queued MESI and MOESI profiles
+
+`python3 SpinalChecks/coherence/directory.py --profile moesi --requests 2`
+runs the queued directory abstraction. `rvw memory directory` and the memory
+MCP tool expose the same experiment. Each A/B/C/D/E queue holds one whole
+message. The home has one active transaction per line. Two lines can have
+active transactions at the same time. Each client has one program request
+outstanding. Repeated requests can hit a valid copy or request an upgrade.
+Writes from Shared/Owned copies retain the local data while the home invalidates
+peer copies. These are abstract upgrades, not a full AcquirePerm channel encoding.
+
+MESI reads can receive Exclusive permission. MOESI intervention can retain a
+dirty Owned copy while another client receives Shared data. Memory can remain
+stale only while an owner or a transfer buffer holds the latest data. Separate
+invariants check exclusivity, valid-copy bytes, intervention data and home data.
+Writes toggle a two-value alphabet. Each client can choose reads or writes to
+one or two lines for up to three requests. Queue occupancy gives backpressure.
+No request deadline is renewed by an unrelated response.
+
+The model reuses named weak-fairness SCC checks. Defects cover lost responses,
+stale data, early grants, starvation and a cyclic C/D wait. The report retains
+bounds, assumptions and incomplete-search status. Native Python exhausted the
+MOESI two-request/one-line graph at 627 states and the one-request/two-line
+graph at 391 states. Those counts apply to these exact bounds.
+
+Limits: whole single-beat messages, no voluntary eviction, no source/sink ID
+allocation, no speculative rollback and no reset during a transaction. The
+TileLink channel monitor is a separate implementation. No refinement relation
+or TLC/Murphi cross-check is established by these model tests.

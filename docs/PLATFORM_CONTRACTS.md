@@ -135,6 +135,15 @@ ignored annotation. It returns a native C1 outcome. A compile-only result is
 not a run outcome. `physical_signoff` remains false. The simulation README
 lists exact fields. No standard-cell library or native gate backend is bundled.
 
+## Finite coherence directory experiments
+
+`rvw.coherence-fair/1` reports pass, fail or inconclusive for a finite model
+under named weak-fairness action sets. Directory reports add a MESI/MOESI
+profile, queue capacity, line count, request count and value bounds. Incomplete
+searches cannot pass. A failure includes a safety witness or a prefix to a
+fair noncompletion component. A model pass is not an RTL liveness or protocol
+refinement result. Independent-model cross-check status remains explicit.
+
 ## Bounded TileLink-C monitor generation
 
 `rvw.tlc-bind/1` is a project profile for two typed Spinal TileLink Bus bundles

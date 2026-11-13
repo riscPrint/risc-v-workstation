@@ -123,3 +123,13 @@ data. This is monitor runtime evidence. It is not a real home/cache refinement
 proof or a production design-database integration result. Multi-beat channels,
 real coherent-fabric campaigns and independent protocol-model cross-checks
 remain open.
+
+## Queued directory experiments
+
+`rvw memory directory --profile moesi --lines 2 --requests 1` checks a finite
+queued directory model. Select MESI or MOESI, one or two lines, and one to three
+requests per client. `--limit` bounds state exploration. `--bug` selects a seeded
+counterexample. The report states the named weak-fairness assumptions and model
+bounds. Use RVW_ROOT to select the installed tools checkout. See the queued
+profile section in `SpinalChecks/coherence/README.md` for semantics and limits.
+A finite-model pass is not a coherent-fabric RTL result.

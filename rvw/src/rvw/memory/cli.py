@@ -5,6 +5,7 @@ from .multihart import images, check
 from .axiomatic import check as axiomatic_check
 from .concurrent import generate
 from .tilelink_bind import generate as tilelink_bind
+from .directory_model import check as directory_check
 
 
 def register(sub):
@@ -33,6 +34,13 @@ def register(sub):
     t.add_argument('--profile', required=True, type=Path)
     t.add_argument('--out', required=True, type=Path)
     t.set_defaults(func=lambda args: emit(lambda: tilelink_bind(args.database, args.profile, args.out)))
+    d = commands.add_parser('directory', help='check finite queued MESI/MOESI directory profiles')
+    d.add_argument('--profile', choices=('mesi', 'moesi'), default='mesi')
+    d.add_argument('--lines', type=int, default=1)
+    d.add_argument('--requests', type=int, default=1)
+    d.add_argument('--limit', type=int, default=100000)
+    d.add_argument('--bug', choices=('lost_ack', 'stale_data', 'early_grant', 'starvation', 'cyclic_wait'))
+    d.set_defaults(func=lambda args: emit(lambda: directory_check(args.profile, args.lines, args.requests, args.limit, args.bug)))
 
 
 def command_images(args):
@@ -49,4 +57,4 @@ def emit(call):
     except (ValueError, OSError, KeyError, TypeError) as exc:
         result = {'status': 'inconclusive', 'reason': str(exc)}
     print(json.dumps(result, indent=2))
-    return {'mismatch': 1, 'forbidden': 1, 'inconclusive': 3}.get(result.get('status'), 0)
+    return {'mismatch': 1, 'forbidden': 1, 'fail': 1, 'inconclusive': 3}.get(result.get('status'), 0)

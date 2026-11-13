@@ -1187,7 +1187,7 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 
 ```text
 usage: rvw memory [-h] [--project PROJECT]
-    {images,check,axiomatic,generate,tilelink-bind} ...
+    {images,check,axiomatic,generate,tilelink-bind,directory} ...
 ```
 
 ### `rvw memory images`
@@ -1222,6 +1222,15 @@ usage: rvw memory generate [-h] [--seed SEED] [--harts HARTS] [--length
 ```text
 usage: rvw memory tilelink-bind [-h] --database DATABASE --profile PROFILE
     --out OUT [--project PROJECT]
+```
+
+### `rvw memory directory`
+
+```text
+usage: rvw memory directory [-h] [--profile {mesi,moesi}] [--lines LINES]
+    [--requests REQUESTS] [--limit LIMIT] [--bug
+    {lost_ack,stale_data,early_grant,starvation,cyclic_wait}] [--project
+    PROJECT]
 ```
 
 ### `rvw ooo`
@@ -2926,6 +2935,14 @@ Starts a background job: no.
 Check C2/2 serialized memory against independent stimulus bytes. No RVWMO proof.
 
 Arguments: `trace` (required), `reference` (required).
+
+Starts a background job: no.
+
+### `memory_directory`
+
+Check a finite queued MESI/MOESI directory model with named weak fairness.
+
+Arguments: `profile`, `lines`, `requests`, `limit`, `bug`.
 
 Starts a background job: no.
 
