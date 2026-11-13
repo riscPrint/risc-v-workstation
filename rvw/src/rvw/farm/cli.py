@@ -25,6 +25,17 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    queue = commands.add_parser("queue")
+    queue.add_argument("--root", required=True)
+    queue.add_argument("--operation", choices=("submit", "list", "work", "recover", "cancel", "events"), default="list")
+    queue.add_argument("--options", default="{}", help="JSON operation arguments")
+    queue.set_defaults(func=queue_command)
+    serve = commands.add_parser("serve")
+    serve.add_argument("--root", required=True)
+    serve.add_argument("--tokens", required=True, help="JSON file mapping tokens to owners")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8765)
+    serve.set_defaults(func=serve_command)
     report = commands.add_parser("dashboard")
     report.add_argument("--root", required=True)
     report.add_argument("--out", required=True)
@@ -66,3 +77,14 @@ def classify_command(args):
 def notifications_command(args):
     from .notifications import notifications
     print(json.dumps(notifications(args.out)))
+
+
+def queue_command(args):
+    from .service import manage
+    print(json.dumps(manage(args.root, args.operation, **json.loads(args.options))))
+
+
+def serve_command(args):
+    from .http import server
+    with server(args.root, json.loads(Path(args.tokens).read_text()), args.host, args.port) as http:
+        http.serve_forever()

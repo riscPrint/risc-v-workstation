@@ -192,3 +192,31 @@ The dashboard also plots recorded C3 `sim_khz` and
 `sim_instructions_per_s` per core, suite and preset. Missing values stay absent.
 The denominator includes adapter execution and artifact handling. It excludes
 model setup. These plots do not establish equivalent results or speedups.
+
+## Persistent service queue
+
+Use `rvw farm queue --root DIR --operation submit --options
+'{"owner":"alice","command":["/path/adapter"],"priority":2,"retries":1}'`.
+Run `--operation work` once per available local execution slot. Run it again
+until the queue is empty. Queue records and attempts survive controller restarts.
+Higher priority runs first. Equal priorities choose the owner with fewer recorded
+attempts, then the oldest job. This is attempt fairness, not CPU-time fairness.
+Retries cover command errors, timeouts and infrastructure errors. Every attempt
+stays recorded. An exit code of zero means collection complete, not DUT pass.
+Use `farm classify` on C1 campaign reports for identity-bound DUT instability.
+
+Use `--operation recover` after worker death. Live controllers retain ownership.
+A dead worker's recorded process group is killed only if its leader start time
+still matches. A live group with an unknown identity requires operator cleanup.
+Recovered work retries only under its declared retry count. Otherwise it stays
+inconclusive. A running cancel stays `cancel_requested` until group cleanup ends.
+This queue does not change the existing SSH executor recovery protocol.
+
+`rvw farm serve --root DIR --tokens tokens.json` serves a live run view and
+HTTP API on localhost port 8765. The token file maps bearer tokens to owners.
+`GET /runs`, `POST /runs` and `POST /cancel/ID` enforce owner isolation. The root
+page keeps the token in page memory. Workers must be launched separately with
+`farm queue --operation work`. Only trusted project users can submit commands.
+Use a TLS reverse proxy for remote access. The API does not supply a sandbox.
+MCP `farm_queue` exposes the same local operations. C3 trends remain available
+through `farm dashboard`. Cluster drill-down is not yet part of the HTTP view.
