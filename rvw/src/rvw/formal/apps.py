@@ -111,6 +111,10 @@ def generate(plan, prop):
                  f' if ({reset} || !({pending}) || ({progress})) rvwa_age <= 0;',
                  f' else if (rvwa_age < {bound}) rvwa_age <= rvwa_age + 1; end']
         assertion = f'!({pending}) || ({progress}) || rvwa_age < {bound}'
+    elif kind in ('stuck_at', 'dead_code', 'fsm_state', 'fsm_transition'):
+        from .automonitors import generate as auto_monitor
+        extra, assertion = auto_monitor(prop, ports, signal, expr, clock, reset)
+        body.extend(extra)
     elif kind == 'unr':
         assertion = f'!({expr(prop["target"])})'
     else:
@@ -168,8 +172,12 @@ def run(args):
                      'kind': prop['kind'], 'status': result['status'],
                      'proof_kind': result['proof_kind'], 'result': f'{prop["id"]}/result.json',
                      'activation': 'not_measured', 'proof_core': 'unavailable'})
+        from .automonitors import observation
+        rows[-1]['observation'] = observation(prop['kind'], result)
     status = 'fail' if any(r['status'] == 'fail' for r in rows) else (
         'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive')
+    if any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code') for p in properties):
+        status = 'inconclusive'  # Reachability targets use assertion failures as observations.
     report = {'schema': 'rvw.formal-app-results/1', 'status': status, 'properties': rows,
               'limits': 'Reviewed port map; no SpinalDB resolution. Progress is a bounded response contract, '
                         'not general liveness. No activation or solver core claim. UNR app results do not '

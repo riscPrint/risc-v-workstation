@@ -1219,3 +1219,42 @@ It checks handshake observations and rejects EXOKAY responses. It does not check
 payload stability, response data, or full AXI/TileLink behavior.
 Bind each monitor from a project wrapper, then use the existing formal flows.
 Native fixture results are bounded observation checks, not whole-core proof.
+### Automatic checks and FSM observations
+
+`rvw formal autocheck plan.json --out checks --depth 20` generates one zero and
+one one constant candidate for each output bit. It also checks declared dead-code
+conditions, FSM states and FSM transitions. Use `--mode prove` for unbounded
+safety checks. `--max-properties` limits generated work and rejects larger plans.
+
+The plan uses `rvw.autocheck/1`. It has the same `top`, `ports`, `clock`, `reset`
+and `verilog` fields as `rvw.formal-apps/1`. The clock and active-high synchronous
+reset are one-bit input ports. Optional `dead_code` rows have `id` and `expression`.
+Optional `fsms` rows have `signal`, integer `states`, and `transitions` as pairs
+of integer state values. FSM signals must be exposed in the reviewed port map.
+For example:
+
+```json
+{"schema":"rvw.autocheck/1", "top":"Top", "clock":"clk", "reset":"reset",
+ "verilog":["Top.sv"],
+ "ports":{"clk":{"direction":"input","width":1},
+          "reset":{"direction":"input","width":1},
+          "state":{"direction":"output","width":2}},
+ "fsms":[{"signal":"state","states":[0,1,2],"transitions":[[0,1],[1,2],[2,0]]}],
+ "dead_code":[{"id":"state3","expression":"state == 3"}]}
+```
+
+Each row retains its native proof result. `observation` separates `reached`,
+`not_observed_bounded`, `unreachable_conditional`, `not_constant`, `holds_bounded`
+and `constant_conditional`. A bounded absence is not unreachability or a constant
+proof. A reached target uses a failing negated assertion as its witness. Reports
+with reachability targets have aggregate status `inconclusive`; read each row.
+FSM transitions exclude the first sample and reset-crossing samples.
+These reports do not authorize coverage exclusions. Use `rvw cov prove` for UNR.
+
+`--xprop` also runs the existing bounded output X-propagation flow. Its separate
+result is retained under `xprop/`. It does not replace native four-state replay.
+MCP tools: `formal_autocheck` and `formal_apps`. The latter also exposes the
+existing deadlock and livelock progress contracts. Those contracts check a
+reviewed response bound. They do not establish general liveness or discover
+all possible deadlocks. Automatic checks use declared ports and expressions;
+they do not claim automatic extraction of all RTL FSMs or source dead branches.

@@ -408,7 +408,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,template,contracts,strengthen,proof-core,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -474,6 +474,14 @@ usage: rvw formal proof-core [-h] --smt2 SMT2 --mapping MAPPING [--db DB]
 usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
     [--timeout TIMEOUT] [--mode {bmc,prove}] [--event-model] [--async-reset]
     [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal autocheck`
+
+```text
+usage: rvw formal autocheck [-h] --out OUT [--max-properties MAX_PROPERTIES]
+    [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] [--mode {bmc,prove}]
+    [--xprop] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw formal bench`
@@ -1154,7 +1162,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 78 built-in tools, including the four job tools.
+The default server exposes 80 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1422,6 +1430,22 @@ Starts a background job: no.
 Run native SSH shards. Complete is transport completeness, not a gate verdict.
 
 Arguments: `hosts` (required), `manifest` (required), `adapter` (required), `identity_command` (required), `identity` (required), `out` (required), `jobs`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_apps`
+
+Run reviewed connectivity, CSR, bounded progress, UNR and FSM monitor contracts.
+
+Arguments: `manifest` (required), `out` (required), `depth`, `engine`, `timeout`, `mode`, `event_model`, `async_reset`.
+
+Starts a background job: yes.
+
+### `formal_autocheck`
+
+Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.
+
+Arguments: `manifest` (required), `out` (required), `max_properties`, `depth`, `engine`, `timeout`, `mode`, `xprop`.
 
 Starts a background job: yes.
 

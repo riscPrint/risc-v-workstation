@@ -2881,3 +2881,20 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Automatic formal checks
+
+`rvw.autocheck/1` extends the reviewed formal app port manifest with optional
+`dead_code` rows (`id`, `expression`) and `fsms` rows (`signal`, integer `states`,
+`transitions` as integer pairs). Generated app plans use `rvw.formal-apps/1`.
+The added kinds are `stuck_at` (`signal`, `bit`, `value`), `dead_code` (`target`),
+`fsm_state` (`signal`, `value`) and `fsm_transition` (`signal`, `source_value`,
+`value`). Report rows add `observation` without changing their raw native status.
+A failing negated reachability target means `reached`. A passing bounded target
+means `not_observed_bounded`. Unbounded passing targets mean
+`unreachable_conditional`. Constant checks distinguish `not_constant`,
+`holds_bounded` and `constant_conditional`. Existing safety contracts use
+`violated`, `holds_bounded` or `holds_conditional`. Unknown results are
+`inconclusive`.
+Plans with reachability targets have aggregate status `inconclusive` because
+reached targets are observations. No exclusion is authorized. Optional `xprop`
+records the status and path of a separate bounded output X-propagation result.
