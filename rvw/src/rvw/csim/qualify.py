@@ -124,7 +124,7 @@ def build(name: str, archive: Path | None = None) -> Path:
 def _preds(path: Path) -> dict[int, tuple[int, bool, bool]]:
     rows = {}
     with path.open() as f:
-        if f.readline().strip() != "rvw.csim-predictions/1":
+        if f.readline().strip() not in ("rvw.csim-predictions/1", "rvw.csim-predictions/2"):
             raise ValueError("bad predictions file")
         for line in f:
             o, pc, kind, taken, pred, *_ = line.split()

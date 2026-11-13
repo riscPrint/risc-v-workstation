@@ -63,7 +63,7 @@ public:
         learn_cfg = wrong_path > 0 || c.at("frontend").any();
         top_n = unsigned(c.u("report.top_branches", 20, 0, 100000));
         std::string pf = c.str("report.predictions_file", "");
-        if (!pf.empty()) { predictions.open(pf); if (!predictions) throw Error("cannot write predictions_file"); predictions << "rvw.csim-predictions/1\n"; }
+        if (!pf.empty()) { predictions.open(pf); if (!predictions) throw Error("cannot write predictions_file"); predictions << "rvw.csim-predictions/2\n"; }
     }
     bool active() const { return dir || btb || ras || ind; }
 
@@ -349,7 +349,7 @@ inline void BranchStudy::branch(const Rec& r, bool measure) {
     }
     if (predictions.is_open() && measure)
         predictions << r.ord << ' ' << std::hex << r.pc << ' ' << kind_name(r.kind) << ' ' << r.taken << ' ' << pred_taken << ' '
-                    << r.target << ' ' << pred_target << std::dec << '\n';
+                    << r.target << ' ' << pred_target << std::dec << ' ' << (btb ? level : -2) << '\n';
     if (learn_cfg && block_start) {
         StaticBranch& s = cfg[block_start]; s.pc = r.pc; s.kind = r.kind; s.len = r.len; s.last_taken = r.taken; if (r.taken) s.last_target = r.target;
     }

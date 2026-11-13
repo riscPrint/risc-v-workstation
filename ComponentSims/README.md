@@ -289,3 +289,7 @@ hit agreement and signed miss-rate error. Incomplete streams and missing or
 misaligned accesses are inconclusive. The aligned access stream can feed
 replacement and prefetch studies with `rvw csim run` or `sweep`. Model results
 do not establish RTL correctness or speed.
+
+`compare-rtl` reports target status separately from target address agreement.
+Bind `btb_hit` in branch events to distinguish a BTB miss from a not-taken
+prediction. Missing hit evidence stays unknown. See `docs/contracts/csim.md`.
