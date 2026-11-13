@@ -25,6 +25,6 @@ def report_run(job,**args):
 
 def mcp_tools():
     return [ToolSpec('checks_generate','Emit project checks and explicit missing-binding reasons. No proof run.',
-            schema({k:{'type':'string'} for k in ('project','out','manifest')},['project','out']),run,long=True),
+            schema({k:{'type':'string'} for k in ('project','out','manifest')},['project','out']),run,long=True, side_effects='long-running; writes generated checks under project out', native_tools=()),
         ToolSpec('checks_report','Count generated, bound, proven, bounded, fired and unbound checks. Missing evidence stays null.',
-            schema(dict(inventory={'type':'string'},runs={'type':'array','items':{'type':'string'}},formal={'type':'string'}),['inventory']),report_run)]
+            schema(dict(inventory={'type':'string'},runs={'type':'array','items':{'type':'string'}},formal={'type':'string'}),['inventory']),report_run, side_effects='read-only', native_tools=())]

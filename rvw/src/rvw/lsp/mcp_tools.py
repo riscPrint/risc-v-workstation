@@ -12,4 +12,4 @@ def mcp_tools():
         'db': {'type': 'string'}, 'method': {'type': 'string', 'enum': [
             'textDocument/definition', 'textDocument/references', 'textDocument/hover', 'textDocument/documentSymbol']},
         'params': {'type': 'object'}}, ['db', 'method', 'params']), request,
-        annotations={'readOnlyHint': True})]
+        annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=())]

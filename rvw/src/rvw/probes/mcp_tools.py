@@ -30,13 +30,13 @@ def mcp_tools():
                  annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_list', 'List simulation probes from a design database (db) or a probe event stream '
                  '(events), and for each consumer tool whether the probes enable it or which events are missing.',
-                 schema({'db': S, 'events': S}, []), _list, annotations={'readOnlyHint': True}),
+                 schema({'db': S, 'events': S}, []), _list, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_summary', 'Event counts and counter totals of a rvw.probe-events/1 stream.',
-                 schema({'events': S}, ['events']), _summary, annotations={'readOnlyHint': True}),
+                 schema({'events': S}, ['events']), _summary, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_convert', 'Convert a rvw.probe-events/1 stream into a consumer format: '
                  + ', '.join(sorted(CONVERTERS)) + '. bp-events, counts and interrupts need the run C2 (c2); '
                  'counts also needs C1 (c1). Refuses events that do not align with C2.',
                  schema({'events': S, 'to': {'type': 'string', 'enum': sorted(CONVERTERS)}, 'out': S, 'c2': S,
                          'c1': S, 'probe': S, 'roi_start': {'type': 'integer'}, 'roi_end': {'type': 'integer'}},
-                        ['events', 'to', 'out']), _convert),
+                        ['events', 'to', 'out']), _convert, side_effects='writes converted files to out', native_tools=()),
     ]
