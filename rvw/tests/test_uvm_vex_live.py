@@ -26,7 +26,13 @@ def test_live_vex_spike_and_corruption(tmp_path, monkeypatch):
     monkeypatch.setenv('RVW_CPU_ELF', os.environ['RVW_VEX_LIVE_ELF'])
     monkeypatch.delenv('RVW_VEX_CORRUPT', raising=False)
     report = run(HERE/'bench.json', tmp_path/'good', timeout=120)
+    assert len(report['tests']) == 6
     assert all(t['status'] == 'pass' for t in report['tests'])
+    for program in ('add', 'beq', 'lw', 'sw', 'jal', 'xor'):
+        name = 'rv32ui-p-'+program
+        evidence = json.loads((tmp_path/'good'/('cpu-checks-'+name+'.json')).read_text())
+        assert evidence['checks'] > 5 and evidence['traps'] > 0
+        assert (tmp_path/'good'/('spike-capture-'+name)).is_dir()
     checks = json.loads((tmp_path/'good/cpu-checks.json').read_text())
     assert checks['checks'] > 5
     assert checks['coverage']['samples'] == checks['checks']

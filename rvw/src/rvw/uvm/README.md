@@ -44,3 +44,6 @@ filter alone is not a feature qualification result.
 Accellera DPI remains disabled. A project DPI bridge needs separate ABI and
 behavior checks. Imported VIP still requires usable licenses and qualified
 engine support. The profile does not bypass those requirements.
+
+The [live VexRiscv binding](../../../../Uvm/examples/vexriscv/README.md#native-results-on-2026-11-13)
+has native Spike results for six RV32UI programs and six PC-corruption runs.
