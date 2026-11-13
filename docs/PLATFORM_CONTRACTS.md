@@ -4462,3 +4462,23 @@ toolchain/license scope and `generated` or `mismatch`. Generation exits 0;
 a reference mismatch exits 1; malformed input exits 2. No result is a core
 acceptance verdict. The GCC fragment and standalone decoder are integration
 hooks. They are not installed compiler or disassembler plugins.
+
+### Pinned named-profile obligations
+
+`rvw.profile-plan/1` supplies `isa_manifest`, selected `profiles` and hash-pinned
+AsciiDoc `documents`. Optional tables map obligation IDs to `proofs`, `tests`,
+and `checkers`; `unsupported` lists IDs or extension names. Optional extension
+obligations activate from the selected ISA. Supervisor profiles inherit the
+unprivileged extension requirements without weakening mandatory items.
+
+`rvw.profile-report/1` preserves full named requirement text, source line/hash,
+source revision/URL when supplied, and separate implemented/verified/missing/
+unsupported/not-selected inventories per profile. Verified requires a hash-bound
+unbounded pass with assertions and reachable environment. It is scoped to the
+reviewed obligation-to-proof mapping and retains restrictions. Base clauses,
+notes, implicit dependencies and full-profile acceptance are excluded.
+
+A baseline diff reports changed text, mandatory/optional category and activation,
+affected checkers and missing tests. Test presence has hashes but implies no
+execution. Changes require explicit adoption. This command changes no source,
+pin or model. Valid reports exit 3 and remain inconclusive. Input errors exit 2.

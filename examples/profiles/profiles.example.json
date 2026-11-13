@@ -1,0 +1,28 @@
+{
+  "schema": "rvw.profile-plan/1",
+  "isa_manifest": "${RVW_ISA_MANIFEST}",
+  "profiles": [
+    "RVA23U64",
+    "RVA23S64",
+    "RVB23U64",
+    "RVB23S64"
+  ],
+  "documents": [
+    {
+      "path": "${RISCV_PROFILES}/src/rva23-profile.adoc",
+      "sha256": "3bdbf1f2580b2e304f0954cfabecf0b2108fa0a84bb4dc3f6fa97399f07697de",
+      "revision": "e030b70992447784ad9081045d47ce6e278f381e",
+      "url": "https://github.com/riscv/riscv-profiles/blob/e030b70992447784ad9081045d47ce6e278f381e/src/rva23-profile.adoc"
+    },
+    {
+      "path": "${RISCV_PROFILES}/src/rvb23-profile.adoc",
+      "sha256": "132a466b805b8f6100b531b231122719b51797b2f8bc868db08653b642fe44ea",
+      "revision": "e030b70992447784ad9081045d47ce6e278f381e",
+      "url": "https://github.com/riscv/riscv-profiles/blob/e030b70992447784ad9081045d47ce6e278f381e/src/rvb23-profile.adoc"
+    }
+  ],
+  "unsupported": [],
+  "proofs": {},
+  "tests": {},
+  "checkers": {}
+}

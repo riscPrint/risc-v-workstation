@@ -292,6 +292,13 @@ def register(sub) -> None:
     custom.add_argument("--json", action="store_true")
     from .custom_isa import main as custom_main
     custom.set_defaults(func=custom_main)
+    profiles = s.add_parser("profiles", help="track pinned RVA23/RVB23 named obligations and mapped proof evidence")
+    profiles.add_argument("manifest")
+    profiles.add_argument("--baseline", help="previous pinned plan for an explicit-adoption obligation diff")
+    profiles.add_argument("--out", required=True)
+    profiles.add_argument("--json", action="store_true")
+    from .profiles import main as profiles_main
+    profiles.set_defaults(func=profiles_main)
     r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
     r.add_argument("--out", required=True)
     r.add_argument("--timeout", type=float, default=60, help="seconds per check")
