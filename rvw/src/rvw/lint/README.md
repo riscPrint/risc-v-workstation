@@ -598,3 +598,199 @@ The resetless-register inventory compares clock identity and edge across
 per-cell HDL domains. A BOOT domain does not hide an unreset register on a
 clock that also has resettable state. The default remains `info`: the check
 cannot infer whether a register carries valid control or qualified payload.
+
+## Five-design noise measurement, 2026-11-13
+
+Before uses workstation `79488348`. After uses the fixes in PRs #1263,
+#1267, #1270, #1276 and #1277, plus the resetless-cell and generated-RTL advice changes.
+All six backends were run. The pinned Verible version was
+`v0.0-4298-g085eef05`. Yosys timed out
+at 90 seconds on the SoC, before it completed the front end. Those results
+are not passes. All structural reports remain inconclusive. Databases were
+freshly extracted with each example's existing entry point, without simulation.
+The SoC is `generated.MultiDomainSoc`, not the single-clock composition.
+OoO Mini's fresh database differs from the earlier 100-finding report: it has
+13 rules findings and 97 Verilator findings. The old aggregate is not used
+as this measurement's baseline.
+
+| Design | Structural before / after | Rules errors before / after | Native warnings after | Precision |
+|---|---:|---:|---:|---|
+| VexRiscv | 1012 / 2 | 26 / 0 | 0 | Partial samples only |
+| VexiiRiscv | 4285 / 3 | 11 / 0 | 3 | Partial samples only |
+| NaxRiscv | 13765 / 3 | 77 / 0 | 120 | Partial samples only |
+| OoO Mini | 0 / 0 | 0 / 0 | 16 | Partial samples only |
+| SoC | 2507 / 43 | 28 / 0 | 5 | Partial samples only |
+
+NaxRiscv still has 120 native warnings. Informational register inventories remain large. This work has not
+met the daily-use target of few warnings. It has not established whole-design
+precision or CDC/RDC safety. No project-specific name suppression was added.
+Counts include informational findings. An after count of zero does not mean
+that the analyzer resolved the source-scope or hashed-expression evidence.
+
+### Counts per rule
+
+Cells are before / after. Zero means no diagnostic, not a recall result.
+The small width-extension change on the SoC follows fresh expression-key
+hashing after the scope tag; it is not a demonstrated precision improvement.
+
+| Rule | VexRiscv | VexiiRiscv | NaxRiscv | OoO Mini | SoC |
+|---|---:|---:|---:|---:|---:|
+| cdc.comb_before_sync | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 7 / 1 |
+| cdc.qualified_data_candidate | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 2 |
+| cdc.sync_candidate | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 2 / 2 |
+| lint.clock_as_data | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.comb_loop | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.constant_register | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.fsm_unreachable | 0 / 0 | 1 / 0 | 41 / 0 | 0 / 0 | 0 / 0 |
+| lint.input_driven | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.latch | 26 / 0 | 11 / 0 | 77 / 0 | 0 / 0 | 28 / 0 |
+| lint.max_fanout | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.multiple_drivers | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.naming | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.no_reset | 130 / 130 | 160 / 160 | 1112 / 1112 | 0 / 0 | 138 / 138 |
+| lint.unconnected_output | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.undriven | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| lint.unused | 1 / 1 | 8 / 8 | 12 / 12 | 0 / 0 | 8 / 8 |
+| lint.width_extension | 7 / 7 | 15 / 15 | 3 / 3 | 12 / 12 | 11 / 10 |
+| lint.width_truncation | 2 / 2 | 4 / 4 | 41 / 41 | 1 / 1 | 8 / 8 |
+| rdc.async_assert_crossing | 0 / 0 | 2142 / 1 | 6882 / 1 | 0 / 0 | 1173 / 12 |
+| rdc.async_release_unsynchronized | 0 / 0 | 1 / 1 | 1 / 1 | 0 / 0 | 3 / 3 |
+| rdc.comb_reset_logic | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 1 / 1 |
+| rdc.reconvergence | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 148 / 10 |
+| rdc.release_order_unproved | 506 / 1 | 2142 / 1 | 6882 / 1 | 0 / 0 | 1173 / 12 |
+| rdc.resetless_receiver | 506 / 1 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| sdc.unconstrained_clock | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 | 0 / 0 |
+| sdc.unsafe_crossing | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 7 / 2 |
+| verible.always-comb | 214 / 1 | 209 / 1 | 1040 / 1 | 189 / 1 | 277 / 1 |
+| verible.explicit-function-lifetime | 0 / 0 | 1 / 1 | 3 / 1 | 0 / 0 | 0 / 0 |
+| verible.explicit-function-task-parameter-type | 0 / 0 | 1 / 1 | 3 / 1 | 0 / 0 | 0 / 0 |
+| verible.explicit-parameter-storage-type | 27 / 1 | 32 / 1 | 76 / 1 | 0 / 0 | 57 / 1 |
+| verible.line-length | 697 / 1 | 2181 / 1 | 8857 / 1 | 435 / 1 | 1126 / 1 |
+| verible.unpacked-dimensions-range-ordering | 1 / 1 | 3 / 1 | 161 / 1 | 0 / 0 | 5 / 1 |
+| verilator.CMPCONST | 0 / 0 | 0 / 0 | 0 / 0 | 16 / 16 | 0 / 0 |
+| verilator.DECLFILENAME | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 |
+| verilator.UNDRIVEN | 0 / 0 | 0 / 0 | 1 / 1 | 0 / 0 | 0 / 0 |
+| verilator.UNSIGNED | 0 / 0 | 1 / 1 | 0 / 0 | 0 / 0 | 0 / 0 |
+| verilator.UNUSEDPARAM | 0 / 0 | 0 / 0 | 1 / 1 | 0 / 0 | 3 / 1 |
+| verilator.UNUSEDSIGNAL | 142 / 1 | 327 / 1 | 447 / 1 | 80 / 1 | 236 / 1 |
+| verilator.WIDTHTRUNC | 0 / 0 | 2 / 2 | 115 / 115 | 0 / 0 | 5 / 5 |
+| yosys.undriven | 0 / 0 | 0 / 0 | 3 / 3 | 0 / 0 | 0 / 0 |
+| yosys.warning | 0 / 0 | 0 / 0 | 1 / 1 | 0 / 0 | 0 / 0 |
+
+### Reviewed samples and precision limits
+
+Precision is TP / (TP + FP). Duplicate reports are excluded. The first
+source-backed finding per listed design/rule was reviewed, except where
+sample counts are stated. This is a small diagnostic sample, not a random
+or exhaustive design review. U means not triaged: no precision is claimed.
+Rules with no findings have no precision estimate.
+
+| Rule | Reviewed designs and label | Sample precision before / after |
+|---|---|---|
+| lint.latch | VexRiscv and NaxRiscv: first 10 each, FP; VexiiRiscv and SoC: first 1 each, FP | 0/22 / no active latch samples |
+| lint.width_extension | All five: first 1 each, FP; ordinary zero/sign extension | 0/5 / 0/5 |
+| lint.width_truncation | VexRiscv: both divider results, FP; OoO Mini: remainder resize, FP; NaxRiscv: first queue ID, FP; SoC: peripheral address resize, FP | 0/5 / 0/5; VexiiRiscv U |
+| lint.no_reset | VexRiscv, VexiiRiscv, NaxRiscv, SoC: first 1 each, FP; payload/state uses separate validity | 0/4 / 0/4 |
+| lint.unused | VexRiscv, VexiiRiscv, NaxRiscv, SoC: first 1 each, FP; optional counter/helper results | 0/4 / 0/4 |
+| lint.fsm_unreachable | VexiiRiscv and NaxRiscv: first 1 each, FP; hidden literal or upstream enum source | 0/2 / no active samples |
+| cdc.comb_before_sync | SoC: all 7 paths; 5 FP held payloads, 2 TP combinational comparator paths | 2/7 / 2/2 paths; one grouped finding |
+| cdc.sync_candidate | SoC: both paths recognised as two-stage BufferCC structures | Inventory; protocol U |
+| rdc.resetless_receiver | VexRiscv: first 1, FP; synchronous state feeds a resetless payload | 0/1 / 0/1 |
+| rdc.release_order_unproved | Same source/destination as the RDC class diagnostic: duplicate review item | Duplicate; no precision estimate |
+| rdc.async_assert_crossing, rdc.async_release_unsynchronized, rdc.reconvergence, rdc.comb_reset_logic | Functional isolation, reset-release assumptions and reset logic need more review | U |
+| sdc.unconstrained_clock | VexRiscv, VexiiRiscv, NaxRiscv, OoO Mini: missing period, TP | 4/4 / 4/4 |
+| sdc.unsafe_crossing | SoC: same 7 paths as CDC; 5 FP, 2 TP | 2/7 / 2/2 |
+| verilator.DECLFILENAME | All five: generated RTL contains multiple modules per file, FP | 0/5 / counted info advice |
+| verilator.UNUSEDSIGNAL | All five: optional input, unused bundle field or slice, FP | 0/5 / counted info advice |
+| verilator.UNUSEDPARAM | NaxRiscv and SoC: optional generated definitions, FP | 0/2 / counted info advice |
+| verilator.CMPCONST | OoO Mini: guarded unrolled age comparison, FP | 0/1 / 0/1 |
+| verilator.UNSIGNED | VexiiRiscv: generated default-priority comparison, FP | 0/1 / 0/1 |
+| verible.line-length | All five: first 1 each, FP; emitted expressions and identifiers | 0/5 / counted info advice |
+| verible.always-comb | All five: first 1 each, FP; legal Verilog always @(*) | 0/5 / counted info advice |
+| verible.explicit-parameter-storage-type | VexRiscv, VexiiRiscv, NaxRiscv, SoC: first 1 each, FP; emitted enum localparams | 0/4 / counted info advice |
+| verible.unpacked-dimensions-range-ordering | Same four: first 1 each, FP; emitted memory layout | 0/4 / counted info advice |
+| verible.explicit-function-lifetime | VexiiRiscv and NaxRiscv: first 1 each, FP; emitted constant functions | 0/2 / counted info advice |
+| verible.explicit-function-task-parameter-type | Same two: first 1 each, FP; legal implicit input type | 0/2 / counted info advice |
+| verilator.WIDTHTRUNC, verilator.UNDRIVEN, yosys.undriven, yosys.warning | Further source/usage review required | U |
+
+The latch sample includes exhaustive muxes, local expressions and partial
+bit assignments. The fixes preserve incomplete-switch detection. The enum
+fix retains an inconclusive result when typed or readable literals are not
+available. U rows remain open work; they are not silently counted as TP.
+
+### SoC crossing verdicts
+
+| Crossing class | Paths | Verdict | Missing fact |
+|---|---:|---|---|
+| Forward and reverse toggle qualifiers | 2 | Recognised BufferCC structures | Transfer and pulse timing |
+| Forward address/write/data and reverse data/error | 5 | Qualified held-data candidates | Source stability while the qualifier crosses |
+| Timer value/compare to interrupt BufferCC | 2 | Unprotected combinational input to synchronizer | A registered, glitch-free source or reviewed timing argument |
+| Reset-domain paths | 1173 class paths; 148 merge reports | 12 class groups, 12 release-order groups, 10 merge groups | Functional isolation and reset sequencing |
+| Reset controls | 3 release reports; 1 logic report | Still active | Release synchronization and reset-control assumptions |
+
+Library recognition does not establish protocol protection. The five payload
+paths keep stability obligations. The two comparator paths remain errors.
+The reset tree has not been qualified by this count reduction.
+
+### Ten planted defects
+
+Ten new fault cones were placed inside a private copy of OoO Mini's exported
+CPU module. They use instruction bits as inputs. This checks static diagnostic
+recall. It does not establish pipeline fault activation. No simulation ran.
+
+| Plant | Diagnostic after fixes |
+|---|---|
+| Conditional latch | verilator.LATCH and lint.latch |
+| Combinational loop | verilator.UNOPTFLAT and lint.comb_loop |
+| Eight-to-four-bit truncation | verilator.WIDTHTRUNC |
+| Used undriven signal | verilator.UNDRIVEN, yosys.undriven, lint.undriven |
+| Multiple clocked drivers | verilator.MULTIDRIVEN, yosys.conflicting_drivers |
+| Resetless output valid on a resettable clock | lint.no_reset, info; this was missed before the clock-identity fix |
+| Unsynchronized crossing | cdc.unsynchronized |
+| Reset used as data | rdc.reset_as_data |
+| Unreachable localparam FSM state | Missed: no typed enum reachability evidence; UNUSEDPARAM is not a reachability result |
+| Missing switch default | lint.latch from lowered $dlatch; missed before the imported-latch fix |
+
+Nine plants produce relevant diagnostics. This is not a general 90% recall
+claim. The localparam FSM miss and pipeline fault-activation tests remain open.
+The imported latch-enable cones also produce extra clock-as-data diagnostics;
+this is a known precision gap in the mutated HDL case.
+The minimal HDL tests are `test_lint_hdl_latch.py` and `test_lint_hdl_reset.py`.
+
+### Regenerate
+
+Use `RVW_HOME=$CHECKOUT`, the pinned external source environment variables,
+and `scripts/with-lock.sh sbt-lint nice -n 10` for private sbt outputs.
+The existing entry points are:
+
+| Design | Database entry point |
+|---|---|
+| VexRiscv | examples/vexriscv/rvw: db/runMain rvwvex.Database rv32im $RUN_ROOT/vex/design.db |
+| VexiiRiscv | examples/vexiiriscv/rvw: ++2.13.14!; db/runMain rvwvexii.Database rv32im $RUN_ROOT/vexii/design.db |
+| NaxRiscv | examples/naxriscv/rvw/build-db.sh rv32imasu $RUN_ROOT/nax/design.db; set RVW_NAX_SBT_LOCK=sbt-lint |
+| OoO Mini | examples/ooo-mini: runMain ooomini.BuildDb; output rvw/out/design.db |
+| SoC | Generate the two Vex compositions, then SpinalSoc: -Drvw.soc.vex=true db/runMain rvwsoc.Database $RUN_ROOT/soc/design.db 50000000 async_high generated.MultiDomainSoc --rtl $RUN_ROOT/soc/rtl |
+
+For VexiiRiscv set `JAVA_TOOL_OPTIONS=-Driscvsim.script=$CHECKOUT/examples/vexiiriscv/rvw/run.sh`.
+For each database, use `rvw.lint-settings/1` with its `meta.config` or
+`default`, `meta.toplevel`, the generated RTL files, `timeout_s: 90`, and
+`backends: [verilator, verible, yosys, structural, rules, sdc]`.
+Run `rvw lint --settings SETTINGS.json --json`. Keep raw data outside Git.
+Direct entry points were used because OoO Mini and the composed example have
+no `query.build` project entry, and the other launchers hard-code shared locks.
+
+### Generated RTL advice policy
+
+SpinalDB's `spinalhdl` metadata and exact `rtl_files` paths identify emitted
+RTL. The adapter counts known source-format advice once per rule and file,
+at `info` severity. It retains counts, member locations and native output.
+This covers Verible formatting/type-spelling rules and Verilator filename,
+unused-field and unused-parameter advice. Handwritten or unrecorded files
+keep their original diagnostics. Truncation, undriven values, missing defaults,
+errors and incomplete backend status remain unchanged. Review existing exact
+waivers after regrouping. The minimal native fixture uses legal `always @(*)`.
+
+External source HEADs were VexRiscv `baf7dc82`, VexiiRiscv `9f70315d`,
+and NaxRiscv `9f452d50`. OoO Mini's copied RTL was checked byte-identical to
+its database-recorded emitted file. Final advice measurements use that emitted
+path. A copied path alone does not establish database provenance.
