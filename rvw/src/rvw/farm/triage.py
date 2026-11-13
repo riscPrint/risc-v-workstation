@@ -32,9 +32,19 @@ def triage(root, baseline=None, known=None, bundles=None, core_env=None):
                     issues.append(dict(test=test.id, run=str(run), error=str(error)))
             details = test.extra.get('details', {})
             details = details if isinstance(details, dict) else {}
+            trap_observation = None
+            if (run and not observed and test.conclusive and test.status == 'fail'
+                    and type(details.get('traps')) is int and details['traps'] > 0):
+                from .trap_signature import observed_trap
+                try:
+                    trap_observation = observed_trap(run, test, suite.core, suite.config, suite.source)
+                except (ValueError, OSError, TypeError, KeyError) as error:
+                    issues.append(dict(test=test.id, run=str(run), error=str(error)))
             mismatch = observed or details.get('first_mismatch', {})
             if isinstance(mismatch, dict) and mismatch.get('pc') is not None and mismatch.get('instruction') is not None:
                 signature = 'mismatch:' + json.dumps([mismatch['pc'], mismatch['instruction']], sort_keys=True)
+            elif trap_observation:
+                signature = 'trap:' + trap_observation['cause']
             elif details.get('trap_cause') is not None:
                 signature = 'trap:' + str(details['trap_cause'])
             else:
@@ -46,7 +56,7 @@ def triage(root, baseline=None, known=None, bundles=None, core_env=None):
                 core=suite.core, config=suite.config, signature=signature, category=category,
                 members=[], known=[], bundle=None))
             cluster['members'].append(dict(suite=suite.suite, test=test.id, seed=test.seed, status=test.status,
-                run=str(run) if run else None, revision=suite.source, signature=test.signature, comparison=observed))
+                run=str(run) if run else None, revision=suite.source, signature=test.signature, comparison=observed, trap_observation=trap_observation))
             for entry in known_entries:
                 if entry.matches(suite.suite, test.id, test.signature, suite.config):
                     cluster['known'].append(dict(reason=entry.reason, recorded_at_rev=entry.recorded_at_rev,

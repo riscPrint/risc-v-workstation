@@ -214,3 +214,33 @@ A real cluster run still needs all of these steps:
 
 Cluster submission, admission, PVC binding, container builds, cancellation and
 pod execution were NOT RUN. No cluster capacity or Linux parity is claimed.
+
+## Native trap-cause negative control
+
+`trap-results.json` records two real persistent-server tests on the clean good
+core fixture. `trap/correct-cause.S` expects machine ECALL cause 11 and passes.
+`trap/wrong-cause.S` expects cause 3 and fails with original signature `fail:2`.
+Both take one observed trap with cause `0xb`. The pair completed in 25.793
+seconds, including startup, under private core and sbt locks and a private
+`RISCVSIM_WORK`. The wrong expectation is a test fault. It is not a core finding.
+
+Triage validates the failed C1/C3 identities, full C2 stream, terminal status,
+trap count and trace-header identities. It groups the failure as `trap:0xb`
+and writes one C5 bundle. The original C1 and C5 signatures stay `fail:2`.
+The passing trap control creates no failure cluster. A last trap is not an
+established root cause. No new Spike comparison or C4 acceptance is claimed.
+The initial probe and earlier shared-plan run used the default model cache.
+The recorded control/fault pair instead uses an explicit private model path.
+
+Build each source with the RISC-V compiler and `trap/link.ld`, for example:
+
+```sh
+riscv64-unknown-elf-gcc -march=rv32im_zicsr -mabi=ilp32 -nostdlib -nostartfiles \
+  -Wl,-T,trap/link.ld -o wrong-cause.elf trap/wrong-cause.S
+```
+
+Run both ELFs through a two-row explicit manifest and the native submit path.
+Give the bundle operation a project with `[debug].config` bound to its core
+debug description. A missing debug binding remains an explicit bundle error.
+The receipt pins the measured ELF, C1, C2, RTL and C5 bytes. The assembly recipe
+can build new executions; it does not copy the original run artifacts.
