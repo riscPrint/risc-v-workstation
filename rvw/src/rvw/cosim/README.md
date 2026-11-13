@@ -195,3 +195,10 @@ never takes arbitrary trap bits from the DUT to make a match.
 
 `cosim_doctor` uses an isolated read-only MCP call. Small traces return the
 inspection inline. A longer inspection returns a job ID. No reference runs.
+
+For an RVFI source that reports the full aligned read bus on every scalar load,
+set `memory_read_convention: "full_word"` and `aligned_mem: true` in the platform.
+The checker validates the raw address and full read strobe before deriving the
+instruction's byte lanes. Other modes retain strict architectural masks. Store
+strobes and register values remain strict. This option refuses MMIO, misaligned,
+compressed and trapping loads. Review the RTL capture before choosing it.
