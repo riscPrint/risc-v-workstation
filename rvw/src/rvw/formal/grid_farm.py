@@ -16,7 +16,9 @@ from .grid_adapter import identity
 
 
 def distributed(model, hosts, out, *, timeout=60, **settings):
-    validate(model)
+    is_rtl = model.get('input_kind') == 'rtl'
+    if not is_rtl:
+        validate(model)
     if not hosts or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('remote hosts and positive finite timeout required')
     if len({h['name'] for h in hosts}) != len(hosts):
@@ -41,7 +43,11 @@ def distributed(model, hosts, out, *, timeout=60, **settings):
             return {**row, 'status': 'empty', 'rows': []}
         subset = {**model, 'properties': {p: model['properties'][p] for p in selected}}
         if not host:
-            return {**row, **grid(subset, out / 'local', **settings)}
+            solve_grid = grid
+            if is_rtl:
+                from .rtl_grid import local
+                solve_grid = local
+            return {**row, **solve_grid(subset, out / 'local', **settings)}
         payload = json.dumps({'model': subset, 'settings': settings}, sort_keys=True).encode()
         control = controls[index - 1]
         python = host.get('python', 'python3')
@@ -75,7 +81,7 @@ def distributed(model, hosts, out, *, timeout=60, **settings):
             report = json.loads(data)
             if report['request_sha256'] != sha256(payload).hexdigest():
                 raise ValueError('result request identity differs')
-            if [r['property'] for r in report['rows']] != selected:
+            if sorted(r['property'] for r in report['rows']) != sorted(selected):
                 raise ValueError('result property coverage differs')
             (out / f'remote-{index}.json').write_bytes(data)
             return {**row, **report}
@@ -87,9 +93,9 @@ def distributed(model, hosts, out, *, timeout=60, **settings):
         shards = list(pool.map(shard, range(len(groups))))
     rows = [r for s in shards for r in s['rows']]
     status = 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive'
-    report = {'schema': 'rvw.formal-model-grid/1', 'status': status, 'rows': rows, 'shards': shards,
+    report = {'schema': 'rvw.formal-rtl-grid/1' if is_rtl else 'rvw.formal-model-grid/1', 'status': status, 'rows': rows, 'shards': shards,
               'model_sha256': sha256(raw).hexdigest(), 'adapter_identity': expected_identity,
               'limits': 'Trusted remote hosts. Uses farm SSH transfer, identity, reservations and cancellation. '
-                        'Proof covers the supplied explicit graph only.'}
+                        + ('Proof covers exported RTL cases only.' if is_rtl else 'Proof covers the supplied explicit graph only.')}
     (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     return report

@@ -49,3 +49,17 @@ def test_grid(tmp_path):
     r = grid(m, tmp_path / 'out', workers=2)
     assert r['status'] == 'fail'
     assert {x['property']: x['status'] for x in r['rows']} == {'safe': 'pass', 'broken': 'fail'}
+
+
+def test_exhaustive_three_state_soundness():
+    from itertools import product
+    from rvw.formal.deep_model import path_to_bad, adjacency
+    possible = [(str(a), str(b)) for a in range(3) for b in range(3)]
+    for mask in range(1 << len(possible)):
+        m = {'states': {str(i): {'bit': i % 2, 'ram': i} for i in range(3)},
+             'initial': ['0'], 'edges': [list(e) for j, e in enumerate(possible) if mask & (1 << j)],
+             'properties': {'p': ['2']}}
+        expected = 'fail' if path_to_bad(m['initial'], adjacency(m), {'2'}) else 'pass'
+        assert abstract(m, 'p', ['bit'])['status'] == expected
+        r = induction(m, 'p', 3)
+        assert r['status'] in (expected, 'inconclusive')
