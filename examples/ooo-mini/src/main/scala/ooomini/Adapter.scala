@@ -48,7 +48,7 @@ object Adapter extends CoreAdapter {
     report(key,work).generatedSourcesPaths.toSeq.map(new File(_))
   override def generatedVerilog(model: Model): Seq[File] = model.report.generatedSourcesPaths.toSeq.map(new File(_))
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
-    require(!job.konata && !job.spinaltrace && !job.rvfiCheck,
+    require(!job.konata && !job.rvfiCheck,
       "use probe conversion for Kanata; runtime RVFI monitor is not mapped")
     require(job.memLatency.forall(_ == 0), "only zero-latency RAM is mapped")
     require(!sys.env.contains("RVW_COSIM_PORT") || job.rvfiTrace,"live comparison needs --rvfi-trace")
@@ -63,12 +63,14 @@ object Adapter extends CoreAdapter {
     var outcome = RunOutcome(Status.Timeout,0,0)
     var cycle = 0L
     var retired = 0L
+    var firstSample = -1L
     try model.doSim(job.out.getAbsolutePath,job.seed) { dut =>
       dut.io.boot #= ctx.elf.entry
       dut.io.interrupts #= 0; dut.io.accessDevice #= false
       dut.io.instruction #= 0; dut.io.loadData #= 0
       dut.clockDomain.forkStimulus(10)
       dut.clockDomain.waitSampling()
+      if(job.wave && job.waveFrom.exists(_ > 0)) disableSimWave()
       val control = new SimControl(job,ctx.wallClock)
       dut.clockDomain.onSamplings { control.cycle += 1 }
       FaultInjector.forJob(job).foreach(_.attach(dut,control))
@@ -116,6 +118,7 @@ object Adapter extends CoreAdapter {
             evidence("taken",ujson.Obj("cause" -> Hex(cause)))
             writer.foreach(_.trap(cycle,cause,BigInt(0),true))
           }
+          if(firstSample < 0) firstSample = simTime()
           val records = rvfi.sample(cycle)
           val store = dut.io.store.toBoolean
           val addr = dut.io.storeAddress.toLong
@@ -148,7 +151,10 @@ object Adapter extends CoreAdapter {
         ChecksSim.writeRunReport(dut,new File(job.out,"checks-run.json").getPath)
         outcome = outcome.copy(details = ujson.Obj("generated_sv_bindings" -> (if(job.config == "default") 8 else 0),
           "generated_sv_assertions_enabled" -> (job.config == "default"),"device_plugins" -> devices.nonEmpty,
-          "external_interrupt_evidence" -> external.nonEmpty,"socket_lockstep" -> live.nonEmpty))
+          "external_interrupt_evidence" -> external.nonEmpty,"socket_lockstep" -> live.nonEmpty,
+          "wave_time_per_cycle" -> 10,"wave_time_of_cycle_1" -> (firstSample + 10),
+          "wave_window" -> ujson.Obj("from" -> job.waveFrom.map(x => ujson.Num(x)).getOrElse(ujson.Null),
+            "to" -> job.waveTo.map(x => ujson.Num(x)).getOrElse(ujson.Null))))
         if(ChecksSim.firings(dut).nonEmpty && outcome.status == Status.Pass)
           outcome = outcome.copy(status = Status.Fail,message = Some("generated check fired"))
         writer.foreach(_.end(cycle,outcome.status.name))
