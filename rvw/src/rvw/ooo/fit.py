@@ -22,6 +22,9 @@ def fit(plan,out):
         for key in ('elf','trace','c1','events'):
             sample[key]=str((source.parent/sample[key]).resolve())
     max_cycles=plan_max_cycles(calibration)
+    objective=spec.get('objective','cycles')
+    if objective not in ('cycles','ipc'):
+        raise ValueError('objective must be cycles or ipc')
     base=asdict(configuration(json.loads(Path(calibration['config']).read_text())))
     params=spec['parameters']
     if not isinstance(params,dict) or not params or any(not isinstance(v,list) or not v for v in params.values()):
@@ -44,7 +47,8 @@ def fit(plan,out):
         errors=[]
         for row in training:
             model=run(cp,paths[row['id']],max_cycles)
-            errors.append(abs(model['cycles']/row['rtl_cycles']-1))
+            errors.append(abs(model['ipc']/row['rtl_ipc']-1) if objective=='ipc'
+                          else abs(model['cycles']/row['rtl_cycles']-1))
             for name,mapping in mappings.items():
                 measured=row['events'][name]['measured']
                 if measured is None:raise ValueError('training event is missing: '+name)
@@ -58,7 +62,7 @@ def fit(plan,out):
     report=dict(schema='rvw.ooo-fit/1',status='reported',accuracy_status='inconclusive',
                 candidates=candidates,best=best,config=str(chosen),calibration=str(dest/'calibration.json'),
                 heldout=final['samples']['heldout'],
-                objective='mean absolute relative cycle and mapped-event errors on training only; zero events use denominator one',
+                objective='mean absolute relative '+objective+' and mapped-event errors on training only; zero events use denominator one',
                 limits=['baseline validation reads heldout evidence, but selection uses training only',
                         'finite declared grid; no claim of unique or global fitted parameters',
                         'saved observations only; no RTL launch or accuracy verdict'])

@@ -898,3 +898,8 @@ can therefore use only one instruction slot from that block. The next
 block waits for another cycle. `fetch_block_limit_cycles` counts this
 restriction. Instruction count width remains a separate limit.
 
+A fit plan can set `objective: ipc` to minimize relative IPC error instead
+of the default relative cycle error. Mapped-event errors keep equal
+weight with that timing metric. Selection still uses training samples
+only. Cycle error and IPC error are different ratios, so they can select
+different candidates. The fit report names its objective.
