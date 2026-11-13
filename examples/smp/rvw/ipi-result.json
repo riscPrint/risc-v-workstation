@@ -1,0 +1,39 @@
+{
+  "run": "ipi-fixed3-run",
+  "status": "pass",
+  "c1_inconclusive": null,
+  "seed": 17,
+  "cycles": 247,
+  "instret": 74,
+  "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+  "ordering": "not_checked",
+  "per_hart_retirements": {
+    "0": 39,
+    "1": 35
+  },
+  "hart_status": {
+    "0": "pass",
+    "1": "pass"
+  },
+  "trace_sha256": "77a79df7da0ff49e8293b58ff86f9d7dabfbc3fd0329a95996cbdd10c239a061",
+  "irq_events": [
+    {
+      "hart": 1,
+      "levels": "0x8",
+      "cycle": 131
+    },
+    {
+      "hart": 1,
+      "levels": "0x0",
+      "cycle": 195
+    }
+  ],
+  "trap_events": [
+    {
+      "hart": 1,
+      "cause": "0x8000000000000003",
+      "cycle": 158
+    }
+  ]
+}

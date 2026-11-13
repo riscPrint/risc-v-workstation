@@ -15,7 +15,7 @@ import scala.collection.mutable
   * xepc when a trap follows. The last record of a run uses the decoded fall-through target. */
 class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (BigInt, BigInt),
                 sink: RvfiRecord => Unit, trapSink: (Long, BigInt, BigInt, Boolean) => Unit,
-                onStore: (BigInt, Int, BigInt) => Unit) extends TraceBackend {
+                onStore: (BigInt, Int, BigInt) => Unit, onCommit: RvfiRecord => Unit = _ => ()) extends TraceBackend {
   private val mask = (BigInt(1) << xlen) - 1
   val regs: Array[BigInt] = Array.fill(32)(BigInt(0))
   var retired = 0L
@@ -70,6 +70,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     handler = false
     rdData = None; load = None
     pending = Some(r)
+    onCommit(r)
     store.foreach { case (a, n, d) => onStore(BigInt(a), Integer.numberOfTrailingZeros(n.toInt), d) }
     store = None
   }

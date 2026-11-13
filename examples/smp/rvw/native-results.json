@@ -1,0 +1,84 @@
+[
+  {
+    "run": "order-lrsc-17-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 1060,
+    "instret": 498,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 249,
+      "1": 249
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "75ba406eb85aeff87ef61ed25b952371ad36d045b7c2c7fa470c70d7cef887d3"
+  },
+  {
+    "run": "order-amo-17-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 18630,
+    "instret": 8346,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 4173,
+      "1": 4173
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "c58e42d7d8ad5ee9d013e2ffe62c670ad9a05bafe309e84831e3896158cd8ece"
+  },
+  {
+    "run": "smoke3-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 86,
+    "instret": 35,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "9ddcf7e04bb37f47714252ba20d588208a4df66597832f6ab1a0e421e26e6526",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 11,
+      "1": 12,
+      "2": 12
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass",
+      "2": "pass"
+    },
+    "trace_sha256": "d546849397881eea9307feec02f3db525768b109f368d493304012f51354434a"
+  },
+  {
+    "run": "random-17-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 87,
+    "instret": 26,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 13,
+      "1": 13
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "c099f78a50de1f39c9d81e307a920e86589c829e11afa6945cd9a02810720bb9"
+  }
+]

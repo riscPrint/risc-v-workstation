@@ -6,22 +6,24 @@ import spinal.lib.misc.plugin.FiberPlugin
 import vexiiriscv.{ParamSimple, VexiiRiscv}
 import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 
-/** RV64IMA, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit. */
+/** Cacheless RV64IMA. The hsm2 profile also enables S/U privilege with no MMU. */
 object VexiiTop {
-  val configs = (2 to 8).map(n => s"smp$n")
+  val configs = (2 to 8).map(n => s"smp$n") ++ Seq("serial2", "hsm2")
+  def count(config: String): Int = if(Set("serial2", "hsm2")(config)) 2 else config.stripPrefix("smp").toInt
 
   def param(config: String): ParamSimple = {
     require(configs.contains(config), s"unknown VexiiRiscv config $config")
     val p = new ParamSimple()
     p.xlen = 64
     p.addISA("m", "a")
+    if(config == "hsm2") { p.addISA("s", "u"); p.disableMmu = true }
     p.fixIsaParams()
     p
   }
 
   def apply(config: String, hart: Int): VexiiRiscv = {
     val p = param(config)
-    p.resetVector = 0x80000000L + hart * 0x20000L
+    p.resetVector = 0x80000000L + (if(Set("serial2", "hsm2")(config)) 0L else hart * 0x20000L)
     val plugins = p.plugins(hart)
     plugins += new TrapTapPlugin
     if (sys.env.get("RVW_COSIM_DPI").contains("1")) plugins += new LockstepTapPlugin
@@ -64,7 +66,7 @@ class LockstepTapPlugin extends FiberPlugin {
 }
 
 class SmpTop(config: String) extends Component {
-  val cores = (0 until config.stripPrefix("smp").toInt).map(h => VexiiTop(config, h))
+  val cores = (0 until VexiiTop.count(config)).map(h => VexiiTop(config, h))
   val ports = spinal.core.fiber.Fiber patch new Area {
     val fetch = cores.map(_.host[vexiiriscv.fetch.FetchCachelessPlugin].logic.bus.toIo())
     val lsu = cores.map(_.host[vexiiriscv.execute.lsu.LsuCachelessPlugin].logic.bus.toIo())
@@ -72,5 +74,8 @@ class SmpTop(config: String) extends Component {
     val timer = cores.map(_.host[PrivilegedPlugin].logic.harts(0).int.m.timer.toIo())
     val external = cores.map(_.host[PrivilegedPlugin].logic.harts(0).int.m.external.toIo())
     val time = cores.map(_.host[PrivilegedPlugin].logic.rdtime.toIo())
+    if(config == "hsm2") for(core <- cores) {
+      core.host[PrivilegedPlugin].logic.harts(0).int.s.external := False
+    }
   }
 }

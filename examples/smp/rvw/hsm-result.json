@@ -1,0 +1,50 @@
+{
+  "run": "hsm-v6-run",
+  "status": "pass",
+  "c1_inconclusive": null,
+  "seed": 17,
+  "cycles": 1431,
+  "instret": 530,
+  "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "tools_rev": "1236363528afb81b50281b9b034ce4dc08a98dca",
+  "tools_dirty": true,
+  "rtl_sha256": "92d9465aa0161b88c1840bd13c439cf8f266c146572da2270285acf46771060d",
+  "ordering": "not_checked",
+  "per_hart_retirements": {
+    "0": 342,
+    "1": 188
+  },
+  "hart_status": {
+    "0": "pass",
+    "1": "pass"
+  },
+  "trace_sha256": "a14ce92c607ba8567be3070b7fefff6824f62242888fd0f209ea04e272737e1c",
+  "hsm": {
+    "starts": 2,
+    "entries": 2,
+    "stops": 1,
+    "stopped": 1,
+    "ipis": 2,
+    "scope": "SBI software lifecycle; no clock/reset/power gating"
+  },
+  "entries": [
+    {
+      "mode": 1,
+      "hart_id": 1,
+      "opaque": "0x55"
+    },
+    {
+      "mode": 1,
+      "hart_id": 1,
+      "opaque": "0x66"
+    }
+  ],
+  "retired_modes": {
+    "3": 405,
+    "1": 125
+  },
+  "trap_causes": {
+    "0x9": 6,
+    "0x8000000000000003": 2
+  }
+}
