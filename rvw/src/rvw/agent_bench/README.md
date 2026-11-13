@@ -61,7 +61,7 @@ Build the benchmark ISA programs first:
 
 ```sh
 nice -n 15 rvw/.venv/bin/python examples/agent-bench/build-native-tests.py \
-  --source /path/to/pinned/riscv-tests --out examples/agent-bench/out/isa
+  --source /path/to/pinned/riscv-tests --out examples/agent-bench/out/isa-control
 ```
 
 The builder pins riscv-tests at `d7e86f701b929b5d801f8cda1a4871ab05f452bb`.
@@ -182,3 +182,21 @@ regression, cosim, bundle, query and wave tools over MCP stdio. It records
 source locations in tool traversal order. See [the workflow](solver.md).
 MCP tool: `agent_bench_evidence_solve`. Native localisation ranks are not yet
 measured. The solver does not edit sources or earn repair acceptance.
+
+## OoO Mini task inputs
+
+[The second-core pack](../../../../examples/agent-bench/ooo-mini.md) declares ten
+source mutations at a pinned example commit. They cover wakeup, rename,
+free-list release, recovery, store forwarding and load/store ordering.
+Source round trips are checked. Native detection and monitor activation are
+not yet measured. A named workload in this pack is a proposed detector.
+
+
+The pass-to-pass control writes `mscratch`, forms the tohost address, then
+stores a passing value. It does not use branch comparisons, bitwise ALU,
+loads or shifts. ISA programs use these operations during startup and can
+therefore fail as controls for a seed in those operations. The control is
+separate from the failing ISA body. Native runs stop after 10,000 cycles.
+A complete C2 cycle-limit run can detect a seeded fault only when strict Spike
+comparison has an explicit architectural mismatch. A wall timeout, missing end
+or matching prefix remains inconclusive. Raw C1 timeout status is retained.

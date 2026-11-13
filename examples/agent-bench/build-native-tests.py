@@ -27,6 +27,8 @@ header.write_text(text)
 pack = json.loads(Path(__file__).with_name('native.json').read_text())
 tests = sorted({name for task in pack['tasks'] for name in task['private']['fail_to_pass'] + task['private']['pass_to_pass']})
 for name in tests:
+    if name == 'agent-control':
+        continue
     family, _, test = name.partition('-p-')
     subprocess.run(['nice', '-n', '15', 'riscv64-unknown-elf-gcc', '-march=rv32im_zicsr_zifencei',
         '-mabi=ilp32', '-static', '-mcmodel=medany', '-fvisibility=hidden', '-nostdlib', '-nostartfiles',
@@ -34,3 +36,8 @@ for name in tests:
         '-T', str(env / 'p/link.ld'), str(source / 'isa' / family / (test + '.S')),
         '-o', str(a.out / name)], check=True)
 print(f'Built {len(tests)} programs from {PIN}; first instruction initializes mscratch')
+
+subprocess.run(['nice', '-n', '15', 'riscv64-unknown-elf-gcc', '-march=rv32im_zicsr_zifencei',
+    '-mabi=ilp32', '-nostdlib', '-nostartfiles', '-Wl,--build-id=none',
+    '-T', str(env / 'p/link.ld'), str(Path(__file__).with_name('agent-control.S')),
+    '-o', str(a.out / 'agent-control')], check=True)

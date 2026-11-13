@@ -242,3 +242,9 @@ The evaluator can add `true_line_rank`. Candidate order follows the query
 and wave response traversal. It does not imply causal confidence.
 `observed` means all five workflow requests returned. `inconclusive` means a
 request failed or its budget expired. Neither is a repair or C4 verdict.
+
+A run also records `trace_complete`. A complete C1 cycle-limit timeout may
+qualify a seeded failure when its strict Spike result has an explicit mismatch.
+This rule applies only to fail-to-pass seeds. Controls and repairs must pass.
+A wall timeout, missing end or matching prefix stays inconclusive. Raw C1
+status is never changed in the report.
