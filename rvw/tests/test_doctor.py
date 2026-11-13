@@ -8,6 +8,8 @@ from rvw.common.project import load_project
 from rvw.doctor import check
 from rvw.mcp.registry import discover
 
+pytestmark = pytest.mark.fast
+
 
 def test_records_keep_version_warnings():
     records = check.native_records('WARNING Verilator 5.049: outside tested version table (5.052)\nPRESENT Verilator: 5.049\nMISSING JDK\n')
@@ -89,7 +91,7 @@ def test_smoke_requires_requested_identity_and_conclusive_result(tmp_path, monke
                           configs=['default'], default_config='default', build_timeout_s=10,
                           suites={}, input_complete=False, identity=False, identity_capture=False,
                           source_repo=tmp_path)
-    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path))
+    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path, get=lambda *keys: None))
     monkeypatch.setattr(check, 'load_config', lambda **kw: cfg)
     def run(cmd, **kwargs):
         if 'info' in cmd:
@@ -130,7 +132,7 @@ def test_info_waits_for_the_project_startup_time(tmp_path, monkeypatch):
     cfg = SimpleNamespace(adapter=['fixture'], path=tmp_path / 'rvw.toml', name='fixture', configs=['default'],
                           default_config='default', startup_s=300.0, build_timeout_s=10, suites={},
                           input_complete=False, identity=False, identity_capture=False, source_repo=tmp_path)
-    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path))
+    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path, get=lambda *keys: None))
     monkeypatch.setattr(check, 'load_config', lambda **kw: cfg)
     seen = {}
     def run(cmd, **kwargs):

@@ -62,7 +62,16 @@ def test_schema_and_tool_boundary():
                 r.call(tool, args)
         assert set(r.tools) == {'bench_inspect', 'bench_diagnose', 'bench_patch',
                                 'bench_reject', 'bench_finish', 'job_status',
-                                'job_log', 'job_cancel', 'job_list'}
+                                'job_log', 'job_cancel', 'job_list', 'job_result',
+                                'job_events', 'rvw_tools_load', 'rvw_tools_search',
+                                'rvw_tools_describe'}
+        # Profile loading must stay inside this session's restricted catalog.
+        assert r.call('rvw_tools_load', {'profile': 'all'})['added'] == []
+        names = {t['name'] for t in r.call('rvw_tools_search', {'keyword': ''})['tools']}
+        assert names == {'bench_inspect', 'bench_diagnose', 'bench_patch',
+                         'bench_reject', 'bench_finish'}
+        with pytest.raises(ToolError):
+            r.call('query_read', {'path': str(PACK)})
     finally:
         r.jobs.shutdown()
 

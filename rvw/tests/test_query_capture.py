@@ -133,8 +133,8 @@ def test_where_refuses_changed_rtl(gcd_db, tmp_path, race_injector, replace, rev
 def capture_classpath():
     from rvw.common.proc import run_group
     repo = Path(__file__).resolve().parents[2]
-    # Scala tests use the cached dependencies. The sbt lock also applies inside the suite lock.
-    result = run_group([str(repo / 'scripts/with-lock.sh'), 'sbt', 'nice', '-n', '10',
+    # Serialize sbt builds in this checkout, without blocking other worktrees.
+    result = run_group([str(repo / 'scripts/with-lock.sh'), f'sbt-{repo.name}', 'nice', '-n', '10',
                         'sbt', '-batch', '-Dsbt.offline=true', 'export Test / fullClasspath'],
                        cwd=repo / 'SpinalDB/spinaldb', capture=True, timeout=600)
     assert result.returncode == 0, result.stdout + result.stderr

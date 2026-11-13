@@ -433,7 +433,7 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
         'lazy val root = (project in file(".")).dependsOn('
         'ProjectRef(file("../../generic-project"), "riscvsim"))\n')
     ref = '{' + project.as_uri() + '/}riscvsim'
-    build = run_group([str(repo / "scripts/with-lock.sh"), "sbt", "nice", "-n", "10", "sbt",
+    build = run_group([str(repo / "scripts/with-lock.sh"), f"sbt-{repo.name}", "nice", "-n", "10", "sbt",
                        "-J-Xmx1g", "-Dsbt.offline=true", "-batch", f"{ref}/Test/compile", f"export {ref}/Test/fullClasspath"],
                       cwd=consumer, env=env, capture=True, timeout=240)
     assert build.returncode == 0, (build.stdout, build.stderr)
