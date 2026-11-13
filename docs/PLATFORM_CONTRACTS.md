@@ -3011,6 +3011,11 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+The optional `kind = "disabled"` selects FS-Off or absent-supervisor matrices.
+`priv = "mu"` selects absent supervisor operations. Otherwise FS-Off requires
+F in `isa`. The reference forwards `priv` to Spike. These cases use the same
+build, reference and check schemas.
+
 `rvw regress privilege build` reads `rvw.privilege/1`: `modes` selects distinct
 M/S/U modes and `isa` selects an RV64 compiler and Spike ISA string. The current
 control matrix requires `priv = "msu"` when given. It writes self-checking ELFs,

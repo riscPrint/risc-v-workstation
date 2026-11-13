@@ -21,10 +21,10 @@ def load(path):
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
-    if raw.get('priv', 'msu') != 'msu':
+    if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi'):
-        raise ValueError('kind must be controls or wfi')
+    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled'):
+        raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
         programs(raw)
@@ -33,7 +33,10 @@ def load(path):
 
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    if config.get('kind') == 'wfi':
+    if config.get('kind') == 'disabled':
+        from .disabled import programs
+        rows = programs(config)
+    elif config.get('kind') == 'wfi':
         from .wake import programs
         rows = programs(config)
     else:
@@ -86,7 +89,7 @@ def reference(directory, spike='spike', timeout=2):
         if digest(elf) != scenario['elf_sha256']:
             raise ValueError('ELF changed since build')
         command = ['nice', '-n', '10', executable, '--isa=' + manifest['config'].get('isa', 'rv64im_zicsr_zifencei'),
-                   '--priv=msu', '-m128', str(elf)]
+                   '--priv=' + manifest['config'].get('priv', 'msu'), '-m128', str(elf)]
         result = run_group(command, capture=True, timeout=timeout)
         status = 'inconclusive'
         if not result.timed_out:
