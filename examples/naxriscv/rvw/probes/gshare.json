@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "naxriscv-gshare-4kib",
+  "description": "NaxRiscv's direction predictor as configured by naxriscv.Gen: GSharePlugin(memBytes = 4 KiB, historyWidth = 24, counterWidth = 2), 16384 two-bit counters. The RTL index takes 13 bits: reversed PC bits above the slice xor the low history bits.",
+  "source": {"fidelity": "unqualified",
+             "approximations": ["standard gshare index, not the RTL's reversed-PC hash",
+                                "13 effective history bits (the RTL truncates the 24-bit history to the index width)",
+                                "training at retirement after a fixed delay; the RTL trains at its commit-time learn port",
+                                "exact committed-path history; the RTL predicts with speculative history"]},
+  "branch": {"model": "gshare", "entries": 16384, "history": 13, "update_delay": 4}
+}

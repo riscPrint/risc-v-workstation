@@ -9,11 +9,12 @@ from rvw.common.jsonout import write
 
 from .analysis import analyze, compare, render
 from .inputs import capture_input
+from . import topdown
 
 
 def register(subparsers):
     parser = subparsers.add_parser("perf", help="Measure Kanata 0004 pipeline traces")
-    parser.add_argument("paths", nargs="+", help="LOG or compare A B (logs or rvw.perf/1 JSON)")
+    parser.add_argument("paths", nargs="+", help="LOG, compare A B (logs or rvw.perf/1 JSON), or topdown EVENTS")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--window", type=int, default=1000)
     parser.add_argument("--isa", choices=("none", "riscv"), default="none")
@@ -25,11 +26,16 @@ def register(subparsers):
     parser.add_argument("--result", help="C1 result.json (otherwise discovered beside log)")
     parser.add_argument("--tolerance", type=float, default=.05, help="comparison relative magnitude threshold")
     parser.add_argument("--top", type=int, default=10)
+    parser.add_argument("--c2", help="topdown: the run's rvfi.jsonl; retiring slots must equal its retirements")
     parser.set_defaults(func=run)
 
 
 def calculate(args):
     """Return the CLI JSON report for reuse by MCP."""
+    if args.paths[0] == "topdown":
+        if len(args.paths) != 2:
+            raise ValueError("usage: rvw perf topdown EVENTS [--c2 RVFI] [--result RESULT]")
+        return topdown.report(args.paths[1], c2=getattr(args, "c2", None), c1=args.result)
     options = {key: getattr(args, key) for key in ("window", "isa", "lane", "queue_stage", "issue_stage",
                                                  "head_stage", "in_order_retirement", "result")}
     comparing = len(args.paths) == 3 and args.paths[0] == "compare"
@@ -66,6 +72,8 @@ def run(args):
         report = calculate(args)
         if args.json:
             write(report)
+        elif report.get("schema") == topdown.SCHEMA:
+            print(topdown.render(report))
         else:
             print(render(report, args.top))
         return 0
@@ -83,7 +91,7 @@ def run(args):
 def execute_json(paths: list[str], **options) -> dict:
     from argparse import Namespace
     defaults = dict(window=1000, isa="none", lane="0", queue_stage=None, issue_stage=None,
-                    head_stage=None, in_order_retirement=False, result=None, tolerance=.05)
+                    head_stage=None, in_order_retirement=False, result=None, tolerance=.05, c2=None)
     unknown = options.keys() - defaults.keys()
     if unknown:
         raise TypeError(f"unknown options: {sorted(unknown)}")
