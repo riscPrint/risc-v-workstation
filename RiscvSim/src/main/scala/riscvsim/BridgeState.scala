@@ -2,7 +2,7 @@ package riscvsim
 
 import spinal.core._
 import spinal.core.sim._
-import spinal.core.internals.{ExpressionContainer, PhaseContext, PhaseNetlist}
+import spinal.core.internals.{ExpressionContainer, PhaseContext, PhaseNetlist, PhaseGetInfoRTL}
 import scala.collection.mutable.ArrayBuffer
 
 /** Live state transfer through Spinal's public register and memory bridge.
@@ -43,7 +43,11 @@ class BridgeState {
             read.clockDomain {
               val value = Reg(Bits(read.getWidth bits)).setName(s"snapshot_read_$index")
               when(read.readEnable.asInstanceOf[Bool]) {
-                value := read.mem.asInstanceOf[Mem[Bits]].readAsync(read.address.asInstanceOf[UInt])
+                // Use the lowered width. The original HardType can depend on a
+                // plugin database scope which has ended before this phase runs.
+                val data = Bits(read.getWidth bits)
+                read.mem.readAsyncImpl(read.address.asInstanceOf[UInt], data, dontCare, false)
+                value := data
               }
               consumers.foreach(_.remapExpressions(e => if (e eq read) value else e))
             }
@@ -57,6 +61,22 @@ class BridgeState {
         }
       }
     })
+    // Normalization can replace or remove declarations. Bind the inventory to
+    // the final netlist, including state introduced by backend lowering.
+    config.phasesInserters += { phases =>
+      val index = phases.indexWhere(_.isInstanceOf[PhaseGetInfoRTL])
+      require(index >= 0, "bridge state needs the final RTL information phase")
+      phases.insert(index, new PhaseNetlist {
+        override def impl(pc: PhaseContext): Unit = {
+          registers.clear(); memories.clear()
+          pc.walkDeclarations {
+            case b: BaseType if b.isReg => b.simPublic(); registers += b
+            case m: Mem[_] => m.simPublic(); memories += m.asInstanceOf[Mem[Data]]
+            case _ =>
+          }
+        }
+      })
+    }
     config
   }
   private def layout: ujson.Value = ujson.Obj(
