@@ -25,8 +25,8 @@ def fixture_db(tmp_path, mode='unsafe', width=1):
                   (i, clk, clk + ':Bool', 'RISING', 'BOOT'))
     for i in (1, 2, 3):
         domain = 1 if i == 1 or mode == 'same' else 2
-        c.execute('INSERT INTO signals(id,component_id,name,path,kind,width,clock_domain_id,file_id,line) VALUES(?,?,?,?,?,?,?,?,?)',
-                  (i, 1, f'r{i}', f'r{i}', 'reg', width, domain, 1, i))
+        c.execute('INSERT INTO signals(id,component_id,name,path,kind,width,clock_domain_id,reset_value,file_id,line) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                  (i, 1, f'r{i}', f'r{i}', 'reg', width, domain, '0', 1, i))
     c.execute("INSERT INTO edges VALUES(1,2,'data')")
     if mode == 'sync':
         c.execute("INSERT INTO edges VALUES(2,3,'data')")
@@ -58,9 +58,16 @@ def test_exact_waiver_retains_finding_and_unused(tmp_path):
                            reason='Test fault.', config='reference') for e in ['r2','missing']]
     p.write_text(json.dumps(cfg))
     r = report(p)
-    assert r['status'] == 'inconclusive'
+    assert r['status'] == 'findings'
     assert [w['matches'] for w in r['waivers']] == [1,0]
+    assert [w['stale'] for w in r['waivers']] == [False, True]
+    assert [f['rule'] for f in r['waiver_findings']] == ['lint.stale_waiver']
     assert r['backends']['structural']['findings'][0]['disposition'] == 'waived'
+    cfg['waivers'] = cfg['waivers'][:1]; p.write_text(json.dumps(cfg))
+    assert report(p)['status'] == 'inconclusive'
+    cfg['waivers'] = [dict(cfg['waivers'][0], rule='verible.x')]; p.write_text(json.dumps(cfg))
+    r = report(p)
+    assert r['waivers'][0]['stale'] is None and r['status'] == 'findings'
     cfg['waivers'][0]['config'] = 'other'; p.write_text(json.dumps(cfg))
     with pytest.raises(ValueError, match='waiver'):
         report(p)
@@ -145,7 +152,8 @@ def test_async_reset_release_and_unknown(tmp_path):
     with sqlite3.connect(p) as c:
         c.execute("UPDATE clock_domains SET reset_kind='ASYNC',reset='r3',reset_key=NULL WHERE id=1")
     r = run_on(p, structural.analyze)
-    assert {f['rule'] for f in r['findings']} == {'rdc.async_release_unproved','rdc.unknown_control'}
+    assert {f['rule'] for f in r['findings']} == {'rdc.async_release_unsynchronized','rdc.unknown_control'}
+    assert r['rdc']['domains'][0]['release'] == 'unsynchronized'
     assert r['reset_trees'][0]['nodes'] == ['r3']
     assert r['reset_trees'][0]['status'] == 'structural_cone'
 
@@ -220,7 +228,7 @@ def test_waiver_does_not_hide_changed_native_message(tmp_path, monkeypatch):
     p.write_text(json.dumps(cfg))
     finding['message'] = 'Signal is not used: different'
     result = report(p)
-    assert result['active_findings'] == 1
+    assert result['active_findings'] == 2  # the changed finding and the stale waiver
     assert result['waivers'][0]['matches'] == 0
 
 

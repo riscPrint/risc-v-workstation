@@ -94,15 +94,55 @@ importer. The optional Yosys backend checks native connectivity. It does not inf
 
 ## Reset-domain crossings
 
-The analyzer also compares reset keys, reset kind, polarity and soft-reset
-controls at each register boundary. `rdc.independent_reset` marks different
-reset signatures, including paths within one clock. Reset trees record each
-reset control's upstream combinational cone and stop at registers. Unknown
-control paths remain `unknown_control`. Missing typed control identity gets
-`rdc.unknown_control`. `rdc.async_release_unproved` marks each used asynchronous
-reset domain. It does not assert that a release synchronizer is absent.
+`rdc.py` derives reset domains from SpinalDB clock-domain data. A reset domain
+is one signature: reset key, kind (`SYNC`, `ASYNC`, `BOOT`), polarity and soft
+reset. A register without `init` is in the `none` domain, even in a clock domain
+with a reset. The report's `rdc.domains` lists each domain with its reset
+source, clocks, register count and release status (`synchronized`,
+`unsynchronized`, `synchronizer_stages`, `synchronous`, `boot`,
+`not_applicable`).
 
-Actual reset ordering, synchronous release, isolation and functional reset
+Each register path between different reset domains gets one class in
+`rdc.crossings`:
+
+| Class | Rule | Meaning |
+|---|---|---|
+| `async_assert_crossing` | `rdc.async_assert_crossing` (error) | The source has an asynchronous reset that the destination does not share. Assertion can make the destination metastable. |
+| `resetless_receiver` | `rdc.resetless_receiver` | The destination has no reset. It can capture the source reset value. |
+| `independent_reset` | `rdc.independent_reset` | Different synchronous reset signatures, including paths within one clock. |
+| `source_not_reset` | none (`no_hazard`) | The source has no reset, so reset cannot change it. |
+| `missing_domain` | `rdc.missing_domain` | A register has no clock-domain record. The RDC status is `inconclusive`. |
+
+A path is `protected` only by a project declaration with a reason.
+`intent.isolation` rows name `qualifier`, `reason` and `source` and/or
+`destination`. The qualifier must be in the destination's combinational
+fan-in. Otherwise the check reports `rdc.isolation_unmatched` (error) and keeps
+the class finding. `intent.reset_order` pairs `[source reset_key,
+destination reset_key]` declare that the destination stays in reset while the
+source is in reset. A covered path is `protected` by `declared_reset_order`.
+Both are assumptions. They are not proofs of the hardware sequence.
+
+An asynchronous reset is `synchronized` when its net comes, through wires or
+inverters, from a chain of at least two one-bit registers in the controlled
+clock with a constant first input and an asynchronous reset. This matches
+Spinal's `ResetCtrl.asyncAssertSyncDeassert` and `BufferCC` reset bridges.
+Otherwise `rdc.async_release_unsynchronized` reports the domain. The chain
+stages themselves are `synchronizer_stages`. `rdc.comb_reset_logic` (error)
+marks combinational logic with more than one input on an asynchronous reset net.
+`rdc.reset_as_data` marks a register that a reset net reaches through data or
+control logic. Synchronizer stages are exempt.
+
+`rdc.status` is `findings`, `protected`, `inconclusive` or `no_crossings_found`.
+It is never `clean`. Reset trees record each reset control's upstream
+combinational cone and stop at registers. Unknown control paths remain
+`unknown_control`. Missing typed control identity gets `rdc.unknown_control`.
+
+Waivers are project data with reasons. A waiver that matches no finding in a
+backend that ran is stale: it adds a `lint.stale_waiver` error to
+`waiver_findings` and sets `stale: true`. A waiver for a backend that did not
+run has `stale: null`.
+
+Actual reset ordering, release timing, recovery/removal and functional reset
 reconvergence remain unproved. Declared order and bounded merge checks are below. Matching reset signatures only remove a structural RDC candidate.
 A reset-tree match does not establish safe deassertion, recovery/removal timing
 or analog behavior. No declared sequencing or clock relationship is trusted as
@@ -129,8 +169,8 @@ crossing. None earns protocol safety. MCP exposes the same report through
 
 The same entry emits `reset-shared`, `reset-independent` and `reset-async`.
 The shared synchronous reset has no RDC candidate. Independent reset controls
-must report `rdc.independent_reset`. Asynchronous controls must also report
-`rdc.async_release_unproved`.
+must report `rdc.independent_reset`. Asynchronous controls must report
+`rdc.async_assert_crossing` and `rdc.async_release_unsynchronized`.
 
 Run the extracted-design assertions from the workstation root:
 
@@ -183,8 +223,8 @@ latency or memory/blackbox paths. Functional reconvergence remains unrun.
 
 Reset pairs declare source release before destination release. The check accepts
 transitive order and rejects unknown reset keys and cycles. An uncovered RDC path
-gets `rdc.release_order_unproved`. A covered path records
-`declared_source_before_destination`; it does not prove the declared order occurs.
+gets `rdc.release_order_unproved`. A covered path is `protected` in
+`rdc.crossings`; it does not prove the declared order occurs.
 Asynchronous release findings remain active even with an order declaration.
 Recovery/removal, metastability, release synchronization and analog timing remain
 unproved. All structural reports stay inconclusive or findings.

@@ -10,6 +10,10 @@ from rvw.query.db import run_on, QueryError
 from . import native, structural
 
 
+BACKEND_OF = {'verilator': 'verilator', 'verible': 'verible', 'yosys': 'yosys', 'cdc': 'structural',
+              'rdc': 'structural', 'lint': 'rules', 'sdc': 'sdc'}
+
+
 def register(sub):
     p = sub.add_parser('lint', help='native lint and structural CDC/RDC inventory')
     p.add_argument('--settings', help='lint settings JSON; else project lint.settings')
@@ -106,12 +110,25 @@ def report(path):
                     w['matches'] += 1
                     f['disposition'] = 'waived'
                     f['waiver_reason'] = w['reason']
-    active = sum(f['disposition'] == 'active' for r in runs.values() for f in r['findings'])
+    # A waiver that matches nothing in a backend that ran is stale: an error, not a silent pass.
+    stale = []
+    for w in waivers:
+        backend = BACKEND_OF.get(w['rule'].split('.')[0], 'structural')
+        if w['matches']:
+            w['stale'] = False
+        elif runs.get(backend, {}).get('status', 'not_run') == 'not_run':
+            w['stale'] = None
+        else:
+            w['stale'] = True
+            stale.append(dict(rule='lint.stale_waiver', severity='error', endpoint=w['endpoint'],
+                              disposition='active', waived_rule=w['rule'], finding_id=w['finding_id'],
+                              message=f"Waiver matches no {w['rule']} finding: {w['reason']}"))
+    active = sum(f['disposition'] == 'active' for r in runs.values() for f in r['findings']) + len(stale)
     incomplete = any(r['status'] != 'completed' for r in runs.values())
     status = 'findings' if active else ('inconclusive' if incomplete else 'clean')
     return dict(schema='rvw.lint/1', config=cfg['config'], top=cfg['top'], settings=identity,
                 inputs=[dict(path=f, sha256=hashlib.sha256(Path(f).read_bytes()).hexdigest()) for f in cfg['files']],
-                status=status, active_findings=active, backends=runs, waivers=waivers)
+                status=status, active_findings=active, backends=runs, waivers=waivers, waiver_findings=stale)
 
 
 def run(args):
