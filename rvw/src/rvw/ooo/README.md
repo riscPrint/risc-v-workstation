@@ -931,3 +931,51 @@ Kendall tau-b is 0.707 with three unresolved pairs.
 
 See [all RTL, delta, fit and rank tables](../../../../examples/naxriscv/README.md#measured-delta-study-2026-11-13).
 Finite store drain, wrong-path queue pressure and exact replay remain open.
+
+## Delta diagnosis before resource changes
+
+The 13 failures all underpredict a loss. None predicts a gain. The table
+uses the retained paired probe counters and `rvw perf topdown` results in
+`examples/naxriscv/rvw/arch/mechanism-results.json`. Counter occupancy is
+a sum over cycles, not a peak. B is the back-end slot fraction.
+
+| Structure | Program | RTL / model change (%) | Pressure counter, base to variant | B (%), base to variant |
+|---|---|---:|---|---|
+| iq16 | median | -1.682 / -0.155 | iq_push_blocked: 132 to 525 | 49.47 to 50.25 |
+| iq16 | qsort | -0.617 / -0.276 | iq_push_blocked: 1419 to 5649 | 46.46 to 46.83 |
+| iq16 | multiply | -0.303 / -0.088 | iq_push_blocked: 17 to 153 | 25.71 to 25.81 |
+| iq16 | memcpy | -12.497 / -5.890 | iq_push_blocked: 5731 to 11187 | 36.30 to 44.08 |
+| lq8 | median | -1.057 / +0.000 | lq_full_cycles: 0 to 483 | 49.47 to 49.98 |
+| lq8 | qsort | -0.359 / +0.000 | lq_full_cycles: 0 to 6681 | 46.46 to 46.66 |
+| lq8 | multiply | -0.021 / +0.000 | lq_full_cycles: 0 to 92 | 25.71 to 25.73 |
+| lq8 | towers | -1.388 / -0.108 | lq_full_cycles: 130 to 1213 | 47.00 to 48.35 |
+| lq8 | vvadd | -2.902 / +0.000 | lq_full_cycles: 0 to 1545 | 28.22 to 30.28 |
+| lq8 | memcpy | -7.988 / -3.490 | lq_full_cycles: 0 to 17122 | 36.30 to 41.43 |
+| sq8 | qsort | -0.294 / +0.000 | sq_full_cycles: 0 to 1180 | 46.46 to 46.65 |
+| sq8 | towers | -4.393 / -0.054 | sq_full_cycles: 124 to 2432 | 47.00 to 49.68 |
+| sq8 | memcpy | -10.902 / -2.602 | sq_full_cycles: 2982 to 8768 | 36.30 to 43.26 |
+
+IQ: four failures. Median, qsort and multiply have small losses below 2%.
+Memcopy has a 12.5% loss. Dispatch blocking increases in both groups.
+The model has compacting lines, but committed instructions omit speculative
+queue demand. Missing demand and registered scheduling can hide capacity cost.
+
+LQ: six failures. Five predicted changes are zero or below 0.11% in size.
+Memcopy loses 7.99% in RTL and 3.49% in the model. Smaller capacity increases
+back-end slots. The committed trace omits loads that are later squashed.
+Replay can also retain entries while a miss or address hazard resolves.
+
+SQ: three failures. Qsort predicts zero for a 0.294% loss. Towers predicts
+0.054% loss for 4.393%. Memcopy predicts 2.602% loss for 10.902%.
+The buffered model frees stores at commit. RTL can retain stores until drain.
+This hides store pressure and forwarding from undrained stores.
+
+ROB: no failed pairs. Doubling capacity changes no measured IPC here.
+This does not test whether the model predicts a cost when ROB capacity shrinks.
+
+These are mechanism hypotheses, not isolated causes. Execute and commit
+reschedule counters include branch recovery. They do not identify individual
+cache or memory-order replays. Refill counts alone give no replay window.
+The paired partitions describe where slots went. They cannot prove which
+missing mechanism caused a specific IPC loss. Exact replay needs typed,
+instruction-linked reschedule events before it can be claimed.
