@@ -1759,7 +1759,8 @@ declarations remain refused. Property arguments and local captures remain
 outside this unbounded subset.
 
 Supported unbounded sequences are `a ##[M:$] b`, `a[*M:$] ##1 b`,
-`a[*] ##1 b`, `a[->N]` and `a[=N]`. Goto and nonconsecutive repetition can have
+`a[*] ##1 b`, `a[->N]` and `a[=N]`. Goto and nonconsecutive counts can also
+use positive literal ranges such as `[->1:3]` or `[=1:3]`. They can have
 one `##1 b` completion. Operands must be Boolean expressions. Counts are positive
 decimal literals and state or delay limits are 64. A consecutive repetition with
 no completion must have a positive minimum. An optional outer `first_match`
@@ -1772,10 +1773,18 @@ requires two sampled `b` events for every request. Overlapping requests use
 count buckets. A separate set tracks old obligations until they complete.
 New requests cannot erase those obligations or prevent acceptance forever.
 
+A count range retains every permitted completion. For example,
+`b[->1:3] ##1 c` can use the second or third occurrence when the `c` sample
+after the first occurrence is false. It fails when the final permitted occurrence
+cannot complete. Nonconsecutive repetition can wait through additional `!b`
+samples before `c`. A standalone range needs only its minimum permitted count.
+The maximum is at most 64, or 63 when there is a completion operand. Zero-count
+and unbounded-count ranges remain refused.
+
 The rules follow IEEE 1800-2017 clauses 16.9 and 16.12, including the weak default
 for sequence properties. The [IEEE language reference](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf)
 gives the operator definitions. The generated support table includes paired native
-cases for each listed form. General nested sequence composition, count ranges,
+cases for each listed form. General nested sequence composition,
 reset cancellation and local captures in this unbounded frontend remain refused. Native finite checks need a separate job.
 
 Unbounded operands can use the same clock-local `$past`, `$rose`, `$fell`,

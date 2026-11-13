@@ -137,12 +137,15 @@ def emit(text, clock, prefix):
 
     # Literal goto/nonconsecutive counts. Count buckets retain overlapping
     # attempts. A separate owed set takes no new attempts until it empties.
-    repeat = re.fullmatch(r'(.*?)\[\s*(->|=)\s*(\d+)\s*\]\s*(?:##\s*1\s+(.+))?', rhs, re.S)
+    repeat = re.fullmatch(r'(.*?)\[\s*(->|=)\s*(\d+)(?:\s*:\s*(\d+))?\s*\]\s*(?:##\s*1\s+(.+))?', rhs, re.S)
     if repeat:
         value, operator, count = monitor.expression(repeat[1]), repeat[2], int(repeat[3])
-        completion = monitor.expression(repeat[4]) if repeat[4] is not None else None
-        if not 1 <= count <= LIMIT - bool(completion):
-            raise Unsupported('liveness_capacity', 'repetition count must fit 64 state buckets')
+        maximum = int(repeat[4] or repeat[3])
+        completion = monitor.expression(repeat[5]) if repeat[5] is not None else None
+        if not 1 <= count <= maximum <= LIMIT - bool(completion):
+            raise Unsupported('liveness_capacity', 'repetition range must fit 64 state buckets')
+        if maximum != count and completion is not None:
+            return range_monitor(monitor, request, value, operator, count, maximum, completion, strength)
         width = count + bool(completion)
         active, owed = prefix+'_active', prefix+'_owed'
         truth = f'(({value}) != 0)'
@@ -169,5 +172,31 @@ def emit(text, clock, prefix):
         if fatal:
             progress = f'!{fatal} && ({progress})'
         return monitor.finish(progress), dict(operator='goto' if operator == '->' else 'nonconsecutive',
-                                              count=count, strength=strength, completion=completion is not None)
+                                              count=count, strength=strength, completion=completion is not None,
+                                              **(dict(maximum=maximum) if maximum != count else {}))
     raise Unsupported('liveness_form', rhs)
+
+
+def range_monitor(monitor, request, value, operator, minimum, maximum, completion, strength):
+    """Count occurrences per attempt and retain every permitted completion."""
+    prefix, width = monitor.prefix, maximum+1
+    active, owed = prefix+'_active', prefix+'_owed'
+    truth = f'(({value}) != 0)'
+    previous = monitor.state('previous_event', truth)
+    eligible = ((1 << (maximum+1))-1) ^ ((1 << minimum)-1)
+    # The target sample follows the last matched occurrence. Nonconsecutive
+    # repetition can also end after trailing !value samples.
+    complete = f'({completion})' + (f' && {previous}' if operator=='->' else '')
+    upper = f'{active}[{maximum}]'
+    invalid = f'{upper} && !({completion})' + (f' && {truth}' if operator=='=' else '')
+    fatal = monitor.fatal(invalid)
+    def advance(name):
+        remaining = f'({name} & (({complete}) ? ~{width}\'d{eligible} : ~{width}\'d0))'
+        return f'({truth} ? ({remaining} << 1) : {remaining})'
+    born = f'(({request}) ? ({truth} ? {width}\'d2 : {width}\'d1) : {width}\'d0)'
+    next_active = f'({advance(active)} | {born})'
+    monitor.state('active', next_active, width)
+    monitor.state('owed', f'({owed} == 0) ? {next_active} : {advance(owed)}', width)
+    progress = f'!{fatal}' + (f' && ({owed} == 0)' if strength=='strong' else '')
+    return monitor.finish(progress), dict(operator='goto' if operator=='->' else 'nonconsecutive',
+                                          count=minimum, maximum=maximum, strength=strength, completion=True)
