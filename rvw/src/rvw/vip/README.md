@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.ahb` | AHB-Lite, 32-bit, one manager | `Uvm/vip/ahb/` |
 | `rvw.vip.apb` | APB4, 32-bit, one peripheral select | `Uvm/vip/apb/` |
 
 See each SV agent's README for its sequence library, scoreboard policy,
