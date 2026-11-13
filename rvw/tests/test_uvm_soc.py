@@ -49,3 +49,16 @@ def test_corruption_and_empty_cpu_cannot_pass():
         env.transfer('control', 0x10001000, False, 0)
     with pytest.raises(AssertionError, match='SOC_AXI_PROFILE'):
         env.axi_transfer('serial', ('read', axi.Address(0x10001000), (axi.Response(),), axi.Response(response=2)))
+
+
+def test_partial_trailing_uart_frame_cannot_pass():
+    env = environment()
+    env.cpu.checks = 1
+    env.bus_checks = {'control':1,'serial':1}
+    env.serial.expect(uart.Frame(65))
+    for bit in uart.encode(uart.Frame(65))+(1,)*16:
+        env.uart.sample(bit)
+    # Begin another frame after the expected stream. A prefix cannot pass.
+    env.uart.sample(0)
+    with pytest.raises(AssertionError,match='SOC_PENDING_UART'):
+        env.finish(1)
