@@ -389,3 +389,10 @@ Proof and bounded counts require an attached formal activation result with
 status `reached`. BMC activation must use the same depth as the assertion job.
 A cover miss means only that the trigger was not reached within that bound.
 Simulation activation does not establish formal activation.
+
+## Generated check proof preparation
+
+The connected preparer supports bmc and prove modes. Prove requests SMTBMC
+k-induction. Activation stays bounded. The portfolio exporter writes a
+`rvw.check-proof-plan/1` index and standard hashed formal portfolio manifests.
+Prepared is not proven. FIFO helper bounds are assertions, never assumptions.

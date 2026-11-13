@@ -7,7 +7,9 @@ import re
 import shutil
 
 
-def prepare(rtl, inventory, out, ids, depth=4):
+def prepare(rtl, inventory, out, ids, depth=4, mode="bmc"):
+    if mode not in ('bmc', 'prove'):
+        raise ValueError('mode must be bmc or prove')
     if not 3 <= depth <= 16:
         raise ValueError('depth must be in 3..16')
     data = json.loads(Path(inventory).read_text())
@@ -72,7 +74,7 @@ rvw_selected_check rvw_selected_check_instance(.clk({clock}), .reset_active({act
         for source in extras:
             shutil.copyfile(source, directory/source.name)
         files = sorted(p.name for p in directory.glob('*.v'))
-        (directory/'job.sby').write_text(f'[options]\nmode bmc\ndepth {depth}\n\n[engines]\nsmtbmc yices\n\n[script]\n'
+        (directory/'job.sby').write_text(f'[options]\nmode {mode}\ndepth {depth}\n\n[engines]\nsmtbmc yices\n\n[script]\n'
             + 'read_verilog -formal -sv ' + ' '.join(files) + '\nchformal -assert -remove\nchformal -cover -remove\n'
             + f'read_verilog -formal -sv monitor.sv\nprep -top {top}\nasync2sync\ndffunmap\n\n[files]\n'
             + '\n'.join(files + sorted(p.name for p in extras)) + '\nmonitor.sv\n')
@@ -84,7 +86,7 @@ rvw_selected_check rvw_selected_check_instance(.clk({clock}), .reset_active({act
                 'module rvw_selected_check(input clk, reset_active, fail);\n'
                 'always @(posedge clk) if (!reset_active) cover(fail);\nendmodule\n')
             job = (directory/'job.sby').read_text()
-            cover_job = job.replace('mode bmc', 'mode cover').replace('monitor.sv', 'activation.sv')
+            cover_job = job.replace('mode ' + mode, 'mode cover').replace('monitor.sv', 'activation.sv')
             for source in list(directory.glob('*.v')):
                 text = source.read_text()
                 (directory/('activation_' + source.name)).write_text(text.replace('.fail(' + fail + ')', '.fail(' + trigger + ')'))
@@ -101,6 +103,7 @@ if __name__ == '__main__':
     p.add_argument('--inventory', type=Path, required=True)
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--check-id', action='append', required=True)
+    p.add_argument('--mode', choices=('bmc','prove'), default='bmc')
     p.add_argument('--depth', type=int, default=4)
     a = p.parse_args()
-    prepare(a.rtl, a.inventory, a.out, a.check_id, a.depth)
+    prepare(a.rtl, a.inventory, a.out, a.check_id, a.depth, a.mode)
