@@ -78,3 +78,38 @@ the ISA suite in a new directory. Compare clean and fault run directories:
 ```sh
 rvw regress gate --tier full --rvfi-trace --base "$IBEX_WORK/committed"   --cand "$IBEX_WORK/fault" --out "$IBEX_WORK/gate.json" --json
 ```
+
+## Whole-core navigation
+
+Use Yosys from OSS CAD Suite with its matching slang plugin.
+
+```sh
+rvw query build --config default --out "$IBEX_WORK/design.db"
+rvw query drivers --db "$IBEX_WORK/design.db" u_ibex_core.load_store_unit_i.data_req_o
+rvw query loads --db "$IBEX_WORK/design.db" data_rdata_i --limit 10
+rvw query path --db "$IBEX_WORK/design.db" --comb-only --max-paths 1 \
+  data_req_o u_ibex_core.data_req_o
+rvw query export --db "$IBEX_WORK/design.db" blocks "$IBEX_WORK/blocks.json"
+```
+
+| Measurement | Count |
+| --- | ---: |
+| Elaborated components | 41 |
+| Signals | 41,387 |
+| Assignments | 33,813 |
+| Dependency edges | 153,516 |
+| Registers, including aliases | 2,092 |
+| Memories | 1 |
+
+The import uses the simulation source list and include directories. It selects
+`RV32M=ibex_pkg::RV32MSlow`, because slang requires the enum type. It omits
+RVFI instrumentation. RVFI cross-module counter references cannot cross a
+preserved module boundary. This does not remove the functional core.
+Drivers and loads retain SystemVerilog file and line locations. The database
+has conservative signal and whole-cell dependencies. It does not prove an
+exact causal path. Use short paths and explicit limits on this large graph.
+The block export is an artifact check. No rendered-view check was run.
+
+The front end now ignores comments in its file-input guard. A comment that
+mentions `$readmemh` does not read a file. Active file inputs and source
+remapping remain refused. Five fast regression tests cover that boundary.
