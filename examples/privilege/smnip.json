@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "smnip",
+  "reference_backend": "python",
+  "spec_version": "riscv-fast-interrupt-v0.20",
+  "fast_interrupts": {
+    "config_csr": 853
+  },
+  "spec_revision": "b623d1262ed40a255fd290333d8e0c6d0c44b2e8"
+}

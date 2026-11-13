@@ -3590,6 +3590,14 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+Kinds `imsic`, `aplic`, `aclint` and `smnip` select versioned controller
+programs. `spec_version` pins the implemented version; `spec_revision` records
+an optional immutable source revision. `reference_backend = "python"` selects
+small executable reference models. The reference report adds `evidence =
+"model-based"` and `model_sha256`, mapping model source files to hashes.
+Its scenario outcomes are model observations, not native Spike or DUT results.
+The normal C1 plus complete strict-reference gate remains unchanged.
+
 Kinds `pmp`, `epmp` and `pma` generate separate protection matrices. PMA
 scenarios require a `privilege_bus` C1 artifact: `complete` is Boolean,
 `transfers` hold address/width/write and `device_state` holds independent

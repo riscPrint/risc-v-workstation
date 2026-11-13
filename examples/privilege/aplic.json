@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "aplic",
+  "reference_backend": "python",
+  "aplic": {
+    "base": 218103808,
+    "context": 0
+  },
+  "spec_version": "AIA-1.0"
+}

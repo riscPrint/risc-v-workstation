@@ -172,3 +172,41 @@ C1 must provide `privilege_bus`: a JSON object with `complete`, `transfers`
 contract stays inconclusive. Spike CLI cannot implement arbitrary project PMA.
 These initial boundary probes do not cover conflicting regions, atomic PMAs,
 cache coherence or idempotency effects.
+
+## Versioned interrupt controllers
+
+The project pins `spec_version` and can record `spec_revision`. Models reject
+unknown versions. A future version needs a separate implementation before its
+results can count. Examples pin:
+
+- AIA 1.0: `AIA-1.0`. IMSIC programs check MSI injection, enable, threshold,
+  delivery and ordered claims. APLIC programs check detached software-pending
+  sources, direct-delivery priority, threshold and claims.
+- Fast interrupts: `riscv-fast-interrupt-v0.20`, commit
+  `b623d1262ed40a255fd290333d8e0c6d0c44b2e8`. This is the latest published
+  release found in the upstream release list. Its source says Stable. It uses
+  ACLIC, Smidctrl and Smnip names. It does not use the old CLIC register layout.
+  Four Smnip programs check threshold CSR values, synchronous-trap save and
+  return restore. `fast_interrupts.config_csr` selects the implemented mireg4.
+- ACLINT: `ACLINT-v1.0-rc4`, commit
+  `4e570bfd3201f2c09e5afd290b5091526b0f099a`. MSWI and SSWI programs check
+  setting and clearing pending state. SSWI zero writes must not clear SSIP.
+
+Sources: [AIA 1.0](https://docs.riscv.org/reference/aia/v1.0/index.html),
+[fast-interrupts v0.20](https://github.com/riscv/riscv-fast-interrupt/releases/tag/v0.20),
+[ACLINT rc4](https://github.com/riscvarchive/riscv-aclint/releases/tag/v1.0-rc4).
+
+Set `reference_backend = "python"` to run the small versioned reference models.
+The report says `evidence = "model-based"` and binds model source hashes.
+It never earns DUT groups. Set `reference_backend = "spike"`, or omit it, to
+request native Spike self-checks. The generated ELF hash is checked in both
+paths. An unavailable Spike device model is not a passing result.
+
+The Python models cover IMSIC pending/enables/threshold/claims and file state,
+APLIC source modes, priority, direct claims, source delegation and software/edge
+MSI routing, ACLINT pending/timer state and nested priority groups. Unit tests
+are model tests. Programs currently cover machine interrupt files and one APLIC
+context. Guest files, full virtualization, level-to-MSI conversion, vector
+entry and asynchronous preemption need additional program campaigns. The model
+rejects level-to-MSI requests rather than assume a gateway rule. Old CLIC drafts
+are not silently mapped onto ACLIC. These limits keep #158, #165 and #186 open.

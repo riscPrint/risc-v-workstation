@@ -16,14 +16,14 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp'):
+    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -31,28 +31,19 @@ def load(path):
     return raw
 
 
+
+def scenarios(config):
+    from importlib import import_module
+    kind = config.get('kind', 'controls')
+    module = {'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+              'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
+              'aclint':'fast_interrupts', 'smnip':'fast_interrupts'}.get(kind, kind)
+    generator = import_module('rvw.privilege.' + module)
+    return getattr(generator, 'controls' if kind == 'controls' else 'programs')(config)
+
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    if config.get('kind') in ('pma', 'pmp', 'epmp'):
-        from importlib import import_module
-        rows = import_module('rvw.privilege.' + config['kind']).programs(config)
-    elif config.get('kind') == 'plic':
-        from .plic import programs
-        rows = programs(config)
-    elif config.get('kind') in ('reset', 'nmi'):
-        from .lifecycle import programs
-        rows = programs(config)
-    elif config.get('kind') == 'scheduled-wfi':
-        from .scheduled import programs
-        rows = programs(config)
-    elif config.get('kind') == 'disabled':
-        from .disabled import programs
-        rows = programs(config)
-    elif config.get('kind') == 'wfi':
-        from .wake import programs
-        rows = programs(config)
-    else:
-        rows = controls(config)
+    rows = scenarios(config)
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
@@ -83,11 +74,11 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
-         'domains': [['0x180', '0x300', '0x341', '0x342'], ['M', 'S', 'U']]},
+         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c'], ['M', 'S', 'U']]},
         {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
          'when': {'event': 'trap', 'interrupt': False}, 'domains': [[2, 8, 9, 11], ['M']]},
         {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
-         'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7], ['M']]},
+         'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7, 11], ['M']]},
     ]}, indent=2) + '\n')
     # This fragment is merged into the project's regression config by the owner.
     suites = []
@@ -107,6 +98,20 @@ def reference(directory, spike='spike', timeout=2):
     manifest = json.loads((directory / 'manifest.json').read_text())
     if manifest['schema'] != 'rvw.privilege-build/1':
         raise ValueError('expected privilege build manifest')
+    if manifest['config'].get('reference_backend') == 'python':
+        from . import aia, fast_interrupts, controllers
+        rows = []
+        for scenario in manifest['scenarios']:
+            if digest(directory / scenario['elf']) != scenario['elf_sha256']:
+                raise ValueError('ELF changed since build')
+            if 'reference_model' not in scenario:
+                raise ValueError('no Python reference model for this scenario')
+            model = fast_interrupts if scenario['reference_model']['kind'] in ('aclint', 'smnip') else aia
+            rows.append(model.reference(scenario))
+        return dict(schema='rvw.privilege-reference/1', scope='model-based Python reference; no DUT coverage',
+                    evidence='model-based', manifest_sha256=digest(directory / 'manifest.json'),
+                    model_sha256={Path(m.__file__).name:digest(m.__file__) for m in (aia,fast_interrupts,controllers)},
+                    status=verdict(rows), scenarios=rows)
     executable = shutil.which(spike)
     if not executable:
         raise ValueError('Spike executable not found')
