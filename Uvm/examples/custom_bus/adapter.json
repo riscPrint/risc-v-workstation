@@ -1,0 +1,12 @@
+{
+  "schema": "rvw.uvm-adapter/1",
+  "bus": "custom_endpoint.link",
+  "profile": "apb",
+  "scenario": "scenario.py",
+  "bindings": {
+    "clk": "tick", "reset_n": "clear_n", "psel": "request",
+    "penable": "access_phase", "pwrite": "store", "paddr": "location",
+    "pwdata": "write_value", "pstrb": "lanes", "pprot": "protection",
+    "pready": "done", "pslverr": "fault", "prdata": "read_value"
+  }
+}
