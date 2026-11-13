@@ -4,6 +4,7 @@ Project data for `rvw sec` native runs (see `rvw/src/rvw/sec/README.md`).
 
 ```sh
 rvw/sec/build-rtl.sh "$RVW_SEC_RTL/vex"        # rv32im and rv32imu VexTop.v
+rvw/sec/build-rtl.sh "$RVW_SEC_RTL/vex" rv32im_cached
 export RVW_SEC_RTL=/path/to/rtl RVW_SEC_WORK=/path/to/cache
 rvw sec ift-core --binding rvw/sec/core.json --policy rvw/sec/ift/memory-policy.json \
   --asm rvw/sec/ift/leak-index.S --out out/ift
@@ -18,6 +19,12 @@ rvw sec spec-suite --binding rvw/sec/core.json --template rvw/sec/spec.S --out o
   `rv32imu-pmp`, Spike platform `platform-mu-pmp.json`). `isolation-pmp.json`
   and `pmp.S` deny U-mode access to the keystore; `ift/pmp-meltdown.S` and
   `ift/pmp-policy.json` are the IFT form of the same case.
+- `core-cached.json`: the cached configuration `rv32im_cached` (`SecRtl` also builds
+  `rv32ima_linux`) with burst refill buses and the cache probes. `cache.S` is its case
+  template (a 64-byte `table` over two cache lines). `cache-index.json` is a
+  secret-indexed lookup observed by public probe loads (a violation through
+  `cache_events`); `cache-ct.json` is the constant-time lookup (clean).
+  `ift/cache-policy.json` names the cached bus sinks.
 - `core-leaky.json`: RTL built from a private copy with `leaky-transient-load.patch`
   applied. The patch lets flushed loads reach the data bus. It is a positive
   control for the speculative receiver, not a core change.

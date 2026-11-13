@@ -6,8 +6,9 @@ import vexriscv.plugin._
 
 /** Plain Verilog for `rvw sec` native runs. `rv32im` is the example configuration with probes.
   * `rv32imu` adds user mode (CsrPlugin userGen) for isolation runs across a privilege switch.
+  * `rv32im_cached` and `rv32ima_linux` are the cached configurations (`VexCached`).
   * `rv32imu-pmp` adds a 4-region NAPOT PMP (32-byte granularity) on fetch and data accesses.
-  * Usage: SecRtl OUT [rv32im|rv32imu]... */
+  * Usage: SecRtl OUT [rv32im|rv32imu|rv32imu-pmp|rv32im_cached|rv32ima_linux]... */
 object SecRtl {
   def configuration(variant: String): VexRiscvConfig = {
     val base = VexTop.configuration()
@@ -27,6 +28,8 @@ object SecRtl {
           new PmpResponseBinding)
         case p => Seq(p)
       })
+      // The cached configurations of `CachedConfig.scala`, with their cache probes.
+      case c if VexCached.configs.contains(c) => VexCached.configuration(c)
       case other => sys.error(s"unknown sec variant $other")
     }
   }
