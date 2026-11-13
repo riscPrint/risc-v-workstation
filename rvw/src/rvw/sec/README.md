@@ -479,3 +479,10 @@ X and Z constants represent either Boolean value. Their representative value
 is zero and their taint is one. This can add findings. It cannot establish
 absence of leakage through an unknown constant. It does not model electrical
 high impedance. Both precise and conservative modes retain this uncertainty.
+
+Generated mapped projects include `rvw/sec/flow.S`. Run it with the generated
+core binding and flow policy using `sec ift-core --asm rvw/sec/flow.S`.
+Precise mode is the default. Use `--timeout 110` for a finite preparation budget.
+The progress report records netlist, shadow, compile and simulate phases.
+A timeout returns an inconclusive partial report. Cell and byte counts explain
+preparation cost. They are not a latency or leakage result.

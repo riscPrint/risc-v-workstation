@@ -147,3 +147,12 @@ It translates declared bus roles without guessing signal names. The default
 native environment supplies one-cycle responses and active-high reset.
 `rvw/export-rtl.sh` exports simulation elaboration to `rvw/out/export/core.v`.
 The sample pair and flow policy are bounded examples. They are not qualification.
+
+## Finite core-flow preparation
+
+The ift-core timeout covers native netlist generation, shadow compilation and
+simulation in one wall budget. The default is 110 seconds. Progress goes to
+stderr and progress.json. A native timeout returns rvw.sec/1 inconclusive with
+the last phase and available cell/byte counts. Counts describe preparation
+cost. They do not predict runtime. Keep the work cache to reuse completed work.
+Scaffolds include flow.S, a short load from the declared scratch word.

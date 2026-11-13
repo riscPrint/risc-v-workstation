@@ -78,14 +78,15 @@ tohost: .dword 0
 '''
     pair = dict(contract='constant-time', clauses=['pc', 'memory'],
                 observations=['cycles', 'retire_cycles', 'bus_timing'], public={'reset': 'cold'},
-                program=['add x10, x6, x7'], secrets=[{'x6': 7, 'x7': 3}, {'x6': 21, 'x7': 4}],
+                program=['div x10, x6, x7' if 'm' in core['isa'] else 'add x10, x6, x7'], secrets=[{'x6': 7, 'x7': 3}, {'x6': 21, 'x7': 4}],
                 minimize_runs=0, timeout=90,
                 adapter_command=['{python}', '-m', 'rvw.sec.core_adapter', '--binding', 'core.json',
                                  '--template', 'case.S', '{request}', '{out}'])
     bus = next((b for b in core['buses'] if 'write' in b['signals']), core['buses'][0])
     policy = dict(memory_regions=[dict(symbol='scratch', size='0x4')],
                   sinks=[dict(signal=bus['signals']['address'])])
-    return {'rvw/sec/core.json': json.dumps(binding, indent=2)+'\n',
+    flow = case.replace('# RVW_SETUP', '').replace('# RVW_PROGRAM', '  la t0, scratch\n  lw t1, 0(t0)\n  addi t1, t1, 1').replace('# RVW_DATA', '.balign 4\n.globl scratch\nscratch: .word 7')
+    return {'rvw/sec/flow.S': flow, 'rvw/sec/core.json': json.dumps(binding, indent=2)+'\n',
             'rvw/sec/constant-time.json': json.dumps(pair, indent=2)+'\n',
             'rvw/sec/case.S': case, 'rvw/sec/flow.json': json.dumps(policy, indent=2)+'\n'}
 

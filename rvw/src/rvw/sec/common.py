@@ -6,8 +6,12 @@ from rvw.common.proc import run_group
 
 
 def native(argv, cwd, timeout=90):
+    from .budget import remaining, BudgetExpired
+    timeout = remaining(timeout)
     r = run_group(['nice', '-n', '10', *argv], cwd=cwd, timeout=timeout, capture=True)
-    if r.returncode or r.timed_out:
+    if r.timed_out:
+        raise BudgetExpired(f'{argv[0]} exceeded its {timeout:.1f} s wall budget')
+    if r.returncode:
         raise ValueError(f'{argv[0]} failed: {r.stdout}\n{r.stderr}')
     return r.stdout or ''
 
