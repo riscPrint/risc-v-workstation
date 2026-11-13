@@ -38,6 +38,8 @@ def open_wave(path: str) -> Iterator[Source]:
     if str(path).endswith('.rvwi'):
         from .index import reader, state
         with reader(path) as (db, hdr):
+            opened = []
+
             def window(codes, t0, t1):
                 before = state(db, codes, t0 - 1) if t0 > 0 else {}
                 hi = MAX_T if t1 is None else t1
@@ -45,11 +47,17 @@ def open_wave(path: str) -> Iterator[Source]:
                                       'WHERE code=? AND t>=? AND t<=? ORDER BY t, seq', (c, t0, hi))
                            for c in sorted(codes)]
                 merged = heapq.merge(*streams)
+                opened.append(merged)
                 return before, ((t, c, r) for t, _, c, r in merged)
 
             def end():
                 return db.execute('SELECT MAX(t) FROM events WHERE code IS NULL').fetchone()[0]
-            yield Source(hdr, window, end)
+            try:
+                yield Source(hdr, window, end)
+            finally:
+                # Close partly read merges while the index connection is still open.
+                for merged in opened:
+                    merged.close()
         return
     with wave_input(path) as saved, vcd.open_text(saved) as f:
         hdr = vcd.read_header(f)

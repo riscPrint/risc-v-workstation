@@ -81,6 +81,49 @@ def _verify(index, source=None):
     return verify(index, source)
 
 
+def _why(wave, signal, at, db=None, depth=2, max_nodes=64, period=None, clock=ops.CLOCK_RX):
+    from .why import why
+    from ..query.db import default_db
+    from .vcd import WaveError
+    database = db or default_db()
+    if not database:
+        raise WaveError("no design database: pass db or set RVW_DESIGNDB")
+    return why(database, wave, signal, time_at(wave, at, period, clock), depth, max_nodes)
+
+
+def _seq(wave, sequence, t0=None, t1=None, limit=100, period=None, clock=ops.CLOCK_RX):
+    from .temporal import sequence as run
+    return run(wave, sequence, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock), clock, limit)
+
+
+def _txn(wave, valid=None, ready=None, payload=None, stream=None, db=None, t0=None, t1=None, limit=1000,
+         period=None, clock=ops.CLOCK_RX):
+    from .temporal import stream_signals, transactions
+    from .vcd import WaveError
+    names = None
+    if stream:
+        from ..query.db import default_db
+        database = db or default_db()
+        if not database:
+            raise WaveError("stream needs a design database: pass db or set RVW_DESIGNDB")
+        s = stream_signals(database, stream)
+        valid, ready, names = s["valid"], s["ready"], s["payload"]
+    if not valid:
+        raise WaveError("pass valid [ready] [payload] or stream with a database")
+    return transactions(wave, valid, ready, payload, time_at(wave, t0, period, clock) or 0,
+                        time_at(wave, t1, period, clock), clock, limit, payload_names=names)
+
+
+def _diff(wave, other, signals=None, t0=None, t1=None, offset=0, map=None, on_clock=False, all=False,
+          limit=50, period=None, clock=ops.CLOCK_RX):
+    from .wdiff import diff
+    from .vcd import WaveError
+    if map and "=" not in map:
+        raise WaveError("map takes A_PREFIX=B_PREFIX")
+    return diff(wave, other, signals, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock),
+                offset, clock if on_clock else None, tuple(map.split("=", 1)) if map else None, limit, not all)
+
+
 def mcp_tools():
     return [
         ToolSpec("wave_info", "Inspect timescale, signal count, time range and clock period of a waveform.",
@@ -103,6 +146,29 @@ def mcp_tools():
                  _indexed(_find), annotations=RO),
         ToolSpec("wave_edges", "Count value changes, rising and falling edges and x/z transitions per matching signal.",
                  schema({**WAVE, **REGEX, **TIME, **WINDOW}, ["wave", "regex"]), _indexed(_edges), annotations=RO),
+        ToolSpec("wave_why", "Explain why a signal has its value at a time: database assignments, which one was "
+                 "active (from condition signal values), values of the read signals, walking back through "
+                 "registers to their last change. Needs a SpinalDB database (db or RVW_DESIGNDB).",
+                 schema({"wave": WAVE["wave"], **TIME, "signal": S, "at": S, "db": S,
+                         "depth": {"type": "integer", "minimum": 0, "default": 2},
+                         "max_nodes": {"type": "integer", "minimum": 1, "default": 64}},
+                        ["wave", "signal", "at"]), _why, annotations=RO),
+        ToolSpec("wave_seq", "Match a clocked sequence 'a ##1 b ##[1:3] c' (SVA-like delays, ##[n:$] open) at each "
+                 "rising clock edge where the first expression holds; returns matches, failures and pending starts.",
+                 schema({**WAVE, **TIME, **WINDOW, "sequence": S,
+                         "limit": {"type": "integer", "minimum": 0, "default": 100}}, ["wave", "sequence"]),
+                 _indexed(_seq), annotations=RO),
+        ToolSpec("wave_txn", "Extract handshake transfers of a Stream (valid/ready) or Flow (valid) at rising clock "
+                 "edges: payload per transfer, wait cycles, stalls, payload_changed and valid_dropped issues. "
+                 "Give valid/ready/payload names, or stream (bundle path) with a design database.",
+                 schema({**WAVE, **TIME, **WINDOW, "valid": S, "ready": S, "payload": S, "stream": S, "db": S,
+                         "limit": {"type": "integer", "minimum": 0, "default": 1000}}, ["wave"]),
+                 _indexed(_txn), annotations=RO),
+        ToolSpec("wave_diff", "Compare two waves (signals paired by name, optional prefix map and time offset) and "
+                 "report the first divergence time and the differing signals; status match/diverged/no_points.",
+                 schema({**WAVE, **TIME, **WINDOW, "other": S, "signals": S, "offset": {"type": "integer", "default": 0},
+                         "map": S, "on_clock": B, "all": B, "limit": {"type": "integer", "minimum": 1, "default": 50}},
+                        ["wave", "other"]), _indexed(_diff), annotations=RO),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
                          "reader": {"enum": ["auto", "vcd", "wellen"], "default": "auto"}}, ["wave", "out"]), _index),

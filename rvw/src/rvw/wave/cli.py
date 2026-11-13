@@ -88,6 +88,48 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--to", dest="t1", help=TIME_HELP)
     q.set_defaults(func=_edges)
 
+    q = w.add_parser("why", help="why a signal has its value at T: active drivers from a design database")
+    common(q, regex=False)
+    q.add_argument("signal", help="signal name (Verilog, waveform or Spinal path)")
+    q.add_argument("--at", required=True, help=TIME_HELP)
+    q.add_argument("--db", help="SpinalDB design database (default: RVW_DESIGNDB)")
+    q.add_argument("--depth", type=int, default=2, help="levels of read signals to follow (default 2)")
+    q.add_argument("--max-nodes", type=int, default=64, help="stop after N explained signals (default 64)")
+    q.set_defaults(func=_why)
+
+    q = w.add_parser("seq", help="match a clocked sequence 'a ##1 b ##[1:3] c' at every edge where a holds")
+    common(q, regex=False)
+    q.add_argument("sequence", help="expressions joined by ##N or ##[lo:hi] (hi may be $) clock delays")
+    q.add_argument("--from", dest="t0", help=TIME_HELP)
+    q.add_argument("--to", dest="t1", help=TIME_HELP)
+    q.add_argument("--limit", type=int, default=100, help="matches and failures to list (default 100; 0 = all)")
+    q.set_defaults(func=_seq)
+
+    q = w.add_parser("txn", help="handshake transfers, stalls and protocol issues of a Stream or Flow")
+    common(q, regex=False)
+    q.add_argument("--valid", help="valid signal name")
+    q.add_argument("--ready", help="ready signal name (omit for a Flow)")
+    q.add_argument("--payload", help="payload signals regex")
+    q.add_argument("--stream", help="Stream/Flow bundle path in the design database (sets valid/ready/payload)")
+    q.add_argument("--db", help="SpinalDB design database for --stream (default: RVW_DESIGNDB)")
+    q.add_argument("--from", dest="t0", help=TIME_HELP)
+    q.add_argument("--to", dest="t1", help=TIME_HELP)
+    q.add_argument("--limit", type=int, default=1000, help="transfers and issues to list (default 1000; 0 = all)")
+    q.set_defaults(func=_txn)
+
+    q = w.add_parser("diff", help="compare two waves and report the first divergence")
+    common(q, regex=False)
+    q.add_argument("other", help="second wave (B)")
+    q.add_argument("--signals", help="compare only signals matching this regex (names in A)")
+    q.add_argument("--from", dest="t0", help=TIME_HELP + " (in A)")
+    q.add_argument("--to", dest="t1", help=TIME_HELP + " (in A)")
+    q.add_argument("--offset", type=int, default=0, help="B time = A time + OFFSET")
+    q.add_argument("--map", help="A_PREFIX=B_PREFIX: rename A signal prefixes to find B signals")
+    q.add_argument("--on-clock", action="store_true", help="sample both at A's rising clock edges (--clock)")
+    q.add_argument("--all", action="store_true", help="scan the whole window; report each signal's first divergence")
+    q.add_argument("--limit", type=int, default=50, help="signals to list (default 50)")
+    q.set_defaults(func=_diff)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -232,6 +274,115 @@ def _edges(a):
             extra = f" rising {s['rising']} falling {s['falling']}" if 'rising' in s else ''
             print(f"{s['signal']}: changes {s['changes']}{extra} unknown {s['unknown']}")
     return 0
+
+
+@_wrap
+def _seq(a):
+    from .temporal import sequence
+    r = sequence(a.wave, a.sequence, _t(a, a.t0) or 0, _t(a, a.t1), a.clock, a.limit)
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# clock {r['clock']}, {r['cycles']} edges: {r['matched']} matched, {r['failed']} failed, "
+              f"{r['pending']} pending at window end")
+        for m in r['matches']:
+            print(f"match {m['start']} .. {m['end']} ({m['cycles']} cycles)")
+        for f in r['failures']:
+            print(f"fail  {f['start']}: step {f['failed_step']} ({f['expr']}) not seen by {f['at']}")
+    return 0
+
+
+@_wrap
+def _txn(a):
+    from .temporal import stream_signals, transactions
+    names = None
+    if a.stream:
+        from ..query.db import default_db
+        database = a.db or default_db()
+        if not database:
+            raise WaveError("--stream needs a design database: pass --db or set RVW_DESIGNDB")
+        s = stream_signals(database, a.stream)
+        valid, ready, names = s['valid'], s['ready'], s['payload']
+    elif a.valid:
+        valid, ready = a.valid, a.ready
+    else:
+        raise WaveError("pass --valid [--ready] [--payload] or --stream with a database")
+    r = transactions(a.wave, valid, ready, a.payload, _t(a, a.t0) or 0, _t(a, a.t1), a.clock, a.limit,
+                     payload_names=names)
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# {r['kind']} {r['valid']}: {r['transfers']} transfers in {r['edges']} edges, "
+              f"{r['stall_edges']} stalled, {r['unknown_edges']} unknown, max wait {r['max_wait_cycles']}")
+        for x in r['transactions']:
+            pay = " ".join(f"{k.rsplit('.', 1)[-1]}={v}" for k, v in x['payload'].items())
+            print(f"{x['time']:10d} wait {x['wait_cycles']} {pay}")
+        for i in r['issues']:
+            print(f"ISSUE {i['time']}: {i['issue']} (waiting since {i['since']})")
+    return 0
+
+
+@_wrap
+def _diff(a):
+    from .wdiff import diff
+    mapping = None
+    if a.map:
+        if "=" not in a.map:
+            raise WaveError("--map takes A_PREFIX=B_PREFIX")
+        mapping = tuple(a.map.split("=", 1))
+    r = diff(a.wave, a.other, a.signals, _t(a, a.t0) or 0, _t(a, a.t1), a.offset,
+             a.clock if a.on_clock else None, mapping, a.limit, not a.all)
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# {r['status']}: {r['signals_compared']} signals, {r['points_compared']} points ({r['mode']})")
+        if r['first_divergence'] is not None:
+            print(f"first divergence at {r['first_divergence']}:")
+            for d in r['divergent']:
+                print(f"  {d['signal']}: A={d['a']} B={d['b']}")
+        if r['only_in_a_count']:
+            print(f"# {r['only_in_a_count']} signals only in A")
+    return 0 if r['status'] == 'match' else 1
+
+
+def _why(a):
+    from .why import why
+    from ..query.db import QueryError, default_db
+    try:
+        database = a.db or default_db()
+        if not database:
+            raise WaveError("no design database: pass --db or set RVW_DESIGNDB")
+        r = why(database, a.wave, a.signal, _t(a, a.at), a.depth, a.max_nodes)
+        if a.json:
+            jsonout.write(r)
+        else:
+            _print_why(r['trace'], 0)
+            if r['truncated']:
+                print(f"(stopped after {r['nodes']} signals; raise --max-nodes)")
+            print(f"# {r['binding']}")
+        return 0
+    except (WaveError, QueryError, CaptureError, jsonout.JsonOutputError) as e:
+        if a.json:
+            jsonout.write({'error': str(e)})
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2
+
+
+def _print_why(n, level):
+    pad = "  " * level
+    head = f"{pad}{n['signal']} = {n['value']} @ {n['time']}"
+    if n.get('set_at') is not None:
+        head += f" (set at {n['set_at']})"
+    print(f"{head}  [{n.get('status')}]" + (f" {n['cause']}" if n.get('cause') else ""))
+    for c in n.get('assignments', []):
+        if c['id'] == n.get('active'):
+            cond = " && ".join(f"{x['kind']}({x['expr']})={x['holds']}" for x in c['conditions'])
+            print(f"{pad}  := {c['source']}" + (f"  under {cond}" if cond else "") + (f"  at {c['loc']}" if c['loc'] else ""))
+    for r in n.get('reads', []):
+        if r['kind'] != 'data':
+            print(f"{pad}  reads {r['signal']} ({r['kind']}) = {r['value']}")
+    for child in n.get('children', []):
+        _print_why(child, level + 1)
 
 
 def _verify(a):

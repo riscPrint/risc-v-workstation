@@ -14,6 +14,11 @@ rvw wave find    WAVE EXPR [--from T] [--to T] [--limit N]   # first/last/all in
 rvw wave edges   WAVE REGEX [--from T] [--to T]               # changes, rising/falling, x/z per signal
 rvw wave index   WAVE -o OUT.rvwi [--reader auto|vcd|wellen]  # build an indexed snapshot
 rvw wave verify  OUT.rvwi [--source WAVE]                     # full SHA-256 check; exit 1 when stale
+rvw wave why     WAVE SIGNAL --at T --db DESIGN.db [--depth N]  # active drivers behind a value
+rvw wave seq     WAVE 'a ##1 b ##[1:3] c' [--clock RX]          # clocked sequence matches/failures
+rvw wave txn     WAVE --valid V [--ready R] [--payload RX]      # Stream/Flow transfers and issues
+rvw wave txn     WAVE --stream io.cmd --db DESIGN.db            # same, signals typed by the database
+rvw wave diff    A B [--signals RX] [--offset N] [--map P=Q] [--on-clock] [--all]  # exit 1 on divergence
 ```
 
 Every query command takes `--indexed`: it queries a cached index of the wave and builds
@@ -58,6 +63,46 @@ interval), `matches` (intervals `{start, end}`; `end` null means true through th
 `edges` counts value changes per signal (a repeated dump of the same value is not a change,
 the first value is not a change), rising and falling edges for 1-bit signals, and transitions
 to or from x/z under `unknown`. Both read only the referenced signals' rows from an index.
+
+## Active drivers (`why`)
+
+`why` joins the wave with a SpinalDB database (`--db` or `RVW_DESIGNDB`). For the signal it
+reports the value at T, every database assignment with its `when`/`switch` chain, and which
+one was active. A condition holds when its condition signal (`conds.signal_id`, for example
+`when_Gcd_l19`) has a known value that selects it; `switch` cases compare literal keys.
+The last full-width assignment whose chain holds wins; an undecided later assignment makes
+the node `ambiguous`. A register is explained at its last value change: `set_at` is that
+time and the drivers are evaluated just before it (`evaluated_at`). An asserted reset gives
+`status: reset`. The walk follows `data` reads up to `--depth` levels and `--max-nodes`
+signals. Node `status`: `active`, `held`, `reset`, `initial`, `ambiguous`, `no_driver`,
+`no_active_driver`, `unresolved` (no wave signal) or `seen`. The wave is read through a
+cached index. The result says `binding: unverified`: names are joined by wave path, and the
+wave and database are the caller's choice. Partial-range assignments are listed but do not
+combine bits.
+
+## Clocked analyses (`seq`, `txn`) and `diff`
+
+Clocked commands sample signals at each rising edge of `--clock` (the shallowest 1-bit match)
+with the values just before the edge. `rose()`/`fell()` then compare with the last edge.
+
+`seq` takes expressions joined by `##N` or `##[lo:hi]` cycle delays (`hi` may be `$`). Each
+edge where the first expression holds starts a thread. A thread advances at the first edge in
+its window where the next expression holds, fails when the window passes, and is `pending`
+when the wave ends. The report lists matches, failures (with the failed step) and pending
+starts. Unknown values never advance a thread.
+
+`txn` reports Stream transfers (valid && ready) or Flow transfers (valid; no `--ready`) with
+their payload and wait cycles, stall and idle edges, throughput and two protocol issues:
+`payload_changed` (payload changed while valid && !ready) and `valid_dropped` (valid fell
+before ready). `--stream PATH --db DB` takes valid, ready and payload from a Stream/Flow bundle
+in the database. Edges with unknown valid or ready count as `unknown_edges`, not transfers.
+
+`diff` pairs signals by name (`--map A_PREFIX=B_PREFIX` renames, `--offset` shifts B) and
+compares values by meaning (x/z bits differ from known bits). Without `--on-clock` it compares
+at the window start and at every time either wave changes; with it, at A's rising edges. It
+stops at the first divergence (`--all` scans on and lists each signal's first divergence).
+`status` is `match`, `diverged` or `no_points`; the CLI exits 1 unless `match`. The
+alignment is by time only, not by retirement or transactions.
 
 Python API (used by `rvw bundle`): `rvw.wave.ops.{list_signals, changes, changes_page, sample, sample_raw,
 cut, info, detect_period}` (`changes` has no default limit; `changes_page` has the CLI's).

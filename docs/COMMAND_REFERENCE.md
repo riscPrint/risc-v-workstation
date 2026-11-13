@@ -1174,7 +1174,8 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
 
 ```text
 usage: rvw wave [-h] [--project PROJECT]
-    {index,verify,list,changes,sample,cut,find,edges,info} ...
+    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,info}
+    ...
 ```
 
 ### `rvw wave index`
@@ -1236,6 +1237,40 @@ usage: rvw wave edges [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--indexed] [--from T0] [--to T1] [--project PROJECT] wave regex
 ```
 
+### `rvw wave why`
+
+```text
+usage: rvw wave why [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] --at AT [--db DB] [--depth DEPTH] [--max-nodes MAX_NODES]
+    [--project PROJECT] wave signal
+```
+
+### `rvw wave seq`
+
+```text
+usage: rvw wave seq [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--project PROJECT] wave
+    sequence
+```
+
+### `rvw wave txn`
+
+```text
+usage: rvw wave txn [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] [--valid VALID] [--ready READY] [--payload PAYLOAD] [--stream
+    STREAM] [--db DB] [--from T0] [--to T1] [--limit LIMIT] [--project
+    PROJECT] wave
+```
+
+### `rvw wave diff`
+
+```text
+usage: rvw wave diff [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] [--signals SIGNALS] [--from T0] [--to T1] [--offset OFFSET]
+    [--map MAP] [--on-clock] [--all] [--limit LIMIT] [--project PROJECT] wave
+    other
+```
+
 ### `rvw wave info`
 
 ```text
@@ -1272,7 +1307,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 90 built-in tools, including the four job tools.
+The default server exposes 95 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1951,6 +1986,14 @@ Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0` (required), `t1
 
 Starts a background job: no.
 
+### `wave_diff`
+
+Compare two waves (signals paired by name, optional prefix map and time offset) and report the first divergence time and the differing signals; status match/diverged/no_points.
+
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `other` (required), `signals`, `offset`, `map`, `on_clock`, `all`, `limit`.
+
+Starts a background job: no.
+
 ### `wave_edges`
 
 Count value changes, rising and falling edges and x/z transitions per matching signal.
@@ -2004,5 +2047,29 @@ Starts a background job: no.
 Read matching signal values at a wave time, cycle Nc, or end.
 
 Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `at` (required), `dec`.
+
+Starts a background job: no.
+
+### `wave_seq`
+
+Match a clocked sequence 'a ##1 b ##[1:3] c' (SVA-like delays, ##[n:$] open) at each rising clock edge where the first expression holds; returns matches, failures and pending starts.
+
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `sequence` (required), `limit`.
+
+Starts a background job: no.
+
+### `wave_txn`
+
+Extract handshake transfers of a Stream (valid/ready) or Flow (valid) at rising clock edges: payload per transfer, wait cycles, stalls, payload_changed and valid_dropped issues. Give valid/ready/payload names, or stream (bundle path) with a design database.
+
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `valid`, `ready`, `payload`, `stream`, `db`, `limit`.
+
+Starts a background job: no.
+
+### `wave_why`
+
+Explain why a signal has its value at a time: database assignments, which one was active (from condition signal values), values of the read signals, walking back through registers to their last change. Needs a SpinalDB database (db or RVW_DESIGNDB).
+
+Arguments: `wave` (required), `period`, `clock`, `signal` (required), `at` (required), `db`, `depth`, `max_nodes`.
 
 Starts a background job: no.
