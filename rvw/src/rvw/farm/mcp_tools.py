@@ -31,7 +31,9 @@ def mcp_tools():
     array = {"type": "array", "items": string, "minItems": 1}
     from .service import manage
     from .costs import budget
-    return [ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",
+    from .triage import triage
+    return [ToolSpec("farm_triage", "Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.",
+                 schema({"root": string, "baseline": string, "known": string, "bundles": string}, ["root"]), triage, long=True), ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",
                  schema({"root": string, "scope": string, "limits": {"type": "object"},
                          "rate_per_core_hour": {"type": "number", "minimum": 0}}, ["root", "scope"]), budget), ToolSpec("farm_batch", "Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.",
                  schema({"plan": {"type": "object"}, "action": string, "executor": string, "root": string,

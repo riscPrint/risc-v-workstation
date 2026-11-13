@@ -1,5 +1,13 @@
 # Platform contracts
 
+### Farm failure clusters
+
+`rvw.failure-clusters/1` retains original per-test evidence and source identities.
+Clusters preserve core/configuration and infrastructure/DUT category boundaries.
+Known-failure matches do not waive failures. C5 creation uses one representative
+per cluster with reruns disabled. The optional diff uses existing C3/C4 identity
+and seed checks; missing or changed evidence cannot establish a fix.
+
 ### Queue cumulative budgets
 
 `rvw.queue-cost/1` records cumulative run, agent or project usage and configured
