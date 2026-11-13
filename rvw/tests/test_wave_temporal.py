@@ -166,3 +166,26 @@ def test_cli_and_mcp(tmp_path, cluster_db):
         assert not error and data['kind'] == 'Flow'
     finally:
         registry.jobs.shutdown()
+
+
+def test_aligned_diff(tmp_path):
+    # B is A delayed by two clock periods with one extra idle edge: time alignment diverges,
+    # event alignment on transfers matches until the payload differs.
+    import re
+    a = tmp_path / 'a.vcd'
+    a.write_text(HS)
+    b = tmp_path / 'b.vcd'
+    b.write_text(re.sub(r'#(\d+)', lambda m: f'#{int(m.group(1)) + 20 if int(m.group(1)) else 0}', HS)
+                 .replace('$end\n#20\n1!', '$end\n#5\n1!\n#10\n0!\n#20\n1!'))
+    assert wdiff.diff(str(a), str(b), clock='clk')['status'] == 'diverged'
+    r = wdiff.aligned_diff(str(a), str(b), 'io_cmd_valid', 'payload')
+    assert r['status'] == 'match' and r['events_compared'] == 4, r
+    c = tmp_path / 'c.vcd'
+    c.write_text(HS.replace('b10 $', 'b110 $'))
+    r = wdiff.aligned_diff(str(a), str(c), 'io_cmd_valid', 'payload')
+    assert r['status'] == 'diverged' and r['first_divergence']['event'] == 2
+    assert r['first_divergence']['a_time'] == 35 and r['first_divergence']['signals'][0]['b'] == '0x6'
+    short = tmp_path / 'd.vcd'
+    short.write_text(HS.replace('#45\n1!\n0"', '#45\n1!\n0"').replace('#15\n1!\n1#', '#15\n1!\n0"\n1#'))
+    r = wdiff.aligned_diff(str(a), str(short), 'io_cmd_valid && io_cmd_ready', 'payload')
+    assert r['status'] == 'diverged' and 'fewer events' in r['first_divergence']['cause']

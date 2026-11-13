@@ -1740,8 +1740,8 @@ usage: rvw wave txn [-h] [--json] [--period PERIOD] [--clock CLOCK]
 ```text
 usage: rvw wave diff [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--indexed] [--signals SIGNALS] [--from T0] [--to T1] [--offset OFFSET]
-    [--map MAP] [--on-clock] [--all] [--limit LIMIT] [--project PROJECT] wave
-    other
+    [--map MAP] [--on-clock] [--all] [--align ALIGN] [--align-b ALIGN_B]
+    [--limit LIMIT] [--project PROJECT] wave other
 ```
 
 ### `rvw wave info`
@@ -2912,7 +2912,7 @@ Starts a background job: no.
 
 Compare two waves (signals paired by name, optional prefix map and time offset) and report the first divergence time and the differing signals; status match/diverged/no_points.
 
-Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `other` (required), `signals`, `offset`, `map`, `on_clock`, `all`, `limit`.
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `other` (required), `signals`, `offset`, `map`, `on_clock`, `all`, `limit`, `align`, `align_b`.
 
 Starts a background job: no.
 

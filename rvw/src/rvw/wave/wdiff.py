@@ -119,3 +119,80 @@ def diff(a: str, b: str, regex: str | None = None, t0: int = 0, t1: int | None =
             'first_divergence_by_signal': [{'signal': k, 'time': v} for k, v in
                                            sorted(per_signal.items(), key=lambda kv: (kv[1], kv[0]))[:limit]],
             'divergent_times': divergent_times, 'points_compared': compared}
+
+
+def aligned_diff(a: str, b: str, event: str, regex: str | None = None, clock: str = r"(^|\.)(clk|clock|clk_i|clock_i)$",
+                 map_prefix: tuple[str, str] | None = None, event_b: str | None = None,
+                 t0: int = 0, t1: int | None = None, limit: int = 50, stop: bool = True) -> dict:
+    """Compare two runs event by event instead of by time.
+
+    `event` is an expression (for example a commit valid). At each rising clock edge where it
+    holds (pre-edge values), the compared signals are sampled. The k-th event of A is compared
+    with the k-th event of B (`event_b` when B names it differently). Use this when the runs
+    have different timing, e.g. two configurations retiring the same program.
+    """
+    from .expr import Expr
+    from .temporal import sampled
+    _validate(t0, t1)
+
+    def stream(src, expr_text, names):
+        ex = Expr(expr_text, src.hdr.vars)
+        clk = pick_clock(src.hdr, clock)
+        vars_ = [src.hdr.vars[i] for i in names]
+        codes = ex.codes | {v.code for v in vars_}
+        prev: dict = {}
+        for t, vals in sampled(src, clk, codes, t0, t1):
+            v = ex.evaluate(vals, prev)
+            prev = vals
+            if v is not None and v:
+                yield t, [_norm(vals.get(x.code), x.width) for x in vars_]
+
+    with open_wave(a) as wa, open_wave(b) as wb:
+        index_b = {v.name: i for i, v in enumerate(wb.hdr.vars)}
+
+        def other(name):
+            if map_prefix and name.startswith(map_prefix[0]):
+                return map_prefix[1] + name[len(map_prefix[0]):]
+            return name
+        pairs = [(i, index_b[other(v.name)]) for i, v in enumerate(wa.hdr.vars)
+                 if (regex is None or __import__('re').search(regex, v.name)) and other(v.name) in index_b]
+        if not pairs:
+            raise WaveError('no signal names in common; use --map A_PREFIX=B_PREFIX')
+        names = [wa.hdr.vars[i].name for i, _ in pairs]
+        sa = stream(wa, event, [i for i, _ in pairs])
+        sb = stream(wb, event_b or event, [j for _, j in pairs])
+        k = 0
+        first = None
+        divergent = 0
+        per_signal: dict[str, int] = {}
+        ended = None
+        while True:
+            ea, eb = next(sa, None), next(sb, None)
+            if ea is None or eb is None:
+                if ea is not None or eb is not None:
+                    ended = 'a' if ea is None else 'b'
+                break
+            diffs = [{'signal': n, 'a': x, 'b': y} for n, x, y in zip(names, ea[1], eb[1]) if x != y]
+            if diffs:
+                divergent += 1
+                for d in diffs:
+                    per_signal.setdefault(d['signal'], k)
+                if first is None:
+                    first = {'event': k, 'a_time': ea[0], 'b_time': eb[0], 'signals': diffs[:limit]}
+                    if stop:
+                        k += 1
+                        break
+            k += 1
+    stopped = stop and first is not None
+    if first is None and ended:
+        status = 'diverged'
+        first = {'event': k, 'cause': f"run {'A' if ended == 'a' else 'B'} has fewer events"}
+    else:
+        status = 'diverged' if first else ('match' if k else 'no_points')
+    return {'a': a, 'b': b, 'mode': f'aligned on {event}' + (f' / {event_b}' if event_b else ''),
+            'status': status, 'match': status == 'match', 'complete': not stopped,
+            'events_compared': k, 'signals_compared': len(pairs), 'first_divergence': first,
+            'first_divergence_by_signal': [{'signal': s, 'event': e} for s, e in
+                                           sorted(per_signal.items(), key=lambda kv: (kv[1], kv[0]))[:limit]],
+            'divergent_events': divergent,
+            'basis': 'k-th event of A against k-th event of B; equal events do not prove equal timing'}

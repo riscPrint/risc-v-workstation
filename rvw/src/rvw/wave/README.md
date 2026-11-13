@@ -19,6 +19,7 @@ rvw wave seq     WAVE 'a ##1 b ##[1:3] c' [--clock RX]          # clocked sequen
 rvw wave txn     WAVE --valid V [--ready R] [--payload RX]      # Stream/Flow transfers and issues
 rvw wave txn     WAVE --stream io.cmd --db DESIGN.db            # same, signals typed by the database
 rvw wave diff    A B [--signals RX] [--offset N] [--map P=Q] [--on-clock] [--all]  # exit 1 on divergence
+rvw wave diff    A B --align 'commit_valid' --signals 'commit_(pc|data)'      # k-th event vs k-th event
 ```
 
 Every query command takes `--indexed`: it queries a cached index of the wave and builds
@@ -111,8 +112,15 @@ in the database. Edges with unknown valid or ready count as `unknown_edges`, not
 compares values by meaning (x/z bits differ from known bits). Without `--on-clock` it compares
 at the window start and at every time either wave changes; with it, at A's rising edges. It
 stops at the first divergence (`--all` scans on and lists each signal's first divergence).
-`status` is `match`, `diverged` or `no_points`; the CLI exits 1 unless `match`. The
-alignment is by time only, not by retirement or transactions.
+`status` is `match`, `diverged` or `no_points`; the CLI exits 1 unless `match`.
+
+`diff --align EXPR` aligns by events instead of time: at each rising `--clock` edge where
+`EXPR` holds (pre-edge values; for example a commit valid or a Stream fire), the selected
+signals are sampled, and the k-th event of A is compared with the k-th event of B
+(`--align-b` when B names the event differently). The first divergence gives the event
+index and both times. A run with fewer events is `diverged` with that cause. Use it to
+compare runs with different timing (two configurations, a fix, another core). Equal events
+do not prove equal timing.
 
 Python API (used by `rvw bundle`): `rvw.wave.ops.{list_signals, changes, changes_page, sample, sample_raw,
 cut, info, detect_period}` (`changes` has no default limit; `changes_page` has the CLI's).
