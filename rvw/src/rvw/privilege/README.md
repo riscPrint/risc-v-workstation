@@ -275,3 +275,20 @@ Examples include `sstc-h.json` and `envcfg-h.json` for H profiles. These remain
 RV64 campaigns. RV32 split timer accesses, all extension-state gates, complete
 virtualization transitions, interrupted landing-pad sequences and guest shadow
 stacks remain open. No C1 or DUT result is inferred from a native Spike pass.
+
+## Simultaneous disabled-feature combinations
+
+`kind = "disabled-matrix"` crosses every requested combination of SUM, MXR,
+MPRV, TVM, TW and TSR with M/S/U entry. `disabled.feature` selects `fs-off`,
+`vs-off`, `no-float`, `no-vector` or `no-supervisor`. Absent supervisor uses
+M/U entry and requires `priv = "mu"`. The first four profiles emit 192 programs
+each. The absent-supervisor profile emits 384 across satp, SFENCE.VMA and SRET.
+The five project examples use the `all-` prefix and emit 1152 programs in total.
+
+Each program checks illegal-instruction cause and exact PC. It captures WARL
+control readback before entry and checks retention on trap. It accounts for
+MRET clearing MPRV on lower-mode entry. Group names say `requested` because an
+unimplemented WARL bit need not retain the written value. Raw F/V encodings
+permit absent-extension tests without requiring that extension in the compiler
+or reference ISA. Only four masks per profile were selected for the short
+native smoke run. Those samples do not establish results for all 1152 programs.

@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "disabled-matrix",
+  "isa": "rv64im_zicsr_zifencei",
+  "priv": "msu",
+  "disabled": {
+    "feature": "no-vector"
+  }
+}
