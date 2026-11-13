@@ -38,3 +38,45 @@ A final partial interval of one instruction is excluded.
 
 These results require native runs. Unit tests establish orchestration and arithmetic
 only. No statistical confidence or timing fidelity is inferred from them.
+
+## Compare with a full RTL run
+
+`rvw sample STUDY.json --validate --out /path/to/validation --intervals 10000 50000 --clusters 1 4 8 --warmup 1000`
+runs the same prefix from reset and at sampled points. The prefix ends at the
+instruction budget or the successful `tohost` write. MCP: `sample_validate`.
+`validation.json` reports full IPC, sampled IPC and signed relative IPC error
+for every setting. A failed setting remains visible. Maximum observed error
+is an empirical result for this prefix. It is not a confidence interval.
+Use multiple workload classes before applying the method to a long program.
+
+Two deterministic programs are in `examples/vexriscv/rvw/sample-workloads`:
+heapsort and run-length compression with a round-trip check. Build short cases:
+
+```sh
+nice -n 15 examples/vexriscv/rvw/sample-workloads/build.sh "$RUN_ROOT/kernels"
+```
+
+`SIZE=1024 ROUNDS=10` are the defaults. Increase `ROUNDS` for a long workload.
+Each program reports success through `tohost`. The linker keeps code and data
+below the stack and bootstrap reserve. Set each study's instruction budget
+above completion for full-program calibration, rather than prefix calibration.
+Compilation does not establish RTL or sampled timing accuracy.
+
+| Functional smoke build | Spike instructions to successful `tohost` | RTL timing |
+|---|---:|---|
+| Heapsort, `SIZE=128 ROUNDS=1` | 20,038 | NOT RUN |
+| Compression, `SIZE=128 ROUNDS=1` | 3,958 | NOT RUN |
+
+Regenerate these small functional profiles with studies whose ELF files come
+from this build and whose instruction budgets are 1,000,000:
+
+```sh
+SIZE=128 ROUNDS=1 nice -n 15 examples/vexriscv/rvw/sample-workloads/build.sh "$RUN_ROOT/kernel-smoke"
+mkdir -p "$RUN_ROOT/profile-sort" "$RUN_ROOT/profile-compression"
+nice -n 15 python -c 'import sys; from pathlib import Path; from rvw.sample.validation import load; from rvw.sample.flow import profile; profile(load(sys.argv[1]), Path(sys.argv[2]))' sort.json "$RUN_ROOT/profile-sort"
+nice -n 15 python -c 'import sys; from pathlib import Path; from rvw.sample.validation import load; from rvw.sample.flow import profile; profile(load(sys.argv[1]), Path(sys.argv[2]))' compression.json "$RUN_ROOT/profile-compression"
+```
+
+Each `profile.csim` ends with `END N`. Run in the installed `rvw` Python
+environment. The counts above qualify only these small functional runs.
+They do not fill the full-RTL sampling error table.

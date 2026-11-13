@@ -21,3 +21,12 @@ The latter is 1 / sum(weight * CPI) only with all points matched.
 Timing is N-1 retirement gaps per N measured instructions.
 Resume binds study and input hashes. Evidence is rechecked before reuse.
 Reports have no confidence bound until a native validation study supplies one.
+
+## Full-run validation
+
+`rvw.sample-validation/1` records full RTL IPC, sampled IPC, interval size,
+maximum cluster count, selected point count and signed relative IPC error.
+It retains inconclusive settings. `max_observed_error_percent` covers only
+successful settings and is null when none succeed. The whole study is
+inconclusive if any setting fails. An observed maximum is not a statistical
+confidence interval. The full reference uses reset execution.
