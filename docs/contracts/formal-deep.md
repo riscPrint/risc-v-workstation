@@ -237,3 +237,69 @@ an entry. A cache supplies candidates, never an acceptance verdict. Helpers
 remain assertions in the fresh target proof. A failure with selected helpers
 stays inconclusive. A failure without helpers is the original target's
 native result. CLI `ic3-lemmas` and MCP `formal_ic3_lemmas` share this report.
+
+## Exhaustive initial-state RTL partition
+
+CLI `initial-split` and MCP `formal_initial_split` read a hash-pinned Verilog
+manifest with `top`, `sources`, `split_variable`, optional `engines`, `depth`
+and `max_cases`. The variable names a flattened Yosys net with distinct,
+nonconstant bits. The runner enumerates every initial bit pattern. Each case
+adds only `$initstate -> variable == value` and retains all original transitions.
+The default limit is 16 cases. The maximum is 256. No partial selection earns
+a partition proof.
+
+`rvw.formal-initial-split-plan/1` records every value, source hash and generated
+case problem. `rvw.formal-initial-split/1` records each case result and the plan
+hash. A pass requires unbounded success on every case and no original source
+environment assumptions. The generated partition guard is discharged by
+exhaustive initial-value coverage. Other source assumptions remain unqualified.
+A failed case is a counterexample in a subset of the original initial states.
+The split does not constrain a variable to stay constant after initialization.
+
+## Lazy RAM word-state refinement
+
+CLI `lazy-ram` and MCP `formal_lazy_ram` read pinned Verilog `top` and `sources`,
+plus a collected Yosys `memory` cell name. The runner uses `memory_map -formal`
+to retain source read, write, initialization and collision behavior. It then
+replaces each untracked word's flip-flop driver with an unconstrained per-step
+input. It removes initialization constraints from those freed word aliases.
+Tracked word dynamics remain unchanged. Aliased word state, negative offsets,
+missing word names and ambiguous whole-word drivers are rejected.
+
+`rvw.formal-lazy-ram/1` records original selected-memory state bits, tracked
+addresses, per-round `memory_state_bits`, result paths and source hashes. A
+source-conditional engine pass stays inconclusive. An unbounded pass on an
+overapproximation proves the original supplied safety problem. An abstract
+counterexample requests refinement only. Read-address constants and sampled
+counterexample addresses prioritize the next restored word. Missing samples
+fall back to the next word. Only a failure after all words are restored can
+become a concrete counterexample. The report does not claim total design-state
+or runtime savings. `max_words` defaults to 64 and cannot exceed 4096.
+
+EBMC Verilog inputs receive explicit `FORMAL` and `YOSYS` preprocessor defines,
+matching the Yosys formal read. Engine rows record these `defines`. Unsupported
+formal builtins remain native conversion errors. The adapter never falls back
+to a non-formal source branch to obtain a result.
+
+
+## Reset-policy counter quotient certificate
+
+CLI `counter-quotient` and MCP `formal_counter_quotient` read pinned Verilog
+`top` and `sources`, `width`, and `keep_bits` with
+`1 <= keep_bits < width <= 256`. Optional `ports` maps exactly `clock`, `reset`,
+`enable`, and `count` to simple identifiers. The concrete interface must match
+one-bit control inputs and the declared output width. Extra ports are refused.
+Optional `reset_active` selects high or low polarity.
+
+`rvw.formal-counter-quotient/1` certifies a generated smaller enabled counter
+only after a fresh unbounded relation proof and guarded reset reachability.
+The relation is `abstract_count = concrete_count mod 2**keep_bits` under the
+recorded initial-reset and clock policy. Source assumptions keep it
+inconclusive. A failed obligation reports `obligation_failed` and leaves the
+candidate uncertified. Source assertions remain in the obligation.
+
+The report retains source, model and manifest hashes, the proof path and
+restrictions. `abstract.sv` is the candidate model. A successful certificate
+covers projected low bits only. It does not replace a wider design. The reset
+policy resets once at startup, then holds reset inactive. Arbitrary future
+reset sequences are outside this certificate.
