@@ -1,0 +1,47 @@
+{
+  "schema": "rvw.known-findings/1",
+  "findings": [
+    {
+      "finding_id": "VEX-MTVAL-IRQ-001",
+      "core": "vexriscv",
+      "test": "scheduled-wfi-3-1",
+      "trace_sha256": "278c6ce7f7dc89afb9a102f4652f52514fcabd4398a723f0e1162412110bf7ab",
+      "observed_status": "mismatch",
+      "reference": "examples/vexriscv/FINDINGS.md#vex-mtval-irq-001",
+      "differences": {
+        "tval": {
+          "expected": "0x0",
+          "actual": "0x204236d3"
+        }
+      }
+    },
+    {
+      "finding_id": "VEX-MTVAL-IRQ-001",
+      "core": "vexriscv",
+      "test": "scheduled-wfi-7-1",
+      "trace_sha256": "46781c09490b9dc8b2fd552135d1dcd594f8f2573ffde2b9fe614529afa39881",
+      "observed_status": "mismatch",
+      "reference": "examples/vexriscv/FINDINGS.md#vex-mtval-irq-001",
+      "differences": {
+        "tval": {
+          "expected": "0x0",
+          "actual": "0x204236d3"
+        }
+      }
+    },
+    {
+      "finding_id": "VEX-MTVAL-IRQ-001",
+      "core": "vexriscv",
+      "test": "scheduled-wfi-11-1",
+      "trace_sha256": "5c6dd57de4e0e83ed37afb59da92c96e27c991f0f8e7251bde3520bb29645115",
+      "observed_status": "mismatch",
+      "reference": "examples/vexriscv/FINDINGS.md#vex-mtval-irq-001",
+      "differences": {
+        "tval": {
+          "expected": "0x0",
+          "actual": "0x204236d3"
+        }
+      }
+    }
+  ]
+}

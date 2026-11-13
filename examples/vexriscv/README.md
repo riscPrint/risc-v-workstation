@@ -1105,3 +1105,18 @@ request/response port from project data. Its matching feed passes strict Spike
 comparison. Its deliberately changed feed produces the expected mismatch.
 The stimulus plan now links the passing native port run. This is a declared
 evidence link for the tested hook, not whole-core or live TestRIG qualification.
+
+## Reviewed findings
+
+[The consolidated findings](FINDINGS.md) include suites, formal checks,
+generated checks, security and debug results. Identify the three retained
+scheduled-WFI mismatches with:
+
+```sh
+rvw regress cosim RUN --platform rvw/platform.json --allow-sync reset,irq --findings known-findings.json --json
+```
+
+Exact reviewed traces and trap differences report `known_finding` with ID
+`VEX-MTVAL-IRQ-001`. They do not count as Spike matches. C1 program passes
+remain distinct from failed reference comparisons. A changed trace or
+mismatch field requires review. The command still exits 1.

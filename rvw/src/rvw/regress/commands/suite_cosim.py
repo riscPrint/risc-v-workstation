@@ -15,6 +15,7 @@ from rvw.mcp.spec import ToolSpec, schema
 from rvw.regress.random_stream import complete
 from rvw.regress.run_evidence import owned_run_paths
 from rvw.results import load_run
+from rvw.regress.findings import load_findings, classify
 
 
 def _member(path, root):
@@ -65,7 +66,7 @@ def _mailbox_read(run, elf, mismatch):
     return ack is not None and ack.value <= int(str(actual.get('mem_addr')), 0) < ack.value + 8
 
 
-def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
+def check_run(run_dir, platform, model='spike', on_row=None, allow=(), findings=None):
     """Compare each owned C1 result of `run_dir` with the reference. Returns rows and counts.
 
     `allow` names synchronizations a match may use: `reset` (the architecturally unspecified
@@ -76,6 +77,7 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
     allow = tuple(sorted(set(allow)))
     if set(allow) - set(ALLOW):
         raise ValueError(f'unknown --allow-sync kinds {sorted(set(allow) - set(ALLOW))}')
+    known = load_findings(findings)
     rows = []
     for path in owned_run_paths(run_dir):
         run = load_run(path)
@@ -110,6 +112,7 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
                 row['synchronized'] = comparison.get('synchronized', 0)
             else:
                 row['reason'] = comparison.get('message') or f"comparison {comparison.get('status')} is incomplete"
+        classify(row, run.core, trace, known)
         rows.append(row)
         if on_row:
             on_row(row)
@@ -126,6 +129,7 @@ def register(commands):
     p.add_argument('run', type=Path, help='rvw regress run output directory')
     p.add_argument('--platform', type=Path, required=True, help='cosim platform JSON of the core profile')
     p.add_argument('--model', default='spike')
+    p.add_argument('--findings', type=Path, help='project reviewed finding catalog; never counts as match')
     p.add_argument('--allow-sync', default='', help='comma-separated: reset (unspecified mscratch reset value), '
                    'irq (pending bits of asserted inputs), mmio (loads from declared MMIO regions); default none (strict)')
     p.add_argument('--out', type=Path, help='write the full report here')
@@ -135,7 +139,7 @@ def register(commands):
         try:
             result = check_run(args.run, args.platform, args.model,
                                on_row=None if args.json else lambda r: print(f"{r['suite']}/{r['test']}: {r['status']}", flush=True),
-                               allow=[k for k in args.allow_sync.split(',') if k])
+                               allow=[k for k in args.allow_sync.split(',') if k], findings=args.findings)
         except (ValueError, OSError, KeyError) as exc:
             print(f'rvw regress cosim: {exc}', file=sys.stderr)
             return 2
@@ -148,9 +152,10 @@ def register(commands):
 
 def mcp_tools():
     return [ToolSpec('regress_cosim', 'Strictly compare every C1 result of one regress run with the reference. '
-                     'Statuses: match, mismatch, fail, error, inconclusive. Nothing is masked or promoted.',
+                     'Statuses: match, mismatch, fail, error, inconclusive, known_finding. Nothing is masked or promoted.',
                      schema({'run_dir': {'type': 'string'}, 'platform': {'type': 'string'}, 'model': {'type': 'string'},
+                             'findings': {'type': 'string'},
                              'allow_sync': {'type': 'array', 'items': {'type': 'string', 'enum': sorted(ALLOW)}}},
                             ['run_dir', 'platform']),
-                     lambda run_dir, platform, model='spike', allow_sync=(): check_run(run_dir, platform, model, allow=allow_sync),
+                     lambda run_dir, platform, model='spike', allow_sync=(), findings=None: check_run(run_dir, platform, model, allow=allow_sync, findings=findings),
                      annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=('Spike',))]

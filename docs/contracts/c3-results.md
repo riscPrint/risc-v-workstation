@@ -117,3 +117,16 @@ flags, stat caching, `core.fileMode` and line-ending normalization. This applies
 and cached revision checkouts. Private ignore files cannot hide untracked source files; use
 repository `.gitignore` rules for build outputs. Sparse checkout, shallow history, replacement
 refs, grafts, private attributes and active clean/smudge filters are refused.
+
+## Reviewed suite findings
+
+`rvw regress cosim --findings FILE` accepts project data with schema
+`rvw.known-findings/1` and a `findings` array. Each entry has `finding_id`,
+`core`, `test`, `trace_sha256`, `observed_status` and `reference` strings.
+Only exact trace SHA-256, core, test and observed failure status matches apply.
+The report uses `status: known_finding`, retains `observed_status` (`fail` or
+`mismatch`), and adds `finding_id` and `finding_reference`. It retains the C1
+status, mismatch and reason. The count is separate from `match`. The command
+still exits 1. Changed evidence needs review. This catalog does not waive C1,
+C3, gate, coverage or reference checks. It does not change a core or mask a
+reference field.
