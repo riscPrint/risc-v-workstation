@@ -229,3 +229,6 @@ builds. Their status is `unconnected`, and `width` is the declared port width.
 older captures with `coverage=legacy-connections-only` to inspect open ports.
 This describes the lowered netlist. A source-level open connection that the
 compiler replaces with a synthetic wire may still appear connected.
+
+Repeat `-G NAME=VALUE` for each slang top parameter. The launcher joins each
+option and value before it calls slang. Values use SystemVerilog constant syntax.

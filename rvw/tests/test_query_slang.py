@@ -277,3 +277,17 @@ def test_serv_core(tmp_path):
         print('SERV counts:', ops.info(db)['counts'])
     finally:
         db.close()
+
+
+@needs_slang
+def test_multiple_parameter_overrides(tmp_path):
+    source = tmp_path / 'pair.sv'
+    source.write_text('module pair #(parameter A=1, B=2)(input [A-1:0] a, output [B-1:0] b); assign b=a; endmodule')
+    out = tmp_path / 'pair.db'
+    build_hdl([source], 'pair', out, frontend='slang', parameters=['A=3', 'B=5'])
+    db = DesignDB(out)
+    try:
+        assert db.resolve_one('a').width == 3
+        assert db.resolve_one('b').width == 5
+    finally:
+        db.close()
