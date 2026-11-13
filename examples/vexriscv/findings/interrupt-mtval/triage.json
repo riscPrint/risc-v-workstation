@@ -1,0 +1,257 @@
+{
+  "core_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+  "rows": [
+    {
+      "interrupt": 3,
+      "program": "msip.S",
+      "c1_status": "fail",
+      "cycles": 247,
+      "instret": 20,
+      "tohost": "0x3",
+      "elf_sha256": "a50de5c30c9d747a96a465cf4d1bba82e60eeb1bdf0d58249215aa91538a87a9",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "trace_sha256": "585252d3eee2628f5c0fd7011430d68df6a6c403351d43d379fc41ece7f6bb13",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 9,
+        "trap_events": 0,
+        "synchronized": 1,
+        "recent_synchronizations": [
+          {
+            "order": 0,
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff",
+            "source": "csr_state",
+            "reference": "0x0",
+            "core": "0x304a3852"
+          }
+        ],
+        "applied_masks": [
+          {
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff"
+          }
+        ]
+      },
+      "mismatch": {
+        "order": 8,
+        "cycle": 208,
+        "differences": {
+          "tval": {
+            "expected": "0x0",
+            "actual": "0x55"
+          }
+        },
+        "actual": {
+          "event": "trap",
+          "cycle": 208,
+          "cause": "0x80000003",
+          "tval": "0x55",
+          "intr": true
+        },
+        "expected": {
+          "pc": "0x80000024",
+          "pc_next": "0x80000028",
+          "insn": "0xffdff06f",
+          "mode": 3,
+          "rd": 0,
+          "rd_wdata": "0x0",
+          "mem_addr": "0x0",
+          "mem_rmask": 0,
+          "mem_wmask": 0,
+          "mem_rdata": "0x0",
+          "mem_wdata": "0x0",
+          "trap": 1,
+          "intr": 1,
+          "cause": "0x80000003",
+          "tval": "0x0",
+          "mem_fault": 0,
+          "halted": 0,
+          "fd_valid": 0,
+          "fd": 0,
+          "fd_wdata": "0x0",
+          "fflags": "0x0",
+          "fcsr": "0x0",
+          "disasm": "j       pc - 0x4",
+          "debug": {
+            "mode": false,
+            "dpc": "0x0",
+            "dcsr": "0x40000000",
+            "step": false
+          }
+        }
+      },
+      "disposition": "core-defect"
+    },
+    {
+      "interrupt": 7,
+      "program": "mtval.S",
+      "c1_status": "fail",
+      "cycles": 247,
+      "instret": 20,
+      "tohost": "0x3",
+      "elf_sha256": "6ba746bc275256762377834373f302fedfbc680456ee105417c18c6069704193",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "trace_sha256": "3ff065fd16040e42438d866920d2f812d633d2a55175736c74e95278675768ea",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 9,
+        "trap_events": 0,
+        "synchronized": 1,
+        "recent_synchronizations": [
+          {
+            "order": 0,
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff",
+            "source": "csr_state",
+            "reference": "0x0",
+            "core": "0x304a3852"
+          }
+        ],
+        "applied_masks": [
+          {
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff"
+          }
+        ]
+      },
+      "mismatch": {
+        "order": 8,
+        "cycle": 208,
+        "differences": {
+          "tval": {
+            "expected": "0x0",
+            "actual": "0x55"
+          }
+        },
+        "actual": {
+          "event": "trap",
+          "cycle": 208,
+          "cause": "0x80000007",
+          "tval": "0x55",
+          "intr": true
+        },
+        "expected": {
+          "pc": "0x80000024",
+          "pc_next": "0x80000028",
+          "insn": "0xffdff06f",
+          "mode": 3,
+          "rd": 0,
+          "rd_wdata": "0x0",
+          "mem_addr": "0x0",
+          "mem_rmask": 0,
+          "mem_wmask": 0,
+          "mem_rdata": "0x0",
+          "mem_wdata": "0x0",
+          "trap": 1,
+          "intr": 1,
+          "cause": "0x80000007",
+          "tval": "0x0",
+          "mem_fault": 0,
+          "halted": 0,
+          "fd_valid": 0,
+          "fd": 0,
+          "fd_wdata": "0x0",
+          "fflags": "0x0",
+          "fcsr": "0x0",
+          "disasm": "j       pc - 0x4",
+          "debug": {
+            "mode": false,
+            "dpc": "0x0",
+            "dcsr": "0x40000000",
+            "step": false
+          }
+        }
+      },
+      "disposition": "core-defect"
+    },
+    {
+      "interrupt": 11,
+      "program": "meip.S",
+      "c1_status": "fail",
+      "cycles": 247,
+      "instret": 21,
+      "tohost": "0x3",
+      "elf_sha256": "a05383cc98529bcd38c5782ae3b47610eb6c89e188287dbb9a0285372744226f",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "trace_sha256": "f3187e9fe0f3b2a5822337b31d4ed58ac6a6129ffc11b6889d42aca559427a38",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 10,
+        "trap_events": 0,
+        "synchronized": 1,
+        "recent_synchronizations": [
+          {
+            "order": 0,
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff",
+            "source": "csr_state",
+            "reference": "0x0",
+            "core": "0x304a3852"
+          }
+        ],
+        "applied_masks": [
+          {
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff"
+          }
+        ]
+      },
+      "mismatch": {
+        "order": 9,
+        "cycle": 208,
+        "differences": {
+          "tval": {
+            "expected": "0x0",
+            "actual": "0x55"
+          }
+        },
+        "actual": {
+          "event": "trap",
+          "cycle": 208,
+          "cause": "0x8000000b",
+          "tval": "0x55",
+          "intr": true
+        },
+        "expected": {
+          "pc": "0x80000028",
+          "pc_next": "0x8000002c",
+          "insn": "0xffdff06f",
+          "mode": 3,
+          "rd": 0,
+          "rd_wdata": "0x0",
+          "mem_addr": "0x0",
+          "mem_rmask": 0,
+          "mem_wmask": 0,
+          "mem_rdata": "0x0",
+          "mem_wdata": "0x0",
+          "trap": 1,
+          "intr": 1,
+          "cause": "0x8000000b",
+          "tval": "0x0",
+          "mem_fault": 0,
+          "halted": 0,
+          "fd_valid": 0,
+          "fd": 0,
+          "fd_wdata": "0x0",
+          "fflags": "0x0",
+          "fcsr": "0x0",
+          "disasm": "j       pc - 0x4",
+          "debug": {
+            "mode": false,
+            "dpc": "0x0",
+            "dcsr": "0x40000000",
+            "step": false
+          }
+        }
+      },
+      "disposition": "core-defect"
+    }
+  ]
+}
