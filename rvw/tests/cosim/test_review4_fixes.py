@@ -107,7 +107,8 @@ def test_sail_end_status_is_checked_when_the_core_stops_at_the_store(tmp_path, s
     rows = [r for r in rows if r.get("order") != max(x.get("order", -1) for x in rows)]   # drop the j
     result = sail_run(tmp_path, rows, sail_elf, platform, sail)
     assert result["status"] == "match", result
-    assert (result["scope"], result["reference_end"], result["end_status"], result["uncompared_instructions"]) == (
+    assert result["scope"] == "no_fp_state"
+    assert (result["comparison_scope"], result["reference_end"], result["end_status"], result["uncompared_instructions"]) == (
         "complete trace", "pass", "pass", 0)
     rows[-1]["status"] = "fail"
     with pytest.raises(ValueError, match="reference ended with pass but the core trace ends with fail"):
@@ -118,7 +119,10 @@ def test_a_prefix_that_ends_before_the_store_has_no_reference_end(tmp_path, sail
     rows, indexes = boom_trace(sail_elf, platform)
     rows = [r for r in rows if r.get("order", -1) < indexes["misaligned_site"] and "event" not in r]
     result = sail_run(tmp_path, rows, sail_elf, platform, sail)
-    assert result["status"] == "match" and result["scope"] == "trace prefix" and "reference_end" not in result
+    assert result["status"] == "match"
+    assert result["scope"] == "no_fp_state"
+    assert result["comparison_scope"] == "trace prefix"
+    assert "reference_end" not in result
 
 
 # Finding 3: every irq level event was kept until the next mip/sip read.

@@ -52,7 +52,8 @@ def test_trace_hash_matches_parsed_stream(tmp_path, monkeypatch, race_injector, 
     result = functional.functional([path])
     assert edit.fired and (restore is None or restore.fired)
     assert list(result['traces']) == [hashlib.sha256(original).hexdigest()]
-    bins = result['groups']['mnemonic_mode']['hits']
+    assert result['groups']['mnemonic_mode']['hits'] == []
+    bins = result['unqualified']['mnemonic_mode']
     assert bins == [{'bin': ['addi', 'M'], 'count': 1}]
 
 

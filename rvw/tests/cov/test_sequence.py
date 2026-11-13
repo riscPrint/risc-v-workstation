@@ -1,7 +1,7 @@
 import json
 import pytest
 from rvw.cov.functional import functional
-from .test_functional import row, trace, bins
+from .test_functional import row, trace, bins, decoded_observations_only
 
 
 def run(tmp_path, rows, distances=None):

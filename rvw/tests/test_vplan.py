@@ -14,6 +14,7 @@ def write(path,data):
 
 def setup(tmp_path):
     write(tmp_path/'coverage.json',{'schema':'rvw.functional-coverage/1','config_sha256':'a'*64,
+        'qualification_policy':'c1-pass-complete-c2-v1',
         'groups':{'operands':{'fields':['value'],'expected_bins':2,'expected_hit':1,'holes':[['one']]}}})
     write(tmp_path/'c1.json',{'schema':'rvw.run/1','status':'pass'})
     data={'schema':'rvw.vplan/1','requirements':{'REQ.ADD':'Add produces the required result.','REQ.OTHER':'Another obligation.'},

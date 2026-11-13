@@ -219,7 +219,8 @@ def test_sail_checks_a_boom_style_trace_to_its_htif_termination(tmp_path, sail_e
     rows, _ = boom_trace(sail_elf, platform)
     result = sail_run(tmp_path, rows, sail_elf, platform, sail)
     assert result["status"] == "match", result
-    assert result["scope"] == "until the reference's termination"
+    assert result["scope"] == "no_fp_state"
+    assert result["comparison_scope"] == "until the reference's termination"
     assert (result["reference_end"], result["end_status"], result["uncompared_instructions"]) == ("pass", "pass", 1)
     assert result["trap_events"] == 2                        # misaligned load, software interrupt
 
