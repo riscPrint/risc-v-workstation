@@ -1,4 +1,5 @@
 """Small Verilator cocotb smoke. Needs cocotb 2.0.1 in the rvw environment."""
+from rvw.sim.uvm import require_evidence
 import argparse
 import os
 from pathlib import Path
@@ -30,9 +31,9 @@ def main():
             result = ET.parse(run / 'results.xml')
             failures = list(result.iter('failure')) + list(result.iter('error'))
             if buggy:
-                assert failures and 'AXIS_PACKET_DATA_ORDER' in ''.join(ET.tostring(f, encoding='unicode') for f in failures)
+                require_evidence(failures and 'AXIS_PACKET_DATA_ORDER' in ''.join(ET.tostring(f, encoding='unicode') for f in failures), "missing conformance evidence")
             else:
-                assert not failures
+                require_evidence(not failures, "missing conformance evidence")
     print('AXIS cocotb: 3 good runs and 3 AXIS_PACKET_DATA_ORDER failures')
 
 

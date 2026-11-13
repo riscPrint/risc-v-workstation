@@ -1,6 +1,7 @@
 """A live scalar CPU bench from the adapter's declared memory and RVFI roles."""
 import json
 from pathlib import Path
+from rvw.sim.uvm import require_evidence
 
 
 def discover(db):
@@ -125,10 +126,10 @@ async def run(dut, config):
                 if config.get('output_symbol') and record['mem_wmask'] and record['mem_addr']==elf.symbols[config['output_symbol']]:
                     output.append(record['mem_wdata'] & 255)
                 if record['mem_wmask'] and record['mem_addr']==elf.symbols['tohost']:
-                    assert record['mem_wdata']==1,'tohost failure'
+                    require_evidence(record['mem_wdata']==1, 'tohost failure')
                     scoreboard.finish(scoreboard.checks)
                     if 'expected_output' in config:
-                        assert bytes(output).decode()==config['expected_output'], 'output mismatch'
+                        require_evidence(bytes(output).decode()==config['expected_output'], 'output mismatch')
                         dut._log.info('CPU output: %s', bytes(output).decode())
                     dut._log.info('Spike checked %d live retirements',scoreboard.checks)
                     return

@@ -1,4 +1,5 @@
 """Real RTL tests with seeded stimulus and independent expected values."""
+from rvw.sim.uvm import require_evidence
 import os
 import random
 import cocotb
@@ -20,7 +21,7 @@ async def serial(dut):
         agent=CocotbAgent(dut,'spi')
         for _ in range(4):
             data=rng.randrange(256)
-            assert await agent.transfer(data)==data,'SPI_RTL_DATA'
+            require_evidence(await agent.transfer(data)==data, 'SPI_RTL_DATA')
     elif proto=='uart':
         from rvw.vip.uart import CocotbAgent,Frame
         seen=[];agent=CocotbAgent(dut,hook=seen.append)
@@ -29,7 +30,7 @@ async def serial(dut):
         try:
             for data in values: await agent.send(Frame(data))
             await ClockCycles(dut.clk,10)
-            assert seen==[Frame(data) for data in values],'UART_RTL_DATA'
+            require_evidence(seen==[Frame(data) for data in values], 'UART_RTL_DATA')
         finally: task.cancel()
     elif proto=='gpio':
         from rvw.vip.gpio import CocotbAgent,Config,sequences
@@ -39,4 +40,4 @@ async def serial(dut):
     elif proto=='i2c':
         from rvw.vip.i2c import CocotbAgent
         agent=CocotbAgent(dut,'i2c',resolved_open_drain=True)
-        assert await agent.transfer(0x35,[rng.randrange(256)])==[True,True],'I2C_RTL_ACK'
+        require_evidence(await agent.transfer(0x35,[rng.randrange(256)])==[True,True], 'I2C_RTL_ACK')

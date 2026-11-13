@@ -1,3 +1,4 @@
+from rvw.sim.uvm import require_evidence
 import os
 import importlib
 import random
@@ -22,5 +23,5 @@ async def read_response(dut):
             if task.done():task.result()
             if int(dut.done.value):break
         else:raise AssertionError('reactive DUT manager timeout')
-        assert int(dut.result.value)==0,protocol.upper()+'_REACTIVE_DATA'
+        require_evidence(int(dut.result.value)==0, protocol.upper()+'_REACTIVE_DATA')
     finally:task.cancel()

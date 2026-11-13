@@ -54,6 +54,7 @@ def generate(source, out, rtl, expected_map=None):
 TEST = '''import json
 from pathlib import Path
 import cocotb
+from rvw.sim.uvm import require_evidence
 import pyuvm
 from cocotb.triggers import FallingEdge, RisingEdge
 from rvw.sim.bench import start
@@ -76,7 +77,7 @@ class Frontdoor:
         for _ in range(self.max_cycles):
             await RisingEdge(d.clk)
             if int(d.core_stimulus_ready.value):
-                assert not int(d.core_stimulus_error.value), 'SOC_FRONTDOOR_ERROR'
+                require_evidence(not int(d.core_stimulus_error.value), 'SOC_FRONTDOOR_ERROR')
                 value = int(d.core_stimulus_rdata.value)
                 await FallingEdge(d.clk)
                 d.core_stimulus_valid.value = 0
@@ -84,10 +85,10 @@ class Frontdoor:
                 return value
         raise AssertionError('SOC_FRONTDOOR_TIMEOUT')
     async def read(self, address, width):
-        assert width in (8,16,32)
+        require_evidence(width in (8,16,32), 'missing conformance evidence')
         return (await self.transfer(address)) & ((1 << width)-1)
     async def write(self, address, data, width):
-        assert width in (8,16,32)
+        require_evidence(width in (8,16,32), 'missing conformance evidence')
         await self.transfer(address, True, data & ((1 << width)-1))
 
 @pyuvm.test()
@@ -129,11 +130,11 @@ class ComposedRegisters(pyuvm.uvm_test):
                 if reg['write_action'] == 'one_to_clear' and reg['access'] == 'rw':
                     await ral.write(name,(1 << reg['width'])-1)
                     await ral.read(name,check=True)
-            assert frontdoor.transfers > 0, 'SOC_NO_REGISTER_CHECKS'
+            require_evidence(frontdoor.transfers > 0, 'SOC_NO_REGISTER_CHECKS')
             await RisingEdge(dut.clk)
             await FallingEdge(dut.clk)
             report = environment.finish()
-            assert report['checks'] > 0 and not report['unexercised'], 'SOC_UNEXERCISED_BUS'
+            require_evidence(report['checks'] > 0 and not report['unexercised'], 'SOC_UNEXERCISED_BUS')
             task.cancel()
             (here/'checks.json').write_text(json.dumps(dict(checks=report['checks'],transfers=frontdoor.transfers,registers=cfg['registers'],environment=report)))
         finally:

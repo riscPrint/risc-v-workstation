@@ -72,7 +72,8 @@ def test_subword_frontdoor_preserves_declared_value_width(width,expected):
     from rvw.uvm.composed import TEST
     tree=ast.parse(TEST)
     node=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='Frontdoor')
-    namespace={};exec(compile(ast.Module(body=[node],type_ignores=[]),'generated-frontdoor','exec'),namespace)
+    imports=[n for n in tree.body if isinstance(n,ast.ImportFrom) and n.module=='rvw.sim.uvm']
+    namespace={};exec(compile(ast.Module(body=imports+[node],type_ignores=[]),'generated-frontdoor','exec'),namespace)
     frontdoor=namespace['Frontdoor'](None,10)
     writes=[]
     async def transfer(address,write=False,data=0):

@@ -1,3 +1,4 @@
+from rvw.sim.uvm import require_evidence
 import os
 import cocotb
 from cocotb.clock import Clock
@@ -30,9 +31,9 @@ async def fifo(dut):
             await RisingEdge(dut.clk)
         if mt.done(): mt.result()
         if mr.done(): mr.result()
-        assert not os.environ.get('AXIS_BUGGY'), 'corruption escaped checker'
+        require_evidence(not os.environ.get('AXIS_BUGGY'), 'corruption escaped checker')
         tx.monitor.finish(); rx.monitor.finish(); sc.finish()
-        assert sc.count == 66
-        assert rx.monitor.coverage['stall']
+        require_evidence(sc.count == 66, "missing conformance evidence")
+        require_evidence(rx.monitor.coverage['stall'], "missing conformance evidence")
     finally:
         mt.cancel(); mr.cancel(); sink.cancel()

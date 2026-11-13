@@ -1,4 +1,5 @@
 """Drive seeded RTL semantic endpoints through the existing Python agents."""
+from rvw.sim.uvm import require_evidence
 import os
 import random
 import cocotb
@@ -24,7 +25,7 @@ async def contracts(d):
         await FallingEdge(d.clk)
         d.command.value=command; d.tag.value=tag; d.address.value=address; d.data.value=data; d.valid.value=1
         await RisingEdge(d.clk); await Timer(1,unit='ns')
-        assert int(d.response_valid.value), 'RTL endpoint response missing'
+        require_evidence(int(d.response_valid.value), 'RTL endpoint response missing')
         result=int(d.response_data.value)
         observed['tag']=int(d.response_tag.value)
         observed['status']=int(d.response_status.value)
@@ -55,7 +56,7 @@ async def contracts(d):
                 agent.transfer(Transaction(index,index*8,True,payload,8))
                 agent.transfer(Transaction(index,index*8,length=8))
             agent.monitor.finish()
-            assert agent.monitor.count==8
+            require_evidence(agent.monitor.count==8, "missing conformance evidence")
         elif protocol=='ethernet':
             from rvw.vip.ethernet import Adapter, Descriptor
             host=bytearray(64)
@@ -75,7 +76,7 @@ async def contracts(d):
                 exchange(0,index,int.from_bytes(payload,'little'))
                 agent.transmit(Descriptor(index*8,8))
                 agent.receive(Descriptor(index*8,8),rng.getrandbits(64).to_bytes(8,'little'))
-            assert agent.count==8
+            require_evidence(agent.count==8, "missing conformance evidence")
         elif protocol=='dram':
             from rvw.vip.dram import Adapter, Backend, Command
             def backend(command,contract):
@@ -89,7 +90,7 @@ async def contracts(d):
                 agent.issue(Command(2+index*2,'WR',column=index,data=value))
                 agent.issue(Command(3+index*2,'RD',column=index))
             agent.issue(Command(12,'PRE'))
-            assert agent.monitor.count==4
+            require_evidence(agent.monitor.count==4, "missing conformance evidence")
         else:
             from rvw.vip.coherent import Manager, Directory, Event
             scoreboard=Directory(); transaction=0
@@ -103,5 +104,5 @@ async def contracts(d):
                 agent.request(transaction,node,0,1);transaction+=1
                 agent.request(transaction,node,0,2,rng.getrandbits(64));transaction+=1
             scoreboard.finish()
-            assert scoreboard.coverage[2]==8
+            require_evidence(scoreboard.coverage[2]==8, "missing conformance evidence")
     await bridge(exercise)()

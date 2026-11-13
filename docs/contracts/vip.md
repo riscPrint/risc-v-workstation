@@ -110,3 +110,11 @@ A bench must finish each agent. It cannot pass with an undeclared empty agent.
 The UVM protocol monitors use the string config key
 `idle_reason` for the same declaration. Their default empty result is fatal
 `NO_CHECKS`. Existing scoreboards still require their expected checks.
+
+## Python conformance checks
+
+Built-in VIP conformance wrappers and generated Python benches use explicit
+`require_evidence` guards for verdict checks. These guards remain active with
+`PYTHONOPTIMIZE`, `-O` and `-OO`. Missing logs, fault diagnostics or positive
+checks cannot become a pass because Python removed an assertion.
+Native protocol qualification still requires actual native evidence.
