@@ -1,0 +1,124 @@
+{
+  "schema": "rvw.vplan/1",
+  "requirements": {
+    "INTEGER.EXEC": "The four declared integer programs must complete on this core.",
+    "INTEGER.OPERANDS": "The tests must observe all declared add operand classes.",
+    "NATIVE.POINTS": "The tests must hit all native points in the selected instrumented scopes.",
+    "PROBE.MEMORY": "The load workload must expose data read offers.",
+    "PROBE.BRANCH": "The branch workload must expose both declared branch outcomes.",
+    "RETIRE.PAIRS": "The tests must observe all declared retirement pairs at distances 1, 2, and 4.",
+    "INJECTION": "The project must bind and test the instruction injection port."
+  },
+  "features": [
+    {
+      "id": "integer-execution",
+      "requirements": [
+        "INTEGER.EXEC"
+      ],
+      "tests": [
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/add/result.json",
+          "sha256": "2e25a839d3bd3334691360514e6f09b53944d63617b8409bc80dc2cccdbdc01e"
+        },
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/beq/result.json",
+          "sha256": "335cd897a38399c86afac1ac6277e56718e87a4d1fe512049eaa9e013e9ef43f"
+        },
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/lw/result.json",
+          "sha256": "0ad0ab8544a909257b45fdf836cb8c9baaceedc959c83fe1dfeb99991648c495"
+        },
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/sw/result.json",
+          "sha256": "ab7d3c71d98ebed4fa8ef1a7c4f772cbd7a43e29c70609cc7fdd5f2a09b663d0"
+        }
+      ]
+    },
+    {
+      "id": "add-operand-classes",
+      "requirements": [
+        "INTEGER.OPERANDS"
+      ],
+      "coverage": [
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/functional.json",
+          "sha256": "facb840ee34841e1653b9672e8ef5b966488f553520b17ef0ef03178493a4629",
+          "groups": [
+            "sem_add_rs1",
+            "sem_add_rs2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "native-instrumented-scope",
+      "requirements": [
+        "NATIVE.POINTS"
+      ],
+      "coverage": [
+        {
+          "path": "../../rvw/out/dv/source-vexiiriscv/database.json",
+          "sha256": "f74435036307f477a39e2a610fb71691bb6190d6e9f95045e6fb2f99dbf5d57b",
+          "groups": [
+            "TOP.VexiiRiscv",
+            "TOP.VexiiRiscv.early0_DivPlugin_logic_processing_div",
+            "TOP.VexiiRiscv.integer_RegFilePlugin_logic_regfile_fpga",
+            "TOP.VexiiRiscv.streamArbiter_1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data-read-offers",
+      "requirements": [
+        "PROBE.MEMORY"
+      ],
+      "coverage": [
+        {
+          "path": "rvw/random/probe-goals/lw.json",
+          "sha256": "e27a9bc1afa83916c0bad228acce9cfe4907363f8e142dd1bbaa620283ef3d37",
+          "groups": [
+            "data-read-offer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "branch-outcomes",
+      "requirements": [
+        "PROBE.BRANCH"
+      ],
+      "coverage": [
+        {
+          "path": "rvw/random/probe-goals/beq.json",
+          "sha256": "0ba22d3bde81018d0ebdc02b667f19ff9b1ad594809f35281bf4f862991f499b",
+          "groups": [
+            "branch-probe-taken",
+            "branch-probe-not-taken"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "retirement-pairs",
+      "requirements": [
+        "RETIRE.PAIRS"
+      ],
+      "coverage": [
+        {
+          "path": "rvw/random/probe-goals/retirement-coverage.json",
+          "sha256": "9b21491737ed84505a591dbe8b43577d6378d698b502c2e3e16c1c44be2f0b0c",
+          "groups": [
+            "sequence"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instruction-injection",
+      "requirements": [
+        "INJECTION"
+      ]
+    }
+  ]
+}

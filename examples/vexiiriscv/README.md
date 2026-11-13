@@ -534,3 +534,19 @@ Trap observations invalidate expected `mepc` and `mtval` state. A later complete
 software write makes the bank known again. This is software readback evidence.
 It does not check trap-update values, all CSR fields, dynamic AIA semantics,
 shared aliases, hardware/software update races or whole-core equivalence.
+
+## Stimulus verification plan
+
+[The project plan](verification-plan.json) binds the measured integer,
+operand, native-counter and probe evidence. Run it from the workstation root:
+
+```sh
+rvw plan status examples/vexiiriscv/verification-plan.json --json
+```
+
+[The saved status](verification-status.json) comes from real native results.
+It retains unobserved add classes, native counter holes, missing retirement
+pairs, and the pending instruction injection hook. Source path aliases are
+for display. Raw runs remain in the worker checkout. Missing raw runs on a
+clean checkout become explicit evidence holes. The plan covers these bounded
+stimulus samples. It does not qualify the whole core or grant C4 acceptance.

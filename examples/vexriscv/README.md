@@ -1081,3 +1081,19 @@ a passing result. Formal checks bounded lassos at depth 12 and separately covers
 the antecedent. It uses one startup reset clock and no progress fairness.
 Read [the measured results](property-results.md#eventual-stage-release).
 This does not prove unbounded liveness or fetched-instruction identity.
+
+## Stimulus verification plan
+
+[The project plan](verification-plan.json) binds the measured integer,
+operand, native-counter and probe evidence. Run it from the workstation root:
+
+```sh
+rvw plan status examples/vexriscv/verification-plan.json --json
+```
+
+[The saved status](verification-status.json) comes from real native results.
+It retains unobserved add classes, native counter holes, missing retirement
+pairs, and the pending instruction injection hook. Source path aliases are
+for display. Raw runs remain in the worker checkout. Missing raw runs on a
+clean checkout become explicit evidence holes. The plan covers these bounded
+stimulus samples. It does not qualify the whole core or grant C4 acceptance.

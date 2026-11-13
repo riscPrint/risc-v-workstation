@@ -91,3 +91,12 @@ coverage, probes and RVFI observation flags. This lets regression check the
 requested model without inferring options from artifact names. Missing or
 conflicting option receipts remain inconclusive. Native probe qualification
 never bypasses that regression check.
+
+## Verification plan probe references
+
+A `rvw.vplan/1` coverage reference can select event and sequence IDs from
+`rvw.probe-coverage/1`. The reporter requires qualified C1/strict reference
+execution, positive instruction count, complete trace, and zero masks and
+synchronization. Probe and sampled RTL contexts stay distinct. Negative or
+duplicate counts are invalid. Uncompleted sequences remain holes. These
+references preserve the recorded model identity and do not grant C4 acceptance.

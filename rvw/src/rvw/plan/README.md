@@ -61,3 +61,17 @@ It does not run tests or prove properties. Links are project declarations.
 hole. It does not establish complete requirements, correct mappings, runtime
 assumptions, unconditional proof, whole-core closure or C4 acceptance.
 Native campaign qualification and proof exclusion rollups remain separate.
+
+## Probe goal evidence
+
+Coverage references also accept `rvw.probe-coverage/1`. Select explicit event
+or sequence IDs in `groups`. The report must have qualified execution and a
+complete strict reference comparison, with zero masks and synchronization.
+The result keeps the plan and generated RTL identities in the coverage context.
+A pending sequence is a hole until at least one completion is observed.
+The report does not prove probe wiring or complete requirements.
+
+Both example cores have `verification-plan.json` and a saved status from real
+native samples. Their plans retain native point and retirement-pair holes.
+They pin evidence hashes. Missing worker-local C1 files remain missing evidence
+on a clean checkout. Saved status path aliases are for display.
