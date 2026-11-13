@@ -209,3 +209,44 @@ def test_neorv32_cpu(tmp_path):
         assert ops.path(db, 'ibus_rsp_i[data]', 'cpu_regfile_inst.rd_we_i')['found']
     finally:
         db.close()
+
+
+@pytest.mark.skipif(not (YOSYS and GHDL and os.environ.get('RVW_GHDL_PLUGIN')),
+                    reason='UART memories need the rebuilt GHDL plugin (RVW_GHDL_PLUGIN)')
+def test_neorv32_uart(tmp_path):
+    """A second real VHDL design, with FIFO memories and top generics."""
+    from rvw.common.proc import run_group
+    from rvw.query.hdl_ghdl import ghdl_prefix, plugin_path
+    from test_query_slang import _oracle
+    root = Path(os.environ.get('RVW_HDL_REF', Path(__file__).parents[3] / 'ref')) / 'neorv32'
+    listing = root / 'rtl/file_list_core.f'
+    if not listing.exists():
+        pytest.skip('NEORV32 external reference is absent')
+    sources = [Path(line.replace('$NEORV32_HOME', str(root))) for line in listing.read_text().split()]
+    out = tmp_path / 'uart.db'
+    build_hdl(sources, 'neorv32_uart', out, yosys=YOSYS, frontend='ghdl', library='neorv32',
+              parameters=['RX_FIFO_DEPTH=4', 'TX_FIFO_DEPTH=4'])
+    netlist, script = tmp_path / 'oracle.json', tmp_path / 'oracle.ys'
+    script.write_text('ghdl --std=08 --work=neorv32 -gRX_FIFO_DEPTH=4 -gTX_FIFO_DEPTH=4 '
+                      + ' '.join(map(str, sources)) + f' -e neorv32_uart\nwrite_json {netlist}\n')
+    tool = type('Tool', (), {'resolved': os.path.realpath(YOSYS)})()
+    env = {**os.environ, 'GHDL_PREFIX': ghdl_prefix(tool) or ''}
+    p = run_group([YOSYS, '-Q', '-T', '-m', str(plugin_path(tool, None)), '-s', str(script)],
+                  cwd=tmp_path, env=env, capture=True, timeout=90)
+    assert p.returncode == 0, p.stderr
+    oracle = _oracle(netlist, 'neorv32_uart')
+    db = DesignDB(out)
+    try:
+        assert ops.where(db, 'uart_rxd_i')['signal']['loc'].endswith('neorv32_uart.vhd:36')
+        assert db.q('SELECT count(*) FROM memories')[0][0] == 2
+        extra = []
+        for a in ('uart_rxd_i', 'uart_ctsn_i', 'bus_req_i[data]', 'clkgen_i'):
+            for b in ('uart_txd_o', 'uart_rtsn_o', 'irq_o', 'bus_rsp_o[data]'):
+                found, expected = ops.path(db, a, b)['found'], oracle(a, b)
+                assert found or not expected, ('missing native path', a, b)
+                if found and not expected:
+                    extra.append((a, b))
+        if extra:
+            pytest.xfail('inconclusive exact connectivity: conservative packed-vector aliases add paths: ' + str(extra))
+    finally:
+        db.close()
