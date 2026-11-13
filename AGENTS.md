@@ -57,6 +57,7 @@ keep the issue list in `TODO.md` in step with them.
 | `SpinalChecks/c2rtl/` | Native C truth-table reference against small combinational RTL units. See its `README.md`. |
 | `SpinalKonata/` | Konata pipeline traces for any Spinal design that tags its pipeline events. |
 | `SpinalProbes/` | Simulation-only probe API (`Probe.branch`, `stage`, `stall`, `cacheAccess`, `tlb`, `counter`, ...), off by default; RiscvSim samples it into `rvw.probe-events/1` and `rvw probes` converts it for each consumer. See its `README.md`. |
+| `rvw/src/rvw/probes/` | `rvw probes`: list a design's probes and consumer gaps, convert probe events into consumer formats. See its `README.md`. |
 | `SpinalWaves/` | Spinal types and source locations in Surfer waveforms (port of Tywaves). |
 | `SpinalTrace/` | Traces a signal value back to the Spinal statements that caused it (port of ChiselTrace). |
 | `SpinalBlocks/` | Block diagrams of Spinal designs: extractor, viewer engine, web host. |
