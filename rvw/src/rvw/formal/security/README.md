@@ -159,3 +159,43 @@ The digital rules use the
 [seed CSR contract in scalar crypto 1.0.1](https://docs.riscv.org/reference/isa/v20240411/unpriv/scalar-crypto.html#_the_seed_csr).
 CSR address decoding, privilege-policy generation, ignored write data, physical
 health tests and entropy certification retain separate proof obligations.
+
+## Dynamic PMP and ePMP access safety
+
+The formal app kind `pmp` checks grants against a declared PMP CSR-bank binding.
+Use the existing `rvw formal apps` command or `formal_apps` MCP tool. Example:
+
+```json
+{"id":"pmp_access", "kind":"pmp", "address":"access_address",
+ "request":"request", "grant":"grant", "size":"log2_bytes",
+ "privilege":"effective_privilege", "operation":"access_kind",
+ "mml":"mml", "mmwp":"mmwp", "latency":1,
+ "entries":[{"config":"pmpcfg0_byte0", "address":"pmpaddr0_field"}]}
+```
+
+The physical address width is 4..64 bits. Each config is eight bits. Each PMP
+address field is physical width minus two bits. Entries appear in priority order.
+The monitor handles OFF, TOR, NA4 and NAPOT with four-byte PMP granularity.
+`size` is a two-bit log2 byte count. `operation` is read=0, write=1, execute=2.
+`privilege` is the effective U=0, S=1 or M=3 mode. Reserved values are denied.
+Bind effective privilege after any project MPRV logic.
+
+The check includes full-access containment, first-touch priority, locked base
+PMP permissions, MMWP default deny and the MML shared-region permission table.
+The ePMP table follows
+[Smepmp 1.0](https://docs.riscv.org/reference/isa/v20240411/priv/smepmp.html).
+Base PMP reserved R=0/W=1 encodings must not be exposed as active legal rules.
+The monitor treats an enforced reserved encoding as denied.
+
+Config and address ports can change each clock. With `latency: 0`, the check uses
+current policy. With latency 1..64, it stores the request-time permission and
+valid bit for each response slot. Later CSR changes cannot grant access to an
+old denied request. This is a fixed-latency interface contract. It does not track
+transaction IDs or permit variable response reordering. It checks grant safety,
+not that every legal request eventually completes. An always-denying unit can
+satisfy this safety property.
+
+The CSR bank is an explicit trusted observation binding. The monitor does not
+prove CSR address decoding, WARL legalization, MML/MMWP stickiness, RLB or locked
+write suppression. It does not check DMA/debug initiators unless the project
+binds their requests and effective policy. Those remain separate obligations.
