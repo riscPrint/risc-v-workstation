@@ -66,12 +66,37 @@ claimed. `input_complete` remains false.
 
 ## Measured results
 
-On 2026-11-13, the three-hart smoke passed in Verilator at seed 17.
-It took 86 cycles and retired 35 instructions: 11, 12 and 12 per hart.
-All three C2/2 completion records report pass. The C1 instruction count equals
-the validated C2 retirement count. This is simulation evidence, not hardware
-qualification. Five Python tests passed. The native source build passed.
-See `rvw/smoke-result.json` for the core, RTL and trace hashes.
+These runs used the pinned VexiiRiscv core on 2026-11-13. All harts must
+complete. C1 retirement totals equal the parsed C2/2 record counts.
+RAM, atomic service and devices are simulation models. These are RTL simulation
+results, not hardware or full ISA qualification.
+
+| Suite | Config | Seed | Cycles | Retirements | Result |
+|---|---|---:|---:|---:|---|
+| Three-hart smoke | smp3 | 17 | 86 | 35 | pass |
+| LR/SC | smp2 | 17 | 1060 | 498 | pass |
+| AMO | smp2 | 17 | 18630 | 8346 | pass |
+| SB | smp2 | 17 | 82 | 26 | consistent with herd7 |
+| MP | smp2 | 17 | 82 | 25 | consistent with herd7 |
+| LB | smp2 | 17 | 82 | 26 | consistent with herd7 |
+| SB+fence.rw.rws | smp2 | 17 | 82 | 28 | consistent with herd7 |
+| MP+fence.rw.rws | smp2 | 17 | 81 | 27 | consistent with herd7 |
+| LB+fence.rw.rws | smp2 | 17 | 82 | 28 | consistent with herd7 |
+| Generated seed 1 | smp2 | 1 | 208 | 75 | inconclusive at 100000 candidates |
+| Generated seed 7 | smp2 | 7 | 119 | 40 | allowed after 6 candidates |
+| Generated seed 17 | smp2 | 17 | 87 | 26 | allowed after 1 candidate |
+| Generated seed 23 | smp2 | 23 | 105 | 39 | allowed after 8 candidates |
+| Cross-hart FENCE.I | smp2 | 17 | 191 | 62 | pass |
+| IPI | smp2 | 17 | 247 | 74 | pass |
+| HSM | hsm2 | 17 | 1431 | 530 | pass |
+| Spike shared RAM | serial2 | 17 | 122 | 38 | 38 instructions match; zero masks/sync |
+
+Each litmus case has one captured outcome. Seed 17 used two generated program
+steps. Seeds 1, 7 and 23 used four. An allowed execution is a finite checker
+result. The candidate-limit result remains inconclusive. The HSM observer saw
+two starts, two S-mode entries, one stop/stopped transition and two IPIs.
+Clock/reset/power control and coherent-cache RTL remain unqualified.
+The JSON files under `rvw/` record the RTL and trace hashes.
 
 
 ## Ordering campaigns

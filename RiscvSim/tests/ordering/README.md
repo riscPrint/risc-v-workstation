@@ -389,3 +389,20 @@ This fixture has a serialized shared-memory port and a small instruction
 subset. It is not a production RISC-V core. Encoding coverage is not external
 aq/rl ordering evidence. Word/quadword CAS contention, production adapters and
 weak-memory RTL campaigns remain open.
+
+
+## Production SMP execution
+
+The [cacheless SMP example](../../../examples/smp/README.md#measured-results)
+links these LR/SC and AMO programs into separate hart images. Both run on two
+real VexiiRiscv RTL instances. At seed 17, LR/SC passed with 498 retirements in
+1060 cycles. AMO passed with 8346 retirements in 18630 cycles. Each hart keeps
+private functional-test operands. Generated programs exercise shared targets.
+
+The same example captures all six pinned litmus cases for the outcome checker.
+All six seed-17 outcomes are consistent with native herd7 7.58. Its cross-hart
+FENCE.I, IPI and HSM runs passed with 62/74/530 retirements in 191/247/1431 cycles.
+The HSM observer checks two starts and one stop. Shared-RAM Spike comparison
+matched 38 instructions with no masks or synchronizations. These captures are
+bounded RTL evidence. They do not turn the fixtures above into whole-core
+coherence proofs or establish complete outcome coverage.

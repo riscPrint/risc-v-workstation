@@ -321,7 +321,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 
 | Tool | Recorded scope | Remaining limit |
 |---|---|---|
-| [memory](../rvw/src/rvw/memory/README.md) | Ran on RTL fixture | Scripted coherence monitors have bounded native tests; real cache/home binding remains open. [#653](https://github.com/riscPrint/risc-v-workstation/pull/653). |
+| [memory](../rvw/src/rvw/memory/README.md) | Ran on multicore RTL, cacheless | [Native SMP suite counts](../examples/smp/README.md#measured-results): LR/SC 1060 cycles / 498 retirements; AMO 18630 / 8346; six litmus cases consistent with herd7; FENCE.I 191 / 62; IPI 247 / 74; HSM 1431 / 530; Spike 38 instructions match with zero masks/sync. Three generated executions allowed; one inconclusive at 100000 candidates. Coherent cache/home binding remains open. [#917](https://github.com/riscPrint/risc-v-workstation/pull/917). |
 | [privilege](../rvw/src/rvw/privilege/README.md) | Spike only for recorded program slices | Generated cases and reference self-checks do not establish DUT privilege correctness. [#622](https://github.com/riscPrint/risc-v-workstation/pull/622). |
 | [evidence](../rvw/src/rvw/evidence/README.md) | Fixture only | Original JSON and declared hashes are checked; native semantic validation remains open. [#604](https://github.com/riscPrint/risc-v-workstation/pull/604). |
 | [checks](../rvw/src/rvw/checks/README.md) | Fixture/source binding only | Queued HPM elaboration is not a completed RTL campaign. [#639](https://github.com/riscPrint/risc-v-workstation/pull/639). |
