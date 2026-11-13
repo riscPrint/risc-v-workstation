@@ -228,6 +228,8 @@ class Registry:
             to_json = getattr(e, "to_json", None)
             result = to_json() if callable(to_json) else {"error": f"{type(e).__name__}: {e}"}
             is_error = True
+        from .envelope import envelope
+        result = envelope(result, error=is_error)
         text, result = fit(result, self.max_text)
         return text, result if isinstance(result, dict) else {"result": result}, is_error
 

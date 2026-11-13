@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 from contextlib import closing
 import json
 from pathlib import Path
@@ -30,7 +31,7 @@ def parity(old, new, capsys, *, scope=None, connections=True):
     assert main(args) == 0
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", params)
-    assert not error and cli == json.loads(text)
+    assert not error and envelope(cli) == json.loads(text)
     return cli
 
 

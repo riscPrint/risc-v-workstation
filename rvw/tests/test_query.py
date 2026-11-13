@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 import gzip
 import json
 import re
@@ -285,7 +286,7 @@ def test_diff_round15_emitted_hardware_and_cli_mcp(probe, kind, capsys):
         cli_result = json.loads(capsys.readouterr().out)
         text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(paths[0]), "new": str(paths[1])})
         assert not error
-        assert cli_result == json.loads(text) == result
+        assert envelope(cli_result) == json.loads(text) == envelope(result)
     finally:
         a.close()
         b.close()
@@ -547,7 +548,7 @@ def test_diff_refuses_schema14_cli_mcp(gcd_db, tmp_path, capsys, old_side):
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json("query_diff", {"old": str(a), "new": str(b)})
     assert error
-    assert json.loads(text) == cli
+    assert json.loads(text) == envelope(cli)
     assert "diff needs rvw.designdb/20" in cli["error"]
     assert "Rebuild the database" in cli["error"]
     assert "summary" not in cli

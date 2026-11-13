@@ -161,3 +161,11 @@ The profile and workflow filters intersect when both are set.
 `rvw_tools_describe(name)` returns arguments, effects and profile.
 Search can describe tools outside the loaded profile. Restart with that profile
 to call them. Remote catalogs contain only tools from the client's allowlist.
+
+## Common results
+
+MCP results add `status`, `summary`, `artifacts`, `next` and `diagnostics`.
+A verdict is present only when the source result has one or an explicit evidence
+status. Completion is not a pass. Existing result fields remain available.
+Older verdict terms remain in `legacy_verdict` with a common verdict of
+`inconclusive`. Direct Python `Registry.call` retains its raw return value.

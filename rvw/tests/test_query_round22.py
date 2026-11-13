@@ -1,3 +1,4 @@
+from rvw.mcp.envelope import envelope
 """User emission code keys, round 22."""
 from contextlib import closing
 import json
@@ -69,7 +70,7 @@ def test_schema19_diff_is_refused(gcd_db, tmp_path, capsys, old_side):
     assert main(['query', 'diff', *map(str, paths), '--json']) == 2
     cli = json.loads(capsys.readouterr().out)
     text, _, error = Registry(mcp_tools()).call_json('query_diff', dict(zip(('old', 'new'), map(str, paths))))
-    assert error and cli == json.loads(text)
+    assert error and envelope(cli) == json.loads(text)
     assert 'diff needs rvw.designdb/20' in cli['error']
 
 

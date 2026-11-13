@@ -37,7 +37,7 @@ class ToolSpec:
 
     side_effects: str | None = None
     native_tools: tuple[str, ...] | None = None
-    result_envelope: bool = False
+    result_envelope: bool = True
 
     @property
     def wants_job(self) -> bool:

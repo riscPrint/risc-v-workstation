@@ -47,3 +47,21 @@ def test_meta_tools_respect_catalog_boundary():
     assert not registry.call("rvw_tools_search", {"keyword": "formal"})["tools"]
     _, _, error = registry.call_json("rvw_tools_describe", {"name": "formal_bmc"})
     assert error
+
+
+def test_registry_envelope_preserves_legacy_fields_without_pass():
+    registry = Registry([ToolSpec("test_report", "Return a static report.", schema({}), lambda: {"count": 4}),
+                         ToolSpec("test_gate", "Return legacy verdict.", schema({}), lambda: {"verdict": "accept"})])
+    _, data, error = registry.call_json("test_report", {})
+    assert not error and data["count"] == 4
+    assert {"status", "summary", "artifacts", "next", "diagnostics"} <= data.keys()
+    assert "verdict" not in data
+    _, data, _ = registry.call_json("test_gate", {})
+    assert data["legacy_verdict"] == "accept" and data["verdict"] == "inconclusive"
+
+
+def test_envelope_list_and_explicit_failure():
+    from rvw.mcp.envelope import envelope
+    assert envelope([1, 2])["result"] == [1, 2]
+    assert envelope({"status": "fail"})["verdict"] == "fail"
+    assert envelope({"verdict": "pass"})["verdict"] == "pass"
