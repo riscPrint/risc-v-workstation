@@ -73,9 +73,13 @@ IRQ = dict(GOOD, synchronized=1, applied_masks=[dict(reason='irq', csr='0x344')]
     (RESET, ('reset',), 'match', ('counter', 'mmio', 'irq')),
     (IRQ, ('reset',), 'inconclusive', ('counter', 'mmio', 'irq')),
     (IRQ, ('irq', 'reset'), 'match', ('counter', 'mmio')),
+    (dict(IRQ, applied_masks=[dict(reason='mmio')], recent_synchronizations=[dict(reason='mmio')]), ('irq',), 'inconclusive', ('counter', 'mmio', 'csr')),
+    (dict(IRQ, applied_masks=[dict(reason='mmio')], recent_synchronizations=[dict(reason='mmio')]), ('mmio',), 'match', ('counter', 'csr', 'irq')),
     (dict(RESET, recent_synchronizations=[dict(reason='counter')]), ('reset',), 'inconclusive', ('counter', 'mmio', 'irq')),
     (dict(RESET, applied_masks=[dict(reason='csr', csr='0x300')]), ('reset',), 'inconclusive', ('counter', 'mmio', 'irq')),
-    (dict(GOOD, synchronized=1), ('reset',), 'inconclusive', ('counter', 'mmio', 'irq'))])
+    (dict(GOOD, synchronized=1), ('reset',), 'inconclusive', ('counter', 'mmio', 'irq')),
+    (dict(GOOD, synchronized=1, recent_synchronizations=[dict(reason='mmio')]), ('mmio',), 'match', ('counter', 'csr', 'irq')),
+    (dict(GOOD, synchronized=11, recent_synchronizations=[dict(reason='mmio')] * 10), ('mmio',), 'inconclusive', ('counter', 'csr', 'irq'))])
 def test_allowed_sync_kinds_only(tmp_path, monkeypatch, comparison, allow, status, strict_sync):
     runs(tmp_path, monkeypatch, [comparison])
     calls = []

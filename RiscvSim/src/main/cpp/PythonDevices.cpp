@@ -13,9 +13,33 @@ PyObject* call(PyObject* p, const char* name, PyObject* args) {
   if (!result) PyErr_Print();
   return result;
 }
+// build-devices.py compiles in the interpreter home and the workstation's rvw/src. The
+// interpreter is then isolated: no PYTHONHOME, PYTHONPATH or user site, so the library bytes
+// (which embed both paths) identify the device runtime. Without the defines, the environment
+// configures the embedded interpreter as before.
+bool initialize() {
+#if defined(RVW_DEVICE_PYTHON_HOME) && defined(RVW_DEVICE_PYTHON_PATH)
+  PyConfig config;
+  PyConfig_InitIsolatedConfig(&config);
+  PyStatus status = PyConfig_SetBytesString(&config, &config.home, RVW_DEVICE_PYTHON_HOME);
+  if (!PyStatus_Exception(status)) status = Py_InitializeFromConfig(&config);
+  PyConfig_Clear(&config);
+  if (PyStatus_Exception(status)) return false;
+  PyObject* path = PySys_GetObject("path");
+  PyObject* source = PyUnicode_FromString(RVW_DEVICE_PYTHON_PATH);
+  bool ok = path && source && PyList_Insert(path, 0, source) == 0;
+  Py_XDECREF(source);
+  return ok;
+#else
+  Py_Initialize();
+  return true;
+#endif
+}
 void* create(const char* config, uint64_t seed) {
   static std::once_flag once;
-  std::call_once(once, [] { if (!Py_IsInitialized()) { Py_Initialize(); PyEval_SaveThread(); } });
+  static bool ready = true;
+  std::call_once(once, [] { if (!Py_IsInitialized()) { ready = initialize(); if (Py_IsInitialized()) PyEval_SaveThread(); } });
+  if (!ready) return nullptr;
   Gil gil;
   PyObject* module = PyImport_ImportModule("rvw.sim.devices");
   PyObject* cls = module ? PyObject_GetAttrString(module, "Device") : nullptr;

@@ -307,13 +307,28 @@ project files expect `DIR` at `../../rvw/out/suites64` (or `suites32`) from
 this folder; change the suite `dir` values for another location.
 
 `rvw64-devices.toml` selects the optional DeviceApiV1 host binding. Build the
-library with `RiscvSim/scripts/build-devices.py`. Set `RVW_DEVICE_LIBRARY`,
-`PYTHONHOME` and `PYTHONPATH` from its output before running regressions.
+library with `RiscvSim/scripts/build-devices.py --out LIB` and set
+`RVW_DEVICE_LIBRARY=LIB`. Leave `PYTHONHOME` and `PYTHONPATH` unset: the
+library embeds both paths, and the launcher refuses them because native
+identity cannot enumerate their inputs.
 `rvw/devices64.json` supplies CLINT and PLIC regions and output-to-pin routes.
 `rvw/clint64.json` is passed as raw JSON to preserve its 64-bit reset value.
 The adapter ticks each model before MMIO on every sampled cycle. An explicit
 IRQ schedule replaces device input levels for that run. Each run gets fresh
 device handles. This path has no checkpoint binding or multi-hart claim.
+
+`rvw/features64-devices.json` adds `device:clint`, so `rvw regress plan`
+also selects the CLINT WFI family (`examples/privilege/spike-wfi.json`).
+`prepare-suites.py --features rvw/features64-devices.json --out DIR` builds it
+under `DIR/wfi-clint`; `rvw64-devices.toml` expects `../../rvw/out/suites64d`.
+On 2026-11-13 the four programs (MSIP and MTIP wake-up, MIE clear and set)
+passed C1 on `rv64imasu` with the CLINT model driving the pins. All four
+matched Spike with `rvw regress cosim --allow-sync irq,mmio`: the Spike shim
+has no CLINT state, so `mtime` loads and asserted `mip` bits take DUT values
+(one or two synchronizations per program). Narrow MMIO stores now pass only
+their own byte lanes to the device model; before, a 4-byte MSIP write carried
+the replicated upper word and the model refused it. PLIC families need the
+`rvw.stimulus/1` mailbox in this adapter and are not run yet.
 
 ### Generated suites on RTL (2026-11-13)
 
@@ -358,7 +373,7 @@ synchronization each). All other matches are strict.
 Not applicable from the declared features: Sv48/Sv57, NAPOT/PBMT, H,
 pointer masking, Smepmp, Zacas, cache-block operations and two-hart families.
 The RV64 CLINT WFI family needs `device:clint`, which only the device profile
-declares; it was not run here. NMI, AIA, Sstc, state-enable and PLIC families
+declares; see the device binding below (4/4 match). NMI, AIA, Sstc, state-enable and PLIC families
 are not in the requirement catalog and need extensions or devices this core
 does not have.
 

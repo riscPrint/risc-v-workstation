@@ -46,7 +46,10 @@ def main():
     library = python_library()
     output.parent.mkdir(parents=True, exist_ok=True)
     darwin = platform.system() == 'Darwin'
-    step([cc, '-std=c++17', '-shared', '-fPIC', '-I'+sysconfig.get_path('include'),
+    source = Path(__file__).resolve().parents[2] / 'rvw/src'
+    # Embed the interpreter home and rvw/src: the library then needs no PYTHONHOME/PYTHONPATH.
+    embedded = [f'-DRVW_DEVICE_PYTHON_HOME="{sys.base_prefix}"', f'-DRVW_DEVICE_PYTHON_PATH="{source}"']
+    step([cc, '-std=c++17', '-shared', '-fPIC', *embedded, '-I'+sysconfig.get_path('include'),
           '-I'+str(header), str(header/'PythonDevices.cpp'), str(library),
           '-Wl,-rpath,'+str(library.parent),
           *(['-Wl,-headerpad_max_install_names'] if darwin else []), '-o', str(output)])
@@ -55,7 +58,8 @@ def main():
         name = python_load_name(linked, library)
         step(['install_name_tool', '-change', name, str(library), str(output)])
     print('Library: '+str(output))
-    print('PYTHONHOME: '+sys.base_prefix)
-    print('Set PYTHONPATH to the selected workstation rvw/src directory.')
+    print('Embedded Python home: '+sys.base_prefix)
+    print('Embedded module path: '+str(source))
+    print('Leave PYTHONHOME and PYTHONPATH unset; the library is isolated from them.')
 
 if __name__ == '__main__': main()
