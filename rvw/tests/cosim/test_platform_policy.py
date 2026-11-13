@@ -126,11 +126,15 @@ def test_ecall_tval_is_exact(tmp_path, umode_elf, platform, value):
 
 
 @pytest.mark.parametrize('key,value', [('privilege_modes', 'M'), ('ecall_tval', 'insn'), ('absent_pmp_csrs', 'read_zero_write_ignored')])
-def test_sail_refuses_unimplemented_settings(platform, key, value):
+def test_sail_configures_selected_settings(platform, sail_base, key, value):
     p = copy.deepcopy(platform)
     setattr(p, key, value)
-    with pytest.raises(ValueError, match='Sail cannot implement'):
-        build_config({}, p, [])
+    p.pmp_regions = 0
+    c, _ = build_config(sail_base, p, [])
+    assert c['extensions']['S']['supported'] == ('S' in p.privilege_modes)
+    assert c['extensions']['U']['supported'] == ('U' in p.privilege_modes)
+    assert c['memory']['pmp']['usable_count'] == 0
+    assert c['memory']['pmp']['count'] == (64 if p.absent_pmp_csrs == 'read_zero_write_ignored' else 0)
 
 
 @pytest.mark.parametrize('field', ['instruction', 'data', 'page_table', 'device'])
@@ -268,3 +272,5 @@ def test_vex_declares_m_only():
     source = (root / 'rvw/src/main/scala/rvwvex/VexTop.scala').read_text()
     assert 'userGen = false, supervisorGen = false' in source
     assert 'misaExtensionsInit = 0x1100' in source
+
+from test_review16_sail import sail_base  # shared native default-config fixture

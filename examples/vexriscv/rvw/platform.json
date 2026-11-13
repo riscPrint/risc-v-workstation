@@ -33,5 +33,28 @@
     "device": "little"
   },
   "absent_pmp_csrs": "read_zero_write_ignored",
-  "ecall_tval": "insn"
+  "ecall_tval": "insn",
+  "sail_overrides": {
+    "platform": {
+      "clint": {
+        "supported": false
+      },
+      "simple_interrupt_generator": {
+        "supported": false
+      }
+    },
+    "extensions": {
+      "M": {
+        "mutable_misa": false
+      }
+    },
+    "base": {
+      "mtvec": {
+        "vectored": {
+          "supported": false
+        }
+      }
+    }
+  },
+  "sail_reference_isa": "rv32im_zicsr_zifencei"
 }

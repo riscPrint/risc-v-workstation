@@ -554,3 +554,44 @@ equal to the independent Arcilator reference. The README includes build time,
 execution/trace time, child-process RSS, cache counters and a build-time chart.
 These short samples qualify the profile plumbing. They do not qualify a
 runtime speed improvement or a BOOM preset. Defaults remain unchanged.
+## Sail adjudication
+
+Set `RVW_VEX_CSR_CAPTURE=0` to capture C2/1 for the common GPR, memory and trap
+scope. This setting does not remove fields from an existing trace. It selects
+a fresh native capture and is recorded in project inputs and replay. The
+default remains CSR capture. Sail cannot observe the default CSR snapshots;
+that input must remain inconclusive rather than being silently downgraded.
+
+The platform selects `sail_reference_isa=rv32im_zicsr_zifencei`. Sail rejects
+counter and MMIO reads. This profile has no CLINT time source. Spike keeps its
+separate declared reference ISA. Both effective instruction selections are
+checked. Sail uses M-only privilege, zero usable PMP entries, read-only MISA.M
+and direct trap vectors. Native PMP controls checked actual zero reads and
+ignored writes against both references.
+
+The example's declared ECALL `mtval=0x73` is an exact platform policy. Raw Sail
+writes zero. The comparator checks the exact declared event value and records
+`ecall_tval` in `recent_quirks`. It does not take arbitrary trap bits from RTL.
+Sail's internal CSR state is not fabricated. A later `mtval` read is refused
+until an independent full CSR write or another trap restores common state.
+The reference report states this limit. This is not a raw, unmodified-Sail
+trap-value match or a full machine CSR equivalence claim.
+
+After native `run-many` with the selected capture, save both reference reports:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/rvw/check-isa.py --adjudicate jobs.jsonl adjudication.json
+```
+
+On 2026-11-13, all 49 aligned ISA programs passed natively. Each complete
+C2/1 trace matched Spike and Sail 0.15 under the stated profile: 17,735
+instructions per reference, zero synchronizations and no applied bit masks.
+Sail recorded the exact ECALL policy quirk once per program. The reports retain
+both references and their captured input identities. They do not vote away a
+disagreement. Native controls also checked a changed GPR result, a refused
+post-ECALL `mtval` read and an independent overwrite that restores comparison.
+
+A separate zero-ECALL-value profile was also checked on the real `add` trace.
+Both references reported the actual `0x73` trap value as a mismatch against
+zero. The declared policy is therefore part of these results, rather than a
+claim of standard zero-valued ECALL behavior.

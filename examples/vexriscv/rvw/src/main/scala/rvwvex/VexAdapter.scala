@@ -17,7 +17,7 @@ object VexAdapter extends CoreAdapter {
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
-    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL").flatMap(
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
       name => sys.env.get(name).map(name -> _))
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
@@ -60,6 +60,7 @@ object VexAdapter extends CoreAdapter {
       v | (BigInt(memory.getOrElse((addr & ~3L) + i, 0)) << (8 * i))
     }
     val capture = job.socMap.map(m => new MapCapture(m, job, ctx))
+    val captureCsrs = !sys.env.get("RVW_VEX_CSR_CAPTURE").contains("0")
     var writer = Option.empty[RvfiTraceWriter]
     var traceEnded = false
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
@@ -75,8 +76,9 @@ object VexAdapter extends CoreAdapter {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
         dut.lockstepDpi.foreach(_.initialize())
-        val header = ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
+        val header = if (captureCsrs) ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
           ("csr_snapshot" -> ujson.Arr.from(dut.traps.snapshots.keys.toSeq.sorted.map(a => Hex(BigInt(a))))))
+          else ctx.rvfiHeader
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(
           new File(job.out, "rvfi.jsonl"), header,
           observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
@@ -165,7 +167,7 @@ object VexAdapter extends CoreAdapter {
             Some(record(dut.rvfi, ctl.cycle, handler)) else None
           // RVFI describes the firing edge. CSR storage must include that edge's effects.
           if (sample.nonEmpty) sleep(1)
-          val csrState = if (sample.nonEmpty)
+          val csrState = if (sample.nonEmpty && captureCsrs)
             dut.traps.snapshots.map { case (address, value) => address -> value.toBigInt }
             else Map.empty[Int, BigInt]
           if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
