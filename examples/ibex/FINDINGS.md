@@ -11,6 +11,9 @@
 | Standard riscv-tests bootstrap | Writes arbitrary continuation addresses to mtvec. Ibex requires 256-byte alignment. Traps restart the boot region. | Platform bootstrap mismatch. Instruction profile uses an explicit reduced bootstrap. |
 | RVFI masks | Non-memory records can have read mask 15. | Transport convention. Exporter gates inactive masks and retains the raw values. |
 | RVFI order | First valid retirement has order 1. | Transport origin. Exporter validates the sequence and subtracts 1. |
+| Lint automatic local | `is_mml_m_exec_cfg.pmp_cfg` has no standalone hardware load or driver. | Import/lint bug. Slang automatic-lifetime metadata now prevents the false undriven error. Loaded and static signals still require drivers. |
+| Functional trace binding | The C2 header lacked the captured ELF hash. | Adapter gap. The header now binds the same bytes as C1. A fresh 51-ELF run has eight qualified M-mode class bins. |
+| Bounded ISA | Retirement cover reaches depth 16. ADD activation at the assertion cycle does not reach. | Inconclusive. An engine PASS is not a qualified ADD proof. |
 | Slang with RVFI | Cross-module references to counters conflict with preserved hierarchy. | Query limit. Navigation omits RVFI instrumentation and retains the whole functional core. |
 
 No core defect is established by these observations. Strict comparison results
