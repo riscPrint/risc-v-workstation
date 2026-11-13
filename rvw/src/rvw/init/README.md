@@ -246,3 +246,9 @@ binding. Set `RISCV_FORMAL` before init or install its source checkout at
 `~/.cache/rvw/riscv-formal`. `rvw formal isa` exports fresh RTL through
 `riscv_formal.build`, then runs the selected finite instruction checks.
 See the integration guide for the memory assumptions and remaining proof gaps.
+
+For generated ISA kits, first run a smoke with `--rvfi-trace`. Then use
+`rvw formal isa --trace RUN/rvfi.jsonl --out NEW_DIR --timeout 15`.
+The trace selects the default depth. Review `latency_measurement` in the report.
+Use a representative load/store program. An unsampled slow path can need a
+larger explicit `riscv_formal.depth` or `check_options.cycles` value.

@@ -1106,3 +1106,12 @@ The memory environment uses stable symbolic bytes with writes in program order.
 The bus accepts one request and returns read data one cycle later. Stores get
 responses only when the declared bus requests them. Review this environment.
 No machine-state, observer conformance or unbounded proof is inferred.
+
+## Measured ISA depth
+
+`rvw formal isa --trace RVFI.jsonl` selects depth from sampled retirement
+cycles: first retirement plus the largest retirement interval plus two cycles.
+The report retains the sample count and trace SHA-256. This is a selected bound,
+not a proof of worst-case latency. Explicit check_options.cycles still override
+individual checks. Projects can set latency_trace or an explicit depth.
+An inconclusive instruction row gives an action for timeout or activation gaps.
