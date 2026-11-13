@@ -1017,7 +1017,7 @@ usage: rvw fault report [-h] [--project PROJECT] [--json] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT] [--json]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-abstract,riscv-proof,sail-m,sail-state,strategy,sva-inspect,uf-prove}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-abstract,riscv-proof,sail-m,sail-state,scenario-compile,strategy,sva-inspect,uf-prove}
     ...
 ```
 
@@ -1652,6 +1652,14 @@ usage: rvw formal sail-state [-h] --model MODEL --compiler COMPILER --out OUT
     [--json] [--project PROJECT]
 ```
 
+### `rvw formal scenario-compile`
+
+```text
+usage: rvw formal scenario-compile [-h] --source SOURCE --out OUT [--baremetal
+    BAREMETAL] [--pyuvm PYUVM] --finisher FINISHER [--json] [--project
+    PROJECT]
+```
+
 ### `rvw formal strategy`
 
 ```text
@@ -1806,7 +1814,8 @@ usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--effective-config
 usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
     LANE] [--queue-stage QUEUE_STAGE] [--issue-stage ISSUE_STAGE]
     [--head-stage HEAD_STAGE] [--in-order-retirement] [--result RESULT]
-    [--tolerance TOLERANCE] [--top TOP] [--project PROJECT] paths [paths ...]
+    [--tolerance TOLERANCE] [--top TOP] [--c2 C2] [--project PROJECT] paths
+    [paths ...]
 ```
 
 ### `rvw plan`
@@ -2068,7 +2077,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT] [--json]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,plan,cosim}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,act4-build,plan,cosim}
     ...
 ```
 
@@ -2367,11 +2376,19 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
     PROJECT]
 ```
 
+### `rvw regress act4-build`
+
+```text
+usage: rvw regress act4-build [-h] --profile PROFILE --checkout CHECKOUT --out
+    OUT [--timeout TIMEOUT] [--compiler COMPILER] [--reference REFERENCE]
+    [--json] [--project PROJECT]
+```
+
 ### `rvw regress plan`
 
 ```text
-usage: rvw regress plan [-h] --features FEATURES [--catalog CATALOG] [--json]
-    [--project PROJECT]
+usage: rvw regress plan [-h] (--features FEATURES | --act4 ACT4) [--catalog
+    CATALOG] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress cosim`
@@ -4253,6 +4270,14 @@ Arguments: `source` (required), `observed` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `formal_scenario_compile`
+
+Generate an RV32 MMIO test and CPU-backed pyuvm sequence. Does not run verification.
+
+Arguments: `source` (required), `out` (required), `finisher` (required), `baremetal`, `pyuvm`.
+
+Starts a background job: no.
+
 ### `formal_scenario_plan`
 
 Plan deterministic resource-aware actions with backend-specific timing. Does not execute operations.
@@ -4573,6 +4598,14 @@ Arguments: `path` (required), `window`, `isa`, `lane`, `queue_stage`, `issue_sta
 
 Starts a background job: yes.
 
+### `perf_topdown`
+
+Commit-slot top-down attribution (retiring, bad speculation, back-end bound, front-end bound) from a run's topdown_* counter probes, checked against the C2 retirement count.
+
+Arguments: `events` (required), `c2`, `result`.
+
+Starts a background job: yes.
+
 ### `plan_status`
 
 Roll up project requirements and feature evidence. Report coverage holes, test/formal/check gaps and compatible trends. Recorded closure grants no C4 accept.
@@ -4805,6 +4838,22 @@ Arguments: `project`, `run_dir` (required), `out`, `signature`, `modes`, `seeds`
 
 Starts a background job: yes.
 
+### `regress_act4_build`
+
+Build pinned ACT4 tests. Sail supplies expected signatures; no DUT execution.
+
+Arguments: `profile` (required), `checkout` (required), `out` (required).
+
+Starts a background job: no.
+
+### `regress_act4_plan`
+
+Select ACT4 extensions from project data. No DUT evidence.
+
+Arguments: `profile` (required).
+
+Starts a background job: no.
+
 ### `regress_compare`
 
 Decide accept/reject/inconclusive from stored base and candidate results, known failures and performance tolerance. C4 /2 separates tests (pass/fail/incomplete) from verdict. Accept requires clean committed source identities on both sides. Inconclusive means harness errors, wall-clock timeouts or no shared tests: rerun, do not accept. Writes verdict.json beside the candidate unless out is given. Inputs accept directories, run IDs/prefixes or latest.
@@ -4970,6 +5019,14 @@ Starts a background job: no.
 Describe a tool, its arguments, effects and loading profile.
 
 Arguments: `name` (required).
+
+Starts a background job: no.
+
+### `rvw_tools_load`
+
+Add a profile's tools to this running server (no restart). Use after rvw_tools_search names a profile that is not loaded.
+
+Arguments: `profile` (required).
 
 Starts a background job: no.
 
