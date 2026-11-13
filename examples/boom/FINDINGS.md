@@ -107,7 +107,8 @@ is separate from their architectural tohost outcome. The run inserts
 | MSHR 0 replay queue valid hold | 1 | 1 | 1245 | ae_ptw, times 12550 to 12620 |
 
 Wave times are raw FST timestamps. The clock period is 10. Separate wave
-reruns reproduce all 10 IDs. Raw waves and build outputs remain local.
+reruns reproduce all 10 IDs. Selected wave windows remain local.
+The full waves and build trees were removed after diagnosis.
 None of the 24 IDs in `SpinalChecks/boom/stream-dispositions.json` fires
 in this run. The source review still records an incomplete mapping to
 the original historical inventory. This does not close issue #5.

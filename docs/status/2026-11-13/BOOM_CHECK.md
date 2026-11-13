@@ -127,7 +127,7 @@ No new generic-code regression was found in the completed simulation, Spike,
 gate, query or elaboration checks. Thus no causing merged PR or generic-code
 fix is claimed for those checks. No feature code was added.
 
-Final doctor reports native tools, adapter info, ISA discovery, VM discovery
+The baseline doctor reports native tools, adapter info, ISA discovery, VM discovery
 and gate inputs ready. Its overall result remains `not_ready`: ACT4,
 benchmark, stress and MMU suite inputs are absent; build-only elaboration
 has no ELF inputs; the live source trees are dirty. Its own build/run probe
@@ -143,10 +143,66 @@ generation paths. It completed all 174 unique programs, then began duplicate
 comparisons. The driver was stopped. Counts above use the first result for
 each unique program, not duplicate paths. No unique test was skipped.
 
+## Expanded BOOM small verification
+
+This continuation uses the same private core revision. The workstation
+base is `eac5c2b` with the adapter and profile repairs in PR #1410.
+Core RTL is unchanged. Frozen privileged and generated runs share the
+independently checked build identity in the [ACT4 profile](../../../rvw/configs/act4/boom/README.md).
+The initial instruction run precedes the word-monitor repair. Its two
+repaired cases pass on rerun. Counts below use each selected ELF once.
+An earlier privileged run with an input identity mismatch is excluded.
+
+| Program set | Built/run | Latest C1 pass | Execution failures | Complete strict Spike matches |
+|---|---:|---:|---:|---:|
+| ACT4 RV64 instructions | 378 | 376 | 2 | 0 |
+| ACT4 M/S/U and Sv39 | 232 | 196 | 36, including ten RVFI errors | 0 |
+| Generated Sv39 | 145 | 145 | 0 | 0 |
+| Generated PMP | 394 | 379 | 15 | 0 |
+| Privilege controls and random transitions | 34 | 34 | 0 | 0 |
+| CLINT WFI and scheduled interrupts | 10 | 10 | 0 | 0 |
+| LR/SC, AMO, AMO faults, FENCE, FENCE.I | 5 | 5 | 0 | 0 |
+
+Every strict check ran. Each stops at unspecified reset FP state, often
+with mscratch state in generated programs. There are no masks or
+synchronizations. The earlier daily loop's default-policy 173 Spike matches
+remain a separate result. No expanded-suite acceptance gate was run.
+The [findings](../../../examples/boom/FINDINGS.md) retain every execution
+failure group and small directed programs. No failure was waived.
+
+The selected Sv39 matrix uses ASID 0 and fault-based A/D updates. Eight
+initial ASID-7 readback failures and two unsupported hardware A/D controls
+remain setup findings. The unchanged AMO fault program passes at 38,498
+cycles with a 200,000-cycle budget after its first 30,000-cycle timeout.
+The harness binds CLINT and an interrupt generator. It lacks PLIC registers
+and claim/complete. Multiple-hart and nonzero-ASID isolation are unmeasured.
+
+| Tool measurement | Result | Limit |
+|---|---|---|
+| Probe program completion | Four C1 passes | No complete new strict Spike match |
+| Predictor compare-rtl | Four reports; direction disagreements 6, 13, 62, 24 | Approximate model, no fidelity verdict |
+| OoO model versus RTL IPC | add-timing ratio 2.77083; SFB ratio 2.11875 | Two other programs refused for traps |
+| perf topdown | Four explicit refusals | Five required slot counters are absent |
+| Generated quick-tier checks | 519 inserted; 101 existing waived/disabled; ten distinct firing IDs across 174 programs | Zero clean instrumented passes; all ten IDs have wave windows |
+| Historical stream IDs | Zero of the 24 named IDs fires now | Original inventory mapping remains incomplete; Refs: #5 |
+
+The instrumented programs retain 173 passing tohost outcomes and the known
+instret failure. Instrumented check status is separate. Current firings
+include a TileLink request defect, a simulation-agent response defect and
+two cancellation-binding gaps. The checks remain active.
+
+See the [adapter tables and commands](../../../RiscvSim/boom/README.md) for
+per-family counts and regeneration. ACT4 built 610 ELFs. The generated
+script's build phase reproduced all 588 selected ELFs. The fixes passed
+three Scala tests with native Icarus vectors, 15 ACT4 Python tests and
+40 release-hygiene tests. The final pre-publication fast set passed
+3,508 tests with four skips. The full Python suite and GitHub CI were not run.
+
 ## Limits
 
-NOT RUN: medium, large, mega and giga presets; ACT4; formal proofs;
-SpinalChecks simulation; scheduled interrupts; fault injection; probes;
-checkpoint/restore; device plugins; wave capture; Sail comparison.
+NOT RUN: medium, large, mega and giga presets; formal proofs;
+checkpoint/restore; device plugins; offline Sail trace comparison.
+The expanded runs above add ACT4, generated families, probes and check waves.
+The earlier bounded fault/DPI record remains separate.
 The failure bundle uses the captured RVFI trace without a wave rerun.
 These results qualify the tested small-preset daily loop only.

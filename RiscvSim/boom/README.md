@@ -2,7 +2,7 @@
 
 Set `SPINAL_BOOM` to the private `spinal-boom-eda` clone. Do not edit or build
 the working `spinal-boom` checkout. Use `small` for bounded native checks.
-Run BOOM jobs through `scripts/with-lock.sh boom nice -n 15 ...`.
+Run BOOM jobs through `scripts/with-lock.sh boom nice -n 10 ...`.
 Simulation-only probes and the DPI mailbox are off by default.
 
 ## Interface inventory, 2026-11-13
@@ -193,6 +193,7 @@ output mask was used for that comparison. Raw captures remain local.
 |---:|---:|---:|---:|---:|
 | 174 | 519 | 101 | 10 | 0 |
 
+The underlying tohost outcomes are 173 pass and one known instret failure.
 All 24 named source-review stream IDs are absent from the new firing set.
 The original historical mapping remains incomplete. The 10 current IDs
 cover one A request violation, one simulation-agent D response violation,
