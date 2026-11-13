@@ -4,6 +4,7 @@ from pathlib import Path
 from .multihart import images, check
 from .axiomatic import check as axiomatic_check
 from .concurrent import generate
+from .tilelink_bind import generate as tilelink_bind
 
 
 def register(sub):
@@ -27,6 +28,11 @@ def register(sub):
     g.add_argument('--harts', type=int, default=2)
     g.add_argument('--length', type=int, default=16)
     g.set_defaults(func=lambda args: emit(lambda: generate(args.seed, args.harts, args.length)))
+    t = commands.add_parser('tilelink-bind', help='generate a bounded single-beat TL-C channel monitor and bind')
+    t.add_argument('--database', required=True, type=Path)
+    t.add_argument('--profile', required=True, type=Path)
+    t.add_argument('--out', required=True, type=Path)
+    t.set_defaults(func=lambda args: emit(lambda: tilelink_bind(args.database, args.profile, args.out)))
 
 
 def command_images(args):
