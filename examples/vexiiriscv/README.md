@@ -252,3 +252,6 @@ device handles. This path has no checkpoint binding or multi-hart claim.
 
 Current supervisor validation is in progress. No RTL pass count is claimed
 for these new configurations until the C1 runs and strict Spike checks finish.
+The database launcher also honors `RVW_VEX_LOCK`. Use a private checkout and
+set `RVW_VEX_LOCK=vex-vexii` for isolated extraction. This selects the core
+lock; the shared sbt lock still serializes library compilation.
