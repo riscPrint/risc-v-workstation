@@ -1060,3 +1060,41 @@ instance. `BusAssertions(axi)` returns missing issuing-limit declarations
 as gaps. It does not invent queue limits. AXI tracking uses the bus config's
 positive read/write issuing capabilities. The existing generated-check
 phase and its interfaces remain unchanged. Channel stability is separate.
+
+### Recovery, killed effects and fence drain
+
+`RecoveryChecks.bind` takes independent allocation, release, retirement and
+accepted device-effect observations. Every event carries a slot and a generation
+tag. All tags have one declared width. The reference model has up to 32 slots
+and needs a reset domain. Missing events, tags or masks fail elaboration.
+
+The rules check free-slot allocation, matching releases, unique live retirement,
+and forbidden killed effects. A slot can be released and reused at one edge.
+Late events must carry the old generation, so they cannot act on a new owner.
+Generation tags must not be reused while late events can still arrive. Killed
+operations stay owned until release. Current-cycle kill also forbids retirement
+and device effects. The declared kill set must exclude committed operations.
+By default a device effect needs prior retirement or matching retirement at the
+same edge. A project can explicitly disable that requirement. The check detail
+records that policy. This does not disable the killed-generation check.
+
+The project supplies an independent kill mask and fence predecessor mask.
+Derive them from recovery snapshots and decoded ordering intent. Do not use a
+DUT empty flag or copy its kill decision as the expected result. The template
+does not infer branch age, FENCE predecessor classes, or FENCE.I semantics.
+
+A fence start snapshots the selected pre-edge owned generations. An allocation
+at that edge is younger. Completion waits for those generations to be released
+or canceled. A current-edge release can satisfy the fence. Later generations
+that reuse a slot do not become old predecessors. Empty and back-to-back fences
+are supported. Release must mean that all bound required effects have completed
+or the operation was discarded. The model cannot establish that interpretation
+from the signal name alone.
+
+Stable rule IDs are `recovery.allocate`, `recovery.release`, `recovery.retire`,
+`recovery.device_effect`, `recovery.kill_retired`, `recovery.fence_lifecycle` and
+`recovery.fence_drained`, followed by the binding name. The seed-17 Verilator
+fixture runs one legal scenario and 14 fault scenarios. It checks late effects,
+same-cycle cancellation, reuse, early fences and lifecycle errors. This is a
+native template test. No BOOM or other core binding, instruction-level recovery
+proof, byte-data check or full memory-order qualification is claimed.
