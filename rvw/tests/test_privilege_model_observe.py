@@ -152,3 +152,12 @@ def test_zfinx_instruction_result_binding(tmp_path,monkeypatch):
     assert model_observe.observe(elf,s,path)['status']=='pass'
     rows[-1]['rd_wdata']='0x40000000';write()
     assert model_observe.observe(elf,s,path)['status']=='fail'
+
+
+def test_denied_instruction_must_match_model_even_without_retirement(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'stateen-extensions',select='stateen-hierarchy-jvt-0-s-000')
+    image=model_observe.Elf(elf);pc=image.symbols['access_site']
+    image.segments[:]=[(address,b'\x13\x00\x00\x00' if address==pc else data,size)
+                       for address,data,size in image.segments]
+    result=model_observe.observe(elf,s,path)
+    assert result['status']=='inconclusive' and 'denied instruction differs' in result['reason']

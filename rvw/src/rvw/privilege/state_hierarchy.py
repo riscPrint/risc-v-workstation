@@ -126,4 +126,5 @@ def observation_bindings(plan):
 def observation_forbidden_pcs(plan):
     denied,_=expected_access(plan['probe'],plan['mode'],plan['machine'],plan['hypervisor'],plan['supervisor'],plan['guest_index'])
     target='target_site' if plan['probe']=='stateen' and plan['mode'] not in ('U','VU') else 'access_site'
-    return [{'symbol':target}] if denied else []
+    insn=0x00c58553 if plan['probe']=='zfinx-op' else ((0x10c+plan['index'] if plan['probe']=='stateen' else PROBES[plan['probe']][1])<<20)|(2<<12)|(10<<7)|0x73
+    return [{'symbol':target,'insn':hex(insn)}] if denied else []

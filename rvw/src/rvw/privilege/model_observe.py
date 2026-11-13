@@ -22,6 +22,12 @@ def _observe(elf,scenario,trace_path,c1_identity):
         pc=symbols[binding['symbol']]
         if pc in wanted:raise ValueError('duplicate model observation PC')
         wanted[pc]=binding;seen[pc]=[]
+    for item in scenario.get('model_forbidden_pcs',[]):
+        if isinstance(item,dict) and 'insn' in item:
+            pc=number(item)
+            raw=next((data[pc-address:pc-address+4] for address,data,_ in image.segments if address<=pc and pc+4<=address+len(data)),None)
+            if raw is None or int.from_bytes(raw,'little')!=number(item['insn']):
+                return dict(status='inconclusive',reason='denied instruction differs from the model')
     end=None;instructions=0;trace=None
     try:
         trace=Trace(trace_path)
