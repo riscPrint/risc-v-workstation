@@ -41,9 +41,11 @@ def state_bits(module):
     for name, net in module['netnames'].items():
         if name.startswith('rvwl_'):
             raise ValueError('reserved rvwl_ signal')
+        width, offset = len(net['bits']), net.get('offset', 0)
         for i, bit in enumerate(net['bits']):
+            index = offset + (width - 1 - i if net.get('upto', 0) else i)
             if isinstance(bit, int):
-                aliases.setdefault(bit, f'\\{name} [{i}]' if len(net['bits']) > 1 else f'\\{name} ')
+                aliases.setdefault(bit, f'\\{name} [{index}]' if width > 1 or offset else f'\\{name} ')
     state = set()
     for cell in module.get('cells', {}).values():
         kind = cell['type']
