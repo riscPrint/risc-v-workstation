@@ -273,7 +273,7 @@ accidental use of the second register in an x0 pair.
 
 `--suite zacas-fault` requires locked NAPOT PMP. A read-only 64-byte region
 must raise store/AMO access fault for every tested width and aq/rl combination.
-The program checks cause, fault PC, trap address, unchanged destination pair,
+The program checks cause, fault PC, nonzero trap address, unchanged destination pair,
 trap count and every byte in the region.
 
 `--suite zacas-align` requires a platform without a misaligned atomicity
@@ -354,3 +354,8 @@ separate platform obligation.
 Native model smoke checks retain SB's all-zero outcome and exclude the MP
 message-passing violation and LB's all-one outcome. These are model results,
 not evidence that a DUT implements Ztso. No target Ztso support is inferred.
+
+Zacas fault profiles accept `mtval=0` where the platform permits it. A nonzero
+value must equal the fault address. This follows the [machine trap-value
+rules](https://docs.riscv.org/reference/isa/priv/machine.html). The fault PC,
+cause, unchanged destination pair and unchanged memory remain mandatory.

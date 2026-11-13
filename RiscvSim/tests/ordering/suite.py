@@ -368,7 +368,9 @@ cas_trap:
  csrr t4, mepc
  bne t4, s0, fail
  csrr t4, mtval
+ beqz t4, cas_tval_ok
  bne t4, a0, fail
+cas_tval_ok:
  addi s1, s1, 1
  addi t4, s0, 4
  csrw mepc, t4
