@@ -1123,3 +1123,33 @@ The helper runs the existing probe, top-down, timing-model and Spike tools.
 It checks their outcomes and prints the IPC table. Full consumer reports
 stay in the external output directory. The model configuration SHA256 is
 `c8ed44308b842f120a5106d4a4fccbd1a2b99b9b7393b3486a59eab57ce879d2`.
+
+## Benchmark regression tier
+
+The `bench` tier is off in `quick` and `full`. It selects median, vvadd and
+multiply. C1 self-checks must pass. The gate compares cycles for the full run of
+these fixed instruction streams. Project `core.perf_tolerance` is 0.01.
+The tolerance is an allowed increase in cycles. It is not host timing noise.
+
+Recorded baseline: MacBookPro, 2026-11-13, default config, seed 1, added memory
+latency 0. These are RTL simulation counts. They are not physical core scores.
+
+| Program | Instructions | Cycles | IPC | Cycle tolerance |
+|---|---:|---:|---:|---:|
+| median | 10653 | 18061 | 0.589834 | 1% |
+| vvadd | 6490 | 5220 | 1.243295 | 1% |
+| multiply | 54296 | 38207 | 1.421101 | 1% |
+
+Use a fresh external `RUN_ROOT`. The link path must not exist.
+Set the project's source environment and private locks as described above.
+
+```sh
+nice -n 15 rvw workloads run --project "$PROJECT" --source "$RISCV_TESTS" --out "$RUN_ROOT"
+mkdir -p "$PROJECT/rvw/out"
+ln -s "$RUN_ROOT" "$PROJECT/rvw/out/bench"
+nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-rev "$BASE" --cand-rev "$CANDIDATE"
+```
+
+The gate measures both committed revisions. The table is a dated reference;
+it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
+to override the project policy explicitly. Keep all generated results out of Git.

@@ -402,3 +402,33 @@ The restored debug interface passes smoke with --spinaltrace, --wave,
 Spike match and 25 monitors with zero firings. PDG and FST files are produced.
 C1 records a wave period of 10 and a measured cycle-1 time of 188. This verifies
 the adapter interface. Dynamic dependency attribution remains unqualified.
+
+## Benchmark regression tier
+
+The `bench` tier is off in `quick` and `full`. It selects median, vvadd and
+multiply. C1 self-checks must pass. The gate compares cycles for the full run of
+these fixed instruction streams. Project `core.perf_tolerance` is 0.01.
+The tolerance is an allowed increase in cycles. It is not host timing noise.
+
+Recorded baseline: MacBookPro, 2026-11-13, default config, seed 1, added memory
+latency 0. These are RTL simulation counts. They are not physical core scores.
+
+| Program | Instructions | Cycles | IPC | Cycle tolerance |
+|---|---:|---:|---:|---:|
+| median | 10653 | 12912 | 0.825046 | 1% |
+| vvadd | 6490 | 6563 | 0.988877 | 1% |
+| multiply | 54296 | 55377 | 0.980479 | 1% |
+
+Use a fresh external `RUN_ROOT`. The link path must not exist.
+Set the project's source environment and private locks as described above.
+
+```sh
+nice -n 15 rvw workloads run --project "$PROJECT" --source "$RISCV_TESTS" --out "$RUN_ROOT"
+mkdir -p "$PROJECT/rvw/out"
+ln -s "$RUN_ROOT" "$PROJECT/rvw/out/bench"
+nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-rev "$BASE" --cand-rev "$CANDIDATE"
+```
+
+The gate measures both committed revisions. The table is a dated reference;
+it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
+to override the project policy explicitly. Keep all generated results out of Git.
