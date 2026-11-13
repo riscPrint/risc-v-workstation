@@ -13,6 +13,8 @@ from .flows import _inputs
 
 def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
+    p.add_argument('--sampled-events', action='store_true', help='conditional global-sample clock-event comparison')
+    p.add_argument('--stable-at-edge', action='append', default=[], metavar='INPUT', help='input stable across sampled root rising edges')
     p.add_argument('--blackbox-contract', help='explicit trusted behavioral models; result remains conditional')
     p.add_argument('--gold', nargs='+', help='reference RTL files')
     p.add_argument('--gate', nargs='+', help='changed RTL files')
@@ -38,11 +40,11 @@ def register(sub):
     p.set_defaults(func=run)
 
 
-def state(body):
+def state(body, *, include_latches=False):
     """Cover every register Q bit with a stable user-visible net name."""
     qbits = set()
     for cell in body['cells'].values():
-        if cell['type'] in common._SYNCHRONOUS_STATE:
+        if cell['type'] in common._SYNCHRONOUS_STATE or (include_latches and cell['type']=='$dlatch'):
             qbits.update(cell['connections']['Q'])
         elif not cell['type'].startswith('$'):
             raise ValueError('blackbox or unresolved module obligations are not supported')
@@ -122,6 +124,9 @@ def harness(args, ports, *, delay=0):
             control += f'wire rvw_reset = {"" if args.reset_active == "high" else "!"}(rvw_count < {args.reset_cycles});\n'
     else:
         control = 'wire rvw_ready = 1;\n'
+    if getattr(args, 'sampled_events', False):
+        from .event_equiv import constraints
+        assigns.extend(constraints(args, ports))
     return (f'module rvw_equiv({", ".join(decl)});\n' + control + '\n'.join(assigns)
             + f'\n{args.top} dut({", ".join(connect)});\nendmodule\n')
 
@@ -176,6 +181,14 @@ def _run(args):
             common.die('timeout must be finite and positive; reset-cycles must be positive')
         if not 0 <= args.latency <= 64:
             raise ValueError('latency must be in 0..64')
+        sampled = getattr(args, 'sampled_events', False)
+        stable = getattr(args, 'stable_at_edge', [])
+        if stable and not sampled:
+            raise ValueError('stable-at-edge requires sampled-events')
+        if sampled:
+            if args.unmatched_state != 'prove' or args.dsec:
+                raise ValueError('sampled-events requires unmatched-state prove and excludes advisory dsec')
+            result['event_model'] = {'backend':'yosys clk2fflogic', 'scope':'global input samples; no between-sample event claim', 'stable_at_edge':stable}
         revisions = (args.gold_rev, args.gate_rev)
         if any(revisions):
             if not all(revisions) or args.gold or args.gate:
@@ -207,10 +220,11 @@ def _run(args):
             a = SimpleNamespace(**vars(args))
             a.verilog, a.checks, a.engine = getattr(args, side), None, 'abc:pdr'
             a.timeout = budget()
-            snapshot, ports, models = _inputs(a, directory, ['SYNTHESIS'])
+            snapshot, ports, models = _inputs(a, directory, ['SYNTHESIS'], allow_latches=sampled)
             snapshots.append(snapshot)
             # Each side owns its active tool context until the command ends.
-            common.probe_clocks(models, args.top, args.clock, directory, budget())
+            if not sampled:
+                common.probe_clocks(models, args.top, args.clock, directory, budget())
             script = (f'read_rtlil {models[0]}\nhierarchy -check -top {args.top}\nflatten\n'
                       f'write_json {directory / "flat.json"}\n')
             (directory / 'flat.ys').write_text(script)
@@ -218,7 +232,7 @@ def _run(args):
             if rc:
                 raise ValueError('flattening failed')
             body = json.loads((directory / 'flat.json').read_text())['modules'][args.top]
-            bodies.append(state(body))
+            bodies.append(state(body, include_latches=sampled))
             for p in ports:
                 common.check_ident('port', p.name)
                 if p.name.startswith('rvw_'):
@@ -242,7 +256,8 @@ def _run(args):
         lines = []
         for side in ('gold', 'gate'):
             lines += [f'[{side}]', f'read_rtlil {out / side / "module_ports.il"}',
-                      f'read_verilog {out / side / "wrapper.v"}', 'prep -top rvw_equiv -flatten',
+                      f'read_verilog {"-formal " if sampled else ""}{out / side / "wrapper.v"}', 'prep -top rvw_equiv -flatten',
+                      *(['clk2fflogic'] if sampled else []),
                       'setundef -undriven -anyseq']
         lines += ['[match rvw_equiv]']
         for p in portsets[0]:
@@ -290,7 +305,7 @@ def _run(args):
             if record.get('status') == 'unknown':
                 result['status'] = 'inconclusive'
         ACTIVE.reset(token)
-    if 'blackbox_contract' in result and result['status'] in ('equivalent','not_equivalent'):
+    if ('blackbox_contract' in result or 'event_model' in result) and result['status'] in ('equivalent','not_equivalent'):
         result['contract_verdict'] = result['status']
         result['status'] = 'conditional'
     result['wall_s'] = round(time.monotonic() - started, 3)

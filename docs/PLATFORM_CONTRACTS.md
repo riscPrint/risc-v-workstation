@@ -2557,12 +2557,35 @@ format does not record internal-register or whole-core security qualification.
 ### Equivalence witness simulation
 
 `rvw.formal.cex/1` can set `source_flow` to `equiv`. The input must be a
-`not_equivalent` result with a witness inside a failed native eqy partition.
+`not_equivalent` result or a conditional `contract_verdict=not_equivalent` result with a witness inside a failed native eqy partition.
 Simulation uses the captured partition RTLIL model and retains both source
 snapshots. `reproduced` requires the same observed assertion path and source
 in baseline and edited replay, without an assumption failure. It is simulation
 evidence only. Status remains `inconclusive` and CLI exit remains 1. Generated
 model and testbench files keep their existing generation-only contract.
+
+### Sampled clock-event equivalence
+
+`rvw.formal.equiv/1.event_model` records the `yosys clk2fflogic` backend,
+global-sample scope and `stable_at_edge` input names. Simple `$dlatch` cells are
+allowed only through the explicit sampled-event equivalence frontend. Both
+wrappers are normalized before eqy output partitioning. Each declared input
+setup constraint is captured as an assumption in both wrappers. Reset/settle
+count root-clock edges. There is no between-sample transition or analog claim.
+A completed query reports status `conditional` and a separate `contract_verdict`.
+CLI exit is 1. Default formal flows retain their prior state/clock restrictions.
+
+### Conditional blackbox models
+
+`rvw.equiv-blackbox/1` contains a nonempty `models` source-path list and a
+nonempty list of prose `obligations`. Paths resolve from the manifest directory.
+`rvw.formal.equiv/1.blackbox_contract` records manifest/model hashes and the
+unproved model obligations. Both source snapshots include the model files.
+A completed model-based proof has status `conditional`; `contract_verdict` is
+`equivalent` or `not_equivalent`. CLI exit is always 1 for this status. Missing
+evidence remains `inconclusive`. These models do not establish implementation
+correspondence, physical behavior or unconditional equivalence. Unresolved
+blackboxes and model assumptions/nondeterministic cells remain refused.
 
 ### Sequential equivalence result (`rvw.formal.equiv/1`)
 

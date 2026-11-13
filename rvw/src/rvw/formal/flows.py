@@ -14,13 +14,14 @@ from .snapshot import InputSnapshot
 from .tools import ACTIVE, Toolchain
 
 
-def _inputs(args, out: Path, defines: list[str] = ()) -> tuple[InputSnapshot, list[Port], list[Path]]:
+def _inputs(args, out: Path, defines: list[str] = (), *, allow_latches=False) -> tuple[InputSnapshot, list[Port], list[Path]]:
     snapshot = InputSnapshot(args, out)
     args._input_snapshot = snapshot
     snapshot.tools = Toolchain(snapshot.capture, args, snapshot.directory / 'tools')
     args._formal_tools_token = ACTIVE.set(snapshot.tools)
+    event_options = {'allow_latches': True} if allow_latches else {}
     ports = common.module_ports(snapshot.sources, args.top, out, args.timeout, defines, snapshot=snapshot,
-                                allow_async_reset=getattr(args, "async_reset", False))
+                                allow_async_reset=getattr(args, "async_reset", False), **event_options)
     # App port maps must match the sealed DUT interface. Yosys can otherwise resize
     # instance connections and leave an omitted port free without rejecting the RTL.
     for module, expected in getattr(args, "expected_interfaces", {}).items():

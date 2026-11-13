@@ -237,7 +237,7 @@ def ports_from_json(path: Path, top: str) -> list[Port]:
 
 
 def module_ports(verilog_files: list[Path], top: str, out: Path,
-                 timeout: float | None = None, defines: list[str] = (), *, snapshot, allow_async_reset=False) -> list[Port]:
+                 timeout: float | None = None, defines: list[str] = (), *, snapshot, allow_async_reset=False, allow_latches=False) -> list[Port]:
     """Elaborate using the proof's defines and read all top ports before any optimization.
 
     `proc` lowers processes because `write_json` cannot serialize them. It preserves the interface.
@@ -265,7 +265,7 @@ def module_ports(verilog_files: list[Path], top: str, out: Path,
     if rc != 0:
         die("the port probe (yosys) failed, see " + str(out / "module_ports.log"))
     snapshot.check_frontend()
-    check_state_controls(out / "module_ports.json", allow_async_reset=allow_async_reset)
+    check_state_controls(out / "module_ports.json", allow_async_reset=allow_async_reset, allow_latches=allow_latches)
     return ports_from_json(out / "module_ports.json", top)
 
 
@@ -275,7 +275,7 @@ _STATE_MEMORIES = {'$memrd', '$memwr', '$memwr_v2', '$meminit', '$meminit_v2', '
                    '$memrd_v2', '$mem_v2'}
 
 
-def async_state_problems(modules, *, allow_async_reset=False) -> list[str]:
+def async_state_problems(modules, *, allow_async_reset=False, allow_latches=False) -> list[str]:
     """Refuse state events outside the single-clock model in every elaborated module.
 
     This includes async reset/load/set/clear cells, latches and fine-grained state cells.
@@ -298,6 +298,8 @@ def async_state_problems(modules, *, allow_async_reset=False) -> list[str]:
             if kind in modules:
                 continue  # module bodies are all checked before pruning unused instances
             where = f'{module}.{name} ({kind})'
+            if allow_latches and kind == '$dlatch':
+                continue  # Explicit sampled-event equivalence only.
             if allow_async_reset and kind in {'$adff', '$adffe'}:
                 continue  # clk2fflogic preserves constant-value asynchronous resets
             if _STATE_LIKE.match(kind) and kind not in _SYNCHRONOUS_STATE | _STATE_MEMORIES:
@@ -313,10 +315,10 @@ def async_state_problems(modules, *, allow_async_reset=False) -> list[str]:
     return problems
 
 
-def check_state_controls(probe_json: Path, *, allow_async_reset=False) -> None:
+def check_state_controls(probe_json: Path, *, allow_async_reset=False, allow_latches=False) -> None:
     """Refuse unsupported state controls with exit 2, before writing a proof result."""
     try:
-        problems = async_state_problems(json.loads(probe_json.read_text())['modules'], allow_async_reset=allow_async_reset)
+        problems = async_state_problems(json.loads(probe_json.read_text())['modules'], allow_async_reset=allow_async_reset, allow_latches=allow_latches)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         problems = [f'cannot read the asynchronous state-control probe {probe_json} ({exc})']
     if problems:
