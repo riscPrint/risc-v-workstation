@@ -25,3 +25,8 @@ libraryDependencies ++= (if (sys.props.get("rvw.soc.vex").contains("true"))
 
 // The example can compile generated checks into its simulation and formal capture.
 lazy val root = (project in file(".")).dependsOn(ProjectRef(file("../SpinalChecks"), "spinalchecks"))
+
+// Optional typed extraction. The core sources still compile only in root.
+lazy val db = (project in file("db"))
+  .dependsOn(root, ProjectRef(file("../SpinalDB/spinaldb"), "spinaldb"))
+  .settings(fork := true, run / javaOptions ++= Seq("-Xss64m", "-Xmx3g"))

@@ -476,3 +476,22 @@ composition's clocks and bridge boundaries. The selected map must match.
 The Vex example does this before its native program run. Map-only SV bind
 files need project instance/clock review; use native composition or a typed
 database for automatic domain association.
+
+A connectivity entry with both `database` and `manifest` runs the existing
+formal connectivity consumer in `prove` mode. Optional `engine` and `depth`
+select its backend and activation depth. Each declared transfer needs an
+unbounded proof and a reachable activation witness. Timeouts, absent results
+and bounded results stay inconclusive. The report preserves reverse influence
+gaps. A proved table row covers the declared contracts only.
+
+The optional `SpinalSoc` `db` project extracts the current generated top with
+`rvwsoc.Database DB CLOCK_HZ RESET_KIND --rtl DIR`. Build it with `db/compile`
+and obtain its classpath with `export db/Compile/fullClasspath`. Use private
+build output and the `sbt-soc` lock. Recompose and rebuild before extraction.
+Supply the database to `cdc_rdc.database` to run the existing structural lint
+consumer. That consumer reports unrun protocol and reset-release obligations.
+It does not establish CDC or RDC qualification.
+
+`prepare_steps` can hold several argument lists. Each step runs in order
+with the same per-command timeout. A failed step stops verification.
+Database paths can use `{out}` for databases created by these steps.

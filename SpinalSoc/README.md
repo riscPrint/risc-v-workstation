@@ -237,3 +237,12 @@ positive issuing limits in the wrapper's bus config. Missing limits emit
 a gap warning. The Vex wrapper declares two read and two write requests.
 The build compiles those generic checker sources into its private output.
 It does not build a core or write shared SpinalChecks output directories.
+
+## Typed composed database
+
+The optional `db` sbt project depends on the normal composer and SpinalDB.
+`rvwsoc.Database DB CLOCK_HZ RESET_KIND [COMPONENT_CLASS] --rtl DIR` extracts
+fresh RTL and a typed database. The default class is `generated.ComposedSoc`.
+The Vex verification helper also builds `generated.MultiDomainSoc` from the
+separate two-clock composition. Use the `sbt-soc` lock for these private outputs.
+See the Vex example for its build helper and combined verification manifest.

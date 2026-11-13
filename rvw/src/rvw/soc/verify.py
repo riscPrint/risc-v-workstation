@@ -172,7 +172,7 @@ def verify(source, out, manifest=None, timeout=120):
     if manifest:
         path = Path(manifest).resolve()
         spec = json.loads(path.read_text())
-        if set(spec)-{'schema','checks','prepare'} or not {'schema','checks'} <= set(spec) or spec['schema'] != 'rvw.soc-verify/1':
+        if set(spec)-{'schema','checks','prepare','prepare_steps'} or not {'schema','checks'} <= set(spec) or spec['schema'] != 'rvw.soc-verify/1':
             raise ValueError('expected rvw.soc-verify/1 with checks')
         settings, root = spec['checks'], path.parent
         if not isinstance(settings, dict) or set(settings)-set(KINDS):
@@ -182,24 +182,50 @@ def verify(source, out, manifest=None, timeout=120):
                 raise ValueError('check settings must be dictionaries')
             for key in ('database', 'clocks', 'manifest', 'classpath_file', 'composition'):
                 if key in entry:
-                    entry[key] = str((root/entry[key]).resolve())
+                    entry[key] = str((root/entry[key].replace('{out}', str(out))).resolve())
     rows = generate(source, out, settings)
-    if manifest and spec.get('prepare'):
-        command = spec['prepare']
+    steps = []
+    if manifest:
+        if spec.get('prepare'):
+            steps.append(spec['prepare'])
+        extra = spec.get('prepare_steps', [])
+        if not isinstance(extra, list):
+            raise ValueError('prepare_steps must be a list of argument lists')
+        steps.extend(extra)
+    for index, command in enumerate(steps):
         if not isinstance(command, list) or not command or not all(isinstance(a,str) for a in command):
             raise ValueError('prepare must be a nonempty argument list')
         argv = [a.replace('{out}', str(out)).replace('{map}', str(source)) for a in command]
-        with (out/'prepare.log').open('w') as log:
+        name = 'prepare.log' if index == 0 else f'prepare-{index}.log'
+        with (out/name).open('w') as log:
             prepared = run_group(argv, cwd=root, stdout=log, stderr=log, timeout=timeout)
         if prepared.returncode or prepared.timed_out:
             for row in rows:
-                row['reason'] = 'Preparation failed; see prepare.log.'
+                row['reason'] = f'Preparation failed; see {name}.'
             result = dict(schema='rvw.soc-verify-result/1',status='inconclusive',checks=rows)
             (out/'result.json').write_text(dumps(result))
             return result
     for row in rows:
         try:
             entry = settings.get(row['kind'], {})
+            if row['kind'] == 'cdc_rdc' and entry.get('database') and not row['ran']:
+                from rvw.query.db import DesignDB
+                from rvw.lint.structural import analyze
+                db = DesignDB(entry['database'])
+                try:
+                    report = analyze(db, entry.get('intent'))
+                finally:
+                    db.close()
+                (out/'cdc_rdc.json').write_text(dumps(report))
+                row.update(generated=True, ran=True, result='inconclusive', details=report)
+                row.pop('reason', None)
+            if row['kind'] == 'connectivity' and entry.get('database') and entry.get('manifest'):
+                from .connection_run import run as run_connections
+                report = run_connections(entry['database'], entry['manifest'], out/'connectivity-run',
+                                         timeout=timeout, engine=entry.get('engine', 'smtbmc:yices'),
+                                         depth=entry.get('depth', 10))
+                row.update(generated=True, ran=report['ran'], result=report['status'], details=report)
+                row.pop('reason', None)
             if row['kind'] == 'uvm' and entry.get('composition') and entry.get('classpath_file'):
                 from .uvm_run import run as run_uvm
                 report = run_uvm(entry['composition'],out/'uvm-run',Path(entry['classpath_file']).read_text().strip(),
@@ -224,7 +250,7 @@ def verify(source, out, manifest=None, timeout=120):
                     row.update(ran=True, result='fail', reason=str(exc))
             if row['result'] != 'fail':
                 execute(row, settings.get(row['kind'], {}), root, out, timeout)
-        except (OSError, ValueError, KeyError, TypeError) as exc:
+        except (OSError, ValueError, KeyError, TypeError, QueryError) as exc:
             row['reason'] = str(exc)
     status = 'fail' if any(r['result']=='fail' for r in rows) else (
         'pass' if all(r['generated'] and r.get('complete', True) and r['ran'] and r['result'] in ('pass','proven') for r in rows) else 'inconclusive')

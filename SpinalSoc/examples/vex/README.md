@@ -66,3 +66,21 @@ sampled APB pins with the VIP and register oracle. See
 [the measured table](VERIFICATION.md) for counts and missing consumers.
 The adapter writes `apb.jsonl` beside C1 output. Its normal source build now
 uses `sbt-soc`, since all build output is private to this worktree.
+
+The extended verification profile extracts fresh databases for both the normal
+SoC and `compose-multidomain.json`. The second composition puts CLINT in a
+10 MHz clock domain. Build both tops before the run:
+
+```sh
+rvw/.venv/bin/python SpinalSoc/examples/vex/build-verify.py
+export RVW_SOC_CLASSPATH="$(cat SpinalSoc/out/vex-cp.txt)"
+rvw/.venv/bin/rvw soc verify SpinalSoc/examples/vex/soc.json \
+  --manifest SpinalSoc/examples/vex/verify.json --out NEW_DIR
+```
+
+Use the private `VEXRISCV` copy and native tool environment above. The build
+uses `sbt-soc`. A cold dependency build can exceed its two-minute limit. If so,
+run the same build again after the dependency cache is warm. Preparation then
+extracts fresh typed databases and runs the CPU. Connectivity uses captured
+RTL through `rvw formal connectivity`. The report preserves failed proofs,
+missing bindings, activation gaps and structural lint findings.

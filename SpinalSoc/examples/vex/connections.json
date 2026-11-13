@@ -1,0 +1,28 @@
+{
+  "connection": [
+    {
+      "id": "timer_irq",
+      "kind": "required",
+      "source": "clint_1.io_irq",
+      "destination": "core.area_cpu.timerInterrupt"
+    },
+    {
+      "id": "external_irq",
+      "kind": "required",
+      "source": "interrupt_11",
+      "destination": "core.area_cpu.externalInterrupt"
+    },
+    {
+      "id": "core_reset",
+      "kind": "required",
+      "source": "ram.reset",
+      "destination": "core.reset"
+    },
+    {
+      "id": "fabric_clock",
+      "kind": "required",
+      "source": "ram.clk",
+      "destination": "clint_1.clk"
+    }
+  ]
+}

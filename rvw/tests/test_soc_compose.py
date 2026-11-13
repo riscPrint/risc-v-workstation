@@ -24,7 +24,7 @@ def test_compose(tmp_path):
     assert 'new rvwsoc.IdleCore()' in text
     assert 'new WordMemory(12, 1024, false, Seq())' in text
     assert 'Fabric.connect(core.bus' in text
-    assert 'core.interrupts(7) := False' in text
+    assert 'interrupt_7 := False' in text
     assert (tmp_path/'out/registers.svd').exists()
     with pytest.raises(ValueError, match='must be new'):
         compose(p, tmp_path/'out')
@@ -78,7 +78,8 @@ def test_pin_and_irq_binders(tmp_path):
     p.write_text(json.dumps(spec))
     compose(p,tmp_path/'out')
     text=(tmp_path/'out/ComposedSoc.scala').read_text()
-    assert 'core.interrupts(3) := clint.io.softwareIrq' in text
+    assert 'interrupt_3 := clint.io.softwareIrq' in text
+    assert 'core.interrupts(3) := interrupt_3' in text
     assert 'clint.io.softwareIrq.toIo()' in text
 
 
