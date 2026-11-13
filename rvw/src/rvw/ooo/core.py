@@ -39,6 +39,7 @@ class Config:
     rename: dict = field(default_factory=dict)
     custom_instructions: list = field(default_factory=list)
     components: dict = field(default_factory=dict)
+    memory_rename: dict = field(default_factory=dict)
 
     def __post_init__(self):
         from rvw.csim.config import validate as validate_components
@@ -49,6 +50,8 @@ class Config:
             raise ValueError("component instruction cache requires explicit frontend timing")
         if self.translation and self.components.get("memory", {}).get("tlb"):
             raise ValueError("select own translation or component TLB timing, not both")
+        from .memory_rename import validate as validate_memory_rename
+        validate_memory_rename(self.memory_rename, self.memory_policy)
         from .custom import validate as validate_custom
         validate_custom(self.custom_instructions, self.latencies)
         from .rename import validate
@@ -120,6 +123,7 @@ class Entry:
     register: bool = True
     translation_ready: int | None = None
     predicted_correct: bool | None = None
+    data_producer: object = None
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None):
@@ -157,7 +161,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             raise ValueError(f"unsupported instruction class: {op.kind}")
         if any(type(r) is not int or not 0 <= r < 64 or (r >= 32 and not (op.kind.startswith("fp_") or op.kind == "store")) for r in op.sources):
             raise ValueError("invalid source register")
-        if (config.memory_policy in ("disambiguate", "speculate") or config.translation or memory is not None) and op.kind in ("load", "store"):
+        if (config.memory_policy in ("disambiguate", "speculate") or config.translation or config.memory_rename or memory is not None) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
                 raise ValueError("disambiguate requires memory address and size")
         if op.mnemonic == "fence.i" and (config.components.get("memory", {}).get("l1i") or config.frontend.get("uop_cache_entries", 0)):
@@ -198,6 +202,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
 
     from .control import SERIAL
     from .rename import elimination, fuses
+    from .memory_rename import source as memory_source
     from .dependence import Dependence
     dependence = Dependence(config.dependence_entries)
     for cycle in range(max_cycles):
@@ -382,12 +387,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             eliminated = elimination(op, config.rename)
             fused = fuses(rob[-1].insn if rob else None, op, config.rename)
             bypass = eliminated is not None or fused
+            alias = memory_source(op, rob) if config.memory_rename else None
             blocked = ("rob_full" if len(rob) >= config.rob_entries else
                        "issue_full" if not bypass and len(waiting) >= config.issue_entries else
                        "distributed_issue_full" if not bypass and execution.queue_full(op.kind, waiting) else
                        "load_full" if op.kind == "load" and loads >= config.load_entries else
                        "store_full" if op.kind == "store" and stores >= config.store_entries else
-                       "register_full" if not bypass and op.dest and op.dest < 32 and config.physical_registers and allocated >= config.physical_registers - 32 else
+                       "register_full" if not bypass and alias is None and op.dest and op.dest < 32 and config.physical_registers and allocated >= config.physical_registers - 32 else
                        "float_register_full" if not bypass and op.dest is not None and op.dest >= 32 and config.physical_float_registers and allocated_float >= config.physical_float_registers - 32 else None)
             if blocked:
                 events[blocked] += 1
@@ -401,14 +407,23 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 deps = ()
             if fused:
                 deps = (rob[-1],)
-            entry = Entry(op, deps, bypass_ready=cycle + 1 if bypass else 0, register=not bypass)
-            if not bypass and op.dest:
+            entry = Entry(op, deps, bypass_ready=cycle + 1 if bypass else 0, register=not bypass and alias is None)
+            if op.kind == "store" and len(op.sources) == 2 and op.sources[1]:
+                entry.data_producer = writers.get(op.sources[1])
+            if not bypass and alias is None and op.dest:
                 if op.dest < 32:
                     allocated += 1
                 else:
                     allocated_float += 1
             if op.dest:
-                writers[op.dest] = entry
+                if alias is not None:
+                    if alias.data_producer is not None:
+                        writers[op.dest] = alias.data_producer
+                    else:
+                        writers.pop(op.dest, None)
+                    events["memory_renamed_loads"] += 1
+                else:
+                    writers[op.dest] = entry
             rob.append(entry)
             if bypass:
                 events["fused_immediates" if fused else eliminated + "_eliminated"] += 1
@@ -495,7 +510,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

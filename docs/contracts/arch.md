@@ -301,3 +301,14 @@ PC ranges define regions. Unmapped PCs remain explicit.
 retirement counts. It gives base minus candidate cycles saved, candidate minus
 base IPC and slots, base/candidate cycle speedup and per-region slot deltas.
 These are model estimates. They do not establish hardware top-down accuracy.
+
+## Oracle memory rename policy
+
+The optional own-model `memory_rename` object is empty by default. The only
+accepted nonempty value is `{"mode":"oracle_store_data"}`. It aliases LD
+consumer dependencies to the youngest exactly overlapping SD data producer.
+The load retains execution, memory verification and ordered commit. It does
+not allocate a new physical register. Traced addresses are an early oracle.
+`memory_renamed_loads` counts aliases. Partial overlaps, barriers and unsupported
+widths stop lookup. Speculative dependence replay is refused. This policy has
+no failed alias prediction, fault recovery or predictor recovery evidence.
