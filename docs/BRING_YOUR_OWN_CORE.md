@@ -101,8 +101,15 @@ solver. See the [co-simulation guide](../Cosim/README.md) and
 The Python install does not install native tools or cache Scala dependencies.
 Offline sbt builds need their dependencies already in the cache. The VexRiscv
 launcher uses `-Dsbt.offline=true`. With an empty cache, first fetch its Scala,
-SpinalHDL and sbt dependencies online from `examples/vexriscv/rvw/`. Empty-cache
-startup remains unverified. SpinalWaves, SpinalTrace GUI, the VS Code extension
+SpinalHDL and sbt dependencies online from the copied core's `rvw/` directory:
+
+```sh
+cd "$CORE_ROOT/rvw"
+"$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 sbt -batch update db/update
+```
+
+See the [VexRiscv setup](../examples/vexriscv/README.md#setup) for the pinned
+public core and test-source fetches. SpinalWaves, SpinalTrace GUI, the VS Code extension
 and Sail need separate setup steps. See [tool versions](TOOL_VERSIONS.md).
 
 Use a patched JDK 21. Fetch Scala dependencies only when the local network
