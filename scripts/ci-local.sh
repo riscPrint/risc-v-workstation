@@ -2,7 +2,7 @@
 # Run the same checks in Actions and in a disposable local work directory.
 set -euo pipefail
 mode="${1:-fast}"
-case "$mode" in fast|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
+case "$mode" in fast|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 # Commit policy needs only the standard library and the event's Git history.
 if [ "$mode" = messages ]; then
@@ -66,7 +66,7 @@ scala() { (cd "$1"; "$RVW_CI_WORK/scripts/with-lock.sh" sbt nice -n 10 sbt -batc
 pytest_report() {
   local report="$1" budget="$2" status=0 summary_status=0
   shift 2
-  lock suite python -m pytest rvw/tests "$@" --junitxml="$report" || status=$?
+  lock suite python -m pytest "$@" --junitxml="$report" || status=$?
   # Publish counts even when pytest fails. Never hide the original test exit.
   if [ -f "$report" ]; then
     if [ -n "$budget" ]; then
@@ -83,13 +83,20 @@ pytest_report() {
 }
 case "$mode" in
   fast)
-    pytest_report fast-results.xml 300 -m fast --strict-markers -q -ra --durations=10
+    if [ "${CI_HYGIENE_ONLY:-false}" = true ]; then
+      pytest_report fast-results.xml 300 rvw/tests/test_release_hygiene.py rvw/tests/test_command_reference.py -m fast --strict-markers -q -ra --durations=10
+    else
+      pytest_report fast-results.xml 300 rvw/tests -m fast --strict-markers -q -ra --durations=10
+    fi
+    ;;
+  javascript)
     (cd vscode; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 bash -e -c 'npm ci; npm run typecheck; npm run build; npm test')
+    ;;
+  rust)
     (cd SpinalTrace; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 cargo test --locked -p spinaltrace-rs)
-    scala SpinalWaves/spinalwaves 'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'
     ;;
   nightly-python)
-    pytest_report nightly-results.xml "" --strict-markers -q -ra --durations=20
+    pytest_report nightly-results.xml "" rvw/tests --strict-markers -q -ra --durations=20
     ;;
   nightly-scala)
     scala SpinalKonata test inputs/test

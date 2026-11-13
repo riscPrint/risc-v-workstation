@@ -6,26 +6,74 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
-  fast:
-    name: Fast (macOS ARM64)
+  changes:
     runs-on: [self-hosted, macOS, ARM64, rvw-local]
-    timeout-minutes: 90
+    timeout-minutes: 5
+    outputs:
+      python: ${{ steps.paths.outputs.python }}
+      javascript: ${{ steps.paths.outputs.javascript }}
+      rust: ${{ steps.paths.outputs.rust }}
+      scala: ${{ steps.paths.outputs.scala }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+          fetch-depth: 0
+      - id: paths
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ]; then
+            python3 scripts/ci-paths.py --base "$BASE" --head "$HEAD"
+          else
+            python3 scripts/ci-paths.py
+          fi
+  fast:
+    name: Fast
+    needs: changes
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          distribution: temurin
-          java-version: '21'
-      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: '22'
-      - name: Run isolated local checks
+          persist-credentials: false
+      - name: Python fast set or release hygiene
+        env:
+          CI_HYGIENE_ONLY: ${{ needs.changes.outputs.python != 'true' }}
         run: scripts/ci-local.sh fast
+  javascript:
+    needs: changes
+    if: needs.changes.outputs.javascript == 'true'
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: scripts/ci-local.sh javascript
+  rust:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: scripts/ci-local.sh rust
+  scala:
+    needs: changes
+    if: needs.changes.outputs.scala == 'true'
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: scripts/ci-local.sh nightly-scala
