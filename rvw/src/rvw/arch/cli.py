@@ -5,6 +5,9 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == "sched-study":
+        from .sched_study import study
+        return study(**kw)
     if action == "traffic":
         from .traffic import traffic
         return traffic(**kw)
@@ -98,13 +101,15 @@ def register(subparsers):
     p.add_argument('--clusters', type=int, default=8)
     p.add_argument('--warmup', type=int, default=100_000)
     p.add_argument('--json', action='store_true')
-    for action in ('sched-generate', 'sched-measure'):
+    for action in ('sched-generate', 'sched-measure', 'sched-study'):
         p = sub.add_parser(action)
         p.set_defaults(func=_run)
         p.add_argument('description_path')
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
-        if action == 'sched-measure':
+        if action == 'sched-study':
+            p.add_argument('--repeats', type=int, default=3)
+        if action in ('sched-measure', 'sched-study'):
             p.add_argument('--count', type=int, default=32)
             p.add_argument('--timeout', type=float, default=600)
             p.add_argument('--cc', default='riscv64-unknown-elf-gcc')

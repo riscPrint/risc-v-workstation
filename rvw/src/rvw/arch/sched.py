@@ -134,13 +134,13 @@ def assembly(c, count, mode):
     return '\n'.join(text) + '\n', words
 
 
-def trace_span(raw, header, records, start, words, config, elf_hash):
+def trace_span(raw, header, records, start, words, config, elf_hash, seed=1):
     parsed = RunResult.from_dict(raw)
     if parsed.why_inconclusive:
         raise ValueError('inconclusive C1 result')
     if (raw.get('schema') != 'rvw.run/1' or raw.get('status') != 'pass' or raw.get('inconclusive')
             or raw.get('elf_sha256') != elf_hash or raw.get('config') != config
-            or raw.get('seed') != 1 or raw.get('mem_latency') != 0):
+            or raw.get('seed') != seed or raw.get('mem_latency') != 0):
         raise ValueError('C1 pass, identity or fixed timing mismatch')
     if (header.get('schema') not in ('rvw.rvfi/1', 'rvw.rvfi/2')
             or header.get('core') != raw.get('core') or header.get('config') != config):
@@ -200,8 +200,9 @@ def linker_script(d):
 
 
 def measure(description_path, out, project=None, count=32, timeout=600,
-            cc='riscv64-unknown-elf-gcc', mca='llvm-mca'):
+            cc='riscv64-unknown-elf-gcc', mca='llvm-mca', seed=1):
     d = description(description_path); integer(count, 'count', 16, 256)
+    integer(seed, 'seed', 1, 2147483647)
     if not isinstance(timeout, (int, float)) or not 0 < timeout <= 1800:
         raise ValueError('timeout must be in (0, 1800]')
     config = load_config(project=project)
@@ -242,7 +243,7 @@ def measure(description_path, out, project=None, count=32, timeout=600,
                     raise ValueError('MCA total cycles missing')
                 run = base.with_suffix('.run')
                 jobs.append({'elf': str(elf), 'out': str(run), 'config': d['config'],
-                             'seed': 1, 'mem_latency': 0, 'max_cycles': 100000, 'rvfi_trace': True})
+                             'seed': seed, 'mem_latency': 0, 'max_cycles': 100000, 'rvfi_trace': True})
                 cases.append((c['name'], mode, n, start[0], words, elf, run, int(matches[0])))
     manifest = out / 'jobs.jsonl'
     manifest.write_text(''.join(json.dumps(j)+'\n' for j in jobs))
@@ -258,7 +259,7 @@ def measure(description_path, out, project=None, count=32, timeout=600,
             raise ValueError('C1 core mismatch')
         trace_path = run / raw['artifacts']['rvfi_trace']
         records = [json.loads(line) for line in trace_path.read_text().splitlines()]
-        span = trace_span(raw, records[0], records[1:], start, words, d['config'], digest(elf.read_bytes()))
+        span = trace_span(raw, records[0], records[1:], start, words, d['config'], digest(elf.read_bytes()), seed=seed)
         rows.append({'class': name, 'mode': mode, 'count': n, 'rtl_cycles': span, 'mca_cycles': cycles,
                      'elf_sha256': digest(elf.read_bytes()), 'result': str(result_path),
                      'result_sha256': digest(result_path.read_bytes()),

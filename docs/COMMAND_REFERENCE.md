@@ -42,7 +42,7 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -104,6 +104,14 @@ usage: rvw arch sched-generate [-h] --out OUT [--json] [--project PROJECT]
 usage: rvw arch sched-measure [-h] --out OUT [--json] [--count COUNT]
     [--timeout TIMEOUT] [--cc CC] [--mca MCA] [--project PROJECT]
     description_path
+```
+
+### `rvw arch sched-study`
+
+```text
+usage: rvw arch sched-study [-h] --out OUT [--json] [--repeats REPEATS]
+    [--count COUNT] [--timeout TIMEOUT] [--cc CC] [--mca MCA] [--project
+    PROJECT] description_path
 ```
 
 ### `rvw arch search`
@@ -1979,6 +1987,14 @@ Starts a background job: yes.
 Select instruction-weighted BBV phases from complete C2. No restore or fidelity claim.
 
 Arguments: `trace` (required), `out` (required), `project`, `interval`, `clusters`, `warmup`.
+
+Starts a background job: yes.
+
+### `arch_sched_study`
+
+Run repeated three-size scheduling studies and flag nonlinear timing.
+
+Arguments: `description_path` (required), `out` (required), `project`, `cc`, `mca`, `count`, `repeats`, `timeout`.
 
 Starts a background job: yes.
 

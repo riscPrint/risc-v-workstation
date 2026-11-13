@@ -16,6 +16,12 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec("arch_sched_study", "Run repeated three-size scheduling studies and flag nonlinear timing.",
+                 schema({**{k: {"type": "string"} for k in ("description_path", "out", "project", "cc", "mca")},
+                         "count": {"type": "integer", "minimum": 16, "maximum": 128},
+                         "repeats": {"type": "integer", "minimum": 3, "maximum": 10},
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["description_path", "out"]),
+                 handler("rvw.arch.cli", "sched-study"), long=True),
         ToolSpec("arch_traffic", "Model declared multi-agent memory traffic and abstract power-state costs.",
                  schema({k: {"type": "string"} for k in ("plan", "out", "project")}, ["plan", "out"]),
                  handler("rvw.arch.cli", "traffic"), long=True),
