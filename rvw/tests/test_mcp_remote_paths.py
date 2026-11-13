@@ -1,5 +1,5 @@
 import pytest
-from rvw.mcp.paths import confine, is_path
+from rvw.mcp.paths import confine
 from rvw.mcp.registry import Registry, discover
 from rvw.mcp.remote import ClientRegistry
 from rvw.mcp.spec import ToolSpec, ToolError, schema
@@ -26,18 +26,26 @@ def test_remote_confinement(tmp_path):
 
 
 @pytest.mark.fast
-def test_all_discovered_path_properties_are_checked(tmp_path):
+def test_all_discovered_string_arguments_are_checked(tmp_path):
+    from dataclasses import replace
     tools, problems = discover()
     assert not problems
+    def forbidden(**kwargs):
+        raise AssertionError('path escape reached a handler')
+    registry = ClientRegistry([replace(t, handler=forbidden, long=False) for t in tools], project=str(tmp_path))
     count = 0
-    for tool in tools:
-        for name, spec in tool.input_schema.get('properties', {}).items():
-            if is_path(name, spec) and spec.get('type') in ('string', 'array'):
-                value = ['../escape'] if spec['type'] == 'array' else '../escape'
-                with pytest.raises(ToolError, match='outside'):
-                    confine({name: value}, tool.input_schema, str(tmp_path))
-                count += 1
-    assert count > 100
+    try:
+        for tool in tools:
+            for name, spec in tool.input_schema.get('properties', {}).items():
+                if spec.get('type') in ('string', 'array'):
+                    value = ['../escape'] if spec['type'] == 'array' else '../escape'
+                    with pytest.raises(ToolError, match='outside|project is fixed'):
+                        registry.call(tool.name, {name: value})
+                    count += 1
+        assert count > 100
+        assert registry.jobs.list() == []
+    finally:
+        registry.jobs.shutdown()
 
 
 @pytest.mark.fast
@@ -79,3 +87,13 @@ def test_sse_paths_and_project_ownership(tmp_path):
                 assert json.loads(result.content[0].text)['jobs'] == []
     with process_server(tmp_path, ['mcp', '--transport', 'sse', '--clients', str(policies)]) as (url, _):
         asyncio.run(check(url))
+
+
+@pytest.mark.fast
+def test_remote_non_path_strings_keep_their_meaning(tmp_path):
+    args = {'image': 'registry.example/team/tool:v1',
+            'sail_endpoint': 'http://127.0.0.1:18768',
+            'filter': ['^directory/test$'], 'base': 'feature/branch',
+            'schema': 'rvw.example/1', 'db': 'design.sqlite'}
+    checked = confine(args, {}, str(tmp_path))
+    assert checked == {**args, 'db': str(tmp_path / 'design.sqlite')}
