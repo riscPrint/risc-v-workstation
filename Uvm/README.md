@@ -209,3 +209,19 @@ sequences. The [RAL fixture](examples/ral/top.sv) exercises generated models
 with these components. It uses a fixture backdoor. It does not qualify a
 physical peripheral. The standard access sequence reports
 `UNSUPPORTED_RAL_BACKDOOR` if a register has no configured backdoor.
+
+## Live scalar CPU environment
+
+See [the CPU environment](cpu/README.md) for live RVFI monitoring, independent
+Spike DPI checks, shared memory response services, control sequences, Python
+services and a bounded RV32I_Zicsr ADDI/MISA fixture. The bridge uses the current Spike
+shim ABI 6 and passes the platform PMP granularity. The previous ABI 5 setup
+cannot initialize a current shim.
+
+The fixture also has a cocotb path on Icarus. It uses the same independent
+Spike comparator and Python memory services. Neither fixture establishes a
+VexRiscv live UVM bind, interrupt/debug architecture or C4 acceptance.
+
+See [the feature table](FEATURES.md) for explicit profile diagnostics and
+workarounds. `rvw regress uvm --require-feature NAME` rejects a requirement
+outside the qualified profile before it creates output or starts tools.

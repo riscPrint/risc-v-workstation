@@ -1367,7 +1367,7 @@ usage: rvw regress backends [-h] [--backend {verilator,icarus} | --hdl]
 ```text
 usage: rvw regress uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE]
     [--verilator VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT]
-    [--json] [--project PROJECT]
+    [--require-feature REQUIRE_FEATURE] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress uvm-ral`
@@ -1649,8 +1649,8 @@ usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
 
 ```text
 usage: rvw uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE] [--verilator
-    VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT] [--json]
-    [--project PROJECT]
+    VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT]
+    [--require-feature REQUIRE_FEATURE] [--json] [--project PROJECT]
 ```
 
 ### `rvw uvm-ral`

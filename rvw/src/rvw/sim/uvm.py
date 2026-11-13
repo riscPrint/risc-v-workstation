@@ -75,7 +75,9 @@ def evidence(log: str, returncode: int, timed_out: bool, *, negative=False) -> b
 
 
 def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
-        seed=1, seeds=1, timeout=600) -> dict:
+        seed=1, seeds=1, timeout=600, required_features=()) -> dict:
+    from .uvm_features import require
+    require(required_features)
     if (type(seed) is not int or not 1 <= seed <= 2**31-1 or
             type(seeds) is not int or not 1 <= seeds <= 100 or seed+seeds > 2**31 or
             not math.isfinite(timeout) or timeout <= 0):
@@ -164,6 +166,8 @@ def register(sub):
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--seeds", type=int, default=1)
     parser.add_argument("--timeout", type=float, default=600)
+    parser.add_argument("--require-feature", action="append", default=[],
+                        help="refuse features outside the qualified runner profile")
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(func=command)
 
@@ -173,7 +177,7 @@ def command(args):
     try:
         report = run(args.out, archive=args.archive, suite=args.suite,
                      verilator=args.verilator, seed=args.seed, seeds=args.seeds,
-                     timeout=args.timeout)
+                     timeout=args.timeout, required_features=args.require_feature)
     except (OSError, ValueError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         return 2

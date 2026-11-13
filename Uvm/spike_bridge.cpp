@@ -28,19 +28,19 @@ extern "C" void rvw_uvm_close() {
 }
 extern "C" int rvw_uvm_init(const char* lib,const char* source_hash,const char* build_hash,
  const char* isa,const char* modes,unsigned bits,unsigned pmp,int absent_zero,int align,
- unsigned long long base,unsigned long long size,unsigned long long pc,const char* image) {
+ unsigned long long base,unsigned long long size,unsigned long long pc,const char* image,unsigned long long grain) {
  rvw_uvm_close(); error="initialization failed"; xlen=bits; aligned=align;
  std::memset(registers,0,sizeof(registers));
  library=dlopen(lib,RTLD_NOW|RTLD_LOCAL); if(!library) { error=dlerror(); return -1; }
  auto version=symbol<unsigned(*)()>("rvw_shim_version");
  auto source=symbol<const char*(*)()>("rvw_shim_source_sha256");
  auto build=symbol<const char*(*)()>("rvw_shim_build_sha256");
- auto create=symbol<void*(*)(const char*,const uint64_t*,size_t,const uint64_t*,size_t,uint64_t,unsigned,const char*,int,int)>("rvw_create");
+ auto create=symbol<void*(*)(const char*,const uint64_t*,size_t,const uint64_t*,size_t,uint64_t,unsigned,uint64_t,const char*,int,int)>("rvw_create");
  auto write=symbol<int(*)(void*,uint64_t,const uint8_t*,size_t)>("rvw_write");
  step_fn=symbol<decltype(step_fn)>("rvw_step"); destroy_fn=symbol<decltype(destroy_fn)>("rvw_destroy");
  if(!version || !source || !build || !create || !write || !step_fn || !destroy_fn ||
- version()!=5 || source_hash!=std::string(source()) || build_hash!=std::string(build())) { error="shim identity mismatch"; return -1; }
- uint64_t ram[]={base,size}; machine=create(isa,ram,1,nullptr,0,pc,pmp,modes,0,absent_zero);
+ version()!=6 || source_hash!=std::string(source()) || build_hash!=std::string(build())) { error="shim identity mismatch"; return -1; }
+ uint64_t ram[]={base,size}; machine=create(isa,ram,1,nullptr,0,pc,pmp,grain,modes,0,absent_zero);
  if(!machine) return -1;
  std::ifstream input(image); uint64_t addr,value;
  while(input>>std::hex>>addr>>value) { uint8_t byte=value; if(write(machine,addr,&byte,1)) return -1; }
@@ -79,5 +79,27 @@ extern "C" int rvw_uvm_check(const svOpenArrayHandle data) {
  static_cast<void>(a[17]);
  if(a[17] || a[18]) { error="handler/halt record unsupported"; return -1; }
  std::memcpy(registers,e.regs,sizeof(registers));
+ return 0;
+}
+
+// Optional post-retirement architectural snapshots from a project wrapper.
+extern "C" int rvw_uvm_check_state(const svOpenArrayHandle gprs,
+ const svOpenArrayHandle csr_addresses,const svOpenArrayHandle csr_values,unsigned csr_count) {
+ if(!machine || svSize(gprs,1)!=32 || svSize(csr_addresses,1)!=8 || svSize(csr_values,1)!=8 || csr_count>8) {
+  error="invalid architectural snapshot"; return -1;
+ }
+ uint64_t xmask=xlen==32 ? 0xffffffffULL : ~0ULL;
+ for(int i=0;i<32;i++) {
+  auto actual=*static_cast<uint64_t*>(svGetArrElemPtr1(gprs,i));
+  if(actual!=(registers[i]&xmask)) { error="GPR snapshot mismatch x"+std::to_string(i); return 1; }
+ }
+ auto read=symbol<int(*)(void*,unsigned,uint64_t*)>("rvw_read_csr");
+ if(!read && csr_count) { error="unsupported:uvm_cpu_csr_snapshot"; return -1; }
+ for(unsigned i=0;i<csr_count;i++) {
+  uint64_t address=*static_cast<uint64_t*>(svGetArrElemPtr1(csr_addresses,i));
+  uint64_t actual=*static_cast<uint64_t*>(svGetArrElemPtr1(csr_values,i)), expected=0;
+  if(address>4095 || read(machine,unsigned(address),&expected)) { error="unsupported:uvm_cpu_csr_snapshot"; return -1; }
+  if(actual!=(expected&xmask)) { error="CSR snapshot mismatch "+std::to_string(address); return 1; }
+ }
  return 0;
 }
