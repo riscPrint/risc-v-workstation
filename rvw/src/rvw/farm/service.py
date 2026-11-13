@@ -121,7 +121,9 @@ class Queue:
                 elif group_live(job['pgid']):
                     cleaned = False
             job['attempts'][-1].update(status='infrastructure_error', end=time.time())
-            state = ('queued' if len(job['attempts']) <= job['retries'] else 'inconclusive') if cleaned else 'cleanup_required'
+            retry_on = job['metadata'].get('retry_on', ['error', 'timeout', 'infrastructure_error'])
+            retry = 'infrastructure_error' in retry_on and len(job['attempts']) <= job['retries']
+            state = ('queued' if retry else 'inconclusive') if cleaned else 'cleanup_required'
             if cleaned and job['state'] == 'cancel_requested':
                 state = 'cancelled'
             recovered.append(self.update(job['id'], state=state, pgid=None if cleaned else job.get('pgid'), attempts=job['attempts']))
