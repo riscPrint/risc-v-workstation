@@ -1,0 +1,15 @@
+{
+  "model": "clint",
+  "cycles_per_tick": 1,
+  "map": {
+    "mtime": 49144,
+    "mtimecmp": [
+      16384
+    ],
+    "msip": [
+      0
+    ],
+    "reset_mtime": 0,
+    "reset_mtimecmp": 18446744073709551615
+  }
+}

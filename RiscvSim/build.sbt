@@ -19,6 +19,7 @@ lazy val riscvsim = (project in file("."))
       "com.github.spinalhdl" %% "spinalhdl-sim" % spinalVersion,
       compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion),
       "com.lihaoyi" %% "ujson" % "3.3.1",
+      "net.java.dev.jna" % "jna" % "5.12.1",
       "org.scalatest" %% "scalatest" % "3.2.19" % Test
     ),
     scalacOptions ++= Seq("-deprecation", "-feature", "-language:reflectiveCalls"),

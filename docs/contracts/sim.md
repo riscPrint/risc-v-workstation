@@ -318,3 +318,10 @@ storage. Wide Verilator reads retain the byte interface. Set the option to
 false for a measured control. Public wave capture uses the same settled values.
 Execution CPU time, when present in the example's C1 details, includes the
 Python adapter and C2 write/validation. It does not isolate generated RTL code.
+## Host device plugins
+
+The Scala `PluginDevice` binding uses the existing DeviceApiV1 ABI. Each run
+owns a fresh handle. The adapter serializes tick and MMIO calls at sampled
+boundaries and supplies all address and interrupt routing data. Libraries
+remain loaded for the process lifetime. Callback failure stops the operation.
+This binding does not provide checkpoint capture or restore.

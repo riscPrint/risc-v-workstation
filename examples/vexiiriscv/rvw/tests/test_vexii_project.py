@@ -70,3 +70,13 @@ pathlib.Path(args[1]).write_text('database fixture')
                          env=env, capture_output=True, text=True)
     assert run.returncode == 2
     assert not captured.exists()
+
+
+def test_rich_paging_selection_excludes_other_modes_and_hardware_ad():
+    import runpy
+    module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
+    selected, excluded = module['mmu_selection'](EXAMPLE.parents[1])
+    assert len(selected) == 145
+    assert len(selected) + len(excluded) == 589
+    assert all(row['mode'] == 'sv39' and row.get('ad_mode') != 'hardware' for row in selected)
+    assert any('hardware A/D' in row['reason'] for row in excluded)

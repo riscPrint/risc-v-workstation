@@ -103,3 +103,16 @@ rvw/.venv/bin/python RiscvSim/scripts/build-devices.py --out /tmp/new-devices.so
 
 The helper refuses an existing output. It uses the interpreter's library and
 headers. On macOS it corrects the portable CPython library install name.
+
+## Scala host binding
+
+`riscvsim.PluginDevice` calls DeviceApiV1 through JNA. It uses the same plugin
+shared library as the C++ and DPI wrappers. The project supplies the library,
+configuration JSON, seed, address map and interrupt routing. Call `tick` before
+MMIO at each sampled cycle. Close each handle after its run. Libraries remain
+loaded for the JVM lifetime because CPython has process-global state.
+
+The binding checks the ABI, required callbacks, initialization and operation
+status. It refuses accesses after close. It has no checkpoint binding.
+Include the shared library, configuration and transitive Python modules in
+C1 input capture before using it in a cacheable regression.
