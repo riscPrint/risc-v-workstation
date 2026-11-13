@@ -246,3 +246,16 @@ reads for cores without machine CSRs. C1 still supplies the full-run counts.
 The runner reuses C1 `run-many` with one worker. Each manifest entry has its
 own wall limit. The launch budget also covers adapter setup. Completed table
 rows resume; raw results from an interrupted batch are not reused.
+
+## Compare RTL tables
+
+`rvw workloads compare A/report.json B/report.json` reports per-program IPC
+changes and top-down fraction changes. MCP tool: `workloads_compare`.
+Both tables need at least two passing samples with identical cycles and
+instructions for each program. The command checks the samples itself.
+A stored `deterministic` flag alone is not sufficient. Missing or failed
+programs and changed instruction counts are inconclusive. IPC differences
+can still be shown with an unverified noise check. Exit 3 means inconclusive.
+Different ELF hashes are explicit, so two compiled revisions can be compared.
+Use the same program inputs and ISA. Compare top-down fractions only when the
+project uses the same slot partition. Differences are fractions, not percent.

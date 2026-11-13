@@ -1210,6 +1210,7 @@
         "perf_topdown",
         "perf_topdown_compare",
         "workloads_build",
+        "workloads_compare",
         "workloads_evaluate",
         "workloads_list",
         "workloads_run",
