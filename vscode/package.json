@@ -29,7 +29,10 @@
     "onCustomEditor:spinalblocks.diagram",
     "onLanguage:scala",
     "workspaceContains:**/blocks/*.json.gz",
-    "workspaceContains:**/*.spinalblocks.json"
+    "workspaceContains:**/*.spinalblocks.json",
+    "onCommand:wave.new",
+    "onCommand:wave.open",
+    "onView:wave.results"
   ],
   "contributes": {
     "commands": [
@@ -153,6 +156,38 @@
       {
         "command": "spinalblocks.forgetDesignChoice",
         "title": "SpinalBlocks: Forget Remembered Design Choices"
+      },
+      {
+        "command": "wave.new",
+        "title": "Wave: New Query"
+      },
+      {
+        "command": "wave.open",
+        "title": "Wave: Open Saved Query"
+      },
+      {
+        "command": "wave.rerun",
+        "title": "Wave: Run Query Again"
+      },
+      {
+        "command": "wave.save",
+        "title": "Wave: Save Query"
+      },
+      {
+        "command": "wave.raw",
+        "title": "Wave: Open Result JSON"
+      },
+      {
+        "command": "wave.driverSource",
+        "title": "Wave: Open Driver Location"
+      },
+      {
+        "command": "wave.signalSource",
+        "title": "Wave: Jump to Signal Source via Design Database"
+      },
+      {
+        "command": "wave.openWindow",
+        "title": "Wave: Open Window in Surfer"
       }
     ],
     "views": {
@@ -173,6 +208,10 @@
           "id": "spinalblocks.hierarchy",
           "name": "SpinalBlocks",
           "when": "spinalblocks.hasDiagram"
+        },
+        {
+          "id": "wave.results",
+          "name": "RVW Wave Query"
         }
       ]
     },
@@ -267,6 +306,31 @@
           "command": "regress.trace",
           "when": "view == regress.results",
           "group": "results"
+        },
+        {
+          "command": "wave.new",
+          "when": "view == wave.results",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.open",
+          "when": "view == wave.results",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.rerun",
+          "when": "view == wave.results",
+          "group": "results"
+        },
+        {
+          "command": "wave.save",
+          "when": "view == wave.results",
+          "group": "results"
+        },
+        {
+          "command": "wave.raw",
+          "when": "view == wave.results",
+          "group": "results"
         }
       ],
       "view/item/context": [
@@ -303,6 +367,26 @@
         {
           "command": "regress.runResult",
           "when": "view == regress.results && viewItem == rvw.run",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.raw",
+          "when": "view == wave.results",
+          "group": "evidence"
+        },
+        {
+          "command": "wave.driverSource",
+          "when": "view == wave.results && viewItem =~ /loc/",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.signalSource",
+          "when": "view == wave.results && viewItem =~ /signal/",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.openWindow",
+          "when": "view == wave.results && viewItem =~ /time/",
           "group": "navigation"
         }
       ],
@@ -476,6 +560,33 @@
             "type": "boolean",
             "default": false,
             "description": "Select the matching element in visible diagrams when the Scala editor cursor moves."
+          }
+        }
+      },
+      {
+        "title": "Wave queries",
+        "properties": {
+          "wave.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
+          },
+          "wave.surferExecutable": {
+            "type": "string",
+            "default": "surfer",
+            "description": "Path to Surfer (or SpinalWaves).",
+            "restricted": true
+          },
+          "wave.windowSpan": {
+            "type": "number",
+            "default": 1000,
+            "description": "Wave time before and after a selected row for Open Window in Surfer."
+          },
+          "wave.timeoutMs": {
+            "type": "number",
+            "default": 600000,
+            "description": "Time limit for one rvw call."
           }
         }
       }

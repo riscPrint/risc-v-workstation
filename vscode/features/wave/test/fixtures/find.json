@@ -1,0 +1,1 @@
+{"expr": "io_cmd_valid && !io_cmd_ready", "signals": {"io_cmd_valid": "TOP.dut.io_cmd_valid", "io_cmd_ready": "TOP.dut.io_cmd_ready"}, "from": 0, "to": null, "first": 5, "last": {"start": 25, "end": 45}, "count": 2, "matches": [{"start": 5, "end": 15}, {"start": 25, "end": 45}], "truncated": false, "limit": 1000, "true_time": 30, "steps": 5, "unknown_steps": 0}

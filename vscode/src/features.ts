@@ -5,6 +5,7 @@ import regress from '../features/regress/src/feature';
 import coverage from '../features/coverage/src/feature';
 import debug from '../features/debug/src/feature';
 import perf from '../features/perf/src/feature';
+import wave from '../features/wave/src/feature';
 
 // Every feature under features/ must be listed here. `npm run manifest:check` fails otherwise.
 export const features: Feature[] = [
@@ -13,4 +14,5 @@ export const features: Feature[] = [
   coverage,
   perf,
   debug,
+  wave,
 ];

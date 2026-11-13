@@ -9,6 +9,7 @@ One VS Code extension for the tools in this repository. Each tool adds a **featu
 | `regress` | Saved C3 tests and C4 verdicts, with full causes | [features/regress/README.md](features/regress/README.md) |
 | `coverage` | Saved coverage reports, holes and limits | [features/coverage/README.md](features/coverage/README.md) |
 | `perf` | Saved perf measurements and scope | [features/perf/README.md](features/perf/README.md) |
+| `wave` | Saved `rvw wave` queries: expression search, driver traces, sequences, transactions, wave diffs | [features/wave/README.md](features/wave/README.md) |
 
 The result views include manual source navigation through `rvw query where`.
 They also open selected waves in Surfer and selected dependency traces in SpinalTrace.
