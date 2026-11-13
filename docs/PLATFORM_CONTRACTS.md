@@ -1395,6 +1395,17 @@ checker mode export HGLDD only. Trace, GUI and export mode require PDG and HGLDD
 The output directory must be empty. Native consumer exit codes pass through.
 This export establishes artifact identity, not waveform or dynamic trace parity.
 
+### Reduced coherent VIP event bridge
+
+`rvw.chi-like/1` is a reduced project event contract, not an Arm CHI bus.
+Fields are `kind` (request 0, snoop acknowledgement 1, completion 2),
+`txn`, `node`, 64-byte-aligned `line`, `op` (ReadShared 0, ReadUnique 1,
+WriteBack 2) and abstract 64-bit `data`. Requests consume a source credit.
+Completion requires all declared snoop acknowledgements and correct data.
+It restores the source credit. One request can be active per line.
+The project owns licensed-bus translation. There is no CHI conformance
+verdict, dirty forwarding or native backend qualification in this format.
+
 ## C7. MCP tools (`rvw mcp`)
 
 `rvw mcp` is one stdio MCP server for every rvw tool. Each subpackage plugs in without editing
