@@ -2,7 +2,6 @@
 from pathlib import Path
 import json
 
-from rvw.agent_bench.native import qualify
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -17,12 +16,14 @@ def register(sub):
 
 
 def execute(args):
+    from rvw.agent_bench.native import qualify
     report = qualify(args.pack, args.source, args.out, task_ids=args.task, timeout=args.timeout)
     print(json.dumps(report, indent=2))
     return 0 if all(t['status'] == 'qualified' for t in report['tasks']) else 3
 
 
 def native_qualify(pack, source, out, tasks=None, timeout=110):
+    from rvw.agent_bench.native import qualify
     return qualify(pack, source, out, task_ids=tasks, timeout=timeout)
 
 

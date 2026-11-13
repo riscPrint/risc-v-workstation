@@ -1,9 +1,9 @@
 """Agent access to language server operations without an editor."""
 from rvw.mcp.spec import ToolSpec, schema
-from .server import Server
 
 
 def request(db, method, params=None):
+    from .server import Server
     return {'result': Server(db).request(method, params or {})}
 
 

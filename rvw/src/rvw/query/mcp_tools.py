@@ -6,13 +6,16 @@ from pathlib import Path
 
 from rvw.mcp.spec import ToolError, ToolSpec, schema
 
-from . import diff as diff_mod
-from . import ops
-from .db import QueryError, default_db, run_on
+from rvw.mcp.lazy import functions
+from .kinds import KIND_RANK
+
+ops = functions("rvw.query.ops")
+diff_mod = functions("rvw.query.diff")
 
 
 def _wrap(fn):
     def handler(db: str | None = None, project: str | None = None, **kw):
+        from .db import QueryError, default_db, run_on
         try:
             from rvw.common.project import database
             selected_db, project_capture = database(db, project)
@@ -37,7 +40,7 @@ IFACE = {"type": "string", "description": "signal, or a bundle/Area path standin
 LIMIT = {"limit": {"type": "integer", "default": 500, "description": "maximum signals returned"}}
 GRAPH = {"depth": {"type": "integer", "default": 1}, "stop_at_regs": {"type": "boolean", "default": False,
          "description": "do not expand past registers and memories"},
-         "kinds": {"type": "array", "items": {"type": "string", "enum": sorted(ops.KIND_RANK)},
+         "kinds": {"type": "array", "items": {"type": "string", "enum": sorted(KIND_RANK)},
                    "description": "only these dependency kinds (data, cond, sel, init, blackbox)"},
          "include_clock": {"type": "boolean", "default": False,
                            "description": "include explicit clock-domain relations when stored; data uses are always kept"}, **LIMIT}
@@ -45,6 +48,7 @@ RO = {"readOnlyHint": True, "idempotentHint": True}
 
 
 def _diff(old: str, new: str, scope: str | None = None, limit: int = 200, connections: bool = True) -> dict:
+    from .db import QueryError, default_db, run_on
     try:
         return diff_mod.diff_files(old, new, scope=scope, limit=limit, connections=connections)
     except QueryError as e:
@@ -67,6 +71,7 @@ def entries(root: Path | None = None) -> list[str]:
 def _build_db(out: str, design: str | None = None, entry: str | None = None, config: str | None = None,
               sbt_dir: str | None = None, test_classpath: bool = False, options: list[str] | None = None,
               job=None, project=None) -> dict:
+    from .db import QueryError, default_db, run_on
     from rvw.common.project import find_project
     if not design and not entry and find_project(project):
         from .project import build_database
@@ -99,6 +104,7 @@ def _build_db(out: str, design: str | None = None, entry: str | None = None, con
 def _build_hdl(sources: list, top: str, out: str, frontend: str = "yosys", include_dirs: list | None = None,
                defines: list | None = None, parameters: list | None = None, std: str | None = None,
                library: str = "work", source_roots: list | None = None, timeout: int = 300, cache_dir: str | None = None) -> dict:
+    from .db import QueryError, default_db, run_on
     from .hdl import build_hdl
     try:
         result = build_hdl(sources, top, out, frontend=frontend, include_dirs=include_dirs or (),

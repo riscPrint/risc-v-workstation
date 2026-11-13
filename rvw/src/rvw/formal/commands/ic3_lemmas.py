@@ -26,7 +26,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_ic3_lemmas',
                     'Export ABC PDR predicates and certify them, or select a saved library by transition-cone hash. Target proofs are fresh.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},

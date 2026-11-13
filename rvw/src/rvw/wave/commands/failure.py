@@ -1,6 +1,6 @@
 """Failure-cause command and MCP tool."""
 import json
-from rvw.wave.failure import explain_run
+
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -30,3 +30,8 @@ def mcp_tools():
                              'window': {'type': 'integer', 'default': 20}, 'rerun': {'type': 'boolean', 'default': True}},
                             ['run_dir', 'db', 'binding', 'out']), explain_run,
                      long=True, annotations={'readOnlyHint': False}, side_effects='may run simulator and write output', native_tools=('Spike',))]
+
+
+def explain_run(*args, **kwargs):
+    from rvw.wave.failure import explain_run as implementation
+    return implementation(*args, **kwargs)

@@ -1,6 +1,5 @@
 """Simulation security MCP surface."""
 from rvw.mcp.spec import ToolSpec, schema
-from .ift import run
 
 
 def mcp_tools():
@@ -9,3 +8,9 @@ def mcp_tools():
                    ['rtl','top','policy','stimulus','out']),run,long=True,
         side_effects='long-running; launches Yosys and Verilator; writes digital IFT artifacts under out', native_tools=('Verilator', 'Yosys'),
         )]
+
+
+def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
+    """Load the handler on first use."""
+    from rvw.sec.ift import run as implementation
+    return implementation(rtl, top, policy, stimulus, out, mode, db)

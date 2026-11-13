@@ -1,7 +1,6 @@
 """Regression MCP tools, using the CLI's structured Python API (contract C7)."""
 from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import handler
-from .cli import execute_json
 
 S = {"type": "string"}
 B = {"type": "boolean"}
@@ -23,12 +22,14 @@ COMPARE = {**CORE, "known": S, "perf_tolerance": N, "allow_missing": B,
 
 def _call(action):
     def call(**arguments):
+        from .cli import execute_json
         return execute_json(action, **arguments)
     return call
 
 
 def mcp_tools():
-    from .mmu_iommu import mcp_run, generate
+    mcp_run = _lazy_mcp_run
+    generate = _lazy_generate
     return [
         ToolSpec("regress_sail_tests", "Generate bounded directed test fragments for the three pinned RV32 Sail arithmetic rules. Expected values come from a complete DII oracle stream. No DUT pass or endpoint identity attestation is granted.",
                  schema({"model":{"type":"string"},"work_dir":{"type":"string"},"sail_endpoint":{"type":"string"},
@@ -80,3 +81,15 @@ def mcp_tools():
         ToolSpec("regress_known_remove", "Remove a resolved or obsolete known-failure entry by suite and test ID, optionally signature.",
                  schema({**CORE, "file": S, "suite": S, "id": S, "signature": S}, ["suite", "id"]), _call("known_remove"), side_effects='writes the selected known-failures file', native_tools=()),
     ]
+
+
+
+def _lazy_mcp_run(description, observations=None, result=None):
+    """Load the handler on first use."""
+    from rvw.regress.mmu_iommu import mcp_run as implementation
+    return implementation(description, observations, result)
+
+def _lazy_generate(seed=1, mode='sv39'):
+    """Load the handler on first use."""
+    from rvw.regress.mmu_iommu import generate as implementation
+    return implementation(seed, mode)

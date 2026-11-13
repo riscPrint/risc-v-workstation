@@ -29,7 +29,7 @@ def register(subparsers):
 
 
 def mcp_tools():
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_trace_mine', 'Emit Scala DSL candidates from finite signal traces. Does not prove candidates.',
         schema({'manifest': {'type':'string'}, 'trace': {'type':'array','items':{'type':'string'},'minItems':1},

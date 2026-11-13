@@ -2,10 +2,10 @@ from rvw.mcp.aliases import with_aliases
 from dataclasses import replace
 from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import handler
-from .dashboard import dashboard
 
 
 def execute_json(hosts=None, manifest=None, adapter=None, identity_command=None, identity=None, out=None, jobs=1, timeout=600, action=None, root=None, core=None, suite=None, config=None, gate=None, run=None, reports=None):
+    from .dashboard import dashboard
     if action == "notifications":
         from .notifications import notifications
         return notifications(out)
@@ -31,12 +31,12 @@ def cancel_json(out):
 def mcp_tools():
     string = {"type": "string"}
     array = {"type": "array", "items": string, "minItems": 1}
-    from .service import manage
-    from .costs import budget
-    from .triage import triage
-    from .selection import select
-    from .workflows import workflow
-    from .shard_plan import plan
+    manage = _lazy_manage
+    budget = _lazy_budget
+    triage = _lazy_triage
+    select = _lazy_select
+    workflow = _lazy_workflow
+    plan = _lazy_plan
     tools = [ToolSpec("farm_plan", "Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.",
                  schema({"manifest": string, "adapter": array, "root": string, "image": string, "claim": string,
                          "shards": {"type": "integer", "minimum": 1}, "jobs": {"type": "integer", "minimum": 1},
@@ -122,3 +122,35 @@ def live_json(root, owner, out=None):
         from .live_export import export
         return export(Queue(root), owner, out)
     return snapshot(Queue(root), owner)
+
+
+
+def _lazy_manage(root, operation='list', **options):
+    """Load the handler on first use."""
+    from rvw.farm.service import manage as implementation
+    return implementation(root, operation, **options)
+
+def _lazy_budget(root, scope, limits=None, rate_per_core_hour=None):
+    """Load the handler on first use."""
+    from rvw.farm.costs import budget as implementation
+    return implementation(root, scope, limits, rate_per_core_hour)
+
+def _lazy_triage(root, baseline=None, known=None, bundles=None, core_env=None):
+    """Load the handler on first use."""
+    from rvw.farm.triage import triage as implementation
+    return implementation(root, baseline, known, bundles, core_env)
+
+def _lazy_select(db, changed, catalogue, seconds=600):
+    """Load the handler on first use."""
+    from rvw.farm.selection import select as implementation
+    return implementation(db, changed, catalogue, seconds)
+
+def _lazy_workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
+    """Load the handler on first use."""
+    from rvw.farm.workflows import workflow as implementation
+    return implementation(root, action, plan, workflow_id, owner)
+
+def _lazy_plan(manifest, adapter, root, image, claim, shards=1, jobs=1, identity=None, resources=None, timeout=600, persistent=False, python='python3'):
+    """Load the handler on first use."""
+    from rvw.farm.shard_plan import plan as implementation
+    return implementation(manifest, adapter, root, image, claim, shards, jobs, identity, resources, timeout, persistent, python)

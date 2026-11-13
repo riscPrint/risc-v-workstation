@@ -1,6 +1,5 @@
 """Feed identity-checked native farm results to rvw regress gate."""
 import json
-from rvw.farm.gate_job import execute
 from rvw.mcp.spec import ToolSpec,schema
 
 
@@ -24,3 +23,9 @@ def mcp_tools():
     return [ToolSpec('farm_gate',__doc__,schema({**{k:string for k in ('base','candidate','project','tier','out')},
         'rvfi_trace':{'type':'boolean'}},['base','candidate','project']),execute,long=True,
         side_effects='reads native C1/C3 evidence and project inputs; writes C4 verdict under out',native_tools=())]
+
+
+def execute(base, candidate, project, tier='quick', out=None, rvfi_trace=False):
+    """Load the handler on first use."""
+    from rvw.farm.gate_job import execute as implementation
+    return implementation(base, candidate, project, tier, out, rvfi_trace)

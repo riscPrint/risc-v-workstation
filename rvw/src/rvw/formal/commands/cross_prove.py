@@ -19,7 +19,7 @@ def register(subparsers):
 
 
 def mcp_tools():
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_cross_prove', 'Check a Boolean two-clock implication. Global samples, pre-update values; no clock fairness or between-sample event claim.',
         schema({'source':{'type':'string'}, 'top':{'type':'string'}, 'out':{'type':'string'},

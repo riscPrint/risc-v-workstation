@@ -27,7 +27,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_aiger_live',
                     'Check one fair AIGER bad justice group with native rIC3. Reaching a k-liveness bound stays inconclusive.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},

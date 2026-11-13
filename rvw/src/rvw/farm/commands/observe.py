@@ -1,12 +1,12 @@
 """Native waveform observations for advisory impact selection."""
 import json
 from pathlib import Path
-from rvw.farm.observations import observe
 from rvw.mcp.spec import ToolSpec, schema
-from rvw.results import write_json
 
 
 def execute(db, root, wave_prefix, out=None):
+    from rvw.farm.observations import observe
+    from rvw.results import write_json
     report = observe(db, root, wave_prefix)
     if out:
         write_json(out, report)

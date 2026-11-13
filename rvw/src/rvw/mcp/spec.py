@@ -3,6 +3,7 @@ so tool packages can declare tools without the optional dependency installed."""
 from __future__ import annotations
 
 import inspect
+from functools import cached_property
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -39,7 +40,7 @@ class ToolSpec:
     native_tools: tuple[str, ...] | None = None
     result_envelope: bool = True
 
-    @property
+    @cached_property
     def wants_job(self) -> bool:
         try:
             return "job" in inspect.signature(self.handler).parameters

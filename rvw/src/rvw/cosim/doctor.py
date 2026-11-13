@@ -1,12 +1,12 @@
 """Describe validated C2 capture and configured comparison scope without a model."""
 import json
 from pathlib import Path
-from .trace import Trace
-from .platform import Platform
-from .checker import SYNC_KINDS, COUNTERS, INSTRET, IRQ_INPUT_MASKS
 
 
 def execute_json(*, trace, core=None, platform=None, project=None, strict=False):
+    from .trace import Trace
+    from .platform import Platform
+    from .checker import SYNC_KINDS, COUNTERS, INSTRET, IRQ_INPUT_MASKS
     try:
         from rvw.common.project import load_project
         selected = load_project(project, core=core)

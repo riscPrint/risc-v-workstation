@@ -32,7 +32,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_revision_bench','Measure fresh re-proofs with cone-matched lemmas. Report signed time saved.',
         schema({'base':{'type':'string'},'revised':{'type':'string'},'out':{'type':'string'},
                 'timeout':{'type':'number','exclusiveMinimum':0},'trials':{'type':'integer','minimum':1,'maximum':20}},

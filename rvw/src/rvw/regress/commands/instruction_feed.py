@@ -1,6 +1,5 @@
 """Offline instruction source for the generic C1 fetch injection port."""
 import json
-from rvw.regress.instruction_feed import generate
 
 
 def run(args):
@@ -22,3 +21,9 @@ def mcp_tools():
     return [ToolSpec('regress_instruction_feed','Build an offline reference-image word source for the C1 instruction port.',
         schema({'elf':{'type':'string'},'out':{'type':'string'},'word_bytes':{'type':'integer','enum':[4,8]}},['elf','out']),
         generate,isolate=True,side_effects='writes-files',native_tools=())]
+
+
+def generate(elf, out, word_bytes=4):
+    """Load the handler on first use."""
+    from rvw.regress.instruction_feed import generate as implementation
+    return implementation(elf, out, word_bytes)

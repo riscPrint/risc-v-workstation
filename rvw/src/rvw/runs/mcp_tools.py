@@ -1,6 +1,5 @@
 """Portable replay archive tools."""
 from rvw.mcp.spec import ToolSpec, schema
-from .portable import pack, replay
 
 
 def mcp_tools():
@@ -13,3 +12,14 @@ def mcp_tools():
                  schema({'archive': s, 'out': s, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}, 'lock': s}, ['archive', 'out']),
                  replay, long=True, side_effects='long-running; launches Git and the configured native adapter; writes extracted sources, builds and replay evidence under out', native_tools=(), result_envelope=True),
     ]
+
+
+def pack(run_dir, recipe, out, *, checkpoint_cycle=None):
+    """Load the handler on first use."""
+    from rvw.runs.portable import pack as implementation
+    return implementation(run_dir, recipe, out, checkpoint_cycle=checkpoint_cycle)
+
+def replay(archive, out, *, timeout=600, lock=None):
+    """Load the handler on first use."""
+    from rvw.runs.portable import replay as implementation
+    return implementation(archive, out, timeout=timeout, lock=lock)

@@ -1,5 +1,4 @@
 from rvw.mcp.spec import ToolSpec, schema
-from rvw.sec.pairs import run
 import json
 
 
@@ -22,3 +21,9 @@ def mcp_tools():
                     schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
         side_effects='long-running; launches configured native RTL adapter; writes paired evidence under out', native_tools=(),
         )]
+
+
+def run(manifest, out):
+    """Load the handler on first use."""
+    from rvw.sec.pairs import run as implementation
+    return implementation(manifest, out)

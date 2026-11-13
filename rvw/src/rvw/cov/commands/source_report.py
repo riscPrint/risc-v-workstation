@@ -1,6 +1,5 @@
 """Source navigation report for code and functional coverage."""
 import json
-from rvw.cov.source_report import source_report
 
 
 def run(args):
@@ -26,3 +25,9 @@ def mcp_tools():
     return [ToolSpec('cov_source_report','Join native counters and project-declared functional source links.',
         schema({k:{'type':'string'} for k in ('database','functional','bindings')},
                ['database','functional','bindings']), source_report, isolate=True, side_effects='read-only', native_tools=())]
+
+
+def source_report(database, functional, bindings):
+    """Load the handler on first use."""
+    from rvw.cov.source_report import source_report as implementation
+    return implementation(database, functional, bindings)

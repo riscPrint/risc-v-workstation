@@ -25,7 +25,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_lazy_ram', 'Abstract untracked RAM words and restore addressed entries after abstract failures.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},
                             'budget': {'type': 'number', 'exclusiveMinimum': 0},

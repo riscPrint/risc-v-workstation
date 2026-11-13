@@ -1,4 +1,9 @@
 """Project-owned verification plan rollups."""
-from .model import VPlan
+__all__ = ['VPlan']
 
-__all__=['VPlan']
+
+def __getattr__(name):
+    if name == 'VPlan':
+        from .model import VPlan
+        return VPlan
+    raise AttributeError(name)

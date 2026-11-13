@@ -1,7 +1,6 @@
 """Generate a C4 config for a source-bound compiled SV bench."""
 import json
 from pathlib import Path
-from rvw.uvm.gate import configure
 from rvw.mcp.spec import ToolSpec,schema
 
 def command(a):
@@ -22,3 +21,9 @@ def mcp_tools():
     return [ToolSpec('uvm_gate_config','Bind a pure SV UVM build to a C4 build suite.',
         schema({'build_dir':string,'source_repo':string,'out':string,'seeds':{'type':'array','items':{'type':'integer'}}},
                ['build_dir','source_repo','out']),configure, side_effects='writes generated files under out', native_tools=())]
+
+
+def configure(build_dir, source_repo, out, *, seeds=(1, 3)):
+    """Load the handler on first use."""
+    from rvw.uvm.gate import configure as implementation
+    return implementation(build_dir, source_repo, out, seeds=seeds)

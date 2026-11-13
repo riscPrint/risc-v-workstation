@@ -1,6 +1,5 @@
 """Run generated concurrent programs through an explicit project adapter."""
 from pathlib import Path
-from rvw.memory.concurrent_campaign import run
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -37,3 +36,9 @@ def mcp_tools():
                              'shared_base':{'type':'string','default':'0x81000000'}},required=['out','adapter','config']),run,
         side_effects='long-running; launches compiler and configured native adapter; writes campaign under out', native_tools=('RISC-V GCC',),
         )]
+
+
+def run(out, adapter, config, seed=1, harts=2, length=16, model='rvwmo', gcc='riscv64-unknown-elf-gcc', max_cycles=20000, timeout=60, limit=100000, base=2147483648, shared_base=2164260864):
+    """Load the handler on first use."""
+    from rvw.memory.concurrent_campaign import run as implementation
+    return implementation(out, adapter, config, seed, harts, length, model, gcc, max_cycles, timeout, limit, base, shared_base)

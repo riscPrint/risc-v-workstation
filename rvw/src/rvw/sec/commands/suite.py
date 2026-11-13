@@ -1,5 +1,4 @@
 import json
-from rvw.sec.suite import collect
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -19,3 +18,9 @@ def mcp_tools():
                     schema({'reports':{'type':'array','items':{'type':'string'}},'out':{'type':'string'}},['reports','out']),collect,
         side_effects='writes collected C3 evidence under out', native_tools=(),
         )]
+
+
+def collect(reports, out):
+    """Load the handler on first use."""
+    from rvw.sec.suite import collect as implementation
+    return implementation(reports, out)

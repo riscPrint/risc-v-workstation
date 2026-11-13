@@ -3,8 +3,6 @@ from rvw.mcp.spec import ToolSpec, schema
 
 from . import ops
 from .capture import captured
-from .cli import time_at
-from .vcd import end_time
 
 S = {"type": "string"}
 B = {"type": "boolean", "default": False}
@@ -33,6 +31,7 @@ def _list(wave, regex=None):
 @captured
 def _changes(wave, regex, t0=None, t1=None, limit=ops.DEFAULT_CHANGES_LIMIT, dec=False, period=None,
              clock=ops.CLOCK_RX, db=None, elf=None, pc=r"(?i)pc"):
+    from .cli import time_at
     page = ops.changes_page(wave, regex, time_at(wave, t0, period, clock) or 0,
                             time_at(wave, t1, period, clock), limit, "dec" if dec else "hex")
     if db:
@@ -46,6 +45,8 @@ def _changes(wave, regex, t0=None, t1=None, limit=ops.DEFAULT_CHANGES_LIMIT, dec
 
 @captured
 def _sample(wave, regex, at, dec=False, period=None, clock=ops.CLOCK_RX, db=None):
+    from .cli import time_at
+    from .vcd import end_time
     t = end_time(wave) if at == "end" else time_at(wave, at, period, clock)
     values = ops.sample(wave, regex, t, "dec" if dec else "hex")
     if db:
@@ -56,6 +57,7 @@ def _sample(wave, regex, at, dec=False, period=None, clock=ops.CLOCK_RX, db=None
 
 @captured
 def _cut(wave, out, t0, t1=None, signals=None, rebase=False, period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
     return ops.cut(wave, out, time_at(wave, t0, period, clock), time_at(wave, t1, period, clock),
                    signals, rebase)
 
@@ -74,6 +76,7 @@ def _indexed(fn):
 
 
 def _find(wave, expr, t0=None, t1=None, limit=1000, period=None, clock=ops.CLOCK_RX, db=None):
+    from .cli import time_at
     from .search import find
     from .typed import enums
     return find(wave, expr, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock), limit,
@@ -81,6 +84,7 @@ def _find(wave, expr, t0=None, t1=None, limit=1000, period=None, clock=ops.CLOCK
 
 
 def _edges(wave, regex, t0=None, t1=None, period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
     from .search import edges
     return edges(wave, regex, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock))
 
@@ -96,6 +100,7 @@ def _verify(index, source=None):
 
 
 def _why(wave, signal, at, db=None, depth=2, max_nodes=64, period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
     from .why import why
     from ..query.db import default_db
     from .vcd import WaveError
@@ -106,6 +111,7 @@ def _why(wave, signal, at, db=None, depth=2, max_nodes=64, period=None, clock=op
 
 
 def _seq(wave, sequence, t0=None, t1=None, limit=100, period=None, clock=ops.CLOCK_RX, db=None):
+    from .cli import time_at
     from .temporal import sequence as run
     from .typed import enums
     return run(wave, sequence, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock), clock, limit,
@@ -114,6 +120,7 @@ def _seq(wave, sequence, t0=None, t1=None, limit=100, period=None, clock=ops.CLO
 
 def _txn(wave, valid=None, ready=None, payload=None, stream=None, db=None, t0=None, t1=None, limit=1000,
          period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
     from .temporal import stream_signals, transactions
     from .vcd import WaveError
     names = None
@@ -132,6 +139,7 @@ def _txn(wave, valid=None, ready=None, payload=None, stream=None, db=None, t0=No
 
 def _diff(wave, other, signals=None, t0=None, t1=None, offset=0, map=None, on_clock=False, all=False,
           limit=50, period=None, clock=ops.CLOCK_RX, align=None, align_b=None):
+    from .cli import time_at
     from .wdiff import aligned_diff, diff
     from .vcd import WaveError
     if map and "=" not in map:
@@ -155,6 +163,8 @@ def _session_open(session, root=None):
 
 @captured
 def _value(wave, name, at, db=None, dec=False, period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
+    from .vcd import end_time
     from .typed import value
     from ..query.db import default_db
     from .vcd import WaveError
@@ -171,6 +181,7 @@ def _bench(tasks, vars=None, only=None, timeout=600):
 
 
 def _profile(wave, pc, elf, valid=None, t0=None, t1=None, phases=50, period=None, clock=ops.CLOCK_RX):
+    from .cli import time_at
     from .symbols import profile
     return profile(wave, pc, elf, valid, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock),
                    clock, phases)

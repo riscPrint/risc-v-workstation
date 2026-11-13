@@ -1,5 +1,4 @@
 import json
-from rvw.soc.exports import export
 
 
 def register(sub):
@@ -22,3 +21,9 @@ def run(args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
     return [ToolSpec('soc_export_ipxact','Export the register memoryMap subset. No bus interface or CPU model is inferred.',schema({k:{'type':'string'} for k in ('source','out')},['source','out']),export, side_effects='writes generated artifacts and reports to out', native_tools=())]
+
+
+def export(source, out):
+    """Load the handler on first use."""
+    from rvw.soc.exports import export as implementation
+    return implementation(source, out)

@@ -1,7 +1,7 @@
 """Semantic navigation for CLI and MCP clients."""
 import json
-from rvw.query import semantic
-from rvw.query.db import DesignDB
+from rvw.mcp.lazy import functions
+semantic = functions("rvw.query.semantic")
 from rvw.query.mcp_tools import DB, RO, _wrap
 from rvw.mcp.spec import ToolSpec, schema
 
@@ -16,6 +16,7 @@ COMMANDS = {
 
 
 def compare(old, new):
+    from rvw.query.db import DesignDB
     with_old = DesignDB(old)
     try:
         with_new = DesignDB(new)

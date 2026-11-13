@@ -8,7 +8,6 @@ import sys
 from pathlib import Path
 
 from rvw.mcp.spec import ToolError, ToolSpec, schema
-from .scenario import mcp_handler as scenario_handler
 
 S = {"type": "string"}
 I = {"type": "integer", "minimum": 0}
@@ -248,9 +247,9 @@ def _profiles(job, **args):
 
 
 def mcp_tools():
-    from .apps_mcp import mcp_tools as apps_tools
-    from .deep_cli import mcp_tools as deep_tools
-    from .internal_paths import mcp_tools as path_tools
+    from rvw.formal.apps_mcp import mcp_tools as apps_tools
+    from rvw.formal.deep_cli import mcp_tools as deep_tools
+    from rvw.formal.internal_paths import mcp_tools as path_tools
     return [*deep_tools(), *apps_tools(), *path_tools(),
 
         ToolSpec("formal_psl", "Translate the finite PSL subset to SVA. No verification run.",
@@ -413,3 +412,11 @@ def _buses(job, **args):
     if code not in (0, 3):
         raise ToolError("bus generation failed", {"exit_code": code, "log_tail": job.tail(30)})
     return json.loads((Path(args['out'])/'result.json').read_text())
+
+
+def scenario_handler(action):
+    """Load the handler on first use."""
+    def call(job, **arguments):
+        from rvw.formal.scenario import mcp_handler
+        return mcp_handler(action)(job=job, **arguments)
+    return call

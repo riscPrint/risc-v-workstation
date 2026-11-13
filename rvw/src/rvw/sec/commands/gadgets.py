@@ -1,5 +1,4 @@
 import json
-from rvw.sec.gadgets import generate
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -21,3 +20,9 @@ def mcp_tools():
                             'threshold':{'type':'integer'},'declares_speculation':{'type':'boolean'}},['out']),generate,
         side_effects='writes assembly templates under out', native_tools=(),
         )]
+
+
+def generate(out, seed=1, threshold=10, declares_speculation=False):
+    """Load the handler on first use."""
+    from rvw.sec.gadgets import generate as implementation
+    return implementation(out, seed, threshold, declares_speculation)

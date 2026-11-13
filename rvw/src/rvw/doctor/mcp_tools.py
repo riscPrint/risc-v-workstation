@@ -1,6 +1,4 @@
 from rvw.mcp.spec import ToolSpec, schema
-from .check import diagnose
-from .inventory import load
 
 
 def mcp_tools():
@@ -19,3 +17,14 @@ def mcp_tools():
 def _smoke(elf, project=None, options='rvfi', platform=None, conformance=False):
     return diagnose(project=project, features='sim,riscv-gcc,cosim', smoke_elf=elf,
                     smoke_flags=options, smoke_platform=platform, conformance=conformance)
+
+
+def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None, conformance=False, skip_adapter_info=False):
+    """Load the handler on first use."""
+    from rvw.doctor.check import diagnose as implementation
+    return implementation(project, features, install, yes, dry_run, smoke_elf, smoke_flags, smoke_platform, conformance, skip_adapter_info)
+
+def load():
+    """Load the handler on first use."""
+    from rvw.doctor.inventory import load as implementation
+    return implementation()

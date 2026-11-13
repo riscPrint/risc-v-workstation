@@ -1,5 +1,4 @@
 import json
-from rvw.sec.latency import run
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -21,3 +20,9 @@ def mcp_tools():
                     schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
         side_effects='long-running; launches Yosys and Verilator; writes latency evidence under out', native_tools=('Verilator', 'Yosys'),
         )]
+
+
+def run(manifest, out):
+    """Load the handler on first use."""
+    from rvw.sec.latency import run as implementation
+    return implementation(manifest, out)

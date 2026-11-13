@@ -1,11 +1,11 @@
 """The same architecture commands as cancellable MCP jobs."""
 from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import run_function
-from .core import C1_GRACE_S
 
 
 def handler(module, action):
     def call(job, **arguments):
+        from .core import C1_GRACE_S
         # The worker must outlive the C1 supervisor and its outer cleanup.
         job.GRACE_S = max(job.GRACE_S, C1_GRACE_S + 10.0)
         return run_function(job, module, 'execute_json', {'action': action, **arguments})

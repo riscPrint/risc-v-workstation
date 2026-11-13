@@ -9,11 +9,11 @@ COMMON = {"project": {**S, "description": "project file or directory"}, "elf": {
 
 
 def mcp_tools():
-    from .doctor import mcp_tools as doctor_tools
-    from .exchange_cli import mcp_tools as exchange_tools
-    from .vector_source import mcp_tools as vector_tools
-    from .adjudicate import mcp_tools as adjudication_tools
-    from .qemu import mcp_tools as qemu_tools
+    from rvw.cosim.doctor import mcp_tools as doctor_tools
+    from rvw.cosim.exchange_cli import mcp_tools as exchange_tools
+    from rvw.cosim.vector_source import mcp_tools as vector_tools
+    from rvw.cosim.adjudicate import mcp_tools as adjudication_tools
+    from rvw.cosim.qemu import mcp_tools as qemu_tools
     return [
         *doctor_tools(),
         *qemu_tools(),

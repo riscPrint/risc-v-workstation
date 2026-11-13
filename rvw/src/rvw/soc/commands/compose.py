@@ -1,6 +1,5 @@
 """CLI and MCP for the first SoC composition profile."""
 import json
-from rvw.soc.compose import compose
 
 
 def register(sub):
@@ -28,3 +27,9 @@ def mcp_tools():
         return compose(**args)
     return [ToolSpec('soc_compose', 'Generate an RV32 Spinal top with bus ingress bridges. Generation is not simulation evidence.',
                      schema({'source': {'type':'string'}, 'out': {'type':'string'}, 'elf': {'type':'string'}}, ['source','out']), execute, side_effects='writes generated artifacts and reports to out', native_tools=())]
+
+
+def compose(source, out, elf=None):
+    """Load the handler on first use."""
+    from rvw.soc.compose import compose as implementation
+    return implementation(source, out, elf)

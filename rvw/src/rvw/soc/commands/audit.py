@@ -1,7 +1,5 @@
 from rvw.mcp.aliases import with_aliases
 import json
-from rvw.query.db import QueryError
-from rvw.soc.audit import audit
 
 
 def register(sub):
@@ -12,6 +10,7 @@ def register(sub):
 
 
 def run(args):
+    from rvw.query.db import QueryError
     try:
         print(json.dumps(audit(args.source,args.db,args.bindings,args.out)));return 3
     except (OSError,ValueError,QueryError) as exc:
@@ -22,3 +21,9 @@ def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
     names=['source','db_path','bindings','out']
     return [with_aliases(ToolSpec('soc_audit','Check complete declared bindings and export structural SoC checks. No proof result is inferred.',schema({k:{'type':'string'} for k in names},names),audit, side_effects='writes generated artifacts and reports to out', native_tools=()), db='db_path')]
+
+
+def audit(source, db_path, bindings, out):
+    """Load the handler on first use."""
+    from rvw.soc.audit import audit as implementation
+    return implementation(source, db_path, bindings, out)

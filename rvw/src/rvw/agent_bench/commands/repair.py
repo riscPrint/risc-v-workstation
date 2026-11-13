@@ -2,7 +2,6 @@
 from pathlib import Path
 import json
 
-from rvw.agent_bench.repair import prepare_challenge, check_challenge
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -22,22 +21,26 @@ def register(sub):
 
 
 def execute_prepare(args):
+    from rvw.agent_bench.repair import prepare_challenge, check_challenge
     report = prepare_challenge(args.pack, args.task, args.source, args.out, timeout=args.timeout)
     print(json.dumps(report, indent=2))
     return 0 if report['reproduced'] else 3
 
 
 def execute_check(args):
+    from rvw.agent_bench.repair import prepare_challenge, check_challenge
     report = check_challenge(args.challenge, args.out, timeout=args.timeout)
     print(json.dumps(report, indent=2))
     return {'repair_verified': 0, 'repair_rejected': 1}.get(report['status'], 3)
 
 
 def prepare(pack, task, source, out, timeout=110):
+    from rvw.agent_bench.repair import prepare_challenge, check_challenge
     return prepare_challenge(pack, task, source, out, timeout=timeout)
 
 
 def check(challenge, out, timeout=110):
+    from rvw.agent_bench.repair import prepare_challenge, check_challenge
     return check_challenge(challenge, out, timeout=timeout)
 
 
