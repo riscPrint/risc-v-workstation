@@ -453,3 +453,14 @@ The checker uses the APB VIP and an independent register side-effect oracle.
 Unknown reset values are never learned from DUT responses. Captured matches
 remain inconclusive. Core AXI ingress is outside this peripheral capture.
 Missing end records, pending transfers and unexercised buses remain visible.
+
+A `decode` entry can supply `classpath_file`. It must contain the classpath
+of a private SpinalSoc build that includes `rvwsoc.FabricProofGenerate`.
+The consumer elaborates the real `Fabric.connect` implementation with every
+map window. It then runs `rvw formal prove` with a bounded wall time. All
+requests and peripheral responses are free. The proof covers one-hot decode,
+exact window selection and unmapped error completion. It does not substitute
+map arithmetic for RTL proof. Core and peripheral state are outside this
+fabric proof target. The normal composer keeps protocol assertions enabled.
+The proof target omits temporal APB assertions because it does not assume a
+legal master. A native failure to generate or prove remains inconclusive.

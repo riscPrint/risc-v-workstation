@@ -119,3 +119,22 @@ def test_register_environment_keeps_unknown_reads_unchecked(tmp_path):
     report = env.finish()
     assert report['checks'] == 1
     assert report['transfers']['uart'] == 1
+
+
+@pytest.mark.parametrize('assertions,kind,rc,status,expected', [
+    (7,'unbounded',0,'pass','proven'), (0,'unbounded',0,'pass','inconclusive'),
+    (7,'bounded',0,'pass','inconclusive'), (7,'unbounded',1,'fail','fail'),
+    (7,'unbounded',1,'pass','inconclusive')])
+def test_decode_requires_full_unbounded_evidence(tmp_path, monkeypatch, assertions, kind, rc, status, expected):
+    from types import SimpleNamespace
+    from rvw.soc import decode_proof
+    def run(command, **kwargs):
+        if 'formal' in command:
+            proof = Path(command[command.index('--out')+1])
+            proof.mkdir()
+            (proof/'result.json').write_text(json.dumps(dict(assertions=assertions,proof_kind=kind,status=status)))
+            return SimpleNamespace(returncode=rc,timed_out=False)
+        return SimpleNamespace(returncode=0,timed_out=False)
+    monkeypatch.setattr(decode_proof,'run_group',run)
+    result = decode_proof.prove(MAP,tmp_path/'out','classpath')
+    assert result['status'] == expected

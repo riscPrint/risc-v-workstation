@@ -195,3 +195,15 @@ class ProjectCore extends Component with SimpleCoreWrapper {
 The example is a binding outline. It does not execute a CPU until mapped.
 `runMain rvwsoc.SimpleBusSmoke` tests wait states, strobes, data and errors.
 AXI4-Lite wrappers can still use the existing `AxiLiteCoreWrapper` and ingress.
+## Fabric decode proof
+
+`rvwsoc.FabricProofGenerate OUT BASE_HEX:SIZE_HEX ...` emits a standalone
+instance of the real fabric. The external master requests and peripheral
+responses are unconstrained. Decode assertions remain enabled. Temporal APB
+assertions are separate, since this proof target has no legal-master
+assumptions. Normal compositions keep all protocol assertions enabled.
+
+After a private build, set `decode.classpath_file` in `rvw soc verify` to run
+this target through `rvw formal prove`. The Vex SoC map proved all seven
+assertions on 2026-11-13. An incorrect UART decode address failed the proof.
+This is a fabric-instance proof, not complete SoC correctness.

@@ -24,7 +24,7 @@ once, then runs the APB VIP and register oracle on sampled peripheral pins.
 | vip | yes | yes | inconclusive |
 | uvm | no | no | inconclusive |
 | connectivity | no | no | inconclusive |
-| decode | yes | no | inconclusive |
+| decode | yes | yes | proven |
 | cdc_rdc | no | no | inconclusive |
 
 The capture contains 158 sampled pin rows and 53 completed transfers.
@@ -38,6 +38,9 @@ not qualify an RTL peripheral's side effects.
 
 The table does not claim complete protocol qualification. Core AXI ingress
 pins are not in the capture. The emitted bind files were not compiled in a
-separate consumer. Native Spinal fabric assertions were enabled. The pyuvm
-SoC environment, formal connectivity, formal decode and a multi-domain lint
-run were NOT RUN. The single-clock program cannot qualify CDC or RDC.
+separate consumer. Native Spinal fabric assertions were enabled. The real fabric decode target proved seven assertions with `rvw formal
+prove` and Yices in three seconds. A decoder mutant changed the UART
+selection address from `0x10000000` to `0x10000200`. It failed the same
+proof in 1.9 seconds. This proof covers the fabric instance with the map
+windows. It excludes core and peripheral state. The pyuvm SoC environment,
+formal connectivity and a multi-domain lint run were NOT RUN. The single-clock program cannot qualify CDC or RDC.

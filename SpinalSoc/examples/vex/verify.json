@@ -1,9 +1,30 @@
 {
   "schema": "rvw.soc-verify/1",
-  "prepare": ["bash", "run.sh", "run", "--elf", "../../programs/vex/verify", "--out", "{out}/native", "--seed", "31", "--max-cycles", "40000"],
+  "prepare": [
+    "bash",
+    "run.sh",
+    "run",
+    "--elf",
+    "../../programs/vex/verify",
+    "--out",
+    "{out}/native",
+    "--seed",
+    "31",
+    "--max-cycles",
+    "40000"
+  ],
   "checks": {
-    "protocol": {"capture": "{out}/native/apb.jsonl"},
-    "registers": {"capture": "{out}/native/apb.jsonl"},
-    "vip": {"capture": "{out}/native/apb.jsonl"}
+    "protocol": {
+      "capture": "{out}/native/apb.jsonl"
+    },
+    "registers": {
+      "capture": "{out}/native/apb.jsonl"
+    },
+    "vip": {
+      "capture": "{out}/native/apb.jsonl"
+    },
+    "decode": {
+      "classpath_file": "../../out/vex-cp.txt"
+    }
   }
 }
