@@ -39,7 +39,7 @@ def score(out, core):
     calibrate(plan,dest/'baseline.json')
     fp = dest/'fit-plan.json'
     fp.write_text(json.dumps(dict(schema='rvw.ooo-fit-plan/1',calibration_plan='calibration-plan.json',
-                                 parameters={'frontend.fetch_latency':[1,2,3,4], 'branch_penalty':[1,3,5,7]})))
+                                 parameters={'frontend.fetch_latency':([3,5,7,9] if core == 'vexriscv' else [1,2,3,4]), 'branch_penalty':[1,3,5,7]})))
     with (dest/'fit-stdout.json').open('w') as output:
         subprocess.run(['nice','-n','10',str(ROOT/'rvw/.venv/bin/rvw'),
                         'arch','ooo-fit',str(fp),'--out',str(dest/'fit'),'--json'],

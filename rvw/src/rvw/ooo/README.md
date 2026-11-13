@@ -776,3 +776,11 @@ ranking and the next three improving DSE points. It reports fewer points
 when the declared search finds fewer than three improvements.
 See [the plan and limits](../../../../Arch/ooo/DESIGNER.md) and
 [the six-kernel model sample](../../../../Arch/ooo/DESIGNER_SAMPLE.md).
+
+### Static predictor correlation
+
+`branch_prediction` accepts `sequential` or `static_btfn`. The VexRiscv example
+now selects `static_btfn`. Decoded targets give 1, 1, 1, 1, 1 and 101 misses
+on the six saved RTL programs, equal to their RTL counters. Fitted held-out
+IPC errors are +2.62%, +31.35% and -2.46%. Accuracy remains inconclusive.
+See [the corrected experiment](../../../../Arch/ooo/correlation/README.md#static-predictor-correction).

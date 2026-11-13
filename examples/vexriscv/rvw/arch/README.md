@@ -85,3 +85,7 @@ for actual C1 cycle counts, converted SpinalProbes totals, a training-only
 parameter fit and held-out IPC errors. The model uses sequential branch
 prediction. The RTL uses STATIC prediction. Fitted recovery cost can absorb
 that policy difference.
+
+The own-model description now selects `branch_prediction: static_btfn`. This
+matches STATIC conditional direction and direct JAL targets. JALR stays
+sequential. The policy does not model decode-stage redirects or all interlocks.

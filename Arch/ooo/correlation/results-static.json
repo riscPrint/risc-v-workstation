@@ -1,0 +1,115 @@
+{
+  "schema": "rvw.arch-static-correlation/1",
+  "best": {
+    "id": 14,
+    "values": {
+      "branch_penalty": 7,
+      "frontend.fetch_latency": 7
+    },
+    "score": 0.012781748213304023
+  },
+  "samples": [
+    {
+      "id": "chain",
+      "split": "training",
+      "rtl_cycles": 3638,
+      "rtl_ipc": 0.27762506871907644,
+      "model_branch_misses": 1,
+      "rtl_branch_misses": 1,
+      "baseline_ipc_error_percent": 99.56116291826656,
+      "fitted_ipc_error_percent": 2.6234132581099967,
+      "hashes": {
+        "c1": "69c27875fd02eae9d10a8eacc12b44acd527fb86af21e13d023c3e611fd74ee8",
+        "elf": "9c022c106352ed42d5c04395c678391d94bdc77b2f82f9fe94971cf942a59f46",
+        "events": "c8bad24aa426a76ab83adb0a40a0a536841605fe3f5fa57606eb38a3bcac2687",
+        "trace": "495508c349aedf726a66f5812a4414da5cea5a638d1f07013ad59c20c437f794"
+      }
+    },
+    {
+      "id": "multiply",
+      "split": "training",
+      "rtl_cycles": 3638,
+      "rtl_ipc": 0.27762506871907644,
+      "model_branch_misses": 1,
+      "rtl_branch_misses": 1,
+      "baseline_ipc_error_percent": 99.56116291826656,
+      "fitted_ipc_error_percent": 2.6234132581099967,
+      "hashes": {
+        "c1": "9232b49f4597866467b011b2d2376a09722c4afc0b7f0b232a3681b2628b5349",
+        "elf": "b13624e45d55d2682cb91862b887d42eb3ccffc045de15452f644fa6c508228e",
+        "events": "66e04d4431d31cc236754fee339b912a6adcee739081b2b72a12b0f6a29d9f15",
+        "trace": "841a6f9f354cb5bb72487bbe7fa41db8b2238795af2bddad01f42421423cbc69"
+      }
+    },
+    {
+      "id": "memory",
+      "split": "training",
+      "rtl_cycles": 3638,
+      "rtl_ipc": 0.27762506871907644,
+      "model_branch_misses": 1,
+      "rtl_branch_misses": 1,
+      "baseline_ipc_error_percent": 99.56116291826656,
+      "fitted_ipc_error_percent": 2.6234132581099967,
+      "hashes": {
+        "c1": "21692b7d49fb35647e69e0197ddb24e2b63507e2dcd8561f380220fb0a777129",
+        "elf": "9a1a7bcbc88503ab9f3d3d69aed84f7860fd300c32dd8239e2fcbe26d3bc65bf",
+        "events": "cb0d0be46ee859f6dd029ed92870da5d7cd1890bc8f01555f15ab3dc841a8744",
+        "trace": "d2447935037c7bec225d71c7a5505bc189c06c28fe0681273bce6896b85c3594"
+      }
+    },
+    {
+      "id": "independent",
+      "split": "heldout",
+      "rtl_cycles": 3638,
+      "rtl_ipc": 0.27762506871907644,
+      "model_branch_misses": 1,
+      "rtl_branch_misses": 1,
+      "baseline_ipc_error_percent": 99.56116291826656,
+      "fitted_ipc_error_percent": 2.6234132581099967,
+      "hashes": {
+        "c1": "cc0423d96d84e26223e836cf475851e63034c22c255227a9fd5aa69bf2fbdd03",
+        "elf": "42daacf6ab47f9e2e0158c7167b1072aafa2d4e0160684bed8bdfd78770ce896",
+        "events": "0dff138ca35d4516ea9eb23828d390515de2caaa98ccb723df9859d5151821d6",
+        "trace": "0fc526f7c89bd1a950cc588e9e321cbbbf0cd6c14596e23cb15a02f5f7df594b"
+      }
+    },
+    {
+      "id": "divide",
+      "split": "heldout",
+      "rtl_cycles": 10038,
+      "rtl_ipc": 0.10061765291890815,
+      "model_branch_misses": 1,
+      "rtl_branch_misses": 1,
+      "baseline_ipc_error_percent": 31.697717134610357,
+      "fitted_ipc_error_percent": 31.35304894006805,
+      "hashes": {
+        "c1": "bc28f86e593f7970cbe7829e3855339700d00ae078017b695a2c7b07090fc1f4",
+        "elf": "af27283845e0e20f20a6e5049720d0b03288ff50b4a88e884c9601311c252793",
+        "events": "786a07f17bb48f3481415b90485b8c4bf885abeccc81102248823241fa43af65",
+        "trace": "1df80241bbb5c13d40c210ffda890c731074401787fa2747f2783e57fbcec6af"
+      }
+    },
+    {
+      "id": "branch",
+      "split": "heldout",
+      "rtl_cycles": 4238,
+      "rtl_ipc": 0.26191599811231714,
+      "model_branch_misses": 101,
+      "rtl_branch_misses": 101,
+      "baseline_ipc_error_percent": 64.71045472211425,
+      "fitted_ipc_error_percent": -2.4626006904487907,
+      "hashes": {
+        "c1": "180e62ab0fa701b4474159b8f679999a4f365c8a49cd595d40658df106bfe1c4",
+        "elf": "4d035169f41d0bb36d1dea35be3d2f1c658f0fbee915a625bd1e401847f16ec9",
+        "events": "c772920e4aea0d4e13606f65cc67f5b59364a6e376ce7b759964e506536ae71d",
+        "trace": "2b5711f4a2bcbe27f1fbe3c7607a4815baa68610c83305d4f89075a212640e03"
+      }
+    }
+  ],
+  "accuracy_status": "inconclusive",
+  "limits": [
+    "saved native RTL evidence reused; RTL not rerun",
+    "static policy matches branch miss counts on these six small programs only",
+    "divide held-out error exceeds 10 percent; no accuracy verdict"
+  ]
+}

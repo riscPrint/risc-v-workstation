@@ -449,3 +449,12 @@ probe or require gem5. Its `rvw.arch-build/1` record has `backend: "riscv-gcc"`
 and compiler identity. gem5 identity belongs to the later model run record.
 `rvw arch run` and `calibrate` still require the supported gem5 binary.
 Inspection, report comparison and the `rvw ooo` trace model do not require it.
+
+## Static branch timing policy
+
+The own-model `branch_prediction` field accepts `sequential` by default or
+`static_btfn`. Static prediction decodes conditional targets and predicts
+backward branches taken. It predicts direct jumps taken and indirect jumps
+sequential. It does not use the observed outcome to predict a target.
+Static prediction uses the Python scheduler and cannot combine with component
+branch prediction. It models direction and targets, not RTL prediction stages.
