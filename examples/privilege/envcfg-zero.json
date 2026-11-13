@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "envcfg-zero",
+  "isa": "rv64ima_zicsr_zifencei_zicboz",
+  "envcfg": {
+    "block_bytes": 64
+  }
+}

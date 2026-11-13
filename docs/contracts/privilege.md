@@ -147,3 +147,13 @@ the existing `rvw.privilege/1` schema. Generated artifacts and C1 qualification
 use the common privilege campaign contract. Model self-checks do not earn DUT
 coverage. The shadow profile names its selected architectural register in each
 scenario ID and functional bin.
+
+## State-enable and CBO.ZERO project profiles
+
+`rvw.privilege/1` adds kinds `stateen-hierarchy` and `envcfg-zero`. The former
+uses `stateen.probes` and `stateen.writable_bits` for the declared Smstateen
+implementation. The latter uses `envcfg.block_bytes`, a power of two from 16
+to 4096. The generated manifest records `reference_options` for the matching
+native Spike cache-block size. This field configures the reference process.
+It does not configure a DUT. Native results retain the Spike self-check scope.
+DUT coverage still requires the existing C1 and strict-reference evidence.
