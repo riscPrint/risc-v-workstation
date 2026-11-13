@@ -25,13 +25,16 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop"}
 
 
 def _argv(command, args):
     argv = [sys.executable, "-m", "rvw", "formal", command]
     for key, value in args.items():
         if value is None or value is False:
+            continue
+        if key == 'manifest' and command in ('apps', 'autocheck'):
+            argv.append(str(value))
             continue
         opt = "--" + key.replace("_", "-")
         if key in FLAGS:
@@ -96,6 +99,16 @@ def mcp_tools():
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
+        ToolSpec("formal_autocheck", "Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.",
+                 schema({"manifest": S, "out": S, "max_properties": I, "depth": I,
+                         "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0},
+                         "mode": {**S, "enum": ["bmc", "prove"]}, "xprop": B}, ["manifest", "out"]),
+                 _runner("autocheck"), long=True),
+        ToolSpec("formal_apps", "Run reviewed connectivity, CSR, bounded progress, UNR and FSM monitor contracts.",
+                 schema({"manifest": S, "out": S, "depth": I, "engine": S,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0},
+                         "mode": {**S, "enum": ["bmc", "prove"]}, "event_model": B, "async_reset": B},
+                        ["manifest", "out"]), _runner("apps"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
