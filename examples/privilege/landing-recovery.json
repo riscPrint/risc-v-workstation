@@ -1,0 +1,6 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "landing-recovery",
+  "isa": "rv64imc_zicsr_zifencei_zicfilp",
+  "landing": {"pmp_entries": 8}
+}
