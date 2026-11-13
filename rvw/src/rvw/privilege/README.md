@@ -992,7 +992,9 @@ transactions, debug reset and multi-hart repeated reset remain open.
 Use `kind: fp-state`, `modes: [M]`, `priv: m` and an ISA with F in the
 existing campaign description. Build with `rvw regress privilege build`.
 The slice tests FS off trapping, initial and clean readback, and clean to
-dirty after an FP register write. It supports RV32 and RV64. Example files
+dirty after an FP register write. A second program checks Dirty after FEQ.S
+changes fflags without an FP register write. It reads FS before fflags.
+A failing self-check gets no bin credit. It supports RV32 and RV64. Example files
 are `examples/vexiiriscv/rvw/fpu/fs32.json` and `fs64.json`.
 A Spike reference pass is separate from a DUT pass and strict C2/2 match.
 Context save/restore and lower privilege modes remain outside this slice.
