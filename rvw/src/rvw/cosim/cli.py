@@ -25,6 +25,8 @@ def register(subparsers):
     register_vector_source(subs)
     from .adjudicate import register as register_adjudicate
     register_adjudicate(subs)
+    from .qemu import register as register_qemu
+    register_qemu(subs)
     for action in ("check", "generate", "live"):
         cmd = subs.add_parser(action, help={"check": "check C2 against a model", "generate": "make a C2 trace from Spike",
                                           "live": "launch an adapter and check C2 during simulation"}[action])

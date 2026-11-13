@@ -141,3 +141,24 @@ The optional platform `cheri` object records a pinned reference and capability
 width. See [the short assessment](../../../../Cosim/CHERI.md). Stock comparison
 reports unsupported reference evidence when it is selected. The hook does not
 compare capabilities or establish standard RISC-V profile compliance.
+
+### Optional QEMU boot observations
+
+Capture a matching QEMU machine with `-smp 1 -accel tcg,one-insn-per-tb=on
+-d cpu,nochain -D qemu.log`. Use the same memory map, image and boot inputs as
+the DUT. QEMU's CPU log records state before each instruction. The comparator
+uses the next snapshot to check a destination write. It can skip up to 4096
+boot-ROM snapshots before the first DUT PC. `--max-prefix` changes this bound.
+
+Use `rvw cosim qemu-check --trace TRACE --log qemu.log --json` for a bounded
+single-hart boot segment. The MCP tool is `cosim_qemu_check`. Only PC, next PC,
+integer sources and integer destinations compare. The report lists unchecked
+state and always sets `architectural_match: false`. Interrupt, trap and debug
+events return inconclusive. This is useful for early Linux boot segments before
+those events. It does not establish a full Linux boot match.
+
+Add `--qemu-log qemu.log` to `rvw cosim adjudicate` for an optional partial third
+reference. The result retains all three reports. QEMU can expose disagreement
+in the observed fields. It cannot outvote an architectural mismatch. An actual
+native bare-metal smoke is tested. Full Linux and asynchronous injection remain
+NOT RUN/unsupported.

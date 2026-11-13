@@ -918,6 +918,23 @@ Stock comparison refuses this selection with `unsupported_reference:cheri`.
 No C2 capability-state format or reference implementation is enabled by it.
 See `Cosim/CHERI.md` for the pinned candidate and required state observations.
 
+### C2 QEMU boot observation comparison
+
+`rvw cosim qemu-check` and MCP `cosim_qemu_check` read a single-hart QEMU
+`-d cpu,nochain` log produced with `-accel tcg,one-insn-per-tb=on` and `-smp 1`.
+`rvw.qemu-observation/1` records trace/log hashes, skipped boot-ROM prefix,
+compared count, scope and unchecked fields. It checks PC, next PC, integer source
+values and integer destination values. `architectural_match` is always false.
+`match` applies only to those observations in a completed bounded C2 segment.
+Missing snapshots or asynchronous/trap/debug events are inconclusive.
+
+`rvw cosim adjudicate --qemu-log LOG` retains QEMU as an optional partial third
+reference. Its trace hash must agree with the Spike/Sail input. Missing QEMU
+evidence makes the combined result inconclusive. A QEMU observation mismatch
+against a two-reference match produces disagreement. QEMU does not vote away
+an architectural mismatch. Full Linux boot, event injection and non-integer
+state remain unsupported by this first log adapter.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

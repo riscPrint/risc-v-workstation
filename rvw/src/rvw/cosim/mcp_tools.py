@@ -12,7 +12,9 @@ def mcp_tools():
     from .exchange_cli import mcp_tools as exchange_tools
     from .vector_source import mcp_tools as vector_tools
     from .adjudicate import mcp_tools as adjudication_tools
+    from .qemu import mcp_tools as qemu_tools
     return [
+        *qemu_tools(),
         *adjudication_tools(),
         *exchange_tools(),
         *vector_tools(),

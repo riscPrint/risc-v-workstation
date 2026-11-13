@@ -37,7 +37,19 @@ def adjudicate(results):
 
 def execute_json(**options):
     from .cli import execute_json as check
-    return adjudicate({model: check('check', model=model, **options) for model in ('spike', 'sail')})
+    qemu_log = options.pop('qemu_log', None)
+    report = adjudicate({model: check('check', model=model, **options) for model in ('spike', 'sail')})
+    if qemu_log is not None:
+        from .qemu import execute_json as qemu_check
+        qemu = qemu_check(trace=options['trace'], log=qemu_log)
+        expected_hash = report['references']['spike'].get('reproduction', {}).get('trace_sha256')
+        report['references']['qemu'] = qemu
+        report['qemu_role'] = 'partial_boot_observations'
+        if qemu.get('trace_sha256') != expected_hash or qemu['status'] not in ('match', 'mismatch'):
+            report.update(status='inconclusive', cause='qemu_evidence_missing_or_different')
+        elif qemu['status'] == 'mismatch' and report['status'] == 'match':
+            report.update(status='disagreement', cause='qemu_observations_differ')
+    return report
 
 
 def register(subs):
@@ -47,6 +59,7 @@ def register(subs):
     cmd.add_argument('--core')
     cmd.add_argument('--platform', type=Path)
     cmd.add_argument('--sail-config', type=Path)
+    cmd.add_argument('--qemu-log', type=Path, help='optional single-step QEMU CPU log for partial boot comparison')
     cmd.add_argument('--timeout', type=float, default=120)
     cmd.add_argument('--strict', action='store_true')
     cmd.add_argument('--json', action='store_true')
@@ -54,7 +67,7 @@ def register(subs):
 
 
 def run(args):
-    options = {key: getattr(args, key) for key in ('elf', 'trace', 'core', 'platform', 'sail_config', 'timeout', 'strict')}
+    options = {key: getattr(args, key) for key in ('elf', 'trace', 'core', 'platform', 'sail_config', 'timeout', 'strict', 'qemu_log')}
     options['project'] = getattr(args, 'project', None)
     result = execute_json(**options)
     print(json.dumps(result))
@@ -64,7 +77,7 @@ def run(args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     from rvw.mcp.worker import handler
-    properties = {key: {'type': 'string'} for key in ('elf', 'trace', 'core', 'platform', 'project', 'sail_config')}
+    properties = {key: {'type': 'string'} for key in ('elf', 'trace', 'core', 'platform', 'project', 'sail_config', 'qemu_log')}
     properties.update(timeout={'type': 'number', 'exclusiveMinimum': 0, 'default': 120}, strict={'type': 'boolean', 'default': False})
     return [ToolSpec('cosim_adjudicate', 'Check a DUT trace against Spike and Sail. Preserve both reports and identify which reference the DUT matches at a disagreement. No majority vote.',
                      schema(properties, ['elf', 'trace']), handler('rvw.cosim.adjudicate'), long=True)]
