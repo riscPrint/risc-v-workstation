@@ -1,0 +1,231 @@
+{
+  "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "results": [
+    {
+      "workload": "cached-integer",
+      "instructions": 500000,
+      "input_bytes": 149777955,
+      "trace_sha256": "6b585a64aebc9ca8e420048932f51359df98c8893149182154c76f51efe984e5",
+      "config_sha256": "2acebcdc7f7a78ca6bef7bc8e66c19db93e99dbf30cc903d22182f915156bd05",
+      "cycles": 62503,
+      "trials": {
+        "control": [
+          {
+            "wall_s": 0.518322707968764,
+            "cpu_s": 0.26858700000000013,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 0.7082807499682531,
+            "cpu_s": 0.27026099999999964,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 1.6446353750070557,
+            "cpu_s": 0.2850139999999999,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 0.9848627910250798,
+            "cpu_s": 0.2820880000000008,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          }
+        ],
+        "candidate": [
+          {
+            "wall_s": 0.9508820408955216,
+            "cpu_s": 0.27578299999999967,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 0.807482291944325,
+            "cpu_s": 0.2797339999999999,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 1.332808917039074,
+            "cpu_s": 0.27984899999999957,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 0.975954791996628,
+            "cpu_s": 0.27828699999999973,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          }
+        ]
+      },
+      "medians": {
+        "control": {
+          "instructions_per_second": 590617.3787328866,
+          "instructions_per_cpu_second": 1810449.5527284367
+        },
+        "candidate": {
+          "instructions_per_second": 518985.3042714659,
+          "instructions_per_cpu_second": 1792047.2527019603
+        }
+      },
+      "wall_speedup": 0.8787166157976921
+    },
+    {
+      "workload": "diverse-integer",
+      "instructions": 500000,
+      "input_bytes": 153080522,
+      "trace_sha256": "4de98f6d26ea20bd064ee75ccea0feffbe4d87fed66ec8086332f75ea241bb3f",
+      "config_sha256": "2acebcdc7f7a78ca6bef7bc8e66c19db93e99dbf30cc903d22182f915156bd05",
+      "cycles": 73211,
+      "trials": {
+        "control": [
+          {
+            "wall_s": 7.788418042007834,
+            "cpu_s": 2.1737569999999984,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 9.648540124995634,
+            "cpu_s": 2.2405980000000003,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 8.08600920799654,
+            "cpu_s": 2.1780800000000013,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          },
+          {
+            "wall_s": 7.615792249911465,
+            "cpu_s": 2.1510420000000003,
+            "c2_decoder": "python-template",
+            "engine_sha256": "36f90cd98d896ad31e60ff01f25dc36707571ce9c1d83405added7648f047a4f"
+          }
+        ],
+        "candidate": [
+          {
+            "wall_s": 0.5164937910158187,
+            "cpu_s": 0.28781700000000043,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 1.6012401659972966,
+            "cpu_s": 0.3010610000000007,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 0.8643369589699432,
+            "cpu_s": 0.2890519999999981,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          },
+          {
+            "wall_s": 1.205393624957651,
+            "cpu_s": 0.3092630000000014,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "da46ee9227da359b57b26dba950531c9b40af9abc6d2b9d058ff306103419729"
+          }
+        ]
+      },
+      "medians": {
+        "control": {
+          "instructions_per_second": 62994.398742778234,
+          "instructions_per_cpu_second": 229788.01825527934
+        },
+        "candidate": {
+          "instructions_per_second": 483154.67132073035,
+          "instructions_per_cpu_second": 1694590.6970359948
+        }
+      },
+      "wall_speedup": 7.669803680380708
+    },
+    {
+      "workload": "diverse-components",
+      "instructions": 500000,
+      "input_bytes": 153583940,
+      "trace_sha256": "a2ae9845b8255d63071a1851aa40329c108638fc292528cf1cce3feba0534af2",
+      "config_sha256": "311a5e05774f7ce2f235c438f1d5b68fe68d1b602f87edba15baf8b584412ef6",
+      "cycles": 380672,
+      "trials": {
+        "control": [
+          {
+            "wall_s": 10.166360541945323,
+            "cpu_s": 2.0934130000000017,
+            "c2_decoder": "python-template",
+            "engine_sha256": "192833b10b9e820602e2910ae84348605128f537b07bf6a1b869a944754b8c8d"
+          },
+          {
+            "wall_s": 9.271306875045411,
+            "cpu_s": 2.1201550000000005,
+            "c2_decoder": "python-template",
+            "engine_sha256": "192833b10b9e820602e2910ae84348605128f537b07bf6a1b869a944754b8c8d"
+          },
+          {
+            "wall_s": 8.471759042004123,
+            "cpu_s": 2.099026999999996,
+            "c2_decoder": "python-template",
+            "engine_sha256": "192833b10b9e820602e2910ae84348605128f537b07bf6a1b869a944754b8c8d"
+          },
+          {
+            "wall_s": 9.373835167032667,
+            "cpu_s": 2.0518149999999977,
+            "c2_decoder": "python-template",
+            "engine_sha256": "192833b10b9e820602e2910ae84348605128f537b07bf6a1b869a944754b8c8d"
+          }
+        ],
+        "candidate": [
+          {
+            "wall_s": 1.6529857080895454,
+            "cpu_s": 0.388891000000001,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "64e1e840d49fb19d8e18da64799dfb60ce0ab392ef12adb2ad495872dc75431b"
+          },
+          {
+            "wall_s": 1.967999582993798,
+            "cpu_s": 0.39879900000000035,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "64e1e840d49fb19d8e18da64799dfb60ce0ab392ef12adb2ad495872dc75431b"
+          },
+          {
+            "wall_s": 1.522209250018932,
+            "cpu_s": 0.39143800000000084,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "64e1e840d49fb19d8e18da64799dfb60ce0ab392ef12adb2ad495872dc75431b"
+          },
+          {
+            "wall_s": 1.8809850419638678,
+            "cpu_s": 0.39661600000000163,
+            "c2_decoder": "native-imc",
+            "engine_sha256": "64e1e840d49fb19d8e18da64799dfb60ce0ab392ef12adb2ad495872dc75431b"
+          }
+        ]
+      },
+      "medians": {
+        "control": {
+          "instructions_per_second": 53633.27336113691,
+          "instructions_per_cpu_second": 238524.58234345645
+        },
+        "candidate": {
+          "instructions_per_second": 282967.82025852526,
+          "instructions_per_cpu_second": 1268948.5745900623
+        }
+      },
+      "wall_speedup": 5.275975202057422
+    }
+  ],
+  "method": "one warmup per variant; four alternating paired public run trials; file reads, validation, packing, scheduling and hashes included",
+  "limits": [
+    "synthetic streams; register values are not an architectural oracle",
+    "generation and native compilation excluded; no RTL speed qualification",
+    "wall time can reflect other workstation jobs; CPU rates are also retained"
+  ]
+}

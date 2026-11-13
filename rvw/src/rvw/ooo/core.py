@@ -607,6 +607,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
         else:
             result["backend"] = "native"
         result["trace_reader"] = "native-c2" if packed is not None else "python-c2"
+        result["c2_decoder"] = packed.decoder if packed is not None else "python"
         trace_hash = trace_digest.result().hexdigest()
     # Decoder and C2 parser are part of the model identity.
     import rvw.common.riscv as decoder
@@ -615,6 +616,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     engine += Path(__file__).with_name("native_c2.c").read_bytes()
+    engine += Path(__file__).with_name("native_decode.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
         engine += library_path().read_bytes()

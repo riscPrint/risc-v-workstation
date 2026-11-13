@@ -791,3 +791,15 @@ The native controls restore PC, registers, memory, mscratch and minstret.
 The two small samples give baseline IPC gaps +19.34% and -13.41%. These are
 model-policy gaps, not error against RTL. Dynamic prediction stays unsupported.
 See [the experiment and native results](../../../../Arch/ooo/WRONG_PATH.md).
+
+## Native instruction-word decoding
+
+The supported flat C2/1 IMC path now decodes new instruction words in C.
+Other classes retain the Python template fallback. Reports identify the
+`c2_decoder`. Old native libraries remain supported.
+
+The warmed full-run synthetic sample records 518,985 instructions/s for
+cached integer, 483,155 for diverse integer and 282,968 for diverse components.
+The cached stream regressed in wall time. The other two streams improved.
+These shared-host results do not meet millions/s end-to-end throughput.
+See [the method, CPU rates and all trials](../../../../Arch/ooo/NATIVE_DECODE.md).
