@@ -408,7 +408,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {security,template,contracts,strengthen,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {security,template,contracts,strengthen,proof-core,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -451,6 +451,14 @@ usage: rvw formal contracts [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
 ```text
 usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
     [--engine ENGINE] [--json] [--project PROJECT] manifest
+```
+
+### `rvw formal proof-core`
+
+```text
+usage: rvw formal proof-core [-h] --smt2 SMT2 --mapping MAPPING [--db DB]
+    [--solver SOLVER] [--timeout TIMEOUT] --out OUT [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal apps`
@@ -1131,7 +1139,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 74 built-in tools, including the four job tools.
+The default server exposes 75 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1423,6 +1431,14 @@ Starts a background job: yes.
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `trace` (required), `cycle`, `time`, `scope`, `memories`, `first_failure`.
+
+Starts a background job: yes.
+
+### `formal_proof_core`
+
+Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
+
+Arguments: `smt2` (required), `mapping` (required), `db`, `solver`, `timeout`, `out` (required).
 
 Starts a background job: yes.
 

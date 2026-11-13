@@ -2797,3 +2797,14 @@ The standalone C3 report marks `mode=offline-c1-replay` and records the
 profile, captured reference inputs, source hashes, commands and logs. It
 does not modify C1 or establish C4 acceptance. Unsupported profiles and
 incomplete observations are errors. Source identity remains incomplete.
+
+### Named SMT core reports
+
+`rvw.smt-bindings/1` binds one SMT query to `property_id`, optional
+`requirement_ids`, and a `constraints` object indexed by every named assertion.
+Each constraint can list design `signals`. Bindings are caller-supplied metadata.
+`rvw.solver-core/1` retains the query SHA-256, solver calls, core labels and their
+bindings, optional SpinalDB locations, and the input capture. `status=pass` means
+only that this SMT query is UNSAT. `minimal=true` means deletion minimality was
+checked with SAT on each single-constraint removal. Unknown removal results set
+`minimal=false`. This report is not a coverage exclusion or an RTL proof result.

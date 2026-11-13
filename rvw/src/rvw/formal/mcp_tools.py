@@ -72,6 +72,10 @@ def _runner(command):
 
 def mcp_tools():
     return [
+        ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
+                 schema({"smt2": S, "mapping": S, "db": S, "solver": S,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
+                        ["smt2", "mapping", "out"]), _runner("proof-core"), long=True),
         ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},

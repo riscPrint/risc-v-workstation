@@ -104,6 +104,16 @@ def register(sub) -> None:
     strengthen.add_argument("--engine", default="smtbmc:yices")
     strengthen.add_argument("--json", action="store_true")
     strengthen.set_defaults(func=mining.run)
+    from . import cores
+    core = s.add_parser("proof-core", help="extract a deletion-minimal core from a named SMT query")
+    core.add_argument("--smt2", required=True)
+    core.add_argument("--mapping", required=True)
+    core.add_argument("--db")
+    core.add_argument("--solver", default="z3")
+    core.add_argument("--timeout", type=float, default=60)
+    core.add_argument("--out", required=True)
+    core.add_argument("--json", action="store_true")
+    core.set_defaults(func=cores.run)
     from . import apps, bench
     app = s.add_parser("apps", help="table-driven connectivity, CSR, progress and UNR checks")
     app.add_argument("manifest")
