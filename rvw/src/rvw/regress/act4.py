@@ -41,7 +41,9 @@ def description(path):
         raise ValueError('ACT4 requires one RAM range beginning at reset_pc')
     if data['params']['MXLEN'] != platform.xlen:
         raise ValueError('ACT4 MXLEN differs from platform')
-    selected = data.get('test_extensions', [x for x in versions if x not in ('sm', 's', 'u')])
+    if data.get('all_applicable') and 'test_extensions' in data:
+        raise ValueError('all_applicable and test_extensions are mutually exclusive')
+    selected = data.get('test_extensions', [x for x in versions if data.get('all_applicable') or x not in ('sm', 's', 'u')])
     if not selected or set(selected) - set(versions):
         raise ValueError('test_extensions must be a nonempty subset of declared extensions')
     return data, platform, selected
@@ -51,6 +53,9 @@ def selection(profile):
     data, platform, selected = description(profile)
     return dict(schema='rvw.act4-plan/1', isa=platform.isa,
                 privilege_modes=platform.privilege_modes, extensions=selected,
+                limitations=data.get('limits', []),
+                test_selection='all-applicable' if data.get('all_applicable') else 'extensions',
+                include_priv_tests=data.get('include_priv_tests', bool(data.get('all_applicable'))),
                 evidence='selection only; no DUT execution')
 
 
@@ -79,18 +84,28 @@ def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc
     (config / 'udb.yaml').write_text(json.dumps(udb, indent=2))
     tc = dict(name='rvw-act4', compiler_exe=compiler, ref_model_exe=reference,
               udb_config='udb.yaml', linker_script='link.ld', dut_include_dir='.',
-              include_priv_tests=data.get('include_priv_tests', False))
+              include_priv_tests=data.get('include_priv_tests', bool(data.get('all_applicable'))))
     (config / 'test_config.yaml').write_text(json.dumps(tc, indent=2))
     cmd = ['make', '-C', str(checkout), f'CONFIG_FILES={config / "test_config.yaml"}',
-           f'WORKDIR={out / "work"}', 'JOBS=2', 'FAST=True',
-           'EXTENSIONS=' + ','.join(data.get('udb_names', {}).get(x, x.upper() if len(x)==1 else x[0].upper()+x[1:]) for x in selected)]
+           f'WORKDIR={out / "work"}', 'JOBS=2', 'FAST=True', 'EXCLUDE_EXTENSIONS=']
+    if data.get('all_applicable'):
+        cmd += ['EXTENSIONS=']
+    else:
+        cmd += ['EXTENSIONS=' + ','.join(data.get('udb_names', {}).get(x, x.upper() if len(x)==1 else x[0].upper()+x[1:]) for x in selected)]
     with (out / 'build.log').open('w') as log:
         result = run_group(cmd, timeout=timeout, stdout=log, stderr=log)
     elfs = out / 'work' / 'rvw-act4' / 'elfs'
     records = [dict(path=p.relative_to(elfs).as_posix(), sha256=digest(p)) for p in sorted(elfs.rglob('*.elf'))]
+    tools = {}
+    for name, executable in [('compiler', compiler), ('reference', reference)]:
+        resolved = shutil.which(executable)
+        version = run_group([executable, '--version'], timeout=30, capture=True)
+        tools[name] = dict(executable=executable, sha256=digest(resolved) if resolved else None,
+                           version=(version.stdout or version.stderr or '').splitlines()[:1])
+    signatures = {p.relative_to(out).as_posix(): digest(p) for p in sorted((out / 'work').rglob('*.sig'))}
     manifest = dict(schema='rvw.act4-build/1', status='built' if result.returncode == 0 and records else 'error',
                     revision=data['revision'], profile_sha256=digest(profile), command=cmd,
-                    reference=reference, compiler=compiler, selection=selection(profile),
+                    reference=reference, compiler=compiler, tools=tools, signatures=signatures, selection=selection(profile),
                     files={n: digest(config / n) for n in ('rvmodel_macros.h', 'sail.json', 'link.ld', 'udb.yaml')},
                     tests=records, counts=dict(Counter(Path(r['path']).parent.name for r in records)))
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')

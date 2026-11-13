@@ -110,3 +110,11 @@ def test_stimulus_ack_read_is_inconclusive_not_a_finding(tmp_path, monkeypatch):
         root = tmp_path / str(len(list(tmp_path.iterdir())))
         runs(root, monkeypatch, [comparison], extra=extra)
         assert suite_cosim.check_run(root, 'p.json')['counts'] == {status: 1}
+def test_nested_test_id_keeps_suite_and_identity(tmp_path):
+    path = tmp_path/'act4/rv32im/tests/rv32i/I/I-add-00/result.json'
+    assert suite_cosim._member(path, tmp_path) == ('act4','rv32i/I/I-add-00')
+
+
+def test_suite_subdirectory_keeps_membership(tmp_path):
+    root = tmp_path/'isa/rv32im'
+    assert suite_cosim._member(root/'tests/add/result.json', root) == ('isa','add')

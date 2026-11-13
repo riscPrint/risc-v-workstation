@@ -20,3 +20,22 @@ are errors. This manifest records the local build, not external certification.
 Run ELFs through `rvw regress run --rvfi-trace`. Use `rvw regress cosim` for
 Spike comparison. Keep C1 signature results and reference comparison separate.
 A signature failure or reference mismatch is never converted to a pass.
+
+Build manifests also record compiler and reference executable hashes and version
+lines. `signatures` records each retained Sail `.sig` hash. Selection includes
+the project's explicit `limits` as `limitations`. Model-only devices required
+by ACT4 must be stated in the project profile limits. They do not establish
+DUT device support.
+
+Set `"all_applicable": true` in the JSON profile to let pinned ACT4 metadata
+select all compatible groups from the UDB declaration. Do not also set
+`test_extensions`. This mode includes privileged test directories by default.
+The plan reports `include_priv_tests`; a project can set it explicitly.
+The build explicitly clears extension exclusions. The plan
+labels this mode `all-applicable`; the build manifest lists the final tests.
+
+`rvw.act4-observations/1` is a retained native observation package. It records
+source pins, build input hashes, per-extension counts and each test's C1 and
+strict Spike status. Failed baselines remain separate from final instruction
+suite counts. A core finding names its first difference and reproduction.
+These observations do not grant a regression gate accept or certification.

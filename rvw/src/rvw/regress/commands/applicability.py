@@ -84,7 +84,7 @@ def register(commands):
             print(json.dumps(result))
         else:
             if args.act4:
-                print(', '.join(result['extensions']))
+                print('all compatible tests (UDB metadata)' if result['test_selection'] == 'all-applicable' else ', '.join(result['extensions']))
             for row in result.get('suites', []):
                 print(f"{row['name']}: {'applicable' if row['applicable'] else 'excluded'} ({row['reason']})")
         return 0
