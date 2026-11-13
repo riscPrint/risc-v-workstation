@@ -90,3 +90,16 @@ retained the infrastructure attempt. The retry collected 25 tests. A separate
 cancellation stopped its native group and finished as `cancelled`. Both native
 JVM group checks found no live members. `dashboard-results.json` records the
 control report hash and outcomes.
+
+## Native failure triage
+
+`triage-results.json` compares 49 good cells with the 49-cell private fault run.
+The diff reports two new failures. Captured reset-only Spike comparisons split
+the failures into two PC/instruction signatures. XORI first differs at
+`0x80000198` (`0xf0f6c713`). XOR first differs at `0x800001a0` (`0xc5c733`).
+Each cluster has a C5 bundle. Both comparisons record one unknown-CSR reset
+synchronization. No masks hide the GPR differences. The record includes the
+exact good-to-bad range and `rvw bisect` argument arrays. Native bisection was attempted. Input capture refused the tracked
+`src/test/resources/VexRiscvRegressionData` gitlink before simulation. No
+endpoint or first-bad result was earned. The capture check was kept intact.
+These XOR failures did not exercise a trap-cause signature.

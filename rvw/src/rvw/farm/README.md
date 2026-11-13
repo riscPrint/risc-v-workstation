@@ -439,3 +439,12 @@ clusters and referenced C5 summaries. It needs no HTTP service or token.
 Review its contents before sharing it. The export contains that owner's
 evidence. It does not infer gate acceptance. Cluster bundles written under
 `JOB/bundles/CLUSTER_ID/summary.json` appear in live and exported drill-down.
+
+Triage also reads `cosim.json` beside a C1 result. A first-mismatch signature
+requires a recorded `rvw.cosim/1` mismatch whose captured ELF and C2 hashes
+match that C1 and whose C1 identity matches the C3 entry. Invalid comparisons
+produce report issues and retain the original C1 failure signature. Cluster
+members retain the comparison hash, model, masks and synchronization records.
+`--core-env NAME` adds the source variable to generated `rvw bisect` commands.
+These commands bind the recorded good and bad revisions. `execution: not_run`
+means that triage has not run bisection.

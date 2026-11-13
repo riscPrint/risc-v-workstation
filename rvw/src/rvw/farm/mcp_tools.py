@@ -55,7 +55,7 @@ def mcp_tools():
                         ["db", "changed", "catalogue"]), select, long=True,
         side_effects='read-only; long-running', native_tools=(),
         ), ToolSpec("farm_triage", "Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.",
-                 schema({"root": string, "baseline": string, "known": string, "bundles": string}, ["root"]), triage, long=True,
+                 schema({"root": string, "baseline": string, "known": string, "bundles": string, "core_env": string}, ["root"]), triage, long=True,
         side_effects='long-running; writes representative failure bundles under bundles', native_tools=(),
         ), ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",
                  schema({"root": string, "scope": string, "limits": {"type": "object"},
