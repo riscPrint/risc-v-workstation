@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x", "dsec", "sampled_events", "memory_map"}
+FLAGS = {"confirm", "unbounded", "run", "cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x", "dsec", "sampled_events", "memory_map"}
 
 
 def _psl(job, **args):
