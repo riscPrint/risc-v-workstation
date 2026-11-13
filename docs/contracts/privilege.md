@@ -188,3 +188,15 @@ Base PMP data may select entries, granularity_bytes and address_modes under
 `pmp`. The matrix requires at least eight entries. Unsupported NA4/granularity
 combinations are rejected. Program generation uses the selected grain and
 honors project mode selection for priority probes too.
+
+## PLIC delivery reference execution
+
+Campaign kind `plic-delivery` adds project `plic_delivery.targets`, each with
+mode and context, and positive settle_ticks. Its source events retain the
+mailbox protocol. `reference_backend = "spike-python-plic"` requires
+reference_shim and runs the ELF through the captured native Spike shim with a
+Python PLIC. The reference report records evidence=model-based, input capture,
+source hashes, instruction count, traps and stimulus completion. Native self-
+check success requires tohost=1 and all source events acknowledged. Bounds,
+unsupported operations or incomplete input remain inconclusive. This reference
+result does not earn DUT coverage or replace the C1 architectural gate.
