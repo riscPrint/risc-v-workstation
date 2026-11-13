@@ -61,6 +61,11 @@ def run(args):
     plan = expand(source, args.max_properties, getattr(args, 'kind', None))
     database_capture = capture.record()
     plan['verilog'] = [str((path.parent / p).resolve()) for p in plan['verilog']]
+    if plan.get('internal_ports'):
+        from .internal_exposure import expose
+        files = [capture.file(Path(p)).copy for p in plan['verilog']]
+        plan['verilog'] = [str(p) for p in expose(plan, files, capture_root / 'exposure', capture, args.timeout)]
+        database_capture = capture.record()
     # Keep the generated plan beside the report, outside the source tree.
     import tempfile
     with tempfile.TemporaryDirectory(prefix='rvw-autocheck-') as temporary:
@@ -90,6 +95,11 @@ def run(args):
                                'scope': 'Bounded X-propagation output check; native replay not requested.'}
             if xresult['status'] != 'pass' and report['status'] == 'pass':
                 report['status'], code = 'inconclusive', 1
+        report['counts'] = {'generated': len(plan['properties']),
+            'proven': sum(p['status'] == 'pass' and p.get('proof_kind') == 'unbounded' for p in report['properties']),
+            'bounded': sum(p['status'] == 'pass' and p.get('proof_kind') == 'bounded' for p in report['properties']),
+            'failed': sum(p['status'] == 'fail' for p in report['properties']),
+            'unsupported': len(database.get('skipped', [])) + sum('unsupported' in r for r in database.get('roles', [])) if database else 0}
         from .common import write_json
         write_json(out / 'result.json', report)
         print(json.dumps(report, indent=2) if args.json else report['status'])

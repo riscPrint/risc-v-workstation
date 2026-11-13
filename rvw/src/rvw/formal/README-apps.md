@@ -299,3 +299,20 @@ that never acknowledges fails. All state must use one rising-edge clock.
 Unsupported state and black boxes cause an error. Fairness feasibility is not
 proved. This command checks universal fair response. It does not establish the
 CTL claim that every reachable state has some path to progress.
+
+## Typed roles and internal FSMs
+
+Database autocheck now reports roles with their database evidence. It finds Stream
+and Flow bundles by Spinal type. Output Streams receive payload and valid hold
+checks under backpressure. Self-updating signed and unsigned registers are counter
+candidates. Complete enum encodings receive FSM state and transition observations.
+Retained internal enum signals are exposed by exact RTL name with Yosys. The tool
+checks each exposed width before it builds a wrapper. No hierarchical name is guessed.
+
+FIFO, arbiter and CAM class candidates retain type and memory evidence. Their
+semantic endpoint contracts remain unsupported when the database does not supply
+them. Counter wrap requirements are not inferred. These roles are reported with
+an explicit unsupported reason. This is not complete automatic app binding.
+The report counts generated, proven, bounded, failed and unsupported checks.
+A failed reachability assertion can mean that a requested observation was reached.
+Read each row's `observation` before treating it as a design failure.
