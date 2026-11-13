@@ -12,6 +12,7 @@ import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 /** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit.
   * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
+  def liveMap = riscvsim.SimMap.load(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "../live-devices.json"))
   val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv32im_cached")
 
   def param(config: String): ParamSimple = {
@@ -49,7 +50,14 @@ object VexiiTop {
           transfers = M2sTransfers(get = SizeRange.all, putFull = SizeRange.all))
       }
     }
-    ParamSimple.setPma(plugins, ParamSimple.defaultPma ++ deviceRegions)
+    val liveRegions = Seq(liveMap).flatMap { map =>
+      map.regions.filter(_.kind == "mmio").map { r =>
+        new PmaRegionImpl(mapping = SizeMapping(r.base.toLong, r.size.toLong),
+          isMain = false, isExecutable = false,
+          transfers = M2sTransfers(get = SizeRange.all, putFull = SizeRange.all))
+      }
+    }
+    ParamSimple.setPma(plugins, ParamSimple.defaultPma ++ deviceRegions ++ liveRegions)
     VexiiRiscv(plugins)
   }
 

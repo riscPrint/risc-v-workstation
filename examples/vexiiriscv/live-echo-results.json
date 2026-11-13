@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "cycles": 4094,
+  "instret": 1001,
+  "elf_sha256": "3d84f0ca9878ee1a8e920f339e68ac8df3d5e37a8e7f74e14d20697906f7e52d",
+  "rtl_sha256": "219f66b23e00b198fc7a1b656e693a07d31accaf3cfd045fa95fa9fc6db47f28",
+  "schema": "rvw.vexii-live-echo-sample/1",
+  "core_revision": "9b63f47fe559dbba7874af9196746412fa1294c1",
+  "device_output": {
+    "uart": "echo\n"
+  },
+  "c2_sha256": "e68a2e2965b072bd4de96670f716d6fee7a70d89c73aff58f83328e19ff7d5c0"
+}

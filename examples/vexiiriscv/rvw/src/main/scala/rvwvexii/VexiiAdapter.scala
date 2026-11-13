@@ -52,7 +52,11 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
 
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
     require(!job.rvfiCheck, "VexiiRiscv adapter has no riscv-formal monitor; use --rvfi-trace")
-    require(job.socMap.isEmpty, "VexiiRiscv adapter does not support --soc-map")
+    require(job.socMap.isEmpty || !sys.env.contains("RVW_VEX_DEVICE_MAP"), "select one device map")
+    job.socMap.foreach(m => require(m.interrupts.isEmpty && m.regions.forall(r => !r.cacheable), "live devices require uncached regions and device-owned interrupts"))
+    job.socMap.foreach(m => require(m.regions.filter(_.kind == "mmio").map(r => (r.base, r.size)).toSet == VexiiTop.liveMap.regions.filter(_.kind == "mmio").map(r => (r.base, r.size)).toSet, "device regions must match project PMA map"))
+    val live = job.socMap.map(new LiveDevices(_))
+    live.foreach(d => require((d.interruptMask & ~irqInputMask) == 0, "unsupported device interrupt pin"))
     require(ctx.elf.entry == ramBase, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
       throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
@@ -132,7 +136,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           val cycle = ctl.cycle
           probes.foreach(_.sample(cycle))
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
-          val deviceLevels = devices.map(_.tick(cycle)).getOrElse(BigInt(0))
+          val deviceLevels = live.map(_.tick(cycle)).orElse(devices.map(_.tick(cycle))).getOrElse(BigInt(0))
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(deviceLevels)
           if (dut.host[PrivilegedPlugin].p.withSupervisor) priv.int.s.external #= levels.testBit(9)
           priv.int.m.software #= levels.testBit(3)
@@ -188,7 +192,12 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
             }
             if (ok && op == 2) reservation = Some(addr)
             if (op == 3) reservation = None
-            if (devices.exists(_.contains(cmd.address.toLong, width))) {
+            if (live.exists(_.contains(cmd.address.toLong, width))) {
+              require(!atomic, "device atomics are unsupported")
+              if (cmd.write.toBoolean) live.get.write(cmd.address.toLong, width, (cmd.data.toBigInt >> shift) & fieldMask)
+              val result = if (cmd.write.toBoolean) BigInt(0) else live.get.read(cmd.address.toLong, width) << shift
+              lsu.accept(cycle, result, false, cmd.id.toInt)
+            } else if (devices.exists(_.contains(cmd.address.toLong, width))) {
               require(!atomic, "device atomics are unsupported")
               if (cmd.write.toBoolean) devices.get.write(cmd.address.toLong, width, (cmd.data.toBigInt >> shift) & fieldMask) // the bus replicates narrow data across lanes
               val result = if (cmd.write.toBoolean) BigInt(0) else devices.get.read(cmd.address.toLong, width) << shift
@@ -274,6 +283,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
+        "device_output" -> live.map(_.outputs).getOrElse(ujson.Obj()),
         "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
         "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),
         "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L))), metrics)

@@ -424,3 +424,11 @@ Other adapter/device implementations still own their reset behavior.
 Portable and live-bundle paths also refuse interactive debug bindings and
 external trace-ingress bindings. These inputs need explicit transaction
 capture before they can supply deterministic reproduction evidence.
+
+## VexiiRiscv live-map adapter
+
+The VexiiRiscv example can consume the existing `rvw.sim-map/1` live-device
+map. Its uncached MMIO ranges must match the project PMA map. Live devices
+and DeviceApiV1 selection are mutually exclusive. C1 `details.device_output`
+contains UART output. The model drives software, timer and external core
+interrupt inputs from device state. This adds no new generic map fields.
