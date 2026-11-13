@@ -55,7 +55,8 @@ def main():
     run('set var *(unsigned int *)&counter = 5')
     fresh()
     mark('memory_write', counter() == 5, 'counter readback differs')
-    run('break target')
+    # An instruction address avoids GDB function-prologue skipping.
+    run('break *target')
     run('continue')
     fresh()
     mark('breakpoint', val('$pc') == val('&target') and counter() == 6,
@@ -63,7 +64,7 @@ def main():
     run('delete')
     run('set $pc = loop')
     before = counter()
-    error = attempt('hbreak target') or attempt('continue')
+    error = attempt('hbreak *target') or attempt('continue')
     fresh()
     mark('hardware_breakpoint', not error and val('$pc') == val('&target') and counter() == before + 1,
          error or f'pc 0x{val("$pc"):x} counter %d' % counter())
@@ -78,13 +79,16 @@ def main():
     run('stepi')
     fresh()
     mark('stepi_jump', val('$pc') == val('&loop'), f'pc 0x{val("$pc"):x}')
-    run('set $pc = loop')
-    before = counter()
-    error = attempt('watch *(unsigned int *)&counter') or attempt('continue')
-    fresh()
-    mark('watchpoint', not error and counter() == before + 1 and val('&loop') < val('$pc') <= val('&target'),
-         error or f'pc 0x{val("$pc"):x} counter %d' % counter())
-    run('delete')
+    if os.environ.get('RVW_WATCHPOINT') == '0':
+        print('RVW_UNSUPPORTED:watchpoint:profile declares no store triggers', flush=True)
+    else:
+        run('set $pc = loop')
+        before = counter()
+        error = attempt('watch *(unsigned int *)&counter') or attempt('continue')
+        fresh()
+        mark('watchpoint', not error and counter() == before + 1 and val('&loop') < val('$pc') <= val('&target'),
+             error or f'pc 0x{val("$pc"):x} counter %d' % counter())
+        run('delete')
     reset_pc = os.environ.get('RVW_RESET_PC')
     if reset_pc:
         run('monitor reset halt')

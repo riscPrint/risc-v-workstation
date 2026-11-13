@@ -64,8 +64,8 @@ review before they can be promoted to confirmed specification defects.
 | VEX-DEBUG-004 | Write tdata1 action=1 with dmode=0 | action stays 1 | Trigger action restrictions |
 | VEX-DEBUG-005 | Configure dmode trigger; attempt M-mode write | Trigger changes | Debug-only trigger protection |
 
-Open interop observation: software and hardware breakpoints stop at target+4.
-The stop position is unexplained. Execute-only triggers refuse watchpoints.
+The historical interop script selected target+4 through GDB prologue skipping.
+See "Breakpoint address selection" below. Execute-only triggers refuse watchpoints.
 Physical JTAG and a hardware trace encoder were not tested.
 
 ## Resolved checker and harness findings
@@ -96,3 +96,39 @@ results do not resolve that contract. Minimal reproduction:
 See [the ACT4 record](rvw/act4/README.md). The selected scaffold expects this
 access to complete. Resolve the declared machine CSR contract before calling
 this a specification defect. No mask or waiver changes the observation.
+
+## Breakpoint address selection
+
+The late breakpoint is an interop script bug. GDB 18.1 resolves `break target`
+to `target + 4` for the interop ELF. It treats the first instruction as a
+function prologue. This happens without a target connection. The instruction
+is `addi s1,s1,1`. Both software and hardware function breakpoints use prologue
+skipping. Use `break *target` and `hbreak *target` for the instruction address.
+
+Minimal host-only reproduction after `rvw/debug/build.sh`:
+
+```sh
+riscv64-elf-gdb -nx -batch rvw/out/programs/debug-loop \
+  -ex 'info address target' -ex 'break target' -ex 'info break' \
+  -ex 'break *target' -ex 'info break'
+```
+
+| Command | Address |
+|---|---|
+| `info address target` | `0x80000014` |
+| `break target` | `0x80000018` |
+| `break *target` | `0x80000014` |
+
+[Debug 0.13.2 DPC](https://five-embeddev.github.io/riscv-docs-html/riscv-debug-spec/v0.13-release/core_registers.html)
+requires the ebreak address for an ebreak halt and the matching instruction
+address for a timing-0 trigger. The reference checks `abs.dpc_resume` and
+`trig.execute_matches` use those addresses. The latter also checks that the
+matched instruction has not changed x8. The script must ask OpenOCD for that
+same address. No DPC adjustment is needed in the harness.
+
+Fresh DMI RTL run: `abs.dpc_resume` passes with cause 1, DPC
+`0x80010004` and x8=6 after one increment from 5. `trig.execute_matches`
+passes with cause 2 at `0x80010008` before the third increment. Both checks
+match a fresh reference model. The complete run has 34 pass, 5 fail and
+45 unsupported or skipped checks. The five failures are the recorded target
+deviations above. The breakpoint-address fix changes no core RTL.
