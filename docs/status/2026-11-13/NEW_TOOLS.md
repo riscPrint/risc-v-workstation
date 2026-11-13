@@ -1,6 +1,6 @@
 # New tools and command families
 
-Current census: 854 merged PR bodies, through 2026-11-13T16:23:40Z.
+Current census: 865 merged PR bodies, through 2026-11-13T16:37:04Z.
 Each row reports the strongest executed slice. Native evidence is read from PR bodies. It was not rerun. A real-core report consumed by an index or plan is analysis of that report, not execution of a new core workflow. Full bodies are in [PR_EVIDENCE.md](PR_EVIDENCE.md).
 
 ## ComponentSims / rvw csim
@@ -31,7 +31,7 @@ Purpose: Dynamic simulation security experiments and contract suites.
 
 Evidence level: ran on real core RTL. Scope: VexRiscv and VexiiRiscv; Stepper paired and 42-cycle flow controls. Sources: [#955](https://github.com/riscPrint/risc-v-workstation/pull/955), [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240).
 
-What remains: The precise Stepper flow completes 42 checked cycles with no_leak_observed. Add/division pairs each complete two runs. Whole-core, all-operand and physical security qualification remain open. Source: [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240).
+What remains: Finite Stepper flow and operand pairs complete. Whole-core and all-operand security remain open. Source: [#1248](https://github.com/riscPrint/risc-v-workstation/pull/1248).
 
 ## rvw fault
 
@@ -41,7 +41,7 @@ Purpose: Fault plans, native public-access injection and C2 classification.
 
 Evidence level: ran on real core RTL. Scope: NaxRiscv; VexRiscv, VexiiRiscv and BOOM small in earlier injections. Source: [#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143).
 
-What remains: One ISA mutation and three selected register bits do not qualify ISA support, safety or broad fault coverage. Source: [#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143).
+What remains: OoO Mini adds four confirmed flips, two detected and two safe. Selected register bits do not qualify broad fault coverage or hardware reliability. Source: [#1245](https://github.com/riscPrint/risc-v-workstation/pull/1245).
 
 ## rvw bugmem
 
@@ -61,7 +61,7 @@ Purpose: Compose map-driven peripheral SoCs and generate software data.
 
 Evidence level: ran on real core RTL. Scope: VexRiscv composed SoC; Stepper. Source: [#1195](https://github.com/riscPrint/risc-v-workstation/pull/1195).
 
-What remains: Native CPU execution is established for this finite RAM profile. The generated verify table does not establish peripheral, connectivity, CDC or full SoC qualification. Consumer automation remains work. Source: [#1227](https://github.com/riscPrint/risc-v-workstation/pull/1227).
+What remains: Stepper protocol and decode consumers close their fabric-only scopes. Five other consumers and automatic native preparation remain open. Vex CDC/RDC findings remain separate. Source: [#1248](https://github.com/riscPrint/risc-v-workstation/pull/1248).
 
 ## rvw vip / protocol families
 
@@ -211,7 +211,7 @@ Purpose: Generate mapped external-core projects and launchers.
 
 Evidence level: ran on real core RTL. Scope: Stepper RV32IM. Source: [#1217](https://github.com/riscPrint/risc-v-workstation/pull/1217).
 
-What remains: Whole-core ISA/state proof and automatic SoC consumer bindings remain incomplete. These results are an informed rerun, not an independent newcomer trial or release qualification. Source: [#1232](https://github.com/riscPrint/risc-v-workstation/pull/1232).
+What remains: Reviewed add/lw/sw cycles have bounded passes with activation. Trace-selected depth 22 remains inconclusive. Five SoC consumers and automatic native preparation remain open. Source: [#1248](https://github.com/riscPrint/risc-v-workstation/pull/1248).
 
 ## Agent trial and evidence benchmark
 
