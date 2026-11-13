@@ -3113,6 +3113,12 @@ The table lists missing property classes and witness-reconstruction failures.
 
 ## ISA kit signoff table
 
+Unbounded and abstraction rows retain their source assumptions and condition
+model identity. A conditional native proof is labelled in the table. It does
+not change an inconclusive ISA row to proven. Abstraction rows state which
+pipeline restriction and RAM model the attempt used. Null assumptions mean
+the native record was unavailable. They do not mean an assumption-free proof.
+
 Use the [retained timeout replay](timeout-rerun.md) for a later 30-minute
 comparison on an idle machine. It selects the prior timeout checks, preserves
 their captured model and writes the engine, time, depth and load table.
