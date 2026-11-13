@@ -1,0 +1,1066 @@
+{
+  "schema": "rvw.native-archives/1",
+  "archives": [
+    {
+      "tool": "JDK",
+      "host": "Darwin-arm64",
+      "version": "21.0.13",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "JDK",
+      "host": "Linux-x86_64",
+      "version": "21.0.13",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "JDK",
+      "host": "Linux-aarch64",
+      "version": "21.0.13",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "sbt",
+      "host": "Darwin-arm64",
+      "version": "1.10.7 Linux; 1.11.7 observed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "sbt",
+      "host": "Linux-x86_64",
+      "version": "1.10.7 Linux; 1.11.7 observed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "sbt",
+      "host": "Linux-aarch64",
+      "version": "1.10.7 Linux; 1.11.7 observed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verilator",
+      "host": "Darwin-arm64",
+      "version": "ea338be98e1e838d3518809ce8899f85a009963c",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verilator",
+      "host": "Linux-x86_64",
+      "version": "ea338be98e1e838d3518809ce8899f85a009963c",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verilator",
+      "host": "Linux-aarch64",
+      "version": "ea338be98e1e838d3518809ce8899f85a009963c",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "RISC-V GCC",
+      "host": "Darwin-arm64",
+      "version": "a33dac0251d17a7b74d99bd8fd401bfce87d2aed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "RISC-V GCC",
+      "host": "Linux-x86_64",
+      "version": "a33dac0251d17a7b74d99bd8fd401bfce87d2aed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "RISC-V GCC",
+      "host": "Linux-aarch64",
+      "version": "a33dac0251d17a7b74d99bd8fd401bfce87d2aed",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Spike",
+      "host": "Darwin-arm64",
+      "version": "eff659cd43d7eafb7f3559bceed2540eabb31c50",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Spike",
+      "host": "Linux-x86_64",
+      "version": "eff659cd43d7eafb7f3559bceed2540eabb31c50",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Spike",
+      "host": "Linux-aarch64",
+      "version": "eff659cd43d7eafb7f3559bceed2540eabb31c50",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Sail",
+      "host": "Darwin-arm64",
+      "version": "0.15",
+      "status": "verified_metadata",
+      "url": "https://github.com/riscv/sail-riscv/releases/download/0.15/sail-riscv-Mac-arm64.tar.gz",
+      "sha256": "be025dbf8226de49b89719b14b7a59aa15baef01ce41ddcd50f5fd85c2204ebc",
+      "evidence": "Upstream GitHub release asset digest checked 2026-11-13. Archive and native runtime NOT RUN."
+    },
+    {
+      "tool": "Sail",
+      "host": "Linux-x86_64",
+      "version": "0.15",
+      "status": "verified_metadata",
+      "url": "https://github.com/riscv/sail-riscv/releases/download/0.15/sail-riscv-Linux-x86_64.tar.gz",
+      "sha256": "8bb3626a6ce5d45c1d1fa7b907f9d9602cc23270883e470db5d6401f26a2e143",
+      "evidence": "Upstream GitHub release asset digest checked 2026-11-13. Archive and native runtime NOT RUN."
+    },
+    {
+      "tool": "Sail",
+      "host": "Linux-aarch64",
+      "version": "0.15",
+      "status": "verified_metadata",
+      "url": "https://github.com/riscv/sail-riscv/releases/download/0.15/sail-riscv-Linux-aarch64.tar.gz",
+      "sha256": "52980f9afb50f2468c61589522d28ac97d74db36ad3fdcdb63b335f5c4286202",
+      "evidence": "Upstream GitHub release asset digest checked 2026-11-13. Archive and native runtime NOT RUN."
+    },
+    {
+      "tool": "Yosys",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Yosys",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Yosys",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SymbiYosys",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SymbiYosys",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SymbiYosys",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Yices",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Yices",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Yices",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Z3",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Z3",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Z3",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Boolector",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Boolector",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Boolector",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "ABC",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "ABC",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "ABC",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Avy",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Avy",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Avy",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btorsim",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btorsim",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btorsim",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "suprove",
+      "host": "Darwin-arm64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "suprove",
+      "host": "Linux-x86_64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "suprove",
+      "host": "Linux-aarch64",
+      "version": "OSS CAD Suite 2026-10-22",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-slang",
+      "host": "Darwin-arm64",
+      "version": "scripts/yosys-slang-sources.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-slang",
+      "host": "Linux-x86_64",
+      "version": "scripts/yosys-slang-sources.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-slang",
+      "host": "Linux-aarch64",
+      "version": "scripts/yosys-slang-sources.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "rIC3",
+      "host": "Darwin-arm64",
+      "version": "02c12ff1407b3474b7eb85c4531a06ad2eb86933",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "rIC3",
+      "host": "Linux-x86_64",
+      "version": "02c12ff1407b3474b7eb85c4531a06ad2eb86933",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "rIC3",
+      "host": "Linux-aarch64",
+      "version": "02c12ff1407b3474b7eb85c4531a06ad2eb86933",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "EBMC",
+      "host": "Darwin-arm64",
+      "version": "2f4f2fc76f450557de3eef5f3e3d075869999e85",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "EBMC",
+      "host": "Linux-x86_64",
+      "version": "2f4f2fc76f450557de3eef5f3e3d075869999e85",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "EBMC",
+      "host": "Linux-aarch64",
+      "version": "2f4f2fc76f450557de3eef5f3e3d075869999e85",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CBMC",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CBMC",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CBMC",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "pono",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "pono",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "pono",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GHDL",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GHDL",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GHDL",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CIRCT/arcilator",
+      "host": "Darwin-arm64",
+      "version": "firtool-1.163.0",
+      "status": "verified_metadata",
+      "url": "https://github.com/llvm/circt/releases/download/firtool-1.163.0/circt-full-shared-macos-arm64.tar.gz",
+      "sha256": "820ad2bb75605ab81ff1b584e04726fdf4e5c21a8f7f910df0b8fa36e9d4b760",
+      "evidence": "Upstream GitHub release asset digest checked 2026-11-13. Archive and native runtime NOT RUN."
+    },
+    {
+      "tool": "CIRCT/arcilator",
+      "host": "Linux-x86_64",
+      "version": "firtool-1.163.0",
+      "status": "verified_metadata",
+      "url": "https://github.com/llvm/circt/releases/download/firtool-1.163.0/circt-full-shared-linux-x64.tar.gz",
+      "sha256": "2a3b8a19a8884e7adf9508555346bb9107feb6aaced9ad7fdf247dbf7048a945",
+      "evidence": "Upstream GitHub release asset digest checked 2026-11-13. Archive and native runtime NOT RUN."
+    },
+    {
+      "tool": "CIRCT/arcilator",
+      "host": "Linux-aarch64",
+      "version": "firtool-1.163.0",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "riscv-dv",
+      "host": "Darwin-arm64",
+      "version": "f557b89ed6881a20515481a2585e9d004cd9642b",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "riscv-dv",
+      "host": "Linux-x86_64",
+      "version": "f557b89ed6881a20515481a2585e9d004cd9642b",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "riscv-dv",
+      "host": "Linux-aarch64",
+      "version": "f557b89ed6881a20515481a2585e9d004cd9642b",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "gem5",
+      "host": "Darwin-arm64",
+      "version": "c8222cc67a399bfc01e8658dd14b30d5bfd634f9",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "gem5",
+      "host": "Linux-x86_64",
+      "version": "c8222cc67a399bfc01e8658dd14b30d5bfd634f9",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "gem5",
+      "host": "Linux-aarch64",
+      "version": "c8222cc67a399bfc01e8658dd14b30d5bfd634f9",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native csim",
+      "host": "Darwin-arm64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native csim",
+      "host": "Linux-x86_64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native csim",
+      "host": "Linux-aarch64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native OoO",
+      "host": "Darwin-arm64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native OoO",
+      "host": "Linux-x86_64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "native OoO",
+      "host": "Linux-aarch64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "QEMU",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "QEMU",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "QEMU",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "herd7",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "herd7",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "herd7",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "OpenOCD",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "OpenOCD",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "OpenOCD",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GDB",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GDB",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GDB",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verible",
+      "host": "Darwin-arm64",
+      "version": "v0.0-4298-g085eef05",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verible",
+      "host": "Linux-x86_64",
+      "version": "v0.0-4298-g085eef05",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Verible",
+      "host": "Linux-aarch64",
+      "version": "v0.0-4298-g085eef05",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Icarus",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Icarus",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Icarus",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "typed waves",
+      "host": "Darwin-arm64",
+      "version": "SpinalWaves/vendor-lock.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "typed waves",
+      "host": "Linux-x86_64",
+      "version": "SpinalWaves/vendor-lock.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "typed waves",
+      "host": "Linux-aarch64",
+      "version": "SpinalWaves/vendor-lock.json",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SpinalTrace",
+      "host": "Darwin-arm64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SpinalTrace",
+      "host": "Linux-x86_64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "SpinalTrace",
+      "host": "Linux-aarch64",
+      "version": "repository revision",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Surfer",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Surfer",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Surfer",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GTKWave tools",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GTKWave tools",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "GTKWave tools",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "VS Code",
+      "host": "Darwin-arm64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "VS Code",
+      "host": "Linux-x86_64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "VS Code",
+      "host": "Linux-aarch64",
+      "version": "unverified",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Bitwuzla",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Bitwuzla",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "Bitwuzla",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC4",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC4",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC4",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC5",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC5",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "CVC5",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "MathSAT",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "MathSAT",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "MathSAT",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btormc",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btormc",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "btormc",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-smtbmc",
+      "host": "Darwin-arm64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-smtbmc",
+      "host": "Linux-x86_64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "yosys-smtbmc",
+      "host": "Linux-aarch64",
+      "version": "unverified; optional OSS CAD Suite engine",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "firtool",
+      "host": "Darwin-arm64",
+      "version": "firtool-1.163.0",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "firtool",
+      "host": "Linux-x86_64",
+      "version": "firtool-1.163.0",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    },
+    {
+      "tool": "firtool",
+      "host": "Linux-aarch64",
+      "version": "firtool-1.163.0",
+      "status": "unverified",
+      "url": null,
+      "sha256": null
+    }
+  ]
+}
