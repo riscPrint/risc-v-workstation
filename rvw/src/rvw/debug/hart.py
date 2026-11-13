@@ -121,6 +121,7 @@ class Hart:
     # -- state ---------------------------------------------------------------
     def reset(self):
         self.x = [0] * 32
+        self.f = [0] * 32          # raw FLEN=64 register bits, for abstract FPR access only
         self.pc = self.reset_pc
         self.mode = M
         self.debug_mode = False
@@ -543,6 +544,10 @@ class Asm:
     @staticmethod
     def sw(rs2, rs1, imm=0):
         return _s(0x23, 2, rs1, rs2, imm)
+
+    @staticmethod
+    def sh(rs2, rs1, imm=0):
+        return _s(0x23, 1, rs1, rs2, imm)
 
     @staticmethod
     def sb(rs2, rs1, imm=0):

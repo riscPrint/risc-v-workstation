@@ -62,6 +62,7 @@ class TriggerUnit:
         self.has_tcontrol = bool(profile.get('tcontrol', True))
         self.maskmax = int(profile.get('maskmax', 31))
         self.version = int(profile.get('version', 1))
+        self.sizes = tuple(profile.get('sizes', (0,)))
         self.reset()
 
     @property
@@ -180,7 +181,8 @@ class TriggerUnit:
         if kind in (MCONTROL, MCONTROL6):
             if fields['match'] not in self.matches:
                 fields['match'] = 0
-            fields['size'] = 0
+            if fields['size'] not in self.sizes:
+                fields['size'] = 0
             if kind == MCONTROL and fields['timing'] not in self.timings:
                 fields['timing'] = 0
             last = self.slots.index(slot) == len(self.slots) - 1
@@ -267,6 +269,7 @@ class TriggerUnit:
 
     def check_access(self, address, size, *, load=False, store=False, before=False, data=None):
         hart = self.hart
+        size_bytes = size
         if hart.debug_mode or not self.slots:
             return
         after = []
@@ -278,6 +281,9 @@ class TriggerUnit:
                 return False
             if after[-1] is None or after[-1] == before:
                 return False
+            size = self.field(slot, 'size')
+            if size and {1: 1, 2: 2, 3: 4, 4: 6, 5: 8}.get(size) != size_bytes:
+                return False   # size matching: the access must have the selected size
             value = data if self.field(slot, 'select') else address
             return value is not None and self._value_match(slot, value)
         matched = [hits(s) for s in self.slots]
