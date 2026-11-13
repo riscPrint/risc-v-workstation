@@ -21,10 +21,10 @@ for name, spec in [('ComposedSoc','compose.json'), ('MultiDomainSoc','compose-mu
         text = text.replace('ComposedSoc',name).replace('object Generate','object MultiDomainGenerate')
     (library/'generated').mkdir(exist_ok=True)
     (library/'generated'/f'{name}.scala').write_text(text)
-command = [str(root/'scripts/with-lock.sh'),'sbt-soc','nice','-n','10','sbt',
+command = [str(root/'scripts/with-lock.sh'),'sbt-soc','nice','-n','10','sbt','-J-XX:ActiveProcessorCount=4','-J-Xmx3g',
            '-Drvw.soc.vex=true','db/compile','export db/Compile/fullClasspath']
 with (out/'verify-db-build.log').open('w') as log:
-    process = run_group(command,cwd=library,stdout=log,stderr=log,timeout=120)
+    process = run_group(command,cwd=library,stdout=log,stderr=log,timeout=240)
 if process.returncode or process.timed_out:
     raise SystemExit('Build failed; see SpinalSoc/out/verify-db-build.log')
 lines = (out/'verify-db-build.log').read_text().splitlines()

@@ -95,3 +95,60 @@ CDC/RDC consumer ran on this database. Its detailed report retains structural
 findings and unrun metastability, pulse-loss, reconvergence and reset-release
 obligations. The table does not claim CDC/RDC signoff. Databases, captured RTL
 and command logs remain local development artifacts under `SpinalSoc/out/`.
+
+## Scoped consumer execution
+
+The scoped campaign uses per-connection source cuts, an explicit legal
+APB master contract for bounded protocol checks, directed register obligations,
+and separate cocotb tests for each MMIO bus. It keeps structural findings
+separate from unrun consumers. The native runs use the same private core pin
+and seed 31. The private source build passed in 133 seconds.
+
+The source-cut backend first resolves the structural dependency. It then
+replaces module bodies outside the observed hierarchy with free output values.
+It cuts the actual source driver by canonical Yosys bit ID. Named aliases
+remain connected. This avoids RAM initialization and CPU state in a wire proof.
+All four declared connections proved with separate activation witnesses.
+Transfer proofs took 3.6 to 4.4 seconds. Activation checks took 1.6 to 2.2
+seconds.
+A native corrupted-transfer test failed, while the unchanged transfer proved.
+Clock and reset rows name their actual top-level drivers. They are sampled
+value contracts, not sequencing checks.
+
+The protocol campaign runs all 49 selected ISA programs in one composed
+Verilator build with assertions. The bounded target checks 31 fabric assertions
+at depth 8. Its legal-master assumptions are emitted with `includeFormal`.
+This covers bounded APB fabric safety and sampled CPU AXI assertions. It does
+not establish complete AXI ordering, coherence or liveness.
+
+The directed register program checks ten known-value reads. Its explicit
+write/read obligations cover UART scratch, CLINT MSIP and PLIC priority 1.
+The selected map has no read-clear or W1C register under these obligations.
+Those semantics remain outside this RTL campaign.
+
+Each generated peripheral VIP test resets the composed RTL and uses its own
+APB monitor and register oracle. UART checks three reads. CLINT checks three.
+PLIC checks ten. Finisher checks one. These are four separate cocotb tests on
+an independent-master composition. They do not execute the CPU.
+
+The multi-domain structural report retains two clock sources, 293 registers,
+nine CDC paths and 2,507 findings. It recognizes `BufferCC` and
+`FlowCCUnsafeByToggle`. Two paths are synchronizer candidates. Another 1,561
+reset paths have no structural hazard. These are different classifications.
+The seven unrun temporal rule groups remain in the detailed report.
+Structural findings require review. They do not establish a silicon failure
+or a CDC/RDC acceptance result.
+
+The fresh combined run produced this table:
+
+| kind | generated | ran | result |
+|---|---|---|---|
+| protocol | yes | yes | pass |
+| registers | yes | yes | pass |
+| vip | yes | yes | pass |
+| uvm | yes | yes | pass |
+| connectivity | yes | yes | proven |
+| decode | yes | yes | proven |
+| cdc_rdc | yes | yes | findings |
+
+Each pass has the scope stated above. The structural findings require review.

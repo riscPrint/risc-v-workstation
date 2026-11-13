@@ -727,23 +727,30 @@ combined verification command produced this table:
 
 | kind | generated | ran | result |
 |---|---|---|---|
-| protocol | yes | yes | inconclusive |
-| registers | yes | yes | inconclusive |
-| vip | yes | yes | inconclusive |
+| protocol | yes | yes | pass |
+| registers | yes | yes | pass |
+| vip | yes | yes | pass |
 | uvm | yes | yes | pass |
-| connectivity | yes | yes | inconclusive |
+| connectivity | yes | yes | proven |
 | decode | yes | yes | proven |
-| cdc_rdc | yes | yes | inconclusive |
+| cdc_rdc | yes | yes | findings |
 
-The pyuvm bench checked 17 known-reset reads with an independent bus master.
-The fabric proof covers map windows and unmapped completion. It excludes core
-and peripheral state. Connectivity timed out during internal RTL binding.
-Multi-domain lint ran on the composition with a 10 MHz CLINT domain. It found
-2 clock sources, 293 registers, 9 CDC paths and 2,507 structural findings.
-Those findings and unrun reset/protocol obligations remain open. Sampled
-protocol/register/VIP matches do not qualify every behavior. Read the
-[measured record](../SpinalSoc/examples/vex/VERIFICATION.md) before reusing the
-profile. A new core, peripheral or clock configuration needs fresh evidence.
+Protocol assertions ran over all 49 selected ISA tests. A separate bounded
+APB fabric check passed 31 assertions at depth 8. Directed register checks
+covered ten reads and write/read obligations on UART scratch, CLINT MSIP and
+PLIC priority 1. Four generated peripheral cocotb tests passed 17 known-value
+reads. The separate pyuvm bench also checked 17 reads. Connectivity now uses
+per-connection source cuts after a structural pre-check. All four transfers
+proved with activation witnesses. Clock and reset contracts are sampled
+values. They do not establish sequencing or reset-release correctness.
+
+Multi-domain lint found 2 clock sources, 293 registers, 9 CDC paths and 2,507
+structural findings. It recognizes BufferCC and FlowCCUnsafeByToggle. These
+findings and unrun temporal obligations remain open. The aggregate can report
+`findings` when every scoped consumer finishes and structural findings remain.
+It keeps a nonzero exit code. Read the [measured record](../SpinalSoc/examples/vex/VERIFICATION.md)
+for the exact scopes. A new core, peripheral or clock configuration needs
+fresh evidence.
 
 The UART profile is still a subset. Full 16550 behavior, boot-from-flash,
 native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,

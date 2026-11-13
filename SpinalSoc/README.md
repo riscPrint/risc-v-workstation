@@ -289,3 +289,28 @@ status or undo accepted writes. Stores are initialized to zero at elaboration.
 Controller reset aborts a transfer and clears status. It retains stored data.
 Byte access and a disk-image preload interface are outside this profile.
 See [the composed test](examples/block/README.md).
+
+## Scoped Vex verification results
+
+The fresh combined campaign on 2026-11-13 produced these results. Each pass
+refers to a declared consumer scope. The report is not whole-SoC acceptance.
+
+| kind | generated | ran | result |
+|---|---|---|---|
+| protocol | yes | yes | pass |
+| registers | yes | yes | pass |
+| vip | yes | yes | pass |
+| uvm | yes | yes | pass |
+| connectivity | yes | yes | proven |
+| decode | yes | yes | proven |
+| cdc_rdc | yes | yes | findings |
+
+Protocol checks ran over 49 selected ISA programs with native assertions.
+The APB fabric passed 31 bounded assertions at depth 8. The directed register
+program checked ten reads and write/read obligations for UART scratch, CLINT
+MSIP and PLIC priority 1. Four generated peripheral cocotb tests passed 17
+known-value reads. The separate pyuvm bench passed the same 17 reset reads.
+All four connection rows proved with activation witnesses. The decode target
+proved seven assertions. The multi-domain inventory retains 2,507 findings
+and recognizes BufferCC and FlowCCUnsafeByToggle. Temporal CDC/RDC rules
+remain unproved. See [the evidence scopes](examples/vex/VERIFICATION.md).

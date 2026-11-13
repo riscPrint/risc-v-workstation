@@ -23,7 +23,7 @@ rvw --project SpinalSoc/out/vex-project/rvw.toml regress run --suite isa --no-in
 
 `configure.py` resolves the external core path and adapter inputs into a local
 project file. The template is not a runnable project. The launcher holds
-`vex-soc`. Scala builds also hold `sbt`. Native processes use `nice -n 10`.
+`vex-soc`. Scala builds also hold `sbt-soc`. Native processes use `nice -n 10`.
 The adapter composes an empty RAM image, compiles the wrapper and loads each
 captured ELF through the simulator memory API. BSS and unused RAM start at zero.
 C1 records core and tools revisions, ELF/RTL hashes and UART output.
@@ -79,8 +79,8 @@ rvw/.venv/bin/rvw soc verify SpinalSoc/examples/vex/soc.json \
 ```
 
 Use the private `VEXRISCV` copy and native tool environment above. The build
-uses `sbt-soc`. A cold dependency build can exceed its two-minute limit. If so,
-run the same build again after the dependency cache is warm. Preparation then
+uses `sbt-soc` with private outputs, four JVM processors and a 3 GiB heap.
+Its source compile has a four-minute limit. Preparation then
 extracts fresh typed databases and runs the CPU. Connectivity uses captured
 RTL through `rvw formal connectivity`. The report preserves failed proofs,
 missing bindings, activation gaps and structural lint findings.

@@ -6,10 +6,14 @@ from rvw.common.proc import run_group
 from rvw.uvm.composed import generate
 
 
-def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120, expected_map=None):
+def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120, expected_map=None, profile="uvm"):
     out = Path(out).resolve()
     root = Path(__file__).resolve().parents[4]
     report = generate(source,out,out/'rtl/VerificationSoc.v',expected_map=expected_map)
+    bus_tests = None
+    if profile == 'vip':
+        from .vip_bench import generate as vip
+        bus_tests = vip(out)
     command = [str(root/'scripts/with-lock.sh'),'sbt-soc','nice','-n','10','sbt',*build_args,
                'set Compile / unmanagedSources += file("'+report['scala']+'")','compile']
     with (out/'compile.log').open('w') as log:
@@ -38,6 +42,12 @@ def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120,
     simulation = simulate(out/'bench.json',out/'simulation',seed=31,timeout=timeout)
     checks_path = out/'checks.json'
     checks = json.loads(checks_path.read_text()) if checks_path.is_file() else {}
+    if bus_tests:
+        reports = {name: json.loads((out/('checks-'+name+'.json')).read_text())
+                   for name in bus_tests if (out/('checks-'+name+'.json')).is_file()}
+        checks = dict(checks=sum(r['checks'] for r in reports.values()), buses=reports)
+        if set(reports) != set(bus_tests):
+            checks['checks'] = 0
     # Cocotb result rows and independent positive checker counts are required.
     cases = simulation.get('tests',[])
     passed = bool(cases) and all(t['status']=='pass' for t in cases)
