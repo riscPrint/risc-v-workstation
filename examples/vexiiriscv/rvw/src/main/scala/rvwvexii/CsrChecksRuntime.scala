@@ -17,12 +17,16 @@ object CsrChecksRuntime {
     require(args.length >= 4, "usage: CsrChecksRuntime model.json out none|read program.elf ...")
     val source = scala.io.Source.fromFile(args(0))
     val model = try ujson.read(source.mkString) finally source.close()
+    val bankModel = model("schema").str == "rvw.csr-bank/1"
+    require(model("xlen").num == 32)
+    if (!bankModel) {
     require(model("schema").str == "rvw.csr/1" && model("xlen").num == 32)
     val scratch = model("csrs").arr.find(_("name").str == "mscratch").get
     require(scratch("address").num == 0x340 && scratch("privilege").str == "M")
     val fields = scratch("fields").arr
     require(fields.size == 1 && fields.head("lsb").num == 0 && fields.head("width").num == 32 &&
       fields.head("access")("M").str == "RW" && scratch("reset_known").bool == false)
+    }
     val out = new File(args(1)).getCanonicalFile
     require(Set("none", "read")(args(2)))
     val fault = args(2) == "read"
@@ -39,7 +43,8 @@ object CsrChecksRuntime {
     def design(): VexiiRiscv = {
       val plugins = VexiiTop.param("rv32im").plugins()
       plugins += new TrapTapPlugin
-      plugins += new CsrChecksPlugin(fault)
+      if (bankModel) plugins += new CsrBankPlugin(model, fault)
+      else plugins += new CsrChecksPlugin(fault)
       ParamSimple.setPma(plugins)
       VexiiRiscv(plugins)
     }
@@ -51,7 +56,7 @@ object CsrChecksRuntime {
       .withVerilator.addSimulatorFlag("--assert")
     if (sys.env.get("RVW_CHECKS_WAVE").contains("1")) sim.withWave
     val compiled = sim.compile(design())
-    require(checks.inserted.count(_.kind == "csr.read") == 1)
+    require(checks.inserted.count(_.kind == "csr.read") == (if(bankModel) model("views").arr.count(_.obj.get("present").forall(_.bool)) else 1))
     for ((path,index) <- args.drop(3).zipWithIndex) {
       val elf = ElfFile(path)
       require(elf.xlen == 32 && elf.entry == 0x80000000L)

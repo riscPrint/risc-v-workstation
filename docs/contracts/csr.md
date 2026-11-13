@@ -325,3 +325,15 @@ does not add its new generation to a previous fence. The default device-effect
 policy requires retirement before or at the same edge; the check detail records
 an explicit project override. These are sampled template obligations. They do
 not infer branch age, architectural fence classes, data values or a core binding.
+
+## Vexii static-bank transaction binding
+
+The project `CsrChecksRuntime` accepts `rvw.csr-bank/1` as an alternative to
+`rvw.csr/1`. Its bank binding requires RV32, one present unshifted M-mode view
+per bank, and declared static masks. It observes accepted CSR interface reads
+and writes. Physical storage can be a register or RAM. Expected values come
+from declared reset and software transactions, not from observed DUT storage.
+Trap events invalidate the mepc and mtval reference values until a software
+write. This does not establish trap-update correctness or denied-access checks.
+The trap-free project harness leaves the general CSR generator's trap-control
+restriction unchanged. Reference configuration differences remain failures.

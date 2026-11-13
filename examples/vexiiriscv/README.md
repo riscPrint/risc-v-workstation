@@ -472,3 +472,47 @@ The native control is `rvw/tests/test_live_devices.py`. Set private
 `VEXIIRISCV`, `RVW_VEX_LOCK=vex-simsrv`, `RVW_SBT_LOCK=sbt-simsrv` and
 `RISCVSIM_WORK` before running it. This example does not require a plugin
 library. OS boot and native checkpoint restore need separate checks.
+## Catalog-backed CSR bank readback
+
+`csr-bank.json` selects nine machine CSRs from the pinned catalog: `mscratch`,
+`mtval`, `mepc`, `mtvec`, `misa`, `mvendorid`, `marchid`, `mimpid` and `mhartid`.
+The model declares reset values, static read/write masks and project IDs.
+`CsrBankPlugin` checks accepted reads against independent software-write state.
+It uses the CSR interface, so it can check RAM-backed storage without guessing
+register names. This project binding accepts one unshifted M-mode view per
+32-bit bank. It rejects aliases and other widths. The generic bank model keeps
+its broader support.
+
+Generate the trap-free programs with:
+
+```sh
+rvw/.venv/bin/python examples/vexiiriscv/rvw/csr-bank-programs.py \
+  examples/vexiiriscv/csr-bank.json --out /tmp/vexii-csr-bank
+```
+
+Compile each `.S` with RV32IM/Zicsr, the ILP32 ABI and
+`examples/vexriscv/rvw/programs/link.ld`. Pass the generated `model.json` and
+ELFs to `rvwvexii.CsrChecksRuntime`. Set `RVW_CHECKS_ISA=1` to retain all
+available checks. The main accepts both the original scalar model and this
+bank model. Keep the source build in a private core copy under `vex-csr` and
+`sbt-csr`. The recorded run used cached pinned dependency jars and private core
+classes. It did not rebuild those dependencies.
+
+The harness does not install a trap handler. It can therefore test `mtvec` and
+`mepc` without the general generator's trap-control setup. Unexpected traps
+fail by timeout. It tests legal aligned software writes, set and clear for four
+RAM-backed CSRs, and constant reads for five CSRs. It does not test denied
+accesses, illegal WARL inputs or lower modes. The general generator still
+rejects models that conflict with its own trap setup.
+
+All nine native RTL programs passed at seed 17, with 33 generated and bound
+checks and zero firings. Eight programs passed on Spike. The `marchid` program
+failed because the project declares 46 and the installed Spike returns 5.
+This is a reference configuration difference. It is retained as a failure.
+The `mscratch` read-corruption control fired only `csr.read:mscratch`, 15 times.
+See [the measured record](csr-bank-native-results.json).
+
+Trap observations invalidate expected `mepc` and `mtval` state. A later complete
+software write makes the bank known again. This is software readback evidence.
+It does not check trap-update values, all CSR fields, dynamic AIA semantics,
+shared aliases, hardware/software update races or whole-core equivalence.
