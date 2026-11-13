@@ -229,3 +229,15 @@ completion, expiry, reset cancellation and trace-end pending attempts. Reset
 clears all attempts. Each input starts fresh temporal history. Unsupported
 clocks, reset rules or delay semantics refuse the calculation. See the
 coverage README for the full sequence contract and native example.
+
+## Explicit project binders
+
+`rvw.soc-compose/1` has `map` (relative to this file), `core` (`class` and
+`bus=apb3`), positive `clock_hz`, `reset` (`sync_high` or `async_high`), and
+`devices`. Devices map each region name to `type=ram|rom|project`. Project
+binders also require a qualified Scala `class`. The first profile requires
+32 address bits, RV32, a unified APB3 master and one clock domain.
+
+The generated `rvw.soc-composed/1` manifest records profile, memory dimensions,
+clock/reset intent, bus paths, map/composition/ELF hashes and
+`validation=generated_only`. This is generation metadata, not C1 evidence.

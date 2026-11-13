@@ -10,6 +10,8 @@ from .model import generate
 def register(sub):
     parser = sub.add_parser('soc', help='project-owned SoC map exports and checks')
     commands = parser.add_subparsers(dest='soc_command', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.soc', commands)
     from .pairing import register as register_pairing
     register_pairing(commands)
     gen = commands.add_parser('generate', help='validate a map and write deterministic exports')

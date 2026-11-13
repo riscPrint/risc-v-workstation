@@ -261,3 +261,10 @@ and input hashes. Structural paths do not prove bridge behavior. Run the same
 table with `rvw formal connectivity --run --proof-mode prove` to request
 value-transfer proofs. Real retirement/bus pairing and source provenance are
 still required for a mapped DUT integration claim.
+
+## Spinal composition
+
+`rvw soc compose SPEC --out NEW_DIR [--elf FILE]` generates a Spinal top and
+software exports. MCP: `soc_compose`. See [SpinalSoc](../../../../SpinalSoc/README.md)
+for the explicit APB3 wrapper profile and its limits. This command generates
+source. It does not report a run or proof result.

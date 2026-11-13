@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.soc-compose/1",
+  "map": "soc.json",
+  "core": {"class": "rvwsoc.IdleCore", "bus": "apb3"},
+  "clock_hz": 50000000,
+  "reset": "sync_high",
+  "devices": {"ram": {"type": "ram"}}
+}
