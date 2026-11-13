@@ -1,5 +1,5 @@
 """Sampled protocol safety monitors. Payload ports contain every enabled sideband."""
-NAMES = ('axis', 'apb', 'ahb_lite')
+NAMES = ('axis', 'apb', 'ahb_lite', 'req_rsp')
 
 
 def render(kind, width, entries):
@@ -18,6 +18,19 @@ always @(posedge clk) begin
   previous_payload<=payload;
  end
 end'''
+    elif kind == 'req_rsp':
+        # One-cycle request pulses, one outstanding transaction, in-order response.
+        # A response can complete a newly issued request on the same edge.
+        ports = f'input request, response, input [{width-1}:0] payload'
+        body = """reg pending=0;
+always @(posedge clk) begin
+ if(reset) pending<=0;
+ else begin
+  if(response) assert(pending || request);
+  if(request) assert(!pending || response);
+  pending <= (pending || request) && !response;
+ end
+end"""
     elif kind == 'apb':
         ports = f'input select, enable, ready, error, input [{width-1}:0] request'
         body = f'''reg selected=0, enabled=0, completed=0;

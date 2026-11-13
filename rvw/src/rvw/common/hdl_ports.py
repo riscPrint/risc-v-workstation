@@ -11,7 +11,7 @@ from rvw.query.db import DesignDB
 IDENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 
 
-def load(database, port_map):
+def load(database, port_map, *, protocols=("ready_valid",)):
     spec = json.loads(Path(port_map).read_text())
     if spec.get('schema') != 'rvw.hdl-ports/1':
         raise ValueError('expected rvw.hdl-ports/1')
@@ -40,11 +40,12 @@ def load(database, port_map):
             if not IDENT.fullmatch(bus['name']) or bus['name'] in names:
                 raise ValueError('bus names must be unique HDL identifiers')
             names.add(bus['name'])
-            if bus['protocol'] != 'ready_valid':
-                raise ValueError('declared HDL path currently supports ready_valid channels')
-            if set(bus['ports']) != {'valid','ready','payload'}:
-                raise ValueError('ready_valid needs valid, ready and payload ports')
-            port(bus['ports']['valid'],1); port(bus['ports']['ready'],1)
+            if bus['protocol'] not in protocols:
+                raise ValueError('unsupported declared protocol: ' + bus['protocol'])
+            controls = ('request', 'response') if bus['protocol'] in ('req_rsp','req_ack') else ('valid', 'ready')
+            if set(bus['ports']) != {*controls,'payload'}:
+                raise ValueError(bus['protocol'] + ' needs ' + ', '.join(controls) + ' and payload ports')
+            for control in controls: port(bus['ports'][control],1)
             payload=bus['ports']['payload']
             if not isinstance(payload,list) or not payload or len(set(payload)) != len(payload):
                 raise ValueError('payload must list unique ports')
@@ -57,23 +58,28 @@ def load(database, port_map):
 
 def checks(database, port_map, out):
     from rvw.formal.simple_bus_checks import render
-    spec=load(database,port_map)
+    spec=load(database,port_map,protocols=("ready_valid","req_rsp","req_ack"))
     sources=[];binds=[];rows=[]
     for bus in spec['buses']:
         module='rvw_declared_'+bus['name']
-        sources.append(render('axis',bus['payload_width'],4).replace('rvw_axis(',module+'('))
+        kind = 'req_rsp' if bus['protocol'] == 'req_rsp' else 'axis'
+        sources.append(render(kind,bus['payload_width'],4).replace('rvw_'+kind+'(',module+'('))
         pins=bus['ports']
         reset=spec['reset']['signal']
         if spec['reset']['active']==0: reset='~'+reset
-        ports=dict(clk=spec['clock'],reset=reset,valid=pins['valid'],ready=pins['ready'],
-                   payload='{'+','.join(pins['payload'])+'}')
+        ports=dict(clk=spec['clock'],reset=reset, payload='{'+','.join(pins['payload'])+'}')
+        if bus['protocol'] == 'req_ack':
+            ports.update(valid=pins['request'],ready=pins['response'])
+        else:
+            for control in (('request','response') if kind == 'req_rsp' else ('valid','ready')):
+                ports[control]=pins[control]
         binds.append('bind '+spec['top']+' '+module+' '+module+'_instance ('+
                      ', '.join('.'+key+'('+value+')' for key,value in ports.items())+');')
-        rows.append(dict(path=bus['name'],kind='ready_valid',status='generated',ports=ports))
+        rows.append(dict(path=bus['name'],kind=bus['protocol'],status='generated',ports=ports))
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     (out/'monitors.sv').write_text('\n'.join(sources))
     (out/'binds.sv').write_text('\n'.join(binds)+'\n')
     result=dict(status='generated',buses=rows,complete=True,
-                limits=['Generated stability checks only. No solver or simulation was run.'])
+                limits=['Ready/valid stability or single-outstanding pulse request/response safety only. No liveness or memory-data check. No solver or simulation was run.'])
     (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     return result
