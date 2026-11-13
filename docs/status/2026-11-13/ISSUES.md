@@ -1,6 +1,6 @@
 # Issue status
 
-Hourly refresh collected at 2026-11-13T08:21:26.898955+00:00: 80 additional merged PRs; 563 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
+Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. Local personal paths in quoted source text are omitted. Raw JSON retains the source. PR bodies report the evidence. Their artifacts were not independently rerun.
 
@@ -6803,3 +6803,232 @@ Current state: open.
   Issues and Roadmap source: Refs: #355. The report composes existing model analyses. RTL fidelity, broad workload representativeness and physical feasibility remain unqualified. Roadmap notes: designer reports now combine per-function model attribution, local bottleneck ranking and exact DSE change suggestions through CLI and MCP.
 
 Reopened since the previous collection: [#64](https://github.com/riscPrint/risc-v-workstation/issues/64), [#85](https://github.com/riscPrint/risc-v-workstation/issues/85), [#87](https://github.com/riscPrint/risc-v-workstation/issues/87), [#127](https://github.com/riscPrint/risc-v-workstation/issues/127), [#133](https://github.com/riscPrint/risc-v-workstation/issues/133), [#153](https://github.com/riscPrint/risc-v-workstation/issues/153), [#156](https://github.com/riscPrint/risc-v-workstation/issues/156), [#161](https://github.com/riscPrint/risc-v-workstation/issues/161), [#296](https://github.com/riscPrint/risc-v-workstation/issues/296). These issues remain in the midnight census.
+
+## Current issue register at 2026-11-13T14:22:26.916089+00:00
+
+This register supersedes current-state statements above. The original census, acceptance text and hand-reviewed dispositions remain. Milestones come from the preserved PR #381 map. Body references can be context references. They do not establish implementation ownership or closure. Read the full Testing, Issues, remaining scope and Roadmap notes in the linked source ledger.
+
+| Issue | Current state | Milestone in PR #381 | New PR body references | Disposition |
+|---|---|---|---|---|
+| [#1](https://github.com/riscPrint/risc-v-workstation/issues/1) | open | M1 |  | keep open; remaining scope |
+| [#5](https://github.com/riscPrint/risc-v-workstation/issues/5) | open | M2 | [#1003](https://github.com/riscPrint/risc-v-workstation/pull/1003), [#1005](https://github.com/riscPrint/risc-v-workstation/pull/1005), [#1017](https://github.com/riscPrint/risc-v-workstation/pull/1017), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044), [#1107](https://github.com/riscPrint/risc-v-workstation/pull/1107), [#1116](https://github.com/riscPrint/risc-v-workstation/pull/1116) | keep open; remaining scope |
+| [#8](https://github.com/riscPrint/risc-v-workstation/issues/8) | open | M2 |  | keep open; remaining scope |
+| [#10](https://github.com/riscPrint/risc-v-workstation/issues/10) | open | M2 |  | keep open; remaining scope |
+| [#11](https://github.com/riscPrint/risc-v-workstation/issues/11) | open | M2 |  | keep open; remaining scope |
+| [#14](https://github.com/riscPrint/risc-v-workstation/issues/14) | open | M4 |  | keep open; remaining scope |
+| [#15](https://github.com/riscPrint/risc-v-workstation/issues/15) | open | M1 |  | keep open; remaining scope |
+| [#16](https://github.com/riscPrint/risc-v-workstation/issues/16) | open | M4 | [#1058](https://github.com/riscPrint/risc-v-workstation/pull/1058), [#1064](https://github.com/riscPrint/risc-v-workstation/pull/1064), [#1068](https://github.com/riscPrint/risc-v-workstation/pull/1068), [#1073](https://github.com/riscPrint/risc-v-workstation/pull/1073), [#1079](https://github.com/riscPrint/risc-v-workstation/pull/1079), [#1084](https://github.com/riscPrint/risc-v-workstation/pull/1084), [#1092](https://github.com/riscPrint/risc-v-workstation/pull/1092) | keep open; remaining scope |
+| [#17](https://github.com/riscPrint/risc-v-workstation/issues/17) | open | M2 |  | keep open; remaining scope |
+| [#18](https://github.com/riscPrint/risc-v-workstation/issues/18) | open | M3 | [#1000](https://github.com/riscPrint/risc-v-workstation/pull/1000), [#1086](https://github.com/riscPrint/risc-v-workstation/pull/1086), [#1146](https://github.com/riscPrint/risc-v-workstation/pull/1146), [#1155](https://github.com/riscPrint/risc-v-workstation/pull/1155) | keep open; remaining scope |
+| [#19](https://github.com/riscPrint/risc-v-workstation/issues/19) | open | M3 | [#1011](https://github.com/riscPrint/risc-v-workstation/pull/1011), [#1053](https://github.com/riscPrint/risc-v-workstation/pull/1053), [#1076](https://github.com/riscPrint/risc-v-workstation/pull/1076), [#1105](https://github.com/riscPrint/risc-v-workstation/pull/1105), [#1130](https://github.com/riscPrint/risc-v-workstation/pull/1130) | keep open; remaining scope |
+| [#20](https://github.com/riscPrint/risc-v-workstation/issues/20) | open | M3 | [#1000](https://github.com/riscPrint/risc-v-workstation/pull/1000), [#1025](https://github.com/riscPrint/risc-v-workstation/pull/1025), [#1036](https://github.com/riscPrint/risc-v-workstation/pull/1036), [#1140](https://github.com/riscPrint/risc-v-workstation/pull/1140) | keep open; remaining scope |
+| [#21](https://github.com/riscPrint/risc-v-workstation/issues/21) | open | M3 | [#1066](https://github.com/riscPrint/risc-v-workstation/pull/1066), [#1122](https://github.com/riscPrint/risc-v-workstation/pull/1122) | keep open; remaining scope |
+| [#22](https://github.com/riscPrint/risc-v-workstation/issues/22) | open | M4 |  | keep open; remaining scope |
+| [#23](https://github.com/riscPrint/risc-v-workstation/issues/23) | open | M7 |  | keep open; remaining scope |
+| [#24](https://github.com/riscPrint/risc-v-workstation/issues/24) | open | M5 |  | keep open; remaining scope |
+| [#25](https://github.com/riscPrint/risc-v-workstation/issues/25) | open | M6 | [#1031](https://github.com/riscPrint/risc-v-workstation/pull/1031), [#1057](https://github.com/riscPrint/risc-v-workstation/pull/1057), [#1067](https://github.com/riscPrint/risc-v-workstation/pull/1067), [#1090](https://github.com/riscPrint/risc-v-workstation/pull/1090), [#1109](https://github.com/riscPrint/risc-v-workstation/pull/1109) | keep open; remaining scope |
+| [#26](https://github.com/riscPrint/risc-v-workstation/issues/26) | open | M3 |  | keep open; remaining scope |
+| [#27](https://github.com/riscPrint/risc-v-workstation/issues/27) | open | M5 | [#966](https://github.com/riscPrint/risc-v-workstation/pull/966) | keep open; remaining scope |
+| [#28](https://github.com/riscPrint/risc-v-workstation/issues/28) | open | M4 |  | keep open; remaining scope |
+| [#29](https://github.com/riscPrint/risc-v-workstation/issues/29) | open | M2 |  | keep open; remaining scope |
+| [#31](https://github.com/riscPrint/risc-v-workstation/issues/31) | open | M3 |  | keep open; remaining scope |
+| [#32](https://github.com/riscPrint/risc-v-workstation/issues/32) | open | M4 |  | keep open; remaining scope |
+| [#33](https://github.com/riscPrint/risc-v-workstation/issues/33) | open | M2 |  | keep open; remaining scope |
+| [#34](https://github.com/riscPrint/risc-v-workstation/issues/34) | open | M1 | [#974](https://github.com/riscPrint/risc-v-workstation/pull/974), [#975](https://github.com/riscPrint/risc-v-workstation/pull/975), [#976](https://github.com/riscPrint/risc-v-workstation/pull/976), [#977](https://github.com/riscPrint/risc-v-workstation/pull/977), [#980](https://github.com/riscPrint/risc-v-workstation/pull/980), [#984](https://github.com/riscPrint/risc-v-workstation/pull/984), [#990](https://github.com/riscPrint/risc-v-workstation/pull/990), [#1016](https://github.com/riscPrint/risc-v-workstation/pull/1016), [#1049](https://github.com/riscPrint/risc-v-workstation/pull/1049) | keep open; remaining scope |
+| [#35](https://github.com/riscPrint/risc-v-workstation/issues/35) | open | M3 | [#966](https://github.com/riscPrint/risc-v-workstation/pull/966) | keep open; remaining scope |
+| [#37](https://github.com/riscPrint/risc-v-workstation/issues/37) | open | M7 |  | keep open; remaining scope |
+| [#38](https://github.com/riscPrint/risc-v-workstation/issues/38) | open | M3 |  | keep open; remaining scope |
+| [#39](https://github.com/riscPrint/risc-v-workstation/issues/39) | open | M7 |  | keep open; remaining scope |
+| [#40](https://github.com/riscPrint/risc-v-workstation/issues/40) | open | M2 |  | keep open; remaining scope |
+| [#41](https://github.com/riscPrint/risc-v-workstation/issues/41) | open | M4 | [#1051](https://github.com/riscPrint/risc-v-workstation/pull/1051), [#1058](https://github.com/riscPrint/risc-v-workstation/pull/1058), [#1064](https://github.com/riscPrint/risc-v-workstation/pull/1064), [#1068](https://github.com/riscPrint/risc-v-workstation/pull/1068), [#1071](https://github.com/riscPrint/risc-v-workstation/pull/1071), [#1073](https://github.com/riscPrint/risc-v-workstation/pull/1073), [#1079](https://github.com/riscPrint/risc-v-workstation/pull/1079), [#1084](https://github.com/riscPrint/risc-v-workstation/pull/1084), [#1092](https://github.com/riscPrint/risc-v-workstation/pull/1092), [#1160](https://github.com/riscPrint/risc-v-workstation/pull/1160) | keep open; remaining scope |
+| [#42](https://github.com/riscPrint/risc-v-workstation/issues/42) | open | M2 |  | keep open; remaining scope |
+| [#43](https://github.com/riscPrint/risc-v-workstation/issues/43) | open | M2 |  | keep open; remaining scope |
+| [#45](https://github.com/riscPrint/risc-v-workstation/issues/45) | open | M4 |  | keep open; remaining scope |
+| [#46](https://github.com/riscPrint/risc-v-workstation/issues/46) | open | M4 | [#992](https://github.com/riscPrint/risc-v-workstation/pull/992), [#1002](https://github.com/riscPrint/risc-v-workstation/pull/1002), [#1014](https://github.com/riscPrint/risc-v-workstation/pull/1014), [#1029](https://github.com/riscPrint/risc-v-workstation/pull/1029), [#1040](https://github.com/riscPrint/risc-v-workstation/pull/1040), [#1046](https://github.com/riscPrint/risc-v-workstation/pull/1046) | keep open; remaining scope |
+| [#48](https://github.com/riscPrint/risc-v-workstation/issues/48) | open | M2 | [#1007](https://github.com/riscPrint/risc-v-workstation/pull/1007), [#1094](https://github.com/riscPrint/risc-v-workstation/pull/1094), [#1100](https://github.com/riscPrint/risc-v-workstation/pull/1100), [#1145](https://github.com/riscPrint/risc-v-workstation/pull/1145), [#1148](https://github.com/riscPrint/risc-v-workstation/pull/1148), [#1153](https://github.com/riscPrint/risc-v-workstation/pull/1153), [#1156](https://github.com/riscPrint/risc-v-workstation/pull/1156), [#1161](https://github.com/riscPrint/risc-v-workstation/pull/1161) | keep open; remaining scope |
+| [#49](https://github.com/riscPrint/risc-v-workstation/issues/49) | open | M2 | [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091), [#1116](https://github.com/riscPrint/risc-v-workstation/pull/1116) | keep open; remaining scope |
+| [#51](https://github.com/riscPrint/risc-v-workstation/issues/51) | open | M7 |  | keep open; remaining scope |
+| [#52](https://github.com/riscPrint/risc-v-workstation/issues/52) | open | M1 | [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101), [#1116](https://github.com/riscPrint/risc-v-workstation/pull/1116) | keep open; remaining scope |
+| [#54](https://github.com/riscPrint/risc-v-workstation/issues/54) | open | M2 |  | keep open; remaining scope |
+| [#55](https://github.com/riscPrint/risc-v-workstation/issues/55) | open | M2 |  | keep open; remaining scope |
+| [#57](https://github.com/riscPrint/risc-v-workstation/issues/57) | open | M4 |  | keep open; remaining scope |
+| [#58](https://github.com/riscPrint/risc-v-workstation/issues/58) | open | M3 |  | keep open; remaining scope |
+| [#59](https://github.com/riscPrint/risc-v-workstation/issues/59) | open | M6 |  | keep open; remaining scope |
+| [#60](https://github.com/riscPrint/risc-v-workstation/issues/60) | open | M3 |  | keep open; remaining scope |
+| [#61](https://github.com/riscPrint/risc-v-workstation/issues/61) | open | M3 | [#992](https://github.com/riscPrint/risc-v-workstation/pull/992), [#1002](https://github.com/riscPrint/risc-v-workstation/pull/1002), [#1014](https://github.com/riscPrint/risc-v-workstation/pull/1014), [#1029](https://github.com/riscPrint/risc-v-workstation/pull/1029), [#1040](https://github.com/riscPrint/risc-v-workstation/pull/1040), [#1046](https://github.com/riscPrint/risc-v-workstation/pull/1046) | keep open; remaining scope |
+| [#62](https://github.com/riscPrint/risc-v-workstation/issues/62) | open | M3 |  | keep open; remaining scope |
+| [#63](https://github.com/riscPrint/risc-v-workstation/issues/63) | open | M3 | [#986](https://github.com/riscPrint/risc-v-workstation/pull/986), [#1001](https://github.com/riscPrint/risc-v-workstation/pull/1001), [#1013](https://github.com/riscPrint/risc-v-workstation/pull/1013), [#1023](https://github.com/riscPrint/risc-v-workstation/pull/1023), [#1035](https://github.com/riscPrint/risc-v-workstation/pull/1035), [#1041](https://github.com/riscPrint/risc-v-workstation/pull/1041), [#1050](https://github.com/riscPrint/risc-v-workstation/pull/1050), [#1061](https://github.com/riscPrint/risc-v-workstation/pull/1061), [#1070](https://github.com/riscPrint/risc-v-workstation/pull/1070), [#1074](https://github.com/riscPrint/risc-v-workstation/pull/1074) | keep open; remaining scope |
+| [#64](https://github.com/riscPrint/risc-v-workstation/issues/64) | open | M2 | [#1082](https://github.com/riscPrint/risc-v-workstation/pull/1082), [#1117](https://github.com/riscPrint/risc-v-workstation/pull/1117), [#1134](https://github.com/riscPrint/risc-v-workstation/pull/1134), [#1139](https://github.com/riscPrint/risc-v-workstation/pull/1139) | keep open; remaining scope |
+| [#65](https://github.com/riscPrint/risc-v-workstation/issues/65) | open | M2 | [#996](https://github.com/riscPrint/risc-v-workstation/pull/996), [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044), [#1060](https://github.com/riscPrint/risc-v-workstation/pull/1060), [#1066](https://github.com/riscPrint/risc-v-workstation/pull/1066), [#1072](https://github.com/riscPrint/risc-v-workstation/pull/1072), [#1077](https://github.com/riscPrint/risc-v-workstation/pull/1077), [#1093](https://github.com/riscPrint/risc-v-workstation/pull/1093), [#1122](https://github.com/riscPrint/risc-v-workstation/pull/1122), [#1129](https://github.com/riscPrint/risc-v-workstation/pull/1129) | keep open; remaining scope |
+| [#66](https://github.com/riscPrint/risc-v-workstation/issues/66) | open | M2 | [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044) | keep open; remaining scope |
+| [#70](https://github.com/riscPrint/risc-v-workstation/issues/70) | closed | M2 | [#978](https://github.com/riscPrint/risc-v-workstation/pull/978), [#979](https://github.com/riscPrint/risc-v-workstation/pull/979), [#981](https://github.com/riscPrint/risc-v-workstation/pull/981), [#989](https://github.com/riscPrint/risc-v-workstation/pull/989), [#1005](https://github.com/riscPrint/risc-v-workstation/pull/1005), [#1047](https://github.com/riscPrint/risc-v-workstation/pull/1047), [#1055](https://github.com/riscPrint/risc-v-workstation/pull/1055) | owner decision; review acceptance scope |
+| [#71](https://github.com/riscPrint/risc-v-workstation/issues/71) | open | M4 |  | keep open; remaining scope |
+| [#72](https://github.com/riscPrint/risc-v-workstation/issues/72) | open | M3 |  | keep open; remaining scope |
+| [#74](https://github.com/riscPrint/risc-v-workstation/issues/74) | open | M5 |  | keep open; remaining scope |
+| [#75](https://github.com/riscPrint/risc-v-workstation/issues/75) | open | M2 |  | keep open; remaining scope |
+| [#76](https://github.com/riscPrint/risc-v-workstation/issues/76) | open | M1 |  | keep open; remaining scope |
+| [#77](https://github.com/riscPrint/risc-v-workstation/issues/77) | open | M2 |  | keep open; remaining scope |
+| [#78](https://github.com/riscPrint/risc-v-workstation/issues/78) | open | M3 |  | keep open; remaining scope |
+| [#79](https://github.com/riscPrint/risc-v-workstation/issues/79) | open | M1 |  | keep open; remaining scope |
+| [#80](https://github.com/riscPrint/risc-v-workstation/issues/80) | open | M2 |  | keep open; remaining scope |
+| [#82](https://github.com/riscPrint/risc-v-workstation/issues/82) | open | M2 |  | keep open; remaining scope |
+| [#83](https://github.com/riscPrint/risc-v-workstation/issues/83) | open | M2 |  | keep open; remaining scope |
+| [#84](https://github.com/riscPrint/risc-v-workstation/issues/84) | open | M2 | [#982](https://github.com/riscPrint/risc-v-workstation/pull/982), [#985](https://github.com/riscPrint/risc-v-workstation/pull/985), [#1048](https://github.com/riscPrint/risc-v-workstation/pull/1048), [#1111](https://github.com/riscPrint/risc-v-workstation/pull/1111), [#1121](https://github.com/riscPrint/risc-v-workstation/pull/1121), [#1124](https://github.com/riscPrint/risc-v-workstation/pull/1124), [#1128](https://github.com/riscPrint/risc-v-workstation/pull/1128), [#1132](https://github.com/riscPrint/risc-v-workstation/pull/1132), [#1147](https://github.com/riscPrint/risc-v-workstation/pull/1147) | keep open; remaining scope |
+| [#85](https://github.com/riscPrint/risc-v-workstation/issues/85) | open | M2 | [#1003](https://github.com/riscPrint/risc-v-workstation/pull/1003), [#1017](https://github.com/riscPrint/risc-v-workstation/pull/1017), [#1026](https://github.com/riscPrint/risc-v-workstation/pull/1026), [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044), [#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136), [#1144](https://github.com/riscPrint/risc-v-workstation/pull/1144), [#1157](https://github.com/riscPrint/risc-v-workstation/pull/1157) | keep open; remaining scope |
+| [#87](https://github.com/riscPrint/risc-v-workstation/issues/87) | open | M2 |  | keep open; remaining scope |
+| [#90](https://github.com/riscPrint/risc-v-workstation/issues/90) | open | M2 | [#964](https://github.com/riscPrint/risc-v-workstation/pull/964) | keep open; remaining scope |
+| [#91](https://github.com/riscPrint/risc-v-workstation/issues/91) | open | M2 |  | keep open; remaining scope |
+| [#93](https://github.com/riscPrint/risc-v-workstation/issues/93) | open | M2 | [#954](https://github.com/riscPrint/risc-v-workstation/pull/954), [#983](https://github.com/riscPrint/risc-v-workstation/pull/983) | keep open; remaining scope |
+| [#95](https://github.com/riscPrint/risc-v-workstation/issues/95) | open | M2 |  | keep open; remaining scope |
+| [#96](https://github.com/riscPrint/risc-v-workstation/issues/96) | open | M2 |  | keep open; remaining scope |
+| [#97](https://github.com/riscPrint/risc-v-workstation/issues/97) | open | M2 | [#964](https://github.com/riscPrint/risc-v-workstation/pull/964) | keep open; remaining scope |
+| [#98](https://github.com/riscPrint/risc-v-workstation/issues/98) | open | M2 | [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044) | keep open; remaining scope |
+| [#99](https://github.com/riscPrint/risc-v-workstation/issues/99) | open | M2 |  | keep open; remaining scope |
+| [#100](https://github.com/riscPrint/risc-v-workstation/issues/100) | open | M2 |  | keep open; remaining scope |
+| [#102](https://github.com/riscPrint/risc-v-workstation/issues/102) | open | M2 | [#964](https://github.com/riscPrint/risc-v-workstation/pull/964) | keep open; remaining scope |
+| [#103](https://github.com/riscPrint/risc-v-workstation/issues/103) | open | M3 |  | keep open; remaining scope |
+| [#104](https://github.com/riscPrint/risc-v-workstation/issues/104) | open | M2 |  | keep open; remaining scope |
+| [#106](https://github.com/riscPrint/risc-v-workstation/issues/106) | closed | M3 |  | owner decision; review acceptance scope |
+| [#107](https://github.com/riscPrint/risc-v-workstation/issues/107) | open | M3 |  | keep open; remaining scope |
+| [#109](https://github.com/riscPrint/risc-v-workstation/issues/109) | open | M2 | [#1097](https://github.com/riscPrint/risc-v-workstation/pull/1097), [#1141](https://github.com/riscPrint/risc-v-workstation/pull/1141), [#1159](https://github.com/riscPrint/risc-v-workstation/pull/1159) | keep open; remaining scope |
+| [#111](https://github.com/riscPrint/risc-v-workstation/issues/111) | open | M2 |  | keep open; remaining scope |
+| [#112](https://github.com/riscPrint/risc-v-workstation/issues/112) | open | M2 |  | keep open; remaining scope |
+| [#114](https://github.com/riscPrint/risc-v-workstation/issues/114) | open | M2 |  | keep open; remaining scope |
+| [#118](https://github.com/riscPrint/risc-v-workstation/issues/118) | closed | M4 |  | owner decision; review acceptance scope |
+| [#119](https://github.com/riscPrint/risc-v-workstation/issues/119) | open | M3 |  | keep open; remaining scope |
+| [#122](https://github.com/riscPrint/risc-v-workstation/issues/122) | open | M2 |  | keep open; remaining scope |
+| [#123](https://github.com/riscPrint/risc-v-workstation/issues/123) | open | M2 | [#952](https://github.com/riscPrint/risc-v-workstation/pull/952), [#965](https://github.com/riscPrint/risc-v-workstation/pull/965), [#971](https://github.com/riscPrint/risc-v-workstation/pull/971) | keep open; remaining scope |
+| [#124](https://github.com/riscPrint/risc-v-workstation/issues/124) | open | M3 |  | keep open; remaining scope |
+| [#125](https://github.com/riscPrint/risc-v-workstation/issues/125) | open | M3 |  | keep open; remaining scope |
+| [#127](https://github.com/riscPrint/risc-v-workstation/issues/127) | open | M2 |  | keep open; remaining scope |
+| [#128](https://github.com/riscPrint/risc-v-workstation/issues/128) | open | M2 |  | keep open; remaining scope |
+| [#129](https://github.com/riscPrint/risc-v-workstation/issues/129) | open | M2 |  | keep open; remaining scope |
+| [#131](https://github.com/riscPrint/risc-v-workstation/issues/131) | open | M2 | [#970](https://github.com/riscPrint/risc-v-workstation/pull/970) | keep open; remaining scope |
+| [#132](https://github.com/riscPrint/risc-v-workstation/issues/132) | open | M4 |  | keep open; remaining scope |
+| [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) | open | M2 |  | keep open; remaining scope |
+| [#134](https://github.com/riscPrint/risc-v-workstation/issues/134) | open | M2 | [#956](https://github.com/riscPrint/risc-v-workstation/pull/956), [#1006](https://github.com/riscPrint/risc-v-workstation/pull/1006), [#1019](https://github.com/riscPrint/risc-v-workstation/pull/1019), [#1028](https://github.com/riscPrint/risc-v-workstation/pull/1028), [#1033](https://github.com/riscPrint/risc-v-workstation/pull/1033) | keep open; remaining scope |
+| [#136](https://github.com/riscPrint/risc-v-workstation/issues/136) | open | M2 |  | keep open; remaining scope |
+| [#137](https://github.com/riscPrint/risc-v-workstation/issues/137) | open | M2 |  | keep open; remaining scope |
+| [#138](https://github.com/riscPrint/risc-v-workstation/issues/138) | open | M2 |  | keep open; remaining scope |
+| [#139](https://github.com/riscPrint/risc-v-workstation/issues/139) | open | M2 | [#999](https://github.com/riscPrint/risc-v-workstation/pull/999), [#1009](https://github.com/riscPrint/risc-v-workstation/pull/1009) | keep open; remaining scope |
+| [#140](https://github.com/riscPrint/risc-v-workstation/issues/140) | open | M2 |  | keep open; remaining scope |
+| [#141](https://github.com/riscPrint/risc-v-workstation/issues/141) | open | M2 |  | keep open; remaining scope |
+| [#142](https://github.com/riscPrint/risc-v-workstation/issues/142) | open | M3 |  | keep open; remaining scope |
+| [#143](https://github.com/riscPrint/risc-v-workstation/issues/143) | open | M2 |  | keep open; remaining scope |
+| [#144](https://github.com/riscPrint/risc-v-workstation/issues/144) | open | M2 |  | keep open; remaining scope |
+| [#145](https://github.com/riscPrint/risc-v-workstation/issues/145) | open | M3 |  | keep open; remaining scope |
+| [#146](https://github.com/riscPrint/risc-v-workstation/issues/146) | open | M2 |  | keep open; remaining scope |
+| [#147](https://github.com/riscPrint/risc-v-workstation/issues/147) | open | M2 |  | keep open; remaining scope |
+| [#148](https://github.com/riscPrint/risc-v-workstation/issues/148) | open | M2 |  | keep open; remaining scope |
+| [#149](https://github.com/riscPrint/risc-v-workstation/issues/149) | open | M2 |  | keep open; remaining scope |
+| [#150](https://github.com/riscPrint/risc-v-workstation/issues/150) | open | M5 | [#992](https://github.com/riscPrint/risc-v-workstation/pull/992), [#1046](https://github.com/riscPrint/risc-v-workstation/pull/1046) | keep open; remaining scope |
+| [#151](https://github.com/riscPrint/risc-v-workstation/issues/151) | open | M2 |  | keep open; remaining scope |
+| [#152](https://github.com/riscPrint/risc-v-workstation/issues/152) | open | M2 | [#1158](https://github.com/riscPrint/risc-v-workstation/pull/1158) | keep open; remaining scope |
+| [#153](https://github.com/riscPrint/risc-v-workstation/issues/153) | open | M2 |  | keep open; remaining scope |
+| [#154](https://github.com/riscPrint/risc-v-workstation/issues/154) | open | M2 |  | keep open; remaining scope |
+| [#155](https://github.com/riscPrint/risc-v-workstation/issues/155) | open | M2 |  | keep open; remaining scope |
+| [#156](https://github.com/riscPrint/risc-v-workstation/issues/156) | open | M2 |  | keep open; remaining scope |
+| [#157](https://github.com/riscPrint/risc-v-workstation/issues/157) | open | M2 |  | keep open; remaining scope |
+| [#158](https://github.com/riscPrint/risc-v-workstation/issues/158) | open | M2 |  | keep open; remaining scope |
+| [#159](https://github.com/riscPrint/risc-v-workstation/issues/159) | open | M2 |  | keep open; remaining scope |
+| [#160](https://github.com/riscPrint/risc-v-workstation/issues/160) | open | M4 |  | keep open; remaining scope |
+| [#161](https://github.com/riscPrint/risc-v-workstation/issues/161) | open | M2 |  | keep open; remaining scope |
+| [#162](https://github.com/riscPrint/risc-v-workstation/issues/162) | open | M2 | [#951](https://github.com/riscPrint/risc-v-workstation/pull/951), [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044) | keep open; remaining scope |
+| [#163](https://github.com/riscPrint/risc-v-workstation/issues/163) | open | M2 | [#951](https://github.com/riscPrint/risc-v-workstation/pull/951), [#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038), [#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044) | keep open; remaining scope |
+| [#164](https://github.com/riscPrint/risc-v-workstation/issues/164) | open | M2 |  | keep open; remaining scope |
+| [#165](https://github.com/riscPrint/risc-v-workstation/issues/165) | open | M2 |  | keep open; remaining scope |
+| [#166](https://github.com/riscPrint/risc-v-workstation/issues/166) | open | M2 |  | keep open; remaining scope |
+| [#167](https://github.com/riscPrint/risc-v-workstation/issues/167) | open | M4 |  | keep open; remaining scope |
+| [#168](https://github.com/riscPrint/risc-v-workstation/issues/168) | open | M2 |  | keep open; remaining scope |
+| [#169](https://github.com/riscPrint/risc-v-workstation/issues/169) | open | M2 |  | keep open; remaining scope |
+| [#170](https://github.com/riscPrint/risc-v-workstation/issues/170) | open | M2 |  | keep open; remaining scope |
+| [#171](https://github.com/riscPrint/risc-v-workstation/issues/171) | open | M2 |  | keep open; remaining scope |
+| [#172](https://github.com/riscPrint/risc-v-workstation/issues/172) | open | M2 |  | keep open; remaining scope |
+| [#173](https://github.com/riscPrint/risc-v-workstation/issues/173) | open | M3 |  | keep open; remaining scope |
+| [#174](https://github.com/riscPrint/risc-v-workstation/issues/174) | open | M2 |  | keep open; remaining scope |
+| [#175](https://github.com/riscPrint/risc-v-workstation/issues/175) | open | M2 |  | keep open; remaining scope |
+| [#176](https://github.com/riscPrint/risc-v-workstation/issues/176) | open | M2 |  | keep open; remaining scope |
+| [#177](https://github.com/riscPrint/risc-v-workstation/issues/177) | open | M2 | [#973](https://github.com/riscPrint/risc-v-workstation/pull/973) | keep open; remaining scope |
+| [#178](https://github.com/riscPrint/risc-v-workstation/issues/178) | open | M4 |  | keep open; remaining scope |
+| [#179](https://github.com/riscPrint/risc-v-workstation/issues/179) | open | M2 |  | keep open; remaining scope |
+| [#180](https://github.com/riscPrint/risc-v-workstation/issues/180) | open | M4 |  | keep open; remaining scope |
+| [#181](https://github.com/riscPrint/risc-v-workstation/issues/181) | open | M2 |  | keep open; remaining scope |
+| [#182](https://github.com/riscPrint/risc-v-workstation/issues/182) | open | M4 |  | keep open; remaining scope |
+| [#183](https://github.com/riscPrint/risc-v-workstation/issues/183) | open | M5 | [#1037](https://github.com/riscPrint/risc-v-workstation/pull/1037), [#1078](https://github.com/riscPrint/risc-v-workstation/pull/1078) | keep open; remaining scope |
+| [#184](https://github.com/riscPrint/risc-v-workstation/issues/184) | open | M3 |  | keep open; remaining scope |
+| [#185](https://github.com/riscPrint/risc-v-workstation/issues/185) | closed | M2 |  | owner decision; review acceptance scope |
+| [#186](https://github.com/riscPrint/risc-v-workstation/issues/186) | open | M2 |  | keep open; remaining scope |
+| [#187](https://github.com/riscPrint/risc-v-workstation/issues/187) | open | M4 | [#1162](https://github.com/riscPrint/risc-v-workstation/pull/1162) | keep open; remaining scope |
+| [#188](https://github.com/riscPrint/risc-v-workstation/issues/188) | open | M2 |  | keep open; remaining scope |
+| [#189](https://github.com/riscPrint/risc-v-workstation/issues/189) | open | M2 |  | keep open; remaining scope |
+| [#190](https://github.com/riscPrint/risc-v-workstation/issues/190) | open | M2 |  | keep open; remaining scope |
+| [#191](https://github.com/riscPrint/risc-v-workstation/issues/191) | open | M4 |  | keep open; remaining scope |
+| [#192](https://github.com/riscPrint/risc-v-workstation/issues/192) | open | M2 |  | keep open; remaining scope |
+| [#193](https://github.com/riscPrint/risc-v-workstation/issues/193) | open | M2 |  | keep open; remaining scope |
+| [#194](https://github.com/riscPrint/risc-v-workstation/issues/194) | open | M2 |  | keep open; remaining scope |
+| [#195](https://github.com/riscPrint/risc-v-workstation/issues/195) | open | M2 |  | keep open; remaining scope |
+| [#196](https://github.com/riscPrint/risc-v-workstation/issues/196) | open | M2 |  | keep open; remaining scope |
+| [#197](https://github.com/riscPrint/risc-v-workstation/issues/197) | open | M2 |  | keep open; remaining scope |
+| [#198](https://github.com/riscPrint/risc-v-workstation/issues/198) | open | M3 |  | keep open; remaining scope |
+| [#199](https://github.com/riscPrint/risc-v-workstation/issues/199) | open | M2 |  | keep open; remaining scope |
+| [#200](https://github.com/riscPrint/risc-v-workstation/issues/200) | open | M3 |  | keep open; remaining scope |
+| [#201](https://github.com/riscPrint/risc-v-workstation/issues/201) | open | M2 |  | keep open; remaining scope |
+| [#202](https://github.com/riscPrint/risc-v-workstation/issues/202) | open | M2 |  | keep open; remaining scope |
+| [#203](https://github.com/riscPrint/risc-v-workstation/issues/203) | open | M3 |  | keep open; remaining scope |
+| [#204](https://github.com/riscPrint/risc-v-workstation/issues/204) | open | M2 | [#987](https://github.com/riscPrint/risc-v-workstation/pull/987) | keep open; remaining scope |
+| [#205](https://github.com/riscPrint/risc-v-workstation/issues/205) | open | M2 | [#987](https://github.com/riscPrint/risc-v-workstation/pull/987) | keep open; remaining scope |
+| [#206](https://github.com/riscPrint/risc-v-workstation/issues/206) | closed | M2 |  | owner decision; review acceptance scope |
+| [#207](https://github.com/riscPrint/risc-v-workstation/issues/207) | open | M2 |  | keep open; remaining scope |
+| [#208](https://github.com/riscPrint/risc-v-workstation/issues/208) | open | M3 |  | keep open; remaining scope |
+| [#209](https://github.com/riscPrint/risc-v-workstation/issues/209) | open | M2 |  | keep open; remaining scope |
+| [#210](https://github.com/riscPrint/risc-v-workstation/issues/210) | open | M3 |  | keep open; remaining scope |
+| [#211](https://github.com/riscPrint/risc-v-workstation/issues/211) | open | M3 |  | keep open; remaining scope |
+| [#212](https://github.com/riscPrint/risc-v-workstation/issues/212) | open | M2 |  | keep open; remaining scope |
+| [#213](https://github.com/riscPrint/risc-v-workstation/issues/213) | open | M4 |  | keep open; remaining scope |
+| [#214](https://github.com/riscPrint/risc-v-workstation/issues/214) | open | M4 |  | keep open; remaining scope |
+| [#215](https://github.com/riscPrint/risc-v-workstation/issues/215) | open | M2 |  | keep open; remaining scope |
+| [#216](https://github.com/riscPrint/risc-v-workstation/issues/216) | open | M2 |  | keep open; remaining scope |
+| [#217](https://github.com/riscPrint/risc-v-workstation/issues/217) | open | M4 |  | keep open; remaining scope |
+| [#282](https://github.com/riscPrint/risc-v-workstation/issues/282) | open | M6 | [#1037](https://github.com/riscPrint/risc-v-workstation/pull/1037), [#1078](https://github.com/riscPrint/risc-v-workstation/pull/1078) | keep open; remaining scope |
+| [#294](https://github.com/riscPrint/risc-v-workstation/issues/294) | open | M5 |  | keep open; remaining scope |
+| [#295](https://github.com/riscPrint/risc-v-workstation/issues/295) | open | M6 |  | keep open; remaining scope |
+| [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) | open | M4 | [#962](https://github.com/riscPrint/risc-v-workstation/pull/962), [#987](https://github.com/riscPrint/risc-v-workstation/pull/987), [#1008](https://github.com/riscPrint/risc-v-workstation/pull/1008), [#1021](https://github.com/riscPrint/risc-v-workstation/pull/1021), [#1042](https://github.com/riscPrint/risc-v-workstation/pull/1042) | keep open; remaining scope |
+| [#297](https://github.com/riscPrint/risc-v-workstation/issues/297) | open | M5 |  | keep open; remaining scope |
+| [#335](https://github.com/riscPrint/risc-v-workstation/issues/335) | open | M4 |  | keep open; remaining scope |
+| [#344](https://github.com/riscPrint/risc-v-workstation/issues/344) | open | M4 |  | keep open; remaining scope |
+| [#345](https://github.com/riscPrint/risc-v-workstation/issues/345) | open | M4 |  | keep open; remaining scope |
+| [#346](https://github.com/riscPrint/risc-v-workstation/issues/346) | open | M4 |  | keep open; remaining scope |
+| [#347](https://github.com/riscPrint/risc-v-workstation/issues/347) | open | M4 |  | keep open; remaining scope |
+| [#348](https://github.com/riscPrint/risc-v-workstation/issues/348) | open | M4 |  | keep open; remaining scope |
+| [#349](https://github.com/riscPrint/risc-v-workstation/issues/349) | closed | M3 | [#994](https://github.com/riscPrint/risc-v-workstation/pull/994), [#1022](https://github.com/riscPrint/risc-v-workstation/pull/1022), [#1094](https://github.com/riscPrint/risc-v-workstation/pull/1094), [#1114](https://github.com/riscPrint/risc-v-workstation/pull/1114) | owner decision; review acceptance scope |
+| [#350](https://github.com/riscPrint/risc-v-workstation/issues/350) | open | M4 |  | keep open; remaining scope |
+| [#351](https://github.com/riscPrint/risc-v-workstation/issues/351) | open | M3 |  | keep open; remaining scope |
+| [#352](https://github.com/riscPrint/risc-v-workstation/issues/352) | open | M3 | [#1081](https://github.com/riscPrint/risc-v-workstation/pull/1081), [#1094](https://github.com/riscPrint/risc-v-workstation/pull/1094) | keep open; remaining scope |
+| [#353](https://github.com/riscPrint/risc-v-workstation/issues/353) | open | M3 | [#994](https://github.com/riscPrint/risc-v-workstation/pull/994), [#1022](https://github.com/riscPrint/risc-v-workstation/pull/1022), [#1081](https://github.com/riscPrint/risc-v-workstation/pull/1081), [#1094](https://github.com/riscPrint/risc-v-workstation/pull/1094), [#1114](https://github.com/riscPrint/risc-v-workstation/pull/1114) | keep open; remaining scope |
+| [#354](https://github.com/riscPrint/risc-v-workstation/issues/354) | open | M3 | [#1043](https://github.com/riscPrint/risc-v-workstation/pull/1043), [#1054](https://github.com/riscPrint/risc-v-workstation/pull/1054), [#1062](https://github.com/riscPrint/risc-v-workstation/pull/1062), [#1089](https://github.com/riscPrint/risc-v-workstation/pull/1089) | keep open; remaining scope |
+| [#355](https://github.com/riscPrint/risc-v-workstation/issues/355) | open | M3 |  | keep open; remaining scope |
+| [#356](https://github.com/riscPrint/risc-v-workstation/issues/356) | open | M3 |  | keep open; remaining scope |
+| [#357](https://github.com/riscPrint/risc-v-workstation/issues/357) | open | M3 |  | keep open; remaining scope |
+| [#358](https://github.com/riscPrint/risc-v-workstation/issues/358) | open | M3 |  | keep open; remaining scope |
+| [#359](https://github.com/riscPrint/risc-v-workstation/issues/359) | open | M3 |  | keep open; remaining scope |
+| [#360](https://github.com/riscPrint/risc-v-workstation/issues/360) | open | M3 |  | keep open; remaining scope |
+| [#361](https://github.com/riscPrint/risc-v-workstation/issues/361) | open | M2 |  | keep open; remaining scope |
+| [#362](https://github.com/riscPrint/risc-v-workstation/issues/362) | open | M3 |  | keep open; remaining scope |
+| [#363](https://github.com/riscPrint/risc-v-workstation/issues/363) | open | M2 |  | keep open; remaining scope |
+| [#364](https://github.com/riscPrint/risc-v-workstation/issues/364) | open | M3 |  | keep open; remaining scope |
+| [#365](https://github.com/riscPrint/risc-v-workstation/issues/365) | open | M3 | [#1097](https://github.com/riscPrint/risc-v-workstation/pull/1097), [#1113](https://github.com/riscPrint/risc-v-workstation/pull/1113), [#1141](https://github.com/riscPrint/risc-v-workstation/pull/1141), [#1149](https://github.com/riscPrint/risc-v-workstation/pull/1149) | keep open; remaining scope |
+| [#366](https://github.com/riscPrint/risc-v-workstation/issues/366) | open | M3 |  | keep open; remaining scope |
+| [#367](https://github.com/riscPrint/risc-v-workstation/issues/367) | open | M3 |  | keep open; remaining scope |
+| [#369](https://github.com/riscPrint/risc-v-workstation/issues/369) | open | M3 |  | keep open; remaining scope |
+| [#370](https://github.com/riscPrint/risc-v-workstation/issues/370) | open | M1 |  | keep open; remaining scope |
+| [#371](https://github.com/riscPrint/risc-v-workstation/issues/371) | open | M1 |  | keep open; remaining scope |
+| [#372](https://github.com/riscPrint/risc-v-workstation/issues/372) | open | M1 |  | keep open; remaining scope |
+| [#375](https://github.com/riscPrint/risc-v-workstation/issues/375) | open | M2 |  | keep open; remaining scope |
+| [#376](https://github.com/riscPrint/risc-v-workstation/issues/376) | open | M2 |  | keep open; remaining scope |
+| [#377](https://github.com/riscPrint/risc-v-workstation/issues/377) | open | M2 |  | keep open; remaining scope |
+| [#378](https://github.com/riscPrint/risc-v-workstation/issues/378) | open | M4 |  | keep open; remaining scope |
+| [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) | closed | M2 |  | owner decision; review acceptance scope |
+| [#722](https://github.com/riscPrint/risc-v-workstation/issues/722) | open | Unmapped |  | keep open; remaining scope |
+| [#723](https://github.com/riscPrint/risc-v-workstation/issues/723) | open | Unmapped |  | keep open; remaining scope |
+
+The register contains 218 preserved census IDs and two separately recorded new IDs. New evidence does not change milestone membership. No issue was closed or commented on.

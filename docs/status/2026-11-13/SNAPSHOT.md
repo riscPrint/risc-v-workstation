@@ -1,6 +1,6 @@
 # Collection record
 
-Hourly refresh collected at 2026-11-13T08:21:26.898955+00:00: 80 additional merged PRs; 563 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
+Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. PR bodies report the evidence. Their artifacts were not independently rerun.
 
@@ -111,3 +111,69 @@ The refresh repeats the original explicit-repository PR/open/closed queries with
 | [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) | ReopenedEvent | 2026-11-13T07:19:15Z | open |
 | [#349](https://github.com/riscPrint/risc-v-workstation/issues/349) | ClosedEvent | 2026-11-13T07:42:26Z | closed |
 | [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) | ClosedEvent | 2026-11-13T04:29:55Z | closed |
+
+## Latest collection at 2026-11-13T14:22:26.916089+00:00
+
+```json
+{
+  "collectedAt": "2026-11-13T14:22:26.916089+00:00",
+  "mainHeadAtDocumentWrite": "298f3598542c72a9aadee7a0103c56b229bd22d7",
+  "previousMergedPRs": 563,
+  "additionalMergedPRs": 212,
+  "mergedPRs": 775,
+  "openIssues": 213,
+  "currentlyClosedSinceMidnight": 7,
+  "midnightIssues": 218,
+  "newToday": [
+    722,
+    723
+  ],
+  "rawLocation": "/tmp/rvw-status-2026-11-13/refresh-1420",
+  "timelinePaginationComplete": true,
+  "rawSha256": {
+    "milestone-map.json": "457344db2919d876262b3e887841fafac6109b8a6881bde467a0476689d0f3f7",
+    "rvw-audit-open.json": "a40f284d0c49e52d319da00874dfbfa4faf5a76e61e447c247276686f8c35216",
+    "timelines.json": "9409908038fec01a13d1876d9428434de8acf40ddc6de1948c51dc96cf6e4d69",
+    "rvw-audit-delta.json": "cee209687e8bfacbd74195ddaa9feb44a6c6e5116ace5399d7fffddbe2705d87",
+    "rvw-audit-closed.json": "3be110b0b55385d8859fc5c13245d868afbe7b5ceff913862945096c15e8fcbe",
+    "reviewed-labels.json": "b7a3b924e995ca684fad13559c38a78c1628ebba58c7b973413a08485770e1ad",
+    "rvw-audit-prs.json": "50d86e392f6d4403101ee17f763181833182a2e26786d7ca633e7e66dc9eb48f"
+  }
+}
+```
+
+Collection used explicit repository `riscPrint/risc-v-workstation`, merged PRs since midnight and open/closed issue queries with limit 1000. All results are below that limit. Delta membership uses the 563 PR headings in the previous source ledger, not PR-number order. The latest included merge is 2026-11-13T14:17:33Z. Later merges are outside this collection. All 220 issue timelines were fetched with first:100 and all pagination flags are false. Raw bodies, metadata, reviewed label map, milestone map and this document-only helper remain outside the repository.
+
+The requested original helper directory was absent. The nearby `rvw-status-2026-11-13-agent` directory contained raw JSON and a diff, but no generation helpers. Those files were inspected as historical inputs. No old generator was run. The retained issue appendix supplied the exact census and PR #381 milestone map. The worktree was clean before fetch and detached checkout. A later clean external checkout moved HEAD again; the recorded head above identifies the document base.
+
+### Current closure/reopen events since midnight
+
+| Issue | Event | UTC time |
+|---|---|---|
+| [#64](https://github.com/riscPrint/risc-v-workstation/issues/64) | ClosedEvent | 2026-11-13T04:57:44Z |
+| [#64](https://github.com/riscPrint/risc-v-workstation/issues/64) | ReopenedEvent | 2026-11-13T07:19:36Z |
+| [#70](https://github.com/riscPrint/risc-v-workstation/issues/70) | ClosedEvent | 2026-11-13T07:26:23Z |
+| [#85](https://github.com/riscPrint/risc-v-workstation/issues/85) | ClosedEvent | 2026-11-13T03:05:20Z |
+| [#85](https://github.com/riscPrint/risc-v-workstation/issues/85) | ReopenedEvent | 2026-11-13T07:19:31Z |
+| [#87](https://github.com/riscPrint/risc-v-workstation/issues/87) | ClosedEvent | 2026-11-13T01:56:34Z |
+| [#87](https://github.com/riscPrint/risc-v-workstation/issues/87) | ReopenedEvent | 2026-11-13T07:19:34Z |
+| [#106](https://github.com/riscPrint/risc-v-workstation/issues/106) | ClosedEvent | 2026-11-13T06:34:31Z |
+| [#118](https://github.com/riscPrint/risc-v-workstation/issues/118) | ClosedEvent | 2026-11-13T02:29:03Z |
+| [#127](https://github.com/riscPrint/risc-v-workstation/issues/127) | ClosedEvent | 2026-11-13T02:14:59Z |
+| [#127](https://github.com/riscPrint/risc-v-workstation/issues/127) | ReopenedEvent | 2026-11-13T07:19:28Z |
+| [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) | ClosedEvent | 2026-11-13T02:14:59Z |
+| [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) | ReopenedEvent | 2026-11-13T07:19:25Z |
+| [#153](https://github.com/riscPrint/risc-v-workstation/issues/153) | ClosedEvent | 2026-11-13T02:14:59Z |
+| [#153](https://github.com/riscPrint/risc-v-workstation/issues/153) | ReopenedEvent | 2026-11-13T07:19:23Z |
+| [#156](https://github.com/riscPrint/risc-v-workstation/issues/156) | ClosedEvent | 2026-11-13T02:15:00Z |
+| [#156](https://github.com/riscPrint/risc-v-workstation/issues/156) | ReopenedEvent | 2026-11-13T07:19:20Z |
+| [#161](https://github.com/riscPrint/risc-v-workstation/issues/161) | ClosedEvent | 2026-11-13T02:20:49Z |
+| [#161](https://github.com/riscPrint/risc-v-workstation/issues/161) | ReopenedEvent | 2026-11-13T07:19:17Z |
+| [#185](https://github.com/riscPrint/risc-v-workstation/issues/185) | ClosedEvent | 2026-11-13T02:51:50Z |
+| [#206](https://github.com/riscPrint/risc-v-workstation/issues/206) | ClosedEvent | 2026-11-13T04:20:35Z |
+| [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) | ClosedEvent | 2026-11-13T03:10:42Z |
+| [#296](https://github.com/riscPrint/risc-v-workstation/issues/296) | ReopenedEvent | 2026-11-13T07:19:15Z |
+| [#349](https://github.com/riscPrint/risc-v-workstation/issues/349) | ClosedEvent | 2026-11-13T07:42:26Z |
+| [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) | ClosedEvent | 2026-11-13T04:29:55Z |
+
+The currently closed set is [#70](https://github.com/riscPrint/risc-v-workstation/issues/70), [#106](https://github.com/riscPrint/risc-v-workstation/issues/106), [#118](https://github.com/riscPrint/risc-v-workstation/issues/118), [#185](https://github.com/riscPrint/risc-v-workstation/issues/185), [#206](https://github.com/riscPrint/risc-v-workstation/issues/206), [#349](https://github.com/riscPrint/risc-v-workstation/issues/349), [#379](https://github.com/riscPrint/risc-v-workstation/issues/379). Closure events do not establish acceptance. No issue was closed or commented on. No project code, test, build, simulation, proof or MCP discovery ran. ROADMAP.md and TODO.md were not edited. No schedule was created.

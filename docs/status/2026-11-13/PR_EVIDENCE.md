@@ -1,6 +1,6 @@
 # PR source ledger
 
-Hourly refresh collected at 2026-11-13T08:21:26.898955+00:00: 80 additional merged PRs; 563 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
+Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. Local personal paths in quoted source text are omitted. Raw JSON retains the source. PR bodies report the evidence. Their artifacts were not independently rerun.
 
@@ -14952,3 +14952,5914 @@ Refs: #215
 Refs: #216
 
 Roadmap notes: Move these four Python profiles from mock-only callback evidence to the measured seeded semantic RTL scope. Keep external native models, physical protocols and the listed unsupported operations open.
+
+## Refresh at 2026-11-13T14:22:26.916089+00:00
+
+Each body below was read before its evidence label was assigned. Labels describe the reported slice, including failed runs. Source exports, saved-artifact analysis and compilation do not establish new RTL execution. Extracted arithmetic units and small native controls use the fixture label. Documentation bodies can cite earlier execution without adding a new run.
+
+## PR 951
+
+[#951](https://github.com/riscPrint/risc-v-workstation/pull/951). Merged: 2026-11-13T08:20:35Z.
+
+Title: feat(checks): parse literal tcl command forms for upf
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Accept literal quoted Tcl words, semicolon/newline command separators and command-start comments in the existing UPF subset. Preserve separators inside grouped words and apply the backslash-newline prepass. Keep unsupported commands, substitutions, nested braced lists and other escapes as errors. No interpreter is invoked.
+
+Reuse the existing UPF command validation and monitor generation. Normalized intent and bindings keep their existing schemas. Document the lexical subset against https://www.tcl-lang.org/man/tcl8.6/TclCmd/Tcl.htm.
+
+## Testing
+
+- 34 targeted parser/generation tests passed; 26 native cases deselected. Cases cover quoted words, separators, continuations, comment placement, unterminated words, trailing unsupported commands and refused substitutions.
+- Fast set: 1824 passed, 1 skipped, 1 unrelated failure, 8241 deselected. test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names rejects replay_pack's git declaration because the inventory lacks that tool name. Command-reference validation is deferred by the brief.
+- CLI import, MCP discovery and 34 targeted tests checked after rebase.
+- No new simulation, proof, physical-power test or full Python suite. Monitor semantics are unchanged.
+
+## Issues
+
+Refs: #162, #163. General Tcl, nested lists, dynamic expressions, clock-gate import and broader UPF strategy coverage remain open. This is a lexical import extension, not IEEE 1801 qualification.
+
+Roadmap notes: The literal UPF parser now handles common quoted and separated command forms while retaining fail-closed command validation. Clock-gate import and broader power intent are still separate gaps.
+
+## PR 952
+
+[#952](https://github.com/riscPrint/risc-v-workstation/pull/952). Merged: 2026-11-13T08:21:35Z.
+
+Title: fix(mcp): declare architecture effects and replay commands
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare effects beside 46 architecture, component-model, OoO and workload tools. Include model engine cache builds, reference downloads, optional gem5, RISC-V GCC, Spike and QEMU use, and generated report paths. Lower the baseline by 91 findings.
+
+Leave arch_sched_study's native declaration unknown: it uses llvm-mca, which has no installer inventory ID. Its effect declaration names this gap. No empty tuple is used to conceal the missing dependency.
+
+The global inventory test also caught replay_pack and replay_run declaring Git as an optional installer tool. Their declarations now use no optional installer IDs and explicitly name Git and the configured adapter in their effects. C7 defines this distinction.
+
+Roadmap notes: architecture effect declarations are complete. The llvm-mca inventory gap and other package declarations remain open.
+
+## Testing
+Metadata and coherence tests: 32 passed, no skips.
+Fast set: 1,812 passed, 1 skipped, 8,241 deselected.
+NOT RUN: simulations, core builds, full Python suite, native qualification and GitHub CI.
+
+## Issues
+Refs: #123
+The llvm-mca inventory gap remains open.
+
+## PR 953
+
+[#953](https://github.com/riscPrint/risc-v-workstation/pull/953). Merged: 2026-11-13T08:21:42Z.
+
+Title: feat(probes): write kanata prediction records from branch probes
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Closes the inventory gap "rvw perf predictor effects: not yet (needs a live instruction ID on the branch probe)".
+
+- `Probe.branch(..., id = Some(instructionId))` adds an optional `id` field: the stage/retire probes' instruction ID.
+- `rvw probes convert --to kanata` writes `#rvw 1 prediction` direction records (predictor = probe name; recovery, work, warmup, alias and context `?`) for branch events with `id` and `predicted_taken`. Each record comes before the instruction's retire. A branch ID that is not a live instruction is refused.
+- The VexRiscv `ProbePlugin` passes `wb.input(PROBE_ID)`.
+- Consumer row `perf-predictions`. Contract text in `docs/contracts/sim.md`; SpinalProbes inventory and probes README updated.
+
+## Testing
+
+- `rvw/.venv/bin/python -m pytest rvw/tests/test_probes_kanata_predictions.py rvw/tests/test_probes.py rvw/tests/test_probes_validate.py -q`: 23 passed (3 new).
+- Native VexRiscv `branches --probes` (private copy, lock `vex-csims`): `--to kanata` gives 9002 prediction records. `rvw perf` reads 9002 outcomes, 4147 correct (overall 0.461). 9002 − 4147 = 4855, equal to the core's `mispredicts` counter. `rvw probes check --c2` reports `clean`.
+- Fast set: 1814 passed, 1 skipped, 2 failed outside this PR: `test_docs_site.py::test_docs_staging_does_not_write_sources`, `test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names` (`replay_pack` declares `git`).
+
+Not run: SpinalProbes sbt tests after the API change (one optional parameter; the native run compiled it), CI.
+
+## Issues
+
+Refs: probes follow-up (next gap after the six items).
+
+Roadmap notes: probe streams now feed `rvw perf` prediction outcomes (direction only).
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 954
+
+[#954](https://github.com/riscPrint/risc-v-workstation/pull/954). Merged: 2026-11-13T08:22:45Z.
+
+Title: fix(cosim): compare completed split accesses in bare ram
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+
+Permit an explicit `scalar_split_ram` platform setting for completed scalar accesses across an XLEN word. Require M-mode, no PMP or MPRV, no device overlap, one RAM region and one page. Check complete reference byte coverage before producing one C2 effect. Keep all existing refusals by default. Update the versioned shim and its UVM bridge compatibility guard.
+
+Roadmap notes: the independent RV32 core's ma_data trace now matches Spike for 421 instructions. This covers complete bare-RAM effects. Translated, protected, page-crossing and partial-fault split effects remain unsupported.
+
+## Testing
+
+- New native split test failed at the guard before the fix.
+- Policy and native comparison tests: 60 passed. Include data corruption and default/PMP/device/page refusals.
+- Native shim build passed. UVM/build-capture targeted compatibility tests: 49 passed.
+- Fast set: 1773 passed, 1 skipped, 1 unrelated failure in test_docs_staging_does_not_write_sources.
+- MCP discovery: no skipped module warning.
+- No BOOM build, full Python suite, long formal run or native UVM campaign was run for this fix.
+
+## Issues
+
+Refs: #93
+
+Partial fault effects and split-page observation remain open. No issue is closed.
+
+## PR 955
+
+[#955](https://github.com/riscPrint/risc-v-workstation/pull/955). Merged: 2026-11-13T08:22:53Z.
+
+Title: feat(sec): add resumable coverage-guided leakage campaigns
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+The campaign loop for paired leakage testing: `rvw sec campaign --manifest M --out D [--resume]` (MCP `sec_campaign`).
+
+- Grammar-based RV32IM program generation (alu, alui, mul, div, load, store, branch). Secrets stay out of addresses and branch conditions.
+- Input mutation: program insert/delete/replace (a branch stays with its label) and secret-pair mutation (bit flips, boundary values).
+- Coverage feedback from microarchitectural observations: per-instruction retirement latency, bus trace lengths, probe branch outcomes and probe counter values. Pairs with new keys join the corpus.
+- Contract selection (round robin over `contracts`), violation minimisation with the paired reducer, deduplication by root-cause signature (reduced mnemonics and differing channels).
+- Budgets in pairs and seconds; `state.json` after each pair; `--resume` continues; C3 `results.json`, `report.json` and `report.md`.
+- Fix found by the first campaign: VexRiscv RVFI replicates byte-store data across the word, so 13 of 24 pairs were inconclusive. Store data now compares on its written byte lanes, as `rvw cosim` does.
+
+Results (24 pairs per core, both contracts):
+
+| Core | Outcomes | Signatures |
+|---|---|---|
+| VexiiRiscv | 18 no_leak_observed, 6 violations | `remu` (`remu x15, x7, x5`), `div` (`div x10, x7, x10`) |
+| VexRiscv | 24 no_leak_observed | none |
+
+This branch also carries two small harness hooks used by the next PRs (`soc` path in the core binding, the tainted-RAM dump in IFT runs, `rtl_required=False` for model-only use).
+
+## Testing
+
+- `rvw/.venv/bin/python -m pytest rvw/tests/test_sec_suite.py rvw/tests/test_sec_core.py rvw/tests/test_sec_campaign.py -q`: 17 passed. The campaign tests use a fake adapter whose divide latency depends on the secret.
+- Native: both campaigns above on private RTL copies (Verilator 5.049, Spike).
+- Not run: the full fast set (only `rvw/src/rvw/sec` changed since #920), BOOM, the full suite.
+
+## Issues
+
+Refs: none.
+
+Roadmap notes: `rvw sec campaign` is a resumable coverage-guided leakage campaign with reduction and root-cause deduplication. It found two divider signatures on VexiiRiscv and none on VexRiscv in 24 pairs each.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 956
+
+[#956](https://github.com/riscPrint/risc-v-workstation/pull/956). Merged: 2026-11-13T08:23:10Z.
+
+Title: feat(soc): bind protocol checks across ingress and bridges
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Bind native checks to the actual core ingress and every composed APB endpoint. Cover both legacy interfaces and both sides of clock crossings. Sample downstream checks at the destination clock. Emit a protocol binding inventory in the composition manifest. Let `rvw soc verify` generate native bindings from a matching composition.
+
+Add a public `SpinalChecks.BusAssertions` facade for the existing AXI address/read/write and TileLink transaction checkers. Keep their extraction interfaces unchanged. Unsupported tracking limits remain explicit gaps. Declare the Vex wrapper's read/write/combined issuing bounds. Use the new main-side SpinalChecks project dependency for the library build. Keep explicit checker source lists for the scaffold and pinned Vexii build. All outputs stay inside this worktree. Update the scaffold and Vexii source lists.
+
+Fix the generated APB monitor's incorrect rejection of PENABLE on an unselected peripheral. Keep the pending-transfer and setup checks.
+
+## Testing
+
+- Python composition and verification tests: 40 passed before the consumer-source-list check; 41 passed including exports after that change.
+- Native Icarus APB/AXI-stream/AHB monitor tests: 15 passed. The added unselected-PENABLE test failed before the fix.
+- Private SpinalHDL 1.15.0 build passed under `sbt-soc`.
+- All 5 composed VexRiscv programs passed at seed 31 with assertions and AXI transaction tracking enabled. The register program measured 248 cycles and 36 retired instructions.
+- Stable held-request fixture passed at seed 37. A changed stalled request address failed the native stability assertion.
+- An unsolicited AXI B response failed `axi4.write_match` in a separate native fixture.
+- Required fast set: 1709 passed, 1 skipped, 1 failed in the unrelated `formal_equiv_partitions` native-tool inventory declaration.
+- Full Python suite, new 49-test ISA sweep, TileLink transaction simulation and multi-domain runtime qualification: NOT RUN.
+- Generated SoC scaffold compiled 20 Scala sources and elaborated in 35 seconds.
+- Vexii wrapper and new checkers compiled against private cached dependencies at core revision 9f70315 and Spinal revision de72faf. The composed top elaborated in 8.5 seconds. It reported missing AXI issuing-limit declarations as gaps. These dependencies were not rebuilt.
+- The full Vexii source build was not available because the private snapshot has no ext/SpinalHDL source tree. It was NOT RUN.
+
+Rebase resolution: main added the SpinalChecks project dependency for connected captures. Keep that dependency and remove the duplicate local checker-source compilation block. Preserve both README additions.
+
+## Issues
+
+Refs: #134. Complete automatic SoC verification remains open.
+
+Roadmap notes: native ingress and bridge-boundary protocol binds now use the composition's clocks. Reuse the existing transaction checkers through a public facade. Keep whole-protocol qualification, formal connectivity, CDC/RDC and peripheral behavior gaps open.
+
+## PR 957
+
+[#957](https://github.com/riscPrint/risc-v-workstation/pull/957). Merged: 2026-11-13T08:23:32Z.
+
+Title: docs(status): refresh merged evidence and issue state
+
+Audit evidence label: no code.
+
+## Summary
+Refresh the dated research audit after #880 with 80 newly merged PR bodies. Record 213 open issues, seven currently closed issues and 16 issues with closure events since midnight. Preserve the 218-issue census, two separate new issues, prior findings and sheriff fixes. Retain all evidence labels and explicit native, fixture, reference and NOT RUN limits. Raw JSON and reviewed classification data remain outside the repository.
+
+## Testing
+Document-only validation passed: 218 unique census rows plus two new issues; current 213/7 issue partition; 563 unique PR bodies and allowed evidence labels; seven milestone mappings; local links and GitHub issue/PR link forms; personal-path scan; git diff --check. Nine previously closed issues are open again.
+
+NOT RUN: project tests, builds, simulations, proofs, MCP discovery or CI. The task permits document reading and writing only. Reported PR evidence was not rerun.
+
+## Issues
+Refs: #101
+
+No issues closed or commented on. ROADMAP.md and TODO.md are unchanged. Roadmap notes: the dated proposals retain acceptance rules and add the new measured scope and remaining gaps. This is one hourly refresh only. No schedules added.
+
+## PR 958
+
+[#958](https://github.com/riscPrint/risc-v-workstation/pull/958). Merged: 2026-11-13T08:23:56Z.
+
+Title: feat(sec): bind ift secrets from the soc map and csr catalog
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Automatic memory-region and CSR bindings for whole-core flow tracking, with per-word memory taint reporting.
+
+- `rvw/src/rvw/sec/bindings.py`: `{"soc_region": NAME}` entries (optional `offset`/`size`, or an MMIO `register`) resolve through the project's `rvw.soc/1` map (`--soc` or `soc` in the core binding). `csrs` names or addresses are checked against the pinned CSR catalog and resolved to the one netname that stores the CSR (flop outputs and internal names win over copies and ports; a binding `csr_signals` map overrides; none or several is an error listing candidates).
+- `ift-core` report: resolved `csrs` and `memory_regions`, and `tainted_memory` (tainted RAM words at the end, and the words outside the secret regions that received tainted data). RAM taint is per word, per bit.
+- Example data: `soc-sec.json` (a `keystore` region) and `ift/auto-policy.json` for both cores, `keystore-ct.S` / `keystore-index.S`.
+
+Results:
+
+| Core | Program | Result | Tainted RAM outside the secrets |
+|---|---|---|---|
+| VexRiscv | keystore-ct | no_leak_observed; `mscratch` → `CsrPlugin_mscratch` | the 4 output words |
+| VexRiscv | keystore-index | violation: data bus address at cycle 17 | none |
+| VexiiRiscv | keystore-ct | no_leak_observed | the 4 output words |
+| VexiiRiscv | keystore-index | violation: LSU address at cycle 75 | none |
+
+VexiiRiscv keeps CSRs in a RAM, so `csrs` there reports "no storage signal".
+
+## Testing
+
+- `rvw/.venv/bin/python -m pytest rvw/tests/test_sec_bindings.py rvw/tests/test_sec_core.py rvw/tests/test_sec_suite.py -q`: 15 passed.
+- Native: the four rows above (Verilator 5.049, private RTL copies).
+- Not run: the full fast set (only `rvw/src/rvw/sec` and example data changed), MMIO register secrets on a real core (the harness RAM covers RAM regions only).
+
+## Issues
+
+Refs: none.
+
+Roadmap notes: IFT secrets bind automatically from the SoC map and the CSR catalog; reports show which RAM words received tainted data.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 959
+
+[#959](https://github.com/riscPrint/risc-v-workstation/pull/959). Merged: 2026-11-13T08:24:47Z.
+
+Title: feat(sec): predict contract-pair leakage on the ooo timing model
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+
+A model-level leakage pre-check: `rvw sec model-check --manifest M --out D` (MCP `sec_model_check`). It runs the same contract pairs on the trace-driven OoO timing model (`rvw/src/rvw/ooo/`) to predict leakage of a planned microarchitecture before RTL exists.
+
+- Each secret's program runs on Spike. Its C2 trace drives the model description (`rvw.arch-core/1` or an `ooo` table).
+- `operand_latency` states planned unit behavior per class: `fixed`, `quotient_bits` (divider that skips zero quotient bits) or `early_out` (narrow-operand multiplier). Rules read operands from the reference trace and become per-instruction custom latency classes.
+- Equal architectural contract traces with different predicted cycles are a predicted violation. Reports say the evidence is a model prediction, not RTL evidence.
+
+Results (examples' in-order model descriptions):
+
+| Manifest | Rule | Predicted cycles | Prediction | RTL |
+|---|---|---|---|---|
+| vexiiriscv model-precheck | divide quotient_bits | 28 vs 57 | violation | violation (remu 14 vs 38) |
+| vexriscv model-precheck | divide fixed 34 | 56 vs 56 | no_leak_observed | no_leak_observed |
+| vexiiriscv model-precheck-mul | multiply early_out | 25 vs 33 | violation | planned unit, no RTL |
+
+The model predicts the direction of both RTL results, not the cycle counts.
+
+## Testing
+
+- `rvw/.venv/bin/python -m pytest rvw/tests/test_sec_model_check.py rvw/tests/test_sec_suite.py -q`: 7 passed (rule arithmetic; synthetic C2 trace on the model with dependent, fixed and no rules).
+- Native: the three manifests above with Spike and the RISC-V GCC.
+- MCP audit: no new debt for `sec_*` tools.
+- Not run: the full fast set (only `rvw/src/rvw/sec` changed), transient or cache predictions (the model is committed-path only).
+
+## Issues
+
+Refs: none.
+
+Roadmap notes: `rvw sec model-check` predicts timing leakage of a planned unit on the OoO model before RTL; it agrees in direction with both example cores' RTL results.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 960
+
+[#960](https://github.com/riscPrint/risc-v-workstation/pull/960). Merged: 2026-11-13T08:26:02Z.
+
+Title: docs(sec): state what each technique shows with real core results
+
+Audit evidence label: no code.
+
+## Summary
+
+README pass for `rvw sec`: per technique, what it can and cannot show, with the real results from the example cores.
+
+- `rvw/src/rvw/sec/README.md`: a "Techniques at a glance" table (unit IFT, whole-core IFT, contract pairs, isolation, speculative self-tests, campaign, model pre-check, unit latency, critical faults), each with its scope, its limits and the measured result.
+- Stale statements updated: automatic memory/CSR binding now exists for whole cores; a native whole-core adapter exists for the paired interface; executed RV32 gadget suites exist. "Remaining integration work" now lists the real open gaps (no cache/TLB/PMP/supervisor in the example cores, VexiiRiscv C2 is PC-only, campaign grammar limits, committed-path model, no source-level provenance) and states the X-constant difference between whole-core and unit IFT.
+- `examples/*/README.md` and `examples/*/rvw/sec/README.md` point to the security project data.
+
+## Testing
+
+Documentation only. No tests run for this change.
+
+## Issues
+
+Refs: none.
+
+Roadmap notes: the `rvw sec` README states per technique what it shows and cannot show, with VexRiscv and VexiiRiscv results.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 961
+
+[#961](https://github.com/riscPrint/risc-v-workstation/pull/961). Merged: 2026-11-13T08:27:50Z.
+
+Title: fix(cosim): align unspecified fcsr state once at reset
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Declare BOOM's unreset FCSR state. Align Spike once before a neutral first integer instruction, then compare all FP writes, flags and declared CSR snapshots exactly. Preserve mstatus during the reference initialization. Report the configured reset policy in cosim doctor. No FP mask is added.
+
+## Testing
+53 targeted comparator tests passed. The native initialization test passed and checked that mstatus was unchanged. A fresh BOOM small batch passed add, sub, beq and fadd. Spike matched 514, 505, 335 and 219 C2 instruction records with FP and CSR comparison active. Cosim doctor inspected complete C2/2 state before and after. One BOOM native build served the four programs. No regression suite or BOOM formal ran.
+
+Fast set: 1821 passed, 1 skipped, 8246 deselected. Two failures are in unchanged tests: test_docs_site.py::test_docs_staging_does_not_write_sources and test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names. Release hygiene: 40 passed. MCP listing has no skipped modules.
+
+## Issues
+Refs: #6
+
+Roadmap notes: BOOM small now has measured FP and CSR Spike agreement on four short programs. Wider presets, fault-access records and wider CSR snapshots remain open. Reset synchronization is explicit and strict mode disables it.
+
+## PR 964
+
+[#964](https://github.com/riscPrint/risc-v-workstation/pull/964). Merged: 2026-11-13T08:29:07Z.
+
+Title: feat(memory): add replayable per-hart clock and bus stress
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add per-hart clock enables and seeded fetch/LSU backpressure to the SMP example. Expose maximum response delay, ready probability and clock-enable probability as project environment controls. Accept requests only on enabled edges. Keep responses pending across disabled edges. Record settings and per-hart stall counts in C1 and include controls in replay.
+
+## Testing
+
+- Native stress test: 1 passed, covering six C1 jobs with 70% clock enable, 60% ready and response waits of 0..11 base cycles.
+- LR/SC and exact replay: both pass, 2132 cycles / 498 retirements at seed 17. Both record 585/603 disabled edges. Full C2 bytes and hashes are identical.
+- AMO seed 23: pass, 35860 cycles / 8326 retirements.
+- Generated seed 7: pass, 230 cycles / 39 retirements. The independent RVWMO checker allows the capture after 6 candidates.
+- HSM seed 17: pass, 2813 cycles / 520 retirements, two starts, one stop and two IPIs.
+- Serialized shared AMO seed 23: pass, 152 cycles / 30 retirements. Spike matched all 30 instructions with zero masks and zero synchronizations.
+- Default three-hart control: pass, 86 cycles / 35 retirements. All clock-stall counts are zero.
+- Targeted fast Python controls: 17 passed.
+- Fast set: 1785 passed, 1 skipped, 2 unchanged failures: test_docs_site.py::test_docs_staging_does_not_write_sources and test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names (git inventory declaration).
+- NOT RUN: N=4..8, full suites, CDC, independent clock frequencies, physical clock gating, reset and power control. Shared RAM/devices remain simulation models; no coherent cache is present.
+
+## Issues
+
+Refs: #90, #97, #102. No issue closed. The tests establish bounded execution and replay under these seeds and controls. They do not establish exhaustive interleaving coverage.
+
+Roadmap notes: The production multicore example now has replayable clock and bus stress controls. Keep physical clock/reset/power and coherent-cache qualification open. ROADMAP.md and TODO.md are unchanged.
+
+## PR 963
+
+[#963](https://github.com/riscPrint/risc-v-workstation/pull/963). Merged: 2026-11-13T08:29:30Z.
+
+Title: fix(init): rebuild native objects when build flags change
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Force make to rebuild native objects before saving HDL build identity. Make does not track changed compiler flags as object dependencies. A new input identity must not label an old executable.
+
+Roadmap notes: the plain HDL builder now handles compiler-flag changes without stale native objects.
+
+## Testing
+
+New rebuild regression and identity/build tests: 3 passed. Native Verilator reproducer: build with ID_FLAG=1 printed 1. Before this fix, rebuilding with ID_FLAG=2 still printed 1. With this fix the same rebuild prints 2. Fast set: 1813 passed, 1 skipped, 1 unrelated failure in test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names for replay_pack (git is absent from the native inventory names).
+
+The full scratch-core run already completed with unchanged flags: 46 conclusive C1 passes and 46 Spike matches at workstation 9fa90545. A new native core smoke follows this merge. Full Python suite, BOOM, long formal jobs and CI waits: NOT RUN.
+
+## Issues
+
+Refs: #6
+
+Project launchers can skip compilation only when the complete saved identity is unchanged.
+
+## PR 962
+
+[#962](https://github.com/riscPrint/risc-v-workstation/pull/962). Merged: 2026-11-13T08:29:40Z.
+
+Title: docs(uvm): add measured integration matrices
+
+Audit evidence label: no code.
+
+## Summary
+
+Add a UVM/VIP integration section with the measured SV protocol, live SV CPU, C4, ISA, composed-SoC and Python endpoint matrix. Link each detailed result. Give the build, run and gate commands. Explain committed source, explicit native dependencies, runtime bundles and profile limits.
+
+## Testing
+
+- Detailed native campaigns are linked from the guide. No native jobs were repeated for this text change.
+- Guide parser/link checks: 2 passed. Commands use the guide's single-line convention.
+- Final fast set: 1822 passed, 1 skipped, 1 unrelated failure, 8253 deselected. `test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names` rejects `formal_equiv_partitions` metadata outside this area. That metadata is unchanged. The brief permits merge for this unrelated failure.
+- NOT RUN: broader engine, core, physical-link or commercial-VIP qualification.
+
+## Issues
+
+Refs: #296
+
+Roadmap notes: Link the measured UVM/VIP evidence and keep failures, inert model stubs, replay modes and CPU-zero SoC scenarios explicit. No qualification transfers from these fixtures to a new DUT.
+
+## PR 966
+
+[#966](https://github.com/riscPrint/risc-v-workstation/pull/966). Merged: 2026-11-13T08:30:47Z.
+
+Title: feat(agent): add end-to-end bring-up check on a tiny seeded core
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+- `rvw agent bringup-check --out DIR` (MCP `agent_bringup_check`, long job): copies a tiny multi-cycle RV32I Spinal core (`rvw/src/rvw/agent/bringup/core`: one memory port, RVFI outputs, four self-checking programs) into a new Git repository, seeds a `sub` defect in the copy, and walks the `rvw agent guide` workflows: `bring-up` (doctor, init plan/write with `--wire-build --linker-script --db-top`, doctor, manual mapping with a prepared adapter, doctor smoke, regress list, quick tier, cosim, committed gate, query build) and `test-fails` (failing `arith` run, bundle, cosim first difference, query drivers, one-line fix, gate). `report.json` (`rvw.agent-bringup/1`) records command, exit, expected outcome, `works`/`rough_edge` and the log per step.
+- Rough edges it found, fixed here:
+  - `rvw init` put `Elaboration` and the `Database` main inside `CoreAdapter.scala`, the file an agent replaces while mapping; replacing it silently removed the `query build` entry. They now live in `rvw/src/main/scala/rvwcore/Elaboration.scala`.
+  - `rvw init` wrote no `[debug] config`, so `rvw bundle` refused (`missing debug.config`). It now writes `rvw/debug.toml` (name, `RVW_CORE_SOURCE`, period 10).
+  - With `--wire-build`, the core's own sbt outputs (`target/`, `project/target/`) were untracked, so the core tree was dirty and no gate could accept. init now writes a root `.gitignore` when there is none, and lists missing entries in `next` otherwise.
+  - `rvw doctor` gave `adapter.info` a fixed 30 s; a mapped launcher compiles first, so info timed out and `adapter.c2` failed with it. It now waits `core.startup_s` and names it on timeout.
+  - The mapped adapter must keep the scaffold's `generatedVerilog` hook; without it every C1 result is `inconclusive: input_not_captured:rtl` (the tools refuse correctly; noted in the prepared adapter).
+
+## Testing
+- Native walk (sbt 1.10.7, SpinalHDL 1.15.0, Verilator 5.049, Spike shim), final run: 16 of 17 steps `works`, 666 s; both committed gates accept, cosim finds the first difference on the seeded `sub`, bundle and drivers work. The remaining rough edge is this machine's setup: doctor's native check fails (no workstation `env.sh`, `uv` 0.12.21 < 0.13.6); `adapter.c2_mapping` stays inconclusive without `--smoke-platform`.
+- Earlier walks: 7/17 (tiny core assignment overlap, my bug), 12/17 (lost DB entry, missing debug config, dirty core tree), 16/17 (doctor info timeout).
+- Unit: `test_agent_bringup.py` 2 passed, `test_init_capture.py` 2 passed (new: debug config, ignores), `test_doctor.py` 32 passed (new: startup timeout), `test_init.py`, `test_mcp_coherence.py` pass.
+- Fast set: 1859 passed, 1 skipped, 1 failed in a file I did not touch (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: BOOM; any LLM agent on this walk (the manual steps use prepared files).
+
+## Issues
+Refs: #27 (agent bug-fix loop exercised end to end on a seeded core), #35 (doctor), #36 (init).
+
+Roadmap notes: agent experience: `rvw agent bringup-check` walks the agent guide on a tiny seeded Spinal core and found four init/doctor gaps, fixed here.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 965
+
+[#965](https://github.com/riscPrint/risc-v-workstation/pull/965). Merged: 2026-11-13T08:31:10Z.
+
+Title: fix(mcp): declare regression and coverage effects
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare MCP effects for 30 regression and coverage tools. Record known-failure file edits, verdict output, project adapter jobs, generated candidates, optional reports, Z3 and native proof dependencies. Lower the audit baseline by 59 findings.
+
+Keep cov_mutate's native declaration unknown. It invokes MCY, which has no installer inventory ID. Its effect declaration names the project MCY call. Supplied Sail endpoints are project-selected commands, rather than the installer's full ISA reference executable.
+
+Roadmap notes: regression and coverage effect declarations are complete. The MCY inventory gap and other package declarations remain open.
+
+## Testing
+Metadata and coherence tests: 33 passed, no skips.
+Fast set: 1,840 passed, 1 skipped, 8,253 deselected.
+NOT RUN: simulations, core builds, full Python suite, native qualification and GitHub CI.
+
+## Issues
+Refs: #123
+The MCY inventory gap remains open.
+
+## PR 967
+
+[#967](https://github.com/riscPrint/risc-v-workstation/pull/967). Merged: 2026-11-13T08:31:23Z.
+
+Title: feat(formal): add conditional ram instruction proof experiments
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add conditional instruction proof experiments with a project-declared single-flight restriction and the shared RAM word abstraction. Preserve reset and bus assumptions. Retry the cut netlist through RTLIL to retain internal formal cells. Support concrete retained words without assuming their values. Connect the experiments to `formal isa --abstraction` and add MCP.
+
+Keep unselected ISA instructions and missing retirement-channel checks visible in the ISA table. Fix the existing unbounded-proof MCP adapter so valid inconclusive results return data instead of ToolError. Allow project selection in ISA and instruction-proof MCP calls.
+
+## Testing
+28 targeted formal and MCP audit tests passed. Native experiments used private source, vex-conn, nice -n 10 and at most three jobs.
+
+LUI closed with PDR in 107.4 seconds on the all-word RAM abstraction under the declared single-flight restriction. Concrete instruction cover reached. This is a conditional unbounded model proof, not full core signoff. ADD/AND produced abstract SMT counterexamples; PDR witness conversion failed on predictor-memory metadata. Retaining actual word-zero state led to 180-second timeouts for all three checks. All concrete covers reached. Earlier outcomes remain recorded.
+
+Fast set: 1770 passed, 1 skipped, 1 failed, 8235 deselected. The unrelated failure is test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names for formal_equiv_partitions. Targeted tests also passed after the final MCP schema change. Full Python suite and BOOM NOT RUN.
+
+## Issues
+No issue closed. Full pipeline proofs, assumption activation and adapter conformance remain open. Abstract failures are not core failures.
+
+Roadmap notes: conditional RAM instruction experiments and one native LUI closure are available. Full ISA signoff remains inconclusive. The front command now exposes check-list and retirement-channel gaps.
+
+## PR 968
+
+[#968](https://github.com/riscPrint/risc-v-workstation/pull/968). Merged: 2026-11-13T08:33:16Z.
+
+Title: feat(sec): check pmp isolation on a vexriscv variant with user mode
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+PMP isolation evidence on a real core (the next gap after the listed items: neither example core had PMP).
+
+- `SecRtl` variant `rv32imu-pmp`: the example VexTop with user mode and a 4-region NAPOT PMP (upstream `PmpPluginNapot`, 32-byte granularity) on fetch and data accesses. The general `PmpPlugin` makes a combinational loop with `DBusSimplePlugin` (recorded in the README).
+- `isolation-pmp.json` + `pmp.S` (`isolation_kind: pmp`): M-mode writes the secret into the `keystore` region, PMP entry 0 denies it to U-mode, then U-mode loads it and does a load indexed by the loaded value (a Meltdown-style sequence). `observer_mode: 0`.
+- `ift/pmp-meltdown.S` + `ift/pmp-policy.json`: the same sequence under whole-core IFT with the keystore as the secret region.
+
+Results on RTL:
+
+- Isolation pair: `no_leak_observed`. The RTL takes a load access fault (cause 0xd, tval 0x80008000) exactly as Spike does. The denied load is absent from the data bus trace; the dependent load uses the public address for both secrets (30 cycles each).
+- IFT: `no_leak_observed`; no tainted data left the keystore.
+
+## Testing
+
+- Native: both runs above (Verilator 5.049, Spike with `pmp_regions: 4`, `pmp_granularity: 32`, private VexRiscv copy, lock `vex-mmu`).
+- No Python code changed. Not run: unit tests (unchanged code), ePMP, supervisor mode.
+
+## Issues
+
+Refs: none.
+
+Roadmap notes: `rvw sec isolation` has real PMP evidence: on VexRiscv with NAPOT PMP, a U-mode load of a denied region neither reaches the bus nor feeds a dependent access.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 969
+
+[#969](https://github.com/riscPrint/risc-v-workstation/pull/969). Merged: 2026-11-13T08:33:58Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate `docs/COMMAND_REFERENCE.md` from the current parsers and MCP declarations (sheriff batch).
+
+## Testing
+- `scripts/command-reference.py`; fast set on main 12892b19: 878 passed, 1 skipped.
+
+## Issues
+None.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 970
+
+[#970](https://github.com/riscPrint/risc-v-workstation/pull/970). Merged: 2026-11-13T08:36:53Z.
+
+Title: fix(sim): build device plugins with framework python
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Find the selected CPython shared library in standard and macOS framework layouts. Read its actual linked basename when repairing the plugin install name. Keep refusal for missing libraries.
+
+Roadmap notes: the standard device plugin builder now builds against the installed framework Python. CLINT and PLIC integration on the independent core continues separately.
+
+## Testing
+
+- Six resolver and load-name unit tests passed.
+- Native PythonDevices shared library build passed with framework Python.
+- Fast set: 1851 passed, one skipped, one unrelated documentation-staging failure.
+- No BOOM build, full Python suite, long formal campaign or full device qualification was run.
+
+## Issues
+
+Refs: #131
+
+This fixes plugin construction. PLIC arbitration and whole-core delivery qualification remain separate.
+
+## PR 971
+
+[#971](https://github.com/riscPrint/risc-v-workstation/pull/971). Merged: 2026-11-13T08:38:57Z.
+
+Title: fix(mcp): declare soc uvm and snapshot tool effects
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare effects beside 26 SoC, UVM and simulation snapshot MCP registrations. Record generated files, pinned UVM download, Verilator compilation and coverage merging, built native bench execution and project snapshot/replay adapter calls. Keep saved profile inspection read-only. Lower the baseline by 52 findings.
+
+Roadmap notes: these package declarations are complete. Other package declarations and inventory gaps remain open.
+
+## Testing
+Metadata and coherence tests: 34 passed, no skips. The metadata module alone was rerun after its assertion cleanup: 24 passed.
+Fast set: 1,872 passed, 1 skipped, 8,269 deselected.
+NOT RUN: simulations, core builds, full Python suite, native qualification and GitHub CI.
+
+## Issues
+Refs: #123
+Other package declarations remain open.
+
+## PR 972
+
+[#972](https://github.com/riscPrint/risc-v-workstation/pull/972). Merged: 2026-11-13T08:39:02Z.
+
+Title: docs(integration): record the verilog second pass
+
+Audit evidence label: no code.
+
+## Summary
+
+Append the Verilog second-pass status table and update the non-Spinal integration guide. Record six merged code fixes, 46 conclusive native passes, 46 new Spike matches, committed good/bad gate evidence, declared-port monitor activation, the native stale-flag fix and the final doctor checks. Keep exact tested revisions and unresolved limits.
+
+Roadmap notes: plain HDL now has native identity, declared full-word read comparison, declared ready/valid check/VIP/pyuvm paths, compiler-only architecture builds and HDL-specific diagnostics. The scaffold still needs project bus mapping. ISA signoff, SVA evidence closure, native UVM scenarios and gem5 calibration remain open.
+
+## Testing
+
+Fast set: 1869 passed, 1 skipped, 8264 deselected. Release hygiene: 40 passed. MCP inventory has no skipped-provider diagnostic.
+
+Scratch core: 46 conclusive C1 passes and 46 new Spike matches at workstation 9fa90545. Good smoke gate accepts; planted instruction-response fault gate rejects. Generated bind runs with 3 stalled cycles and 3 transfers. ISA add/cover report bounded depth 8; overall inconclusive. Three SVA engine passes remain inconclusive. Median ELF builds without gem5; Python OoO consumes the real smoke trace without a calibration claim. Doctor smoke checks are ready; JVM tools are not_applicable; only the pre-existing workstation out/ checkout gate remains inconclusive. After the stale-flag fix, a bounded native smoke at c6b7effc passes with 55 cycles and 15 retirements.
+
+Full Python suite, BOOM, long formal proofs, native UVM scenario qualification, gem5 calibration, physical hardware and CI waits: NOT RUN.
+
+## Issues
+
+Refs: #6
+
+The report retains the partial protocol scope and all formal and qualification limits.
+
+## PR 974
+
+[#974](https://github.com/riscPrint/risc-v-workstation/pull/974). Merged: 2026-11-13T08:46:45Z.
+
+Title: fix(sim): refuse rounded floats in device plugin maps
+
+Audit evidence label: unit tests only.
+
+## Summary
+The third dry-run pass bound the CPython CLINT/PLIC device plugin from a Scala adapter through `riscvsim.PluginDevice`. The adapter re-serialised its project JSON with `ujson`, which keeps numbers as doubles. An all-ones `reset_mtimecmp` (2**64-1) became `1.8446744073709552e19`, and the timer refused it with the misleading "invalid timer reset value".
+
+Device maps (`clint`, `aclint`, `plic`) now take exact JSON integers or decimal/`0x` strings, the same rule as `rvw.sim-map/1` (`SimMap.number`). Floats and booleans are refused with an explicit message that names the fix. `DEVICES.md` states the rule.
+
+## Testing
+- `rvw/.venv/bin/python -m pytest rvw/tests/test_standard_devices.py -q`: 5 passed, 1 skipped (native build skip). The new test fails before the fix.
+- Fast set: 1887 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: native plugin rebuild in this PR (done in the dry-run scratch project after merge), full Python suite.
+
+## Issues
+Refs: #34 (third-pass dry run finding). Nothing else remains for this edge.
+
+## PR 975
+
+[#975](https://github.com/riscPrint/risc-v-workstation/pull/975). Merged: 2026-11-13T08:54:20Z.
+
+Title: feat(privilege): generate rv32 machine-only interrupt suites
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+In the third dry-run pass the independent RV32IM core gained machine timer, software and external interrupts with CLINT/PLIC plugin devices. `rvw regress plan` then selected no interrupt suite: `scheduled-wfi` and `wfi-clint` required `xlen:64`, and their generators emitted RV64-only code (`sd`/`ld`, mcause bit 63) and a preamble that writes `satp`, `medeleg`, `mideleg` and PMP CSRs, which an M-only core may not have.
+
+- `rvw.privilege.programs`: `xlen`, `head`, `tail` and `interrupt_cause` helpers, an M-only preamble and an RV32 tail.
+- `wake` (`kind = "wfi"`) and `scheduled`: follow the campaign `isa`. RV32 uses word stores, a high/low/high `mtime` read and a high-word-first `mtimecmp` write.
+- `campaign.load`: `priv = "m"` is accepted for `wfi` and `scheduled-wfi` only.
+- `examples/privilege/spike-wfi-rv32.json`, `scheduled-wfi-rv32.json` and requirement rows `wfi-clint-rv32`, `scheduled-wfi-rv32` (`xlen:32`).
+- The RV64 output is unchanged (a test checks this).
+
+Roadmap notes: privilege/interrupt suites now cover an RV32 M-only core with CLINT and interrupt inputs (generation and Spike self-check). Native runs on the dry-run core follow in the dry-run report.
+
+## Testing
+- `pytest rvw/tests/test_privilege_rv32_interrupts.py test_privilege_scheduled.py test_privilege_campaign.py test_regress_applicability.py`: 35 passed.
+- New slow native module `test_privilege_rv32_interrupts_native.py`: builds both RV32 campaigns with RISC-V GCC and runs the four `wfi-clint-rv32` ELFs on Spike (`--isa=rv32i_zicsr --priv=m`): passed locally.
+- Fast set: 1890 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, BOOM builds.
+
+## Issues
+Refs: #34. Remaining: PLIC-driven RV32 interrupt suites (`plic-delivery` stays RV64 + S-mode).
+
+## PR 976
+
+[#976](https://github.com/riscPrint/risc-v-workstation/pull/976). Merged: 2026-11-13T09:02:04Z.
+
+Title: feat(probes): add cached vexriscv and vexiiriscv example configs
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Cached configurations for both example cores, without changes to the core sources. `rv32im` stays the default in both projects.
+
+- VexRiscv `rv32im_cached`: `IBusCachedPlugin` + `DBusCachedPlugin` with the `GenFullNoMmu` caches (4 KiB, 32-byte lines, 1 way, write-through D$ with no allocation on a store miss).
+- VexRiscv `rv32ima_linux`: the same caches with LR/SC and AMOs, `MmuPlugin` (Sv32, 4-entry port TLBs), M/S/U CSRs. `rvw/platform-linux.json` is its Spike platform.
+- VexiiRiscv `rv32im_cached`: upstream fetch L1 and LSU L1 (64-byte lines, 2 ways x 32 sets, write-back LSU L1) and the upstream BTB + RAS + GShare.
+- `CachedFormalPlugin` (VexRiscv): `DBusCachedPlugin` does not feed the RVFI memory fields; they are rebuilt at write-back (masks, store data, load word lanes, AMO result, SC success).
+- `CachedBuses` (VexRiscv) and `L1Buses` (VexiiRiscv) answer the cache buses (line refills one word per cycle after the run's latency; Vexii writeback bursts).
+- VexiiRiscv `SpinalConfig(inlineRom = true)`: the predictor RAMs have simulation init content, and RiscvSim's RTL identity needs one generated file. Configs without such RAMs give the same Verilog.
+- New suites `isa-cached` (both) and `isa-linux` (VexRiscv). `build-tests.sh` (VexRiscv) also builds `rv32ua-p`.
+
+## Testing
+
+Native, private core copies (`wt/.vex/csims`, `wt/.vex/csims-vexii`), private locks, `rvw cosim check` against Spike for every trace:
+
+| Core / config | Programs | Latency | Pass | Spike match | Instructions |
+|---|---|---|---|---|---|
+| VexRiscv `rv32im_cached` | 49 rv32ui/um-p | 0 | 49 | 49 | 17,735 |
+| VexRiscv `rv32im_cached` | 49 | seeded (seed 7) | 49 | 49 | 17,735 |
+| VexRiscv `rv32ima_linux` | 59 rv32ui/um/ua-p | 0 | 59 | 59 | 24,919 |
+| VexRiscv `rv32ima_linux` | 59 | seeded (seed 7) | 59 | 59 | 24,919 |
+| VexiiRiscv `rv32im_cached` | 49 rv32ui/um-p | 0 | 49 | 49 | |
+| VexiiRiscv `rv32im_cached` | 49 | seeded (seed 7) | 49 | 49 | |
+| Defaults `rv32im` (both cores) | 5 each (add, beq, lw, sw, fence_i) | 0 | 5 | 5 | |
+
+`rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q`: 1848 passed, 1 skipped; `test_docs_site` failed only because a local `.pytest_cache/README.md` existed; it passes after removing it.
+
+Not run: the full default ISA campaigns on `rv32im` (5 programs each only), any program beyond the riscv-tests p environment, the VexiiRiscv `rv32imasu`/`rv64imasu` configs after the `inlineRom` change, probes on the new configs (next PR).
+
+## Issues
+
+Refs: #34. Remaining: cache probes and their consumers, predictor comparison, perf attribution (next PRs).
+
+Roadmap notes: the example cores now have cached configs (VexRiscv I$/D$ and an MMU/S-mode linux-class set; VexiiRiscv L1s with BTB/GShare/RAS), all passing the ISA suites with Spike-matching traces.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 977
+
+[#977](https://github.com/riscPrint/risc-v-workstation/pull/977). Merged: 2026-11-13T09:03:07Z.
+
+Title: fix(privilege): read regress outputs once and refuse unearned fails
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Two defects found when the third dry-run pass ran the generated RV32 interrupt suites on the independent core and checked them with `rvw privilege check`.
+
+1. **Duplicate C1 results.** `privilege check`, `regress/mmu.py` (two checks) and `regress/vector.py` used `Path(results).rglob('result.json')`. A `rvw regress run --out` directory holds each run twice (sealed generation and current view), so every scenario had two candidates and stayed "need one conclusive C1 result" forever. A new `run_evidence.run_paths_under` stops at each owned root and reads its members once through the existing `owned_run_paths`. A parent of several regression outputs still works.
+2. **Unearned fails.** The strict comparison failed a correct core when it read `mip` with a pending external interrupt pin, or loaded `mtime` from a declared MMIO CLINT. Spike models neither. Only these exact shapes are now `inconclusive` with a reason: a CSR read of mip whose differing bits are all platform `irq_inputs`, and a load in a platform `mmio` region that differs only in the loaded value. All other mismatches still fail. Nothing new can pass.
+
+Roadmap notes: on the dry-run RV32 core, the RV32 `wfi-clint` and `scheduled-wfi` suites now give 4 strict passes and 6 explicit inconclusives (external pins / device reads), and all 10 match Spike with irq/mmio synchronization.
+
+## Testing
+- `pytest rvw/tests/test_privilege_campaign.py test_regress_run_evidence.py`: all passed. The new tests cover irq bits, non-irq bits, a non-mip CSR, extra difference fields, MMIO/RAM loads, and a store/parent tree with duplicate members.
+- `pytest rvw/tests -m fast -k "mmu or vector or privilege or run_evidence"`: 143 passed.
+- Native: `rvw privilege check` on the dry-run regression output (10 RTL runs) before and after.
+- Fast set: 1891 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, BOOM.
+
+## Issues
+Refs: #34. A strict match for external-input programs needs a reference with a pin model; that remains open.
+
+## PR 978
+
+[#978](https://github.com/riscPrint/risc-v-workstation/pull/978). Merged: 2026-11-13T09:06:33Z.
+
+Title: feat(sim): add a spinalhdl source axis and build naxriscv on it
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+- Add a second SpinalHDL version axis to the Spinal libraries (`scripts/sbt/SpinalAxis.scala`, one `project/spinal-axis.sbt` line per library). `RVW_SPINAL_SOURCE` selects a SpinalHDL source checkout instead of the 1.15.0 release jars. Both axes cross-build for Scala 2.13.14 and 2.12.18. Each source checkout compiles into `target/spinal-source-<rev>/`, so the axes never share class files. The release axis is the default and is unchanged apart from `scala-collection-compat`.
+- Make RiscvSim, SpinalProbes, SpinalTrace and SpinalWaves compile on Scala 2.12 and on an older SpinalHDL: 2.12-compatible collection calls, and `SpinalCompat` objects for members that NaxRiscv's SpinalHDL lacks (`_waveFilePrefix`, `MemReadAsyncWrite`, `Axi4Config.withAxi3`, tile-link sim `MemoryAgent.blockSize` and `TransactionC.beat`); each states its fallback. `Probe.site` no longer uses the result of `ScopeStatement.on`.
+- Add `examples/naxriscv/` (build, adapter, launcher, README): NaxRiscv `9f452d50` compiled with its own pinned SpinalHDL `c3626570` and Scala 2.12.18, no edits to NaxRiscv. The C1 adapter drives the native FetchL1/DataMem/peripheral buses; C2 comes from the upstream `NaxriscvProbe`. The pinned SpinalHDL sim wrapper crashes under Verilator 5.049 (`sc_time_stamp()` before its handle is set); `run.sh` compiles with `-DVL_TIME_CONTEXT`.
+- Document the axis in `docs/BRING_YOUR_OWN_CORE.md`; add the Layout row.
+
+## Testing
+- Source axis (NaxRiscv SpinalHDL, Scala 2.12.18): `sbt '++2.12.18!' root/compile` passes (RiscvSim, SpinalProbes, SpinalTrace, SpinalWaves, NaxRiscv, adapter).
+- Release axis: `cd RiscvSim && sbt riscvsim/Test/compile` passes (compiles RiscvSim, SpinalChecks, SpinalDB, SpinalTrace, SpinalWaves, SpinalProbes at 2.13.14/1.15.0).
+- Native smoke: `rvw/run.sh run --elf rv32ui-p-add --rvfi-trace` passed (1003 cycles, 501 retired); `rvw cosim check` with Spike: match, 501 instructions, 3 traps, 0 synchronizations, 0 masks. Full ISA results follow in the next PR.
+- `pytest rvw/tests/test_spinal_axis.py`: 7 passed. Fast set: 1887 passed, 1 skipped, 1 failed in an unrelated file (`test_docs_site.py::test_docs_staging_does_not_write_sources`, failing on main).
+- NOT RUN: Scala test suites of the libraries, BOOM, VexRiscv and VexiiRiscv builds on the changed libraries (the release-axis compile covers their library code only).
+
+## Issues
+Refs: #70
+No open issue tracks NaxRiscv. SpinalDB and SpinalChecks do not compile on the Scala 2.12 source axis yet (next PRs).
+
+Roadmap notes: platform — the Spinal libraries have a SpinalHDL source/version axis; NaxRiscv (out-of-order, RV32IMA, Sv32) builds and runs with its pinned toolchain. It is the first light out-of-order RTL target.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 979
+
+[#979](https://github.com/riscPrint/risc-v-workstation/pull/979). Merged: 2026-11-13T09:07:40Z.
+
+Title: feat(regress): add naxriscv suites, spike platform and isa results
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+- Add the NaxRiscv project data: `rvw.toml` (suites `isa` = rv32ui-p without `ma_data`, rv32um-p, rv32ua-p; `smoke`; tiers `quick`/`full`), the Spike cosim platform (`rv32ima_zicsr_zifencei`, MSU, 16 MiB RAM at `0x80000000`), `build-tests.sh` and the two local programs.
+- Record the measured results in `examples/naxriscv/README.md`.
+- Add `examples/naxriscv/rvw/tests/test_nax_project.py` (project selection, platform, launcher pins).
+
+## Testing
+- `rvw regress run --suite isa --rvfi-trace`: 59 pass, 0 fail, 0 skip (86,309 cycles, 24,801 retired). `--suite smoke`: 2 pass.
+- `rvw cosim check` with Spike on every trace: 61 of 61 match, 24,829 instructions, 178 traps, 0 synchronizations, 0 applied masks.
+- Seeded random memory timing (seeds 3, 7) on lw, sb, div, amoadd_w, lrsc, fence_i: 12 pass, 12 Spike matches.
+- `pytest examples/naxriscv/rvw/tests`: 3 passed; `test_release_hygiene.py`: passed.
+- NOT RUN: a negative control (fault injection), interrupts, MMU programs, full fast set (no Python code changed since #978's run).
+
+## Issues
+Refs: #70
+No open issue tracks NaxRiscv. Next: SpinalDB/SpinalBlocks, out-of-order probes, the OoO model correlation and generated checks.
+
+Roadmap notes: simulation/verification — NaxRiscv (out-of-order) passes the 59 RV32IMA ISA programs with complete Spike matches; the first out-of-order core with fast native runs (model build ~10 s).
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 980
+
+[#980](https://github.com/riscPrint/risc-v-workstation/pull/980). Merged: 2026-11-13T09:10:11Z.
+
+Title: feat(formal): add 8 and 16 bit rv m datapath reference models
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+In the third dry-run pass the independent RV32 core gained an M unit. `rvw formal datapath` against `SpinalChecks/c2rtl/models/{mul,...,remu}32.c` timed out in CBMC at 45 s for all eight operations: a 32-bit gate-level multiplier/divider equivalence is beyond SAT in minutes. The tool already accepts `--width 8|16`, but there were no 8/16-bit M reference models.
+
+- `riscv_m.h`: the width mask now works for 8, 16, 32 and 64.
+- New models `mul8.c` … `remu8.c` and `mul16.c` … `remu16.c`.
+- README: the reduced-width proof pattern and its limit (it does not prove the 32-bit instance).
+
+Roadmap notes: on the dry-run core, a width-parameterised `MUnit` proved all eight M operations at 8 bits (`proved`, each under a minute). The 32-bit instance has rv32um RTL passes and Spike matches, not a proof.
+
+## Testing
+- `pytest rvw/tests/formal/test_datapath.py -k "riscv_m or width_reduced"`: 4 passed (native clang, Yosys, CBMC). Corner-case model checks now cover widths 8 and 16. New native proofs: 8-bit MUL and DIVU proved, a MULHU mutant gives a counterexample.
+- Native on the dry-run core: 8/8 M operations `proved` at width 8.
+- Fast set: 1891 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, BOOM, 32-bit proofs (known to time out).
+
+## Issues
+Refs: #34. An unbounded or 32-bit multiplier proof needs a different engine (e.g. word-level or algebraic); that stays open.
+
+## PR 981
+
+[#981](https://github.com/riscPrint/risc-v-workstation/pull/981). Merged: 2026-11-13T09:14:21Z.
+
+Title: feat(query): build the naxriscv design database on the spinal axis
+
+Audit evidence label: unit tests only.
+
+## Summary
+- SpinalDB (and the SpinalBlocks extractor compiled into it) now compiles on Scala 2.12 and on NaxRiscv's pinned SpinalHDL `c3626570`. Members that this revision lacks go through typed shims: `src/main/scala-spinal-1.15/` (aliases to the real types) and `src/main/scala-spinal-legacy/` (never-instantiated types, so their cases never match; stated fallbacks for `PhaseDeviceDefault`, `ObfuscateConfig`, `preventMemToBlackboxTranslation`). `SpinalAxis.api` detects the level from the source checkout; `SpinalAxis.apiSources` adds the directory.
+- Add the NaxRiscv database entry: `rvw/build-db.sh`, `rvwnax.Database` (elaborated with `includeSimulation`, as in the C1 runs), and `[query]` in `rvw.toml`.
+- README and BYOC docs updated with the measured results and the shim rule.
+
+## Testing
+- `rvw/build-db.sh rv32imasu rvw/out/nax.db`: 17 s; 30 components, 8278 signals, 1482 registers, 154 memories, 17,363 dependency edges; PDG, blocks and HGLDD written, 50 warnings.
+- `rvw query info|search|drivers|fanin|path|hierarchy|regs` answer on it; `rvw query export blocks.json` wrote 24 module diagrams.
+- Release axis: `cd RiscvSim && sbt riscvsim/Test/compile` passes (includes SpinalDB at 2.13.14/1.15.0 with the 1.15 shim).
+- `pytest rvw/tests/test_spinal_axis.py examples/naxriscv/rvw/tests`: 11 passed. Fast set: 1899 passed, 1 skipped, 1 failed in an unrelated file (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- NOT RUN: SpinalDB/SpinalBlocks Scala test suites, VexiiRiscv/BOOM database builds, viewer rendering of the NaxRiscv diagrams.
+
+## Issues
+Refs: #70
+`rvw query build` from the workstation copy points `NAXRISCV` at the project root; the project must sit in the NaxRiscv checkout (as for VexiiRiscv). SpinalChecks on the legacy axis is next.
+
+Roadmap notes: IDE/query — SpinalDB and SpinalBlocks work on an out-of-order core (NaxRiscv) and on an older SpinalHDL through API-level shims.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 982
+
+[#982](https://github.com/riscPrint/risc-v-workstation/pull/982). Merged: 2026-11-13T09:20:01Z.
+
+Title: feat(vexii): run generated suites on rtl with walk and spike checks
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Make the generated verification suites real on RTL for VexiiRiscv (RV64 Sv39 and a new RV32 Sv32 supervisor profile) and for the M-only VexRiscv.
+
+- **Selection.** `examples/vexiiriscv/rvw/prepare-suites.py --features F` now asks `rvw regress plan` which families apply and builds each one with its shared generator: paging matrix, fault walks and random programs for the declared satp mode, privilege controls, PMP, scheduled WFI and the single-hart ordering programs. `selection.json` records generated/applicable counts and a reason per exclusion. New `rvw32.toml`, `rvw/platform32.json`, `rvw/features32.json`. `rvw64.toml` now holds every RV64 family (`rvw64-extra.toml` folded in). VexRiscv gets `rvw/features.json`, `rvw/prepare-suites.py` and `rvw-suites.toml`.
+- **Adapter fixes (VexiiRiscv).** The previous worker's VA capture read a 64-bit signal with `toLong` (every RV64 program asserted). An AMO's store half has a stale probe store id; it now binds to the latest hart command at its physical address. C2 `tval` now uses the core's own CSR write expression (`expendPc`), which fixes the `sv39-noncanonical-negative` mismatch. The VA tap is optional so `rv32im_cached` still elaborates. 16/9 ASID bits (previous commit).
+- **Page-walk observation path.** `WalkTap` reads the MMU refill state machine (start request, PTE reads on the walker port, refill response with the walker's permission check). `WalkCapture` turns that into C2 `mmu_walks`. RiscvSim `RvfiRecord.extra` appends adapter-observed fields. `rvw regress mmu report` then compares against the independent walker. `mmu_walk.same_run` now accepts the runner fields that `rvw regress run` adds to C1 `source`; before, every walk check under a regress run was inconclusive.
+- **`rvw regress cosim RUN --platform P [--allow-sync reset,irq]`** (MCP `regress_cosim`): one status per C1 result (`match`, `mismatch`, `fail`, `error`, `inconclusive`), counts per suite. Strict by default; `reset` allows only the unspecified `mscratch` reset value, `irq` only pending bits of asserted inputs. Contract in `docs/contracts/vexii.md`.
+- **Numbers** in the VexiiRiscv, VexRiscv, MMU, privilege and ordering READMEs and in `docs/INTEGRATION_GUIDE.md`.
+
+### Results (2026-11-13, seed 1)
+
+| Core / profile | Family | Generated (mode) | Run | C1 pass | Spike match | Finding |
+|---|---|---|---|---|---|---|
+| VexiiRiscv rv64imasu | MMU matrix | 589 (147) | 145 | 143 | 143 | 2 |
+| | fault walks | 84 (18) | 18 | 9 | 9 | 9 |
+| | random | 8 (2) | 2 | 2 | 2 | 0 |
+| | privilege controls | 30 | 30 | 30 | 30 | 0 |
+| | PMP | 264 | 264 | 264 | 264 | 0 |
+| | ordering | 5 | 5 | 5 | 5 | 0 |
+| | scheduled WFI | 6 | 6 | 6 | 6 (3 with one irq sync) | 0 |
+| VexiiRiscv rv32imasu | MMU matrix | 589 (142) | 140 | 138 | 138 | 2 |
+| | fault walks | 84 (12) | 12 | 6 | 6 | 6 |
+| | random | 8 (2) | 2 | 2 | 2 | 0 |
+| | ordering | 5 | 5 | 5 | 5 | 0 |
+| | scheduled WFI | 6 | 6 | 6 | 6 (3 with one irq sync) | 0 |
+| VexRiscv rv32im (M) | scheduled WFI | 6 | 6 | 6 | 3 | 3 |
+| | FENCE / FENCE.I | 2 | 2 | 2 | 2 | 0 |
+
+Walk check vs the independent walker: Sv39 matrix 92 consistent, fault walks 6; Sv32 matrix 89, fault walks 4. The rest: no reference access plan (49 per matrix, fetch walks), C1 fail, or two non-canonical cases with no walk.
+
+Findings (core differences, not masked):
+1. VexiiRiscv: PTE reads ignore PMP. All `walk-denied` / `walk-deny-level-*` programs (11 RV64, 8 RV32). Reproduction `examples/vexiiriscv/findings/ptw-pmp/load.S`. The DUT walk records show each denied read completing, where the reference walker reports an access fault.
+2. VexRiscv: an interrupt trap keeps the old `mtval` (`CsrPlugin` writes it only `when(hadException)`). New reproduction `examples/vexriscv/findings/interrupt-mtval/` (C1 fail `tohost = 0x3`; Spike `tval` 0x0 vs 0x55). VexiiRiscv zeroes `mtval` correctly.
+
+## Testing
+
+- Native RTL: commands above, Verilator 5.049, private core copies, private locks. RV64 final run 470 programs; RV32 165; VexRiscv 8. Strict Spike comparison through `rvw regress cosim`; walk checks through `rvw regress mmu report`. After the final rebase onto main (L1 refactor in the adapter): Scala `C2BackendSpec` + `WalkCaptureSpec` 9/9 pass, and a three-program RV64 RTL smoke (Sv39 load, non-canonical, AMO) matched Spike.
+- `rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q`: 1915 passed, 1 skipped. Targeted: `test_regress_suite_cosim.py` (16), `test_mmu_walk.py`, `test_privilege_*`, `test_regress_applicability.py`, `test_release_hygiene.py`; `examples/vexiiriscv/rvw/tests/test_vexii_project.py` 5 passed. `rvw mcp --list`: no skipped tools.
+- NOT RUN: the RV64 CLINT/PLIC device profile families (`wfi-clint`, PLIC), NMI/AIA/Sstc/state-enable (no target feature), full RTL rerun of every family after the last rebase (only the smoke above), `test_adapter.py`.
+
+## Issues
+
+Refs: #84. Remaining: CLINT/PLIC device-driven families on RTL, TLB-hit and fence walk coverage, Sv48/57/H/NAPOT/PBMT targets, multi-hart families.
+
+Roadmap notes: generated MMU, privilege (controls, PMP, scheduled WFI) and single-hart ordering suites now run on real RTL (VexiiRiscv RV64/RV32, VexRiscv M-only) with run-level strict Spike comparison (`rvw regress cosim`) and a DUT page-walk observation path checked by the independent walker. Two core findings recorded with reproductions.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 983
+
+[#983](https://github.com/riscPrint/risc-v-workstation/pull/983). Merged: 2026-11-13T09:22:27Z.
+
+Title: fix(cosim): compare split ram accesses under uniform pmp and u-mode
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+The third dry-run pass added U-mode and four PMP entries to the independent RV32 core. The riscv-tests `p` environment then runs the tests in U-mode under its all-memory NAPOT entry, and the `scalar_split_ram` comparison (from #954) refused `rv32ui-p-ma_data` again: it required M-mode and zero PMP regions.
+
+The shim now accepts a split RAM access when:
+- the effective mode (after MPRV) is M, or U on a core without S-mode (no translation);
+- `mseccfg` is zero;
+- PMP decides every byte the same way, by Spike's rule: the lowest entry that matches any byte matches all bytes and `access_ok` allows the access, or no entry matches and the mode is M.
+
+Partial matches, denied accesses, page splits, MMIO overlap and partial faults stay refused. No ABI change. The contract and `Cosim/README.md` text are updated.
+
+Roadmap notes: on the dry-run core with U-mode and PMP, all 61 RTL traces (42 rv32ui-p, 8 rv32um-p, smoke, 10 RV32 interrupt programs) match Spike.
+
+## Testing
+- `pytest rvw/tests/cosim/test_scalar_split_ram.py rvw/tests/test_scalar_split_policy.py`: 14 passed (native Spike shim). New: unlocked PMP and a locked RWX entry give a match; a locked R/X-only entry refuses the split store. The new match cases failed before the fix.
+- Native: `rv32ui-p-ma_data` on the dry-run U-mode core: refused before, `match` (419 instructions) after.
+- Fast set: 1899 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, BOOM, Sail.
+
+## Issues
+Refs: #93. Split accesses under S-mode translation and partial faults remain open.
+
+## PR 984
+
+[#984](https://github.com/riscPrint/risc-v-workstation/pull/984). Merged: 2026-11-13T09:25:54Z.
+
+Title: feat(privilege): generate the pmp matrix for rv32 m/u cores
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+The third dry-run pass added U-mode and four PMP entries to the independent RV32 core. `rvw regress plan` selected no PMP suite: `pmp` required `xlen:64` and `pmp:8`, and the generator used the RV64 `pmpcfg0` layout (fallback entry 7), RV64 stores and an S-mode preamble.
+
+- `pmp.py`: follows the campaign `isa`. On RV32 the allow-all TOR fallback is entry 3 (last entry of RV32 `pmpcfg0`), so four entries suffice. `priv = "mu"` uses the M/U preamble and default modes M, U, MPRV-U, and refuses S rows.
+- `programs.head`: `priv = "mu"` drops `satp`, `medeleg` and `mideleg` writes.
+- `applicability`: new capability `pmp:4`; new requirement row `pmp-rv32` and `examples/privilege/pmp-rv32.json`.
+- The RV64 output is byte-identical to main (checked: 394 rows equal).
+
+Roadmap notes: PMP suites now cover RV32 M/U cores with four entries (242 programs, all passing on Spike). Native results on the dry-run core follow in the dry-run report.
+
+## Testing
+- `pytest rvw/tests/test_privilege_rv32_interrupts.py test_privilege_rv32_interrupts_native.py test_privilege_pmp.py test_regress_applicability.py`: 13 passed. The native test builds all 242 RV32 PMP programs and runs them on Spike (`--priv=mu --pmpregions=4`): all pass.
+- Fast set: 1917 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, BOOM.
+
+## Issues
+Refs: #34. RV32 S-mode PMP rows (with Sv32) are not generated by this change.
+
+## PR 985
+
+[#985](https://github.com/riscPrint/risc-v-workstation/pull/985). Merged: 2026-11-13T11:10:19Z.
+
+Title: feat(vexii): run clint wfi suites through isolated device plugins
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Run the CLINT-driven WFI family on VexiiRiscv RTL through the DeviceApiV1 CPython plugin.
+
+- **Isolated device library.** `RiscvSim/scripts/build-devices.py` compiles the interpreter home and this workstation's `rvw/src` into `PythonDevices.cpp`, which then starts an isolated interpreter (`PyConfig_InitIsolatedConfig`). Before, the profile needed `PYTHONHOME`/`PYTHONPATH`, and native identity refuses both ("cannot enumerate ... inputs"), so every regress run of `rvw64-devices.toml` was `input_not_captured`. A library built without the defines still reads the environment. `run64-devices.sh` now refuses the two variables.
+- **MMIO store fix.** The adapter passed the whole 64-bit bus data for a narrow MMIO store; the bus replicates a word in both lanes, so a 4-byte MSIP write exceeded 32 bits and the model refused it (C1 assert). It now masks the value to the access width.
+- **Selection and suites.** `rvw/features64-devices.json` adds `device:clint`; `prepare-suites.py` builds the `wfi-clint` family when `rvw regress plan` selects it. `rvw64-devices.toml` runs the four programs.
+- **`rvw regress cosim --allow-sync mmio`**: DUT data for loads from declared MMIO regions (the Spike shim has no device state). Sync reasons are now checked from `recent_synchronizations`; a truncated history stays inconclusive.
+
+Results (2026-11-13, `rv64imasu`, core `9f70315`): 4/4 C1 pass (MSIP and MTIP wake-up, MIE clear/set), 4/4 Spike match with `--allow-sync irq,mmio` (1–2 syncs each). Strict mode gives 1 match and 3 mismatches, all on `mtime` loads or asserted `mip` bits.
+
+## Testing
+
+- Native: `rvw regress run --project examples/vexiiriscv/rvw64-devices.toml --suite wfi-software-mie-0,... --rvfi-trace` and `rvw regress cosim ... --allow-sync irq,mmio` as above.
+- New `test_built_library_needs_no_python_environment` (builds the library, runs it with no and with bogus PYTHONHOME/PYTHONPATH). `test_regress_suite_cosim.py` 20 passed. Fast set: 1920 passed, 1 skipped. `test_vexii_project.py` 5 passed. MCP list: no skipped tools.
+- NOT RUN: Scala adapter unit tests after the one-line MMIO mask change (the RTL runs compiled and exercised it), PLIC families (need the `rvw.stimulus/1` mailbox in the adapter; next PR), RV32 device profile.
+
+## Issues
+
+Refs: #84. Remaining: PLIC stimulus mailbox and PLIC/PLIC-delivery runs, RV32 CLINT profile.
+
+Roadmap notes: device-driven interrupt suites now run on RTL: the CPython device plugin is identity-complete, and the CLINT WFI family passes and matches Spike (with declared MMIO/IRQ synchronization) on VexiiRiscv RV64.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 973
+
+[#973](https://github.com/riscPrint/risc-v-workstation/pull/973). Merged: 2026-11-13T11:10:52Z.
+
+Title: feat(privilege): verify cache-management environment gates
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Add project-configured CBO.CLEAN, CBO.FLUSH and CBO.INVAL environment-control matrices. Pin CMO-1.0.0 from the 20260120 ISA manual. Check legal CBIE/CBCFE field readback and instruction access/traps across M/S/U/VS/VU. Extend the shared entry helper to RV32 MPV/tohost transport and include senvcfg/mstatush in functional CSR domains. Preserve RV64 code.
+
+## Testing
+- Targeted tests: 39 passed.
+- Native Spike: all 532 actual programs passed across RV32/RV64, with and without H. Each XLEN has 51 non-H and 215 H programs. Initial short startup bounds gave 22 inconclusive runs; those exact ELFs all passed with a two-second bound. Initial and retry records are retained. The two first-pass batches took 69 and 53 seconds under nice -n 10.
+- All original RV64 assembly and ELF hashes remained unchanged after the RV32 entry extension.
+- Fast set: 1793 passed, 1 skipped, 8237 deselected, 1 unrelated failure: test_mcp_effect_declarations.py::test_declared_native_tools_use_inventory_names. replay_pack declares git, which is not an inventory name. One unrelated unraisable BufferedWriter warning comes from test_debug_dm.py::test_process_bus_bad_adapter. No waiver or change outside this area.
+- NOT RUN: cache writeback/eviction effects, DUT/RTL, BOOM, full Python suite, long formal or CI. Metadata operation selection is not a cache-effect result.
+
+## Issues
+Refs: #177. Project data must supply legal WARL value sets. Reserved CBIE encodings are rejected. MPRV, memory protection/translation faults, physical cache effects, memory ordering and full DUT qualification remain open.
+
+Roadmap notes: Extend environment-control verification from readback and CBO.ZERO to legal CBIE/CBCFE access behavior on both XLENs and guest modes. Keep permission groups separate from unobserved cache data effects.
+
+## PR 988
+
+[#988](https://github.com/riscPrint/risc-v-workstation/pull/988). Merged: 2026-11-13T11:12:31Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate `docs/COMMAND_REFERENCE.md` from the current parsers and MCP declarations (sheriff batch).
+
+## Testing
+- `scripts/command-reference.py`; fast set on main 12892b19: 878 passed, 1 skipped.
+
+## Issues
+None.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 989
+
+[#989](https://github.com/riscPrint/risc-v-workstation/pull/989). Merged: 2026-11-13T11:13:16Z.
+
+Title: feat(perf): add naxriscv ooo probes and commit-slot top-down report
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+- `examples/naxriscv`: `ProbeTapPlugin` binds SpinalProbes to existing NaxRiscv signals, no source edits: commit-slot top-down counters, ROB allocation/occupancy, execute-time and commit-time reschedules, integer free-list allocations/frees, issue-queue occupancy, load/store queue occupancy, I$/D$ refills and D$ write-backs, and a commit-ordered conditional branch probe from the branch-context learn port (prediction = the dispatch-time `BRANCH_EARLY` context). `rvwnax.ProbeSafety` shows identical Verilog with and without the plugin when probes are off.
+- New `rvw perf topdown EVENTS [--c2] [--result]` (MCP `perf_topdown`, format `rvw.topdown/1` in `docs/contracts/perf.md`): retiring / bad speculation / back-end bound / front-end bound from five project-bound counter probes. The classes must cover every slot; `retiring` must equal the C2 retirements and C1 instret. The NaxRiscv binding uses the OoO model's partition predicates, so RTL and model compare like for like.
+- `RiscvSim/scripts/make-jobs.sh`: older SpinalHDL wrappers (NaxRiscv's pin) access public signals by raw names; Verilator 5 encodes `__` in member names. The wrapper now uses the encoded name only where the headers lack the raw one (no-op for newer SpinalHDL).
+- `rvw/build-bench.sh` (riscv-tests benchmarks via `Arch/bench`), `rvw/probes/gshare.json` (csim study of NaxRiscv's GShare) and the measured table in the README.
+
+## Testing
+- Nine riscv-tests benchmarks with `--probes --rvfi-trace`: 9 pass; Spike matched all nine complete traces (2,464,330 instructions). `rvw perf topdown` checked on all nine (retiring = C2 = C1). `rvw probes convert --to bp-events`: events align 1:1 with C2 conditional branches on all nine; `rvw csim compare-rtl` direction agreement 80.4 % to 99.8 %.
+- `rvwnax.ProbeSafety`: identical Verilog SHA-256 with and without the tap (probes off).
+- `pytest rvw/tests/test_perf_topdown.py rvw/tests/test_make_jobs_names.py`: 8 passed. Fast set: 1907 passed, 1 skipped, 1 failed in an unrelated file (`test_docs_site.py::test_docs_staging_does_not_write_sources`). `rvw mcp --list`: no skipped tools.
+- NOT RUN: Kanata pipeline view, TLB probes, random memory timing with probes, BOOM/Vex runs through the changed make wrapper (it only rewrites names the headers lack).
+
+## Issues
+Refs: #70
+Remaining: Kanata stage/flush binding (bulk ROB flush has no probe kind), TLB events, qualification of the gshare study.
+
+Roadmap notes: performance — first out-of-order RTL with stall attribution: commit-slot top-down from probes on NaxRiscv (`rvw perf topdown`), predictor comparison against RTL (`rvw csim compare-rtl`), and calibration counters for the OoO model.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 990
+
+[#990](https://github.com/riscPrint/risc-v-workstation/pull/990). Merged: 2026-11-13T11:19:36Z.
+
+Title: feat(mcp): load a profile into the running server
+
+Audit evidence label: unit tests only.
+
+## Summary
+The third dry-run pass drove the bring-up through `rvw mcp --profile core` only. That profile holds 18 tools (agent guide, doctor, init, plan, evidence, jobs, catalog). Every regress, cosim, bundle, bisect, query, formal, coverage, lint, probes and perf step needed a server restart with another profile. An agent client cannot restart its own MCP server mid-session.
+
+- New meta tool `rvw_tools_load(profile)`: adds that profile's catalog tools to the running server, returns the added names, and is idempotent. Unknown profiles are refused.
+- The stdio and SSE servers now advertise `tools.listChanged` and send `notifications/tools/list_changed` after a load (SDK 1.x and 2.x paths).
+- Remote catalogs hold only allowlisted tools, so a load cannot exceed the allowlist. The bench client's exact tool-set assertion includes the new meta tool.
+- README: which profiles a bring-up agent loads for which step.
+
+Roadmap notes: MCP agents can now start with `--profile core` and load verification/debug/formal/arch/soc tools on demand without a restart.
+
+## Testing
+- `pytest rvw/tests/test_mcp_load_profile.py test_mcp.py test_mcp_smoke.py test_mcp_effect_declarations.py test_agent_external.py`: all passed. The new stdio test starts `rvw mcp --profile core`, checks `listChanged`, loads `verification`, receives `tools/list_changed`, and finds `regress_run` and `cosim_check` in the new list.
+- Fast set: 1923 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- `test_mcp_remote.py::test_authenticated_sse_protocol_roundtrip` (slow set) fails on main before this change too (result envelope vs `{'fixture': True}`); not touched here.
+- Not run: full Python suite.
+
+## Issues
+Refs: #34. There is no unload; a client that ignores `list_changed` must list tools again.
+
+## PR 991
+
+[#991](https://github.com/riscPrint/risc-v-workstation/pull/991). Merged: 2026-11-13T11:27:31Z.
+
+Title: fix(sim): exclude runtime transport from native cache identity
+
+Audit evidence label: unit tests only.
+
+## Summary
+Exclude runtime cosim ports, trace flushing and macOS XPC service labels from native cache identity. Keep DPI elaboration, generated RTL, tools, compiler options and unknown environment settings in the identity. Advance the namespace to v29.
+
+## Testing
+- Native identity unit tests: 39 passed.
+- FP and scratch reset checks after rebuilding the current Spike shim: 26 passed.
+- Recompare existing small add, sub, beq and fadd C2/2 captures: all four match. This uses stored RTL captures; no new BOOM simulation or build.
+- Release hygiene: passed as part of the targeted run (69 passed; four native reset tests first failed because the local shim was version 6, then passed after rebuilding version 7).
+- Fast set: result added below.
+- BOOM build, regression suites and formal: NOT RUN.
+
+## Issues
+Refs: #6. Native BOOM cache reuse with the extended probes remains to be measured.
+
+Roadmap notes: cache identity now separates runtime transport from native build inputs. Full-state cosim is already implemented by PR #961; its four stored captures also match the current comparator.
+
+Fast set: 1938 passed, 1 skipped, 1 failed, 8298 deselected. The unrelated failure is `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources` (missing staged documentation page). No documentation staging code changed.
+
+## PR 986
+
+[#986](https://github.com/riscPrint/risc-v-workstation/pull/986). Merged: 2026-11-13T11:27:49Z.
+
+Title: docs(formal): record the isa proof method and measured table
+
+Audit evidence label: no code.
+
+## Summary
+Last finished commit of the formal ISA kit worker, saved when the Codex usage limit stopped it. Documentation only.
+
+## Testing
+NOT RUN by the orchestrator. The worker ran its targeted tests before the commit.
+
+## Issues
+Refs: #63
+
+## PR 992
+
+[#992](https://github.com/riscPrint/risc-v-workstation/pull/992). Merged: 2026-11-13T11:28:02Z.
+
+Title: feat(formal): execute literal scenarios on the vexriscv soc
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Compile literal resource-aware RV32 MMIO plans into a bare-metal program and a CPU-backed pyuvm virtual sequence. Add formal scenario-compile and formal_scenario_compile MCP. Bind and execute the generated artifacts on the real composed VexRiscv SoC.
+
+The example performs 12 actions across UART scratch, CLINT MSIP and PLIC priority. Bare-metal APB capture and pyuvm each observe the real CPU's transfers. Both use the same generated CPU image. This is two execution consumers, not independent stimulus backends. Dynamic produced data, symbolic/PSS constraints, random schedules and a general independent pyuvm bus executor remain open.
+
+## Testing
+
+- Fresh private Scala compile and composed VexRiscv elaboration succeeded.
+- Native bare-metal C1: pass, 324 measured cycles, 54 retirements. All 12 APB observations present.
+- Native cocotb 2.0.1 / pyuvm 4.0.1 / Verilator: 1 passed, 0 failed, 0 skipped. All 12 live MMIO values matched.
+- Existing scenario checker: match for both consumers; 24 comparisons, no missing records, no dependency overlaps or resource conflicts. Cross-consumer output maps match.
+- The first pyuvm attempt stopped on an implicit narrowing warning. The wrapper makes the existing LHS conversion explicit with sized casts in its RTL copy. No warning or assertion is disabled. A later attempt exposed missing memory-image paths. The wrapper now copies and hashes the images, resolves their paths and verifies unchanged bytes after execution. Earlier failed artifacts remain local.
+- Targeted compiler tests: 7 passed. Native execution repeated after salvage recovery: bare-metal pass at 324 cycles and 54 retirements; pyuvm 1 passed; shared checker 24 comparisons matched. Release hygiene: 40 passed. CLI generation produced the expected generated-only report. MCP listing has no skipped diagnostics.
+- Fast set: 1945 passed, 1 skipped, 8296 deselected in 296.55 seconds.
+- Release hygiene was run with the new files staged.
+- NOT RUN: full Python suite, BOOM, hardware, full PSS conformance, independent stimulus equivalence or C4 acceptance.
+
+## Issues
+
+Refs: #150, #61, #46
+
+Roadmap notes: A literal serial scenario now compiles to RV32 software and a CPU-backed pyuvm sequence. Both run the actual composed VexRiscv SoC and produce matching observations for the shared checker. #150 remains open for independent executors, dynamic data, symbolic constraints and wider scenarios. General nested unbounded SVA, full multi-clock proof and instruction-identity liveness also remain open.
+
+## PR 993
+
+[#993](https://github.com/riscPrint/risc-v-workstation/pull/993). Merged: 2026-11-13T11:28:45Z.
+
+Title: perf(memory): prune axiomatic search and add sparse witnesses
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Finish the recovered axiomatic search. Index read-from sources by location and observed value. Preserve per-hart store order, reject candidate prefix cycles, and try a sparse SC certificate first. Independent enabled SC operations use one stable schedule. Equal-value stores keep separate identities.
+
+The saved seed-1 execution now returns allowed in 3 ms. The synthetic 8,000-event, four-hart SC execution takes 18 ms. General relaxed executions can still exhaust the branch limit. This is not general RVWMO qualification.
+
+## Testing
+38 targeted axiomatic tests passed, including all outcome sets for six pinned litmus tests in RVWMO and Ztso and planted illegal executions. Rechecked four saved RTL captures. No new RTL run. Fast-set result recorded below.
+
+## Issues
+No issue is closed. Remaining: larger native campaigns, full-program Spike replay, cached SMP, scaling and PLIC races.
+
+Roadmap notes: sparse certificates and pruned candidate search are implemented. Large arbitrary weak-order executions remain bounded and can be inconclusive.
+
+Fast set: 1942 passed, 1 skipped, 8294 deselected. One unrelated failure: `test_docs_site.py::test_docs_staging_does_not_write_sources`. Release hygiene: 40 passed. MCP discovery completed with no skipped-tool warning.
+
+## PR 994
+
+[#994](https://github.com/riscPrint/risc-v-workstation/pull/994). Merged: 2026-11-13T11:29:45Z.
+
+Title: feat(cov): measure paired native integer closure campaigns
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add a uniform random control to the integer closure loop. Qualify a common initial C1 suite before either arm earns coverage. Forward the caller's core lock to persistent regression workers. Allow a private sbt lock for private adapter builds.
+
+Recover the unfinished salvage work as a feature commit. Keep the salvage branch and all raw runs. Both example cores start at 20 of 170 supported bins. Four directed candidates reach 24 bins. Four random candidates reach 26 bins. Commit JSON curves and a small SVG per example. Retain the full 4,544-bin denominator and inconclusive campaign status. This single seed does not show an advantage over random.
+
+## Testing
+
+- Targeted controller, curve, initial suite, lock and release tests: 92 passed.
+- Checked all 16 saved native candidate attempts against their immutable C8 artifacts. All saved comparisons are complete strict Spike matches, with no synchronization or masks.
+- MCP discovery completed with no stderr and no skipped modules.
+- Fast set: 1961 passed, 1 skipped, 8294 deselected. The skipped command-reference check is deferred by the brief.
+- Native measurements are from the resumed worker's saved artifacts. Their recorded execution identities and implementation hashes are retained. This revision has Python tests; the complete paired native campaign was not rerun after salvage.
+- NOT RUN: full Python suite, BOOM, hardware, formal, five-seed campaign, complete descendant CPU accounting.
+
+## Issues
+
+Refs: #349, #353
+
+The broader goals remain open. Lock waits are included in attempt wall times. Initial qualification and evidence publication are excluded. No runtime speed gain or CPU-hour rate is claimed. The separate riscv-dv native item is already merged in PR #908.
+
+## Roadmap notes
+
+Record bounded four-attempt paired measurements on both example cores. Record strict qualification of initial suites, random control and preserved closure histories. Keep multi-seed qualification, native source guidance and complete CPU-hour accounting open.
+
+## PR 995
+
+[#995](https://github.com/riscPrint/risc-v-workstation/pull/995). Merged: 2026-11-13T11:29:48Z.
+
+Title: fix(arch): match static branch prediction in rtl correlation
+
+Audit evidence label: unit tests only.
+
+## Summary
+Use decoded static targets for the VexRiscv own-model description. Keep cacheless VexiiRiscv sequential. Document its cached predictor stack separately.
+
+Reuse the saved six-program RTL evidence. Model and RTL branch misses now agree on all six. Training-only fitting gives held-out IPC errors +2.62%, +31.35%, -2.46%. The divide error remains outside 10%. No accuracy verdict is claimed.
+
+## Testing
+24 targeted tests passed. Release hygiene: 40 passed. Fast set: 1941 passed, 1 skipped, 8294 deselected. MCP list has no skipped tools.
+
+RTL, gem5 and native core builds NOT RUN. This change reuses saved native C1/C2/probe evidence.
+
+## Issues
+Refs: #862
+Pipeline and divide timing, application correlation and cached predictor correlation remain open.
+
+Roadmap notes: static prediction closes the six-program miss-count gap. Held-out timing remains inconclusive.
+
+## PR 996
+
+[#996](https://github.com/riscPrint/risc-v-workstation/pull/996). Merged: 2026-11-13T11:29:50Z.
+
+Title: feat(checks): add tagged recovery and fence templates
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Finish the saved recovery template. Check generation-tagged allocation, release, retirement, killed device effects and fence drain. Retain the explicit limits on independent project observations and core bindings. Remove saved README conflict markers and keep both sections.
+
+## Testing
+
+Native `testOnly spinalchecks.RecoveryChecksSpec` passed under the private sbt-csr lock: 1 test with one legal flow and 14 fault scenarios. The legal flow had zero firings. Each fault fired the expected rule family.
+
+Release hygiene: 40 passed. CLI import and MCP discovery passed with no skipped-provider diagnostics. Fast set: 1939 passed, 1 skipped, 8294 deselected in 349.89 seconds. The command-reference check is deferred by the brief.
+
+Core binding, BOOM simulation, instruction-level recovery proof, full Python suite and CI wait: NOT RUN.
+
+## Issues
+
+Refs: #65. Core-owned bindings, independent instruction and byte-data observations, and recovery qualification remain open.
+
+Roadmap notes: Generic recovery/fence templates have a native positive and fault-injection test. They have no measured core binding or core proof.
+
+## PR 997
+
+[#997](https://github.com/riscPrint/risc-v-workstation/pull/997). Merged: 2026-11-13T11:30:43Z.
+
+Title: fix(cosim): declare mcp effects and reference tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare effects and optional native tools next to all seven cosim registrations. Saved QEMU logs need no QEMU process. Record the Git source-fetch requirement in effects because the installer inventory has no Git entry. Preserve handlers and argument schemas. Reduce the audit baseline from 202 stale entries to the current 94 entries.
+
+## Testing
+Targeted MCP checks: 34 passed. Effect declarations with the new cosim regression: 25 passed.
+Fast set: see final result below.
+No simulations, core builds or native reference runs.
+
+## Issues
+No issue closure requested. Remaining work includes other packages, profiles, shared CSR data, evidence layers, verdict checks and status refresh.
+
+Roadmap notes: cosim now declares effects and optional native reference dependencies beside registration.
+
+Fast set: 1939 passed, 1 skipped, 8294 deselected. Three temporary-directory cleanup warnings.
+
+## PR 998
+
+[#998](https://github.com/riscPrint/risc-v-workstation/pull/998). Merged: 2026-11-13T11:31:29Z.
+
+Title: feat(sim): reset live devices and select per-request threads
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Reset the complete UART, CLINT and PLIC state. Add explicit per-request simulation thread counts to opted-in adapters. Keep model and native-cache variants separate. Include the count in replay and C1 records. Refuse portable/live replay inputs that are not captured. Preserve the rebased MCP registry.
+
+## Testing
+Eight targeted Scala tests passed. Portable replay and release hygiene: 49 passed. Native reset and complete fast-set results follow below.
+
+Not run: full Python suite, BOOM simulation, sampled OS-thread counts or a thread-speed comparison.
+
+## Issues
+Roadmap notes: device reset and explicit thread model selection have targeted coverage. No thread-speed gain is claimed. Cross-machine native replay remains untested. No issue is closed.
+
+Fast set: 1940 passed, 1 skipped, 8294 deselected. One unrelated failure: `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources`, from the docs staging assertion in `scripts/build-docs.py`. It is outside this change.
+
+Native Verilator reset/thread test: 1 passed in the private core copy with `vex-simsrv` and `sbt-simsrv`. Five server requests gave the deliberate poison failure followed by four passes. The complete C2 traces match between one- and two-thread variants. The saved sample was refreshed from the rerun. Trace header identities changed on rebase; the native test compares matching programs within the same session.
+
+## PR 999
+
+[#999](https://github.com/riscPrint/risc-v-workstation/pull/999). Merged: 2026-11-13T11:33:25Z.
+
+Title: feat(privilege): generate sscofpmf overflow and delivery probes
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+
+Add a project-configured Sscofpmf 1.0 campaign. Generate scountovf access/visibility probes and M/S software-pending LCOFI delivery with local/global masks. Add optional project event selection for 64-bit hardware wrap, OF notification suppression and MINH. Register the profile with regress plan and reuse generated C1 suites and functional groups.
+
+The Python Counter unit model checks wrap, rearm and notification suppression. Its tests are model-based. Hardware-event reference rows remain inconclusive because Spike has no project HPM event source.
+
+## Testing
+
+- Targeted tests: 12 passed.
+- Native Spike smoke: all 12 programs compiled; 11 passed, 1 failed. Installed Spike masks M-mode scountovf with mcounteren; the pinned 20260120 text requires unconditional M-mode visibility. Keep the expected value and failure.
+- Optional hardware-event profile: all 15 programs compiled. Hardware event execution NOT RUN.
+- Fast set: 1951 passed, 1 skipped, 8294 deselected.
+- MCP discovery: no skipped modules.
+- RTL, full Python suite, physical timing and concurrent counter overflow: NOT RUN.
+
+## Issues
+
+Refs: #139
+
+Remaining: RV32 split controls, guest filtering, simultaneous sources and native hardware-event reference integration.
+
+Roadmap notes: add Sscofpmf CSR visibility and local-interrupt delivery to privilege capabilities. Keep hardware overflow and model-based unit evidence distinct from DUT qualification.
+
+## PR 1000
+
+[#1000](https://github.com/riscPrint/risc-v-workstation/pull/1000). Merged: 2026-11-13T11:34:03Z.
+
+Title: test(formal): prove a real recoded divider revision
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Use private sbt-equiv builds for real Spinal source revision comparisons. Recode the copied divider control as one hot. Compare two export configurations of the same VexRiscv FpuSqrt source. Record one equivalent divider proof and two inconclusive square-root attempts.
+
+Fix the stale security test after #873. Check X taint in the JSON backend and continued refusal in the native plugin. Correct the backend limits in the README.
+
+## Testing
+- Real divider revision flow: equivalent, five output partitions, 138.503 seconds including both source exports.
+- FpuSqrt configuration flow: inconclusive at 240 seconds in both attempts. The isolated retry proved input-ready only.
+- Security file: 34 passed, one optional skip.
+- Revision recipe: one passed.
+- Release hygiene: 40 passed.
+- Fast set: 1,938 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- MCP discovery: no skipped modules.
+- Full Python suite, BOOM, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #18
+Refs: #20
+
+Roadmap notes: Real small Spinal control-state recoding now has native revision-flow evidence. Square-root configuration equivalence remains inconclusive. This does not prove arithmetic correctness, full-width modules or whole cores.
+
+## PR 1001
+
+[#1001](https://github.com/riscPrint/risc-v-workstation/pull/1001). Merged: 2026-11-13T11:34:19Z.
+
+Title: fix(formal): stop simulation on state monitor failures
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Stop simulation with a failing exit code for x0 and register-frame assertion failures. Stop the PicoRV32 comparison on missing, extra or unknown valid events. Keep Yosys assertions through its built-in YOSYS define, including riscv-formal readers that do not define FORMAL.
+
+Add nine simulation controls. Replay the known PicoRV32 misaligned JAL as program 3. It fails on the first retirement with x14=4 in native RVFI. The original three programs still match 30 retirements each. The trap mismatch remains unresolved.
+
+## Testing
+- Native architectural-state tests: 20 passed, including good/bad bounded formal controls, monitor generation and nine simulation controls.
+- Fast set: 1940 passed, 1 skipped, 8303 deselected.
+- PicoRV32 native simulation: three positive programs passed; counterexample program returned exit code 1 as required.
+- CLI import and MCP discovery checked after rebase.
+- Full Python suite, BOOM, new full PicoRV32 equivalence campaign and unbounded proofs NOT RUN.
+
+## Issues
+Refs: #63
+No issue closed. PicoRV32 full bounded stream equivalence still fails.
+
+Roadmap notes: architectural-state simulations now fail on assertion errors instead of returning a misleading zero exit code. The known trap mismatch is reproduced as a negative simulation control.
+
+## PR 1002
+
+[#1002](https://github.com/riscPrint/risc-v-workstation/pull/1002). Merged: 2026-11-13T11:35:56Z.
+
+Title: feat(formal): retain nested eventual milestone obligations
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Retain overlapping obligations for nested eventual Boolean milestones. Accept two to eight ordered terms, including `s_eventually (a && s_eventually b)`. Use an old-obligation set for infinite-trace acceptance. Regenerate the support table.
+
+This is a subset of item 3. General nested unbounded expressions, temporal disjunction, nested until, formal reset cancellation and multi-clock proofs remain unsupported.
+
+## Testing
+
+33 targeted tests passed. Native Icarus checked 44 periodic traces against an independent existential oracle. Native liveness-to-safety jobs returned PASS for the alternating milestones and FAIL for a missing final milestone. Those engine observations do not qualify a real core.
+
+Fast set: 1948 passed, 1 skipped, 8303 deselected in 287.58 seconds. NOT RUN: full Python suite, BOOM, hardware, multi-clock proofs or general nested SVA qualification.
+
+## Issues
+
+Refs: #61, #46
+
+Roadmap notes: Add nested eventual milestone support. Keep general nested composition and multi-clock proof open.
+
+## PR 1003
+
+[#1003](https://github.com/riscPrint/risc-v-workstation/pull/1003). Merged: 2026-11-13T11:36:49Z.
+
+Title: fix(checks): bind vexii pc offer cancellation
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve the two retained VexiiRiscv PC-stream findings with an exact project cancellation binding. PcPlugin.scala:88-97 withdraws the PC offer on registered hold. Retain both failing wave windows and the original finding record. No waiver is added. Other stream obligations remain active outside the cancellation condition.
+
+Both connected CSR programs now pass C1 with all 25 checks bound and zero firings. The recorded 49-program VexRiscv capture already has 57 bound checks and zero firings. The composed SoC record has 17 bound checks and zero firings. Update the measured tables and add opt-in runtime waves with seed 17.
+
+## Testing
+
+Native pinned VexiiRiscv run reproduced both firings before the binding at 770 and 1270 ps. The rerun passed both programs with zero firings. Private core copy, vex-csr lock and sbt-csr compilation lock were used. Core and dependency revisions remain pinned.
+
+Targeted qualification, connected-formal preparation and release-hygiene tests: 53 passed. Fast set: 1979 passed, 1 skipped, 8300 deselected. Command-reference validation is deferred by the brief.
+
+No new 49-program VexRiscv sweep, composed SoC simulation, BOOM run, full Python suite, unbounded proof or CI wait. The separate expanded depth-4 campaign will be recorded in the next item.
+
+## Issues
+
+Refs: #5, #85. This source review resolves one tool false positive. It does not qualify whole cores, all CSR addresses or input closure.
+
+Roadmap notes: The connected VexiiRiscv two-program capture now has 25 generated/bound checks, zero firings and two C1 passes. Original finding evidence is retained.
+
+## PR 1004
+
+[#1004](https://github.com/riscPrint/risc-v-workstation/pull/1004). Merged: 2026-11-13T11:36:59Z.
+
+Title: fix(mcp): declare debug mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each debug registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+36 passed
+Fast set:
+......................................                                   [100%]
+1981 passed, 1 skipped, 8300 deselected in 309.37s (0:05:09)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: debug MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1005
+
+[#1005](https://github.com/riscPrint/risc-v-workstation/pull/1005). Merged: 2026-11-13T11:37:15Z.
+
+Title: feat(checks): bind microarchitecture checks to naxriscv and simulate them
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+- `examples/naxriscv/checks.generate.json` and `rvw/micro-checks.json` (`rvw.micro-checks/1`) bind the generic microarchitecture templates to NaxRiscv signals: counter bounds on the load/store queue free counts and the branch-context occupancy, and stream stability on the I$ refill, D$ refill and peripheral command streams. `rvw checks generate --all` binds all six rules; bus instances report that no checker exists for NaxRiscv's custom bus types.
+- `RVW_NAX_CHECKS=DIR` selects a check model in the adapter: the generated monitors and binds are passed to Verilator (content-addressed; the pinned SpinalHDL ignores `addRtl` for reports), each `assert(e);` becomes one firing line, and every run writes `checks-run.json` (`rvw.checks-run/1`). A pass with firings becomes `fail`; uncaptured output is an error, never a pass. `TapPlugin` adds a constant `rvw_checks_active` wire for the counter-bound enables.
+- `rvw/micro-checks-control.json`: a negative control (load-queue free count at most 8).
+- This item is merged before the OoO-model item (#5) because its calibration run is still in progress; the two do not depend on each other.
+
+## Testing
+- ISA suite with the check model (`RVW_NAX_CHECKS=.../queues rvw regress run --suite isa`): 59 pass, 59 reports captured, 0 firings.
+- Negative control on `rv32ui-p-add`: status `fail`, 1,004 firings of `control_lq_free_le_8`.
+- `pytest examples/naxriscv/rvw/tests`: 4 passed. Fast set (before rebase): 1936 passed, 1 skipped, 1 failed in an unrelated file (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- NOT RUN: free-list/ROB conservation templates (NaxRiscv has no live-tag mask and a 2-wide ROB; see README), store-queue forwarding and age-matrix rules, SpinalChecks Scala checks (do not compile on the legacy SpinalHDL axis yet), formal on these rules.
+
+## Issues
+Refs: #70
+Remaining: SpinalChecks on the legacy axis (about 37 API/Scala 2.12 errors), conservation checks that need a live-tag mask.
+
+Roadmap notes: verification — generated microarchitecture checks bound by project data and simulated on an out-of-order core (NaxRiscv): 6 rules, 59 ISA runs, 0 firings, control fires.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1006
+
+[#1006](https://github.com/riscPrint/risc-v-workstation/pull/1006). Merged: 2026-11-13T11:37:43Z.
+
+Title: feat(soc): run typed connectivity and multi-domain lint consumers
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Extend `rvw soc verify` with the existing formal connectivity consumer and fresh typed database extraction. Add stable interrupt-cause names, bounded preparation steps and a two-clock Vex composition for the existing structural CDC/RDC consumer. Finish the saved extractor WIP without resetting its branch. Keep existing CLI and MCP interfaces.
+
+The real composed Vex register program passed at seed 31 in 248 cycles and 36 retirements. All seven verification kinds generated and ran. Pyuvm passed 17 reset reads and fabric decode was proven. Connectivity timed out in internal RTL binding. Structural lint found 2 clocks, 293 registers, 9 CDC paths and 2,507 findings. Sampled protocol/register/VIP matches and CDC/RDC remain inconclusive. No whole-SoC qualification is claimed.
+
+## Testing
+
+- Private `sbt-soc` build: `db/compile` and classpath export passed.
+- Targeted SoC tests: 41 passed.
+- Release hygiene: 40 passed.
+- Fast set: 1,944 passed, 1 skipped, 8,294 deselected before the final preparation-step tests. Final rerun recorded below.
+- CLI import and MCP list passed with no skipped modules.
+- Native verification table and limits are in `SpinalSoc/examples/vex/VERIFICATION.md`.
+- NOT RUN: full Python suite, BOOM jobs, long formal campaigns, CI, physical hardware, complete CDC/RDC protocol or reset sequencing proofs.
+
+## Issues
+
+Refs: #134. Complete mapped retirement provenance, full protocol stress, register side effects in RTL and successful whole-SoC connectivity proofs remain open. Peripheral, crossbar, external-IP and debug tasks remain separate work.
+
+Roadmap notes: SoC verification now runs typed connectivity and multi-domain structural lint consumers in the combined flow. All seven kinds ran on the composed Vex example. Connectivity was inconclusive; CDC/RDC findings remain open. No roadmap or TODO file was edited.
+
+Final fast rerun: 1,945 passed, 1 failed, 1 skipped, 8,294 deselected. The failure was `test_soc_stub.py::test_stub_project`, which expected the old direct interrupt assignment text. Updated that expectation for the stable named wire; the focused SoC rerun covers the correction. The skip is the deferred command-reference batch check.
+
+## PR 987
+
+[#987](https://github.com/riscPrint/risc-v-workstation/pull/987). Merged: 2026-11-13T11:38:40Z.
+
+Title: fix(vip): let uvm own reactive fixture phases
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Let UVM invoke the AXI, TileLink and UART reactive fixture phases once. Configure UART transmit observation before build. Hold the AHB malformed-manager case through two wait cycles so the intended stability check sees the violation. Retain the expected fault diagnostics and scoreboards.
+
+Update the measured Verilator 5.052 matrix: all 20 fixtures compile; the 16 runnable fixtures pass 120 declared good and fault runs. The four inert SV model stubs remain unqualified. The failures recorded in #853 were fixture errors. No Verilator language limitation is inferred.
+
+## Testing
+
+- Targeted VIP/UVM set: 389 passed, 13 skipped.
+- Native Python endpoint, generated APB and pyuvm checks: 8 passed, 0 skipped.
+- Release hygiene: 40 passed.
+- Fast set before final rebase: 1870 passed, 1 skipped, 8264 deselected. The command reference check is deferred by the brief.
+- Clean rebase and helper: completed. CLI import, MCP listing with no skipped diagnostics, and six targeted SV qualification tests passed after rebase.
+- Fresh native Verilator 5.049 builds and three-seed good/fault matrices for AHB, AXI, TileLink and UART: 36 checked runs, 0 failed checks, 0 skipped.
+- NOT RUN: full Python suite, BOOM, commercial simulators, external SV native models, physical protocols, Accellera DPI or HDL backdoors.
+
+## Issues
+
+Refs: #204
+Refs: #205
+Refs: #296
+
+Roadmap notes: Record the repaired SV runtime fixtures and the complete declared 16-fixture matrix. Keep compile-only model stubs and untested modes separate from runtime qualification.
+
+## PR 1007
+
+[#1007](https://github.com/riscPrint/risc-v-workstation/pull/1007). Merged: 2026-11-13T11:38:44Z.
+
+Title: feat(regress): build pinned project act4 suites
+
+Audit evidence label: unit tests only.
+
+## Summary
+Add a project-owned ACT4 build command and selection through `rvw regress plan --act4`. Pin the upstream revision. Use ACT4's Sail signature pipeline. Record input and ELF hashes. Check the entire ELF set before regression discovery.
+
+Project data supplies ISA, privilege, UDB versions and options, model macros, linker script and Sail configuration. The existing C1 regression runner and suite Spike comparison handle execution. Generic code has no core names.
+
+## Testing
+Targeted ACT4 tests: 9 passed. Release hygiene: 40 passed.
+Fast set: 1,948 passed, 1 skipped, 8,296 deselected. Native ACT4 bring-up is in progress. No DUT ACT4 pass is claimed here. BOOM builds and simulations, the full Python suite and CI were NOT RUN.
+
+## Issues
+Refs: #48. Native VexRiscv/VexiiRiscv results, privileged tests, coverage, BOOM configuration and measured integration documentation remain.
+
+Roadmap notes: ACT4 now has a pinned project build description, manifest-bound ELF discovery and applicability selection. Native qualification remains separate.
+
+## PR 1008
+
+[#1008](https://github.com/riscPrint/risc-v-workstation/pull/1008). Merged: 2026-11-13T11:39:23Z.
+
+Title: test(uvm): qualify custom project adapter on native rtl
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Qualify the project-owned adapter path from #888 against a small custom-pin RTL endpoint. Declare APB4 semantics and map project pins through rvw.uvm-adapter/1. Generate a pyuvm bench from a declared database fixture, copy its project scenario and drive the existing APB manager against actual RTL.
+
+Record the good result and a separate corrupt-read control with source hashes and tool versions. This is adapter-path qualification for an explicit APB4 binding. It does not infer a new protocol or claim Scala extraction.
+
+## Testing
+
+- Verilator 5.049, cocotb 2.1.0 and pyuvm 4.0.1: the good run passed 82 compared transfers and 83 positive checks at seed 17. Each transfer has two wait cycles. Traffic covers four words, byte masks, error addresses, reads and writes.
+- The corrupt RTL read failed with APB_DATA and produced no completion counts. Missing or skipped XML cannot satisfy the controls.
+- Targeted adapter and opt-in native tests: 2 passed. Final standalone good/bad run passed after narrowing the fixture map to its actual four words.
+- Rebased project-adapter and release-hygiene tests: 43 passed.
+- Published hashes match all five input files. No personal paths occur in the published result.
+- Fast set: 1982 passed, 1 skipped, 8301 deselected. The command reference check is deferred by the brief.
+- NOT RUN: full Python suite, BOOM, C4 acceptance, CPU execution, asynchronous clocks or full APB protocol qualification.
+
+## Issues
+
+Refs: #296
+
+Roadmap notes: The custom project-adapter path now has native good/bad RTL evidence for a bounded APB4 binding. Keep arbitrary bus semantics and automatic discovery outside that claim.
+
+## PR 1010
+
+[#1010](https://github.com/riscPrint/risc-v-workstation/pull/1010). Merged: 2026-11-13T11:40:32Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate `docs/COMMAND_REFERENCE.md` from the current parsers and MCP declarations (sheriff batch).
+
+## Testing
+- `scripts/command-reference.py`; fast set on main 12892b19: 878 passed, 1 skipped.
+
+## Issues
+None.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1009
+
+[#1009](https://github.com/riscPrint/risc-v-workstation/pull/1009). Merged: 2026-11-13T11:40:36Z.
+
+Title: feat(privilege): check seeded rv32 trap and return frames
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+
+Extend the merged seeded privilege-transition generator to RV32. Keep the same operation sequence for a seed at either XLEN. Check saved xIE/xPIE on trap entry and restored interrupt-enable state after MRET/SRET. Register both profiles with regress plan.
+
+Also keep passing hardware-HPM C1 runs inconclusive when the selected reference cannot count the project event. A conclusive C1 self-check failure still fails. This completes the unsupported-reference guard for the Sscofpmf rows added in #999.
+
+## Testing
+
+- Targeted random, planner and Sscofpmf tests: 26 passed.
+- Native Spike: four RV32 and four RV64 programs passed, 32 steps each. All 256 trap/return steps include entry-frame checks; M/S steps include return-state checks.
+- Existing RNMI and state-enable tests: 20 passed.
+- Fast set: 1996 passed, 1 skipped, 8300 deselected in 331.12s (0:05:31).
+- The unsupported-HPM checker guard was added during that run and then verified by the targeted tests above.
+- Release hygiene: 40 passed.
+- MCP discovery: no skipped modules.
+- RTL, full Python suite, random asynchronous interrupts and guest transitions: NOT RUN.
+
+## Issues
+
+Refs: #139
+
+Remaining: guest modes, nested handlers, random asynchronous interrupts and native HPM-event reference integration.
+
+Roadmap notes: seeded privilege programs support both XLENs and verify saved/restored interrupt-enable state. Hardware HPM events retain an explicit unavailable-reference result.
+
+## PR 1011
+
+[#1011](https://github.com/riscPrint/risc-v-workstation/pull/1011). Merged: 2026-11-13T11:40:44Z.
+
+Title: feat(formal): check real hardfloat and divider unit contracts
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Finish the saved real HardFloat and VexRiscv divider unit runners. Compare binary16/binary32 result bits and flags with pinned SoftFloat references. Support the declared public asynchronous reset in the Boolean transaction translator. Keep variable-latency completion as a proof obligation.
+
+Retain the earlier 130-attempt HardFloat ledger: 85 closed and 45 inconclusive. Record fresh unrestricted binary16 add and signed integer conversion proofs, plus an isolated DIVU zero-divisor proof. Keep all timeout attempts.
+
+## Testing
+- Saved wrapper, divider extraction and native public-reset tests: 20 passed.
+- Unit tests plus release hygiene after recovery: 60 passed.
+- Fresh HardFloat binary16 add, to-int, from-int: proved with unrestricted operands under round-to-nearest.
+- Fresh DIVU zero-divisor: timed out at 90 seconds; isolated 180-second retry proved in 98.286 seconds.
+- MCP discovery: no skipped modules.
+- Fast set: 2,009 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Whole FPU/core, unrestricted full-width divide, VexiiRiscv datapaths, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #19
+
+Roadmap notes: Real unit runners now retain exact source hashes, model pins, case splits, flags, latency obligations and per-attempt outcomes. Full binary32 arithmetic, unrestricted multiply/FMA and normal-operand divide/sqrt remain open. The extracted VexRiscv divider does not certify decode, pipeline control or whole-core integration. VexiiRiscv unit binding remains open.
+
+## PR 1012
+
+[#1012](https://github.com/riscPrint/risc-v-workstation/pull/1012). Merged: 2026-11-13T11:41:15Z.
+
+Title: feat(memory): run bounded rtl smp ordering campaigns
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Run a fixed 28-job SMP campaign: all six applicable pinned litmus tests, 16 generated programs of length 16, and LR/SC contention plus AMO suites at N=2..4. Add a repeatable campaign builder and C1/C2 summary. Use the private sbt-mem lock.
+
+The larger captures exposed greedy SC scheduling dead ends. Add bounded alternate SC scheduling with repeated-state pruning. It retains write and LR source identities. Exhaustion still falls through to the bounded axiomatic search.
+
+## Testing
+Default timing: 28/28 RTL programs pass. All 16 generated traces are RVWMO allowed. The slowest checker call took 13 ms. All six captured litmus outcomes are consistent with native pinned herd7 7.58. Each case has one observation. Targeted checker and campaign tests pass. Fast-set and stress results are recorded below.
+
+No BOOM builds, full Python suite, long formal jobs or CI wait. Coherent-cache RTL is NOT RUN. These finite results are not full RVWMO qualification.
+
+## Issues
+No issue is closed. Remaining: coherent-cache integration and larger coverage.
+
+Roadmap notes: fixed-budget cacheless RTL campaigns now cover shared LR/SC contention at N=2..4 and a 16-seed generated-program budget with independent axiomatic checks.
+
+Stress: 28/28 RTL passes with delay 0..11, readiness 60%, clock enables 70%. All 16 generated captures allowed, slowest check 180 ms. All six litmus observations consistent with native herd7. No illegal execution found in this fixed budget.
+
+Fast set: 1952 passed, 1 skipped, 8300 deselected. One unrelated failure: `test_docs_site.py::test_docs_staging_does_not_write_sources`. Release hygiene: 40 passed. Checker scale regression: 8 passed. Campaign tests: 2 passed.
+
+## PR 1013
+
+[#1013](https://github.com/riscPrint/risc-v-workstation/pull/1013). Merged: 2026-11-13T11:41:20Z.
+
+Title: feat(formal): bind rv32im machine controller checks
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Bind generated exception entry, interrupt entry and MRET rules to the measured VexRiscv FormalMTop RV32IM export. Capture controller before-state and redirect, then observe actual updated state. Keep core signal names in the example. Reject other RTL hashes.
+
+Native exception and interrupt entry assertions passed through cycle 25 with reached triggers. MRET failed at step 15: after a prior return clears MPP, a second return has captured MPP zero and actual privilege 3. Preserve that failure for profile, MPP and alignment review. Do not edit the core or exclude the witness.
+
+Update the integration table. Keep complete-machine signoff incomplete.
+
+## Testing
+- Three native assertion tasks and three trigger covers, 120-second limit each, at most three parallel jobs under vex-conn and nice -n 10. Two bounded passes, one failure; all covers reached.
+- Targeted binding, machine rule and release hygiene tests: 47 passed before three extra exit-code tests were added. Final binding/rule tests: 10 passed.
+- Fast set: 1997 passed, 1 skipped, 8309 deselected. 56 warnings included concurrent pytest temporary-directory cleanup warnings.
+- Captured RTL from the committed helper matches the native source byte for byte.
+- CLI import and MCP discovery checked after rebase.
+- Full Python suite, BOOM builds, new core builds, CSR instruction consistency, fetch pairing, killed-instruction history, cross-trap PC chain and unbounded machine proofs NOT RUN.
+
+## Issues
+Refs: #63
+No issue closed. Review of the failed return transition and the other machine checks remains.
+
+Roadmap notes: RV32IM exception and interrupt controller transitions have depth-25 native evidence. MRET retains a failing witness. This does not complete machine ISA signoff.
+
+## PR 1014
+
+[#1014](https://github.com/riscPrint/risc-v-workstation/pull/1014). Merged: 2026-11-13T11:41:49Z.
+
+Title: feat(formal): mine scala candidates from isa signal traces
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Mine Boolean implications, guarded next-sample stability, mutex pairs and declared one-hot-or-zero sets from signal traces. Emit Scala DSL assertions as candidates. Drop refuted and inactive candidates. Add optional native trace capture to the VexRiscv property harness.
+
+The aligned ISA run passed all 49 programs. Its 42,769 samples retained 87 candidates: 27 implications, 46 stable relations, 13 mutex pairs and one one-hot-or-zero set. The miner dropped 730 refuted and 57 inactive candidates. Generated candidates are disabled by default. Some reflect signals constant in this finite suite. No fresh formal proof is claimed.
+
+## Testing
+
+- Targeted miner and release checks: 46 passed.
+- Native Verilator: 49 aligned ISA programs passed with compiled property monitors. An overly broad initial glob also selected rv32ui-p-ma_data; that known unsupported test failed and remains in local evidence. It is excluded from the aligned-suite report.
+- Generated Scala DSL: compiled successfully with SpinalChecks under the private sbt-sva lock.
+- MCP list: no skipped diagnostics.
+- Fast set: 2003 passed, 1 skipped, 8314 deselected in 290.88 seconds.
+- NOT RUN: fresh proofs of mined candidates, full Python suite, BOOM, hardware, full invariant discovery or qualification.
+
+## Issues
+
+Refs: #61, #46
+
+Roadmap notes: Trace mining now emits reviewed-input Scala candidates and counts for a real ISA campaign. Formal certification and broader trace environments remain open.
+
+## PR 1016
+
+[#1016](https://github.com/riscPrint/risc-v-workstation/pull/1016). Merged: 2026-11-13T11:42:21Z.
+
+Title: feat(sec): run security checks on same-cycle memory buses
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+The third dry-run pass added U-mode and PMP to the independent RV32 core and ran `rvw sec isolation` and `rvw sec ift-core` on it. Three gaps blocked or misreported this.
+
+1. **Same-cycle buses.** The native sec harness (`rtl.py`) supported only valid/ready buses with latency ≥ 1. A core with asynchronous RAM ports reads data in the cycle of its address, cannot wait, and has no `rsp_valid`/`cmd_ready`. Bus `latency: 0` now answers `rsp_data` (and its taint for IFT) from the current `cmd_address` in the drive step, queues nothing, and logs the handshake on `cmd_valid`. `rsp_valid` is optional there; `cmd_ready` is refused.
+2. **Undocumented binding fields.** `rvw.sec.core_adapter` used `link` (default `../programs/link.ld`, the VexRiscv layout) and `march`, which the contract did not name. `docs/contracts/sec.md` now documents them and the latency-0 rule.
+3. **Finding hidden as an error.** `ift-core --json` printed `status: violation` and exited 1; the CLI JSON fallback replaced that with `status: error, code: command_failed`. Exit 1 with a command's own JSON status now keeps the status and sets `verdict: fail`. Text-only output on exit 1 is still an error.
+
+Roadmap notes: `rvw sec` now runs on cores with same-cycle memory ports. On the dry-run core (U-mode, 4 PMP entries): PMP isolation pair `no_leak_observed` (U-mode load of the denied keystore traps; RTL traces match Spike); IFT `ct-xor` `no_leak_observed`, `leak-index` violation on the data bus address at cycle 9.
+
+## Testing
+- `pytest rvw/tests/test_sec_core.py`: 9 passed (new: same-cycle drive, no queue, handshake log, IFT taint, missing `rsp_valid` refused for latency ≥ 1).
+- `pytest rvw/tests/test_json_stdout.py -k finding_status`: passed (finding status kept; text failure still `command_failed`).
+- Native on the dry-run core: `rvw sec isolation` (PMP pair) and `rvw sec ift-core` (two programs), results above.
+- Fast set: 1939 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite, VexRiscv sec reruns (their buses use latency 1 and the queued path is unchanged).
+
+## Issues
+Refs: #34. Cross-word accesses through a byte-addressed same-cycle data port need a project wrapper; the harness RAM is word-addressed.
+
+## PR 1015
+
+[#1015](https://github.com/riscPrint/risc-v-workstation/pull/1015). Merged: 2026-11-13T11:42:29Z.
+
+Title: fix(mcp): declare fault mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each fault registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+.......................................                                  [100%]
+39 passed in 11.62s
+Fast set:
+..........................................................               [100%]
+2001 passed, 1 skipped, 8312 deselected in 273.69s (0:04:33)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: fault MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1017
+
+[#1017](https://github.com/riscPrint/risc-v-workstation/pull/1017). Merged: 2026-11-13T11:42:55Z.
+
+Title: docs(checks): record all connected depth-four results
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Record depth-4 BMC for every generated check in the three retained connected formal captures: VexRiscv 57/57, VexiiRiscv 25/25 and the composed SoC 17/17. Update the measured tables and qualification records. Keep exact IDs, result hashes, reset assumptions and the bounded-only limits.
+
+Each job selects one assertion and keeps the full design hierarchy. The Vexii PC formal check is the original strict rule from the retained #921 capture. It is distinct from the later cancellation-aware native rerun.
+
+## Testing
+
+Run all 99 jobs through `rvw formal regress` with depth 4, two initial reset samples, arbitrary other inputs, `--jobs 3 --timeout 60`. All 99 property results are bounded-pass. The suite status remains unknown. No activation cover or unbounded proof was run.
+
+Targeted connected-formal preparation, qualification and release hygiene: 53 passed. Fast set: 1997 passed, 1 skipped, 8312 deselected. The command-reference check is deferred by the brief.
+
+New core elaborations, BOOM runs, full Python suite, long formal jobs, release acceptance and CI wait: NOT RUN.
+
+## Issues
+
+Refs: #5, #85. Activation, deeper bounds, input closure, unbounded proof and whole-core qualification remain open.
+
+Roadmap notes: All 99 recorded generated IDs have depth-4 bounded results on the retained connected captures. Proven remains zero on every design. Activation remains not measured.
+
+## PR 1018
+
+[#1018](https://github.com/riscPrint/risc-v-workstation/pull/1018). Merged: 2026-11-13T11:43:10Z.
+
+Title: feat(sim): connect live devices to the vexii core
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Connect project-owned live UART FIFO, CLINT and PLIC state to VexiiRiscv memory requests and interrupt pins. Add the interrupt-driven UART echo program and its native test. Preserve the DeviceApiV1 path and reject mixed device-map selection. Check the live map against the project PMA ranges.
+
+## Testing
+Native and fast-set results follow below.
+Not run: full Python suite, BOOM simulations, Linux boot or native VexiiRiscv checkpoint restore.
+
+## Issues
+Refs: #865
+Roadmap notes: the project now has a live UART/CLINT/PLIC adapter and an interrupt-driven echo control. This does not qualify OS boot or native checkpoint restore. No issue is closed.
+
+Native Verilator control: 1 passed in the private VexiiRiscv copy, including its first source compile. It requires `echo\n`, complete passing C2, and software/timer/external IRQ assertions on the actual core. Fast set: 1981 passed, 1 skipped, 8300 deselected. One unrelated failure: `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources` from the docs staging assertion. MCP and release hygiene are checked before push.
+
+## PR 1019
+
+[#1019](https://github.com/riscPrint/risc-v-workstation/pull/1019). Merged: 2026-11-13T11:43:23Z.
+
+Title: feat(soc): add a watchdog with a composed fabric test
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add an APB watchdog with a saturating countdown, keyed service writes, sticky W1C expiry, IRQ and an explicit reset-request output. Export its register map through the existing CLI/MCP peripheral interface. Keep reset-tree integration project-owned.
+
+Add a composer-generated example with the independent simple-bus verification master. Its directed test checks disabled state, countdown, wrong/correct keys, reload, expiry, IRQ routing, reset request, status clear and zero reload. The example does not execute CPU instructions and does not qualify an independent safety clock or platform reset sequencing.
+
+## Testing
+
+- Private Scala compile passed.
+- Composed Verilator test passed at seed 43.
+- The documented helper was run with Verilator assertions; result recorded below.
+- Targeted map and release hygiene tests and the fast set are recorded below.
+- NOT RUN: full Python suite, BOOM jobs, long formal runs, physical hardware, CPU firmware, safety-clock independence or platform reset sequencing.
+
+## Issues
+
+Refs: #134. This delivers the watchdog profile only. Full 16550, boot flash and SD/block peripheral work remains open.
+
+Roadmap notes: The composer now has a watchdog register profile and a directed native composed-fabric test. Reset-request wiring remains explicit project work. No roadmap or TODO file was edited.
+
+The documented isolated helper passed with `--assert` at seed 43. Its sbt compile/simulation step took 49 seconds. Map and release hygiene tests: 51 passed. MCP listing had no skipped modules.
+
+Final fast set: 2,007 passed, 1 skipped, 8,312 deselected in 242.24 seconds. The skip is the deferred command-reference batch check.
+
+## PR 1020
+
+[#1020](https://github.com/riscPrint/risc-v-workstation/pull/1020). Merged: 2026-11-13T11:44:06Z.
+
+Title: docs(integration): verify the verilog walk on current main
+
+Audit evidence label: no code.
+
+## Summary
+
+Record a current-main walk of the external PicoRV32 scratch project. The seven requested items already have merged fixes and a second-pass report. Preserve their original revision scope. Add the current declared-port, formal, architecture and doctor checks. Rebuild the stale local Spike shim for the current ABI.
+
+Roadmap notes: plain HDL identity, declared full-word reads, declared ready/valid generation, compiler-only architecture build and HDL doctor were already delivered. Formal ISA and SVA remain bounded or inconclusive. UVM outputs remain skeletons. No roadmap or task-list edits.
+
+## Testing
+
+- Targeted identity, cosim convention, declared ports, architecture and doctor tests: 18 passed.
+- HDL native rebuild tests: 2 passed.
+- Fast set: 1939 passed, 1 skipped, 8294 deselected.
+- Release hygiene: 40 passed.
+- MCP inventory: no skipped-provider stderr.
+- Fresh full regression: 46 pass, zero inconclusive. Initial batch timeout recovered through retries.
+- Sealed-generation Spike comparison: 46 match, all C1 ELF hashes checked.
+- Scratch native commands and exact evidence limits are recorded in the report and external journal.
+- NOT RUN: full Python suite, BOOM builds, long formal proofs, a native UVM scenario, gem5 calibration or hardware.
+
+## Issues
+
+Refs: #911, #922, #927, #933, #942, #963, #972.
+
+Machine-state formal bindings, RVFI adapter conformance, unbounded proof and project UVM stimulus remain open. This report does not close those gaps.
+
+## PR 1021
+
+[#1021](https://github.com/riscPrint/risc-v-workstation/pull/1021). Merged: 2026-11-13T11:44:26Z.
+
+Title: docs(uvm): record native custom adapter qualification
+
+Audit evidence label: no code.
+
+## Summary
+
+Add the measured custom-bus project adapter result to the UVM/VIP integration matrix. Link its runnable fixture and source-hashed result. State the APB4 semantics, declared database fixture, positive comparisons and corrupt-read detection. Keep CPU execution, automatic protocol discovery and C4 acceptance outside the claim.
+
+## Testing
+
+- The fixture merged in #1008 passed the native good/bad controls on Verilator 5.049, cocotb 2.1.0 and pyuvm 4.0.1. The good run checked 82 transfers and 83 positive results at seed 17. The corrupt read failed with APB_DATA.
+- Checked the matrix values against the committed result and verified the relative link target.
+- Release hygiene: 40 passed. Pytest reported temporary-directory cleanup warnings. Fast set: 2016 passed, 1 skipped, 8316 deselected in 250.50s (0:04:10). The command reference check is deferred by the brief.
+- NOT RUN: new native campaigns for this documentation change, full Python suite, BOOM or changed-core C4 acceptance.
+
+## Issues
+
+Refs: #296
+
+Roadmap notes: Include the native custom-bus project-adapter result with the other measured UVM/VIP profiles. Keep every row's evidence boundary explicit.
+
+## PR 1023
+
+[#1023](https://github.com/riscPrint/risc-v-workstation/pull/1023). Merged: 2026-11-13T11:46:34Z.
+
+Title: feat(formal): select the sail m assertion engine
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add an assertion-engine choice to the VexRiscv Sail M campaign helper. Preserve the ABC default. Allow smtbmc Bitwuzla without editing the generated project. Keep both engines' results scoped to their actual runs.
+
+Record the native depth-20 MUL and MULHU SMT retry. Both assertion jobs timed out at 150 seconds. Both instruction activation covers reached and both general retirement covers passed. No instruction proof closed. RTL and generated Sail model hashes match the earlier ABC campaign.
+
+## Testing
+- Two native assertion jobs in parallel under vex-conn and nice -n 10, plus general and instruction-specific covers.
+- Sail model/activation and engine forwarding tests: 10 passed.
+- Fast set: 2045 passed, 1 skipped, 8320 deselected.
+- Release hygiene: 40 passed; pytest emitted concurrent temporary-directory cleanup warnings.
+- CLI import and MCP discovery checked after rebase.
+- Full Python suite, BOOM, new core elaboration, other M instructions and unbounded proofs NOT RUN.
+
+## Issues
+Refs: #63
+No issue closed. Sail M assertion proofs remain inconclusive.
+
+Roadmap notes: the campaign can select ABC or Bitwuzla. The new native SMT retry does not improve the signoff verdict. It retains explicit timeouts and reached target covers.
+
+## PR 1022
+
+[#1022](https://github.com/riscPrint/risc-v-workstation/pull/1022). Merged: 2026-11-13T11:46:47Z.
+
+Title: feat(cov): join native source metrics and functional goals
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Enable the existing Spinal location capture for coverage elaboration. Keep other elaboration settings unchanged. Add `rvw cov source-report` and MCP `cov_source_report`. Join native counters and project-declared functional groups per source line. Keep metric families and denominators separate. Keep unmapped points visible and in the native hole list.
+
+Measure four ISA workloads on each example with line/toggle counters, probes and complete strict Spike comparison. Native holes drive `rvw cov closure` suggestions from measured workload signatures. Replay the best additional workload on each core and check it again against Spike.
+
+| Core | Native points | Add baseline hits | Four-program hits | Holes closed | Source-linked points |
+|---|---:|---:|---:|---:|---:|
+| VexRiscv | 21429 | 17367 | 17915 | 548 | 558 |
+| VexiiRiscv | 32703 | 27074 | 27645 | 571 | 586 |
+
+Each core closes six source-linked native points. Functional source links are project declarations. No individual Scala statement hit is inferred. The fresh guided VexRiscv `sw` replay closes 545 initial holes. The VexiiRiscv `lw` replay closes 546. Signatures and replays use the same characterization set and seed. No held-out prediction or adaptive generator gain is claimed.
+
+Index literal native point IDs once in closure suggestions. Keep wildcard matching for patterns. This avoids scanning thousands of literal targets for every hole.
+
+## Testing
+
+- Source/parser tests: 22 passed. Final source report tests: 5 passed.
+- Controller/closure and MCP effect audit checks: 44 passed.
+- Closure tests including the literal-catalog regression: 6 passed.
+- Fast set after MCP metadata fixes: 1984 passed, 1 skipped, 8302 deselected. The skip is the brief-deferred command reference check. The added literal-index regression also passed separately.
+- Scala `riscvsim/testOnly riscvsim.CoverageLocationsSpec`: 1 passed under the private sbt lock. An initial invocation from the example build used an unavailable project ID. The rerun from RiscvSim passed.
+- Native: four programs and one guided replay per core passed C1 and complete strict Spike comparisons. No masks or synchronization. Private core copies, `vex-dv`, `sbt-dv`, nice priority 10.
+- Rebuilt the local Spike shim to version 7 before reference comparisons.
+- Release hygiene: 40 passed. Final MCP discovery has no skipped modules.
+- NOT RUN: full Python suite, BOOM, hardware, formal proofs, native adaptive code-feedback campaign. The controller's coverage reset receipt remains a separate obligation.
+
+## Issues
+
+Refs: #349, #353
+
+These are bounded native source-navigation and suite-guidance results. They do not grant C4 acceptance or complete Scala statement coverage. Most native points remain unmapped. Raw files remain in the worker checkout. Published records use neutral path aliases and pin the original raw report hashes.
+
+## Roadmap notes
+
+Record native line/toggle counts, per-source navigation with explicit unmapped totals, declared functional source associations, native hole lists, and qualified measured-suite guidance replays on both examples. Keep full statement attribution and adaptive generator qualification open.
+
+## PR 1024
+
+[#1024](https://github.com/riscPrint/risc-v-workstation/pull/1024). Merged: 2026-11-13T11:47:10Z.
+
+Title: fix(mcp): declare lint mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each lint registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+.........................................                                [100%]
+41 passed in 4.56s
+Fast set:
+........................................                                 [100%]
+2055 passed, 1 skipped, 8323 deselected in 234.55s (0:03:54)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: lint MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1025
+
+[#1025](https://github.com/riscPrint/risc-v-workstation/pull/1025). Merged: 2026-11-13T11:50:03Z.
+
+Title: feat(formal): add bounded csr state taint policies
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add persistent synchronous-register sources to Boolean IFT. Keep the DUT value logic unchanged. Add explicit bounded taint policies and exact finite-memory lowering. Refuse unsupported response-region alignment.
+
+Extend the real VexRiscv runner with CSR sources and bounded IFT. Record fresh RV32IM and PMP exports with source pins and native results. Keep all failures.
+
+## Testing
+- State-source, native clean/leaking controls and existing security tests: 44 passed, one skipped.
+- Additional policy refusal tests and pure source tests: 10 passed.
+- Release hygiene: 40 passed.
+- Fresh RV32IM depth-eight two-copy memory and initialization checks: counterexamples at cycle five. Both differ on data-bus command-valid. Independent uninitialized state and unconstrained bus traffic prevent attribution to a memory-secret leak.
+- Fresh RV32IM memory/CSR IFT: mapping and instrumentation completed; native port probe timed out before solving.
+- Fresh PMP variant: all checks refused two undriven translation-bypass signals. No isolation proof closed.
+- MCP discovery: no skipped modules.
+- Fast set: 2,046 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Full Python suite, whole-core proof, VexiiRiscv security, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #20
+
+Roadmap notes: CSR-state taint and bounded taint are now supported with native small controls. Real-core attempts have explicit hashes, source pins, contracts and limits. The RV32IM contracts have counterexamples. The PMP export must be repaired before isolation proof. No whole-core security or initialization pass is claimed.
+
+## PR 1026
+
+[#1026](https://github.com/riscPrint/risc-v-workstation/pull/1026). Merged: 2026-11-13T11:50:26Z.
+
+Title: feat(checks): bind vexii catalog csr bank readback
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Bind nine catalog-backed machine CSR views on VexiiRiscv. Check independent accepted software readback through the CSR interface, including four RAM-backed CSRs. Add a trap-free generated-program harness so mtvec and mepc do not conflict with the general generator's trap setup. Keep that general guard unchanged.
+
+Record 33 generated/bound checks, nine RTL passes and zero firings. Eight programs pass Spike. The marchid test fails on Spike because this project declares 46 while the installed Spike returns 5. Retain the mismatch and original reference trace classification. Add the measured rows and binding limits.
+
+## Testing
+
+Final current plugin/runtime compilation passed against private cached core classes and pinned dependency jars. Nine native RTL programs passed at seed 17 under vex-csr. Scala compilation used sbt-csr. A read-corruption control fired only csr.read:mscratch, 15 times, across the nine programs. That control used the same functional binding before the final input-shape guards.
+
+The production generator emits byte-identical programs to those run natively. Six generator/unsupported-shape unit tests passed. Fast set: 2059 passed, 1 skipped, 8323 deselected. Command-reference validation is deferred by the brief.
+
+Dependencies were not rebuilt. New 33-check formal, denied accesses, illegal WARL inputs, lower modes, hardware-update semantics, BOOM, full Python suite and CI wait: NOT RUN.
+
+Rebase resolution: union-rebase.sh retained both Vexii README additions. The six generator tests, CLI import and MCP discovery passed after the rebase.
+
+## Issues
+
+Refs: #85. This binds nine static machine views. Full CSR catalog coverage, dynamic aliases, trap-update expected values and concurrent hardware/software semantics remain open. Trap events invalidate mepc/mtval expected values until a software write. The mismatch does not establish a core defect or reference equivalence.
+
+Roadmap notes: Vexii CSR readback now covers nine catalog views and RAM storage. The generated native campaign has nine RTL passes and eight Spike passes, plus one explicit reference configuration mismatch. The earlier 25-check formal evidence remains separate from the new 33-check binding.
+
+## PR 1027
+
+[#1027](https://github.com/riscPrint/risc-v-workstation/pull/1027). Merged: 2026-11-13T11:50:34Z.
+
+Title: fix(memory): unblock full-program serialized hart replay
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Fix serialized SMP bus ownership for complete programs. Keep one hart as owner while its requests retire, but allow that hart to issue later requests. Blocking all later requests can freeze the in-order pipeline before its previous memory operation retires. Other harts remain blocked until the owner's requests retire.
+
+Add a complete shared-memory program with 128 AMO updates per hart, arithmetic, branches, a completion barrier and exact final-value checks. Replay each C2 retirement through the existing shared-memory Spike scheduler. Retain per-hart counts and fault controls.
+
+## Testing
+RTL seeds 17 and 23 pass. Spike matches 2622 instructions (1317/1305 per hart) and 2613 instructions (1308/1305). One injected register-result fault on each hart produces a mismatch on that hart. Native SerialMemoryGateChecks: 8 checks passed. Native shared-hart Spike test: 1 passed. Rebuilt the worktree's Spike shim after main changed its ABI from 6 to 7. Full fast-set and hygiene results below.
+
+The original gate timed out for both full programs and the smaller case. Saved timeouts remain local. No BOOM, full Python suite, formal jobs or CI wait. This serialized profile is not an RVWMO outcome oracle. No coherent-cache claim.
+
+## Issues
+No issue is closed. General concurrent weak-memory Spike scheduling remains outside this profile.
+
+Roadmap notes: full-program serialized DUT-order replay is measured with per-hart comparison and negative controls.
+
+Release hygiene: 40 passed. Both per-hart reports use zero applied masks and zero synchronizations. The worktree-local full reports retain captured build inputs; committed reports omit those large reproduction blocks and retain trace hashes and comparison results.
+
+Fast set: 2037 passed, 1 skipped, 8320 deselected. One unrelated failure: `test_docs_site.py::test_docs_staging_does_not_write_sources`. MCP discovery has no skipped-tool warning.
+
+## PR 1028
+
+[#1028](https://github.com/riscPrint/risc-v-workstation/pull/1028). Merged: 2026-11-13T11:50:57Z.
+
+Title: feat(soc): add a volatile sector block device
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add a volatile eight-sector block device and its CLI/MCP register profile. Full-word DATA accesses read or write 512-byte sectors. The device has completion/error IRQ, W1C status, transfer abort and explicit errors for invalid LBA, wrong transfer direction, inactive DATA, active LBA changes and overlapping commands.
+
+The composer-generated test uses an independent simple-bus master and the real APB fabric. It writes a patterned sector, compares 257 read words, checks a second sector and tests IRQ, completion, abort and errors. This is a memory-backed verification device, not physical SD signalling or persistent storage. CPU firmware and disk-image loading remain open.
+
+## Testing
+
+- Documented isolated helper: Verilator with assertions passed at seed 47. Compile/simulation step: 34 seconds.
+- Targeted map, release hygiene and fast-set results recorded below.
+- NOT RUN: full Python suite, BOOM jobs, CPU firmware, SD wire protocol, hardware, persistent media or reset-during-transfer simulation.
+
+## Issues
+
+Refs: #134. Full 16550 and boot-from-flash remain open. This implements the requested block-device option, not an SD host controller.
+
+Roadmap notes: SoC composition now has a volatile sector block device with register exports and a directed composed-fabric test. No roadmap or TODO file was edited.
+
+Targeted map/release hygiene: 53 passed. Fast set: 2,057 passed, 1 skipped, 8,323 deselected in 253.58 seconds. The skip is the deferred command-reference batch check. MCP listing had no skipped modules.
+
+## PR 1029
+
+[#1029](https://github.com/riscPrint/risc-v-workstation/pull/1029). Merged: 2026-11-13T11:51:21Z.
+
+Title: feat(formal): observe real-core eventual stage release
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add a Scala DSL eventual-release property beside the VexRiscv elaboration. A valid stalled first stage must eventually become invalid, leave the stall, be removed or be flushed. Gate requests during startup reset. No finite deadline or hidden fairness condition replaces eventual completion.
+
+Run the property through compiled Verilator monitors with C1 completion, activation and pending counts. Pending requests make the result inconclusive. Attempt the existing native liveness-to-safety adapter and retain unsupported results.
+
+This is stage progress, not fetched-instruction identity or an eventual retirement guarantee.
+
+## Testing
+
+Native small monitor tests: 2 passed, including pending and completed requests. Real-core Verilator: all 49 aligned programs passed; 1742 activations, 1742 completions, zero failures and zero pending requests. rvw cov merge consumed all 49 count files. Native bounded lasso search: 2998 state bits, depth 12. Formal regress: bounded-pass 12, antecedent reached, C3 and JUnit written. Exact rerun: cache hit with cover witness restored. Fast set: 2049 passed, 1 skipped, 8324 deselected in 263.13 seconds. Earlier preprocessor and missing anyseq-module failures remain in local artifacts. The portable export now preserves that formal nondeterminism with a width-preserving primitive definition. No property or assumption was removed.
+
+NOT RUN: hardware, full Python suite, fetched-instruction identity liveness or a fair-environment full-core proof.
+
+## Issues
+
+Refs: #61, #46
+
+Roadmap notes: Add real-core finite liveness observations with explicit pending counts. Keep instruction identity and complete formal liveness support open.
+
+## PR 1030
+
+[#1030](https://github.com/riscPrint/risc-v-workstation/pull/1030). Merged: 2026-11-13T11:52:01Z.
+
+Title: fix(mcp): declare memory mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each memory registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+..................................................                       [100%]
+50 passed in 7.02s
+Fast set:
+..........................................................               [100%]
+2073 passed, 1 skipped, 8326 deselected in 241.55s (0:04:01)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: memory MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1031
+
+[#1031](https://github.com/riscPrint/risc-v-workstation/pull/1031). Merged: 2026-11-13T11:55:06Z.
+
+Title: feat(farm): run persistent native shards through the local queue
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Run local queue shards through the persistent native adapter. Use fresh C1 directories per attempt, validate input identities and server execution, and collect C3 with retained source, options and failure details. Add a submit example and crash/cancel controls.
+
+Allow cooperative cleanup before queue SIGKILL. Keep a recovered pending cancellation cancelled. The native run found and fixed a management test ID leaking into the C1 manifest.
+
+Roadmap notes: 49 VexRiscv ISA tests passed through two queued native server shards. Record source and RTL hashes and measured collection rates in examples/regression-scale/local-results.json. Collection is not C4 acceptance.
+
+## Testing
+
+- Targeted native-shard and queue tests: 14 passed.
+- Release hygiene: 40 passed.
+- Fast set: 2054 passed, 1 skipped, 8322 deselected.
+- Native VexRiscv: 49/49 C1 pass, 49 C3 entries, one session per shard, equal RTL hashes. Shard wall times: 65.80 and 130.71 s, including startup and private-lock wait. Combined rate: 0.249 tests/s.
+- Startup controller SIGKILL: checked cleanup, retained infrastructure attempt, retry collected 25/25 pass. Startup cancel: acknowledged cancelled, no live captured group.
+- MCP tool list: no skipped diagnostics.
+- NOT RUN: new Spike comparison, C4 gate, Kubernetes cluster, full Python suite, GitHub CI. This initial native harness was dirty. Native-session crash controls and the remaining management integrations are separate work.
+
+## Issues
+
+Refs: #25
+
+Remaining: real dual-core dashboard history, planted RTL failures and triage, impact selection validation, budget/cost and gate integration, offline Kubernetes validation, and the integration guide.
+
+## PR 1032
+
+[#1032](https://github.com/riscPrint/risc-v-workstation/pull/1032). Merged: 2026-11-13T11:55:43Z.
+
+Title: fix(init): synthesize vhdl without the yosys plugin
+
+Audit evidence label: unit tests only.
+
+## Summary
+Use standalone GHDL Verilog synthesis in the VHDL simulation launcher. Avoid the bundled Yosys plugin memory-cell ABI failure. Keep the plugin for source-mapped design queries.
+
+## Testing
+- Targeted unit test: 1 passed. It checks the generated command, paths with spaces and emitted RTL passed to Verilator.
+- Fast set: 2056 passed, 1 skipped, 8323 deselected.
+- Release hygiene: 40 passed.
+- Native NEORV32 GHDL synthesis: completed. Native query with the matching plugin: completed.
+- NOT RUN: full Python suite, BOOM, long formal jobs.
+- NEORV32 direct Verilator import exposes a further memory-array limitation. Normalization and whole-core runtime work continue separately.
+
+## Issues
+No issue is closed. Whole-core dry run continues.
+
+Roadmap notes: VHDL simulation synthesis no longer needs a GHDL Yosys plugin. Database extraction still needs the matching plugin.
+
+## PR 1033
+
+[#1033](https://github.com/riscPrint/risc-v-workstation/pull/1033). Merged: 2026-11-13T11:56:31Z.
+
+Title: docs(soc): explain composition with measured verification results
+
+Audit evidence label: no code.
+
+## Summary
+
+Add a "Give your core a SoC" section to the integration guide. Describe wrapper/composer inputs and the generate/build/run sequence. Include the real composed Vex verification table and exact limits for sampled checks, connectivity timeout and multi-domain lint findings. Link the watchdog and volatile block-device profiles. Keep the remaining requested capabilities explicitly open.
+
+## Testing
+
+- Documentation checked against the measured Vex, watchdog and block-device records.
+- Fast-set result recorded below.
+- No new native run was needed for this documentation-only change. The referenced measurements are development evidence, not whole-SoC qualification.
+- NOT RUN: CI, full Python suite, hardware or long formal campaigns.
+
+## Issues
+
+Refs: #134. Whole-SoC connectivity proof, full 16550, flash boot, native crossbars, width conversion, composer SMP hosting, external-IP import and composed debug integration remain open.
+
+Roadmap notes: The integration guide now documents the measured SoC flow and its current gaps. No roadmap or TODO file was edited.
+
+Fast set: 2,082 passed, 1 skipped, 8,328 deselected in 295.81 seconds. The skip is the deferred command-reference batch check. Local guide links and MCP discovery checked cleanly.
+
+## PR 1034
+
+[#1034](https://github.com/riscPrint/risc-v-workstation/pull/1034). Merged: 2026-11-13T11:57:39Z.
+
+Title: fix(mcp): declare sec mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each sec registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+.........................................................                [100%]
+57 passed in 8.61s
+Fast set:
+...........                                                              [100%]
+2098 passed, 1 skipped, 8330 deselected in 289.17s (0:04:49)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: sec MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1035
+
+[#1035](https://github.com/riscPrint/risc-v-workstation/pull/1035). Merged: 2026-11-13T11:57:45Z.
+
+Title: fix(formal): check mret mpp on machine-only cores
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve the saved RV32IM MRET counterexample as an MPP update deviation in the machine-only VexRiscv profile. Replay the saved SBY testbench in Icarus. Add a directed program and compare the same ELF on the measured RTL and Spike with `--priv=m`. VexRiscv reads MPP=0 after MRET; Spike reads MPP=3.
+
+Add the missing post-return MPP observation and a declared least supported mode to the machine check. Keep the failed result. No upstream core source changes or property waivers.
+
+## Testing
+
+- Targeted Python tests: 11 passed.
+- Release hygiene: 40 passed.
+- Native machine checks, depth 25: exception and interrupt entry PASS with reached covers; MRET FAIL at step 9 with reached cover.
+- Saved SBY testbench replay: same second-return privilege assertion fails.
+- Directed from-reset Icarus and Spike runs: MSTATUS values 0x80 and 0x1880 respectively; extracted MPP values 0 and 3.
+- Fast set: see final run count below.
+- NOT RUN: full Python suite, BOOM, other core profiles, complete machine signoff, unbounded ISA signoff.
+
+## Issues
+
+Refs: #63
+
+The owner decides issue closure. The core deviation remains unfixed. Other machine checks and other ISA kit work remain.
+
+Roadmap notes: the machine-only RV32IM profile has a reproducible MRET MPP deviation. Exception and interrupt entry retain bounded depth-25 evidence. Full machine and unbounded ISA qualification remain incomplete.
+
+Fast set result: 2065 passed, 1 skipped, 8326 deselected in 293.37 seconds. The skip reason was not captured by this invocation; no native proof result is inferred from this set.
+
+## PR 1037
+
+[#1037](https://github.com/riscPrint/risc-v-workstation/pull/1037). Merged: 2026-11-13T12:00:19Z.
+
+Title: feat(arch): evaluate pinned workloads with sampled timing
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Add the default seven-workload evaluation set: Embench crc32, matmult-int and slre; the CoreMark algorithm check; qsort; rsort; and zstd compression/decompression. Reuse pinned recipes, verify outputs on Spike, capture complete C2 and run shared SimPoint-style samples on the two approximate reference descriptions. Add CLI and MCP entry points with JSON and Markdown reports.
+
+Publish actual sampled results and input hashes. Trace sizes range from 228,696 to 17,851,075 instructions. Six saved results were reused. Zstd timing was completed in this run. Its second model reuses hash-bound windows after full first-model validation and reproduces every first-model sample. Sampling error and RTL accuracy remain unmeasured.
+
+Add bounded window decoding, shifted contiguous RVFI mask support and opt-in Spike memory diagnostics. Keep the default file diagnostic mode.
+
+## Testing
+- Targeted sampler, native C2, workload and static-policy tests: 29 passed.
+- Targeted MCP/workload declarations: 28 passed.
+- Native ECALL diagnostic mode comparison: 1 passed. C2 bytes agree.
+- Required fast set: 1986 passed, 1 skipped, 8302 deselected.
+- Release hygiene: 40 passed. Shared pytest temporary-directory cleanup emitted 44 warnings.
+- All seven saved Spike output checks passed. Zstd source/window hashes and first-model timing parity checked.
+
+RTL, gem5, BOOM, sbt and full Python suite NOT RUN. No native timing accuracy verdict is claimed.
+
+## Issues
+Refs: #183, #282
+Full-timing sampling error, RTL application correlation and detailed commercial CPU fidelity remain open.
+
+Roadmap notes: the default open evaluation set now has complete Spike traces and sampled model evidence. The reference names remain approximate RISC-V configurations.
+
+## PR 1036
+
+[#1036](https://github.com/riscPrint/risc-v-workstation/pull/1036). Merged: 2026-11-13T12:00:35Z.
+
+Title: test(formal): record native reset xprop and replay results
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Record native reset/X checks on the fresh RV32IM export. Retain both formal candidates and the captured-source Icarus replay results. Neither target earned an initialization pass.
+
+## Testing
+- Yosys X-propagation, depth eight, two reset samples, defined inputs: candidates at step seven on instruction/data bus command-valid.
+- Captured-source Icarus replay: both replays completed; neither confirmed an unknown. Both target dispositions remain inconclusive.
+- Release hygiene: 40 passed.
+- Fast set: 2,073 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- PMP initialization remains blocked by undriven translation-bypass signals. VexiiRiscv initialization, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #20
+
+Roadmap notes: Native initialization evidence now includes formal X candidates and independent four-state replay outcomes. The difference remains unresolved. No core initialization pass or confirmed RTL X fault is claimed.
+
+## PR 1038
+
+[#1038](https://github.com/riscPrint/risc-v-workstation/pull/1038). Merged: 2026-11-13T12:03:15Z.
+
+Title: feat(checks): add bounded event and coherent models
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add four bounded capabilities in the generated-check area:
+
+- A serialized one-client coherent cache/reservation oracle for accepted B/C/E-related transactions, independent byte data, dirty writeback and source-specific negotiated capabilities. Add wire cap/report adapters. Keep beat-level protocol checks separate.
+- Programmable additive HPM event selection from independent control writes and event observations, with all five Sscofpmf mode filters.
+- An IMSIC indirect CSR oracle with dynamic selectors, separate interrupt files, guest routing and explicit unknown initial state. Model gaps do not become verified architectural traps.
+- Explicit clock-gate companion bindings beside literal UPF domains. Reuse the existing sampled monitor. Do not invent a clock-gating Tcl command.
+
+Record source hashes, measured test counts and binding limits. Keep issues open.
+
+## Testing
+
+Source-tree sbt under sbt-csr: 4 tests passed across HpmEventChecksSpec and TileLinkCacheModelSpec. HPM has one legal and two injected-fault scenarios. The final wire-parameter and spurious-SC-failure cache tests were then rerun: 3 passed.
+
+New Python model/binding tests: 17 passed. Existing UPF unit cases: 34 passed, 26 native cases deselected. Native Icarus clock-gate fixtures: 4 passed, including three detected faults. Release hygiene: 40 passed. CLI import and MCP listing passed without skipped-provider diagnostics.
+
+Fast set: 2097 passed, 1 skipped, 8332 deselected. The command-reference check is deferred by the brief. An earlier run used an in-checkout temporary directory and was interrupted because install tests require external destinations. The final run uses a private external temporary directory.
+
+Core cache, AIA, HPM or physical gate bindings; new formal runs; concurrent coherence races; full Python suite; BOOM; and CI wait: NOT RUN.
+
+## Issues
+
+Refs: #66, #65, #98, #85, #162, #163. Broader core-owned bindings and qualification remain open. The cache model is serialized. AIA privilege traps, major priorities, delivery timing and hardware/software races are not modeled. HPM OF and unsupported-mode legalization need separate bindings. Clock-gating Tcl import and physical glitch checks remain unsupported.
+
+Roadmap notes: Coherent cache/reservation, programmable filtered HPM, dynamic IMSIC expectations and UPF companion clock gates now have bounded model/template tests. No core or physical qualification is added by these fixtures.
+
+## PR 1039
+
+[#1039](https://github.com/riscPrint/risc-v-workstation/pull/1039). Merged: 2026-11-13T12:04:15Z.
+
+Title: fix(mcp): declare farm mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each farm registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+.......................................................................  [100%]
+71 passed in 6.12s
+Fast set:
+................................                                         [100%]
+2119 passed, 1 skipped, 8330 deselected in 327.41s (0:05:27)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: farm MCP effects and optional dependencies are explicit beside registration.
+
+Inventory gap: farm_batch can launch kubectl. The installer inventory has no kubectl ID. Keep native_tools unknown and retain this one audit finding. Its effects declare local/Kubernetes execution and cancellation.
+
+## PR 1040
+
+[#1040](https://github.com/riscPrint/risc-v-workstation/pull/1040). Merged: 2026-11-13T12:04:36Z.
+
+Title: feat(formal): prove a global-step two-clock property subset
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add formal cross-prove and formal_cross_prove MCP for one Boolean two-clock implication. Use global steps with pre-update sampled values, Yosys clk2fflogic and multiclock on. Support overlapped and nonoverlapped implication, posedge and negedge events, one scalar top input per clock. Retain requests until the nearest eligible target event. Add separate bounded obligation covers and the existing C3/JUnit regression output. Regenerate the support table. Also preserve newline whitespace after s_eventually in the nested parser; a focused regression test covers the prior single-eventual form.
+
+Both property clock inputs start low. No clock fairness is assumed. Proofs apply to the discrete global-step model. They do not prove eventual target clocks, full SystemVerilog scheduling, events between global samples, metastability or hardware behavior. General multi-clock SVA remains open.
+
+## Testing
+
+- 25 targeted tests passed. Three additional focused tests passed after fixing multiline eventual parsing.
+- Native Icarus oracle: 101 global samples for each implication form.
+- Native SMTBMC/Yices induction: four positive jobs returned proven. Four negative jobs returned failed. All eight obligation covers were reached. Both posedge and negedge target events were tested.
+- A sequential destination mutant failed because the property sees its pre-edge value, rather than its updated value.
+- MCP listing has no skipped diagnostics.
+- Corrected integration-guide command syntax was checked with the CLI parser. Its previous full fast set exposed shell line continuations rejected by the guide parser; that fix will ship in the separate guide PR.
+- Fast set: 2095 passed, 1 skipped, 8339 deselected in 325.81 seconds. Release hygiene: 40 passed.
+- NOT RUN: full Python suite, whole-core multi-clock proofs, full SVA scheduling qualification, hardware.
+
+## Issues
+
+Refs: #61, #46
+
+Roadmap notes: Add a native proved/refuted Boolean two-clock subset with an explicit global-step model. Keep general multi-clock SVA, clock fairness/liveness and events between samples open.
+
+## PR 1041
+
+[#1041](https://github.com/riscPrint/risc-v-workstation/pull/1041). Merged: 2026-11-13T12:05:43Z.
+
+Title: feat(formal): bind rv32im machine history checks
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add pinned RV32IM machine observations for an ordered instruction-response FIFO, live history through the four pipeline stages, pending trap redirects and mscratch read/modify/write transactions. The generated manifest works with `rvw formal machine-checks` and the machine rows in `rvw formal isa`.
+
+Retain the new PC-chain failure. A raw MRET redirect and RVFI next PC hold 0x80000005, but the next normal retirement is at 0x80000004. No alignment mask or input waiver is applied. Add measured results and explicit environment and CSR scope limits.
+
+## Testing
+
+- Two targeted Python tests passed. The helper rejects another RTL export and maps every generic observation.
+- Targeted tests plus release hygiene: 42 passed.
+- Native Bitwuzla, bound 25, 180-second task limit: live retirement history PASS; PC chain FAIL at step 13; CSR and instruction-memory assertions timed out. All four trigger covers reached.
+- Same-source retries at bound 15: CSR and instruction memory PASS with reached covers.
+- Fast set: final count below.
+- NOT RUN: full Python suite, BOOM, full CSR bank, directed PC-chain replay, unbounded proof of these machine checks.
+
+## Issues
+
+Refs: #63
+
+Item 2 remains partial: the CSR row certifies only read-enabled mscratch transactions at its finite bound. Other CSR WARL and hardware-update rules, write-only CSRRW, and the PC-chain counterexample attribution remain open. The owner decides issue closure.
+
+Roadmap notes: RV32IM now has bounded live-history, fetch-response pairing and mscratch checks. PC chaining remains failed on an unaligned MRET witness. Complete machine signoff remains incomplete.
+
+Fast set result: 2108 passed, 1 skipped, 8330 deselected in 332.29 seconds. The skip reason was not captured by this invocation.
+
+## PR 1042
+
+[#1042](https://github.com/riscPrint/risc-v-workstation/pull/1042). Merged: 2026-11-13T12:06:46Z.
+
+Title: fix(uvm): check trap handler entry in the python cpu scoreboard
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+The third dry-run pass ran native custom-core UVM for the first time: the pyuvm bench generated by `rvw uvm new` with the pass-2 project adapter, a project scenario, Verilator through `rvw regress cocotb`, and `CpuScoreboard` against a real captured Spike. Three generic defects stopped it:
+
+1. **Handler entry refused.** RVFI sets `intr` on the first instruction of every trap handler, including synchronous traps. `CpuScoreboard` treated every `intr` record as an asynchronous interrupt, so any riscv-tests program (which ends with `ecall`) was refused at its first trap. Entry right after a retired trap is now checked like any retirement. `intr` without a preceding trap stays refused.
+2. **Verilator lint stopped the build.** The cocotb worker built Verilator without `-Wno-fatal`; generated Spinal RTL has `UNSIGNED` constant-compare warnings and the build exited. Warnings still print; only errors stop it, as in the RiscvSim flow.
+3. **No usable reference helper or diagnosis.** `spike_reference(platform_json, elf, work)` now builds the captured Spike instance the docs required. Mismatch messages name field, order, PC, instruction and both values (was only `SPIKE_MISMATCH:pc_next`).
+
+Roadmap notes: native custom-core pyuvm on the dry-run RV32IM/U/PMP core passes against Spike: smoke (19 retirements), `rv32ui-p-add` (504, U-mode and traps), `rv32um-p-div` (135), a PMP-denied U-mode load (58). Open: the installed workstation venv is Python 3.15 and cocotb 2.1 supports at most 3.14, so the `pyuvm` extra needed a separate Python 3.14 environment.
+
+## Testing
+- `pytest rvw/tests/test_cpu_env.py`: 15 passed (new: handler entry after a trap checked, entry without a trap refused; `-Wno-fatal` build arguments).
+- Native (Python 3.14 venv with `rvw[pyuvm,mcp]`, Verilator 5.049, Spike shim): the four runs above pass; before fix 2 the build failed, before fix 1 `rv32ui-p-add` was refused at its first handler entry.
+- Fast set: 2063 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: SV UVM flow, full Python suite.
+
+## Issues
+Refs: #296. Asynchronous interrupts in the Python scoreboard still need an extended comparator.
+
+## PR 1043
+
+[#1043](https://github.com/riscPrint/risc-v-workstation/pull/1043). Merged: 2026-11-13T12:09:40Z.
+
+Title: feat(arch): replay bounded wrong paths through spike
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Add PC redirect to the Spike shim and an additive functional replay checkpoint API. Restore creates a fresh machine, replays the saved action prefix and checks effect hashes. Add bounded real wrong-path capture with shared ROB, queues, registers and issue resources. Wrong loads can affect cache state. Wrong stores are suppressed. Add CLI/MCP and measured sample reports.
+
+Capture all 299 and 199 sequential-prediction misses in two small programs. The baseline IPC gaps against bounded speculative timing are +19.34% and -13.41%. These compare two model policies. They are not RTL error bounds. The gap includes removal of correct-target lookahead.
+
+## Testing
+- Scheduler, frontend, static-policy and mode-mismatch regression tests: 31 passed.
+- Native replay fixture and actual Spike checkpoint controls: 3 passed. Covers PC, GPRs, memory, mscratch, minstret and nondeterministic replay refusal.
+- Required fast set: 2116 passed, 1 skipped, 8334 deselected. The added mode-mismatch check also passed in the targeted set.
+- Release hygiene: 40 passed. MCP list has no skipped tools.
+- Two native Spike capture/timing experiments completed with full sequential-miss coverage and bounded 16-instruction wrong paths.
+
+RTL, gem5, BOOM, sbt and full Python suite NOT RUN. Dynamic predictor repair, nested prediction, wrong-store cache effects and uop-cache pollution remain unsupported.
+
+## Issues
+Refs: #354
+Accuracy against RTL and dynamic wrong-path policies remain open.
+
+Roadmap notes: real Spike functional paths now supply bounded speculative timing experiments. The default committed-path model is unchanged. Functional checkpoints use replay rather than copied Spike internals.
+
+## PR 1045
+
+[#1045](https://github.com/riscPrint/risc-v-workstation/pull/1045). Merged: 2026-11-13T12:10:56Z.
+
+Title: fix(mcp): declare agent_bench mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each agent_bench registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+...                                                                      [100%]
+75 passed in 7.75s
+Fast set:
+.............................................................            [100%]
+2148 passed, 1 skipped, 8336 deselected in 336.11s (0:05:36)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: agent_bench MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1044
+
+[#1044](https://github.com/riscPrint/risc-v-workstation/pull/1044). Merged: 2026-11-13T12:10:58Z.
+
+Title: docs(checks): finish measured integration tables
+
+Audit evidence label: no code.
+
+## Summary
+
+Finish the measured integration tables in SpinalChecks/README.md and docs/INTEGRATION_GUIDE.md. Keep the retained 99-check formal captures separate from the later 33-check CSR native capture. Move the nine-CSR result note next to its core table. Record model/template test counts and remaining binding limits.
+
+The rows distinguish connected native simulation, depth-4 BMC, native template fixtures and reference-model tests. Preserve the marchid reference configuration mismatch and every NOT RUN limit.
+
+## Testing
+
+Fast set: 2130 passed, 1 skipped, 8336 deselected. Command-reference validation is deferred by the brief. Table counts match the three qualification JSON records and the separate 33-check native record. The private core and Spinal pins were verified against the recorded revisions.
+
+No new core simulation, native template run, proof, full Python suite, physical test or CI wait for this documentation item. Earlier item records contain their measured execution results.
+
+## Issues
+
+Refs: #5, #85, #65, #66, #98, #162, #163. No issue closure or whole-core qualification is claimed.
+
+Roadmap notes: The integration documents now show per-design generated/bound/proven/bounded/fired/unbound counts and separate model/template measurements. New core bindings, deeper formal and activation remain explicit follow-up work.
+
+## PR 1046
+
+[#1046](https://github.com/riscPrint/risc-v-workstation/pull/1046). Merged: 2026-11-13T12:12:40Z.
+
+Title: docs(formal): explain measured core property integration
+
+Audit evidence label: no code.
+
+## Summary
+
+Add "Write properties for your core" to docs/INTEGRATION_GUIDE.md. Show project-owned Scala bindings, visible observation ports, assertion emission, caller source lines, finite simulation accounting, antecedent covers, C3/JUnit, and exact proof-cache reuse. Include the measured per-property table: 34 safety assertions, two covers, and the separate eventual stage-release property. Link the measured trace-mining and real SoC scenario runs.
+
+State the limits of each observation. The guide distinguishes false antecedents, finite completions, pending liveness requests, bounded lasso results and conditional engine proofs. It records the global-step two-clock subset and keeps general nested SVA, full multi-clock semantics, instruction identity and independent scenario executors open. Clarify that only the two property clock inputs have the stated low initial level.
+
+## Testing
+
+- Guide command parser and evidence-boundary tests: 2 passed after fixing multiline shell continuations rejected by the parser.
+- Direct parser check of the new command examples passed.
+- MCP listing after union rebase: no skipped diagnostics.
+- Fast set: 2149 passed, 1 skipped, 8349 deselected in 349.95 seconds.
+- NOT RUN: full Python suite, new hardware or whole-core proof campaigns for this documentation PR. Native measurements come from the linked feature PRs and committed tables.
+
+## Issues
+
+Refs: #61, #46, #150
+
+Roadmap notes: The integration guide now gives a measured core property workflow, a per-property table and explicit remaining capability gaps.
+
+## PR 1047
+
+[#1047](https://github.com/riscPrint/risc-v-workstation/pull/1047). Merged: 2026-11-13T12:13:18Z.
+
+Title: feat(arch): describe naxriscv for the ooo model and correlate with rtl
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+- `examples/naxriscv/rvw/arch/ooo.json`: the NaxRiscv `rv32imasu` configuration for the trace-driven OoO model (`rvw ooo`): two-wide fetch/rename/commit, 64-entry ROB, 32 issue entries, 16+16 LSQ, 64 physical registers, disambiguation, and shared components for its GShare (16384 counters), 512-entry BTB and 16 KiB I$/D$.
+- `rvw/arch/calibrate.py RUNS OUT`: builds the `rvw.ooo-calibration-plan/1` from the probe runs, maps the RTL `branches` counter to the model's `branches` event, fits branch penalty / fetch latency / load latency on training programs only (`rvw arch ooo-fit`, 27 candidates) and scores the held-out programs, with model and RTL top-down partitions side by side.
+- `rvw/arch/results-2026-11-13.json` and a README section with the measured correlation.
+
+## Testing
+- Training median, qsort, multiply; held out towers, vvadd, rsort, memcpy, dhrystone (spmv exceeds the model's 1M-cycle budget). Selected branch penalty 6, fetch latency 3, load latency 2.
+- IPC error: training +13.7 / -16.9 / -12.4 %; held out -7.8 / -15.1 / -21.0 / -42.7 / -37.9 %. Mean absolute 14.3 % training, 24.9 % held out. `branches` event exact on all programs (r = 1). Budgets: IPC not within 10 %, coverage insufficient (one event family). `accuracy_status: inconclusive`.
+- Round 1 (4-entry fetch/decode buffers) is kept in the table; round 2 changed them on training evidence only.
+- NOT RUN: memory-disambiguation/LSU port experiments for the memcpy/dhrystone gap, spmv (budget), random memory timing.
+
+## Issues
+Refs: #70
+Remaining: the model underpredicts high-IPC memory-heavy code by about 40 %; more event families (cache refills, mispredicts with matching predicates) for coverage.
+
+Roadmap notes: arch/OoO model — first out-of-order RTL correlation (NaxRiscv): held-out IPC error 7.8 % to 42.7 %, branch counts exact; model too slow on memory-heavy code.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1048
+
+[#1048](https://github.com/riscPrint/risc-v-workstation/pull/1048). Merged: 2026-11-13T12:13:40Z.
+
+Title: feat(vexii): serve plic stimulus mailboxes on rtl
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Wire the PLIC interrupt suites to VexiiRiscv RTL through the `rvw.stimulus/1` mailbox and the DeviceApiV1 plugin.
+
+- **DeviceApiV1 ABI 2.** Appends `set_input(handle, input, level)` (for example a PLIC gateway source). Hosts (`DevicePlugin.h`, Scala `PluginDevice`) accept ABI 1 and 2 and read the new callback only for ABI 2. `PythonDevices.cpp` exports ABI 2 and maps it to `Device.set_level`.
+- **`--stimulus-file` (RiscvSim, generic).** Loads `rvw.stimulus/1`; only adapters with `supportsStimulus` accept it. `StimulusMailbox` serves the next event when the program stores its step to `stimulus_step` and writes `stimulus_ack` after `settle_ticks`. C1 records `stimulus_file` (as given) and `stimulus_sha256`.
+- **VexiiRiscv adapter.** Drives `plic-level` events through `DeviceBus.setInput("plic", ...)`. A passing program with unserved events becomes C1 `error`.
+- **Selection.** Catalog rows `plic` (`device:plic`, MEIP) and `plic-delivery` (also SEIP and S mode); `rvw regress plan` now maps IRQ input 9 to `irq:seip`. `features64-devices.json` declares both; `prepare-suites.py` builds them; `rvw64-devices.toml` runs the 12 programs (build directories are `cache_paths`, so regress captures the stimulus files).
+- **No unearned verdicts.** A strict mismatch at a load of the stimulus run's `stimulus_ack` word is reference-blind: `rvw regress privilege check` and `rvw regress cosim` report it as inconclusive with that reason (before: privilege check reported `fail`, "architectural mismatch").
+
+Results (2026-11-13, `rv64imasu`): 12/12 PLIC programs pass C1 (priority, tie, threshold claim, contexts, gateway, enable changes; M and S delivery with global/local/threshold masking). Their claim-ID checks come from the independent PLIC model. Spike agrees for the first 56–61 instructions of each, up to the first mailbox read; comparison verdict: inconclusive (12).
+
+## Testing
+
+- Native: the 12 PLIC programs above; after the final rebase (main added `--sim-threads`), Scala `C2BackendSpec`/`WalkCaptureSpec`/`StimulusMailboxSpec` 11/11 and an RTL smoke (`plic-gateway`, `plic-delivery-s-1-global`, `wfi-software-mie-1`) 3/3 pass.
+- Python: `test_standard_devices.py` (built library runs the ABI 2 `setInput` on a PLIC), `test_regress_suite_cosim.py` 21, `test_regress_applicability.py`, `test_privilege_scheduled.py` (reference-blind mailbox rule), PLIC/campaign tests 82 passed. Fast set: 1924 passed, 1 skipped. MCP list: no skipped tools.
+- NOT RUN: a Spike reference that models the mailbox (needs single-hart external-write C2 events in cosim), the Python model-observation backend for `plic-delivery`, RV32 device profile.
+
+## Issues
+
+Refs: #84. Remaining: reference support for harness-written RAM (C2 external write events for one hart), RV32 CLINT/PLIC profile.
+
+Roadmap notes: the stimulus mailbox and device input ABI let generated PLIC campaigns run on RTL; VexiiRiscv passes all 12 programs. The Spike comparison stays inconclusive at the mailbox word by design.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1049
+
+[#1049](https://github.com/riscPrint/risc-v-workstation/pull/1049). Merged: 2026-11-13T12:14:07Z.
+
+Title: fix(cli): load the command parser without the mcp extra
+
+Audit evidence label: unit tests only.
+
+## Summary
+The third dry-run pass needed a separate Python 3.14 environment for the `pyuvm` extra (cocotb 2.1 does not support the installed Python 3.15). That environment had `rvw[pyuvm]` but not `rvw[mcp]`, and every `rvw` command failed with `ModuleNotFoundError: anyio`: `agent_bench/commands/trial.py` imported `rvw.agent_bench.external` (and through it `rvw.mcp.remote` and `anyio`) while the CLI parser was being built.
+
+The import now happens when `agent_bench trial` runs. A new fast test builds the full parser with `anyio`, `mcp`, `uvicorn` and `starlette` blocked.
+
+Roadmap notes: `rvw` commands now work in an environment without the `mcp` extra; only MCP-serving commands need it.
+
+## Testing
+- `pytest rvw/tests/test_cli_without_mcp.py`: 1 passed. It failed before the change with the same `anyio` error seen natively.
+- Fast set: 2151 passed, 1 skipped, 1 unrelated failure (`test_docs_site.py::test_docs_staging_does_not_write_sources`).
+- Not run: full Python suite.
+
+## Issues
+Refs: #34.
+
+## PR 1050
+
+[#1050](https://github.com/riscPrint/risc-v-workstation/pull/1050). Merged: 2026-11-13T12:15:00Z.
+
+Title: feat(formal): compare pico state across rv32ui tests
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve the PicoRV32 trap counterexample as a difference between native terminal-trap write reporting and the kit's strict architectural trap-frame rule. Native RVFI and the independent physical register snapshot both retain the misaligned JAL's link write to x14. Keep the failed equivalence result and strict frame check. Do not alias native RVFI fields or assume the trap away.
+
+Add a simulation comparison across every selected RV32UI source. The helper uses the pinned core, builds each ELF, compares all base fields and the register frame, and waits until the final tohost store retires. Missing completion remains inconclusive. Add results and the exact trap/IRQ/environment limits.
+
+## Testing
+
+- Targeted suite-helper tests: 3 passed.
+- Targeted helper plus release hygiene: 43 passed.
+- Native full upstream RV32UI and trap negative control: measured rows below.
+- Fast set: count below.
+- NOT RUN: full Python suite, new full bounded equivalence proof, IRQ/PCPI/compressed profiles, BOOM, unbounded ISA qualification.
+
+## Issues
+
+Refs: #63
+
+The kit is not formally equivalent to PicoRV32 for all traps. This PR documents that exact limit and expands finite simulation coverage. It does not certify precise trap behavior or close the issue.
+
+Roadmap notes: all upstream RV32UI tests now have explicit state-monitor comparison rows. Trapping or uncompleted cases stay outside demonstrated simulation matches. Full native RVFI/state-monitor equivalence remains failed on the misaligned-JAL trap.
+
+Native final result: all 42 upstream RV32UI sources attempted; 40 matched through the completion-store retirement, fence_i and ma_data inconclusive at limits. Misaligned-JAL negative control returned exit 1 at retirement 1, x14=4, with both frame and rd-address failures.
+
+Fast set: 2153 passed, 1 skipped, 8349 deselected in 348.60 seconds. The skip reason was not captured by this invocation. Targeted tests passed again after the rebase. MCP discovery emitted no skipped-module errors.
+
+## PR 1051
+
+[#1051](https://github.com/riscPrint/risc-v-workstation/pull/1051). Merged: 2026-11-13T12:16:32Z.
+
+Title: test(suite): repair merged fixtures and isolate native locks
+
+Audit evidence label: unit tests only.
+
+## Summary
+Repair stale benchmark and doctor test doubles after the merged MCP and HDL changes. Keep the benchmark tool boundary check and verify that profile loading cannot expose tools outside its catalog.
+
+Use a checkout-specific lock for three generic sbt test helpers. Add the pure unit doctor module to the fast set. Each doctor test took less than one second in the targeted run.
+
+## Testing
+- Targeted benchmark and doctor modules: 33 passed.
+- Fast set, random seed 111: 2055 passed, 1 skipped.
+- Fast set, random seed 222 with the doctor module: 2080 passed, 1 skipped.
+- The command-reference skip is required by the parallel-push brief.
+- The full slow and native scan continues. The native lock helpers have not all completed their native runs. BOOM builds and simulations were not run.
+
+## Issues
+Refs: #41. The full-suite scan and its failure report remain in progress.
+
+Roadmap notes: Repair the merged test fixtures. Generic native capture helpers use a checkout-specific sbt lock. The doctor unit module now opts into fast discovery.
+
+## PR 1052
+
+[#1052](https://github.com/riscPrint/risc-v-workstation/pull/1052). Merged: 2026-11-13T12:17:43Z.
+
+Title: fix(mcp): declare bisect mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each bisect registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+....                                                                     [100%]
+76 passed in 11.12s
+Fast set:
+.                                                                        [100%]
+2160 passed, 1 skipped, 8353 deselected in 327.97s (0:05:27)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: bisect MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1053
+
+[#1053](https://github.com/riscPrint/risc-v-workstation/pull/1053). Merged: 2026-11-13T12:18:34Z.
+
+Title: feat(formal): check real vexiiriscv divider transactions
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Add a real-source runner for the optional VexiiRiscv DivRadix2 implementation with shift skipping. Export the committed 32-bit component in a private build. Compare stable unsigned transactions with the M models at first completion. Treat the latency bound as an obligation.
+
+Record a native arithmetic mismatch. Icarus returns 0x808080ab for 1 / 0. The M model requires 0xffffffff. CBMC independently finds a datapath-result counterexample with definedness proved and completion checks successful. No core source was patched.
+
+## Testing
+- Unit scope and model binding tests plus release hygiene: 48 passed.
+- Real Scala unit export: succeeded against SpinalHDL 1.15.0.
+- DIVU and REMU zero-divisor checks at 40 clocks: inconclusive at 180 seconds each.
+- DIVU zero-divisor check at 12 clocks: counterexample in 82.94 seconds. Only the datapath-result property failed.
+- Complete runner on the example pin 9f70315d: identical RTL, same Icarus mismatch, CBMC counterexample in 105.869 seconds, exit one.
+- Icarus with exported assertions enabled: reproduced 1 / 0 mismatch after eight clocks.
+- Unrestricted binary32 HardFloat add retry: inconclusive at 180 seconds.
+- Fast set: 2,120 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- MCP discovery: no skipped modules.
+- Signed divide, nonzero unrestricted division, VexiiRiscv multiplier, complete core ISA reproduction, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #19
+
+Roadmap notes: The real optional bitpasta divider now has source-pinned M-model checks and a concrete unit counterexample. This is not the default DivRadix implementation. The unit was re-elaborated against the released Spinal dependency. Full-core confirmation and arithmetic qualification remain open. The full 173 MB CBMC receipt remains private; its hash and compact metadata are committed.
+
+## PR 1054
+
+[#1054](https://github.com/riscPrint/risc-v-workstation/pull/1054). Merged: 2026-11-13T12:18:39Z.
+
+Title: perf(arch): decode native c2 words without python callbacks
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Decode supported flat C2/1 IMC instruction words in C and pack scheduler arrays without new-word Python callbacks. Keep Python template decoding for other classes and old libraries. Record the selected decoder in run reports and include decoder source in engine identity.
+
+Publish warmed alternating full-run trials with 500,000 instructions per stream. Diverse integer throughput changes from 62,994 to 483,155 instructions/s. Diverse component throughput changes from 53,633 to 282,968 instructions/s. Cached integer wall throughput regresses from 590,617 to 518,985 instructions/s; its CPU rates are nearly equal. The host was shared. The full-run millions/s wall target is not met.
+
+## Testing
+- Native decoder, C2 parser, old-library fallback and scheduler tests: 29 passed. Includes exhaustive compressed words and seeded 32-bit decoder comparisons.
+- Required fast set: 2161 passed, 1 skipped, 8353 deselected.
+- Release hygiene: 40 passed. MCP list has no skipped tools.
+- Four warmed alternating paired trials per stream. Every trial checks equal cycles, IPC, events, occupancy and top-down counts. File I/O, validation, packing, scheduling and hashes are included.
+
+RTL, gem5, BOOM, sbt and full Python suite NOT RUN. These synthetic streams do not validate architectural execution or application throughput. No general speedup is claimed.
+
+## Issues
+Refs: #354
+Cached-stream throughput, advanced-policy Python loops and large-application end-to-end rates remain open.
+
+Roadmap notes: native IMC decoding removes the new-word callback cost. Detailed limits and all wall/CPU trials remain in Arch/ooo/NATIVE_DECODE.md and benchmark-results-decode.json.
+
+## PR 1055
+
+[#1055](https://github.com/riscPrint/risc-v-workstation/pull/1055). Merged: 2026-11-13T12:20:33Z.
+
+Title: docs(integration): record what an out-of-order spinal core needs
+
+Audit evidence label: no code.
+
+## Summary
+- `docs/INTEGRATION_GUIDE.md`: new section "Out-of-order Spinal core (NaxRiscv, measured 2026-11-13)" with one row per tool (build axis, C1/C2, cosim, query/blocks, probes and top-down, predictor comparison, OoO model, generated checks): what an out-of-order Spinal core project supplies, what the NaxRiscv example measured, and what remains open.
+- `examples/naxriscv/README.md`: a short "what an out-of-order core project needs" section linking the guide; the `branches` statement now covers all eight calibrated programs.
+
+## Testing
+- Documentation only. Fast set: 2158 passed, 1 skipped, 1 failed in an unrelated file (`test_docs_site.py::test_docs_staging_does_not_write_sources`). `test_release_hygiene.py` passed.
+- Numbers are copied from #978, #979, #981, #989, #1005 and #1047 runs. The benchmark instruction total is 2,464,620 (the #989 PR body said 2,464,330; the README table and this guide use the per-run counts).
+
+## Issues
+Refs: #70
+
+Roadmap notes: docs — integration guide records the out-of-order Spinal core path and its measured results on NaxRiscv.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1056
+
+[#1056](https://github.com/riscPrint/risc-v-workstation/pull/1056). Merged: 2026-11-13T12:20:50Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate `docs/COMMAND_REFERENCE.md` from the current parsers and MCP declarations (sheriff batch).
+
+## Testing
+- `scripts/command-reference.py`; fast set on main 12892b19: 878 passed, 1 skipped.
+
+## Issues
+None.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+## PR 1057
+
+[#1057](https://github.com/riscPrint/risc-v-workstation/pull/1057). Merged: 2026-11-13T12:21:28Z.
+
+Title: feat(farm): export live dashboards from native dual-core history
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Export the owner-scoped live dashboard as standalone HTML with embedded C5 summaries. Find per-cluster bundles and keep C5 generation storage out of C3 history discovery. Extend the existing farm live CLI and MCP tool with an optional output path.
+
+Real fault runs found that adapter exit code 1 was treated as incomplete collection. Accept that code only with complete conclusive C1 evidence containing a DUT failure. Keep exit code 1 with only passes inconclusive.
+
+Roadmap notes: authenticated history now reads seven real queue records and 221 test observations from both cores. Commit single-run and multi-run dashboard examples, with paths sanitized. A private committed XOR-to-OR fault gives 47 passes and two failures out of 49. Its cluster has one real C5 bundle.
+
+## Testing
+
+- Targeted live, triage, export and native-shard tests: 17 passed.
+- Fast set: 2101 passed, 1 skipped, 8330 deselected.
+- Release hygiene: 40 passed.
+- Both exported scripts pass node --check. MCP tool list has no skipped diagnostic.
+- Native VexiiRiscv: two queued runs of 49 tests each, all C1 pass. The cold run took 666.02 seconds including Scala/native builds and queue wait.
+- Native VexRiscv fault: 47 pass, 2 fail. Corrected rerun collected all 49 as complete despite native exit 1.
+- Real-history HTTP: 401 without token; other owner sees zero runs; native owner sees seven runs, 221 tests, one cluster and one C5 summary; bundle drill-down succeeds.
+- Native-session controls: kill controller after its first real C1; checked recovery stops the native JVM group; retry collects 25; separate real-session cancel acknowledges cancelled and stops its native group.
+- Fresh partial strict VexRiscv comparisons mismatched on unknown mscratch reset. Preserve those records. Reset-only synchronization matched sampled clean add/xor/xori traces and found wrong GPR data in both planted-fault traces. Each VexRiscv check used one CSR reset synchronization. VexiiRiscv sample checks matched with zero synchronization.
+- NOT RUN: full-suite fresh strict Spike matches, C4 gate for this history, browser rendering, Kubernetes cluster, full Python suite, GitHub CI. Native harnesses were dirty for this history.
+
+## Issues
+
+Refs: #25
+
+Remaining: mismatch-derived cluster signatures and revision diff, measured design/coverage selection, real budget/cost and committed gate integration, offline Kubernetes validation and the integration guide.
+
+## PR 1058
+
+[#1058](https://github.com/riscPrint/risc-v-workstation/pull/1058). Merged: 2026-11-13T12:21:59Z.
+
+Title: ci(setup): separate policy checks from test dependencies
+
+Audit evidence label: unit tests only.
+
+## Summary
+Separate commit policy from Python dependency installation. Check the Python lock before setup. Use all four local runner labels. Remove Scala warm-up compilation from the Python Nightly job.
+
+Investigated failed runs 43361249526 (stale uv.lock before tests), 43380639589 (release hygiene failure), 43380769975 (missing issue footer), and 43209456502 (Nightly: 9 failures and 6 errors, including Verilator build errors, stale test expectations and Python environment faults). The current lock passes `uv lock --check`. Do not waive these test failures. Tier and reporting changes follow separately.
+
+## Testing
+Focused CI tests: 19 passed. Fast set: 2163 passed, 1 skipped, 8354 deselected in 349.43 s under shared load. The command-reference check remains deferred by the owner. No simulations, sbt, core builds, full Python suite or workflow runs were started. No runner service changes or run cancellations.
+
+## Issues
+Refs: #16, #41
+Nightly runtime qualification and failures in other areas remain open.
+
+Roadmap notes: CI setup faults are separated from test failures. Current Nightly is not qualified.
+
+## PR 1060
+
+[#1060](https://github.com/riscPrint/risc-v-workstation/pull/1060). Merged: 2026-11-13T12:22:50Z.
+
+Title: feat(checks): report generated check activation
+
+Audit evidence label: unit tests only.
+
+## Summary
+Add explicit trigger signals, saturating simulation activation counts and separate per-check cover jobs. Join cover observations into checks reports and MCP. Do not count formal engine passes without reached triggers. Correct the historical tables to show zero activated passes.
+
+## Testing
+16 targeted Python tests passed. Scala compile passed. The first monitor test run exposed an incorrect test expectation for inactive payload obligations; the corrected run is in progress. A private VexRiscv ISA attempt timed out after 240 seconds during compilation, with zero completed programs. Both-core ISA activation and connected formal cover runs remain unmeasured.
+
+## Issues
+Refs: #65
+Activation remains incomplete for declared rules without explicit triggers and for the two-core measured campaign. No unbounded proof is claimed.
+
+Roadmap notes: Generated check activation is now an explicit evidence field. Missing activation cannot increase passing-evidence totals. Connected measurement remains pending.
+
+## PR 1059
+
+[#1059](https://github.com/riscPrint/risc-v-workstation/pull/1059). Merged: 2026-11-13T12:23:04Z.
+
+Title: fix(mcp): declare bundle mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each bundle registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+.....                                                                    [100%]
+77 passed in 8.61s
+Fast set:
+.................................                                        [100%]
+2192 passed, 1 skipped, 8329 deselected in 245.47s (0:04:05)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: bundle MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1061
+
+[#1061](https://github.com/riscPrint/risc-v-workstation/pull/1061). Merged: 2026-11-13T12:25:39Z.
+
+Title: docs(formal): attribute pc-chain and mepc evidence
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Record PC-chain witness attribution and a from-reset MEPC reproduction. The saved local witness uses SRET and replays with X, so it does not confirm the earlier numeric MRET witness. A separate directed MRET program shows VexRiscv reading odd MEPC back unchanged while Spike clears bit 0. Keep the property and failure unchanged.
+
+MPP may be fixed to M on this M-only profile. Exposing zero after MRET is a deviation, so no permissive platform setting is added.
+
+## Testing
+Targeted machine and release hygiene tests: 48 passed. Icarus and Spike ran the same directed ELF. The saved SBY witness replay is inconclusive due to X values. Full formal reruns and core fixes were NOT RUN. Fast set: 2190 passed, 1 skipped, 8329 deselected. Formal MCP discovery has no skipped-module warnings.
+
+## Issues
+Refs: #63
+
+Roadmap notes: PC-chain evidence now separates an inconclusive saved replay from a directed MEPC readback deviation. Whole CSR coverage, trap alignment and complete ISA signoff remain open.
+
+## PR 1062
+
+[#1062](https://github.com/riscPrint/risc-v-workstation/pull/1062). Merged: 2026-11-13T12:25:56Z.
+
+Title: feat(arch): compare one parameter with a what-if report
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Add `rvw arch ooo-what-if` and the cancellable MCP tool `arch_ooo_what_if`. Change one existing numeric, Boolean or string field, validate both descriptions and run the same C2 path. Write JSON and Markdown deltas plus both configurations in a new directory. Preserve the source configuration and record its hash and old value.
+
+Publish a saved RTL-trace example. Changing branch recovery from 3 to 1 changes model cycles from 2573 to 2371, with 101 misses in both runs. The model IPC increase is 8.52%. This is not a measured RTL improvement.
+
+## Testing
+- Scalar types, invalid-value refusal, source preservation and MCP declarations: 70 passed.
+- Required fast set: 2209 passed, 1 skipped, 8331 deselected.
+- Release hygiene: 40 passed. MCP list has no skipped tools.
+- Actual CLI example on the saved RTL C2 trace; source hash, trace identity and delta checked.
+
+RTL, gem5, BOOM, sbt and full Python suite NOT RUN. The command predicts no changed program path, physical PPA or RTL accuracy. A later run failure can leave a partial output directory.
+
+## Issues
+Refs: #354
+Physical estimates and changes that alter program paths remain outside this command.
+
+Roadmap notes: a one-parameter CLI/MCP comparison now reports cycle, IPC and event deltas, with a readable Markdown report and input identity.
+
+## PR 1064
+
+[#1064](https://github.com/riscPrint/risc-v-workstation/pull/1064). Merged: 2026-11-13T12:27:49Z.
+
+Title: ci(pr): select jobs by changed paths
+
+Audit evidence label: unit tests only.
+
+## Summary
+Keep one stable Fast check. Select Python, Rust, JavaScript and Scala jobs from changed paths. Docs-only changes run release hygiene and the command-reference test, which remains explicitly deferred by the owner. Python changes run the fast set. Unknown code paths conservatively select Python. CI changes select all jobs. Cancel superseded PR runs by branch. Keep the separate conventional-commit check.
+
+## Testing
+25 focused CI/path tests passed. Fast set result recorded below before push. No native jobs, simulations, sbt, core builds or Actions runs were executed.
+
+## Issues
+Refs: #16, #41
+Branch protection must select the Fast check if it is not already configured. Python tests remain a shared package set because tests cover cross-package contracts.
+
+Roadmap notes: PR jobs are selected by path. Native and language suite tier definitions follow separately.
+
+## PR 1063
+
+[#1063](https://github.com/riscPrint/risc-v-workstation/pull/1063). Merged: 2026-11-13T12:27:51Z.
+
+Title: fix(soc): execute scoped verification consumers
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Run scoped SoC verification consumers on the composed VexRiscv example. Connectivity first resolves each structural dependency, then proves a source-cut RTL cone with an activation witness. Canonical Yosys bit IDs keep aliases connected. Clock and reset rows now name their top-level drivers.
+
+Protocol checks run all 49 selected ISA programs with native assertions and 31 APB fabric assertions at depth 8. Directed register obligations require checked reads after writes. Four generated cocotb tests check each peripheral bus. CDC/RDC output recognizes both declared synchronizer classes and reports its 2,507 structural findings separately from missing consumers. No whole-SoC or CDC/RDC acceptance is claimed.
+
+The measured table is in SpinalSoc/examples/vex/VERIFICATION.md and the integration guide. The protocol, register, VIP and pyuvm rows pass in their declared scopes. All four connectivity rows and the seven decode assertions prove. CDC/RDC reports findings.
+
+## Testing
+
+- Fresh private Spinal compile passed in 133 seconds with SpinalHDL 1.15.0.
+- Fresh single-clock and multi-domain extraction completed.
+- Composed register program passed at seed 31: 248 cycles, 36 retired instructions.
+- All 49 selected RV32UI/UM ISA programs passed with native assertions.
+- 31 APB assertions passed at depth 8 under explicit legal-master assumptions.
+- Four peripheral cocotb tests passed, with 17 independent known-value reads and no skips.
+- Separate pyuvm bench passed 17 known-reset reads.
+- Four source-cut connection proofs passed with activation witnesses. Transfer proofs took 3.6 to 4.4 seconds each.
+- Native connection regressions passed: correct transfer proves; corrupted transfer fails. Existing native binding tests also passed.
+- Seven fabric decode assertions proved.
+- Fast set: 2,108 passed, 1 skipped, 8,332 deselected. Latest targeted set: 41 passed.
+- Release hygiene: 40 passed. MCP listing has no skipped-tool errors.
+
+Full Python suite, BOOM builds, full Scala suites, hardware, complete AXI protocol qualification and temporal CDC/RDC signoff were NOT RUN.
+
+## Issues
+
+Refs: #1006, #1033
+
+Full 16550 behavior, boot-from-flash, native crossbars and width adaptation, composer-hosted SMP, external IP import and composed debug integration remain separate items in the assigned task.
+
+Roadmap notes: SoC verification now has executable scoped protocol, directed register and per-peripheral VIP consumers. Source-cut connectivity finishes in seconds per obligation. Multi-domain lint produces explicit findings and recognized synchronizer classifications. Structural findings and temporal CDC/RDC obligations remain open.
+
+## PR 1065
+
+[#1065](https://github.com/riscPrint/risc-v-workstation/pull/1065). Merged: 2026-11-13T12:28:23Z.
+
+Title: fix(mcp): declare reduce mcp effects and native tools
+
+Audit evidence label: unit tests only.
+
+## Summary
+Declare file writes, long jobs and native-tool use next to each reduce registration. Preserve handler behavior and argument schemas. Reduce the MCP audit baseline to the remaining findings.
+
+## Testing
+Targeted effect and audit tests:
+......                                                                   [100%]
+78 passed in 7.25s
+Fast set:
+..........................................................               [100%]
+2217 passed, 1 skipped, 8329 deselected in 266.95s (0:04:26)
+No core builds, simulations, native campaigns or full Python suite.
+
+## Issues
+No issue closure requested. These declarations do not qualify native tool behavior.
+
+Roadmap notes: reduce MCP effects and optional dependencies are explicit beside registration.
+
+## PR 1066
+
+[#1066](https://github.com/riscPrint/risc-v-workstation/pull/1066). Merged: 2026-11-13T12:29:35Z.
+
+Title: feat(checks): prepare induction and portfolio proof jobs
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add prove mode to connected generated-check preparation. Keep covers bounded. Export normalized hashed RTLIL for the existing three-engine race. Assert FIFO reference occupancy and pointer bounds as helper invariants.
+
+## Testing
+4 connected-preparer tests passed. The fast set had 2214 passed, 1 skipped, 8329 deselected and one unrelated failure: test_doctor_c1suite.py::test_each_fault_is_reported[nondeterministic-determinism]. Native Yices unbounded engine observations passed one enum check on each retained VexRiscv and VexiiRiscv capture. The race reports remain inconclusive with activation_not_checked and proof_kind none. Other kinds NOT RUN. No qualified both-core closure is claimed.
+
+## Issues
+Refs: #65
+Refs: #21
+The complete both-core proof/activation campaign remains pending.
+
+Roadmap notes: K-induction and portfolio preparation are available for generated checks. Helper bounds are assertions, never assumed DUT behavior. Qualified unbounded closure remains unmeasured.
+
+## PR 1067
+
+[#1067](https://github.com/riscPrint/risc-v-workstation/pull/1067). Merged: 2026-11-13T12:31:12Z.
+
+Title: feat(farm): triage native mismatches with captured input identities
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Use captured reference mismatches to refine farm failure signatures. Check the C1/C3 core, configuration, seed, status and ELF identity. Require recorded ELF and C2 hashes before using the first-mismatch PC and instruction. Keep comparison hashes, masks and synchronization records in each member. Invalid comparison evidence remains an explicit issue and does not waive the original C1 failure.
+
+Emit rvw bisect command arrays for each recorded good-to-bad range. Add the optional core source environment variable through CLI and MCP.
+
+Roadmap notes: native VexRiscv regression diff reports two new failures across 49 cells per side. XORI differs at 0x80000198 (0xf0f6c713). XOR differs at 0x800001a0 (0xc5c733). Both clusters have real C5 bundles. Commit the measured record under examples/regression-scale.
+
+## Testing
+
+- Targeted comparison-signature, triage and live tests: 11 passed.
+- Fast set: 2213 passed, 1 skipped, 8329 deselected.
+- Release hygiene: 40 passed.
+- MCP tool list: no skipped diagnostic.
+- Native C1/C3 diff: two new failures, no triage issues. Both saved comparisons bind actual ELF and C2 hashes. Both retain one documented unknown-CSR reset synchronization. Wrong GPR data remains visible.
+- Native bisect attempted on the recorded adjacent revisions. Input capture refused the tracked src/test/resources/VexRiscvRegressionData gitlink before simulation. Keep the fail-closed check intact. No endpoint or first-bad result was earned.
+- NOT RUN: native trap-cause signature case, full fresh strict reference suite, full Python suite, GitHub CI. Gate acceptance is not inferred from triage.
+
+## Issues
+
+Refs: #25
+
+Remaining: native bisect input capture needs support for this tracked core gitlink or a separately committed fixture without that input. Design/coverage selection, budgets/costs, committed gate integration, offline Kubernetes validation and the integration guide are separate items.
+
+## PR 1068
+
+[#1068](https://github.com/riscPrint/risc-v-workstation/pull/1068). Merged: 2026-11-13T12:34:07Z.
+
+Title: ci(tiers): define inventory-backed native and nightly checks
+
+Audit evidence label: unit tests only.
+
+## Summary
+Define fast, native-light, examples and nightly tiers. Tool names refer to the installer/doctor inventory. macOS expects tools and reports missing tools as explicit skips. Native-light uses marked tiny fixtures and a 120-second process-group cap. Examples uses pinned cached VexRiscv/VexiiRiscv sources, private build copies and `rvw regress` smoke suites. Nightly separates slow Python into four stable shards and defines Scala, Rust, VS Code, ComponentSims and VIP jobs. Scala commands run tests rather than reporting compilation as a test pass.
+
+## Testing
+28 focused configuration tests passed. `bash -n scripts/ci-local.sh` and `uv lock --check --project rvw` passed. Native-light plan inspected without execution. Fast set result appended before push. No native tests, simulations, sbt, core builds, full Python suite or workflow runs were executed.
+
+## Issues
+Refs: #16, #41
+Native and Nightly runtime qualification remains NOT RUN. Existing Nightly failures remain visible. Local component aggregation and report retention follow in a separate PR.
+
+Roadmap notes: Four inventory-backed tiers are defined. No runtime support claim follows from tool presence or a plan check.
+........                                                                 [100%]
+2239 passed, 1 skipped, 8337 deselected in 311.87s (0:05:11)
+
+## PR 1069
+
+[#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069). Merged: 2026-11-13T12:34:37Z.
+
+Title: docs(integration): record chisel and vhdl core dry runs
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Record whole-core bring-up through the installed tool interface in two separate repositories: pinned riscv-mini and NEORV32. Add the requested Spinal/SystemVerilog/Chisel/VHDL tool table to the non-Spinal integration section.
+
+Both cores have four native regression passes and four Spike matches for add, beq, lw and sw. Both have committed good gate acceptance, committed planted-response-fault rejection with no inconclusive evidence, failure bundles, design queries, diagram exports, lint reports and C1 coverage reports. Both faults are reverted. Both reference-enabled doctors report ready.
+
+The Chisel stream uses the generated architectural-state monitor. The VHDL path uses standalone GHDL synthesis and Verilator 5.052. PR #1032 already merged the generic VHDL launcher fix and its unit test.
+
+## Testing
+- Final required fast set: 2098 passed, 1 skipped, 8330 deselected in 246.03 seconds.
+- Release hygiene: 40 passed. MCP discovery has no skipped-module stderr.
+- Targeted VHDL launcher unit test: 1 passed.
+- Native commands, failed attempts, pins and raw outputs remain in the external scratch journal and repositories. Only documentation is in this PR.
+- NOT RUN: full Python suite, full upstream ISA/privilege matrix, BOOM, long formal proofs, rendered diagram viewer or hardware.
+- Request/response bus-check generation is explicitly unsupported. Lint has findings. Coverage is emitted RTL coverage and does not establish closure. Good gates compare each committed good revision against itself for one smoke; they do not establish changed-core acceptance.
+
+## Issues
+No issue is closed. The report ranks the remaining bus-check, tool-version, lowering, query-semantics and full-qualification gaps.
+
+Roadmap notes: Chisel and VHDL now have bounded whole-core installed-interface evidence. The generated state monitor runs on riscv-mini. NEORV32 runs through GHDL and Verilator. Full ISA, machine state and whole-core proof remain open.
+
+## PR 1070
+
+[#1070](https://github.com/riscPrint/risc-v-workstation/pull/1070). Merged: 2026-11-13T12:35:24Z.
+
+Title: feat(formal): split csr contracts into catalog-resolved jobs
+
+Audit evidence label: unit tests only.
+
+## Summary
+Add catalog-resolved CSR inventory and per-CSR jobs. The VexRiscv helper discovers 21 implemented address-decode terms. Add explicit Yosys cone cuts, scoped result rows and per-CSR output in `rvw formal isa`.
+
+The mscratch SRC1-cut assertion and cover pass at depth 25 under the x0/immediate operand contract. The result remains inconclusive for pipeline signoff. Other 20 CSR bindings remain unsupported. This is partial item-2 infrastructure, not complete CSR-bank consistency.
+
+## Testing
+Targeted machine, slice and release tests: 52 passed. ISA table and slice tests: 12 passed. Native mscratch local cone: assertion PASS, cover PASS, bound 25, 50-second per-task limit, nice 15 and private vex-conn lock. Initial unconstrained-x0 cut failed locally; the corrected contract is explicit. Whole-bank proof, contract composition, and the other six follow-ups were NOT RUN in this change.
+
+Fast set: 2218 passed, 1 skipped, 8329 deselected. Staged release hygiene: 40 passed. MCP discovery returned no skipped-module warnings.
+
+## Issues
+Refs: #63
+
+Roadmap notes: per-CSR decomposition and catalog inventory exist. Only mscratch is bound. Twenty bindings, hardware-update/WARL models, and pipeline composition remain open.
+
+## PR 1071
+
+[#1071](https://github.com/riscPrint/risc-v-workstation/pull/1071). Merged: 2026-11-13T12:36:04Z.
+
+Title: fix(suite): restore merged contracts and isolate native tests
+
+Audit evidence label: unit tests only.
+
+## Summary
+Repair cross-area test failures after the merged CLI and MCP changes. Probe only executable JSON commands, pass complete argument lists, and use missing-input paths for long native commands. Keep all payload checks. Send the datapath input error to stderr so JSON stdout stays clean.
+
+Align MCP tests with the documented C7 envelope, legacy C4 verdicts, machine error codes, and worker dispatch. Add the missing backend module to the launcher fixture. Check that stopped descendants are not running, including the existing zombie handling. Keep native RiscvSim test caches inside the checkout.
+
+## Testing
+- JSON output suite: 383 passed.
+- Targeted repairs: 18 passed; the three subsequent assertions were repaired and reran with 3 passed.
+- Fast set: 2191 passed, 1 skipped. The skip is the deferred command reference.
+- Generic RiscvSim Scala run with the private cache: 179 passed, 1 failed because the official litmus test needs an external pinned plan. Plan preparation and a targeted rerun remain in progress.
+- The full slow scan continues. BOOM builds and simulations were not run.
+
+## Issues
+Refs: #41. Remaining suite failures and native prerequisites are still under review.
+
+Roadmap notes: Repair merged CLI/MCP test contracts. The JSON argument probe has a fast unit check. Generic RiscvSim tests use checkout-local runtime caches.
+
+## PR 1072
+
+[#1072](https://github.com/riscPrint/risc-v-workstation/pull/1072). Merged: 2026-11-13T12:39:06Z.
+
+Title: feat(checks): add a small out-of-order pipeline fixture
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Add a small executable SpinalHDL rename/ROB/IQ/store-forwarding and recovery fixture. Bind 11 checks through library calls and named project data. Add occupancy/flush probes and a ROB-head fault site. Add seven actual bug variants and seeded simulation and bounded formal runners.
+
+## Testing
+All eight 1200-cycle seed-17 simulations completed. Clean had zero firings. Each bug fired its matching check. At depth 16, all seven selected negative checks failed and ten clean checks passed. Clean free-list conservation timed out at 30 and 60 seconds, then passed at depth 8 with activation. Preserve the depth-16 timeout as inconclusive. Fast set: 2240 passed, 1 skipped, 8333 deselected. Release hygiene: 40 passed.
+
+## Issues
+Refs: #65
+The complete microarchitecture-template set is not bound. Recovery generation tags/fence, complete forwarding byte semantics, and direct perf/timing/fault consumer adapters remain pending. This is bounded fixture evidence, not core qualification.
+
+Roadmap notes: Added a real small OoO pipeline fixture and seven executable negative controls. Record the depth-16 clean conservation timeout and missing template/consumer bindings.
+
+## PR 1073
+
+[#1073](https://github.com/riscPrint/risc-v-workstation/pull/1073). Merged: 2026-11-13T12:39:38Z.
+
+Title: ci(local): run every tier and retain failure reports
+
+Audit evidence label: unit tests only.
+
+## Summary
+Run all four tiers through the isolated local CI wrapper. Local nightly runs all six components by default and continues to report later components after a failure. Keep the existing locks and nice. Retain JUnit reports and command logs outside the disposable tree. Print the final local exit status in the summary. Add stub-based dispatch tests so an accepted tier cannot silently do nothing.
+
+## Testing
+25 local CI unit tests passed, including three dispatch cases that start no native tools. Three tier configuration tests passed. Bash syntax passed. Fast set result appended before push. No native tests, simulations, sbt, core builds or workflows were executed.
+
+## Issues
+Refs: #16, #41
+Runtime parity remains NOT RUN. Detailed job summaries follow separately.
+
+Roadmap notes: Local tier dispatch and report retention are wired. Native qualification remains open.
+...................                                                      [100%]
+2250 passed, 1 skipped, 8337 deselected in 279.72s (0:04:39)
+
+## PR 1075
+
+[#1075](https://github.com/riscPrint/risc-v-workstation/pull/1075). Merged: 2026-11-13T12:42:53Z.
+
+Title: fix(mcp): cover bring-up calls and workflow tool sets
+
+Audit evidence label: unit tests only.
+
+## Summary
+The core profile now includes every named new-core bring-up call and contains 22 tools. Replay tools belong to debug. Agent benchmark tools belong to verification.
+
+Fix the guide's invalid smoke call: rvw_doctor remains read-only, while doctor_smoke exposes the existing native CLI smoke path as a job. Add init_scaffold over the existing project generator. Complete the guide's MCP examples with schema-valid arguments. Keep installation and adapter mapping explicit.
+
+Give every discovered tool an optional tool set in a guide workflow. Add SoC infrastructure and agent-evaluation workflows. Optional sets are choices, not executable sequences. Preserve workflow decisions. Correct the bring-up check's native dependency metadata.
+
+## Testing
+55 targeted tests passed, including schema walks, all-tool profile/workflow coverage, the core tool budget, MCP stdio profile loading and notifications, CLI command-map coverage and the diagnostic/smoke boundary. The same 55 tests passed after rebase.
+
+Fast set: 2243 passed, 1 skipped, 8335 deselected. The skip is the deferred command-reference check. An earlier fast run found two outdated fixture assumptions; both are updated in this PR.
+
+Core profile discovery has no skipped providers. NOT RUN: native bring-up, simulations, core builds, full Python suite or CI waits.
+
+## Issues
+No issue closure requested. These are static and unit checks. They do not qualify a native core workflow.
+
+Roadmap notes: core MCP selection supports the guide's named bring-up calls within a 22-tool initial set. All discovered tools have explicit profile and workflow membership.
+
+## PR 1074
+
+[#1074](https://github.com/riscPrint/risc-v-workstation/pull/1074). Merged: 2026-11-13T12:42:56Z.
+
+Title: fix(formal): diagnose pico terminal traps before suite timeout
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Resolve the two PicoRV32 suite timeouts as observed profile limits. FENCE.I traps at PC 0x80000050 after 20 retirements because this profile lacks Zifencei. LH at x8+1 traps at PC 0x80000010 after four retirements; x8=0x80000580 and CATCH_MISALIGN=1.
+
+Stop one simulation time unit after a terminal trap so the strict monitor can run. Classify only the diagnosed instruction/operand limits as unsupported. Other traps stay inconclusive. Simulator or monitor failures stay failed. Keep all 42 programs in the receipt: 40 historical matches and two unsupported profiles, overall inconclusive. Preserve the old timeout observations and the trap-write limit.
+
+## Testing
+Targeted suite tests: 5 passed. Both retained ELFs ran on the unchanged strict miter with Icarus, nice 15 and private vex-conn. Their terminal logs are committed. The 40 matching programs were NOT RERUN. No full native equivalence or new bounded proof was run.
+
+Fast set: 2254 passed, 1 skipped, 8337 deselected. Staged release hygiene: 40 passed. MCP discovery has no skipped-module warnings.
+
+## Issues
+Refs: #63
+
+Roadmap notes: two timeout causes are known profile limits. The profile does not pass the entire upstream RV32UI selection. The native RVFI trap-write difference remains documented.
+
+## PR 1077
+
+[#1077](https://github.com/riscPrint/risc-v-workstation/pull/1077). Merged: 2026-11-13T12:44:11Z.
+
+Title: test(checks): verify the naxriscv binding declarations
+
+Audit evidence label: unit tests only.
+
+## Summary
+Verify that NaxRiscv is now present and retain its six existing project-owned bindings. Add a fast generation test and a hashed binding review. Record the exact unbound OoO interfaces.
+
+## Testing
+The six-rule generation test passed. No new NaxRiscv native run. Existing main records 59 ISA passes with zero firings; activation remains unmeasured.
+
+## Issues
+Refs: #65
+Free-list masks, two-lane ROB conservation, forwarding age/data and full recovery remain unbound. No single-lane alias or fixture result is used to claim these bindings.
+
+Roadmap notes: NaxRiscv is present with six verified generation bindings. Full OoO conservation and recovery bindings remain pending.
+
+## PR 1078
+
+[#1078](https://github.com/riscPrint/risc-v-workstation/pull/1078). Merged: 2026-11-13T12:44:19Z.
+
+Title: perf(arch): reuse validated windows across workload models
+
+Audit evidence label: reference model only (Spike/Sail/Python).
+
+## Summary
+Reuse complete C2 validation and decoded windows across workload models with identical custom instruction definitions. Keep fresh timing and component state for each model. Check raw trace identity before reuse and check every project description against the C2 selection. Distinct custom definitions get separate validation.
+
+The workload evaluator now calls this shared path. The single-model CLI/MCP behavior and report format stay unchanged. Configuration and point hashes use the bytes actually parsed.
+
+## Testing
+- Shared/independent report parity, changed-source refusal, custom-definition separation and project-selection checks, plus existing sampler/workload tests: 12 passed.
+- Required fast set: 2222 passed, 1 skipped, 8331 deselected.
+- Release hygiene: 40 passed. MCP list has no skipped tools.
+- Actual saved CRC32 C2: 3,831,528 instructions. One complete validation call produced both reference-model reports. Both reports exactly match the saved independent runs. Evidence and hashes are in Arch/ooo/evaluation/shared-validation.json.
+
+No wall-time speedup was measured. Validation call counts are not throughput evidence. RTL, gem5, BOOM, sbt and full Python suite NOT RUN. Sampling error and RTL accuracy remain unmeasured.
+
+## Issues
+Refs: #183, #282
+Full-run sampling error and RTL correlation remain open.
+
+Roadmap notes: multi-model workload evaluation avoids repeated complete structural validation while retaining independent timing state and input checks.
+
+## PR 1076
+
+[#1076](https://github.com/riscPrint/risc-v-workstation/pull/1076). Merged: 2026-11-13T12:44:46Z.
+
+Title: feat(formal): check default vexii divider and multiplier helpers
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Extend the real divider runner to select the default VexiiRiscv DivRadix implementation. Add a runner for the actual MulSpliter and AdderAggregator arithmetic with the default MulPlugin settings. Keep pipeline control outside the proof scope.
+
+Record native M-model results on the pinned example source. Keep all operand and divisor restrictions explicit.
+
+## Testing
+- Scope and reference-domain tests: 23 passed. The C projection checks cover all 65,536 input pairs for each multiplication operation against independent Python arithmetic.
+- Default 32-bit DivRadix: DIVU and REMU proved for every dividend with divisor zero, in 59.056 and 45.531 seconds.
+- Icarus default-divider 1 / 0 sample: matched 0xffffffff.
+- Real multiplier helpers: MUL, MULH, MULHU and MULHSU proved for the documented eight-bit signed/unsigned operand domains. Every selected 32-bit result bit was compared.
+- Fast set: 2,209 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Release hygiene: 40 passed.
+- MCP discovery: no skipped modules.
+- Full 32-bit multiplier inputs, nonzero unrestricted division, signed division, pipeline/ISA integration, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #19
+
+Roadmap notes: Both zero-divisor operations on the real default divider and four projected multiplication operations on the actual arithmetic helpers now have native proof receipts. The optional DivRadix2 mismatch remains. Pipeline timing and complete core arithmetic qualification remain open.
+
+## PR 1079
+
+[#1079](https://github.com/riscPrint/risc-v-workstation/pull/1079). Merged: 2026-11-13T12:46:23Z.
+
+Title: ci(reports): publish package counts and missing evidence
+
+Audit evidence label: unit tests only.
+
+## Summary
+Publish JUnit counts by package, the ten slowest tests and actual skip reasons. Include missing inventory tools and timeout/exit status. Keep reports and logs for seven days through per-job artifacts. Add an always-run summary step, including setup failures with no test counts. Rust and Node runner counts remain separate from Python/Scala JUnit reports.
+
+## Testing
+Focused summary and CI unit tests are recorded before push. Fast set result appended before push. No native tests, simulations, sbt, core builds, full Python suite or workflows were executed.
+
+## Issues
+Refs: #16, #41
+No pass counts are inferred when a runner emits no report. Runtime validation remains NOT RUN.
+
+Roadmap notes: Summaries distinguish test counts, skips, absent tools, setup failures and unreported counts.
+............................                                             [100%]
+2259 passed, 1 skipped, 8305 deselected in 346.54s (0:05:46)
+
+## PR 1080
+
+[#1080](https://github.com/riscPrint/risc-v-workstation/pull/1080). Merged: 2026-11-13T12:46:28Z.
+
+Title: fix(checks): generate declared request response monitors
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Generate declared req_rsp pulse checks and req_ack level stability checks for plain HDL, Chisel and VHDL designs. Keep protocol selection explicit. Existing ready/valid VIP and UVM agents reject these protocol names.
+
+## Testing
+
+Targeted Python and native Icarus monitor tests: 23 passed. Added req_ack mapping test passes in the later targeted run. Replayed saved native core waveforms through generated monitors: Chisel 26 samples; VHDL 10,008 samples; no assertions. Yosys SAT succeeds at 24 steps for both recorded prefixes. This is bounded replay, not an unconstrained whole-core proof. Full core bind simulation and full ISA qualification are not established by this PR. Fast set result recorded in the merge journal.
+
+## Issues
+
+Refs: #927. Memory data, liveness, multiple outstanding requests and whole-core formal remain open.
+
+Roadmap notes: Declared request/response generation now works without Spinal types. Protocols retain explicit sampled limits.
+
+## PR 1081
+
+[#1081](https://github.com/riscPrint/risc-v-workstation/pull/1081). Merged: 2026-11-13T12:48:41Z.
+
+Title: feat(cov): guide native sequence goals from probe events
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add `rvw cov probe-goals` and MCP `cov_probe_goals`. Measure project-owned event bins and bounded cycle sequences from complete probe streams. Require matching C1/C2, ELF, core/config, seed and generated RTL identities. Require complete strict Spike comparison. Keep unhit goals and pending activations visible.
+
+Connect probe feedback to the existing UCB controller through `probe_plan` and event recipes. Preserve code/RTL receipt rules. Reject repeated streams. Enable the requested probe/coverage model options and retain those options for archived replay.
+
+The native controller found that generic C1 recorded model flags only in diagnostics. Add explicit selected flags under C1 `options`. Keep the regression receipt checker unchanged.
+
+## Testing
+
+- Targeted probe/controller/reference and MCP checks: 88 passed.
+- Scala coverage location and C1 flag receipt tests: 2 passed under `sbt-dv`.
+- Fast set: 2071 passed, 1 skipped, 8328 deselected before the final Scala receipt change. After that change, 2070 passed with one release-hygiene failure. Published capture metadata contained home paths. Those published paths were replaced with neutral aliases; the release-hygiene set passed after the fix. Raw evidence is unchanged.
+- An additional fast invocation used an in-repository temporary directory and failed seven installer fixture checks that require external paths. The normal-directory rerun passed those seven checks. No installer code or assertion was changed.
+- MCP discovery: no stderr or skipped modules.
+- Eight saved native C1/C2 runs were rechecked with strict Spike for probe reports. Both cores hit 14 of 36 declared C2 retirement-pair bins.
+- Fresh native controller: two attempts per core, seed base 71, private copies, `vex-dv`, `sbt-dv`, nice priority 10. All four payloads earned the declared C2 sequence hit and complete strict Spike comparison. Each core observed 2 of 6 probe goals. No masks or synchronization.
+- Resume on both native campaigns preserved the attempts and credit.
+- Negative evidence retained: the initial missing C1 option receipt earned no credit. A VexiiRiscv controller with an earlier model's plan earned no probe reward. A separate plan bound to the controller's actual generated RTL passed. Counts from different models are not combined.
+- NOT RUN: full Python suite, BOOM, physical hardware, formal proofs, multi-seed comparative event-closure measurement, live TestRIG.
+
+## Issues
+
+Refs: #352, #353
+
+These are bounded native hook and reporting results. Cycle sequences do not correlate instruction IDs. C2 pairs do not measure pipeline stalls. Probe wiring remains a project obligation. Full-program probe counts include setup and termination. No C4 acceptance or gain over random is claimed.
+
+## Roadmap notes
+
+Record project-owned probe event/sequence goals, native UCB feedback on both examples, preserved missing/stale receipt rejections, and C1 model option receipts. Keep the 36-bin retirement denominator separate from the 6-goal probe denominator. Keep unobserved goals, unsupported targets and incomplete temporal activations open.
+
+## PR 1082
+
+[#1082](https://github.com/riscPrint/risc-v-workstation/pull/1082). Merged: 2026-11-13T12:52:36Z.
+
+Title: feat(formal): extend vex m unit and sail uf routes
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Extend the real VexRiscv product-cell adapter to MUL, MULH, MULHSU and MULHU with full selected RV32 results and reduced signed or unsigned operands. Add a reduced-operand domain to the real divider transaction adapter. Use private locks and nice priority 15. Retain pinned Sail MUL/MULHU checks under global typed multiplication UFs.
+
+Roadmap notes: reduced-domain MULHSU and MULHU close. Unrestricted RV32 arithmetic, pipeline composition and Sail M signoff remain open. No core source changes.
+
+## Testing
+
+Targeted adapter tests: 4 passed. Release hygiene and adapter tests before the final test addition: 43 passed. Native short CBMC and UF attempts are recorded in m-route-results.json. MCP listing has no skipped modules. Fast set result is recorded below.
+
+NOT RUN: full Python suite, full-width arithmetic retry, BOOM builds, simulations, long formal runs, GitHub CI wait.
+
+## Issues
+
+Refs: #64. This is partial arithmetic and ISA-integration evidence. The owner decides issue closure.
+
+Native outcomes: MULHSU and MULHU proved on reduced eight-bit operand domains. MUL/MULH and all four reduced divider operations timed out. Both Sail UF checks returned abstract counterexamples and remain inconclusive. The first DIV and MUL captures had private-lock queue failures; isolated retries reached CBMC. No unrestricted RV32 result closed.
+
+Fast set: 2268 passed, 1 skipped, 8303 deselected in 311.06 seconds.
+
+## PR 1083
+
+[#1083](https://github.com/riscPrint/risc-v-workstation/pull/1083). Merged: 2026-11-13T12:54:26Z.
+
+Title: feat(soc): add the full-register uart profile
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add the `uart16550-full` composer profile with a Spinal APB wrapper and synthesizable UART RTL. The existing subset profile remains available. The new profile supplies selectable one-byte/16-byte queues, FIFO thresholds and timeout, prioritized interrupts, modem pins/deltas, DLAB/divisor aliases, THRE/TEMT, framing/errors, DMA requests and serial/modem loopback.
+
+The independent UART agent drives receive frames and scores transmit frames. The directed bench also runs through the elaborated Spinal wrapper. README and integration guide tables record the measured scope.
+
+## Testing
+
+- Private Spinal compile and wrapper elaboration passed with SpinalHDL 1.15.0.
+- Native UART RTL: one test passed, 240 checks, 28 scored TX frames, zero skips, seed 31.
+- Native Spinal wrapper: the same 240 checks and 28 scored TX frames passed, zero skips, seed 31.
+- Queued 5N1.5 frames measured 361 clocks between starts at a 48-clock bit period. This includes one idle clock.
+- A corrupted transmit-bit mutant failed the UART agent with UART_BYTE_STREAM.
+- Targeted map/composer tests: 14 passed.
+- Fast set: 2,237 passed, 1 skipped, 8,333 deselected.
+- Verilator lint passed without warnings.
+- Release hygiene: 40 passed.
+- MCP listing has no skipped-tool errors.
+
+Full Python suite, full Scala suites, CPU execution with this UART profile, hardware, baud mismatch tolerance and a complete 16550 compliance campaign were NOT RUN.
+
+## Issues
+
+Refs: #1006, #1033
+
+Roadmap notes: The composer has an additive full-register UART profile with explicit modem/DMA pins and a directed serial/register campaign. Software must program its divisor and framing. The old bounded subset is still available. Native behavior is tested; complete compliance and hardware qualification remain open.
+
+## PR 1084
+
+[#1084](https://github.com/riscPrint/risc-v-workstation/pull/1084). Merged: 2026-11-13T12:54:38Z.
+
+Title: ci(linux): keep inventory-backed tiers disabled by one switch
+
+Audit evidence label: unit tests only.
+
+## Summary
+Keep Ubuntu definitions present but disabled by one repository variable: RVW_LINUX_CI must equal enabled. Read apt package lists from each tier's names in the shared tool inventory. Mark Linux untested. Source-only tools remain explicit missing-tool skips. Existing manual installer and Linux boot controls stay separate.
+
+## Testing
+Focused CI tests and recipe tests recorded before push. Fast set result appended before push. No Linux job, apt install, native tests, simulation, sbt or core build ran.
+
+## Issues
+Refs: #16, #41
+Linux runtime qualification remains NOT RUN. The switch remains unset by this change.
+
+Roadmap notes: Disabled Linux tier definitions and inventory-backed apt recipes are present; Linux remains untested.
+....................................................                     [100%]
+2283 passed, 1 skipped, 8311 deselected in 380.71s (0:06:20)
+
+## PR 1085
+
+[#1085](https://github.com/riscPrint/risc-v-workstation/pull/1085). Merged: 2026-11-13T12:54:48Z.
+
+Title: fix(lint): count real loads through imported net aliases
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Count real design loads through imported Yosys aliases in the max-fanout rule. A vector's bit aliases no longer count as hardware loads. Preserve loads reached through those bits.
+
+## Testing
+
+Targeted tests: 6 passed. Exact-schema regression checks both an alias-only false positive and real loads behind alias bits. Reran rules on the scratch core databases. Chisel: 8 findings before, 6 after; two alias fan-out findings removed. VHDL: 6 before, 7 after; real fan-out of u.ctrl (1073 loads) is now reported. Native Verilator and reset-domain findings remain unchanged. Full Python suite, BOOM, and physical signoff NOT RUN. Required fast set recorded in the journal.
+
+## Issues
+
+Refs: #927. This fixes structural load counting. It does not waive native warnings or reset crossings.
+
+Roadmap notes: Generic HDL lint counts loads through alias bit nodes. Whole-core lint remains findings, not signoff.
+
+## PR 1086
+
+[#1086](https://github.com/riscPrint/risc-v-workstation/pull/1086). Merged: 2026-11-13T12:57:16Z.
+
+Title: test(formal): prove small real module export configurations
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Make the real revision recipe's FpuSqrt width selectable. Preserve the four-bit default. Record a successful two-bit single-file versus per-component export comparison through the public revision command.
+
+## Testing
+- Native one-command revision flow: equivalent in 93.135 seconds, including both source exports. All four interface partitions passed.
+- Raw payloads remained in the comparison. Inputs stayed free after the recorded reset/startup procedure.
+- Recipe and release hygiene tests: 45 passed.
+- Fast set: 2,284 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- MCP discovery: no skipped modules.
+- Larger mantissa proofs, IEEE arithmetic, hardware-parameter changes, whole-core equivalence, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #18
+
+Roadmap notes: The small real VexRiscv module now has a successful revision-flow export-configuration control. The larger case retains its earlier inconclusive attempts. This does not qualify a hardware parameter change or a production FPU.
+
+## PR 1088
+
+[#1088](https://github.com/riscPrint/risc-v-workstation/pull/1088). Merged: 2026-11-13T12:57:40Z.
+
+Title: fix(sim): count fault injection cycles at clock sampling edges
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Count fault injection cycles from clock sampling edges. An adapter tick can run before or after the injector on the same edge. A change in that order no longer skips a one-cycle flip. Keep read-back confirmation and refuse ambiguous adapter counts.
+
+## Testing
+- Native `FaultInjectorNativeSpec`: 1 passed. The same test fails on the old injector at cycle 5. Fixed code also checks cycles 10 and 11.
+- Fast Python set: 2252 passed, 1 skipped, 1 unrelated failure in `test_docs_staging_does_not_write_sources`; 8301 deselected.
+- Release hygiene: 40 passed. MCP discovery: no skipped-module warning.
+- Full Python, BOOM and long formal runs: NOT RUN. Scratch campaign rerun follows merge.
+
+## Issues
+Found during the custom-core dry run. No issue is closed.
+
+Roadmap notes: generic fault injection now tolerates the two valid tick orders on a sampling edge. Native read-back remains required.
+
+## PR 1089
+
+[#1089](https://github.com/riscPrint/risc-v-workstation/pull/1089). Merged: 2026-11-13T12:57:41Z.
+
+Title: fix(arch): enable probes in both correlation batch manifests
+
+Audit evidence label: unit tests only.
+
+## Summary
+Enable probes in both fresh correlation batch manifests. Distinguish the current VexiiRiscv probe binding from the saved batch, which contains no probe streams. Keep the saved scorer's IPC-only VexiiRiscv mapping explicit. New event comparisons still need matching declared model/RTL predicates.
+
+Remove the obsolete binding-availability claim from the saved result note and summary generator. Keep all historical numbers unchanged. Also state the exact wrong-path capture checks: PC, next PC, instruction, privilege mode, integer writes and memory effects. That capture checker does not compare FP register effects.
+
+## Testing
+- Native compiler smoke: six distinct RV32 ELFs; twelve manifest entries; probes enabled for both cores.
+- Required fast set: 2269 passed, 1 skipped, 1 failed, 8303 deselected. The failure is in untouched `rvw/tests/test_doctor_c1suite.py::test_each_fault_is_reported[nondeterministic-determinism]`. This PR changes no doctor code or tests. Per the worker brief, this unrelated failure does not block delivery.
+- Release hygiene: 40 passed. MCP list has no skipped tools.
+
+RTL was NOT rerun. No new probe observations or timing accuracy are claimed. gem5, BOOM, sbt and full Python suite NOT RUN.
+
+## Issues
+Refs: #354
+Fresh VexiiRiscv mapped-event calibration and cached dynamic-predictor correlation remain open.
+
+Roadmap notes: future prepared batches request available probe streams from both adapters. Historical IPC-only evidence remains distinct from current adapter capability.
+
+## PR 1087
+
+[#1087](https://github.com/riscPrint/risc-v-workstation/pull/1087). Merged: 2026-11-13T12:57:43Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate the CLI and MCP command reference from the current declarations. Sheriff round 16 found no cross-area failure. Leave the command-reference test deferred.
+
+## Testing
+Main 309f3ac6: 2283 passed, 1 skipped, 8314 deselected in 497.51 seconds. Parser construction, MCP listing with no skipped-package warning, and all 46 top-level help checks passed. Conflict-marker and repeated top-level definition scans were clean. Slow sample: 4 passed, 9 deselected. Full Python suites and BOOM jobs were not run. The full-suite worker owns those results and repairs. The reference commit was rebased onto current main after the fast run.
+
+## Issues
+No issue closure. Roadmap notes: no feature or roadmap change.
+
+## PR 1090
+
+[#1090](https://github.com/riscPrint/risc-v-workstation/pull/1090). Merged: 2026-11-13T12:57:53Z.
+
+Title: feat(farm): select from native waveform and coverage observations
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add farm observe and farm_observe to build impact catalogues from conclusive native C1/C3 waveforms and a design database. Retain exact signal aliases, source/RTL identities, measured times and captured converter inputs. Unknown observations remain mandatory.
+
+Honor coverage_selection.tests even beyond the time budget. Refuse required test IDs absent from the catalogue. This fixes a real integration gap where coverage-required tests could be omitted.
+
+Roadmap notes: real design, FST and Verilator coverage data now feed selection. A frozen safe plan caught the planted fault through full fallback. The eight-test point-ranking subset missed it. Test reduction is not qualified.
+
+## Testing
+
+- Targeted observations and selection tests: 8 passed.
+- Fast set: 2249 passed, 1 skipped, 8335 deselected.
+- Release hygiene: 40 passed.
+- CLI help and MCP tool list passed, with no skipped MCP diagnostic.
+- Private committed control fixture: updated example project, line comments, unused test-data gitlink removed. Capture policy unchanged.
+- Real database: 1033 signals. Baseline: 49 native passes, 1585 coverage points, 808 exact database names through 453 FST codes. No observation issues.
+- Freeze catalogue and two-second plan before candidate execution. The split-add/sub edit and planted XOR fault touch two unmapped coverage lines. Coverage selection requires all 49 tests. The plan reports 61.89 seconds and over_budget=true.
+- Independent full and selected runs: each 47 pass, 2 fail. Alias mapping fix replay keeps the same 49 selected IDs. Preserve the original frozen catalogue and plan hashes.
+- Separate native point-ranking run: 8/8 pass and misses the fault. No reduction or speedup claim.
+- NOT RUN: C4 gate acceptance for this history, full Python suite, GitHub CI. Per-test time includes startup in the first test. Wave activity includes reset and boot and is not functional coverage.
+
+## Issues
+
+Refs: #25
+
+Remaining: source attribution of the edited lines prevents qualified reduction. Budgets/costs, committed gate integration, offline Kubernetes validation and the integration guide are separate items.
+
+## PR 1091
+
+[#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). Merged: 2026-11-13T12:58:12Z.
+
+Title: feat(boom): retain branch predictions and capture ooo probes
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Retain conditional predictions at ROB enqueue before BOOM repairs uop.taken. Capture fetch predictions, execution resolutions, redirects, full ROB occupancy, physical free-list levels, D-cache lookups and D-TLB misses. Add a short predication program and native capture checks. Fix the OoO event-map region field so the calibration reader can use it.
+
+## Testing
+- Scala adapter compiled and BOOM elaborated through the BOOM lock with nice priority 15.
+- Two native builds in this continuation. The first exposed lost prediction history. Its capture fails the new prediction regression. The second retains enqueue predictions and uses -O0.
+- Native small beq, fadd, SFB, timing and fault runs passed. Capture checks: 8 passed across four clean traces. The SFB arithmetic check passed with 7 predicated-off commits.
+- csim compare-rtl reports compared. Perf reports measured stall causes and unknown intervals. Two-program OoO calibration reports inconclusive. The report includes the IPC table and artifact hashes.
+- Fast set: 1938 passed, 1 skipped, 1 failed, 8298 deselected. Unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Release hygiene: result recorded below.
+- Regression suites, wider presets, BOOM formal and checkpoint restore: NOT RUN.
+
+## Issues
+Refs: #49, #6. The SFB probe window has 85 architectural commits versus 84 C1/C2 instructions. Endpoint alignment remains open. Zero TLB/walk counts do not exercise those bindings. The approximate model is not qualified by this comparison.
+
+Roadmap notes: BOOM small has retained conditional predictions and richer occupancy/cache probes. Native evidence supports bounded event conversion and stall attribution. Model accuracy and full pipeline attribution remain incomplete. Native fault and DPI qualification follows separately.
+
+Release hygiene after staging: 40 passed.
+
+## PR 1092
+
+[#1092](https://github.com/riscPrint/risc-v-workstation/pull/1092). Merged: 2026-11-13T13:00:53Z.
+
+Title: ci(docs): document tiers and validate workflow wiring
+
+Audit evidence label: unit tests only.
+
+## Summary
+Document the four tiers in AGENTS.md and CONTRIBUTING.md. Replace stale runner, test-selection and Nightly claims. Validate workflow YAML, script references, tool names, native markers and Scala matrix coverage. Test shard partitioning, missing-tool skips and local tier dispatch without native execution.
+
+## Testing
+Focused tests and fast set results recorded before push. No native tests, simulations, sbt, core builds, full Python suite or workflows were executed.
+
+## Issues
+Refs: #16, #41
+The owner still needs to restore the deferred command-reference check. Branch protection must select Fast in repository settings. Linux and the native tiers remain unqualified until completed runs provide evidence. Existing Nightly test failures are not waived.
+
+Roadmap notes: Tier documentation and static workflow checks are current. Runtime qualification remains open.
+
+Validation: 62 focused CI tests passed. A final 19-test subset also passed after the examples-report correction. YAML, inventory, marker, shard, local dispatch, and report checks passed. The lock check, Bash syntax check and whitespace check passed.
+
+Final fast set: 1 failed, 2320 passed, 1 skipped, 8308 deselected in 249.43 seconds. Failure: `rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`; `cov_probe_goals` lacks a workflow coverage entry. This file is unchanged and outside CI ownership. Per BRIEF.md, this does not block delivery. The command-reference check is the owner-deferred skip. Earlier focused checks emitted shared temporary-directory cleanup warnings; the final targeted subset used a private basetemp and passed without warnings.
+
+The Linux switch RVW_LINUX_CI was verified absent. No branch protection, runner service, workflow run or repository variable was changed.
+
+## PR 1093
+
+[#1093](https://github.com/riscPrint/risc-v-workstation/pull/1093). Merged: 2026-11-13T13:01:26Z.
+
+Title: feat(checks): show designer binding requirements and gaps
+
+Audit evidence label: unit tests only.
+
+## Summary
+Add rvw checks plan and checks_plan MCP. List generator template ports, required database types, project declarations, generated bindings and missing reasons. Optional elaborated inventories add native inserted IDs and signal roles. Generate only in temporary output. Expose existing rename, issue and LSQ template interfaces to project bindings.
+
+## Testing
+Four targeted plan tests passed. All 14 plan, workflow and guide tests passed. The full fast set passed after updating the workflow registry and its generated guide. The NaxRiscv plan finds three counter-bound and three pipeline declarations. MCP discovery lists checks_plan with no skipped-tool diagnostic. After rebase, 13 targeted tests passed and workflow coverage failed on unrelated new main tools cov_probe_goals and farm_observe. Imports and MCP discovery have no skipped-tool diagnostic. No native simulation or proof is claimed by the plan.
+
+## Issues
+Refs: #65
+A generated binding is not a compiled or activated check. Custom Scala declarations require an explicit elaborated inventory.
+
+Roadmap notes: Designers can inspect exact template port needs and current declarations before generation. Native insertion is shown separately when an inventory is supplied.
+
+## PR 1094
+
+[#1094](https://github.com/riscPrint/risc-v-workstation/pull/1094). Merged: 2026-11-13T13:01:32Z.
+
+Title: feat(plan): bind example verification plans to native evidence
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Add a project-owned stimulus verification plan for each example core. Pin evidence hashes and generate status from the real native C1, code, functional and probe reports. Keep the full native point denominator across all measured scopes. Accept qualified probe goal reports in `rvw plan status`; reject incomplete, masked or synchronized reference evidence.
+
+| Core | Features reported closed | Features open | Native point denominator | Retirement pairs hit |
+|---|---:|---:|---:|---:|
+| VexRiscv | 3 | 4 | 21429 | 14 of 36 |
+| VexiiRiscv | 3 | 4 | 32703 | 14 of 36 |
+
+Open features retain two missing add operand classes, native counter holes, 22 missing retirement-pair bins and the pending instruction injection hook. Closure is a rollup of declared evidence links. It is not C4 acceptance or whole-core qualification.
+
+Add the missing verification workflow entry for `cov_probe_goals`, as required by the current workflow coverage check.
+
+## Testing
+
+- Existing and new verification-plan tests: 15 passed.
+- Final plan and workflow registry tests: 19 passed.
+- Fast set: 2297 passed, 1 skipped, 1 failed. The failure was the missing workflow entry for `cov_probe_goals`; the registry entry was added and its targeted checks passed.
+- Release hygiene: 40 passed.
+- Ran `rvw plan status` on both real example plans. Saved their complete status with display path aliases. Raw status and native inputs remain in the worker checkout.
+- NOT RUN: new RTL simulations, full Python suite, BOOM, hardware, formal. This item consumes the preceding native measurements.
+
+## Issues
+
+Refs: #349, #352, #353, #48
+
+The instruction injection requirement stays open. Worker-local native C1 files remain explicit dependencies; a clean checkout without them reports evidence holes. Published probe reports retain their recorded model identities.
+
+## Roadmap notes
+
+Record real project plan status for both examples. Keep incomplete operand, native point, retirement-pair and instruction injection features open. Keep source/model contexts and evidence hashes visible.
+
+## PR 1095
+
+[#1095](https://github.com/riscPrint/risc-v-workstation/pull/1095). Merged: 2026-11-13T13:01:53Z.
+
+Title: fix(cov): map exact ghdl source locator pairs
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Map exact GHDL source locator comments to the immediately following lowered RTL statement in native coverage. Do not search nearby comments. Keep missing links unmapped.
+
+## Testing
+
+Targeted coverage tests: 19 passed. NEORV32 add coverage maps 2777 of 57336 native points to 343 VHDL lines. Chisel uses the existing inline Scala locator path on original emitted RTL; the Yosys state-monitor model strips comments and has zero comment-based links. Source-line groups report native points, not individual source-statement coverage. Full Python suite and whole-core coverage closure NOT RUN. Required fast-set result is in the journal.
+
+## Issues
+
+Refs: #927. Coverage for stripped or transformed models still needs a source map. Unmapped points remain in the denominator.
+
+Roadmap notes: GHDL exact locator pairs now support native-point navigation to VHDL source lines. No original-language statement-hit claim is inferred.
+
+Fast set: 2300 passed, 1 skipped, 1 failed, 8316 deselected. The unrelated test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow fails because cov_probe_goals has no workflow. Per the worker brief this does not block delivery. Targeted coverage plus release hygiene: 59 passed.
+
+## PR 1096
+
+[#1096](https://github.com/riscPrint/risc-v-workstation/pull/1096). Merged: 2026-11-13T13:03:53Z.
+
+Title: docs(integration): record third custom-core dry run
+
+Audit evidence label: no code.
+
+## Summary
+Append the third dry-run pass. Record M, interrupt, U-mode/PMP and predictor growth, committed gate accept/reject, the planted MULHU bisect, native coverage, custom-core pyuvm and the MCP core-profile session. Record the merged injector fix and its scratch campaign rerun. Rank the remaining edges by their effect on a larger out-of-order project.
+
+## Testing
+- Existing journal and retained C1/C2/results inspected. Completed gate, bisect, coverage and UVM steps were not repeated.
+- Native injector regression failed before the fix and passed after it. Merged scratch rerun: 4 safe, 2 not injected because the program ended before their cycles. Campaign exit 3.
+- Corrected unfinished MCP datapath call: 8-bit multiplier proved.
+- SoC verify: all seven kinds inconclusive; no RTL consumer binding.
+- Fast Python: 2302 passed, 1 skipped; unrelated failures in docs staging and `test_each_tool_has_a_profile_and_workflow`. 8316 deselected.
+- Release hygiene: 40 passed.
+- Full Python, BOOM, native gem5 and long formal suites: NOT RUN.
+
+## Issues
+No issue is closed. Missing fault outcomes and fault-report verdict propagation are the next two small fixes. Larger interrupt, formal, predictor and SoC integration limits remain explicit.
+
+Roadmap notes: the custom core now has measured M/PMP, predictor, gate/bisect and native UVM evidence. This does not qualify an out-of-order core.
+
+## PR 1097
+
+[#1097](https://github.com/riscPrint/risc-v-workstation/pull/1097). Merged: 2026-11-13T13:04:42Z.
+
+Title: feat(probes): compare cached core events with component models
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add cache taps to the extra cached VexRiscv and VexiiRiscv configurations. Add a cache event checker and per-access component-model comparison through CLI and MCP. Add write-through and no-write-allocation model controls. Preserve defaults and core sources.
+
+## Testing
+- Targeted cache tests: 10 passed.
+- Fast set before final rebase: 1895 passed, 1 skipped, 8281 deselected.
+- Release hygiene: 40 passed. Import and MCP listing passed after rebase; no skipped-tool warnings.
+- Native cached sweep: VexRiscv 3342 instructions / 7774 cycles; VexiiRiscv 3344 instructions / 20738 cycles. Both conclusive RTL passes and complete Spike matches.
+- Both data-cache comparisons: 769 accesses, 513 misses, zero disagreements and zero miss-rate error. VexRiscv emitted 192 evictions. VexiiRiscv checked 513 refills and 512 writebacks with no observer violations.
+- Ran 12 replacement/prefetch studies on the RTL-observed access streams. These are model experiments, not RTL speed results.
+- VexRiscv instruction-cache residency reports two hits after invalidation: retirement projection includes buffered fetches. This remains a measured limitation; the checker is not waived. VexiiRiscv instruction comparison is inconclusive because its commit-port stream is two instructions shorter than upstream completion-based C2.
+- No BOOM jobs, full Python suite, formal campaign or hardware tests. No CI wait.
+
+## Issues
+Refs: #109, #365
+Instruction lookup and retirement projection need separate semantics for full instruction-cache residency qualification. Neither issue is closed.
+
+Roadmap notes: cached core probes now feed data-cache comparison and replacement/prefetch experiments. Instruction-cache tail and invalidation semantics remain explicit gaps. The owner updates ROADMAP.md and TODO.md.
+
+## PR 1098
+
+[#1098](https://github.com/riscPrint/risc-v-workstation/pull/1098). Merged: 2026-11-13T13:06:04Z.
+
+Title: fix(ooo): model buffered stores and extend calibration budget
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add an optional buffered-store timing policy. Preserve the ordered default. Describe NaxRiscv with speculative loads and a shared execution port. Extend the calibration plan cycle budget so spmv completes.
+
+Training mean IPC error is 20.7%, worse than 14.3%. The original five held-out programs improve from 24.9% to 13.0%. Six held-out programs, including spmv, give 12.4%. Save trace hashes, RTL counters and a store-policy ablation. No fidelity verdict is claimed. Finite store-buffer occupancy and drain remain unmodelled.
+
+## Testing
+- Targeted store-policy and fit tests: 8 passed. Binding and release-hygiene tests also ran.
+- Fast set: 2313 passed, 1 skipped, 2 failed, 8318 deselected. Unrelated failures: test_docs_site.py::test_docs_staging_does_not_write_sources and test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow (cov_probe_goals, farm_observe).
+- Saved RTL traces: final training-only grid fit and all nine timing runs completed. Store-policy ablation completed on memcpy and dhrystone.
+- NOT RUN: fresh RTL benchmark runs, BOOM, full Python suite, hardware, CI waits.
+
+## Issues
+Refs: #1055
+Timing accuracy remains mixed. Replay and finite store-buffer effects need more work.
+
+Roadmap notes: add buffered-store policy and calibration cycle budgets. Record 20.7% training and 13.0% on the original held-out set. spmv is now included, with no fidelity pass.
+
+## PR 1100
+
+[#1100](https://github.com/riscPrint/risc-v-workstation/pull/1100). Merged: 2026-11-13T13:10:57Z.
+
+Title: feat(regress): exercise act4 on integer core profiles
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add project-owned ACT4 instruction profiles for both integer examples. Build Sail signatures, use a real reset-entry veneer to define mscratch and mtvec, and run all selected bodies through C1. Keep every failure. No core source changes, masks, synchronization or test exclusions are used in the final comparisons.
+
+| Extension | Built/run per core | VexRiscv pass/fail | VexiiRiscv pass/fail |
+|---|---:|---:|---:|
+| I | 39 | 39/0 | 39/0 |
+| M | 8 | 8/0 | 8/0 |
+| Zmmul | 4 | 4/0 | 4/0 |
+| Zicsr | 6 | 0/6 | 6/0 |
+| Zifencei | 1 | 1/0 | 1/0 |
+
+All 52 passing VexRiscv cases and all 58 VexiiRiscv cases completely match Spike in strict mode. All six VexRiscv Zicsr traces diverge on MEPC alignment bits. Standalone writes of 1, 2 and 3 fail on VexRiscv and pass on VexiiRiscv. Per-test first differences, hashes and reproduction inputs are retained in observations.json.
+
+These are instruction-only results with a reduced CSR bootstrap. The original standard boot failed all 58 cases on each core before test bodies. VexRiscv traps on mstatush; VexiiRiscv traps on mhpmevent3. The observations retain each failure and its minimal reproduction. They remain Sm scaffold compatibility findings. The HPM hardware/firmware contract needs review; this PR does not assert a proved HPM hardware defect. No Sm compatibility or certification pass is claimed.
+
+Fix generic nested test identities in regress cosim. Add explicit all-applicable selection, including privileged directories by default. Record compiler/reference versions, executable hashes and Sail signature hashes.
+
+## Testing
+- ACT4 native builds: 58 ELFs per core. Native C1 and strict Spike results are listed above.
+- Minimal native reproductions: VexRiscv boot CSR and three MEPC probes fail; VexiiRiscv boot CSR fails and three MEPC probes pass. These negative results are retained.
+- Targeted ACT4, project and suite-comparison tests: 37 passed after rebase.
+- Fast set: 2,022 passed, 1 skipped, 8,315 deselected.
+- Release hygiene: 40 passed.
+- Stock riscv-tests: 49 C1 passes on each core. VexiiRiscv has 49 complete strict Spike matches. Strict VexRiscv checks stop at the original stub's unspecified initial mscratch snapshot; those are not counted as matches here. The ACT4 veneer defines that input with real instructions.
+- Native observations precede the final rebase. Their workstation revision and dirty-state flags are retained. They do not qualify the combined main branch.
+- NOT RUN: BOOM builds/simulations, the full Python suite, or CI.
+
+## Issues
+Refs: #48. Supervisor ACT4, merged functional coverage, the BOOM configuration and the shared suite/integration documentation follow in separate PRs. Core and platform compatibility findings remain open.
+
+Roadmap notes: Native ACT4 instruction-source integration is measured on two cores. Full Sm compatibility remains unqualified. Detailed failures and reproductions are retained.
+
+## PR 1102
+
+[#1102](https://github.com/riscPrint/risc-v-workstation/pull/1102). Merged: 2026-11-13T13:11:13Z.
+
+Title: fix(fault): retain missing outcomes in campaign reports
+
+Audit evidence label: unit tests only.
+
+## Summary
+Retain every planned fault when recomputing a campaign report. Missing outcomes count as inconclusive and appear in missing_outcomes and unresolved. Refuse unknown, duplicate or conflicting fault identities before computing denominators. Stored evidence is not changed.
+
+## Testing
+- Five new unit cases failed before the fix. Targeted fault tests: 11 passed.
+- Scratch six-fault campaign with one outcome omitted in memory: planned remains 6; f00005 is missing and inconclusive. No simulation rerun was needed for this report change.
+- Fast Python: 3 failed, 2348 passed, 1 skipped, 8312 deselected in 316.34s (0:05:16)
+Unrelated failures:
+- FAILED rvw/tests/test_agent_guide.py::test_agent_setup_embeds_the_generated_block
+- FAILED rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources
+- FAILED rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow
+- Release hygiene: 40 passed. MCP discovery: no skipped-module warning.
+- Full Python, BOOM and long formal runs: NOT RUN.
+
+## Issues
+Third dry-run report edge 1. No issue is closed. Report exit/verdict propagation is the next separate fix.
+
+Roadmap notes: fault campaign reports now preserve incomplete evidence in their planned population and unresolved list.
+
+## PR 1099
+
+[#1099](https://github.com/riscPrint/risc-v-workstation/pull/1099). Merged: 2026-11-13T13:11:17Z.
+
+Title: refactor(csr): share register data across consumers
+
+Audit evidence label: unit tests only.
+
+## Summary
+Move the pinned CSR resolver into rvw.csr.catalog. Keep the base/AIA data files and legacy formal imports compatible. Share names, numbers, fields, aliases and raw WARL metadata. Read project register data through the shared loader. Keep project overrides and consumer validation rules.
+
+Use the API for formal CSR artifacts, co-simulation capture and masks, UVM RAL and SoC register exports. Keep architectural CSR numbers and MMIO byte addresses in separate address spaces. The simple MMIO projection retains whole-word fields and access actions. Checker logic stays in its existing packages.
+
+Add read-only csr show / csr_describe metadata access. Add a source guard against a second pinned catalog, private address mappings, record tables and numeric CSR capture selections. Update workflow membership for the catalog tool and two tools added on main during rebase.
+
+## Testing
+97 targeted unit tests passed. After rebase: 74 catalog, generator, RAL, SoC export, workflow and inventory tests passed. MCP discovery has no skipped provider.
+
+Fast set: 2271 passed, 1 skipped, 8305 deselected. The skip is the deferred command reference. The first fast run needed the new README staged for the tracked-file docs check; that check now passes.
+
+Before/after comparison against the original main implementation: all generated SoC files and RAL text are byte-identical for the BOOM and VexRiscv project examples. IP-XACT output or its empty-map refusal is unchanged.
+
+Known unchanged failures: test_soc.py::test_examples for BOOM and VexRiscv. The old implementation has the same platform fixture drift: fcsr_reset for BOOM; sail_overrides, irq_inputs, privilege_modes and sail_reference_isa for VexRiscv. The fixtures are unchanged.
+
+NOT RUN: simulations, core builds, native CSR/SoC/UVM campaigns, full Python suite or CI waits. An earlier broad targeted selection skipped 28 optional native cases; subsequent selections used explicit unit entrypoints.
+
+## Issues
+No issue closure requested. Raw WARL IDL remains metadata. Existing unsupported-model refusals remain. These checks do not establish native CSR or SoC qualification.
+
+Roadmap notes: add the shared CSR catalog API and read-only catalog command. Formal, UVM, SoC and cosim consumers now use one data API with separate address spaces and existing checker logic.
+
+## PR 1101
+
+[#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101). Merged: 2026-11-13T13:12:32Z.
+
+Title: fix(boom): run dpi sampling on a simulation thread
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Run BOOM's DPI C2 sampling on a simulation thread. A sampling callback cannot yield to the DPI mailbox. Send the end record before the simulation thread stops. Keep the ordinary callback path unchanged. Add native fault and DPI evidence checks.
+
+## Testing
+- Before: the native clean DPI run failed at cycle zero with a SimThread NullPointerException. Its trace was incomplete.
+- After: fadd completes online DPI lockstep with 218 C2 instructions, FP/CSR comparison active and trace_complete true. The launcher confirms a Verilator cache hit.
+- Two native cycle-200 flips have read-back confirmation. Offline comparison detects fflags, fcsr and mscratch differences at order 13, cycle 228.
+- Injected online result and capture test counts are recorded below.
+- Fast set: 2307 passed, 1 skipped, 2 failed, 8318 deselected. Unrelated failures: test_docs_site.py::test_docs_staging_does_not_write_sources and test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow.
+- No additional native build was needed for the Scala scheduling fix. Two native builds total in this continuation.
+- Regression suites, BOOM formal, wider presets and checkpoint restore: NOT RUN.
+
+## Issues
+Refs: #52, #6. Native fault evidence covers register bit flips. Memories, arbitrary injection kinds and full fault campaigns remain open. Online restore still has no matched reference checkpoint.
+
+Roadmap notes: BOOM small has native register injection evidence and a clean full-state DPI match. The native regression caught a sampling-context bug. The fix preserves the non-DPI callback path.
+
+Native evidence checks: 3 passed. Online injection reports fflags/fcsr mismatch at cycle 228 and stops the simulator. The host cancellation can precede a native exception log. The test checks the report, nonzero simulator exit, incomplete trace and the same compiled RTL identity as the clean DPI run. The clean capture has 40 FP writes.
+
+The ordinary post-fix beq path passed at 1844 cycles and 333 C1 instructions. Its two probe capture checks passed. It reused Verilator. Release hygiene: 40 passed.
+
+## PR 1103
+
+[#1103](https://github.com/riscPrint/risc-v-workstation/pull/1103). Merged: 2026-11-13T13:16:31Z.
+
+Title: docs(boom): record checkpoint and device binding gaps
+
+Audit evidence label: no code.
+
+## Summary
+Record the BOOM checkpoint and device-plugin bindings that are missing. Link the gap list from the adapter README. This adds documentation only.
+
+## Testing
+- Source review of the adapter, native checkpoint template, C2 writer and live-device support.
+- BOOM checkpoint/restore and BOOM device-plugin jobs: NOT RUN. Neither binding is implemented.
+- Fast set and release hygiene: results recorded below.
+
+## Issues
+Refs: #6. Restore needs a native JNI binding plus backing memory, pending TileLink work, device state, input schedules, counters, C2 position and a matched online reference checkpoint. One RTL snapshot cannot restore this harness.
+
+Roadmap notes: defer BOOM checkpoint and plugin integration. Two of the three native builds were used for probe integration. The final build was reserved for integration failures. Existing generic checkpoint support does not establish BOOM support.
+
+Fast set: 2373 passed, 1 skipped, 1 failed, 8322 deselected. Unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources. Release hygiene: 40 passed.
+
+## PR 1104
+
+[#1104](https://github.com/riscPrint/risc-v-workstation/pull/1104). Merged: 2026-11-13T13:17:06Z.
+
+Title: fix(fault): propagate incomplete campaign report verdicts
+
+Audit evidence label: unit tests only.
+
+## Summary
+Propagate fault campaign evidence through CLI and MCP report results. Silent corruption is fail/exit 1. Unresolved faults or an empty campaign are inconclusive/exit 3. A complete campaign is complete/exit 0, without a reliability-pass claim. Silent corruption takes priority over missing evidence. Run and report use the same exit policy.
+
+## Testing
+- Seven verdict cases failed before the change. Targeted fault tests, including an added empty-campaign case: 19 passed.
+- Retained scratch campaign: CLI report now exits 3 with status inconclusive for 4 safe and 2 not-injected faults. An MCP core-profile session loaded verification and returned status and verdict inconclusive on the same evidence.
+- Fast Python: 3 failed, 2373 passed, 1 skipped, 8320 deselected in 249.34s (0:04:09)
+Unrelated failures:
+- FAILED rvw/tests/test_agent_guide.py::test_agent_setup_embeds_the_generated_block
+- FAILED rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources
+- FAILED rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow
+- Release hygiene: 40 passed. MCP discovery: no skipped-module warning.
+- No native simulation rerun was needed for report propagation. Full Python, BOOM and long formal runs: NOT RUN.
+
+## Issues
+Third dry-run report edge 2. No issue is closed. Larger interrupt, formal, predictor and SoC integration limits remain in the report.
+
+Roadmap notes: fault report consumers now receive explicit incomplete evidence and silent-corruption verdicts through both CLI and MCP.
+
+## PR 1105
+
+[#1105](https://github.com/riscPrint/risc-v-workstation/pull/1105). Merged: 2026-11-13T13:18:11Z.
+
+Title: test(formal): record real datapath database binding proposals
+
+Audit evidence label: unit tests only.
+
+## Summary
+Record the existing datapath kit on Yosys databases built from the real VexiiRiscv multiplier export. Retain the physical 33/33/64 helper proposal and a 32-bit word-adapter proposal. Both require designer confirmation and run no proof.
+
+## Testing
+- Two native Yosys database builds: succeeded.
+- Raw helper: proposed a, b and y; correctly reported inconsistent word widths.
+- Named 32-bit adapter: proposed all required roles; wide child did not match the requested widths.
+- Kit and release hygiene tests: 44 passed.
+- Fast set: 2,302 passed, one skipped, two unrelated failures:
+  - test_docs_site.py::test_docs_staging_does_not_write_sources
+  - test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow, for cov_probe_goals
+- Operation inference, automatic inline pipeline extraction, complete core binding, full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #19
+
+Roadmap notes: The existing one-command binding proposal path now has real generated RTL and native database evidence. Port proposals remain structural hints. A designer must check signedness, projection, result selection and the reference model.
+
+## PR 1106
+
+[#1106](https://github.com/riscPrint/risc-v-workstation/pull/1106). Merged: 2026-11-13T13:19:44Z.
+
+Title: fix(cosim): map declared word lane observer addresses
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add an explicit project-adapter helper for observers that expose an effective byte address with word-lane data and strobes. Align only the bus address. Preserve every data and mask bit. Reject fault effects. Keep the existing full-word co-simulation validation strict.
+
+## Testing
+
+14 targeted tests passed. Fast set: 2378 passed, 1 skipped, 8322 deselected, one unraisable I/O warning. The scratch Chisel adapter now uses this mapping. A new native lb run passes and matches Spike for 191 instructions. Corrected replays of the 41 nontrapping RV32UI traces match Spike. ma_data remains refused: fault-access mapping is not claimed. The Chisel ISA declaration now includes its implemented FENCEI. The NEORV32 trace uses architectural lanes and needs its project platform corrected instead of this helper.
+
+The full clean native campaign is rerun after freezing the installed tool revision. Previous campaigns executed 41 programs successfully and timed out on ma_data, but changing the installed checkout made some identity claims inconclusive. Those runs are not qualification. Full Python suite, BOOM, fault-access normalization and full ISA qualification NOT RUN.
+
+## Issues
+
+Refs: #927. This is an explicit adapter mapping, not a default relaxation or an ISA mask.
+
+Roadmap notes: Project adapters can map reviewed word-lane observers to canonical aligned C2 addresses. Core fault events still need their own mapping.
+
+Post-rebase targeted checks: 53 passed, one unrelated release-hygiene failure. The failure is test_tracked_text_has_no_personal_paths on examples/vexiiriscv/formal/adapter-kit-results.json lines 122/125 and native-kit-results.json lines 67/70. These files came from main and are outside this change. The brief permits delivery with the failure named.
+
+## PR 1107
+
+[#1107](https://github.com/riscPrint/risc-v-workstation/pull/1107). Merged: 2026-11-13T13:19:56Z.
+
+Title: fix(checks): map the internal boom tilelink a stage
+
+Audit evidence label: unit tests only.
+
+## Summary
+Map the internal arbiter.ups_0_a stage named in the original core issue. Distinguish it from io_ups_0_a by the Spinal source-offset adapter. Add a source disposition only; do not add a waiver. Separate later aliases from the original historical inventory.
+
+## Testing
+- Source disposition tests: 3 passed.
+- Source review: Spinal 1.15.0 Arbiter.scala:35-50 and Bus.scala:456-465; BOOM mshrs.scala:719; original riscPrint/spinal-boom#7.
+- Fast set and release hygiene: results recorded below.
+- BOOM elaboration, simulation and formal: NOT RUN for this source review.
+
+## Issues
+Refs: #5. There are 24 named source dispositions, including a later FetchBuffer alias. Only 23 names belong to the historical set. One original ID is still absent from the available inventory. This PR does not claim a complete original mapping or a new native check pass. Accepted TileLink checks stay active.
+
+Roadmap notes: the internal A-stage source disposition is recorded. Historical inventory recovery and native binding validation remain open. Later aliases cannot fill gaps in the original set.
+
+Fast set: 2374 passed, 1 skipped, 1 failed, 8322 deselected. Unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources. Release hygiene: 40 passed.
+
+## PR 1109
+
+[#1109](https://github.com/riscPrint/risc-v-workstation/pull/1109). Merged: 2026-11-13T13:20:09Z.
+
+Title: feat(farm): enforce native budgets and report outcome unit costs
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Report C1/C3 DUT observations separately from C4 gate reports. Add scope cost per conclusive DUT observation and per unambiguous recorded C4 report. Keep unit costs null when no rate or denominator exists. Include infrastructure charges in scope unit costs. Do not infer a verdict from queue state.
+
+Register farm_observe in the existing workflow tool list and regenerate its one-line agent setup count.
+
+Roadmap notes: real per-run, per-agent and wall-budget controls now have native evidence. Preserve the original DUT failure when its retry budget is exhausted. C4 costs remain null in this experiment; the next committed gate integration supplies real C4 reports.
+
+## Testing
+
+- Targeted cost and agent-guide tests: 15 passed.
+- Fast set: 2311 passed, 1 skipped, 8318 deselected; one failure remains in test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow because cov_probe_goals is absent from its workflow. That tool is outside this area. The farm_observe registration and generated setup count are fixed. The brief permits this unrelated failure to proceed without disabling the check.
+- Release hygiene: 40 passed. MCP list has no skipped diagnostic.
+- Native per-run jobs=1: XOR fails; declared DUT-failure retry blocked; original C1 failure retained.
+- Native agent jobs=1: add passes; second agent job blocked before launch.
+- Native wall_seconds=0.2: launch stops with no C1 verdict; charged cleanup-inclusive wall time 0.399 s; private lock free afterward.
+- Three attempts: 145.751 wall seconds, two declared cores, 0.080973 core-hours. Illustrative rate 1 caller unit/core-hour gives 0.040486 units per conclusive C1 observation across one pass and one failure. This is not measured CPU or a provider bill.
+- NOT RUN: C4 acceptance or native C4 cost in this experiment, full Python suite, GitHub CI. Native harness was dirty; no gate acceptance is inferred.
+
+## Issues
+
+Refs: #25
+
+Remaining: committed native gate accept/reject runs and C4 cost, offline Kubernetes validation and the integration guide. The unrelated cov_probe_goals workflow registration remains with its owner.
+
+## PR 1110
+
+[#1110](https://github.com/riscPrint/risc-v-workstation/pull/1110). Merged: 2026-11-13T13:20:19Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate the CLI and MCP command reference from current declarations. Sheriff round 17 found no cross-area failure. Leave the reference test deferred.
+
+## Testing
+Main 854fcad0: 2374 passed, 1 skipped, 8322 deselected in 186.22 seconds. Parser construction, MCP listing without skipped-package warnings, all 47 top-level help checks, conflict-marker scan and repeated top-level definition scan passed. Slow cache sample: 6 passed. Dependency reinstall passed. Full Python suites and BOOM jobs were not run. The full-suite worker owns its reported coverage and UVM failures. Rebased onto current main after the fast run.
+
+## Issues
+No issue closure. Roadmap notes: no feature or roadmap change.
+
+## PR 1108
+
+[#1108](https://github.com/riscPrint/risc-v-workstation/pull/1108). Merged: 2026-11-13T13:20:55Z.
+
+Title: feat(checks): bind wide rob and ram free-list event rules
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add three generic event templates: multi-lane ROB pointers, a ghost free-tag mask for RAM-backed free lists, and youngest-older-store selection in a wrapping queue. Bind all three to NaxRiscv. Preserve existing FIFO bounds. Add lane-list bindings and load qualification.
+
+ISA: 59 pass, nine rules, zero firings. With seed 1, planted ROB/free-list/forwarding bugs fire their target rules 29/135/2 times. The directed positive has zero firings and 331 complete Spike matches. Save failed attempts too. An unseeded clean directed run fired other rules; the cause remains unresolved. This evidence is scoped to seed 1, not a formal or core qualification.
+
+## Testing
+- Targeted template, binding, resource binding and hygiene tests ran.
+- Fast set: 2358 passed, 1 skipped, 3 failed, 8320 deselected. Unrelated failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block, test_docs_site.py::test_docs_staging_does_not_write_sources, test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow.
+- Native nine-rule ISA run and all three private planted controls completed. Each retry used a 180-second wall bound and private locks at nice 15.
+- NOT RUN: BOOM, full Python suite, formal proofs, hardware, CI waits. Forwarding data correctness is not checked by the new age rule.
+
+## Issues
+Refs: #1055
+Unseeded directed-run firings need further analysis. The owner retains issue closure.
+
+Roadmap notes: nine NaxRiscv rules now bind. Record fixed-seed ISA and planted controls. Keep the random-seed limitation and lack of forwarded-data checking visible.
+
+## PR 1111
+
+[#1111](https://github.com/riscPrint/risc-v-workstation/pull/1111). Merged: 2026-11-13T13:21:10Z.
+
+Title: feat(vexii): finish rv32 pmp rtl suite verification
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Connect the planner's `pmp-rv32` family to the VexiiRiscv RV32 supervisor regression profile. Use the declared ISA, eight PMP entries and 4-byte granularity. Keep the S-mode and MPRV-S cases for this MSU core. Record generated and applicable counts in `selection.json`.
+
+Finish the interrupted 394-program RTL campaign by rebuilding the stale Spike shim and repeating strict comparison. All 394 programs pass C1 and match Spike, with 26,798 compared instructions, zero synchronizations, zero C1 failures and zero findings. Retain per-program result, trace and ELF hashes in `examples/vexiiriscv/pmp32-results.json`. Add the PMP counts to the family README and the integration guide. The guide also shows the retained per-family generated/applicable/run/pass/fail/finding counts from earlier merged campaigns.
+
+## Testing
+
+- Project tests: 7 passed. The new controls check MSU and MU generation, XLEN, PMP entries and granularity, and selection counts. Fix the copied-project fixture to supply the source variable required by the current project.
+- Release hygiene: 40 passed after the evidence file was written.
+- Fast set: 2382 passed, 1 skipped, 8322 deselected after rebase. Use `-o cache_dir=rvw/out/pytest-core-cache`. The first attempt had one docs-staging failure because the docs builder included the untracked root `.pytest_cache/README.md`; moving the cache under `rvw/out` resolved it without a source change.
+- MCP discovery: no skipped modules, including after rebase. The 7 project tests also pass after rebase.
+- RTL: reuse the completed isolated `rvw regress run --suite pmp --rvfi-trace` capture on core `9f70315deb3390b283995c5b8f1bd38215ecf52b`, seed 1, memory latency 0. Strict `rvw regress cosim` replay completed in this continuation at nice priority 15. Private core copy and suite outputs retained.
+- NOT RUN: a fresh 394-program RTL rerun, full Python suite, RV32 device profiles, reference support for the harness-written PLIC acknowledgement. Prior MMU, ordering and other privilege runs were not repeated. Their existing findings remain visible.
+
+## Issues
+
+Refs: #84. The 12 PLIC comparisons remain inconclusive at the harness-written acknowledgement. Unsupported extensions and multi-hart families remain outside these profiles. The earlier 19 PMP-denied page-walk failures and three VexRiscv interrupt `mtval` mismatches remain findings with reproductions.
+
+Roadmap notes: RV32 supervisor PMP now has 394 real RTL passes and 394 strict Spike matches, with retained per-program hashes. The integration guide separates generated, applicable, run, C1 pass, C1 fail, Spike match and finding counts for the generated suite families.
+
+## PR 1112
+
+[#1112](https://github.com/riscPrint/risc-v-workstation/pull/1112). Merged: 2026-11-13T13:21:50Z.
+
+Title: feat(soc): boot the composed core from spi flash
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add a read-only SPI NOR pin model and a real composed VexRiscv flash-boot example. The ROM stub reads the payload through the Spinal SPI controller, copies it into application RAM, checks a byte sum and jumps to RAM. Only the RAM payload reports success. Only the ROM ELF is preloaded. The generated RAM constructor and initial RAM observation exclude a hidden application preload.
+
+Fix the legacy APB bridge for targets that omit PSLVERROR, as the Spinal SPI controller does. Full accesses return no error from such targets. Partial writes still fail before target select. A dedicated native smoke checks both paths.
+
+## Testing
+
+- Private source compile and composed elaboration passed with SpinalHDL 1.15.0 and the pinned private VexRiscv core.
+- Unchanged payload: native cocotb test passed at seed 31; 5,150 CPU cycles, 573 retired instructions, 16 flash bytes, 20 SPI words, one flash transaction, finisher 1.
+- Corrupted payload: deliberately failed the success expectation; 5,130 cycles, 569 retired instructions, finisher 3. The failure record is retained.
+- RAM word zero was observed as zero before both runs. The positive run observed the expected payload word afterward.
+- Existing SPI agent independently monitored the wire words.
+- Flash model unit tests: 5 passed. Normal/fast reads, address restart, erased bytes, supplied identity/status, unsupported commands, missing identity and partial words are covered.
+- LegacyErrorSmoke passed under Verilator assertions at seed 31.
+- Fast set: 2,301 passed, 1 skipped, 8,316 deselected, 1 unrelated failure. `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow` reports the existing `cov_probe_goals` MCP tool without a workflow entry. No coverage-tool or workflow files are changed here.
+- Release hygiene: 40 passed.
+- MCP listing has no skipped-tool errors.
+
+Full Python/Scala suites, C1 gate acceptance, Spike co-simulation, physical flash, XIP, production bootloader behavior and program/erase modeling were NOT RUN.
+
+## Issues
+
+Refs: #1006, #1033
+
+Roadmap notes: The composer can host a ROM-copy boot path on the real core, with the payload supplied only through the SPI pin model. Native positive/corruption evidence is recorded in the example README and integration guide. The NOR model is explicitly read-only. Hardware and complete boot qualification remain open.
+
+## PR 1113
+
+[#1113](https://github.com/riscPrint/risc-v-workstation/pull/1113). Merged: 2026-11-13T13:22:28Z.
+
+Title: feat(csim): compare the cached vexii predictor stack
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Describe the cached VexiiRiscv GShare, BTB and RAS stack as a component study. Carry the actual final prediction direction and target into its optional branch probe. The previous XOR mapping could confuse target errors with direction errors. Ignore unused targets of not-taken branches in both sides of target scoring.
+
+## Testing
+- Native cached `branches`: conclusive pass and complete Spike match, 35,661 C2 instructions in 108,567 cycles.
+- 6,001 conditional events aligned with C2. Direction agreement 93.1845%; RTL 844 misses, model 1065. Target agreement 89.9017%; RTL 4 misses, model 610. These are approximate-model gaps.
+- Targeted component tests: 14 passed. Guide/workflow/cache tests: 15 passed; one failure from unrelated `farm_observe` missing its workflow.
+- Fast set: 2349 passed, 1 skipped, 8320 deselected; one failure in `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow` from `farm_observe`.
+- Release hygiene: 40 passed.
+- No BOOM build, full Python suite, hardware test or CI wait. RAS target agreement is not measured: the full learn-port stream had one event beyond C2 and conversion refused it.
+
+## Issues
+Refs: #365
+The model approximates the PC hash, RAM reset, speculative history and update order. It has no RTL fidelity verdict.
+
+Roadmap notes: the dynamic cached VexiiRiscv predictor stack now has native conditional direction and target comparisons. Call/return alignment and RAS comparison remain open. The owner updates roadmap files.
+
+After rebase, the targeted component and guide/workflow tests passed: 24 passed. Main now covers farm_observe. Duplicate workflow entries from the union rebase were removed.
+
+## PR 1114
+
+[#1114](https://github.com/riscPrint/risc-v-workstation/pull/1114). Merged: 2026-11-13T13:23:09Z.
+
+Title: feat(cov): minimise measured suites and enforce smoke budgets
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add `rvw cov smoke` and MCP `cov_smoke`. Use measured native point sets for exact cardinality minimisation through 20 tests. Use C1 wall costs and a declared startup allowance for greedy time-budget selection. Keep the full native denominator and historical point target separate.
+
+Optional execution runs the recorded ELF/config/seed and coverage modes through project C1. A process deadline covers the lock wait, startup, build and programs. Timeouts cannot become pass because files exist. Conclusive C1 failures remain failures. New execution earns no coverage or strict reference credit.
+
+| Core | Exact minimum in four measured tests | Budget selection | Historical point target covered | Native C1 elapsed |
+|---|---:|---:|---:|---:|
+| VexRiscv | 2 | 2 | 17915 of 17915 | 88.3 s |
+| VexiiRiscv | 4 | 3 | 27644 of 27645 | 150.6 s |
+
+Both runs passed all selected C1 programs under the 180-second deadline. The startup allowance was 120 seconds. VexiiRiscv leaves one previously observed point outside its budget selection. The exact minimum applies only to these measured signatures. It is not an optimum over arbitrary programs.
+
+## Testing
+
+- Final smoke, generated guide, MCP schema and effect checks: 94 passed. Includes deadline expiry after all result files exist and propagation of a conclusive C1 failure.
+- Fast set after installing main's declared PyYAML development dependency: 2351 passed, 1 skipped, 2 failed. Regenerated the agent guide to fix one failure; targeted checks now pass. The remaining `test_each_tool_has_a_profile_and_workflow` failure names `farm_observe`, an unrelated missing main workflow entry. No farm code or assertion was changed.
+- Release hygiene: 40 passed.
+- MCP discovery: no skipped modules or stderr.
+- Native private-core C1 runs: 2 VexRiscv programs and 3 VexiiRiscv programs passed. Used `vex-dv`, `sbt-dv` and nice priority 10.
+- NOT RUN: new Spike comparisons, full Python suite, BOOM, physical hardware, formal. The selected signatures come from the preceding strictly qualified coverage measurements.
+
+## Issues
+
+Refs: #349, #353
+
+The time estimate does not guarantee runtime. The execution deadline enforces the adapter budget, with termination cleanup time as needed. Native point holes remain outside the observed-signature target. No C4 acceptance or new coverage credit is claimed.
+
+## Roadmap notes
+
+Record measured suite minimisation and deadline-bound C1 smoke execution on both examples. Keep exact minimum, greedy budget selection, historical signatures and fresh C1 outcomes distinct. Retain VexiiRiscv's one omitted observed point and all unhit native points.
+
+## PR 1115
+
+[#1115](https://github.com/riscPrint/risc-v-workstation/pull/1115). Merged: 2026-11-13T13:23:38Z.
+
+Title: feat(memory): host cached smp with coherence observers
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Host two real cached RV64IMA VexiiRiscv cores with the pinned upstream TileLink coherent hub and RTL RAM, CLINT and PLIC. Keep the cached native path separate from the cacheless C1 adapter.
+
+Bind permission observers to accepted LSU TileLink messages. Bind independent bytes for one fixed handoff line: hart 0 writes 37, hart 1 checks 37 and writes 85, then hart 0 checks 85. Add a writeback event that cleans a retained line after downgrade, with a targeted unit test. Project a selected line without driving DUT handshakes. Extract the actual design database and generate a typed TL-C bind. Replay the generated monitor against physical projection samples, with a corrupted-GrantData negative control.
+
+The project snapshot iterator avoids the pinned wrapper's Scala 2.13 mutation-during-iteration exception. No core source is edited.
+
+## Testing
+Measured results follow. Generation, native RTL execution and generated-monitor replay are separate evidence classes. In-simulation SV bind execution is NOT RUN. No full cache/coherence or ISA qualification claim. No BOOM, full Python suite, long formal work or CI wait.
+
+## Issues
+No issue is closed. Byte checks cover one handoff line. Broader cache state, eviction/replacement, stress and reset coverage remain open.
+
+Roadmap notes: add a real cached two-hart TileLink hub path, accepted-message permission binding, one-line independent byte oracle and generated monitor binding/replay. Cacheless C1 profiles retain cache_coherence=not_present.
+
+Native cached handoff: pass, 686 cycles, 99 retirements (56/43). Permission binding: 10 grants and 7 shrinks. Independent byte binding: 3 fills, 2 reads, 2 stores, 2 writebacks and 1 invalidation. Generated-monitor replay: 688 physical clock/reset events, control pass, corrupted GrantData rejected. The captured reset is asynchronous with the clock stopped. No synthetic reset sample is used in the committed evidence.
+
+CacheScoreboardSpec: 4 passed. Typed/native monitor tests: 3 passed, including six seeded generic bind defects. Fast set: 2080 passed, 1 skipped, 8328 deselected. One unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources. Release hygiene: 40 passed. MCP discovery has no skipped-tool warning. Bounded compiler, monitor and Spike helpers use process groups. The compiler helper's loaded segments match the native input; its temporary object symbol name can change the whole ELF hash.
+
+## PR 1116
+
+[#1116](https://github.com/riscPrint/risc-v-workstation/pull/1116). Merged: 2026-11-13T13:24:33Z.
+
+Title: docs(boom): reconcile the qualified interface inventory
+
+Audit evidence label: no code.
+
+## Summary
+Reconcile the BOOM adapter inventory and integration-guide rows with the native probe, fault, DPI and full-state comparison evidence. Remove superseded support statements. Keep checkpoint/plugin gaps, the historical stream-ID gap, endpoint alignment and model accuracy limits explicit.
+
+## Testing
+- Check all relative Markdown link targets in both edited files.
+- Source review against the merged probe, checkpoint and source-disposition reports.
+- No new BOOM job or native build for this documentation change.
+- Fast set and release hygiene: results recorded below.
+
+## Issues
+Refs: #5, #6, #49, #52. This inventory does not qualify all presets or all options. Checkpoint restore, device plugins, full historical inventory recovery and wider state capture remain open.
+
+Roadmap notes: BOOM small has raw FP/CSR capture with explicit reset alignment, retained prediction probes, bounded stall attribution, two register-flip read-backs and clean/injected DPI results. Native cache reuse is confirmed. Two-program OoO accuracy remains inconclusive. Checkpoint/plugin work is deferred with a source gap list.
+
+Fast set: 2385 passed, 1 skipped, 2 failed, 8322 deselected. Failures are test_docs_site.py::test_docs_staging_does_not_write_sources and test_release_hygiene.py::test_tracked_text_has_no_personal_paths. The latter names existing examples/vexiiriscv/formal/adapter-kit-results.json:122,125 and native-kit-results.json:67,70 on main. Those files are outside this BOOM task and were not changed. The targeted hygiene set has 39 passed and the same one failure. Both edited documents pass the release scanner when checked directly. All relative link targets exist.
+
+## PR 1117
+
+[#1117](https://github.com/riscPrint/risc-v-workstation/pull/1117). Merged: 2026-11-13T13:26:32Z.
+
+Title: feat(formal): measure vex instruction portfolio attempts
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Run the VexRiscv instruction selection through upstream unbounded checkers, the declared single-flight restriction, regfile RAM abstraction and the PDR/Bitwuzla portfolio. Retain x0 storage. Report conditional engine results separately from full-pipeline signoff. Add a reusable attempt-summary function and focused tests.
+
+Roadmap notes: the per-check table retains historical bounded-20 instruction results for the matching FormalSimple source hash. Conditional proof attempts do not certify pipeline composition or RVFI conformance. M-profile results remain separate.
+
+## Testing
+
+Targeted summary tests: 3 passed. Summary plus release hygiene: 43 passed. Fast set: 2298 passed, 1 skipped, 8316 deselected, 1 unrelated failure. The failure is test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow because cov_probe_goals has no workflow entry. This PR does not change that tool or its workflow. MCP discovery has no skipped modules.
+
+Native per-check results are in portfolio-results.json and portfolio-table.md. Each race uses at most two proof engines. Native jobs use vex-conn and nice priority 15.
+
+NOT RUN: full Python suite, BOOM builds, simulations, long individual proof jobs, GitHub CI wait.
+
+## Issues
+
+Refs: #64. Full-pipeline unbounded ISA signoff and observer qualification remain open. The owner decides issue closure.
+
+The historical generated wrapper and the new project wrapper have distinct hashes. Matching RTL does not make their environments identical. The table retains those receipt hashes and does not claim a fresh BMC run or revalidated historical instruction activation.
+
+Final native count: 37 instructions attempted, 74 engine timeouts, 37 reached general retirement covers, zero new conditional proofs. Final targeted and hygiene check: 43 passed. All 37 table rows retain historical bounded-20 evidence and its scope.
+
+## PR 1118
+
+[#1118](https://github.com/riscPrint/risc-v-workstation/pull/1118). Merged: 2026-11-13T13:27:31Z.
+
+Title: build(checks): compile both spinalhdl api axes
+
+Audit evidence label: unit tests only.
+
+## Summary
+Compile SpinalChecks against the pinned NaxRiscv SpinalHDL source with Scala 2.12.18 and the 1.15 release with Scala 2.13.14. Select typed API shims for memory ports, reporting and AXI writes. Use compatible collection and regex operations. Preserve the shared checks implementation. State every legacy fallback.
+
+## Testing
+- Main and all test sources compile on both axes.
+- `testOnly spinalchecks.NamingSpec`: 4 passed on each axis, 0 failed.
+- Fast set: 2304 passed, 1 skipped, 23 failed, 68 errors, 8322 deselected. Most failures/errors come from main's duplicate soc-integration tool entry. The remaining failures include documentation staging and personal paths in two VexiiRiscv evidence files. No failed test was waived or changed.
+- MCP discovery currently prints a skipped agent-resource line for that duplicate entry. `import rvw.cli` works.
+- NOT RUN: other compiled Scala tests, full Python suite, NaxRiscv Scala inserted-check simulation, BOOM, hardware, CI waits.
+
+Fast failing tests:
+- rvw/tests/test_agent_guide.py::test_playbook_is_valid_and_complete - V...
+- rvw/tests/test_agent_guide.py::test_every_cli_step_parses_and_every_mcp_tool_exists
+- rvw/tests/test_agent_guide.py::test_agent_setup_embeds_the_generated_block
+- rvw/tests/test_agent_guide.py::test_guide_cli_json_and_unknown_workflow
+- rvw/tests/test_agent_guide.py::test_guide_resource_over_mcp_stdio - MC...
+- rvw/tests/test_agent_guide.py::test_failure_workflow_requires_identity_and_repair_runs
+- rvw/tests/test_cli_coherence.py::test_command_map_is_generated_from_real_commands
+- rvw/tests/test_cli_coherence.py::test_core_profile_keeps_setup_and_meta_tools
+- rvw/tests/test_cli_tree.py::test_every_mcp_package_loads - AssertionEr...
+- rvw/tests/test_command_reference.py::test_command_reference_does_not_depend_on_terminal_width
+- rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources
+- rvw/tests/test_mcp_aliases.py::test_provider_aliases_are_explicit_and_optional
+- rvw/tests/test_mcp_coherence.py::test_discovery_audit_baseline - Asser...
+- rvw/tests/test_mcp_coherence.py::test_profiles_and_meta_tools - Assert...
+- rvw/tests/test_mcp_coherence.py::test_native_job_migration_is_bounded
+- rvw/tests/test_mcp_coherence.py::test_core_effect_declarations_follow_handlers
+- rvw/tests/test_mcp_inventory_gaps.py::test_only_named_inventory_gaps_remain
+- rvw/tests/test_mcp_inventory_gaps.py::test_replay_and_sva_discovery_stay_valid
+- rvw/tests/test_mcp_smoke.py::test_every_discovered_tool_is_described_and_dry_called
+- rvw/tests/test_mcp_smoke.py::test_cli_smoke_and_call_need_no_native_inputs
+- rvw/tests/test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow
+- rvw/tests/test_mcp_workflow_coverage.py::test_bringup_calls_fit_the_core_profile_and_schema
+- rvw/tests/test_release_hygiene.py::test_tracked_text_has_no_personal_paths
+The 68 errors are in test_mcp_effect_declarations.py, from the same discovery error.
+
+## Issues
+Refs: #1055
+Compilation and four elaboration tests per axis are not whole-core or formal qualification.
+
+Roadmap notes: mark the legacy SpinalChecks compile gap resolved. Keep native inserted-check qualification separate.
+
+## PR 1119
+
+[#1119](https://github.com/riscPrint/risc-v-workstation/pull/1119). Merged: 2026-11-13T13:28:54Z.
+
+Title: feat(sim): load firmware on the vexii supervisor profile
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Load captured firmware and payloads on the VexiiRiscv supervisor profile. Add reproducible reset, DTB and SBI payload preparation. Add a compressed RV64 supervisor profile and dense byte RAM up to 128 MiB for bounded Linux startup. Support the UART modem-control writes used by OpenSBI and retain the register in device snapshots.
+
+## Testing
+Targeted Scala tests: 7 passed. Native boot and fast-set results follow below.
+Not run: full Python suite, BOOM simulations, second-machine replay or native VexiiRiscv checkpoint restore. The Spinal adapter has no native checkpoint implementation; boot inputs support from-reset replay only.
+
+## Issues
+Refs: #865
+Roadmap notes: keep the native supervisor payload result separate from bounded Linux progress and from checkpoint restore. Live VexiiRiscv checkpoint restore remains open. No issue is closed.
+
+Final native control: OpenSBI v1.6 with the project-owned UART/CLINT platform passed at cycle 304429 with 126162 retirements. It observed 14 S-mode instructions, the supervisor ecall and SBI version 2.0. Complete C2 passed the shared parser. No PMP warning remained. The native pytest passed in 107.56 seconds. Eight Scala tests passed. A real store of 1 under the bounded Linux profile did not pass; C2 validated that store and C1 timed out at cycle 500.
+
+Linux: the compressed supervisor RTL built, then executed for the full 600-second wall budget. It retired 1726669 instructions, including 1597511 in S mode, and observed 15 MMU walks and 328491 translated accesses. Last PC: `0xffffffff8021296e`. UART output was empty. Result: wall-clock timeout, not completed Linux boot. Linux C2 was not captured. Samples contain hashes and counts, not absolute home paths.
+
+Failed discovery runs are retained locally: generic DTB firmware exceeded 240/600/900-second limits. The fixed-map platform exposed missing 64-bit CLINT MMIO, which is fixed and tested. Its initial narrow PMP ranges were corrected to the standard compare bank. The final control rejects PMP warnings.
+
+Latest fast set: 2052 passed, 1 skipped, 8323 deselected. One unrelated failure: `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources`. Release hygiene: 40 passed. MCP discovery emitted no skipped tools. Full Linux boot, initramfs/user-space checks, native checkpoint restore and second-machine replay were not run or implemented. The native Spinal adapter's checkpoint gap remains open.
+
+## PR 1120
+
+[#1120](https://github.com/riscPrint/risc-v-workstation/pull/1120). Merged: 2026-11-13T13:29:19Z.
+
+Title: fix(formal): bind byte memory contracts and rvfi memory faults
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Generate shared byte-addressed RAM response assumptions from a project's declared zero-latency bus contract. Preserve the latest written byte or a stable symbolic initial byte. Keep DUT request addresses and writes unconstrained. Assert on history overflow. Add the upstream optional RVFI memory-fault field group.
+
+On the external scratch core, fix the project-owned formal adapter's aligned/truncated transfer export and bind attempted fault masks. ADD, BEQ, JAL, LW, SW and retirement cover pass at depth 6. Each instruction has a reached activation cover. Whole-core signoff remains inconclusive because machine-state bindings and adapter certification are absent.
+
+## Testing
+
+- Targeted Python tests: 60 passed, 12 native tests deselected.
+- Independent native generated-memory fixture: cross-word byte write/read PASS; deliberately wrong expected byte FAIL.
+- Scratch ISA run: six bounded passes and five reached instruction covers, Yices, depth 6, 90-second per-check limit, nice 15.
+- Fast set: 2387 passed, one skipped, two unrelated failures: test_docs_staging_does_not_write_sources and test_tracked_text_has_no_personal_paths. The latter names existing examples/vexiiriscv/formal/{adapter-kit-results,native-kit-results}.json.
+- Release hygiene: 39 passed, the same unrelated personal-path failure.
+- MCP discovery: no skipped-module warning before rebase.
+- NOT RUN: full Python, BOOM, long formal, whole-core ISA qualification, CI wait.
+
+## Issues
+
+Refs: dry-run report edge 4. The eight prior 16-bit arithmetic runs timed out in CBMC at about 120 seconds. Integer case splitting remains separate work. Only combinational byte-addressed RAM is supported by this environment. Devices need their own model.
+
+Roadmap notes: declared ISA RAM response environments and optional memory-fault export are implemented. Whole-core machine-state and adapter-conformance gaps remain.
+
+## PR 1121
+
+[#1121](https://github.com/riscPrint/risc-v-workstation/pull/1121). Merged: 2026-11-13T13:29:47Z.
+
+Title: fix(mmu): triage denied walks and plan fetch fault checks
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Classify the 19 denied page-walk failures as one core defect in the pinned cacheless VexiiRiscv supervisor profiles: 11 Sv39 and 8 Sv32 cases read PTEs from PMP-denied pages. Retain each failing walk, its independent reference result and trace hash. Add a minimal program, fresh RTL result identities, a short wave window and the privileged-spec rule. Spike raises load access fault; RTL completes the load and reports C1 fail. Do not change core sources or mask the finding.
+
+Fix the checker reference-plan gap for bounded fetch faults. Tests verify Sv32/Sv39 stopping levels and results. Keep failed C1 coverage inconclusive.
+
+## Testing
+
+- Targeted walker tests: 94 passed, 1 native test deselected.
+- Native: two RV64 directed RTL runs with wave capture, nice priority 15, private source and `vex-suites`/`sbt-suites`. Both retain the failing result. Fresh minimal Spike run raises load access fault at PC 0x80000078 with tval 0x40000000.
+- Direct forensic replay: all 19 retained walks mismatch the independent PMP-aware walker.
+- Fast set: 2310 passed, 1 skipped, 8324 deselected, 22 failed and 68 errors. Failures are in untouched agent-guide, MCP/coherence, command-reference and release-hygiene tests. MCP errors stem from the duplicate soc-integration guide tool name.
+- Release hygiene: 39 passed, 1 failed on pre-existing personal paths in formal/adapter-kit-results.json and formal/native-kit-results.json.
+- MCP discovery reports the pre-existing duplicate tool name in the soc-integration agent guide.
+- NOT RUN: full Python suite, fresh 19-program RTL campaign, other cores or configurations.
+
+## Issues
+
+Refs: #84. PLIC comparisons, VexRiscv interrupt disposition and remaining suite-family execution continue separately.
+
+Roadmap notes: the denied page-walk group now has a core-defect decision, per-program evidence, a minimal Spike reproduction and a short wave window. Fetch-fault reference plans are now supported. No coverage pass is added for a failed C1 run.
+
+## PR 1122
+
+[#1122](https://github.com/riscPrint/risc-v-workstation/pull/1122). Merged: 2026-11-13T13:30:07Z.
+
+Title: feat(checks): add trigger bindings and joint helper proof jobs
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Complete trigger instrumentation for all 82 connected VexRiscv/VexiiRiscv checks. Record fresh ISA activation, depth-4 covers and one induction sample per bound kind. Add joint helper groups that assert CSR state and FIFO capacity/occupancy companions. Update SpinalChecks and integration tables. Retain the PC/divider findings.
+
+## Testing
+- 100 programs reached software pass. VexRiscv has 49 C1 passes. VexiiRiscv has 2 C1 passes and 49 check-gate failures: 103 PC payload events and 36 divider valid-hold events.
+- Simulation activated 44 of 82 checks. All triggers were measured. Depth-4 covers reached 3; the other 79 were not reached within the bound. All 82 safety jobs have bounded-pass engine observations, but only 3 have activated bounded evidence.
+- Fourteen one-instance-per-kind induction samples used depth 8 and depth-16 activation covers. Only the selected enum sample closes with activation on both cores. Unknown and no_activation are retained.
+- ABC PDR passes the joint VexRiscv CSR-read/state group. Helpers are asserted, never assumed. The portfolio still reports inconclusive and proof_kind none.
+- 22 targeted Python tests passed. The native HPM valid-read activation test passed. Release hygiene: 40 passed.
+- Fast set: 2348 passed, 1 skipped, 8312 deselected; 2 unrelated failures in main: test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow. The environment was updated with main's declared PyYAML dependency after an initial collection error.
+- Full Python/Scala suites, complete all-instance unbounded closure, and whole-core qualification NOT RUN.
+
+## Issues
+Refs: #65
+Refs: #21
+The OoO fixture still lacks the complete template and consumer bindings. NaxRiscv still needs independent free-list, multi-lane ROB, forwarding and recovery interfaces. The two wider VexiiRiscv findings remain undisposed.
+
+Roadmap notes: Connected checks now have measured triggers on both example cores. Keep activated evidence separate from bounded engine observations. Helper-group preparation and per-kind induction samples are available. Full template binding and all-instance proof closure remain open.
+
+## PR 1124
+
+[#1124](https://github.com/riscPrint/risc-v-workstation/pull/1124). Merged: 2026-11-13T13:34:52Z.
+
+Title: docs(vexriscv): resolve three interrupt mtval findings
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve the three VexRiscv scheduled-interrupt findings as one core defect observed on MSIP, MTIP and MEIP. Add a minimal program per input and fresh RTL/Spike evidence with ELF, RTL and trace hashes. The RTL handler reads the old mtval value 0x55. Spike sets it to zero. Cite Machine-Level ISA 1.13: the rule has no exception for an M-only core. Do not change the core or add a platform setting that permits the defect.
+
+## Testing
+
+- Fresh native RTL: three minimal programs, seed 1, fixed memory latency, one simulation at a time, nice priority 15, private core source and vex-suites/sbt-suites locks. Each reports C1 fail with tohost 3.
+- Spike replay: three mismatches, each only tval expected 0 and actual 0x55 at interrupt entry. Counter, MMIO and IRQ synchronization disabled. Each comparison has one unspecified mscratch reset synchronization.
+- Fast set: 2419 passed, 1 skipped, 8327 deselected, 2 failed. The failures are in untouched test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_release_hygiene.py::test_tracked_text_has_no_personal_paths.
+- NOT RUN: full Python suite, other configurations, a core fix.
+
+## Issues
+
+Refs: #84. PLIC evidence and remaining generated family results continue separately.
+
+Roadmap notes: all three M-only interrupt findings now have a defect decision, minimal program, fresh reference comparison and specification citation. No waiver was added.
+
+## PR 1125
+
+[#1125](https://github.com/riscPrint/risc-v-workstation/pull/1125). Merged: 2026-11-13T13:34:56Z.
+
+Title: feat(formal): split integer datapath proofs by operand prefix
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Split integer datapath proofs by an explicit high-bit prefix of operand b. Substitute fixed bits before SAT construction. Keep all low bits and other operands symbolic. CLI and MCP accept the same fields. Every result records the exact interval and says that it covers only that partition.
+
+## Testing
+
+- Ten targeted partition tests passed. Combined memory and partition tests: 17 passed.
+- On the scratch core's exported 16-bit units, 16 native jobs returned 13 proved and three inconclusive. All eight units pass for b=0. MUL, DIV, DIVU, REM and REMU pass for b=65535. MULH, MULHSU and MULHU time out in CBMC at 60 seconds for b=65535. Operand a remains symbolic. Two native jobs at most, nice 15.
+- The original eight unsplit reports all record CBMC timeouts at about 120 seconds. They do not report unsupported operations.
+- Fast set: 2428 passed, one skipped, three unrelated failures: test_agent_setup_embeds_the_generated_block, test_docs_staging_does_not_write_sources and test_tracked_text_has_no_personal_paths. Release hygiene: 39 passed, the same existing Vexii evidence path failure.
+- MCP discovery has no skipped-module warning.
+- NOT RUN: remaining operand partitions, whole-unit proof, full Python, BOOM, long formal or CI wait.
+
+## Issues
+
+Refs: dry-run report edge 4. Two selected b values do not cover all 65536 values. High-half multiply proofs still need smaller cases or another proof backend. No whole-unit or whole-core proof is claimed.
+
+Roadmap notes: integer operand partitions are available through CLI and MCP. Partial coverage and stage-specific resource limits remain explicit.
+
+## PR 1126
+
+[#1126](https://github.com/riscPrint/risc-v-workstation/pull/1126). Merged: 2026-11-13T13:36:41Z.
+
+Title: fix(checks): bind explicitly declared emitted module names
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Allow a project to declare rtl_top for the emitted bind module while top still matches the database. GHDL's database importer uses drytop, but standalone synthesis emits DryTop. Keep this mapping explicit and validate it as an HDL module identifier. Keep database port and width checks.
+
+## Testing
+
+7 targeted tests passed. Public check generation emits two monitors per scratch core. Full native bound models compile and run with Verilator assertions: Chisel add passes with 427 retirements in 446 cycles; NEORV32 add passes with 428 retirements in 979 cycles. Four generated-monitor replay checks pass Yosys SAT at 24 steps. This is bounded replay, not a whole-core proof. Fast-set result recorded in the journal. Full Python suite, BOOM and long formal runs NOT RUN.
+
+## Issues
+
+Refs: #927. A project declaration does not prove the emitted module exists; native compilation establishes it for these two models.
+
+Roadmap notes: Declared checks can bind emitted module spelling when a database frontend normalizes names.
+
+Fast set: 2386 passed, 1 skipped, 1 unrelated release-hygiene failure, 8322 deselected. The failure is test_tracked_text_has_no_personal_paths on main's examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json. These files are outside this change. The brief permits delivery with this failure named.
+
+## PR 1123
+
+[#1123](https://github.com/riscPrint/risc-v-workstation/pull/1123). Merged: 2026-11-13T13:36:49Z.
+
+Title: fix(evidence): retain the weakest input verdict in plan summaries
+
+Audit evidence label: unit tests only.
+
+## Summary
+Document verdict ownership for producers, C4 gates, the evidence index, verification plans, farm workflow plans and the agent guide.
+
+Use a shared canonical verdict vocabulary and weakest-input aggregation. Plan entries, features and reports carry verdict bounds. Producer blockers, invalid evidence, unresolved holes and unassigned requirements prevent pass. Preserve typed C1/C3 inconclusive rules and check selected formal children. Coverage counts remain planning data.
+
+Farm completion carries an explicit inconclusive verification verdict. Index queries retain producer status and separate integrity. Guide advice grants no verification result.
+
+## Testing
+53 targeted tests passed. After rebase and guide regeneration: 57 targeted tests passed, including workflow coverage. Discovery has no skipped provider.
+
+Fast set: 2396 passed, 1 skipped, 8322 deselected. The initial attempt stopped at collection because PyYAML was absent from the local environment. Installed the dependency declared by current dev requirements and reran.
+
+Regressions cover complete coverage counts with inconclusive/unsupported/not_installed producers; conflicting C3 and formal child verdicts; inconclusive C1 failure attribution; index status preservation; farm command completion without verification evidence; and guide advice without pass.
+
+NOT RUN: simulations, core builds, native proofs, full Python suite or CI waits.
+
+## Issues
+No issue closure requested. A plan verdict is bounded by its selected evidence. It does not establish requirement completeness or grant C4 acceptance.
+
+Roadmap notes: evidence layers have explicit ownership. Plan summaries preserve producer blockers and the weakest selected evidence bound.
+
+## PR 1127
+
+[#1127](https://github.com/riscPrint/risc-v-workstation/pull/1127). Merged: 2026-11-13T13:38:05Z.
+
+Title: feat(probes): export reused rob lifetimes to kanata
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Export out-of-order instruction lifetimes from ROB allocation through dispatch, issue, operand read, completion, retirement and ROB-tail flushes. Reused IDs start only at explicit first-stage probes. Keep late events visible. Validate the same lifetimes in the probe checker.
+
+Add optional inclusive sampling bounds to probe end records. This preserves idle startup and tail cycles in rvw perf. Save a native Kanata sample and measured evidence.
+
+## Testing
+- Probe conversion and validation tests: 23 passed.
+- Native add with probes: pass, 1003 cycles, 501 retirements. All 501 retirement PCs and cycles match C2. Spike matches 501 instructions and 3 trap events. rvw perf uses all 1003 cycles.
+- Converter: 718 lifetimes, 210 flushed, 7 open at shutdown, 32 orphan events, 0 stale closures, no unknown flush anchors. Probe checking has one orphan warning, no errors. Orphans are not fabricated into instructions.
+- ProbeSafety: identical Verilog with and without the tap when probes are disabled.
+- Fast set: 2414 passed, 1 skipped, 3 failed, 8325 deselected. Unrelated failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block, test_docs_site.py::test_docs_staging_does_not_write_sources, test_release_hygiene.py::test_tracked_text_has_no_personal_paths (VexiiRiscv evidence files).
+- NOT RUN: graphical Konata browser inspection, full Python suite, BOOM, hardware, CI waits. Execute is an operand-read marker, not a measured per-unit execution latency.
+
+## Issues
+Refs: #1055
+Remaining orphan events and open shutdown instructions are reported. No full pipeline qualification is claimed.
+
+Roadmap notes: add the NaxRiscv probe-to-Kanata binding and shared reused-ID/flush support. Record the exact C2 alignment and the remaining warnings.
+
+## PR 1128
+
+[#1128](https://github.com/riscPrint/risc-v-workstation/pull/1128). Merged: 2026-11-13T13:38:39Z.
+
+Title: feat(vexii): verify remaining selected suite families
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Run the remaining planner-selected random privilege family on VexiiRiscv RV32 and RV64. All eight programs pass RTL and match Spike strictly, with zero synchronizations and no masks. Each program performs 32 seeded M/S/U transitions. Add the family to prepare-suites.py and both supervisor regression profiles.
+
+Publish separate generated/applicable/run/C1 pass/C1 fail/Spike match/finding counts for translation, Svade A/D, TLB/ASID and fences, LR/SC, AMO, AMO faults, FENCE and FENCE.I. These split the retained campaigns; they are not extra runs. Retain every member name and new random ELF/RTL/trace hashes. Add reset-rv64 to the planner with a required harness:reset-events capability. Three reset programs compile, but the adapter has no repeated-reset stimulus or observation binding. Report zero applicable and zero run, with that harness limit. Do not claim a reset pass.
+
+## Testing
+
+- Project tests: 9 passed. Both XLENs select and build four random programs. Both omit reset without the required harness binding.
+- Native: eight fresh RTL passes, one simulation at a time, nice priority 15, private core and vex-suites/sbt-suites locks. Eight strict Spike matches, zero synchronizations, no masks.
+- Reset generator: three RV64 ELFs compiled. RTL reset runs NOT RUN because the adapter cannot drive their declared events.
+- Fast set: 2424 passed, 1 skipped, 8327 deselected, 2 failed. Untouched failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_release_hygiene.py::test_tracked_text_has_no_personal_paths.
+- NOT RUN: full Python suite, fresh rerun of matrix/ordering campaigns, hardware A/D, unsupported satp modes, multi-hart shootdown.
+
+## Issues
+
+Refs: #84. The 12 PLIC comparisons continue separately. Reset event binding remains a harness gap.
+
+Roadmap notes: per-family RTL denominators are explicit. The remaining planner-selected random privilege family has eight fresh strict matches. Reset is explicitly excluded by a harness capability instead of hidden from the plan.
+
+## PR 1129
+
+[#1129](https://github.com/riscPrint/risc-v-workstation/pull/1129). Merged: 2026-11-13T13:41:16Z.
+
+Title: docs(checks): refresh the nine-rule naxriscv binding review
+
+Audit evidence label: no code.
+
+## Summary
+Refresh the check-binding review after main added three NaxRiscv declarations. Generate all nine and document the ROB-pointer, free-list ghost-event and forwarding-window interfaces. Preserve the earlier six-rule source hash and native evidence boundary.
+
+## Testing
+Nine declarations generated successfully. Five NaxRiscv/plan tests passed. The fast set had 2424 passed, 1 skipped and 8327 deselected, with two unrelated main failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_release_hygiene.py::test_tracked_text_has_no_personal_paths. The release scan found four personal paths in examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json; these files are not changed here. No new native NaxRiscv run. The historical 59-program zero-firing record applies only to the original six rules.
+
+## Issues
+Refs: #65
+Actual allocator RAM conservation, forwarded byte data and full recovery remain open. This follow-up records a concurrent main update; it does not transfer historical native evidence to the new declarations.
+
+Roadmap notes: NaxRiscv now has nine reviewed generation declarations. Native activation and validation of the three new rules remain pending.
+
+## PR 1132
+
+[#1132](https://github.com/riscPrint/risc-v-workstation/pull/1132). Merged: 2026-11-13T13:43:00Z.
+
+Title: feat(cosim): declare ordered external interrupt evidence
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Define rvw.external-interrupts/1 as the shared format for external-interrupt evidence. This is the common C2 extension for the PLIC work and other external interrupt adapters. Declare it in the C2 header. Capture ordered pin levels, source changes, accepted MMIO reads/writes including claim/complete, mailbox acknowledgement writes and the retirement boundary where the DUT took an interrupt.
+
+Add a generic RvfiTraceWriter emitter. The reader rejects undeclared events, skipped sequence numbers, wrong retirement boundaries and malformed access payloads. A reference that has no extension consumer refuses the evidence. No core names, signal names, device addresses or test lists enter generic code. Checkpoint resume remains refused for this extension.
+
+## Testing
+
+- Python extension tests: 7 passed.
+- Scala emitter tests: 2 passed. Compile and tests ran in this private checkout under sbt-suites with nice priority 15.
+- Fast set: 2468 passed, 1 skipped, 8327 deselected, 1 failed. The untouched release-hygiene test reports existing personal paths in formal result evidence.
+- NOT RUN: native PLIC recapture and comparison, full Python suite. The next PR binds this format to the adapter and independent device replay.
+
+## Issues
+
+Refs: #84. This PR supplies the shared format for external-interrupt evidence. It does not resolve the 12 PLIC inconclusive comparisons by itself.
+
+Roadmap notes: the generic C2 harness and contract now have one declared external-interrupt evidence extension. Consumer and adapter binding follow separately.
+
+## PR 1131
+
+[#1131](https://github.com/riscPrint/risc-v-workstation/pull/1131). Merged: 2026-11-13T13:43:44Z.
+
+Title: docs(integration): record full chisel and vhdl second pass
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Record the full Chisel and VHDL second pass and update the per-HDL tool table. Each frozen native RV32UI campaign has 41 passes, one ma_data timeout and zero inconclusive identity records. Each has 41 Spike matches. Chisel refuses the ma_data fault record; VHDL reports its fault mapping mismatch. There are zero applied masks or reference synchronizations. Neither suite is accepted or called ISA qualification.
+
+Record five merged fixes: declared request/response protocols, real alias fan-out counting, GHDL source-location coverage, explicit word-bus observer address mapping, and emitted module spelling for binds. Both generated bound models run add with assertions enabled. Four monitor replay windows pass Yosys SAT at depth 24. Query paths return Scala and VHDL lines. Coverage links native points to 121 Scala and 343 VHDL lines. Keep statement-hit status undetermined and real lint findings active.
+
+## Testing
+
+Final fast set: 2435 passed, 1 skipped, 2 unrelated failures, 8327 deselected. The failing tests are test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_release_hygiene.py::test_tracked_text_has_no_personal_paths. The hygiene findings are main's examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json. These files and the generated agent setup block are outside this diff. The worker brief permits delivery with these failures named.
+
+Five code PRs contain targeted tests and native scratch evidence. All 84 final captured ELF hashes and all C1 tool identities were audited. Matched retirements: Chisel 11807, VHDL 12090. Core sources and native artifacts stay outside the workstation. git diff --check passes. MCP discovery has no skipped-module warning. Full Python suite, BOOM, long formal runs, physical hardware, privileged ISA and full source-statement coverage NOT RUN. No CI wait.
+
+## Issues
+
+Refs: #927, #1032, #1069. Misaligned-access emulation, fault-access trace mapping, real lint findings, unconstrained whole-core formal and source-statement coverage remain open. No issue is closed.
+
+Roadmap notes: Both non-Spinal cores run the complete 42-program RV32UI list with explicit remaining failures. Declared monitors work on instruction and data buses through generation, native bind simulation and bounded replay. Queries and native-point source links work with their recorded limits.
+
+## PR 1130
+
+[#1130](https://github.com/riscPrint/risc-v-workstation/pull/1130). Merged: 2026-11-13T13:43:53Z.
+
+Title: fix(formal): redact native kit capture paths
+
+Audit evidence label: unit tests only.
+
+## Summary
+Replace four absolute home paths in the native kit input-capture records with the private run-root placeholder. Preserve database hashes, port proposals and all confirmation requirements.
+
+## Testing
+- Release hygiene on the tracked receipts: 40 passed.
+- Fast set after refreshing declared local dependencies: 2,383 passed, one skipped, one unrelated failure in test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Proposal semantics are unchanged. Full Python suite, hardware and CI: NOT RUN.
+
+## Issues
+Refs: #19
+
+Roadmap notes: The real database proposal receipts now meet release hygiene.
+
+## PR 1133
+
+[#1133](https://github.com/riscPrint/risc-v-workstation/pull/1133). Merged: 2026-11-13T13:45:29Z.
+
+Title: feat(memory): scale rtl smoke and plic races to eight harts
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Extend native cacheless SMP checks to N=2..8. Add CPU PLIC claim/complete races, a recorded held-source mask, and per-context claim/completion counts. Each eight-round program checks one winner per round and a zero second claim before completion.
+
+Add a repeatable simulation-time workload with one warmup and three measured runs per N. Verify completion, C1/C2 counts and byte-identical captures. Read seed and stress controls from actual C1 results. Reject mixed controls, missing harts and interleaved worker logs.
+
+## Testing
+14/14 stressed smoke/race runs passed with delay 0..11, readiness 60% and clock enables 70%. Every race recorded 8 claims and 8 completions: 56 successful pairs total. These exercise RTL CPUs against the simulation PLIC model. PLIC RTL and starvation freedom are not qualified.
+
+28/28 timing runs passed. At each N, four C2 captures have identical bytes. Model build time is excluded. The shared host causes substantial wall-time variation; these are simulator measurements, not hardware performance results. Five targeted report tests passed. Fast-set and hygiene results below.
+
+No BOOM builds, full Python suite, long formal jobs or CI wait.
+
+## Issues
+No issue is closed. Larger race budgets, RTL PLIC arbitration and asynchronous clock/reset coverage remain open.
+
+Roadmap notes: bounded smoke, CPU PLIC races and identical C2 replay are measured through eight RTL harts. Timing reports retain all three samples and use actual C1 controls.
+
+Five targeted report tests passed, including per-context completion mismatch detection. Fast set: 2080 passed, 1 skipped, 8328 deselected. One unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources. Dependency warnings were also printed. No issue is closed.
+
+Release hygiene: 39 passed, 1 failed. The failure is test_tracked_text_has_no_personal_paths in untouched main files examples/vexiiriscv/formal/adapter-kit-results.json and examples/vexiiriscv/formal/native-kit-results.json. All 8 files changed by this PR have no hygiene findings. The timing report uses actual C1 settings, checks one worker, and verifies each configured hart set. No skipped MCP tool warning.
+
+## PR 1134
+
+[#1134](https://github.com/riscPrint/risc-v-workstation/pull/1134). Merged: 2026-11-13T13:47:01Z.
+
+Title: feat(formal): align vexii memory and trap retirement
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Align the single-lane RV32 cacheless VexiiRiscv observer with register writes, memory effects and trap boundaries. Retain results by full micro-op ID until emission. ECALL gets a separate fault record. MRET stays a normal record. The preceding instruction ends at xepc across a trap. Capture privilege and correct the source/destination roles of CSR immediate and privileged instructions.
+
+The directed program now matches 15 expected records, including a dependent store/load, ECALL, handler entry and MRET. A forced zero observer store-data output fails at the intended store check. The first continuation run found and retained a timing failure: the trap redirect occurs before the architectural trap pulse. The observer now records that actual redirect.
+
+Roadmap notes: finite alignment evidence is available. Full independent observer equivalence, observer liveness, interrupts, I/O and overlapping completion events remain unqualified. The last normal commit still needs a following commit or trap boundary for its next PC.
+
+## Testing
+
+Native observer compile and elaboration passed using the pinned private core and cached Spinal classpath. Directed positive comparison: 15 records matched. Negative control: nonzero exit at store mismatch. Targeted verdict tests: 4 passed. ADD was tried at depth 12 first; its assertion passed but general retirement cover timed out, so no qualified bound is claimed. ADD, LUI, BEQ, LW and SW assertion and instruction-activation tasks all timed out at depth 60 with 20-second task limits. The general retirement cover also timed out. No VexiiRiscv instruction proof closed. observer-signoff.md retains every unsupported inventory row.
+
+The first fast attempt stopped during collection because the local venv lacked the newly declared pyyaml dependency. Installing the declared dev dependencies fixed collection. The next fast set had 2416 passed, 1 skipped, 8325 deselected and 2 unrelated failures: test_agent_setup_embeds_the_generated_block and test_tracked_text_has_no_personal_paths. The latter names existing adapter-kit-results.json and native-kit-results.json. This PR does not change those receipts or the agent guide. Final fast results are recorded below. MCP listing has no skipped modules.
+
+NOT RUN: full Python suite, full sbt/core/Spinal rebuild, long formal jobs, independent formal observer equivalence, interrupt/I/O campaigns, other instruction checks, GitHub CI wait.
+
+## Issues
+
+Refs: #889, #64. Formal qualification remains incomplete. The owner decides issue closure.
+
+Final fast run: 2416 passed, 1 skipped, 8325 deselected and the same 2 unrelated failures in 117.55 seconds. Final directed comparison includes strict PC/instruction/register/control checks and empty-memory-effect checks for other instructions. It passed; the negative control was detected.
+
+## PR 1135
+
+[#1135](https://github.com/riscPrint/risc-v-workstation/pull/1135). Merged: 2026-11-13T13:50:37Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate the CLI and MCP command reference from current declarations. Sheriff round 18 found no cross-area failure. Leave the reference test deferred.
+
+## Testing
+Main 60e38f17: 2469 passed, 1 skipped, 8327 deselected in 216.39 seconds. Parser construction, MCP listing without skipped-package warnings, all 47 top-level help checks, conflict-marker scan and repeated top-level definition scan passed. All 14 newly added test files are fast and were covered by this run; no separate slow candidates were present. Dependency files were unchanged. Full Python suites and BOOM jobs were not run. The full-suite worker retains its reported repairs. Rebased onto current main after the fast run.
+
+## Issues
+No issue closure. Roadmap notes: no feature or roadmap change.
+
+## PR 1136
+
+[#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136). Merged: 2026-11-13T13:51:21Z.
+
+Title: fix(checks): bind vexii redirects and divider cancellation
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve the 139 VexiiRiscv firing events as incomplete cancellation bindings. Retain all 51 historical program records, source statements, and two native wave windows. Bind current PC redirects and previous-cycle divider flushes. Allow several distinct reviewed cancellation terms on one stream. Keep duplicate terms as errors.
+
+Roadmap notes: The 51-program rerun has zero firings across 25 inserted checks. This is bounded simulation evidence. Activation closure remains open.
+
+## Testing
+
+- Native 51-program ISA/CSR campaign: 51 software and check passes, zero firings.
+- StreamCancellationSpec: 13 passed, including illegal payload-change controls.
+- Targeted evidence and release hygiene: 40 passed, 1 failed. The failure is existing personal paths in examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json. These files were not changed.
+- Fast set: 2468 passed, 1 skipped, 8327 deselected, 1 failed in the same existing release-hygiene test.
+- MCP list: no skipped tools.
+- NOT RUN: whole-core proofs, full Python suite, BOOM simulation.
+
+## Issues
+
+Refs: #85
+
+Activation and whole-core qualification remain open. The core is unchanged.
+
+## PR 1137
+
+[#1137](https://github.com/riscPrint/risc-v-workstation/pull/1137). Merged: 2026-11-13T13:51:50Z.
+
+Title: fix(cosim): replay ordered interrupt and device input evidence
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Replay harness-owned pins and device responses through a declared C2/2 retirement-ordered environment extension. Keep events in file order. Bind each response and interrupt trap to a retirement boundary. Read recorded machine pins through Spike's architectural mip CSR interface. Deliver interrupts at the observed trap boundary. Device responses come from the device model before DUT consumption. DUT results and writes remain compared. These inputs do not count as synchronization from DUT values.
+
+## Testing
+
+- Scratch core: all ten RTL self-checks pass. Strict privilege checks pass all four CLINT and six scheduled cases, zero inconclusive, zero synchronizations. This resolves the six reference-evidence gaps from the third pass.
+- Changing only captured pin levels to zero produces a strict mip read mismatch. A changed DUT device read also fails the policy unit test.
+- Python targeted: 45 passed, 711 deselected.
+- Native trace-writer unit: one passed, no skips, private sbt-cosim lock, 21 seconds. Scratch adapter compiled in eight seconds. All native commands use nice 15; at most two simulation/reference processes.
+- Native Spike shim rebuilt from the changed source. MCP discovery has no skipped-module warning.
+- Fast set: 2446 passed, one skipped, three unrelated failures: test_agent_setup_embeds_the_generated_block, test_docs_staging_does_not_write_sources and test_tracked_text_has_no_personal_paths.
+- Release hygiene: 39 passed, the existing Vexii formal evidence personal-path failure remains.
+- NOT RUN: BOOM, full Python, CI wait, general interrupt arbitration/latency proof or device-model qualification.
+
+## Issues
+
+Refs: dry-run report edge 3. This backend supports single-hart machine software, timer and external pins. Other pin sets or backends refuse the extension. Device-model inputs require captured configuration and implementation. The scratch core stays outside this repository.
+
+Roadmap notes: ordered C2 external-event inputs now support strict reference comparison for the ten scratch privilege cases. Interrupt arbitration, latency policy and device-model qualification remain separate evidence.
+
+## PR 1138
+
+[#1138](https://github.com/riscPrint/risc-v-workstation/pull/1138). Merged: 2026-11-13T13:53:10Z.
+
+Title: feat(perf): attribute top-down slots to elf functions
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add ELF-symbol top-down counts and a same-workload configuration diff to CLI and MCP. Retired slots use each C2 PC. Lost slots use the next retirement as explicit time attribution. Refuse aggregate-only input and misaligned per-cycle retirement counts or ELF identity.
+
+Add a 16-entry issue-queue example beside the 32-entry default. On memcpy, both pass and completely match Spike for 31185 instructions. The smaller queue adds 3624 cycles and 7160 back-end slots in main. The exact queue-push blocked counter grows from 5731 to 11187, while refills stay at 1009. Aggregate full-queue counts remain zero. This supports issue/dispatch window pressure for this pair; the counter is not an exclusive cycle budget.
+
+## Testing
+- Function/perf/hygiene selection: 154 passed, 1 unrelated failure in release hygiene (VexiiRiscv evidence paths).
+- Fast set: 2462 passed, 1 skipped, 3 failed, 8328 deselected. Unrelated failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block, test_docs_site.py::test_docs_staging_does_not_write_sources, test_release_hygiene.py::test_tracked_text_has_no_personal_paths.
+- Native memcpy pair, sampled partition checks, exact per-cycle retirement counts and complete Spike matches passed. Save reports, counters and input hashes.
+- MCP discovery completed without skipped modules.
+- NOT RUN: 59-test ISA or generated checks on IQ16, other benchmark/configuration pairs, BOOM, full Python suite, hardware, CI waits. A ROB32/IQ32 attempt failed elaboration on the pinned core and is recorded, not offered.
+
+## Issues
+Refs: #1055
+Function loss attribution is temporal, not a causal per-instruction stall diagnosis. No broad core or performance qualification is claimed.
+
+Roadmap notes: add function top-down and configuration diffs. Record the measured IQ32/IQ16 memcpy pair and its limits. COMMAND_REFERENCE remains deferred under the shared-file rule.
+
+## PR 1139
+
+[#1139](https://github.com/riscPrint/risc-v-workstation/pull/1139). Merged: 2026-11-13T13:54:36Z.
+
+Title: docs(formal): document measured isa proof routes
+
+Audit evidence label: no code.
+
+## Summary
+
+Add the "Prove your core against the ISA" section to the integration guide. Give one measured table for the selected VexRiscv, VexiiRiscv and PicoRV32 profiles. Keep historical bounds, reduced operand proofs, conditional abstractions, finite stream matches and incomplete attempts separate. Include command recipes and source/evidence links.
+
+Classify the measured M-only MPP update and MEPC bit-zero readback as defects, with Privileged ISA 1.13 sections 2.1.1.6.1 and 2.1.1.14. Record that no core fix was applied. Keep PicoRV32's two unsupported programs and its failed terminal-trap equivalence separate from its 40 finite stream matches.
+
+Roadmap notes: all four requested continuation items now have merged code or measured attempt records. Full ISA and independent observer signoff remain incomplete. Twenty VexRiscv CSR bindings remain open.
+
+## Testing
+
+Fast set: 2473 passed, 1 skipped, 8327 deselected in 145.98 seconds. All new relative evidence links exist. The section has no personal paths. git diff --check passed. The spec clauses were checked against the official versioned RISC-V machine-level ISA.
+
+NOT RUN: new native campaigns, earlier M-only or PicoRV32 programs, full Python suite, full core/sbt rebuilds, GitHub CI wait. This PR documents retained measurements. It does not create new proof claims.
+
+## Issues
+
+Refs: #64, #889. No whole-core signoff or issue closure is claimed. The owner decides issue closure.
+
+## PR 1140
+
+[#1140](https://github.com/riscPrint/risc-v-workstation/pull/1140). Merged: 2026-11-13T13:56:01Z.
+
+Title: test(formal): qualify asynchronous reset assertion guards
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Record the default VexiiRiscv asynchronous-reset initialization attempts. Preserve source assertions and report the unsupported reset-trigger model as inconclusive. Add positive and negative reset-event controls. The controls require a safe refusal or correct native assertion semantics. A guard-only relaxation reversed the expected results and was discarded.
+
+## Testing
+
+- Native pinned core export completed with the launcher property required by VexiiTop.liveMap.
+- Xprop and two-copy event BMC stopped at documented model guards. No initialization pass is claimed.
+- Independent Icarus reset controls: positive control had zero assertion errors; negative control had two errors.
+- Targeted reset controls and release hygiene: 44 passed.
+- Fast set: 2470 passed, 1 skipped, 1 unrelated failure in test_docs_staging_does_not_write_sources.
+- CLI imports and MCP listing passed without skipped modules.
+- No full Python suite, BOOM build, simulation suite or CI wait.
+
+## Issues
+
+Refs: #20. A qualified model of asynchronous reset assertion events is still required. No core fault is established.
+
+Roadmap notes: The default Vexii initialization flow now has pinned native refusal evidence and reset-event qualification controls. VexRiscv formal X candidates remain unconfirmed by Icarus replay. Native initialization proof remains open.
+
+## PR 1141
+
+[#1141](https://github.com/riscPrint/risc-v-workstation/pull/1141). Merged: 2026-11-13T13:56:40Z.
+
+Title: feat(probes): attribute cache stalls and score timing models
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add cache-refill and inferred mispredict-recovery spans for performance reports. Add a commit-stage view for the single-lane VexiiRiscv examples. Use explicit sampling bounds from main for complete probe-to-Kanata windows.
+
+Separate physical instruction lookups from retired refill attribution. Check early restart against exact returned words and data, through refill-beat probes. Do not waive false hits. Add frozen cached timing configurations and a saved-evidence helper for `rvw arch ooo-calibrate`.
+
+## Testing
+- 28 targeted probe, conversion and cache comparison tests passed.
+- Eight conclusive native runs: smoke, branches, cache sweep with FENCE.I, and the nop variant, on both cached cores. All eight cache-check reports are consistent. The VexiiRiscv cache sweep checked 12 early-restart hits, 513 data fills and 512 writebacks.
+- Revalidated each cached core with probes enabled: 49 aligned RV32UI/UM passes and 49 complete Spike matches per core. Results retain ELF, C1 and C2 hashes.
+- Ran `rvw perf` on all eight streams. Clock windows match C1. VexiiRiscv retirement-count differences remain visible; they are not normalized.
+- Ran `rvw arch ooo-calibrate` on smoke, branches and the nop cache sweep for each core. Both accuracy verdicts are inconclusive. Held-out model IPC errors: VexRiscv -18.99% / +9.80%; VexiiRiscv +81.54% / +210.26%. No fitting was performed.
+- Fast set: 2403 passed, 1 skipped, 8323 deselected; one failure in release hygiene from pre-existing personal paths in examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json. These files belong to another worker and were not edited.
+- Release hygiene separately: 39 passed, same one unrelated failure. New evidence uses portable paths.
+- No BOOM job, full Python suite, hardware test or CI wait.
+
+## Issues
+Refs: #109, #365
+The timing models are approximate. Refill and recovery spans overlap; inferred spans are not a total of lost cycles. VexiiRiscv has a commit-stage view only. Its upstream completion-based C1 count differs from the commit-port count.
+
+Roadmap notes: both cached examples now feed cache observers, performance attribution and saved-evidence IPC scoring. Physical early restart is checked without relaxing false-hit rules. Timing accuracy remains inconclusive. The owner updates roadmap files.
+
+Rebase notes: kept main's explicit sampling bounds and its reused-ID/range-flush support. Removed the legacy-origin fallback. Fresh native captures on the rebased code supply first_cycle/last_cycle; all eight observers are consistent and all clock windows match C1.
+
+After rebase, release hygiene passed all 40 tests. The earlier personal-path failures were fixed on main. The cached RTL hashes also equal those in the 98 complete ISA/Spike comparisons.
+
+## PR 1142
+
+[#1142](https://github.com/riscPrint/risc-v-workstation/pull/1142). Merged: 2026-11-13T13:57:58Z.
+
+Title: fix(csim): distinguish predictor target availability and errors
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Separate BTB misses, no taken prediction, and wrong target addresses in RTL/model comparisons. Retain explicit BTB-hit probe evidence. Add native prediction-stream version 2 with the lookup level, while both readers retain version 1 support. Compare target addresses only when both sides supply a target prediction.
+
+## Testing
+
+- Targeted target-status, component-model and probe checks: 31 passed. Seven partition/status cases include a valid target address of zero and both stream versions.
+- Scratch median: RTL passes, 10653 instructions, 12875 cycles. The project now declares its 64-entry direct-mapped BTB and exports the fetch-time hit alongside its prediction.
+- All 3573 target status events agree: 27 BTB misses, 645 not-predicted, 1229 correct targets, 1672 not-taken. There are zero status disagreements and zero address disagreements among 1229 comparable address predictions.
+- Direction still has two disagreements among 3562 events. Each side has 1089 direction misses. The project describes fetch/execute/retirement timing and JAL prediction differences. This is measured agreement on one program, not predictor equivalence.
+- Fast set: 2494 passed, one skipped, one unrelated failure: test_docs_staging_does_not_write_sources.
+- Release hygiene: 40 passed. MCP discovery has no skipped-module warning.
+- NOT RUN: full Python, BOOM, CI wait or predictor qualification beyond this trace.
+
+## Issues
+
+Refs: dry-run report edge 5. Causal stall probes are separate work. Missing BTB-hit evidence stays unknown; the reader never treats address zero as a miss sentinel.
+
+Roadmap notes: target availability and address disagreement now have separate measurements. The scratch BTB model agrees on this trace; direction timing still has two disagreements.
+
+## PR 1143
+
+[#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143). Merged: 2026-11-13T13:58:42Z.
+
+Title: test(naxriscv): add isa and register-fault negative controls
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Save a private integer ALU mutation and an ISA negative control. Spike finds the intended wrong write at order 1, PC 0x80000050: li ra, 0 writes 1 rather than 0. The boot jump matches. The mutant later asserts; the comparison stops at the earlier architectural mismatch.
+
+Save a fixed-native-seed fault adapter and a three-register plan. One bit flip each in ROB allocation, commit and free pointers has an applied receipt at cycle 150. All three are detected by existing assert/fail statuses. Preserve the earlier one-register sample and failed setup attempts separately. Capture RVW_NAX_PLANT in project input identity.
+
+## Testing
+- Native negative control: expected Spike mismatch, no masks or synchronization. Golden: pass and complete Spike match for 501 instructions and 3 trap events.
+- Fault campaign: 3 planned, 3 injected, 3 detected; 0 not-injected or inconclusive. Three of 21 bit/cycle positions in the declared window. No safety or broad diagnostic-coverage qualification.
+- Targeted fault and hygiene tests: 59 passed. Seeded shell adapter passes bash -n.
+- Fast set: 2489 passed, 1 skipped, 2 failed, 8328 deselected. Unrelated failures: test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_docs_site.py::test_docs_staging_does_not_write_sources.
+- NOT RUN: full Python suite, full ISA suite under the mutant, broad fault campaigns, BOOM, hardware, CI waits. No watchdog was declared.
+
+## Issues
+Refs: #1055
+One ISA mutation and three selected register bits do not qualify ISA support, safety or broad fault coverage.
+
+Roadmap notes: add the native ISA negative and three-register fault evidence. Keep the sample scope explicit. The owner retains issue closure.
+
+## PR 1144
+
+[#1144](https://github.com/riscPrint/risc-v-workstation/pull/1144). Merged: 2026-11-13T14:00:25Z.
+
+Title: feat(checks): measure backpressure and prove inactive triggers
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add opt-in command backpressure and ordered fetch-response delay to the generated-check runtimes. Run the CSR, HPM-read and bus-backpressure slices selected with rvw regress plan. Retain one result for each of the 38 original inactive checks.
+
+20 checks newly activate in simulation. Negated-trigger induction proves 13 unreachable under the captured reset sequence and async2sync single-clock mapping. Four VexRiscv FIFO-input checks and the VexiiRiscv divider payload trigger remain no_activation. These are not unreachability claims. Backpressure exposes new retained stream failures on both cores.
+
+Roadmap notes: Native activation improves. Five original simulation misses remain unresolved. Every bound check has a depth-16 cover observation. VexiiRiscv misses without an unreachability proof have depth-128 retries. These are conditional check results, not whole-core qualification.
+
+## Testing
+
+- Fast set: 2474 passed, 1 skipped, 8327 deselected.
+- Native slices: CSR, HPM, add and divide, with period-8 backpressure and 32-cycle ordered fetch response delay. All outcomes and check firings are retained in activation-followup-results.json. Failed check gates remain failures.
+- Formal: 82 depth-16 cover runs; base-case and induction jobs for simulation misses. Depth-128 VexiiRiscv retries retain timeouts.
+- rvw formal from-sim: refused asynchronous-reset RTL. No unsupported bypass.
+- NOT RUN: asynchronous hardware proofs, full Python suite, BOOM runs.
+
+## Issues
+
+Refs: #85
+
+Five original activation gaps and new backpressure findings remain open. This PR does not claim activation closure.
+
+## PR 1145
+
+[#1145](https://github.com/riscPrint/risc-v-workstation/pull/1145). Merged: 2026-11-13T14:00:54Z.
+
+Title: feat(sim): add a project-bound instruction injection port
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add a generic core-side instruction injection port to C1. Project JSON binds split fetch request/response pins. Check widths, directions, config and paired IDs. Apply command backpressure and retain one outstanding response. Keep the normal path unchanged when injection is off.
+
+Add `rvw regress instruction-feed` and MCP `regress_instruction_feed`. Pack reference ELF load bytes into exact little-endian bus words. Capture the parsed binding, source words, input hashes and response log in C1. Refuse pass when a requested port did not attach or deliver data. Both example adapters opt in for their tested `rv32im` config and disable their RAM instruction responder while injection is active.
+
+The native matching feed passes complete strict Spike comparison on each core. A second feed changes `addi x5,zero,7` to `addi x5,zero,8` while leaving the reference ELF unchanged. Both cores produce the expected mismatch at instruction 1. This proves that the CPUs consume the independent port source.
+
+## Testing
+
+- Final Python feed, plan, generated guide and MCP checks: 101 passed.
+- Scala port parsing/source and coverage/C1 receipt tests: 5 passed.
+- Fast set: 2412 passed, 1 skipped, 1 failed. The failure reports existing personal paths in `examples/vexiiriscv/formal/adapter-kit-results.json` and `examples/vexiiriscv/formal/native-kit-results.json`. This PR does not edit those files. The staged-file hygiene scan has no findings in this PR's files.
+- MCP discovery: no stderr or skipped modules.
+- Native: four C1 passes on private cores, `vex-dv`, `sbt-dv`, nice priority 10. Matching traces compare all 6 VexRiscv and 7 VexiiRiscv retirements. Both mutated traces produce the intended x5 difference at instruction 1. No masks or synchronization.
+- Receipts record 8 response handshakes per VexRiscv case and 9 per VexiiRiscv case. These include speculative fetches. Missing feed addresses return fetch faults.
+- Initial preflight stopped before retirement because the raw reset object was not visible. The fixed implementation uses Spinal's simulation reset API. Failed preflights remain in the worker output and earn no credit.
+- Rebuilt the local Spike shim after main changed its source, before the strict comparisons.
+- Updated both real verification plans and saved status. Each now reports 4 closed and 3 open features. Operand, native point and retirement-pair holes remain open.
+- NOT RUN: live TestRIG transport or packet protocol, external TestRIG process, full Python suite, BOOM, physical hardware, formal proofs.
+
+## Issues
+
+Refs: #48
+
+This PR supplies the requested core-side fetch hook and offline source. It does not claim full TestRIG integration. `InstructionSource` is the public supply/backpressure API for a later transport. No C4 or whole-core qualification follows from these samples.
+
+## Roadmap notes
+
+Record a project-bound generic instruction port with native positive and deliberate mismatch controls on both examples. Record input/response receipts and the unchanged disabled path. Keep live TestRIG transport and broader issue #48 qualification open.
+
+## PR 1146
+
+[#1146](https://github.com/riscPrint/risc-v-workstation/pull/1146). Merged: 2026-11-13T14:01:03Z.
+
+Title: test(formal): prove real multiplier split configurations
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add a reproducible real-hardware configuration comparison through the public revision export flow. Use VexiiRiscv MulSpliter and AdderAggregator with 17-bit versus 9-bit partial products. Both configurations sign extend eight-bit inputs to 33 bits and compare the complete 64-bit product. Retain the exact source hashes and native export receipt.
+
+## Testing
+
+- Native EQY: equivalent, one complete output partition, 230.351 seconds including both source exports.
+- Public preparation recipe reproduced the native Scala and build files byte for byte.
+- Recipe and hygiene tests: 47 passed.
+- Fast set: 2493 passed, 1 skipped; unrelated failures in test_agent_setup_embeds_the_generated_block and test_docs_staging_does_not_write_sources.
+- CLI and MCP checks passed. No skipped MCP modules.
+- No full-width operand, pipeline, whole-core, full Python suite or CI run was performed.
+
+## Issues
+
+Refs: #18. This closes the stated small combinational helper configuration check. It does not close full-width or pipeline equivalence.
+
+Roadmap notes: Real equivalence now covers a recoded four-bit Spinal divider and a hardware split-configuration change in Vexii multiplier helpers. The same-source FpuSqrt export comparison retains its separate scope. Larger arithmetic and whole-core equivalence remain open.
+
+## PR 1147
+
+[#1147](https://github.com/riscPrint/risc-v-workstation/pull/1147). Merged: 2026-11-13T14:01:09Z.
+
+Title: feat(cosim): resolve plic comparisons with checked device evidence
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Resolve all 12 PLIC comparisons on the pinned VexiiRiscv RV64 supervisor profile. Capture the shared external-interrupt extension from real pin changes, accepted PLIC transactions, served mailbox writes and DUT interrupt entry. Keep core signal bindings in the example. Generic replay checks source events against the stimulus plan, replays accepted claim/complete operations on the independent PLIC model, binds retired accesses and checks the ELF mailbox addresses. Spike uses those checked platform inputs. It does not take expected GPR values from the DUT.
+
+All 12 fresh RTL runs pass and all 12 complete traces match Spike strictly: 1,424 instructions, zero synchronizations, no masks and zero findings. Retain 36 pin records, 123 MMIO accesses, 30 claims, eight completions, 27 source changes, 27 acknowledgements and six interrupt-taken boundaries, with cycles and retirement indices. Each delivery program takes one interrupt. Replace the earlier inconclusive counts in the README and integration guide.
+
+The Spike shim is version 8. Its added API sets checked external pending bits for pending-state CSR reads. The reference still takes interrupts at the captured boundary. Rebuild old shims with Cosim/build.sh. No core source is changed. Device maps and addresses remain project data.
+
+Rebase resolution: preserve #1137's environment replay alongside #1132's external-interrupt binding. Fix the union merge so the environment device response is not overwritten by the legacy MMIO selector. The reader permits one declared protocol per stream. The PLIC captures use #1132 and its independent PLIC checks.
+
+## Testing
+
+- Fresh native RTL: 12/12 C1 pass, seed 1, fixed memory latency zero, one simulation at a time, nice priority 15, private source and vex-suites/sbt-suites locks. Build the device library with the current interpreter. The initial attempt with the old embedded library failed before a usable capture and is not counted as a pass.
+- Strict Spike: 12/12 complete matches, 1,424 instructions, zero synchronizations and no masks. Every comparison reports external_interrupt_evidence.status checked.
+- Negative controls: missing acknowledgement gives a load-data mismatch; wrong claim and wrong pin levels each fail the independent device check.
+- Focused extension/replay tests: 12 passed. Native shim build/load test: 1 passed. The Scala adapter compiled and ran all 12 real programs.
+- Pre-rebase fast set on the committed tree: 2473 passed, 1 skipped, 8327 deselected, 1 failed. The untouched test_release_hygiene.py::test_tracked_text_has_no_personal_paths reports existing personal paths in two formal result files.
+- Rebase checks: 26 focused tests pass across both external protocols and environment policy; MCP discovery has no skipped modules. Rebuilt the merged shim and repeated all 12 strict PLIC comparisons; all match and bind the merged shim hash.
+- Post-rebase fast set: 2502 passed, 1 skipped, 8330 deselected, 1 failed. The remaining untouched failure is test_agent_guide.py::test_agent_setup_embeds_the_generated_block. Release hygiene now passes on main.
+- Standard privilege campaign checker: PLIC 6 pass and delivery 6 pass, zero fail and zero inconclusive. MCP discovery has no skipped modules.
+- NOT RUN: full Python suite, other cores, hardware PLIC qualification, other device models, checkpoint resume, repeated reset campaigns without a reset-event binding.
+
+## Issues
+
+Refs: #84. The earlier 19 page-walk and three VexRiscv interrupt defects remain findings. Reset stimulus/observation binding remains a harness gap. This PR resolves the 12 PLIC inconclusive comparisons; it does not claim whole-core qualification.
+
+Roadmap notes: PLIC and delivery now have 12 fresh RTL passes and 12 strict conclusive Spike matches. The shared extension from #1132 now has a real adapter binding, independent device replay, retained ordered evidence and negative controls.
+
+## PR 1148
+
+[#1148](https://github.com/riscPrint/risc-v-workstation/pull/1148). Merged: 2026-11-13T14:01:16Z.
+
+Title: feat(regress): record the standard supervisor act4 campaign
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add a project-owned all-applicable ACT4 profile for VexiiRiscv RV32IMA, M/S/U and Sv32. Keep the standard Sm bootstrap. Bind the suite to the build manifest. Record all 270 native failures and per-group built/run/pass/fail/finding counts. No failure is waived.
+
+All 270 tests trap on the write to mhpmevent3 in the standard bootstrap. None reaches its test body. Strict Spike checks of one case from each of 37 groups confirm that first difference, with zero synchronization and zero output masks. This is a core compatibility finding under the selected scaffold, not a proved hardware defect. The exact core and firmware CSR contract remains open. The existing minimal CSR program reproduces the failure.
+
+## Testing
+
+- Native: 270 built, 270 run, 0 pass, 270 fail, 0 inconclusive; 201 privileged-directory tests and 69 instruction tests.
+- Same supervisor profile controls: 49 riscv-tests pass with complete strict Spike matches; MEPC write-1 passes and matches; missing CSR reproduction fails and differs from Spike.
+- Targeted ACT4/profile/release hygiene: 53 passed before rebase. Targeted checks repeated after rebase.
+- Fast set: 2364 passed, 1 skipped, 8320 deselected, 2 unrelated failures: `test_agent_guide.py::test_agent_setup_embeds_the_generated_block` and `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow` (missing mappings for csim_compare_cache and farm_observe).
+- CLI import and MCP listing checked. No skipped MCP modules.
+- NOT RUN: BOOM, full Python suite, GitHub CI. No core sources changed.
+
+## Issues
+
+Refs: #48
+
+Privileged bodies remain unqualified. Resolve the standard bootstrap CSR compatibility gap before claiming privileged ACT4 results. Functional coverage, the BOOM config-only profile and the common measured guide follow in separate PRs. riscv-dv and TestRIG belong to another worker.
+
+Roadmap notes: ACT4 all-applicable supervisor selection and native execution are available through the generic C1 suite. The native campaign records a common bootstrap blocker, not a passing privileged suite.
+
+## PR 1149
+
+[#1149](https://github.com/riscPrint/risc-v-workstation/pull/1149). Merged: 2026-11-13T14:03:58Z.
+
+Title: docs(probes): explain vexii retirement event boundaries
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Explain the VexiiRiscv retirement-count difference from source and native events. The typed counter uses trapAt commit ports. C1/C2 use the upstream completion-based scheduler. The upstream loop can emit completed instructions before their commit-port event and can drain more than one instruction in the final callback.
+
+## Testing
+- Reproduced the original cacheless branches case with seed 1: 35660 C2 records versus 35658 typed commits.
+- Cached smoke: 18 versus 17. Cached branches: 35661 versus 35659. Cache sweep: 3344 versus 3342.
+- In all four cases, commit-port PCs equal the C2 prefix. The unmatched records are at the tail. Native C1 results are conclusive passes. Input hashes, source pin and source hashes are recorded.
+- Fast set: 2504 passed, 1 skipped, 8330 deselected; one unrelated failure in test_agent_guide.py::test_agent_setup_embeds_the_generated_block. The generated agent guide on main is stale. This PR does not edit it.
+- No BOOM job, full Python suite, hardware test or CI wait.
+
+## Issues
+Refs: #365
+No count correction or core-source change is made. Consumers must keep the event boundary explicit.
+
+Roadmap notes: the VexiiRiscv two-record gap has a source explanation and native evidence. Equal-boundary retirement capture would require a separate producer/end-condition change. The owner updates roadmap files.
+
+Release hygiene: 40 passed. CLI import and MCP listing passed after rebase with no skipped-tool warnings.
+
+## PR 1150
+
+[#1150](https://github.com/riscPrint/risc-v-workstation/pull/1150). Merged: 2026-11-13T14:05:20Z.
+
+Title: docs(naxriscv): align integration results and remaining limits
+
+Audit evidence label: no code.
+
+## Summary
+Update the NaxRiscv README and out-of-order integration table for the delivered memory model, nine-rule native checks, both compile axes, Kanata, function reports, configuration comparison and negative/fault controls. Mark the older timing and six-rule tables as historical. Add the private worker layout, pinned Scala/Spinal toolchain and warm build paths.
+
+Preserve the training-error regression, temporal attribution, orphan events, unseeded check firings and missing RAM-state/data/recovery coverage. Keep IQ16 evidence limited to its one benchmark. Do not turn compile or sample results into core or safety qualification.
+
+## Testing
+- All local file links in both edited documents resolve.
+- git diff --check passes. CLI import and MCP discovery pass with no skipped modules.
+- Fast set: 2503 passed, 1 skipped, 2 failed, 8330 deselected. Known failures outside these edits: test_agent_guide.py::test_agent_setup_embeds_the_generated_block and test_docs_site.py::test_docs_staging_does_not_write_sources. The site staging assertion already failed before this change.
+- NOT RUN: new native jobs, rendered site inspection, full Python suite, hardware, CI waits. This PR changes documentation only.
+
+## Issues
+Refs: #1055
+The documented limits remain open. The owner retains issue closure.
+
+Roadmap notes: reconcile the out-of-order section with the seven delivered items and retain all stated evidence boundaries. ROADMAP and TODO remain unchanged under the worker brief.
+
+## PR 1151
+
+[#1151](https://github.com/riscPrint/risc-v-workstation/pull/1151). Merged: 2026-11-13T14:05:48Z.
+
+Title: feat(probes): bind measured causes and producer dependencies
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add observed producer dependencies to the probe API and Kanata conversion. Retain producers after retirement. Refuse unknown dependency endpoints. Add probes check --consumer perf-causal, also available through MCP, to name missing stage, retirement, reason and producer bindings. Keep dependency observations separate from explicit measured stall causes.
+
+## Testing
+
+- Targeted probe tests: 18 passed.
+- Scratch median passes with 10653 retirements in 12875 cycles. Optional probes record 14960 dependencies. Explicit reason samples account for all 2222 zero-retirement cycles: 2 pipeline-fill and 2220 redirect-recovery cycles. Zero unknown and zero overlapping cause cycles. Two open final instructions remain visible.
+- Consumer declaration and stream validation against C2: present, clean, 14 probes, 68920 events, zero findings. This does not prove wiring for all inputs.
+- Fast set: 2506 passed, one skipped, two unrelated failures: test_agent_setup_embeds_the_generated_block and test_docs_staging_does_not_write_sources.
+- Release hygiene: 40 passed. MCP discovery has no skipped-module warning.
+- Native commands use nice 15 and private sbt-cosim compilation. NOT RUN: full Python, BOOM, CI wait or OoO cause qualification.
+
+## Issues
+
+Refs: dry-run report edge 5. The scratch pipeline has no memory wait states. Reason samples identify its fill and redirect recovery. Dependency edges alone never establish a stall cause. Other pipelines must supply their own reason and dependency bindings.
+
+Roadmap notes: generic dependency capture and consumer-specific probe diagnostics are implemented. Simple-pipeline causal measurements are complete for the median trace. OoO issue, replay and commit-head causes still need project probes.
+
+## PR 1153
+
+[#1153](https://github.com/riscPrint/risc-v-workstation/pull/1153). Merged: 2026-11-13T14:06:39Z.
+
+Title: feat(cov): merge native act4 and isa functional observations
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Publish ACT4 functional coverage merged with riscv-tests through `rvw cov functional`. Keep each XLEN/ISA profile separate. Include all failed prefixes in the observed merge. A separate qualified stream requires C1 pass and a complete strict Spike match.
+
+- VexRiscv machine: 58 ACT4 + 49 riscv-tests = 107 observed, 52 qualified.
+- VexiiRiscv machine: 58 + 49 = 107 observed and qualified.
+- VexiiRiscv supervisor: 270 + 49 = 319 observed, 49 qualified.
+
+Every profile includes the source reports, merged report, qualified report, SHA-bound corpus and complete default-domain hole list. Whole execution includes boot and signature checks. It is not isolated ACT4 body coverage or certification. Default-domain holes do not prove defects or reachability.
+
+## Testing
+
+- Ran the real `rvw cov functional` CLI for source reports, saved-report merges and qualified streams.
+- Checked unique raw C2 hashes, exact corpus membership, qualified membership, summed instruction records and every merged bin count.
+- Release hygiene: 40 passed.
+- Fast set: 2518 passed, 1 skipped, 8332 deselected.
+- NOT RUN: new RTL simulations, BOOM, full Python suite, GitHub CI. This PR analyzes the native runs retained in the preceding PRs.
+
+## Issues
+
+Refs: #48
+
+The six VexRiscv MEPC failures remain visible. Its 49 riscv-tests C1 passes do not qualify under this strict policy because the stock reset stub has an initial CSR snapshot difference. VexiiRiscv's 270 standard-bootstrap failures remain visible and do not qualify privileged behavior. The BOOM config-only suite and common measured integration guide follow separately. No riscv-dv or TestRIG files changed.
+
+Roadmap notes: ACT4 and riscv-tests now have measured functional coverage merges for three native example profiles, with complete hole lists and explicit observed/qualified boundaries.
+
+## PR 1152
+
+[#1152](https://github.com/riscPrint/risc-v-workstation/pull/1152). Merged: 2026-11-13T14:09:54Z.
+
+Title: fix(results): refuse positive results from missing evidence
+
+Audit evidence label: unit tests only.
+
+## Summary
+Fix positive result paths found by the verdict-honesty sweep. Keep valid conclusive failures and valid nonempty checks unchanged.
+
+Findings:
+1. Security suite collection trusted complete=true on an inconclusive child and discarded conflicting canonical verdicts. Require conclusive child outcomes and agreement with technique status. A complete, conclusive violation still reports complete evidence and failure.
+2. Paired security comparison could compare two empty observer projections and report no_leak_observed. Missing observer retirements now yield inconclusive.
+3. UVM feature and CPU qualification tables ignored C3 inconclusive flags and explicit blocked verdicts. Probe tables could also retain pass despite ignored-feature warnings. These cases now remain not established.
+4. An empty N-Trace byte/message vector passed round-trip checks and could qualify an adapter. Empty vectors now yield inconclusive and leave the adapter unverified.
+5. Direct local and distributed RTL grids returned pass for an empty property map. Both now reject the input before output creation or solver/SSH dispatch.
+
+The sweep also checked existing nonempty/skip guards in cocotb, UVM log evidence, explicit-model validation, formal app waivers, contract closure, initial partitions and remote property coverage. Their existing guards remain.
+
+## Testing
+84 targeted unit tests passed. After rebase: 90 targeted tests passed, including workflow coverage and the audit inventory guard. Discovery has no skipped provider.
+
+Pure pre-fix probes reproduced the empty packet-vector pass and both empty-grid passes without invoking a solver or SSH. Regressions cover all findings and preserve conclusive security failure/completion behavior.
+
+Fast set: 2478 passed, 1 failed, 1 skipped, 8327 deselected. The failure was test_release_hygiene.py::test_tracked_text_has_no_personal_paths in untouched examples/vexiiriscv/formal/adapter-kit-results.json and native-kit-results.json. After rebasing the owner's fix, release hygiene passed all 40 tests. This is not a claim that the earlier fast run passed.
+
+NOT RUN: simulations, core builds, native protocol/security/proof campaigns, full Python suite or CI waits.
+
+## Issues
+No issue closure requested. These are result eligibility and regression fixes. They do not qualify a core, a language feature or a vendor protocol adapter.
+
+Roadmap notes: missing observer data, incomplete reports, ignored features, empty vectors and empty proof grids no longer earn the positive results listed above.
+
+## PR 1154
+
+[#1154](https://github.com/riscPrint/risc-v-workstation/pull/1154). Merged: 2026-11-13T14:10:21Z.
+
+Title: docs(memory): record measured smp integration coverage
+
+Audit evidence label: no code.
+
+## Summary
+Update the SMP README, memory README and integration rows with measured results. Replace stale checker-limit and N=4..8 statements. Split cacheless and cached evidence. Retain the earlier fixture and lifecycle references.
+
+Record full-program per-hart C1 provenance beside Spike reports. Recheck the four saved scalar captures and the 8000-event synthetic SC case with the current checker. No new RTL run is claimed by this documentation update.
+
+## Testing
+39 targeted axiomatic tests passed. All four saved captures are allowed. Documentation and report links are checked locally. Release hygiene: 40 passed. Fast set: 2468 passed, 1 skipped, 1 failed, 8327 deselected. The failure is the existing `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources` assertion in unchanged docs-staging code. Nine added relative links resolve; both changed result JSON files parse.
+
+No BOOM builds, full Python suite, formal jobs or CI wait. General weak-order search remains bounded. PLIC races use a simulation model. Cached byte checks cover one line. In-simulation SV bind is NOT RUN.
+
+## Issues
+No issue is closed. The documented limits remain open.
+
+Roadmap notes: the memory area now has measured cacheless multi-hart campaigns, serialized full-program Spike replay, a selected-line cached RTL handoff, and N=2..8 smoke/race/replay evidence. Keep these scopes separate from full qualification.
+
+## PR 1156
+
+[#1156](https://github.com/riscPrint/risc-v-workstation/pull/1156). Merged: 2026-11-13T14:12:10Z.
+
+Title: feat(regress): configure boom for the generic act4 suite
+
+Audit evidence label: unit tests only.
+
+## Summary
+
+Add a `rvw.act4/1` BOOM profile and manifest-bound `act4-project` suite in the bundled `boom.toml`. Reuse the generic ACT4 plan/build/run description. Keep the legacy ELF suite available.
+
+The profile translates the existing BOOM port flow's UDB parameters, memory map and halt macros. It uses the bundled reference ISA, including Zicntr/Zihpm. The source hash ledger records all configuration changes. Extra legacy hint/property extensions are outside this selection. A real reset veneer clears mscratch and mtvec. The standard bootstrap remains enabled. The local comparison platform has no CSR output masks.
+
+## Testing
+
+- Targeted ACT4/BOOM configuration and release hygiene: 54 passed.
+- The selection test refuses any attempted subprocess. It loads the real generic profile, ISA/privilege selection and suite paths.
+- Checked RAM, XLEN, physical width, PMP count, Sv39/counter reference settings, signature halt macros and reset veneer. Checked the tightened Sail IO map after that change: 14 targeted tests passed.
+- Ran `rvw regress plan --act4` and CLI import/MCP listing. No skipped MCP modules.
+- Fast set: 2525 passed, 1 skipped, 8332 deselected.
+- NOT RUN: ACT4 compilation for BOOM, BOOM elaboration, BOOM simulation, BOOM cosim, full Python suite, GitHub CI. No runtime BOOM result is claimed.
+
+## Issues
+
+Refs: #48
+
+BOOM remains config/unit-test only, as requested. The common suite README and measured integration-guide rows follow separately. No riscv-dv or TestRIG files changed.
+
+Roadmap notes: The bundled BOOM example can use the generic project-owned ACT4 profile and manifest-bound suite. Only static configuration and unit tests establish this result. Native execution is NOT RUN.
+
+## PR 1155
+
+[#1155](https://github.com/riscPrint/risc-v-workstation/pull/1155). Merged: 2026-11-13T14:12:12Z.
+
+Title: feat(formal): prove real fifo memory and internal partitions
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add exact finite-memory lowering to closed internal equivalence proofs. Lower storage once in the output proof. Project internal observations from that lowered design. This avoids mapping generated storage aliases twice. Expose the option through CLI and MCP.
+
+Add a reproducible real StreamFifo RAM-to-register-vector revision example. The native proof compares a four-entry, eight-bit FIFO under an explicit valid-payload observation rule. Add native receipts for this refinement, four matched FIFO controls and five matched register observations in the recoded Spinal divider.
+
+## Testing
+
+- Real FIFO revision proof: equivalent, all five outputs, 32.047 seconds including both exports.
+- Final FIFO closed internal proof: equivalent, four observations, no omitted candidates, 53.271 seconds.
+- Negative control that flips a valid payload bit: not_equivalent, 47.645 seconds.
+- Real recoded divider closed internal proof: equivalent, five observations, 33.348 seconds. The old and new control encodings remain unmatched.
+- The public recipe reproduces the native Scala and build files byte for byte.
+- A native regression found repeated-lowering alias collisions. The fixed regression passed. Final targeted checks: 12 passed. Release hygiene: 40 passed. Fast set: 1 failed, 2512 passed, 1 skipped, 8333 deselected in 133.38s (0:02:13). The failure is test_docs_staging_does_not_write_sources in an unchanged file. CLI import and MCP listing passed without skipped modules.
+- No full Python suite, BOOM builds, large RAM, abstract array, banked memory or CI run was performed.
+
+## Issues
+
+Refs: #18. This qualifies exact finite RTL storage refinement and closed proofs of automatically matched observations. It does not prove all internal state relations or abstract memory refinement.
+
+Roadmap notes: Real memory refinement now has a RAM/vector FIFO proof and a failing payload-corruption control. Real automatic internal observations pass for both this FIFO and the recoded divider. Larger memories, symbolic arrays, banked memories and assumed-cut composition remain open.
+
+## PR 1157
+
+[#1157](https://github.com/riscPrint/risc-v-workstation/pull/1157). Merged: 2026-11-13T14:12:16Z.
+
+Title: feat(checks): bind ooo helpers and native consumers
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Add five asserted rename helpers to the tiny OoO fixture. The conservation group now passes ABC BMC3 at depth 16 in 16 seconds. Its separate depth-16 activation cover passes. SMTBMC induction and ABC PDR remain inconclusive under the short limits.
+
+Bind per-slot ExecutionChecks and generation-aware RecoveryChecks. Add a fence that blocks dispatch until the ROB drains. Export stage/retire/flush events through ProbeCollector. Add a command-projection C2 trace, a timing configuration and a native C1 fault adapter with ROB-head flip read-back.
+
+Roadmap notes: 68 inserted checks; zero clean firings; seven matching planted controls. All three requested consumers have short native/CLI results. Timing uses a declared command projection, not an executed RISC-V ELF. Replay and device effects remain inactive because the fixture has no such behavior.
+
+## Testing
+
+- Eight seed-17 native variants, 1200 cycles each: clean passes and all seven bugs fire their target rules.
+- Conservation plus five helpers: bounded depth-12 and depth-16 passes; depth-16 trigger reached. Helpers are asserted, never assumed. Short induction/PDR attempts timed out.
+- Probe-to-Kanata/perf: 257 retired, 144 flushed and 3 open commands.
+- OoO timing smoke: 257 projected commands, 260 model cycles; accuracy remains inconclusive.
+- Native rvw fault campaign: one head flip injected and detected; passing golden run. Not a detection-rate qualification.
+- Fast set: 2505 passed, 1 skipped, 8330 deselected; one unrelated failure in test_agent_guide.py::test_agent_setup_embeds_the_generated_block.
+- Targeted evidence/release hygiene: 41 passed. MCP list has no skipped tools.
+- NOT RUN: full Python suite, core proofs, replay/device-effect activation.
+
+## Issues
+
+Refs: #85
+
+Unbounded conservation and whole-core qualification remain open.
+
+## PR 1158
+
+[#1158](https://github.com/riscPrint/risc-v-workstation/pull/1158). Merged: 2026-11-13T14:13:05Z.
+
+Title: feat(reduce): shrink uart inputs and private per-hart code
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add `uart_rx` reduction of captured UART RX entries and `--hart-symbol HART:NAME` reduction of private per-hart executable symbols. Retained input order, cycle numbers, hart inventory, entry addresses and peer images stay fixed. Per-hart failures must preserve the full hart-to-code map.
+
+Record deterministic per-hart C1 failure codes in the SMP example. Add native controls, source-snapshot preparation, CLI/MCP options, contracts and measured samples. Keep unsupported stimulus-file inputs out of portable and live replay packaging.
+
+## Testing
+
+- Native UART reduction: five entries to byte 42 at cycle 1000; eight conclusive RTL trials; final fail code 21. Empty input passes. All complete C2 traces parsed.
+- Native SMP reduction: three slots to slot 1 on hart 1; six conclusive RTL trials; fail code 7. Empty code passes. A failure with the same code on hart 0 is rejected. Four direct server controls and a final SMP launch also passed their expected predicates. Complete C2/2 parsed.
+- Each captured reducer used one RTL hash. Relative to the original, only the generator Git comment changed during source capture. All other Verilog bytes were checked equal.
+- Targeted reducer and portable replay modules: 37 passed. Live input capture module: 9 passed. Native jobs used nice and private source, core and sbt locks.
+- Final rebased fast set: 2527 passed, 1 skipped, 1 unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources. Release hygiene passed. An earlier run also found generated-guide drift and formal evidence paths; both were fixed on main before the final run.
+- Rebased targeted reducer, replay, live capture and hygiene modules: 66 passed. Fresh rebased native SMP failure confirmed fail code 7 on hart 1 with complete C2/2.
+- MCP discovery reports no skipped module. Full Python suite, BOOM simulation and GitHub CI were NOT RUN.
+
+## Issues
+
+Refs: #152
+
+This supports timed UART RX entries and named private per-hart code. Arbitrary device transactions, overlapping shared code and project-specific environment constraints need separate forms. Minimality is stage-local, not a global minimum. No core defect or ISA qualification is claimed.
+
+Roadmap notes: Add native transaction and multi-hart reduction evidence. Keep general device-model stimulus and shared-code reduction open.
+
+## PR 1159
+
+[#1159](https://github.com/riscPrint/risc-v-workstation/pull/1159). Merged: 2026-11-13T14:15:03Z.
+
+Title: test(probes): name a misplaced branch probe in native rtl
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add a native negative test for probe placement. It copies the VexRiscv adapter, moves only the copy's branch probe to decode, runs RTL, and calls `rvw probes check --validate` with its C2 trace. The command must return 1 and name branch/misplaced_decode_branch.
+
+## Testing
+- Native repository test: 1 passed in 112.68 seconds. It uses a private core copy, private vex-csims/sbt-csims locks, nice 15 and two make jobs.
+- The deliberately wrong probe is confined to the temporary adapter. Core sources and the normal adapter stay unchanged.
+- The process-group runner owns timeout cleanup for the full child tree.
+- Fast set: 2521 passed, 1 skipped, 8332 deselected.
+- No BOOM job, full Python suite, hardware test or CI wait.
+
+## Issues
+Refs: #109
+A missing VEXRISCV environment causes a skip. It does not establish native validation.
+
+Roadmap notes: probe validation now has a native deliberately misplaced binding test that checks the exact diagnostic name. The owner updates roadmap files.
+
+Release hygiene: 40 passed. CLI import and MCP listing passed after rebase without skipped-tool warnings.
+
+## PR 1160
+
+[#1160](https://github.com/riscPrint/risc-v-workstation/pull/1160). Merged: 2026-11-13T14:15:50Z.
+
+Title: test(suite): repair merged native and integration fixtures
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Repair integration fixtures found by the complete non-BOOM suite run. Keep the C7 envelope, source-byte, native cache, watchdog, activation and negative-control checks. Add the missing SpinalChecks dependency to the composed UVM SoC build. Put integration screenshots and runtime caches in private output directories.
+
+Promote 269 measured pure unit tests in 36 modules through package-owned fast markers. No feature was added. No real check was deleted.
+
+## Testing
+
+- Slow Python directories completed, with a test-ID delta audit. Fixed failures passed targeted reruns.
+- Random fast orders 333 and 444: each 2522 passed, 1 expected command-reference skip. Final pre-push seed 555: 2522 passed, 1 skipped.
+- Scala: Waves 18, Trace 26, DB 86, Checks 145, Konata 6 plus 7 input tests, Probes 5, Blocks 6, generic RiscvSim 180 passed. SpinalSoc and its DB subproject compiled with no test cases.
+- Native emitted Scala SVA: 22 passed after preserving newlines after source comments. Native lint fixtures: 17 passed. Native cache identity: 1 passed. Configured cosim/profile checks: 39 passed.
+- Rust workspace: 29 passed. Typed-wave checker: 8 passed.
+- VS Code: typecheck, build and 36 unit tests passed. Debug browser and rebuilt extension integration passed. Tracked screenshots stayed unchanged after the rebuilt integration run.
+- Composed SoC: regenerated RTL after the dependency fix; both native scenario seeds passed. Connected SoC: both seeds passed.
+- The scan spans main revisions c29ad597 through f104f10a plus these repairs. A full rerun of the rebased main was NOT RUN. No BOOM build, BOOM simulation or private core rebuild was run. CI was not awaited.
+
+## Issues
+
+Refs: #41
+
+Remaining native failures are recorded in the full-suite log: Accellera UVM random-data conformance, installed slang without SVA support, and the installed Spike PLIC threshold/claim disagreement. Missing optional inputs and native tools skipped with reasons. The complete status report follows in a separate documentation PR.
+
+Roadmap notes: Record this cross-area suite scan and its remaining native failures. Keep whole-core qualification separate. No ROADMAP.md or TODO.md edit is included.
+
+## PR 1161
+
+[#1161](https://github.com/riscPrint/risc-v-workstation/pull/1161). Merged: 2026-11-13T14:17:17Z.
+
+Title: docs(regress): publish measured act4 integration results
+
+Audit evidence label: no code.
+
+## Summary
+
+Add the common ACT4 suite README and measured integration-guide rows. Document project-owned ISA/privilege selection, Sail signature generation, manifest validation, C1 execution, strict Spike comparison, native counts, open findings and functional coverage holes.
+
+Keep reduced-boot instruction results separate from standard Sm compatibility. State that all 270 supervisor cases fail before the test body. Label the 37 representative first-difference comparisons explicitly; the other 233 reference checks are NOT RUN. Record per-group mismatch/not-run counts. Correct the inherited supervisor header comment and record its old/new hashes as a comment-only post-run change. No macro definition or native result changed.
+
+## Testing
+
+- Targeted ACT4, supervisor, BOOM configuration and release hygiene: 57 passed.
+- Checked all local links in the new guide and integration guide.
+- Verified 37 representative mismatches plus 233 NOT RUN reference checks equal 270 supervisor cases.
+- Checked the documented plan/list CLI syntax.
+- Fast set: 2548 passed, 1 skipped, 8333 deselected.
+- NOT RUN: new native simulations, BOOM builds or runs, full Python suite, GitHub CI. All measured numbers refer to the preceding native evidence.
+
+## Issues
+
+Refs: #48
+
+The assigned ACT4 implementation, native measurements, coverage, BOOM configuration and measured guides are delivered. Six VexRiscv MEPC cases remain core findings. Standard boot compatibility remains unresolved. Privileged ACT4 bodies remain unqualified. BOOM execution remains NOT RUN. riscv-dv, TestRIG and the additional campaigns in #48 belong to other work.
+
+Roadmap notes: ACT4 is available as a generic project-owned suite with native VexRiscv/VexiiRiscv observations, strict reference checks and functional coverage hole lists. The measured supervisor campaign exposes a common bootstrap blocker. BOOM has config/unit-test evidence only. No certification or whole-core proof is claimed.
+
+## PR 1162
+
+[#1162](https://github.com/riscPrint/risc-v-workstation/pull/1162). Merged: 2026-11-13T14:17:33Z.
+
+Title: feat(sim): share tlm memory across systemc initiators
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+
+Allow multiple SystemC initiators to bind to the generic blocking TLM memory target. Use a multi-passthrough socket and count successful reads and writes for each binding. Keep direct transport available.
+
+Add a native two-initiator example. It checks shared-address write order, shared reads, independent byte locations, per-binding counts and consumed delay. Document call-time effects and SystemC kernel ordering in the simulation contract.
+
+## Testing
+
+- Native SystemC 3.0.2 two-initiator example and existing Verilator 5.049 RTL bridge: 2 passed in 13.21 seconds. Real C++ compilation, real SystemC kernel and Verilator --sc build. Native jobs used nice -n 10.
+- Release hygiene: 40 passed.
+- MCP discovery: no skipped module.
+- Fast suite: 2555 passed, 1 skipped, 1 unrelated failure: test_docs_site.py::test_docs_staging_does_not_write_sources.
+- Full Python suite, whole-core TLM integration and GitHub CI were NOT RUN.
+
+## Issues
+
+Refs: #187
+
+This is blocking, loosely timed memory in one SystemC kernel. Effects occur at call time. Annotated completion time does not reorder effects. Arbitration, fairness, host-thread synchronization, DMI, nonblocking transport, interrupts and checkpoint binding remain open. This does not qualify whole-core or device timing.
+
+Roadmap notes: Record native SystemC multi-initiator memory and explicit kernel-order semantics. Keep complete virtual-platform, nonblocking and cycle-accurate bridges open.
