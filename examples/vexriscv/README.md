@@ -18,14 +18,20 @@ cd "$HOME/projects/VexRiscv"
 unset VEXRISCV RVW_PROJECT RVW_CORE
 export RVW_PYTHON="$RVW_HOME/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
-export RISCV_TESTS_SOURCE=/path/to/riscv-tests
+export RISCV_TESTS_SOURCE="$HOME/projects/riscv-tests"
+git clone --recursive https://github.com/riscv-software-src/riscv-tests "$RISCV_TESTS_SOURCE"
+git -C "$RISCV_TESTS_SOURCE" checkout --detach 3df703cd52d5f0d8224e3c50bf03c6cb70efff98
+git -C "$RISCV_TESTS_SOURCE" submodule update --init --recursive
+# Fetch dependencies online before the launcher uses offline sbt.
+(cd rvw && "$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 sbt -batch update db/update)
 rvw/build-tests.sh
 git add rvw.toml rvw
 git commit -m 'Add workstation project files'
 ```
 
-Use JDK 21, sbt, Verilator, a C++ compiler and make. The build uses cached sbt
-1.10.7, Scala 2.13.14 and SpinalHDL 1.15.0. It runs offline. The RISC-V compiler
+Use JDK 21, sbt, Verilator, a C++ compiler and make. The build uses sbt
+1.10.7, Scala 2.13.14 and SpinalHDL 1.15.0. The setup command fetches their
+dependencies online. The adapter then runs sbt offline. The RISC-V compiler
 default is `riscv64-unknown-elf-` on `PATH`.
 Set `RISCV_PREFIX` to use another prefix. Build outputs are ignored by Git.
 The adapter holds the `vex` lock through JVM exit. Scala builds also hold the
@@ -35,7 +41,7 @@ The adapter holds the `vex` lock through JVM exit. Scala builds also hold the
 
 ```sh
 rvw regress list
-rvw regress run --suite isa --filter '^rv32ui-p-' --rvfi-trace \
+rvw regress run --suite isa --filter '^rv32ui-p-' --jobs 1 --rvfi-trace \
   --out rvw/out/rv32ui --no-index --json
 rvw regress gate --tier quick --base-rev baf7dc82f855eddaf5b0a20a6802c526f127e38a \
   --cand-rev HEAD --json
@@ -54,7 +60,10 @@ ISA tests and two local programs. `rv32ui-p-ma_data` requires misaligned access
 support and is excluded. Gate acceptance covers only the selected tests.
 Commit the workstation changes before the gate. A dirty harness cannot earn
 acceptance. The gate selects core revisions through `VEXRISCV`; leave it unset
-for normal use. The adapter defaults to its own core checkout.
+for normal use. The adapter and project default to their own core checkout. `VEXRISCV` can
+select an external checkout. Doctor checks all declared suites. Unbuilt
+optional `dv-baseline` and `act4` suites remain not ready; an ISA subset does
+not qualify them.
 
 ## Design and limits
 

@@ -212,10 +212,9 @@ Connect C2 RVFI fields to actual retired effects. Preserve trap CSR values.
 Reject unsupported flags. Do not fabricate an RVFI monitor or Konata support.
 
 Keep Scala 2.13.14 and SpinalHDL 1.15.0 aligned with the workstation.
-The current RiscvSim `ProjectRef` loads the bundled BOOM build.
-For an independent core, compile `RiscvSim/src/main/scala` as unmanaged sources.
-Use [the VexRiscv build](../examples/vexriscv/rvw/build.sbt) for that workaround.
-It does not require a BOOM checkout. SpinalDB can use its `ProjectRef`.
+The generic RiscvSim `ProjectRef` does not load a BOOM checkout.
+Use [the VexRiscv build](../examples/vexriscv/rvw/build.sbt) as the library
+integration example. SpinalDB also supports `ProjectRef`.
 
 For VexRiscv, run:
 
