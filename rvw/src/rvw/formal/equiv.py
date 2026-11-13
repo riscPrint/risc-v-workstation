@@ -15,6 +15,7 @@ def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
     p.add_argument('--sampled-events', action='store_true', help='conditional global-sample clock-event comparison')
     p.add_argument('--stable-at-edge', action='append', default=[], metavar='INPUT', help='input stable across sampled root rising edges')
+    p.add_argument('--state-encoding', help='JSON finite register encoding relations; checked without assumptions')
     p.add_argument('--blackbox-contract', help='explicit trusted behavioral models; result remains conditional')
     p.add_argument('--gold', nargs='+', help='reference RTL files')
     p.add_argument('--gate', nargs='+', help='changed RTL files')
@@ -123,7 +124,7 @@ def output_contract(ports, latency, entries, renames):
     return delays, aliases
 
 
-def harness(args, ports, *, delay=0, delays=None, aliases=None):
+def harness(args, ports, *, delay=0, delays=None, aliases=None, encoding=None):
     delays = delays or {}
     aliases = aliases or {}
     decl, connect, assigns = [], [], []
@@ -144,6 +145,10 @@ def harness(args, ports, *, delay=0, delays=None, aliases=None):
             connect.append(f'.{aliases.get(p.name, p.name)}(rvw_raw_{p.name})')
         else:
             connect.append(f'.{p.name}({p.name})')
+    if encoding:
+        from .state_encoding import harness as encoding_harness
+        extra_decl, extra_connect, extra_assign = encoding_harness(*encoding)
+        decl.extend(extra_decl); connect.extend(extra_connect); assigns.extend(extra_assign)
     limit = (args.reset_cycles if args.reset else 0) + args.settle + getattr(args, "_max_latency", args.latency)
     if limit:
         width = max(1, limit.bit_length())
@@ -243,7 +248,14 @@ def _run(args):
             if not any(revisions) and Path(source).resolve().is_relative_to(out):
                 raise ValueError('RTL inputs must be outside --out')
         common.clear_outputs(out, 'gold', 'gate', 'eqy', 'equiv.eqy', 'eqy.log')
-        bodies, portsets = [], []
+        encoding_rows = []
+        if getattr(args, 'state_encoding', None):
+            from . import state_encoding
+            encoding_rows, result['encoding_contract'] = state_encoding.load(args.state_encoding, out)
+            result['encoding_verdict'] = 'not_proved'
+            if args.dsec:
+                raise ValueError('state-encoding excludes advisory dsec')
+        bodies, portsets, proof_models = [], [], []
         delays, aliases = {}, {}
         for side in ('gold', 'gate'):
             directory = out / side
@@ -262,8 +274,11 @@ def _run(args):
             rc, _ = common.run(['yosys', '-Q', '-s', 'flat.ys'], directory, directory / 'flat.log', budget())
             if rc:
                 raise ValueError('flattening failed')
-            body = json.loads((directory / 'flat.json').read_text())['modules'][args.top]
+            flat = json.loads((directory / 'flat.json').read_text())
+            body = flat['modules'][args.top]
             bodies.append(state(body, include_latches=sampled))
+            proof_models.append(state_encoding.expose(encoding_rows, side, flat, bodies[-1], args.top, directory, budget, snapshot)
+                                if encoding_rows else directory/'module_ports.il')
             for p in ports:
                 common.check_ident('port', p.name)
                 if p.name.startswith('rvw_'):
@@ -289,16 +304,22 @@ def _run(args):
             portsets.append(ports)
             side_delays = {name: max(0, lag if side == 'gold' else -lag) for name, lag in delays.items()}
             (directory / 'wrapper.v').write_text(harness(args, ports, delays=side_delays,
-                                                       aliases=aliases if side == 'gate' else {}))
+                                                       aliases=aliases if side == 'gate' else {},
+                                                       encoding=(encoding_rows, side, bodies[-1]) if encoding_rows else None))
             snapshot.seal(directory / 'wrapper.v')
         if portsets[0] != portsets[1]:
             raise ValueError('design port interfaces differ')
         result['state_mapping'], result['unmatched'] = mapping(*bodies, args.pair)
+        if encoding_rows:
+            if any(pair.split('=')[index] == row[side] for pair in args.pair
+                   for row in encoding_rows for index, side in enumerate(('gold','gate'))):
+                raise ValueError('pair and state-encoding must not name the same register')
+            state_encoding.audit(encoding_rows, bodies, result['state_mapping'], result['unmatched'])
         # Match only boundary ports in the proof. State mappings are audited coverage,
         # never assumed equal. Thus a FAIL is an output counterexample, not a cutpoint failure.
         lines = []
-        for side in ('gold', 'gate'):
-            lines += [f'[{side}]', f'read_rtlil {out / side / "module_ports.il"}',
+        for side, model in zip(('gold', 'gate'), proof_models):
+            lines += [f'[{side}]', f'read_rtlil {model}',
                       f'read_verilog {"-formal " if sampled else ""}{out / side / "wrapper.v"}', 'prep -top rvw_equiv -flatten',
                       *(['clk2fflogic'] if sampled else []),
                       'setundef -undriven -anyseq']
@@ -306,6 +327,8 @@ def _run(args):
         for p in portsets[0]:
             if p.name != args.reset:
                 lines.append(f'gold-match {p.name}')
+        if encoding_rows:
+            lines += [f'gold-match {name}' for name in state_encoding.observations(encoding_rows)]
         lines += ['gold-nomatch *', '[collect rvw_equiv]', 'join *',
                   '[strategy scorr]', 'use sby', 'engine abc scorr; pdr', 'xprop off',
                   f'timeout {max(1, int(budget()))}']
@@ -332,6 +355,12 @@ def _run(args):
         proof_complete = rc == 0 and (out / 'eqy/PASS').is_file()
         result['status'] = verdict(0 if proof_complete else (rc or 1), rc == 124, result['partitions'],
                                    result['unmatched'] if args.unmatched_state == 'refuse' else {}, result['traces'])
+        if encoding_rows:
+            if result['status'] == 'equivalent':
+                result['encoding_verdict'] = 'proved'
+            elif result['status'] == 'not_equivalent':
+                result['status'] = 'inconclusive'
+                result['reason'] = 'output or encoding obligation failed; rerun without the mapping to classify output differences'
         result['solver_exit'] = rc
     except SystemExit as exc:
         result['reason'] = f'input or elaboration refused (exit {exc.code}); see logs'
