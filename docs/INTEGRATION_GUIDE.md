@@ -212,7 +212,8 @@ source pins, per-extension records and minimal reproductions.
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 / 270 | 0 / 270 | 0 | 270 |
 | NaxRiscv RV32IMA instruction profile | 69 / 69 | 69 / 0 | 69 | 0 |
 | PicoRV32 mapped RV32IM instruction profile | 51 / 51 | 50 / 1 | 50 | 1 |
-| Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+| BOOM small instructions | 378 / 378 | 376 / 2 | 0 | 2 |
+| BOOM small M/S/U, Sv39 | 232 / 232 | 196 / 36 | 0 | 36 |
 
 The instruction profiles use project bootstraps. They do not establish
 standard Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
@@ -228,7 +229,9 @@ NaxRiscv has 69 strict instruction-case matches. Its standard Sm and
 supervisor ACT4 remain NOT RUN. PicoRV32 has 50 strict matches under the
 shared platform's checked full-word load convention. Its FENCE rd=x1
 state difference remains failed. Neither result grants certification.
-The BOOM profile has configuration and unit tests only.
+BOOM ran all 610 selected programs. Ten of its 38 execution failures are RVFI
+monitor errors. All strict comparisons stop at unspecified reset FCSR. See
+the [profile and findings](../rvw/configs/act4/boom/README.md).
 
 | ACT4 plus riscv-tests coverage | Observed traces | Qualified traces | Observed default-domain holes |
 | --- | ---: | ---: | ---: |
@@ -810,7 +813,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [sec](../rvw/src/rvw/sec/README.md) | Ran on RTL fixture | [#696](https://github.com/riscPrint/risc-v-workstation/pull/696) checked planted digital leaks. No whole-core, physical leakage or full dynamic provenance result follows. |
 | [common](../rvw/src/rvw/common/README.md) | Local process/fixture checks | Process cancellation and resource limits do not establish DUT acceptance. |
 | [fault](../rvw/src/rvw/fault/README.md) | Ran on RTL | A bounded VexRiscv campaign and BOOM small register flips confirm native injection. Memories and FMEDA remain open. [#689](https://github.com/riscPrint/risc-v-workstation/pull/689), [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101). |
-| [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | BOOM small has measured stall samples and conditional branch comparisons. Prediction tags and full pipeline attribution remain open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). |
+| [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | BOOM small has four predictor comparisons and two trap-free OoO/RTL IPC pairs. Top-down refuses all four captures because five slot counters are absent. Full pipeline attribution remains open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). |
 | [ooo](../rvw/src/rvw/ooo/README.md) | Native parity and bounded RTL correlation | NaxRiscv has 30 Spike-matched runs, but 9/24 final structure deltas remain wrong. Dynamic wrong-path timing and native gem5 comparison remain unqualified. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
 
 ## Shared library boundaries
@@ -822,7 +825,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [SpinalWaves](../SpinalWaves/README.md) | Native checker evidence | Interactive Surfer rendering is separate; use the vendored limits. |
 | [SpinalTrace](../SpinalTrace/README.md) | Bounded VCD/Verilator validation | FST and other simulators remain unqualified. Source paths need the original sources. |
 | [SpinalBlocks](../SpinalBlocks/README.md) | Extraction/diagram tests | Native HDL diagram export in #688 did not run ELK/SVG rendering or VS Code. |
-| [SpinalChecks](../SpinalChecks/README.md) | Native core activation and bounded OoO fixture evidence | All 82 bound VexRiscv/VexiiRiscv checks have measured triggers. Wider VexiiRiscv PC/divider findings stay open. Selected enum induction samples do not qualify a core. |
+| [SpinalChecks](../SpinalChecks/README.md) | Native core activation and bounded OoO fixture evidence | All 82 bound VexRiscv/VexiiRiscv checks have measured triggers. BOOM quick-tier simulation inserts 519 checks and fires ten distinct IDs. Wider VexiiRiscv PC/divider findings stay open. Selected enum induction samples do not qualify a core. |
 | [SpinalKonata](../SpinalKonata/README.md) | Captured trace analysis | Standalone compiled-model capture is incomplete; retain its C1 error and null cache key. |
 | [RiscvSim](../RiscvSim/README.md) | Ran on RTL, selected adapters | Fault, DPI and SystemC checks have different scopes. BOOM small has bounded fault and DPI evidence. No all-option qualification follows. See the BOOM table below. |
 
@@ -1386,21 +1389,23 @@ data, symbolic constraints, randomized schedules and PSS parsing remain open.
 ## BOOM adapter results
 
 The [BOOM inventory](../RiscvSim/boom/README.md) separates native results from
-source bindings. The 2026-11-13 continuation used the private core clone,
-small only, the BOOM lock and nice priority 15. It used two native builds.
-No regression suite, wider-preset campaign or BOOM formal job ran.
-These rows do not qualify every workstation feature on BOOM.
+source bindings. The expanded 2026-11-13 runs use private revision `0cb0b69`,
+`small`, the BOOM lock and `nice -n 10`. Core RTL is unchanged. Earlier
+bounded fault and DPI captures remain separate. No wider preset or formal
+campaign ran. These rows do not qualify every workstation feature on BOOM.
 
 | Interface | Recorded BOOM evidence | Remaining gap |
 |---|---|---|
-| C1 and C2 | Bounded ISA and trap-free runs pass. Current Spike checks match add, sub, beq and fadd captures. | Stored legacy add trace still has an order gap; no broad campaign. |
+| C1 and C2 | Baseline quick tier: 173 pass, one known failure; 173 default-policy Spike matches. Expanded ACT4 and generated counts follow below. | New strict checks stop at reset state. The legacy add trace has an order gap. |
+| Generic ACT4 | 610 built/run; 572 C1 pass, 38 execution failures including ten RVFI errors. | Zero complete strict Spike matches; retained [findings](../examples/boom/FINDINGS.md). |
+| Generated RV64 families | 588 built/run; 573 C1 pass and 15 PMP failures. Sv39: 145/145 pass with ASID 0 and fault-based A/D. | No nonzero-ASID isolation, Svadu, PLIC claim/complete or multiple-hart qualification. Zero complete strict Spike matches. |
 | C2/2 FP and CSR | Small exports raw FP writes, fflags/fcsr and CSR 0x340. Fadd has 40 FP writes. Reset alignment is explicit. | Other CSRs, wider per-slot capture and fault-access records. |
-| Probes and csim | Retained enqueue predictions align with C2. Fetch, execution, redirect, occupancy and lookup bindings exist. Native SFB reports 7 predicated-off commits. | One endpoint sample exceeds C1/C2. TLB fills and miss-path qualification remain open. |
-| Perf and OoO | Measured stall causes and unknown intervals are separate. Trap-free timing/model IPC ratios are 2.6875 and 1.9625. | Two-program calibration is inconclusive. No predictor fidelity or full stall-coverage claim. |
+| Probes and csim | Four native program passes and four predictor reports. Direction disagreements: 6, 13, 62 and 24. Earlier SFB records seven predicated-off commits. | The predictor is approximate. Endpoint alignment, TLB fills and miss paths remain unqualified. |
+| Perf and OoO | Fresh model/RTL IPC ratios: 2.77083 for add-timing and 2.11875 for SFB. Two trap-bearing programs are refused by the model. | Top-down refuses four captures with five missing slot counters. Two-program timing correlation does not establish fidelity. |
 | Fault injection | Two register flips have read-back confirmation; full-state comparison detects all affected fields. | Memory faults, other injection kinds and broad campaigns. |
 | DPI lockstep | Clean fadd matches with a complete trace and FP/CSR comparison. An injected FFLAGS bit is caught at cycle 228. Both reuse Verilator. | Online reference checkpoint and wider configurations. |
 | Checkpoint and devices | [Source gap list](../RiscvSim/boom/CHECKPOINT_GAPS.md). | No BOOM restore or device-plugin binding; native jobs NOT RUN. |
-| Stream checks | [Source review](../SpinalChecks/boom/STREAM_REVIEW.md) maps the internal source-offset A stage without a new waiver. | The original historical ID inventory remains incomplete. No new native check pass. |
+| Generated checks | Quick tier: 174 programs, 519 inserted checks, 101 existing waived/disabled, ten distinct firing IDs, zero clean instrumented passes. All ten IDs have wave windows. | None of the 24 named historical IDs fires now. The original mapping remains incomplete. Core interface, simulation-agent and cancellation-binding findings remain open. Refs: #5. |
 
 The DPI path samples on a simulation thread because the mailbox can yield.
 The ordinary callback path remains separate. Its post-fix beq run retains
@@ -1408,7 +1413,7 @@ The ordinary callback path remains separate. Its post-fix beq run retains
 mismatch can occur before the native exception log. An incomplete trace
 never earns a complete match.
 
-See the [probe/timing report](../examples/boom/ooo/PROBE_OBSERVATION.md) and
+See the earlier [probe/timing report](../examples/boom/ooo/PROBE_OBSERVATION.md) and
 [fault/DPI evidence](../RiscvSim/boom/NATIVE_FAULT_DPI.json) for counts, hashes
 and limits. The checkpoint and plugin gaps are documented, not implemented.
 ## Generated check activation and designer planning
