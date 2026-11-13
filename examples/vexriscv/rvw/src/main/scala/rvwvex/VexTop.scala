@@ -57,6 +57,7 @@ class VexTop extends VexRiscv(VexTop.configuration()) {
 class TrapProbePlugin extends Plugin[VexRiscv] {
   var valid: Bool = null
   var cause, tval, scratch: Bits = null
+  var snapshots = Map.empty[Int, Bits]
 
   override def build(pipeline: VexRiscv): Unit = {
     val csr = pipeline.config.get(classOf[CsrPlugin])
@@ -73,6 +74,13 @@ class TrapProbePlugin extends Plugin[VexRiscv] {
       value
     }
     scratch = out(readCsr(0x340, "snapshot_mscratch"))
+    val addresses = if (sys.env.get("RVW_VEX_CSR_FULL").contains("1"))
+      csr.csrMapping.mapping.toSeq.collect {
+        case (address, fields) if ((address >> 8) & 3) == 3 &&
+          fields.exists(_.isInstanceOf[CsrRead]) => address
+      }.sorted else Seq(0x340)
+    snapshots = addresses.map(address => address -> (if (address == 0x340) scratch
+      else out(readCsr(address, s"snapshot_csr_$address")))).toMap
     cause = out(Bits(32 bits)).setName("trap_cause")
     tval = out(Bits(32 bits)).setName("trap_tval")
     cause := readCsr(0x342, "trap_mcause")

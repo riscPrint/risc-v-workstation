@@ -299,12 +299,12 @@ The RV32IM adapter captures actual `mscratch` storage for its single RVFI slot.
 The C2/2 header declares `capabilities: ["csr"]` and `csr_snapshot: ["0x340"]`.
 Each retirement carries that snapshot. This does not declare FP capture.
 The checker compares defined bits and reports any synchronization of unspecified
-reset bits. No other CSR snapshot is claimed. This example has no debug module,
+reset bits. The default capture selects only this CSR. This example has no debug module,
 so debug-entry comparison is not available.
 
 `rvw/tests/test_csr_capture.py` checks two consecutive CSR values in native RTL.
-The wiring compiles. Native timing validation is still required before this
-capture can support an RTL CSR comparison claim.
+Native timing validation passed on 2026-11-13. The capture reads the single
+actual RVFI slot. It does not establish timing for a core with multiple slots.
 ## Reverse replay on the live bridge
 
 `rvw/checkpoint_port.py` implements the existing snapshot-port interface for
@@ -470,6 +470,7 @@ runs matched Spike completely. Total checked execution time divided by total
 baseline execution time was 5.22. This is measured adapter overhead
 for this loop. Other workers were active. It is not a stable host benchmark,
 a universal slowdown factor or a measurement of hardware speed.
+These timings precede the later post-edge CSR sampling change.
 
 ## Native interrupt synchronization
 
@@ -510,3 +511,36 @@ Both adjacent endpoints were checked. The older configuration passed the
 supervisor-CSR compatibility program. The newer configuration deliberately
 failed that old expectation. C1 records the selected adapter and source hashes.
 This is a known compatibility transition, not a new core bug or BOOM result.
+## Full machine CSR capture
+
+Set `RVW_VEX_CSR_FULL=1` to capture every readable machine CSR in this adapter's
+CSR mapping. The C2 header declares the exact address set. Each retirement
+contains every declared value. The probe reads actual mapped CSR fields and
+fills unmapped bits with zero, as the core's CSR read path does. It does not
+copy expected values from Spike. The default remains the validated `mscratch`
+capture. The setting is part of project inputs and replay.
+
+The set includes machine status, ISA, interrupt enable and pending state,
+trap vector, scratch, exception PC, cause, trap value, both RV32 halves of
+cycle and retirement counters, and the four machine identity registers.
+
+This is a capture capability. Full machine-CSR equivalence with Spike is not
+claimed. The core has unspecified reset storage for `mepc`, `mcause` and
+`mtval`, different identity and trap-vector reset values, and a cycle counter driven by RTL clocks.
+The current reference snapshot comparison checks exact values and will expose
+these differences. No broad mask or reference-state overwrite is added.
+
+Run the native timing and inventory test with the private core environment:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_csr_capture.py examples/vexriscv/rvw/tests/test_full_csr_capture.py -q
+```
+
+Native validation on 2026-11-13 passed the default and full-capture tests.
+The full test checked all 17 declared machine CSR addresses over 17 retirements.
+It checked consecutive `mscratch` writes of 7 and 9 without a read between them.
+It also checked `mtvec`, `mepc` and `mtval` write/read timing and the four actual
+identity values. For this no-trap program, every snapshot had `mcycle=cycle`
+and `minstret=order+1`. Both high counter halves were captured. Counter rollover
+and software counter writes were not exercised. The RVFI record is sampled at
+the firing edge; CSR storage is sampled after that edge settles.

@@ -17,7 +17,7 @@ object VexAdapter extends CoreAdapter {
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
-    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK").flatMap(
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL").flatMap(
       name => sys.env.get(name).map(name -> _))
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
@@ -76,7 +76,7 @@ object VexAdapter extends CoreAdapter {
         val cd = dut.clockDomain
         dut.lockstepDpi.foreach(_.initialize())
         val header = ujson.Obj.from(ctx.rvfiHeader.value.toSeq :+
-          ("csr_snapshot" -> ujson.Arr("0x340")))
+          ("csr_snapshot" -> ujson.Arr.from(dut.traps.snapshots.keys.toSeq.sorted.map(a => Hex(BigInt(a))))))
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(
           new File(job.out, "rvfi.jsonl"), header,
           observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
@@ -161,15 +161,20 @@ object VexAdapter extends CoreAdapter {
           val trap = if (dut.traps.valid.toBoolean)
             Some((dut.traps.cause.toBigInt, dut.traps.tval.toBigInt)) else None
           if (trap.nonEmpty) handler = true
-          val sample = if (dut.rvfi.valid.toBoolean) Some(
-            record(dut.rvfi, ctl.cycle, handler).copy(
-              csrState = Map(0x340 -> dut.traps.scratch.toBigInt))) else None
+          val sample = if (dut.rvfi.valid.toBoolean)
+            Some(record(dut.rvfi, ctl.cycle, handler)) else None
+          // RVFI describes the firing edge. CSR storage must include that edge's effects.
+          if (sample.nonEmpty) sleep(1)
+          val csrState = if (sample.nonEmpty)
+            dut.traps.snapshots.map { case (address, value) => address -> value.toBigInt }
+            else Map.empty[Int, BigInt]
           if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
           trap.foreach { case (cause, tval) =>
             traps += 1
             writer.foreach(_.trap(ctl.cycle, cause, tval, cause.testBit(31)))
           }
-          sample.foreach { sampled =>
+          sample.foreach { retirement =>
+            val sampled = retirement.copy(csrState = csrState)
             val r = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(sampled.order.toString)) {
               require(sampled.rd != 0, "fault target must write a GPR")
               sampled.copy(rdWdata = sampled.rdWdata ^ 1)
