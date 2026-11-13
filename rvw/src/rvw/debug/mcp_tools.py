@@ -15,6 +15,10 @@ def _tap(job, **arguments):
     return run_function(job, 'rvw.debug.api', 'tap_run', arguments)
 
 
+def _interop(job, **arguments):
+    return run_function(job, 'rvw.debug.api', 'interop_run', arguments)
+
+
 def _list():
     from . import api
     return {'checks': api.list_checks()}
@@ -32,6 +36,12 @@ def mcp_tools():
                  'BYPASS, DTMCS, DMI status, sticky busy and resets. Writes C3 results.',
                  schema({'port': {'type': 'integer'}, 'out': S, 'host': S, 'irlen': {'type': 'integer'},
                          'busy_probe': B}, ['port', 'out']), _tap, long=True),
+        ToolSpec('debug_interop', 'Run OpenOCD and GDB against a remote_bitbang target (or the reference model '
+                 'for a profile): load, register and memory writes, breakpoints, stepping, watchpoint and reset-halt, '
+                 'checked by effect. Records client versions. Writes C3.',
+                 schema({'out': S, 'elf': S, 'port': {'type': 'integer'}, 'profile': S,
+                         'reset_pc': {'type': 'integer'}, 'idcode': {'type': 'integer'}, 'openocd': S, 'gdb': S,
+                         'timeout': {'type': 'number'}}, ['out', 'elf']), _interop, long=True),
         ToolSpec('debug_checks', 'List the Debug Specification compliance checks and the rule each one tests.',
                  schema({}), _list, annotations={'readOnlyHint': True}),
     ]

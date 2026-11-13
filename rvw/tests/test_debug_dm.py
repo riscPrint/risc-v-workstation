@@ -339,3 +339,38 @@ def test_hart_model_basics():
     assert hart.x[5] == (1 << 64) - 3 and hart.x[6] == (1 << 64) - 2 and hart.pc == 0x1010 and hart.x[1] == 0x100c
     with pytest.raises(Trap):
         hart.read_csr(0x7b0)
+
+
+# --- OpenOCD/GDB interop (no native tools) --------------------------------------------------------
+def test_interop_assess_needs_effects():
+    from rvw.debug import interop
+    every = '\n'.join('RVW_CHECK:' + c for c in interop.CHECKS)
+    assert interop.assess('RVW_CONNECTED\n' + every + '\nRVW_COMPLETE', 0, False, expect_reset=False)['status'] == 'pass'
+    assert interop.assess('RVW_CONNECTED\nRVW_COMPLETE', 0, False, expect_reset=False)['status'] == 'fail'
+    assert interop.assess('RVW_CONNECTED\n' + every, 0, False, expect_reset=False)['status'] == 'inconclusive'
+    assert interop.assess('RVW_CONNECTED\n' + every + '\nRVW_COMPLETE', 0, False,
+                          expect_reset=True)['status'] == 'fail'
+    assert interop.assess(every + '\nRVW_COMPLETE', 0, False, expect_reset=False)['status'] == 'inconclusive'
+    assert interop.assess('RVW_CONNECTED\nRVW_FAILURE:breakpoint:pc', 0, False, expect_reset=False)['status'] == 'fail'
+
+
+def test_interop_c3_attributes_gdb_errors(tmp_path):
+    from rvw.debug import interop
+    summary = interop.assess('RVW_CONNECTED\nRVW_CHECK:load\nRVW_FAILURE:gdb:Cannot access memory', 0, False,
+                             expect_reset=False)
+    summary.update(openocd_version='x', target='model')
+    interop.write_c3(summary, tmp_path)
+    results = json.loads((tmp_path / 'results.json').read_text())
+    assert not validate_results(results)
+    by_id = {t['id']: t['status'] for t in results['tests']}
+    assert by_id['interop.load'] == 'pass' and by_id['interop.register_write'] == 'fail'
+    assert by_id['interop.watchpoint'] == 'error'
+    assert results['clients']['gdb'] is None
+
+
+def test_interop_config_and_entry_word(tmp_path):
+    from rvw.debug import interop
+    text = interop.openocd_config(1234, idcode=0xdeadbeef, log=tmp_path / 'log')
+    assert 'remote_bitbang port 1234' in text and 'gdb_port pipe' in text and '-expected-id 0xdeadbeef' in text
+    with pytest.raises(ValueError):
+        interop.first_word(__file__)

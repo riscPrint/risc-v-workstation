@@ -447,7 +447,7 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 
 ```text
 usage: rvw debug [-h] [--project PROJECT]
-    {openocd,ingress,etrace,suite,tap,serve} ...
+    {openocd,ingress,etrace,suite,tap,serve,interop} ...
 ```
 
 ### `rvw debug openocd`
@@ -494,6 +494,14 @@ usage: rvw debug serve [-h] [--profile PROFILE] [--host HOST] [--port PORT]
     [--dtm-latency DTM_LATENCY] [--idle IDLE] [--ticks-per-ms TICKS_PER_MS]
     [--port-file PORT_FILE] [--duration DURATION] [--log LOG] [--project
     PROJECT]
+```
+
+### `rvw debug interop`
+
+```text
+usage: rvw debug interop [-h] [--port PORT] [--profile PROFILE] --elf ELF
+    [--reset-pc RESET_PC] [--idcode IDCODE] [--openocd OPENOCD] [--gdb GDB]
+    --out OUT [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw doctor`
@@ -1965,6 +1973,14 @@ List the Debug Specification compliance checks and the rule each one tests.
 Arguments: none.
 
 Starts a background job: no.
+
+### `debug_interop`
+
+Run OpenOCD and GDB against a remote_bitbang target (or the reference model for a profile): load, register and memory writes, breakpoints, stepping, watchpoint and reset-halt, checked by effect. Records client versions. Writes C3.
+
+Arguments: `out` (required), `elf` (required), `port`, `profile`, `reset_pc`, `idcode`, `openocd`, `gdb`, `timeout`.
+
+Starts a background job: yes.
 
 ### `debug_suite`
 

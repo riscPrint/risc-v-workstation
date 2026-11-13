@@ -94,6 +94,38 @@ a `dmi_process` adapter bus. OpenOCD attaches with `adapter driver remote_bitban
 A model hart keeps running between JTAG accesses (`--ticks-per-ms`).
 `--port-file` records the port. `--duration` stops the server.
 
+## OpenOCD and GDB interoperability
+
+```sh
+rvw debug interop --profile rvw-debug.toml --elf interop.elf --out /tmp/interop
+rvw debug interop --port 9824 --elf interop.elf --reset-pc 0x1000 --out /tmp/interop
+```
+
+GDB starts OpenOCD through a pipe (`gdb_port pipe`). OpenOCD connects to the
+remote_bitbang target: a running simulation, or the reference model that
+`--profile` serves. A GDB Python script (`interop_gdb.py`) checks each operation
+by its effect (#161):
+
+| Check | Effect checked |
+|---|---|
+| `load` | the first word at `_start` equals the ELF file bytes |
+| `register_write`, `memory_write` | values read back after the caches are flushed |
+| `breakpoint`, `hardware_breakpoint` | the hart stops at `target`, and `counter` advanced by one loop iteration |
+| `stepi`, `stepi_jump` | pc advances by one instruction, the register effect is visible, and the jump goes to `loop` |
+| `watchpoint` | the hart stops after the store, and `counter` advanced by one |
+| `reset_halt` | with `--reset-pc` (or a profile with resethaltreq), pc after `monitor reset halt` |
+
+The ELF must define `_start`, `loop`, `target` and a 32-bit `counter`
+(`rvw/tests/fixtures/debug/interop.S`). C3 results (`debug-interop`) record the
+GDB and OpenOCD versions in `clients`. A connection without these effects is not
+a pass. A GDB error belongs to the first check it did not reach. Unreached checks
+are inconclusive.
+
+Measured: OpenOCD 0.12.0+dev-00519 with GDB 18.1 passes every check against the
+reference model. Against Spike, hardware breakpoints and watchpoints fail:
+Spike resets each trigger to `tdata1.type` 15, and this OpenOCD skips type-15
+triggers ("Couldn't find an available hardware trigger"). The other checks pass.
+
 ## Spike findings
 
 The campaign ran against native Spike 1.1.1-dev (source revision checked:

@@ -57,6 +57,18 @@ def register(subparsers):
     serve.add_argument('--log', type=Path)
     serve.set_defaults(func=_serve)
 
+    interop = sub.add_parser('interop', help='OpenOCD and GDB functional campaign against a JTAG target (C3)')
+    interop.add_argument('--port', type=int, help='remote_bitbang port of a running target')
+    interop.add_argument('--profile', type=Path, help='serve the reference model for this profile instead')
+    interop.add_argument('--elf', type=Path, required=True, help='64-bit program with _start, loop, target, counter')
+    interop.add_argument('--reset-pc', type=lambda v: int(v, 0), help='expected pc after monitor reset halt')
+    interop.add_argument('--idcode', type=lambda v: int(v, 0))
+    interop.add_argument('--openocd', default='openocd')
+    interop.add_argument('--gdb')
+    interop.add_argument('--out', required=True, type=Path)
+    interop.add_argument('--timeout', type=float, default=120)
+    interop.set_defaults(func=_interop)
+
 
 def _profile(path):
     from . import profile
@@ -145,3 +157,16 @@ def _serve(args):
     serve.serve_forever(endpoint, duration=args.duration, port_file=args.port_file,
                         announce=lambda line: print(line, flush=True))
     return 0
+
+
+def _interop(args):
+    from . import api
+    try:
+        result = api.interop_run(args.out, elf=args.elf, port=args.port, profile=args.profile,
+                                 reset_pc=args.reset_pc, idcode=args.idcode, openocd=args.openocd,
+                                 gdb=args.gdb, timeout=args.timeout)
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(json.dumps({'status': 'inconclusive', 'reason': str(exc)}))
+        return 3
+    print(json.dumps(result, sort_keys=True))
+    return {'pass': 0, 'fail': 1}.get(result['status'], 3)
