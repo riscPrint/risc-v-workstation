@@ -17,6 +17,37 @@ TODO FV items 5 and 7. Generic for any Spinal design; BOOM is one user (`boom/`)
 | `boom/` | BOOM adapter: separate sbt build over the spinal-boom clone (`BoomChecks`), `waivers.txt` |
 | `../rvw/src/rvw/formal/` | `rvw formal bmc | from-sim | xprop` (Python CLI, uses yosys/sby) |
 
+## Scala property builder
+
+`spinalchecks.Sva` builds finite properties beside a Spinal design and emits
+ordinary SVA for the shared frontend. Signal references use final local RTL
+names. Render the properties after Spinal finishes generation.
+
+```scala
+import spinal.core._
+import spinalchecks.Sva
+class Dut extends Component {
+  val io = new Bundle { val req = in Bool(); val ack = out Bool() }
+  io.ack := RegNext(io.req) init(False)
+  val responseContract = Sva.signal(io.req).sequence.implies(
+    Sva.signal(io.ack).sequence, overlap = false)
+}
+val report = SpinalVerilog(new Dut)
+val statement = report.toplevel.responseContract.assertOn("response", Sva.signal("clk"))
+Sva.write(java.nio.file.Paths.get("response.sv"), Seq(statement))
+```
+
+The builder supports Boolean expressions, sampled-value functions, finite delay
+and repetition, sequence composition, implication, assert, assume and cover.
+`assertOn`, `assumeOn` and `coverOn` accept an optional reset expression.
+Use `Some(!Sva.signal("rst_n"))` for active-low reset. Invalid identifiers and
+unsupported bounds are errors. An unnamed Spinal signal cannot be rendered.
+
+The output is a module-local snippet. Include it in a project-owned module or
+checker wrapper before verification. The API does not inject assertions into
+RTL, infer bindings, or run a proof. The `rvw` temporal frontend remains the
+validation and lowering boundary. This is a small builder, not full SVA syntax.
+
 ## Checks
 
 A Spinal phase, inserted after naming and before the IO/hierarchy checks, walks every component of the

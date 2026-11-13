@@ -1356,6 +1356,14 @@ accepts the same options. Native viewer navigation still needs a captured Spinal
 design and the viewer tools. These additions do not establish that integration.
 
 
+### Properties beside Spinal RTL
+
+`spinalchecks.Sva` emits the same module-local SVA consumed by the temporal
+frontend. It supports finite sequence composition and sampled-value functions.
+Render after Spinal assigns RTL names, then include the snippet in the reviewed
+module or checker wrapper. See [the Scala API](../../../../SpinalChecks/README.md#scala-property-builder).
+The builder does not insert properties into a design or run verification.
+
 ## Finite temporal SVA and task regression
 
 Use open Yosys for RTL and immediate formal statements. The `temporal` frontend
