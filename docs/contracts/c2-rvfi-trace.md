@@ -203,7 +203,9 @@ be `{"applied": true, "site", "bit", "cycle"}` after the bit was forced, or
 mechanisms that fired. An adapter without `--fault` support must not claim it.
 `rvw fault run` writes `plan.json` (`rvw.fault-plan/1`), `outcomes.json`,
 `report.json` (`rvw.fault-report/1`) and C3 `results.json` with
-`suite: "fault-campaign"` (see `rvw/src/rvw/fault/README.md`).
+`suite: "fault-campaign"` (see `rvw/src/rvw/fault/README.md`). With `--watchdog`,
+only a C1 `timeout` at the cycle limit counts as `detected`. A harness or
+`wall_clock_timeout` timeout stays `timeout`.
 
 ### RiscvSim harness hooks
 

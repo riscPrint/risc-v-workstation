@@ -30,7 +30,7 @@ def register(subparsers):
     r.add_argument('--max-cycles', type=int)
     r.add_argument('--timeout', type=float, default=600)
     r.add_argument('--detections', type=Path, help='JSON: {"mechanisms": [...], "status": {"fail": "self-test"}}')
-    r.add_argument('--watchdog', action='store_true', help='count timeouts as detected (a declared watchdog)')
+    r.add_argument('--watchdog', action='store_true', help='count cycle-limit hangs as detected (a declared watchdog); wall-clock timeouts stay timeout')
     r.set_defaults(func=_run)
     rep = sub.add_parser('report', help='recompute the report of a finished campaign directory')
     rep.add_argument('directory', type=Path)
