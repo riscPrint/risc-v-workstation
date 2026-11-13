@@ -276,7 +276,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 
 | Tool or flow | Recorded scope | Evidence and remaining limit |
 |---|---|---|
-| init | Native SV scaffold compile; mapped runtime incomplete in the fresh dry run | [Verilog dry run](DRY_RUN_VERILOG_2026-11-13.md): a fresh PicoRV32 scaffold compiles after #847. The mapped path waits for sbt. A compiled stub does not run a program. |
+| init | Plain HDL identity capture; run mapping is project work | [Verilog second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass): native identity and good/bad smoke gates work with the project C++ adapter. The generated stub still refuses run until mapped. |
 | sim / arcilator | Ran on RTL | [#654](https://github.com/riscPrint/risc-v-workstation/pull/654): bounded VexRiscv C1/C2 comparison; BOOM, checkpoints and broader engine options NOT RUN. |
 | regress privilege extensions | Spike only | [#552](https://github.com/riscPrint/risc-v-workstation/pull/552): 81 programs; RTL and independent nested-pointer model remain open. |
 | cosim vector | Spike only | [#608](https://github.com/riscPrint/risc-v-workstation/pull/608): 1,333 instructions, replay match; no vector RTL. |
@@ -299,20 +299,37 @@ Spike-only scope or qualify interrupts, extended CSR capture or a second core.
 
 ## Fresh Verilog project results
 
-The [2026-11-13 dry run](DRY_RUN_VERILOG_2026-11-13.md) records commands, fixes
+The [2026-11-13 second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass) records commands, fixes
 and limits for an external PicoRV32 repository. These rows do not qualify
 every non-Spinal core.
 
 | Flow | Status | Recorded scope and limit |
 |---|---|---|
-| Pure C++ C1/C2 and regression | Native completions; C1 inconclusive | 46 program completions pass. The temporary project adapter lacks complete native identity capture. No C4 acceptance. |
-| Scalar cosim | Native comparison | 40 traces match; six byte/halfword cases differ. No masks relaxed. |
-| Yosys/slang query and blocks | Native extraction and export | Both frontends run. SpinalBlocks JSON exports. Rendering NOT RUN. Include-bearing slang sources retain directory capture limits. |
-| Automatic UVM/VIP bench generation from plain ports | unsupported | No supported typed bus metadata. Supply a project bench with explicit protocol pin bindings. CLI exits 2; MCP retains unsupported. |
-| Formal | Bounded observations | Three bus properties pass at depth 8; retirement cover at depth 20; add check times out. No ISA proof. |
-| Fault injection through the temporary native adapter | unsupported | Sites and plans work. The adapter refuses --fault; zero injections. A project injection binding is required. |
-| Security IFT | Native potential-flow observation | Eight samples identify declared memory-data influence on a bus-data sink. X/Z values stay tainted. This is not a security specification or whole-core proof. |
-| Architecture calibration | NOT RUN | Project model supplied; gem5.opt absent. Component trace studies run separately and remain hypothetical. |
+| Pure C++ C1/C2 and regression | 46 passes, zero inconclusive C1 results in the final full regression. | PR #911 supplies plain HDL identity capture. A committed smoke gate accepts the good revision and rejects a planted instruction-response fault. The generated run stub still needs project bus mapping. |
+| Scalar cosim | 46 native matches | PR #922 adds the declared full-word read convention. All 46 traces match Spike. Raw read address/strobes, accessed data, write strobes and destination values are checked. |
+| Yosys/slang query and blocks | First-pass extraction and export | Both frontends ran. SpinalBlocks JSON exported. Rendering was not run. Include-bearing slang sources retain directory capture limits. |
+| Declared plain HDL checks, UVM and VIP | Bound checks and generated skeletons | PR #927 accepts a project port map without Spinal types. Native ready/valid checks observe 3 stalls and 3 transfers. pyuvm stimulus and expected results remain project work. Other declared protocols and SV UVM remain outside this path. |
+| Formal ISA kit | Overall inconclusive | Existing main reports add and cover bounded at depth 8 with the core RVFI wrapper. Machine-state bindings and adapter conformance remain open. No unbounded ISA proof. |
+| Hand-written SVA | Three engine passes, all inconclusive | At depth 8. The rerun does not certify input closure, attribution or non-vacuity. |
+| Fault injection through the temporary native adapter | First-pass unsupported | The adapter still refuses --fault. A project injection binding is required. |
+| Security IFT | First-pass potential-flow observation | Not rerun in the second pass. The first run is not a security specification or whole-core proof. |
+| Architecture without gem5 | Native ELF build and Python trace model | PR #933 permits compiler-only build. The OoO model consumes 15 real retirements. Its configuration is hypothetical. gem5 run/calibrate still need the supported binary. |
+| HDL doctor | JVM probes not_applicable | PR #942 uses `[project] hdl = "sv"`. The final smoke check reports build/run, C2 mapping, wave and coverage ready. Only the workstation checkout gate remains inconclusive for the pre-existing untracked `out/`. Native version probes do not qualify a tool combination. |
+
+For SV projects, keep `rvw/hdl.json` as the source of build arguments. Map the
+native harness before running programs. Copy the saved build identity claims
+into C1. Rebuild when the current identity differs. Review input declarations
+when you add external dependencies.
+
+Declare protocol meaning in a `rvw.hdl-ports/1` project file. Use `--port-map`
+with `rvw vip buses`, `rvw vip bench`, or `rvw uvm new`. A checks generation
+manifest can supply `database` and `port_map` in its `buses` entry. See the
+[declared channel contract](contracts/vip.md#declared-plain-hdl-channels).
+A port map does not define memory response behavior.
+
+Use `memory_read_convention: "full_word"` only after reviewing the capture RTL.
+The initial convention supports nontrapping aligned scalar loads outside MMIO.
+It does not relax store strobes or destination register comparisons.
 
 ## Other tool boundaries
 
