@@ -125,3 +125,13 @@ A custom build without native dependencies remains refused by the C4 bridge.
 Projects must declare the complete DPI header, runtime library and generated
 input set. The flow does not infer dependencies from arbitrary build arguments.
 A native dependency declaration alone does not establish ABI or runtime support.
+
+## Composed peripheral reset and side-effect environment
+
+`uvm_new` accepts `composition` instead of `db`. `soc` can verify that the
+composition uses the selected map. The generated test-only wrapper exports
+an independent `SimpleCpuBus` master port. Production composition inputs
+remain unchanged. Generated APB observation outputs preserve every MMIO
+bus for the passive VIP and register oracle. The known-reset RAL profile
+requires activity on every MMIO bus. It excludes CPU execution and supports
+one clock domain. Unknown-reset and autonomous behavior remain separate.

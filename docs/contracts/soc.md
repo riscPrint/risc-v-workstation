@@ -360,3 +360,15 @@ A verification `decode` entry can set `classpath_file`. The consumer uses
 pairs. It runs `rvw formal prove`. It reports `proven` only after an unbounded
 pass with at least one assertion per window plus one-hot and unmapped-error
 assertions. Report scope is the fabric instance, not the whole composed SoC.
+
+## Core IO exports and pyuvm composition run
+
+Composition `core.exports` is an optional list of IO member names. The
+composer exports each as `core_NAME`. The main bus, interrupt vector and
+debug reset cannot be exported this way. Existing compositions are unchanged.
+
+A verification `uvm` entry can contain `composition`, `classpath_file`,
+`build_args` and `idle_inputs`. The consumer checks map equality, builds a
+separate test-master harness, then runs its RAL and APB VIP environment.
+The row result refers to that peripheral harness. It does not certify CPU
+execution. Generated memory images have hashes in the consumer result.

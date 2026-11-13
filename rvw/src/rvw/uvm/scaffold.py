@@ -13,19 +13,30 @@ def bus_type(class_name):
     return BUS_TYPES.get(leaf)
 
 
-def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto', adapter=None):
+def generate(db=None, soc=None, out=None, *, rtl=None, language='pyuvm', profile='auto', adapter=None, composition=None):
+    if composition is not None:
+        if db is not None or adapter is not None or language != 'pyuvm':
+            raise ValueError('composition profile needs pyuvm without database or adapter')
+        from .composed import generate as composed
+        if rtl and len(rtl) != 1:
+            raise ValueError('composition profile requires one generated RTL file')
+        return composed(composition, out, list(rtl)[0] if rtl else Path(out)/'rtl/VerificationSoc.v', expected_map=soc)
+    if db is None or soc is None:
+        raise ValueError('database-selected profiles require db and soc')
     if adapter is not None:
         from .profiles import generate as generate_profile
         return generate_profile(db, soc, out, rtl=rtl, language=language, profile=profile, adapter=adapter)
     from .profiles import classify
     with_db = DesignDB(Path(db).resolve())
     try:
-        discovered = [classify(c) for c, in with_db.conn.execute(
-            'SELECT b.class_name FROM bundles b JOIN components c ON b.component_id=c.id WHERE c.parent_id IS NULL')
-            if classify(c)]
+        classes = [c for c, in with_db.conn.execute(
+            'SELECT b.class_name FROM bundles b JOIN components c ON b.component_id=c.id WHERE c.parent_id IS NULL')]
+        discovered = [classify(c) for c in classes if classify(c)]
     finally:
         with_db.close()
     if not discovered:
+        if any(bus_type(c) for c in classes):
+            raise ValueError('automatic runnable profile requires one top-level APB bus')
         load(soc)
         return {'status': 'unsupported', 'reason': 'No supported typed bus metadata. Plain HDL ports need a project-owned UVM bench and explicit VIP pin bindings.'}
     if language != 'pyuvm' or profile != 'auto' or (discovered and discovered != ['apb']):

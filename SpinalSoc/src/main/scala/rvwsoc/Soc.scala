@@ -21,7 +21,7 @@ class WordMemory(addressBits: Int, words: Int, readOnly: Boolean,
   val mem = Mem(Bits(32 bits), words)
   require(image.size <= words)
   mem.initBigInt(image ++ Seq.fill(words - image.size)(BigInt(0)))
-  val index = (io.bus.PADDR >> 2).resized
+  val index = if(addressBits > 2) io.bus.PADDR(addressBits-1 downto 2) else U(0, 0 bits)
   val aligned = io.bus.PADDR(1 downto 0) === 0
   io.bus.PRDATA := mem.readAsync(index)
   io.bus.PREADY := True
