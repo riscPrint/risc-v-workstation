@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -1269,6 +1269,19 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
     LANE] [--queue-stage QUEUE_STAGE] [--issue-stage ISSUE_STAGE]
     [--head-stage HEAD_STAGE] [--in-order-retirement] [--result RESULT]
     [--tolerance TOLERANCE] [--top TOP] [--project PROJECT] paths [paths ...]
+```
+
+### `rvw plan`
+
+```text
+usage: rvw plan [-h] [--project PROJECT] {status} ...
+```
+
+### `rvw plan status`
+
+```text
+usage: rvw plan status [-h] [--previous PREVIOUS] [--out OUT] [--json]
+    [--project PROJECT] plan
 ```
 
 ### `rvw privilege`
@@ -3061,6 +3074,14 @@ Starts a background job: yes.
 Measure pipeline stage residence, IPC windows, discarded work and inferred retirement bubbles from a Kanata 0004 log (or load a saved report). Large logs run as a job. Stage names are explicit options.
 
 Arguments: `path` (required), `window`, `isa`, `lane`, `queue_stage`, `issue_stage`, `head_stage`, `in_order_retirement`, `result`.
+
+Starts a background job: yes.
+
+### `plan_status`
+
+Roll up project requirements and feature evidence. Report coverage holes, test/formal/check gaps and compatible trends. Recorded closure grants no C4 accept.
+
+Arguments: `plan` (required), `previous`, `out`.
 
 Starts a background job: yes.
 

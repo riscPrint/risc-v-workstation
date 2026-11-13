@@ -235,6 +235,23 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Project-owned verification plans
+
+`rvw plan status` and `plan_status` read `rvw.vplan/1`: requirement descriptions
+and features that map requirement IDs to coverage groups, C1/C3 tests, named
+formal app properties and C4/block checks. Evidence references have relative
+paths and optional exact SHA-256 pins. `rvw.plan-status/1` reports feature
+status, coverage totals, holes, evidence hashes and unassigned requirements.
+Missing/inconclusive evidence, zero denominators and unmeasured groups stay open.
+Bounded formal evidence cannot meet an unbounded obligation. Features can select
+block or integration scope. Block-only evidence cannot close integration scope.
+Block reuse does
+not cover new wiring. Source/execution contexts constrain coverage trends.
+Same-plan snapshots can report hole/hit deltas; incompatible coverage contexts
+have no numeric trend. `reported_closed` is a recorded evidence rollup under
+project-declared mappings. It grants no requirement completeness, unconditional
+proof, runtime assumption enforcement, whole-core closure or C4 acceptance.
+
 ### Reusable block evidence
 
 `rvw cov block-check` and `cov_block_check` compare `rvw.block-evidence/1` with
