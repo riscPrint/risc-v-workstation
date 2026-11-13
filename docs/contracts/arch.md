@@ -503,3 +503,13 @@ Old libraries keep the callback path. The shared C2 validator remains the
 fallback for unsupported syntax. Decoder source and loaded library bytes
 remain part of engine identity. This field does not validate architectural
 execution or establish timing accuracy.
+
+## Single-parameter comparisons
+
+`rvw arch ooo-what-if` and `arch_ooo_what_if` change one existing scalar field.
+The value must keep its numeric, Boolean or string type. Both descriptions
+are validated. A new directory holds both configurations, JSON and Markdown.
+`rvw.ooo-what-if/1` records the source hash, old and new values, both runs and
+cycle, IPC and event deltas. Both runs must have the same trace hash. Invalid
+configuration values fail before output creation. A run failure can leave a
+partial directory. The comparison predicts no changed path or RTL accuracy.

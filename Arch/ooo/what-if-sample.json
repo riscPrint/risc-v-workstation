@@ -1,0 +1,267 @@
+{
+  "schema": "rvw.ooo-what-if/1",
+  "status": "reported",
+  "evidence": "model-only",
+  "accuracy_status": "inconclusive",
+  "source_config_sha256": "fb470232496db99a7e6ae7027a919b656f1bff569e4813898610b080538c1c73",
+  "parameter": "ooo.branch_penalty",
+  "baseline_value": 3,
+  "value": 1,
+  "baseline": {
+    "schema": "rvw.ooo-run/1",
+    "backend": "python",
+    "cycles": 2573,
+    "instret": 1110,
+    "ipc": 0.43140303148076176,
+    "events": {
+      "dependency_blocked": 0,
+      "issued": 1110,
+      "branches": 400,
+      "branch_misses": 101,
+      "wrong_path_fetch_slots_estimate": 303,
+      "uop_cache_misses": 1110,
+      "decode_input_not_ready": 356,
+      "fetch_buffer_full": 354,
+      "frontend_recovery_cycles": 1103,
+      "decode_width_limited": 400
+    },
+    "max_occupancy": {
+      "rob_entries": 2,
+      "issue_entries": 1,
+      "load_entries": 0,
+      "store_entries": 1,
+      "fetch_entries": 2,
+      "decode_entries": 1
+    },
+    "topdown": {
+      "unit": "commit_slots",
+      "total_slots": 2573,
+      "slots": {
+        "retiring": 1110,
+        "frontend_bound": 306,
+        "bad_speculation": 303,
+        "backend_bound": 854
+      },
+      "fractions": {
+        "retiring": 0.43140303148076176,
+        "frontend_bound": 0.11892732219199378,
+        "bad_speculation": 0.11776136805285659,
+        "backend_bound": 0.33190827827438785
+      },
+      "method": "retired slots, then recovery, then ROB occupancy, then front end"
+    },
+    "trace_reader": "python-c2",
+    "c2_decoder": "python",
+    "config": {
+      "fetch_width": 1,
+      "fetch_entries": 2,
+      "rename_width": 1,
+      "rob_entries": 5,
+      "issue_width": 1,
+      "issue_entries": 2,
+      "load_entries": 1,
+      "store_entries": 1,
+      "commit_width": 1,
+      "latencies": {
+        "alu": 1,
+        "multiply": 3,
+        "divide": 34,
+        "load": 3,
+        "store": 1,
+        "branch": 2,
+        "jump": 2,
+        "csr": 1,
+        "fence": 1,
+        "system": 1
+      },
+      "ports": {},
+      "physical_registers": 0,
+      "physical_float_registers": 0,
+      "branch_penalty": 3,
+      "branch_speculation": false,
+      "branch_prediction": "static_btfn",
+      "issue_order": "in_order",
+      "memory_policy": "ordered",
+      "dependence_entries": 1024,
+      "replay_penalty": 5,
+      "forwarding_latency": 1,
+      "frontend": {
+        "decode_width": 1,
+        "decode_entries": 2,
+        "decode_latency": 1,
+        "fetch_latency": 3,
+        "ftq_entries": 2,
+        "block_bytes": 4,
+        "predictor_latency": 1
+      },
+      "execution": {},
+      "translation": {},
+      "rename": {},
+      "custom_instructions": [],
+      "components": {},
+      "memory_rename": {}
+    },
+    "config_sha256": "fb470232496db99a7e6ae7027a919b656f1bff569e4813898610b080538c1c73",
+    "trace_sha256": "2b5711f4a2bcbe27f1fbe3c7607a4815baa68610c83305d4f89075a212640e03",
+    "engine_sha256": "af5401a25b11e91ae44e5775fcab933a7fe82ada655b8f09844680ee937f1638",
+    "wall_s": 0.3710960829630494,
+    "accuracy_status": "inconclusive",
+    "configuration_status": "unchecked",
+    "configuration_evidence": null,
+    "limits": [
+      "fixed latency",
+      "committed path only; no wrong-path resource use",
+      "branch prediction at issue; no speculative predictor history",
+      "cache timing needs a component service; no replay or translation faults",
+      "topdown is an approximate commit-slot partition",
+      "disambiguation uses traced addresses after store issue"
+    ],
+    "cycle_order": [
+      "commit",
+      "issue",
+      "rename",
+      "decode",
+      "fetch"
+    ]
+  },
+  "candidate": {
+    "schema": "rvw.ooo-run/1",
+    "backend": "python",
+    "cycles": 2371,
+    "instret": 1110,
+    "ipc": 0.4681568958245466,
+    "events": {
+      "dependency_blocked": 0,
+      "issued": 1110,
+      "branches": 400,
+      "branch_misses": 101,
+      "wrong_path_fetch_slots_estimate": 101,
+      "uop_cache_misses": 1110,
+      "decode_input_not_ready": 356,
+      "fetch_buffer_full": 354,
+      "frontend_recovery_cycles": 901,
+      "decode_width_limited": 400
+    },
+    "max_occupancy": {
+      "rob_entries": 2,
+      "issue_entries": 1,
+      "load_entries": 0,
+      "store_entries": 1,
+      "fetch_entries": 2,
+      "decode_entries": 1
+    },
+    "topdown": {
+      "unit": "commit_slots",
+      "total_slots": 2371,
+      "slots": {
+        "retiring": 1110,
+        "frontend_bound": 306,
+        "bad_speculation": 101,
+        "backend_bound": 854
+      },
+      "fractions": {
+        "retiring": 0.4681568958245466,
+        "frontend_bound": 0.1290594685786588,
+        "bad_speculation": 0.04259805989034163,
+        "backend_bound": 0.360185575706453
+      },
+      "method": "retired slots, then recovery, then ROB occupancy, then front end"
+    },
+    "trace_reader": "python-c2",
+    "c2_decoder": "python",
+    "config": {
+      "fetch_width": 1,
+      "fetch_entries": 2,
+      "rename_width": 1,
+      "rob_entries": 5,
+      "issue_width": 1,
+      "issue_entries": 2,
+      "load_entries": 1,
+      "store_entries": 1,
+      "commit_width": 1,
+      "latencies": {
+        "alu": 1,
+        "multiply": 3,
+        "divide": 34,
+        "load": 3,
+        "store": 1,
+        "branch": 2,
+        "jump": 2,
+        "csr": 1,
+        "fence": 1,
+        "system": 1
+      },
+      "ports": {},
+      "physical_registers": 0,
+      "physical_float_registers": 0,
+      "branch_penalty": 1,
+      "branch_speculation": false,
+      "branch_prediction": "static_btfn",
+      "issue_order": "in_order",
+      "memory_policy": "ordered",
+      "dependence_entries": 1024,
+      "replay_penalty": 5,
+      "forwarding_latency": 1,
+      "frontend": {
+        "decode_width": 1,
+        "decode_entries": 2,
+        "decode_latency": 1,
+        "fetch_latency": 3,
+        "ftq_entries": 2,
+        "block_bytes": 4,
+        "predictor_latency": 1
+      },
+      "execution": {},
+      "translation": {},
+      "rename": {},
+      "custom_instructions": [],
+      "components": {},
+      "memory_rename": {}
+    },
+    "config_sha256": "f0826b1d19c5e072d80733f5fb76372d1808627194a7b6da512ae1ae0c449292",
+    "trace_sha256": "2b5711f4a2bcbe27f1fbe3c7607a4815baa68610c83305d4f89075a212640e03",
+    "engine_sha256": "af5401a25b11e91ae44e5775fcab933a7fe82ada655b8f09844680ee937f1638",
+    "wall_s": 0.3307069999864325,
+    "accuracy_status": "inconclusive",
+    "configuration_status": "unchecked",
+    "configuration_evidence": null,
+    "limits": [
+      "fixed latency",
+      "committed path only; no wrong-path resource use",
+      "branch prediction at issue; no speculative predictor history",
+      "cache timing needs a component service; no replay or translation faults",
+      "topdown is an approximate commit-slot partition",
+      "disambiguation uses traced addresses after store issue"
+    ],
+    "cycle_order": [
+      "commit",
+      "issue",
+      "rename",
+      "decode",
+      "fetch"
+    ]
+  },
+  "delta": {
+    "cycles": -202,
+    "ipc": 0.03675386434378486,
+    "relative_ipc": 0.0851961197806832,
+    "speedup": 1.0851961197806832,
+    "events": {
+      "branch_misses": 0,
+      "branches": 0,
+      "decode_input_not_ready": 0,
+      "decode_width_limited": 0,
+      "dependency_blocked": 0,
+      "fetch_buffer_full": 0,
+      "frontend_recovery_cycles": -202,
+      "issued": 0,
+      "uop_cache_misses": 0,
+      "wrong_path_fetch_slots_estimate": -202
+    }
+  },
+  "limits": [
+    "same committed path; program changes are not predicted",
+    "positive cycle delta means slower; positive IPC delta means faster",
+    "no RTL or physical PPA estimate"
+  ]
+}
