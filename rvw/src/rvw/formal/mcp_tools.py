@@ -29,6 +29,16 @@ COMMON = {
 FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x", "dsec", "sampled_events"}
 
 
+def _psl(job, **args):
+    argv = [sys.executable, '-m', 'rvw', 'formal', 'psl', args['source'], '--out', args['out']]
+    if args.get('clock'):
+        argv += ['--clock', args['clock']]
+    code = job.run(argv)
+    if code:
+        raise ToolError('PSL lowering failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return {'status': 'generated', 'output': args['out']}
+
+
 def _argv(command, args):
     argv = [sys.executable, "-m", "rvw", "formal", *command.split()]
     for key, value in args.items():
@@ -230,6 +240,8 @@ def mcp_tools():
     from .internal_paths import mcp_tools as path_tools
     return [*deep_tools(), *apps_tools(), *path_tools(),
 
+        ToolSpec("formal_psl", "Translate the finite PSL subset to SVA. No verification run.",
+                 schema({"source": S, "out": S, "clock": S}, ["source", "out"]), _psl, long=True),
         ToolSpec("formal_simulate", "Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.",
                  schema({"verilog": {"type": "array", "items": S}, "top": S, "events": S,
                          "out": S, "backend": {**S, "enum": ["icarus", "verilator"]},

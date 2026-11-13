@@ -136,7 +136,11 @@ clear/set. The delta is in timer ticks. C1 execution bounds the wait. It makes
 no minimum sleep or physical clock-gating claim. Builds include
 `functional-groups.json` for C2 observation coverage. Observation hits do not
 grant the architectural pass groups from `privilege check`.
-
+CLI `formal psl` and MCP `formal_psl` translate a finite Verilog-flavor PSL subset
+to the existing SVA frontend. An explicit rising-edge clock or matching default
+clock is required. Generation reports `rvw.psl-lowering/1`, `status=generated`,
+and the output path. This is not a verification result. Unsupported PSL forms
+are errors. The adapter does not silently replace liveness with finite bounds.
 
 ## CFI recovery project data
 

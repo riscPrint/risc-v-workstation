@@ -160,6 +160,12 @@ def register(sub) -> None:
 
     from .scenario import register as register_scenario
     register_scenario(s)
+    from . import psl
+    psl_lower = s.add_parser("psl", help="translate a finite Verilog-flavor PSL subset to SVA")
+    psl_lower.add_argument("source")
+    psl_lower.add_argument("--clock")
+    psl_lower.add_argument("--out", required=True)
+    psl_lower.set_defaults(func=psl.run)
 
     from . import temporal
     lowering = s.add_parser("sva-lower", help="lower finite temporal SVA to native Yosys assertions")

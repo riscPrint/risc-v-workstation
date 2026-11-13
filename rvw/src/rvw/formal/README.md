@@ -1334,6 +1334,28 @@ data dependencies and backend-specific timing. `formal scenario check` compares
 supplied outcome records. Neither command executes backend operations. See
 [the scenario contract and PSS reuse assessment](SCENARIOS.md).
 
+### Finite PSL adapter
+
+```sh
+rvw formal psl properties.psl --clock clk --out properties.sv
+```
+
+The adapter accepts a finite Verilog-flavor PSL subset. It emits SVA statements
+for inclusion inside a project module. A file can instead declare
+`default clock = (posedge clk);`. Supported directives are `assert always`,
+`assume always`, and `cover` with a finite SERE. Boolean implication, `next`,
+`next[N]`, flat SERE concatenation, finite consecutive repetition and suffix
+implication map to the shared finite SVA frontend. Every emitted statement is
+checked by that frontend before publication. `formal_psl` provides the same
+operation through MCP. Generation does not run verification.
+
+Nested SEREs, verification units, multiple clocks, unbounded repetition, abort
+and PSL liveness operators remain refused. This is not full PSL conformance.
+The syntax and sampling reference is the
+[Accellera PSL 1.1 manual](https://www.inf.pucrs.br/calazans/graduate/SDAC/PSL-v1.1.pdf),
+sections 4.4, 5.4 and 6. Native tests check legal and faulted next-cycle and suffix
+implications through the emitted SVA and SMTBMC/Yices.
+
 ## Finite temporal SVA and task regression
 
 Use open Yosys for RTL and immediate formal statements. The `temporal` frontend
