@@ -15,7 +15,7 @@ def test_boom_profile_plan_does_not_execute_tools(monkeypatch):
         pytest.fail('config-only ACT4 check attempted a subprocess')
     monkeypatch.setattr(act4, 'run_group', forbidden)
     plan = act4.selection(PROFILE)
-    assert plan['isa'] == 'rv64imafdc_zicsr_zifencei_zba_zbb_zbs_zicntr_zihpm'
+    assert plan['isa'] == 'rv64imafdc_zicsr_zifencei_zba_zbb_zbs'
     assert plan['privilege_modes'] == 'MSU'
     assert {'i', 'm', 'a', 'f', 'd', 'c', 'sm', 's', 'u', 'sv39', 'zihpm'} <= set(plan['extensions'])
     assert plan['test_selection'] == 'all-applicable'

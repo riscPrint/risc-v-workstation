@@ -13,7 +13,9 @@
     "Kept source memory map, halt macros, UDB parameters and standard bootstrap.",
     "Added the reset veneer that clears mscratch and mtvec with real instructions.",
     "Removed legacy output masks from the local comparison platform.",
-    "Restricted Sail IO regions and CLINT size to the bundled platform map."
+    "Restricted Sail IO regions and CLINT size to the bundled platform map.",
+    "Removed MUTABLE_MISA_B because aggregate B is not selected in UDB.",
+    "Kept reference-only Zicntr/Zihpm separate from the adapter trace ISA labels."
   ],
-  "evidence": "configuration translation only; build and execution NOT RUN"
+  "evidence": "Native execution and strict comparison counts are in README.md; open findings remain."
 }

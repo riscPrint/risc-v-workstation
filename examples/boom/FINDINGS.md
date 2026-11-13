@@ -1,5 +1,71 @@
 # BOOM findings
 
+## ACT4, 2026-11-13
+
+The [bundled profile](../../rvw/configs/act4/boom/README.md) records the
+610-program selection and counts. The following groups account for all
+38 remaining execution failures. No core RTL, signature or waiver changed.
+
+| Cases | Count | Classification | Observed result and retained action |
+|---|---:|---|---|
+| Zalrsc-sc.w, Zalrsc-sc.d | 2 | Core simulation assertion | Repeated unsuccessful SC triggers `dcache.scala:754`, even with LR and SC at different addresses. Keep the assertion failure. |
+| PMPS/PMPU/PMPSm NA4 and TOR legal-lxwr; three PMPSm TOR configuration cases; six PMPZca NA4/TOR cases | 15 | Core execution difference | Narrow executable regions cause instruction access fault before the permitted instruction reaches its data access. |
+| Sm_F | 1 | Core execution difference | FLW leaves FS Initial after it changes an FP register. |
+| ZicntrSm, ZicntrS, ZicntrU | 3 | Core counter difference | The tested interval is 44 retired instructions against Sail's 43. The minimal ECALL interval is 6 against Spike's 5. |
+| Sstvecd | 1 | Platform WARL mapping | Writing `0x4000000000` reads `0xffffffc000000000` on BOOM and the written value on Spike. The two WARL mappings differ. This alone does not prove an ISA defect. |
+| Sm_mcsr_cntr | 1 | Platform timing assumption | The time CSR trap path returns 719 after the test writes mtime=42. Its delta bound is 100. The measured delta is 677. |
+| ExceptionsSvZalrsc S/U; ExceptionsSvZalrscSm MPRV S; SvPMP on physical address S/U | 5 | Sail expectation/platform gap | The generated signature expects a low address such as `0x40000000`; BOOM and Spike report the full VA such as `0x140000000`. Do not truncate the observed VA. |
+| ExceptionsSm/S/U/Zc; ExceptionsSv S/U; ExceptionsSvSm MPRV S/U | 8 | RVFI check binding | Trap records lose operands or access masks. A misaligned LH reproduces error 111. Keep the monitor active. |
+| Sv canonical S/U | 2 | RVFI check binding | JALR reports next PC `0x8000000140009000`; the next trap record reports PC `0x140009000`. The shadow-PC check rejects this truncation. These runs do not establish an execution defect. |
+
+The three extra PMPSm cases are `cfg_A_tor_zero`, `cfg_A_tor_bot` and
+`cfg_tor_check-01`.
+All case names have the ACT4 `-00` suffix. Full generated inventories stay
+local. The eight RVFI cases are `ExceptionsSm`, `ExceptionsS`,
+`ExceptionsU`, `ExceptionsZc`, `ExceptionsSv_sv39_exceptions_{S,U}mode`
+and `ExceptionsSvSm_sv39_exceptions_mprv_{S,U}_Mmode`.
+
+| Minimal source in findings/ | Variants | Spike | BOOM small | Rule or evidence boundary |
+|---|---:|---|---|---|
+| [sc-outside-reservation.S](findings/sc-outside-reservation.S) | W/D | pass | assertion after repeated failures | Different-address LR/SC is an unconstrained loop. The constrained-loop eventual-success rule does not apply. No forward-progress defect is claimed. |
+| [pmp-narrow-exec.S](findings/pmp-narrow-exec.S) | NA4/TOR | pass, store fault 7 | fail, instruction fault 1 | PMP checks the bytes of the access. A four-byte instruction lies wholly inside its executable region. MIE and MIDELEG are cleared before S-mode entry. |
+| [flw-fs-dirty.S](findings/flw-fs-dirty.S) | FLW changes f0 | pass, FS=3 | fail, FS=1 | A change to FP register state must mark FS Dirty. The core's dirty signal follows fflags validity and misses this load. |
+| [minstret-ecall.S](findings/minstret-ecall.S) | ECALL, four handler instructions | pass, delta 5 | fail, delta 6 | ECALL raises an exception and does not retire. |
+| [stvec-warl.S](findings/stvec-warl.S) | one write/read | written value | sign-extended value | STVEC is WARL. The reference needs the implementation's legal-value mapping. |
+| [misaligned-rvfi.S](findings/misaligned-rvfi.S) | misaligned LH | pass, cause 4 | RVFI error 111 | The binding clears rs1 on traps and omits mem_fault for misalignment. This is not evidence that LH executed without its trap. |
+| [word-remainder.S](findings/word-remainder.S) | REMW/REMUW | pass | pass after checker fix | Word division uses the low 32 operand bits and sign-extends the result. |
+
+Compile with `riscv64-unknown-elf-gcc -nostdlib -nostartfiles
+-march=rv64imafdc_zicsr_zifencei -mabi=lp64 -Wl,-Ttext=0x80000000,--no-relax
+SOURCE -o ELF`. Use `-DWORD` for SC.W and `-DTOR` for TOR. Run with
+`scripts/with-lock.sh boom nice -n 10 RiscvSim/boom/run.sh run --config small
+--elf ELF --out RUN --rvfi-trace --max-cycles 30000 --json`.
+The independent Spike runs use `spike --isa=rv64imafdc_zicsr_zifencei ELF`.
+These directed checks are separate from the strict full-trace comparisons.
+
+The imported riscv-formal REMW/REMUW models tested all 64 divisor bits for
+zero. A divisor with low word zero therefore caused a false monitor error.
+`RiscvFormalModel` copies and corrects the two word checks before elaboration.
+The external source stays unchanged. Icarus unit vectors cover zero low
+words, sign extension and nonzero divisors. Both ACT4 reruns pass.
+The ECALL freshness guard compared an unsigned 40-bit PC to a signed
+64-bit EPC. Generic `Hex.signExtend` and its tests retain the guard while
+fixing that representation error. Both SvPMP-on-PTE reruns now pass.
+
+All 610 strict comparisons stop at reset state, before the full test can
+be compared. The reset veneer clears mscratch first. BOOM reports
+FCSR=`0xff`; Spike starts with zero. Strict mode does not seed or mask
+that state. This is a platform initialization
+limitation. It is not 610 proven core defects. Later directed observations
+do not turn those comparisons into complete matches.
+
+Rules: [RISC-V privileged specification, reset, PMP, FS, WARL and counters](https://docs.riscv.org/reference/isa/priv/machine.html),
+[RISC-V unprivileged specification, M and A](https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf).
+The high-VA rule requires the faulting virtual address when a nonzero trap
+value is reported. The Sail expectation gap remains open. Full Sm_F and
+Zicntr CLI runs hit earlier illegal-instruction tval policy differences;
+only their isolated programs establish the Spike outcomes above.
+
 ## Generated checks, 2026-11-13
 
 Private core revision `0cb0b69`, preset `small`, seed 1, randomized memory

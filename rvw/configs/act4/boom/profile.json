@@ -88,7 +88,6 @@
     ],
     "MUTABLE_MISA_D": false,
     "MUTABLE_MISA_C": false,
-    "MUTABLE_MISA_B": false,
     "TIME_CSR_IMPLEMENTED": false,
     "WFI_U_MODE": true,
     "MUTABLE_MISA_U": false,
@@ -329,8 +328,8 @@
     "sail.json": "sail.json"
   },
   "limits": [
-    "Config and unit tests only. ACT4 build and BOOM execution were NOT RUN.",
+    "Measured native and strict Spike outcomes are in README.md. Execution failures and reset comparison differences remain open.",
     "Instruction selection follows the bundled reference ISA. Extra legacy hint and Zicc property extensions are not selected.",
-    "The profile uses the bundled reference ISA, including Zicntr and Zihpm. Output masks are removed from this profile; no native comparison has been run."
+    "Trace ISA labels follow the adapter. Zicntr and Zihpm are explicit reference extensions. No comparison output masks are used."
   ]
 }
