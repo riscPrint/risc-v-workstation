@@ -76,16 +76,20 @@ def linker_platform(path, *, region=None, reset_pc=None, name, isa, xlen):
 
 def db_script(top, name):
     return f'''#!/usr/bin/env bash
-# C6 entry for a reviewed no-argument Component class.
+# C6 entry: the same project-owned elaboration as simulation.
 set -euo pipefail
 [ "$#" = 2 ] && [ "$1" = default ] || {{ echo 'usage: build-db.sh default OUT' >&2; exit 2; }}
 here="$(cd "$(dirname "$0")" && pwd)"
 : "${{RVW_HOME:?Set RVW_HOME to the installed workstation}}"
 export SPINALDB_PROCESS_RUNNER="$RVW_HOME/SpinalDB/scripts/hdl-deps.py"
 export SPINALDB_PYTHON="${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}"
-exec "$RVW_HOME/scripts/with-lock.sh" {name} \\
-  "$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 \\
-  "$RVW_HOME/SpinalDB/build-db.sh" class {top} "$2" --sbt-dir "$here" --source-root "$here/../src"
+argsdir="$(mktemp -d /tmp/rvw-db.XXXXXX)"
+trap 'rm -rf "$argsdir"' EXIT
+printf '%s\\0' "$2" --source-root "$here/../src" > "$argsdir/args"
+cd "$here"
+"$RVW_HOME/scripts/with-lock.sh" {name} \\
+  "$RVW_HOME/scripts/with-lock.sh" sbt-{name} nice -n 10 \\
+  sbt -batch "runMain rvwcore.Database --args-file $argsdir/args"
 '''
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 
 import rvw
+from .inputs import INPUT_COMMANDS, INPUT_ENV
 from .optional import build_files, linker_platform, db_script, sim_script
 
 
@@ -77,23 +78,37 @@ exit 2
 
 import java.io.File
 import riscvsim._
+import spinal.core._
+import spinal.core.sim._
 
 // Candidates from source inspection only: {', '.join(tops) or 'none detected'}.
 // No signal mapping or completion rule has been inferred.
 object Adapter extends CoreAdapter {{
-  type Model = Unit // Replace with the compiled simulation model.
+  type Model = SimCompiled[Component]
   def core: String = {q(name)}
   def configs: Seq[String] = Seq("default")
   def isa(config: String): String = {q(isa)}
   def xlen: Int = {width}
   def sourceDir: File = new File(sys.env("RVW_CORE_SOURCE"))
   override def replayEnv: Seq[(String, String)] = Seq("RVW_CORE_SOURCE" -> sourceDir.getCanonicalPath)
+  def report(key: ModelKey, work: File) =
+    RiscvSimConfig.elaborate(key, work, Elaboration.config)(Elaboration.top())
   def compile(key: ModelKey, work: File, cache: File): Model =
-    throw new UnsupportedOperationException("Map the core and compile its simulation model")
+    RiscvSimConfig(key, work, cache, Elaboration.config).compile(report(key, work))
   override def elaborate(key: ModelKey, work: File): Seq[File] =
-    throw new UnsupportedOperationException("Generate the same RTL as compile")
+    report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
+  override def generatedVerilog(model: Model): Seq[File] =
+    Option(new File(model.compiledPath, "rtl").listFiles()).toSeq.flatten
+      .filter(f => f.getName.endsWith(".v") || f.getName.endsWith(".sv"))
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome =
     throw new UnsupportedOperationException("Map reset, memory, retired completion and C2 RVFI; load ctx.elf")
+}}
+
+// Edit this entry for every flow. Do not create a separate database top/config.
+object Elaboration {{
+  def config: SpinalConfig = SpinalConfig(
+    defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
+  def top(): Component = {('new ' + db_top) if db_top else 'throw new UnsupportedOperationException("Map the core top")'}
 }}
 
 object Main {{
@@ -131,8 +146,26 @@ No integration-model policy is selected.
     if wire_build:
         if versions != ['1.15.0']:
             raise ValueError('Build wiring requires one literal Spinal version 1.15.0, matching RiscvSim. Review other builds manually.')
+        paths = ['rvw/src', 'rvw/build.sbt', 'rvw/project/build.properties', 'rvw/run.sh',
+                 '${RVW_HOME}/RiscvSim/src', '${RVW_HOME}/RiscvSim/scripts',
+                 '${RVW_HOME}/RiscvSim/build.sbt', '${RVW_HOME}/RiscvSim/project/build.properties',
+                 '${RVW_HOME}/SpinalProbes', '${RVW_HOME}/scripts/with-lock.sh',
+                 '${RVW_HOME}/rvw/src/rvw/sim']
+        files['rvw.toml'] = files['rvw.toml'].replace(
+            'input_complete = false\nidentity = false\nidentity_capture = false',
+            'input_complete = true\nidentity = true\nidentity_capture = true\n'
+            + 'cache_paths = ' + q(paths) + '\n'
+            + 'input_tools = ["git", "bash", "java", "verilator", "make"]\n'
+            + 'input_verilator_toolchain = true\ninput_commands = ' + INPUT_COMMANDS + '\n'
+            + 'input_commands_by_platform = { darwin = ["xcode-select", "xcrun"] }\n'
+            + 'input_env = ' + INPUT_ENV + '\nidentity_timeout_s = 1200')
         files.update(build_files(build, sbt_project=sbt_project, db_top=db_top))
         files['rvw/run.sh'] = sim_script(name, launcher)
+        files['rvw/README.md'] = files['rvw/README.md'].replace(
+            'No program pass, RVFI mapping or input-completeness claim is supplied.',
+            'Standard launcher inputs are declared. Review custom inputs before regression.').replace(
+            '11. Review all result-changing inputs before enabling input_complete and identity.',
+            '11. Extend cache_paths and input_env for custom result-changing inputs.')
         files['rvw.toml'] = files['rvw.toml'].replace('source_repo = "."', 'source_repo = "."\nsource_env = "RVW_CORE_SOURCE"')
         files['rvw/README.md'] += "\nThe generated sbt build uses the core project and generic RiscvSim library.\nSet RVW_HOME. Run sbt compile from rvw/ to check dependencies. The launcher\nuses generic supervision and identity capture. The adapter throws until mapped.\n"
     if (ram_region or reset_pc) and linker_script is None:
@@ -143,9 +176,20 @@ No integration-model policy is selected.
         files['rvw.toml'] += '\n[cosim]\nplatform = "rvw/cosim.json"\n'
         files['rvw/README.md'] += "\nReview rvw/cosim.json against the core specification. The linker supplies\nonly the selected RAM region. Check MMIO, PMP, IRQ, privilege and fault policies.\nRemove review_required only after this review. The cosim loader refuses it.\n"
     if db_top:
+        files['rvw/src/main/scala/rvwcore/CoreAdapter.scala'] += '''
+object Database {
+  def main(args: Array[String]): Unit = {
+    val (opts, rtl, pos) = spinaldb.Main.parse(args.toSeq)
+    require(pos.length == 1, "Expected output database path")
+    spinaldb.SpinalDB.generate(
+      Elaboration.config.copy(targetDirectory = rtl.getOrElse("out/db-rtl")),
+      new File(pos.head), opts)(Elaboration.top())
+  }
+}
+'''
         files['rvw/build-db.sh'] = db_script(db_top, name)
         files['rvw.toml'] += '\n[query]\nbuild = ["./rvw/build-db.sh"]\ndb = "rvw/out/design.db"\n'
-        files['rvw/README.md'] += "\nThe query entry requires a no-argument Component class. Check --db-top against\nthe actual source. Run rvw query build --config default after dependency setup.\n"
+        files['rvw/README.md'] += "\nThe query entry uses Elaboration.top and Elaboration.config. Check --db-top against\nthe actual source. Run rvw query build --config default after dependency setup.\n"
     conflicts = [key for key in files if (root / key).exists() or (root / key).is_symlink()]
     if conflicts and not force:
         raise ValueError('Refusing to overwrite: ' + ', '.join(conflicts) + '. Use --force only for intended replacement.')

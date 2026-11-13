@@ -173,3 +173,12 @@ scaffold or a project-owned adapter.
 The query entry preserves external absolute sources. It uses slang when defines
 or parameters are selected, so query and simulation elaborate the same options.
 Port discovery also applies the parameter overrides before reading widths.
+## Wired input capture and elaboration
+
+Wired projects declare the standard launcher inputs before the first regression.
+Review and extend `cache_paths` and `input_env` when the adapter adds inputs.
+The adapter supplies `elaborate` and `generatedVerilog(model)`. Keep both hooks.
+`Elaboration.config` and `Elaboration.top()` are the project entry for simulation
+and SpinalDB. Formal and lint consume the RTL recorded by that database.
+Set the actual clock/reset policy in that entry. Rebuild the database after edits.
+The run method still requires the core's memory, reset, completion and RVFI mapping.

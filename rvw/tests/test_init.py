@@ -123,7 +123,7 @@ def test_optional_scaffolds_are_planned_and_loadable(core):
     assert not (core / 'rvw.toml').exists()
     assert 'ProjectRef(coreSource, "cpu")' in report['files']['rvw/build.sbt']
     assert 'SpinalDB/spinaldb' in report['files']['rvw/build.sbt']
-    assert 'with-lock.sh" sbt nice -n 10' in report['files']['rvw/build-db.sh']
+    assert 'with-lock.sh" sbt-mycore nice -n 10' in report['files']['rvw/build-db.sh']
     scaffold(core, **options)
     project = load_project(core)
     assert project.get('cosim', 'platform') == core / 'rvw/cosim.json'
@@ -181,15 +181,18 @@ def test_db_entry_forwards_arguments_without_sbt_command_injection(core, tmp_pat
     lock = workstation / 'scripts/with-lock.sh'
     lock.write_text('#!/bin/bash\nshift\nexec "$@"\n')
     lock.chmod(0o755)
-    builder = workstation / 'SpinalDB/build-db.sh'
-    builder.write_text('#!/bin/bash\n[ "$SPINALDB_PROCESS_RUNNER" = "$RVW_HOME/SpinalDB/scripts/hdl-deps.py" ] || exit 7\n[ -n "$SPINALDB_PYTHON" ] || exit 8\nprintf "%s\\0" "$@" > "$OUTPUT_ARGS"\n')
+    binaries = tmp_path / 'bin'
+    binaries.mkdir()
+    builder = binaries / 'sbt'
+    builder.write_text('#!/usr/bin/env python3\nimport os,sys\nfrom pathlib import Path\nargsfile = sys.argv[-1].split("--args-file ")[1]\nPath(os.environ["OUTPUT_ARGS"]).write_bytes(Path(argsfile).read_bytes())\n')
     builder.chmod(0o755)
     arguments = tmp_path / 'args'
     output = tmp_path / 'spaces ; dollar $ output.db'
-    env = dict(os.environ, RVW_HOME=str(workstation), OUTPUT_ARGS=str(arguments))
+    env = dict(os.environ, RVW_HOME=str(workstation), OUTPUT_ARGS=str(arguments),
+               PATH=str(binaries) + ':' + os.environ['PATH'])
     done = subprocess.run([str(core / 'rvw/build-db.sh'), 'default', str(output)], env=env)
     assert done.returncode == 0
-    assert arguments.read_bytes().split(b'\0')[:4] == [b'class', b'demo.Top', str(output).encode(), b'--sbt-dir']
+    assert arguments.read_bytes().split(b'\0')[:2] == [str(output).encode(), b'--source-root']
     assert subprocess.run([str(core / 'rvw/build-db.sh'), 'other', str(output)], env=env).returncode == 2
 
 
