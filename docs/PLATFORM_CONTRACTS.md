@@ -3622,6 +3622,15 @@ C safety failures, unwinding failures, missing tools and timeouts are
 array retains CBMC property descriptions, statuses and available traces.
 The reference model and dependencies are trusted specification inputs.
 
+#### Bounded datapath completion
+
+`rvw.datapath/1.max_latency` is null for the existing fixed-latency contract.
+A positive value selects a first-done completion bound in 1..256 clocks after
+start. Result bits and flags are checked at that first completion. Missing done
+is a completion failure. Operands stay stable. `inputs.binding.json` captures the
+optional project top and canonical-to-project port map by SHA-256. A binding
+changes names only. It does not remove ports, change widths or add assumptions.
+
 ### Generic multi-hart harness inputs
 
 C1 adapters can declare `hartIds(config)` and accept `--hart-images PATH`.

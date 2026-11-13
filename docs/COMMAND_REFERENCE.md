@@ -802,12 +802,13 @@ usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
 ### `rvw formal datapath`
 
 ```text
-usage: rvw formal datapath [-h] --rtl RTL --model MODEL --width {8,16,32,64}
-    [--latency LATENCY] [--unwind UNWIND] [--case
-    {all,finite,nan,infinity,zero,subnormal}] [--rounding {0,1,2,3,4}]
-    [--reference-tree REFERENCE_TREE] [--reference-source REFERENCE_SOURCE]
-    [--reference-include REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT
-    [--json] [--project PROJECT]
+usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
+    --width {8,16,32,64} [--max-latency MAX_LATENCY] [--latency LATENCY]
+    [--unwind UNWIND] [--case {all,finite,nan,infinity,zero,subnormal}]
+    [--rounding {0,1,2,3,4}] [--reference-tree REFERENCE_TREE]
+    [--reference-source REFERENCE_SOURCE] [--reference-include
+    REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal equiv`
@@ -2088,9 +2089,9 @@ Starts a background job: yes.
 
 ### `formal_datapath`
 
-Bit-blast mapped RTL and a C reference with CBMC. Fixed-latency transaction checks; no streaming proof.
+Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.
 
-Arguments: `rtl` (required), `model` (required), `width` (required), `out` (required), `latency`, `unwind`, `case`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
+Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
 
 Starts a background job: yes.
 
