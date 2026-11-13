@@ -39,3 +39,13 @@ source pins, build input hashes, per-extension counts and each test's C1 and
 strict Spike status. Failed baselines remain separate from final instruction
 suite counts. A core finding names its first difference and reproduction.
 These observations do not grant a regression gate accept or certification.
+
+## Blocked test bodies and representative comparisons
+
+Observation counts distinguish C1 results from reference checks. A report
+can retain a shared bootstrap failure for every test and compare one
+representative per group. It must state that scope. A first-difference
+comparison is not a complete trace match. An absent per-test reference
+check means NOT RUN. It does not mean match. Finding counts measure
+cases, not distinct defects. A bootstrap failure does not qualify the
+unreached test body. Coverage from failed prefixes must retain that limit.

@@ -166,6 +166,41 @@ accepted. Read [regress](../rvw/src/rvw/regress/README.md). Generated privilege
 and MMU programs often have Spike-only evidence. Run them on the new RTL before
 claiming DUT coverage. No optional generator is needed for an existing ELF suite.
 
+### ACT4 suite integration measured on 2026-11-13
+
+Use a project-owned ACT4 description, then build Sail signatures and run
+the final self-checking ELFs through C1. The manifest checks the whole ELF
+set before filters apply. See [ACT4 suites](ACT4.md) for the commands,
+source pins, per-extension records and minimal reproductions.
+
+| ACT4 profile | Built / run | C1 pass / fail | Complete strict Spike matches | Finding cases |
+| --- | ---: | ---: | ---: | ---: |
+| VexRiscv RV32IM instruction profile | 58 / 58 | 52 / 6 | 52 | 6 |
+| VexiiRiscv RV32IM instruction profile | 58 / 58 | 58 / 0 | 58 | 0 |
+| VexiiRiscv RV32IMA M/S/U, standard boot | 270 / 270 | 0 / 270 | 0 | 270 |
+| Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+
+The instruction profiles use a reduced CSR boot. They do not establish
+Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
+The supervisor suite includes 201 privileged-directory tests and 69
+instruction tests. All 270 fail on the mhpmevent3 bootstrap write before
+their test bodies. One strict comparison per group confirms that first
+difference. No failure is waived. The bootstrap CSR contract remains open.
+The BOOM profile has configuration and unit tests only.
+
+| ACT4 plus riscv-tests coverage | Observed traces | Qualified traces | Observed default-domain holes |
+| --- | ---: | ---: | ---: |
+| VexRiscv machine | 107 | 52 | 42 |
+| VexiiRiscv machine | 107 | 107 | 42 |
+| VexiiRiscv supervisor | 319 | 49 | 34 |
+
+These are `rvw cov functional` merges. Each includes 49 riscv-tests traces.
+The qualified stream requires C1 pass and a complete strict Spike match.
+The observed stream retains failed prefixes. Coverage includes boot and
+signature checks. It does not isolate ACT4 bodies or qualify the blocked
+supervisor behavior. The full hole lists and evidence limits are linked
+from [ACT4 suites](ACT4.md). Default-domain holes do not prove defects.
+
 ## 6. Compare with an independent reference
 
 Install `--with-cosim`. Review the project's Spike platform and capture scope.

@@ -41,7 +41,9 @@ On 2026-11-13, all 58 selected ELFs built and ran. C1 reported 58 pass and
 0 fail. 58 passing cases have complete strict Spike matches with zero
 masks and zero synchronizations. The detailed rows and hashes are in
 `observations.json`. The standard boot failed all 58 cases before the test
-bodies. Those failures are retained separately. The standard boot traps on mhpmevent3 (0x323). UDB 0.1.17 requires unused HPM counters and events to be hardwired read-only zero.
+bodies. Those failures are retained separately. The standard boot traps on mhpmevent3 (0x323). The selected scaffold
+expects this access to complete. The exact core and firmware CSR contract
+remains open. This compatibility finding is not a proved hardware defect.
 
 These are native RTL simulation results. They are not hardware results,
 certification, or a passing Sm test suite. The original riscv-tests reset

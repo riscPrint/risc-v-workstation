@@ -45,259 +45,370 @@
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "ExceptionsSm": {
       "built": 4,
       "run": 4,
       "fail": 4,
       "finding": 4,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 3,
+      "spike_match": 0
     },
     "ExceptionsSv": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "ExceptionsSvSm": {
       "built": 4,
       "run": 4,
       "fail": 4,
       "finding": 4,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 3,
+      "spike_match": 0
     },
     "ExceptionsSvZaamo": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "ExceptionsSvZaamoSm": {
       "built": 3,
       "run": 3,
       "fail": 3,
       "finding": 3,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 2,
+      "spike_match": 0
     },
     "ExceptionsSvZalrsc": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "ExceptionsSvZalrscSm": {
       "built": 3,
       "run": 3,
       "fail": 3,
       "finding": 3,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 2,
+      "spike_match": 0
     },
     "ExceptionsU": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "ExceptionsZaamo": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "ExceptionsZalrsc": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "I": {
       "built": 39,
       "run": 39,
       "fail": 39,
       "finding": 39,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 38,
+      "spike_match": 0
     },
     "InterruptsS": {
       "built": 11,
       "run": 11,
       "fail": 11,
       "finding": 11,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 10,
+      "spike_match": 0
     },
     "InterruptsSm": {
       "built": 21,
       "run": 21,
       "fail": 21,
       "finding": 21,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 20,
+      "spike_match": 0
     },
     "M": {
       "built": 8,
       "run": 8,
       "fail": 8,
       "finding": 8,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 7,
+      "spike_match": 0
     },
     "PMPS": {
       "built": 11,
       "run": 11,
       "fail": 11,
       "finding": 11,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 10,
+      "spike_match": 0
     },
     "PMPSm": {
       "built": 35,
       "run": 35,
       "fail": 35,
       "finding": 35,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 34,
+      "spike_match": 0
     },
     "PMPU": {
       "built": 11,
       "run": 11,
       "fail": 11,
       "finding": 11,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 10,
+      "spike_match": 0
     },
     "PMPZaamo": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "PMPZalrsc": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "S": {
       "built": 8,
       "run": 8,
       "fail": 8,
       "finding": 8,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 7,
+      "spike_match": 0
     },
     "Sm": {
       "built": 27,
       "run": 27,
       "fail": 27,
       "finding": 27,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 26,
+      "spike_match": 0
     },
     "Ssccptr": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "Sscounterenw": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "Sstvecd": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "Sv": {
       "built": 25,
       "run": 25,
       "fail": 25,
       "finding": 25,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 24,
+      "spike_match": 0
     },
     "SvPMP": {
       "built": 4,
       "run": 4,
       "fail": 4,
       "finding": 4,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 3,
+      "spike_match": 0
     },
     "SvSm": {
       "built": 6,
       "run": 6,
       "fail": 6,
       "finding": 6,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 5,
+      "spike_match": 0
     },
     "Svade": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "Svbare": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "SvbareSm": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "U": {
       "built": 8,
       "run": 8,
       "fail": 8,
       "finding": 8,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 7,
+      "spike_match": 0
     },
     "Zaamo": {
       "built": 9,
       "run": 9,
       "fail": 9,
       "finding": 9,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 8,
+      "spike_match": 0
     },
     "Zalrsc": {
       "built": 2,
       "run": 2,
       "fail": 2,
       "finding": 2,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 1,
+      "spike_match": 0
     },
     "Zicsr": {
       "built": 6,
       "run": 6,
       "fail": 6,
       "finding": 6,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 5,
+      "spike_match": 0
     },
     "Zifencei": {
       "built": 1,
       "run": 1,
       "fail": 1,
       "finding": 1,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 0,
+      "spike_match": 0
     },
     "Zmmul": {
       "built": 4,
       "run": 4,
       "fail": 4,
       "finding": 4,
-      "pass": 0
+      "pass": 0,
+      "spike_mismatch": 1,
+      "spike_not_run": 3,
+      "spike_match": 0
     }
   },
   "tests": [
@@ -326,7 +437,9 @@
         "end": "0x80002f40",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSm/ExceptionsSm-00",
@@ -353,7 +466,9 @@
         "end": "0x80002ab8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSm/ExceptionsSm_medeleg_m-00",
@@ -380,7 +495,8 @@
         "end": "0x800028f8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSm/ExceptionsSm_medeleg_s-00",
@@ -407,7 +523,8 @@
         "end": "0x80002b00",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSm/ExceptionsSm_medeleg_u-00",
@@ -434,7 +551,8 @@
         "end": "0x80002b00",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSv/ExceptionsSv_sv32_exceptions_Smode-00",
@@ -461,7 +579,9 @@
         "end": "0x80000a30",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSv/ExceptionsSv_sv32_exceptions_Umode-00",
@@ -488,7 +608,8 @@
         "end": "0x80000a80",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvSm/ExceptionsSvSm_sv32_exceptions_mprv_S_Mmode-00",
@@ -515,7 +636,9 @@
         "end": "0x8000399c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSvSm/ExceptionsSvSm_sv32_exceptions_mprv_U_Mmode-00",
@@ -542,7 +665,8 @@
         "end": "0x8000351c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvSm/ExceptionsSvSm_sv32_medeleg_Smode-00",
@@ -569,7 +693,8 @@
         "end": "0x800020a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvSm/ExceptionsSvSm_sv32_medeleg_Umode-00",
@@ -596,7 +721,8 @@
         "end": "0x800020a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZaamo/ExceptionsSvZaamo_sv32_exceptions_Zaamo_Smode-00",
@@ -623,7 +749,9 @@
         "end": "0x80000830",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSvZaamo/ExceptionsSvZaamo_sv32_exceptions_Zaamo_Umode-00",
@@ -650,7 +778,8 @@
         "end": "0x80000880",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZaamoSm/ExceptionsSvZaamoSm_sv32_exceptions_Zaamo_mprv_S_Mmode-00",
@@ -677,7 +806,9 @@
         "end": "0x8000235c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSvZaamoSm/ExceptionsSvZaamoSm_sv32_medeleg_Zaamo_Smode-00",
@@ -704,7 +835,8 @@
         "end": "0x80001a24",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZaamoSm/ExceptionsSvZaamoSm_sv32_medeleg_Zaamo_Umode-00",
@@ -731,7 +863,8 @@
         "end": "0x80001a24",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZalrsc/ExceptionsSvZalrsc_sv32_exceptions_Zalrsc_Smode-00",
@@ -758,7 +891,9 @@
         "end": "0x80000930",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSvZalrsc/ExceptionsSvZalrsc_sv32_exceptions_Zalrsc_Umode-00",
@@ -785,7 +920,8 @@
         "end": "0x800009a0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZalrscSm/ExceptionsSvZalrscSm_sv32_exceptions_Zalrsc_mprv_S_Mmode-00",
@@ -812,7 +948,9 @@
         "end": "0x80002bdc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsSvZalrscSm/ExceptionsSvZalrscSm_sv32_medeleg_Zalrsc_Smode-00",
@@ -839,7 +977,8 @@
         "end": "0x80001f04",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsSvZalrscSm/ExceptionsSvZalrscSm_sv32_medeleg_Zalrsc_Umode-00",
@@ -866,7 +1005,8 @@
         "end": "0x80001f04",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/ExceptionsU/ExceptionsU-00",
@@ -893,7 +1033,9 @@
         "end": "0x80002c10",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsZaamo/ExceptionsZaamo-00",
@@ -920,7 +1062,9 @@
         "end": "0x800035b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/ExceptionsZalrsc/ExceptionsZalrsc-00",
@@ -947,7 +1091,9 @@
         "end": "0x80000bd0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_enable_S-00",
@@ -974,7 +1120,9 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_enable_U-00",
@@ -1001,7 +1149,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_priority_sie_S-00",
@@ -1028,7 +1177,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_priority_sie_U-00",
@@ -1055,7 +1205,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_priority_sip_S-00",
@@ -1082,7 +1233,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_priority_sip_U-00",
@@ -1109,7 +1261,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_trigger_S-00",
@@ -1136,7 +1289,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_trigger_U-00",
@@ -1163,7 +1317,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_wfi_S-00",
@@ -1190,7 +1345,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_wfi_timeout_S-00",
@@ -1217,7 +1373,8 @@
         "end": "0x80000120",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsS/InterruptsS_wfi_timeout_U-00",
@@ -1244,7 +1401,8 @@
         "end": "0x80000240",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_enable_M-00",
@@ -1271,7 +1429,9 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_enable_S-00",
@@ -1298,7 +1458,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_enable_U-00",
@@ -1325,7 +1486,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mideleg_M-00",
@@ -1352,7 +1514,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mideleg_S-00",
@@ -1379,7 +1542,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mideleg_U-00",
@@ -1406,7 +1570,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mie_M-00",
@@ -1433,7 +1598,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mie_S-00",
@@ -1460,7 +1626,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mie_U-00",
@@ -1487,7 +1654,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mip_M-00",
@@ -1514,7 +1682,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mip_S-00",
@@ -1541,7 +1710,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_priority_mip_U-00",
@@ -1568,7 +1738,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_trigger_M-00",
@@ -1595,7 +1766,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_trigger_S-00",
@@ -1622,7 +1794,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_trigger_U-00",
@@ -1649,7 +1822,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_wfi_M-00",
@@ -1676,7 +1850,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_wfi_S-00",
@@ -1703,7 +1878,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_wfi_U-00",
@@ -1730,7 +1906,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_wfi_timeout_S-00",
@@ -1757,7 +1934,8 @@
         "end": "0x80000130",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_wfi_timeout_U-00",
@@ -1784,7 +1962,8 @@
         "end": "0x800001e0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/InterruptsSm/InterruptsSm_write_stip_sstc-00",
@@ -1811,7 +1990,8 @@
         "end": "0x80000080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_cfg_A_off-00",
@@ -1838,7 +2018,9 @@
         "end": "0x800001c8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/PMPS/PMPS_cfg_XWR-00",
@@ -1865,7 +2047,8 @@
         "end": "0x80000c30",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_cfg_XWR_unlocked-00",
@@ -1892,7 +2075,8 @@
         "end": "0x80000c30",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_csr_access-00",
@@ -1919,7 +2103,8 @@
         "end": "0x800010d8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_mprv_check-01-00",
@@ -1946,7 +2131,8 @@
         "end": "0x800006a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_mprv_check-02-00",
@@ -1973,7 +2159,8 @@
         "end": "0x800006a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_na4_legal_lxwr-00",
@@ -2000,7 +2187,8 @@
         "end": "0x80000d20",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_napot_legal_lxwr-01-00",
@@ -2027,7 +2215,8 @@
         "end": "0x80000cf4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_napot_legal_lxwr-02-00",
@@ -2054,7 +2243,8 @@
         "end": "0x80000cf4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_tor_legal_lxwr-01-00",
@@ -2081,7 +2271,8 @@
         "end": "0x80000b64",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPS/PMPS_tor_legal_lxwr-02-00",
@@ -2108,7 +2299,8 @@
         "end": "0x80000b64",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_all_entries_check-00",
@@ -2135,7 +2327,9 @@
         "end": "0x800011e0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_all-00",
@@ -2162,7 +2356,8 @@
         "end": "0x800001ec",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_all_na4-00",
@@ -2189,7 +2384,8 @@
         "end": "0x8000016c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_all_tor-00",
@@ -2216,7 +2412,8 @@
         "end": "0x8000016c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_off_all-00",
@@ -2243,7 +2440,8 @@
         "end": "0x800011e0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_tor_bot-00",
@@ -2270,7 +2468,8 @@
         "end": "0x8000073c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_A_tor_zero-00",
@@ -2297,7 +2496,8 @@
         "end": "0x8000033c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_L_access_all-00",
@@ -2324,7 +2524,8 @@
         "end": "0x800012a0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_L_modify_napot-00",
@@ -2351,7 +2552,8 @@
         "end": "0x800002cc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_L_modify_off-00",
@@ -2378,7 +2580,8 @@
         "end": "0x800002c8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_L_modify_tor-00",
@@ -2405,7 +2608,8 @@
         "end": "0x800002cc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_XWR_all-01-00",
@@ -2432,7 +2636,8 @@
         "end": "0x80001808",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_XWR_all-02-00",
@@ -2459,7 +2664,8 @@
         "end": "0x80001808",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_XWR_all-03-00",
@@ -2486,7 +2692,8 @@
         "end": "0x80001808",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_XWR_all-04-00",
@@ -2513,7 +2720,8 @@
         "end": "0x80001808",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_na4_all-00",
@@ -2540,7 +2748,8 @@
         "end": "0x80000c40",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_napot_all-00",
@@ -2567,7 +2776,8 @@
         "end": "0x80000e20",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_tor_all-00",
@@ -2594,7 +2804,8 @@
         "end": "0x800008fc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_tor_check-01-00",
@@ -2621,7 +2832,8 @@
         "end": "0x800002f8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_tor_check-02-00",
@@ -2648,7 +2860,8 @@
         "end": "0x80000318",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_cfg_tor_check-03-00",
@@ -2675,7 +2888,8 @@
         "end": "0x80000318",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_grain-00",
@@ -2702,7 +2916,8 @@
         "end": "0x800004f0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_grain_check-00",
@@ -2729,7 +2944,8 @@
         "end": "0x80000114",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_na4_legal_lxwr-00",
@@ -2756,7 +2972,8 @@
         "end": "0x80000cf8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_napot_legal_lxwr-01-00",
@@ -2783,7 +3000,8 @@
         "end": "0x80000cec",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_napot_legal_lxwr-02-00",
@@ -2810,7 +3028,8 @@
         "end": "0x80000cec",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_pmpcfg_walk_01-00",
@@ -2837,7 +3056,8 @@
         "end": "0x80000110",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_pmpcfg_walk_02-00",
@@ -2864,7 +3084,8 @@
         "end": "0x80000350",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_pmpcfg_walk_03-00",
@@ -2891,7 +3112,8 @@
         "end": "0x80000350",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_pmpcfg_walk_04-00",
@@ -2918,7 +3140,8 @@
         "end": "0x80000350",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_pmpcfg_walk_05-00",
@@ -2945,7 +3168,8 @@
         "end": "0x80000350",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_priority-00",
@@ -2972,7 +3196,8 @@
         "end": "0x800007a0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_priority_off-00",
@@ -2999,7 +3224,8 @@
         "end": "0x80000260",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_tor_legal_lxwr-01-00",
@@ -3026,7 +3252,8 @@
         "end": "0x80000b1c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPSm/PMPSm_tor_legal_lxwr-02-00",
@@ -3053,7 +3280,8 @@
         "end": "0x80000b1c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_cfg_A_off-00",
@@ -3080,7 +3308,9 @@
         "end": "0x800001c8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/PMPU/PMPU_cfg_XWR-00",
@@ -3107,7 +3337,8 @@
         "end": "0x80000c30",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_cfg_XWR_unlocked-00",
@@ -3134,7 +3365,8 @@
         "end": "0x80000c30",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_csr_access-00",
@@ -3161,7 +3393,8 @@
         "end": "0x800010d8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_mprv_check-01-00",
@@ -3188,7 +3421,8 @@
         "end": "0x8000063c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_mprv_check-02-00",
@@ -3215,7 +3449,8 @@
         "end": "0x8000063c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_na4_legal_lxwr-00",
@@ -3242,7 +3477,8 @@
         "end": "0x80000d20",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_napot_legal_lxwr-01-00",
@@ -3269,7 +3505,8 @@
         "end": "0x80000cf4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_napot_legal_lxwr-02-00",
@@ -3296,7 +3533,8 @@
         "end": "0x80000cf4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_tor_legal_lxwr-01-00",
@@ -3323,7 +3561,8 @@
         "end": "0x80000b64",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPU/PMPU_tor_legal_lxwr-02-00",
@@ -3350,7 +3589,8 @@
         "end": "0x80000b64",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/PMPZaamo/PMPZaamo_cfg_wr-00",
@@ -3377,7 +3617,9 @@
         "end": "0x800009fc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/PMPZalrsc/PMPZalrsc_cfg_wr-00",
@@ -3404,7 +3646,9 @@
         "end": "0x800005a8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/S/S-00",
@@ -3431,7 +3675,9 @@
         "end": "0x800024e0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/S/S_scsr-00",
@@ -3458,7 +3704,8 @@
         "end": "0x8000250c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr-01",
@@ -3485,7 +3732,8 @@
         "end": "0x80002134",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr_addr-00",
@@ -3512,7 +3760,8 @@
         "end": "0x80001e60",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr_insufficient_priv-00",
@@ -3539,7 +3788,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr_insufficient_priv-01",
@@ -3566,7 +3816,8 @@
         "end": "0x80004060",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr_ro-00",
@@ -3593,7 +3844,8 @@
         "end": "0x80004880",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/S/S_scsr_ro-01",
@@ -3620,7 +3872,8 @@
         "end": "0x80002480",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_csr_insufficient_priv-00",
@@ -3647,7 +3900,9 @@
         "end": "0x80000280",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Sm/Sm_csr_ro-00",
@@ -3674,7 +3929,8 @@
         "end": "0x80004880",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_csr_ro-01",
@@ -3701,7 +3957,8 @@
         "end": "0x80004880",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_inst-00",
@@ -3728,7 +3985,8 @@
         "end": "0x800000f0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcause-00",
@@ -3755,7 +4013,8 @@
         "end": "0x80000374",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_access-00",
@@ -3782,7 +4041,8 @@
         "end": "0x80001d44",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_addr-00",
@@ -3809,7 +4069,8 @@
         "end": "0x8000197c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_cntr-00",
@@ -3836,7 +4097,8 @@
         "end": "0x80002ab8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-00",
@@ -3863,7 +4125,8 @@
         "end": "0x8000233c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-01",
@@ -3890,7 +4153,8 @@
         "end": "0x80002adc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-02",
@@ -3917,7 +4181,8 @@
         "end": "0x80002ce4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-03",
@@ -3944,7 +4209,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-04",
@@ -3971,7 +4237,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-05",
@@ -3998,7 +4265,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-06",
@@ -4025,7 +4293,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-07",
@@ -4052,7 +4321,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-08",
@@ -4079,7 +4349,8 @@
         "end": "0x80002ce0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-09",
@@ -4106,7 +4377,8 @@
         "end": "0x800016b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-10",
@@ -4133,7 +4405,8 @@
         "end": "0x80000cf8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mcsr_walk-11",
@@ -4160,7 +4433,8 @@
         "end": "0x800018b4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_misa-00",
@@ -4187,7 +4461,8 @@
         "end": "0x8000036c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_mstatus_sd-00",
@@ -4214,7 +4489,8 @@
         "end": "0x8000170c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_satp_from_m-00",
@@ -4241,7 +4517,8 @@
         "end": "0x80000094",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_satp_from_s-00",
@@ -4268,7 +4545,8 @@
         "end": "0x800000b4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_scsr_from_m-00",
@@ -4295,7 +4573,8 @@
         "end": "0x800005c8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_shadow-00",
@@ -4322,7 +4601,8 @@
         "end": "0x80000828",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sm/Sm_xret-00",
@@ -4349,7 +4629,8 @@
         "end": "0x80002528",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Ssccptr/Ssccptr_sv32_hptw_read-00",
@@ -4376,7 +4657,9 @@
         "end": "0x80000310",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Sscounterenw/Sscounterenw-00",
@@ -4403,7 +4686,9 @@
         "end": "0x80000b20",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Sstvecd/Sstvecd-00",
@@ -4430,7 +4715,9 @@
         "end": "0x8000053c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Sv/Sv_sv32_VA_all_ones_Smode-00",
@@ -4457,7 +4744,9 @@
         "end": "0x80000418",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Sv/Sv_sv32_VA_all_zeros_Smode-00",
@@ -4484,7 +4773,8 @@
         "end": "0x80000414",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_global_pte_Smode-00",
@@ -4511,7 +4801,8 @@
         "end": "0x80000570",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_global_pte_Umode-00",
@@ -4538,7 +4829,8 @@
         "end": "0x80000590",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_invalid_pte_Smode-00",
@@ -4565,7 +4857,8 @@
         "end": "0x80000438",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_invalid_pte_Umode-00",
@@ -4592,7 +4885,8 @@
         "end": "0x80000448",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_misaligned_page_Smode-00",
@@ -4619,7 +4913,8 @@
         "end": "0x800002d0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_misaligned_page_Umode-00",
@@ -4646,7 +4941,8 @@
         "end": "0x800002e0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_mstatus_mxr_Smode-00",
@@ -4673,7 +4969,8 @@
         "end": "0x800006c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_mstatus_mxr_Umode-00",
@@ -4700,7 +4997,8 @@
         "end": "0x800006f0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_nleaf_pte_DAU_Smode-00",
@@ -4727,7 +5025,8 @@
         "end": "0x800005d8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_nleaf_pte_DAU_Umode-00",
@@ -4754,7 +5053,8 @@
         "end": "0x80000628",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_nleaf_pte_level0_Smode-00",
@@ -4781,7 +5081,8 @@
         "end": "0x80000318",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_nleaf_pte_level0_Umode-00",
@@ -4808,7 +5109,8 @@
         "end": "0x80000328",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_pte_reserved_rwx_Smode-00",
@@ -4835,7 +5137,8 @@
         "end": "0x800006b8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_pte_reserved_rwx_Umode-00",
@@ -4862,7 +5165,8 @@
         "end": "0x800006e8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_pte_rsw_Smode-00",
@@ -4889,7 +5193,8 @@
         "end": "0x80000abc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_pte_rsw_Umode-00",
@@ -4916,7 +5221,8 @@
         "end": "0x80000b1c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_satp_access_Smode-00",
@@ -4943,7 +5249,8 @@
         "end": "0x80000388",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_spage_Smode-00",
@@ -4970,7 +5277,8 @@
         "end": "0x80000e38",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_spage_access_Umode-00",
@@ -4997,7 +5305,8 @@
         "end": "0x80000ec8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_spage_mstatus_sum_set_Smode-00",
@@ -5024,7 +5333,8 @@
         "end": "0x80000940",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_upage_Umode-00",
@@ -5051,7 +5361,8 @@
         "end": "0x80000ec8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_upage_mstatus_sum_set_Smode-00",
@@ -5078,7 +5389,8 @@
         "end": "0x80000e40",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Sv/Sv_sv32_upage_mstatus_sum_unset_Smode-00",
@@ -5105,7 +5417,8 @@
         "end": "0x80000e38",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvPMP/SvPMP_sv32_pmp_on_pa_Smode-00",
@@ -5132,7 +5445,9 @@
         "end": "0x80000a68",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/SvPMP/SvPMP_sv32_pmp_on_pa_Umode-00",
@@ -5159,7 +5474,8 @@
         "end": "0x80000a68",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvPMP/SvPMP_sv32_pmp_on_pte_Smode-00",
@@ -5186,7 +5502,8 @@
         "end": "0x80000508",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvPMP/SvPMP_sv32_pmp_on_pte_Umode-00",
@@ -5213,7 +5530,8 @@
         "end": "0x80000508",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvSm/SvSm_sv32_mstatus_mprv_Smode-00",
@@ -5240,7 +5558,9 @@
         "end": "0x800004d8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/SvSm/SvSm_sv32_mstatus_mprv_Umode-00",
@@ -5267,7 +5587,8 @@
         "end": "0x800004b8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvSm/SvSm_sv32_satp_access_Mmode-00",
@@ -5294,7 +5615,8 @@
         "end": "0x800000ec",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvSm/SvSm_sv32_upage_mprv_set_sum_set_Smode-00",
@@ -5321,7 +5643,8 @@
         "end": "0x800004f8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvSm/SvSm_sv32_upage_mprv_set_sum_unset_Smode-00",
@@ -5348,7 +5671,8 @@
         "end": "0x80000578",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvSm/SvSm_sv_mstatus_tvm_test-00",
@@ -5375,7 +5699,8 @@
         "end": "0x8000012c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Svade/Svade_sv32_Svade_Smode-00",
@@ -5402,7 +5727,9 @@
         "end": "0x80000bd8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Svade/Svade_sv32_Svade_Umode-00",
@@ -5429,7 +5756,8 @@
         "end": "0x80000c48",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/Svbare/Svbare_Svbare_Smode-00",
@@ -5456,7 +5784,9 @@
         "end": "0x80000138",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/Svbare/Svbare_Svbare_Umode-00",
@@ -5483,7 +5813,8 @@
         "end": "0x80000140",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/SvbareSm/SvbareSm_Svbare_mstatus_mprv-00",
@@ -5510,7 +5841,9 @@
         "end": "0x80000238",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/U/U-00",
@@ -5537,7 +5870,9 @@
         "end": "0x800000ac",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "priv/U/U_ucsr-00",
@@ -5564,7 +5899,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr-01",
@@ -5591,7 +5927,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr-02",
@@ -5618,7 +5955,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr-03",
@@ -5645,7 +5983,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr-04",
@@ -5672,7 +6011,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr-05",
@@ -5699,7 +6039,8 @@
         "end": "0x80004080",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "priv/U/U_ucsr_ro-00",
@@ -5726,7 +6067,8 @@
         "end": "0x80002480",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-add-00",
@@ -5753,7 +6095,9 @@
         "end": "0x800044b4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/I/I-addi-00",
@@ -5780,7 +6124,8 @@
         "end": "0x800034ac",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-and-00",
@@ -5807,7 +6152,8 @@
         "end": "0x800044e8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-andi-00",
@@ -5834,7 +6180,8 @@
         "end": "0x800034a8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-auipc-00",
@@ -5861,7 +6208,8 @@
         "end": "0x80000730",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-beq-00",
@@ -5888,7 +6236,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-bge-00",
@@ -5915,7 +6264,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-bgeu-00",
@@ -5942,7 +6292,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-blt-00",
@@ -5969,7 +6320,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-bltu-00",
@@ -5996,7 +6348,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-bne-00",
@@ -6023,7 +6376,8 @@
         "end": "0x8000a02c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-fence-00",
@@ -6050,7 +6404,8 @@
         "end": "0x8000050c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-jal-00",
@@ -6077,7 +6432,8 @@
         "end": "0x8001c03c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-jalr-00",
@@ -6104,7 +6460,8 @@
         "end": "0x80003c14",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lb-00",
@@ -6131,7 +6488,8 @@
         "end": "0x800014a0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lbu-00",
@@ -6158,7 +6516,8 @@
         "end": "0x800014a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lh-00",
@@ -6185,7 +6544,8 @@
         "end": "0x80001324",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lhu-00",
@@ -6212,7 +6572,8 @@
         "end": "0x80001320",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lui-00",
@@ -6239,7 +6600,8 @@
         "end": "0x80000724",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-lw-00",
@@ -6266,7 +6628,8 @@
         "end": "0x80001264",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-nop-00",
@@ -6293,7 +6656,8 @@
         "end": "0x80000084",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-or-00",
@@ -6320,7 +6684,8 @@
         "end": "0x800044bc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-ori-00",
@@ -6347,7 +6712,8 @@
         "end": "0x8000349c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sb-00",
@@ -6374,7 +6740,8 @@
         "end": "0x800028b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sh-00",
@@ -6401,7 +6768,8 @@
         "end": "0x800026b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sll-00",
@@ -6428,7 +6796,8 @@
         "end": "0x800044ac",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-slli-00",
@@ -6455,7 +6824,8 @@
         "end": "0x80001cbc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-slt-00",
@@ -6482,7 +6852,8 @@
         "end": "0x80004418",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-slti-00",
@@ -6509,7 +6880,8 @@
         "end": "0x8000345c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sltiu-00",
@@ -6536,7 +6908,8 @@
         "end": "0x80003464",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sltu-00",
@@ -6563,7 +6936,8 @@
         "end": "0x8000441c",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sra-00",
@@ -6590,7 +6964,8 @@
         "end": "0x800044b8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-srai-00",
@@ -6617,7 +6992,8 @@
         "end": "0x80001cc8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-srl-00",
@@ -6644,7 +7020,8 @@
         "end": "0x800044c4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-srli-00",
@@ -6671,7 +7048,8 @@
         "end": "0x80001cc8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sub-00",
@@ -6698,7 +7076,8 @@
         "end": "0x800044c4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-sw-00",
@@ -6725,7 +7104,8 @@
         "end": "0x800025b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-xor-00",
@@ -6752,7 +7132,8 @@
         "end": "0x800044c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/I/I-xori-00",
@@ -6779,7 +7160,8 @@
         "end": "0x800034b0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-div-00",
@@ -6806,7 +7188,9 @@
         "end": "0x800044d8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/M/M-divu-00",
@@ -6833,7 +7217,8 @@
         "end": "0x800044bc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-mul-00",
@@ -6860,7 +7245,8 @@
         "end": "0x800044dc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-mulh-00",
@@ -6887,7 +7273,8 @@
         "end": "0x800044d4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-mulhsu-00",
@@ -6914,7 +7301,8 @@
         "end": "0x800044e8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-mulhu-00",
@@ -6941,7 +7329,8 @@
         "end": "0x800044d0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-rem-00",
@@ -6968,7 +7357,8 @@
         "end": "0x800044c4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/M/M-remu-00",
@@ -6995,7 +7385,8 @@
         "end": "0x800044a8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amoadd.w-00",
@@ -7022,7 +7413,9 @@
         "end": "0x800081c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amoand.w-00",
@@ -7049,7 +7442,8 @@
         "end": "0x800081c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amomax.w-00",
@@ -7076,7 +7470,8 @@
         "end": "0x80009fc0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amomaxu.w-00",
@@ -7103,7 +7498,8 @@
         "end": "0x80009fc0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amomin.w-00",
@@ -7130,7 +7526,8 @@
         "end": "0x80009fc0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amominu.w-00",
@@ -7157,7 +7554,8 @@
         "end": "0x80009fc0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amoor.w-00",
@@ -7184,7 +7582,8 @@
         "end": "0x800081c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amoswap.w-00",
@@ -7211,7 +7610,8 @@
         "end": "0x800081c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zaamo/Zaamo-amoxor.w-00",
@@ -7238,7 +7638,8 @@
         "end": "0x800081c0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zalrsc/Zalrsc-lr.w-00",
@@ -7265,7 +7666,9 @@
         "end": "0x80000f08",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/Zalrsc/Zalrsc-sc.w-00",
@@ -7292,7 +7695,8 @@
         "end": "0x8000ca60",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrc-00",
@@ -7319,7 +7723,9 @@
         "end": "0x800020fc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrci-00",
@@ -7346,7 +7752,8 @@
         "end": "0x800011a8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrs-00",
@@ -7373,7 +7780,8 @@
         "end": "0x800020ec",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrsi-00",
@@ -7400,7 +7808,8 @@
         "end": "0x800011a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrw-00",
@@ -7427,7 +7836,8 @@
         "end": "0x800020f4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zicsr/Zicsr-csrrwi-00",
@@ -7454,7 +7864,8 @@
         "end": "0x800011a8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zifencei/Zifencei-fence.i-00",
@@ -7481,7 +7892,9 @@
         "end": "0x800002a4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/Zmmul/Zmmul-mul-00",
@@ -7508,7 +7921,9 @@
         "end": "0x800044dc",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "mismatch",
+      "spike_scope": "first difference only"
     },
     {
       "id": "rv32i/Zmmul/Zmmul-mulh-00",
@@ -7535,7 +7950,8 @@
         "end": "0x800044d4",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zmmul/Zmmul-mulhsu-00",
@@ -7562,7 +7978,8 @@
         "end": "0x800044e8",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     },
     {
       "id": "rv32i/Zmmul/Zmmul-mulhu-00",
@@ -7589,7 +8006,8 @@
         "end": "0x800044d0",
         "entry_retired": false,
         "instructions_in_range": 0
-      }
+      },
+      "spike": "not_run"
     }
   ],
   "reference_policy": "strict; zero synchronization; zero output masks; first-difference comparisons only, not full trace matches",
@@ -14575,5 +14993,14 @@
     "riscv_tests_strict_spike_match": 49,
     "mepc_write_1": "pass; complete strict Spike match",
     "missing_boot_csr": "fail; strict Spike mismatch"
-  }
+  },
+  "post_run_changes": [
+    {
+      "file": "rvmodel_macros.h",
+      "kind": "comment only",
+      "reason": "Corrected the inherited header label; no macro definition changed.",
+      "native_input_sha256": "083fb4bae51db5976d386721148705909c3e4b31498c7243cea9eb16136c5ff8",
+      "published_sha256": "dd15469306c112a1e5e4d906da58aa915dbcff90b29fad81ddd8c70b324929ae"
+    }
+  ]
 }

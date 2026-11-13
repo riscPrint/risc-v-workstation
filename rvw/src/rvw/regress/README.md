@@ -1028,6 +1028,9 @@ claim that all combinations within a family are supported.
 
 ## ACT4 builds
 
+See [ACT4 suites and measured examples](../../../../docs/ACT4.md) for the
+project profiles, native counts, open findings and functional coverage holes.
+
 Use `rvw regress plan --act4 PROJECT_PROFILE.json --json` to select ACT4
 extensions from project data. Use `rvw regress act4-build --profile
 PROJECT_PROFILE.json --checkout PINNED_ACT4 --out NEW_DIRECTORY` to build them.
