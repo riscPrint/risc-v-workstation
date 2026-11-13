@@ -397,7 +397,11 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     start = perf_counter()
     config_bytes, trace_bytes = Path(config_path).read_bytes(), Path(trace_path).read_bytes()
     try:
-        config = Config(**json.loads(config_bytes))
+        from .project import configuration
+        description = json.loads(config_bytes)
+        config = configuration(description)
+        if description.get("schema") == "rvw.arch-core/1" and json.loads(trace_bytes.splitlines()[0])["config"] != description["config"]:
+            raise ValueError("project description does not match C2 selected config")
     except TypeError as exc:
         raise ValueError(f"invalid model configuration: {exc}") from exc
     from .structures import check_configuration
@@ -409,7 +413,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
