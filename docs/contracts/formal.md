@@ -914,3 +914,12 @@ cycles. The sequence checks expected values and emits the existing
 `rvw.scenario-observation/1`. The bare-metal adapter must produce separate
 observations. The existing scenario checker validates outcomes, dependencies
 and resource occupancy. The CPU-backed route is not an independent bus master.
+
+## Nested eventual milestones
+
+The existing liveness result schema records `operator: nested_eventually` and
+`milestones`, the number of ordered Boolean milestones. Two to eight terms
+are accepted. The acceptance predicate uses a separate set of old obligations.
+It must hold infinitely often. These fields do not turn a finite observation
+or bounded pass into an unbounded proof. Other nested temporal operators and
+multi-clock proofs retain unsupported results.

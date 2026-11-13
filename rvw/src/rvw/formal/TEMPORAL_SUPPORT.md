@@ -41,3 +41,4 @@
 | `native asynchronous cancellation` | positive and negative native case | finite native observation; stable input disable controls |
 | `default clocking` | positive and negative native case | simple module-local defaults; bounded single-clock cases |
 | `default disable iff` | positive and negative native case | simple module-local defaults; bounded single-clock cases |
+| `nested eventual Boolean milestones` | native lasso oracle and positive/negative l2s jobs | two to eight ordered Boolean milestones; single clock |

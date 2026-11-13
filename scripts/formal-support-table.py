@@ -74,4 +74,11 @@ features = ast.literal_eval(next(node.value for node in defaults.body
                                         for t in node.targets)))
 rows += [f'| `{feature}` | positive and negative native case | simple module-local defaults; bounded single-clock cases |'
          for feature in features]
+nested = ast.parse((root / 'rvw/tests/formal/test_nested_eventually.py').read_text())
+features = ast.literal_eval(next(node.value for node in nested.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature}` | native lasso oracle and positive/negative l2s jobs | two to eight ordered Boolean milestones; single clock |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')
