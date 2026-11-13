@@ -458,3 +458,17 @@ a seed at either XLEN. Generated plans remain bounded, not exhaustive.
 For a row with both `hardware_event` and `reference_unavailable`, a conclusive
 C1 self-check failure still fails. A passing C1 result stays inconclusive.
 The checker does not call Spike for an unsupported HPM event selector.
+
+## Lazy floating-point context slice
+
+Campaign kind `fp-state` uses the existing `rvw.privilege/1` format and
+`rvw regress privilege` CLI and MCP paths. It accepts machine mode and an
+ISA with F. The generated `fp-context-fs` program checks an illegal
+instruction trap with FS off. It checks initial and clean readback. It
+then checks dirty state after an FP destination write. It uses a 32-bit
+tohost store at both XLEN values.
+
+The three bins describe program intent. A reference self-check pass gives
+no DUT credit. Native C1 and complete strict C2/2 comparison, including
+mstatus, fcsr and FP destinations, are separate evidence requirements.
+The slice does not test context save/restore, lower modes or migration.

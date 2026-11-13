@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "fp-state",
+  "modes": ["M"],
+  "priv": "m",
+  "isa": "rv64imafdc_zicsr_zifencei"
+}

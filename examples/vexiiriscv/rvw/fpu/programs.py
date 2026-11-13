@@ -60,6 +60,9 @@ def arithmetic(width, seed, random_cases):
 
 
 
+from rvw.privilege.fp_state import lazy_state
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--width', type=int, choices=[32, 64], required=True)
@@ -69,6 +72,7 @@ def main():
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / 'classes.S').write_text(arithmetic(args.width, args.seed, args.random_cases))
+    (args.out / 'lazy-fs.S').write_text(lazy_state())
 
 if __name__ == '__main__':
     main()
