@@ -178,9 +178,10 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             except (OSError, ValueError, TypeError) as exc:
                 add('adapter.build_run', 'error', str(exc), 'Implement C1 build/run and use a valid small ELF.')
             if conformance:
-                from .c1suite import conformance as c1_conformance
+                from .c1suite import conformance as c1_conformance, c2_conformance
                 try:
                     checks.extend(c1_conformance(cfg, info, smoke_elf, home=home))
+                    checks.extend(c2_conformance(cfg, info, smoke_elf, platform=smoke_platform))
                 except (OSError, ValueError, TypeError, KeyError) as exc:
                     add('conformance', 'error', str(exc), 'Fix the adapter or the smoke ELF and rerun --conformance.')
         for name, suite in cfg.suites.items():
@@ -205,7 +206,10 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
     suite = [c for c in checks if c['name'].startswith('conformance')]
     result['adapter_conformance'] = {
         'scope': 'C1 option checks around one ELF' if suite else 'one config and ELF; selected options only',
-        'full_c1': 'inconclusive' if not suite else 'ready' if all(c['status'] == 'ready' for c in suite) else 'error',
+        'full_c1': 'inconclusive',
+        'full_c2': 'inconclusive',
+        'requested_checks': ('error' if any(c['status'] == 'error' for c in suite) else
+                             'inconclusive' if any(c['status'] != 'ready' for c in suite) else 'ready') if suite else 'not_run',
         'checks': [c for c in checks if c['name'].startswith(('adapter.', 'conformance'))]}
     ready = all(c['status'] == 'ready' for c in checks)
     result.update(status='ready' if ready else 'not_ready', exit_code=0 if ready else 1)

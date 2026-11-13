@@ -107,13 +107,15 @@ def conformance(cfg, info, elf, *, home, timeout=300):
                              'run-many must run each manifest line with its own seed and latency.'))
 
         replayed = None
+        replay_ok = False
         replay = (one or {}).get('replay')
         if replay:
             words = shlex.split(replay)
             out = words[words.index('--out') + 1] if '--out' in words else None
             process = run_group(['bash', '-c', replay], cwd=home, timeout=timeout, capture=True)
             replayed = _result(out) if out else None
-        checks.append(_check('replay', bool(replayed) and all(replayed.get(k) == one.get(k)
+            replay_ok = process.returncode == 0
+        checks.append(_check('replay', replay_ok and bool(replayed) and all(replayed.get(k) == one.get(k)
                                                              for k in ('status', 'cycles', 'instret', 'seed', 'rtl_sha256', 'elf_sha256')),
                              {'replay': replay, 'replayed': {k: (replayed or {}).get(k) for k in ('status', 'cycles', 'instret', 'seed')}},
                              'The recorded replay command must reproduce status, cycles, instret, seed and identity.'))
@@ -154,4 +156,35 @@ def conformance(cfg, info, elf, *, home, timeout=300):
                                  {'exit_code': process.returncode, 'status': (wall or {}).get('status'),
                                   'wall_clock_timeout': (wall or {}).get('wall_clock_timeout')},
                                  'With wall_timeout declared, --wall-timeout must end a hung run as a wall-clock timeout.'))
+    return checks
+
+
+def c2_conformance(cfg, info, elf, *, platform=None, timeout=120):
+    """Request a real C2 stream for each advertised config; never infer signal mapping."""
+    from .conformance import artifacts
+    checks = []
+    with tempfile.TemporaryDirectory(prefix='rvw-doctor-c2-') as tmp:
+        for index, config in enumerate(info.get('configs') or cfg.configs):
+            directory = Path(tmp) / str(index)
+            try:
+                process = run_group([*cfg.adapter, 'run', '--config', config, '--elf', str(Path(elf).resolve()),
+                                     '--out', str(directory), '--seed', '7', '--max-cycles', '100000',
+                                     '--rvfi-trace', '--json'], cwd=cfg.path.parent,
+                                    timeout=timeout, capture=True)
+                record = _result(directory)
+                errors = validate_run(record) if record else ['no result.json']
+                ok = (process.returncode == 0 and not errors and record.get('status') == 'pass'
+                      and record.get('core') == cfg.name and record.get('config') == config)
+                checks.append(_check(f'c2.{config}.run', ok,
+                                     dict(exit_code=process.returncode, errors=errors,
+                                          stderr=(process.stderr or '')[-800:]),
+                                     'Run the smoke ELF with --rvfi-trace for this config and write a bound C1 result.'))
+                if ok:
+                    for check in artifacts(record, directory, ['rvfi'], info, elf=elf,
+                                           core=cfg.name, config=config, platform=platform):
+                        check['name'] = f'conformance.c2.{config}.' + check['name'].removeprefix('adapter.')
+                        checks.append(check)
+            except (OSError, ValueError, TypeError, KeyError) as exc:
+                checks.append(_check(f'c2.{config}.run', False, str(exc),
+                                     'Fix this config or its C2 stream and rerun doctor.'))
     return checks
