@@ -20,4 +20,24 @@ monitor inputs and complete output vectors with an always-on sampled clock.
 `rvw.upf-generation/1` records input hashes, normalized intent and unmonitored
 domains. Generation is not proof or physical power evidence. No generated monitor
 returns `no_checks`, exit 3. Unsupported commands and Tcl constructs are errors.
-Retention, supply tables and clock-gating import remain unsupported.
+Clock-gating import and physical supply modeling remain unsupported.
+
+## Literal retention and supply tables
+
+`rvw.upf-subset/1` can also retain `retention` and `psts` declarations.
+`rvw.upf-bindings/1` has optional maps with the same names. Every imported
+retention strategy and power-state table needs a binding. Retention uses
+sampled high/low save and restore controls. Supply tables compare declared
+integer state codes against legal tuples. Neither feature infers analog
+availability or voltage semantics. Generation retains the existing hashes,
+limitations and no_checks behavior.
+
+## Literal power-switch gating
+
+`rvw.upf-subset/1` can include `switches` from single-control
+`create_power_switch` declarations. The optional `switches` map in
+`rvw.upf-bindings/1` names sampling clock/reset, independent input/output
+availability and positive `settle_cycles`. After that many stable request
+samples, output availability must match input availability and the declared
+control sense. Names of supply ports do not establish physical connectivity.
+No analog ramp, glitch or clock-gating semantics are inferred.

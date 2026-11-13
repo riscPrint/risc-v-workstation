@@ -25,6 +25,16 @@ The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
 
+### Own-core correct-path branch overlap
+
+`branch_speculation` is an optional boolean, default false. When enabled,
+younger work can issue after an older branch's correct prediction and before
+its completion. Mispredictions retain recovery stalls. Serial control rules
+remain active. `correct_path_speculative_issues` counts such issues. Replay
+clears younger prediction decisions. Predictor history checkpoint/restore is
+not modeled. Optional front-end phase counters expose decode/fetch pressure,
+and `cycle_order` includes decode when configured. Accuracy stays inconclusive.
+
 ## Own-core FP dependency timing
 
 The own engine tracks separate integer and FP register dependency IDs. FP
@@ -260,3 +270,12 @@ bindings, optional SpinalDB locations, and the input capture. `status=pass` mean
 only that this SMT query is UNSAT. `minimal=true` means deletion minimality was
 checked with SAT on each single-constraint removal. Unknown removal results set
 `minimal=false`. This report is not a coverage exclusion or an RTL proof result.
+
+## Own-core component event projection
+
+Native cache demand/writeback/prefetch counts and TLB/walk counts are copied
+to the flat timing `events` map with cache-level or `tlb_` prefixes. Only
+present integer counts are projected. Nested native statistics are retained.
+Project RTL maps must use matching predicates, including replay and page-walk
+traffic. Ratios and averages are not projected as counts. No counter match
+or accuracy claim is implied by this projection.

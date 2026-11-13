@@ -112,3 +112,58 @@ one testbench `RVW_PASS` line and no native error diagnostic earns a pass.
 A failed compile, failed run, timeout or missing completion marker gives error.
 Requirements and missing-tool errors occur before output creation (CLI exit 2).
 This format does not capture transitive file inputs or establish C8 reuse.
+
+## Probe event stream (`rvw.probe-events/1`)
+
+`<adapter> run ... --probes` (C1, optional) elaborates a separate model with the core's
+`spinalprobes.Probe` calls enabled and writes `probe-events.jsonl` (C1 artifact
+`probe_events`). The model key adds `probes` (name suffix `_probes`). Adapters without
+probe support refuse the flag. A run with `--probes` and no registered probe is an error.
+
+The stream is JSONL. Line 1 is the header: `schema`, `identity` (the C2 header's `core`,
+`config`, `elf`, `elf_sha256`, `rtl_sha256`, `seed` when present) and `probes`, a list of
+`{id, kind, name, fields: [[name, width]...], meta: {...}}` with ids `0..n-1`. Each event is
+an array `[cycle, id, value...]` with integer values in the probe's field order. Cycles do not
+decrease and use the C2 writer's cycle number. The last line is
+`{"end": true, "cycles", "counters": {name: total}, "events": {id: count}}`. A stream without
+it is incomplete; totals from it are refused.
+
+Kinds: `branch` (pc, taken, target, optional predicted_taken, predicted_target; meta
+`semantics`, `covers`), `cache` (address, optional hit, write, data, mask, way; meta `cache`,
+`event`), `tlb` (optional va, pa, asid, entry, size, global, pte_address, pte; meta `event`
+fill/hit/miss/invalidate), `walk` (address, optional data, level, fault; meta `event`
+request/response), `stage` (id, optional pc; meta `stage`, `lane`; occupancy), `retire` (id),
+`flush` (id), `stall` (no fields; meta `scope`, `cause`, `evidence`; level), `csr` (address,
+value), `interrupt` (cause, pc, optional tval), `trace` (itype, iaddr, iretire, ilastsize,
+priv, optional cause, tval), `counter` (inc, summed each cycle and written only in the end
+record; optional meta `hpm`), `fault` (a register site, never sampled) and `custom`.
+
+`rvw probes convert` writes consumer formats: `rvw.bp-events/1` (events aligned 1:1 with C2
+branch retirements of the covered kinds, matching PC and taken outcome, else refused),
+Kanata 0004 with `#rvw 1 stall` records, cache observer JSONL (`event` is `CACHE.EVENT`),
+`rvw.mmu-observations/1`, ooo-calibrate RTL event counts (`c1_sha256`, `trace_sha256`,
+`counts`, `cycles`), E-Trace encoder ingress CSV, `rvw.hpm-bindings/1` (`identity`, `cycles`,
+`bindings: [{selector, counter, total}]`) and `rvw.probe-interrupts/1` (`status`
+`consistent`, `mismatch` or `inconclusive`; interrupt probe causes against C2 interrupt trap
+events in order). `rvw probes list` writes `rvw.probes-report/1`: `probes`, one `consumers`
+row per tool with `status` `enabled`, `missing`, `unknown` or `no_converter`, and the
+`enabled`/`missing` lists. Probe events are producer claims; no converter adds an event.
+`rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
+counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
+`RVW_UVM_DONE TEST checks=N` line with the selected test and positive N.
+`rvw uvm regress` writes one C3 row per test/seed and links the corresponding
+C1 and log. `source.identity_complete` is false. These results are component
+checks, not a core gate identity. Native coverage merging does not merge
+functional coverage plans or establish closure.
+
+## Standard device checkpoint payload
+
+The optional `PythonDevices.cpp` library implements `DeviceApiV1` unchanged.
+Its snapshot bytes contain UTF-8 JSON with schema `rvw.standard-device/1`.
+Fields are `schema`, `config`, `cycle` and `state`. Restore requires equal
+configuration and the same model state inventory. Byte arrays use a `bytes`
+hex object. Sets use a sorted `set` array object. The payload is trusted
+same-build state. Capture the plugin, Python library and Python source digests
+in the run identity. Host console output and host file writes are not emitted.
+The model owns the buffered console and disk state. See
+`RiscvSim/src/main/cpp/DEVICES.md` for model selection and interrupt bits.

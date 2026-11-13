@@ -46,7 +46,6 @@ capture overhead can exceed this budget. No new attempt starts after expiry.
 A bounded pass at the maximum depth remains `inconclusive`. Only a concrete
 failed attempt gives aggregate `fail`. Search never claims an unbounded proof.
 
-
 ### Formal simulation-state swarm
 
 `rvw.formal-swarm/1` has aggregate `status: inconclusive` and exit 1. `selection`
@@ -57,7 +56,6 @@ state has `status: error` and a reason. `missing_cycles` lists tasks not started
 earn reset reachability, gate acceptance or unbounded proof. Sources, includes,
 checks and waveform are copied once in the parent `input_snapshot`. Child
 results retain their own full tool/input captures and solver evidence.
-
 
 ### Formal exact proof reuse
 
@@ -72,7 +70,6 @@ capture, frontend checks, tool verification and bounded reachability remain
 mandatory on hits. An invalid entry is a miss. Only successful results with
 assertions and reachable guards enter this cache. Mounted directory sharing
 requires C8 trust; no remote authentication or gate acceptance is supplied.
-
 
 ### Formal memory encoding
 
@@ -142,3 +139,14 @@ start. Result bits and flags are checked at that first completion. Missing done
 is a completion failure. Operands stay stable. `inputs.binding.json` captures the
 optional project top and canonical-to-project port map by SHA-256. A binding
 changes names only. It does not remove ports, change widths or add assumptions.
+
+## Sampled clock-event equivalence
+
+`rvw.formal.equiv/1.event_model` records the `yosys clk2fflogic` backend,
+global-sample scope and `stable_at_edge` input names. Simple `$dlatch` cells are
+allowed only through the explicit sampled-event equivalence frontend. Both
+wrappers are normalized before eqy output partitioning. Each declared input
+setup constraint is captured as an assumption in both wrappers. Reset/settle
+count root-clock edges. There is no between-sample transition or analog claim.
+A completed query reports status `conditional` and a separate `contract_verdict`.
+CLI exit is 1. Default formal flows retain their prior state/clock restrictions.

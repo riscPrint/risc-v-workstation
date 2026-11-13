@@ -16,6 +16,15 @@ register intent. It does not provide independent bus observations or a verdict.
 
 ## Project CSR generation
 
+### Native event and device binding examples
+
+The optional VexRiscv HPM binding observes real CSR storage and independent
+clock/last-stage events. It declares masked RV32 counter-half writes. Generic
+`HpmChecks.bind` applies increments before selected write-mask bits. Unselected
+bits retain the increment result. The GPIO example selects actual library IP
+APB direction accesses. Neither example grants full architectural, peripheral
+or physical-device qualification.
+
 #### Project check generation
 
 `rvw.check-generation/1` selects relative input files for streams, buses, csrs,

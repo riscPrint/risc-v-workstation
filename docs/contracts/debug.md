@@ -27,3 +27,11 @@ and invokes SpinalTrace. Static drivers remain distinct from dynamic evidence.
 The selected database and wave identities do not establish a shared C1 run.
 The loopback web host exposes the same requests at `POST /api`. These are local
 UI transport operations. They issue no simulation or acceptance verdict.
+
+## Progress-possibility app
+
+`rvw.deadlock-app/1` reports reachable states, states with no progress path,
+terminal states and states without an admissible fair infinite continuation.
+The explicit finite graph supplies the state and edge universe. Fairness uses
+state justice. A pass establishes progress possibility in that graph only.
+Infeasible fairness remains inconclusive. No RTL translation claim is added.

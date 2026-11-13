@@ -22,6 +22,9 @@ See `rvw/src/rvw/sim/README.md` for exact limits and artifact paths.
 
 ## Typed simple-bus monitor generation
 
+TileLink rows use `coverage=opcode_safety`. They do not apply generic Stream
+stability to offers before acceptance.
+
 Typed multichannel bus rows include `component_id`, `class_name`, `coverage`
 and `limitations`. `coverage=channel_safety` means full payload stall stability,
 channel valid persistence and the listed opcode/burst field rules only. It is
@@ -38,3 +41,24 @@ The aggregate is `no_checks` when no monitor generated, with exit 3. Otherwise
 it is `generated`, with exit 0. Unsupported rows retain their reasons.
 Only top-component APB3, AHB-Lite3 and AXI4-Stream types are selected.
 Missing recorded clock/reset metadata is not inferred from signal names.
+
+## Reduced coherent VIP event bridge
+
+`rvw.chi-like/1` is a reduced project event contract, not an Arm CHI bus.
+Fields are `kind` (request 0, snoop acknowledgement 1, completion 2),
+`txn`, `node`, 64-byte-aligned `line`, `op` (ReadShared 0, ReadUnique 1,
+WriteBack 2) and abstract 64-bit `data`. Requests consume a source credit.
+Completion requires all declared snoop acknowledgements and correct data.
+It restores the source credit. One request can be active per line.
+The project owns licensed-bus translation. There is no CHI conformance
+verdict, dirty forwarding or native backend qualification in this format.
+
+## DRAM native model integration
+
+`rvw.vip.dram-model/1` declares model name/version, functional or timing
+mode and a positive clock period in picoseconds. The project backend
+receives commands with integer cycle, operation, bank, row, column and
+64-bit data. A read returns data and, in timing mode, its response cycle.
+Missing models or response evidence are errors. The reduced independent
+checker covers ACT/PRE/RD/WR/REF and declared cycle timing. Mock callbacks
+qualify only the contract. No native-model, JEDEC or board signoff follows.
