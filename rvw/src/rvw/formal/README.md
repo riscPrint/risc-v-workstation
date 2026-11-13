@@ -3084,3 +3084,19 @@ hashes, assumptions and individual cycle settings.
 Autocheck input errors return exit 2 and `rvw.autocheck-error/1` JSON.
 Declare clock and reset as one-bit input ports in the manifest. Invalid
 bindings do not produce a proof result.
+## Automatic strategy plans
+
+Run `rvw formal strategy --model design.json --history bench.json --out plan.json`.
+MCP: `formal_strategy`. Supply a Yosys `write_json` model and optional repeated
+engine-bench history files. The planner counts state bits, memory cells,
+adders, multiplication/division and liveness cells. Boolean safety starts with
+PDR/rIC3. Memory or arithmetic puts word-level engines first. Qualified history
+orders engines by solved count, then mean wall time per solve. Conditional and
+bounded observations cannot train the order. The recorded VexRiscv table has
+zero qualified solves and therefore cannot supply a learned winner.
+
+The plan selects RAM, UF, bound counter-leaf or state-cut candidates from these
+features. It requires a liveness reduction when live/fair cells exist. It runs
+no proof and changes no RTL. State size is a cell inventory, not reachable
+state. Counter leaf bindings still need a project declaration. Supplied history
+need not predict a different design. No ML package is used.

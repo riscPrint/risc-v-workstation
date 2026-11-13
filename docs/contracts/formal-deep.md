@@ -372,3 +372,13 @@ are read in manifest order. EBMC returns `unsupported_input` with reason
 Compiled variant plans retain the original model hash, variant kind and
 transformed model hash. They are overapproximations. Failed variant answers
 are not concrete failures of the original problem.
+
+## Strategy plans
+
+`rvw formal strategy` and MCP `formal_strategy` consume a Yosys model and
+optional engine-bench history. `rvw.formal-strategy/1` has status `planned`,
+feature counts, ordered engines, candidate abstractions, accepted history
+samples and reasons. Only rows with qualified `problem_status=pass|fail` and
+positive elapsed time affect learning. Bounded and conditional rows cannot.
+No proof result is emitted. Liveness returns reduction candidates and no raw
+safety engine order. Counter candidates require explicit leaf bindings.
