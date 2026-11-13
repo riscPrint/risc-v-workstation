@@ -8,7 +8,7 @@ import vexriscv.plugin._
 
 /** Bare physical-memory RV32IM, with M-only CSRs and no caches, MMU or debug unit. */
 object VexTop {
-  def configuration(): VexRiscvConfig = VexRiscvConfig(plugins = List(
+  def configuration(probePlugin: Boolean = true): VexRiscvConfig = VexRiscvConfig(plugins = List(
     new IBusSimplePlugin(resetVector = 0x80000000L, cmdForkOnSecondStage = false,
       cmdForkPersistence = true, prediction = STATIC, catchAccessFault = true, compressedGen = false),
     new DBusSimplePlugin(catchAddressMisaligned = true, catchAccessFault = true),
@@ -25,8 +25,7 @@ object VexTop {
     new CsrPlugin(csrConfig),
     new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true),
     new FormalPlugin,
-    new TrapProbePlugin,
-    new ProbePlugin))
+    new TrapProbePlugin) ++ (if (probePlugin) List(new ProbePlugin) else Nil))
 
   def csrConfig: CsrPluginConfig = CsrPluginConfig.all2(0x80000000L).copy(userGen = false, supervisorGen = false,
     misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true,
