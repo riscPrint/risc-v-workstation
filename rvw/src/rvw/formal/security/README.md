@@ -199,3 +199,50 @@ The CSR bank is an explicit trusted observation binding. The monitor does not
 prove CSR address decoding, WARL legalization, MML/MMWP stickiness, RLB or locked
 write suppression. It does not check DMA/debug initiators unless the project
 binds their requests and effective policy. Those remain separate obligations.
+## Prove an exported RTL policy
+
+```sh
+rvw formal security prove --rtl unit.v --top top \
+  --policy examples/security/policies/secure-path.json --out /tmp/secure-proof
+```
+
+This command maps self-contained RTL with Yosys, applies the Boolean IFT pass,
+binds a policy and runs the existing unbounded ABC PDR assertion flow.
+It checks data and control taint through reset and sequential state.
+The policy names public `clock` and active-high synchronous `reset` inputs.
+`sources` must be input ports. `sinks` must be output ports. Both lists must be
+nonempty. `adversary` describes input control. `unmodeled_channels` lists the
+channels outside the proof. The result retains this policy and the C7 proof.
+MCP tool: `formal_security_prove`.
+
+A `declassifier` can name a scalar public input. Sink taint is permitted while
+this input is high. It is checked again when the input goes low. A release pulse
+does not permit data to stay in the sink after release. The policy owner must
+justify release authorization. This command does not prove that authorization.
+Unsupported cells, memories, blackboxes, X/Z constants and unknown state models
+remain errors. Reconvergent taint can produce a conservative false alarm.
+
+Use `kind: constant_time` and list `operations` to declare a Zkt operation subset.
+Name timing control outputs such as done and ready as sinks. The proof checks
+these outputs on every cycle, for all source values. Result data is not a timing
+sink. The project must bind the declared operations to this unit. This does not
+certify full Zkt, physical timing, resource scheduling or enclosing core behavior.
+
+### Static access isolation
+
+`kind: isolation` checks an independent resolved access policy. It does not use
+taint. `signals` maps `request`, `grant`, `write`, `execute`, `privilege`, `master`
+and `address` to top ports. `privilege` has two bits. The request, grant, write
+and execute signals each have one bit. `access_bytes` declares a fixed access
+size. `regions` is a priority-ordered list of byte intervals with inclusive
+`start` and exclusive `end`. Each region has `permissions`, a list of objects
+with numeric `master`, numeric `privilege` and Boolean `read`, `write`, `execute`.
+Unlisted permissions deny access. Execute and write together are refused.
+The first region touched by a request must contain the full request. This catches
+partial boundary overlaps and address wrap. A grant for an unpermitted request
+fails the proof. Reset is public and synchronous, as in the IFT flow.
+
+The project must resolve PMP/ePMP configuration into this independent policy.
+This proves static observed access isolation only. It does not check CSR decode,
+Smepmp rule derivation, policy updates with outstanding requests or unbound bus
+masters. Those obligations remain open. No whole-system security claim follows.
