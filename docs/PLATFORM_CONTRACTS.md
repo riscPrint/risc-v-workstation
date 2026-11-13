@@ -2885,6 +2885,28 @@ config, engine, identity and local creation time. `rvw.ooo-prediction-score/1`
 binds its hash and the later conclusive C1 hash in a separate exclusive file.
 Scoring rechecks captures and exact identities. Local timestamp checks are
 not trusted chronology. No native speed qualification is established.
+### Saved checkpoint warmup observations
+
+`rvw.arch-warmup-plan/1` declares captured ELF bytes, a fixed `[start,start+length)`
+instruction ROI, an error target, a from-reset baseline and warmup samples.
+Each sample binds saved C1/C2 and W. C1 metrics declare ROI start, instruction
+count and measured cycles. Samples use start order W; baseline uses start.
+`rvw.arch-warmup-bias/1` records input captures, cycles, CPI, IPC and signed and
+absolute CPI bias. Architectural suffix records must match after excluding
+order and cycle. Seeds, memory timing, ELF and core identities must match.
+Missing evidence causes an error. Budget comparisons are observations only.
+Accuracy remains inconclusive. No checkpoint or RTL job is launched.
+
+### C2 BBV sampling plans
+
+`rvw.arch-sampling/1` binds a complete single-hart C2 trace hash to fixed
+instruction intervals, BBV counts, deterministic clusters and selected actual
+intervals. Each sample gives `[start,end)`, capture order, actual planned
+warmup, represented instruction count and its instruction fraction `weight`.
+The final short interval uses its actual length. Weights sum to one.
+`accuracy_status` remains inconclusive. Phase selection is not checkpoint
+restore or timing qualification. The CPI helper checks each measured sample's
+instruction count and weights CPI by represented instructions.
 
 ### Experimental trace-driven OoO timing reports
 

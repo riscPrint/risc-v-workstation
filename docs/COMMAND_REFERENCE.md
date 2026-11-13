@@ -42,7 +42,7 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {ooo-calibrate,ooo-predict,ooo-score,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -64,6 +64,19 @@ usage: rvw arch ooo-predict [-h] --out OUT [--json] [--project PROJECT]
 ```text
 usage: rvw arch ooo-score [-h] --out OUT [--json] [--project PROJECT]
     prediction c1
+```
+
+### `rvw arch warmup-bias`
+
+```text
+usage: rvw arch warmup-bias [-h] --out OUT [--json] [--project PROJECT] plan
+```
+
+### `rvw arch sample`
+
+```text
+usage: rvw arch sample [-h] --out OUT [--interval INTERVAL] [--clusters
+    CLUSTERS] [--warmup WARMUP] [--json] [--project PROJECT] trace
 ```
 
 ### `rvw arch sched-generate`
@@ -1327,7 +1340,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 95 built-in tools, including the four job tools.
+The default server exposes 101 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1422,6 +1435,14 @@ Arguments: `project`, `bench`, `out` (required), `timeout`.
 
 Starts a background job: yes.
 
+### `arch_sample`
+
+Select instruction-weighted BBV phases from complete C2. No restore or fidelity claim.
+
+Arguments: `trace` (required), `out` (required), `project`, `interval`, `clusters`, `warmup`.
+
+Starts a background job: yes.
+
 ### `arch_score_prediction`
 
 Score a stored prediction against later RTL evidence.
@@ -1443,6 +1464,14 @@ Starts a background job: yes.
 Run a bounded serial gem5 sweep. Retain model-only identities and SQLite results.
 
 Arguments: `spec` (required), `out` (required), `project`, `bench`.
+
+Starts a background job: yes.
+
+### `arch_warmup_bias`
+
+Compare saved fixed-ROI warmup observations after architectural suffix checks.
+
+Arguments: `plan` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 

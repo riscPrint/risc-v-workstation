@@ -637,3 +637,54 @@ The tool checks exact names and object paths. The project still owns counter
 semantics and unit scales. Missing counters stay unobserved. Request latency
 sums do not establish an outstanding-request integral. Retry time does not
 establish queue-full time. Neither establishes a cause of contention.
+
+## BBV phase selection from C2
+
+`rvw arch sample TRACE --interval 1000000 --clusters 8 --warmup 100000 --out PLAN --json`
+selects representative intervals from a complete passing single-hart C2 trace.
+The matching cancellable MCP job is `arch_sample`. No gem5 or RTL job starts.
+
+Basic blocks end at control flow or a nonsequential next PC. BBV entries count
+instructions in each block, including interval fragments. K-means uses
+instruction-normalized vectors, instruction-weighted centers and deterministic
+farthest-first initialization. It retains at most the requested cluster count.
+Identical phases share one cluster. The nearest actual interval represents
+each cluster. A short final interval retains its actual instruction count.
+
+The exclusive `rvw.arch-sampling/1` plan retains the trace hash, every interval,
+cluster membership, representative bounds, represented instruction fractions
+and planned warmup capture bounds. `actual_warmup` is truncated at trace start.
+The `sampled_cpi` Python helper aggregates measured CPI by represented
+instruction fractions and reports bias against a declared full-run cycle count.
+It requires every representative's exact instruction count. It never averages
+IPC directly.
+
+Tests check deterministic phases and weighted CPI on small synthetic traces.
+Full native validation, checkpoint restore, warmup bias and cache/predictor
+state qualification remain open. BBV similarity does not establish timing
+similarity. This is SimPoint-style clustering, not a SimPoint implementation.
+
+## Saved warmup bias observations
+
+`rvw arch warmup-bias PLAN --out REPORT --json` compares saved C1/C2 observations.
+The cancellable MCP job is `arch_warmup_bias`. No RTL job starts.
+PLAN has schema `rvw.arch-warmup-plan/1`, an `elf` path, fixed `start` and
+`length` instruction bounds, a declared `target_percent`, a `baseline` object
+with `c1` and `trace` paths, and `samples` with those paths plus `warmup` W.
+All paths resolve beside PLAN. W must be unique and in zero through start.
+Each sample represents capture at start minus W. Its actual warmup is W.
+
+C1 `metrics` must contain `roi_start_order`, `roi_instret` and `roi_cycles`.
+The baseline ROI starts at start; each restored trace ROI starts at W.
+Complete passing C2 and conclusive C1 must agree on whole-trace instruction
+counts and core/config/ELF identity. Each C1 must bind the captured ELF hash.
+The tool checks equal architectural suffix records after excluding order and
+cycle. It requires paired seeds and equal memory timing. Region cycles must
+be measured counters. Retirement timestamps do not replace them.
+
+`rvw.arch-warmup-bias/1` retains captures, raw cycles, CPI, IPC, signed and
+absolute CPI bias, and per-sample observed budget results. Missing baselines
+or counters cause an error. The report does not select a qualified W.
+Tests use synthetic saved observations. Cached-core and learned-predictor
+qualification, uncached-core startup measurements and native restore remain
+NOT RUN. Trace association and ROI counters remain producer declarations.
