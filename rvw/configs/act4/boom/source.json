@@ -1,0 +1,19 @@
+{
+  "source": "spinal-boom/act4/boom-rv64gc",
+  "files": {
+    "test_config.yaml": "0a61a097e355e17a9fbf971a91354572830ce4ba67c012f04d6127669db1d0e4",
+    "boom-rv64gc.yaml": "f69418e7431ced5be4afaa6e14eb40da1f1a1db9ec1a61241aad0ea6248e1a0a",
+    "link.ld": "d9a4d1190a0362b2238621134a2dba49e512b3a79b59ec96066434537740a27e",
+    "rvmodel_macros.h": "b11f1189c3fd17fe104c8bf68b455d159e9a95b4556c24ea67eadd10796b9680",
+    "sail.json": "e66be68251a0526649c9bab48ae914e6f3f8ad1a344857d72ea8313f79c067fb"
+  },
+  "changes": [
+    "Selected the bundled reference ISA, including Zicntr/Zihpm, plus explicit privileged options.",
+    "Disabled extra legacy instruction features in the local Sail file.",
+    "Kept source memory map, halt macros, UDB parameters and standard bootstrap.",
+    "Added the reset veneer that clears mscratch and mtvec with real instructions.",
+    "Removed legacy output masks from the local comparison platform.",
+    "Restricted Sail IO regions and CLINT size to the bundled platform map."
+  ],
+  "evidence": "configuration translation only; build and execution NOT RUN"
+}
