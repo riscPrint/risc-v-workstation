@@ -77,8 +77,25 @@ def _csr(job, **args):
     return json.loads((Path(args['out']) / 'result.json').read_text())
 
 
+def _template(job, **args):
+    from .invariants import NAMES
+    if args['kind'] not in NAMES:
+        raise ToolError('unknown template kind')
+    argv = [sys.executable, '-m', 'rvw', 'formal', 'template', args['kind'], '--out', args['out']]
+    for key in ('entries', 'width'):
+        if key in args:
+            argv += ['--' + key, str(args[key])]
+    code = job.run(argv)
+    if code:
+        raise ToolError('template generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return {'status': 'generated', 'out': args['out']}
+
+
 def mcp_tools():
     return [
+        ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
+                 schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
+                 _template, long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
