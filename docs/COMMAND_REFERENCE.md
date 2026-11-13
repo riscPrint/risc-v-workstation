@@ -1661,7 +1661,7 @@ usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
 
 ```text
 usage: rvw wave [-h] [--project PROJECT]
-    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,info}
+    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,info}
     ...
 ```
 
@@ -1756,6 +1756,27 @@ usage: rvw wave diff [-h] [--json] [--period PERIOD] [--clock CLOCK]
     [--indexed] [--signals SIGNALS] [--from T0] [--to T1] [--offset OFFSET]
     [--map MAP] [--on-clock] [--all] [--align ALIGN] [--align-b ALIGN_B]
     [--limit LIMIT] [--project PROJECT] wave other
+```
+
+### `rvw wave session`
+
+```text
+usage: rvw wave session [-h] [--project PROJECT] {save,open} ...
+```
+
+### `rvw wave session save`
+
+```text
+usage: rvw wave session save [-h] --wave WAVE [--db DB] [--signal SIGNAL]
+    [--cursor CURSOR] [--query QUERY] [--artifact ARTIFACT] [--note NOTE]
+    [--json] [--project PROJECT] out
+```
+
+### `rvw wave session open`
+
+```text
+usage: rvw wave session open [-h] [--root ROOT] [--json] [--project PROJECT]
+    session
 ```
 
 ### `rvw wave info`
@@ -3007,6 +3028,22 @@ Starts a background job: no.
 Match a clocked sequence 'a ##1 b ##[1:3] c' (SVA-like delays, ##[n:$] open) at each rising clock edge where the first expression holds; returns matches, failures and pending starts.
 
 Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `sequence` (required), `db`, `limit`.
+
+Starts a background job: no.
+
+### `wave_session_open`
+
+Open a debug session: locate each artifact (recorded path, or under the session directory or root), verify SHA-256, and report missing or changed artifacts and signals.
+
+Arguments: `session` (required), `root`.
+
+Starts a background job: no.
+
+### `wave_session_save`
+
+Write a portable debug session: signals (regexes resolved now), cursor times, embedded saved queries and the SHA-256 identity of the wave, database and other artifacts.
+
+Arguments: `out` (required), `wave` (required), `db`, `signals`, `cursors`, `queries`, `artifacts`, `note`.
 
 Starts a background job: no.
 
