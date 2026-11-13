@@ -384,6 +384,15 @@ rules remain in `QueueChecks`, `StateChecks` and the property library.
 Projects must bind their own structures and independent accepted events.
 No database inference, fairness, full ROB recovery or real-core proof is claimed.
 
+## UPF isolation import
+
+`rvw formal upf --source intent.upf --bindings bindings.json --out generated`
+imports a literal UPF 2.1 domain/isolation subset and generates sampled isolation
+checks. MCP: `formal_upf`. See `SpinalChecks/upf/README.md` for exact commands,
+binding fields, event semantics and unsupported constructs. Retention, supply
+state tables, clock gating and general Tcl remain unsupported. No verification
+runs during generation.
+
 ## SBY campaigns and property history
 
 The runner is separate from full SVA language support:

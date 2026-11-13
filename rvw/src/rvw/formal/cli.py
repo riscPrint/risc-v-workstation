@@ -82,6 +82,13 @@ def register(sub) -> None:
     events.add_argument("--out", required=True)
     events.set_defaults(func=device_events.run)
 
+    from . import upf_subset
+    upf = s.add_parser("upf", help="import a literal UPF domain/isolation subset and generate sampled checks")
+    upf.add_argument("--source", required=True)
+    upf.add_argument("--bindings", required=True)
+    upf.add_argument("--out", required=True)
+    upf.set_defaults(func=upf_subset.run)
+
     from . import csr
     c = s.add_parser("csr", help="generate project CSR checks, assembly and coverage")
     c.add_argument("--model", required=True)
