@@ -5,28 +5,31 @@ obligation. A breakpoint set prevents new requests from starving old ones.
 """
 import re
 
-from .sva import _expression, _group
+from .sva import _group
+from .sampled import emit as sampled_emit
 from .temporal import Unsupported, split, unwrap
 
 LIMIT = 64
 MARKER = re.compile(r'\bs_eventually\b|\b(?:s_)?until(?:_with)?\b|##\s*\[[^\]]*\$|\[\s*(?:\*|->|=)')
 
 
-def boolean(text):
-    text = unwrap(text)
-    try:
-        _expression(text)
-    except ValueError as error:
-        raise Unsupported('liveness_boolean', str(error)) from error
-    if '$' in text:
-        raise Unsupported('liveness_sampled_function')
-    return text
-
-
 class Monitor:
     def __init__(self, clock, prefix):
         self.clock, self.prefix = clock, prefix
         self.lines = []
+        self.expression_count = 0
+
+    def expression(self, text):
+        try:
+            value, history = sampled_emit(unwrap(text), self.clock,
+                                          f'{self.prefix}_sample{self.expression_count}')
+        except Unsupported:
+            raise
+        except ValueError as error:
+            raise Unsupported('liveness_boolean', str(error)) from error
+        self.expression_count += 1
+        self.lines.extend(history)
+        return value
 
     def state(self, name, expr, width=1):
         name = self.prefix + '_' + name
@@ -61,14 +64,14 @@ def emit(text, clock, prefix):
     parts = split(unwrap(text), r'\|->|\|=>')
     if len(parts) not in (1, 3):
         raise Unsupported('liveness_implication')
-    request = boolean(parts[0]) if len(parts) == 3 else '1'
+    monitor = Monitor(clock, prefix)
+    request = monitor.expression(parts[0]) if len(parts) == 3 else '1'
     offset = int(len(parts) == 3 and parts[1] == '|=>')
     rhs = unwrap(parts[-1])
-    monitor = Monitor(clock, prefix)
     request = monitor.delay(f'(({request}) != 0)', offset, 'start')[-1] if offset else request
     event = re.fullmatch(r's_eventually\s+(.+)', rhs, re.S)
     if event:
-        pending = monitor.pending(request, boolean(event[1]))
+        pending = monitor.pending(request, monitor.expression(event[1]))
         return monitor.finish(f'!{pending}'), {}
 
     parts = split(rhs, r'\b(?:s_)?until(?:_with)?\b')
@@ -76,7 +79,7 @@ def emit(text, clock, prefix):
         if len(parts) != 3:
             raise Unsupported('liveness_until_association')
         left, operator, right = parts
-        left, right = boolean(left), boolean(right)
+        left, right = monitor.expression(left), monitor.expression(right)
         pending = monitor.pending(request, right)
         # Non-inclusive until does not require left at the completion sample.
         condition = f'({pending} || ({request})) && !({left})'
@@ -105,8 +108,8 @@ def emit(text, clock, prefix):
     # One Boolean prefix followed by an unbounded delay and Boolean endpoint.
     delay = split(rhs, r'##\s*\[\s*\d+\s*:\s*\$\s*\]')
     if len(delay) == 3:
-        initial = boolean(delay[0]) if delay[0] else '1'
-        response = boolean(delay[2])
+        initial = monitor.expression(delay[0]) if delay[0] else '1'
+        response = monitor.expression(delay[2])
         minimum = int(re.search(r'\d+', delay[1])[0])
         eligible = monitor.delay(f'(({request}) != 0)', minimum, 'eligible')[-1]
         fatal = monitor.fatal(f'({request}) && !({initial})')
@@ -118,11 +121,11 @@ def emit(text, clock, prefix):
     # completion is sampled one tick after the repeated segment.
     repeat = re.fullmatch(r'(.*?)\[\s*\*\s*(?:(\d+)\s*:\s*\$)?\s*\]\s*(?:##\s*1\s+(.+))?', rhs, re.S)
     if repeat:
-        value = boolean(repeat[1])
+        value = monitor.expression(repeat[1])
         minimum = int(repeat[2] or 0)
         if repeat[3] is None and minimum == 0:
             raise Unsupported('empty_sequence_property')
-        response = boolean(repeat[3]) if repeat[3] is not None else '1'
+        response = monitor.expression(repeat[3]) if repeat[3] is not None else '1'
         taps = monitor.delay(f'(({request}) != 0)', minimum, 'mandatory')
         mandatory = ' || '.join(f'({tap})' for tap in taps[:-1]) or '0'
         eligible = taps[-1]
@@ -136,8 +139,8 @@ def emit(text, clock, prefix):
     # attempts. A separate owed set takes no new attempts until it empties.
     repeat = re.fullmatch(r'(.*?)\[\s*(->|=)\s*(\d+)\s*\]\s*(?:##\s*1\s+(.+))?', rhs, re.S)
     if repeat:
-        value, operator, count = boolean(repeat[1]), repeat[2], int(repeat[3])
-        completion = boolean(repeat[4]) if repeat[4] is not None else None
+        value, operator, count = monitor.expression(repeat[1]), repeat[2], int(repeat[3])
+        completion = monitor.expression(repeat[4]) if repeat[4] is not None else None
         if not 1 <= count <= LIMIT - bool(completion):
             raise Unsupported('liveness_capacity', 'repetition count must fit 64 state buckets')
         width = count + bool(completion)

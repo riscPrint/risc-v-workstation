@@ -1775,8 +1775,16 @@ The rules follow IEEE 1800-2017 clauses 16.9 and 16.12, including the weak defau
 for sequence properties. The [IEEE language reference](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf)
 gives the operator definitions. The generated support table includes paired native
 cases for each listed form. General nested sequence composition, count ranges,
-reset cancellation, local captures and sampled functions in this unbounded
-frontend remain refused. Native finite checks need a separate job.
+reset cancellation and local captures in this unbounded frontend remain refused. Native finite checks need a separate job.
+
+Unbounded operands can use the same clock-local `$past`, `$rose`, `$fell`,
+`$stable` and `$changed` history as finite properties. This includes request and
+response operands and Boolean units within supported repetitions. `$past` accepts
+a decimal depth from 1 to 64. Nested history is limited to eight levels. History
+retains the source width and sign. Rose/fell test the least significant bit.
+Stable/changed compare the full value with four-state equality. History before
+the first sample is unknown. Multi-clock history, gated sampled calls and local
+variable history remain outside this route.
 
 ### SVA liveness through safety engines
 
