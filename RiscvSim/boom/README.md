@@ -47,3 +47,37 @@ A source binding does not establish event accuracy. Keep measured counters,
 model estimates and unsupported consumers separate. Never infer an instruction
 ID from a wrapping ROB index. Predicated-off ROB commits must be counted
 separately from architectural commits (Refs: #49).
+
+## Optional probe binding
+
+`run --rvfi-trace --probes` enables `BoomProbes` and `ProbeCollector`.
+The core sources stay unchanged. A plain run adds no probes. The binding
+captures commit, architectural commit and predicated-off commit counts,
+rename levels, dispatch stalls, ROB-full and head occupancy, collapsing
+issue-queue occupancy, mispredict corrections, I-cache responses, I-TLB
+misses and page-walk memory requests and responses.
+
+The add smoke on `small`, seed 1, passed in 2487 cycles with 512 non-trapping
+retirements. It captured 514 commit events, 53 mispredict corrections and
+914 I-cache responses. Queue occupancy totals are slot-cycles: ROB head
+1116; memory issue 18; ALU issue 1099; unique issue 36; FP issue 0.
+Predicated-off commits, I-TLB misses and page-walk events were zero in this
+program. A zero count does not exercise that binding.
+
+`rvw probes convert` wrote 74 branch events, Kanata and C1/C2-bound counter
+JSON. `rvw perf` read 514 retirements with no open IDs. Its event IPC is
+0.21633 over cycles 112..2487, including two trap instructions. This is not
+the C1 whole-run IPC or a full pipeline trace.
+
+`rvw csim compare-rtl` is **inconclusive**: the 72 conditional branches have
+no captured direction prediction. The binding captures resolved next PCs
+but does not retain the prediction through the ROB. Do not infer a
+prediction from a correction or use a wrapping ROB index as a trace ID.
+Compressed control-flow decoding, full ROB occupancy, banked/matrix issue
+queues, D-cache hit/miss classification and full TLB-fill records remain
+open. `rob_head_occupancy` is only the head row, not the full ROB.
+
+The first native capture stopped before retirement because an FP capture
+register was unnamed. A corrected capture variant passed. There were two
+native builds, one for each RTL variant. No regression suite or BOOM formal
+job was run. Raw evidence remains in the local adoption run directory.
