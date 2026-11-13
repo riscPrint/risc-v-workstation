@@ -45,6 +45,7 @@ keep the issue list in `TODO.md` in step with them.
 | `examples/smp/` | Pinned cacheless VexiiRiscv SMP adapter with two to eight RTL harts and C2/2 capture. See its `README.md`. |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
 | `examples/vexiiriscv/` | External RV32/RV64 VexiiRiscv adapter (C2 from the upstream probe), regression config, Spike platform and SpinalDB entry. See its `README.md`. |
+| `examples/naxriscv/` | External out-of-order NaxRiscv adapter (RV32IMA, Sv32; C2 from the upstream commit probe), built with its pinned SpinalHDL through the Spinal axis (`scripts/sbt/SpinalAxis.scala`). See its `README.md`. |
 | `examples/picorv32/` | External Verilog PicoRV32 project written by `rvw init --verilog-top`: generic mapped adapter, regression, Spike platform and Yosys query entry. See its `README.md`. |
 | `rvw/src/rvw/workloads/` | Pinned open workload builds and Spike/QEMU output checks; local Linux and licensed SPEC manifests. |
 | `ComponentSims/` | Native trace-driven component models (direction predictors to TAGE-SC-L, BTB/RAS/ITTAGE, FTQ front end, caches, replacement, prefetchers, TLB, store sets, value prediction). CLI/MCP in `rvw/src/rvw/csim/` (`rvw csim`). See its `README.md`. |

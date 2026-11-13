@@ -193,9 +193,10 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
     case r: MemReadWrite =>
       memRead(r.mem, r.address, r.getWidth, c, info); info.delay = 1
       enableCond(r.chipSelect, info)
-    case r: MemReadAsyncWrite =>
-      warn(s"memory ${memSym(r.mem)}: asynchronous write attribution is not modeled")
-      memRead(r.mem, r.address, r.getWidth, c, info)
+    case r if spinalwaves.SpinalCompat.memReadAsyncWrite(r).nonEmpty =>
+      val (mem, address, width) = spinalwaves.SpinalCompat.memReadAsyncWrite(r).get
+      warn(s"memory ${memSym(mem)}: asynchronous write attribution is not modeled")
+      memRead(mem, address, width, c, info)
     case other =>
       if (other.getClass.getName.contains("$Formal$"))
         warn(s"formal expression ${other.getClass.getSimpleName} is not modeled")
@@ -507,8 +508,8 @@ class PdgExtractor(report: SpinalReport[_ <: Component], opts: ExtractOptions = 
       case rw: MemReadWrite =>
         emitMemWrite(rw.mem, rw.address, rw.data, Seq(rw.chipSelect, rw.writeEnable), locs.of(rw), ctx, out)
       case _: MemReadSync | _: MemReadAsync => // handled where the read data is assigned
-      case rw: MemReadAsyncWrite =>
-        warn(s"memory ${memSym(rw.mem)}: MemReadAsyncWrite ports are only traced on their read side")
+      case rw if spinalwaves.SpinalCompat.memReadAsyncWrite(rw).nonEmpty =>
+        warn(s"memory ${memSym(spinalwaves.SpinalCompat.memReadAsyncWrite(rw).get._1)}: MemReadAsyncWrite ports are only traced on their read side")
       case as: AssertStatement =>
         val loc  = locs.of(as)
         val info = new ExprInfo

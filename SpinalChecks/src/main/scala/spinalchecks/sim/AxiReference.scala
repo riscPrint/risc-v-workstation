@@ -8,7 +8,7 @@ import scala.collection.mutable
 /** Serialized INCR memory traffic. Expected bytes are separate from the subordinate memory.
   * Use protocol reference tests for channel errors and reordering. */
 class AxiReference(bus: Axi4, cd: ClockDomain) {
-  require(!bus.config.withAxi3, "AXI reference supports AXI4")
+  require(!spinalchecks.SpinalCompat.axi3(bus.config), "AXI reference supports AXI4")
   val master = Axi4Master(bus, cd)
   private val expected = mutable.Map.empty[BigInt, Byte]
   var reads = 0L

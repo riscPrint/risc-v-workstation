@@ -97,9 +97,14 @@ final class TileLinkProgressObserver(boundCycles: Long, capacity: Int, fairness:
   override def onA(a: TransactionA): Unit = enqueue(A(a.source))
   override def onB(b: TransactionB): Unit = enqueue(B(b.source, b.address,
     b.opcode == Opcode.B.PROBE_BLOCK || b.opcode == Opcode.B.PROBE_PERM))
+  // Sources with a C transaction in progress; used when TransactionC has no `beat` (older SpinalHDL).
+  private val cOpen = scala.collection.mutable.Set.empty[Long]
+  private def firstBeat(c: TransactionC): Boolean =
+    SpinalCompat.intMember(c, "beat").map(_ == 0).getOrElse(cOpen.add(c.source.toLong))
   override def onBeatC(c: TransactionC): Unit =
-    if (c.beat == 0 && (c.opcode == Opcode.C.RELEASE || c.opcode == Opcode.C.RELEASE_DATA)) enqueue(CStart(c.source))
-  override def onC(c: TransactionC): Unit = enqueue(C(c.source, c.address,
+    if (firstBeat(c) && (c.opcode == Opcode.C.RELEASE || c.opcode == Opcode.C.RELEASE_DATA)) enqueue(CStart(c.source))
+  override def onC(c: TransactionC): Unit = { cOpen -= c.source.toLong; enqueueC(c) }
+  private def enqueueC(c: TransactionC): Unit = enqueue(C(c.source, c.address,
     c.opcode == Opcode.C.PROBE_ACK || c.opcode == Opcode.C.PROBE_ACK_DATA,
     Set(Opcode.C.PROBE_ACK, Opcode.C.PROBE_ACK_DATA, Opcode.C.RELEASE, Opcode.C.RELEASE_DATA)(c.opcode)))
   override def onD(d: TransactionD): Unit = enqueue(D(d.source, d.sink,

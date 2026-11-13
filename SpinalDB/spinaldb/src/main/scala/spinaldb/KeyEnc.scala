@@ -9,7 +9,7 @@ import spinal.core.internals._
   *
   *   - a string is a quoted literal (`str`): `"` and `\` escaped, and every control character
   *     (ExprText's register-token marks U+0001/U+0002 among them) and every surrogate written
-  *     `\uXXXX`, so a string can neither end early nor pose as a token, and SQLite's UTF-8 cannot
+  *     `\\uXXXX`, so a string can neither end early nor pose as a token, and SQLite's UTF-8 cannot
   *     merge two strings;
   *   - a name (class, field, signal path, generic) is kept as it is when it is a plain JVM name
   *     (`[A-Za-z0-9_$.]+`, not `null`), else quoted (`name`);

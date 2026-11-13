@@ -113,7 +113,7 @@ private[spinalchecks] object ProtocolChecks {
   }
   def axiAddress(ax: Axi4Ax, emit: Bool => Unit): Unit = {
     val c = ax.config
-    require(!c.withAxi3, "AXI3 checks are not supported")
+    require(!SpinalCompat.axi3(c), "AXI3 checks are not supported")
     val len = if (c.useLen) ax.len.resize(9) else U(0, 9 bits)
     val size = if (c.useSize) ax.size else U(log2Up(c.bytePerWord), 3 bits)
     val burst = if (c.useBurst) ax.burst else B(1, 2 bits)

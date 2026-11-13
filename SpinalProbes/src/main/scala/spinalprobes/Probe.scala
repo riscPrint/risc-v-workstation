@@ -69,6 +69,8 @@ object Probe {
     val set = registry.synchronized(registry.computeIfAbsent(toplevel(c), _ => new ProbeSet))
     val base = s"${Prefix}__${kind}__${clean(name)}"
     Some(set.add { index =>
+      // ScopeStatement.on returns Unit in older SpinalHDL versions (for example NaxRiscv's pin).
+      var site: ProbeSite = null
       c.dslBody.on {
         val v = Bool().setName(s"${base}__valid")
         v := valid
@@ -82,8 +84,9 @@ object Probe {
           w.simPublic()
           clean(n) -> w
         }
-        ProbeSite(index, kind, name, v, copies, meta)
+        site = ProbeSite(index, kind, name, v, copies, meta)
       }
+      site
     })
   }
 

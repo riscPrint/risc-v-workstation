@@ -7,8 +7,8 @@ import scala.collection.mutable
 final class HartLifecycleObserver(harts: Set[Int], bootHarts: Set[Int], transitionBound: Long,
     fairness: String, onReset: Int => Unit = _ => (), requireClaimsDrained: Boolean = true, resetClearsIpi: Boolean = false) {
   require(harts.nonEmpty && bootHarts.subsetOf(harts))
-  private val states = mutable.Map.from(harts.map(h => h -> (if (bootHarts(h)) "started" else "stopped")))
-  private val epochs = mutable.Map.from(harts.map(_ -> 0))
+  private val states = mutable.Map(harts.toSeq.map(h => h -> (if (bootHarts(h)) "started" else "stopped")): _*)
+  private val epochs = mutable.Map(harts.toSeq.map(_ -> 0): _*)
   private val entries = mutable.Map.empty[Int, (BigInt, BigInt)]
   private val ipis = mutable.Set.empty[Int]
   private val owners = mutable.Map.empty[Int, Int]

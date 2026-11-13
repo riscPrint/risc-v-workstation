@@ -1,0 +1,7 @@
+target/
+project/target/
+project/project/
+db/target/
+out/
+__pycache__/
+!platform.json

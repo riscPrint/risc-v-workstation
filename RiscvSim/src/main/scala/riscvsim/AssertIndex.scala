@@ -14,7 +14,7 @@ class AssertIndex(entries: Seq[AssertIndex.Entry]) {
   /** Source locations ("File.scala:L123") whose message format matches `line`. */
   def locate(line: String): Seq[String] = {
     val t = line.trim
-    entries.filter(_.pattern.matches(t)).map(_.location).distinct
+    entries.filter(_.pattern.pattern.matcher(t).matches()).map(_.location).distinct
   }
 }
 
