@@ -101,7 +101,7 @@ finite-service environment. It does not establish unbounded progress, full bus
 compliance, or liveness on the workstation simulation variant.
 The C4 verdict remains inconclusive because these checks are bounded.
 
-Evidence: `/Users/mahir/fun/saviour/wt/.vex/conn/evidence/conn-fair-live/results.json`, `verdict.json` and SBY trees.
+Evidence: `<local evidence>/conn/evidence/conn-fair-live/results.json`, `verdict.json` and SBY trees.
 The source revision is `c992aa61fdfe0846c5ed90324c596202a1c69b76`.
 RTL SHA-256: `545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1`.
 Generated wrapper SHA-256: `992bb0e03f0d4e82004670350c67c5c29c3e3943adb15cb073d93f77daf1b4ad`.
@@ -129,10 +129,10 @@ timeout results do not replace the earlier bounded PASS records.
 The portfolio keeps source assumptions and reports activation as unchecked.
 A proof of this captured source would remain conditional on those assumptions.
 
-Evidence: `/Users/mahir/fun/saviour/wt/.vex/conn/evidence/conn-proof-insn_add_ch0/result.json`,
-`/Users/mahir/fun/saviour/wt/.vex/conn/evidence/conn-proof-insn_and_ch0/result.json`,
-`/Users/mahir/fun/saviour/wt/.vex/conn/evidence/conn-proof-plain/insn_and_ch0-race/result.json`, and
-`/Users/mahir/fun/saviour/wt/.vex/conn/evidence/conn-proof-lui/insn_lui_ch0-race/result.json`. The first two use the
+Evidence: `<local evidence>/conn/evidence/conn-proof-insn_add_ch0/result.json`,
+`<local evidence>/conn/evidence/conn-proof-insn_and_ch0/result.json`,
+`<local evidence>/conn/evidence/conn-proof-plain/insn_and_ch0-race/result.json`, and
+`<local evidence>/conn/evidence/conn-proof-lui/insn_lui_ch0-race/result.json`. The first two use the
 recorded fair wrapper. The latter two use a newly generated wrapper without
 bus environment declarations or input constants. All use the pinned RTL
 snapshot above. Capture manifests retain the source hashes and engine tools.
