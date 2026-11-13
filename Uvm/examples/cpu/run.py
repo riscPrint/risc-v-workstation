@@ -13,7 +13,7 @@ from rvw.sim import uvm
 from rvw.results import write_json
 
 
-def run(out, shim, archive):
+def run(out, shim, archive, *, build_timeout=600):
     if SHIM_VERSION != 6:
         raise ValueError('unsupported:live_cpu_spike_abi')
     out = Path(out).resolve()
@@ -58,7 +58,7 @@ def run(out, shim, archive):
         '-CFLAGS','-I'+str(out),'--Mdir',str(out/'obj'),
         '-MAKEFLAGS','OPT_FAST=-O0 OPT_SLOW=-O0']
     with (out/'build.log').open('w') as log:
-        result=run_group(command,timeout=120,stdout=log,stderr=log)
+        result=run_group(command,timeout=build_timeout,stdout=log,stderr=log)
     if result.returncode or result.timed_out:
         raise ValueError('native build failed; see build.log')
     rows=[]
@@ -122,5 +122,6 @@ if __name__=='__main__':
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--shim',type=Path,required=True)
     p.add_argument('--archive',type=Path,required=True)
+    p.add_argument('--build-timeout',type=float,default=600)
     a=p.parse_args()
-    print(json.dumps(run(a.out,a.shim,a.archive)))
+    print(json.dumps(run(a.out,a.shim,a.archive,build_timeout=a.build_timeout)))

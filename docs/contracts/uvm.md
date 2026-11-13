@@ -82,3 +82,10 @@ All source inputs must be within the selected source repository and match
 the selected revision. Existing C4 source and input capture rules apply.
 Standalone UVM C3 identity remains incomplete. The bridge does not grant
 CPU or ISA qualification from a component fixture.
+
+## Native qualification matrix
+
+`uvm qualification` renders CPU C3 and engine-probe evidence into a table.
+Missing or failed rows remain `not established`. Engine probe runtime gaps
+and ignored-feature warnings remain explicit. A successful CPU fixture build
+does not qualify the VexRiscv SV environment or full SystemVerilog coverage.

@@ -152,3 +152,24 @@ debug state, DPC, DCSR, step bit and PC. Call it at a synchronized retirement
 boundary. Do not call it merely because a request pin was asserted.
 Resume is explicitly unsupported. These services have unit tests.
 Their presence does not qualify a project's interrupt or debug wiring.
+
+## Native qualification matrix
+
+See [the measured matrix](../QUALIFICATION.md). On 2026-11-13, the SV CPU
+fixture built once on Verilator 5.049 in about 109 seconds. Its two normal
+runs and three corruption checks passed. The runner now accepts
+`--build-timeout` with a 600-second default. The run timeout remains short.
+This is the ADDI/MISA fixture. VexRiscv SV CPU qualification remains open.
+
+Refresh the matrix after native runs:
+
+```sh
+rvw uvm qualification --cpu-results /path/to/cpu/results.json \
+ --probes /path/to/probes/probes.json --out Uvm/QUALIFICATION.md
+```
+
+Use `Uvm/probes/run.py` to refresh the engine probes. SV transition bins
+had a runtime gap and an ignored-feature warning on Verilator 5.049.
+Use the live pyuvm observed-bin path and `rvw cov functional` as the
+coverage workaround. The constrained Python example also supports the
+UCIS round trip. None of these paths grants credit for unobserved bins.
