@@ -268,3 +268,20 @@ Without a rate, cost is null. MCP `farm_budget` has the same interface.
 These budgets govern the local service queue. CPU is declared cores times wall
 time, not measured CPU or an OS quota. Memory/disk reservations remain in the SSH
 host scheduler. Kubernetes admission and external plugin accounting are separate.
+
+## Automatic failure triage
+
+`rvw farm triage --root RUN --baseline BASE --known known.toml --bundles OUT`
+reads recorded C3 results. It groups failures by core, configuration, category
+and signature. It reuses assertion identity checks. Recorded
+`details.first_mismatch.pc` and `instruction`, or `details.trap_cause`, refine
+signatures when available. Infrastructure and incomplete evidence stay separate.
+Every member retains its test, seed, run path and source revision. Known-failure
+matches are links for review, not waivers. Revisions and an optional baseline
+identify the recorded comparison range.
+
+`--bundles` calls the existing C5 builder once per cluster with a recorded run.
+It disables reruns and SpinalTrace execution. Missing run paths and bundle errors
+stay explicit. `--baseline` reuses the identity-aware C3/C4 comparison for new
+failures, fixes, missing tests and changed inputs. MCP exposes `farm_triage`.
+This report does not infer a root cause or accept a change from cluster counts.

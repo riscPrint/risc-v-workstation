@@ -25,6 +25,12 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    triage = commands.add_parser("triage")
+    triage.add_argument("--root", required=True)
+    triage.add_argument("--baseline")
+    triage.add_argument("--known")
+    triage.add_argument("--bundles")
+    triage.set_defaults(func=triage_command)
     costs = commands.add_parser("budget")
     costs.add_argument("--root", required=True)
     costs.add_argument("--scope", required=True)
@@ -111,3 +117,8 @@ def batch_command(args):
 def budget_command(args):
     from .costs import budget
     print(json.dumps(budget(args.root, args.scope, json.loads(args.limits) if args.limits else None, args.rate_per_core_hour)))
+
+
+def triage_command(args):
+    from .triage import triage
+    print(json.dumps(triage(args.root, args.baseline, args.known, args.bundles), default=str))

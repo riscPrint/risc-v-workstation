@@ -681,7 +681,7 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,budget,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -715,6 +715,13 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm triage`
+
+```text
+usage: rvw farm triage [-h] --root ROOT [--baseline BASELINE] [--known KNOWN]
+    [--bundles BUNDLES] [--project PROJECT]
 ```
 
 ### `rvw farm budget`
@@ -2720,6 +2727,14 @@ Starts a background job: no.
 Run native SSH shards. Complete is transport completeness, not a gate verdict.
 
 Arguments: `hosts` (required), `manifest` (required), `adapter` (required), `identity_command` (required), `identity` (required), `out` (required), `jobs`, `timeout`.
+
+Starts a background job: yes.
+
+### `farm_triage`
+
+Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.
+
+Arguments: `root` (required), `baseline`, `known`, `bundles`.
 
 Starts a background job: yes.
 
