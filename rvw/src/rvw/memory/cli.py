@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 from .multihart import images, check
+from .dependency_consistency import DeclarationError
 from .axiomatic import check as axiomatic_check
 from .concurrent import generate
 from .tilelink_bind import generate as tilelink_bind
@@ -66,7 +67,9 @@ def command_check(args):
 def emit(call):
     try:
         result = call()
+    except DeclarationError as exc:
+        result = {'status': 'error', 'reason': str(exc)}
     except (ValueError, OSError, KeyError, TypeError) as exc:
         result = {'status': 'inconclusive', 'reason': str(exc)}
     print(json.dumps(result, indent=2))
-    return {'mismatch': 1, 'forbidden': 1, 'fail': 1, 'inconclusive': 3}.get(result.get('status'), 0)
+    return {'error': 2, 'mismatch': 1, 'forbidden': 1, 'fail': 1, 'inconclusive': 3}.get(result.get('status'), 0)
