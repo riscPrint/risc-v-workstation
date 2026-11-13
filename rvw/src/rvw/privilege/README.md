@@ -104,3 +104,45 @@ no retirement while stopped, pending input during the pause and retirement after
 restart. It binds the observation artifact hash in the report. Missing samples
 remain inconclusive. The project harness must drive the clock pause itself.
 This interface does not claim a clock-stop run or physical clock-gating proof.
+
+## PLIC, reset and Smrnmi
+
+Select `kind = "plic"` and supply a complete `PlicMap` as `plic`. Six programs
+check priority, tie order, claim despite threshold, shared contexts, gateway
+completion and enable changes. The existing independent PLIC model derives
+expected claim IDs. The known native Spike threshold discrepancy remains a
+failure; it is not used as a replacement rule.
+
+Each source event uses RAM symbols `stimulus_step` and `stimulus_ack`. Generated
+`rvw.stimulus/1` files carry the event payload. A project adapter must read the
+request, apply the device event, then write the acknowledgement. `MailboxDriver`
+in `events.py` provides this sequence for Python adapters. It does not contain
+bus or signal names. The C1 result must record the generated stimulus SHA-256.
+Unsupported adapters must reject the option. The source schedule requires a
+fresh device state. It does not cover all simultaneous context races.
+
+`kind = "reset"` requires `reset.pulses`, `state` with value/mask pairs and
+`invalid_outputs`. `kinds` selects cold, warm or local reset. The program retains
+a RAM restart count across actual pulses and requires every restart. The harness
+must preserve this RAM region. It records `privilege_reset` as a JSON list of
+pulses. Each pulse is a list of existing ResetSample records. The checker reuses
+the independent reset contract checker. It requires all requested pulses. It
+does not count simulator construction as a reset. In-flight bus, debug and trap
+reset drivers remain project integrations.
+
+`kind = "nmi"` requires Smrnmi in `isa`, `nmi.cause` and `nmi.vector`. It places
+an NMI handler at that vector. The event waits for the exact `nmi_wait` PC. The
+adapter supplies the PC and ELF symbol map to MailboxDriver. The program checks
+MNCAUSE, NMIE clear, MNEPC, preservation across a nested ordinary ECALL trap,
+MNRET recovery and a retained register. It does not test a second RNMI while
+NMIE is clear, a vendor machine-error record or reset during RNMI.
+
+The supplied examples declare fixture addresses and contracts. Replace them
+with project data. Spike CLI cannot inject these mailbox events. Their reference
+self-checks are inconclusive until a project reference adapter supplies them.
+No DUT run, NMI injection or physical reset is claimed by a generated file.
+
+`compiler_isa` can select a compiler ISA string separate from the reference
+`isa`. The Smrnmi example uses numeric CSR and MNRET encodings because the
+installed assembler does not recognize the Smrnmi ISA name. This does not
+change the reference or DUT extension requirement.

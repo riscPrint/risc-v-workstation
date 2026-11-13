@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "reset",
+  "reset": {
+    "pulses": 3,
+    "kinds": [
+      "cold",
+      "warm",
+      "local"
+    ],
+    "state": {
+      "privilege": {
+        "value": 3,
+        "mask": 3
+      }
+    },
+    "invalid_outputs": [
+      "request_valid"
+    ]
+  }
+}

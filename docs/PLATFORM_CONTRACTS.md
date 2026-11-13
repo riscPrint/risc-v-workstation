@@ -3290,6 +3290,20 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+`compiler_isa` optionally selects compiler instruction parsing. `isa` still
+selects the reference model architecture. Numeric encodings can therefore be
+compiled with a base assembler without claiming extension model support.
+
+Kinds `plic`, `reset` and `nmi` emit `rvw.stimulus/1` device events. Each
+payload has a positive `step`, request/ack ELF symbols and project event data.
+The adapter applies events in order and acknowledges each step after driving
+it. Optional `when_pc` requires the resolved architectural PC. Build manifests
+bind the stimulus hash; C1 must record `stimulus_sha256`. Reset campaigns also
+require a `privilege_reset` artifact containing one list of ResetSample objects
+per requested pulse. Samples use `cycle`, `asserted`, `state` and `valid`.
+The report binds the observation hash and requires the existing independent
+reset contract check. Missing evidence remains inconclusive.
+
 `kind = "scheduled-wfi"` emits per-program suites with C1 `irq_schedule`.
 `wake` declares assertion/clear cycles and optional retained-state masks in
 `clock_state`. The optional C1 artifact `privilege_clock` holds a JSON sample
