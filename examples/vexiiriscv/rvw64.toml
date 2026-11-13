@@ -181,3 +181,12 @@ irq_schedule = "1:0x0,1000:0x800,20000:0x0"
 
 [cosim]
 platform = "rvw/platform64.json"
+
+[suites.random-privilege]
+kind = "elf-dir"
+dir = "../../rvw/out/suites64/random-privilege"
+glob = "*.elf"
+strip_suffix = ".elf"
+config = "rv64imasu"
+max_cycles = 30000
+timeout_s = 30
