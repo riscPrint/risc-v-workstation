@@ -22982,3 +22982,269 @@ NOT RUN: simulations, builds, proofs, native campaigns, full Python suite or CI 
 
 ## Issues
 Refs: #202, #205, #296. No full UVM, CPU or protocol qualification is claimed.
+
+## PR 1243
+
+[#1243](https://github.com/riscPrint/risc-v-workstation/pull/1243). Merged: 2026-11-13T16:24:21Z.
+
+Title: fix(soc): emit composed consumer inputs and run fabric checks
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Emit verify.json, register-checks.json and connections.json with each composition. Bind direct interrupts and device clocks/resets from the selected composition. Name required native classpath, database and APB capture inputs. Add a classpath-bound fabric protocol consumer. Keep its scope separate from CPU ingress and device state.
+
+## Testing
+36 targeted tests passed. Stepper composition generated the inputs. A native fabric protocol proof passed at depth 8 and decode was proven for its map. Its RAM-only map and missing native databases/captures leave five consumer rows inconclusive. Fast set results are recorded below before push. No BOOM, full suite, long proofs or CI wait.
+
+## Issues
+Refs: #1227. Automatic native preparation and seven-consumer closure remain open. The owner must not close this on two fabric rows.
+
+Roadmap notes: composition now supplies consumer input files. Fabric protocol and decode are conclusive in their limited scope. Registers, live VIP/UVM, connectivity and CDC/RDC still require native project inputs.
+
+Fast set before final fetch: 2994 passed, 1 skipped. MCP discovery stderr was empty.
+
+## PR 1244
+
+[#1244](https://github.com/riscPrint/risc-v-workstation/pull/1244). Merged: 2026-11-13T16:25:07Z.
+
+Title: test(vexii): audit rv64 generated families and machine ordering
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add the RV64 machine feature declaration and plan-selected ordering suite. Keep paging, PMP and AMO fault tests excluded for the machine profile. Replay the independent page walker against retained Sv39 DUT captures. Keep PMP-bypass findings and unsupported walker checks visible.
+
+## Testing
+Fresh machine RTL ordering: LR/SC, AMO, FENCE and FENCE.I pass. One exploratory AMO-fault program failed because it requires PMP, which the machine config lacks; the plan excludes it. No core change or waiver. Fresh reference-walker replay: matrix 92 consistent / 2 mismatch / 51 inconclusive; fault walks 9 consistent / 9 mismatch; random 2 inconclusive. All 11 walk mismatches are the documented PTW/PMP core defect. Retained supervisor C1 and Spike records remain distinct from fresh runs. Fast and hygiene counts are in the work log. No full Python suite, BOOM, long formal or GitHub CI.
+
+## Issues
+Refs: no issue assigned. Sv48, Sv57, H and unsupported page-walk access plans remain outside qualification. Three disabled-interrupt WFI controls need declared IRQ synchronization because Spike has no input pins; they are not strict matches.
+
+Roadmap notes: extra RV64 machine ordering evidence and explicit RV64 machine applicability. Supervisor counts and finding dispositions remain explicit.
+
+## PR 1245
+
+[#1245](https://github.com/riscPrint/risc-v-workstation/pull/1245). Merged: 2026-11-13T16:25:27Z.
+
+Title: test(ooo-mini): qualify native checks, faults and committed gates
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Complete native SV-bind execution, fault injection, coverage, lint and committed gate controls for OoO Mini. Default runs load eight SV binds with Verilator assertions and 19 Scala monitors. Support fault-cycle validation and classify HDL assertion exits correctly. Use the installed workstation libraries and lower native Java priority in the launcher.
+
+Fix core bugs found by directed tests: FENCE.I now discards younger fetched ROB instructions; reserved encodings trap; machine trap state updates the implemented mstatus bits; minstret excludes trapping instructions and uses a counter separate from C2 order. Keep formal ISA configuration in its own profile so ordinary simulation needs no formal checkout.
+
+## Testing
+
+- ISA: 50/50 native pass, 50/50 strict Spike match, zero synchronizations. Eight SV binds and 19 Scala monitors; zero assertion exits/firings.
+- Three directed programs pass and strictly match. FENCE.I failed before the fix and mismatched at the stale instruction. The trap/counter test failed before the minstret fix and now matches for 52 instruction records.
+- Four confirmed flips: two detected, two safe, none unresolved. This is a four-sample exercise.
+- Five generated checks have depth-8 bounded-pass observations and reached covers. Overall remains unknown; ISA checks did not close.
+- Code coverage on smoke and trap programs: 3,436/5,121 points. Line 60.24%; branch 71.37%. Functional coverage is recorded separately from 18,354 ISA instruction records, including trapping records.
+- Lint: 100 active findings, 159 unresolved generated temporaries. One clock, 501 registers, no structural CDC/RDC crossings found. No lint or CDC signoff.
+- Current committed three-program gate, seed 17: planted multiplier bug rejects for one new failure; committed repair accepts. No waiver or allow-missing flag. Control commits are retained on test/ooo-mini-gate-controls-20261113-mem.
+- Fast set: 2,959 passed, 1 skipped. Targeted release hygiene results are checked before push.
+
+NOT RUN: unbounded proof, full privileged ISA, interrupts, MMU/caches, fault qualification, or clean lint signoff. ROB16 does not load the eight-entry SV binds.
+
+## Issues
+
+No issue is closed. Generic fixes are separate PRs: #1192, #1196, #1200 and #1220.
+
+Roadmap notes: native OoO qualification now includes SV binds, measured fault outcomes, coverage, structural inventory and committed negative/positive gate controls. Formal ISA closure and lint findings remain open.
+
+## PR 1246
+
+[#1246](https://github.com/riscPrint/risc-v-workstation/pull/1246). Merged: 2026-11-13T16:27:02Z.
+
+Title: docs(test): record the boom daily-loop check
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Record the small-preset BOOM daily-loop check at workstation revision 16325512. The persistent quick tier reports 173 pass and the known instret_overflow failure over 174 selected programs. Spike matches 173/174. The unchanged committed gate accepts with the same failure still recorded. No new generic-code regression was found.
+
+Doctor setup repairs were local only. The final doctor remains not_ready for absent optional suite inputs and dirty live trees. Database build/navigation, failure bundle and SpinalChecks compile/elaboration passed. No core RTL, comparison policy or feature code changed.
+
+## Testing
+
+- Native small BOOM add smoke and full persistent quick tier with RVFI traces, 264.10 seconds.
+- Spike over 174 unique traces: 173 match, one known mismatch.
+- Committed unchanged full quick gate: accept, 174 compared, no new failures or inconclusive entries.
+- Failure bundle without wave rerun; BOOM query build and five queries.
+- SpinalChecks compile and small elaboration: 519 checks inserted, 101 existing waived/disabled.
+- Fast Python: 2981 passed, 1 skipped, 8081 deselected.
+- Release hygiene: 40 passed. MCP inventory: no skipped imports.
+- NOT RUN: other presets, ACT4, formal, SpinalChecks simulation, Sail, probes, fault injection, device plugins, checkpoint/restore or waves. No hosted CI wait.
+
+## Issues
+
+The known core instret_overflow bug remains. No issue is closed. No new generic-code regression was established, so this PR adds evidence only.
+
+Roadmap notes: Replace the stale 173/173 quick claim with 173 pass plus one known failure across 174 selected programs. Keep Spike at 173/174. Record the committed gate acceptance and successful small database/SpinalChecks elaboration. Keep optional suites and wider-preset evidence deferred.
+
+## PR 1247
+
+[#1247](https://github.com/riscPrint/risc-v-workstation/pull/1247). Merged: 2026-11-13T16:27:06Z.
+
+Title: docs(regress): reconcile native limits and finding dispositions
+
+Audit evidence label: no code.
+
+## Summary
+Correct the farm selector's stale not-run statement. Record the eight-test false negative and safe 49-test fallback. Correct reduction limits for the real instruction, IRQ, UART and per-hart recipes.
+
+Mark the retired Vexii PC checker finding resolved. Consolidate the two IDs for the same ACT4 bootstrap finding. Add the observed rIC3 removed-option backend limit to the central findings list.
+
+## Testing
+Fast set: 2992 passed, 1 skipped, 8083 deselected in 167.53 seconds. The skip is the deferred command-reference check. Whitespace and changed local links checked.
+
+NOT RUN: simulations, builds, proofs, native reruns, full Python suite or CI waits. The sources retain exact native scope.
+
+## Issues
+Refs: #25, #84, #152, #294. No core finding is waived. Arbitrary schedules, reduced selection, backend repair and full qualification remain open.
+
+## PR 1248
+
+[#1248](https://github.com/riscPrint/risc-v-workstation/pull/1248). Merged: 2026-11-13T16:27:58Z.
+
+Title: docs(test): record bounded clean-room third-pass results
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Append the informed third-pass results and scores. Record exact-cycle bounded instruction passes, completed precise flow and paired division results, and the two conclusive fabric consumers. State the remaining five SoC consumer gaps. Update the agent playbook, regenerate its setup block and update the integration recipes.
+
+## Testing
+46 guide and release checks passed. Native receipts and evidence limits are listed in the report. Final fast set result is added below before push. No full Python suite, BOOM, long proof, CI wait or hardware operation.
+
+## Issues
+Refs: #1234, #1240, #1243. Five SoC consumers and automatic native preparation remain open. Trace-selected depth 22 remains inconclusive in the short solver budget. Reviewed earlier assertion cycles have bounded passes.
+
+Roadmap notes: retain bounded, dynamic, paired and fabric proof scopes separately. This rerun is not independent clean-room acceptance or whole-core qualification.
+
+Final fast set: 2994 passed, 1 skipped, 8083 deselected.
+
+## PR 1249
+
+[#1249](https://github.com/riscPrint/risc-v-workstation/pull/1249). Merged: 2026-11-13T16:33:05Z.
+
+Title: fix(arch): keep speculative mix independent of capacity
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Make speculative filler independent of unused capture capacity. Previously, generating more work advanced a global cursor even when work was never admitted. A larger ROB could therefore change later branches' synthetic instruction mix. Index each dynamic branch into the frozen trace instead. Every variant now gets the same per-branch prefix. No variant-specific value or fitted parameter changes.
+
+Add explicit `replay_window` selection for finite memory-order readmission without requiring a component cache. Preserve the earlier admission policy when both retry options are false, so mechanism ablation is explicit. Common recovery correctness fixes remain active for all policies.
+
+Rerun the current-engine baseline and all three mechanism stages with the same base-only fitted parameters. Preserve the earlier per-stage results as historical `*-preseed-results.json`. Corrected calibration and delta reports share one engine. Exact typed LSU replay remains open.
+
+## Testing
+
+Targeted timing and filler tests: 42 passed. Added direct checks for a capacity-independent prefix, cache-independent memory-order window, and Boolean validation. The prefix test fails with the old cursor. All scores reuse saved RTL captures. Fast set: 2990 passed, 1 skipped, 8083 deselected, 1 warning. Focused pressure/dependence tests: 20 passed. Corrected baseline: 11/24 and 2/15 nonzero; occupancy: 15/24 and 6/15; drain: 15/24 and 6/15; cache-response retry: 10/24 and 1/15. The memory-order-only window score is also retained.
+
+NOT RUN: new RTL or Spike runs, core builds, full Python suite, formal jobs, hardware, CI waits.
+
+## Issues
+
+Refs: #1047, #1098. This removes an artificial sensitivity, not a new accuracy qualification.
+
+Roadmap notes: use the corrected shared-engine study and retain all earlier scores as historical. Keep exact LSU evidence and structure-size qualification open.
+
+## PR 1250
+
+[#1250](https://github.com/riscPrint/risc-v-workstation/pull/1250). Merged: 2026-11-13T16:30:36Z.
+
+Title: docs(status): include later rv64 flow and retry evidence
+
+Audit evidence label: no code.
+
+## Summary
+Extend the source census to 854 merged PR bodies through 16:23:40 UTC. Add the eight later bodies and update affected issue/tool rows. Record 85 strict RV64 matches per Vexii M/MSU profile, the completed finite Stepper flow and ABI 8 UVM fixture repair.
+
+Keep timing stages separate: two-of-15 at #1218, five-of-15 at the drain stage, then one-of-15 at the retry stage. Correct the entry status in the model and core READMEs. Retain every failed stage. Add the confirmed optional Vexii IPC divider defect to its example catalog.
+
+## Testing
+Fast set: 2995 passed, 1 skipped, 8083 deselected in 129.87 seconds. The skip is the deferred command-reference check. Release hygiene: 40 passed. Document checks: 220 unique issue rows, 854 unique source bodies, local links, path hygiene and whitespace.
+
+NOT RUN: simulations, builds, proofs, native reruns, full Python suite or CI waits. PR bodies are the evidence source. This is a dated snapshot, not continuous monitoring.
+
+## Issues
+Refs: #101, #20, #377. No issue closure. Whole-core security, privileged ISA and structure-size qualification remain open.
+
+## PR 1251
+
+[#1251](https://github.com/riscPrint/risc-v-workstation/pull/1251). Merged: 2026-11-13T16:34:50Z.
+
+Title: docs(ooo-mini): publish measured tool integration results
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Document what each workstation tool gives the native out-of-order example. Link the measured ISA, interface, bounded formal, timing, fault, coverage, lint and gate results. Record every generic tool fix and the remaining limits. Add OoO Mini to the Layout table and Integration Guide.
+
+## Testing
+
+Fast set: 2,995 passed, 1 skipped. Markdown diff check passes. All linked result files exist. MCP enumeration has no skipped-module diagnostic.
+
+The documentation preserves the boundaries: ISA checks did not close; generated formal observations remain overall unknown; the timing model has a measured gap; lint has 100 findings and 159 unresolved candidates; four sampled faults are not qualification; ROB16 does not load the eight-entry SV binds. Native and static evidence stay separate.
+
+NOT RUN: GitHub CI waits or new native runs for this documentation change.
+
+## Issues
+
+No issue is closed. Generic fixes are #1192, #1196, #1200 and #1220. Implementation and measured evidence are #1175, #1184, #1187, #1203 and #1245.
+
+Roadmap notes: add the main-Spinal RV32IM OoO core example and its measured tool coverage. Formal ISA closure, full CSR observation, model accuracy, lint closure and wider SV-bind configurations remain open.
+
+## PR 1252
+
+[#1252](https://github.com/riscPrint/risc-v-workstation/pull/1252). Merged: 2026-11-13T16:36:31Z.
+
+Title: docs(arch): publish corrected resource timing limits
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Publish the cumulative fixed-parameter resource study in the model README, NaxRiscv README and the architecture section of the integration guide. Report all-pair and nonzero delta successes, training and six-program held-out absolute IPC MAE, same-step rank and per-structure direction/size counts. Preserve the earlier local-sensitivity result as a different method.
+
+Add the final experimental project configuration. Preserve the original measured configuration as the frozen baseline. State plainly that structure-size decisions still need RTL. ROB zero changes do not validate shrinkage. Exact probe-driven LSU replay remains open because the captures lack typed reason and instruction-window events. The bounded retry policy is not promoted to exact replay evidence.
+
+## Testing
+
+Reuse all saved model-stage scores and the existing 30-run RTL matrix. No additional timing run or fit. Fast set: 2998 passed, 1 skipped. Release hygiene: 40 passed. MCP inventory has no skipped import. Resource and experiment configuration flags were checked explicitly. NOT RUN: new RTL or Spike runs, core builds, full Python suite, formal jobs, hardware, CI waits.
+
+## Issues
+
+Refs: #1047, #1098. No general structure-size qualification or exact replay claim. Typed LSU evidence, dynamic wrong-path capture and nested predictor repair remain open.
+
+Roadmap notes: record the measured improvement, each absolute-error tradeoff and the remaining RTL measurement requirement. Roadmap and TODO remain owner-managed.
+
+## PR 1253
+
+[#1253](https://github.com/riscPrint/risc-v-workstation/pull/1253). Merged: 2026-11-13T16:37:04Z.
+
+Title: docs(status): separate open limits from completed work
+
+Audit evidence label: no code.
+
+## Summary
+Tighten all 220 remaining-scope cells. Read explicit issue/limit statements before falling back to older limits. Exclude audit-delivery text and completed documentation instructions. Retire later-resolved fixture, activation, farm-gate, IRQ/reset and protocol-runtime gaps.
+
+Keep Non-Spinal evidence scoped to PicoRV32, riscv-mini and NEORV32. Stepper remains a separate Spinal integration. Record the bounded seeded protocol matrix without raising it to full protocol qualification.
+
+## Testing
+Fast set: 2995 passed, 1 skipped, 8083 deselected in 148.93 seconds. The skip is the deferred command-reference check. All 220 rows have valid evidence labels, eight columns and no personal paths. Whitespace passes.
+
+NOT RUN: simulations, builds, proofs, native reruns, full Python suite or CI waits. The 854-body cutoff remains unchanged.
+
+## Issues
+Refs: #101. No issue closure. These scope corrections do not establish whole-core, physical or commercial qualification.
