@@ -1,0 +1,82 @@
+{
+  "schema": "rvw.soc/1",
+  "name": "sim_linux",
+  "address_bits": 64,
+  "platform": {
+    "name": "sim_linux",
+    "xlen": 64,
+    "isa": "rv64imafdc_zicsr_zifencei",
+    "reference_isa": "rv64imafdc_zicsr_zifencei",
+    "reset_pc": "0x80000000",
+    "pmp_regions": 16,
+    "aligned_mem": true,
+    "irq_inputs": [
+      3,
+      7,
+      9,
+      11
+    ],
+    "privilege_modes": "MSU",
+    "misaligned": {
+      "load": "trap",
+      "store": "trap",
+      "atomic": "trap",
+      "split_page": "refuse",
+      "split_bus": "refuse"
+    },
+    "endianness": {
+      "instruction": "little",
+      "data": "little",
+      "page_table": "little",
+      "device": "little"
+    }
+  },
+  "regions": [
+    {
+      "name": "ram",
+      "kind": "ram",
+      "base": "0x80000000",
+      "size": "0x8000000",
+      "permissions": "rwx",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "uart",
+      "kind": "mmio",
+      "base": "0x10000000",
+      "size": "0x100",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "clint",
+      "kind": "mmio",
+      "base": "0x2000000",
+      "size": "0x10000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "plic",
+      "kind": "mmio",
+      "base": "0xc000000",
+      "size": "0x4000000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "test",
+      "kind": "mmio",
+      "base": "0x100000",
+      "size": "0x1000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    }
+  ],
+  "interrupts": []
+}
