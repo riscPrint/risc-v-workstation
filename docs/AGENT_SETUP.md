@@ -646,7 +646,7 @@ Optional tool set: 55 tools. Load MCP profile `arch` with `rvw_tools_load`. Read
 
 A project needs peripheral, lint, multi-run or simulation infrastructure checks.
 
-Optional tool set: 40 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 41 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **review**: Review the project map, adapter and required evidence. Choose the tools listed for this workflow. (manual)
 2. **discover**: Describe the selected tool. Load its profile. Keep transport completion separate from verification. MCP `rvw_tools_search`

@@ -147,3 +147,16 @@ DUT observations or by unambiguous recorded C4 reports. Repeated executions
 count separately. Per-C4 group costs cover only attempts owning those reports.
 Missing rates and zero denominators produce null. These fields do not infer
 DUT pass, C4 acceptance, measured CPU use or an external provider bill.
+
+## Native C4 gate intake
+
+Native intake binds each C3 cell to C1 source, outcome, requested options,
+ELF, RTL and complete native-build identities. Core and harness revisions must
+be clean commits. Dirty or missing native identities mark shard C3 source
+identity incomplete. Recorded DUT outcomes remain unchanged. C3 `options`
+contains requested execution options; `native_options` retains C1 model options.
+
+`rvw.farm-gate/1` is queue collection state. A complete report names its
+recorded C4 verdict. It does not imply accept. Queue attempts retain C4 verdict
+values and report hashes. Live history keeps those values separate from C3
+outcomes. The underlying C4 comparison and requested-plan checks are unchanged.

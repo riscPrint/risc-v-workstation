@@ -37,7 +37,9 @@ def snapshot(queue, owner):
                     clusters.append(cluster)
         except (ValueError, OSError) as exc:
             issues.append(str(exc))
-        runs.append(dict(id=job['id'], state=job['state'], created=job['created'], attempts=job['attempts'],
+        gates = {a['gate_verdict'] for a in job['attempts'] if a.get('gate_verdict')}
+        recorded_gate = next(iter(gates)) if len(gates) == 1 else ('mixed' if gates else 'not recorded')
+        runs.append(dict(recorded_gate=recorded_gate, id=job['id'], state=job['state'], created=job['created'], attempts=job['attempts'],
                          tests=count, passes=passes, evidence='recorded' if count else 'no_checks', issues=issues))
         trends.append(dict(job_id=job['id'], created=job['created'], tests=count,
                            pass_rate=passes/count if count else None))

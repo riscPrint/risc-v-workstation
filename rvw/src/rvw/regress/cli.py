@@ -110,6 +110,7 @@ def register(sub) -> None:
     gt = rs.add_parser("gate", help="run a tier on base and candidate revisions and print the verdict")
     _core_arg(gt)
     gt.add_argument("--tier", default="quick")
+    gt.add_argument("--out", type=Path, help="write C4 verdict here instead of the candidate directory")
     gt.add_argument("--base-rev", help="git revision of the core repo for the base")
     gt.add_argument("--base", help="existing base results (dir or run id); mutually exclusive with --base-rev")
     gt.add_argument("--cand-rev", help="candidate commit (default: HEAD when clean; a dirty tree runs but cannot accept)")
@@ -299,7 +300,7 @@ def cmd_gate(a):
     opts = _make_opts(a)
     known = a.known or core.known_failures
     r = gate(core, a.tier, a.base_rev, a.cand_rev, a.base, a.cand, _csv(a.config), opts, known,
-             a.perf_tolerance, a.allow_missing, seed_policy=a.seed_policy)
+             a.perf_tolerance, a.allow_missing, out=getattr(a, "out", None), seed_policy=a.seed_policy)
     v = r["verdict"]
     _emit(a, v.to_dict(), format_verdict(v) + f"\nverdict: {r['file']}")
     return v.exit_code

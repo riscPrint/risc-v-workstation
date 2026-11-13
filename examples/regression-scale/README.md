@@ -143,3 +143,29 @@ At an illustrative rate of one caller unit per core-hour, the cost was
 The charge includes the timed-out launch. CPU use is declared, not measured.
 There are no C4 reports in this budget experiment. Its C4 unit cost is null.
 Later committed gate runs supply that separate measure.
+
+## Committed native gate cases
+
+`gate-results.json` records clean committed core and harness revisions, every
+input ELF hash, RTL/native-build hashes and C4 report hashes. Native execution
+used a separate clean tooling clone. Good base and repeat runs each passed 49
+ISA tests. A distinct revision keeps the split-adder edit and restores XOR. It passed
+all 49 tests. The private fault revision passed 47 and failed two. Farm intake
+checked every C1/C3 pair. The existing gate engine accepted both the repeat and the distinct passing revision and
+rejected the fault revision for two new failures. Both compared 49 tests.
+The existing `rvw regress gate` CLI also returned 0 for accept and 1 for reject,
+with explicit separate verdict destinations.
+
+The first native runs exposed model-build keys in C3 execution options. The
+formatter now keeps those keys in `native_options`. Corrected cases were rerun
+from native execution. The original records remain. Incomplete native source
+identity marks C3 source incomplete and cannot earn gate accept. The gate's
+requested-plan checks were preserved.
+
+Queue attempts retain C4 values separately from transport completion. Across
+all ten queue jobs, including the formatter debugging runs, charged wall
+time was 479.759 seconds. At two declared cores and an illustrative rate of
+one caller unit per core-hour, cost was 0.088844 units per recorded C4 report.
+The separate manual CLI checks are outside that queue scope. This is a cost
+per report, not per unique proof. Acceptance covers these 49 ISA self-checks.
+It does not qualify the whole core, formal behavior or fresh Spike parity.
