@@ -331,3 +331,18 @@ This is the rule that `rvw cosim live` and lockstep already apply. The library
 function `rvw.cosim.checker.check` keeps its prefix result for callers that
 check `trace_complete` themselves.
 
+
+## Instruction records and retirements
+
+A single-hart `rvw.cosim/1` checker result reports `instructions` as the number
+of compared C2 instruction records. This includes trapping instruction records.
+The additive `retirements` field counts only compared records with `trap=false`.
+An interrupt trap event adds neither an instruction record nor a retirement.
+`trap_events` must not be subtracted from `instructions` to derive retirements.
+
+C1/C2 qualification compares C1 `instret` with `retirements` when that field is
+present. It checks that the count is an integer between zero and `instructions`.
+Older comparison reports retain the prior `instructions == instret` rule. A
+legacy report that counts trapping records therefore remains inconclusive.
+Complete strict comparison, passing termination and zero synchronization are
+still required. A matching count alone does not qualify a trace.
