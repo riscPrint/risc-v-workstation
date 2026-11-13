@@ -9,16 +9,24 @@ pytestmark=pytest.mark.slow
 @pytest.mark.parametrize('kind',NAMES)
 @pytest.mark.parametrize('bad',[False,True])
 def test_micro_proofs(tmp_path,kind,bad):
+    check_proof(tmp_path,kind,bad)
+
+
+def check_proof(tmp_path,kind,bad):
     if not shutil.which('sby') or not shutil.which('yices-smt2'):
         pytest.skip('SBY and Yices required')
     ports={
       'fifo_order':f'wire push=phase==1, pop=phase==2; wire [7:0] push_data=42, pop_data={41 if bad else 42};',
+      'fifo_flush':f'wire flush=phase==2, push=(phase==1 || phase==2 || phase==4), pop=(phase==2 || phase==5); wire [7:0] push_data=phase==1 ? 42 : 43, pop_data={42 if bad else 43};',
+      'store_forward_age':f'wire load_fire=1, forwarded=1; wire [2:0] valid=7, older=7, address_match=7, selected={4 if bad else 1}; wire [8:0] older_than=200; wire [7:0] load_data={3 if bad else 1}; wire [23:0] store_data=24\'h030201;',
       'pipeline':f'wire valid=1, ready=0; wire [7:0] payload={"phase" if bad else "42"};',
       'mutex':f'wire [2:0] grants={3 if bad else 1};',
       'arbiter':f'wire enabled=1; wire [2:0] requests=1, grants={0 if bad else 1};',
       'age_matrix':f'wire [2:0] valid=7; wire [8:0] older={0 if bad else 38};',
       'store_forward':f'wire load_fire=1, forwarded=1; wire [2:0] valid=7, older=7, address_match=7, selected={1 if bad else 4}; wire [7:0] load_data=3; wire [23:0] store_data=24\'h030201;'
     }[kind]
+    if kind=='store_forward_age' and bad=='cycle':
+        ports="wire load_fire=1, forwarded=1; wire [2:0] valid=7, older=7, address_match=7, selected=0; wire [8:0] older_than=98; wire [7:0] load_data=0; wire [23:0] store_data=24'h030201;"
     source=render(kind,8,3)+f'''module fixture(input clk);
 reg [3:0] phase=0; always @(posedge clk) if(phase<12) phase<=phase+1;
 wire reset=phase==0; {ports}
@@ -52,3 +60,18 @@ def test_project_signals_and_missing_bindings(tmp_path):
     assert result['rules'][1]['status']=='unsupported'
     assert 'push_data' in result['rules'][1]['reason']
     assert '.grants(io_grants)' in (tmp_path/'out/binds.sv').read_text()
+
+
+@pytest.mark.parametrize('kind',['fifo_flush','store_forward_age'])
+def test_flush_and_age_rules_bind_by_named_project_signals(tmp_path,kind):
+    from rvw.formal.micro_checks import generate,PORTS
+    ports={key:'project_'+key for key in ('clk','reset',*PORTS[kind])}
+    result=generate(dict(schema='rvw.micro-checks/1',top='Top',rules=[dict(
+        id='unit',kind=kind,width=8,entries=3,ports=ports)]),tmp_path/'out')
+    assert result['complete'] is True
+    key='flush' if kind=='fifo_flush' else 'older_than'
+    assert f'.{key}(project_{key})' in (tmp_path/'out/binds.sv').read_text()
+
+
+def test_store_age_cycle_cannot_hide_a_missing_candidate(tmp_path):
+    check_proof(tmp_path,'store_forward_age','cycle')

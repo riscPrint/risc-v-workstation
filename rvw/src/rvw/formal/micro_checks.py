@@ -1,5 +1,5 @@
 """Project-instantiated microarchitecture rules with explicit interface contracts."""
-NAMES = ('fifo_order', 'pipeline', 'mutex', 'arbiter', 'age_matrix', 'store_forward')
+NAMES = ('fifo_order', 'fifo_flush', 'pipeline', 'mutex', 'arbiter', 'age_matrix', 'store_forward', 'store_forward_age')
 
 
 def render(kind, width, entries):
@@ -8,12 +8,14 @@ def render(kind, width, entries):
     if kind == 'pipeline':
         from .simple_bus_checks import render as stream
         return stream('axis', width, entries).replace('module rvw_axis(', 'module rvw_pipeline(')
-    if kind == 'fifo_order':
-        ports=f'input push, pop, input [{width-1}:0] push_data, pop_data'
+    if kind in ('fifo_order','fifo_flush'):
+        flush='flush, ' if kind=='fifo_flush' else ''
+        clear='reset || flush' if kind=='fifo_flush' else 'reset'
+        ports=f'input {flush}push, pop, input [{width-1}:0] push_data, pop_data'
         body=f'''reg [{width-1}:0] data [0:{entries-1}];
 integer head=0, tail=0, count=0;
 always @(posedge clk) begin
- if(reset) begin head<=0; tail<=0; count<=0; end
+ if({clear}) begin head<=0; tail<=0; count<=0; end
  else begin
   assert(!pop || count>0);
   assert(!push || pop || count<{entries});
@@ -53,15 +55,24 @@ end
     else:
         ports=f'''input load_fire, forwarded, input [{entries-1}:0] valid, older, address_match, selected,
 input [{width-1}:0] load_data, input [{entries*width-1}:0] store_data'''
+        if kind=='store_forward_age':
+            ports+=f', input [{entries*entries-1}:0] older_than'
+            select=f''' expected=eligible;
+ for(i=0;i<{entries};i=i+1)
+  for(integer k=0;k<{entries};k=k+1)
+   if(i!=k && eligible[k] && older_than[i*{entries}+k]) expected[i]=0;'''
+        else:
+            select=f" expected=0;\n for(i=0;i<{entries};i=i+1) if(eligible[i]) expected=({entries}'d1 << i);"
         body=f'''wire [{entries-1}:0] eligible=valid & older & address_match;
 reg [{entries-1}:0] expected;
 integer i;
 always @* begin
- expected=0;
- for(i=0;i<{entries};i=i+1) if(eligible[i]) expected=({entries}'d1 << i);
+{select}
 end
 always @(posedge clk) if(!reset && load_fire) begin
  assert(forwarded == (eligible != 0));
+ assert((expected & (expected-1'b1))==0);
+ assert((expected != 0)==(eligible != 0));
  assert(selected == expected);
  for(integer j=0;j<{entries};j=j+1) if(expected[j]) assert(load_data == store_data[j*{width} +: {width}]);
 end'''
@@ -77,6 +88,8 @@ PORTS = {
     'cam_match': ('active','require_match','match_bits'),
     'counter_bounds': ('active','value'),
     'fifo_order': ('push', 'pop', 'push_data', 'pop_data'),
+    'fifo_flush': ('flush','push','pop','push_data','pop_data'),
+    'store_forward_age': ('load_fire','forwarded','valid','older','address_match','selected','load_data','store_data','older_than'),
     'pipeline': ('valid', 'ready', 'payload'),
     'mutex': ('grants',),
     'arbiter': ('grants', 'enabled', 'requests'),
