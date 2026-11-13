@@ -47,7 +47,9 @@ no writer exists yet (per-slot CSR state).
 - One hart. Rows are written for hart 0.
 - `interrupts` compares causes in order; `consistent` is agreement of two sources, not a
   cosim result.
-- Prediction records in Kanata and C2/2 `csr_snapshot` are not written yet.
+- Kanata prediction records cover direction outcomes of branch events with an `id`; target
+  and return outcomes, recovery cycles and wrong-path work stay `?`. C2/2 `csr_snapshot` is
+  not written.
 - `mmu-walks` takes the walks the probe declares. A squashed speculative walk gives an extra
   record (a checker mismatch). Each record goes on the first retirement at or after its
   result cycle; a walk after the last retirement is reported as `unattached`.

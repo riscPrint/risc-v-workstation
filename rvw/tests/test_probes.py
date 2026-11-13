@@ -86,7 +86,8 @@ def test_kanata_from_stages_is_readable_by_perf(tmp_path):
     ev = stream(tmp_path, probes, rows)
     out = tmp_path / "k.log"
     rep = api.run_convert(ev, "kanata", out)
-    assert rep == {"format": "Kanata 0004", "instructions": 3, "retired": 2, "flushed": 1, "stall_samples": 1, "open": 0}
+    assert rep == {"format": "Kanata 0004", "instructions": 3, "retired": 2, "flushed": 1, "stall_samples": 1,
+                   "predictions": 0, "open": 0}
     t = kreader.read(out)
     assert len(t.instructions) == 3
     assert sum(1 for i in t.instructions.values() if i.flushed) == 1

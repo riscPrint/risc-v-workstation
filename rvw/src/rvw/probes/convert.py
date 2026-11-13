@@ -119,11 +119,13 @@ def kanata(stream: Stream, out) -> dict:
     after that the same ID starts a new instruction. Instructions left open at the end stay open."""
     live: dict[int, str] = {}
     current: dict[str, tuple[str, str]] = {}
-    order = {"stage": 0, "stall": 1, "retire": 2, "flush": 3}
+    order = {"stage": 0, "stall": 1, "branch": 2, "retire": 3, "flush": 4}
     by_cycle = defaultdict(list)
-    for cycle, p, v in stream.events("stage", "stall", "retire", "flush"):
+    for cycle, p, v in stream.events("stage", "stall", "branch", "retire", "flush"):
+        if p.kind == "branch" and ("id" not in v or "predicted_taken" not in v):
+            continue  # a prediction record needs the instruction ID and the prediction
         by_cycle[cycle].append((order[p.kind], p.id, p, v))
-    serial = retired = flushed = stalls = 0
+    serial = retired = flushed = stalls = predictions = 0
     lines = ["Kanata\t0004"]
     last = None
 
@@ -146,6 +148,15 @@ def kanata(stream: Stream, out) -> dict:
                 stalls += 1
                 continue
             ident = v["id"]
+            if p.kind == "branch":
+                key = live.get(ident)
+                if key is None:
+                    raise ValueError(f"branch probe {p.name}: ID {ident} at cycle {cycle} is not a live instruction")
+                way = ("not_taken", "taken")
+                lines.append(f"#rvw\t1\tprediction\t{key}\t{p.name}\tdirection\t{way[v['predicted_taken']]}"
+                             f"\t{way[v['taken']]}\t?\t?\t?\t?\t?")
+                predictions += 1
+                continue
             key = live.get(ident) or start(ident, v.get("pc"))
             if p.kind == "stage":
                 lane, name = p.meta.get("lane", "0"), p.meta.get("stage", p.name)
@@ -165,7 +176,7 @@ def kanata(stream: Stream, out) -> dict:
     with Path(out).open("x") as f:
         f.write("\n".join(lines) + "\n")
     return {"format": "Kanata 0004", "instructions": serial, "retired": retired, "flushed": flushed,
-            "stall_samples": stalls, "open": len(live)}
+            "stall_samples": stalls, "predictions": predictions, "open": len(live)}
 
 
 def _bytes(value: int, width: int) -> str:

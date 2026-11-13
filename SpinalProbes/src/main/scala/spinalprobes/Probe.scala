@@ -91,12 +91,15 @@ object Probe {
 
   /** A resolved branch or jump. Probe at the commit point so that every event belongs to a
     * retired instruction. `semantics` is `first-prediction` or `final-prediction`.
-    * `covers` lists the branch kinds the probe fires for (cond, jump, ijump, call, icall, ret). */
+    * `covers` lists the branch kinds the probe fires for (cond, jump, ijump, call, icall, ret).
+    * `id` is the instruction ID of the stage/retire probes; with it, the Kanata converter writes
+    * prediction records. */
   def branch(name: String, valid: Bool, pc: Data, taken: Bool, target: Data,
       predictedTaken: Option[Bool] = None, predictedTarget: Option[Data] = None,
-      semantics: String = "final-prediction", covers: Seq[String] = Seq("cond", "jump", "ijump", "call", "icall", "ret")): Unit =
+      semantics: String = "final-prediction", covers: Seq[String] = Seq("cond", "jump", "ijump", "call", "icall", "ret"),
+      id: Option[Data] = None): Unit =
     site("branch", name, valid, Seq("pc" -> pc, "taken" -> taken, "target" -> target) ++
-      opt("predicted_taken", predictedTaken) ++ opt("predicted_target", predictedTarget),
+      opt("predicted_taken", predictedTaken) ++ opt("predicted_target", predictedTarget) ++ opt("id", id),
       Map("semantics" -> semantics, "covers" -> covers.mkString(",")))
 
   /** A cache event. `event` is a project word such as access, fill, evict or invalidate.
