@@ -163,3 +163,7 @@ is retained. An installed version does not prove that the adapter runs.
 ## MCP workflow calls
 
 MCP `rvw_doctor` stays read-only. Use `doctor_smoke` for the native `rvw doctor --smoke-elf` job. Supply `elf`, the selected project and optional `options` or `platform`.
+
+A missing or stale Spike shim adds a `spike_shim` diagnostic with the exact
+`nice -n 10 .../Cosim/build.sh` repair command. Doctor does not rebuild it
+without an installation request. Repeat doctor after repair.

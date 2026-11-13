@@ -191,3 +191,9 @@ project is unchanged. `generated` means checker source, not compiled RTL.
 Use `--inventory CHECKS_JSON` to add inserted native checks and their signal
 roles from an elaborated `rvw.checks/1` inventory. Relative inventory paths
 start at the project directory. MCP tool: `checks_plan`.
+
+`checks plan` includes per-rule declaration templates. Mapped init writes
+`rvw/templates/checks.micro.json` with unbound signal placeholders. Review
+and select the rules before adding a queues path to checks.generate.json.
+The Scala DeclaredCoreChecks stub supplies an explicit activation/failure
+binding for native elaborated check families. Stubs do not bind themselves.

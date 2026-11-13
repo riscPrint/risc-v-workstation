@@ -174,13 +174,12 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
     case None => Class.forName(map.topClass.get).getDeclaredConstructor().newInstance().asInstanceOf[Component]
   }
   private def check(key: ModelKey): Unit = {
-    require(!key.konata, "mapped adapter does not support Konata")
     require(!key.spinaltrace, "mapped adapter does not support SpinalTrace models")
   }
   private def report(key: ModelKey, work: File): SpinalReport[Component] = {
     check(key)
     val roots = if (map.verilog.isEmpty) Seq(new File(sourceDir, "src/main/scala")).filter(_.isDirectory) else Nil
-    spinalprobes.Probe.enabled(key.probes) {
+    spinalprobes.Probe.enabled(key.probes || key.konata) {
       RiscvSimConfig.elaborate(key, work, SpinalConfig(), sourceRoots = roots)(top())
     }
   }
@@ -236,7 +235,7 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
     var retired, traps = 0L
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
-        probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
+        probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job.copy(probes = job.probes || job.konata), ctx.rvfiHeader)
         val ports: Map[String, Data] = dut.getAllIo.map(d => d.getName() -> d).toMap
         def port(n: String): Data = ports.getOrElse(n, throw new IllegalArgumentException(
           s"core map names port '$n', but the top level has no such port"))
@@ -329,6 +328,8 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
           for ((bit, n) <- map.irq) set(n, if (levels.testBit(bit)) 1 else 0)
           if (writer.nonEmpty && levels != irqLevels) { writer.foreach(_.irq(cycle, levels)); irqLevels = levels }
+          // Completion can clear live in onStore. Capture this cycle first.
+          if (live) { models.foreach(_(cycle)); probes.foreach(_.sample(cycle)) }
           for (r <- rvfi.toSeq.filter(_ => live).flatMap(_.sample(cycle))) {
             retired += 1
             if (r.trap) traps += 1
@@ -340,12 +341,18 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
               onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata >> (8 * lane))
             }
           }
-          if (live) { models.foreach(_(cycle)); probes.foreach(_.sample(cycle)) }
         }
         cd.waitSamplingWhere(false)
       }
       writer.foreach(_.end(result._4, result._1.name))
       probes.foreach(_.close(result._4))
+      if (job.konata) {
+        import scala.sys.process._
+        val python = sys.env.getOrElse("RVW_PYTHON", new File(sys.env("RVW_HOME"), "rvw/.venv/bin/python").getPath)
+        val command = Seq(python, "-m", "rvw", "probes", "convert",
+          new File(job.out, ProbeCollector.FileName).getPath, "--to", "kanata", "--out", new File(job.out, "konata.log").getPath)
+        require(command.! == 0, "mapped probe-to-Kanata conversion failed")
+      }
       result
     } finally { writer.foreach(_.close()); probes.foreach(_.abandon()) }
     RunOutcome(status, cycles, retired, code, message,

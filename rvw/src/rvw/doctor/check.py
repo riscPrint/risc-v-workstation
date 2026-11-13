@@ -111,6 +111,11 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                     table[cells[1]] = cells[2]
         result['tested_version_table'] = table
         result['native'] = native_records((done.stdout or '') + (done.stderr or ''), table)
+        for record in result['native']:
+            if 'Spike shim' in record['evidence'] and record['status'] != 'ready':
+                import shlex
+                add('spike_shim', 'error', record['evidence'],
+                    'nice -n 10 ' + shlex.quote(str(home/'Cosim/build.sh')))
         result['native'] = hdl_native_records(result['native'], hdl)
         applicable_ready = bool(result['native']) and all(r['status'] in ('ready','warning','not_applicable') for r in result['native'])
         native_ready = done.returncode == 0 or (hdl in ('sv','vhdl') and applicable_ready)
