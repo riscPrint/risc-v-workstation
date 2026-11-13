@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320" viewBox="0 0 640 320">
+<rect width="640" height="320" fill="white" />
+<path d="M50 20 V270 H620" fill="none" stroke="black" />
+<text x="50" y="15" font-size="12">Covered supported bins</text>
+<text x="210" y="310" font-size="12">Candidate attempt wall seconds</text>
+<text x="20" y="30" font-size="12">170</text>
+<text x="570" y="290" font-size="12">908.1</text>
+<polyline points="50.00,241.76 174.59,240.35 253.08,238.94 451.27,237.53 620.00,236.12" fill="none" stroke="#2266aa" stroke-width="2" />
+<text x="400" y="25" fill="#2266aa" font-size="12">directed: 24 (+4)</text>
+<polyline points="50.00,241.76 214.83,238.94 418.32,238.94 552.31,236.12 614.57,233.29" fill="none" stroke="#cc6600" stroke-width="2" />
+<text x="400" y="43" fill="#cc6600" font-size="12">random: 26 (+6)</text>
+</svg>

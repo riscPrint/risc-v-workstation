@@ -155,3 +155,35 @@ reproduction. Failed generation and compilation attempts without an archived ELF
 are unsupported for execution replay. Current pinned settings and implementation
 must still match. Cross-host replay and total replay-cost accounting remain
 unqualified. CPU fields exclude evidence sealing and publication overhead.
+
+## Paired integer control
+
+Set `strategy` to `directed` or `random`. The default is `directed`.
+The random arm selects an integer instruction uniformly from the same 13
+instruction families. It selects source values and immediate bits uniformly.
+It does not read the hole list. It keeps the fixed attempt budget even after
+all supported bins are hit. Random control currently excludes sequence and RTL
+recipe guidance. Both arms use the same runtime, C1 adapter, strict Spike
+qualification, payload observer and artifact sealing.
+
+Set `initial_results` to a list of C1 `result.json` paths from the initial suite.
+Paths are relative to the settings file. Each result needs its original ELF
+and complete C2 trace. The tool checks C1 pass, ELF hash, selected core/config,
+strict Spike match and common execution identity before crediting initial bins.
+Initial coverage includes the entire test trace. Candidate credit remains
+payload-only. Both arms must use the same initial results and attempt limit.
+The initial qualification and hashes are saved in the report and input identity.
+These controls alone do not establish a measured gain. Native paired results
+are still required.
+
+The report records `initial_hits`, `strategy`, `attempt_budget` and a common
+`pair_context` hash. The hash covers declared inputs, opcode plan, runtime,
+registers, compiler, seed, budgets and implementation. It excludes strategy.
+Use `rvw.cov.paired.compare(directed_report, random_report, output_directory)`
+to write `curves.json` and `curves.svg`. Reports are the saved campaign JSON
+objects from their C8 state generations. The exporter requires equal context,
+initial suite, denominator, implementation and execution identity. It plots
+credited bins only. Failed attempts retain their elapsed cost. Its time axis
+excludes initial-suite qualification and evidence publication. External lock
+waits remain part of each measured attempt. These curves do not establish a
+runtime speed gain or complete CPU accounting.
