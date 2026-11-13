@@ -22,3 +22,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Run isolated local checks
         run: scripts/ci-local.sh messages
+      - name: Job result
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: echo "Job status = $JOB_STATUS. Test counts require a completed test report." >> "$GITHUB_STEP_SUMMARY"
