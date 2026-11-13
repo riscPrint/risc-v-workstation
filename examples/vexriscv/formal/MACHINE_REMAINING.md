@@ -13,7 +13,7 @@ rvw formal isa --project examples/vexriscv \
   --machine CAPTURE/machine.json --out SIGNOFF --timeout 180
 ```
 
-Hold `vex-conn` and use `nice -n 10` for native runs. Select at most three
+Hold `vex-conn` and use `nice -n 15` for native runs. Select at most two
 parallel jobs. The generic `isa` command prints the machine rows. It keeps
 missing instruction checks and missing machine rows visible as unsupported.
 
@@ -85,3 +85,50 @@ and a 180-second task limit. Both `mscratch` CSR consistency and instruction
 memory returned bounded PASS with reached covers. The depth-25 timeouts remain
 inconclusive attempts. These lower-bound results do not replace them. Pass
 `--depth 15` to the capture helper to reproduce the retry bound.
+
+## PC-chain attribution follow-up
+
+The saved local witness was replayed with Icarus on 2026-11-13. The replay
+reached the PC-chain assertion, but the redirect and retired PC contained X.
+That replay is inconclusive. It does not reproduce the numeric witness quoted
+above. The saved testbench supplies `0x10200073` (SRET), not MRET. The core
+has no S mode. Synthesis can choose values for its undefined redirect payload;
+Icarus keeps X. Thus that saved witness does not establish an MRET defect.
+The decoded SRET path also needs a separate illegal-instruction alignment check.
+A directed SRET smoke reached the trap handler with cause 2 in both tools,
+but VexRiscv retained an unknown MEPC. That smoke does not resolve the saved
+witness or qualify trap entry. Its logs remain in the local sret-directed run.
+Do not cite the earlier numeric witness as a replay-confirmed core failure.
+
+A separate from-reset directed program, [pc-chain.S](findings/pc-chain.S),
+writes `after_mret | 1` to MEPC, reads MEPC and executes MRET. The
+[harness](findings/pc-chain-tb.sv) uses ordered one-cycle instruction responses,
+no interrupts and no bus errors. Both runs use the same RV32IM_Zicsr ELF.
+
+| Observation | Measured VexRiscv | Spike 1.1.1-dev, `--priv=m` |
+| --- | --- | --- |
+| MEPC read after writing `0x80000019` | `0x80000019` | `0x80000018` |
+| MRET target at next retirement | `0x80000018` | `0x80000018` |
+| Stored MEPC read value | `0x80000019` | `0x80000018` |
+
+See the adjacent `pc-chain-vex.log` and `pc-chain-spike.log`. The RTL hash is
+`420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37`.
+The RTL assigns all 32 CSR write bits to `CsrPlugin_mepc`. It reads all 32
+bits back and forwards them to the return redirect and RVFI next-PC output.
+The fetch path removes bit 0. This is a core CSR readback deviation plus a
+next-PC observation mismatch. It is not fixed by masking the property target.
+The privileged ISA requires MEPC bit 0 to read as zero. The generic PC-chain
+rule remains unchanged and the original result remains FAIL. No core source
+was changed. A core fix must mask the unsupported MEPC bits on writes and
+reads, and the observer must report the actual architectural next PC.
+
+The independent MPP decision in MACHINE_M.md also remains a deviation.
+An M-only core may hard-wire MPP to M. This core instead exposes MPP=0 after
+MRET. That value is not a legal M-only platform option. The privileged ISA
+requires MRET to set MPP to the least privileged supported mode, M here.
+No platform setting that permits this value was added.
+
+Source for both rules: [Machine-level ISA, MEPC and privilege stack](https://docs.riscv.org/reference/isa/priv/machine.html).
+The directed run follows the ELF/hex recipe in MACHINE_M.md with pc-chain.S.
+Use the matching pc-chain-tb.sv. The first data store records MEPC; the
+subsequent store of 1 ends the test.
