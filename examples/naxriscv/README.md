@@ -580,7 +580,7 @@ It is not ISA or whole-core qualification for the variants.
 
 ## Measured delta study (2026-11-13)
 
-The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+The earlier frozen model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
 
 Thirty RTL runs pass. Thirty complete traces match Spike, with counter
 synchronization recorded. Six programs run at seed 1 with zero added memory
@@ -701,7 +701,7 @@ The [stage-pair counts](rvw/arch/latency-results.json) retain the training
 observations. Stage-pair capture is partial. These counts support timing
 priors, not complete pipeline qualification.
 
-Finite store drain remains absent. Buffered stores release their model
+The earlier frozen policy has no finite store drain. Buffered stores release their model
 queue slot at commit. The RTL can retain stores until drain. Wrong-path
 load/issue occupancy, speculative predictor repair and exact LSU replay
 also remain approximate. These gaps can change capacity deltas even when
@@ -765,3 +765,82 @@ Raw traces and builds stay outside versioned source. Compact receipts and
 hashes are retained. Results cover short RV32IMA programs on one pinned
 small OoO core. FP, vectors, operating-system workloads, larger cores,
 native model throughput and physical hardware are not qualified here.
+
+
+### Resource timing study
+
+All stages use the same base-only fitted parameters. The five corrected
+stages share one engine, including common recovery fixes. The historical
+baseline uses the earlier engine. Compare mechanisms against the current
+engine baseline as well as the historical result. No variant result selects
+parameters. The 30 RTL runs and 30 complete Spike matches are reused. No RTL
+variant was rebuilt. Calibration uses three training and six held-out programs.
+A pair meets the criterion only when its sign matches and its error is no
+more than half the measured change. Exact zero changes retain their sign check.
+
+| Policy | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) | Same-step rank tau-b |
+|---|---:|---:|---:|---:|---:|
+| Historical baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
+| Current engine baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
+| Wrong-path occupancy | 15 | 6 | 7.15 | 9.11 | 0.667 |
+| Plus finite store drain | 15 | 6 | 7.31 | 9.11 | 1.000 |
+| Plus memory-order window | 15 | 6 | 7.31 | 9.08 | 1.000 |
+| Plus cache-response retry | 10 | 1 | 9.46 | 9.55 | 1.000 |
+
+Rejected guarded-fetch attempts, before the final occupancy policy:
+
+| Attempt | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) |
+|---|---:|---:|---:|---:|
+| Issue-time guard | 9 | 0 | 57.46 | 48.69 |
+| Rename-time guard | 10 | 1 | 51.05 | 40.55 |
+
+Rank uses pooled cycles and the same large steps as RTL. This is separate
+from the earlier local-sensitivity tau-b of 0.707 with three unresolved ties.
+Better rank does not establish correct change sizes.
+Read delta and absolute-error changes separately. A lower training error
+or a better rank does not qualify a design decision. Both absolute-error
+splits remain explicit for every policy.
+
+| Structure change | Direction matches / 6 | Within size criterion / 6 | Use for a design decision |
+|---|---:|---:|---|
+| IQ 32 to 16 | 6 | 3 | Measure RTL |
+| ROB 64 to 128 | 6 | 6 | Measure RTL |
+| LQ 16 to 8 | 2 | 2 | Measure RTL |
+| SQ 16 to 8 | 5 | 4 | Measure RTL |
+
+The structure table uses the memory-order window policy, with the
+cache-response retry experiment disabled. No structure is qualified for
+general direction and size predictions.
+IQ, LQ and SQ still need RTL measurements. ROB doubling has no measured effect
+on these six programs. Those zero results do not validate ROB shrinkage or
+larger programs. Use the model to choose experiments and inspect pressure.
+
+Wrong-path work uses a deterministic committed-mix proxy. The existing Spike
+redirect capture cannot supply dynamic gshare paths. The policy has no nested
+prediction, wrong-path register dependencies or speculative cache traffic.
+Committed frontend lookahead remains optimistic. Stores now retain queue
+slots until bounded cache acceptance. Final store visibility after retirement
+is outside the measured region.
+
+The cache-response experiment holds a missed load's queue line and readmits the younger
+window through finite capacity. Exact probe-driven replay remains **open**.
+The RTL reschedule counters mix branches, traps and LSU causes. They cannot
+identify a typed LSU retry window. The five-cycle penalty stays fixed; it is
+not inferred from those totals. A long cache response is only a retry proxy.
+Do not claim that all cache misses require an RTL replay.
+
+The resource configuration is [ooo-resource.json](rvw/arch/ooo-resource.json).
+It enables occupancy, finite drain and the memory-order retry window.
+It leaves the cache-response retry heuristic disabled because typed RTL
+retry evidence is absent. That separate experiment is retained as
+[ooo-retry-experimental.json](rvw/arch/ooo-retry-experimental.json). The original
+[ooo-measured.json](rvw/arch/ooo-measured.json) stays as the frozen baseline.
+The [model README](../../rvw/src/rvw/ooo/README.md) contains each stage's
+24-pair table. Retained JSON files beside these configurations contain all
+pair hashes, absolute errors, model events and rank inputs. Two rejected
+fetch-guard policies are retained with their large regressions.
+
+Run `resource-study.py CALIBRATION_PLAN DELTA_PLAN CONFIG NEW_OUTPUT` with the
+workstation Python to repeat a stage from saved captures. The script runs the
+existing calibration and delta commands. It performs no fit and starts no RTL
+or Spike process. Retain `summary.json`; keep raw captures outside Git.

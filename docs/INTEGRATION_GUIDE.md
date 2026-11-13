@@ -322,31 +322,78 @@ rvw arch calibrate --bench median,vvadd,memcpy --out run/calibration
 Working means model and RTL results use the same workload, region and event
 predicates. gem5 and native component models show trends. They do not replace
 RTL. Native scheduler parity is not application accuracy. The committed-trace
-model does not execute wrong-path instructions. Read [Arch](../Arch/README.md)
+model has optional approximate wrong-path occupancy and bounded retries. Read [Arch](../Arch/README.md)
 and [component simulations](../ComponentSims/README.md).
 
 ### Measured structure-size limits
 
-The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+All stages use the same base-only fitted parameters. The five corrected
+stages share one engine, including common recovery fixes. The historical
+baseline uses the earlier engine. Compare mechanisms against the current
+engine baseline as well as the historical result. No variant result selects
+parameters. The 30 RTL runs and 30 complete Spike matches are reused. No RTL
+variant was rebuilt. Calibration uses three training and six held-out programs.
+A pair meets the criterion only when its sign matches and its error is no
+more than half the measured change. Exact zero changes retain their sign check.
 
-| Variant | Initial outside criterion | Revised outside criterion |
-|---|---:|---:|
-| iq16 | 6/6 | 4/6 |
-| rob128 | 0/6 | 0/6 |
-| lq8 | 5/6 | 6/6 |
-| sq8 | 3/6 | 3/6 |
+| Policy | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) | Same-step rank tau-b |
+|---|---:|---:|---:|---:|---:|
+| Historical baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
+| Current engine baseline | 11 | 2 | 10.67 | 7.47 | 0.667 |
+| Wrong-path occupancy | 15 | 6 | 7.15 | 9.11 | 0.667 |
+| Plus finite store drain | 15 | 6 | 7.31 | 9.11 | 1.000 |
+| Plus memory-order window | 15 | 6 | 7.31 | 9.08 | 1.000 |
+| Plus cache-response retry | 10 | 1 | 9.46 | 9.55 | 1.000 |
 
-On NaxRiscv, the revised base-only fit gives mean absolute IPC errors of
-10.7% training, 7.6% on five held-out programs and 7.5% across six.
-The delta table still has 13 wrong pairs out of 24. Nine pairs are zero
-changes; only two of the 15 nonzero changes meet the criterion.
-Sensitivity places IQ first but ties SQ, LQ and ROB. Tau-b is 0.707.
+Rejected guarded-fetch attempts, before the final occupancy policy:
 
-Use `rvw arch ooo-delta PLAN --out NEW_DIRECTORY --json` or MCP
-`arch_ooo_delta` for the same paired comparison on another project.
-Supply one frozen base calibration and paired C1/C2/ELF captures.
-[The measured tables and limits](../examples/naxriscv/README.md#measured-delta-study-2026-11-13)
-separate base-fit error, delta error and rank agreement.
+| Attempt | Within / 24 | Nonzero within / 15 | Training MAE (%) | Held-out MAE (%) |
+|---|---:|---:|---:|---:|
+| Issue-time guard | 9 | 0 | 57.46 | 48.69 |
+| Rename-time guard | 10 | 1 | 51.05 | 40.55 |
+
+Rank uses pooled cycles and the same large steps as RTL. This is separate
+from the earlier local-sensitivity tau-b of 0.707 with three unresolved ties.
+Better rank does not establish correct change sizes.
+Read delta and absolute-error changes separately. A lower training error
+or a better rank does not qualify a design decision. Both absolute-error
+splits remain explicit for every policy.
+
+| Structure change | Direction matches / 6 | Within size criterion / 6 | Use for a design decision |
+|---|---:|---:|---|
+| IQ 32 to 16 | 6 | 3 | Measure RTL |
+| ROB 64 to 128 | 6 | 6 | Measure RTL |
+| LQ 16 to 8 | 2 | 2 | Measure RTL |
+| SQ 16 to 8 | 5 | 4 | Measure RTL |
+
+The structure table uses the memory-order window policy, with the
+cache-response retry experiment disabled. No structure is qualified for
+general direction and size predictions.
+IQ, LQ and SQ still need RTL measurements. ROB doubling has no measured effect
+on these six programs. Those zero results do not validate ROB shrinkage or
+larger programs. Use the model to choose experiments and inspect pressure.
+
+Wrong-path work uses a deterministic committed-mix proxy. The existing Spike
+redirect capture cannot supply dynamic gshare paths. The policy has no nested
+prediction, wrong-path register dependencies or speculative cache traffic.
+Committed frontend lookahead remains optimistic. Stores now retain queue
+slots until bounded cache acceptance. Final store visibility after retirement
+is outside the measured region.
+
+The cache-response experiment holds a missed load's queue line and readmits the younger
+window through finite capacity. Exact probe-driven replay remains **open**.
+The RTL reschedule counters mix branches, traps and LSU causes. They cannot
+identify a typed LSU retry window. The five-cycle penalty stays fixed; it is
+not inferred from those totals. A long cache response is only a retry proxy.
+Do not claim that all cache misses require an RTL replay.
+
+The [resource configuration](../examples/naxriscv/rvw/arch/ooo-resource.json)
+enables finite memory-order readmission and disables cache-response retries.
+See [the retained project tables](../examples/naxriscv/README.md#resource-timing-study)
+and [the model timing rules](../rvw/src/rvw/ooo/README.md).
+Use `rvw arch ooo-delta` or MCP `arch_ooo_delta` for paired captures on another
+project. Use a new base calibration for each engine policy. Keep fit parameters
+fixed across variants.
 
 ## 13. Add UVM and protocol VIP
 
@@ -732,7 +779,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [common](../rvw/src/rvw/common/README.md) | Local process/fixture checks | Process cancellation and resource limits do not establish DUT acceptance. |
 | [fault](../rvw/src/rvw/fault/README.md) | Ran on RTL | A bounded VexRiscv campaign and BOOM small register flips confirm native injection. Memories and FMEDA remain open. [#689](https://github.com/riscPrint/risc-v-workstation/pull/689), [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101). |
 | [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | BOOM small has measured stall samples and conditional branch comparisons. Prediction tags and full pipeline attribution remain open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). |
-| [ooo](../rvw/src/rvw/ooo/README.md) | Native parity and bounded RTL correlation | NaxRiscv has 30 Spike-matched runs, but 13/24 structure deltas remain wrong. Dynamic wrong-path timing and native gem5 comparison remain unqualified. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
+| [ooo](../rvw/src/rvw/ooo/README.md) | Native parity and bounded RTL correlation | NaxRiscv has 30 Spike-matched runs, but 9/24 final structure deltas remain wrong. Dynamic wrong-path timing and native gem5 comparison remain unqualified. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
 
 ## Shared library boundaries
 
