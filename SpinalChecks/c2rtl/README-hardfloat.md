@@ -57,7 +57,7 @@ sources remain refused. This is not a reset-domain crossing or physical proof.
 
 ## Evidence limits
 
-See `hardfloat-results.json` for the native run ledger. A zero/NaN case result
+The historical native ledger had 130 attempts: 85 closed and 45 inconclusive. Raw per-attempt output is no longer tracked. Regenerate it with the pinned HardFloat and SoftFloat inputs and the commands above. A zero/NaN case result
 does not cover normal, subnormal or infinity first operands. Unrestricted
 conversion results have no floating-point class restriction. All-domain arithmetic
 runs that time out remain inconclusive. Parameterized binary16 results do not
