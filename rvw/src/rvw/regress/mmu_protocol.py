@@ -119,10 +119,15 @@ def configured_check(events, path):
     config = json.loads(Path(path).read_text())
     if config.get('schema') != 'rvw.mmu-probes/1' or not isinstance(config.get('probes'), dict) or not config.get('harts'):
         raise ValueError('expected rvw.mmu-probes/1 with harts and probes')
-    kinds = {'pte_write', 'ad_atomic', 'tlb_fill', 'tlb_hit', 'tlb_invalidate', 'shootdown_request', 'shootdown_ack', 'shootdown_complete', 'memory_type'}
+    kinds = {'pte_write', 'ad_atomic', 'tlb_fill', 'tlb_hit', 'tlb_invalidate', 'shootdown_request', 'shootdown_ack', 'shootdown_complete', 'memory_type', 'bus_effect'}
     if set(config['probes']) - kinds or any(not isinstance(v, str) or not v for v in config['probes'].values()):
         raise ValueError('invalid project translation probes')
     selected = [e for e in events if e['kind'] in kinds]
     if any(e['kind'] not in config['probes'] for e in selected):
         raise ValueError('capture uses an undeclared translation probe')
-    return check(selected, required_harts=config['harts'], pbmt_types=config.get('pbmt_types'))
+    from .mmu_memory_effects import check as check_effects
+    result = check([e for e in selected if e['kind'] != 'bus_effect'], required_harts=config['harts'], pbmt_types=config.get('pbmt_types'))
+    result['memory_effects'] = check_effects(selected, config.get('transactions'), config.get('ordering', []))
+    if result['memory_effects']['status'] == 'mismatch':
+        result['status'] = 'mismatch'
+    return result

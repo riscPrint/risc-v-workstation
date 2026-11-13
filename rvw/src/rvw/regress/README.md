@@ -860,6 +860,14 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+Project protocol declarations can include independent `transactions` and
+`ordering` plans. A `bus_effect` probe captures device-visible sequence,
+address, access, type, width and data. `mmu report --protocol-config FILE`
+checks these effects separately from TLB/atomicity evidence. Missing effects
+remain inconclusive. It detects replayed effects and violated declared order.
+Request issue order is not a substitute for an independent device observer.
+Memory-type and ordering policy comes from project data, never DUT capture.
+
 The `examples/mmu/napot-range.json` campaign primes and remaps each page in a
 64 KiB NAPOT range. It uses either a global fence or one fence per page before
 checking new data. It does not require one address-specific fence to invalidate

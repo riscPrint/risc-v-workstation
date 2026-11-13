@@ -3585,6 +3585,24 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Independent memory-type effects
+
+A project `rvw.mmu-probes/1` declaration may also give `transactions` and
+`ordering`. Each expected transaction has a unique `id`, physical `address`,
+`access`, byte `width`, `memory_type`, and optional expected `data`. Ordering
+is a list of before/after ID pairs. These are independent program/platform
+expectations. Capture must not define the expected types or ordering edges.
+
+The declared `bus_effect` probe records `id`, strictly increasing device-visible
+`sequence`, physical `address`, `access`, `width`, `memory_type` and `data`
+when needed. The checker detects wrong types, widths, data or addresses,
+repeated/extra effects and violated declared ordering. Missing effects or
+missing transaction plans remain inconclusive. The separate `memory_effects`
+result does not earn a TLB/atomicity result. A memory-effect mismatch remains
+a protocol mismatch. These checks require real independently observed device
+effects. Request issue order alone is not device visibility. No global IO
+ordering rule is assumed. The project must declare its supported policy.
+
 ### NAPOT range remapping
 
 `napot_remap = true` selects a complete 64 KiB NAPOT range remap. It requires

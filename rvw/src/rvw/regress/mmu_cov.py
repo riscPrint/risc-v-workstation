@@ -9,6 +9,7 @@ def groups():
         dict(name='vm_level_fault', fields=['vm_mode', 'level', 'fault'], when=dict(event='mmu_pte')),
         dict(name='vm_pte_permissions', fields=['R', 'W', 'X', 'U', 'A', 'D'], when=dict(event='mmu_pte'), domains=[[False, True]] * 6),
         dict(name='vm_protocol_hart', fields=['kind', 'hart'], when=dict(event='mmu_protocol')),
+        dict(name='vm_memory_effect', fields=['memory_type', 'access', 'width'], when=dict(event='mmu_protocol', kind='bus_effect')),
         dict(name='vm_tlb_protocol', fields=['kind'], when=dict(event='mmu_protocol'),
              domains=[['tlb_fill', 'tlb_hit', 'tlb_invalidate', 'ad_atomic', 'shootdown_request', 'shootdown_ack', 'shootdown_complete', 'memory_type']]),
         dict(name='iommu_context_result', fields=['device', 'process', 'result'], when=dict(event='iommu')),
