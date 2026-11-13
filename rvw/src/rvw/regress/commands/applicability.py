@@ -64,12 +64,18 @@ def plan(features, catalog=None):
 
 def register(commands):
     p = commands.add_parser('plan', help='list applicable generated suites and missing features')
-    p.add_argument('--features', type=Path, required=True, help='project-owned feature declaration')
+    choice = p.add_mutually_exclusive_group(required=True)
+    choice.add_argument('--features', type=Path, help='project-owned feature declaration')
+    choice.add_argument('--act4', type=Path, help='project-owned ACT4 profile')
     p.add_argument('--catalog', type=Path, help='project-owned suite requirement catalog')
     p.add_argument('--json', action='store_true')
     def run(args):
         try:
-            result = plan(args.features, args.catalog)
+            if args.act4:
+                from rvw.regress.act4 import selection
+                result = selection(args.act4)
+            else:
+                result = plan(args.features, args.catalog)
         except (ValueError, OSError, KeyError) as exc:
             import sys
             print(f'rvw regress plan: {exc}', file=sys.stderr)
@@ -77,7 +83,9 @@ def register(commands):
         if args.json:
             print(json.dumps(result))
         else:
-            for row in result['suites']:
+            if args.act4:
+                print(', '.join(result['extensions']))
+            for row in result.get('suites', []):
                 print(f"{row['name']}: {'applicable' if row['applicable'] else 'excluded'} ({row['reason']})")
         return 0
     p.set_defaults(func=run)

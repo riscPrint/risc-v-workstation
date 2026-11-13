@@ -23,6 +23,12 @@ def discover(suite: Suite, include: list[str] | None = None) -> list[TestSpec]:
         return [TestSpec("build", None)]
     if suite.dir is None or not suite.dir.is_dir():
         raise ConfigError(f"suite {suite.name}: test directory {suite.dir} does not exist")
+    if suite.act4_manifest:
+        from .act4 import verify_manifest
+        try:
+            verify_manifest(suite.act4_manifest, suite.dir)
+        except (ValueError, OSError, KeyError) as exc:
+            raise ConfigError(f"suite {suite.name}: {exc}") from exc
     inc = [re.compile(r) for r in suite.include]
     exc = [re.compile(r) for r in suite.exclude]
     extra = [re.compile(r) for r in (include or [])]

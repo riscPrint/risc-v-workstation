@@ -151,6 +151,7 @@ class Suite:
     instret_key: str = "instret"
     requires: list[str] = field(default_factory=list)  # semantic needs, checked before adapter launch
     perf_metrics: list[str] = field(default_factory=list)  # compared by `rvw regress compare`
+    act4_manifest: Path | None = None
 
     def __post_init__(self) -> None:
         self.validate()
@@ -410,7 +411,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
                 except re.error as e:
                     raise ConfigError(f"{path} [suites.{name}] {k}: bad regex {rx!r}: {e}") from None
         suite = Suite(
-            name=name, kind=kind, description=s.get("description", ""),
+            name=name, kind=kind, act4_manifest=_path(s["act4_manifest"], base, environment) if s.get("act4_manifest") else None, description=s.get("description", ""),
             dir=_path(s["dir"], base, environment) if s.get("dir") else None,
             glob=s.get("glob", "*"), strip_suffix=s.get("strip_suffix", ""),
             include=_strs(s.get("include"), "include"), exclude=_strs(s.get("exclude"), "exclude"),

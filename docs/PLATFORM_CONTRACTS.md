@@ -91,3 +91,5 @@ Principles (from `ROADMAP.md`):
 - [Generated-suite selection](contracts/regress.md)
 
 - [Probe declaration checks](contracts/probes.md)
+
+- [ACT4 suite builds](contracts/act4.md)
