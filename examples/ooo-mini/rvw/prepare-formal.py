@@ -11,4 +11,5 @@ helper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(helper)
 helper.prepare(root / 'out/rtl', root / 'out/rtl/Core.checks.json', root / 'out/formal-jobs',
                ['ooo.property:rob_bound', 'ooo.property:zero_map', 'queue.occupancy:rob',
-                'ooo.property:issue_operands', 'freelist.conservation:rename'], depth=8)
+                'ooo.property:issue_operands', 'freelist.conservation:rename',
+                'ooo.property:zero_committed', 'ooo.property:zero_not_free'], depth=8)

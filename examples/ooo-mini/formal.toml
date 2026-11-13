@@ -16,7 +16,10 @@ wrapper = "rvw/rvfi-wrapper.v"
 verilog = ["rvw/out/rtl/Core.v"]
 isa = "rv32im"
 nret = 1
-depth = 8
+# Smoke measured 35 cycles from rename to commit (33 from issue to commit).
+# Add two reset edges, one boot edge and two margin edges. This is a selected
+# bounded-check depth, not a universal latency bound for arbitrary programs.
+depth = 40
 solver = "yices"
 checks = ["insn_add_ch0", "insn_lui_ch0", "cover"]
 [riscv_formal.ports]
