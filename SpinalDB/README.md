@@ -537,3 +537,15 @@ so a connect can show the register or operator line instead of its own.
 `meta.firtool_version` and `meta.firtool_options` record the compiler.
 
 See [the design](../docs/design/hdl-frontends.md) for the remaining phases.
+
+### Library peripheral extraction
+
+`PeripheralExtractionSpec` checks the SpinalHDL 1.15.0 APB GPIO, UART and
+machine timer with both Verilog and SystemVerilog. All six cases retain
+signals, registers and a stored SpinalBlocks artifact equal to direct extraction.
+These are native static extraction tests. They do not run peripheral behavior.
+PDG and HGLDD are disabled in these bounded peripheral cases.
+
+The NaxRiscv checkout at `9f452d50560d02fb391bc8039f5453c54e0911af`
+declares Scala 2.12.18 and development SpinalHDL. It still needs a compatible
+library build. The new peripheral evidence does not establish NaxRiscv support.
