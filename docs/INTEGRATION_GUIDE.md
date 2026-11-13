@@ -211,6 +211,8 @@ source pins, per-extension records and minimal reproductions.
 | VexiiRiscv RV64IMA M/S/U, standard boot | 302 / 302 | 0 / 302 | 0 | 302 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 / 270 | 0 / 270 | 0 | 270 |
 | NaxRiscv RV32IMA instruction profile | 69 / 69 | 69 / 0 | 69 | 0 |
+| NaxRiscv RV64IMA machine instruction profile | 98 / 98 | 98 / 0 | 98 | 0 |
+| NaxRiscv RV64IMA M/S/U, machine instruction boot | 98 / 98 | 98 / 0 | 98 | 0 |
 | PicoRV32 mapped RV32IM instruction profile | 51 / 51 | 50 / 1 | 50 | 1 |
 | BOOM small instructions | 378 / 378 | 376 / 2 | 0 | 2 |
 | BOOM small M/S/U, Sv39 | 232 / 232 | 196 / 36 | 0 | 36 |
@@ -225,8 +227,9 @@ gap: the selected profile omits the counter plugin that supplies these
 CSRs. No failure or bootstrap access is waived. All six VexRiscv MEPC
 cases remain core readback differences for IALIGN=32.
 
-NaxRiscv has 69 strict instruction-case matches. Its standard Sm and
-supervisor ACT4 remain NOT RUN. PicoRV32 has 50 strict matches under the
+NaxRiscv has 69 strict RV32 instruction matches and 98 on each RV64 config.
+The RV64 profiles use machine-mode boot. Its standard Sm, S/U and Sv39 ACT4
+remain NOT RUN. PicoRV32 has 50 strict matches under the
 shared platform's checked full-word load convention. Its FENCE rd=x1
 state difference remains failed. Neither result grants certification.
 BOOM ran all 610 selected programs. Ten of its 38 execution failures are RVFI
@@ -617,39 +620,53 @@ Spike-only scope or qualify interrupts, extended CSR capture or a second core.
 
 ## Out-of-order Spinal core (NaxRiscv, measured 2026-11-13)
 
-The [NaxRiscv example](../examples/naxriscv/README.md) uses RV32IMA, M/S/U,
-Sv32, two-wide rename and commit, a 64-entry ROB, Lsu2 with 16-entry load/store
-queues, GShare and BTB. The default issue queue has 32 entries. The `rv32imasu-iq16`
-variant has 16. Only the default has the retained 59-test ISA result. The IQ16
-variant has one measured benchmark. Normal runs do not patch the core. Negative
-controls use a private patched checkout and private locks.
+The [NaxRiscv example](../examples/naxriscv/README.md) keeps `rv32imasu`
+as its default. It adds `rv64ima` for M-only operation and `rv64imasu` for
+M/S/U with Sv39. The core has two-wide rename and commit, a 64-entry ROB,
+32 IQ entries, 16-entry load/store queues, GShare and BTB. The RV32 IQ16
+variant remains separate. Normal runs use a private pinned core without
+source patches. Only the retained RV32 negative controls patch a private copy.
 
-| Tool | What the core project supplies | Measured on NaxRiscv | Open |
-|---|---|---|---|
-| Build (`scripts/sbt/SpinalAxis.scala`) | Pinned `RVW_SPINAL_SOURCE` and Scala axis | SpinalChecks library and all test sources compile on legacy Scala 2.12.18 and release Scala 2.13.14; four naming/elaboration tests pass per axis | Other compiled Scala tests and native Scala-inserted core checks |
-| C1/C2 (`rvw/run.sh`) | Refill bus models and commit-probe C2 backend | Retained default results: 59/59 ISA, 2/2 smoke, 12/12 seeded memory timing and 9/9 benchmarks pass | Interrupts, devices, RVC/FPU configurations; broader IQ16 tests |
-| Cosim (`rvw cosim check`) | Platform JSON and an independent observation path | Retained 59 ISA and nine benchmark matches; ALU negative control finds the wrong write at order 1, PC `0x80000050`; no masks or synchronization | More negative controls and broader architecture coverage |
-| Query (`rvw query`, SpinalBlocks) | `build-db.sh` entry | Default database: 30 components, 8,278 signals, PDG and 24 block diagrams | IQ16 database and broader configurations |
-| Probes and Kanata (`rvw probes`) | Entry, issue, completion, commit and ROB-tail flush taps | 501 native retirement PCs and cycles match C2; 1,003-cycle view; probes-off RTL is identical with and without the tap | 32 orphan events and seven open instructions at shutdown; TLB events |
-| Function top-down (`rvw perf`) | Per-cycle partition samples, C2 and ELF symbols | IQ32/IQ16 `memcpy`: 25,375/28,999 cycles; both completely match Spike; added back-end slots map to `main`; measured queue-push blocking rises | Lost slots use the next retirement as time attribution; more programs and configurations |
-| Predictor (`rvw csim compare-rtl`) | Project predictor study | Retained direction agreement 80.4% to 99.8% against gshare | Qualified study, exact PC hash and speculative history |
-| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | Project description and probe event map | Revised mean IPC error: 10.7% training; 7.6% on five held-out programs; 7.5% across six. Thirty RTL runs match Spike. Thirteen of 24 structure deltas remain wrong | Only two of 15 nonzero deltas meet the criterion; finite store drain, wrong-path occupancy and replay remain approximate |
-| Generated checks (`rvw checks generate`) | Queue, pointer and tag-event bindings | Nine rules; 59 ISA passes with zero firings; seed-1 ROB/free-list/forwarding controls fire their target rules 29/135/2 times | Actual RAM-state conservation, forwarded byte data, full recovery; unseeded directed-run firings |
-| Register faults (`rvw fault`) | Register sites from the database and a fixed-seed adapter | Three applied bit flips on ROB allocation, commit and free pointers; all detected by native assert/fail statuses | Three selected bits at one cycle do not qualify safety or broad fault coverage |
+| Tool | Project input | RV32 retained result | RV64 measured result | Open |
+|---|---|---|---|---|
+| Build | Pinned Spinal source and Scala axis | Library and test-source cross-builds; four naming tests per axis | Both extra configs build with Scala 2.12.18 and pinned SpinalHDL | C/F/D configs and full Scala suites |
+| C1/C2 | Native refill buses and commit observer | 59 ISA, 2 smoke, 12 seeded-memory and 9 benchmark passes | Each config: 85 ISA and 98 ACT4 instruction passes; S config: 163/179 generated passes with 16 MMU failures | Devices, wider config coverage and whole-core qualification |
+| Cosim | Per-config platform JSON | 59 strict ISA matches; benchmark receipts retain their counter policy; ALU negative control caught | Each config: 85 strict ISA and 98 strict ACT4 matches; S generated suites: 157 strict and 6 IRQ-synchronized matches; 3 benchmark matches use counter synchronization | The 16 MMU failures remain; no mask removes them |
+| Query and blocks | `build-db.sh` | 30 components, 8,278 signals and 24 diagrams | NOT RUN | RV64 database and width-sensitive consumers |
+| Probes | Pipeline, queue, branch and retirement taps | Retained 501-PC/cycle check; probes-off equality check | Three benchmark streams checked; 55 registered probes; retirement counts equal C2 | Orphan warnings 1,280/512/69; complete pipeline-ID binding |
+| Function top-down | Per-cycle slots, C2 and ELF | IQ32/IQ16 memcpy: 25,375/28,999 cycles | Median/multiply/memcpy retiring slots: 12,651/55,393/28,674; each equals C1 and C2 | Time attribution does not establish a unique stall cause |
+| Predictor | Project component comparison | Retained direction agreement 80.4% to 99.8% | NOT RUN | Exact PC hash, speculative history and RV64 predictor qualification |
+| OoO timing model | Project resource description | Final window policy: training/held-out MAE 7.31%/9.08%; 15/24 total and 6/15 nonzero deltas meet the criterion | Unfitted RV32 parameter transfer: IPC errors -10.99%/-0.02%/+11.58% on three RV64 programs | Translated timing, workload generality and structure-size decisions |
+| Generated checks | Nine queue, pointer, free-list and forwarding rules | 59 ISA passes with zero firings; three target controls fire 29/135/2 times | Three benchmark passes; nine captured rules per run; zero firings | RV64 negative controls, RAM-state conservation and forwarded byte data |
+| Register faults | Database sites and fixed-seed injection | Three applied register-bit flips detected | NOT RUN | RV64 fault sampling and broad safety coverage |
 
-The current records are in the example's `rvw/arch/memory-results-2026-11-13.json`,
-`rvw/probes/pipeline-results.json`, `rvw/perf/results.json` and `rvw/plants/`.
-The model improves held-out error while training error worsens. Function loss
-attribution is temporal. Queue-blocked counters can overlap other stalls.
-Keep these limits beside the measured results. No result here is hardware,
-whole-core, safety or general timing-model qualification.
+The [RV64 supervisor table](../examples/naxriscv/rvw/supervisor/README.md)
+records 119/135 MMU passes, 30 control passes, four seeded-program passes,
+four ordering passes and six scheduled WFI passes. The four seeded programs
+check 128 transitions. The 14 MPRV permission failures and two noncanonical
+address failures have [minimal reproductions](../examples/naxriscv/FINDINGS.md#rv64-sv39-functional-findings).
+All 16 also differ from strict Spike at a missing page fault.
+
+PMP has zero entries. ASIDs, hardware A/D updates, H and multi-hart shootdown
+are excluded. Native PTE capture records 135 bound files and 442 returned
+PTEs. The bounded data-walk checker reports 26 consistent and 109 inconclusive
+cases. This does not qualify a TLB protocol or earn architecture bin coverage.
+The six WFI matches each use one explicit IRQ synchronization. The three
+benchmark matches each use two counter synchronizations. There are no output
+masks. Keep these policies separate from strict matches.
+
+RV32 records remain in the linked example and its retained study files.
+The [RV64 regeneration commands](../examples/naxriscv/README.md#rv64-out-of-order-tools)
+keep raw C1/C2, probe, check and model outputs outside Git. No result here
+qualifies hardware, a whole core, safety or a general timing model.
 
 ### Generated-suite counts on RTL
 
 These are retained 2026-11-13 results from the suite runs above. The RV32 PMP
 comparison is the resumed run. Counts are programs, not individual assertions.
-The MMU generated counts include all satp modes. Applicability excludes other
-modes and hardware A/D updates. Findings can overlap C1 failures.
+The Vexii MMU generated counts include all satp modes. The Nax row counts
+Sv39 only. Applicability excludes unsupported modes and capabilities.
+Findings can overlap C1 failures.
 
 | Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Known finding | Not run |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -670,7 +687,15 @@ modes and hardware A/D updates. Findings can overlap C1 failures.
 | Vexii RV32 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 | 0 |
 | VexRiscv RV32 M only | FENCE / FENCE.I | 2 | 2 | 2 | 2 | 0 | 2 | 0 | 0 |
 | VexRiscv RV32 M only | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 3 | 3 | 0 |
+| Nax RV64 M/S/U | Sv39 matrix | 147 | 135 | 135 | 119 | 16 | 119 | 16 | 0 |
+| Nax RV64 M/S/U | Privilege controls | 30 | 30 | 30 | 30 | 0 | 30 | 0 | 0 |
+| Nax RV64 M/S/U | Seeded privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 | 0 |
+| Nax RV64 M/S/U | Ordering | 4 | 4 | 4 | 4 | 0 | 4 | 0 | 0 |
+| Nax RV64 M/S/U | Scheduled WFI, IRQ sync | 6 | 6 | 6 | 6 | 0 | 6 | 0 | 0 |
 
+The Nax WFI row has six IRQ-synchronized matches, not strict matches.
+Its 12 excluded Sv39 cases need PMP, hardware A/D updates or ASIDs. No PMP
+corpus was generated for its zero-entry configuration.
 IRQ, MMIO and unspecified-reset synchronizations retain the limits in the
 linked family READMEs. Fresh PLIC traces declare the external-interrupt
 extension. Its independent replay checks device and mailbox events and earns
@@ -1425,7 +1450,7 @@ trigger activation and formal outcomes separate.
 |---|---:|---:|---|---:|
 | VexRiscv | 49 | 57 | 37 / 20 / 0 | 0 / 0 |
 | VexiiRiscv after cancellation fixes | 51 | 25 | 6 / 19 / 0 | 0 / 0 |
-| NaxRiscv, nine declarations | 59 | 9 | not measured / not measured / 9 | 0 / 0 |
+| NaxRiscv RV32, nine declarations | 59 | 9 | not measured / not measured / 9 | 0 / 0 |
 
 The [VexiiRiscv source and wave triage](../examples/vexiiriscv/checks-evidence/firing-triage.md)
 resolves the 139 historical events as incomplete cancellation bindings. A
@@ -1433,6 +1458,9 @@ current redirect replaces the stalled PC offer. A previous flush clears the
 divider response. All 51 clean programs pass after the binding corrections.
 The [NaxRiscv rerun](../examples/naxriscv/checks-nine-rerun.json) captures all
 nine regenerated declarations on every one of the 59 passing programs.
+The separate RV64 benchmark run captures nine declarations with zero firings
+on three programs. It does not measure activation coverage or repeat the
+negative controls.
 
 | Activation follow-up | Bound | Activated in clean or stress simulation | Proved unreachable | Current no_activation | Stress firing IDs |
 |---|---:|---:|---:|---:|---:|
@@ -2108,7 +2136,7 @@ Run that command, then repeat doctor. Rebuilding does not qualify the core.
 |---|---:|---:|---:|---|
 | VexRiscv | 1012 / 2 | 26 / 0 | 0 | Partial samples only |
 | VexiiRiscv | 4285 / 3 | 11 / 0 | 3 | Partial samples only |
-| NaxRiscv | 13765 / 3 | 77 / 0 | 120 | Partial samples only |
+| NaxRiscv RV32 | 13765 / 3 | 77 / 0 | 120 | Partial samples only |
 | OoO Mini | 0 / 0 | 0 / 0 | 16 | Partial samples only |
 | SoC | 2507 / 43 | 28 / 0 | 5 | Partial samples only |
 
