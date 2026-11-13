@@ -1,0 +1,120 @@
+{
+  "schema": "rvw.native-server-lifecycle-sample/1",
+  "seed": 317,
+  "scope": "one VexRiscv native server sequence and one SIGTERM cancellation; no per-request thread census",
+  "runs": [
+    {
+      "status": "timeout",
+      "cycles": 1000,
+      "instret": 113,
+      "elf_sha256": "affa638ee7c5eedf0e8912f7b3c91c469a0dd269aacf5a72a05b902c8d6ca906",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "timeout",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "245123adc5efbc6df30d102a884a7c27a97e881675c86f93a6f45e1a29cb9a45",
+      "c2_equals_fresh": false,
+      "model_run": 1
+    },
+    {
+      "status": "fail",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "4d13f3cfaee5b4013a81ed07131f08f1f65f31d7b8529279ce24fb61f811118c",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "poison-run",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "5a2ab9387ff59c46bf538473393f1aeedf2fc5e85684b996a31414c0972f4943",
+      "c2_equals_fresh": false,
+      "model_run": 2
+    },
+    {
+      "status": "pass",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "724f7bf3a40492f7d2785ca03648009e2d5035720cbae0c9fd5eec3fecc0d1a8",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "second",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "d033b97cc93af3fe3c781149f0eb2388d0ad30d2ecbc056019ba72b2dfc34826",
+      "c2_equals_fresh": true,
+      "model_run": 3
+    },
+    {
+      "status": "pass",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "724f7bf3a40492f7d2785ca03648009e2d5035720cbae0c9fd5eec3fecc0d1a8",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "third",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "d033b97cc93af3fe3c781149f0eb2388d0ad30d2ecbc056019ba72b2dfc34826",
+      "c2_equals_fresh": true,
+      "model_run": 4
+    },
+    {
+      "status": "pass",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "724f7bf3a40492f7d2785ca03648009e2d5035720cbae0c9fd5eec3fecc0d1a8",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "process",
+      "name": "fresh",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "d033b97cc93af3fe3c781149f0eb2388d0ad30d2ecbc056019ba72b2dfc34826",
+      "c2_equals_fresh": true,
+      "model_run": 1
+    },
+    {
+      "status": "pass",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "724f7bf3a40492f7d2785ca03648009e2d5035720cbae0c9fd5eec3fecc0d1a8",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "batch-one",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "d033b97cc93af3fe3c781149f0eb2388d0ad30d2ecbc056019ba72b2dfc34826",
+      "c2_equals_fresh": true,
+      "model_run": 1
+    },
+    {
+      "status": "pass",
+      "cycles": 29,
+      "instret": 4,
+      "elf_sha256": "724f7bf3a40492f7d2785ca03648009e2d5035720cbae0c9fd5eec3fecc0d1a8",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+      "execution_mode": "server",
+      "name": "batch-two",
+      "native_process_stopped": true,
+      "c2_schema_validated": true,
+      "c2_sha256": "d033b97cc93af3fe3c781149f0eb2388d0ad30d2ecbc056019ba72b2dfc34826",
+      "c2_equals_fresh": true,
+      "model_run": 2
+    }
+  ],
+  "cancellation": {
+    "first_status": "pass",
+    "first_cycles": 29,
+    "first_instret": 4,
+    "cancelled_retirement_observed": true,
+    "launcher_exit": 143,
+    "native_process_stopped": true,
+    "cancelled_run_pass": false,
+    "wall_s": 11.222
+  },
+  "source_sha256": {
+    "RiscvSim/src/main/scala/riscvsim/Driver.scala": "6d55be8402f70b526587f58f97319c471896a7d151f4f35d05cc1034fc4797a7",
+    "examples/vexriscv/rvw/tests/test_server.py": "415b366fc5da6ae007d2ecd55965446fa597e58a7123598f76254fcdb0fe3afc",
+    "examples/vexriscv/rvw/tests/test_server_cancel.py": "29e29905b8386c506a4ca38c5db63aae745434b3ca48dd0cd4795a09f9fe4ea3"
+  }
+}

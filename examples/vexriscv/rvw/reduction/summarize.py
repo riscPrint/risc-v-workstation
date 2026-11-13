@@ -43,7 +43,9 @@ def summarize(path):
         trials.append(row)
     return dict(report_sha256=sha(path), signature=data['signature'], streams=data['streams'],
                 wall_s=data['wall_s'], trials=trials, best_trial=data['best']['trial'],
-                source=data['source'], cache_key=data['cache_key'],
+                source={key: value for key, value in {**data['source'], **run.source}.items()
+                        if key in ('core_rev', 'core_rev_full', 'core_dirty', 'core_fingerprint',
+                                   'core_sha256', 'core_tree_sha256')}, cache_key=data['cache_key'],
                 scope='intentional failing software and IRQ fixtures on captured whole-core RTL; no new core defect or global minimum')
 
 
@@ -55,9 +57,6 @@ def main():
     args = parser.parse_args()
     report = dict(schema='rvw.native-reduction-evidence/1',
                   instructions=summarize(args.instructions), irq=summarize(args.irq))
-    # Captured source paths are machine-specific. Keep identity and hashes in the shareable sample.
-    for item in (report['instructions'], report['irq']):
-        item['source'].pop('core_repo', None)
     args.out.write_text(json.dumps(report, indent=2) + '\n')
 
 

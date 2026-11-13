@@ -1068,3 +1068,27 @@ project lifecycle bindings.
 ELFs against one RAM. It checks per-hart retirement and six serialized memory
 actions with the independent byte reference and the public Python C2 reader.
 The subset fixture is not a production core or a weak-memory implementation.
+
+## Native server teardown observation
+
+C1 `details.simulation_session.process_id` records the host JVM PID. It is
+separate from model identity and does not enter C2. Callers can check that PID
+after EOF, explicit shutdown or launcher cancellation.
+
+The VexRiscv native server tests use `RVW_VEX_LOCK` for a private worker lock.
+On 2026-11-13, one server ran a cycle timeout, a failing ELF and two passing
+ELFs. The passing C2 bytes matched a fresh JVM. A separate persistent batch
+also produced two byte-identical passing traces. The server PID was absent
+after EOF. A SIGTERM test cancelled a server while its next ELF was running.
+The launcher returned 143 and the native JVM stopped. The cancelled ELF did
+not report a pass. The test requires observed retirement in that ELF before
+it sends the signal. The sample is
+[server-lifecycle.json](../examples/vexriscv/rvw/server-lifecycle.json).
+
+PID exit establishes that the JVM and its threads stopped. It does not count
+simulation threads between requests in a live JVM. These checks do not cover
+all device reset state, native crashes, SIGKILL, a frozen kernel call or
+workspace deletion after forced cancellation. The existing watchdog refuses
+to run another server request after an abandoned simulation worker. The
+unit tests check that refusal. No forced native thread abandonment was
+injected in this campaign.

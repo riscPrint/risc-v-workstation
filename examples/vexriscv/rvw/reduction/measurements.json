@@ -141,8 +141,12 @@
     ],
     "best_trial": 6,
     "source": {
-      "core_capture": "/Users/mahir/.cache/rvw/debug-inputs/inputs-8c8553d28c76424383727c8fd3e964ab/capture/trees/aebf3ed1f37a4a41229d9f81dbdf3def57940f2fc1fd86a5ea6ea9af41bc1ac3",
-      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
+      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b",
+      "core_dirty": true,
+      "core_fingerprint": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b",
+      "core_rev": "ed3e275",
+      "core_rev_full": "ed3e2755c7b3e92528972e81b285636858e979b5",
+      "core_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
     },
     "cache_key": null,
     "scope": "intentional failing software and IRQ fixtures on captured whole-core RTL; no new core defect or global minimum"
@@ -264,8 +268,12 @@
     ],
     "best_trial": 6,
     "source": {
-      "core_capture": "/Users/mahir/.cache/rvw/debug-inputs/inputs-516a443da2064fd3a66eedbb7b929352/capture/trees/aebf3ed1f37a4a41229d9f81dbdf3def57940f2fc1fd86a5ea6ea9af41bc1ac3",
-      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
+      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b",
+      "core_dirty": true,
+      "core_fingerprint": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b",
+      "core_rev": "ed3e275",
+      "core_rev_full": "ed3e2755c7b3e92528972e81b285636858e979b5",
+      "core_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
     },
     "cache_key": null,
     "scope": "intentional failing software and IRQ fixtures on captured whole-core RTL; no new core defect or global minimum"
