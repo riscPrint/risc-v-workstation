@@ -249,9 +249,6 @@ def encode(rows, profile=None, *, xlen=64):
         if kind == 'unknown':
             raise ValueError(f'unknown instruction at 0x{row["pc"]:x}')
         icnt += length // 2
-        if icnt >= 1 << p['icnt_bits']:
-            msgs.append(Message('ResourceFull', {'rcode': p['rcode_icnt'], 'rdata': icnt}))
-            icnt = 0
         taken = row['pc_next'] != row['pc'] + length
         if kind == 'branch':
             if p['mode'] == 'htm':
@@ -268,6 +265,13 @@ def encode(rows, profile=None, *, xlen=64):
                 msgs.append(Message('ProgTraceSync', {'sync': p['sync_periodic'], 'icnt': 0,
                                                       'faddr': rows[index + 1]['pc'] >> 1}))
                 count_since_sync = 0
+        if icnt >= 1 << p['icnt_bits']:
+            # Supply branch outcomes before asking the decoder to walk this count.
+            if hist != 1:
+                msgs.append(Message('ResourceFull', {'rcode': p['rcode_hist'], 'rdata': hist}))
+                hist = 1
+            msgs.append(Message('ResourceFull', {'rcode': p['rcode_icnt'], 'rdata': icnt}))
+            icnt = 0
     msgs.append(Message('ProgTraceCorrelation', {'evcode': p['evcode_stop'], 'cdf': 1, 'icnt': icnt, 'hist': hist}))
     return msgs
 
