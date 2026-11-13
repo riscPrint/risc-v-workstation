@@ -19,7 +19,7 @@
     9,
     11
   ],
-  "privilege_modes": "MSU",
+  "privilege_modes": "M",
   "misaligned": {
     "load": "trap",
     "store": "trap",

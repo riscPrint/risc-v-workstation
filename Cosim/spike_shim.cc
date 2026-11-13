@@ -38,17 +38,18 @@ struct Machine : simif_t {
   bool inject = false;
   bool step_virtual = false;
   Machine(const char* instruction_set, const uint64_t* regions, size_t nr,
-          const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp,
+          const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp, uint64_t grain,
           const char* modes, bool misaligned, bool absent_pmp_zero)
       : isa(instruction_set), privilege(modes) {
     cfg.isa = isa.c_str(); cfg.priv = privilege.c_str(); cfg.hartids = {0};
-    cfg.pmpregions = pmp; cfg.misaligned = misaligned;
+    cfg.pmpregions = pmp; cfg.pmpgranularity = grain; cfg.misaligned = misaligned;
     cfg.mem_layout.clear();
     for (size_t i=0;i<nr;i++) { ram.push_back({regions[2*i],regions[2*i+1]});
       cfg.mem_layout.emplace_back(regions[2*i],regions[2*i+1]); }
     for (size_t i=0;i<ni;i++) io.push_back({mmio[2*i],mmio[2*i+1]});
     log = tmpfile(); if (!log) throw std::runtime_error("cannot create Spike diagnostic stream");
     cpu = std::make_unique<processor_t>(cfg.isa,cfg.priv,&cfg,this,0,false,log,sout);
+    cpu->set_pmp_granularity(grain);
     if(absent_pmp_zero) {
       if(pmp) throw std::runtime_error("absent PMP zero policy requires no PMP regions");
       auto* state=cpu->get_state();
@@ -226,14 +227,14 @@ static thread_local std::string error;
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
 // 3: explicit privilege, misaligned and absent-PMP platform arguments.
-unsigned rvw_shim_version() { return 5; }
+unsigned rvw_shim_version() { return 6; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
 const char* rvw_error() { return error.c_str(); }
 void* rvw_create(const char* isa,const uint64_t* ram,size_t nr,const uint64_t* io,size_t ni,
-                 uint64_t pc,unsigned pmp,const char* modes,int misaligned,int absent_pmp_zero) {
-  try { return new Machine(isa,ram,nr,io,ni,pc,pmp,modes,misaligned,absent_pmp_zero); }
+                 uint64_t pc,unsigned pmp, uint64_t grain,const char* modes,int misaligned,int absent_pmp_zero) {
+  try { return new Machine(isa,ram,nr,io,ni,pc,pmp,grain,modes,misaligned,absent_pmp_zero); }
   catch(const std::exception& ex) { error=ex.what(); return nullptr; }
   catch(...) { error="Spike initialization failed"; return nullptr; }
 }

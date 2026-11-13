@@ -64,7 +64,7 @@ def merge(base, override):
 
 
 def build_config(base, platform, regions, *, custom=False):
-    if (platform.privilege_modes != "MSU" or platform.misaligned["load"] != "trap"
+    if (platform.pmp_granularity != 4 or platform.privilege_modes != "MSU" or platform.misaligned["load"] != "trap"
             or platform.absent_pmp_csrs != "trap" or platform.ecall_tval != "zero"):
         raise ValueError("Sail cannot implement these privilege/misaligned/absent-PMP/ecall platform settings")
     wanted = isa_extensions(platform.reference_isa or platform.isa, platform.xlen)

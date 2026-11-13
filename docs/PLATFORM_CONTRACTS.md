@@ -317,6 +317,12 @@ must refuse version 2 comparison. Version 1 keeps its integer-only scope.
 Version 2 does not imply that a DUT adapter exports these fields.
 FLEN above 64 remains unsupported. Multi-hart reference comparison is unsupported.
 
+PMP platform settings: `pmp_granularity` is the minimum region size in bytes.
+It defaults to 4 and must be a power of two. Spike applies it through
+`cfg.pmpgranularity`. PMP entry priority follows the ISA: the lowest matching
+entry wins. This priority is fixed and cannot be changed by a platform setting.
+Sail refuses non-default grain until its configuration mapping is implemented.
+
 C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
 Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
 The key set must equal the declared set. Values are full XLEN state after the
