@@ -3317,6 +3317,15 @@ and zero. Hardware clear follows software effects; hardware set has final
 priority. Failed bus accesses suppress software effects, but not hardware events.
 These fields describe independently observed events over the transaction interval.
 
+### Standard CSR catalog selection
+
+`rvw.csr-catalog/1` stores pinned UDB definitions, source paths, source hashes
+and notices. IDL expressions and extension conditions remain data.
+`rvw.csr-selection/1` selects named CSRs and fields with project reset, access,
+legalization and side-effect overrides. It resolves field positions to
+`rvw.csr/1` before the existing generator runs. Unsupported alias, hypervisor
+and debug execution models are errors. Selection is not compliance evidence.
+
 ### Counterexample reduction
 
 The optional `reduction` field in `rvw.formal.cex/1` has schema

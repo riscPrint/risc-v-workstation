@@ -46,3 +46,33 @@ Generation is not execution or coverage evidence.
 
 Keep all DUT bindings in project files. Use one independent expected state per
 CSR. Never initialize it from observed DUT storage.
+
+## Pinned CSR catalog and project overrides
+
+The installed `rvw.formal.csr_catalog.catalog()` data has 416 CSR definitions
+and 1,395 fields from RISC-V Unified Database revision
+`176fc36018be56925061566447a656b93eba0ddb`. Each row keeps the original definition,
+source path, source SHA-256 and copyright notices. Field aliases, extension
+conditions, reset expressions and WARL legalization IDL remain data.
+The BSD-3-Clause-Clear license is in `CSR_CATALOG_LICENSE.txt` beside the data.
+Regenerate from that external source checkout with:
+
+```sh
+uv run --no-project --with PyYAML==6.0.3 python SpinalChecks/csr/import-udb.py UDB_CHECKOUT rvw/src/rvw/formal/csr_catalog.json
+```
+
+Use `rvw.csr-selection/1` with the existing `--model` option.
+`examples/vexriscv/csr.json` selects the example's M-only scratch register and
+absent supervisor scratch register. Each selected CSR has a project reset and
+explicit field access policies. Catalog field names determine bit positions.
+Project `legal`, `legalize` and `effect` overrides use the existing model rules.
+Extension predicates and IDL are not evaluated. Select only implemented fields.
+Use a full `rvw.csr/1` model for project-specific or read-only-zero fields whose
+names are not in the source data. Generation refuses aliases, hypervisor/debug
+access models and unsupported field locations. It never converts these to RW.
+
+This catalog is not complete standard CSR coverage. The pinned source lacks
+field definitions for 26 names in the privileged manual's current address table,
+including AIA interrupt aliases. It does not provide a privilege-sequence engine.
+The VexRiscv selection is input data, not a DUT binding or a compliance result.
+No real-core run or proof is established by catalog selection.
