@@ -136,3 +136,40 @@ For plain HDL ready/valid channels, use a `buses` entry with `database` and
 `port_map` in the generation manifest. The `rvw.hdl-ports/1` declaration binds
 the stability monitor directly to top ports. No typed Spinal bundle is needed.
 Generation does not run a solver. See `docs/contracts/vip.md` for the format.
+
+## Review dispositions and waivers
+
+`rvw checks report --dispositions FILE` attaches source reviews to exact firing
+IDs. MCP `checks_report` accepts the same `dispositions` path. The file uses
+`rvw.check-dispositions/1`, the SHA256 of the exact inventory file, and entries:
+
+```json
+{
+  "schema": "rvw.check-dispositions/1",
+  "inventory_sha256": "REPLACE_WITH_SHA256_OF_CHECKS_JSON",
+  "entries": [{
+    "id": "stream.valid_hold:example",
+    "disposition": "tool_false_positive",
+    "reason": "Source and wave show an intentional flush",
+    "owner": "core-owner",
+    "expires": "2026-12-31"
+  }]
+}
+```
+
+Replace the example fields with the reviewed evidence. Use `shasum -a 256
+CHECKS_JSON` to get the inventory hash. Supported dispositions are `waived`,
+`tool_false_positive`, `design_finding` and `needs_review`. Every entry needs
+an owner, reason and expiry. The expiry is the last valid UTC date.
+
+An expired entry, changed inventory, missing ID, duplicate ID or an entry for
+an observed check that no longer fires gives an error. With no run evidence,
+matched and stale stay null. `needs_review` keeps the review status open.
+These annotations retain raw firing counts, C1 failures and the findings exit
+code. They do not install native waivers or prove that a finding is legal.
+To change an obligation, use a reviewed project binding or exact channel setting.
+
+The metadata and stale-entry policy is shared with `rvw lint` settings version
+2. Legacy native waiver files and lint settings version 1 keep their existing
+format. They do not gain an invented owner or expiry. Migrate lint settings
+by selecting `rvw.lint-settings/2` and adding owner and expires to every waiver.

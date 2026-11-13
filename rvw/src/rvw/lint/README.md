@@ -532,3 +532,14 @@ Results use `rvw.cdc-bench-result/1`. Qualification is `matches_on_suite`,
 `mismatch` or `inconclusive` per tool. No adapters gives commercial comparison
 `not_run`. No licensed tool is bundled. A suite match does not establish
 commercial CDC feature parity, general correctness, physical timing or signoff.
+
+### Owned and dated waivers
+
+Select `schema: rvw.lint-settings/2` to require `owner` and `expires` on every
+waiver, in addition to the existing exact rule, endpoint, finding_id, config
+and reason. `expires` is the last valid UTC date in YYYY-MM-DD form. Missing
+metadata or an expired waiver is an error. A waiver that matches no finding
+in a backend that ran remains a `lint.stale_waiver` error. An unrun backend
+keeps stale null. The metadata and stale-state functions are shared with
+generated check dispositions. Version 1 remains a legacy format without an
+owner or expiry requirement; no values are invented during migration.

@@ -284,3 +284,19 @@ uses `RVW_CHECKS_FORMAL=1` and emits formal-mode RTL without simulation records.
 A selected formal job names the exact generated check ID in `requirements`.
 A depth-4 bounded pass does not imply activation or an unbounded proof. Native
 and formal inventories are separate captures with matching requirement IDs.
+
+## Generated check dispositions
+
+`rvw.check-dispositions/1` has `inventory_sha256` and an `entries` list. Each
+entry has an exact check `id`, a `disposition`, a nonempty `reason` and `owner`,
+and `expires` as the last valid UTC date in YYYY-MM-DD form. Dispositions are
+`waived`, `tool_false_positive`, `design_finding` and `needs_review`.
+
+An expired entry, inventory hash change, absent or duplicate ID, or a check
+that no longer fires in supplied C1 evidence is an error. Without run evidence,
+`matched` and `stale` stay null. The optional `dispositions` and
+`disposition_status` fields in `rvw.check-qualification/1` record the review.
+Raw counts, C1 statuses and the findings verdict do not change. A needs_review
+entry does not resolve an open finding. This metadata does not install native
+waivers or certify source intent. The reason, owner, expiry and stale-state
+policy is shared with lint settings version 2.

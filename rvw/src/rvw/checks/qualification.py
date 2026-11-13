@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 
-def summarize(inventory, runs=(), formal=None):
+def summarize(inventory, runs=(), formal=None, dispositions=None):
     inventory = Path(inventory).resolve()
     report = json.loads(inventory.read_text())
     if report.get('schema') != 'rvw.checks/1':
@@ -78,9 +78,14 @@ def summarize(inventory, runs=(), formal=None):
         for kind, row in counts.items():
             row['proven'] = sum(by_id[i]['kind'] == kind for i in proven)
             row['bounded'] = sum(by_id[i]['kind'] == kind for i in bounded)
-    return dict(schema='rvw.check-qualification/1', status='findings' if fired else 'inconclusive',
+    result = dict(schema='rvw.check-qualification/1', status='findings' if fired else 'inconclusive',
         inventory=str(inventory), counts=counts, runs=run_rows,
         formal=str(formal) if formal else None,
         limitations=['Null means NOT RUN. Zero means no matching observation in supplied evidence.',
             'Simulation covers exercised behavior only. Formal requirements are project associations.',
             'This summary does not certify input closure, activation or whole-core correctness.'])
+
+    if dispositions is not None:
+        from .dispositions import apply
+        result = apply(result, inventory, records, fired, dispositions)
+    return result
