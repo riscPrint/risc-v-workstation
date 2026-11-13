@@ -3,7 +3,7 @@ from .scaffold import scaffold
 
 
 def register(subparsers):
-    parser = subparsers.add_parser('init', help='Scaffold one Spinal/sbt core project')
+    parser = subparsers.add_parser('init', help='Scaffold one core project (Spinal/sbt, or --hdl sv|vhdl|chisel)')
     parser.add_argument('path', nargs='?', default='.')
     parser.add_argument('--isa')
     parser.add_argument('--xlen', type=int, choices=(32, 64))
@@ -14,6 +14,15 @@ def register(subparsers):
     parser.add_argument('--ram-region', help='Selected RAM region from the linker script')
     parser.add_argument('--reset-pc', help='Reset address from the core specification')
     parser.add_argument('--db-top', help='No-argument Component class for a SpinalDB entry; enables build wiring')
+    parser.add_argument('--hdl', choices=('sv', 'vhdl', 'chisel'),
+                        help='Non-Spinal core: query build through slang, GHDL or firtool, Verilator C1 launcher')
+    parser.add_argument('--top', help='Toplevel module, entity or Chisel module (--hdl)')
+    parser.add_argument('--source', action='append', default=[], help='HDL source in order (--hdl; default: discovered)')
+    parser.add_argument('-I', '--include', action='append', default=[], dest='include_dirs', help='Include directory (--hdl sv)')
+    parser.add_argument('--library', default='work', help='VHDL work library (--hdl vhdl)')
+    parser.add_argument('--fir', help='FIRRTL file the core build emits (--hdl chisel)')
+    parser.add_argument('--source-root', action='append', default=[], dest='source_roots',
+                        help='Scala source root (--hdl chisel; default src/main/scala)')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--force', action='store_true')
     parser.add_argument('--json', action='store_true')
@@ -22,12 +31,23 @@ def register(subparsers):
 
 def run(args):
     try:
+        if args.hdl:
+            from .hdl import scaffold_hdl
+            result = scaffold_hdl(args.path, hdl=args.hdl, top=args.top, isa=args.isa, name=args.name,
+                                  sources=args.source, include_dirs=args.include_dirs, library=args.library,
+                                  fir=args.fir, source_roots=args.source_roots, force=args.force,
+                                  dry_run=args.dry_run)
+            return _print(args, result)
         result = scaffold(args.path, isa=args.isa, xlen=args.xlen, name=args.name,
                           dry_run=args.dry_run, force=args.force, wire_build=args.wire_build,
                           sbt_project=args.sbt_project, linker_script=args.linker_script,
                           ram_region=args.ram_region, reset_pc=args.reset_pc, db_top=args.db_top)
     except (OSError, ValueError) as exc:
         result = dict(schema='rvw.init/1', status='error', exit_code=2, error=str(exc))
+    return _print(args, result)
+
+
+def _print(args, result):
     if args.json:
         print(json.dumps(result, indent=2))
     elif result['exit_code']:

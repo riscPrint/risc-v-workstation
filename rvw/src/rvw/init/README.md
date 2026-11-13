@@ -37,6 +37,32 @@ before using `--force`. Existing root `.gitignore` and `AGENTS.md` stay intact.
 Exit 0 means created or planned. Exit 2 means invalid input or write failure.
 Failures include an `error` string. No MCP mutation tool is added.
 
+## Non-Spinal cores (`--hdl`)
+
+```sh
+rvw init --hdl sv --top ibex_core --isa rv32imc -I vendor/lowrisc_ip/ip/prim/rtl --dry-run --json
+rvw init --hdl vhdl --top neorv32_cpu --isa rv32i --library neorv32 --source rtl/core/neorv32_package.vhd ...
+rvw init --hdl chisel --top Top --isa rv64gc --fir out/Top.fir --source-root src/main/scala
+rvw query build --config default        # runs rvw/build-db.sh
+```
+
+`--hdl` selects the query front end: `sv` uses slang, `vhdl` GHDL, `chisel`
+firtool. Without `--source`, it discovers `.sv`/`.v` or `.vhd` files outside
+test and tool directories (`tb`, `test`, `dv`, `sim`, `rvw`, ...), packages
+first. `--top` must be declared in them; candidates are listed in the JSON.
+`--fir` names the FIRRTL file that the Chisel build emits; the scaffold does
+not run sbt.
+
+Files: `rvw.toml` (with `[query] build = ["./rvw/build-db.sh"]` and
+`db = "rvw/out/design.db"`), `rvw/build-db.sh` (an explicit `rvw query
+build-hdl` command; `$RVW` selects the `rvw` executable), `rvw/run.sh` (C1
+launcher: `info` works; `build` compiles the design with Verilator and
+`rvw/sim/harness.cpp`, through GHDL+Yosys for VHDL and firtool for Chisel;
+`run` exits 2), `rvw/sim/harness.cpp` (compiles for any top, maps nothing,
+exits 2), `rvw/.gitignore` and `rvw/README.md`. Every `rvw query` and `rvw
+lint` command works after `rvw query build`. C1 runs need the bus, ELF and
+completion mapping in the harness. The same conflict and `--force` rules apply.
+
 ## Decisions and limits
 
 The output passes the shared project and regression loaders. Doctor reports
