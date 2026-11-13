@@ -318,10 +318,13 @@ trace values or broad CSR masks. See the exact settings and the
 [C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
 ### C2 version 2 (`rvw.rvfi/2`)
 
-One schema supports `capabilities: ["state", "multihart"]`. Either capability
+One schema supports `state`, `multihart` and `csr` capabilities. A capability
 can be used alone. `multihart` requires the `harts` header and the per-hart
 records below. `state` requires the FP fields below on each retirement and
-supports CSR snapshots and fault fields. Both capabilities apply together.
+supports CSR snapshots and fault fields. The optional `csr` capability requires
+C2/2 and a nonempty `csr_snapshot` set. It compares declared CSR state without
+claiming FP observations. It retains all scalar instruction fields. It does
+not permit FP fields unless `state` is also declared. Capabilities can combine.
 For existing v2 producers, omitted capabilities mean `multihart` when `harts`
 is present, and `state` otherwise. V1 keeps its existing scope. Missing state
 in v1 or multi-hart-only traces is unavailable evidence, never a state match.
