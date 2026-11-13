@@ -105,7 +105,11 @@ single-clock unbounded sequence subset. Extended property rows record
 `operator`; sequence rows also record `strength`, a `minimum` or `count`, and
 `completion` where applicable. Assert and assume sequence consequents default to
 weak. Explicit strong sequences require finite completion for every request.
-A latched fatal predicate records finite impossibility. Count buckets retain
+Clock-local sampled functions use the same history emitter as finite SVA.
+The converted full state includes their history registers. Depth, nesting,
+width/sign and four-state comparison rules match the finite frontend. No
+cross-clock sampled history is inferred. A latched fatal predicate records
+finite impossibility. Count buckets retain
 overlapping attempts. A separate owed set gives acceptance when each old group
 finishes, even when requests continue. It never resets an old attempt on a new
 request. Both native-live and liveness-to-safety routes use these predicates. Module-local

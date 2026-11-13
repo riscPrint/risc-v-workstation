@@ -29,3 +29,8 @@
 | `unbounded first_match` | positive and negative native case | infinite trace, single clock; `formal liveness` |
 | `multi-clock overlapped implication` | positive and negative native case | finite native timed replay; two clocks |
 | `multi-clock nonoverlapped implication` | positive and negative native case | finite native timed replay; two clocks |
+| `liveness $past` | positive and negative native case | single-clock liveness; sampled history |
+| `liveness $rose` | positive and negative native case | single-clock liveness; sampled history |
+| `liveness $fell` | positive and negative native case | single-clock liveness; sampled history |
+| `liveness $stable` | positive and negative native case | single-clock liveness; sampled history |
+| `liveness $changed` | positive and negative native case | single-clock liveness; sampled history |

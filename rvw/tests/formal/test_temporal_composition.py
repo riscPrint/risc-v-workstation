@@ -93,6 +93,11 @@ def test_support_table():
         and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
     rows += [f'| `{feature.replace("|", "&#124;")}` | positive and negative native case | finite native timed replay; two clocks |'
              for feature in features]
+    sampled_live = ast.parse(Path('rvw/tests/formal/test_live_sampled_native.py').read_text())
+    functions = ast.literal_eval(next(node.value for node in sampled_live.body if isinstance(node, ast.Assign)
+        and any(isinstance(t, ast.Name) and t.id == 'FUNCTIONS' for t in node.targets)))
+    rows += [f'| `liveness ${function}` | positive and negative native case | single-clock liveness; sampled history |'
+             for function in functions]
     expected = '\n'.join(rows) + '\n'
     assert Path('rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').read_text() == expected
 
