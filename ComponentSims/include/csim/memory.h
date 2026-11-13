@@ -215,8 +215,71 @@ public:
     void fill(uint64_t set, int w, Line*, const AccessInfo& a) override { next[set * ways + w] = a.next_use; }
 };
 
+// Mockingjay (Shah, Jain & Lin, HPCA 2022): sampled sets learn a reuse distance per
+// PC signature; each line holds an estimated time remaining (ETR) that ages with set
+// accesses. The victim has the largest |ETR|; lines predicted to be scans go first.
+class Mockingjay : public Replacement {
+    unsigned sig_bits, sample_every, gran; int inf;
+    std::vector<int> rdp;            // predicted reuse distance (set accesses / gran), -1 unknown
+    std::vector<int16_t> etr;        // per line
+    std::vector<uint64_t> clock;     // per set access counter
+    struct S { uint64_t t; uint32_t sig; };
+    std::vector<std::unordered_map<uint64_t, S>> sampler;
+    size_t window = 0; uint64_t trained = 0, scans = 0;
+    uint32_t sig(uint64_t pc, bool pf) const { return uint32_t(mix64(pc ^ (pf ? 0x9e3779b9 : 0)) & mask(sig_bits)); }
+    void train(uint32_t s, int rd) {
+        int& r = rdp[s];
+        r = r < 0 ? rd : r + (rd > r ? std::min(1 + (rd - r) / 4, rd - r) : -std::min(1 + (r - rd) / 4, r - rd));
+        ++trained;
+    }
+public:
+    explicit Mockingjay(const Config& c) {
+        sig_bits = unsigned(c.u("signature_bits", 11, 4, 20)); sample_every = unsigned(c.u("sample_every", 8, 1, 1024));
+        gran = unsigned(c.u("granularity", 0, 0, 64));
+        rdp.assign(size_t(1) << sig_bits, -1);
+    }
+    std::string name() const override { return "mockingjay"; }
+    void init(uint64_t s, unsigned w) override {
+        Replacement::init(s, w);
+        if (!gran) gran = std::max(1u, w / 4);
+        window = 8 * w; inf = int(window / gran) + 1;
+        etr.assign(s * w, 0); clock.assign(s, 0); sampler.resize((s + sample_every - 1) / sample_every);
+    }
+    void access(uint64_t set, Line* l, const AccessInfo& a) override {
+        uint64_t now = ++clock[set];
+        if (now % gran == 0)
+            for (unsigned w = 0; w < ways; ++w) if (l[w].valid && etr[set * ways + w] > -inf) --etr[set * ways + w];
+        if (set % sample_every) return;
+        auto& m = sampler[set / sample_every];
+        auto it = m.find(a.line);
+        if (it != m.end()) {
+            uint64_t d = now - it->second.t;
+            if (d <= window) train(it->second.sig, int(d / gran));
+        }
+        m[a.line] = {now, sig(a.pc, a.prefetch)};
+        if (m.size() > window) {
+            for (auto i = m.begin(); i != m.end();) {
+                if (now - i->second.t > window) { train(i->second.sig, inf); ++scans; i = m.erase(i); }
+                else ++i;
+            }
+        }
+    }
+    int predict(const AccessInfo& a) const { int r = rdp[sig(a.pc, a.prefetch)]; return r < 0 ? inf / 2 : r; }
+    int victim(uint64_t set, Line* l, const AccessInfo&) override {
+        int v = invalid(l, ways); if (v >= 0) return v;
+        v = 0; int best = -1;
+        for (unsigned w = 0; w < ways; ++w) { int e = std::abs(int(etr[set * ways + w])); if (e > best) { best = e; v = int(w); } }
+        return v;
+    }
+    void hit(uint64_t set, int w, Line*, const AccessInfo& a) override { etr[set * ways + w] = int16_t(predict(a)); }
+    void fill(uint64_t set, int w, Line*, const AccessInfo& a) override { etr[set * ways + w] = int16_t(predict(a)); }
+    uint64_t bits_per_line() const override { return 6 + sig_bits; }
+    uint64_t extra_bits() const override { return rdp.size() * 7 + sampler.size() * window * (sig_bits + 16 + 8); }
+    Json stats() const override { Json j = Json::object(); j["rdp_updates"] = trained; j["scan_trainings"] = scans; return j; }
+};
+
 inline std::unique_ptr<Replacement> make_replacement(const Config& c) {
-    std::string m = c.choice("replacement", "lru", {"lru", "random", "plru", "srrip", "brrip", "drrip", "ship", "hawkeye", "opt"});
+    std::string m = c.choice("replacement", "lru", {"lru", "random", "plru", "srrip", "brrip", "drrip", "ship", "hawkeye", "mockingjay", "opt"});
     if (m == "lru") return std::make_unique<Lru>();
     if (m == "random") return std::make_unique<RandomRepl>();
     if (m == "plru") return std::make_unique<Plru>();
@@ -225,6 +288,7 @@ inline std::unique_ptr<Replacement> make_replacement(const Config& c) {
     if (m == "drrip") return std::make_unique<Rrip>(2, c.at("rrip"));
     if (m == "ship") return std::make_unique<Rrip>(3, c.at("rrip"));
     if (m == "hawkeye") return std::make_unique<Hawkeye>(c.at("hawkeye"));
+    if (m == "mockingjay") return std::make_unique<Mockingjay>(c.at("mockingjay"));
     return std::make_unique<Opt>();
 }
 
@@ -416,6 +480,8 @@ class Sms : public Prefetcher {
     unsigned region_lines;
     struct F { bool valid = false; uint64_t region = 0, pc = 0; unsigned trig = 0; uint64_t stamp = 0; };
     struct A { bool valid = false; uint64_t region = 0, pc = 0; unsigned trig = 0; uint64_t pattern = 0, stamp = 0; };
+    bool bingo = false; uint64_t long_hits = 0, short_hits = 0;
+    uint64_t long_key(uint64_t pc, uint64_t line) const { return mix64(pc * 31 + line + 0x7777); }
     struct H { bool valid = false; uint64_t tag = 0, pattern = 0; };
     std::vector<F> ft; std::vector<A> at; std::vector<H> pht; uint64_t clock = 0; uint64_t generations = 0;
     uint64_t key(uint64_t pc, unsigned trig) const { return mix64(pc ^ (uint64_t(trig) << 48)); }
@@ -423,9 +489,13 @@ class Sms : public Prefetcher {
         if (!a.valid) return;
         uint64_t k = key(a.pc, a.trig); H& h = pht[k & (pht.size() - 1)];
         h.valid = true; h.tag = k >> 20; h.pattern = a.pattern; a.valid = false; ++generations;
+        if (bingo) {  // Bingo: also keep the pattern under the long event (PC + trigger address)
+            uint64_t lk = long_key(a.pc, a.region * region_lines + a.trig); H& g = pht[lk & (pht.size() - 1)];
+            g.valid = true; g.tag = lk >> 20; g.pattern = a.pattern;
+        }
     }
 public:
-    explicit Sms(const Config& c) {
+    explicit Sms(const Config& c, bool b = false) : bingo(b) {
         uint64_t rb = c.u("region_bytes", 2048, 128, 1u << 16); if (!pow2(rb)) throw Error("sms region_bytes must be a power of two");
         region_lines = unsigned(rb / 64);
         if (region_lines > 64) throw Error("sms region must hold at most 64 lines");
@@ -433,7 +503,7 @@ public:
         uint64_t p = c.u("pht_entries", 2048, 1, 1u << 20); if (!pow2(p)) throw Error("sms pht_entries must be a power of two");
         pht.assign(p, H());
     }
-    std::string name() const override { return "sms"; }
+    std::string name() const override { return bingo ? "bingo" : "sms"; }
     void evicted(uint64_t line) override {
         uint64_t r = line / region_lines;
         for (auto& a : at) if (a.valid && a.region == r) finish(a);
@@ -451,14 +521,24 @@ public:
             f.valid = false; return;
         }
         // Trigger access of a new generation.
-        uint64_t k = key(a.pc, off); const H& h = pht[k & (pht.size() - 1)];
-        if (h.valid && h.tag == (k >> 20))
-            for (unsigned b = 0; b < region_lines; ++b) if (b != off && (h.pattern >> b) & 1) out.push_back({r * region_lines + b, false});
+        uint64_t k = key(a.pc, off); const H* h = &pht[k & (pht.size() - 1)];
+        bool found = h->valid && h->tag == (k >> 20);
+        if (bingo) {
+            uint64_t lk = long_key(a.pc, a.line); const H* g = &pht[lk & (pht.size() - 1)];
+            if (g->valid && g->tag == (lk >> 20)) { h = g; found = true; ++long_hits; }
+            else if (found) ++short_hits;
+        }
+        if (found)
+            for (unsigned b = 0; b < region_lines; ++b) if (b != off && (h->pattern >> b) & 1) out.push_back({r * region_lines + b, false});
         F* v = &ft[0]; for (auto& x : ft) { if (!x.valid) { v = &x; break; } if (x.stamp < v->stamp) v = &x; }
         v->valid = true; v->region = r; v->pc = a.pc; v->trig = off; v->stamp = clock;
     }
     uint64_t storage_bits() const override { return ft.size() * (36 + 16 + 5) + at.size() * (36 + 16 + 5 + region_lines) + pht.size() * (24 + region_lines); }
-    Json stats() const override { Json j = Json::object(); j["generations"] = generations; return j; }
+    Json stats() const override {
+        Json j = Json::object(); j["generations"] = generations;
+        if (bingo) { j["long_event_hits"] = long_hits; j["short_event_hits"] = short_hits; }
+        return j;
+    }
 };
 
 class Berti : public Prefetcher {
@@ -508,6 +588,61 @@ public:
     uint64_t storage_bits() const override { return t.size() * (16 + hist_n * (24 + 16) + delta_n * (13 + 4 + 2)); }
 };
 
+// IPCP (Pakalapati & Panda, ISCA 2020): classify each load IP as global stream,
+// constant stride or complex stride, and prefetch by class (next line otherwise).
+class Ipcp : public Prefetcher {
+    struct Ip { bool valid = false; uint64_t tag = 0, last = 0; int64_t stride = 0; uint8_t conf = 0; uint32_t sig = 0; };
+    struct Cs { int64_t stride = 0; uint8_t conf = 0; };
+    struct Rs { bool valid = false; uint64_t region = 0, bits = 0, last = 0, stamp = 0; int dir = 0; };
+    std::vector<Ip> ip; std::vector<Cs> cspt; std::vector<Rs> rst;
+    unsigned cs_degree, cplx_degree, gs_degree, region_lines = 32; uint64_t clock = 0;
+    uint64_t by_class[4] = {0, 0, 0, 0};
+public:
+    explicit Ipcp(const Config& c) {
+        uint64_t n = c.u("ip_entries", 64, 1, 1u << 16); if (!pow2(n)) throw Error("ipcp ip_entries must be a power of two");
+        ip.assign(n, Ip()); cspt.assign(c.u("cspt_entries", 128, 2, 1u << 16), Cs()); rst.assign(c.u("regions", 8, 1, 1024), Rs());
+        cs_degree = unsigned(c.u("cs_degree", 3, 1, 32)); cplx_degree = unsigned(c.u("cplx_degree", 3, 1, 32)); gs_degree = unsigned(c.u("gs_degree", 6, 1, 64));
+    }
+    std::string name() const override { return "ipcp"; }
+    void train(const PfAccess& a, std::vector<PfCand>& out) override {
+        ++clock;
+        uint64_t r = a.line / region_lines;
+        Rs* g = nullptr; for (auto& x : rst) if (x.valid && x.region == r) { g = &x; break; }
+        if (!g) { g = &rst[0]; for (auto& x : rst) { if (!x.valid) { g = &x; break; } if (x.stamp < g->stamp) g = &x; } *g = Rs(); g->valid = true; g->region = r; g->last = a.line; }
+        g->stamp = clock; g->bits |= uint64_t(1) << (a.line % region_lines);
+        if (a.line != g->last) { g->dir += a.line > g->last ? 1 : -1; g->dir = std::max(-8, std::min(8, g->dir)); }
+        g->last = a.line;
+        bool dense = __builtin_popcountll(g->bits) * 4 >= int(region_lines) * 3;
+        Ip& e = ip[mix64(a.pc) & (ip.size() - 1)];
+        if (!e.valid || e.tag != a.pc) { e = Ip(); e.valid = true; e.tag = a.pc; e.last = a.line; return; }
+        int64_t st = int64_t(a.line) - int64_t(e.last);
+        if (st == 0) return;
+        if (st == e.stride) { if (e.conf < 3) ++e.conf; } else { if (e.conf) --e.conf; if (!e.conf) e.stride = st; }
+        Cs& cs = cspt[e.sig % cspt.size()];
+        if (cs.stride == st) { if (cs.conf < 3) ++cs.conf; } else { if (cs.conf) --cs.conf; if (!cs.conf) cs.stride = st; }
+        e.sig = uint32_t(((e.sig << 1) ^ uint32_t(st & 63)) & 127);
+        e.last = a.line;
+        if (dense && std::abs(g->dir) >= 6) {
+            ++by_class[0]; int d = g->dir > 0 ? 1 : -1;
+            for (unsigned k = 1; k <= gs_degree; ++k) out.push_back({uint64_t(int64_t(a.line) + d * int64_t(k)), false});
+        } else if (e.conf >= 2) {
+            ++by_class[1];
+            for (unsigned k = 1; k <= cs_degree; ++k) out.push_back({uint64_t(int64_t(a.line) + e.stride * int64_t(k)), false});
+        } else if (cspt[e.sig % cspt.size()].conf >= 1) {
+            ++by_class[2]; uint32_t sig = e.sig; int64_t l = int64_t(a.line);
+            for (unsigned k = 0; k < cplx_degree; ++k) {
+                const Cs& q = cspt[sig % cspt.size()]; if (!q.conf || !q.stride) break;
+                l += q.stride; out.push_back({uint64_t(l), false}); sig = uint32_t(((sig << 1) ^ uint32_t(q.stride & 63)) & 127);
+            }
+        } else if (!a.hit) { ++by_class[3]; out.push_back({a.line + 1, false}); }
+    }
+    uint64_t storage_bits() const override { return ip.size() * (9 + 6 + 7 + 2 + 7 + 1) + cspt.size() * 9 + rst.size() * (36 + 32 + 4 + 1); }
+    Json stats() const override {
+        Json j = Json::object(); j["global_stream"] = by_class[0]; j["constant_stride"] = by_class[1]; j["complex_stride"] = by_class[2]; j["next_line"] = by_class[3];
+        return j;
+    }
+};
+
 // Entangling instruction prefetcher: pairs a source line with a missed destination
 // line whose fetch latency the source access would have covered.
 class Eip : public Prefetcher {
@@ -543,13 +678,15 @@ public:
 };
 
 inline std::unique_ptr<Prefetcher> make_prefetcher(const Config& c) {
-    std::string k = c.choice("kind", "next-line", {"next-line", "ip-stride", "stream", "bop", "spp", "sms", "berti", "eip"});
+    std::string k = c.choice("kind", "next-line", {"next-line", "ip-stride", "stream", "bop", "spp", "sms", "bingo", "ipcp", "berti", "eip"});
     if (k == "next-line") return std::make_unique<NextLine>(c);
     if (k == "ip-stride") return std::make_unique<IpStride>(c);
     if (k == "stream") return std::make_unique<Stream>(c);
     if (k == "bop") return std::make_unique<Bop>(c);
     if (k == "spp") return std::make_unique<Spp>(c);
     if (k == "sms") return std::make_unique<Sms>(c);
+    if (k == "bingo") return std::make_unique<Sms>(c, true);
+    if (k == "ipcp") return std::make_unique<Ipcp>(c);
     if (k == "berti") return std::make_unique<Berti>(c);
     return std::make_unique<Eip>(c);
 }

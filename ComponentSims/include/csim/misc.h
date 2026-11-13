@@ -176,4 +176,52 @@ public:
     }
 };
 
+
+// Load address prediction: last address, stride, or context (a second table indexed
+// by the PC and the recent delta history). A prediction is made only at full
+// confidence; coverage and accuracy are reported per eligible load.
+class AddressPredictor {
+    struct E { bool valid = false; uint64_t tag = 0, last = 0; int64_t stride = 0; uint8_t conf = 0; uint32_t hist = 0; };
+    struct C { int64_t delta = 0; uint8_t conf = 0; };
+    std::string model; std::vector<E> t; std::vector<C> ctx; unsigned conf_max;
+    uint64_t loads = 0, predicted = 0, correct = 0, wrong = 0;
+public:
+    explicit AddressPredictor(const Config& c) {
+        model = c.choice("model", "stride", {"last-address", "stride", "context"});
+        uint64_t n = c.u("entries", 1024, 1, 1u << 22); if (!pow2(n)) throw Error("address predictor entries must be a power of two");
+        t.assign(n, E()); conf_max = unsigned(mask(unsigned(c.u("conf_bits", 2, 1, 8))));
+        if (model == "context") { uint64_t m = c.u("context_entries", 4096, 1, 1u << 22); if (!pow2(m)) throw Error("context_entries must be a power of two"); ctx.assign(m, C()); }
+    }
+    void load(uint64_t pc, uint64_t addr, bool measure) {
+        if (measure) ++loads;
+        E& e = t[mix64(pc) & (t.size() - 1)];
+        if (!e.valid || e.tag != pc) { e = E(); e.valid = true; e.tag = pc; e.last = addr; return; }
+        int64_t d = int64_t(addr - e.last);
+        uint64_t guess = 0; bool have = false;
+        if (model == "last-address") { have = e.conf >= conf_max; guess = e.last; }
+        else if (model == "stride") { have = e.conf >= conf_max; guess = e.last + uint64_t(e.stride); }
+        else { C& x = ctx[mix64(pc ^ (uint64_t(e.hist) << 40)) & (ctx.size() - 1)]; have = x.conf >= conf_max; guess = e.last + uint64_t(x.delta); }
+        if (have && measure) { ++predicted; if (guess == addr) ++correct; else ++wrong; }
+        if (model == "last-address") { if (d == 0) { if (e.conf < conf_max) ++e.conf; } else e.conf = 0; }
+        else if (model == "stride") { if (d == e.stride) { if (e.conf < conf_max) ++e.conf; } else { e.conf = 0; e.stride = d; } }
+        else {
+            C& x = ctx[mix64(pc ^ (uint64_t(e.hist) << 40)) & (ctx.size() - 1)];
+            if (x.delta == d) { if (x.conf < conf_max) ++x.conf; } else { x.conf = 0; x.delta = d; }
+            e.hist = uint32_t(((e.hist << 8) ^ uint32_t(d & 0xff)) & 0xffff);
+        }
+        e.last = addr;
+    }
+    Storage storage() const {
+        Storage s; s.add("table", t.size() * (16 + 48 + (model == "stride" ? 20 : 0) + log2u(conf_max + 1) + (model == "context" ? 16 : 0)));
+        if (!ctx.empty()) s.add("context", ctx.size() * (20 + log2u(conf_max + 1)));
+        return s;
+    }
+    Json stats(uint64_t instructions) const {
+        Json j = Json::object(); j["model"] = model; j["loads"] = loads; j["predicted"] = predicted; j["correct"] = correct; j["incorrect"] = wrong;
+        j["coverage"] = ratio(double(predicted), double(loads)); j["accuracy"] = ratio(double(correct), double(predicted));
+        j["mispredictions_pki"] = per_kilo(wrong, instructions);
+        return j;
+    }
+};
+
 }  // namespace csim

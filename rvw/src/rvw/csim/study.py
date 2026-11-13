@@ -113,6 +113,9 @@ def metrics(rep: dict) -> dict:
     if rep.get("mdp"):
         m["mdp_violations_pki"] = rep["mdp"]["violations_pki"]
         m["mdp_false_dependences"] = rep["mdp"]["false_dependences"]
+    if rep.get("lap"):
+        m["lap_coverage"] = rep["lap"]["coverage"]
+        m["lap_accuracy"] = rep["lap"]["accuracy"]
     if rep.get("vp"):
         m["vp_coverage"] = rep["vp"]["coverage"]
         m["vp_accuracy"] = rep["vp"]["accuracy"]
