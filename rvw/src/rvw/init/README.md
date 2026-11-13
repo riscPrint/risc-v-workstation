@@ -159,3 +159,17 @@ Checked on PicoRV32 `ef203c2b` (see `examples/picorv32/`): smoke and 45
 PicoRV32 RV32IM test programs pass in `rvw regress`. 40 of 46 traces match
 Spike. The `--spinal-top` path has unit tests only; no Spinal core was run through it.
 
+
+## Mapped SystemVerilog entry
+
+`--hdl sv --top MODULE --source FILE --reset-pc ADDRESS` selects the mapped
+C1 adapter. Supply the same `--bus`, `--define`, `--param`, clock, reset and
+platform options as `--verilog-top`. Repeat `--source` in dependency order.
+Without `--reset-pc`, the existing HDL query and harness skeleton stays in use.
+The mapped entry uses the native Yosys Verilog/SV subset for port discovery.
+It refuses `-I`; full slang syntax and include handling need the query-only
+scaffold or a project-owned adapter.
+
+The query entry preserves external absolute sources. It uses slang when defines
+or parameters are selected, so query and simulation elaborate the same options.
+Port discovery also applies the parameter overrides before reading widths.

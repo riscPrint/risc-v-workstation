@@ -28,15 +28,19 @@ def test_fresh_spinal_project(tmp_path):
         '--sbt-project', 'cpu', '--reset-pc', '0x80000000',
         '--bus', 'mem:valid-ready:valid=valid,ready=ready,address=address,rdata=rdata,wdata=wdata,mask=mask',
         '--rvfi-prefix', 'rvfi_', '--accept-platform-defaults')
+    run('git', 'init')
+    run('git', 'add', '.')
+    run('git', '-c', 'user.name=Native fixture', '-c', 'user.email=fixture@example.invalid',
+        'commit', '-m', 'Seed core and project files')
     run(project / 'rvw/build-smoke.sh')
     # Use the actual core's retirement ports. Random bus wait cycles use seed 7.
     run(project / 'rvw/run.sh', 'run', '--elf', project / 'rvw/out/programs/smoke',
         '--out', project / 'rvw/out/seeded', '--seed', '7', '--rvfi-trace', '--json')
     record = json.loads((project / 'rvw/out/seeded/result.json').read_text())
-    assert record['status'] == 'pass' and record['instret'] > 0
+    assert record['status'] == 'pass' and record['instret'] > 0 and not record.get('inconclusive')
     report = json.loads(run(rvw, 'cosim', 'check', '--elf', project / 'rvw/out/programs/smoke',
                            '--trace', project / 'rvw/out/seeded/rvfi.jsonl', '--json'))
-    assert report['status'] == 'match', report
+    assert report['status'] == 'match' and report.get('trace_complete') is True and report.get('end_status') == 'pass', report
     run(rvw, 'query', 'build', '--config', 'default')
     assert (project / 'rvw/out/design.db').is_file()
     run(rvw, 'query', 'where', 'pc')

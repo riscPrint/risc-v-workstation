@@ -12,7 +12,7 @@ code. One `rvw init` command wrote these files. Only `rvw/env/`,
 git clone https://github.com/YosysHQ/picorv32 "$HOME/projects/picorv32"
 cd "$HOME/projects/picorv32"
 git checkout -b rvw-project ef203c2b0a3fb793280f5114941416c425c5b461
-rvw init --isa rv32im --name picorv32 --verilog-top picorv32 --verilog picorv32.v \
+rvw init --isa rv32im --name picorv32 --hdl sv --top picorv32 --source picorv32.v \
   --define RISCV_FORMAL --param PROGADDR_RESET=0x80000000 --param PROGADDR_IRQ=0x80000010 \
   --param ENABLE_MUL=1 --param ENABLE_DIV=1 --clock clk --reset resetn --reset-active low \
   --reset-pc 0x80000000 --accept-platform-defaults
@@ -57,4 +57,5 @@ and uses no CSRs.
 
 - No interrupts are mapped (`ENABLE_IRQ=0`). No CSRs beyond the counters.
 - C2 has trap records but no trap events, so cosim does not check `cause`.
+- The parameterized query build needs the slang plugin and keeps the selected defines and parameters.
 - The query database is the Yosys navigation subset (see C6 in the contracts).
