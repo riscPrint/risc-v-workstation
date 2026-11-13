@@ -306,7 +306,8 @@ def _run(args):
         for p in portsets[0]:
             if p.name != args.reset:
                 lines.append(f'gold-match {p.name}')
-        lines += ['gold-nomatch *', '[collect rvw_equiv]', '[strategy scorr]', 'use sby', 'engine abc scorr; pdr', 'xprop off',
+        lines += ['gold-nomatch *', '[collect rvw_equiv]', 'join *',
+                  '[strategy scorr]', 'use sby', 'engine abc scorr; pdr', 'xprop off',
                   f'timeout {max(1, int(budget()))}']
         config = out / 'equiv.eqy'
         config.write_text('\n'.join(lines) + '\n')
