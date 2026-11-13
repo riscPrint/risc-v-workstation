@@ -66,10 +66,13 @@ def scan_tracked_tree(root):
 
 def metadata_report(root):
     authors, committers, taggers, findings = set(), set(), set(), []
-    commits = git_at(root, 'rev-list', '--all').splitlines()
-    for oid in commits:
-        fields = git_at(root, 'show', '-s', '--format=%an <%ae>%x00%cn <%ce>%x00%B',
-                        oid.decode()).split(b'\0', 2)
+    # One git call for all commits; one `git show` per commit took minutes on large ref sets.
+    records = git_at(root, 'log', '--all', '--format=%x1e%H%x00%an <%ae>%x00%cn <%ce>%x00%B')
+    commits = []
+    for record in records.split(b'\x1e')[1:]:
+        oid, rest = record.split(b'\0', 1)
+        commits.append(oid)
+        fields = rest.split(b'\0', 2)
         authors.add(fields[0].decode('utf-8', errors='replace'))
         committers.add(fields[1].decode('utf-8', errors='replace'))
         for line, rule in scan_bytes(b'\n'.join(fields)):
