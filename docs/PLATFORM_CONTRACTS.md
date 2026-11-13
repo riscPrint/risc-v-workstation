@@ -703,7 +703,7 @@ Any other reply is the final `rvw.cosim/1` report. The producer must stop.
 The end event receives the final report. Missing end evidence cannot earn match.
 Events precede affected retirements, including events in the same cycle. This
 transport does not reorder cycles or read ahead. Taken interrupt traps inject
-only platform-declared interrupt inputs. Debug entry is not supported here.
+only platform-declared interrupt inputs. Declared debug halt events also synchronize at that boundary.
 
 ### C2 observation exchange
 
@@ -731,6 +731,18 @@ before loading the ELF. Libraries must use the installed Spike extension ABI.
 A missing library or registration failure is an error. Sail refuses this setting.
 Custom CSR state uses the existing C2 `csr_snapshot` declaration. Reference trace
 generation still refuses custom instructions with unknown operand layouts.
+
+### C2 debug entry observations
+
+C2/2 may declare `debug: true`. Every retirement then contains `debug` with
+Boolean `mode` and `step`, XLEN hexadecimal `dpc`, and 32-bit hexadecimal `dcsr`.
+`step` must equal `dcsr.step`. A separate `event: debug` record has a `cycle`,
+`action` (`halt` or `observe`) and the same complete debug snapshot. A halt
+injects a reference halt request before the next instruction. It does not inject
+an ordinary exception or interrupt. All four snapshot fields compare exactly.
+Spike processes a halt without executing a debug ROM instruction. Resume,
+debug ROM execution, triggers and automatic single-step transitions are not yet
+supported. Unsupported reference hooks fail; they cannot earn a match.
 
 ## C3. Suite results (`rvw.results/1`)
 

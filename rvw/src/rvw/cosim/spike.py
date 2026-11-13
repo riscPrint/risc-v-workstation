@@ -190,6 +190,8 @@ class Spike:
         if platform.reference_extensions:
             lib.rvw_register_extension.argtypes = [C.c_void_p, C.c_char_p]
             lib.rvw_register_extension.restype = C.c_int
+        lib.rvw_debug_state.argtypes = [C.c_void_p, C.POINTER(C.c_uint64)]
+        lib.rvw_debug_halt.argtypes = [C.c_void_p]
         lib.rvw_error.restype = C.c_char_p
         lib.rvw_create.argtypes = [C.c_char_p, C.POINTER(C.c_uint64), C.c_size_t,
                                   C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_uint64, C.c_char_p, C.c_int, C.c_int]
@@ -283,8 +285,25 @@ class Spike:
             result["hypervisor"] = dict(virtual=bool(self.lib.rvw_virtual(self.handle, 1)),
                 virtual_after=bool(self.lib.rvw_virtual(self.handle, 0)), mode_after=self.mode(),
                 csrs=self.csr_snapshot([hex(a) for a in H_CSRS], host=True), translations=[])
+        result["debug"], _ = self.debug_snapshot()
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
+
+    def debug_snapshot(self):
+        values = (C.c_uint64 * 4)()
+        if self.lib.rvw_debug_state(self.handle, values):
+            raise ValueError(self.error())
+        return dict(mode=bool(values[0]), dpc=int(values[1]), dcsr=int(values[2]),
+                    step=bool(values[2] & 4)), int(values[3])
+
+    def debug_event(self, action):
+        if action == 'halt':
+            if self.lib.rvw_debug_halt(self.handle):
+                raise ValueError(self.error())
+        elif action != 'observe':
+            raise ValueError('unsupported debug action')
+        state, pc = self.debug_snapshot()
+        return dict(debug=state, pc=pc, regs=list(self.regs), disasm='debug ' + action)
 
     def translations(self, effect):
         from .translation import observations

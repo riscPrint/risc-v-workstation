@@ -18,6 +18,8 @@ def header_fields(header):
                 raise ValueError(f"{letter.upper()} requires C2/2 {name} observations")
         if name in header and header["schema"] != "rvw.rvfi/2":
             raise ValueError(f"{name} requires C2/2")
+    if "debug" in header and (header['schema'] != 'rvw.rvfi/2' or header['debug'] is not True):
+        raise ValueError('debug requires C2/2 and true declaration')
     if "vector" in header:
         v = header["vector"]
         if not isinstance(v, dict) or set(v) != {"vlen", "elen"}:
@@ -34,9 +36,12 @@ def header_fields(header):
 
 def state_fields(obj, header):
     from .trace import hexnum
-    for name in ("vector", "hypervisor"):
+    for name in ("vector", "hypervisor", "debug"):
         if (name in obj) != (name in header):
             raise ValueError(f"{name} state must match header declaration")
+    if "debug" in header:
+        from .debug_state import validate
+        validate(obj['debug'], header['xlen'])
     if "vector" in header:
         v = obj["vector"]
         keys = {"vstart", "vl", "vtype", "vcsr", "vs", "regs"}
@@ -69,7 +74,7 @@ def state_fields(obj, header):
 
 def compare_extensions(actual, expected, header):
     diff = {}
-    for name in ("vector", "hypervisor"):
+    for name in ("vector", "hypervisor", "debug"):
         if name not in header:
             continue
         if name not in expected:

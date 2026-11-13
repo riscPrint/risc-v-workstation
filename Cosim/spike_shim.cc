@@ -268,6 +268,24 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
 void rvw_set_mscratch(void* m,uint64_t value) {
   static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
 }
+int rvw_debug_halt(void* m) {
+  try {
+    auto* cpu = static_cast<Machine*>(m)->cpu.get();
+    if(cpu->halted()) throw std::runtime_error("reference already in debug mode");
+    cpu->halt_request = processor_t::HR_REGULAR;
+    cpu->step(0); // Process the halt request without executing debug ROM.
+    cpu->halt_request = processor_t::HR_NONE;
+    return 0;
+  } catch(const std::exception& ex) { error=ex.what(); return -1; }
+}
+int rvw_debug_state(void* m, uint64_t* values) {
+  auto* s = static_cast<Machine*>(m)->cpu->get_state();
+  values[0] = s->debug_mode;
+  values[1] = s->dpc->read();
+  values[2] = s->dcsr->read();
+  values[3] = s->pc;
+  return 0;
+}
 int rvw_register_extension(void* m, const char* name) {
   try {
     auto factory = find_extension(name);
