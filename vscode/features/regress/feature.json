@@ -42,7 +42,7 @@
       }
     ],
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "regress.results",
           "name": "RVW Regression"

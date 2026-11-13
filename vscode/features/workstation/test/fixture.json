@@ -1,0 +1,1 @@
+{"schema": "rvw.agent-guide/1", "workflows": [{"id": "test-fails", "title": "Test fails", "steps": [{"id": "bundle", "do": "Read the failure bundle.", "cli": ["bundle", "<RUN>"], "decide": [{"then": "stop"}]}]}]}

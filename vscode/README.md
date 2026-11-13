@@ -4,6 +4,12 @@ One VS Code extension for the tools in this repository. Each tool adds a **featu
 
 | Feature | What it adds | Docs |
 |---|---|---|
+| `workstation` | Activity bar and manual agent workflow checklists | [features/workstation/README.md](features/workstation/README.md) |
+| `navigation` | Source, diagram, wave and database cross-navigation | [features/navigation/README.md](features/navigation/README.md) |
+| `project` | Saved project runs, suites, verdicts and failure bundles | [features/project/README.md](features/project/README.md) |
+| `cosim` | First divergence state and saved disassembly jump | [features/cosim/README.md](features/cosim/README.md) |
+| `formal` | Saved properties, counterexample waves and proof-core lines | [features/formal/README.md](features/formal/README.md) |
+| `arch` | Saved designer reports and component study tables | [features/arch/README.md](features/arch/README.md) |
 | `debug` | Linked waves, Scala, blocks and dependency traces from one captured database | [features/debug/README.md](features/debug/README.md) |
 | `spinalblocks` | Block and state machine diagrams for elaborated SpinalHDL designs, linked to the Scala source | [features/spinalblocks/README.md](features/spinalblocks/README.md) |
 | `regress` | Saved C3 tests and C4 verdicts, with full causes | [features/regress/README.md](features/regress/README.md) |

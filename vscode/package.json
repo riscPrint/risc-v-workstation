@@ -60,7 +60,11 @@
     "onCommand:wave.new",
     "onCommand:wave.open",
     "onView:wave.results",
-    "onCommand:wave.openSession"
+    "onCommand:wave.openSession",
+    "onCommand:workstation.guide",
+    "onCommand:workstation.refreshGuide",
+    "onCommand:workstation.reset",
+    "onView:workstation.results"
   ],
   "contributes": {
     "commands": [
@@ -340,10 +344,22 @@
       {
         "command": "wave.runSaved",
         "title": "Wave: Run Saved Query"
+      },
+      {
+        "command": "workstation.guide",
+        "title": "Workstation: Load Saved Agent Guide"
+      },
+      {
+        "command": "workstation.refreshGuide",
+        "title": "Workstation: Read rvw Agent Guide"
+      },
+      {
+        "command": "workstation.reset",
+        "title": "Workstation: Reset Workflow Checklist"
       }
     ],
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "coverage.results",
           "name": "RVW Coverage"
@@ -373,13 +389,19 @@
           "name": "RVW Regression"
         },
         {
+          "id": "wave.results",
+          "name": "RVW Wave Query"
+        },
+        {
+          "id": "workstation.results",
+          "name": "Tools and Workflows"
+        }
+      ],
+      "explorer": [
+        {
           "id": "spinalblocks.hierarchy",
           "name": "SpinalBlocks",
           "when": "spinalblocks.hasDiagram"
-        },
-        {
-          "id": "wave.results",
-          "name": "RVW Wave Query"
         }
       ]
     },
@@ -574,6 +596,21 @@
           "command": "wave.raw",
           "when": "view == wave.results",
           "group": "results"
+        },
+        {
+          "command": "workstation.guide",
+          "when": "view == workstation.results",
+          "group": "navigation"
+        },
+        {
+          "command": "workstation.refreshGuide",
+          "when": "view == workstation.results",
+          "group": "navigation"
+        },
+        {
+          "command": "workstation.reset",
+          "when": "view == workstation.results",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -753,6 +790,15 @@
         ]
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "workstation.container",
+          "title": "Workstation",
+          "icon": "dist/workstation/icon.svg"
+        }
+      ]
+    },
     "configuration": [
       {
         "title": "Coverage",
@@ -929,6 +975,17 @@
             "type": "number",
             "default": 600000,
             "description": "Time limit for one rvw call."
+          }
+        }
+      },
+      {
+        "title": "Workstation",
+        "properties": {
+          "workstation.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
           }
         }
       }
