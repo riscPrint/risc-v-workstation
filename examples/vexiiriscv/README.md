@@ -645,33 +645,42 @@ exceeded their bounds. The passing SBI control uses the fixed-map platform.
 
 The matrix and ordering rows below split the retained RTL campaign. They are
 subsets of the aggregate rows above. Do not add them to those totals.
-The eight random privilege runs are new RTL captures. All eight match Spike
+The detailed table uses separate pass, fail and known-finding dispositions.
+A known finding is never a pass. Raw C1 failures remain in the aggregate table.
+Not run means applicable minus run. Generated programs outside applicability
+are excluded, not failed. Superpage rows are subsets of the translation row.
+The aligned superpage rows exclude level-0 4 KiB pages.
+The eight random privilege runs were captured in #1128. All eight match Spike
 strictly with zero synchronizations and no masks. Each crosses 32 seeded
 M/S/U transitions, traps, delegation and returns. The planner selects these
 families, and `prepare-suites.py` now builds them under `random-privilege`.
 The project files select all four ELFs per XLEN with `--suite random-privilege`.
 
-| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+| Profile | Family | Generated | Applicable | Run | Pass and match | Fail | Known finding | Not run |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| Vexii RV32 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV32 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
-| Vexii RV32 | Translation matrix beyond walk levels | 533 | 128 | 128 | 126 | 2 | 126 | 2 |
-| Vexii RV32 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV64 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
-| Vexii RV64 | Translation matrix beyond walk levels | 533 | 133 | 133 | 131 | 2 | 131 | 2 |
-| Vexii RV64 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 | Reset events | 3 | 3 | 3 | 3 | 0 | 3 | 0 |
+| Vexii RV32 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV32 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 0 | 0 |
+| Vexii RV32 | Translation matrix beyond walk levels | 533 | 128 | 128 | 126 | 0 | 2 | 0 |
+| Vexii RV32 | lrsc | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | amo | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | amo-fault | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | fence | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | fence-i | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | Aligned superpages | 10 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | Misaligned superpages | 10 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | random privilege | 4 | 4 | 4 | 4 | 0 | 0 | 0 |
+| Vexii RV64 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 0 | 0 |
+| Vexii RV64 | Translation matrix beyond walk levels | 533 | 133 | 133 | 131 | 0 | 2 | 0 |
+| Vexii RV64 | lrsc | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | amo | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | amo-fault | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | fence | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | Aligned superpages | 10 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | Misaligned superpages | 10 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | random privilege | 4 | 4 | 4 | 4 | 0 | 0 | 0 |
+| Vexii RV64 | reset | 3 | 3 | 3 | 3 | 0 | 0 | 0 |
 
 [The family record](family-results.json) retains the random run identities and
 names every matrix subset member. Matrix generated counts span all four satp
@@ -734,3 +743,24 @@ mailbox request, delay, pulse length and state receipt before applying reset.
 | Generated | Applicable | Run | Pass and strict match | Fail | Known finding | Not run |
 |---:|---:|---:|---:|---:|---:|---:|
 | 3 | 3 | 3 | 3 | 0 | 0 | 0 |
+
+## Final generated-family audit
+
+[The audit](suite-family-audit.json) lists every selected family and every
+planner exclusion for the RV32 and RV64 supervisor profiles and VexRiscv
+M-only profile. All applicable families have retained RTL numbers. The reset
+results are fresh. The other rows reuse the named earlier captures. The
+superpage subsets were checked against the retained per-program comparisons.
+No program outside the declared profiles gets execution credit.
+
+Hardware A/D updates, Sstc and other timer extensions, cache-block operations,
+Zacas, H, other satp modes, pointer masking, NAPOT/PBMT and multi-hart families
+remain excluded where the required core or harness capability is absent.
+MTIP pin and CLINT WFI tests do not establish Sstc support. Each exclusion has
+its exact missing-capability reason in the audit. Not run is zero within each
+applicable family. Excluded programs remain visible in the generated count.
+
+The audit also includes the CLINT/PLIC RV64 feature plan. Its four WFI and
+12 PLIC/delivery programs keep the documented device/reference limits.
+Repeated reset with live devices is excluded until a device reset contract
+exists. The main-pin reset result does not qualify that combination.

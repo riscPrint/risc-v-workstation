@@ -1,0 +1,1051 @@
+{
+  "scope": "2026-11-13; retained campaigns except fresh repeated reset; subsets overlap aggregate guide rows",
+  "rows": [
+    {
+      "profile": "Vexii RV32",
+      "family": "Accessed/dirty (Svade)",
+      "generated": 16,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "TLB/ASID and fences",
+      "generated": 40,
+      "applicable": 10,
+      "run": 10,
+      "pass_count": 10,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "Translation matrix beyond walk levels",
+      "generated": 533,
+      "applicable": 128,
+      "run": 128,
+      "pass_count": 126,
+      "fail": 0,
+      "known_finding": 2,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "lrsc",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "amo",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "amo-fault",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "fence",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "fence-i",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "superpages",
+      "generated": 10,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes excluded; subset of translation matrix",
+      "programs": [
+        "sv32-level-1"
+      ],
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "misaligned-superpages",
+      "generated": 10,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes excluded; subset of translation matrix",
+      "programs": [
+        "sv32-level-1-misaligned"
+      ],
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "random privilege",
+      "generated": 4,
+      "applicable": 4,
+      "run": 4,
+      "pass_count": 4,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Accessed/dirty (Svade)",
+      "generated": 16,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "TLB/ASID and fences",
+      "generated": 40,
+      "applicable": 10,
+      "run": 10,
+      "pass_count": 10,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Translation matrix beyond walk levels",
+      "generated": 533,
+      "applicable": 133,
+      "run": 133,
+      "pass_count": 131,
+      "fail": 0,
+      "known_finding": 2,
+      "not_run": 0,
+      "reason": "Other satp modes and hardware A/D updates are excluded",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "lrsc",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "amo",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "amo-fault",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "fence",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "fence-i",
+      "generated": 1,
+      "applicable": 1,
+      "run": 1,
+      "pass_count": 1,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "superpages",
+      "generated": 10,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes excluded; subset of translation matrix",
+      "programs": [
+        "sv39-level-1",
+        "sv39-level-2"
+      ],
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "misaligned-superpages",
+      "generated": 10,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Other satp modes excluded; subset of translation matrix",
+      "programs": [
+        "sv39-level-1-misaligned",
+        "sv39-level-2-misaligned"
+      ],
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "random privilege",
+      "generated": 4,
+      "applicable": 4,
+      "run": 4,
+      "pass_count": 4,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "All applicable programs ran",
+      "evidence": "family-results.json"
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "reset",
+      "generated": 3,
+      "applicable": 3,
+      "run": 3,
+      "pass_count": 3,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "reason": "Main pin; one hart; fetch/load/store loops",
+      "evidence": "reset-results.json"
+    }
+  ],
+  "plans": {
+    "Vexii RV64": {
+      "applicable": [
+        "mmu-sv39",
+        "privilege-controls",
+        "scheduled-wfi",
+        "pmp",
+        "lrsc-rv64",
+        "amo-rv64",
+        "amo-fault-rv64",
+        "fence-rv64",
+        "fence-i-rv64",
+        "random-privilege-rv64",
+        "reset-rv64"
+      ],
+      "excluded": [
+        {
+          "family": "mmu-sv32",
+          "reason": "missing: satp:sv32, xlen:32"
+        },
+        {
+          "family": "mmu-sv48",
+          "reason": "missing: satp:sv48"
+        },
+        {
+          "family": "mmu-sv57",
+          "reason": "missing: satp:sv57"
+        },
+        {
+          "family": "mmu-extensions",
+          "reason": "missing: ext:svnapot, ext:svpbmt"
+        },
+        {
+          "family": "hypervisor",
+          "reason": "missing: ext:h"
+        },
+        {
+          "family": "pointer-masking",
+          "reason": "missing: ext:smnpm"
+        },
+        {
+          "family": "shootdown",
+          "reason": "missing: harts:2"
+        },
+        {
+          "family": "wfi-clint",
+          "reason": "missing: device:clint"
+        },
+        {
+          "family": "scheduled-wfi-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "wfi-clint-rv32",
+          "reason": "missing: device:clint, xlen:32"
+        },
+        {
+          "family": "plic",
+          "reason": "missing: device:plic"
+        },
+        {
+          "family": "plic-delivery",
+          "reason": "missing: device:plic, irq:seip"
+        },
+        {
+          "family": "pmp-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "epmp",
+          "reason": "missing: ext:smepmp"
+        },
+        {
+          "family": "memory-concurrent",
+          "reason": "missing: harts:2"
+        },
+        {
+          "family": "lrsc-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "amo-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "amo-fault-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "fence-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "fence-i-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "zacas-rv32",
+          "reason": "missing: ext:zacas, xlen:32"
+        },
+        {
+          "family": "cache-block-rv32",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz, xlen:32"
+        },
+        {
+          "family": "zacas-rv64",
+          "reason": "missing: ext:zacas"
+        },
+        {
+          "family": "cache-block-rv64",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz"
+        },
+        {
+          "family": "sscofpmf",
+          "reason": "missing: ext:sscofpmf, ext:zihpm"
+        },
+        {
+          "family": "random-privilege-rv32",
+          "reason": "missing: xlen:32"
+        }
+      ]
+    },
+    "Vexii RV32": {
+      "applicable": [
+        "mmu-sv32",
+        "scheduled-wfi-rv32",
+        "pmp-rv32",
+        "lrsc-rv32",
+        "amo-rv32",
+        "amo-fault-rv32",
+        "fence-rv32",
+        "fence-i-rv32",
+        "random-privilege-rv32"
+      ],
+      "excluded": [
+        {
+          "family": "mmu-sv39",
+          "reason": "missing: satp:sv39, xlen:64"
+        },
+        {
+          "family": "mmu-sv48",
+          "reason": "missing: satp:sv48, xlen:64"
+        },
+        {
+          "family": "mmu-sv57",
+          "reason": "missing: satp:sv57, xlen:64"
+        },
+        {
+          "family": "mmu-extensions",
+          "reason": "missing: ext:svnapot, ext:svpbmt, satp:sv39, xlen:64"
+        },
+        {
+          "family": "hypervisor",
+          "reason": "missing: ext:h, xlen:64"
+        },
+        {
+          "family": "pointer-masking",
+          "reason": "missing: ext:smnpm, xlen:64"
+        },
+        {
+          "family": "shootdown",
+          "reason": "missing: harts:2, satp:sv39, xlen:64"
+        },
+        {
+          "family": "privilege-controls",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "scheduled-wfi",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "wfi-clint",
+          "reason": "missing: device:clint, xlen:64"
+        },
+        {
+          "family": "wfi-clint-rv32",
+          "reason": "missing: device:clint"
+        },
+        {
+          "family": "plic",
+          "reason": "missing: device:plic, xlen:64"
+        },
+        {
+          "family": "plic-delivery",
+          "reason": "missing: device:plic, irq:seip, xlen:64"
+        },
+        {
+          "family": "pmp",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "epmp",
+          "reason": "missing: ext:smepmp, xlen:64"
+        },
+        {
+          "family": "memory-concurrent",
+          "reason": "missing: harts:2, xlen:64"
+        },
+        {
+          "family": "lrsc-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "amo-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "amo-fault-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "fence-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "fence-i-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "zacas-rv32",
+          "reason": "missing: ext:zacas"
+        },
+        {
+          "family": "cache-block-rv32",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz"
+        },
+        {
+          "family": "zacas-rv64",
+          "reason": "missing: ext:zacas, xlen:64"
+        },
+        {
+          "family": "cache-block-rv64",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz, xlen:64"
+        },
+        {
+          "family": "sscofpmf",
+          "reason": "missing: ext:sscofpmf, ext:zihpm, xlen:64"
+        },
+        {
+          "family": "random-privilege-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "reset-rv64",
+          "reason": "missing: harness:reset-events, xlen:64"
+        }
+      ]
+    },
+    "VexRiscv M-only": {
+      "applicable": [
+        "scheduled-wfi-rv32",
+        "fence-rv32",
+        "fence-i-rv32"
+      ],
+      "excluded": [
+        {
+          "family": "mmu-sv32",
+          "reason": "missing: ad:fault, mode:S, mode:U, pmp, satp:sv32"
+        },
+        {
+          "family": "mmu-sv39",
+          "reason": "missing: ad:fault, mode:S, mode:U, pmp, satp:sv39, xlen:64"
+        },
+        {
+          "family": "mmu-sv48",
+          "reason": "missing: ad:fault, mode:S, mode:U, pmp, satp:sv48, xlen:64"
+        },
+        {
+          "family": "mmu-sv57",
+          "reason": "missing: ad:fault, mode:S, mode:U, pmp, satp:sv57, xlen:64"
+        },
+        {
+          "family": "mmu-extensions",
+          "reason": "missing: ext:svnapot, ext:svpbmt, satp:sv39, xlen:64"
+        },
+        {
+          "family": "hypervisor",
+          "reason": "missing: ext:h, mode:S, mode:U, xlen:64"
+        },
+        {
+          "family": "pointer-masking",
+          "reason": "missing: ext:smnpm, xlen:64"
+        },
+        {
+          "family": "shootdown",
+          "reason": "missing: harts:2, satp:sv39, xlen:64"
+        },
+        {
+          "family": "privilege-controls",
+          "reason": "missing: mode:S, mode:U, pmp, xlen:64"
+        },
+        {
+          "family": "scheduled-wfi",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "wfi-clint",
+          "reason": "missing: device:clint, xlen:64"
+        },
+        {
+          "family": "wfi-clint-rv32",
+          "reason": "missing: device:clint"
+        },
+        {
+          "family": "plic",
+          "reason": "missing: device:plic, xlen:64"
+        },
+        {
+          "family": "plic-delivery",
+          "reason": "missing: device:plic, irq:seip, mode:S, xlen:64"
+        },
+        {
+          "family": "pmp",
+          "reason": "missing: mode:U, pmp, pmp:8, xlen:64"
+        },
+        {
+          "family": "pmp-rv32",
+          "reason": "missing: mode:U, pmp, pmp:4"
+        },
+        {
+          "family": "epmp",
+          "reason": "missing: ext:smepmp, xlen:64"
+        },
+        {
+          "family": "memory-concurrent",
+          "reason": "missing: ext:a, harts:2, xlen:64"
+        },
+        {
+          "family": "lrsc-rv32",
+          "reason": "missing: ext:a"
+        },
+        {
+          "family": "amo-rv32",
+          "reason": "missing: ext:a"
+        },
+        {
+          "family": "amo-fault-rv32",
+          "reason": "missing: ext:a, pmp"
+        },
+        {
+          "family": "lrsc-rv64",
+          "reason": "missing: ext:a, xlen:64"
+        },
+        {
+          "family": "amo-rv64",
+          "reason": "missing: ext:a, xlen:64"
+        },
+        {
+          "family": "amo-fault-rv64",
+          "reason": "missing: ext:a, pmp, xlen:64"
+        },
+        {
+          "family": "fence-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "fence-i-rv64",
+          "reason": "missing: xlen:64"
+        },
+        {
+          "family": "zacas-rv32",
+          "reason": "missing: ext:a, ext:zacas"
+        },
+        {
+          "family": "cache-block-rv32",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz"
+        },
+        {
+          "family": "zacas-rv64",
+          "reason": "missing: ext:a, ext:zacas, xlen:64"
+        },
+        {
+          "family": "cache-block-rv64",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz, xlen:64"
+        },
+        {
+          "family": "sscofpmf",
+          "reason": "missing: ext:sscofpmf, ext:zihpm, mode:S, mode:U, pmp, xlen:64"
+        },
+        {
+          "family": "random-privilege-rv32",
+          "reason": "missing: mode:S, mode:U, pmp"
+        },
+        {
+          "family": "random-privilege-rv64",
+          "reason": "missing: mode:S, mode:U, pmp, xlen:64"
+        },
+        {
+          "family": "reset-rv64",
+          "reason": "missing: harness:reset-events, xlen:64"
+        }
+      ]
+    },
+    "Vexii RV64 with CLINT/PLIC": {
+      "applicable": [
+        "mmu-sv39",
+        "privilege-controls",
+        "scheduled-wfi",
+        "wfi-clint",
+        "plic",
+        "plic-delivery",
+        "pmp",
+        "lrsc-rv64",
+        "amo-rv64",
+        "amo-fault-rv64",
+        "fence-rv64",
+        "fence-i-rv64",
+        "random-privilege-rv64"
+      ],
+      "excluded": [
+        {
+          "family": "mmu-sv32",
+          "reason": "missing: satp:sv32, xlen:32"
+        },
+        {
+          "family": "mmu-sv48",
+          "reason": "missing: satp:sv48"
+        },
+        {
+          "family": "mmu-sv57",
+          "reason": "missing: satp:sv57"
+        },
+        {
+          "family": "mmu-extensions",
+          "reason": "missing: ext:svnapot, ext:svpbmt"
+        },
+        {
+          "family": "hypervisor",
+          "reason": "missing: ext:h"
+        },
+        {
+          "family": "pointer-masking",
+          "reason": "missing: ext:smnpm"
+        },
+        {
+          "family": "shootdown",
+          "reason": "missing: harts:2"
+        },
+        {
+          "family": "scheduled-wfi-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "wfi-clint-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "pmp-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "epmp",
+          "reason": "missing: ext:smepmp"
+        },
+        {
+          "family": "memory-concurrent",
+          "reason": "missing: harts:2"
+        },
+        {
+          "family": "lrsc-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "amo-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "amo-fault-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "fence-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "fence-i-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "zacas-rv32",
+          "reason": "missing: ext:zacas, xlen:32"
+        },
+        {
+          "family": "cache-block-rv32",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz, xlen:32"
+        },
+        {
+          "family": "zacas-rv64",
+          "reason": "missing: ext:zacas"
+        },
+        {
+          "family": "cache-block-rv64",
+          "reason": "missing: cache-block-size, ext:zicbom, ext:zicbop, ext:zicboz"
+        },
+        {
+          "family": "sscofpmf",
+          "reason": "missing: ext:sscofpmf, ext:zihpm"
+        },
+        {
+          "family": "random-privilege-rv32",
+          "reason": "missing: xlen:32"
+        },
+        {
+          "family": "reset-rv64",
+          "reason": "missing: harness:reset-events"
+        }
+      ]
+    }
+  },
+  "aggregate_rows": [
+    {
+      "profile": "Vexii RV64",
+      "family": "MMU matrix",
+      "generated": 589,
+      "applicable": 145,
+      "run": 145,
+      "pass_count": 143,
+      "fail": 0,
+      "known_finding": 2,
+      "not_run": 0,
+      "c1_pass": 143,
+      "c1_fail": 2
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Fault walks",
+      "generated": 84,
+      "applicable": 18,
+      "run": 18,
+      "pass_count": 9,
+      "fail": 0,
+      "known_finding": 9,
+      "not_run": 0,
+      "c1_pass": 9,
+      "c1_fail": 9
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "MMU random",
+      "generated": 8,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 2,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Privilege controls",
+      "generated": 30,
+      "applicable": 30,
+      "run": 30,
+      "pass_count": 30,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 30,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "PMP",
+      "generated": 264,
+      "applicable": 264,
+      "run": 264,
+      "pass_count": 264,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 264,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Ordering",
+      "generated": 5,
+      "applicable": 5,
+      "run": 5,
+      "pass_count": 5,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 5,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64",
+      "family": "Scheduled WFI",
+      "generated": 6,
+      "applicable": 6,
+      "run": 6,
+      "pass_count": 6,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 6,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64 + CLINT",
+      "family": "WFI",
+      "generated": 4,
+      "applicable": 4,
+      "run": 4,
+      "pass_count": 4,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 4,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV64 + PLIC",
+      "family": "PLIC and delivery",
+      "generated": 12,
+      "applicable": 12,
+      "run": 12,
+      "pass_count": 12,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 12,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "MMU matrix",
+      "generated": 589,
+      "applicable": 140,
+      "run": 140,
+      "pass_count": 138,
+      "fail": 0,
+      "known_finding": 2,
+      "not_run": 0,
+      "c1_pass": 138,
+      "c1_fail": 2
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "Fault walks",
+      "generated": 84,
+      "applicable": 12,
+      "run": 12,
+      "pass_count": 6,
+      "fail": 0,
+      "known_finding": 6,
+      "not_run": 0,
+      "c1_pass": 6,
+      "c1_fail": 6
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "MMU random",
+      "generated": 8,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 2,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "PMP",
+      "generated": 394,
+      "applicable": 394,
+      "run": 394,
+      "pass_count": 394,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 394,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "Ordering",
+      "generated": 5,
+      "applicable": 5,
+      "run": 5,
+      "pass_count": 5,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 5,
+      "c1_fail": 0
+    },
+    {
+      "profile": "Vexii RV32",
+      "family": "Scheduled WFI",
+      "generated": 6,
+      "applicable": 6,
+      "run": 6,
+      "pass_count": 6,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 6,
+      "c1_fail": 0
+    },
+    {
+      "profile": "VexRiscv RV32 M only",
+      "family": "FENCE / FENCE.I",
+      "generated": 2,
+      "applicable": 2,
+      "run": 2,
+      "pass_count": 2,
+      "fail": 0,
+      "known_finding": 0,
+      "not_run": 0,
+      "c1_pass": 2,
+      "c1_fail": 0
+    },
+    {
+      "profile": "VexRiscv RV32 M only",
+      "family": "Scheduled WFI",
+      "generated": 6,
+      "applicable": 6,
+      "run": 6,
+      "pass_count": 3,
+      "fail": 0,
+      "known_finding": 3,
+      "not_run": 0,
+      "c1_pass": 6,
+      "c1_fail": 0
+    }
+  ]
+}

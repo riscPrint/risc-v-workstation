@@ -52,3 +52,30 @@ cases before their bodies. A stable-checkout rerun has 270 C1 failures
 and 270 strict Spike first differences. No full trace matches are earned.
 No bootstrap access was removed. No core source was changed.
 See [the decision and trace hashes](rvw/act4-supervisor/README.md#bootstrap-decision).
+
+## VEXII-CSR-BOOT-001
+
+Confirmed profile compatibility finding, not a confirmed hardware defect.
+The selected RV32 supervisor scaffold writes `mhpmevent3` (CSR `0x323`).
+The profile omits the counter plugin that supplies this event selector.
+The core traps on `csrw mhpmevent3, zero`; Spike accepts it. All 270 ACT4
+programs stop in this bootstrap. No test body earns a pass. The final
+campaign checks all 270 first differences against Spike, with zero masks
+and synchronizations. Earlier #1148 compared only 37 representative cases.
+
+Minimal reproduction: [missing-boot-csr.S](rvw/act4/missing-boot-csr.S), built
+with `-DCSR_ADDR=0x323`. The
+[project CSR contract](rvw/act4-supervisor/csr-contract.json) declares it absent.
+The shared CSR catalog assigns `mhpmevent3` to Sm. The remaining question is
+whether this core profile and standard bootstrap claim the same CSR contract.
+No mandatory access is removed to earn a pass. Sources:
+[#1148](https://github.com/riscPrint/risc-v-workstation/pull/1148),
+[#1178](https://github.com/riscPrint/risc-v-workstation/pull/1178).
+
+## Reset harness follow-up
+
+The reset gap recorded in #1128 is resolved for the one-hart RV64 main pin.
+[#1188](https://github.com/riscPrint/risc-v-workstation/pull/1188) supplies
+three fresh RTL passes and strict Spike matches across nine repeated pulses.
+The initial timeout was a harness sampling defect. It is not a core finding.
+Separate SoC reset domains, device reset and debug reset remain untested.
