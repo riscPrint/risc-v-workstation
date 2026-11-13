@@ -844,7 +844,7 @@
       "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp",
       "classification": "tool_false_positive",
       "cause": "incomplete_cancellation_binding",
-      "source": "DivRadix2.scala:187-190; DivPlugin.scala:116-117",
+      "source": "DivRadix.scala:113-116; DivPlugin.scala:116-117",
       "reason": "The divider clears done on the previous flush edge. The consumer deliberately keeps response ready low and consumes by flush.",
       "wave_sha256": "59b3d4c7d8bb65e54e7ccdb4cfe5cda2f2bea3f9e3fd8214141053002ba48c61",
       "program": "rv32um-p-div",
@@ -1252,6 +1252,133 @@
         "status": "pass",
         "fired": 0,
         "firings": []
+      }
+    ],
+    "activation": [
+      {
+        "id": "csr.read:mscratch",
+        "count": 4,
+        "status": "activated"
+      },
+      {
+        "id": "enum.legal:execute_ctrl2_up_BranchPlugin_BRANCH_CTRL_lane0",
+        "count": 57295,
+        "status": "activated"
+      },
+      {
+        "id": "fsm.state_legal:TrapPlugin_logic_harts_0_trap_fsm_stateReg",
+        "count": 57346,
+        "status": "activated"
+      },
+      {
+        "id": "stream.payload_stable:FetchCachelessPlugin_logic_bus_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_persistent",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_translated",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:LearnPlugin_logic_arbitrated",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:LsuCachelessPlugin_logic_bus_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:PcPlugin_logic_harts_0_output",
+        "count": 29108,
+        "status": "activated"
+      },
+      {
+        "id": "stream.payload_stable:early0_BranchPlugin_logic_jumpLogic_learn",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_rsp",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.payload_stable:streamArbiter.io_inputs_0",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_forked",
+        "count": 103,
+        "status": "activated"
+      },
+      {
+        "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_halted",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_persistent",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_translated",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:LearnPlugin_logic_arbitrated",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:LsuCachelessPlugin_logic_bus_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:PcPlugin_logic_harts_0_output",
+        "count": 29108,
+        "status": "activated"
+      },
+      {
+        "id": "stream.valid_hold:early0_BranchPlugin_logic_jumpLogic_learn",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_cmd",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp",
+        "count": 0,
+        "status": "no_activation"
+      },
+      {
+        "id": "stream.valid_hold:streamArbiter.io_inputs_0",
+        "count": 0,
+        "status": "no_activation"
       }
     ]
   }

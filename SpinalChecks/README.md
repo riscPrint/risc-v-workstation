@@ -1219,8 +1219,8 @@ Other check kinds were NOT RUN in this sample.
 [examples/ooo](examples/ooo/README.md) has rename, a free list, a ROB,
 ready/select issue, store forwarding and mispredict recovery. Its native
 seed-17 run has zero clean firings. Seven executable bug variants each fire
-an expected rule. It has 11 inserted rules and named project bindings.
-The fixture README lists the missing template and consumer bindings.
+an expected rule. The expanded fixture has 68 inserted rules and named
+project bindings. Its README lists the current bindings and activation limits.
 
 ### NaxRiscv on main
 
@@ -1230,9 +1230,9 @@ ROB-pointer conservation, free-list ghost events and a forwarding window.
 The [binding review](nax-binding-review.json) regenerated all nine successfully.
 It retains the source hash of the earlier six-rule review.
 
-This worker did not run a new native NaxRiscv campaign. The existing 59-program
-zero-firing record applies to the original six rules. It does not cover the
-three new declarations. Activation remains unmeasured on NaxRiscv.
+The [independent rerun](../examples/naxriscv/checks-nine-rerun.json) covers all
+nine declarations on all 59 ISA programs. Every program passes with captured
+checks and zero firings. Activation remains unmeasured on NaxRiscv.
 Ghost events do not expose the allocator RAM state. The forwarding window
 does not establish forwarded byte-data correctness. Full recovery remains
 unbound. See the example README for its source-interface limits.
@@ -1272,7 +1272,7 @@ is false on the legacy API, which has no AXI3 configuration member.
 Select `RVW_SPINAL_SOURCE` and run `sbt '++2.12.18!' 'Test/compile'` for the
 source axis. Unset it and run `sbt 'Test/compile'` for the release axis.
 Compilation is not a native simulation or formal pass.
-### Fresh activation campaign
+### Historical activation campaign before cancellation triage
 
 The [activation record](activation-results.json) contains new native captures
 and one activation row per bound check. VexRiscv ran 49 aligned ISA programs.
@@ -1300,7 +1300,9 @@ The wider VexiiRiscv campaign has 49 C1 check-gate failures and two C1 passes.
 PC payload stability fired 103 times. Divider response valid hold fired 36
 times. Their IDs are `stream.payload_stable:PcPlugin_logic_harts_0_output`
 and `stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp`.
-These are retained findings. Their causes and dispositions remain open.
+The [source and wave triage](../examples/vexiiriscv/checks-evidence/firing-triage.md)
+resolves these events as incomplete cancellation bindings. The new 51-program
+clean rerun has zero firings. The table above retains the historical counts.
 The earlier two-program clean capture does not cover this wider workload.
 
 The [activated induction samples](activated-induction-results.json) select one
@@ -1398,3 +1400,48 @@ cover is reached. Induction and PDR remain inconclusive. Probe-to-perf, a
 command-projection timing smoke and one confirmed native fault run complete.
 This fixture is not a RISC-V core. Its C2 command projection is stated in its
 README. Timing accuracy and unused replay/device-effect activation are unproved.
+
+### Current evidence tables
+
+[The current summary](current-results.json) links the retained campaigns.
+The clean ISA observations below exclude the backpressure slices. A zero
+firing count is not activation closure.
+
+| Design | Clean programs | Bound checks | Simulation activated | Simulation no_activation | Trigger unmeasured | Fired IDs / events |
+|---|---:|---:|---:|---:|---:|---:|
+| VexRiscv | 49 | 57 | 37 | 20 | 0 | 0 / 0 |
+| VexiiRiscv after cancellation fixes | 51 | 25 | 6 | 19 | 0 | 0 / 0 |
+| NaxRiscv, nine declarations | 59 | 9 | not measured | not measured | 9 | 0 / 0 |
+
+The backpressure and generated CSR/HPM slices activate 20 checks that the
+original ISA campaign did not activate. These slices retain check failures.
+They are not clean qualification runs.
+
+| Design | Bound | Activated across clean and stress runs | Proved unreachable | Current no_activation | Stress firing IDs |
+|---|---:|---:|---:|---:|---:|
+| VexRiscv | 57 | 48 | 5 | 4 | 3 |
+| VexiiRiscv | 25 | 15 | 8 | 2 | 4 |
+
+Of the original 38 misses, 20 activate, 13 have conditional unreachability
+proofs and five remain no_activation. The corrected divider-hold cancellation
+also removes its old firing-trigger activation. This adds one current miss.
+The six exact IDs are in the current summary. No binding is removed to hide
+them. Additional compliant-responder proofs for the four FIFO-input checks
+returned UNKNOWN. They do not establish unreachability.
+
+| Design | Formal trigger reached | Proved trigger unreachable | Inconclusive trigger | Cover bounds |
+|---|---:|---:|---:|---|
+| VexRiscv | 52 | 5 | 0 | 16 |
+| VexiiRiscv | 14 | 8 | 3 | 16, then 128 for unreached triggers without proof |
+
+These formal rows concern triggers. They are not new safety proofs. The
+unreachability proofs use the captured reset assumptions and async2sync
+single-clock mapping. From-sim refused the asynchronous-reset RTL.
+
+| OoO fixture result | Current observation | Remaining limit |
+|---|---|---|
+| Native checks | 68 inserted; zero clean firings; seven matching bug controls | Replay and device-effect activation absent |
+| Conservation plus five asserted helpers | Depth-16 ABC BMC3 pass in 16 seconds; trigger reached | Induction and PDR time out |
+| Probe to perf | 257 retired, 144 flushed, three open commands | Open commands remain censored |
+| OoO timing consumer | 257 projected commands, 260 model cycles | Command projection; no RTL timing accuracy claim |
+| Native fault consumer | One confirmed head flip; one detection | One sample does not qualify a detection rate |
