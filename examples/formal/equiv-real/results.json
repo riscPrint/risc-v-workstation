@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-13",
+  "cases": [
+    {
+      "case": "divider",
+      "status": "inconclusive",
+      "reason": "revision export timed out in shared sbt lock queue before compilation",
+      "wall_s": 180.037,
+      "proof_ran": false
+    },
+    {
+      "case": "sqrt",
+      "status": "inconclusive",
+      "reason": "revision export timed out in shared sbt lock queue before compilation",
+      "wall_s": 180.024,
+      "proof_ran": false
+    }
+  ],
+  "fast_tests": {
+    "passed": 1291,
+    "skipped": 1
+  }
+}
