@@ -189,3 +189,9 @@ These results are separate from the historical coverage and formal tables.
 The [306-program campaign](rvw/coverage.md) reaches 80.40% line and 85.63%
 branch coverage on the M/U PMP core. All runs pass with zero monitor firings.
 ACT4 and complete functional coverage of each logical OoO block remain open.
+
+## Bounded formal extension
+
+The [M/U PMP formal run](rvw/formal.md) closes no property or ISA check.
+Seven depth-8 property jobs time out. Two declared-trigger covers reach.
+ADD, LUI and retirement cover time out at the measured-budget depth of 40.
