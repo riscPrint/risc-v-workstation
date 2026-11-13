@@ -500,3 +500,13 @@ faults have conclusive classifications. CLI exit codes are 1, 3 and 0,
 respectively. A complete campaign is not a hardware reliability pass. MCP
 uses the same report status. Silent corruption takes priority over incomplete
 evidence.
+## Explicit word-bus address mapping
+
+A project observer can expose an effective byte address while its memory data
+and strobes use XLEN word lanes. Such records are not canonical aligned C2.
+A reviewed project adapter can call `rvw.common.bus_trace.word_bus_address`
+before writing C2. It changes only the address to the containing word. It
+preserves every data bit and mask bit. The reference still checks every active
+byte. Do not use this mapping for effective-address data, shifted strobes or
+faults. Fault mapping remains explicit. The helper rejects trapped effects.
+The full-word co-simulation input checks remain strict.
