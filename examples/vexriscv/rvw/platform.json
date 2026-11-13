@@ -16,7 +16,6 @@
   "irq_inputs": [
     3,
     7,
-    9,
     11
   ],
   "privilege_modes": "M",

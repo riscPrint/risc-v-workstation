@@ -60,7 +60,7 @@ for normal use. The adapter defaults to its own core checkout.
 
 The core is RV32IM with M-only CSRs, simple instruction and data buses, 16 MiB of
 RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or debug
-unit. Supervisor CSRs, including SATP, are absent and trap on access. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP, SEIP
+unit. Supervisor CSRs, including SATP, are absent and trap on access. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP
 and MEIP. The adapter records changes in C2. See
 [RiscvSim interrupt schedules](../../RiscvSim/README.md#interrupt-schedules). Misaligned data access traps.
 The only configuration is `rv32im`.
