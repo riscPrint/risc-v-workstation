@@ -223,3 +223,55 @@ All 610 strict checks stop at unspecified reset FCSR state. No mask or
 synchronization was used. These counts do not establish qualification.
 See the [profile and exact regeneration commands](../../rvw/configs/act4/boom/README.md)
 and [failure triage with minimal programs](../../examples/boom/FINDINGS.md).
+
+## Generated RV64 families, 2026-11-13
+
+`rvw regress plan --features examples/boom/verification.json --json`
+selects 11 families. The following program counts use seed 1 and `small`.
+
+| Family | Built/run | C1 pass | C1 fail | Strict Spike matches |
+|---|---:|---:|---:|---:|
+| Sv39 permissions, faults, SATP and TLB | 145 | 145 | 0 | 0 |
+| PMP regions, privilege and locking | 394 | 379 | 15 | 0 |
+| Privilege controls | 30 | 30 | 0 | 0 |
+| Random privilege transitions | 4 | 4 | 0 | 0 |
+| CLINT WFI | 4 | 4 | 0 | 0 |
+| Scheduled WFI interrupts | 6 | 6 | 0 | 0 |
+| LR/SC | 1 | 1 | 0 | 0 |
+| AMO | 1 | 1 | 0 | 0 |
+| AMO faults | 1 | 1 | 0 | 0 |
+| FENCE | 1 | 1 | 0 | 0 |
+| FENCE.I | 1 | 1 | 0 | 0 |
+| Total | 588 | 573 | 15 | 0 |
+
+Sv39 contains 120 permission cases, five superpage cases, three canonical
+address cases, two walk faults, two fault-based A/D cases, three SATP/MPRV
+cases and ten fence/root/global cases. ASID_WIDTH is zero. Use ASID 0;
+these runs do not test isolation between nonzero ASID tags. Svadu hardware
+A/D updates are absent. The first unfiltered matrix had eight ASID readback
+failures with ASID 7 and two unsupported hardware A/D failures. These
+remain setup findings, outside the corrected 145-program selection.
+
+All 15 PMP failures are NA4 execute cases. The isolated NA4 and TOR
+programs in [FINDINGS.md](../../examples/boom/FINDINGS.md) reproduce an
+instruction access fault where Spike reaches the data access. No PMP
+expectation was weakened. The AMO fault suite needs 38,498 cycles. Its
+first 30,000-cycle attempt timed out; it passes with the generator's
+200,000-cycle budget. The table uses that completed rerun.
+
+The harness binds CLINT and an interrupt generator for MEIP/SEIP. It does
+not bind a PLIC register device. Six scheduled cases exercise MSIP, MTIP
+and MEIP schedules. PLIC claim/complete, SEIP handler coverage, multiple
+harts and broad atomic concurrency remain unmeasured.
+
+Strict Spike checks ran for every selected program. Each stops at
+unspecified reset FP state, often with mscratch as well. No complete
+strict match or whole-core qualification is earned. No output mask,
+synchronization or core RTL change was added. Raw outputs stay local.
+
+Regenerate the full build, C1 run and strict comparison from the root with
+`examples/boom/run-generated.sh NEW_OUTPUT_DIRECTORY`. Set `SPINAL_BOOM`
+to the private clone and put the RISC-V GCC bin directory on PATH. The
+script uses the BOOM lock, `nice -n 10`, four workers and the existing
+native cache. Its matrix explicitly selects the implemented A/D and ASID
+settings. The script's build phase was rerun and produces all 588 ELFs.

@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.regress-features/1",
+  "isa": "rv64imafdc_zicsr_zifencei_zba_zbb_zbs",
+  "privilege_modes": "MSU",
+  "satp_modes": [
+    "sv39"
+  ],
+  "pmp_regions": 8,
+  "irq_inputs": [
+    3,
+    7,
+    9,
+    11
+  ],
+  "capabilities": [
+    "ad:fault",
+    "device:clint"
+  ]
+}
