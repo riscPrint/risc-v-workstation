@@ -27,6 +27,27 @@ def decode(value):
     return value
 
 
+def exact(value):
+    """One map integer: a JSON integer or a decimal/0x string, as in rvw.sim-map/1.
+
+    Hosts that parse JSON numbers as doubles (Scala ujson, JavaScript) cannot keep
+    64-bit values such as an all-ones mtimecmp. Refuse floats instead of rounding."""
+    if isinstance(value, bool):
+        raise ValueError('device map integer must not be boolean')
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        return int(value, 16) if value.lower().startswith('0x') else int(value)
+    if isinstance(value, list):
+        return [exact(v) for v in value]
+    raise ValueError(f'device map integer must be exact; got {value!r} '
+                     '(write values above 2**53 as "0x..." strings)')
+
+
+def exact_map(data):
+    return {k: exact(v) for k, v in data.items()}
+
+
 class Console:
     """HTIF console output command only. No host file or input effects."""
     def __init__(self):
@@ -74,9 +95,9 @@ class Device:
         if self.kind == 'ns16550':
             self.model = Ns16550()
         elif self.kind in ('clint', 'aclint'):
-            self.model = Timer(TimerMap.from_dict(c['map']))
+            self.model = Timer(TimerMap.from_dict(exact_map(c['map'])))
         elif self.kind == 'plic':
-            self.model = Plic(PlicMap(**c['map']))
+            self.model = Plic(PlicMap(**exact_map(c['map'])))
         elif self.kind == 'htif-console':
             self.model = Console()
         elif self.kind == 'simple-block':

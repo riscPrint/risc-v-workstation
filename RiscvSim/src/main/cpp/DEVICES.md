@@ -68,6 +68,9 @@ GIL. This is a reference bridge, with no throughput claim.
 The JSON `model` selects `ns16550`, `clint`, `aclint`, `plic`,
 `htif-console` or `simple-block`. Timer `map` uses `TimerMap` fields. PLIC `map`
 uses `PlicMap` fields. All map addresses are relative to this plugin's base.
+Map integers are JSON integers or decimal/`0x` strings, as in `rvw.sim-map/1`.
+A float is refused. Hosts that keep JSON numbers as doubles (Scala `ujson`)
+round 64-bit values such as an all-ones `reset_mtimecmp`. Write those as `0x` strings.
 The project supplies `cycles_per_tick` for timers. PLIC `levels` can contain
 ordered `{cycle, source, level}` events at positive cycles. The harness must
 call `tick` before accesses at each cycle. Output bit zero is UART TX IRQ.
