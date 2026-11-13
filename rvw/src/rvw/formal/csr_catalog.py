@@ -9,7 +9,13 @@ from pathlib import Path
 
 
 def catalog():
-    return json.loads(Path(__file__).with_name('csr_catalog.json').read_text())
+    obj=json.loads(Path(__file__).with_name('csr_catalog.json').read_text())
+    supplement=json.loads(Path(__file__).with_name('csr_aia_catalog.json').read_text())
+    if set(obj['registers']) & set(supplement['registers']):
+        raise ValueError('duplicate base and supplemental CSR definitions')
+    obj['registers'].update(supplement['registers'])
+    obj['supplements']=[{k:v for k,v in supplement.items() if k!='registers'}]
+    return obj
 
 
 def field_range(field, xlen):
@@ -36,6 +42,8 @@ def materialize(selection):
         if name not in data:
             raise ValueError(f'CSR {name} is not in the pinned catalog')
         definition = data[name]['definition']
+        if definition.get('requires_environment_model') and override.get('present',True):
+            raise ValueError(f'{name} requires an explicit interrupt environment model')
         address = definition['address']
         # The existing completed-transaction monitor cannot represent V or debug state.
         if definition['priv_mode'] not in ('M', 'S', 'U') or (address >> 8) & 3 == 2:

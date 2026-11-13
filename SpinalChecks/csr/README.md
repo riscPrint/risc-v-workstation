@@ -49,8 +49,8 @@ CSR. Never initialize it from observed DUT storage.
 
 ## Pinned CSR catalog and project overrides
 
-The installed `rvw.formal.csr_catalog.catalog()` data has 416 CSR definitions
-and 1,395 fields from RISC-V Unified Database revision
+The base catalog has 416 CSR definitions and 1,395 fields from
+RISC-V Unified Database revision
 `176fc36018be56925061566447a656b93eba0ddb`. Each row keeps the original definition,
 source path, source SHA-256 and copyright notices. Field aliases, extension
 conditions, reset expressions and WARL legalization IDL remain data.
@@ -71,8 +71,21 @@ Use a full `rvw.csr/1` model for project-specific or read-only-zero fields whose
 names are not in the source data. Generation refuses aliases, hypervisor/debug
 access models and unsupported field locations. It never converts these to RW.
 
-This catalog is not complete standard CSR coverage. The pinned source lacks
-field definitions for 26 names in the privileged manual's current address table,
-including AIA interrupt aliases. It does not provide a privilege-sequence engine.
-The VexRiscv selection is input data, not a DUT binding or a compliance result.
-No real-core run or proof is established by catalog selection.
+The 26 recorded AIA layout gaps are supplemented from RISC-V AIA revision
+`9507866427961d4ec2d2400ea875103b2a09520b`. The combined catalog has 442
+registers and 1,974 fields. Supplemental rows retain source hashes, attribution,
+license, bit positions and alias facts. The AIA supplement uses CC-BY-4.0;
+`AIA_CATALOG_LICENSE.txt` supplies the license. The base UDB data remains unchanged.
+Regenerate the supplement from the pinned external AIA checkout with:
+
+```sh
+python3 SpinalChecks/csr/import-aia.py AIA_CHECKOUT SpinalChecks/csr/catalog-gaps.json rvw/src/rvw/formal/csr_aia_catalog.json
+```
+
+`catalog-gaps.json` retains the original 26 rows as resolved field definitions.
+This is field-layout coverage, not AIA behavior coverage. Conditional aliases,
+interrupt-file claims, virtual interrupt state and privilege sequences still
+need execution models. Selections that require an interrupt environment are
+refused. No IDL or interrupt semantics are inferred from field positions.
+The VexRiscv project's optional bindings are described in its README. Catalog
+selection alone is neither a DUT binding nor a compliance result.
