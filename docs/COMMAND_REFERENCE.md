@@ -548,7 +548,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -556,6 +556,65 @@ usage: rvw formal [-h] [--project PROJECT]
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+```
+
+### `rvw formal rtl-grid`
+
+```text
+usage: rvw formal rtl-grid [-h] --manifest MANIFEST --out OUT [--json]
+    [--hosts HOSTS] [--timeout TIMEOUT] [--workers WORKERS] [--project
+    PROJECT]
+```
+
+### `rvw formal rtl-refine`
+
+```text
+usage: rvw formal rtl-refine [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--budget BUDGET] [--max-cuts MAX_CUTS] [--project
+    PROJECT]
+```
+
+### `rvw formal relation-strengthen`
+
+```text
+usage: rvw formal relation-strengthen [-h] --manifest MANIFEST --out OUT
+    [--json] [--budget BUDGET] [--engine ENGINE] [--depth DEPTH] [--project
+    PROJECT]
+```
+
+### `rvw formal doctor`
+
+```text
+usage: rvw formal doctor [-h] --out OUT [--json] [--project PROJECT]
+```
+
+### `rvw formal engines`
+
+```text
+usage: rvw formal engines [-h] --out OUT [--json] [--project PROJECT]
+```
+
+### `rvw formal engine-race`
+
+```text
+usage: rvw formal engine-race [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--cross-check] [--project PROJECT]
+```
+
+### `rvw formal engine-bench`
+
+```text
+usage: rvw formal engine-bench [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw formal model-grid`
+
+```text
+usage: rvw formal model-grid [-h] --manifest MANIFEST --out OUT [--json]
+    [--hosts HOSTS] [--timeout TIMEOUT] [--workers WORKERS] [--method
+    {induction,cegar}] [--max-k MAX_K] [--max-refinements MAX_REFINEMENTS]
+    [--project PROJECT]
 ```
 
 ### `rvw formal security`
@@ -1981,11 +2040,51 @@ Arguments: `rtl` (required), `model` (required), `width` (required), `out` (requ
 
 Starts a background job: yes.
 
+### `formal_doctor`
+
+List installed native engines, dependencies and enabled adapter features.
+
+Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `formal_engine_bench`
+
+Measure all engine and pinned case pairs.
+
+Arguments: `out` (required), `manifest` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `formal_engine_race`
+
+Race native engines on pinned RTL. Bounded success is inconclusive.
+
+Arguments: `out` (required), `manifest` (required), `timeout`, `cross_check`.
+
+Starts a background job: yes.
+
+### `formal_engines`
+
+Report installed and missing native engine dependencies.
+
+Arguments: `out` (required).
+
+Starts a background job: yes.
+
 ### `formal_from_sim`
 
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `trace` (required), `cycle`, `time`, `scope`, `memories`, `first_failure`.
+
+Starts a background job: yes.
+
+### `formal_model_grid`
+
+Prove properties of an explicit finite model. No RTL translation claim.
+
+Arguments: `out` (required), `manifest` (required), `hosts`, `timeout`, `workers`, `method`, `max_k`, `max_refinements`.
 
 Starts a background job: yes.
 
@@ -2010,6 +2109,30 @@ Starts a background job: yes.
 Run declared SBY property tasks with a CPU worker cap. Return conditional C3 and JUnit observations.
 
 Arguments: `manifest`, `project`, `out` (required), `jobs`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_relation_strengthen`
+
+Mine relational trace candidates and independently prove each helper before use.
+
+Arguments: `out` (required), `manifest` (required), `budget`, `depth`, `engine`.
+
+Starts a background job: yes.
+
+### `formal_rtl_grid`
+
+Split pinned exported RTL properties across local and farm workers.
+
+Arguments: `out` (required), `manifest` (required), `hosts`, `timeout`, `workers`.
+
+Starts a background job: yes.
+
+### `formal_rtl_refine`
+
+Automatically cut internal RTL state and RAM read outputs, then restore drivers after abstract failures.
+
+Arguments: `out` (required), `manifest` (required), `budget`, `timeout`, `max_cuts`.
 
 Starts a background job: yes.
 

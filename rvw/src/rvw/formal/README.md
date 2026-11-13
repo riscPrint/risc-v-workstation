@@ -1490,3 +1490,156 @@ records whether each cell occurs in the returned core. Conflicting environments
 also get deletion-minimal constraint reduction. A cell outside that core is not
 needed for this query. This is not a general assumption-adequacy result. A SAT
 property query does not produce a proof core or certify assumption necessity.
+## Engine portfolio and explicit-model proofs
+
+`rvw formal engines --out OUT` reports optional engine dependencies. Installer
+checks with `scripts/install.sh --with-formal --check` also list these tools.
+Missing optional tools report `not_installed`. They do not block the base install.
+
+`rvw formal engine-race --manifest examples/formal/deep/race.json --out OUT`
+races installed SBY engines and EBMC on the same captured, hash-pinned RTL.
+The source must include its assertions, clock semantics, initialization and
+assumptions. Literal includes and external memory data are not supported here.
+Yosys must find an elaborated assertion. No clock, reset or vacuity guard is
+added by this raw engine experiment. Source assumptions remain restrictions.
+A portfolio proof with source assumptions stays inconclusive because activation
+is not checked here. Use the guarded proof and contract flows for those jobs.
+The first conclusive answer wins. Other process groups stop. Use `--cross-check`
+to keep engines running until they answer or reach `--timeout`. Conflicting
+answers make the final result inconclusive. A missing or cancelled answer does
+not establish agreement. Bounded success never wins an unbounded proof race.
+
+Adapters cover SBY SMTBMC/Yices and Z3, ABC PDR and BMC3, Pono BMC, Avy,
+rIC3, and direct EBMC BMC/k-induction. SBY must support the selected backend.
+An old SBY backend, a crash, or an unrecognized result reports an error.
+The rIC3 adapter follows the upstream SBY
+[aiger adapter](https://github.com/YosysHQ/sby/blob/main/sbysrc/sby_engine_aiger.py).
+EBMC uses its documented `--k-induction` and `--bound` options.
+
+`rvw formal engine-bench --manifest examples/formal/deep/seeded.json --out OUT`
+runs every engine/case pair separately. It records each engine command, executable
+hash, source hashes, result and wall time. Requested depth is not reached depth.
+The committed suite contains a safe counter and a seeded overflow fault. Supply
+other self-contained exported suites with SHA-256 source entries. No HWMCC data
+is bundled. No speedup or commercial capacity claim follows from these fixtures.
+
+`rvw formal model-grid --manifest MODEL.json --out OUT --workers 4` splits
+properties of an explicit finite transition system across local workers. A model
+has `states` mapping state IDs to integer fields, `initial` state IDs, `edges`
+with pairs of state IDs, and `properties` mapping names to bad state IDs.
+Dead ends have no successors. All nondeterministic choices must be explicit.
+Optional `visible` fields seed CEGAR localization. Optional `samples` contain
+integer state observations for `--method induction`. The default CEGAR method
+projects state fields, searches the quotient graph, replays each abstract trace,
+and adds a field after a spurious counterexample. RAM words, counters and cut
+signals can be fields. Hidden fields give an existential overapproximation.
+The refinement limit leaves a spurious result inconclusive.
+
+Induction checks the reachable base and the k-step condition over all states.
+It mines ranges, pairwise order and constant differences. Each helper needs an
+independent initiation and consecution proof. Failed helpers are discarded.
+These algorithms prove only the supplied graph. They do not extract an RTL
+transition graph or certify a memory/RTL translation. Use the existing
+`formal contracts` command for typed module contracts, provider checks, cycle
+rejection and the final closed composition proof.
+
+Add `--hosts hosts.json` to `model-grid` to run one local shard and one shard
+per configured host. Host records use the farm fields `name`, `address`,
+`python`, `ssh_options`, `resources` and `limits`. Remote hosts need the same
+installed adapter source. The adapter checks source identities, payload hashes,
+artifact hashes and property coverage. It uses the existing `rvw.farm.worker`
+SSH endpoint, resource reservations and cancellation. Its payload is JSON in the
+farm's byte transport field. It does not create a simulation C1 result.
+Tests exercise that endpoint locally. Real SSH distribution was not tested.
+
+Set a source `format` to `aiger` for a binary or ASCII AIGER safety model.
+The importer preserves latch initialization, unconstrained initial latches,
+bad-state predicates and invariant constraints. It rejects justice, fairness,
+and mixed ordinary outputs/bad predicates. Legacy outputs are bad predicates.
+The original bytes and translated RTL remain in the run directory. EBMC is
+excluded from this input mode because the translation uses Yosys global-clock
+semantics.
+
+The pinned manifest `examples/formal/deep/hwmcc-small.json` selects two small,
+preprocessed competition problems from the CAV 2025 artifact at a fixed commit.
+Download their bytes outside the repository:
+
+```sh
+rvw/.venv/bin/python scripts/fetch-formal-bench.py examples/formal/deep/hwmcc-small.json --out /tmp/rvw-hwmcc
+rvw formal engine-bench --manifest /tmp/rvw-hwmcc/manifest.json --out /tmp/rvw-hwmcc-results
+```
+
+This subset is a smoke sample. It does not measure full-block proof capacity.
+The native smoke retained Avy and SMTBMC errors instead of treating them as
+agreement. No result is promoted to commercial parity.
+
+## Automatic RTL refinement and relational helpers
+
+`rvw formal rtl-refine --manifest examples/formal/deep/race.json --out OUT`
+selects internal state and RAM read-output nets as unconstrained cuts. It uses
+the existing guarded proof runner. SMTBMC/Yices is the default engine. Each
+abstract counterexample restores one driver and starts a fresh proof. Only a
+cut-free counterexample reports failure. A proof of the overapproximation can
+report unbounded success. Budgets and tool errors leave the result inconclusive.
+An ABC witness-replay error on an abstract model also remains inconclusive.
+The source manifest uses the same pinned RTL entries as engine-race. Optional
+fields are `engine`, `clock`, `reset` and `depth`. This is driver restoration,
+not a synthesized RAM collision contract or arithmetic counter summary.
+
+`rvw formal relation-strengthen --manifest CONTRACT.json --out OUT` uses the
+existing strengthening manifest. It adds pairwise equality, order, constant
+offset and mutual-exclusion candidates to observed unsigned bounds. Every
+candidate needs a separate fresh unbounded proof. Rejected candidates cannot
+strengthen the target. Certified candidates remain assertions in the final
+joint induction job. Offset candidates use Verilog bit-vector arithmetic.
+Trace observations alone never prove a helper.
+
+`rvw formal rtl-grid --manifest examples/formal/deep/seeded.json --out OUT --workers 2`
+splits exported RTL safety problems across local workers. Add `--hosts` with
+farm host records to add remote shards. Each case has its own top module,
+properties, source hashes and engines. The controller bundles the source bytes
+once. Farm workers verify bundle and adapter identities before running each
+case. The source assumptions and activation limits of engine-race still apply.
+Use `engine_timeout` in the manifest to limit each engine. A missing remote
+answer leaves its assigned properties inconclusive.
+
+If cut-free SMT induction is inconclusive, RTL refinement tries ABC PDR with
+the remaining budget. This is a fresh proof, not reuse of a failed induction.
+
+## Native engine diagnostics
+
+Run `rvw formal doctor --out OUT --json` to list dependencies and enabled adapter
+features. The `formal_doctor` MCP tool returns the same data. Installed tools
+remain unqualified until a native benchmark runs. Bitwuzla and cvc5 are optional
+SMTBMC backends. `btor:btormc` enables bounded search. `aiger:suprove` enables
+unbounded safety when its external executable is present.
+
+Use `scripts/install.sh --with-ric3` or `--with-ebmc` for pinned source builds.
+Builds use two jobs at low priority under `~/.cache/rvw/formal-engines`.
+rIC3 uses a pinned Rust nightly. EBMC needs a C++ compiler, GNU make, flex,
+bison, curl and patch. Source revisions and native build commands are in
+`scripts/install-formal-engine.py`. Source this checkout's `env.sh` after install.
+`--check` probes the selected executable. A successful probe is not proof
+qualification. Existing OSS CAD Suite installs supply pono, Avy, Bitwuzla, cvc5
+and Yices; their native benchmark results must be checked separately.
+
+Native measurement on macOS ARM64, 2026-11-13, on the two pinned cases in
+`examples/formal/deep/hwmcc-small.json`. Each engine ran alone with a 12 s
+timeout. Times below sum engine execution time, excluding preparation.
+This small subset does not establish full-block capacity.
+
+| Engine | Solved / 2 | Engine time (s) | Outcomes |
+|---|---:|---:|---|
+| `abc:pdr` | 2 | 4.797 | pass, pass |
+| `smtbmc:yices` | 1 | 7.108 | pass, inconclusive |
+| `smtbmc:z3` | 1 | 4.910 | pass, inconclusive |
+| `smtbmc:cvc5` | 1 | 7.278 | pass, inconclusive |
+| `smtbmc:bitwuzla` | 1 | 5.920 | pass, inconclusive |
+| `aiger:avy` | 0 | 4.233 | error, error |
+| `aiger:rIC3` | 0 | 0.000 | not_installed, not_installed |
+| `aiger:suprove` | 0 | 0.000 | not_installed, not_installed |
+| `ebmc` | 0 | 0.000 | not_installed, not_installed |
+
+Raw results and tool hashes: `/tmp/rvw-deep-hwmcc-run2/result.json`.
+Avy crashed. Induction exhaustion stays inconclusive. Missing engines were
+not run. No licensed comparison or open-core property campaign ran.

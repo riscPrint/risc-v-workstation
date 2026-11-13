@@ -13,6 +13,8 @@ Usage: scripts/install.sh [OPTIONS]
   --with-riscv-dv    Pinned native pygen in $RVW_RISCV_DV or ~/.cache/rvw.
   --with-riscv-gcc   Bare-metal RISC-V GCC and binutils.
   --with-cosim       Spike headers/libraries and the workstation shim.
+  --with-ric3        Build pinned rIC3 outside the checkout (Rust nightly).
+  --with-ebmc        Build pinned EBMC outside the checkout (make, flex, bison).
   --with-formal      OSS CAD Suite plus a pinned native yosys-slang build.
   --with-ooo         Build the optional C integer OoO scheduler.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
@@ -39,6 +41,7 @@ show() { printf '  +'; printf ' %q' "$@"; printf '\n'; }
 run() { show "$@"; if [ "$dry" = 0 ]; then "$@"; fi; }
 value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a value"; }
 
+ric3=0 ebmc=0
 dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 ooo=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
 waves=0 lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
@@ -57,6 +60,8 @@ while [ "$#" -gt 0 ]; do
     --with-riscv-dv) dv=1; shift ;;
     --with-riscv-gcc) gcc=1; shift ;;
     --with-cosim) cosim=1; shift ;;
+    --with-ric3) ric3=1; shift ;;
+    --with-ebmc) ebmc=1; shift ;;
     --with-formal) formal=1; shift ;;
     --with-ooo) ooo=1; shift ;;
     --with-gem5) gem5=1; shift ;;
@@ -114,7 +119,7 @@ if [ -z "${SPIKE_PREFIX:-}" ]; then
 fi
 if [ "$bundle" = 1 ]; then SPIKE_PREFIX="$tools/spike"; fi
 export SPIKE_PREFIX
-export PATH="$tools/riscv/bin:$PATH"
+export PATH="$HOME/.cache/rvw/formal-engines/bin:$tools/riscv/bin:$PATH"
 case ":$PATH:" in *":$SPIKE_PREFIX/bin:"*) ;; *) export PATH="$SPIKE_PREFIX/bin:$PATH" ;; esac
 
 system="$(uname -s)"
@@ -319,10 +324,20 @@ except (OSError, ValueError, KeyError, AttributeError) as error:
 PYTHON
     then failed=1; fi
   fi
+  if [ "$ric3" = 1 ]; then probe rIC3 0 rIC3 --version || failed=1; fi
+  if [ "$ebmc" = 1 ]; then probe EBMC 0 ebmc --version || failed=1; fi
   if [ "$formal" = 1 ]; then
     probe Yosys 0.46 yosys -V || failed=1
     probe SymbiYosys 0 sby --version || failed=1
     probe Yices 2 yices-smt2 --version || failed=1
+    # Optional portfolio engines do not gate the base formal installation.
+    for engine in yosys-abc pono btorsim avy rIC3 ebmc; do
+      if command -v "$engine" >/dev/null; then
+        printf 'PRESENT optional formal engine: %s\n' "$engine"
+      else
+        printf 'not_installed optional formal engine: %s\n' "$engine"
+      fi
+    done
     if [ ! -f "$RVW_SLANG" ] || ! yosys -Q -T -m "$RVW_SLANG" -p 'help read_slang' >/dev/null 2>&1; then
       printf 'MISSING native yosys-slang: %s\n' "$RVW_SLANG"; failed=1
     else printf 'PRESENT native yosys-slang: %s\n' "$RVW_SLANG"; fi
@@ -547,6 +562,21 @@ if [ "$cosim" = 1 ] && [ "$bundle" = 0 ]; then
   export PATH="$SPIKE_PREFIX/bin:$PATH"
   run env PATH="$rvw_home/rvw/.venv/bin:$PATH" SPIKE_PREFIX="$SPIKE_PREFIX" nice "$rvw_home/Cosim/build.sh"
 fi
+if [ "$ric3" = 1 ]; then
+  case "$pm" in
+    brew) packages gmp mpfr ;;
+    apt) packages libgmp-dev libmpfr-dev ;;
+    dnf) packages gmp-devel mpfr-devel ;;
+  esac
+fi
+for optional_engine in ric3 ebmc; do
+  case "$optional_engine" in ric3) selected="$ric3" ;; ebmc) selected="$ebmc" ;; esac
+  if [ "$selected" = 1 ]; then
+    engine_args=()
+    if [ "$dry" = 1 ]; then engine_args+=(--dry-run); fi
+    run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-engine.py" "$optional_engine" "${engine_args[@]}"
+  fi
+done
 if [ "$formal" = 1 ]; then
   if ! probe Yosys 0.46 yosys -V || ! probe SymbiYosys 0 sby --version || ! probe Yices 2 yices-smt2 --version; then
     command -v curl >/dev/null || packages curl ca-certificates
@@ -658,6 +688,7 @@ if [ "$dry" = 0 ]; then
     if [ -n "${RVW_SAIL:-}" ]; then printf 'export RVW_SAIL=%q\n' "$RVW_SAIL"; fi
     if [ "$formal" = 1 ]; then printf 'export RVW_SLANG=%q\n' "$RVW_SLANG"; fi
     printf 'export PATH="$RVW_HOME/.tools/verible/bin:$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'
+    printf 'export PATH="$HOME/.cache/rvw/formal-engines/bin:$PATH"\n'
     printf 'export SPIKE_PREFIX=%q\nexport PATH="$SPIKE_PREFIX/bin:$PATH"\n' "$SPIKE_PREFIX"
     printf 'export PATH="$RVW_HOME/rvw/.venv/bin:$RVW_HOME/.tools/bin:$RVW_HOME/.tools/oss-cad-suite/bin:$RVW_HOME/.tools/riscv/bin:$PATH"\n'
   } > "$rvw_home/env.sh"

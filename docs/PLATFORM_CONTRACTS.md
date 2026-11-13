@@ -3576,3 +3576,62 @@ Solver-core reports can include `assumptions`, with captured cell names, labels
 and `in_core`. An UNSAT environment gets a reduced `environment_core` and an
 `environment_minimal` flag. This is deletion minimality over constraint groups,
 not minimum cardinality or full assumption adequacy.
+### Deep formal experiment reports
+
+`rvw.formal-portfolio/1` records pinned self-contained RTL hashes, source
+assumptions, engine rows, the first conclusive winner and observed cross-checks.
+Its `pass` requires an unbounded engine answer. Bounded success is
+`bounded_pass` on the engine row and cannot earn portfolio `pass`. Disagreement
+makes the report `inconclusive`. Unavailable backends are `not_installed`.
+No checks or failed preparation makes the report inconclusive without a winner.
+The raw experiment adds no environment or activation guards.
+
+`rvw.formal-engine-bench/1` records one row per case/engine pair. Its `pass`
+means verdict agreement on each case, including agreement on a fault. It is not
+a proof verdict for the benchmark design. Wall time includes engine preparation.
+A requested depth does not claim a measured reached depth.
+
+`rvw.formal-model-grid/1` records the canonical explicit-model SHA-256 and one
+row per property. `pass` requires every row to prove its safety property.
+`fail` requires a concrete graph counterexample. A spurious projected trace is
+inconclusive until replay and refinement. Helper invariants require initiation
+and consecution. The graph, including all memory choices, is a supplied input.
+No RTL-to-graph correspondence or whole-core result is implied.
+
+A distributed explicit-model grid adds `shards`, expected property names and
+adapter source identities. The existing farm worker transports JSON model bytes
+and formal result artifacts. It adds no C1 simulation claims. Transfer, identity
+or coverage failure leaves that shard inconclusive. Real SSH execution requires
+compatible installed adapters and trusted hosts.
+
+`rvw.formal-rtl-refine/1` records frozen source hashes, automatically selected
+state/RAM cuts and each refinement round. Abstract counterexamples remain
+inconclusive. Only a cut-free failure reports `fail`. An unbounded proof of an
+overapproximation can report `pass`. Budget expiry and engine errors remain
+inconclusive. This flow preserves the existing guarded proof runner.
+
+Raw engine portfolios with source assumptions remain inconclusive until a
+separate activation check exists. Engine rows retain the observed conditional
+answer. AIGER imports record original input bytes and the translated Verilog
+and importer SHA-256 identities. Justice/fairness inputs are unsupported.
+Relational strengthening uses `rvw.formal-strengthen/1` with independently
+certified relational candidates in addition to unsigned bounds.
+
+`rvw.formal-rtl-grid/1` reports one result per independently exported RTL
+property case. It uses pinned source bundles and the same farm artifact adapter
+as explicit-model grids. `pass` requires every case to earn a portfolio proof.
+A concrete case failure reports `fail`. Missing remote properties are
+inconclusive. The full exported property set must be supplied by the caller.
+
+### Native formal engine diagnostics and benchmark totals
+
+`rvw.formal-doctor/1` records installed dependencies, executable paths, supported
+modes, and enabled adapter features. `qualification` is `not_measured`.
+`status: pass` means the diagnostic completed. It does not mean a proof passed.
+The `formal_doctor` MCP tool returns the same report.
+
+`rvw.formal-engine-bench/1` adds `total_wall_s` per row, including preparation,
+and `summary` per engine with solved, bounded passes, cases, and total wall time.
+Only `pass` and `fail` count as solved. Missing tools and unsupported modes do
+not count. SBY `UNKNOWN` with exit 4 is inconclusive. Inconsistent status and
+exit code pairs are errors.
