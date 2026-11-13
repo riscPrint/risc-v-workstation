@@ -1387,3 +1387,14 @@ RTL. Its refusal remains visible.
 The stimulus exposes new stream firings. The record retains these failures.
 A software pass does not override a check failure. Unreached and timed-out
 checks remain `no_activation`, not proved unreachable.
+
+### Expanded OoO fixture results
+
+The [follow-up](examples/ooo/followup-results.json) records 68 inserted checks,
+zero clean firings and seven matching negative controls. It binds per-slot
+ExecutionChecks and generation-aware RecoveryChecks, including a draining fence.
+Conservation and five asserted helpers pass ABC BMC3 at depth 16. The trigger
+cover is reached. Induction and PDR remain inconclusive. Probe-to-perf, a
+command-projection timing smoke and one confirmed native fault run complete.
+This fixture is not a RISC-V core. Its C2 command projection is stated in its
+README. Timing accuracy and unused replay/device-effect activation are unproved.
