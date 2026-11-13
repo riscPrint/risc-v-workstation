@@ -752,9 +752,11 @@ It runs the fitting command `rvw arch ooo-fit`.
 Training uses chain, multiply and memory. Held-out scoring uses independent,
 divide and branch. The fit searches only fetch delay and branch recovery.
 
-An empty event map selects IPC-only calibration. VexiiRiscv uses this mode
-because its adapter has no SpinalProbes binding. Missing events are not zero
-observations. IPC-only calibration cannot satisfy event coverage budgets.
+An empty event map selects IPC-only calibration. The saved VexiiRiscv batch
+uses this mode because it contains no probe streams. The current adapter has
+a SpinalProbes binding. New preparation enables probes for both cores.
+Missing historical events are not zero observations. IPC-only calibration
+cannot satisfy event coverage budgets.
 
 An inactive C2 `irq` declaration with `levels=0` has no timing effect.
 Asserted interrupt inputs and actual interrupt or trap records are refused.

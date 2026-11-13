@@ -13,9 +13,10 @@ rvw ooo rvw/arch/own.json RUN/rvfi.jsonl --json
 
 See [the correlation procedure](../../../../Arch/ooo/correlation/README.md)
 for six real RTL programs, training-only fitting and held-out IPC errors.
-This example has no SpinalProbes binding. Its calibration is IPC-only.
-The C2 trace comes from the upstream VexiiRiscv probe. That commit trace does
-not supply the missing SpinalProbes counters.
+The current adapter exports SpinalProbes with `--probes`. The saved
+correlation batch has no probe streams and its calibration remains IPC-only.
+Its C2 commit trace does not supply those missing historical counters.
+Fresh batch preparation enables probes for both example cores.
 
 The `rv32im` own-model description selects sequential prediction. The cached
 `rv32im_cached` RTL config adds BTB, GShare and RAS. This cacheless description

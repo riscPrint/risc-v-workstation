@@ -31,7 +31,7 @@ def summarize(out, target):
                         heldout=['independent','divide','branch']),results=results,
         limits=['six small synthetic RV32IM programs; not application qualification',
                 'one native run per program; repeatability is unmeasured',
-                'VexiiRiscv has no SpinalProbes binding; its event map is empty',
+                'VexiiRiscv event comparisons are not included in this IPC-only scoring path',
                 'the fit grid changes fetch delay and branch penalty only']),indent=2)+'\n')
 
 if __name__ == '__main__':

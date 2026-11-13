@@ -53,7 +53,7 @@ scratch: .word 0
     for core in ('vexriscv','vexiiriscv'):
         rows = [dict(elf=str(out/'elf'/name), out=str(out/core/name),
                      **{'rvfi-trace':True,'mem-latency':0,'seed':1},
-                     **({'probes':True} if core=='vexriscv' else {})) for name in BODIES]
+                     probes=True) for name in BODIES]
         (out/f'{core}.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows))
 
 if __name__ == '__main__':
