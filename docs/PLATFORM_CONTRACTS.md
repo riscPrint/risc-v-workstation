@@ -75,6 +75,17 @@ readback before fetch release. It is not a C1 pass or C4 accept. Bare M mode
 and no active devices, interrupts or hidden execution state are required.
 Raw FPR bits are preserved. Native FP qualification remains required.
 
+### Reverse execution through native checkpoints
+
+`sim_reverse_step` and `rvw sim reverse-step` validate every supplied native
+checkpoint against current identities. Each must have `counters.instructions`.
+Select the greatest count at or before the target. Restore into a fresh port,
+then call `replay_to_instruction(target, max_seconds=...)`. The port must cancel
+native work on timeout. The reached count must equal the target before saving.
+The result lists history, selected count, target and time budget. `saved` means
+a stopped checkpoint exists. It does not mean native replay qualification or
+ISA correctness. A target before available history is refused.
+
 ## Layout
 
 | Path | What | Language |

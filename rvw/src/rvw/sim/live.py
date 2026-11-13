@@ -30,7 +30,7 @@ def _port(manifest):
         bytes.fromhex(identities['harness']) + module.read_bytes() + path.read_bytes()).hexdigest()
     spec = importlib.util.spec_from_file_location('_rvw_snapshot_adapter', module)
     loaded = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(loaded)
+    exec(compile(module.read_bytes(), str(module), 'exec'), loaded.__dict__)
     return loaded.create(data.get('options', {})), identities
 
 
@@ -87,7 +87,11 @@ def suffix_check(original, resumed, *, position):
 
 def command(a):
     try:
-        if a.snapshot_action == 'checkpoint':
+        if a.snapshot_action == 'reverse-step':
+            from .reverse import reverse_step
+            result = reverse_step(a.manifest, a.snapshot, a.out, current=a.current,
+                                  target=a.target, max_seconds=a.max_seconds)
+        elif a.snapshot_action == 'checkpoint':
             result = capture(a.manifest, a.out, cycle=a.cycle, instruction=a.instruction)
         elif a.snapshot_action == 'resume':
             result = resume(a.manifest, a.snapshot, a.out)
@@ -113,6 +117,14 @@ def register(sub):
     p = commands.add_parser('resume', help='restore a native snapshot in a fresh adapter')
     p.add_argument('manifest', type=Path)
     p.add_argument('snapshot', type=Path)
+    p.add_argument('--out', type=Path, required=True)
+    p.set_defaults(func=command)
+    p = commands.add_parser('reverse-step', help='restore a checkpoint and execute forward to an earlier instruction')
+    p.add_argument('manifest', type=Path)
+    p.add_argument('--snapshot', action='append', type=Path, required=True)
+    p.add_argument('--current', type=int, required=True)
+    p.add_argument('--target', type=int, required=True)
+    p.add_argument('--max-seconds', type=float, default=30)
     p.add_argument('--out', type=Path, required=True)
     p.set_defaults(func=command)
     p = commands.add_parser('suffix-check', help='compare complete resumed C2 suffix bytes')
