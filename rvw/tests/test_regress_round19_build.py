@@ -42,8 +42,8 @@ def test_build_override_is_refused_before_adapter(fake, rvw, tmp_path, args):
 def test_mutated_build_arguments_are_checked(fake, tmp_path):
     core = load_config(str(fake.config))
     core.suite("elab").build_options = ["--config", "small"]
-    runner = Runner(core, describe(fake.repo), tmp_path / "run", RunOptions(log=None))
     with pytest.raises(ConfigError, match="reserved"):
+        runner = Runner(core, describe(fake.repo), tmp_path / "run", RunOptions(log=None))
         runner.run(suites_plan(core, ["elab"], ["large"]))
     assert not fake.calls()
 

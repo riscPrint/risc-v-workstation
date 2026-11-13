@@ -7,6 +7,9 @@ from rvw.lint.cli import report
 from rvw.query.db import run_on
 
 
+pytestmark = pytest.mark.fast
+
+
 def design(tmp_path, unsafe=False):
     b = Builder(tmp_path / 'd.db')
     b.domain(1, clock='clkA')

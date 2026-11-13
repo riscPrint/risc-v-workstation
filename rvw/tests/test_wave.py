@@ -186,7 +186,11 @@ def test_invalid_wave_arguments_are_errors(wave, tmp_path, rvw, operation, optio
         assert not problems
         try:
             _, result, error = registry.call_json('wave_' + operation, {'wave': wave, **options})
-            assert error and result['error'].startswith('WaveError:')
+            assert error
+            bad_regex = any(options.get(key) == '[' for key in ('regex', 'signals', 'clock'))
+            prefix = 'invalid signal regex:' if bad_regex else 'invalid wave time:'
+            assert result['error'].startswith(prefix)
+            assert result['diagnostics'][0]['message'] == result['error']
         finally:
             registry.jobs.shutdown()
     else:
@@ -358,6 +362,7 @@ def test_single_timestamp_fst_queries(tmp_path, rvw, timestamp, code):
     from rvw.common.proc import run_group
     from rvw.mcp.registry import Registry
     from test_mcp_tools import call
+    from rvw.mcp.envelope import envelope
     assert vcd.tool('vcd2fst') and vcd.tool('fst2vcd'), 'GTKWave tools required'
     source = tmp_path / 'static.vcd'
     source.write_text('$timescale 1ps $end\n$scope module TOP $end\n'
@@ -378,7 +383,7 @@ def test_single_timestamp_fst_queries(tmp_path, rvw, timestamp, code):
                                      ('changes', {'regex': 'sig'}, ['sig'])]:
                 result = call(registry, 'wave_' + name, wave=path, **opts)
                 cli = rvw('wave', name, path, *args, '--json')
-                assert cli[0] == 0 and result == cli[2]
+                assert cli[0] == 0 and result == envelope(cli[2])
     finally:
         registry.jobs.shutdown()
 

@@ -10,6 +10,9 @@ summary = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(summary)
 
 
+pytestmark = pytest.mark.fast
+
+
 @pytest.mark.parametrize('seconds,code', [(299.9, 0), (300, 1), (301, 1)])
 def test_fast_budget_and_explicit_counts(tmp_path, seconds, code):
     report = tmp_path / 'report.xml'

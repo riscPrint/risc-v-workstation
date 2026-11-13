@@ -9,8 +9,11 @@ from rvw.results import load_results
 from rvw.cli import main
 from rvw.sim.uvm import FEATURES
 
-pytestmark = pytest.mark.skipif(not os.environ.get("RVW_UVM_ARCHIVE"),
-                                reason="set RVW_UVM_ARCHIVE to the pinned source archive")
+pytestmark = [
+    pytest.mark.slow(reason="compile pinned Accellera UVM on Verilator and run three seeds"),
+    pytest.mark.skipif(not os.environ.get("RVW_UVM_ARCHIVE"),
+                       reason="set RVW_UVM_ARCHIVE to the pinned source archive"),
+]
 
 
 def test_accellera_subset_and_rvfi_fault(tmp_path):

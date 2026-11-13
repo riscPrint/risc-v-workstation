@@ -1,6 +1,11 @@
 from rvw.arch.traffic import model
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def plan(capacity=4):
     return dict(schema='rvw.traffic-plan/1', resources={'memory': dict(bytes_per_cycle=8, latency=10, capacity=capacity)},
                 agents={'cpu': dict(route=['memory'], requests=[dict(cycle=0, bytes=64), dict(cycle=0, bytes=64)])})

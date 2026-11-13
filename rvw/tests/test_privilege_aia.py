@@ -2,6 +2,9 @@ import pytest
 from rvw.privilege.aia import programs, reference
 
 
+pytestmark = pytest.mark.fast
+
+
 @pytest.mark.parametrize('kind,data',[('imsic',{'msi_address':0x24000000}),('aplic',{'base':0xd000000})])
 def test_model_programs(kind,data):
     rows=programs(dict(kind=kind,spec_version='AIA-1.0',**{kind:data}))

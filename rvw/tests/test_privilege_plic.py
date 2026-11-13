@@ -1,6 +1,11 @@
 from rvw.privilege.plic import programs
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def rows():
     return programs({'plic': dict(priority=0xc000000, pending=0xc001000,
         enable=0xc002000, enable_stride=0x80, context=0xc200000,

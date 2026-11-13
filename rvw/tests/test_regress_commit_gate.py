@@ -3,6 +3,7 @@ import json
 
 import pytest
 
+from rvw.mcp.envelope import envelope
 from rvw.mcp.registry import Registry
 from rvw.regress.compare import compare
 from rvw.regress.source import describe
@@ -134,4 +135,4 @@ def test_stored_live_tree_cli_mcp_parity(fake, rvw, tmp_path, side):
         mcp = _mcp(action, core=str(fake.config), **arguments)
         assert code == 3 and cli["verdict"] == "inconclusive"
         assert cli["inconclusive_cause"] == "candidate_not_committed"
-        assert cli == mcp
+        assert (envelope(cli) if action == "compare" else cli) == mcp

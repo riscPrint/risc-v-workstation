@@ -57,7 +57,7 @@ def test_native_scala_properties(tmp_path,emitted,name,good,bad,mutant):
     source=tmp_path/'m.sv'
     source.write_text('module m(input clk,reset,output a,b); reg [1:0] phase=0; '
                       'always @(posedge clk) if(reset)phase<=0; else phase<=phase+1; '
-                      'wire req=phase==0; assign '+assignments+'; '+statement+' endmodule')
+                      'wire req=phase==0; assign '+assignments+'; '+statement+'\nendmodule\n')
     out=tmp_path/'out'
     run(Namespace(source=str(source),top='m',out=str(out),run=True,timeout=20,
                   backend='l2s',reset='reset',engine='abc:pdr',mode='prove',depth=12))
@@ -76,7 +76,7 @@ def test_native_simulation_from_scala(tmp_path,emitted,backend,pending):
         pytest.skip('Yosys and selected native simulator required')
     statement=next(line for line in emitted.splitlines() if line.startswith('eventual:'))
     source=tmp_path/'m.sv'
-    source.write_text('module m(input clk,req,a,b); '+statement+' endmodule')
+    source.write_text('module m(input clk,req,a,b); '+statement+'\nendmodule\n')
     events=tmp_path/'events.json'
     events.write_text(json.dumps(dict(schema='rvw.formal-events/1',events=[
         dict(time=0,inputs=dict(clk='0',req='1',a='1',b='0')),

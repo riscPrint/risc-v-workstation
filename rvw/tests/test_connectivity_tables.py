@@ -9,6 +9,9 @@ from rvw.query.db import DesignDB
 from rvw.soc.connectivity import load
 
 
+pytestmark = pytest.mark.fast
+
+
 @pytest.mark.parametrize('suffix,text', [
     ('.csv', 'source,destination,condition,delay,inversion\nio_a,io_result,io_loadValues,1,true\n'),
     ('.json', json.dumps({'connection': [dict(source='io_a', destination='io_result', condition='io_loadValues', delay=1, inversion=True)]})),

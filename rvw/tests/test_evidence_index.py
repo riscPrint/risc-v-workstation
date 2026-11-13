@@ -3,6 +3,11 @@ import json
 from rvw.evidence.index import build, query
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_cross_tool_query_preserves_originals_and_dependencies(tmp_path):
     dependency = tmp_path / 'inputs.txt'
     dependency.write_text('captured')

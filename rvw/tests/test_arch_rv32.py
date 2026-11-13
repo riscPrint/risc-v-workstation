@@ -1,5 +1,6 @@
 """RV32 construction rules and runtime assembly. Native checks are separate."""
 import copy
+import os
 import json
 from pathlib import Path
 import subprocess
@@ -22,7 +23,7 @@ def test_rv32_description(kind):
 
 def test_runtime_keeps_rv64_and_reads_rv32_high_halves(tmp_path):
     # A compiler-independent check of the emitted runtime, not rollover validation.
-    source = ROOT.parent / 'ref/riscv-tests/benchmarks/common/syscalls.c'
+    source = Path(os.environ.get('RISCV_TESTS_SOURCE', ROOT.parent / 'ref/riscv-tests')) / 'benchmarks/common/syscalls.c'
     if not source.exists(): pytest.skip('riscv-tests source unavailable')
     result = subprocess.run(['sh', str(ROOT / 'Arch/bench/rt/patch_syscalls.sh'), str(source)],
                             capture_output=True, text=True, check=True).stdout

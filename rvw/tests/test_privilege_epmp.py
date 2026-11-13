@@ -2,6 +2,9 @@ import pytest
 from rvw.privilege.epmp import programs
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_policy_matrix():
     rows = programs({'isa': 'rv64im_smepmp'})
     assert len(rows) == 4

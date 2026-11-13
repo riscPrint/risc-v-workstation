@@ -5,6 +5,9 @@ from rvw.lint import structural
 from rvw.query.db import run_on
 
 
+pytestmark = pytest.mark.fast
+
+
 def analyze(db, intent=None):
     return run_on(db, lambda d: structural.analyze(d, intent or {}))
 

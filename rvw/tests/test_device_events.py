@@ -7,6 +7,9 @@ from rvw.soc.device_events import check
 ROOT = Path(__file__).resolve().parents[2]
 
 
+pytestmark = pytest.mark.fast
+
+
 def inputs(tmp_path):
     model = json.loads((ROOT/'examples/boom/soc.json').read_text())
     region = next(r for r in model['regions'] if r['registers'])

@@ -7,6 +7,9 @@ from rvw.perf.analysis import render
 from rvw.perf.kanata import read
 
 
+pytestmark = pytest.mark.fast
+
+
 def log(tmp_path, body):
     path = tmp_path / 'events.log'
     path.write_text('Kanata\t0004\nC=\t0\n' + body.replace('|', '\t') + '\n')

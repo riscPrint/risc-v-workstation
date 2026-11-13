@@ -3,6 +3,7 @@ import json
 import hashlib
 
 import pytest
+from test_mcp_debug import stable_report
 
 from race_injection import race_injector
 from rvw.mcp.registry import Registry
@@ -24,11 +25,17 @@ def test_cosim_generate_and_check_match_cli(elf, tmp_path, rvw):
         args = {"elf": str(elf), "core": "boom", "out": str(trace), "max_instructions": 200}
         call(registry, "cosim_generate", args)  # both parity calls capture an existing reference trace
         generated = call(registry, "cosim_generate", args)
-        assert generated == rvw("cosim", "generate", "--elf", elf, "--core", "boom", "--out", trace,
-                                "--max-instructions", 200, "--json")[2]
+        cli = rvw("cosim", "generate", "--elf", elf, "--core", "boom", "--out", trace,
+                  "--max-instructions", 200, "--json")[2]
+        # Each entry point captures its loaded modules. Keep all shared byte bindings.
+        captures = [{row['source']: row['sha256'] for row in value['reproduction']['capture']['files']}
+                    for value in (generated, cli)]
+        shared = captures[0].keys() & captures[1].keys()
+        assert shared and all(captures[0][key] == captures[1][key] for key in shared)
+        assert stable_report(generated) == stable_report(cli)
         assert generated["termination"] == "pass"
         checked = call(registry, "cosim_check", {"elf": str(elf), "core": "boom", "trace": str(trace), "history": 3})
-        assert checked == rvw("cosim", "check", "--elf", elf, "--core", "boom", "--trace", trace, "--history", 3, "--json")[2]
+        assert stable_report(checked) == stable_report(rvw("cosim", "check", "--elf", elf, "--core", "boom", "--trace", trace, "--history", 3, "--json")[2])
         assert checked["status"] == "match"
         rows = [json.loads(line) for line in trace.read_text().splitlines()]
         row = next(r for r in rows if r.get("rd", 0))

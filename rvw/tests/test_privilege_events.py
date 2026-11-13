@@ -3,6 +3,9 @@ from rvw.privilege.events import MailboxDriver, reset_check
 from rvw.privilege.lifecycle import programs
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_ack_after_drive():
     driver = MailboxDriver([dict(step=2, kind='plic-level')]); log = []
     assert not driver.service(1, log.append, log.append)

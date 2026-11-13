@@ -3,6 +3,9 @@ import pytest
 from rvw.memory.multihart import images, check
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_images(tmp_path):
     elf = tmp_path / 'a file.elf'
     elf.write_bytes(b'\x7fELFexample')

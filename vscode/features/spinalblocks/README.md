@@ -45,7 +45,7 @@ npm test
 npm run test:integration:spinalblocks
 ```
 
-The integration runner uses `@vscode/test-electron` with an isolated workspace and settings under `.vscode-test/`. It opens the BOOM gzip design and its recorded Scala source, exercises editor commands and selection, source navigation, search, reloads and persistence. It tests FSMs using generated data when available, otherwise a synthetic design with recorded states and transitions. Light and dark screenshots are written to this feature's `screenshots/`. CDP is enabled on a random local port for the test run.
+The integration runner uses `@vscode/test-electron` with an isolated workspace and settings under `.vscode-test/`. It opens the BOOM gzip design and its recorded Scala source, exercises editor commands and selection, source navigation, search, reloads and persistence. It tests FSMs using generated data when available, otherwise a synthetic design with recorded states and transitions. Light and dark screenshots are written to `.vscode-test/screenshots/spinalblocks/`. CDP is enabled on a random local port for the test run.
 
 Run these from `vscode/`. By default the test uses `spinal-boom/blocks/boom-small.json.gz` from a spinal-boom checkout next to this repository. Set `SPINALBLOCKS_TEST_DESIGN` to another BOOM design with a `tile/core` hierarchy, or `VSCODE_EXECUTABLE` to test an existing VS Code executable. Recorded absolute paths must exist on this machine.
 

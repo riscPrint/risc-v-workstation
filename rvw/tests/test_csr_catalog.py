@@ -7,6 +7,9 @@ from rvw.formal.csr_catalog import catalog, materialize, field_range
 from rvw.formal.csr import load, generate
 
 
+pytestmark = pytest.mark.fast
+
+
 def selection():
     return dict(schema='rvw.csr-selection/1', xlen=32, csrs=[dict(
         name='mscratch', reset=0, assembly_safe=True,

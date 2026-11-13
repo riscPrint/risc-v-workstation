@@ -1,6 +1,11 @@
 from rvw.privilege.pmp import programs, program
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_matrix():
     rows = programs({})
     assert len(rows) == 394

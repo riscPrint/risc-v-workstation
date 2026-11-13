@@ -10,3 +10,7 @@ Compile / unmanagedSourceDirectories ++= Seq(
  baseDirectory.value / "../../../../SpinalSoc/src/main/scala"
 )
 fork := true
+
+// SpinalSoc protocol monitors use the shared assertion library.
+lazy val root = (project in file("."))
+  .dependsOn(ProjectRef(file("../../../../SpinalChecks"), "spinalchecks"))

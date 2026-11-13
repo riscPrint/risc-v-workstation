@@ -2,6 +2,9 @@ import pytest
 from rvw.privilege.controllers import Imsic, Aplic, NestedPriority, Aclint
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_imsic_delivery_threshold_and_claim():
     m=Imsic(); m.enabled={1,2};m.inject(2);m.inject(1)
     assert m.top()==1 and not m.irq

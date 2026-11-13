@@ -3,6 +3,9 @@ import pytest
 from rvw.privilege.scheduled import programs, clock_check
 
 
+pytestmark = pytest.mark.fast
+
+
 def samples():
     return [dict(tick=i, clock_running=i not in (1, 2), state={'x': 42},
                  retired=4 if i < 3 else 5, pending=i == 2) for i in range(4)]

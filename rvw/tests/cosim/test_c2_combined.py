@@ -33,12 +33,12 @@ def test_multihart_missing_evidence_refused(change):
         list(Trace(io.StringIO('\n'.join(map(json.dumps, [h, *records])))))
 
 
-def test_multihart_only_has_no_state_match(tmp_path):
+def test_multihart_without_memory_profile_is_refused(tmp_path):
     from rvw.cosim.checker import check
     from rvw.cosim.platform import Platform
     h, row = fixture()
     h.update(harts=[0], capabilities=['multihart'])
     path = tmp_path / 'trace.jsonl'
     path.write_text(json.dumps(h) + '\n')
-    with pytest.raises(ValueError, match='multi-hart reference'):
+    with pytest.raises(ValueError, match='multi-hart cosim requires memory_profile=serialized-retirement'):
         check(path, object(), Platform.load('boom'))
