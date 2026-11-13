@@ -36,7 +36,7 @@ The existing map stays compatible with software, RAL and UVM consumers.
 
 ## Limits
 
-No executable CPU is bundled in this increment. There is no C1 runner yet.
+The executable stub example has a C1 runner. No production CPU is bundled.
 Generation does not establish a simulation pass. Byte writes, multiple clock
 domains, AXI4/TileLink composition and automatic bridge selection remain open.
 The software device tree is still a memory fragment. Peripheral pins need
@@ -90,3 +90,8 @@ See [the RV32 stub example](examples/stub/README.md) for a C1 adapter,
 `rvw regress` configuration, UART hello-world and timer/PLIC interrupt programs.
 The example runner is enabled only with `-Drvw.soc.stub=true` in sbt. The adapter
 sets that property. The default build compiles the stub wrapper but excludes its simulation runner.
+
+Fabric assertions run on every APB endpoint and decode output. On 2026-11-13
+the PLIC interrupt example passed with Verilator `--assert` at seed 23
+(224 measured loop cycles, 74 retired instructions). Formal decode and
+interrupt value-transfer proofs were NOT RUN.

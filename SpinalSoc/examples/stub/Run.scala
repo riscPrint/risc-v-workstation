@@ -5,7 +5,7 @@ import spinal.core.sim._
 object Run extends App {
   val seed = args(0).toInt
   val limit = args(1).toInt
-  val compiled = SimConfig.withVerilator.compile {
+  val compiled = SimConfig.withVerilator.addSimulatorFlag("--assert").compile {
     val top = new generated.ComposedSoc
     top.core.io.fault.simPublic()
     top.core.io.retired.simPublic()

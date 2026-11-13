@@ -312,3 +312,22 @@ domains, undeclared memories and functional-mode isolation obligations.
 Isolation is `not_run`. The command returns inconclusive (3). It performs no
 BIST insertion and makes no manufacturing-test readiness claim. Supply the
 connection declarations to `rvw formal connectivity` for separate proofs.
+
+## Fabric and SoC audit
+
+SpinalSoc binds APB phase/stability assertions to the core master and every
+peripheral port. It asserts one-hot decode, exact window selection and error
+completion on unmapped addresses. Assertion emission is not a proof result.
+Enable simulator assertions when running the generated RTL.
+
+`rvw soc audit --source MAP --db DB --bindings BINDINGS --out NEW_JSON`
+checks exact map intervals, all declared IRQ bindings, every fabric endpoint
+and clock/reset domains through the existing lint structural reader. MCP:
+`soc_audit`. Bindings contain `interrupts` (map IRQ name to formal connection
+fields) and `bus_ports` (every `core.bus` and `REGION.io.bus` to APB pin paths).
+Each port needs PADDR, PSEL, PENABLE, PWRITE, PWDATA, PRDATA and PREADY.
+
+The report distinguishes disjoint map arithmetic from unrun RTL decode proof.
+IRQ paths use `rvw formal` connectivity resolution. A sibling
+`OUT.connections.json` can be used with `rvw formal connectivity --run`.
+The audit remains inconclusive until behavioral and proof evidence exists.
