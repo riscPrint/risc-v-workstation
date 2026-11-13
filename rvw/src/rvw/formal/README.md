@@ -365,6 +365,25 @@ An abstract failure reports `unknown` with `abstraction_counterexample`.
 It is not a confirmed DUT failure. Interface contracts, dependency checks,
 circular-assumption rejection and RAM abstraction contracts remain open.
 
+## Resource safety templates
+
+`rvw formal template allocation_pool --entries 4 --width 3 --out pool.sv`
+generates an independent ownership bitmap. The two allocation and two release
+lanes carry accepted resource tags. The checker detects duplicate lanes,
+out-of-range tags, allocation of live entries, release of free entries and a
+DUT live bitmap that differs from independent expected ownership. Release then
+allocation permits reuse on the same edge. Override the `INITIAL_LIVE` module
+parameter with project reset ownership. Do not connect it to DUT live state.
+This is a resource-pool rule, not a complete ROB or rename recovery model.
+
+`cam_match` checks at most one match on active samples. `require_match` also
+requires a hit. `counter_bounds` checks the unsigned inclusive range zero to
+`entries`. Both use explicit active signals. These templates are available
+through `formal_template` MCP. Existing FIFO data ordering, arbiter and stream
+rules remain in `QueueChecks`, `StateChecks` and the property library.
+Projects must bind their own structures and independent accepted events.
+No database inference, fairness, full ROB recovery or real-core proof is claimed.
+
 ## SBY campaigns and property history
 
 The runner is separate from full SVA language support:

@@ -741,7 +741,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds}
 ```
 
 ### `rvw formal contracts`

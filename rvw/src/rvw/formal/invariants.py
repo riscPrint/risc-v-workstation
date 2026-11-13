@@ -1,9 +1,9 @@
 """Small reusable safety predicates. Parameters come from the specification."""
 from pathlib import Path
 
-from . import generated_checks
+from . import generated_checks, resource_checks
 
-NAMES = ('rob', 'freelist', 'rename', 'issue', 'lsq', 'credit') + generated_checks.NAMES
+NAMES = ('rob', 'freelist', 'rename', 'issue', 'lsq', 'credit') + generated_checks.NAMES + resource_checks.NAMES
 
 
 def render(kind: str, entries: int = 4, width: int = 3) -> str:
@@ -11,6 +11,8 @@ def render(kind: str, entries: int = 4, width: int = 3) -> str:
         raise ValueError('unknown template or entries outside 1..1024')
     if type(width) is not int or not 1 <= width <= 64:
         raise ValueError('width must be in 1..64')
+    if kind in resource_checks.NAMES:
+        return resource_checks.render(kind, width, entries)
     if kind in generated_checks.NAMES:
         return generated_checks.render(kind, width, entries)
     hdr = f'module rvw_{kind}(input clk, input reset, '
