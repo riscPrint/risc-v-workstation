@@ -4666,3 +4666,11 @@ pin or model. Valid reports exit 3 and remain inconclusive. Input errors exit 2.
 rows. The complete declared Spike RAM image comes first. The reset trampoline
 and reserved bootstrap code follow it. This is not `rvw.arch-checkpoint/1`.
 The producer owns the reserved regions and must exclude them from live data.
+### Persistent farm service queue
+
+`farm queue` stores jobs and an ordered event log in SQLite under its selected
+root. Each job retains an owner, priority, command, retry bound, timeout and all
+attempt outcomes. `complete` means process completion with exit zero, not a C4
+accept or a DUT pass. Worker death is an infrastructure error. Unchecked process
+groups require cleanup and cannot earn cancellation acknowledgement. The HTTP
+service maps bearer tokens to owners and restricts job reads and cancellation.

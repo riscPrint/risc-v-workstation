@@ -29,7 +29,10 @@ def cancel_json(out):
 def mcp_tools():
     string = {"type": "string"}
     array = {"type": "array", "items": string, "minItems": 1}
-    return [ToolSpec("farm_run", "Run native SSH shards. Complete is transport completeness, not a gate verdict.",
+    from .service import manage
+    return [ToolSpec("farm_queue", "Manage persistent local jobs. Completion is not DUT pass.",
+                 schema({"root": string, "operation": string, "options": {"type": "object"}}, ["root"]),
+                 queue_json, long=True), ToolSpec("farm_run", "Run native SSH shards. Complete is transport completeness, not a gate verdict.",
         schema({"hosts": {"type": "array", "items": {"type": "object"}, "minItems": 1},
                 "manifest": string, "adapter": array, "identity_command": array,
                 "identity": {"type": "object"}, "out": string,
@@ -47,3 +50,8 @@ def mcp_tools():
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "recover")),
         ToolSpec("farm_cancel", "Cancel shards and confirm host process-group cleanup.",
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "cancel"), long=True)]
+
+
+def queue_json(root, operation="list", options=None):
+    from .service import manage
+    return manage(root, operation, **(options or {}))

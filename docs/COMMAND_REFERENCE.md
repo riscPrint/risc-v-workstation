@@ -674,7 +674,7 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,dashboard} ...
+    {run,cancel,notifications,classify,recover,queue,serve,dashboard} ...
 ```
 
 ### `rvw farm run`
@@ -707,6 +707,21 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm queue`
+
+```text
+usage: rvw farm queue [-h] --root ROOT [--operation
+    {submit,list,work,recover,cancel,events}] [--options OPTIONS] [--project
+    PROJECT]
+```
+
+### `rvw farm serve`
+
+```text
+usage: rvw farm serve [-h] --root ROOT --tokens TOKENS [--host HOST] [--port
+    PORT] [--project PROJECT]
 ```
 
 ### `rvw farm dashboard`
@@ -2570,6 +2585,14 @@ Starts a background job: yes.
 Export notification events. No external delivery is attempted.
 
 Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `farm_queue`
+
+Manage persistent local jobs. Completion is not DUT pass.
+
+Arguments: `root` (required), `operation`, `options`.
 
 Starts a background job: yes.
 
