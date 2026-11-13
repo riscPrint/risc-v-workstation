@@ -242,8 +242,12 @@ The existing `misaligned` policy must still select `emulate` for loads and
 stores. Keep `split_page` and `split_bus` set to `refuse`: the opt-in is a
 narrow exception for completed architectural RAM effects.
 
-The Spike shim requires M-mode, no active MPRV, no virtualization and zero
-PMP regions. The complete access must fit in one RAM region and one 4 KiB
+The Spike shim requires an effective mode (after MPRV) of M, or U on a core
+without S-mode, so no address translation applies. It requires no
+virtualization and no Smepmp `mseccfg` bits. PMP must decide every byte of the
+access the same way, by Spike's own rule: the lowest entry that matches any
+byte must match all bytes and allow the access, or no entry matches and the
+mode is M. A partly matched or denied access is refused. The complete access must fit in one RAM region and one 4 KiB
 page. It must not overlap MMIO. The shim checks that the reference memory
 log covers every byte exactly once before it emits one scalar C2 effect.
 Faults with partial memory effects remain refused. Other split accesses

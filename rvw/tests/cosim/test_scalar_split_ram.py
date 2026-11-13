@@ -5,12 +5,15 @@ from model_fixtures import Spike
 from test_lockstep import plain_trace, run_check
 
 
-def image(tmp_path_factory, offset=1):
+def image(tmp_path_factory, offset=1, lock=False):
     source=tmp_path_factory.mktemp("split-source") / "split.S"
+    # A locked all-memory entry constrains M-mode. With R and X but no W the
+    # split store is not uniformly allowed and must be refused.
+    locked=f" li t0, -1\n csrw pmpaddr0, t0\n li t0, {lock:#x}\n csrw pmpcfg0, t0\n" if lock else ""
     source.write_text(f""".section .text
 .globl _start
 _start:
- la t0, buffer
+{locked} la t0, buffer
  li t2, {offset}
  add t0, t0, t2
  li t1, 0x12345678
@@ -47,11 +50,18 @@ def test_ram_split_roundtrip_and_mutation(tmp_path_factory,tmp_path,platform):
     assert run_check(tmp_path,rows,elf,p)["status"]=="mismatch"
 
 
-@pytest.mark.parametrize("restriction", ["default","pmp","device"])
+@pytest.mark.parametrize("lock", [0, 0x9f])
+def test_ram_split_with_permissive_pmp(tmp_path_factory,tmp_path,platform,lock):
+    # Unlocked entries do not apply in M-mode; a locked RWX entry allows every byte.
+    elf=image(tmp_path_factory,lock=lock);p=settings(platform);p.pmp_regions=4
+    assert run_check(tmp_path,plain_trace(elf,p),elf,p)["status"]=="match"
+
+
+@pytest.mark.parametrize("restriction", ["default","pmp-locked","device"])
 def test_ram_split_keeps_refusals(tmp_path_factory,platform,restriction):
-    elf=image(tmp_path_factory);p=settings(platform)
+    elf=image(tmp_path_factory,lock=0x9d if restriction=="pmp-locked" else 0);p=settings(platform)
     if restriction=="default":p.scalar_split_ram=False
-    if restriction=="pmp":p.pmp_regions=1
+    if restriction=="pmp-locked":p.pmp_regions=4
     if restriction=="device":p.mmio=list(p.ram)
     model=Spike(p,elf)
     try:
