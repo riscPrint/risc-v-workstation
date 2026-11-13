@@ -56,3 +56,29 @@ The MCA CPUs are built-in comparison baselines, not aliases for these cores.
   No C4 acceptance or C8 completeness claim is made.
 - Report generated-model accuracy as `inconclusive`. MCP, held-out kernels,
   bypasses, memory classes, variable latency and parameter fitting remain open.
+
+## Repeated three-size studies
+
+Use `rvw arch sched-study DESCRIPTION --out NEW_DIRECTORY --count 32 --repeats 3`.
+The matching cancellable MCP tool is `arch_sched_study`. This is an explicit
+RTL job. It uses the existing project adapter and lock. Do not run it as a
+static check.
+
+The study measures lengths N, 2N and 4N with at least three seeds. It reuses
+the existing two-size runner twice per seed. The middle length therefore has
+two observations per seed. All runs keep `mem_latency=0`. The trace checker
+requires the requested seed. The existing `sched-measure` path keeps seed 1.
+
+For each class and dependent/independent mode, the report fits a line to mean
+cycles at each length. It reports the intercept, slope, adjacent slopes and
+maximum residual. Adjacent slope deviation above five percent is marked
+nonlinear. This threshold describes stream scaling; it is not a fidelity
+budget. Repeated seed slopes and signed MCA errors have bootstrap intervals.
+Zero variation remains inconclusive. It does not establish timing accuracy.
+
+The independent stream uses eight register chains. A study is refused if the
+declared latency and initiation throughput need more than eight chains.
+Branch, load, mixed held-out, bypass and operand-dependent kernels remain
+open. Stock llvm-mca still uses the named built-in CPU. Generated scheduling
+fragments are not loaded into that tool. Native LLVM/GCC target integration
+and RTL accuracy qualification remain separate work.

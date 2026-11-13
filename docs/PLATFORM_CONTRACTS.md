@@ -3390,6 +3390,16 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Repeated scheduling studies
+
+`rvw.sched-study/1` captures repeated N/2N/4N scheduling measurements. Each
+seed uses fixed zero memory latency. It retains per-run C1/C2 captures and
+reports fitted slopes, intercepts, adjacent slopes, residuals, nonlinearity
+flags and bootstrap intervals across seeds. The middle length has two
+measurements per seed. At least three repeats are required. The report uses
+a built-in MCA model and keeps generated-model accuracy inconclusive. It
+does not establish isolated unit latency or native generated-model support.
+
 ### Declared SoC traffic model
 
 `rvw.traffic-plan/1` defines resources, agents and request routes. Each request
