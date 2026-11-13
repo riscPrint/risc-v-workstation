@@ -65,3 +65,13 @@ configs = ["rv64ima"]
 max_cycles = 200000
 timeout_s = 60
 mem_latency = 0
+
+[suites.ordering]
+exclude = ['^amo-fault-']
+dir = "../../rvw/out/suites64/ordering"
+glob = "*.elf"
+strip_suffix = ".elf"
+configs = ["rv64ima"]
+max_cycles = 200000
+timeout_s = 60
+mem_latency = 0

@@ -835,3 +835,24 @@ Spike matches: UI 53, UM 13 and UA 19. Both comparisons use zero
 synchronizations and zero masks. The record includes each ELF, C1 and C2
 SHA-256 in [the RV64 ISA results](rvw/rv64/isa-results.json). No core source
 was changed. The source revision is the Setup table's pinned revision.
+
+`rvw/features64m.json` selects LR/SC, AMO, FENCE, FENCE.I and scheduled WFI.
+It excludes MMU, PMP, lower-mode privilege controls and AMO fault programs.
+The machine `ordering` suite selects the four applicable ordering ELFs.
+An exploratory run also executed the PMP-dependent AMO-fault ELF and failed.
+That result is outside machine applicability. It is retained in the run log.
+
+The [fresh walker replay](rvw/rv64/walk-replay.json) rechecks retained Sv39
+DUT captures with the current independent walker. It does not rerun RTL.
+The matrix has 92 consistent, 2 mismatching and 51 inconclusive cases.
+Fault walks have 9 consistent and 9 mismatching cases. Both random cases
+have no supported access plan and remain inconclusive. The 11 mismatches
+are the documented page-walk PMP defect. A consistent walk is separate
+from a self-check pass or a complete strict Spike match.
+
+[The retained supervisor counts](rvw/rv64/generated-results.json) separate
+456 strict matches, 11 PMP-walk failures and 3 strict IRQ differences.
+The three IRQ differences require `--allow-sync irq`. They are not strict
+matches. [Fresh strict IRQ replay](rvw/rv64/irq-replay.json) retains the same
+three differences. [Fresh machine ordering](rvw/rv64/ordering-results.json)
+has four strict matches and the excluded AMO-fault failure described above.

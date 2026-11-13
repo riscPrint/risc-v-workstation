@@ -1,0 +1,104 @@
+{
+  "scope": "Fresh strict Spike replay of six retained scheduled-WFI C1/C2 runs. No new RTL simulation.",
+  "rows": [
+    {
+      "test": "scheduled-wfi-11-0",
+      "status": "mismatch",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 24,
+        "synchronized": 0,
+        "applied_masks": [],
+        "mismatch": {
+          "instruction_index": 24,
+          "order": 24,
+          "cycle": 1016,
+          "pc": "0x80000060",
+          "disassembly": "csrr    t0, mip",
+          "differences": {
+            "rd_wdata": {
+              "expected": "0x0",
+              "actual": "0x800"
+            }
+          }
+        }
+      }
+    },
+    {
+      "test": "scheduled-wfi-11-1",
+      "status": "match",
+      "comparison": {
+        "status": "match",
+        "instructions": 50,
+        "synchronized": 0,
+        "applied_masks": []
+      }
+    },
+    {
+      "test": "scheduled-wfi-3-0",
+      "status": "mismatch",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 23,
+        "synchronized": 0,
+        "applied_masks": [],
+        "mismatch": {
+          "instruction_index": 23,
+          "order": 23,
+          "cycle": 1014,
+          "pc": "0x8000005c",
+          "disassembly": "csrr    t0, mip",
+          "differences": {
+            "rd_wdata": {
+              "expected": "0x0",
+              "actual": "0x8"
+            }
+          }
+        }
+      }
+    },
+    {
+      "test": "scheduled-wfi-3-1",
+      "status": "match",
+      "comparison": {
+        "status": "match",
+        "instructions": 49,
+        "synchronized": 0,
+        "applied_masks": []
+      }
+    },
+    {
+      "test": "scheduled-wfi-7-0",
+      "status": "mismatch",
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 23,
+        "synchronized": 0,
+        "applied_masks": [],
+        "mismatch": {
+          "instruction_index": 23,
+          "order": 23,
+          "cycle": 1014,
+          "pc": "0x8000005c",
+          "disassembly": "csrr    t0, mip",
+          "differences": {
+            "rd_wdata": {
+              "expected": "0x0",
+              "actual": "0x80"
+            }
+          }
+        }
+      }
+    },
+    {
+      "test": "scheduled-wfi-7-1",
+      "status": "match",
+      "comparison": {
+        "status": "match",
+        "instructions": 49,
+        "synchronized": 0,
+        "applied_masks": []
+      }
+    }
+  ]
+}
