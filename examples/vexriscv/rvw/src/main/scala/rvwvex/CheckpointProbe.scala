@@ -11,10 +11,13 @@ import scala.collection.mutable
 /** Bounded real-core checkpoint probe. No JVM threads or reset replay are saved. */
 object CheckpointProbe {
   def main(args: Array[String]): Unit = {
-    require(args.length == 5 || args.length == 6, "ELF OUT CHECKPOINT save|restore|replay|bootstrap RETIREMENT [BOOT-IMAGE]")
+    require(args.length >= 5 && args.length <= 7, "ELF OUT CHECKPOINT save|restore|replay|bootstrap RETIREMENT [BOOT-IMAGE|-] [SIM-MAP]")
     val elfFile = new File(args(0)); val out = new File(args(1)); out.mkdirs()
     val checkpoint = new File(args(2)); val mode = args(3); val at = args(4).toLong
     require(Set("save", "restore", "replay", "bootstrap")(mode) && at > 0)
+    val map = if (args.length == 7) Some(SimMap.load(new File(args(6)))) else None
+    val devices = map.map(new LiveDevices(_))
+    val maxCycles = sys.env.getOrElse("RVW_BOOT_MAX_CYCLES", "5000").toLong
     val bridge = new BridgeState
     val config = bridge.instrument(VexTop.spinalConfig.copy(headerWithDate = false, headerWithRepoHash = false))
     val compiled = SimConfig.withConfig(config).withVerilator
@@ -25,6 +28,10 @@ object CheckpointProbe {
     val identity = ujson.Obj("rtl" -> hash(rtlBytes), "elf" -> hash(Files.readAllBytes(elfFile.toPath)),
       "harness" -> hash(getClass.getResourceAsStream("CheckpointProbe$.class").readAllBytes()),
       "bridge" -> hash(classOf[BridgeState].getResourceAsStream("BridgeState.class").readAllBytes()))
+    identity("device_map") = map.map(m => ujson.Str(m.sha256)).getOrElse(ujson.Null)
+    if (devices.nonEmpty) identity("device_code") = hash(Seq("LiveDevices", "LiveDevices$Device", "LiveDevices$Uart", "LiveDevices$Clint", "LiveDevices$Plic").flatMap { name =>
+      classOf[LiveDevices].getResourceAsStream(name + ".class").readAllBytes().toSeq
+    }.toArray)
     val saved = if (mode == "restore" || mode == "replay") Some({
       val envelope = ujson.read(Files.readString(checkpoint.toPath))
       require(hash(ujson.write(envelope("state")).getBytes("UTF-8")) == envelope("sha256").str,
@@ -64,6 +71,10 @@ object CheckpointProbe {
       dut.csr.timerInterrupt #= false; dut.csr.softwareInterrupt #= false
       dut.csr.externalInterrupt #= false; Option(dut.csr.externalInterruptS).foreach(_ #= false)
       def inputs(): Unit = {
+        val levels = devices.map(_.tick(cycle)).getOrElse(BigInt(0))
+        dut.csr.timerInterrupt #= levels.testBit(7)
+        dut.csr.softwareInterrupt #= levels.testBit(3)
+        dut.csr.externalInterrupt #= levels.testBit(11)
         dut.ibus.cmd.ready #= true; dut.ibus.rsp.valid #= ip.nonEmpty
         dut.ibus.rsp.inst #= ip.map(_._1).getOrElse(BigInt(0)); dut.ibus.rsp.error #= ip.exists(_._2)
         dut.dbus.cmd.ready #= true; dut.dbus.rsp.ready #= dp.nonEmpty
@@ -76,6 +87,7 @@ object CheckpointProbe {
         memory.clear(); s("memory").arr.foreach(r => memory(r(0).str.toLong) = r(1).num.toInt)
         cycle = s("cycle").str.toLong; retired = s("retired").str.toLong; handler = s("handler").bool
         ip = decode(s("ibus")); dp = decode(s("dbus"))
+        devices.foreach(_.restore(s("devices")))
         bridge.restore(s("rtl")); inputs(); sleep(1)
         val restored = bridge.capture()
         val changed = restored("registers").arr.zip(s("rtl")("registers").arr).zipWithIndex.collect {
@@ -84,20 +96,28 @@ object CheckpointProbe {
         require(restored == s("rtl"), "restore readback mismatch: " + changed.mkString(", "))
       }
       var finished = false
-      while (!finished && cycle < 5000) {
+      while (!finished && cycle < maxCycles) {
         inputs(); sleep(1)
         cycle += 1
         val ni = if (dut.ibus.cmd.valid.toBoolean) {
           val a = dut.ibus.cmd.pc.toLong & ~3L; Some(read(a) -> !mapped(a))
         } else None
         val nd = if (dut.dbus.cmd.valid.toBoolean) {
-          val a = dut.dbus.cmd.address.toLong & ~3L
+          val address = dut.dbus.cmd.address.toLong
+          val a = address & ~3L
+          val bytes = 1 << dut.dbus.cmd.size.toInt
+          val lane = (address & 3).toInt
+          val device = devices.filter(_.contains(address, bytes))
           if (dut.dbus.cmd.wr.toBoolean) {
-            require(mapped(a), "store outside RAM")
-            for (i <- 0 until 4 if (dut.dbus.cmd.mask.toInt & (1 << i)) != 0)
-              memory(a + i) = ((dut.dbus.cmd.data.toBigInt >> (8*i)) & 255).toInt
+            device match {
+              case Some(d) => d.write(address, bytes, (dut.dbus.cmd.data.toBigInt >> (8*lane)) & ((BigInt(1) << (8*bytes)) - 1))
+              case None =>
+                require(mapped(a), "store outside RAM")
+                for (i <- 0 until 4 if (dut.dbus.cmd.mask.toInt & (1 << i)) != 0)
+                  memory(a + i) = ((dut.dbus.cmd.data.toBigInt >> (8*i)) & 255).toInt
+            }
             None
-          } else Some(read(a) -> !mapped(a))
+          } else Some(device.map(_.read(address, bytes) << (8*lane)).getOrElse(read(a)) -> (!mapped(a) && device.isEmpty))
         } else None
         if (dut.traps.valid.toBoolean) {
           val cause = dut.traps.cause.toBigInt
@@ -122,7 +142,7 @@ object CheckpointProbe {
             "cycle" -> cycle.toString, "retired" -> retired.toString, "handler" -> handler,
             "ibus" -> pending(ip), "dbus" -> pending(dp), "rtl" -> bridge.capture(),
             "memory" -> ujson.Arr.from(memory.toSeq.sortBy(_._1).map { case (a, v) => ujson.Arr(a.toString, v) }),
-            "writer" -> writer.checkpoint())
+            "writer" -> writer.checkpoint(), "devices" -> devices.map(_.snapshot()).getOrElse(ujson.Null))
           Files.writeString(checkpoint.toPath, ujson.write(ujson.Obj("state" -> state,
             "sha256" -> hash(ujson.write(state).getBytes("UTF-8"))))); captured = true
         }
@@ -130,6 +150,7 @@ object CheckpointProbe {
       require(finished && transferred, "core did not finish after transfer")
       require(!Set("save", "replay")(mode) || captured, "checkpoint retirement not reached")
       writer.end(cycle, "pass")
+      devices.foreach(d => Files.writeString(new File(out, "devices.json").toPath, d.outputs.render()))
     } finally writer.close()
   }
 }

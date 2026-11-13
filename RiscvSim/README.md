@@ -1137,3 +1137,11 @@ bytes and interrupt bit routes come from project data. See
 and [the VexRiscv program](../examples/vexriscv/README.md#live-uart-clint-and-plic).
 The models use simulation cycles and keep output in state. They do not call
 host console or timer services. Each run must allocate a fresh instance.
+
+`LiveDevices.snapshot()` and `restore()` preserve the configured device state
+under the `rvw.live-devices/1` schema. The project checkpoint envelope must bind
+the map and implementation to the same settled RTL boundary. The
+[VexRiscv FreeRTOS example](../examples/vexriscv/rvw/freertos/README.md) checks a
+fresh-process restore against complete C2 and UART output. This uses live
+bridge state. It does not serialize the JVM scheduler or qualify cross-build
+or cross-machine restore.

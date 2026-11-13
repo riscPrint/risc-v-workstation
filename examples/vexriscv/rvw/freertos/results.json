@@ -1,0 +1,33 @@
+{
+  "schema": "rvw.rtos-boot-sample/1",
+  "kernel_revision": "0adc196d4bd52a2d91102b525b0aafc1e14a2386",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "checkpoint_cycle": "7206",
+  "checkpoint_retirement": "5000",
+  "checkpoint_sha256": "8ce95f5148acafcbc12785d26fe5758fdf35b85fba2793b9621a43d77ab38e55",
+  "runs": [
+    {
+      "mode": "save",
+      "cycles": 9421,
+      "retirements": 6480,
+      "output": {
+        "uart": "FreeRTOS boot\nB\nA\nB\nA\nB\nA\nFreeRTOS PASS\n"
+      },
+      "trace_sha256": "9f4b7f9792439e709ce9c5860dc46309bb556dba0c32f136b45b63f3fe83b17f"
+    },
+    {
+      "mode": "restore",
+      "cycles": 9421,
+      "retirements": 6480,
+      "output": {
+        "uart": "FreeRTOS boot\nB\nA\nB\nA\nB\nA\nFreeRTOS PASS\n"
+      },
+      "trace_sha256": "9f4b7f9792439e709ce9c5860dc46309bb556dba0c32f136b45b63f3fe83b17f"
+    }
+  ],
+  "limits": [
+    "M-mode FreeRTOS only",
+    "No Linux or OpenSBI run",
+    "Trusted same-build bridge checkpoint, not a portable simulator image"
+  ]
+}

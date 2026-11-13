@@ -280,4 +280,9 @@ The VexRiscv example connects these generated levels to its real interrupt
 pins. An explicit IRQ schedule overrides device-generated input levels.
 C1 `details.device_output` captures each UART's output. This is software
 simulation evidence. It does not qualify physical device timing or Linux boot.
-Live model snapshots for these Scala devices are not implemented.
+`LiveDevices.snapshot()` returns `rvw.live-devices/1` trusted same-build state.
+It binds the complete device state to the map digest. UART FIFO, output,
+registers, input position, CLINT time and deadline, PLIC priorities, enables,
+active levels and claims are retained. The outer envelope must bind device
+implementation bytes and the RTL/harness boundary. Discard the instance after
+a restore error. This does not serialize host handles or the JVM scheduler.
