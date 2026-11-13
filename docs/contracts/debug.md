@@ -53,3 +53,11 @@ selector, top module, extra scopes, PDG availability and the driver fallback.
 The database capture and staleness warnings accompany the record.
 This record is structural. It does not prove that independently chosen waves
 and sources came from the captured elaboration.
+
+## Interop optional features
+
+With both a profile and a port, `debug interop` uses the port as the transport
+and the profile as target metadata. A profile without store triggers omits the
+watchpoint operation and records `interop.watchpoint` under C3 `unsupported`.
+The parser accepts that omission only when the profile permits it. Other
+unreached checks remain inconclusive. A port alone still attempts every check.

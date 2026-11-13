@@ -73,10 +73,13 @@ def first_word(elf):
     raise ValueError('ELF entry is not in a loadable segment')
 
 
-def assess(output, returncode, timed_out, *, expect_reset):
+def assess(output, returncode, timed_out, *, expect_reset, allowed_unsupported=()):
     checks = set(re.findall(r'^RVW_CHECK:(\w+)\s*$', output, re.M))
     failures = re.findall(r'^RVW_FAILURE:(.*)$', output, re.M)
     expected = set(CHECKS) | ({'reset_halt'} if expect_reset else set())
+    unsupported = dict(re.findall(r'^RVW_UNSUPPORTED:(\w+):(.*)$', output, re.M))
+    unsupported = {name: reason for name, reason in unsupported.items() if name in allowed_unsupported}
+    expected -= set(unsupported)
     complete = 'RVW_COMPLETE' in output
     if failures:
         status = 'fail'
@@ -89,7 +92,7 @@ def assess(output, returncode, timed_out, *, expect_reset):
     gdb = re.search(r'^RVW_GDB_VERSION:(.*)$', output, re.M)
     return {'status': status, 'checks': sorted(checks), 'missing': sorted(expected - checks),
             'failures': failures, 'timed_out': timed_out, 'returncode': returncode,
-            'connected': 'RVW_CONNECTED' in output, 'gdb_version': gdb.group(1).strip() if gdb else None}
+            'unsupported': unsupported, 'connected': 'RVW_CONNECTED' in output, 'gdb_version': gdb.group(1).strip() if gdb else None}
 
 
 def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeout=120, reset_pc=None,
@@ -97,7 +100,7 @@ def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeo
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     endpoint = None
-    if profile is not None:
+    if profile is not None and port is None:
         from . import serve
         from .profile import load_elf
         profile = dict(profile)
@@ -118,6 +121,9 @@ def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeo
     config.write_text(openocd_config(port, idcode=idcode, log=log))
     env = {**os.environ, 'RVW_ELF': str(Path(elf).resolve()), 'RVW_FIRST_WORD': first_word(elf),
            'RVW_OPENOCD_PIPE': f'{shlex.quote(openocd_path)} -f {shlex.quote(str(config))}'}
+    env.pop('RVW_WATCHPOINT', None)
+    if profile is not None and 'store' not in profile['triggers']['accesses']:
+        env['RVW_WATCHPOINT'] = '0'
     if reset_pc is not None:
         env['RVW_RESET_PC'] = hex(reset_pc)
     try:
@@ -127,9 +133,10 @@ def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeo
             endpoint.stop()
     output = (result.stdout or '') + (result.stderr or '')
     (out / 'gdb.log').write_text(output)
-    summary = assess(output, result.returncode, result.timed_out, expect_reset=reset_pc is not None)
+    summary = assess(output, result.returncode, result.timed_out, expect_reset=reset_pc is not None,
+                     allowed_unsupported=('watchpoint',) if env.get('RVW_WATCHPOINT') == '0' else ())
     summary['openocd_version'] = version(openocd_path)
-    summary['target'] = 'model' if endpoint else f'remote_bitbang:{port}'
+    summary['target'] = profile['name'] if profile is not None else f'remote_bitbang:{port}'
     write_c3(summary, out)
     return summary
 
@@ -145,7 +152,7 @@ def write_c3(summary, out):
         failures = [f'{order[0]}:{f}' if f.startswith('gdb:') else f for f in failures]
     summary['failures'] = failures
     failed = {f.split(':', 1)[0] for f in failures}
-    for name in sorted(expected):
+    for name in sorted(expected - set(summary.get('unsupported', {}))):
         test = {'id': f'interop.{name}'}
         if name in failed:
             message = next(f for f in summary['failures'] if f.startswith(name))
@@ -159,6 +166,8 @@ def write_c3(summary, out):
     results = {'schema': 'rvw.results/1', 'run_id': f'{created.replace(":", "-")}-debug-interop',
                'suite': 'debug-interop', 'core': summary['target'], 'config': 'openocd-gdb', 'created': created,
                'source': {}, 'tests': tests,
+               'unsupported': [{'id': f'interop.{name}', 'reason': reason}
+                               for name, reason in summary.get('unsupported', {}).items()],
                'clients': {'gdb': summary['gdb_version'], 'openocd': summary['openocd_version']},
                'scope': 'functional GDB/OpenOCD operations; a connection alone is not a pass'}
     (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')

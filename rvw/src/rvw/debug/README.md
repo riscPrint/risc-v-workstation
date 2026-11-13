@@ -115,6 +115,11 @@ by its effect (#161):
 | `watchpoint` | the hart stops after the store, and `counter` advanced by one |
 | `reset_halt` | with `--reset-pc` (or a profile with resethaltreq), pc after `monitor reset halt` |
 
+With both `--profile` and `--port`, the profile describes the caller-owned
+RTL target. It does not start a model server. A profile without store triggers
+reports the watchpoint as `unsupported`. Without a profile, the campaign
+attempts the watchpoint and records any client failure.
+
 The ELF must define `_start`, `loop`, `target` and a 32-bit `counter`
 (`rvw/tests/fixtures/debug/interop.S`). C3 results (`debug-interop`) record the
 GDB and OpenOCD versions in `clients`. A connection without these effects is not
