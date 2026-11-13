@@ -8,7 +8,7 @@
     ]
   },
   "adapter": "../vexriscv/rvw/run.sh",
-  "programs": "out/isa",
+  "programs": "out/isa-control",
   "config": "rv32im",
   "seed": 1,
   "environment": {
@@ -21,7 +21,7 @@
     "--mem-latency",
     "0",
     "--max-cycles",
-    "200000"
+    "10000"
   ],
   "tasks": [
     {
@@ -43,8 +43,7 @@
           "rv32ui-p-xor"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -67,8 +66,7 @@
           "rv32ui-p-or"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -91,8 +89,7 @@
           "rv32ui-p-and"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -115,8 +112,7 @@
           "rv32ui-p-sub"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -139,8 +135,7 @@
           "rv32ui-p-sltu"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -163,8 +158,7 @@
           "rv32ui-p-slt"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -187,8 +181,7 @@
           "rv32ui-p-bge"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -211,8 +204,7 @@
           "rv32ui-p-beq"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -235,8 +227,7 @@
           "rv32ui-p-lb"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     },
@@ -259,8 +250,7 @@
           "rv32ui-p-sra"
         ],
         "pass_to_pass": [
-          "rv32ui-p-add",
-          "rv32ui-p-sw"
+          "agent-control"
         ]
       }
     }
@@ -288,7 +278,7 @@
   ],
   "program_copy": [
     {
-      "source": "out/isa",
+      "source": "out/isa-control",
       "dest": "rvw/out/isa"
     }
   ],

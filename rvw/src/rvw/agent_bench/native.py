@@ -129,7 +129,8 @@ def run_tests(pack, base, workspace, out, tests, timeout):
                 or identity['elf_sha256'] != expected_elf or not source.get('core_rev')):
             status = 'inconclusive'
         runs[name] = {'status': status, 'identity': identity, 'result': str(run_dir / 'result.json'),
-                      'trace': str(trace), 'batch_wall_s': elapsed, 'exit_code': proc.returncode, 'timed_out': proc.timed_out}
+                      'trace': str(trace), 'batch_wall_s': elapsed,
+                      'trace_complete': bool(valid_trace and end and end.get('status') == result.get('status')), 'exit_code': proc.returncode, 'timed_out': proc.timed_out}
     return runs
 
 
@@ -180,7 +181,16 @@ def reference_checks(pack, base, workspace, runs, timeout):
 
 
 def native_verdict(task, baseline, seeded, repaired):
-    verdict = qualification(task, seeded, repaired)
+    # A complete cycle-limit run with a real architectural mismatch detects a seed.
+    # A wall timeout or a matching prefix cannot do so. Preserve raw C1 status.
+    evaluated = dict(seeded)
+    for name in task['private']['fail_to_pass']:
+        run = seeded.get(name, {})
+        if (run.get('status') == 'timeout' and run.get('trace_complete')
+                and not run.get('timed_out') and run.get('cosim', {}).get('status') == 'mismatch'
+                and run['cosim'].get('mismatch')):
+            evaluated[name] = {**run, 'status': 'fail'}
+    verdict = qualification(task, evaluated, repaired)
     if verdict != 'qualified':
         return verdict
     if set(baseline) != set(seeded):
@@ -242,7 +252,7 @@ def qualify(pack_path, source, out, *, task_ids=None, timeout=110):
                 mutate(workspace, task['private']['mutation'], reverse=True)
                 git(workspace, 'add', '-A')
                 git(workspace, 'commit', '-qm', 'repair ' + task['id'])
-            if any(r['status'] not in ('pass', 'fail', 'assert', 'rvfi_error') for r in seeded.values()):
+            if any(r['status'] not in ('pass', 'fail', 'assert', 'rvfi_error', 'timeout') for r in seeded.values()):
                 report['tasks'].append({'id': task['id'], 'status': 'inconclusive', 'baseline': control,
                                         'seeded': seeded, 'repaired': {},
                                         'reason': 'seeded workload evidence is incomplete'})

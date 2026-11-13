@@ -657,7 +657,7 @@ Optional tool set: 42 tools. Load MCP profile `soc` with `rvw_tools_load`. Read 
 
 Measure a bounded fixture or native repair task with independent checks.
 
-Optional tool set: 4 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 5 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **select**: Select a task pack and its independent checks. Keep fixture scores separate from native repair evidence. (manual)
 2. **inspect**: Describe the benchmark tool before a trial. Record budgets, partial attempts and evidence limits. MCP `rvw_tools_search`

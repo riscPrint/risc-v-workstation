@@ -169,3 +169,21 @@ def test_reference_failure_cannot_earn_match(tmp_path, monkeypatch):
     assert runs['broken']['cosim']['status'] == 'inconclusive'
     assert runs['broken']['cosim']['exit_code'] == 2
     assert runs['broken']['cosim']['wall_s'] >= 0
+
+
+def test_cycle_limit_needs_complete_trace_and_spike_divergence():
+    task = {'private': {'fail_to_pass': ['broken'], 'pass_to_pass': ['control']}}
+    baseline = {n: {**evidence('pass', 'b' * 64), 'cosim': {'status': 'match'}} for n in ('broken', 'control')}
+    seeded = {'broken': {**evidence('timeout'), 'trace_complete': True, 'timed_out': False,
+                         'cosim': {'status': 'mismatch', 'mismatch': {'instruction_index': 5}}},
+              'control': {**evidence('pass'), 'cosim': {'status': 'match'}}}
+    repaired = copy.deepcopy(baseline)
+    assert native.qualification(task, seeded, repaired) == 'inconclusive'
+    assert native.native_verdict(task, baseline, seeded, repaired) == 'qualified'
+    assert seeded['broken']['status'] == 'timeout'
+    for field, value in (('trace_complete', False), ('timed_out', True)):
+        changed = copy.deepcopy(seeded)
+        changed['broken'][field] = value
+        assert native.native_verdict(task, baseline, changed, repaired) == 'inconclusive'
+    seeded['broken']['cosim']['status'] = 'match'
+    assert native.native_verdict(task, baseline, seeded, repaired) == 'inconclusive'
