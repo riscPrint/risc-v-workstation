@@ -57,18 +57,21 @@ Python code. It does not call herd7.
 
 The initial-state file has schema `rvw.axiomatic-initial/1` and `locations`.
 Each location has hex `address`, integer byte `size` and hex `value`.
-C2/2 must declare `memory_dependencies: complete`. Each retired memory action
+C2/2 must declare `memory_dependencies: complete` and
+`memory_addresses: physical`. Virtual RVFI addresses cannot stand in for
+physical memory locations. Each retired memory action
 and FENCE must have a `memory_model` object with `id`, `hart`, integer `order`,
 `kind`, and complete `addr`, `data`, `ctrl` dependency ID lists. Dependencies
 name earlier memory events on that hart. Non-fence events need integer byte
-`address` and `size`, and integer `read` or `write` values. Kinds are R, W, LR,
+`address` and `size`, and `read` or `write` values. Address, order and data
+can use canonical nonnegative decimal strings to preserve all 64 bits. Kinds are R, W, LR,
 SC, AMO, FENCE. Successful SC also names its LR as `rmw`. The adapter must
 compute dependencies through intervening non-memory instructions. Empty
 lists are assertions that no such dependencies exist. Missing lists are not
 empty lists. RVFI bytes, masks, hart identity and instruction kind are checked
 against the annotation. aq/rl and fence domains come from the instruction.
-`MultiHartSession` can take a complete-dependency declaration and an annotation
-callback. Adapters without these observations get `inconclusive`.
+`MultiHartSession` can take a complete-dependency declaration, a physical-address declaration
+and an annotation callback. Adapters without these observations get `inconclusive`.
 
 The supported profile has aligned scalar accesses with no mixed-size overlap,
 no memory faults, no external writers, and no device memory. Unsupported

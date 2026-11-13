@@ -359,3 +359,33 @@ Zacas fault profiles accept `mtval=0` where the platform permits it. A nonzero
 value must equal the fault address. This follows the [machine trap-value
 rules](https://docs.riscv.org/reference/isa/priv/machine.html). The fault PC,
 cause, unchanged destination pair and unchanged memory remain mandatory.
+
+## RV64 concurrent subset smoke
+
+`riscvsim.Rv64AtomicFixtureSpec` extends the existing two-hart subset fixture to
+64-bit data. It checks all nine doubleword AMOs and all four aq/rl encodings,
+external LR/SC invalidation, and contended doubleword Zacas with a failed CAS
+and a successful retry. Independent operands and initial bytes drive the
+`AtomicMemoryObserver`. The DUT supplies old data, complete post-action bytes
+and an adjacent guard word. Seed defects cover torn writes, wrong returns,
+missing reservation invalidation, adjacent corruption, missing CAS writes and
+failed-CAS writes.
+
+Run only this tiny fixture with the sbt lock:
+
+```sh
+cd RiscvSim
+RVW_RV64_TRACE_OUT=/tmp/rv64-traces ../scripts/with-lock.sh sbt nice -n 10 sbt -batch 'testOnly riscvsim.Rv64AtomicFixtureSpec'
+```
+
+The optional output contains 40 C2/2 AMO/LRSC traces. Empty dependency sets are
+complete for these constant-address, constant-operand, branch-free snippets.
+The memory checker accepts decimal strings for full-width annotation values.
+Check them with `rvw memory axiomatic` and an initial location at address zero,
+size eight and value zero. Both RVWMO and Ztso allowed all 40 native traces in
+the bounded smoke. CAS stays outside the scalar axiomatic capture profile.
+
+This fixture has a serialized shared-memory port and a small instruction
+subset. It is not a production RISC-V core. Encoding coverage is not external
+aq/rl ordering evidence. Word/quadword CAS contention, production adapters and
+weak-memory RTL campaigns remain open.

@@ -4649,11 +4649,14 @@ its declared justice assumptions. It does not certify an RTL translation.
 `formal_model_live` return the same report. MCP `formal_swarm` runs replay.
 ### Scalar axiomatic memory annotations
 
-C2/2 can declare `memory_dependencies: complete` and add `memory_model` to
+C2/2 can declare `memory_dependencies: complete` and
+`memory_addresses: physical` and add `memory_model` to
 retirement records. This object identifies the event by string `id`, integer
 `hart` and integer per-hart `order`. It carries `kind` R/W/LR/SC/AMO/FENCE and
 complete dependency source ID arrays `addr`, `data`, `ctrl`. Scalar memory
-events carry integer byte `address`, `size` and integer `read` and/or `write`.
+events carry byte `address`, integer `size` and `read` and/or `write` values.
+Address, order and data can be nonnegative integers or canonical decimal
+strings. Producers must use strings when their JSON library uses doubles.
 A successful SC names its paired LR ID in `rmw`. Fences and aq/rl attributes
 are decoded from RVFI instructions. The checker validates annotated bytes
 against RVFI. Dependency completeness is a project observation contract.
