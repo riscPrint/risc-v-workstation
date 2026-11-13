@@ -860,6 +860,14 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+`mmu report` also checks optional C2 `mmu_nested_walks`. It compares VS/G
+levels, physical PTE addresses, returned values and final results with the
+independent nested walker. Reference tables come from the generated source.
+Only explicitly complete captures can earn consistency. Cached or partial
+captures stay inconclusive. Preset-A/D mappings and fenced G-root reuse are
+supported. Missing capture and hardware A/D remain open. Functional groups
+observe captured VS and G reads separately without granting correctness.
+
 The `examples/mmu/random.json` campaign creates deterministic multi-page
 programs from selected modes and seeds. It mixes loads, stores, invalid PTEs
 and permission faults. Each program checks values, exact fault cause/tval/PC
