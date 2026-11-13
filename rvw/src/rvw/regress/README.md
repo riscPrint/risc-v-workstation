@@ -859,3 +859,9 @@ The optional `pointer_mask` scenario field selects bounded Smnpm tagged
 pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
+
+## Privilege campaigns
+
+`rvw regress privilege build|reference|check` generates control programs, runs
+short Spike self-checks and checks C1 results by functional group. See the
+[privilege guide](../privilege/README.md) for project configuration and limits.

@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -671,6 +671,33 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
     [--tolerance TOLERANCE] [--top TOP] [--project PROJECT] paths [paths ...]
 ```
 
+### `rvw privilege`
+
+```text
+usage: rvw privilege [-h] [--project PROJECT] {build,reference,check} ...
+```
+
+### `rvw privilege build`
+
+```text
+usage: rvw privilege build [-h] --out OUT [--gcc GCC] [--json] [--project
+    PROJECT] description
+```
+
+### `rvw privilege reference`
+
+```text
+usage: rvw privilege reference [-h] [--spike SPIKE] [--timeout TIMEOUT]
+    [--json] [--project PROJECT] directory
+```
+
+### `rvw privilege check`
+
+```text
+usage: rvw privilege check [-h] --results RESULTS --platform PLATFORM
+    [--timeout TIMEOUT] [--json] [--project PROJECT] directory
+```
+
 ### `rvw query`
 
 ```text
@@ -798,7 +825,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,mmu,vector,run,compare,gate,known,history,list}
+    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,privilege,mmu,vector,run,compare,gate,known,history,list}
     ...
 ```
 
@@ -870,6 +897,34 @@ usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
 usage: rvw regress random [-h] [--settings SETTINGS] --out OUT [--seeds SEEDS]
     [--seed-base SEED_BASE] [--core CORE] [--config CONFIG] [--json]
     [--project PROJECT]
+```
+
+### `rvw regress privilege`
+
+```text
+usage: rvw regress privilege [-h] [--project PROJECT] {build,reference,check}
+    ...
+```
+
+### `rvw regress privilege build`
+
+```text
+usage: rvw regress privilege build [-h] --out OUT [--gcc GCC] [--json]
+    [--project PROJECT] description
+```
+
+### `rvw regress privilege reference`
+
+```text
+usage: rvw regress privilege reference [-h] [--spike SPIKE] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] directory
+```
+
+### `rvw regress privilege check`
+
+```text
+usage: rvw regress privilege check [-h] --results RESULTS --platform PLATFORM
+    [--timeout TIMEOUT] [--json] [--project PROJECT] directory
 ```
 
 ### `rvw regress mmu`
@@ -1768,6 +1823,30 @@ Starts a background job: no.
 Discover a core's suites, tiers and configurations before running; pass suite to list test IDs.
 
 Arguments: `project`, `core`, `suite`.
+
+Starts a background job: no.
+
+### `regress_privilege_build`
+
+Build self-checking privilege ELFs from project data.
+
+Arguments: `description` (required), `out` (required), `gcc`.
+
+Starts a background job: no.
+
+### `regress_privilege_check`
+
+Check C1 results and strict Spike traces by functional group.
+
+Arguments: `directory` (required), `results` (required), `platform` (required), `timeout`.
+
+Starts a background job: no.
+
+### `regress_privilege_reference`
+
+Run short Spike self-checks. Does not earn DUT coverage.
+
+Arguments: `directory` (required), `spike`, `timeout`.
 
 Starts a background job: no.
 
