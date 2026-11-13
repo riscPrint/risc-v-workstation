@@ -33,12 +33,14 @@ def run(args):
         left=args.timeout-(time.monotonic()-started)
         if left<=0:raise ValueError('total partition proof time limit')
         return left
-    def prove(gold,gate,target):
+    def prove(gold,gate,target,*,memory_map=False):
         command=['formal','equiv','--gold',*map(str,gold),'--gate',*map(str,gate),
                  '--top',args.top,'--clock',args.clock,'--unmatched-state','prove',
                  '--settle',str(args.settle),'--timeout',str(budget()),'--out',str(target),'--json']
         if args.reset:
             command+=['--reset',args.reset,'--reset-cycles',str(args.reset_cycles)]
+        if memory_map:
+            command+=['--memory-map']
         with (out/(target.name+'.log')).open('w') as log,contextlib.redirect_stdout(log):
             main(command)
         return json.loads((target/'result.json').read_text())
@@ -47,9 +49,11 @@ def run(args):
             raise ValueError('positive finite timeout required')
         if args.max_partitions<1 or args.max_partitions>64:
             raise ValueError('max-partitions must be in 1..64')
-        base=prove(args.gold,args.gate,out/'outputs')
+        base=prove(args.gold,args.gate,out/'outputs',memory_map=getattr(args,'memory_map',False))
         result['output_equivalence']=base['status']
         result['unmatched']=base.get('unmatched',{})
+        if 'memory_mapping' in base:
+            result['memory_mapping']=base['memory_mapping']
         if base['status']!='equivalent':
             result['status']=base['status']
             result['reason']='closed output proof did not establish equivalence'

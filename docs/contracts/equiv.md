@@ -374,3 +374,19 @@ signed bytes extended to 33 bits. The complete 64-bit output is compared.
 This is combinational helper equivalence, not full-width or pipeline proof.
 The recipe uses committed private source revisions and the public revision
 export flow. Its ledger records source and exported module hashes.
+
+## Memory lowering in closed internal proofs
+
+`rvw formal equiv-partitions --memory-map` lowers finite memories exactly in
+the output proof. Internal projections use that lowered design. They do not
+repeat the mapping. The combined result retains the output result's
+`memory_mapping` records. Initial storage remains
+independent. Candidate selection uses the resulting register inventory. It does
+not infer a word-to-word refinement relation for unmatched payload storage.
+All output and selected internal obligations must pass. Omitted candidates still
+prevent a combined equivalence result.
+
+Native qualification covers the four-entry, eight-bit real Spinal `StreamFifo`
+RAM and register-vector configurations. The wrapper compares payload only while
+valid. This is a finite RTL refinement result under that observation rule.
+Symbolic arrays, arbitrary capacities and banked-memory refinement remain open.

@@ -9,6 +9,7 @@ def register(subparsers):
     p.add_argument('--reset')
     p.add_argument('--reset-cycles',type=int,default=1)
     p.add_argument('--settle',type=int,default=0)
+    p.add_argument('--memory-map',action='store_true',help='lower finite memories exactly before output and internal proofs')
     p.add_argument('--max-partitions',type=int,default=16)
     p.add_argument('--timeout',type=float,default=120)
     p.add_argument('--out',required=True)
@@ -22,6 +23,6 @@ def mcp_tools():
     s={'type':'string'}
     return [ToolSpec('formal_equiv_partitions','Prove matched register observations in independent closed cones. No internal cut equality assumptions.',
         schema({'gold':{'type':'array','items':s},'gate':{'type':'array','items':s},'top':s,'clock':s,'reset':s,
-                'reset_cycles':{'type':'integer'},'settle':{'type':'integer'},'max_partitions':{'type':'integer','minimum':1,'maximum':64},
+                'reset_cycles':{'type':'integer'},'settle':{'type':'integer'},'memory_map':{'type':'boolean'},'max_partitions':{'type':'integer','minimum':1,'maximum':64},
                 'timeout':{'type':'number','exclusiveMinimum':0},'out':s},['gold','gate','top','out']),
         _runner('equiv-partitions'),long=True,side_effects='writes-files',native_tools=('Yosys','SymbiYosys','EQY'),result_envelope=True)]
