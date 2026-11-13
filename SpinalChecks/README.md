@@ -1191,3 +1191,25 @@ timeouts and errors. `rvw checks report` and MCP `checks_report` expose these
 observations. Proof and bounded counts require a reached formal trigger.
 The historical table above has unmeasured activation. Its 99 bounded engine
 observations cannot be counted as activated passing evidence.
+
+### Induction and engine races
+
+The connected preparer accepts `--mode prove`. Its SMTBMC job runs the base
+case and k-induction. The activation job remains a bounded cover.
+FIFO ordering templates assert their reference count and pointer bounds.
+These are helper assertions, not assumed DUT behavior.
+
+Run `scripts/export-portfolio.py PREPARED` to normalize each selected job
+into self-contained RTLIL and write a hashed `portfolio.json`.
+Run `rvw formal engine-race --manifest PREPARED/0/portfolio.json --out RESULT --timeout 30`.
+The plan selects three engines: SMTBMC Yices, SMTBMC Z3 and ABC PDR.
+Run one race at a time to keep at most three SBY processes.
+Preparation does not establish proof. A failed or timed-out normalization has
+no usable plan. Keep native race outcomes separate from activation covers.
+Both-core unbounded closure by check kind remains unmeasured.
+
+The [induction sample record](induction-sample-results.json) has one enum
+check on each retained core capture. SMTBMC Yices passed each unbounded job.
+The portfolio result is inconclusive with `activation_not_checked` and
+`proof_kind: none`. No check kind has qualified closure on both cores yet.
+Other check kinds were NOT RUN in this sample.

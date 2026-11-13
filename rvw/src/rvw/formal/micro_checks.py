@@ -17,6 +17,9 @@ integer head=0, tail=0, count=0;
 always @(posedge clk) begin
  if({clear}) begin head<=0; tail<=0; count<=0; end
  else begin
+  assert(count>=0 && count<={entries});
+  assert(head>=0 && head<{entries});
+  assert(tail>=0 && tail<{entries});
   assert(!pop || count>0);
   assert(!push || pop || count<{entries});
   if(pop && count>0) begin
