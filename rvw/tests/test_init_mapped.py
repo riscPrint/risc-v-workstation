@@ -148,3 +148,11 @@ def test_query_sizes_unsigned_parameter(verilog_core):
     result = make(verilog_core, params=['RESET_PC=0x80000000'])
     script = result['files']['rvw/build-db.sh'].replace('\\\n', ' ')
     assert "RESET_PC=32'h80000000" in shlex.split(script)
+
+
+def test_mapped_adapter_has_a_runtime_source(verilog_core):
+    result = make(verilog_core)
+    source = verilog_core / 'rvw/src/main/scala/RvwMappedRuntime.scala'
+    assert source.is_file()
+    assert 'object RvwMappedRuntime' in source.read_text()
+    assert str(source.relative_to(verilog_core)) in result['files']

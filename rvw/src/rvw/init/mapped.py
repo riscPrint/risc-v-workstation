@@ -449,7 +449,10 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
 9. Commit the project files before a gate.
 '''
     files = {'rvw.toml': config, 'rvw/core-map.json': json.dumps(core_map, indent=2) + '\n',
-             'rvw/run.sh': launcher, 'rvw/build.sbt': build, 'rvw/project/build.properties': 'sbt.version=1.10.7\n',
+             'rvw/run.sh': launcher, 'rvw/build.sbt': build,
+             'rvw/src/main/scala/RvwMappedRuntime.scala': (
+                 '// Keep the adapter class directory present in sbt Runtime/fullClasspath.\n'
+                 'private object RvwMappedRuntime\n'), 'rvw/project/build.properties': 'sbt.version=1.10.7\n',
              'rvw/build-smoke.sh': smoke_build, 'rvw/programs/smoke.S': SMOKE,
              'rvw/programs/link.ld': link_script(base, size), 'rvw/build-db.sh': db,
              'rvw/cosim.json': json.dumps(platform, indent=2) + '\n', 'rvw/README.md': readme,
