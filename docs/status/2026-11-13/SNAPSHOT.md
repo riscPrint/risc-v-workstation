@@ -1,5 +1,7 @@
 # Collection record
 
+Implementation review uses a separate collection at 2026-11-13T14:16:50.600662+00:00: 772 midnight merges, including 229 since 08:00 UTC. Its 209 additions to the earlier 563-record ledger are all included in the newer 775-record collection below. Keep the newer census and source records. The afternoon review sections add scope corrections for MCP, CSR, verdicts and native evidence. No native artifact was rerun for this document audit. Document checks and the fast unit set are reported in this PR.
+
 Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. PR bodies report the evidence. Their artifacts were not independently rerun.
@@ -177,3 +179,42 @@ The requested original helper directory was absent. The nearby `rvw-status-2026-
 | [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) | ClosedEvent | 2026-11-13T04:29:55Z |
 
 The currently closed set is [#70](https://github.com/riscPrint/risc-v-workstation/issues/70), [#106](https://github.com/riscPrint/risc-v-workstation/issues/106), [#118](https://github.com/riscPrint/risc-v-workstation/issues/118), [#185](https://github.com/riscPrint/risc-v-workstation/issues/185), [#206](https://github.com/riscPrint/risc-v-workstation/issues/206), [#349](https://github.com/riscPrint/risc-v-workstation/issues/349), [#379](https://github.com/riscPrint/risc-v-workstation/issues/379). Closure events do not establish acceptance. No issue was closed or commented on. No project code, test, build, simulation, proof or MCP discovery ran. ROADMAP.md and TODO.md were not edited. No schedule was created.
+
+## Implementation review collection
+
+```json
+{
+  "collectedAt": "2026-11-13T14:16:50.600662+00:00",
+  "mainHead": "86bc98d4a6e30f86e36f4b0bb8570f4879e8aa2c",
+  "mergeWindowStart": "2026-11-13T08:00:00Z",
+  "mergedPRs": 772,
+  "since0800PRs": 229,
+  "openIssues": 213,
+  "currentlyClosedSinceMidnight": 7,
+  "midnightIssues": 218,
+  "newToday": [
+    722,
+    723
+  ],
+  "timelinePages": 258,
+  "timelinePaginationComplete": true,
+  "additionalLedgerPRs": 209,
+  "previousLedgerPRs": 563,
+  "rawLocation": "/tmp/rvw-status-2026-11-13-agent",
+  "rawSha256": {
+    "381.diff": "a52f467ec6755c3c9e9373c6b26a0ef85a4782cb0f380eb0398a80737849242d",
+    "381.json": "b472041f8aa70255b516c358ebfc18a095f382d22c5cca8ff13bfda04924b452",
+    "collection.json": "e7810c7df06e7f3981d924a381f9eaa9cd8a668650daf8dbec7ad5802cb69e66",
+    "issues.json": "e6cc7d65df265bec5aa13ebed3f6bd54810e315db6f3beb7f01179b7620cd65e",
+    "midnight-prs.json": "39dc3b6724b077726b8d8b8062e6cbedb938ab0973ada8de91d5ad832fc66566",
+    "novel-prs.json": "80ef211fe6f3f04e08c239f423820c7caf2a37c257ef425e593c78d153c432b7",
+    "prs.json": "d5161d4072ce10bc7b26348f1c5975f131087768b5dd3fbf155387e001e240a1",
+    "reviewed-labels.json": "923f817ab48c9bb3048f79c799fb234a2c32b8e950b4609e0dabea9c69707bde",
+    "timelines.json": "93bd92fdbeddd7158c39aa50fce91b7894e350bb3f55c1be457b20c76c737e12"
+  }
+}
+```
+
+The explicit-repository query used `gh pr list --state merged --search "merged:>=2026-11-13T08:00:00Z" --limit 1000 --json number,title,body,mergedAt,files,url`. A separate midnight query supplied the total. Neither reached the limit. The all-state issue query collected 258 issues, including older closed issues. Closed/reopened GraphQL events were collected for each issue. Every pagination flag is false. Reversing events after midnight reproduces the same 218-issue census. The 213 open issues and seven currently closed issues from today partition that census plus issues #722 and #723.
+
+The newer collection has 775 unique source records. All 772 records from this review collection are present. Of 229 merges since 08:00 UTC, 20 were already in the earlier ledger. This review read the other 209 source bodies. PR #381 acceptance and milestone sources remain unchanged. No issue was edited, closed or commented on. Root ROADMAP.md and TODO.md were not edited. The union rebase duplicated source records and table rows; they were reconciled against the newer main collection rather than retained twice.
