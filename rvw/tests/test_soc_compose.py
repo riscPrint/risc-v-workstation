@@ -33,7 +33,7 @@ def test_compose(tmp_path):
 @pytest.mark.parametrize('change,match', [
     ({'devices': {}}, 'every region'),
     ({'core': {'class': 'bad;code', 'bus': 'apb3'}}, 'Scala'),
-    ({'core': {'class': 'Good', 'bus': 'axi4'}}, 'APB3'),
+    ({'core': {'class': 'Good', 'bus': 'unknown'}}, 'core bus'),
     ({'clock_hz': 0}, 'clock_hz'),
 ])
 def test_refuse(tmp_path, change, match):
@@ -80,3 +80,58 @@ def test_pin_and_irq_binders(tmp_path):
     text=(tmp_path/'out/ComposedSoc.scala').read_text()
     assert 'core.interrupts(3) := clint.io.softwareIrq' in text
     assert 'clint.io.softwareIrq.toIo()' in text
+
+
+@pytest.mark.parametrize('bus', ['axi4', 'axi4-lite', 'tilelink'])
+def test_byte_bus(tmp_path, bus):
+    p, spec = setup(tmp_path)
+    spec['core']['bus'] = bus
+    p.write_text(json.dumps(spec))
+    result = compose(p, tmp_path/'out')
+    text = (tmp_path/'out/ComposedSoc.scala').read_text()
+    assert 'BusIngress(core.bus)' in text
+    assert 'byteWrites = true' in text
+    assert result['profile'] == bus + '-rv32-byte'
+
+
+def test_domain_binding(tmp_path):
+    p, spec = setup(tmp_path)
+    spec['domains'] = {'slow': {'clock_hz': 10000000, 'reset': 'async_high'}}
+    spec['devices']['ram']['domain'] = 'slow'
+    p.write_text(json.dumps(spec))
+    compose(p, tmp_path/'out')
+    text = (tmp_path/'out/ComposedSoc.scala').read_text()
+    assert 'new ClockingArea(slow_domain)' in text
+    assert 'BusClockCrossing(ram_crossing, slow_domain)' in text
+    assert 'val ram = ram_area.device' in text
+    spec['devices']['ram']['domain'] = 'missing'
+    p.write_text(json.dumps(spec))
+    with pytest.raises(ValueError, match='unknown domain'):
+        compose(p, tmp_path/'bad')
+
+
+def test_device_clock_export(tmp_path):
+    from rvw.soc.software import board_dts
+    from rvw.soc.model import load
+    p, spec = setup(tmp_path)
+    spec['domains'] = {'slow': {'clock_hz': 10000000, 'reset': 'sync_high'}}
+    from rvw.soc.peripherals import peripheral
+    obj = json.loads((tmp_path/'soc.json').read_text())
+    for kind in ('clint', 'uart16550'):
+        device = peripheral(kind, kind, 0x2000000 if kind == 'clint' else 0x10000000)
+        obj['regions'].append(device['region'])
+        spec['devices'][kind] = dict(device['binder'], domain='slow')
+    (tmp_path/'soc.json').write_text(json.dumps(obj))
+    text = board_dts(load(tmp_path/'soc.json'), spec)
+    assert 'timebase-frequency = <10000000>' in text
+    assert 'clock-frequency = <10000000>' in text
+
+
+@pytest.mark.parametrize('domains', [[], {'bad-name': {}}, {'core': {}}, {'slow': {'clock_hz': 0, 'reset': 'sync_high'}}])
+def test_invalid_domains(tmp_path, domains):
+    p, spec = setup(tmp_path)
+    spec['domains'] = domains
+    p.write_text(json.dumps(spec))
+    with pytest.raises(ValueError):
+        compose(p, tmp_path/'out')
+    assert not (tmp_path/'out').exists()

@@ -6,10 +6,15 @@ COMPATIBLE={'Clint':'riscv,clint0','Plic':'riscv,plic0','Uart16550':'rvw,uart165
 
 
 def board_dts(obj,spec):
+    def frequency(name):
+        domain = spec['devices'][name].get('domain')
+        return spec.get('domains', {}).get(domain, {}).get('clock_hz', spec['clock_hz'])
+    timer = next((r['name'] for r in obj['regions'] if spec['devices'][r['name']].get('class', '').split('.')[-1] == 'Clint'), None)
+    timebase = frequency(timer) if timer is not None else spec['clock_hz']
     lines=['/dts-v1/;','/ {','  #address-cells = <2>;','  #size-cells = <2>;',
            '  compatible = "rvw,verification-soc";',f'  model = {json.dumps(obj["name"])};',
            '  cpus {','    #address-cells = <1>;','    #size-cells = <0>;',
-           f'    timebase-frequency = <{spec["clock_hz"]}>;',
+           f'    timebase-frequency = <{timebase}>;',
            '    rvw_cpu0: cpu@0 {','      device_type = "cpu";','      reg = <0>;',
            '      compatible = "riscv";',f'      riscv,isa = {json.dumps(obj["platform"]["isa"])};',
            '      rvw_cpu_intc: interrupt-controller {','        #interrupt-cells = <1>;',
@@ -32,7 +37,7 @@ def board_dts(obj,spec):
             if causes:
                 lines += ['      interrupts-extended = '+', '.join(f'<&rvw_cpu_intc {i}>' for i in causes)+';']
             if cls=='Plic':lines+=['      interrupt-controller;','      #interrupt-cells = <1>;','      riscv,ndev = <7>;']
-            if cls=='Uart16550':lines+=['      reg-shift = <2>;','      reg-io-width = <4>;',f'      clock-frequency = <{spec["clock_hz"]}>;']
+            if cls=='Uart16550':lines+=['      reg-shift = <2>;','      reg-io-width = <4>;',f'      clock-frequency = <{frequency(name)}>;']
         lines += ['    };']
     return '\n'.join(lines+['  };','};'])+'\n'
 

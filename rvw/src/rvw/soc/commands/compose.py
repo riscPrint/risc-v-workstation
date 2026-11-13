@@ -4,7 +4,7 @@ from rvw.soc.compose import compose
 
 
 def register(sub):
-    p = sub.add_parser('compose', help='generate an APB3 Spinal SoC from explicit project binders')
+    p = sub.add_parser('compose', help='generate a Spinal SoC with explicit bus and domain binders')
     p.add_argument('spec')
     p.add_argument('--out', required=True)
     p.add_argument('--elf')
@@ -26,5 +26,5 @@ def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     def execute(**args):
         return compose(**args)
-    return [ToolSpec('soc_compose', 'Generate an APB3 RV32 Spinal top. Generation is not simulation evidence.',
+    return [ToolSpec('soc_compose', 'Generate an RV32 Spinal top with bus ingress bridges. Generation is not simulation evidence.',
                      schema({'source': {'type':'string'}, 'out': {'type':'string'}, 'elf': {'type':'string'}}, ['source','out']), execute)]

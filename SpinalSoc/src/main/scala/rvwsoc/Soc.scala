@@ -16,8 +16,8 @@ trait CoreWrapper { this: Component =>
 
 /** Word accesses only. APB3 has no byte strobes. ROM writes return an error. */
 class WordMemory(addressBits: Int, words: Int, readOnly: Boolean,
-                 image: Seq[BigInt]) extends Component {
-  val io = new Bundle { val bus = slave(Apb3(Apb3Config(addressBits, 32))) }
+                 image: Seq[BigInt], byteWrites: Boolean = false) extends Component {
+  val io = new Bundle { val bus = slave(Apb3(Apb3Config(addressBits, 32, useStrb = byteWrites))) }
   val mem = Mem(Bits(32 bits), words)
   require(image.size <= words)
   mem.initBigInt(image ++ Seq.fill(words - image.size)(BigInt(0)))
@@ -28,14 +28,31 @@ class WordMemory(addressBits: Int, words: Int, readOnly: Boolean,
   io.bus.PSLVERROR := !aligned || (io.bus.PWRITE && Bool(readOnly))
   if (!readOnly) {
     when(io.bus.PSEL.lsb && io.bus.PENABLE && io.bus.PWRITE && aligned) {
-      mem.write(index, io.bus.PWDATA)
+      if (byteWrites) mem.write(index, io.bus.PWDATA, mask = io.bus.PSTRB)
+      else mem.write(index, io.bus.PWDATA)
     }
   }
 }
 
 object Fabric {
   def connect(master: Apb3, targets: Seq[(Apb3, SizeMapping)]): Unit = {
-    val decoder = Apb3Decoder(master, targets)
+    val decoder = new Apb3Decoder(master.config, targets.map(_._2))
+    val router = new Apb3Router(decoder.io.output.config)
+    decoder.io.input <> master
+    router.io.input <> decoder.io.output
+    targets.map(_._1).zip(router.io.outputs).foreach { case (target, output) => target << output }
+    // SpinalHDL 1.15.0 decoder/router omit the optional strobe/protection wires.
+    // Keep library decode/error behavior and supply only those missing wires.
+    decoder.rework {
+      if(master.config.useStrb) decoder.io.output.PSTRB := decoder.io.input.PSTRB
+      if(master.config.useProt) decoder.io.output.PPROT := decoder.io.input.PPROT
+    }
+    router.rework {
+      router.io.outputs.foreach { output =>
+        if(master.config.useStrb) output.PSTRB := router.io.input.PSTRB
+        if(master.config.useProt) output.PPROT := router.io.input.PPROT
+      }
+    }
     ApbChecks(master)
     targets.foreach(t => ApbChecks(t._1))
     val selected = decoder.io.output.PSEL
@@ -58,11 +75,15 @@ object ApbChecks {
     val previousAddress = RegNext(bus.PADDR)
     val previousWrite = RegNext(bus.PWRITE)
     val previousData = RegNext(bus.PWDATA)
+    val previousMask = if(bus.config.useStrb) RegNext(bus.PSTRB) else null
     val previousCompleted = RegNext(selected && bus.PENABLE && bus.PREADY) init(False)
     when(previousHold) {
       assert(selected && bus.PENABLE, "APB setup/wait must advance to access")
       assert(bus.PADDR === previousAddress && bus.PWRITE === previousWrite, "APB control must remain stable")
-      when(previousWrite) { assert(bus.PWDATA === previousData, "APB write data must remain stable") }
+      when(previousWrite) {
+        assert(bus.PWDATA === previousData, "APB write data must remain stable")
+        if(bus.config.useStrb) assert(bus.PSTRB === previousMask, "APB strobes must remain stable")
+      }
     }
     when(previousCompleted) { assert(!selected || !bus.PENABLE, "APB completion requires setup or idle") }
   }
