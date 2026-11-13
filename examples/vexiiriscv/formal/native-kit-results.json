@@ -1,0 +1,82 @@
+{
+  "schema": "rvw.datapath-kit/1",
+  "status": "needs_confirmation",
+  "unit": "mul",
+  "width": null,
+  "candidates": [
+    {
+      "component": "unit0",
+      "module": "VexiiMul",
+      "evidence": {
+        "name_hints": [
+          "mul"
+        ],
+        "areas": [],
+        "ports": [
+          {
+            "name": "a",
+            "direction": "in",
+            "width": 33,
+            "path": "unit0.a"
+          },
+          {
+            "name": "b",
+            "direction": "in",
+            "width": 33,
+            "path": "unit0.b"
+          },
+          {
+            "name": "y",
+            "direction": "out",
+            "width": 64,
+            "path": "unit0.y"
+          }
+        ]
+      },
+      "binding": {
+        "top": "VexiiMul",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b"
+        }
+      },
+      "missing_roles": [],
+      "ambiguous_roles": {},
+      "unbound_ports": [],
+      "width_consistent": false,
+      "requires_confirmation": true,
+      "review": [
+        "operation and signedness",
+        "operand/result formats",
+        "reset polarity",
+        "transaction protocol and latency",
+        "extra ports and constants",
+        "reference model and FP flags"
+      ]
+    }
+  ],
+  "proof_ran": false,
+  "scope": "name and port structure hints only; no operation or protocol is inferred",
+  "input_capture": {
+    "env": {},
+    "files": [
+      {
+        "copy": "files/d3fafb80ea90d12c04029c5fb1b641cb89caa1bfd2980dd8affda297cb62ce17/raw-helper.db",
+        "executable": 0,
+        "resolved": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/raw-helper.db",
+        "sha256": "56f18abb2e5c2f249c6b5f31128fb6b4f517e6cf9065697d392d37d836fdd040",
+        "size": 630784,
+        "source": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/raw-helper.db",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "frontend": "yosys-verilog",
+  "graph_semantics": "conservative signal and whole-cell dependencies; register stage counts can include state aliases"
+}
