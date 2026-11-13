@@ -468,6 +468,34 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     raise ValueError("model cycle budget exhausted")
 
 
+def _instruction(row, xlen, custom_instructions=()):
+    """Decode one validated non-trapping C2 row for a selected timing window."""
+    from .custom import decode as decode_custom
+    custom = decode_custom(row, custom_instructions)
+    if custom is not None:
+        kind, sources, dest = custom
+        return Instruction(kind, sources, dest, row['pc'], row['pc_next'], 4,
+                           encoding=row['insn'], mnemonic=kind)
+    decoded = decode(row['insn'], xlen)
+    from .control import supported
+    if not supported(decoded):
+        raise ValueError(f'unsupported control instruction: {decoded.mnemonic}')
+    if decoded.cls not in ('alu', 'multiply', 'divide', 'load', 'store', 'branch', 'jump', 'csr', 'fence', 'system', 'float'):
+        raise ValueError(f'unsupported instruction: {decoded.mnemonic}')
+    mask = row['mem_rmask'] or row['mem_wmask']
+    offset = (mask & -mask).bit_length()-1 if mask else 0
+    normalized = mask >> offset
+    if normalized and normalized != (1 << normalized.bit_length()) - 1:
+        raise ValueError('noncontiguous memory mask is unsupported')
+    address, size = row['mem_addr'] + offset, normalized.bit_length()
+    if size and address + size > 1 << xlen:
+        raise ValueError('memory access crosses XLEN address range')
+    from .floating import operands
+    kind, sources, destination = operands(decoded, row)
+    return Instruction(kind, sources, destination, row['pc'], row['pc_next'], decoded.length,
+                       address, size, row['insn'], decoded.mnemonic)
+
+
 def _instructions(data, custom_instructions=()):
     trace = Trace(StringIO(data.decode()))
     try:
@@ -484,27 +512,7 @@ def _instructions(data, custom_instructions=()):
                 continue  # Inactive input declaration has no timing effect.
             if "event" in row or any(row[k] for k in ("trap", "intr", "halt", "mem_fault")):
                 raise ValueError("traps, interrupts and external events are unsupported")
-            from .custom import decode as decode_custom
-            custom = decode_custom(row, custom_instructions)
-            if custom is not None:
-                kind, sources, dest = custom
-                ops.append(Instruction(kind, sources, dest, row["pc"], row["pc_next"], 4,
-                                       encoding=row["insn"], mnemonic=kind))
-                continue
-            decoded = decode(row["insn"], trace.header["xlen"])
-            from .control import supported
-            if not supported(decoded):
-                raise ValueError(f"unsupported control instruction: {decoded.mnemonic}")
-            if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system", "float"):
-                raise ValueError(f"unsupported instruction: {decoded.mnemonic}")
-            mask = row["mem_rmask"] or row["mem_wmask"]
-            if mask and mask != (1 << mask.bit_length()) - 1:
-                raise ValueError("noncontiguous memory mask is unsupported")
-            from .floating import operands
-            kind, sources, destination = operands(decoded, row)
-            ops.append(Instruction(kind, sources, destination,
-                                   row["pc"], row["pc_next"], decoded.length,
-                                   row["mem_addr"], mask.bit_length(), row["insn"], decoded.mnemonic))
+            ops.append(_instruction(row, trace.header['xlen'], custom_instructions))
         if not ended:
             raise ValueError("missing C2 end marker")
         return ops
@@ -547,7 +555,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "structures"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     engine += Path(__file__).with_name("native_c2.c").read_bytes()
     if result["backend"] == "native":

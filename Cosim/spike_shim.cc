@@ -7,6 +7,7 @@
 #include <riscv/extension.h>
 #include <array>
 #include <cstring>
+#include <cstdlib>
 #include <cstdio>
 #include <map>
 #include <memory>
@@ -37,6 +38,8 @@ struct Machine : simif_t {
   unsigned selected = 0;
   std::ostringstream sout;
   FILE* log = nullptr;
+  char* memory_log = nullptr;
+  size_t memory_log_size = 0;
   uint64_t io_addr = 0, io_value = 0;
   bool inject = false;
   bool step_virtual = false;
@@ -52,7 +55,10 @@ struct Machine : simif_t {
     for (size_t i=0;i<nr;i++) { ram.push_back({regions[2*i],regions[2*i+1]});
       cfg.mem_layout.emplace_back(regions[2*i],regions[2*i+1]); }
     for (size_t i=0;i<ni;i++) io.push_back({mmio[2*i],mmio[2*i+1]});
-    log = tmpfile(); if (!log) throw std::runtime_error("cannot create Spike diagnostic stream");
+    const char* log_mode = std::getenv("RVW_SPIKE_MEMORY_LOG");
+    log = log_mode && std::string(log_mode)=="1"
+      ? open_memstream(&memory_log,&memory_log_size) : tmpfile();
+    if (!log) throw std::runtime_error("cannot create Spike diagnostic stream");
     cpu = std::make_unique<processor_t>(cfg.isa,cfg.priv,&cfg,this,0,false,log,sout);
     cpu->set_pmp_granularity(grain);
     if(absent_pmp_zero) {
@@ -68,7 +74,7 @@ struct Machine : simif_t {
     cpu->enable_log_commits(); cpu->set_debug(true);
     cpu->get_state()->pc = pc;
   }
-  ~Machine() { cpu.reset(); parked.clear(); if (log) fclose(log); }
+  ~Machine() { cpu.reset(); parked.clear(); if (log) fclose(log); std::free(memory_log); }
   static bool contains(const Region& r, uint64_t a, size_t n=1) {
     return n <= r.size && a >= r.base && a-r.base <= r.size-n;
   }
@@ -173,7 +179,7 @@ struct Machine : simif_t {
       } catch(...) {}
     }
     s->log_reg_write.clear(); s->log_mem_read.clear(); s->log_mem_write.clear();
-    fflush(log); ftruncate(fileno(log),0); rewind(log);
+    fflush(log); if (!memory_log) ftruncate(fileno(log),0); rewind(log);
     // An interrupt input the caller injects for this step only. The bit's earlier backdoor value is
     // kept and restored after the step: a pending bit that software set (an mip write) is reference
     // state and is never cleared here. The saved value is mip's own stored bits (the base-class
@@ -194,9 +200,16 @@ struct Machine : simif_t {
     cpu->step(1);
     if(cpu->halted()) throw std::runtime_error("debug-mode execution is not represented by C2");
     if(injected) s->mip->backdoor_write_with_mask(injected,prior);
-    fflush(log); rewind(log);
-    std::string diagnostic; char buf[1024];
-    while(fgets(buf,sizeof(buf),log)) diagnostic+=buf;
+    fflush(log);
+    std::string diagnostic;
+    if(memory_log) {
+      auto bytes=ftell(log);
+      if(bytes<0) throw std::runtime_error("cannot read Spike memory diagnostic position");
+      diagnostic.assign(memory_log,size_t(bytes));
+    } else {
+      rewind(log); char buf[1024];
+      while(fgets(buf,sizeof(buf),log)) diagnostic+=buf;
+    }
     e.trap=diagnostic.find("exception ")!=std::string::npos;
     e.halted=cpu->is_waiting_for_interrupt();
     e.pc_next=s->pc;

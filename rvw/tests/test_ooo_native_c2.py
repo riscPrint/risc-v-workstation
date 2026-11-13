@@ -82,3 +82,17 @@ def test_compressed_memory_and_dependencies(setup, xlen):
     expected=simulate(_instructions(data),c,backend='python')
     expected.pop('backend')
     assert actual==expected
+
+
+def test_shifted_contiguous_rvfi_byte_mask(setup):
+    c,t=setup
+    rows=[json.loads(line) for line in t.read_text().splitlines()]
+    for i,row in enumerate(rows[1:-1]):row.update(pc=hex(i*4),pc_next=hex((i+1)*4))
+    rows[1].update(insn='0x510083',rs1=2,rs1_rdata='0x1000',rd=1,rd_wdata='0x7f',
+                   mem_addr='0x1000',mem_rmask=0x20,mem_rdata='0x7f0000000000')
+    data=('\n'.join(map(json.dumps,rows))+'\n').encode()
+    op=_instructions(data)[0]
+    assert (op.address,op.size)==(0x1005,1)
+    packed=native.parse_c2(data,c)
+    assert packed is not None
+    assert (packed.info[3],packed.info[4])==(0x1005,1)

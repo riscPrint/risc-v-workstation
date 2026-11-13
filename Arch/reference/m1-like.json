@@ -141,7 +141,9 @@
       "load": 4,
       "store": 1,
       "branch": 1,
-      "jump": 1
+      "jump": 1,
+      "csr": 1,
+      "fence": 1
     },
     "branch_penalty": 12,
     "branch_speculation": true,

@@ -94,7 +94,11 @@ int64_t rvw_ooo_parse_c2(const char *p, size_t bytes, int xlen, Op *ops, uint64_
   for(int i=15;i<17;i++)if(v[i]>=(1ULL<<(xlen/8)))FAIL;
   for(int i=17;i<21;i++)if(v[i])FAIL;
   for(int i=0;i<9;i++)if((i==2 && v[i]>UINT32_MAX) || (xlen==32 && v[i]>UINT32_MAX))FAIL;
-  uint64_t mask=v[15]?v[15]:v[16];if(mask&(mask+1))FAIL;
+  uint64_t mask=v[15]?v[15]:v[16],offset=0;
+  if(mask) { while(!(mask&1)){mask>>=1;offset++;} }
+  if(mask&(mask+1))FAIL;
+  if(v[6]>UINT64_MAX-offset)FAIL;
+  uint64_t address=v[6]+offset;
   unsigned ix=((uint32_t)v[2]*2654435761u+(unsigned)v[14])&65535;
   Template *t=&cache[ix];
   if(!t->valid || t->word!=(uint32_t)v[2] || t->rd!=(int)v[14]) {
@@ -105,8 +109,8 @@ int64_t rvw_ooo_parse_c2(const char *p, size_t bytes, int xlen, Op *ops, uint64_
   if(v[0]>UINT64_MAX-t->length)FAIL;
   ops[n]=t->op;ops[n].miss=v[1]!=v[0]+t->length;
   uint64_t size=0;while(mask){size++;mask>>=1;}
-  if((ops[n].kind==3 || ops[n].kind==4) && (!size || v[6]>UINT64_MAX-size))FAIL;
-  uint64_t *a=info+6*n;a[0]=v[0];a[1]=v[1];a[2]=t->length;a[3]=v[6];a[4]=size;a[5]=t->bk;
+  if((ops[n].kind==3 || ops[n].kind==4) && (!size || address>UINT64_MAX-size || (xlen==32 && address+size>(1ULL<<32))))FAIL;
+  uint64_t *a=info+6*n;a[0]=v[0];a[1]=v[1];a[2]=t->length;a[3]=address;a[4]=size;a[5]=t->bk;
   n++;
  }
  free(cache);return ended && n?n:-1;

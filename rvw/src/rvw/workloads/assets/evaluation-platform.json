@@ -1,0 +1,11 @@
+{
+  "name": "workloads",
+  "xlen": 64,
+  "isa": "rv64imafdc_zicsr_zifencei_zicntr_zihpm",
+  "reset_pc": "0x80000000",
+  "ram": [{"base": "0x80000000", "size": "0x10000000"}],
+  "mmio": [],
+  "pmp_regions": 8,
+  "privilege_modes": "MSU",
+  "aligned_mem": true
+}
