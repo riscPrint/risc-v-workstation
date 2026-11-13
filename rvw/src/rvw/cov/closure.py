@@ -58,10 +58,17 @@ def closure(report_path, candidates_path, exclusions=None):
                               'exclusion': p.get('exclusion')})
     else:
         raise ValueError('unsupported coverage report')
+    # Native point catalogs can contain thousands of literal SHA-256 IDs.
+    # Index literals once; retain fnmatch behavior for all wildcard patterns.
+    indexed = []
+    for test in sorted(candidates, key=lambda t: (-t['priority'], t['id'])):
+        exact = {p for p in test['targets'] if not any(c in p for c in '*?[')}
+        patterns = [p for p in test['targets'] if p not in exact]
+        indexed.append((test, exact, patterns))
     for hole in holes:
-        hole['candidate_tests'] = [dict(t, evidence='declared suggestion; not measured') for t in sorted(
-            candidates, key=lambda t: (-t['priority'], t['id']))
-            if any(fnmatchcase(hole['id'], pattern) for pattern in t['targets'])]
+        hole['candidate_tests'] = [dict(t, evidence='declared suggestion; not measured')
+            for t, exact, patterns in indexed
+            if hole['id'] in exact or any(fnmatchcase(hole['id'], pattern) for pattern in patterns)]
     return {'schema': 'rvw.coverage-closure/1', 'report_sha256': captured.file(report_path).sha256,
             'candidates_sha256': captured.file(candidates_path).sha256,
             'exclusions_sha256': captured.file(exclusions).sha256 if exclusions else None,

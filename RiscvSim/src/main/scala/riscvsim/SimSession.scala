@@ -44,7 +44,8 @@ object RiscvSimConfig {
       sourceRoots: Seq[File] = Nil)(rtl: => T): SpinalReport[T] = {
     val started = System.nanoTime()
     val cfg = config.copy(targetDirectory = new File(work, key.name + "-rtl").getAbsolutePath,
-      headerWithRepoHash = false, headerWithDate = false).includeSimulation
+      headerWithRepoHash = false, headerWithDate = false,
+      genLineComments = config.genLineComments || key.coverage).includeSimulation
     cfg.noAssertAtTimeZero = true
     cfg.addTransformationPhase(new PhaseNetlist {
       override def impl(pc: PhaseContext): Unit = {
@@ -65,7 +66,9 @@ object RiscvSimConfig {
     })
     if (key.faults) cfg.addTransformationPhase(new FaultFile.PublicRegisters)
     cfg.addTransformationPhase(new SimVerilatorPhase)
-    val report = if (key.spinaltrace) spinaltrace.SpinalTrace.elaborate(cfg)(rtl) else cfg.generateVerilog(rtl)
+    val report = if (key.spinaltrace) spinaltrace.SpinalTrace.elaborate(cfg)(rtl)
+      else if (key.coverage) spinalwaves.SpinalWaves.elaborateWithLocations(cfg)(rtl)
+      else cfg.generateVerilog(rtl)
     if (key.spinaltrace) {
       spinaltrace.PdgExtractor.extractTo(report, dependencyGraph(key, work), spinaltrace.ExtractOptions(sourceRoots = sourceRoots))
     }

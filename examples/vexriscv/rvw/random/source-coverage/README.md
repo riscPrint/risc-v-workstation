@@ -1,0 +1,49 @@
+# Native source coverage sample
+
+Four physical ISA programs (`add`, `beq`, `lw`, `sw`) passed C1 and complete
+strict Spike comparison. Each program uses a fresh simulation with seed 1.
+No masks or synchronization were used. The private locks are `vex-dv` and
+`sbt-dv`. `RISCVSIM_COVERAGE=line,toggle` selects the native metrics.
+
+| Metric | Hit | Total | Holes |
+|---|---:|---:|---:|
+| branch | 750 | 928 | 178 |
+| line | 584 | 753 | 169 |
+| toggle | 16581 | 19748 | 3167 |
+
+The add baseline hits 17367 points. The four-program union hits
+17915 points. The added workloads close 548 holes.
+Six closed points have Scala source links. The full native denominator stays
+21429. Only 558 points have source links.
+The rest remain unmapped. No Scala statement hit is inferred.
+
+[The source report](source-report.json) keeps line/toggle/branch metrics and
+functional groups separate. Functional links to the ALU source line are
+project declarations. They are not measured statement attribution.
+The report emits native `code_targets` and semantic `functional_targets`.
+
+The initial native holes drive `rvw cov closure` suggestions. Candidate
+signatures come from these same four measured workloads. The best additional
+workload is `rv32ui-p-sw`. It targets
+545 initial holes. This is measured suite
+guidance. It is not a held-out prediction or an adaptive generator campaign.
+The controller's native code-feedback receipt remains a separate obligation.
+
+[The measurement](measurement.json) records input hashes and point identities.
+Raw C1, C2, DAT, functional reports and candidate signatures remain under
+`rvw/out/dv/source-vexriscv` in the worker checkout. Path aliases in these published records are
+for display. The source-report hash pins the original raw report.
+
+To make a new report, run the example adapter with `--rvfi-trace --coverage
+--probes`, seed 1 and zero memory latency. Qualify its full C2 trace with
+`rvw cosim check --strict`. Merge its C1 paths with `rvw cov merge`. Generate
+functional coverage from the same traces and the project's ISA manifest.
+Then run `rvw cov source-report --database code.json --functional
+functional.json --bindings source-bindings.json --json`. Bind exact native
+source lines and fixed functional groups as described in the coverage README.
+
+These results do not grant C4 acceptance or whole-core qualification.
+
+A fresh guided replay matched all 554 instructions against Spike.
+It closed 545 initial native holes. No masks or synchronization
+were used. The replay uses the characterized workload and seed.

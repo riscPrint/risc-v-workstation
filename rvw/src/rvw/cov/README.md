@@ -1147,3 +1147,21 @@ points with source navigation links. They do not establish individual Scala
 statement hits. Unmapped points remain in the report's unmapped denominator.
 
 See [reusable block evidence](BLOCK_EVIDENCE.md) for exact tested parameter and assumption checks.
+
+### Joined source navigation
+
+`rvw cov source-report --database code.json --functional functional.json
+--bindings source-bindings.json --json` joins native counters and declared
+functional goals per Scala source line. MCP: `cov_source_report`.
+The bindings use `rvw.source-bindings/1`, the native `point_universe`, the
+functional `functional_config_sha256`, and `links` with `file`, `line`, `groups`.
+Each line must already have native source links. Functional links are project
+claims. They are not measured statement hits. Unmapped evidence stays visible.
+The output keeps metric totals and functional denominators separate.
+Use `code_targets` as the target list of a code-goal plan. Use
+`functional_targets` to select supported generator goals. Neither list grants
+coverage credit. A new qualified execution must measure each hit.
+
+Coverage elaboration enables Spinal source locations and generated line
+comments. Set `RISCVSIM_COVERAGE=line,toggle` for both native metric families.
+Default native kinds remain selected by the existing Verilator version gate.

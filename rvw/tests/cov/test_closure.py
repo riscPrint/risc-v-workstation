@@ -73,3 +73,17 @@ def test_closure_includes_uncompleted_rtl_sequences(tmp_path):
     assert hole['id'] == 'request-response'
     assert hole['pending'] == 1
     assert hole['reachability'] == 'undetermined'
+
+
+def test_native_literal_catalog_does_not_scan_each_pattern(tmp_path,monkeypatch):
+    import importlib
+    module=importlib.import_module('rvw.cov.closure')
+    points=[{'id':f'{i:064x}','count':0} for i in range(100)]
+    r,c=tmp_path/'code.json',tmp_path/'candidates.json'
+    r.write_text(json.dumps({'schema':'rvw.coverage/1','tests':{},'points':points}))
+    c.write_text(json.dumps({'schema':'rvw.coverage-candidates/1','tests':[
+        {'id':'candidate','targets':[p['id'] for p in points],'priority':1,'reason':'measured signatures'}]}))
+    monkeypatch.setattr(module,'fnmatchcase',lambda *args:pytest.fail('literal native IDs need no wildcard scan'))
+    result=module.closure(r,c)
+    assert len(result['unhit'])==100
+    assert all(h['candidate_tests'][0]['id']=='candidate' for h in result['unhit'])
