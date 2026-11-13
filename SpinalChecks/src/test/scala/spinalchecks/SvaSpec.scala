@@ -30,6 +30,8 @@ class SvaSpec extends AnyFunSuite {
     val a = signal("a").sequence
     assert(a.thenAfter(2, a).repeat(2).firstMatch.render == "first_match(((a) ##2 (a))[*2:2])")
     intercept[IllegalArgumentException](signal("a; bad"))
+    assert(signal("data").past(2).render == "$past(data, 2)")
+    intercept[IllegalArgumentException](signal("data").past(0))
     intercept[IllegalArgumentException](a.repeat(0))
     intercept[IllegalArgumentException](a.thenAfter(65, a))
   }

@@ -27,6 +27,10 @@ object Sva {
       new Expr(() => s"(${render}) == $number")
     }
     def past: Expr = new Expr(() => s"$$past(${render})")
+    def past(ticks: Int): Expr = {
+      require(ticks >= 1 && ticks <= 64, "history depth must be in 1..64")
+      new Expr(() => s"$$past(${render}, $ticks)")
+    }
     def rose: Expr = new Expr(() => s"$$rose(${render})")
     def fell: Expr = new Expr(() => s"$$fell(${render})")
     def stable: Expr = new Expr(() => s"$$stable(${render})")

@@ -1355,8 +1355,16 @@ left operand at every sample of the right sequence.
 Single-argument `$past`, `$rose`, `$fell`, `$stable`, and `$changed` use the
 property clock. Edge functions use bit zero. Stability functions compare the
 full vector. History before the first event is unconstrained in formal.
-Nested sampled calls, explicit history depths, and sampled calls in `disable iff`
-remain refused. No cross-clock history or full simulator scheduling is claimed.
+`$past(expr, N)` supports positive decimal depths from 1 to 64. Nested sampled
+calls are supported to a depth of eight. Sampled calls in `disable iff`, gated
+history and explicit alternate clock arguments remain refused. No cross-clock
+history or full simulator scheduling is claimed.
+
+Historic values retain the source expression width and signedness. In Icarus,
+edge functions use four-state case comparisons. Stability functions compare all
+bits, including X/Z. Formal initial history remains unconstrained. This does not
+qualify every typed initialization or simulator scheduling region. The Scala
+builder exposes explicit depth as `.past(N)`.
 The [support table](TEMPORAL_SUPPORT.md) is generated from the semantic test
 corpus. It records test scope, not a complete SystemVerilog conformance claim.
 
