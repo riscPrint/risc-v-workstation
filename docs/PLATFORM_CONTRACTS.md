@@ -1496,6 +1496,15 @@ checker mode export HGLDD only. Trace, GUI and export mode require PDG and HGLDD
 The output directory must be empty. Native consumer exit codes pass through.
 This export establishes artifact identity, not waveform or dynamic trace parity.
 
+### VIP JTAG topology
+
+`rvw.vip.jtag-topology/1` exports ordered TAP declarations with instruction
+lengths, TDI/TDO pins, test resets, access requirements and selected modes.
+It reports missing adjacent connections and unreachable modes against the
+caller-supplied graphs. Missing either graph gives `inconclusive` unless a
+mismatch is already observed. `checked` covers only the supplied graphs.
+The format carries no RISC-V debug conformance or extracted-design claim.
+
 ## C7. MCP tools (`rvw mcp`)
 
 `rvw mcp` is one stdio MCP server for every rvw tool. Each subpackage plugs in without editing
