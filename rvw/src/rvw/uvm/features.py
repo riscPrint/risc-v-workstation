@@ -1,5 +1,6 @@
 """Derive a bounded engine feature table from C3 conformance evidence."""
 from rvw.results import load_results
+from rvw.sim.uvm_features import UNSUPPORTED
 
 FEATURES = {
  'phases_config_factory_tlm': ('phasing, config DB, factory, TLM', 'none in checked scope'),
@@ -25,6 +26,10 @@ def table(path):
         {'feature': 'full CORE-V-VERIF bench', 'test': None, 'status': 'not established', 'runs': 0,
          'workaround': 'use project adapter and qualify each required feature'},
     ])
+    rows.extend({'feature': feature.replace('_', ' '), 'test': None,
+                 'status': 'not established', 'runs': 0,
+                 'workaround': diagnostic + '; ' + workaround}
+                for feature, (diagnostic, workaround) in UNSUPPORTED.items())
     return {'evidence': str(path), 'features': rows}
 
 

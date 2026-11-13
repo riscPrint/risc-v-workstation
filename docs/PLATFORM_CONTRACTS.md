@@ -1713,6 +1713,7 @@ source identity; it does not earn C4 acceptance.
 startup. Unqualified requirements have `unsupported:uvm_*` diagnostics and
 named workarounds in `Uvm/FEATURES.md`. Unknown names are refused. These
 profile limits do not claim universal simulator language limitations.
+
 ## UVM bench manifests and results
 
 `rvw.uvm/1` declares `name`, `top`, ordered `sources` and unique `tests`.
@@ -1730,7 +1731,6 @@ counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
 C1 and log. `source.identity_complete` is false. These results are component
 checks, not a core gate identity. Native coverage merging does not merge
 functional coverage plans or establish closure.
-
 
 ## C9. Native architecture models
 

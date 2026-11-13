@@ -152,3 +152,15 @@ def test_regression_preserves_wall_timeout(tmp_path, monkeypatch):
     assert report['tests'][0]['status']=='timeout'
     assert report['tests'][0]['wall_clock_timeout'] is True
     assert report['tests'][0]['signature']=='timeout:wall-clock'
+
+
+
+def test_feature_table_includes_profile_diagnostics(tmp_path):
+    from rvw.uvm.features import table
+    from rvw.sim.uvm_features import UNSUPPORTED
+    build = binary_fixture(tmp_path)
+    flow.regress(build, tmp_path/'runs')
+    rows = table(tmp_path/'runs')['features']
+    workarounds = [row['workaround'] for row in rows]
+    for diagnostic, _ in UNSUPPORTED.values():
+        assert any(diagnostic in value for value in workarounds)
