@@ -174,3 +174,11 @@ Installation and core adapter mapping remain explicit CLI or manual steps.
 `rvw_doctor` is read-only. `doctor_smoke` runs the native smoke path as a job.
 `init_scaffold` writes project files through the existing scaffold generator.
 Neither scaffold generation nor workflow membership is verification evidence.
+
+## Negative evidence status
+
+When a provider omits `status`, the common envelope uses its explicit negative
+`verdict` as the status. This includes a C4 `reject`, mapped to `fail`.
+An ungraded completion keeps `status: ok` and has no pass verdict.
+An explicit job lifecycle status, such as `done`, stays unchanged. Read its
+`result` to determine the verification outcome.

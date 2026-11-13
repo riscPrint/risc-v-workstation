@@ -20,7 +20,9 @@ def envelope(value, *, error=False):
         data["verdict"] = C4_VERDICTS.get(old_verdict, "inconclusive") if c4 else "inconclusive"
     elif verdict is not None:
         data["verdict"] = verdict
-    data.setdefault("status", "error" if error or data.get("error") else "ok")
+    evidence_status = data.get("verdict")
+    default_status = evidence_status if evidence_status in VERDICTS - {"pass"} else "ok"
+    data.setdefault("status", "error" if error or data.get("error") else default_status)
     data.setdefault("summary", str(data.get("error") or data.get("note") or "Command completed; inspect the returned evidence."))
     data.setdefault("artifacts", [])
     data.setdefault("next", ([{"tool": "job_status", "arguments": {"job_id": data["job_id"], "wait_s": 60}}]
