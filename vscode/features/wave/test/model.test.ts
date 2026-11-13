@@ -37,3 +37,15 @@ test('txn and find rows carry times; no pass wording', () => {
   assert.doesNotMatch(headline('diff', {status: 'match', points_compared: 3}), /pass/i);
   assert.deepEqual(cutArgv('w.vcd', 50, 100, '/t/o.vcd'), ['wave', 'cut', 'w.vcd', '--from', '0', '--to', '150', '-o', '/t/o.vcd', '--json']);
 });
+
+test('sessions report missing and changed artifacts and expose embedded queries', async () => {
+  const { sessionHeadline, rowQuery } = await import('../src/model');
+  assert.equal(sessionHeadline({status: 'complete', artifacts: {wave: {status: 'ok'}}}), 'session complete: 1 artifacts verified');
+  assert.equal(sessionHeadline({status: 'incomplete', artifacts: {wave: {status: 'changed'}, result: {status: 'missing'}},
+    missing_signals: ['a']}), 'session incomplete: wave changed, result missing, 1 signals missing');
+  const q = {schema: 'rvw.wave-query/1', kind: 'find', wave: 'w.vcd', args: ['valid'], options: {}};
+  assert.equal(rowQuery({key: '0', value: q})?.kind, 'find');
+  assert.equal(rowQuery({key: '0', value: {schema: 'other'}}), undefined);
+  const { rowTime } = await import('../src/model');
+  assert.equal(rowTime({key: 'cursor_at', value: 25}), 25);
+});

@@ -12,6 +12,8 @@ their output. See `rvw/src/rvw/wave/README.md` for each query's semantics.
 | Wave: Open Result JSON | Open the whole result, or the selected row, as JSON |
 | Wave: Open Driver Location | On a `why` assignment row: open its database `file:line` |
 | Wave: Jump to Signal Source via Design Database | On a signal row: `rvw query where`, then open the line only when the captured source hash matches |
+| Wave: Open Debug Session | `rvw wave session open`: artifact status (ok, changed, missing), signals, cursors and embedded queries; an incomplete session shows a warning headline |
+| Wave: Run Saved Query | On an embedded query row of a session: run it |
 | Wave: Open Window in Surfer | On a row with a time (match, transfer, issue, divergence, `set_at`): `rvw wave cut` ±`wave.windowSpan` around it and open the cut in Surfer |
 
 Saved query file (`rvw.wave-query/1`), paths relative to the file:

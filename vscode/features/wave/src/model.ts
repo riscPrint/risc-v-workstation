@@ -121,3 +121,20 @@ export function cutArgv(wave: string, time: number, span: number, out: string): 
   const from = Math.max(0, time - span);
   return ['wave', 'cut', wave, '--from', String(from), '--to', String(time + span), '-o', out, '--json'];
 }
+
+/** Summary of `rvw wave session open` output. Incomplete sessions say what is missing. */
+export function sessionHeadline(r: RecordValue): string {
+  if (r.error) return `error: ${String(r.error)}`;
+  const artifacts = Object.entries(object(r.artifacts));
+  const bad = artifacts.filter(([, v]) => object(v).status !== 'ok').map(([k, v]) => `${k} ${String(object(v).status)}`);
+  const missing = Array.isArray(r.missing_signals) ? r.missing_signals.length : 0;
+  return r.status === 'complete' ? `session complete: ${artifacts.length} artifacts verified`
+    : `session incomplete: ${[...bad, ...(missing ? [`${missing} signals missing`] : [])].join(', ')}`;
+}
+
+/** An embedded saved query of a session row, or undefined. */
+export function rowQuery(row: Row | undefined): WaveQuery | undefined {
+  const v = object(row?.value);
+  if (v.schema !== 'rvw.wave-query/1') return undefined;
+  try { return parseQuery(JSON.stringify(v)); } catch { return undefined; }
+}
