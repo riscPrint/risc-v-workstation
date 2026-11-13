@@ -168,3 +168,137 @@ set had 2,949 passes, one skip and 8,076 deselected tests. The one failure was
 the same documentation-staging test named above. Final disk check had 25 GiB
 free. Retained scratch data is about 424 MiB, mainly JSON receipts and C2 traces.
 No waves or Verilator build trees were written to `/private/tmp`.
+
+## Second pass: generated native bindings
+
+This is an informed implementation rerun on the same Stepper core. It is not
+another independent clean-room trial. The worker read workstation code to fix
+the gaps. Native commands used the new guides, generated inputs and command
+help. The original 50/50 regression and strict comparisons were not repeated.
+Those counts remain historical evidence from the first pass.
+
+The generic changes are separate small PRs: mapped MCP init
+[#1222](https://github.com/riscPrint/risc-v-workstation/pull/1222), security
+[#1224](https://github.com/riscPrint/risc-v-workstation/pull/1224), formal ISA
+[#1225](https://github.com/riscPrint/risc-v-workstation/pull/1225), CPU SoC
+[#1227](https://github.com/riscPrint/risc-v-workstation/pull/1227), and live
+pyuvm/VIP [#1229](https://github.com/riscPrint/risc-v-workstation/pull/1229).
+Probe endpoints, declaration stubs and shim diagnostics are in
+[#1230](https://github.com/riscPrint/risc-v-workstation/pull/1230).
+No Stepper source was committed to the workstation. The new scratch project
+inputs were uncommitted during these functional runs. No gate acceptance or
+release qualification is claimed.
+
+Scores below describe setup. `NOT RERUN` means that the earlier score is
+retained without new runtime evidence. The new scores are provisional because
+the implementation worker knew the changes. They do not establish how a new
+independent agent will perform.
+
+| Step | Earlier after-fix score | Second-pass score | New result |
+|---|---|---|---|
+| Install check / doctor | worked after one doc lookup | smooth | Stale shim diagnostic gives the exact rebuild command. Shim rebuilt during bench setup. Presence does not qualify the core. |
+| Init | smooth | smooth | Mapped init through stdio MCP: planned, exit 0, 0.819 s. Bus roles and RVFI options reach the generator. Dry run did not overwrite the project. |
+| Adapter / RVFI build | smooth | smooth | Shared export entry compiled and emitted Stepper RTL. Native probe rerun also compiled the changed adapter. |
+| First ELF | smooth | smooth | New direct pyuvm smoke: 15 live Spike-checked retirements and passing tohost. |
+| RV32UI / RV32UM regression | smooth | smooth | NOT RERUN. Earlier 50 passes retained. |
+| Spike comparison | worked after one doc lookup | worked after one doc lookup | NOT RERUN as a suite. New finite live scoreboards passed. The guarded split-memory platform choice remains explicit. |
+| Planted-bug bundle | smooth | smooth | NOT RERUN. |
+| Committed gate accept / reject | smooth | smooth | NOT RERUN. New dirty functional runs do not earn acceptance. |
+| Bisect | smooth | smooth | NOT RERUN. |
+| Database / query | worked after one doc lookup | worked after one doc lookup | Existing database used for top validation. Extraction NOT RERUN. |
+| Probes / perf | worked after one doc lookup | smooth | Direct mapped --konata: 15 retired events, zero open IDs. C1 and C2 each have 15 retirements. The terminal native regression passed in 8.40 s. |
+| Coverage | smooth | smooth | NOT RERUN. |
+| checks plan | smooth | smooth | Stdio MCP returned the plan in 0.872 s. Rule rows include declaration templates. |
+| checks generate --all | worked after one doc lookup | worked after one doc lookup | Review-only signal-role and Scala declaration stubs are generated. Remaining families need actual semantic bindings. Monitor execution NOT RUN. |
+| Scala property DSL | worked after one doc lookup | worked after one doc lookup | NOT RERUN. |
+| formal isa | blocked | worked after one doc lookup | Generated kit ran instruction and cover checks. Per-check results follow. No machine-state or observer conformance proof. |
+| Formal autocheck | worked after one doc lookup | worked after one doc lookup | NOT RERUN. |
+| Lint | worked after one doc lookup | worked after one doc lookup | NOT RERUN. |
+| Fault | smooth | smooth | NOT RERUN. |
+| Security | blocked | worked after one doc lookup | Generated pair completed two native runs: no_leak_observed. Precise and conservative flow trials each reached the 115 s preparation limit. No flow verdict. |
+| Arch build / what-if | worked after one doc lookup | worked after one doc lookup | NOT RERUN. |
+| SoC compose / verify | blocked | worked after one doc lookup | Real Stepper wrapper elaborated. Composed smoke: 15 matches. RAM-mailbox Hello, world!: 80 matches. Verify consumer closure remains missing. |
+| UVM / VIP scaffold | blocked | worked after one doc lookup | Generated live pyuvm bench passed. It used Python 3.13, cocotb 2.1 and pyuvm 4.0. Python 3.15 was refused by cocotb. No second bus binding was written. |
+
+### Formal per-check results
+
+The scaffold selected add, load, store and retirement cover at depth 24.
+The per-check wall limit was eight seconds. The memory binding used stable
+symbolic bytes, ordered writes and one-cycle read responses. All selected
+instruction checks reached their native engines. No handwritten ISA wrapper
+was needed. The result is not a proof of that memory environment on hardware.
+
+| Check | Depth | Result | Instruction activation |
+|---|---|---|---|
+| insn_add_ch0 | 24 | inconclusive: timeout | timeout |
+| insn_lw_ch0 | 24 | inconclusive: timeout | timeout |
+| insn_sw_ch0 | 24 | inconclusive: timeout | timeout |
+| cover | 24 | inconclusive: timeout | not applicable |
+
+A second finite trial used depth 10 with the same eight-second limit:
+
+| Check | Depth | Result | Instruction activation |
+|---|---|---|---|
+| insn_add_ch0 | 10 | inconclusive: timeout | timeout |
+| insn_lw_ch0 | 10 | inconclusive: missing or unreachable evidence | inconclusive |
+| insn_sw_ch0 | 10 | inconclusive: missing or unreachable evidence | inconclusive |
+| cover | 10 | retirement cover reached | not applicable |
+
+The cover result establishes retirement reachability only. It is not an
+instruction safety proof. The unselected ISA inventory, machine-state and
+adapter-conformance rows remain gaps. Three selected instructions do not
+cover RV32IM.
+
+### SoC verification table
+
+| Consumer | Generated | Ran | Result |
+|---|---|---|---|
+| protocol | yes | no | inconclusive |
+| registers | no | no | inconclusive |
+| vip | yes | no | inconclusive |
+| uvm | no | no | inconclusive |
+| connectivity | no | no | inconclusive |
+| decode | yes | no | inconclusive |
+| cdc_rdc | no | no | inconclusive |
+
+The separate native CPU smoke and hello runs do not fill these consumer rows.
+The hello test observed stores to a RAM mailbox through exported RVFI and
+checked all 80 retirements with Spike. It did not exercise a UART. The default
+map has RAM only. Peripheral and crossing qualification remain out of scope.
+The composer now runs the project CPU. Automatic consumer binding and closure
+are still incomplete.
+
+### Retained evidence and limits
+
+Raw receipts remain under `$RUN_ROOT`, the original clean-room scratch root.
+The report cites these small records and logs:
+
+- `second-mcp-init.log`, `second-mcp-plan.log`: real stdio calls.
+- `core/rvw/out/sec-pair-second/report.json`: two native paired runs.
+- `core/rvw/out/sec-flow-second/timeout.json`: precise flow preparation cap.
+- `core/rvw/out/sec-flow-conservative/timeout.json`: conservative flow preparation cap.
+- `core/rvw/out/formal-isa-second/result.json`: per-check depth-24 results.
+- `core/rvw/out/formal-isa-depth10/result.json`: finite depth-10 trial.
+- `core/rvw/out/uvm-mapped-fourth-run/results.json` and `run.log`: live pyuvm pass.
+- `core/rvw/out/soc-final-run-images/results.json`: composed CPU smoke pass.
+- `core/rvw/out/soc-hello-run/results.json` and `run.log`: mailbox output and 80 matches.
+- `core/rvw/out/soc-verify-second/result.json`: seven unresolved consumer rows.
+- `core/rvw/out/probe-third/result.json`, `probe-events.jsonl` and `konata.log`: final-cycle capture.
+
+Both the precise and conservative flow builds timed out at 115 seconds.
+Their owned caches were removed. No security-flow pass was
+earned. The short proof budget did not earn any depth-24 instruction pass.
+No BOOM run, full Python suite, long proof, CI wait or physical test was run.
+The report does not claim that all four native capability gaps are closed:
+flow completion and SoC consumer automation remain work.
+
+Second-pass validation before the implementation pushes: final fast sets had
+2,954, 2,963, 2,964, 2,969, 2,971 and 2,977 passes respectively. Each had one
+skip. The first set retained the then-existing docs-site failure; later sets
+passed. Final targeted follow-up selection: 52 passes. Guide and release
+selection: 48 passes. The external terminal-probe native regression passed
+once in 8.40 seconds. MCP discovery had no skipped modules. No rebase conflict
+occurred, so union-rebase.sh was not needed.
+
+Owned cocotb and SoC build directories were removed after validation. Small
+logs, JSON, project sources and the cited probe stream remain.
