@@ -77,7 +77,8 @@ An explicit evidence verdict uses pass, fail, inconclusive, no_checks,
 unsupported, not_installed or error. Completion alone has no verdict.
 Legacy result fields remain at the top level. Non-object results use result.
 An older verdict outside this vocabulary moves to legacy_verdict and the common
-verdict is inconclusive. This does not change C4 CLI decisions or exit codes.
+verdict is inconclusive. A C4 report (schema rvw.verdict/*) maps accept to pass,
+reject to fail and inconclusive to inconclusive. This does not change C4 CLI decisions or exit codes.
 The Python Registry.call API retains raw results. Registry.call_json and MCP
 apply the envelope. Artifacts and suggested next calls are empty if unknown.
 
