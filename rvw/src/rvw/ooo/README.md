@@ -648,3 +648,15 @@ Without it, sampling error remains unmeasured. No error bound or RTL accuracy
 is inferred. Tests join the actual ComponentSims SimPoint format and check a
 full-trace point against a complete model run. Large-workload sampling accuracy remains unmeasured. System power-state models
 under #201 and custom-extension trade-offs under #196 are separate tasks.
+
+### Native scan throughput
+
+The scheduler now carries branch and memory prefix state through one oldest-to-
+youngest scan per issue phase. It no longer walks older branches for every
+candidate. The same 250 seeded schedules still match the Python reference.
+`Arch/ooo/benchmark-results-prefix.json` records the updated warmed trials.
+Raw kernel trials use 500,000 instructions to reduce timer noise. Public-call
+trials use 5,000 instructions and include Python validation and packing. The
+original result file remains a historical measurement. The host was shared
+with other workers, so the two files are not a controlled before/after study.
+C2 parsing remains outside both rates.

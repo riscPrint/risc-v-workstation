@@ -13,15 +13,9 @@ typedef struct { int64_t cycles, issued, dependency_blocked, rob_full,
 int rvw_ooo_abi(void) { return 2; }
 int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
  int64_t *done = malloc(sizeof(int64_t)*n), *d0 = malloc(sizeof(int64_t)*n),
- *d1 = malloc(sizeof(int64_t)*n), *bp = malloc(sizeof(int64_t)*n),
- *mp = malloc(sizeof(int64_t)*n);
- if (!done || !d0 || !d1 || !bp || !mp) { free(done);free(d0);free(d1);free(bp);free(mp);return -1; }
- int64_t branch=-1, memory=-1;
- for (int64_t i=0;i<n;i++) {
-  done[i]=-1; bp[i]=branch; mp[i]=memory;
-  if(ops[i].kind>=5)branch=i;
-  if(ops[i].kind==3 || ops[i].kind==4)memory=i;
- }
+ *d1 = malloc(sizeof(int64_t)*n);
+ if (!done || !d0 || !d1) { free(done);free(d0);free(d1);return -1; }
+ for (int64_t i=0;i<n;i++)done[i]=-1;
  int64_t writers[32];for(int i=0;i<32;i++)writers[i]=-1;
  int64_t fetched=0, renamed=0, retired=0, waiting=0, allocated=0;
  int64_t loads=0, stores=0, blocked_until=0, unresolved=-1;
@@ -37,26 +31,18 @@ int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
   if(cycle<blocked_until)r->bad_speculation+=c->commit_width-committed;
   else if(renamed>retired)r->backend+=c->commit_width-committed;
   else r->frontend+=c->commit_width-committed;
-  if(retired==n){r->cycles=cycle+1;free(done);free(d0);free(d1);free(bp);free(mp);return 0;}
+  if(retired==n){r->cycles=cycle+1;free(done);free(d0);free(d1);return 0;}
   if(unresolved>=0 && done[unresolved]<=cycle)unresolved=-1;
   int64_t issued=0, blocked=0, ports[7]={0};
+  int branch_hold=0, speculating=0, memory_hold=0;
   for(int64_t i=retired;i<renamed && issued<c->issue_width;i++) {
-   if(done[i]>=0)continue;
+   if(done[i]>=0)goto scanned;
    if((d0[i]>=0 && (done[d0[i]]<0 || done[d0[i]]>cycle)) ||
-      (d1[i]>=0 && (done[d1[i]]<0 || done[d1[i]]>cycle))) {blocked=1;continue;}
-   int hold=cycle<blocked_until, speculating=0;
-   for(int64_t j=bp[i];j>=retired;j=bp[j])if(done[j]<0 || done[j]>cycle) {
-    if(c->branch_speculation && done[j]>=0 && !ops[j].miss)speculating=1;
-    else hold=1;
-   }
-   if(hold)continue;
+      (d1[i]>=0 && (done[d1[i]]<0 || done[d1[i]]>cycle))) {blocked=1;goto scanned;}
+   if(cycle<blocked_until || branch_hold)goto scanned;
    int64_t kind=ops[i].kind;
-   if(ports[kind]>=c->ports[kind]){r->port_blocked++;continue;}
-   if(kind==3 || kind==4) {
-    int64_t j=mp[i];
-    if(j>=retired && (done[j]<0 || done[j]>cycle))hold=1;
-    if(hold)continue;
-   }
+   if(ports[kind]>=c->ports[kind]){r->port_blocked++;goto scanned;}
+   if((kind==3 || kind==4) && memory_hold)goto scanned;
    if(kind>=5) {
     r->branches++;
     if(ops[i].miss) {
@@ -69,6 +55,16 @@ int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
    }
    done[i]=cycle+ops[i].latency;issued++;waiting--;r->issued++;ports[kind]++;
    if(speculating)r->correct_path_speculative_issues++;
+scanned:
+   /* Prefix state includes earlier entries issued in this phase. It replaces
+      repeated walks over older branches and memory operations. */
+   if(done[i]<0 || done[i]>cycle) {
+    if(ops[i].kind>=5) {
+     if(c->branch_speculation && done[i]>=0 && !ops[i].miss)speculating=1;
+     else branch_hold=1;
+    }
+    if(ops[i].kind==3 || ops[i].kind==4)memory_hold=1;
+   }
   }
   r->dependency_blocked+=blocked;
   for(int64_t lane=0;lane<c->rename_width && renamed<fetched;lane++) {
@@ -93,5 +89,5 @@ int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
   if(loads>r->loads)r->loads=loads;
   if(stores>r->stores)r->stores=stores;
  }
- free(done);free(d0);free(d1);free(bp);free(mp);return 1;
+ free(done);free(d0);free(d1);return 1;
 }
