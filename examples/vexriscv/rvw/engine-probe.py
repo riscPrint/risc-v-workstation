@@ -20,7 +20,7 @@ def run(args):
         if s['type']==1:
             for i,b in enumerate(elf.data[s['off']:s['off']+s['filesz']]):memory[s['paddr']+i]=b
     tohost=elf.symbols()['tohost'].value
-    ports=json.loads(Path(__file__).with_name('engine-ports.json').read_text())
+    ports=json.loads(args.ports.read_text())
     model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'))
     def put(**values):
         for n,v in values.items():model.write(n,v)
@@ -36,8 +36,10 @@ def run(args):
             iBus_rsp_payload_inst=ip[0] if ip else 0,iBus_rsp_payload_error=int(ip[1]) if ip else 0,
             dBus_cmd_ready=rng.randrange(2),dBus_rsp_ready=int(dp is not None),
             dBus_rsp_data=dp[0] if dp else 0,dBus_rsp_error=int(dp[1]) if dp else 0)
-    count=0;status='timeout';cycle=0
+    count=0;status='timeout';cycle=0;handler=False
     try:
+        for name,(direction,width) in ports.items():
+            if direction=='input':model.write(name,0)
         put(clk=0,reset=1,timerInterrupt=0,externalInterrupt=0,softwareInterrupt=0)
         inputs()
         for _ in range(5):put(clk=1);put(clk=0)
@@ -54,17 +56,21 @@ def run(args):
                     for i in range(4):
                         if mask>>i&1:memory[a+i]=value>>(8*i)&255
                 else:nd=(word(a),not mapped(a))
-            if read('trap_valid'):raise ValueError('trap state is outside this bounded probe')
+            if read('trap_valid'):
+                if not args.allow_traps:raise ValueError('trap state is outside this bounded probe')
+                cause=read('trap_cause')
+                rows.append(dict(event='trap',cycle=cycle,cause=hex(cause),tval=hex(read('trap_tval')),interrupt=bool(cause>>31)))
+                handler=True
             if read('rvfi_valid'):
                 if read('rvfi_order')!=count:raise ValueError('RVFI order discontinuity')
                 row=dict(order=count,cycle=cycle,mode=read('rvfi_mode'),trap=bool(read('rvfi_trap')),
-                         halt=bool(read('rvfi_halt')),intr=bool(read('rvfi_intr')),mem_fault=False)
+                         halt=bool(read('rvfi_halt')),intr=handler or bool(read('rvfi_intr')),mem_fault=False)
                 for key,signal in dict(pc='pc_rdata',pc_next='pc_wdata',insn='insn',rs1_rdata='rs1_rdata',
                     rs2_rdata='rs2_rdata',rd_wdata='rd_wdata',mem_addr='mem_addr',mem_rdata='mem_rdata',mem_wdata='mem_wdata').items():
                     row[key]=hex(read('rvfi_'+signal))
                 for key,signal in dict(rs1='rs1_addr',rs2='rs2_addr',rd='rd_addr',mem_rmask='mem_rmask',mem_wmask='mem_wmask').items():
                     row[key]=read('rvfi_'+signal)
-                rows.append(row);count+=1
+                rows.append(row);count+=1;handler=False
                 if row['mem_wmask'] and int(row['mem_addr'],16)==tohost:
                     status='pass' if int(row['mem_wdata'],16)==1 else 'fail'
                     break
@@ -87,6 +93,8 @@ def main():
  p=argparse.ArgumentParser(__doc__)
  p.add_argument('action',nargs='?',choices=['run'],default='run')
  p.add_argument('--backend',choices=['arcilator','verilator'],default=os.environ.get('RVW_NATIVE_ENGINE','arcilator'))
+ p.add_argument('--ports',type=Path,default=Path(__file__).with_name('engine-ports.json'))
+ p.add_argument('--allow-traps',action='store_true')
  p.add_argument('--rtl',type=Path,required=True);p.add_argument('--elf',type=Path,required=True)
  p.add_argument('--out',type=Path,required=True);p.add_argument('--seed',type=int,default=1)
  p.add_argument('--max-cycles',type=int,default=5000);p.add_argument('--rvfi-trace',action='store_true');p.add_argument('--json',action='store_true')

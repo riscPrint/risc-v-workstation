@@ -188,3 +188,15 @@ It samples RTL requests at falling edges and consumes a 2 ns delay before the
 next rising edge of a 10 ns clock. The target alone has loosely timed
 semantics. No multi-initiator ordering, DMI, temporal decoupling or cycle-accurate
 device timing is implied.
+
+### Captured project adapter registry
+
+A debug configuration can set `core.adapter_versions` to a path relative to
+that configuration. The capture freezes its directory. Adapter commands resolve
+inside the captured registry directory. A marker still resolves inside the
+captured core tree. Exact revision entries take precedence. Missing entries are
+unsupported and cannot fall back to the current adapter. The existing
+`rvw.adapter-selection/1` record adds `manifest_scope` as `project` or `source`.
+C1 source identity preserves that selection. The launch descriptor includes
+registry dependencies. This extension applies to debug launches and bisect.
+It does not provide historical gate selection or C4 acceptance.

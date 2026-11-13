@@ -73,6 +73,8 @@ class DebugInputs(WaveInputs):
         self.python_environments = {}
         self.interpreter_guards = []
         self.adapter_trees = {}
+        self.adapter_registry = None
+        self.adapter_registry_tree = None
 
     def interpreter(self, name, *, env=None):
         def guard(item):
@@ -82,6 +84,8 @@ class DebugInputs(WaveInputs):
                                 env=self.environment if env is None else env, guard=guard)
 
     def config(self, core, explicit=None, project=None):
+        self.adapter_registry = None
+        self.adapter_registry_tree = None
         from rvw.bundle import coreconf
         from rvw.common.project import load_project
         selected = explicit
@@ -99,7 +103,13 @@ class DebugInputs(WaveInputs):
             selected = str(candidate) if candidate.exists() else None
         if selected is None:
             return {}, None
-        return coreconf.load(selected, capture=self.capture)
+        cfg, path = coreconf.load(selected, capture=self.capture)
+        registry = (cfg.get('core') or {}).get('adapter_versions')
+        if registry:
+            original = (path.parent / registry).resolve(strict=True)
+            self.adapter_registry_tree = self.build_tree(original.parent, git=False)
+            self.adapter_registry = self.adapter_registry_tree.copy / original.name
+        return cfg, path
 
     def command(self, run, cfg, *, source=True):
         from . import adapter
@@ -225,7 +235,7 @@ class DebugInputs(WaveInputs):
         """
         from .versions import resolve
         try:
-            selected = resolve(source.copy, revision)
+            selected = resolve(source.copy, revision, manifest=self.adapter_registry)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             c = cmd.set()
             c.env['RVW_ADAPTER_RESOLUTION_ERROR'] = str(exc)
@@ -238,7 +248,8 @@ class DebugInputs(WaveInputs):
             if selected is not None:
                 identity['adapter_selection'] = selected[1]
             # Do not assert a clean Git tree: the captured set can include local edits.
-            trees = [source, *([self.tools_tree] if self.tools_tree is not None else [])]
+            trees = [source, *([self.tools_tree] if self.tools_tree is not None else []),
+                     *([self.adapter_registry_tree] if self.adapter_registry_tree is not None else [])]
             descriptor = {'source': identity, 'files': [
                 {'path': str(item.copy), 'sha256': item.sha256}
                 for tree in trees for item in tree.files]}

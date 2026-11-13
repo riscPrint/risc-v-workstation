@@ -54,3 +54,39 @@ def test_captured_launcher_records_selection_and_skips_unsupported(tmp_path):
     attempt = execute(unsupported, tmp_path / 'out', lock=False)
     assert attempt.run is None and 'unsupported revision' in attempt.error
     assert attempt.returncode is None
+
+
+def test_project_registry_supports_real_revisions_without_old_manifest(tmp_path):
+    from rvw.runs.inputs import DebugInputs
+    from rvw.runs.adapter import Command
+    root=tmp_path/'project';root.mkdir()
+    registry=root/'history';registry.mkdir()
+    script=registry/'run.sh';script.write_text('#!/bin/sh\nexit 0\n');script.chmod(0o755)
+    manifest=registry/'adapters.json'
+    manifest.write_text(json.dumps(dict(schema='rvw.adapter-versions/1',revisions={'old':'legacy','new':'current'},
+        adapters={name:dict(api=1,command=['run.sh','--era',name]) for name in ('legacy','current')})))
+    config=root/'debug.toml'
+    config.write_text('[core]\nadapter_versions="history/adapters.json"\n')
+    source=tmp_path/'core';source.mkdir()
+    (source/'rtl.v').write_text('module core;endmodule')
+    inputs=DebugInputs();inputs.config('fixture',explicit=config)
+    captured=inputs.build_tree(source,git=False)
+    manifest.write_text('corrupt original after capture')
+    selected=inputs.launcher_command(Command(exe=['/must/not/run']),captured,revision='old')
+    identity=json.loads(selected.env['RVW_CAPTURE_SOURCE'])
+    assert selected.exe[-2:]==['--era','legacy']
+    assert identity['adapter_selection']['manifest_scope']=='project'
+    descriptor=json.loads(Path(selected.env['RVW_CAPTURE_INPUTS']).read_text())
+    assert any(row['path'].endswith('adapters.json') for row in descriptor['files'])
+    unknown=inputs.launcher_command(Command(),captured,revision='unknown')
+    assert 'unsupported revision' in unknown.env['RVW_ADAPTER_RESOLUTION_ERROR']
+
+
+def test_project_registry_does_not_leak_to_next_core_config(tmp_path):
+    from rvw.runs.inputs import DebugInputs
+    inputs=DebugInputs()
+    inputs.adapter_registry=tmp_path/'previous.json'
+    inputs.adapter_registry_tree=object()
+    config=tmp_path/'next.toml';config.write_text('[core]\nsource_env="NEXT"\n')
+    inputs.config('next',explicit=config)
+    assert inputs.adapter_registry is None and inputs.adapter_registry_tree is None
