@@ -1213,3 +1213,11 @@ check on each retained core capture. SMTBMC Yices passed each unbounded job.
 The portfolio result is inconclusive with `activation_not_checked` and
 `proof_kind: none`. No check kind has qualified closure on both cores yet.
 Other check kinds were NOT RUN in this sample.
+
+### Small out-of-order pipeline fixture
+
+[examples/ooo](examples/ooo/README.md) has rename, a free list, a ROB,
+ready/select issue, store forwarding and mispredict recovery. Its native
+seed-17 run has zero clean firings. Seven executable bug variants each fire
+an expected rule. It has 11 inserted rules and named project bindings.
+The fixture README lists the missing template and consumer bindings.

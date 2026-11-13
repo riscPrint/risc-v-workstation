@@ -1,0 +1,648 @@
+{
+  "schema": "rvw.ooo-fixture-sim/1",
+  "rows": [
+    {
+      "variant": "clean",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 0,
+      "firings": [],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 604,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 291,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 414,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "commit_order",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 2,
+      "firings": [
+        {
+          "id": "queue.order:rob",
+          "kind": "queue.order",
+          "count": 89,
+          "count_saturated": false,
+          "first_cycle": 7,
+          "fail_signal": "chk_queue_order_rob",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 762,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 299,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 89,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 181,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 181,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 239,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 181,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "double_allocate",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 2,
+      "firings": [
+        {
+          "id": "freelist.allocate:rename",
+          "kind": "freelist.allocate",
+          "count": 269,
+          "count_saturated": false,
+          "first_cycle": 4,
+          "fail_signal": "chk_freelist_allocate_rename",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 496,
+          "count_saturated": false,
+          "first_cycle": 14,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 604,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 291,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 414,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "leak",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 1,
+      "firings": [
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 845,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 340,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 157,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 184,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 184,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 212,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 184,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "lost_flush",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 2,
+      "firings": [
+        {
+          "id": "recovery.flush:rob",
+          "kind": "recovery.flush",
+          "count": 49,
+          "count_saturated": false,
+          "first_cycle": 26,
+          "fail_signal": "chk_recovery_flush_rob",
+          "source": null
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "kind": "queue.occupancy",
+          "count": 1130,
+          "count_saturated": false,
+          "first_cycle": 27,
+          "fail_signal": "chk_queue_occupancy_rob",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 14,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 7,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 7,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 7,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 11,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 7,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "not_ready",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 2,
+      "firings": [
+        {
+          "id": "arbiter.requested:issue",
+          "kind": "arbiter.requested",
+          "count": 185,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_arbiter_requested_issue",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq",
+          "kind": "execution.operands",
+          "count": 185,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_execution_operands_iq",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 705,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 379,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 445,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 445,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 482,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 445,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "stale_map",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 2,
+      "firings": [
+        {
+          "id": "recovery.map:rename",
+          "kind": "recovery.map",
+          "count": 49,
+          "count_saturated": false,
+          "first_cycle": 26,
+          "fail_signal": "chk_recovery_map_rename",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 727,
+          "count_saturated": false,
+          "first_cycle": 33,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 604,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 291,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 414,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    },
+    {
+      "variant": "young_store",
+      "cycles": 1200,
+      "seed": 17,
+      "checks": 11,
+      "fired": 1,
+      "firings": [
+        {
+          "id": "store.forward_age:sq",
+          "kind": "store.forward_age",
+          "count": 264,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_store_forward_age_sq",
+          "source": null
+        }
+      ],
+      "activations": [
+        {
+          "id": "queue.capacity:rob",
+          "count": 604,
+          "status": "activated"
+        },
+        {
+          "id": "queue.occupancy:rob",
+          "count": 1155,
+          "status": "activated"
+        },
+        {
+          "id": "queue.order:rob",
+          "count": 291,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.exclusive:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "arbiter.requested:issue",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "count": 1204,
+          "status": "activated"
+        },
+        {
+          "id": "freelist.allocate:rename",
+          "count": 414,
+          "status": "activated"
+        },
+        {
+          "id": "execution.operands:iq",
+          "count": 350,
+          "status": "activated"
+        },
+        {
+          "id": "store.forward_age:sq",
+          "count": 597,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.map:rename",
+          "count": 49,
+          "status": "activated"
+        },
+        {
+          "id": "recovery.flush:rob",
+          "count": 49,
+          "status": "activated"
+        }
+      ]
+    }
+  ],
+  "source_sha256": {
+    "TinyOoo.scala": "86833761b4022a04b3cd150947ab664a52f3e6f88feb7c3b90f7d055c59db86b",
+    "Run.scala": "7fb1b16403c55596745c6a1c2054e45e9414552e088ede51467cd0bbf8278a99",
+    "bindings.properties": "be3a87fa794241287aabb20db4a09a32a5c9e5e830fc5bc2c0cbf470114dc702"
+  },
+  "limitations": [
+    "One seed and 1200 cycles per variant. No core qualification."
+  ]
+}

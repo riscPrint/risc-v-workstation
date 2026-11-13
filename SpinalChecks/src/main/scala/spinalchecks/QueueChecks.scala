@@ -18,11 +18,11 @@ object QueueChecks {
     // No empty bypass. A full FIFO can replace its oldest entry in the same cycle.
     val underflow = pop && count === 0
     val overflow = push && !pop && count === depth
-    DeclaredChecks.rule("queue.capacity", name, "accepted transfers; no empty bypass; flush dominates")(
+    DeclaredChecks.rule("queue.capacity", name, "accepted transfers; no empty bypass; flush dominates", trigger = !flush && (push || pop))(
       !flush && (underflow || overflow))
-    DeclaredChecks.rule("queue.occupancy", name, "independent accepted push/pop count before this edge")(
+    DeclaredChecks.rule("queue.occupancy", name, "independent accepted push/pop count before this edge", trigger = !flush)(
       !flush && occupancy =/= count)
-    DeclaredChecks.rule("queue.order", name, "independent FIFO data or unique token order; no loss or duplication")(
+    DeclaredChecks.rule("queue.order", name, "independent FIFO data or unique token order; no loss or duplication", trigger = !flush && pop && count =/= 0)(
       !flush && pop && count =/= 0 && popped =/= entries(head))
     when(flush) { count := 0; head := 0; tail := 0 }
       .elsewhen(!underflow && !overflow) {
@@ -37,9 +37,9 @@ object QueueChecks {
   def arbiter(name: String, requests: Bits, grants: Bits): Unit = {
     require(requests.getWidth > 0 && requests.getWidth == grants.getWidth)
     val g = grants.asUInt
-    DeclaredChecks.rule("arbiter.exclusive", name, "at most one grant per cycle")(
+    DeclaredChecks.rule("arbiter.exclusive", name, "at most one grant per cycle", trigger = grants.orR)(
       (g & (g - 1)) =/= 0)
-    DeclaredChecks.rule("arbiter.requested", name, "every grant needs its corresponding request")(
+    DeclaredChecks.rule("arbiter.requested", name, "every grant needs its corresponding request", trigger = grants.orR)(
       (grants & ~requests) =/= 0)
   }
 }
