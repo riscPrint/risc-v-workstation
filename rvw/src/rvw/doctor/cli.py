@@ -28,6 +28,8 @@ def run(args):
             print(f"{check['status']} {check['name']}: {check['detail']}")
             if check['status'] != 'ready':
                 print('  Fix: ' + check['fix'])
+        for item in result.get('tool_inventory', []):
+            print(f"{item['area']}: {item['status']} {item['name']} ({item['install_command']})")
         for item in result.get('native', []):
             print(item['evidence'])
         if result.get('installation', {}).get('output'):

@@ -90,3 +90,19 @@ The platform JSON must describe the actual core and its memory map.
 conformance stays inconclusive. This smoke request does not test every config,
 run-many, option interactions, wall timeouts, replay or interrupt scheduling.
 No native combination was qualified by the fixture tests for this increment.
+
+## Shared tool inventory
+
+`tools.json` is the optional tool inventory. It records pins, command areas,
+environment variables, OS recipes and source discovery locations. Linux recipes
+are untested. `rvw doctor` prints each tool area, presence and its exact installer
+flag. Presence does not establish a working tool flow.
+
+Use `scripts/install.sh --profile minimal|verification|formal|arch|all`.
+`minimal` installs the Python CLI. `verification` adds simulation, GCC, Spike,
+riscv-dv, cocotb, pyuvm and lint. `formal` adds the base formal tools, rIC3 and
+EBMC. `arch` selects architecture tools. `all` selects the inventory except Sail
+and the IDE, which need separate setup. Existing `--all` retains its old scope.
+Use `--dry-run` before installation. Some flags print manual upstream recipes
+and exit nonzero on installation; they do not claim an automated install.
+Sail needs `--with-sail --from-bundle`. GUI sessions are not checked.

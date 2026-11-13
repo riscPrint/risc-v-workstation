@@ -1,0 +1,1517 @@
+{
+  "schema": "rvw.tool-inventory/1",
+  "profiles": {
+    "minimal": [],
+    "verification": [
+      "sim",
+      "riscv-gcc",
+      "cosim",
+      "riscv-dv",
+      "cocotb",
+      "pyuvm",
+      "lint"
+    ],
+    "formal": [
+      "formal",
+      "ric3",
+      "ebmc"
+    ],
+    "arch": [
+      "gem5",
+      "csim",
+      "ooo",
+      "qemu",
+      "herd7"
+    ],
+    "all": [
+      "arcilator",
+      "cbmc",
+      "cocotb",
+      "cosim",
+      "csim",
+      "ebmc",
+      "formal",
+      "gdb",
+      "gem5",
+      "ghdl",
+      "gtkwave",
+      "herd7",
+      "iverilog",
+      "lint",
+      "ooo",
+      "openocd",
+      "pono",
+      "pyuvm",
+      "qemu",
+      "ric3",
+      "riscv-dv",
+      "riscv-gcc",
+      "sim",
+      "spinaltrace",
+      "surfer",
+      "typed-waves",
+      "wellen"
+    ]
+  },
+  "tools": [
+    {
+      "name": "JDK",
+      "area": "sim",
+      "executables": [
+        "java",
+        "javac"
+      ],
+      "flag": "sim",
+      "purpose": "Spinal elaboration",
+      "commands": [
+        "rvw sim"
+      ],
+      "env": [
+        "JAVA_HOME"
+      ],
+      "pin": "21.0.13",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "openjdk@21",
+        "apt": "openjdk-21-jdk-headless",
+        "dnf": "",
+        "source": "Temurin 21 fallback in scripts/install.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "sbt",
+      "area": "sim",
+      "executables": [
+        "sbt"
+      ],
+      "flag": "sim",
+      "purpose": "Scala build",
+      "commands": [
+        "rvw sim"
+      ],
+      "env": [],
+      "pin": "1.10.7 Linux; 1.11.7 observed",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "sbt",
+        "apt": "",
+        "dnf": "",
+        "source": "Pinned archive in scripts/install.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Verilator",
+      "area": "sim",
+      "executables": [
+        "verilator"
+      ],
+      "flag": "sim",
+      "purpose": "RTL simulation and lint",
+      "commands": [
+        "rvw sim"
+      ],
+      "env": [],
+      "pin": "ea338be98e1e838d3518809ce8899f85a009963c",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "verilator",
+        "apt": "verilator",
+        "dnf": "verilator",
+        "source": "",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "RISC-V GCC",
+      "area": "sim",
+      "executables": [
+        "riscv64-unknown-elf-gcc",
+        "riscv64-unknown-elf-objdump"
+      ],
+      "flag": "riscv-gcc",
+      "purpose": "Bare-metal ELF build",
+      "commands": [
+        "rvw sim"
+      ],
+      "env": [
+        "RVW_RISCV_CC"
+      ],
+      "pin": "a33dac0251d17a7b74d99bd8fd401bfce87d2aed",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "riscv-software-src/riscv/riscv-gnu-toolchain",
+        "apt": "gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf",
+        "dnf": "",
+        "source": "Pinned source build in scripts/install.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Spike",
+      "area": "cosim",
+      "executables": [
+        "spike"
+      ],
+      "flag": "cosim",
+      "purpose": "ISA reference; also needs headers and shim",
+      "commands": [
+        "rvw cosim"
+      ],
+      "env": [
+        "SPIKE_PREFIX",
+        "RVW_SPIKE_SHIM"
+      ],
+      "pin": "eff659cd43d7eafb7f3559bceed2540eabb31c50",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Pinned source build and Cosim/build.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Sail",
+      "area": "cosim",
+      "executables": [
+        "sail_riscv_sim"
+      ],
+      "flag": "sail",
+      "purpose": "Independent ISA reference",
+      "commands": [
+        "rvw cosim"
+      ],
+      "env": [
+        "RVW_SAIL"
+      ],
+      "pin": "549e723031b34b5ffea5bbb56367be15c7a38a9e",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/install-sail.sh; main flag needs --from-bundle",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Yosys",
+      "area": "formal",
+      "executables": [
+        "yosys"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "SymbiYosys",
+      "area": "formal",
+      "executables": [
+        "sby"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Yices",
+      "area": "formal",
+      "executables": [
+        "yices-smt2"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Z3",
+      "area": "formal",
+      "executables": [
+        "z3"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Boolector",
+      "area": "formal",
+      "executables": [
+        "boolector"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "ABC",
+      "area": "formal",
+      "executables": [
+        "yosys-abc"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Avy",
+      "area": "formal",
+      "executables": [
+        "avy"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "btorsim",
+      "area": "formal",
+      "executables": [
+        "btorsim"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "suprove",
+      "area": "formal",
+      "executables": [
+        "suprove"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "yosys-slang",
+      "area": "query",
+      "executables": [
+        "yosys-config"
+      ],
+      "flag": "formal",
+      "purpose": "SystemVerilog query front end",
+      "commands": [
+        "rvw query"
+      ],
+      "env": [
+        "RVW_SLANG"
+      ],
+      "pin": "scripts/yosys-slang-sources.json",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/build-yosys-slang.py",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "rIC3",
+      "area": "formal",
+      "executables": [
+        "rIC3"
+      ],
+      "flag": "ric3",
+      "purpose": "IC3 proof engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "02c12ff1407b3474b7eb85c4531a06ad2eb86933",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/install-formal-engine.py ric3",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "EBMC",
+      "area": "formal",
+      "executables": [
+        "ebmc"
+      ],
+      "flag": "ebmc",
+      "purpose": "Word-level bounded model checking",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "2f4f2fc76f450557de3eef5f3e3d075869999e85",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/install-formal-engine.py ebmc",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "CBMC",
+      "area": "formal",
+      "executables": [
+        "cbmc"
+      ],
+      "flag": "cbmc",
+      "purpose": "C reference proofs",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "cbmc",
+        "apt": "",
+        "dnf": "",
+        "source": "https://github.com/diffblue/cbmc; source build required if package unavailable",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "pono",
+      "area": "formal",
+      "executables": [
+        "pono"
+      ],
+      "flag": "pono",
+      "purpose": "SMT proof portfolio",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "https://github.com/stanford-centaur/pono; follow upstream build instructions",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "GHDL",
+      "area": "query",
+      "executables": [
+        "ghdl"
+      ],
+      "flag": "ghdl",
+      "purpose": "VHDL front end",
+      "commands": [
+        "rvw query"
+      ],
+      "env": [
+        "GHDL_PREFIX",
+        "RVW_GHDL_PLUGIN"
+      ],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "ghdl",
+        "apt": "ghdl",
+        "dnf": "ghdl",
+        "source": "https://github.com/ghdl/ghdl-yosys-plugin; build plugin against selected Yosys",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "CIRCT/arcilator",
+      "area": "sim",
+      "executables": [
+        "arcilator",
+        "circt-verilog"
+      ],
+      "flag": "arcilator",
+      "purpose": "Cycle simulation",
+      "commands": [
+        "rvw sim"
+      ],
+      "env": [
+        "RVW_CIRCT"
+      ],
+      "pin": "firtool-1.163.0",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "python -m rvw.sim.arcilator_install",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "riscv-dv",
+      "area": "uvm",
+      "executables": [
+        "run.py"
+      ],
+      "flag": "riscv-dv",
+      "purpose": "Constrained random instruction generation",
+      "commands": [
+        "rvw uvm"
+      ],
+      "env": [
+        "RVW_RISCV_DV"
+      ],
+      "pin": "f557b89ed6881a20515481a2585e9d004cd9642b",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/install-riscv-dv.py",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "cocotb",
+      "area": "uvm",
+      "executables": [],
+      "flag": "cocotb",
+      "purpose": "Python RTL drivers",
+      "commands": [
+        "rvw uvm"
+      ],
+      "env": [],
+      "pin": "locked in rvw/uv.lock",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "uv sync --locked --extra cocotb --project rvw",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "pyuvm",
+      "area": "uvm",
+      "executables": [],
+      "flag": "pyuvm",
+      "purpose": "Python UVM agents",
+      "commands": [
+        "rvw uvm"
+      ],
+      "env": [],
+      "pin": "locked in rvw/uv.lock",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "uv sync --locked --extra pyuvm --project rvw",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "wellen",
+      "area": "debug",
+      "executables": [],
+      "flag": "wellen",
+      "purpose": "FST/VCD reader",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [
+        "RVW_WAVE_FST_READER"
+      ],
+      "pin": "pywellen==0.25.7",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "uv sync --locked --extra waves --project rvw",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "gem5",
+      "area": "arch",
+      "executables": [
+        "gem5.opt"
+      ],
+      "flag": "gem5",
+      "purpose": "Architecture models",
+      "commands": [
+        "rvw arch"
+      ],
+      "env": [
+        "RVW_GEM5"
+      ],
+      "pin": "c8222cc67a399bfc01e8658dd14b30d5bfd634f9",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Pinned source build in scripts/install.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "native csim",
+      "area": "arch",
+      "executables": [
+        "c++"
+      ],
+      "flag": "csim",
+      "purpose": "Build component simulation engine",
+      "commands": [
+        "rvw arch"
+      ],
+      "env": [
+        "CXX",
+        "RVW_CSIM_SRC",
+        "RVW_CSIM_CACHE"
+      ],
+      "pin": "repository revision",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "build-essential",
+        "dnf": "gcc-c++",
+        "source": "Built on first rvw csim engine use; requires C++ compiler",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "native OoO",
+      "area": "arch",
+      "executables": [],
+      "flag": "ooo",
+      "purpose": "C scheduler library",
+      "commands": [
+        "rvw arch"
+      ],
+      "env": [
+        "RVW_OOO_NATIVE"
+      ],
+      "pin": "repository revision",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "python -m rvw.ooo.native",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "QEMU",
+      "area": "arch",
+      "executables": [
+        "qemu-system-riscv64"
+      ],
+      "flag": "qemu",
+      "purpose": "Independent execution reference",
+      "commands": [
+        "rvw arch"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "qemu",
+        "apt": "qemu-system-misc",
+        "dnf": "qemu-system-riscv",
+        "source": "",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "herd7",
+      "area": "arch",
+      "executables": [
+        "herd7"
+      ],
+      "flag": "herd7",
+      "purpose": "Memory model litmus reference",
+      "commands": [
+        "rvw arch"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "opam install herdtools7; initialize opam and use eval $(opam env)",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "OpenOCD",
+      "area": "debug",
+      "executables": [
+        "openocd"
+      ],
+      "flag": "openocd",
+      "purpose": "Debug Module interoperability",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "open-ocd",
+        "apt": "openocd",
+        "dnf": "openocd",
+        "source": "",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "GDB",
+      "area": "debug",
+      "executables": [
+        "riscv64-unknown-elf-gdb"
+      ],
+      "flag": "gdb",
+      "purpose": "RISC-V debug interoperability",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [
+        "RVW_GDB_VERSION"
+      ],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "riscv-software-src/riscv/riscv-gnu-toolchain",
+        "apt": "gdb-multiarch",
+        "dnf": "gdb",
+        "source": "Select GDB executable in project debug configuration",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "Verible",
+      "area": "lint",
+      "executables": [
+        "verible-verilog-syntax",
+        "verible-verilog-lint"
+      ],
+      "flag": "lint",
+      "purpose": "SystemVerilog syntax and style",
+      "commands": [
+        "rvw lint"
+      ],
+      "env": [],
+      "pin": "v0.0-4298-g085eef05",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "scripts/install-verible.py",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "Icarus",
+      "area": "lint",
+      "executables": [
+        "iverilog",
+        "vvp"
+      ],
+      "flag": "iverilog",
+      "purpose": "Protocol assertion simulation",
+      "commands": [
+        "rvw lint"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "icarus-verilog",
+        "apt": "iverilog",
+        "dnf": "iverilog",
+        "source": "",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "typed waves",
+      "area": "debug",
+      "executables": [
+        "spinalwaves-check",
+        "surfer-tywaves"
+      ],
+      "flag": "typed-waves",
+      "purpose": "Typed waveform checks",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [],
+      "pin": "SpinalWaves/vendor-lock.json",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Existing Cargo build in scripts/install.sh",
+        "linux_status": "untested"
+      },
+      "legacy": true
+    },
+    {
+      "name": "SpinalTrace",
+      "area": "debug",
+      "executables": [
+        "spinaltrace-cli"
+      ],
+      "flag": "spinaltrace",
+      "purpose": "Dynamic signal tracing",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [
+        "SPINALTRACE_CLI",
+        "SPINALTRACE_GUI"
+      ],
+      "pin": "repository revision",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "See SpinalTrace/README.md; cargo build --locked",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "Surfer",
+      "area": "debug",
+      "executables": [
+        "surfer"
+      ],
+      "flag": "surfer",
+      "purpose": "Waveform GUI",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "surfer",
+        "apt": "",
+        "dnf": "",
+        "source": "https://surfer-project.org; GUI session untested",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "GTKWave tools",
+      "area": "debug",
+      "executables": [
+        "vcd2fst",
+        "fst2vcd"
+      ],
+      "flag": "gtkwave",
+      "purpose": "Waveform format conversion",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "gtkwave",
+        "apt": "gtkwave",
+        "dnf": "gtkwave",
+        "source": "",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    },
+    {
+      "name": "VS Code",
+      "area": "debug",
+      "executables": [
+        "code"
+      ],
+      "flag": "ide",
+      "purpose": "Editor front end",
+      "commands": [
+        "rvw debug"
+      ],
+      "env": [],
+      "pin": "unverified",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "--cask visual-studio-code",
+        "apt": "",
+        "dnf": "",
+        "source": "Install VS Code and build extension from vscode/README.md",
+        "linux_status": "untested"
+      },
+      "legacy": false
+    }
+  ],
+  "discovery": [
+    {
+      "path": "rvw/src/rvw/arch/core.py",
+      "line": 77,
+      "text": "path = shutil.which(str(name))"
+    },
+    {
+      "path": "rvw/src/rvw/arch/core.py",
+      "line": 84,
+      "text": "chosen = os.environ.get('RVW_GEM5')"
+    },
+    {
+      "path": "rvw/src/rvw/arch/core.py",
+      "line": 121,
+      "text": "cc = executable(os.environ.get('RVW_RISCV_CC', 'riscv64-unknown-elf-gcc'))"
+    },
+    {
+      "path": "rvw/src/rvw/arch/linux.py",
+      "line": 27,
+      "text": "path = shutil.which(name)"
+    },
+    {
+      "path": "rvw/src/rvw/arch/linux.py",
+      "line": 138,
+      "text": "assets = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4])) / 'Arch/linux'"
+    },
+    {
+      "path": "rvw/src/rvw/arch/linux.py",
+      "line": 198,
+      "text": "assets = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4])) / 'Arch/linux'"
+    },
+    {
+      "path": "rvw/src/rvw/bugmem/memory.py",
+      "line": 30,
+      "text": "return Path(os.environ.get('RVW_BUGMEM') or Path.home() / '.local/share/rvw/bugmem.jsonl')"
+    },
+    {
+      "path": "rvw/src/rvw/bundle/disasm.py",
+      "line": 21,
+      "text": "p = shutil.which(name, path=environment.get(\"PATH\"))"
+    },
+    {
+      "path": "rvw/src/rvw/bundle/make.py",
+      "line": 86,
+      "text": "cli = inputs.environment.get('SPINALTRACE_CLI') or shutil.which('spinaltrace-cli', path=inputs.environment.get('PATH'))"
+    },
+    {
+      "path": "rvw/src/rvw/common/budget.py",
+      "line": 77,
+      "text": "path = os.environ.get(\"RVW_BUDGET_STATE\")"
+    },
+    {
+      "path": "rvw/src/rvw/common/capture.py",
+      "line": 420,
+      "text": "selected = shutil.which(key)"
+    },
+    {
+      "path": "rvw/src/rvw/common/capture.py",
+      "line": 459,
+      "text": "self._environment[name] = os.environ.get(name)"
+    },
+    {
+      "path": "rvw/src/rvw/common/interpreter.py",
+      "line": 32,
+      "text": "selected = shutil.which(str(name), path=env.get('PATH', os.defpath))"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 64,
+      "text": "return Path(os.environ.get(\"RVW_LOCK_DIR\") or Path.home() / \".cache\" / \"rvw-locks\")"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 176,
+      "text": "for tok in os.environ.get(ENV, \"\").split(\",\"):"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 308,
+      "text": "return os.environ.get(\"RVW_LOCK_LEGACY\", \"1\") not in (\"0\", \"\", \"no\", \"false\")"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 403,
+      "text": "cur = [t for t in os.environ.get(ENV, \"\").split(\",\") if t]"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 408,
+      "text": "cur = [t for t in os.environ.get(ENV, \"\").split(\",\") if t and t != token]"
+    },
+    {
+      "path": "rvw/src/rvw/common/lock.py",
+      "line": 540,
+      "text": "fd, ident, _ = _acquire(paths, float(os.environ.get(\"RVW_LOCK_POLL_S\", \"0.5\")), sys.stderr,"
+    },
+    {
+      "path": "rvw/src/rvw/common/project.py",
+      "line": 19,
+      "text": "selected = project if project is not None else os.environ.get(\"RVW_PROJECT\")"
+    },
+    {
+      "path": "rvw/src/rvw/common/project.py",
+      "line": 44,
+      "text": "return str(path) if path else os.environ.get(\"RVW_CORE\")"
+    },
+    {
+      "path": "rvw/src/rvw/cosim/build.py",
+      "line": 24,
+      "text": "prefix = Path(prefix or os.environ.get('SPIKE_PREFIX', '/opt/homebrew')).absolute()"
+    },
+    {
+      "path": "rvw/src/rvw/cosim/build.py",
+      "line": 58,
+      "text": "cxx = capture.tool(compiler or os.environ.get('CXX', 'c++'))"
+    },
+    {
+      "path": "rvw/src/rvw/cosim/cli.py",
+      "line": 53,
+      "text": "cmd.add_argument(\"--sail\", default=os.environ.get(\"RVW_SAIL\", \"sail_riscv_sim\"))"
+    },
+    {
+      "path": "rvw/src/rvw/cosim/cli.py",
+      "line": 163,
+      "text": "defaults[\"sail\"] = os.environ.get(\"RVW_SAIL\", \"sail_riscv_sim\")"
+    },
+    {
+      "path": "rvw/src/rvw/cov/campaign.py",
+      "line": 103,
+      "text": "compiler = shutil.which(data['compiler'])"
+    },
+    {
+      "path": "rvw/src/rvw/cov/mcp_tools.py",
+      "line": 14,
+      "text": "name = override if override is not None else os.environ.get(\"RVW_HEAVY_LOCK\", DEFAULT_HEAVY_LOCK)"
+    },
+    {
+      "path": "rvw/src/rvw/csim/engine.py",
+      "line": 17,
+      "text": "env = os.environ.get(\"RVW_CSIM_SRC\")"
+    },
+    {
+      "path": "rvw/src/rvw/csim/engine.py",
+      "line": 37,
+      "text": "cxx = os.environ.get(\"CXX\") or shutil.which(\"c++\") or shutil.which(\"clang++\") or shutil.which(\"g++\")"
+    },
+    {
+      "path": "rvw/src/rvw/csim/engine.py",
+      "line": 44,
+      "text": "env = os.environ.get(\"RVW_CSIM_CACHE\")"
+    },
+    {
+      "path": "rvw/src/rvw/debug/interop.py",
+      "line": 28,
+      "text": "path = shutil.which(candidate) if candidate else None"
+    },
+    {
+      "path": "rvw/src/rvw/debug/interop.py",
+      "line": 106,
+      "text": "openocd_path = shutil.which(openocd)"
+    },
+    {
+      "path": "rvw/src/rvw/debug/interop_gdb.py",
+      "line": 86,
+      "text": "reset_pc = os.environ.get('RVW_RESET_PC')"
+    },
+    {
+      "path": "rvw/src/rvw/doctor/backends.py",
+      "line": 13,
+      "text": "path = shutil.which(executable)"
+    },
+    {
+      "path": "rvw/src/rvw/doctor/check.py",
+      "line": 67,
+      "text": "home = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4]))"
+    },
+    {
+      "path": "rvw/src/rvw/formal/bench.py",
+      "line": 169,
+      "text": "installed = {e: shutil.which(tool) for e, tool in ENGINES.items()}"
+    },
+    {
+      "path": "rvw/src/rvw/formal/bench.py",
+      "line": 181,
+      "text": "'peak_memory_bytes': None, 'wall_s': None, 'status': 'not_installed'}"
+    },
+    {
+      "path": "rvw/src/rvw/formal/bench.py",
+      "line": 209,
+      "text": "samples = [r for r in rows if r['case'] == case['id'] and r['status'] not in ('not_installed', 'unsupported_mode')]"
+    },
+    {
+      "path": "rvw/src/rvw/formal/cex.py",
+      "line": 256,
+      "text": "exe = shutil.which(name)"
+    },
+    {
+      "path": "rvw/src/rvw/formal/cex.py",
+      "line": 292,
+      "text": "elif not shutil.which('surfer-tywaves'):"
+    },
+    {
+      "path": "rvw/src/rvw/formal/common.py",
+      "line": 339,
+      "text": "path = shutil.which(tool)"
+    },
+    {
+      "path": "rvw/src/rvw/formal/datapath.py",
+      "line": 69,
+      "text": "path = shutil.which(tool)"
+    },
+    {
+      "path": "rvw/src/rvw/formal/engine_doctor.py",
+      "line": 13,
+      "text": "executables={d: shutil.which(d) for d in deps},"
+    },
+    {
+      "path": "rvw/src/rvw/formal/liveness.py",
+      "line": 105,
+      "text": "if not shutil.which('suprove') or not shutil.which('sby'):"
+    },
+    {
+      "path": "rvw/src/rvw/formal/portfolio.py",
+      "line": 34,
+      "text": "return {name: {'status': 'installed' if all(shutil.which(x) for x in deps) else 'not_installed',"
+    },
+    {
+      "path": "rvw/src/rvw/formal/portfolio.py",
+      "line": 35,
+      "text": "'missing': [x for x in deps if not shutil.which(x)], 'modes': list(modes)}"
+    },
+    {
+      "path": "rvw/src/rvw/formal/portfolio.py",
+      "line": 159,
+      "text": "if row['status'] == 'not_installed':"
+    },
+    {
+      "path": "rvw/src/rvw/formal/portfolio.py",
+      "line": 165,
+      "text": "row['tools'] = {d: {'path': shutil.which(d), 'sha256': sha256(Path(shutil.which(d)).read_bytes()).hexdigest()}"
+    },
+    {
+      "path": "rvw/src/rvw/formal/portfolio.py",
+      "line": 180,
+      "text": "shim = wrapper(directory, shutil.which('rIC3'))"
+    },
+    {
+      "path": "rvw/src/rvw/formal/sail_subset.py",
+      "line": 77,
+      "text": "compiler = shutil.which(str(compiler))"
+    },
+    {
+      "path": "rvw/src/rvw/formal/sail_zicond.py",
+      "line": 80,
+      "text": "compiler = shutil.which(str(compiler))"
+    },
+    {
+      "path": "rvw/src/rvw/formal/shortest.py",
+      "line": 106,
+      "text": "exe = shutil.which('spinalwaves-check')"
+    },
+    {
+      "path": "rvw/src/rvw/formal/tools.py",
+      "line": 59,
+      "text": "selected = os.environ.get('RVW_SLANG')"
+    },
+    {
+      "path": "rvw/src/rvw/formal/tools.py",
+      "line": 111,
+      "text": "path = selected or shutil.which(name, path=self.env.get('PATH', ''))"
+    },
+    {
+      "path": "rvw/src/rvw/lint/native.py",
+      "line": 28,
+      "text": "executable = shutil.which(\"verilator\" if tool == \"verilator\" else \"verible-verilog-lint\")"
+    },
+    {
+      "path": "rvw/src/rvw/lint/protocol.py",
+      "line": 119,
+      "text": "compiler, runtime = shutil.which('iverilog'), shutil.which('vvp')"
+    },
+    {
+      "path": "rvw/src/rvw/lint/yosys.py",
+      "line": 12,
+      "text": "tool = shutil.which('yosys')"
+    },
+    {
+      "path": "rvw/src/rvw/mcp/jobs.py",
+      "line": 90,
+      "text": "budget = self.budget if self.budget is not None else os.environ.get(\"RVW_JOB_BUDGET\")"
+    },
+    {
+      "path": "rvw/src/rvw/mcp/registry.py",
+      "line": 51,
+      "text": "for name in filter(None, (x.strip() for x in os.environ.get(\"RVW_MCP_PLUGINS\", \"\").split(\",\"))):"
+    },
+    {
+      "path": "rvw/src/rvw/mcp/registry.py",
+      "line": 100,
+      "text": "self.sync_s = float(os.environ.get(\"RVW_MCP_SYNC_S\", SYNC_S)) if sync_s is None else sync_s"
+    },
+    {
+      "path": "rvw/src/rvw/mcp/registry.py",
+      "line": 102,
+      "text": "patterns = os.environ.get(\"RVW_MCP_ISOLATE\", ISOLATE)"
+    },
+    {
+      "path": "rvw/src/rvw/memory/concurrent_native.py",
+      "line": 45,
+      "text": "compiler, simulator = shutil.which(gcc), shutil.which(spike)"
+    },
+    {
+      "path": "rvw/src/rvw/ooo/native.py",
+      "line": 29,
+      "text": "return Path(os.environ.get('RVW_OOO_NATIVE', Path(__file__).resolve().parents[4] / '.tools/ooo/libooo.so'))"
+    },
+    {
+      "path": "rvw/src/rvw/ooo/native.py",
+      "line": 36,
+      "text": "compiler = os.environ.get('CC', 'cc')"
+    },
+    {
+      "path": "rvw/src/rvw/ooo/native.py",
+      "line": 50,
+      "text": "if os.environ.get('RVW_OOO_NATIVE') == '0' or not library_path().is_file():"
+    },
+    {
+      "path": "rvw/src/rvw/privilege/campaign.py",
+      "line": 127,
+      "text": "executable = shutil.which(spike)"
+    },
+    {
+      "path": "rvw/src/rvw/query/db.py",
+      "line": 66,
+      "text": "env = os.environ.get(\"RVW_DESIGNDB\")"
+    },
+    {
+      "path": "rvw/src/rvw/query/debug.py",
+      "line": 70,
+      "text": "binary = a.binary or {'trace': os.environ.get('SPINALTRACE_CLI', 'spinaltrace-cli'),"
+    },
+    {
+      "path": "rvw/src/rvw/query/debug.py",
+      "line": 71,
+      "text": "'gui': os.environ.get('SPINALTRACE_GUI', 'spinaltrace'),"
+    },
+    {
+      "path": "rvw/src/rvw/query/hdl.py",
+      "line": 38,
+      "text": "plugin = plugin or os.environ.get('RVW_SLANG')"
+    },
+    {
+      "path": "rvw/src/rvw/query/hdl_ghdl.py",
+      "line": 17,
+      "text": "selected = explicit or os.environ.get('RVW_GHDL_PLUGIN')"
+    },
+    {
+      "path": "rvw/src/rvw/query/hdl_ghdl.py",
+      "line": 29,
+      "text": "if os.environ.get('GHDL_PREFIX'):"
+    },
+    {
+      "path": "rvw/src/rvw/query/mcp_tools.py",
+      "line": 29,
+      "text": "env = os.environ.get(\"RVW_ROOT\")"
+    },
+    {
+      "path": "rvw/src/rvw/regress/captured.py",
+      "line": 120,
+      "text": "selected = shutil.which(name, path=self.child_env.get('PATH', os.defpath))"
+    },
+    {
+      "path": "rvw/src/rvw/regress/captured.py",
+      "line": 133,
+      "text": "executable = shutil.which(core.adapter[0])"
+    },
+    {
+      "path": "rvw/src/rvw/regress/cli.py",
+      "line": 185,
+      "text": "a.core = os.environ.get(\"RVW_CORE\")"
+    },
+    {
+      "path": "rvw/src/rvw/regress/config.py",
+      "line": 301,
+      "text": "dirs = [Path(d) for d in os.environ.get(\"RVW_CORES\", \"\").split(\":\") if d] + [CONFIG_DIR]"
+    },
+    {
+      "path": "rvw/src/rvw/regress/mmu.py",
+      "line": 588,
+      "text": "executable = shutil.which(spike)"
+    },
+    {
+      "path": "rvw/src/rvw/regress/remote_cache.py",
+      "line": 26,
+      "text": "ssh = [\"ssh\", \"-oBatchMode=yes\", *json.loads(os.environ.get(\"RVW_CACHE_SSH_OPTIONS\", \"[]\"))]"
+    },
+    {
+      "path": "rvw/src/rvw/regress/remote_cache.py",
+      "line": 35,
+      "text": "'user': os.environ.get('USER', 'unknown'), 'key': key,"
+    },
+    {
+      "path": "rvw/src/rvw/regress/source.py",
+      "line": 195,
+      "text": "elif any(os.environ.get(k) for k in (\"GIT_REPLACE_REF_BASE\", \"GIT_GRAFT_FILE\")):"
+    },
+    {
+      "path": "rvw/src/rvw/regress/source.py",
+      "line": 402,
+      "text": "return Path(os.environ.get(\"RVW_SRC_CACHE\", Path.home() / \".cache\" / \"rvw\" / \"src\"))"
+    },
+    {
+      "path": "rvw/src/rvw/regress/store.py",
+      "line": 20,
+      "text": "return Path(os.environ.get(\"RVW_RESULTS\", Path.home() / \".cache\" / \"rvw\" / \"results\"))"
+    },
+    {
+      "path": "rvw/src/rvw/regress/store.py",
+      "line": 84,
+      "text": "self.remote = os.environ.get(\"RVW_REMOTE_CACHE\")"
+    },
+    {
+      "path": "rvw/src/rvw/runs/adapter.py",
+      "line": 198,
+      "text": "if os.environ.get(\"RVW_NO_LOCK\") or not core:"
+    },
+    {
+      "path": "rvw/src/rvw/runs/adapter.py",
+      "line": 206,
+      "text": "return None if os.environ.get(\"RVW_NO_LOCK\") or not core else core"
+    },
+    {
+      "path": "rvw/src/rvw/runs/inputs.py",
+      "line": 159,
+      "text": "selected = shutil.which(arg, path=c.child_environment().get('PATH', os.defpath))"
+    },
+    {
+      "path": "rvw/src/rvw/runs/result.py",
+      "line": 17,
+      "text": "env = os.environ.get(\"RVW_ROOT\")"
+    },
+    {
+      "path": "rvw/src/rvw/sim/arcilator_install.py",
+      "line": 25,
+      "text": "root=Path(os.environ.get('RVW_CIRCT',Path.home()/'.cache/rvw/circt'/VERSION)).expanduser().resolve()"
+    },
+    {
+      "path": "rvw/src/rvw/sim/hdl.py",
+      "line": 83,
+      "text": "paths[tool] = shutil.which(tool)"
+    },
+    {
+      "path": "rvw/src/rvw/sim/native_models.py",
+      "line": 35,
+      "text": "path = str(Path(circt)/'bin'/name) if circt and name in ('circt-verilog','arcilator','llc') else shutil.which(name)"
+    },
+    {
+      "path": "rvw/src/rvw/sim/profile.py",
+      "line": 48,
+      "text": "path = shutil.which(tool)"
+    },
+    {
+      "path": "rvw/src/rvw/sim/profile.py",
+      "line": 49,
+      "text": "tools[tool] = dict(status='installed' if path else 'not_installed', path=path)"
+    },
+    {
+      "path": "rvw/src/rvw/sim/uvm.py",
+      "line": 85,
+      "text": "executable = shutil.which(verilator)"
+    },
+    {
+      "path": "rvw/src/rvw/sim/uvm_cpu.py",
+      "line": 116,
+      "text": "executable = shutil.which(verilator)"
+    },
+    {
+      "path": "rvw/src/rvw/uvm/flow.py",
+      "line": 55,
+      "text": "executable = shutil.which(verilator)"
+    },
+    {
+      "path": "rvw/src/rvw/wave/capture.py",
+      "line": 52,
+      "text": "selected = shutil.which(interpreter[0], path=self.environment.get('PATH'))"
+    },
+    {
+      "path": "rvw/src/rvw/wave/index.py",
+      "line": 208,
+      "text": "return Path(os.environ.get('RVW_WAVE_INDEX_DIR') or Path.home() / '.cache' / 'rvw' / 'wave-index')"
+    },
+    {
+      "path": "rvw/src/rvw/wave/search.py",
+      "line": 112,
+      "text": "return os.environ.get('RVW_WAVE_FST_READER', 'auto') != 'vcd' and wellen_available()"
+    },
+    {
+      "path": "rvw/src/rvw/wave/vcd.py",
+      "line": 68,
+      "text": "selected = shutil.which(name, path=active.environment.get('PATH')) if active else shutil.which(name)"
+    },
+    {
+      "path": "rvw/src/rvw/workloads/core.py",
+      "line": 78,
+      "text": "found = shutil.which(name)"
+    }
+  ]
+}

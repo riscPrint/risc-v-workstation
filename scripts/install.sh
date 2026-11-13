@@ -25,7 +25,8 @@ Usage: scripts/install.sh [OPTIONS]
   --from-bundle      Use native workflow artifacts for selected tools.
   --bundle-run ID    Download artifacts from this private Actions run (needs gh).
   --bundle-dir DIR   Use artifacts saved in DIR. No artifact network requests.
-  --all              Select all optional components.
+  --profile NAME     minimal, verification, formal, arch or all (inventory).
+  --all              Select all inventory components; some need manual setup.
   --shell-rc FILE    Add the env.sh source line to FILE. Default: print it only.
   --yes             Approve package commands without a prompt.
   --dry-run         Print actions. Do not write files or install packages.
@@ -42,6 +43,18 @@ show() { printf '  +'; printf ' %q' "$@"; printf '\n'; }
 run() { show "$@"; if [ "$dry" = 0 ]; then "$@"; fi; }
 value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a value"; }
 
+script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Expand profiles from the same packaged data used by rvw doctor.
+for arg in "$@"; do
+  if [ "$arg" = --profile ]; then
+    expanded=$(python3 "$script_root/scripts/tool-inventory.py" --expand "$@") || exit 2
+    expanded_args=()
+    while IFS= read -r arg; do [ -z "$arg" ] || expanded_args+=("$arg"); done <<< "$expanded"
+    set -- "${expanded_args[@]}"
+    break
+  fi
+done
+extra_tools=()
 arc=0 ric3=0 ebmc=0
 dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 ooo=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
@@ -72,6 +85,7 @@ while [ "$#" -gt 0 ]; do
     --dry-run) dry=1; shift ;;
     --check) check=1; shift ;;
     -h|--help) usage; exit 0 ;;
+    --with-*) extra_tools+=("${1#--with-}"); shift ;;
     *) fail "unknown argument: $1" ;;
   esac
 done
@@ -395,6 +409,12 @@ fi
 if [ "$bundle" = 1 ] && [ "$check" = 0 ]; then
   [ -n "$bundle_run" ] || [ -n "$bundle_dir" ] || fail '--from-bundle needs --bundle-run or --bundle-dir'
 fi
+if [ "${#extra_tools[@]}" -gt 0 ] && { [ "$check" = 1 ] || [ "$dry" = 1 ]; }; then
+  inventory_mode=()
+  if [ "$check" = 1 ]; then inventory_mode+=(--check);
+  elif [ "$dry" = 1 ]; then inventory_mode+=(--dry-run); fi
+  python3 "$script_root/scripts/tool-inventory.py" "${inventory_mode[@]}" --extra "${extra_tools[@]}" || exit $?
+fi
 if [ "$check" = 1 ]; then
   failed=0
   core_check || failed=1
@@ -456,6 +476,9 @@ run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_ho
 run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
+if [ "${#extra_tools[@]}" -gt 0 ] && [ "$dry" = 0 ]; then
+  "$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --extra "${extra_tools[@]}" || exit $?
+fi
 
 if [ "$dv" = 1 ]; then
   dv_args=()
