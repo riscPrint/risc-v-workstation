@@ -1,5 +1,5 @@
-import pytest
 """Keep the published command inventory complete as packages add entry points."""
+import pytest
 import runpy
 from pathlib import Path
 
@@ -15,10 +15,14 @@ def test_command_reference_matches_declarations(monkeypatch):
 
 
 def test_command_reference_does_not_depend_on_terminal_width(monkeypatch):
-    monkeypatch.setenv('COLUMNS', '120')
+    # Compare two renders, not the checked-in file: that file can lag the code.
+    monkeypatch.delenv('RVW_MCP_PLUGINS', raising=False)
     root = Path(__file__).resolve().parents[2]
     generator = runpy.run_path(str(root / 'scripts/command-reference.py'))
-    assert generator['TARGET'].read_text() == generator['render']()
+    monkeypatch.setenv('COLUMNS', '40')
+    narrow = generator['render']()
+    monkeypatch.setenv('COLUMNS', '200')
+    assert generator['render']() == narrow
 
 
 def test_command_reference_normalizes_usage_wrap():
