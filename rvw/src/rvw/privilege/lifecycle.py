@@ -104,6 +104,6 @@ stimulus_ack: .dword 0
         raise ValueError('NMI vector must be nonnegative and instruction aligned')
     return [dict(id='smrnmi-nested-trap', family='nmi', assembly=assembly,
         bins=['nmi.entry', 'nmi.trap-nesting', 'nmi.recovery'],
-        link_options=[f'-Wl,--section-start=.nmi={vector}'],
+        link_options=[f'-Wl,--section-start=.nmi={vector:#x}'],
         events=[dict(step=1, kind='nmi', when_pc='nmi_wait', cause=cause)],
         reference_unavailable='Spike CLI has no replayable external RNMI input')]
