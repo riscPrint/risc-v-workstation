@@ -208,3 +208,8 @@ capability for harness-owned interrupt pins and device-model responses.
 See `docs/contracts/c2-rvfi-trace.md`. Strict comparison consumes those inputs
 without copying DUT read results. Rebuild the Spike shim for this extension.
 The current pin backend supports machine software, timer and external inputs.
+
+A trace without FP state on an F/D core carries `scope: no_fp_state`.
+Set `require_fp_state: true` in the platform JSON to require FP comparison.
+Missing FP state then gives `inconclusive`. The default match status stays
+compatible with integer-state comparison. C2/1 has no FP register state.
