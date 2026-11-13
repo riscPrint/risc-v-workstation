@@ -21,6 +21,7 @@ class MappedAdapterSpec extends AnyFunSuite {
     assert(m.buses.head.signals("address") == "a" && !m.buses.head.writeResponse)
     assert(m.rvfiPrefix.contains("rvfi_") && m.irq == Map(7 -> "mtip") && m.constants == Map("x" -> BigInt(5)))
     assert(new MappedAdapter(m).irqInputMask == BigInt(0x80))
+    assert(new MappedAdapter(m).supportsProbes)
   }
 
   test("unknown fields, protocols and bus signals are errors") {

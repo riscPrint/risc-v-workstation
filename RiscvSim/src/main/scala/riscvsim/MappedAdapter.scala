@@ -156,6 +156,7 @@ class MappedRvfi(prefix: String, lookup: String => Option[Data]) {
 /** A generic C1 adapter for a core described by a [[CoreMap]]. It names no core signals itself. */
 class MappedAdapter(val map: CoreMap) extends CoreAdapter {
   override def freshInstancePerRun = true
+  override def supportsProbes = true
   type Model = SimCompiled[Component]
   def core: String = map.core
   def configs: Seq[String] = Seq(map.config)
@@ -176,7 +177,9 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
   private def report(key: ModelKey, work: File): SpinalReport[Component] = {
     check(key)
     val roots = if (map.verilog.isEmpty) Seq(new File(sourceDir, "src/main/scala")).filter(_.isDirectory) else Nil
-    RiscvSimConfig.elaborate(key, work, SpinalConfig(), sourceRoots = roots)(top())
+    spinalprobes.Probe.enabled(key.probes) {
+      RiscvSimConfig.elaborate(key, work, SpinalConfig(), sourceRoots = roots)(top())
+    }
   }
   /** One file for the C1 RTL identity: the generated wrapper, then (for a Verilog top) the
     * defines and each source file, in map order. `identity` and the compiled model use the same rule. */
@@ -226,9 +229,11 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
     def write(addr: Long, n: Int, data: BigInt, mask: BigInt): Unit =
       for (i <- 0 until n if mask.testBit(i)) memory(addr + i) = ((data >> (8 * i)) & 255).toInt
     val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
+    var probes: Option[ProbeCollector] = None
     var retired, traps = 0L
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
+        probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val ports: Map[String, Data] = dut.getAllIo.map(d => d.getName() -> d).toMap
         def port(n: String): Data = ports.getOrElse(n, throw new IllegalArgumentException(
           s"core map names port '$n', but the top level has no such port"))
@@ -332,13 +337,14 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
               onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata >> (8 * lane))
             }
           }
-          if (live) models.foreach(_(cycle))
+          if (live) { models.foreach(_(cycle)); probes.foreach(_.sample(cycle)) }
         }
         cd.waitSamplingWhere(false)
       }
       writer.foreach(_.end(result._4, result._1.name))
+      probes.foreach(_.close(result._4))
       result
-    } finally writer.foreach(_.close())
+    } finally { writer.foreach(_.close()); probes.foreach(_.abandon()) }
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
         "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(map.ramSize), "core_map" -> map.file.getPath))
