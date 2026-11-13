@@ -953,6 +953,10 @@ measurements. A completed Linux boot remains unproved by this check.
 
 ## Minimal Linux workload and shutdown
 
+The completed RTL boot and current minimal recipe are in
+[boot an OS on your core](../../docs/INTEGRATION_GUIDE.md#boot-an-os-on-your-core).
+The earlier bounded results below remain separate from that complete run.
+
 The [Linux recipe](rvw/linux/README.md) builds a static init and a built-in
 initramfs from pinned Linux v6.6.60. Init prints `RVW_LINUX_USERSPACE` and calls
 power-off. The `--resumable` preparation profile uses 32 MiB RAM, a 1 MHz
@@ -980,10 +984,10 @@ The stop cycle is cumulative. Each successful slice replaces the checkpoint.
 
 | Native check | Cycles | Instructions retired | Wall seconds | Instructions/s |
 |---|---:|---:|---:|---:|
-| Current ISA properties, minimal kernel, first bounded slice | 3,201,024 | 1,171,289 | 600.94 | 1,949.09 |
+| Earlier minimal kernel, first bounded slice | 3,201,024 | 1,171,289 | 600.94 | 1,949.09 |
 | Fresh-process continuation of an earlier Linux checkpoint | 65,536 additional | 19,218 additional | 16.49 | 1,165.26 |
 
-The current first slice printed ISA and ELF capabilities `acim`. It retired
+The earlier first slice printed ISA and ELF capabilities `acim`. It retired
 129,728 machine instructions and 1,041,561 supervisor instructions. It had no
 user retirements. Its final PC was `0xffffffff8005ef86`, in
 `should_skip_region` in `memblock.c`. The last trap was supervisor ecall cause

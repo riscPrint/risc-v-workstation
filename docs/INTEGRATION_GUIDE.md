@@ -2665,3 +2665,235 @@ replace the separate live native checkpoint/restore flow.
 | `rvw workloads compare "$RUN_ROOT/vex-summary-rv32im/report.json" "$RUN_ROOT/vex-summary-rv32im_cached/report.json"` | Regenerate IPC and top-down deltas with repeatability checks |
 | `rvw workloads run ... --resume` | Resume only with matching campaign identity and unchanged ELFs |
 | `rvw perf topdown EVENTS --result RESULT_JSON` | Recheck counter totals before transient probe files are removed |
+
+## Boot an OS on your core
+
+Start with a reference boot of the exact payload bytes. Then run the RTL in
+bounded slices. Save a checkpoint at a settled clock boundary. Keep the
+runtime that created it. A built kernel, a bounded timeout and a reference
+boot are separate results.
+
+The measured example uses one cacheless VexiiRiscv RV64 hart with I, M, A,
+C, S, U, Zicsr, Zifencei and Zicntr. It has Sv39, eight PMP entries and a
+16-byte PMP granularity. Its native memory buses have fixed one-cycle
+replies. Its project map provides 32 MiB RAM, a 16550 UART, CLINT and a
+power-off register. The Linux DTB describes the UART and timer. This
+workload uses the UART's polling path. It does not qualify a Linux PLIC
+or block-device driver.
+
+Your adapter must supply the following bindings:
+
+| Binding | Requirement |
+|---|---|
+| Reset and memory | Load the reset ELF and each payload at its declared physical address. Provide all RAM, native bus replies and LR/SC state. |
+| Supervisor execution | Provide the selected ISA, page-table format, PMP behavior, traps and privilege transitions. Check the DTB ISA properties against the RTL. |
+| Time and interrupts | Drive the core time input and CLINT from the same simulated clock. Drive software, timer and external input pins as declared. Save each device's pending state. |
+| Completion | Bind SBI reset to a mapped shutdown request. Check the userspace marker separately. A timeout does not establish a hang or a completed boot. |
+| Checkpoint | Save RTL registers and memories, RAM, in-flight bus replies, counters and devices at the same boundary. Restore them before the next edge. Verify the saved layout and identities. |
+| Debug windows | Save the observer's pending retirement and write tags. Observe real operands, results and memory effects. Do not invent a final next PC. |
+
+The example uses `BridgeState` through Spinal's live register and memory
+bridge. It does not serialize the JVM scheduler. Its harness uses an explicit
+single-clock loop without forked probe threads. Blackboxes and combined
+synchronous read/write memory ports are unsupported. Other backends need an
+adapter-owned state binding, such as a reviewed Verilator `--savable` path.
+Do not claim generic live checkpoint support from the example alone.
+
+### Build the minimal workload
+
+Keep sources, builds, checkpoints and run directories outside the repository.
+Check free disk space before a native build. Keep at least 15 GiB free.
+Set `RVW_HOME` to the workstation checkout. Set `VEXIIRISCV` to a private
+core checkout. The measured pins are:
+
+| Input | Revision |
+|---|---|
+| VexiiRiscv | `9b63f47fe559dbba7874af9196746412fa1294c1` |
+| SpinalHDL | `de72faf6062206a89b445e5cc07e32ed982712c8` |
+| Linux v6.6.60 | `9b5aad3a7498c261116a0251fe57f14ba9c4c6cf` |
+| OpenSBI | `bd613dd92113f683052acfb23d9dc8ba60029e0a` |
+
+Configure RISC-V GCC, LLVM, LLD, GNU make, GNU sed, Flex, Bison, dtc,
+JDK 21 and Verilator. Set `RVW_LLVM_BIN` and `RVW_LLD_BIN` to their bin
+directories. Add both to PATH. On macOS, also set `RVW_GNU_SED_BIN` to
+GNU sed's `gnubin` directory. Set `RVW_HOST_ELF_HEADER` to the toolchain's
+host-compatible `include/elf.h`. See the [minimal workload notes](../examples/vexiiriscv/rvw/linux/README.md)
+for the macOS host-header and UUID adapter.
+
+From the workstation checkout:
+
+```sh
+export RUN_ROOT=/path/outside/the/repository
+mkdir -p "$RUN_ROOT"
+git init "$RUN_ROOT/linux"
+git -C "$RUN_ROOT/linux" remote add origin https://github.com/gregkh/linux.git
+git -C "$RUN_ROOT/linux" fetch --depth 1 origin 9b5aad3a7498c261116a0251fe57f14ba9c4c6cf
+git -C "$RUN_ROOT/linux" checkout --detach FETCH_HEAD
+git init "$RUN_ROOT/opensbi"
+git -C "$RUN_ROOT/opensbi" remote add origin https://github.com/riscv-software-src/opensbi.git
+git -C "$RUN_ROOT/opensbi" fetch --depth 1 origin bd613dd92113f683052acfb23d9dc8ba60029e0a
+git -C "$RUN_ROOT/opensbi" checkout --detach FETCH_HEAD
+examples/vexiiriscv/rvw/linux/build.sh "$RUN_ROOT/linux" "$RUN_ROOT/kernel-build"
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/build.py \
+  --source "$RUN_ROOT/opensbi" --out "$RUN_ROOT/firmware" \
+  --llvm-prefix "$RVW_LLVM_BIN" --linux
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/prepare.py \
+  --firmware "$RUN_ROOT/firmware/platform/rvw/firmware/fw_jump.bin" \
+  --kernel "$RUN_ROOT/kernel-build/arch/riscv/boot/Image" \
+  --resumable --out "$RUN_ROOT/inputs"
+RVW_LINUX_INPUTS="$RUN_ROOT/inputs" nice -n 10 rvw/.venv/bin/python -m pytest \
+  examples/vexiiriscv/rvw/tests/test_linux_reference.py -q \
+  --basetemp="$RUN_ROOT/reference-test"
+```
+
+The initramfs contains a static assembly init and `/dev/console`. Init writes
+`RVW_LINUX_USERSPACE`, drains the tty with `TCSBRK`, then requests power-off.
+Without the drain, a queued tty write can be lost at shutdown. The config
+starts with `allnoconfig`. It uses the tiny allocator and size optimization.
+It disables SMP, floating point, modules, networking, block storage, virtual
+terminals, pseudo terminals, namespaces and unused syscall groups. The
+measured Image is 2,022,400 bytes. The fixed `lpj=1000` avoids delay-loop
+calibration. It is a simulation workload setting. The crypto menu is enabled
+to select `CRYPTO_MANAGER_DISABLE_TESTS`. With that menu disabled, Linux still
+runs the mandatory BLAKE2s library self-test. The recipe keeps the library
+and omits those optional boot tests. On the measured case-insensitive macOS
+filesystem, unrelated case-clashing network and litmus files mark the pinned
+checkout dirty. This config does not compile those files.
+
+### Run and resume RTL slices
+
+From `examples/vexiiriscv`, with the native environment active:
+
+```sh
+export PATH="$RVW_HOME/rvw/.venv/bin:$PATH"
+export RVW_BOOT_WORK="$RUN_ROOT/native"
+export RVW_BOOT_FREEZE_RUNTIME="$RUN_ROOT/runtime"
+export RVW_BOOT_SECONDS=600
+export RVW_BOOT_REFERENCE_INPUTS=1
+rvw/boot-slices.sh "$RUN_ROOT/inputs/reset.elf" "$RUN_ROOT/inputs/payloads.json" \
+  "$RUN_ROOT/inputs/devices.json" "$RUN_ROOT/slice-1" "$RUN_ROOT/boot.zip" fresh 100000000
+unset RVW_BOOT_FREEZE_RUNTIME
+export RVW_BOOT_CLASSPATH="$RUN_ROOT/runtime/classpath.txt"
+cp "$RUN_ROOT/boot.zip" "$RUN_ROOT/before-slice-2.zip"
+rvw/boot-slices.sh "$RUN_ROOT/inputs/reset.elf" "$RUN_ROOT/inputs/payloads.json" \
+  "$RUN_ROOT/inputs/devices.json" "$RUN_ROOT/slice-2" "$RUN_ROOT/boot.zip" restore 100000000
+```
+
+Each output directory must be new. The stop cycle is cumulative. The wall
+limit is checked every 1,024 cycles. A successful slice replaces the checkpoint.
+Use the frozen classpath for every continuation. Source changes can otherwise
+change the model or harness identity. The launcher uses the private
+`vex-linux` and `sbt-linux` locks and reaches nice priority 10 once.
+
+No C2 or wave file is written by default. The reference input option records
+only device responses, counter values and interrupt/trap evidence. It must
+start at reset if sampled reference comparison will be needed. It cannot
+recover a missing prefix later. See [checkpoint debug windows](../examples/vexiiriscv/rvw/linux/CHECKPOINT_DEBUG.md)
+for C2, FST, the induced timer hang and `rvw bundle`. See [sampled reference comparison](../examples/vexiiriscv/rvw/linux/SAMPLED_REFERENCE.md)
+for N-retirement Spike checks after a checkpoint. A sample match covers its
+named window. It does not establish full-prefix or whole-boot parity.
+
+To check each saved checkpoint, copy it before the next continuation. Fork
+a short C2 run from that copy. Choose a checkpoint before shutdown and a
+window with at least N retirements. From `examples/vexiiriscv`:
+
+```sh
+cp "$RUN_ROOT/boot.zip" "$RUN_ROOT/sample-start.zip"
+cp "$RUN_ROOT/sample-start.zip" "$RUN_ROOT/sample-end.zip"
+FROM=$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["cycle"])' "$RUN_ROOT/slice-2/result.json")
+TO=$((FROM + 4096))
+RVW_BOOT_TRACE="$FROM:$TO" rvw/boot-slices.sh \
+  "$RUN_ROOT/inputs/reset.elf" "$RUN_ROOT/inputs/payloads.json" \
+  "$RUN_ROOT/inputs/devices.json" "$RUN_ROOT/sample-window" \
+  "$RUN_ROOT/sample-end.zip" restore "$TO"
+"$RVW_HOME/Cosim/build.sh" "$RUN_ROOT/spike/librvw_spike.so"
+python rvw/linux/build_reference.py --shim "$RUN_ROOT/spike/librvw_spike.so" \
+  --out "$RUN_ROOT/reference-profile"
+RVW_SPIKE_MEMORY_LOG=1 python rvw/linux/sample.py \
+  --checkpoint "$RUN_ROOT/sample-start.zip" --end-checkpoint "$RUN_ROOT/sample-end.zip" \
+  --trace "$RUN_ROOT/sample-window/rvfi.jsonl" --elf "$RUN_ROOT/inputs/reset.elf" \
+  --payloads "$RUN_ROOT/inputs/payloads.json" --map "$RUN_ROOT/inputs/devices.json" \
+  --shim "$RUN_ROOT/spike/librvw_spike.so" \
+  --reference-extension "$RUN_ROOT/reference-profile/vexii-linux.so" \
+  --out "$RUN_ROOT/sample-result" -n 32
+```
+
+Use the latest normal slice report to set `FROM`. Use new output names for
+each sample. The sampled fork leaves the normal `boot.zip` unchanged. Delete
+the C2 file and its captured copy after inspection. Keep the small result.
+The reference re-executes the prefix from reset. Its cost grows with the
+checkpoint retirement count. It is not an O(N) reference restore.
+
+### Measured results and limits
+
+| RTL workload | Processes | Cycles | Instructions retired | Wall seconds | Cycles/s | Instructions/s | Completion |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Minimal kernel with BLAKE2s boot self-tests | 7 | 85,286,613 | 31,197,439 | 3,908.31 | 21,821.88 | 7,982.34 | Marker and power-off |
+| Recipe with optional crypto boot tests disabled | 2 | 38,946,382 | 13,854,575 | 1,125.10 | 34,615.81 | 12,314.04 | Marker and power-off |
+
+Both complete runs retired 21 user-mode instructions. The recipe run used
+one fresh-process continuation. The kernel configs differ. The host load
+also differs. Do not treat their rate ratio as a paired speed measurement.
+The measured payload identities are:
+
+| Payload | SHA-256 |
+|---|---|
+| Baseline Linux Image | `d5cc0e508c2898ebc5d153f270d7d06f82f13df9f8792892f4f878cf7ed88db2` |
+| Recipe Linux Image | `f7c42d0b2a972f9109a7fd8ec57e09960e5c37c5e6fc79bcaf408b629527a0d3` |
+| Shared OpenSBI firmware | `21b651f81f1a7d44a26d79d688cd1311ada35fbbef7beb220eff3b5a80f18ad6` |
+| Shared DTB | `1ff4416b39743671df800c6fa44ea0491b95cab3e8112e44a7a908a7c99454e3` |
+
+These hashes identify the measured bytes. The build includes its timestamp
+and host name. A rebuild need not have the same Image hash. Preparation
+records the rebuilt input hashes for reference and RTL checks.
+
+The complete baseline retired 21 user-mode instructions. It resumed in six
+new processes after the first slice. The wall total sums every slice once.
+It includes the cycle loop, RTL restore and checkpoint writes. It excludes
+native compilation, initial input loading and time waiting for the lock.
+Rates describe this shared host and workload. They are not paired whole-boot
+speed measurements or a C1 acceptance result.
+
+A long quiet interval in the first complete boot was active BLAKE2s testing,
+not a stopped core. A saved return address and the kernel symbols identified
+`blake2s_digest_test`. The final console reached `/init` and `Power down`.
+The earlier illegal `rdtime` stop was a selected-core configuration gap.
+Enabling Zicntr fixed that gap. UART discovery and shutdown required device
+and harness bindings. No private core source change was needed.
+
+Summarize a contiguous history from reset from the workstation root:
+
+```sh
+rvw/.venv/bin/python examples/vexiiriscv/rvw/linux/summary.py \
+  "$RUN_ROOT"/slice-*/result.json
+```
+
+The helper refuses missing or duplicate slices. It sums their wall times
+before it computes throughput. The diagnostic C1 converter leaves `wall_s`
+unknown for a resumed cumulative report. Its details retain the current
+slice's time and counter deltas. A final slice's wall time cannot measure
+the cumulative retirement count.
+
+| Separate check | Result | Limit |
+|---|---|---|
+| Checkpoint equality | At 2,000 cycles, resumed and straight runs both retired 441 instructions and printed `KKK`; full state and RAM were equal. | Short same-build run. |
+| Build profile | Optimization 3, one thread: 1.4343x paired wall speedup over optimization 0. Two threads: 0.2573x. | Five alternating bounded pairs, not whole-boot timing. |
+| Timer-input hang | Masked restore made no new retirements with device MTIP `0x80` and core input zero. Removing the mask reached power-off. | Induced short workload, not a Linux hang. |
+| Debug bundle | The restored FST had 4,044 signals and covered the stop cycle. The C2 control and recovery windows each had five records. | Final pending retirement omitted; raw waves removed after inspection. |
+| Sampled Spike comparison | 1,024 Linux retirements matched after a 2,044,149-retirement prefix; 124 interrupt and 168 counter inputs through the sample. | Static project reference profile; no whole-prefix match. |
+| Negative reference control | A changed destination value mismatched at the first compared retirement. | Short supervisor control. |
+
+The profile experiment used an Apple M1 Pro with 32 GiB RAM, Verilator
+5.049 development revision `v5.048-26-g25d4827bd` and Apple clang 21.0.0.
+Kernel and firmware builds used LLVM 23.1.4. Rates are shared-host measurements.
+The paired profile run did not retain power or swap telemetry. See the
+[profile table](../examples/vexiiriscv/rvw/linux/README.md#long-run-build-profile)
+for its five alternating pairs and exact final-state equality scope.
+
+The boot-slice harness is a project integration. The standard C1 launcher
+and persistent server do not call it. Diagnostic C1 views remain inconclusive
+for regression acceptance because C1 replay is not bound. The passive observer
+supports the selected single-lane integer profile. The sampled reference path
+binds machine software, timer and external pins. It refuses asserted
+supervisor-external input. Linux PLIC, block storage, SMP, floating point and
+cross-build checkpoint migration remain outside this measured recipe.
