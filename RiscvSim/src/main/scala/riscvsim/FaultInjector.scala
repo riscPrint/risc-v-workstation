@@ -93,12 +93,25 @@ class FaultInjector(file: FaultFile) {
     val live = states.filter(_.target.nonEmpty)
     if (live.isEmpty) return
     val cd = dut.clockDomain
+    // Count clock samples here. The adapter's tick() runs in another thread on the
+    // same edge, so reading ctl.cycle could see either side of the increment and
+    // skip a cycle. The contract is one tick() per sample, starting at zero.
+    var samples = ctl.cycle
+    var diverged = false
     fork {
-      while (live.exists(s => s.fault.lastCycle.forall(l => s.lastWrite.forall(_ < l)))) {
+      while (!diverged && live.exists(s => s.fault.lastCycle.forall(l => s.lastWrite.forall(_ < l)))) {
         cd.waitSampling()
-        val cycle = ctl.cycle
+        samples += 1
+        val cycle = samples
+        diverged = ctl.cycle != samples && ctl.cycle != samples - 1
+        if (diverged) {
+          for (s <- live if s.writes == 0) {
+            s.lastWrite = Some(cycle)
+            s.reason = Some(s"adapter cycle ${ctl.cycle} diverges from clock sample $samples; injection cycle is ambiguous")
+          }
+        }
         val first = mutable.ArrayBuffer[State]()
-        for (s <- live; bt <- s.target) {
+        for (s <- live if !diverged; bt <- s.target) {
           val f = s.fault
           val active = cycle >= f.cycle && f.lastCycle.forall(cycle <= _) && !(f.kind == "flip" && s.writes > 0)
           if (active) {

@@ -452,3 +452,12 @@ map. Its uncached MMIO ranges must match the project PMA map. Live devices
 and DeviceApiV1 selection are mutually exclusive. C1 `details.device_output`
 contains UART output. The model drives software, timer and external core
 interrupt inputs from device state. This adds no new generic map fields.
+
+## Fault injection cycle sampling
+
+The generic injector counts clock sampling edges from the adapter cycle at
+attachment. The adapter must call `SimControl.tick()` once per sampled edge.
+The tick can run before or after the injector on that edge. A change in thread
+order must not skip a one-cycle flip. If the adapter count differs by more than
+one tick, pending faults remain unapplied with an ambiguous-cycle reason.
+Read-back confirmation remains required before `details.fault.applied` is true.
