@@ -269,3 +269,10 @@ The opt-in `rvwvexii.FormalRvfi` elaboration uses a project-owned hardware plugi
 It is separate from the simulation probe. It is not qualified for ISA signoff.
 See [the observer status](formal-observer.md) for the source pins, interface
 limits and diagnostic instruction campaign.
+
+Warm launches reuse a completed sbt classpath while source files, resources,
+compiled classes and dependency jars retain their hashes. A cache miss runs
+sbt under the shared lock. The launcher refuses to save a cache if sources
+changed during compilation. `RISCVSIM_CP_CACHE` selects its file. The default
+is `vexii-classpath.json` under `RISCVSIM_WORK`, or under the example's target
+directory. Native RTL identity and C1 capture still run on every launch.

@@ -36,12 +36,18 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
   exit 2
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$VEXIIRISCV" "$repo" > "$launch_owner/source.json"
-output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
-  sbt -J-Xmx3g -batch -Dsbt.offline=true '++2.13.14!' 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
-  echo "$output" >&2; exit 2;
-}
-cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
-if [ -z "$cp" ]; then echo "$output" >&2; echo 'No classpath in sbt output.' >&2; exit 2; fi
+cache="${RISCVSIM_CP_CACHE:-${RISCVSIM_WORK:-$here/target}/vexii-classpath.json}"
+cache_args=(--root "$repo" --root "$VEXIIRISCV")
+if ! cp="$("$RVW_PYTHON" "$here/classpath-cache.py" load --cache "$cache" "${cache_args[@]}")"; then
+  before="$("$RVW_PYTHON" "$here/classpath-cache.py" sources "${cache_args[@]}")"
+  output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
+    sbt -J-Xmx3g -batch -Dsbt.offline=true '++2.13.14!' 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
+    echo "$output" >&2; exit 2;
+  }
+  cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
+  if [ -z "$cp" ]; then echo "$output" >&2; echo 'No classpath in sbt output.' >&2; exit 2; fi
+  "$RVW_PYTHON" "$here/classpath-cache.py" save --cache "$cache" --before "$before" --classpath "$cp" "${cache_args[@]}" || true
+fi
 exec "$RVW_PYTHON" "$sim/scripts/native-identity.py" launch "$native_identity" "$launch_owner" \
   -Xss64m -Xmx"${RISCVSIM_XMX:-3g}" -XX:+UseParallelGC \
   -Driscvsim.cwd="$PWD" -Driscvsim.script="$here/run.sh" \
