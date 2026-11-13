@@ -49,6 +49,14 @@ def expand(plan, max_properties=256, kinds=None):
 
 
 def run(args):
+    try:
+        return _run(args)
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        print(json.dumps({'schema': 'rvw.autocheck-error/1', 'status': 'error', 'error': str(exc)}))
+        return 2
+
+
+def _run(args):
     path = Path(args.manifest).resolve()
     from rvw.common.capture import Capture
     capture_root = Path(args.out).resolve().with_name(Path(args.out).name + '-database-inputs')
