@@ -1,5 +1,5 @@
 """Disabled architectural state and absent supervisor operation campaigns."""
-from .programs import HEAD, TAIL
+from .programs import HEAD, tail
 
 BITS = {'sum': 18, 'mxr': 19, 'mprv': 17, 'tvm': 20, 'tw': 21, 'tsr': 22}
 
@@ -50,6 +50,6 @@ handler:
  la t1, access_site
  bne t0, t1, fail
  j pass
-''' + TAIL
+''' + tail(config)
                     rows.append(dict(id=ident, family='disabled', bins=[f'disabled.{operation}.{mode}.{control}.{enabled}'], assembly=assembly))
     return rows

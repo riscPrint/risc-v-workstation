@@ -15,7 +15,8 @@ locally enabled and delegated. Global enables are clear. WFI has no minimum
 sleep requirement. The expectations use the 20260120 privileged specification.
 
 Use `modes` to select modes. The project supplies `isa`; the default is
-`rv64im_zicsr_zifencei`. This first campaign requires S, U, PMP and RV64.
+`rv64im_zicsr_zifencei`. The control campaign requires S, U and PMP. Control and absent-supervisor
+programs support RV32 and RV64. Their tohost stores use the declared XLEN.
 An unsupported configuration is not a passing disabled-feature test.
 
 Merge the generated `suite.toml` section into the project's regression TOML.

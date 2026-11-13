@@ -1,4 +1,4 @@
-"""Self-checking RV64 privilege programs. No core-specific addresses."""
+"""Self-checking RV32 and RV64 privilege programs. No core-specific addresses."""
 
 SPEC = 'https://docs.riscv.org/reference/isa/v20260120/priv/machine.html'
 LINK = '''OUTPUT_ARCH("riscv")
@@ -100,11 +100,12 @@ def controls(config):
                     rows.append(dict(id=ident, family='supervisor', control=control,
                         mode=mode, enabled=enabled, instruction=instruction,
                         bins=[f'control.{control}.{mode}.{int(enabled)}', f'instruction.{instruction}'],
-                        assembly=control_program(control, instruction, mode, enabled)))
+                        assembly=control_program(control, instruction, mode, enabled, config)))
     return rows
 
 
-def control_program(control, instruction, mode, enabled):
+def control_program(control, instruction, mode, enabled, config=None):
+    config = config or {}
     bit = {'tvm': 20, 'tw': 21, 'tsr': 22}[control]
     op = {'satp-read': 'csrr a0, satp', 'satp-write': 'csrw satp, zero',
           'sfence': 'sfence.vma x0, x0', 'wfi': 'wfi', 'sret': 'sret'}[instruction]
@@ -182,4 +183,4 @@ retry_trap:
  bne t0, t1, fail
  j pass
 '''
-    return code + TAIL
+    return code + tail(config)
