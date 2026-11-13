@@ -27,6 +27,15 @@ Default configuration, seed 17:
 | PMP isolation pair | Complete, no_leak_observed | One pair, private words 1 and 305419896. Both reset and pass. Public U-mode window is 21 cycles. Each sees only the tohost store on the data bus. This is bounded simulation evidence. |
 | Existing smoke and interrupt regression | 13/13 RTL pass before the mem_fault observation-field repair | Includes the new directed program, three smoke cases and nine interrupt cases. |
 
+## Later privilege-family run
+
+The device-enabled core also passes all 72 absent-supervisor cases from
+privilege-mu32.json. All traces match Spike strictly: 3,060 instruction records,
+2,988 retirements and zero synchronization. Each run has 25 clear monitors.
+The cases take 78 to 81 cycles. They check SATP, SFENCE.VMA and SRET traps in
+M/U under six control-bit settings. The [extended coverage commands](coverage.md)
+regenerate this family. They do not establish S-mode support.
+
 ## Reproduce
 
 Use the native setup and set RVW_HOME to the workstation checkout. Keep raw

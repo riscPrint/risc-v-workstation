@@ -1,21 +1,32 @@
 #!/usr/bin/env python3
 """Report the fixed coverage batch and one project-declared closure iteration."""
+import argparse
 import json
 import os
 from pathlib import Path
 import subprocess
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--extended', action='store_true', help='Include privilege and device coverage on the current core.')
+args = parser.parse_args()
 project = Path(__file__).resolve().parent.parent
 out = project/'rvw/out'
-runs = out/'coverage-runs'
-dest = out/'coverage-analysis'
+runs = out/('coverage-device-runs' if args.extended else 'coverage-runs')
+dest = out/('coverage-device-analysis' if args.extended else 'coverage-analysis')
 dest.mkdir(exist_ok=True)
 rvw = str(Path(os.environ['RVW_HOME'])/'rvw/.venv/bin/rvw')
 base = [runs/n for n in ('smoke', 'fence-selfmod', 'illegal')]
 isa = sorted(runs.glob('rv32u*-p-*'))
 generated = sorted(runs.glob('pmp-*')) + sorted(runs.glob('scheduled-wfi-*')) + sorted(runs.glob('precise-*'))
-for name, paths in [('smoke',base), ('isa',base+isa), ('generated',base+isa+generated),
-                    ('directed',base+isa+generated+[runs/'protection-speculative',runs/'flush-chain'])]:
+directed = base+isa+generated+[runs/'protection-speculative',runs/'flush-chain']
+epochs = [('smoke',base), ('isa',base+isa), ('generated',base+isa+generated), ('directed',directed)]
+if args.extended:
+    full = directed+[runs/'irq-full-3']
+    privilege = full+sorted(runs.glob('disabled-*'))
+    devices = sorted((out/'coverage-device-plugins/clint-runs').glob('*'))+[out/'coverage-device-plugins/plic-run']
+    assert len(privilege) == 379 and len(devices) == 5
+    epochs += [('full-rob',full), ('privilege',privilege), ('devices',privilege+devices)]
+for name, paths in epochs:
     db, report = dest/f'{name}.json', dest/f'{name}-report.json'
     subprocess.run([rvw,'cov','merge',*[f'{p.name}={p/"coverage.dat"}' for p in paths],
                     '--source-root',str(project),'--out',str(db),'--json'], stdout=subprocess.DEVNULL,check=True)
@@ -37,7 +48,8 @@ def links(point, area):
     low,high = areas[area]
     return any(Path(loc.get('file','')).name == 'Core.scala' and low <= loc.get('line',0) < high for loc in locations)
 before = json.loads((dest/'generated.json').read_text())
-after = json.loads((dest/'directed.json').read_text())
+final = 'devices' if args.extended else 'directed'
+after = json.loads((dest/f'{final}.json').read_text())
 for area in areas:
     points = [p for p in after['points'] if links(p,area)]
     print(json.dumps(dict(area=area,linked_points=len(points),unhit=sum(not p['count'] for p in points),
@@ -52,6 +64,6 @@ for name, selected, priority in [('precise-interrupt',['ROB commit','recovery'],
                           reason='Project candidate for linked control paths; a hit is not predicted.'))
 candidates = dest/'candidates.json'
 candidates.write_text(json.dumps(dict(schema='rvw.coverage-candidates/1',tests=tests)))
-for name in ('generated','directed'):
+for name in ('generated',final):
     subprocess.run([rvw,'cov','closure',str(dest/f'{name}.json'),'--candidates',str(candidates),
                     '--out',str(dest/f'{name}-closure.json'),'--json'],stdout=subprocess.DEVNULL,check=True)

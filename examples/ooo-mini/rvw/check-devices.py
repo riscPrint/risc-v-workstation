@@ -17,6 +17,7 @@ from rvw.results import load_run
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--coverage', action='store_true', help='Collect native code coverage.')
     parser.add_argument('--library', type=Path, help='Use an existing device library.')
     args = parser.parse_args()
     out = args.out.resolve()
@@ -24,6 +25,7 @@ def main():
     home = Path(os.environ['RVW_HOME']).resolve()
     project = Path(__file__).resolve().parent.parent
     rvw = home / 'rvw/.venv/bin/rvw'
+    coverage = ['--coverage'] if args.coverage else []
     env = dict(os.environ)
     env.setdefault('RVW_SBT_LOCK', 'sbt-ooomini2')
     env.setdefault('RVW_OOO_LOCK', 'ooo-mini-ooomini2')
@@ -50,7 +52,7 @@ def main():
                       '-march=rv32im_zicsr', '-mabi=ilp32', '-nostdlib',
                       '-T', project/'rvw/link.ld', project/'rvw/plic-precise.S', '-o', plic_elf])
     rows = [dict(elf=str(elf), out=str(out/'clint-runs'/elf.stem),
-                 **{'rvfi-trace': True, 'probes': True, 'seed': 17, 'max-cycles': 30000})
+                 **{'rvfi-trace': True, 'probes': True, 'seed': 17, 'max-cycles': 30000, 'coverage': args.coverage})
             for elf in sorted((out/'clint-elfs').glob('*.elf'))]
     assert len(rows) == 4
     manifest = out/'clint-jobs.jsonl'
@@ -62,7 +64,7 @@ def main():
     plic_env = {'OOO_MINI_DEVICE_MAP': str(project/'rvw/devices/plic-map.json')}
     run('plic-run', [project/'rvw/run.sh', 'run', '--elf', plic_elf, '--out', plic_run,
                      '--rvfi-trace', '--probes', '--seed', '17', '--max-cycles', '5000',
-                     '--wall-timeout', '115', '--json'], plic_env)
+                     '--wall-timeout', '115', '--json', *coverage], plic_env)
     rows.append(dict(elf=str(plic_elf), out=str(plic_run)))
     for row in rows:
         run_dir = Path(row['out'])
@@ -90,7 +92,7 @@ def main():
                       '--out', out/'live-plic', '--timeout', '240', '--json',
                       '--simulator', project/'rvw/run.sh', 'run', '--elf', '{elf}', '--out', '{out}/dut',
                       '--rvfi-trace', '--probes', '--seed', '17', '--max-cycles', '5000',
-                      '--wall-timeout', '115', '--json'], plic_env)
+                      '--wall-timeout', '115', '--json', *coverage], plic_env)
     report = json.loads((out/'live-plic.log').read_text())
     assert report['status'] == 'match' and report['trace_complete'] and report['synchronized'] == 0
     assert report['mode'] == 'lockstep' and report['external_interrupt_evidence']['status'] == 'checked'
