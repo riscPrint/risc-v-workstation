@@ -26,6 +26,14 @@ class DemoPipeline extends Component {
   tags.enter(xValid && io.advance && xId =/= 2, xId, "W")
   tags.flush(xValid && io.advance && xId === 2, xId)
   tags.stall(!io.advance && fValid, "pipeline", StallCause.Structural)
+  // Branch outcomes at write-back for IDs 1 and 3: ID 1 mispredicts while cold.
+  val isBranch = wValid && io.advance && (wId === 1 || wId === 3)
+  val recovery = UInt(8 bits); recovery := 2
+  val wrongPath = UInt(8 bits); wrongPath := 1
+  val taken = Bool(); taken := True
+  val aliased = Bool(); aliased := False
+  tags.direction(isBranch, wId, "demo_bimodal", wId === 3, taken, recovery = Some(recovery),
+    wrongPath = Some(wrongPath), warmup = Some(wId === 1), alias = Some(aliased), context = () => Some("demo"))
   tags.commit(wValid && io.advance, wId, wId === 4)
 }
 

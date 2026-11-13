@@ -98,6 +98,8 @@ print('prediction events checked')
     assert(lines.count(_.endsWith("\tpredicated_off")) == 1)
     assert(lines.count(_.endsWith("\tarchitectural")) == 4)
     assert(lines.count(_.startsWith("I\t")) == 6)
+    assert(lines.count(_.startsWith("#rvw\t1\tprediction\t")) == 2)
+    assert(lines.contains("#rvw\t1\tprediction\t1\tdemo_bimodal\tdirection\tnot_taken\ttaken\t2\t1\ttrue\tfalse\tdemo"))
     assert(lines.count(l => l.startsWith("R\t") && l.endsWith("\t0")) == 5)
     assert(lines.count(l => l.startsWith("R\t") && l.endsWith("\t1")) == 1)
     // Read the actual simulator output with the production Python parser and event reporter.
@@ -114,6 +116,9 @@ assert r['stall_causes']['measured_cycles'] == 3
 assert r['commit_kinds']['architectural_total'] == 4
 assert r['commit_kinds']['predicated_off_observed'] == 1
 assert sum(c.values()) == 5
+(e,) = r['predictions']['effects']
+assert e['overall']['outcomes'] == 2 and e['overall']['correct'] == 1
+assert e['by_warmup']['true']['incorrect'] == 1 and e['steady_state']['accuracy'] == 1.0
 print('pipeline events checked')
 """
     val source = new java.io.File("../rvw/src").getCanonicalPath

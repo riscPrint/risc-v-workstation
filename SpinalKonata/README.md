@@ -223,6 +223,21 @@ Register these tags only when tracing is enabled. Register commit tags after all
 other events for the same instruction. The demo now emits three measured global
 hold samples and one predicated-off commit. It still emits five R type 0 events.
 
+Predictor outcomes have hardware tags too. Bind the project's observed signals;
+leave a field out (`None`) when the core cannot observe it, and it is written `?`:
+
+```scala
+tags.direction(resolveFire, branchId, "bim", predictedTaken, actualTaken,
+  recovery = Some(recoveryCycles), wrongPath = Some(wrongPathCount),
+  warmup = Some(entryCold), alias = Some(tagMismatch), context = () => Some("user"))
+tags.target(resolveFire, branchId, "btb", "target", predictedPc, actualPc)
+tags.target(returnFire, retId, "ras", "return", rasTop, actualPc)
+```
+
+Register prediction tags before the instruction's terminal tag. The demo
+emits two direction outcomes at write-back (ID 1 mispredicts while marked
+cold), and the test reads them back through `rvw perf`'s effects report.
+
 The writer uses the `#rvw` version 1 comment extension described in
 [PLATFORM_CONTRACTS.md](../docs/PLATFORM_CONTRACTS.md#pipeline-cause-event-extension).
 Ordinary stage and R records remain intact. `rvw perf` reports cause unions,

@@ -142,8 +142,15 @@ alias and context. Each cost gives observed samples, unknown samples, sum and
 maximum. Unknown is not zero. Overlapping groups must not be summed as global
 cost. Flags and contexts describe observations; they do not prove causal effects.
 
-`PredictionOutcome` in SpinalKonata emits this record. Use `PipelineTags.event`
-to bind a project's observed signals. Complete recovery/work counts can arrive
+`predictions.effects` reports, per predictor and kind, accuracy and mispredict
+costs (samples, unknown, sum, max, mean, nearest-rank p50/p95) split separately
+by warmup, by alias and by context. `?` states are their own groups. Each split
+is a marginal over the other dimensions. `steady_state` keeps only outcomes
+observed with `warmup=false` and `alias=false`. The text report prints overall,
+steady-state, warmup and alias accuracy lines.
+
+`PredictionOutcome` in SpinalKonata emits this record. Use
+`PipelineTags.direction` / `PipelineTags.target` to bind a project's observed signals. Complete recovery/work counts can arrive
 at recovery completion, before the resolving instruction's terminal R. Leave
 unavailable fields unknown. BOOM stall/commit probe wiring remains core-owned:
 [riscPrint/spinal-boom #12](https://github.com/riscPrint/spinal-boom/issues/12) and

@@ -286,6 +286,13 @@ def render(report, top=10):
         lines.append(f"Observed prediction outcomes: {predictions['outcomes']}")
         for row in predictions["by_context"]:
             lines.append(f"  {row['predictor']} {row['kind']} warmup={row['warmup']} alias={row['alias']} context={row['context']}: {row['correct']}/{row['outcomes']} correct; recovery={row['recovery_cycles']}; wrong-path={row['wrong_path_instructions']}")
+        for row in predictions.get("effects", []):
+            def acc(s):
+                return "n/a" if s["accuracy"] is None else f"{s['accuracy']:.3f} ({s['correct']}/{s['outcomes']})"
+            parts = [f"overall {acc(row['overall'])}", f"steady-state {acc(row['steady_state'])}"]
+            for dim in ("warmup", "alias"):
+                parts.append(f"{dim} " + ", ".join(f"{k}: {acc(v)}" for k, v in row[f"by_{dim}"].items()))
+            lines.append(f"  {row['predictor']} {row['kind']} accuracy: " + "; ".join(parts))
     if "stall_causes" in report:
         causes = report["stall_causes"]
         lines.append(f"Measured stall cycles: {causes['measured_cycles']}; overlap cycles: {causes['overlap_cycles']}; "
