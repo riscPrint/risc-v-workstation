@@ -200,3 +200,19 @@ source hashes, instruction count, traps and stimulus completion. Native self-
 check success requires tohost=1 and all source events acknowledged. Bounds,
 unsupported operations or incomplete input remain inconclusive. This reference
 result does not earn DUT coverage or replace the C1 architectural gate.
+
+## RERI transaction reference profiles
+
+Campaign kind `reri-transactions` uses the RERI-v1.0 pin. Project data declares
+logging_writable, supported classes and optional ce_counter_bits=16. Optional
+reference_initial_status selects native model startup state and uses a hex
+string for wide values. It is not a hardware reset expectation. Transaction
+plans record kind/value/observe and hex status expectations. The initial
+invalidation action is not observed before software writes a seed status.
+
+`reference_backend = "spike-python-reri"` requires reference_shim. It executes
+the ELF with a Python MMIO record. The report remains evidence=model-based and
+binds the captured shim/library and Python sources. It records hardware-error
+model events separately from software status/control writes. This profile has
+no physical RAS signal route and makes no signal-delivery claim. Native PLIC
+and RERI execution share a bounded ISA/MMIO runner; their models stay separate.

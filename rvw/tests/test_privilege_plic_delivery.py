@@ -25,7 +25,7 @@ def test_target_validation():
 
 def test_interrupt_before_claim_does_not_commit_the_preview(tmp_path,monkeypatch):
     from types import SimpleNamespace
-    from rvw.privilege import spike_plic
+    from rvw.privilege import spike_plic,spike_device
     instances=[]
     class Device:
         def __init__(self,layout):self.reads=0;instances.append(self)
@@ -46,7 +46,7 @@ def test_interrupt_before_claim_does_not_commit_the_preview(tmp_path,monkeypatch
                         intr=self.count==1,cause=(1<<63)|11,mem_rmask=15 if self.count==2 else 0,
                         mem_wmask=0,mem_fault=0,mem_addr=0x200004)
         def close(self):pass
-    monkeypatch.setattr(spike_plic,'Plic',Device);monkeypatch.setattr(spike_plic,'Spike',CPU)
+    monkeypatch.setattr(spike_plic,'Plic',Device);monkeypatch.setattr(spike_device,'Spike',CPU)
     layout=dict(priority=0x1000,pending=0x2000,enable=0x3000,enable_stride=128,context=0x200000,context_stride=4096,sources=1,contexts=1)
     scenario=dict(id='plic-delivery-m-0-global',elf='one.elf',events=[],reference_model=dict(layout=layout,context=0))
     result=spike_plic.run(tmp_path,scenario,{},2,{'library':{'sha256':'shim'},'manifest':{'sha256':'manifest'}})
