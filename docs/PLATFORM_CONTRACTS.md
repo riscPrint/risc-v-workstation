@@ -3441,6 +3441,48 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core component event projection
+
+Native cache demand/writeback/prefetch counts and TLB/walk counts are copied
+to the flat timing `events` map with cache-level or `tlb_` prefixes. Only
+present integer counts are projected. Nested native statistics are retained.
+Project RTL maps must use matching predicates, including replay and page-walk
+traffic. Ratios and averages are not projected as counts. No counter match
+or accuracy claim is implied by this projection.
+
+### Own-core FP dependency timing
+
+The own engine tracks separate integer and FP register dependency IDs. FP
+operation-family classes use `fp_` plus the mnemonic prefix. FP loads/stores
+retain memory classes. `physical_float_registers` is zero for unbounded
+pressure or a total count of at least 33. `float_register_full` counts rename
+stalls. FP destinations use decoded encoding fields, not integer C2 rd data.
+This is dependency/resource timing. It does not execute FP arithmetic,
+validate rounding or reproduce operand-dependent latency. Traps and vectors
+remain unsupported. These streams use Python and retain inconclusive accuracy.
+
+### Own-core non-trapping control timing
+
+Projects can declare CSR, fence and system-return latencies. These operations
+serialize older and younger execution. Only MRET/SRET system instructions
+are admitted; blocking operations, traps and SFENCE.VMA remain unsupported.
+FENCE.I with instruction/uop caches and possible SATP writes with component
+translation are errors because required invalidation/context interfaces are
+not available. The engine does not verify CSR or privilege semantics.
+
+### Own-core component-library adapter
+
+The optional `components` configuration object selects shared native
+component study sections. The own model delegates cache hierarchy,
+prefetch, TLB and branch component behavior to `rvw.csim.lib.Components`.
+It does not implement their algorithms. `components` in the run report
+retains native component statistics. Data service uses issue-cycle times
+after translation. Instruction service requires explicit front-end timing.
+The own translation object and component TLB cannot be enabled together.
+BTB lookup delay adds to branch resolution delay. History is actual-path
+history at issue. FTQ-directed prefetch, instruction TLB service and
+speculative predictor repair remain unsupported. Accuracy is inconclusive.
+
 ### Shared O3 project descriptions
 
 `rvw.arch-core/1` accepts an optional `ooo` object for O3 descriptions. gem5
