@@ -30,12 +30,12 @@ privileged-ISA qualification, whole-core proof or C4 acceptance.
 
 | Area | Measured result | Remaining work |
 |---|---|---|
-| Precise interrupts | MSIP, MTIP and MEIP pass self-checking programs and strict Spike trap comparisons. One qualified software interrupt enters with eight ROB entries occupied. | CLINT WFI passes 4/4 with declared synchronization. Directed PLIC passes strict offline and socket lockstep comparison with checked device evidence. Dynamic PLIC stimulus and other full-ROB IRQ sources remain open. |
-| U-mode and four-entry PMP | 242 generated cases and one speculative-fault program pass with 243 strict matches. Matcher has 26 native cases. | S-mode, translation, ePMP and full privilege-family qualification are absent. |
+| Precise interrupts | MSIP, MTIP and MEIP pass self-checking programs and strict Spike trap comparisons. One qualified software interrupt enters with eight ROB entries occupied. CLINT WFI passes 4/4 with declared synchronization. Directed PLIC passes strict offline and socket lockstep comparison with checked device evidence. | Dynamic PLIC stimulus and other full-ROB IRQ sources remain open. |
+| U-mode and four-entry PMP | 242 generated PMP cases, 72 absent-supervisor cases and one speculative-fault program pass with strict matches. Matcher has 26 native cases. | S-mode, translation, ePMP and full privilege-family qualification are absent. |
 | Isolation | One complete M-to-U PMP pair reports no_leak_observed. Both public windows are 21 cycles and have no denied load on the bus. | Other secrets, channels, policies and positive leakage controls. |
-| Coverage snapshot | One 306-program batch reaches 80.40% line and 85.63% branch coverage. All pass. No exclusion is used. | ACT4, 405 unhit line points, 585 unhit branch points and incomplete logical-region attribution. This snapshot predates the final probe additions. |
+| Coverage snapshot | Latest 384-execution batch reaches 79.88% line and 85.76% branch. All pass. No exclusion is used. Its point set differs from the earlier 80.40%/85.63% snapshot. | ACT4 rejects the four-entry PMP configuration before build. There are 452 unhit line points, 629 unhit branch points and incomplete logical-region attribution. |
 | Formal snapshot | Seven depth-8 BMC goals time out. Two declared-trigger covers reach. ADD, LUI and retirement cover time out at depth 40. | No new property or ISA instruction proof closed. Long retries were not run. |
-| Monitors and probes | Device-enabled cohort: 307/307 base cases and five device cases pass, 25 monitors with zero firings. Base has 304 strict matches and three explicit IRQ-synchronized matches. PLIC also passes strict socket lockstep. Three directed probe plans qualify. | Complete branch/age/byte/privilege coverage and consecutive-cycle recovery remain open. |
+| Monitors and probes | Latest cohort: 384/384 pass, 25 monitors with zero firings. There are 377 strict matches, three explicit IRQ-synchronized matches and four CLINT matches under declared IRQ/MMIO policy. PLIC also passes strict socket lockstep. Three directed probe plans qualify. | Complete branch/age/byte/privilege coverage and consecutive-cycle recovery remain open. |
 
 Detailed commands and limits: [interrupts](rvw/interrupts.md),
 [devices and live comparison](rvw/devices.md), [protection](rvw/protection.md), [coverage](rvw/coverage.md),
@@ -95,8 +95,8 @@ Third-party source stays outside this project. The C1 launcher builds the select
 source revision and honors RVW_SBT_LOCK and RVW_OOO_LOCK. Use private lock
 names for your checkout. Keep RVW_OOO_LOCK different from the project lock.
 The launcher lowers sbt and native Java priority. The adapter refuses unsupported observation modes.
-Use probe conversion for Kanata. Native runtime RVFI checking and SpinalTrace
-are not mapped. Complete RTL identity capture is not qualified.
+Use probe conversion for Kanata. Native runtime RVFI checking is not mapped. SpinalTrace and bounded wave
+output pass the smoke check below. Complete RTL identity capture is not qualified.
 
 ```sh
 rvw/run.sh run --elf rvw/out/programs/smoke --out rvw/out/probes \
@@ -213,9 +213,10 @@ These results are separate from the historical coverage and formal tables.
 
 ## Bounded coverage extension
 
-The [306-program campaign](rvw/coverage.md) reaches 80.40% line and 85.63%
-branch coverage on the M/U PMP core. All runs pass with zero monitor firings.
-ACT4 and complete functional coverage of each logical OoO block remain open.
+The latest [384-execution campaign](rvw/coverage.md) reaches 79.88% line and
+85.76% branch coverage on the device-enabled core. All runs pass with zero
+monitor firings. The older 306-program snapshot has a different point set.
+ACT4 rejects the four-entry PMP configuration. Complete coverage remains open.
 
 ## Bounded formal extension
 
@@ -395,3 +396,9 @@ the per-program wall limit. Run `rvw/arch/score-matrix.py OUTPUT NEW_MODEL`
 to fit on the base training set and freeze predictions. Repeat scoring after
 collection if it finishes early. `--allow-incomplete` writes an inconclusive
 partial report. It never fills missing measurements with zero deltas.
+
+The restored debug interface passes smoke with --spinaltrace, --wave,
+--wave-from 8 and --wave-to 24: 54 cycles, 17 retirements, a complete strict
+Spike match and 25 monitors with zero firings. PDG and FST files are produced.
+C1 records a wave period of 10 and a measured cycle-1 time of 188. This verifies
+the adapter interface. Dynamic dependency attribution remains unqualified.
