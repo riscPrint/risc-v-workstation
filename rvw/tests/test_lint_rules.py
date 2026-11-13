@@ -223,3 +223,13 @@ def test_hashed_enum_source_keeps_exact_literals(tmp_path):
     r = lint(b.done())
     assert r['fsm'][0]['status'] == 'checked'
     assert r['fsm'][0]['unreachable'] == ['lost']
+
+
+def test_resetless_cell_shares_a_resettable_clock(tmp_path):
+    b = base(tmp_path)
+    b.domain(2, clock='clk', kind='BOOT')
+    b.reg('valid', 2, init=None, direction='out')
+    b.assign('valid', ' := i:Bool'); b.edge('i', 'valid')
+    r = lint(b.done())
+    f = next(f for f in r['findings'] if f['endpoint'] == 'valid' and f['rule'] == 'lint.no_reset')
+    assert f['severity'] == 'info'

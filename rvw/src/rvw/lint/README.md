@@ -593,3 +593,8 @@ unreachable. The FSM check reads exact enum literals from the readable source
 when their enum type matches. An opaque assignment keeps the FSM and rules
 report inconclusive. The long-enum Spinal fixture exercises this boundary.
 It does not prove reachability of a state hidden by the hash.
+
+The resetless-register inventory compares clock identity and edge across
+per-cell HDL domains. A BOOT domain does not hide an unreset register on a
+clock that also has resettable state. The default remains `info`: the check
+cannot infer whether a register carries valid control or qualified payload.
