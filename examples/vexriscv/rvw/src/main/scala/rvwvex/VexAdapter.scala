@@ -19,11 +19,14 @@ object VexAdapter extends CoreAdapter {
   override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
       name => sys.env.get(name).map(name -> _))
+  override def supportsProbes = true
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
     require(!key.konata, "VexRiscv adapter does not support Konata")
-    RiscvSimConfig.elaborate(key, work, VexTop.spinalConfig,
-      sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new VexTop)
+    spinalprobes.Probe.enabled(key.probes) {
+      RiscvSimConfig.elaborate(key, work, VexTop.spinalConfig,
+        sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new VexTop)
+    }
   }
   override def elaborate(key: ModelKey, work: File): Seq[File] =
     report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
@@ -63,6 +66,7 @@ object VexAdapter extends CoreAdapter {
     val captureCsrs = !sys.env.get("RVW_VEX_CSR_CAPTURE").contains("0")
     var writer = Option.empty[RvfiTraceWriter]
     var traceEnded = false
+    var probes = Option.empty[ProbeCollector]
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     val marker = ctx.elf.symbol("setStats")
     var markers = 0
@@ -84,6 +88,7 @@ object VexAdapter extends CoreAdapter {
           observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
 
+        probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         dut.csr.timerInterrupt #= false
         dut.csr.softwareInterrupt #= false
         dut.csr.externalInterrupt #= false
@@ -154,6 +159,7 @@ object VexAdapter extends CoreAdapter {
           while (true) {
           cd.waitSampling()
           ctl.tick()
+          probes.foreach(_.sample(ctl.cycle))
           val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(BigInt(0))
           dut.csr.timerInterrupt #= levels.testBit(7)
           dut.csr.softwareInterrupt #= levels.testBit(3)
@@ -223,8 +229,9 @@ object VexAdapter extends CoreAdapter {
       }
       if (!traceEnded && !sys.env.get("RVW_COSIM_DPI").contains("1"))
         writer.foreach(_.end(result._4, result._1.name))
+      probes.foreach(_.close(result._4))
       result
-    } finally { writer.foreach(_.close()); capture.foreach(_.close()) }
+    } finally { writer.foreach(_.close()); capture.foreach(_.close()); probes.foreach(_.abandon()) }
     val metrics = ujson.Obj()
     bench.filter(_.complete).filter(_ => markers == 2).foreach { b =>
       metrics("roi_cycles") = RvwJson.num(b.words(0).toLong)

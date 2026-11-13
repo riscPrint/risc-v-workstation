@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "vex-static-btfn",
+  "description": "Backward-taken, forward-not-taken direction model: the policy of VexRiscv STATIC prediction for conditional branches.",
+  "source": {"fidelity": "approximate", "approximations": ["direction only; STATIC also predicts JAL taken in decode"]},
+  "branch": {"model": "btfn"}
+}

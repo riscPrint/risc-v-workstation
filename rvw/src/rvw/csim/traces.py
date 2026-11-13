@@ -57,6 +57,18 @@ def branch_kind(insn: int, rd: int, xlen: int = 64) -> str | None:
     return None
 
 
+def cond_target(pc: int, insn: int, xlen: int = 64) -> int:
+    """Decoded target of a conditional branch (B type or c.beqz/c.bnez), taken or not."""
+    if insn & 3 == 3:
+        imm = (((insn >> 31) & 1) << 12) | (((insn >> 7) & 1) << 11) | (((insn >> 25) & 0x3f) << 5) | (((insn >> 8) & 0xf) << 1)
+        imm -= (imm & 0x1000) << 1
+    else:
+        imm = (((insn >> 12) & 1) << 8) | (((insn >> 5) & 3) << 6) | (((insn >> 2) & 1) << 5) \
+            | (((insn >> 10) & 3) << 3) | (((insn >> 3) & 3) << 1)
+        imm -= (imm & 0x100) << 1
+    return (pc + imm) & ((1 << xlen) - 1)
+
+
 def _flags(insn: int, xlen: int) -> str:
     """l: load; m: register move (mv, c.mv); z: zero idiom (li rd,0; xor/sub rd,rs,rs)."""
     d = decode(insn, xlen)
@@ -127,7 +139,9 @@ def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
             if kind:
                 fall = pc + length
                 taken = nxt != fall if kind == "cond" else True
-                out.write(f"B {ordinal} {pc:x} {kind} {int(taken)} {nxt:x} {length}\n")
+                # A not-taken conditional keeps its decoded target, for static rules such as BTFN.
+                target = nxt if taken else cond_target(pc, insn, xlen)
+                out.write(f"B {ordinal} {pc:x} {kind} {int(taken)} {target:x} {length}\n")
                 branches += 1
         if not count:
             raise ValueError("empty C2 trace")
@@ -172,7 +186,8 @@ def from_spike(src: Path, dst: Path, values: bool = False) -> dict:
                 return
             length = 4 if insn & 3 == 3 else 2
             taken = nxt != pc + length if kind == "cond" else True
-            out.write(f"B {ordinal} {pc:x} {kind} {int(taken)} {nxt:x} {length}\n")
+            target = nxt if taken else cond_target(pc, insn)
+            out.write(f"B {ordinal} {pc:x} {kind} {int(taken)} {target:x} {length}\n")
             branches += 1
 
         for line in stream:

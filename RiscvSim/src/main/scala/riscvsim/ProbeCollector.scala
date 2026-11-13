@@ -56,6 +56,9 @@ final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Ob
     }
   }
 
+  /** Close a stream without the end record (the run did not finish). No-op after close. */
+  def abandon(): Unit = if (!closed) { closed = true; out.close() }
+
   /** Write the end record. `cycles` is the total cycle count of the run. */
   def close(cycles: Long): Unit = if (!closed) {
     closed = true

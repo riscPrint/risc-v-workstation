@@ -35,7 +35,7 @@ two `B` rows cannot share one ordinal. The last line is `END INSTRUCTIONS`,
 the total count of instructions, with no data after it.
 
 ```text
-B ORD PC KIND TAKEN TARGET [LEN]   KIND cond|jump|ijump|call|icall|ret; TARGET is the next PC when taken
+B ORD PC KIND TAKEN TARGET [LEN]   KIND cond|jump|ijump|call|icall|ret; TARGET is the next PC when taken, the decoded target for a not-taken cond
 L ORD PC ADDR SIZE                 load, SIZE bytes (1..64)
 S ORD PC ADDR SIZE                 store
 W ORD PC RD VALUE FLAGS            register write; FLAGS '-' or letters l (load), m (move), z (zero idiom)

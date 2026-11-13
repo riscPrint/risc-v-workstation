@@ -454,6 +454,45 @@ interface. See [SpinalChecks](../SpinalChecks/README.md) for installing checks.
 The shipped BOOM launchers also handle identity, native tool binding and replay.
 Replacing them with a bare `runMain` command does not provide those guarantees.
 
+## Instrument your core
+
+Many tools read events that only the core can give: predictor outcomes, pipeline stages,
+stall causes, cache and TLB events, event counters. Add them once with
+[SpinalProbes](../SpinalProbes/README.md). The probes are simulation-only and off by default.
+`RiscvSim` (a `ProjectRef` of it, as above) brings the library with it.
+
+1. In the RTL or in a plugin, call `spinalprobes.Probe.*` with existing signals. Calls add no
+   hardware unless the elaboration runs under `Probe.enabled(true)`.
+2. In the run adapter, set `override def supportsProbes = true`. Elaborate with
+   `Probe.enabled(key.probes) { ... }`. In the run loop, open
+   `ProbeCollector.open(Probe.of(dut), job, ctx.rvfiHeader)`, call `sample(ctl.cycle)` in
+   `onSamplings`, `close(cycles)` after a finished run and `abandon()` in `finally`.
+3. Run with `--probes`. The run writes `probe-events.jsonl` beside `rvfi.jsonl`.
+4. Run `rvw probes list --events RUN/probe-events.jsonl`. It shows which tools your probes
+   enable and what is still missing. With a database built from a probe elaboration,
+   `rvw probes list --db DB` shows the same before any run.
+5. Convert for each tool with `rvw probes convert RUN/probe-events.jsonl --to TARGET`.
+
+Minimal probe set per tool:
+
+| Tool | Probes | Convert |
+|------|--------|---------|
+| `rvw csim compare-rtl` | `branch` at the commit point with `predictedTaken` (and `semantics`) | `--to bp-events --c2 RUN/rvfi.jsonl` |
+| `rvw perf` pipeline view | `stage` per stage with a unique instruction ID, `retire`, `flush` | `--to kanata` |
+| `rvw perf` stall causes | the above plus `stall(scope, cause, valid)` | `--to kanata` |
+| `rvw arch ooo-calibrate` | `counter` per RTL event in the plan (rename stalls, ROB full, IQ occupancy as an amount, mispredicts, misses) | `--to counts --c1 RUN/result.json --c2 RUN/rvfi.jsonl` |
+| HPM monitors | `counter(name, inc, hpm = Some(selector))` | `--to hpm` |
+| RiscvSim `CacheEventObserver` | `cacheAccess` with `data` (and `mask` for stores) | `--to cache` |
+| `rvw regress mmu report --protocol-config` | `tlb` fill/hit/invalidate with va, pa, asid, entry, size, PTE | `--to mmu` |
+| MMU walk capture | `pageWalk` request/response | `--to mmu` |
+| `rvw debug etrace` | `traceIngress` from the encoder port | `--to etrace-ingress` |
+| `rvw cosim` interrupt evidence | `interruptTaken` | `--to interrupts --c2 RUN/rvfi.jsonl` |
+
+Per-slot CSR state for `rvw cosim` still uses `RvfiProbe csrSlots` (see RiscvSim). Fault
+injection uses the design database and an adapter that implements C1 `--fault`.
+The [VexRiscv example](../examples/vexriscv/README.md#probes) taps existing signals from
+a plugin, without core source changes.
+
 ## Configure MCP
 
 Use the installed `rvw` executable as a stdio MCP server. For clients that use a
