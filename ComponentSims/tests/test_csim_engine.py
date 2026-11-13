@@ -425,3 +425,23 @@ def test_simulation_limit(csim, tmp_path):
     d = report(csim, tmp_path, kv(branch__model='bimodal', warmup_instructions=10, simulation_instructions=20),
                trace(cond_rows([1] * 100)))
     assert d['trace']['measured_instructions'] == 20 and d['branch']['direction']['conditional'] == 20
+
+
+def test_context_policies(csim, tmp_path):
+    rows, o = ['X 1 1'], 1
+    for r in range(50):
+        for k in range(4):
+            o += 1; rows.append(f'B {o} {0x100 + 8 * k:x} jump 1 {0x900 + 8 * k:x}')
+        o += 1; rows.append(f'X {o} {r & 1:x}')
+    res = {p: report(csim, tmp_path, kv(btb__entries=64, btb__context=p), trace(rows))['branch']['target'] for p in ('shared', 'flush', 'tagged')}
+    assert res['shared']['btb_misses_taken'] == 4
+    assert res['flush']['btb_misses_taken'] == 4 * 50 and res['flush']['btb'][0]['context_flushes'] == 51
+    assert res['tagged']['btb_misses_taken'] == 8  # one cold miss per branch and context
+    rows = ['B 1 100 call 1 200 4', 'X 2 1', 'B 3 200 ret 1 104 4']
+    flush = report(csim, tmp_path, kv(ras__entries=8, ras__context='flush'), trace(rows))['branch']['target']
+    shared = report(csim, tmp_path, kv(ras__entries=8), trace(rows))['branch']['target']
+    assert flush['return_misses'] == 1 and shared['return_misses'] == 0
+    rows = [f'L {i + 1} 40 {(i % 4) * 4096:x} 8' for i in range(40)] + ['X 41 1'] + [f'L {42 + i} 40 {(i % 4) * 4096:x} 8' for i in range(8)]
+    for pol, walks in (('shared', 4), ('flush', 8), ('tagged', 8)):
+        d = report(csim, tmp_path, kv(memory__l1d__size_kib=32, memory__l1d__ways=8, memory__tlb__context=pol), trace(rows))
+        assert d['memory']['tlb']['walks'] == walks, pol

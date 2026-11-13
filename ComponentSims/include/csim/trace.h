@@ -124,6 +124,9 @@ public:
                     if (c == 'l') r.is_load = true; else if (c == 'm') r.is_move = true; else if (c == 'z') r.is_zero = true;
                     else fail("invalid value flag");
                 }
+            } else if (!std::strcmp(f[0], "X")) {
+                if (n != 3) fail("invalid context row");
+                r.kind = K_CONTEXT; r.value = parse_u(f[2], 16, "context");
             } else fail(std::string("unknown row type ") + f[0]);
             last = r.ord;
             return true;

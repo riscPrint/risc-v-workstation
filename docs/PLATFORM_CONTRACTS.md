@@ -3122,7 +3122,11 @@ B ORD PC KIND TAKEN TARGET [LEN]   KIND cond|jump|ijump|call|icall|ret; TARGET i
 L ORD PC ADDR SIZE                 load, SIZE bytes (1..64)
 S ORD PC ADDR SIZE                 store
 W ORD PC RD VALUE FLAGS            register write; FLAGS '-' or letters l (load), m (move), z (zero idiom)
+X ORD CONTEXT                      context (privilege mode or address space) from this ordinal on
 ```
+
+Converters write an `X` row at the first instruction and at each change of the
+C2 `mode` or the Spike privilege digit.
 
 Unconditional kinds must be taken. `LEN` is 2 or 4 for RISC-V; 0 means unknown.
 `rvw csim convert c2` writes it from one-hart C2 traces without order gaps. A

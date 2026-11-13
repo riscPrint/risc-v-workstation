@@ -731,17 +731,26 @@ class Mmu {
 public:
     unsigned page_bits, levels, level_bits; std::unique_ptr<Tlb> l1, l2; std::vector<std::unique_ptr<Tlb>> pwc;
     bool through_cache; unsigned walk_ref_latency; Cache* cache = nullptr;
+    std::string context_policy; uint64_t ctx_tag = 0, context_flushes = 0;
     uint64_t walks = 0, walk_refs = 0, walk_cycles = 0;
     explicit Mmu(const Config& c) {
         page_bits = unsigned(c.u("page_bits", 12, 10, 30)); levels = unsigned(c.u("levels", 3, 1, 5)); level_bits = unsigned(c.u("level_bits", 9, 1, 16));
         l1 = std::make_unique<Tlb>(c.at("l1"), 64, 4, 0);
         if (c.at("l2").any() || c.flag("l2_enabled", true)) l2 = std::make_unique<Tlb>(c.at("l2"), 1024, 8, 8);
         for (unsigned k = 0; k + 1 < levels; ++k) pwc.push_back(std::make_unique<Tlb>(c.at("pwc", k), 16, 16, 0));
+        context_policy = c.choice("context", "shared", {"shared", "flush", "tagged"});
         through_cache = c.flag("walk_through_cache", true); walk_ref_latency = unsigned(c.u("walk_ref_latency", 30, 0, 10000));
     }
     // Returns the cycle at which the translation is available.
+    void context(uint64_t ctx) {
+        if (context_policy == "flush") {
+            for (Tlb* x : {l1.get(), l2.get()}) if (x) for (auto& e : x->e) e.valid = false;
+            for (auto& p : pwc) for (auto& e : p->e) e.valid = false;
+            ++context_flushes;
+        } else if (context_policy == "tagged") ctx_tag = (ctx & 0xffff) << 48;
+    }
     uint64_t translate(uint64_t vaddr, uint64_t pc, uint64_t t) {
-        uint64_t vpn = vaddr >> page_bits;
+        uint64_t vpn = (vaddr >> page_bits) ^ ctx_tag;
         if (l1->lookup(vpn)) return t + l1->latency;
         t += l1->latency;
         if (l2) { if (l2->lookup(vpn)) { l1->fill(vpn); return t + l2->latency; } t += l2->latency; }
@@ -774,6 +783,7 @@ public:
         Json p = Json::array(); for (auto& x : pwc) p.push(x->stats(instructions)); j["pwc"] = p;
         j["walks"] = walks; j["walk_mpki"] = per_kilo(walks, instructions); j["walk_memory_references"] = walk_refs;
         j["average_walk_cycles"] = ratio(double(walk_cycles), double(walks)); j["walks_through_cache"] = through_cache;
+        j["context"] = context_policy; j["context_flushes"] = context_flushes;
         return j;
     }
 };
