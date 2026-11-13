@@ -3109,6 +3109,13 @@ The table lists missing property classes and witness-reconstruction failures.
 
 ## ISA kit signoff table
 
+Timeout rows now show elapsed seconds, the time limit, the starting host load
+and the next setting to try. Native engine rows retain the ending load too.
+Use `--timeout 1800` for a 30-minute retry at the same depth. A high-load
+timeout stays unresolved. It does not establish a real capacity limit.
+The current default remains 110 seconds. Check depths stay in project data.
+Long low-load measurements are required before either default can change.
+
 `rvw formal isa --project PROJECT --out OUT --timeout 110` runs all selected
 bounded instruction and consistency checks. It prints one row per check and
 writes `rvw.isa-signoff/1` to `OUT/result.json`. Use `--unbounded` to run the

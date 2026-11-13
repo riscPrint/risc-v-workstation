@@ -122,6 +122,9 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
     inventory = installed()
     assumptions = []
     if any(inventory[n]['status'] == 'installed' and mode in ENGINES[n][2] for n in names):
+        from .runtime import load_average, timeout_details
+        prepare_start = time.monotonic()
+        prepare_load = load_average()
         # Count elaborated safety checks so an empty problem cannot earn a proof.
         script = read_script + '; prep -top ' + plan['top'] + '; write_json design.json'
         check = run_group(['yosys', '-Q', '-T', '-p', script], cwd=out, capture=True, timeout=timeout)
@@ -141,6 +144,9 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
             report = {'schema': 'rvw.formal-portfolio/1', 'status': 'inconclusive',
                       'reason': 'no_checks' if design.exists() and check.returncode == 0 else 'preparation_failed',
                       'rows': [], 'winner': None, 'source_sha256': hashes, 'mode': mode, 'depth': depth}
+            if check.timed_out:
+                report.update(timeout_details(time.monotonic() - prepare_start, timeout, prepare_load))
+                report['reason'] = 'preparation_timeout'
             (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
             return report
     stopped = threading.Event()
@@ -223,6 +229,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
                     os.killpg(pid, signal.SIGTERM)
             tracker.start(pid)
         began = time.monotonic()
+        from .runtime import load_average, timeout_details
+        load_start = load_average()
         try:
             proc = run_group(command, cwd=directory, capture=True, timeout=timeout, on_start=on_start)
             text = (proc.stdout or '') + (proc.stderr or '')
@@ -239,7 +247,11 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
             progress_status = status
             from .engine_limits import avy_failure
             diagnostic = avy_failure(directory, text) if name == 'aiger:avy' and status == 'error' else {}
-            return {**row, **diagnostic, 'status': status, 'wall_s': time.monotonic() - began,
+            elapsed = time.monotonic() - began
+            timing = dict(timeout_s=timeout, load_average_start=load_start)
+            if status == 'timeout':
+                timing = timeout_details(elapsed, timeout, load_start, engine=name)
+            return {**row, **diagnostic, **timing, 'status': status, 'wall_s': elapsed,
                     'returncode': proc.returncode, 'command': command}
         except OSError as exc:
             with lock:

@@ -18,12 +18,14 @@ def bounded_rows(suite):
                    else 'inconclusive')
         action = ''
         if outcome == 'inconclusive':
-            action = ('Increase --timeout or select riscv_formal.solver/check_options.engine.'
+            action = (test.get('next_setting', 'Increase --timeout or select riscv_formal.solver/check_options.engine.')
                       if status == 'timeout' else
                       'Use --trace to measure depth; review check_options.cycles, memory response assumptions and RVFI order/valid. See bounded/*-activation.log.')
         rows.append(dict(action=action, check=test['id'], status=outcome, depth=depth,
                          reason=why or ('' if outcome == 'bounded' else status),
-                         evidence='bounded/results.json', instruction_activation=test.get('instruction_activation')))
+                         evidence='bounded/results.json', instruction_activation=test.get('instruction_activation'),
+                         **{k:test[k] for k in ('wall_s', 'timeout_s', 'load_average_start',
+                                               'load_average_end', 'capacity_classification') if k in test}))
     return rows
 
 
@@ -71,7 +73,13 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
                 rows.append(dict(check=row['check'] + ':unbounded',
                                  status='proven' if row['status'] == 'pass' else
                                  'failed' if row['status'] == 'fail' else 'inconclusive',
-                                 reason='See portfolio assumptions and activation limits.',
+                                 reason=row.get('reason', 'See portfolio assumptions and activation limits.'),
+                                 **{k:row[k] for k in ('wall_s','timeout_s','load_average_start',
+                                      'load_average_end','next_setting','capacity_classification') if k in row},
+                                 engine_attempts=[{k:v for k,v in attempt.items() if k in
+                                     ('engine','status','wall_s','timeout_s','load_average_start',
+                                      'load_average_end','next_setting','capacity_classification')}
+                                     for attempt in row.get('rows', [])],
                                  evidence='unbounded/result.json'))
     else:
         rows.append(dict(check='instruction_checks', status='unsupported',
@@ -88,6 +96,7 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
             rows.append(dict(check=row['check'] + ':abstraction',
                              status='failed' if row['status']=='fail' else 'inconclusive',
                              conditional_native_proof=row.get('conditional_native_proof',False),
+                             engine_attempts=row.get('rtlil_retry', {}).get('rows', []),
                              reason='Native proof closed for the declared abstraction; full pipeline signoff is incomplete.'
                              if row.get('conditional_native_proof') else 'The conditional abstraction did not close.',
                              evidence='abstract/result.json'))
@@ -130,5 +139,10 @@ def table(report):
     lines = ['Check | Outcome | Reason', '--- | --- | ---']
     for row in report['rows']:
         outcome = f"bounded {row['depth']}" if row['status'] == 'bounded' else row['status']
-        lines.append(f"{row['check']} | {outcome} | {row.get('reason', '')} {row.get('action', '')}")
+        if row.get('reason') in ('wall-clock timeout', 'timeout', 'preparation_timeout'):
+            outcome += f"; ran {row.get('wall_s', 'unknown')} s; limit {row.get('timeout_s', 'unknown')} s; load {row.get('load_average_start', 'unknown')}"
+        lines.append(f"{row['check']} | {outcome} | {row.get('reason', '')} {row.get('action', row.get('next_setting', ''))}")
+        for attempt in row.get('engine_attempts', []):
+            if attempt['status'] == 'timeout':
+                lines.append(f"{row['check']} / {attempt['engine']} | timeout; ran {attempt.get('wall_s', 'unknown')} s; limit {attempt.get('timeout_s', 'unknown')} s; load {attempt.get('load_average_start', 'unknown')} | {attempt.get('next_setting', '')}")
     return '\n'.join(lines)

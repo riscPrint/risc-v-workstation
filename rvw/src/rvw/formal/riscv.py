@@ -193,14 +193,19 @@ def invoke(argv, **kwargs):
 
 
 def run(cfg, out, timeout, core_name):
+    from .runtime import load_average, timeout_details
     cfg = json.loads(json.dumps(cfg, default=str))
     core, identity = prepare(cfg, out)
     entries = []
+    generation_start = time.monotonic()
+    generation_load = load_average()
     with (out / 'generate.log').open('w') as log:
         gen = invoke([sys.executable, '../../checks/genchecks.py'], cwd=core,
                         timeout=timeout, stdout=log, stderr=log)
+    generation_wall = time.monotonic() - generation_start
     for name in cfg['checks']:
         started = time.monotonic()
+        load_start = load_average()
         work = core / 'checks'
         file = work / f'{name}.sby'
         if gen.returncode or not file.is_file():
@@ -223,7 +228,15 @@ def run(cfg, out, timeout, core_name):
             entry = map_check(name, token, result.returncode, result.timed_out)
         entry.extra['formal_settings'] = check_settings(cfg, name)
         entry.extra['wall_s'] = time.monotonic() - started
+        if gen.timed_out:
+            entry.extra['wall_s'] = generation_wall
+            load_start = generation_load
+            entry.extra['timeout_phase'] = 'generation'
         entry.extra['timeout_s'] = timeout
+        entry.extra['load_average_start'] = load_start
+        if entry.status == 'timeout':
+            entry.extra.update(timeout_details(entry.extra['wall_s'], timeout, load_start,
+                                               engine=entry.extra['formal_settings']['engine']))
         entries.append(entry)
     covered = next(t for t in entries if t.id == 'cover').status == 'pass'
     for entry in entries:
