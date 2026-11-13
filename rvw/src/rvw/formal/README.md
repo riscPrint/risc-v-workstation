@@ -1447,3 +1447,46 @@ file before the native frontend reads it. Instance-target binds, checker output
 ports, event arguments, default arguments and positional binds remain refused.
 Checker port and RTL type errors remain native frontend errors. The lowering
 does not infer an environment contract or qualify simulator scheduling regions.
+
+
+
+
+`rvw formal proof-core --result RUN --out DIR` exports a bounded SMT query
+from `RUN/sby/model/design.il`. It also works when the captured SBY job used
+an AIGER engine. No hand-written SMT is needed. Use `--depth` to set the sample
+count. The core groups initial state, transitions, hierarchy and assumptions
+by sample. It checks all assertions together. It does not identify minimal
+logic cells or establish an unbounded proof. SAT and solver errors remain
+inconclusive. The existing `--smt2` and `--mapping` mode remains available.
+Use `--property CELL_NAME` to select an exact assertion from the captured top.
+The generated bindings retain its cell name as the property ID. Without this
+option, all assertions are checked together. A separate bounded feasibility
+query must be SAT. A conflicting environment remains inconclusive and retains
+its solver core in `environment_core`.
+
+### Formal testplan evidence
+
+`rvw formal testplan --manifest PLAN.json --out DIR` writes JSON and HTML.
+The `rvw.formal-testplan/1` plan lists `properties`. Each property has
+`property_id`, `module` and `origin` (`generated` or `hand_written`). Optional
+fields are `requirement_ids`, `mutation_ids`, and `source` with `file` and `line`.
+The source file can be a Spinal Scala file. The report groups evidence by module
+and source line. It does not infer line coverage from SMT constraint counts.
+
+An optional `evidence` list has `kind` and `path`. Paths are relative to the plan.
+Use `kind=result` with a `property_id` for one captured formal result.
+Use `kind=core` for `rvw.solver-core/1`, `kind=cones` for `rvw.proof-cones/1`,
+and `kind=mutation` for `rvw cov mutate` JSON. Join mutation rows by the plan's
+explicit IDs. Missing mutation rows remain missing. Duplicate property evidence
+and evidence outside the inventory are errors. Files are captured and hashed.
+
+The `formal_testplan` MCP tool uses the same inputs. Missing proof evidence is
+`not_run`. Missing cores are `unavailable`. Reached activation is a separate
+observation. Full non-vacuity and requirement obligations remain unestablished.
+The aggregate status remains inconclusive. Existing guarded `rvw cov prove`
+exclusions remain the only UNR exclusion path.
+Captured assumptions are grouped by cell across all samples. `assumptions`
+records whether each cell occurs in the returned core. Conflicting environments
+also get deletion-minimal constraint reduction. A cell outside that core is not
+needed for this query. This is not a general assumption-adequacy result. A SAT
+property query does not produce a proof core or certify assumption necessity.

@@ -3419,3 +3419,32 @@ argument-free named properties resolve before monitor generation. Recursive or
 unused named properties are refused. Only explicit ANSI input checker ports and
 named-port module-target bindings are supported. Instance-target bindings and
 checker scheduling extensions remain unsupported.
+
+
+
+
+### Captured-model solver cores
+
+`rvw.solver-core/1` can contain `bounded_model` with `top`, `depth` and `scope`.
+These cores refer to an aggregate bounded assertion query exported from frozen
+SBY RTLIL. Labels identify sample constraint groups. They are not cell coverage,
+per-property proofs, or coverage exclusions. Generated SMT and bindings are retained.
+The optional `environment_core` lists constraint labels when the environment
+feasibility query is UNSAT. Such a run is inconclusive. `bounded_model.feasibility`
+records this separate check. `--property` selects one top-module assertion cell;
+the generated property ID is `TOP:CELL_NAME`, bound to the captured model.
+
+### Formal testplan evidence joins
+
+`rvw.formal-testplan/1` lists property IDs, modules, origins, optional source
+locations, requirement IDs, mutation IDs and external evidence paths.
+`rvw.formal-testplan-report/1` retains each property result, depth, proof kind,
+activation, core labels and explicit mutation outcomes. It groups counts by
+module and source line. Missing evidence remains explicit. Requirements and the
+aggregate report remain inconclusive. `cell_coverage=unavailable` prevents SMT
+constraint labels from becoming cell coverage. `exclusion=not_authorized` grants
+no new waivers. The input capture binds the plan and every evidence file.
+Solver-core reports can include `assumptions`, with captured cell names, labels
+and `in_core`. An UNSAT environment gets a reduced `environment_core` and an
+`environment_minimal` flag. This is deletion minimality over constraint groups,
+not minimum cardinality or full assumption adequacy.
