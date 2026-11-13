@@ -18,22 +18,23 @@ The pack limits native make jobs to two. All source changes stay in the
 qualification copy. Source round trips are tested against Git objects at the
 pin. They do not establish compilation, activation or test detection.
 
-| Task | Mutation | Named workload | Native detection |
+| Task | Mutation | Named workload | Native observation |
 |---|---|---|---|
-| wakeup-race | Drop integer wakeup when long-latency completion is simultaneous | mul | Not measured |
-| freelist-leak | Omit retired-tag release | add | Not measured |
-| recovery-map | Restore architectural numbers instead of committed tags | beq | Not measured |
-| store-age | Reverse store-age forwarding test | lw | Not measured |
-| flush-valid | Retain valid entries on recovery | beq | Not measured |
-| operand-ready | Issue with only one ready operand | add | Not measured |
-| rename-source | Read rs1's mapping for rs2 | sub | Not measured |
-| mul-wakeup | Drop long-latency result wakeup | mul | Not measured |
-| mul-flush | Keep long-latency execution on recovery | div | Not measured |
-| lsq-order | Reverse unresolved-store load interlock | lw | Not measured |
+| wakeup-race | Drop integer wakeup when long-latency completion is simultaneous | mul | Complete bounded stall; matching prefix |
+| freelist-leak | Omit retired-tag release | add | Free-list check fires; matching prefix |
+| recovery-map | Restore architectural numbers instead of committed tags | beq | Qualified; Spike and map/free-list checks |
+| store-age | Reverse store-age forwarding test | lw | ISA lw passes; directed forwarding test qualifies |
+| flush-valid | Retain valid entries on recovery | beq | Qualified; Spike and ROB/free-list checks |
+| operand-ready | Issue with only one ready operand | add | ISA add passes; directed readiness test qualifies |
+| rename-source | Read rs1's mapping for rs2 | sub | Named test and control fail; unqualified |
+| mul-wakeup | Drop long-latency result wakeup | mul | Complete bounded stall; matching prefix |
+| mul-flush | Keep long-latency execution on recovery | div | ISA div passes; directed execution-flush test qualifies |
+| lsq-order | Reverse unresolved-store load interlock | lw | Complete bounded stall; matching prefix |
 
 Each task uses the short `agent-control` program. Copy it from the benchmark
 builder output into the private ISA program directory before qualification. Named workloads are proposed detectors.
 They are not qualified detectors. Some mutations can cause a hang without an
 architectural mismatch. Such a result cannot earn the first-mismatch claim.
-Generated monitor detection and additional generated or random workloads need
-native observations. No check activation is inferred from a source rule name.
+The native result table records actual monitor firings and the three generated
+hazard replacements. No check activation is inferred from a source rule name.
+See [the measurements and regeneration commands](native-results.md).

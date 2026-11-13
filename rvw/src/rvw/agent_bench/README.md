@@ -95,7 +95,9 @@ MCP tool: `agent_bench_native_qualify`.
 These ten tasks use the real VexRiscv example. The repair is evaluator supplied.
 Qualification tests the task, not an agent. Dynamic Scala cause links, native
 synthetic-core tasks and external agent repairs remain open in #364 and #27.
-A native task result is not C4 acceptance.
+A native task result is not C4 acceptance. Native source/test qualification
+does not establish a source-localising agent task. That evidence is scored
+separately below.
 
 ## Misleading and incomplete evidence
 
@@ -180,16 +182,18 @@ A harness change between failure and repair leaves the check inconclusive.
 `rvw agent-bench evidence-solve --plan PLAN.json --out NEW_DIRECTORY` drives
 regression, cosim, bundle, query and wave tools over MCP stdio. It records
 source locations in tool traversal order. See [the workflow](solver.md).
-MCP tool: `agent_bench_evidence_solve`. Native localisation ranks are not yet
-measured. The solver does not edit sources or earn repair acceptance.
+MCP tool: `agent_bench_evidence_solve`. Native localisation ranks are
+recorded in the result table below. The solver does not edit sources or earn repair acceptance.
 
 ## OoO Mini task inputs
 
 [The second-core pack](../../../../examples/agent-bench/ooo-mini.md) declares ten
 source mutations at a pinned example commit. They cover wakeup, rename,
 free-list release, recovery, store forwarding and load/store ordering.
-Source round trips are checked. Native detection and monitor activation are
-not yet measured. A named workload in this pack is a proposed detector.
+Source round trips are checked. Native runs qualified five tasks. Generated
+hazard tests detect three faults missed by the initial named ISA tests. Four
+bounded stalls remain inconclusive. The rename-source control also fails.
+See the measured table below. The original pack retains its initial detectors.
 
 
 The pass-to-pass control writes `mscratch`, forms the tohost address, then
@@ -228,13 +232,16 @@ Regenerate these cases with a retained native capture:
 
 ```sh
 nice -n 15 rvw/.venv/bin/python examples/agent-bench/audit-misleading.py \
-  --run-dir BASELINE_RUN --elf MATCHING_ELF --wrong-elf OTHER_ELF \
+  --mcp --run-dir BASELINE_RUN --elf MATCHING_ELF --wrong-elf OTHER_ELF \
   --stale-rtl SEEDED_RTL_SHA256 --out /path/outside/repository/new-audit
 ```
 
 A controlled repair-runner test also checks a candidate that passes its named
 program and fails a hidden independent program. It earns `repair_rejected`.
-A native core run of that wrong-fix case remains NOT RUN.
+Actual native candidate RTL now passes the named XOR program and fails the
+hidden SUB program. The native verdict rejects it. The evaluator reference
+repair passes both. These runs check the scoring predicate in a controlled
+private workspace. An external native source-repair trial remains NOT RUN.
 
 ## External trials on normal rvw tools
 
@@ -265,3 +272,67 @@ repair result. See [the workflow inputs](solver.md).
 The [fixture trial table](../../../../examples/agent-bench/external-trials.md)
 records ten scripted fixture fixes and five preserved inconclusive cases with
 zero false fixes. Those results test the fixture track, not native tools.
+
+## Bounded cold-build retries
+
+A cold Scala build can exhaust the adapter budget before simulation. Retain
+its private workspace and retry without changing the source path:
+
+```sh
+rvw agent-bench native-qualify --pack PACK --source PINNED_SOURCE --out RUN
+rvw agent-bench native-qualify --pack PACK --source PINNED_SOURCE --out RUN --reuse-workspace
+```
+
+Workspace reuse checks the source pin, tracked paths, clean state and every
+source byte. It refuses a seeded or edited workspace. Each attempt reruns the
+baseline and selected tasks. It archives the previous report and uses a fresh
+output subdirectory. It reuses compilation state, not a passing verdict. A
+changed pack gets a separate recorded digest. Keep each adapter budget short.
+
+## Reproduce native tool measurements
+
+`examples/agent-bench/measure-native-tools.py` verifies a clean private native
+workspace before each campaign. It seeds one task at a time. It builds the
+mutated design database through MCP, then starts the bounded external reference
+client. The client runs the five-tool workflow through MCP. It selects the
+observable mismatch field and finds its retirement order in the waveform.
+The example supplies signal names. It supplies no mutated source line to the
+client. Evaluator truth scores returned locations after the trial.
+
+The helper retains the database build time outside the client budget. Each
+client has 110 seconds and 32 calls. All source changes stay in the private
+workspace. The helper restores the original source bytes on exit. Use the
+measured result table for tool limits. Source-line rank does not grant repair
+credit. The benchmark-owned OoO debug description supplies bundle metadata.
+It does not change the pinned core.
+
+
+## Measured native results
+
+| Task class | Qualified natively | Exact source-line rank | Detection mechanism |
+|---|---|---|---|
+| Vex ALU, compare and shift | 7/7 | Absent in this workflow | Named ISA test and strict Spike mismatch |
+| Vex branches | 2/2 | Absent in this workflow | Named ISA test and strict Spike mismatch |
+| Vex signed byte load | 1/1 | Absent in this workflow | Named ISA test and strict Spike mismatch |
+| OoO recovery and valid flush | 2/2 | Absent; recovery-map wave reader fails | Strict Spike; map ownership, ROB count and free-list checks |
+| OoO forwarding, readiness and execution flush | 3/3 | Absent in this workflow | Generated directed tests and strict Spike; operand checks catch readiness |
+| OoO wakeup and load interlock | 0/3 | Absent at the run end | Complete bounded stall; matching Spike prefix |
+| OoO free-list release | 0/1 | Absent at the run end | Free-list check fires; control also flags; matching prefix |
+| OoO source rename | 0/1 | Absent in this workflow | Named test and control both diverge from Spike |
+| Misleading native evidence | Five inconclusive cases preserved | Not a localisation task | Actual C1/C2 admission through MCP |
+| Wrong native fix | No fix credit | Not a localisation task | Named XOR passes; hidden SUB fails |
+
+[The per-task table](../../../../examples/agent-bench/native-results.md) records
+first divergent instructions, phase times, monitor firings and all 21 bounded
+MCP trials. Nineteen trials returned all five steps. Both recovery-map attempts
+failed in `fst2vcd`. No trial returned the exact mutated source line. No client
+claimed a fix. Raw artifacts stay outside Git. The table gives regeneration
+commands and the exact tested tool revisions.
+
+Strict Spike helps an agent identify the first wrong retirement. The direct
+OoO checks identify four fault classes. This bounded observable-output workflow
+does not reach the exact mutated line. Vex traces stop at a compiler temporary
+absent from the wave. OoO traces stop at ambiguous register-bank write enables.
+These are limits of the measured workflow. They do not prove that all search
+strategies fail. Root-cause proof, LLM reasoning and external native source
+repairs remain unmeasured.
