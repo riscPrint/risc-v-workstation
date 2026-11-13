@@ -82,6 +82,9 @@ def mapping(gold, gate, pairs):
             result.append({'gold': a, 'gate': b, 'width': len(bits),
                            'method': 'manual' if a in explicit else 'name'})
             used.add(b)
+    from .register_match import suggest
+    result.extend(suggest(gold, gate, result))
+    used.update(row['gate'] for row in result)
     missing = {'gold': sorted(set(gold) - {r['gold'] for r in result}),
                'gate': sorted(set(gate) - used)}
     if set(explicit) - set(gold) or set(explicit.values()) - set(gate):

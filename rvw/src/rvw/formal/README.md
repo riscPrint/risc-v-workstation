@@ -637,7 +637,9 @@ Each side uses the existing captured RTL frontend and tool bindings. Both design
 must have the same ordered port interface. One rising-edge clock is supported.
 Async controls, latches, memories, blackboxes, design properties and explicit
 nondeterministic cells are refused. State names must cover every register bit.
-The command pairs register names of equal width automatically. Repeat `--pair`
+The command pairs register names of equal width automatically.
+It then pairs unmatched registers with a unique leaf name and equal width.
+Ambiguous names remain unmatched. Manual pairs have priority. Repeat `--pair`
 for renamed state. By default, an unmatched register prevents an equivalence result.
 `--unmatched-state prove` retains the inventory but lets the solver check every
 internal state bit without name pairing. It adds no state equality assumptions.
