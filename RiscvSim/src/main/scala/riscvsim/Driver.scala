@@ -25,10 +25,10 @@ object Driver {
 
   case class Ctx(job: RunJob, elf: ElfFile, logF: String => Unit, rvfiHeader: ujson.Obj, assertIndex: AssertIndex, outputMark: Long,
                  override val wallClock: WallClock = WallClock.none,
-                 requestIdentity: ujson.Obj = ujson.Obj(), bootImage: Option[BootImage] = None) extends RunContext {
+                 requestIdentity: ujson.Obj = ujson.Obj(), bootImage: Option[BootImage] = None, override val hartImages: Option[HartImages] = None) extends RunContext {
     override def captureIdentity: ujson.Obj = ujson.Obj.from(rvfiHeader.value.toSeq ++ requestIdentity.value.toSeq)
     override def loadMemory(write: (Long, Array[Byte]) => Unit): Unit =
-      bootImage match { case Some(b) => b.load(write); case None => elf.load(write) }
+      bootImage match { case Some(b) => b.load(write); case None => super.loadMemory(write) }
     def log(line: String): Unit = logF(line)
   }
 
@@ -217,6 +217,7 @@ class Driver(val adapter: CoreAdapter) {
     val out = new File(job.out.getPath + "-replay")
     val parts = Seq(replayScript, "run", "--elf", job.elf.getPath, "--out", out.getPath, "--config", job.config,
       "--seed", job.seed.toString, "--max-cycles", job.maxCycles.toString) ++
+      job.hartImages.toSeq.flatMap(f => Seq("--hart-images", f.getPath)) ++
       job.bootPayloads.toSeq.flatMap(f => Seq("--boot-payloads", f.getPath)) ++
       Seq("--elf-load-bias", job.elfLoadBias.toString) ++
       job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
@@ -238,6 +239,7 @@ class Driver(val adapter: CoreAdapter) {
   }
 
   // ---------------------------------------------------------------- runs in progress
+  private val capturedHartImages = new ConcurrentHashMap[RunJob, HartImages]()
   private val capturedBootImages = new ConcurrentHashMap[RunJob, BootImage]()
   private val capturedElfs = new ConcurrentHashMap[String, ElfFile]()
   private val activeRuns = new java.util.LinkedHashSet[Driver.RunState]()
@@ -301,6 +303,7 @@ class Driver(val adapter: CoreAdapter) {
   /** Runs one job and writes `job.out/result.json`; returns the result. Never throws. */
   def runOne(job: RunJob): ujson.Obj = {
     capturedElfs.remove((job.elf.getAbsolutePath + ":" + job.elfLoadBias))
+    capturedHartImages.remove(job)
     capturedBootImages.remove(job)
     runOne(job, newState(job))
   }
@@ -348,6 +351,10 @@ class Driver(val adapter: CoreAdapter) {
       elfSha = elf.sha256
       require(elf.xlen == adapter.xlen,
         s"ELF XLEN ${elf.xlen} does not match adapter XLEN ${adapter.xlen} (${adapter.core}/${job.config})")
+      job.hartImages.foreach { manifest =>
+        require(adapter.hartIds(job.config).size >= 2 && job.bootPayloads.isEmpty, "unsupported multi-hart inputs")
+        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen))
+      }
       job.bootPayloads.foreach { manifest =>
         require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
         capturedBootImages.computeIfAbsent(job, _ => BootImage.fromManifest(elf, manifest))
@@ -359,7 +366,7 @@ class Driver(val adapter: CoreAdapter) {
       val ctx = Driver.Ctx(job, elf, log, ujson.Obj("xlen" -> adapter.xlen, "isa" -> adapter.isa(job.config),
         "core" -> adapter.core, "config" -> job.config, "elf" -> job.elf.getPath, "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
         "source" -> source, "seed" -> job.seed, "elf_sha256" -> elf.sha256), b.index, mark, st.wall,
-        bootImage = Option(capturedBootImages.get(job)), requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
+        hartImages = Option(capturedHartImages.get(job)), bootImage = Option(capturedBootImages.get(job)), requestIdentity = ujson.Obj("session_id" -> sessionId, "run_id" -> runId))
       adapter.run(b.model, job, ctx)
     } catch {
       case e: Throwable =>
@@ -382,6 +389,7 @@ class Driver(val adapter: CoreAdapter) {
       artifacts("pdg") = "pdg.json"
     }
     val details = outcome.details
+    Option(capturedHartImages.get(job)).foreach(h => details("hart_images") = h.identity)
     Option(capturedBootImages.get(job)).foreach { image =>
       details("boot_loads") = ujson.Arr.from(image.layout.map { case (address, size) =>
         ujson.Obj("address" -> Hex(address), "size" -> size.toString)
@@ -484,11 +492,16 @@ class Driver(val adapter: CoreAdapter) {
    */
   private def captureJobs(jobs: Seq[RunJob]): Unit = {
     // Freeze every batch ELF before any worker can compile a model. Reruns use these bytes.
+    capturedHartImages.clear()
     capturedBootImages.clear()
     capturedElfs.clear()
     for (job <- jobs) try {
       val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias),
         _ => new ElfFile(job.elf, job.elfLoadBias))
+      job.hartImages.foreach { manifest =>
+        require(adapter.hartIds(job.config).size >= 2 && job.bootPayloads.isEmpty, "unsupported multi-hart inputs")
+        capturedHartImages.computeIfAbsent(job, _ => HartImages.capture(manifest, adapter.hartIds(job.config), adapter.xlen))
+      }
       job.bootPayloads.foreach { manifest =>
         require(adapter.supportsBootPayloads, "adapter does not support boot payload loading")
         capturedBootImages.put(job, BootImage.fromManifest(elf, manifest))
