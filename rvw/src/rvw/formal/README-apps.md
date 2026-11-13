@@ -7,8 +7,8 @@ ports and complete output enum encodings from a current SpinalDB database.
 The plan still supplies `top`, `clock`, `reset` and `verilog`. `database_component`
 selects a component path when a module has several instances. No state list is
 needed. Each enum value and each pair of enum values becomes a reachability
-target. Hashed encodings and internal enums without exported RTL ports are
-listed as skipped. The database input capture is retained beside the result.
+target. Hashed encodings and internal enums without plain retained RTL names are
+listed as skipped. Retained internal enums are exposed and width-checked. The database input capture is retained beside the result.
 
 Database candidates also include output bit constants and toggles, one-hot
 checks for complete one-hot enums, direct whole-width port addition/subtraction,
@@ -266,7 +266,7 @@ design and the viewer tools. These additions do not establish that integration.
 ### Shortest solver counterexample
 
 `rvw formal shortest --result RUN --max-depth 20 --out DIR` checks increasing
-sample depths in a captured BMC model. The model must have exactly one assertion.
+sample depths in a captured BMC model. Each selected assertion gets an independent search. The default selects all assertions.
 The first FAIL is shortest only if all smaller depths passed. An unknown or
 failed solver invocation stops the search as inconclusive. Reaching the depth
 limit with PASS results also stays inconclusive. This is not an unbounded proof.
@@ -341,3 +341,36 @@ failure queries are UNSAT, that leaf is `replacement_vacuous_bounded`. A SAT
 replacement is `sensitive_bounded`. Missing solver evidence is inconclusive.
 The analysis stops at state bits and checks at most 64 atoms per assertion.
 It does not claim full temporal or unbounded non-vacuity.
+
+## Multiple shortest witnesses and typed output
+
+`rvw formal shortest --result RUN --out DIR` isolates each captured assertion
+before searching increasing sample depths. Repeat `--property` to select exact
+assertion cell names. Each property has its own attempts and shortest certificate.
+A shared time budget covers all properties. Unknown earlier depths cannot certify
+a shortest witness. The original assumptions remain in every isolated model.
+
+Add `--hgldd DIR` to run `spinalwaves-check` on each failing witness and export
+`property-N/typed.vcd`. Missing tools or a failed type lookup report inconclusive
+typed output. Solver evidence remains separate. Native type export passed after an offline 24-second build of `spinalwaves-check`.
+A real shortest witness was converted with explicit UInt test metadata. This
+checks export, not automatic source-type extraction or viewer navigation.
+
+## Real library autocheck run
+
+A native run on 2026-11-13 used SpinalHDL 1.15.0 `StreamFifo(Bits(2 bits), 2)`.
+The reproducible source is [AutocheckFifo.scala](examples/AutocheckFifo.scala).
+`rvwformal.AutocheckDatabase` generates a synchronous-reset database and RTL.
+Compile it as an added unmanaged source in `SpinalDB/spinaldb` under the `sbt`
+lock. Run its main with the database path and RTL output directory. The Vex lock
+attempt did not acquire the lock within 180 seconds. No VexRiscv result is claimed.
+
+The library database has 2 components, 54 signals and 1 memory. The autocheck plan
+selects top `AutocheckFifo`, clock `clk`, reset `reset` and its generated RTL.
+The command used `--mode prove --engine abc:pdr --depth 8 --timeout 8`.
+Counts: **13 generated, 1 proven, 0 bounded passes, 12 solver failures, 1 unsupported**.
+The proof is the output Stream hold check. Eight failures show outputs are not
+constant. Four failures reach toggle targets. These are observations, not FIFO
+faults. The unsupported record is the input Stream producer, which belongs to the
+environment. This run does not establish full FIFO ordering or full core coverage.
+The first default asynchronous-reset export was refused before proof.
