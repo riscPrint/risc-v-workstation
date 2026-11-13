@@ -590,3 +590,32 @@ the explicit cycle/time origin pair defined in C1.
 The native boot C2 cycle index starts at zero before its sampled edge.
 The diagnostic converter shifts its wave origin by one for C1's completed
 edge count. Its C1 details record `boot_trace_cycle_base=0`.
+
+## Sampled project boot reference comparison
+
+The project `linux/sample.py` helper captures both checkpoints, the C2 window,
+original boot bytes, device map, shim and optional reference profile. It checks
+the state digests, exact input-history prefix relation, trace identities and
+window event correspondence. It executes Spike from the original reset ELF.
+It loads original payloads. It never seeds the reference from saved DUT RAM,
+GPRs or CSRs. Compact counter and external-input records apply at their
+absolute retirement boundaries. An unsupported input or missing sample is an
+error. A different reference trap or instruction is a mismatch.
+
+The result schema is `rvw.boot-sample-result/1`. A `match` reports `compared`,
+`fast_forwarded`, `counter_inputs`, `interrupts`, `trap_events`,
+`reference_wall_seconds` and `reference_profile`. Event counts include the
+executed prefix. The checkpoint SHA-256 values and captured inputs bind the
+result. A mismatch reports its order and observed/reference evidence when
+available. A match covers only the N compared retirements. The prefix executes
+without full retirement comparison. No C1 gate acceptance is implied.
+
+The optional `rvw_vexii_linux` reference library constrains PMP CSR width to
+32 physical bits, uses Sv39 only, omits trigger CSRs and supplies the selected
+core's read-only standard-priority MTOPI. These are project model settings,
+not DUT-value synchronization. Its build manifest has schema
+`rvw.vexii-reference-build/1` and binds source, library and Spike-library
+hashes, physical width, PMP count and captured build inputs. The sample helper
+checks those bindings and resets the reference after registration, before
+the first instruction. This profile does not qualify full AIA behavior or
+arbitrary addresses beyond the declared physical regions.
