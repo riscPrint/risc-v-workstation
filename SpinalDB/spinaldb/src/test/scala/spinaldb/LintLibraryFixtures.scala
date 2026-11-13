@@ -13,7 +13,7 @@ class LibraryReference extends Component {
   val pop = master Stream(Bits(8 bits))
   val pulseIn = in Bool()
   val pulseOut, flagOut, slowOut = out Bool()
-  val cdA = ClockDomain(clkA, config = ClockDomainConfig(resetKind = BOOT))
+  val cdA = ClockDomain(clkA, config = ClockDomainConfig(resetKind = BOOT), frequency = FixedFrequency(100 MHz))
   val cdB = ClockDomain(clkB, config = ClockDomainConfig(resetKind = BOOT))
   val resetB = ResetCtrl.asyncAssertSyncDeassert(rawReset, cdB)
   val cdBReset = ClockDomain(clkB, resetB, config = ClockDomainConfig(resetKind = ASYNC))

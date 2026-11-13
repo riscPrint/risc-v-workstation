@@ -51,6 +51,7 @@ CREATE TABLE pdg_vertices(id INTEGER PRIMARY KEY, name TEXT, kind TEXT, clocked 
   assigns_to TEXT, file_id INTEGER, line INTEGER);
 CREATE TABLE pdg_edges(src INTEGER NOT NULL, dst INTEGER NOT NULL, kind TEXT NOT NULL, clocked INTEGER);
 CREATE TABLE artifacts(name TEXT PRIMARY KEY, media_type TEXT, encoding TEXT, size INTEGER, content BLOB);
+CREATE TABLE clock_frequencies(clock_domain_id INTEGER NOT NULL, hz TEXT NOT NULL);
 CREATE TABLE rtl_files(path TEXT NOT NULL);
 CREATE TABLE input_files(path TEXT PRIMARY KEY, resolved TEXT, sha256 TEXT NOT NULL, size INTEGER NOT NULL, record TEXT NOT NULL);
 CREATE TABLE warnings(source TEXT NOT NULL, message TEXT NOT NULL);

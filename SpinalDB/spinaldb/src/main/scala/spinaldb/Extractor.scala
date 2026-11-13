@@ -1176,6 +1176,17 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
       tCd.add(id, r.clock, r.reset, r.resetKind, r.resetHigh, r.enable, r.soft, r.edge, r.enableHigh, r.softHigh,
         r.clockKey, r.resetKey, r.enableKey, r.softKey) }
 
+    // Additive: the declared frequency of each clock domain (Spinal `FixedFrequency`), for SDC intent.
+    val tFreq = db.table("clock_frequencies", "clock_domain_id", "hz")
+    val freqs = mutable.LinkedHashSet[(Int, String)]()
+    cdOf.forEach { (cd, id) =>
+      cd.frequency match {
+        case f: ClockDomain.FixedFrequency => freqs += ((id.intValue, f.getValue.toBigDecimal.bigDecimal.toPlainString))
+        case _ =>
+      }
+    }
+    freqs.foreach { case (id, hz) => tFreq.add(id, hz) }
+
     val tRtl = db.table("rtl_files", "path")
     (report.generatedSourcesPaths ++ report.rtlSourcesPaths).toSeq.distinct.sorted.foreach(p => tRtl.add(new File(p).getAbsolutePath))
     opts.log(f"netlist tables in ${(System.nanoTime() - t0) / 1e9}%.1f s")

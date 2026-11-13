@@ -10,7 +10,7 @@ from rvw.query.db import run_on, QueryError
 from . import native, structural
 
 
-BACKENDS = ('verilator', 'verible', 'yosys', 'structural', 'rules')
+BACKENDS = ('verilator', 'verible', 'yosys', 'structural', 'rules', 'sdc')
 BACKEND_OF = {'verilator': 'verilator', 'verible': 'verible', 'yosys': 'yosys', 'cdc': 'structural',
               'rdc': 'structural', 'lint': 'rules', 'sdc': 'sdc'}
 
@@ -59,8 +59,13 @@ def load(path):
         raise ValueError('native lint needs files')
     if set(backends) & {'structural', 'rules', 'sdc'} and not isinstance(cfg.get('db'), str):
         raise ValueError('structural, rules and sdc analysis need db')
-    from . import rules
+    from . import rules, sdc
     rules.settings(cfg.get('rules'))
+    sdc.options(cfg.get('sdc'))
+    if (cfg.get('sdc') or {}).get('check'):
+        cfg['sdc']['check'] = str((path.parent / cfg['sdc']['check']).resolve())
+        if not Path(cfg['sdc']['check']).is_file():
+            raise ValueError(f"SDC file not found: {cfg['sdc']['check']}")
     if cfg.get('db'):
         cfg['db'] = str((path.parent / cfg['db']).resolve())
     timeout = cfg.get('timeout_s', 120)
@@ -97,6 +102,9 @@ def report(path):
         elif backend == 'rules':
             from . import rules
             runs[backend] = run_on(cfg['db'], lambda db: rules.analyze(db, cfg.get('rules')))
+        elif backend == 'sdc':
+            from . import sdc
+            runs[backend] = sdc.run(cfg['db'], cfg.get('sdc'), cfg.get('intent', {}))
         elif backend == 'yosys':
             from . import yosys
             if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', cfg['top']):

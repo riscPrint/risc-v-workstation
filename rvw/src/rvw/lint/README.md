@@ -184,6 +184,57 @@ The checkers use one clock (the source clock) and immediate assertions. The
 monitor. Emission is never a pass; the obligations stay unproved until a formal
 or simulation run checks them.
 
+## Timing-constraint intent (SDC)
+
+Select backend `sdc` to generate constraints from clock-domain data and to
+check a project SDC file. Settings `sdc`:
+
+```json
+{"clocks": {"clkB": {"period_ns": 8}},
+ "generated": {"pll.clkOut": {"source": "clkIn", "multiply_by": 4, "divide_by": 1}},
+ "multicycle": [{"from": "core.a", "to": "core.b", "setup": 2, "reason": "enable every 2nd cycle"}],
+ "check": "constraints.sdc",
+ "register_pattern": "{path}_reg*", "output_pin": "Q"}
+```
+
+Periods come from `sdc.clocks`, else from SpinalDB `clock_frequencies` (Spinal
+`FixedFrequency`). Generation (`backends.sdc.sdc`, also `constraints.sdc` with
+`--emit`):
+
+- `create_clock` for each primary clock with a period. A primary clock without a
+  period, or a generated/unknown clock without an `sdc.generated` row, gets
+  `sdc.unconstrained_clock` (error).
+- `create_generated_clock -divide_by 2` for a toggling register clock; ratios
+  from `sdc.generated` for blackbox (PLL) clocks. Gated clocks get a comment:
+  STA propagates the master clock through the gate.
+- One exception per recognized safe crossing (`sync_Nff`, `gray_sync`,
+  `qualified_data`): `set_max_delay -datapath_only` from Spinal
+  `crossClockMaxDelay` (cycles times the source or target period), else
+  `set_false_path`. Spinal `crossClockFalsePath` tags (reset synchronizers)
+  give `set_false_path -to`. Unsafe crossings get no exception and
+  `sdc.unsafe_crossing`.
+- `set_multicycle_path` setup and hold (default `setup - 1`) for each declared
+  multicycle path. The path must be an elaborated register path, else
+  `sdc.unmatched_multicycle` (error).
+- A commented `set_clock_groups -asynchronous` line for each pair of masters
+  whose crossings are all recognized and excepted.
+
+Register cells use `register_pattern` with `/`-separated instance paths. Check
+it against the synthesis tool's naming. `spinal_synchronous` lists Spinal
+`setSynchronousWith` clock pairs.
+
+The check reads `create_clock`, `create_generated_clock`, `set_false_path`,
+`set_max_delay`, `set_multicycle_path` and `set_clock_groups` with
+`get_ports|cells|clocks|pins` objects. It reports `sdc.unmatched_clock`
+(a clock on a port that is not a toplevel input or no design clock),
+`sdc.unconstrained_clock` (a design clock without an SDC clock),
+`sdc.unmatched_endpoint` (a cell or port pattern that matches nothing),
+`sdc.unsafe_false_path` (an exception or asynchronous clock group that covers an
+unsafe crossing) and `sdc.unconstrained_crossing` (a crossing between unrelated
+clocks without an exception). This checks logical intent against elaborated
+endpoints. It is not routed timing signoff and does not read Tcl variables or
+loops.
+
 ## Reset-domain crossings
 
 `rdc.py` derives reset domains from SpinalDB clock-domain data. A reset domain

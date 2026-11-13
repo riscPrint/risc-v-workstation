@@ -82,3 +82,18 @@ def test_extracted_library_structures():
     assert release == {'rawReset': 'synchronizer_stages', 'resetB': 'synchronized'}
     lint = run_on(Path(root) / 'library/design.db', lambda d: rules.analyze(d, {}))
     assert lint['status'] == 'completed'
+
+
+def test_extracted_library_sdc():
+    root = os.environ.get('RVW_LINT_FIXTURES')
+    if not root or not (Path(root) / 'library/design.db').exists():
+        pytest.skip('set RVW_LINT_FIXTURES with the library fixture')
+    from rvw.lint import sdc
+    r = run_on(Path(root) / 'library/design.db',
+               lambda d: sdc.analyze(d, {'clocks': {'clkB': {'period_ns': 8}}}, {}))
+    text = r['sdc']
+    assert 'create_clock -name clkA -period 10 [get_ports {clkA}]' in text  # Spinal FixedFrequency(100 MHz)
+    assert 'create_generated_clock -name a_toggle -source [get_ports {clkA}] -divide_by 2' in text
+    assert text.count('set_max_delay -datapath_only') == 3
+    assert 'set_false_path -from [get_ports {rawReset}]' in text
+    assert r['findings'] == [] and r['spinal_synchronous'] == [['a_toggle', 'clkA']]

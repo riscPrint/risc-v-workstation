@@ -76,6 +76,10 @@ def write(report, files, out):
                     unbound=[o['id'] for o in obligations if not o.get('bind')],
                     note='Run checked_rtl with rvw formal bmc/prove or a simulator with --assert. '
                          'Emission is not a pass.')
+    sdc = report['backends'].get('sdc', {}).get('sdc')
+    if sdc:
+        (out / 'constraints.sdc').write_text(sdc)
+        manifest['sdc'] = 'constraints.sdc'
     data = json.dumps(manifest, indent=2, sort_keys=True)
     (out / 'cdc_obligations.json').write_text(data + '\n')
     return dict(dir=str(out), obligations=len(obligations), bound=len(bound),
