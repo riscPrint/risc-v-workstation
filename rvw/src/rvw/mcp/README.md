@@ -141,3 +141,12 @@ checks. Tokens grant trusted tool access. There are no token expiry, arbitrary
 read-only roles, durable remote MCP job stores or hostile-input guarantees.
 Tests cover a local HTTP/SSE protocol roundtrip, auth, ownership and budgeted
 worker errors. No cloud agent or external proxy was tested.
+
+## Interface audit
+
+Use `rvw mcp audit --json` for a static report of every tool. It checks names,
+descriptions, schema fields, common argument aliases, handler signatures and
+declared effects and native dependencies. It does not call handlers. Unknown
+metadata stays unknown. The fast baseline test permits recorded debt but rejects
+new findings. Use `project`, `out`, `run_dir`, `elf`, `trace`, `db`,
+`config`, `seed` and `json` for these concepts in new interfaces.

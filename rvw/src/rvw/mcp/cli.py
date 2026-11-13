@@ -7,6 +7,7 @@ import sys
 
 def register(subparsers) -> None:
     p = subparsers.add_parser("mcp", help="MCP server (stdio) exposing the rvw tools to agents", description=__doc__)
+    p.add_argument("action", nargs="?", choices=("audit",), help="audit interface declarations")
     p.add_argument("--list", action="store_true", help="print the tools and exit (needs no MCP SDK)")
     p.add_argument("--only", help="comma-separated rvw packages whose tools to serve (default: all)")
     p.add_argument("--json", action="store_true", help="with --list: machine-readable")
@@ -37,6 +38,17 @@ def run(args) -> int:
     registry, problems = Registry.discover(only, project=str(selected.path) if selected else None)
     for msg in problems:
         print(f"rvw mcp: skipped {msg}", file=sys.stderr)
+    if getattr(args, "action", None) == "audit":
+        from .audit import audit
+        report = audit(registry, problems)
+        if args.json:
+            print(json.dumps(report, indent=1))
+        else:
+            print(json.dumps(report["summary"]))
+            for row in report["tools"]:
+                for finding in row["findings"]:
+                    print(f'{row["name"]}: {finding["code"]}: {finding["detail"]}')
+        return 2 if problems else 0
     if args.list:
         tools = [{"name": t.name, "long": t.long, "description": t.description, "input_schema": t.input_schema}
                  for t in registry.tools.values()]

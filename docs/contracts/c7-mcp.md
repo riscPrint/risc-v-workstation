@@ -54,3 +54,11 @@ Clients can inspect and cancel only their own jobs. Remote calls use owned worke
 and optional per-client per-run supervisor budgets. Disconnect does not cancel;
 server shutdown does. Read-only roles are limited to the implemented query list.
 No new verification verdict or hostile-input guarantee follows from transport.
+
+## Interface audit declarations
+
+ToolSpec adds optional side_effects (read-only or writes-files), native_tools
+(tuple of inventory ids, empty when none), and result_envelope fields.
+Unknown declarations remain null and produce audit findings. Long-running is
+declared separately with long=True. The static audit checks schemas and Python
+signatures without executing handlers. Existing argument names remain valid.
