@@ -1988,8 +1988,30 @@ simulation route. Formal lowering keeps its cross-clock refusal. C1
 The rules for simultaneous and strictly later events follow IEEE 1800-2017
 clause 16.13, [multiclocked properties](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf).
 
+Native replay also accepts Boolean `s_eventually`, `until`, `until_with`,
+`s_until` and `s_until_with` properties. Both implication forms and zero-argument
+named properties are accepted. Each request retains a counted obligation.
+A response can fulfill several requests and produces one observation per request.
+Until forms can record a finite failure when the hold operand is false.
+Inclusive until also tests that operand at the completion sample.
+
+These observations do not replace liveness with a finite deadline. Each property
+reports `pending` obligations at the trace end. This includes a final `|=>`
+request that has not reached its consequent's first sample. Pending assertions
+make C1 inconclusive. Pending assumptions also prevent a fault verdict under an
+unverified environment. Recorded finite failures and output X observations retain
+their normal priority when the assumptions are resolved. Coverage counts contain
+only witnessed completions. Cover obligations can remain pending without hits.
+
+This subset uses the existing clock-local sampled history. It accepts explicit
+top-input event clocks and Boolean operands. Unbounded sequence composition,
+local captures, cross-clock eventual response and disable cancellation remain
+outside native unbounded replay. C1 `unbounded_properties` records each property,
+operator, event clock and implication form. These are finite native observations.
+They are not unbounded proofs or full simulator scheduling qualification.
+
 Runtime input updates preserve pre-event sampling on both backends.
-The same finite SVA set runs as simulation monitors on either backend. This
+The same supported SVA set runs as simulation monitors on either backend. This
 includes separate checker files and properties clocked by an asynchronous input.
 The runner records assertion pass/fail and cover hit/miss counts per property.
 An assumption failure makes the stimulus inconclusive. No assertion samples and

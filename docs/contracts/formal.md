@@ -460,6 +460,29 @@ does not infer execution provenance, hardware evidence or design acceptance.
 Missing outcomes and zero expected comparisons remain inconclusive. See
 `rvw/src/rvw/formal/SCENARIOS.md` for the finite contract and native PSS limits.
 
+## Native unbounded assertion observations
+
+Timed simulation accepts Boolean eventual response and until forms on both
+backends. C1 `unbounded_properties` records `id`, `kind`, private `clock`, source
+`event`, parsed `terms`, `operator`, `nonoverlap` and `monitor`. Zero-argument
+named properties expand before native lowering. Clock-local sampled functions
+use the shared history emitter. The probe removes these statements only for
+interface extraction. The sealed simulation model contains the actual monitors.
+
+Assertion records add optional `pending`. Every request retains an obligation.
+Completions produce pass or cover observations. A violated until hold condition
+produces failure or miss observations. A final nonoverlapping request remains
+pending until a later property event starts its consequent. No finite deadline
+is substituted. Pending assertions make C1 inconclusive. Pending assumptions
+prevent a design-fault verdict under an unresolved environment. Cover counts
+include only observed completions. Failed assumptions retain their existing
+inconclusive result. Native runner cancellation uses the shared process cleanup.
+
+This is finite observation evidence. Native replay does not prove unbounded
+liveness, restore earlier assertion obligations from a DUT trace, or qualify
+full scheduling semantics. Native unbounded sequence composition, local captures,
+cross-clock response and disable cancellation remain unsupported.
+
 ## Typed finite local captures
 
 Typed finite local captures add optional `local_variables` to each
