@@ -1,0 +1,573 @@
+{
+  "schema": "rvw.check-kind-induction/1",
+  "rows": [
+    {
+      "core": "vexriscv",
+      "kind": "csr.read",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_0",
+        "status": "error",
+        "seed": null,
+        "signature": "formal:unknown",
+        "wall_s": 4.7645189999602735,
+        "run": "check_0/run.log",
+        "formal_status": "unknown",
+        "mode": "prove",
+        "depth": null,
+        "traces": [
+          "check_0/sby/engine_0/trace_induct.vcd"
+        ],
+        "task": null,
+        "requirements": [
+          "csr.read:mscratch"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "ced0c14806f7b6920423f4b6b220c6c62ac2f0593e8d74d9ff07c06862c5873c",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.051602249965072,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_0/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexriscv",
+      "kind": "csr.state",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_1",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 2.849614959093742,
+        "run": "check_1/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "csr.state:mscratch"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "fcc31962f9e38d3298551dbd8c5611144938d176e3aa4d904c7b0f035a1c19ef",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.25811966706533,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_1/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexriscv",
+      "kind": "csr.access",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_2",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 2.9839981249533594,
+        "run": "check_2/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "csr.access:mscratch"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "8a62f9424fe150dd00b2fc4e47a1b099555de1bf664d4742fabbece7c4a5c6a8",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.047870584065095,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_2/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexriscv",
+      "kind": "hpm.count",
+      "bound_instances": 2,
+      "sampled": 1,
+      "property": {
+        "id": "check_3",
+        "status": "error",
+        "seed": null,
+        "signature": "formal:unknown",
+        "wall_s": 4.3556640829192474,
+        "run": "check_3/run.log",
+        "formal_status": "unknown",
+        "mode": "prove",
+        "depth": null,
+        "traces": [
+          "check_3/sby/engine_0/trace_induct.vcd"
+        ],
+        "task": null,
+        "requirements": [
+          "hpm.count:mcycle"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "062efc9caa3ecd4e5225e362de18ec5d610ea1ae903d31f4d4833dbaddcaf2eb",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.04594454204198,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_3/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexriscv",
+      "kind": "hpm.read",
+      "bound_instances": 4,
+      "sampled": 1,
+      "property": {
+        "id": "check_4",
+        "status": "error",
+        "seed": null,
+        "signature": "formal:unknown",
+        "wall_s": 4.792692874907516,
+        "run": "check_4/run.log",
+        "formal_status": "unknown",
+        "mode": "prove",
+        "depth": null,
+        "traces": [
+          "check_4/sby/engine_0/trace_induct.vcd"
+        ],
+        "task": null,
+        "requirements": [
+          "hpm.read:mcycle_machine"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "a589770e92d22036746e12fc8b96726ae9e4edbb112d8efd23d6a714485994d2",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 5.134924917016178,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_4/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexriscv",
+      "kind": "stream.valid_hold",
+      "bound_instances": 22,
+      "sampled": 1,
+      "property": {
+        "id": "check_5",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.7319437499390915,
+        "run": "check_5/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "stream.valid_hold:iBus_cmd"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "3a8987e1e4403df2b08ae026cb3fe6f6d101464c4b407b2de8d642f1e1e4acd5",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.801424416946247,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_5/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexriscv",
+      "kind": "stream.payload_stable",
+      "bound_instances": 20,
+      "sampled": 1,
+      "property": {
+        "id": "check_6",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.8206232079537585,
+        "run": "check_6/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "stream.payload_stable:iBus_cmd"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "aad8c57f513c56f62765b28f25fda97c22e5c7be4fdde168b19207e2c22569e3",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 3.332341165980324,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_6/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexriscv",
+      "kind": "vec.index",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_7",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.7158460000064224,
+        "run": "check_7/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "vec.index:index_of3"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "2427004bc9cc6b002ddfb29956c3534db86ca5c1c5867d7e9260319fcd4ea70c",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 3.0009515410056338,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_7/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexriscv",
+      "kind": "enum.legal",
+      "bound_instances": 5,
+      "sampled": 1,
+      "property": {
+        "id": "check_8",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.452409000019543,
+        "run": "check_8/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "enum.legal:decode_to_execute_ALU_CTRL"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "f4e481a0af2c6d91b977fa611bd0adb6fa14614101967dc77f171390524321bd",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 2.7255445409100503,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_8/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexiiriscv",
+      "kind": "csr.read",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_0",
+        "status": "error",
+        "seed": null,
+        "signature": "formal:unknown",
+        "wall_s": 7.124746749992482,
+        "run": "check_0/run.log",
+        "formal_status": "unknown",
+        "mode": "prove",
+        "depth": null,
+        "traces": [
+          "check_0/sby/engine_0/trace_induct.vcd"
+        ],
+        "task": null,
+        "requirements": [
+          "csr.read:mscratch"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "c290504bf09c357496fbec37bde4906aa0c40b39940a00cdab6a4bb869a650e8",
+        "activation": {
+          "status": "not_reached_within_bound",
+          "depth": 16,
+          "wall_s": 3.7503897910937667,
+          "engine": "smtbmc:yices",
+          "traces": [],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexiiriscv",
+      "kind": "stream.valid_hold",
+      "bound_instances": 12,
+      "sampled": 1,
+      "property": {
+        "id": "check_1",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 5.1715539580909535,
+        "run": "check_1/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "93b99dfe801e207723a1c01a7a3634bc082b80f43ec4dd115b30cdf257ee9bb3",
+        "activation": {
+          "status": "not_reached_within_bound",
+          "depth": 16,
+          "wall_s": 3.860357583966106,
+          "engine": "smtbmc:yices",
+          "traces": [],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexiiriscv",
+      "kind": "stream.payload_stable",
+      "bound_instances": 10,
+      "sampled": 1,
+      "property": {
+        "id": "check_2",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 5.018281832919456,
+        "run": "check_2/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "stream.payload_stable:FetchCachelessPlugin_logic_bus_cmd"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "9dc580db93197476a3f37c667727aae62712901f0bc8f3c27bb06371b95ad5e6",
+        "activation": {
+          "status": "not_reached_within_bound",
+          "depth": 16,
+          "wall_s": 3.7187838749960065,
+          "engine": "smtbmc:yices",
+          "traces": [],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": false
+    },
+    {
+      "core": "vexiiriscv",
+      "kind": "enum.legal",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_3",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.1606286249589175,
+        "run": "check_3/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "enum.legal:execute_ctrl2_up_BranchPlugin_BRANCH_CTRL_lane0"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "3da9186c1c5804ebef4de80f10130c278c127cd747dfdd5426f04406b689abad",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 4.297282584011555,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_3/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    },
+    {
+      "core": "vexiiriscv",
+      "kind": "fsm.state_legal",
+      "bound_instances": 1,
+      "sampled": 1,
+      "property": {
+        "id": "check_4",
+        "status": "pass",
+        "seed": null,
+        "signature": null,
+        "wall_s": 3.2073600830044597,
+        "run": "check_4/run.log",
+        "formal_status": "proven",
+        "mode": "prove",
+        "depth": null,
+        "traces": [],
+        "task": null,
+        "requirements": [
+          "fsm.state_legal:TrapPlugin_logic_harts_0_trap_fsm_stateReg"
+        ],
+        "assumptions": [
+          "reset for two initial samples; other inputs arbitrary"
+        ],
+        "configuration": "external",
+        "job_sha256": "ff55dc8922eeb68cdae21d263d401cc660dc84a1d61534328dac1508f86dec89",
+        "activation": {
+          "status": "reached",
+          "depth": 16,
+          "wall_s": 3.9719028340186924,
+          "engine": "smtbmc:yices",
+          "traces": [
+            "check_4/activation-sby/engine_0/trace0.vcd"
+          ],
+          "scope": "one bounded antecedent cover; not a proof of universal activation"
+        },
+        "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+        "source": null
+      },
+      "passing_conditional_evidence": true
+    }
+  ],
+  "limits": [
+    "One selected instance of each bound kind, not all instances.",
+    "SMTBMC k-induction depth 8; separate activation covers at depth 16; 10-second limits.",
+    "Unknown is not proof. An unreached trigger is no_activation even when the safety engine proves its formula.",
+    "These are conditional engine observations, not input-closure or whole-core certificates."
+  ]
+}

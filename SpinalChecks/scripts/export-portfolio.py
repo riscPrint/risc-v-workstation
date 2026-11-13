@@ -9,9 +9,9 @@ import tomllib
 from rvw.common.proc import run_group
 
 
-def export(prepared, timeout=30):
+def export(prepared, timeout=30, manifest="regress.toml"):
     prepared=Path(prepared)
-    plan=tomllib.loads((prepared/'regress.toml').read_text())
+    plan=tomllib.loads((prepared/manifest).read_text())
     rows=[]
     for prop in plan['property']:
         job=prepared/prop['sby']

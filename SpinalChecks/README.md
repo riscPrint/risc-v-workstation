@@ -1206,7 +1206,7 @@ The plan selects three engines: SMTBMC Yices, SMTBMC Z3 and ABC PDR.
 Run one race at a time to keep at most three SBY processes.
 Preparation does not establish proof. A failed or timed-out normalization has
 no usable plan. Keep native race outcomes separate from activation covers.
-Both-core unbounded closure by check kind remains unmeasured.
+Full closure of every bound instance by check kind remains unmeasured.
 
 The [induction sample record](induction-sample-results.json) has one enum
 check on each retained core capture. SMTBMC Yices passed each unbounded job.
@@ -1269,3 +1269,78 @@ is false on the legacy API, which has no AXI3 configuration member.
 Select `RVW_SPINAL_SOURCE` and run `sbt '++2.12.18!' 'Test/compile'` for the
 source axis. Unset it and run `sbt 'Test/compile'` for the release axis.
 Compilation is not a native simulation or formal pass.
+### Fresh activation campaign
+
+The [activation record](activation-results.json) contains new native captures
+and one activation row per bound check. VexRiscv ran 49 aligned ISA programs.
+VexiiRiscv ran those 49 programs and the two scratch/absent-CSR programs.
+All 100 programs reached software pass. Check firings remain a separate gate.
+
+| Design | Bound | Simulation activated | Simulation no_activation | Trigger unmeasured | Fired IDs / events | Formal activated at depth 4 |
+|---|---:|---:|---:|---:|---:|---:|
+| VexRiscv | 57 | 37 | 20 | 0 | 0 / 0 | 2 |
+| VexiiRiscv | 25 | 7 | 18 | 0 | 2 / 139 | 1 |
+
+Every bound core check now has an explicit trigger. HPM count checks are
+unconditional after reset. HPM reads trigger on valid responses. The custom
+VexiiRiscv CSR read triggers when an accepted read has known expected state.
+
+All 82 selected depth-4 assertion jobs have passing BMC engine observations.
+VexRiscv has 55 unreached covers and two reached HPM count triggers.
+VexiiRiscv has 24 unreached covers and one reached FSM trigger. Only those
+three checks count as activated bounded evidence at this depth. Unreached means not reached within four samples. It does not
+establish that a trigger is unreachable.
+The initial full VexRiscv formal campaign timed out. Two smaller batches
+completed all 57 jobs. The record retains the complete observations.
+
+The wider VexiiRiscv campaign has 49 C1 check-gate failures and two C1 passes.
+PC payload stability fired 103 times. Divider response valid hold fired 36
+times. Their IDs are `stream.payload_stable:PcPlugin_logic_harts_0_output`
+and `stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp`.
+These are retained findings. Their causes and dispositions remain open.
+The earlier two-program clean capture does not cover this wider workload.
+
+The [activated induction samples](activated-induction-results.json) select one
+enum instance per core. SMTBMC prove closes each selected instance under the
+captured reset and environment assumptions. Each trigger is reached by depth
+8. The engine race also returns a Yices pass, but retains `inconclusive` and
+`proof_kind: none` because its input-closure policy is not met. This does not
+establish closure for every enum instance, other kinds or the whole core.
+
+
+### Induction by check kind and helper groups
+
+The [kind samples](kind-induction-results.json) select one instance of every
+kind in the 57-check and 25-check captures. They use k-induction depth 8, activation covers at
+depth 16 and a 10-second limit per solver job. A proved formula with an
+unreached trigger is still no_activation. These are conditional engine
+observations. Other instances of each kind remain unmeasured.
+
+| Kind | VexRiscv selected instance | VexiiRiscv selected instance |
+|---|---|---|
+| csr.read | unknown; activated | unknown; no_activation |
+| csr.state | proven; activated | not bound |
+| csr.access | proven; activated | not bound |
+| hpm.count | unknown; activated | not bound |
+| hpm.read | unknown; activated | not bound |
+| stream.valid_hold | proven; activated | proven; no_activation |
+| stream.payload_stable | proven; activated | proven; no_activation |
+| vec.index | proven; activated | not bound |
+| enum.legal | proven; activated | proven; activated |
+| fsm.state_legal | not bound | proven; activated |
+
+Only the selected enum sample closes with activation on both cores.
+This does not establish closure for every enum instance.
+
+`prepare-check-group.py` prepares a primary check with helper assertions.
+It infers a same-object CSR state rule for CSR reads and capacity/occupancy
+rules for FIFO ordering. Explicit `--helper-id ID` values are also supported.
+Helpers must share the primary module instance and clock domain. All helpers
+are asserted. None becomes an assumption. The script exports a portfolio plan.
+Run that plan with `rvw formal engine-race`. The single-assertion regress
+runner rejects these groups by design.
+
+The [joint CSR record](csr-helper-results.json) has an ABC PDR pass for the
+VexRiscv CSR-read/state group. The primary trigger was reached in the separate
+kind sample. The portfolio remains inconclusive with `proof_kind: none`.
+This is a conditional group result, not a whole-core certificate.

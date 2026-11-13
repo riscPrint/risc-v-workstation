@@ -439,3 +439,22 @@ as bus addresses. Existing access actions, output formats and checker logic stay
 `rvw csr show` and `csr_describe` return `rvw.csr-description/1` with a raw
 `definition`. This is metadata only. It has no verification verdict.
 A fast source guard rejects another private pinned catalog or CSR address table.
+## Activation campaign and induction samples
+
+`rvw.check-activation-campaign/1` records native inventories, their hashes,
+program outcomes, per-check activation and qualification summaries, and raw
+formal property observations. `rvw.check-activated-induction/1` records selected
+conditional prove observations, bounded trigger covers and engine-race status.
+A portfolio result with `proof_kind: none` remains inconclusive. A sample does
+not establish closure for other instances of the same check kind.
+
+## Joint helper groups and kind samples
+
+`rvw.check-proof-group/1` names one primary ID and helper IDs from the same
+module instance and clock domain. All checks remain assertions. Helpers never
+become assumptions. `group.toml` is input to the portfolio exporter, not the
+single-assertion regression runner. `rvw.check-group-observation/1` retains the
+portfolio outcome and its refusal to certify input closure.
+`rvw.check-kind-induction/1` records one selected instance per bound kind.
+Its passing conditional evidence requires both `proven` and a reached trigger.
+It does not transfer that result to the other instances of the kind.

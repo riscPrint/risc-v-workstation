@@ -25,7 +25,7 @@ object HpmChecks {
     incremented := expected
     when(!inhibit && permitted) { incremented := (expected + eventCount.resized).resized }
     expected := Mux(write, (incremented & ~mask) | (data & mask), incremented)
-    DeclaredChecks.rule("hpm.count", name, "v1 independent events: " + model.eventMeaning)(observed =/= expected)
+    DeclaredChecks.rule("hpm.count", name, "v1 independent events: " + model.eventMeaning, trigger = True)(observed =/= expected)
     expected
   }
   /** Requests include denied attempts. Counter-enable bits are independent project observations.
@@ -38,7 +38,7 @@ object HpmChecks {
     val userAllowed = machineEnable && (if (hasSupervisor) supervisorEnable else True)
     val allowed = (!write || machineAlias) && (privilege === 3 || (!machineAlias &&
       ((privilege === 1 && machineEnable) || (privilege === 0 && userAllowed))))
-    DeclaredChecks.rule("hpm.access", name, "Zihpm privilege, read-only alias and counter enables")(
+    DeclaredChecks.rule("hpm.access", name, "Zihpm privilege, read-only alias and counter enables", trigger = read || write)(
       (read || write) && (denied === allowed))
     allowed
   }
@@ -46,7 +46,7 @@ object HpmChecks {
   /** Check an RV32 read response against a full independent expected counter. */
   def bindHalfRead(name: String, expected: UInt, high: Bool, response: Bits, valid: Bool): Unit = {
     require(expected.getWidth == 64 && response.getWidth == 32)
-    DeclaredChecks.rule("hpm.read", name, "RV32 selected counter half")(
+    DeclaredChecks.rule("hpm.read", name, "RV32 selected counter half", trigger = valid)(
       valid && response =/= Mux(high, expected(63 downto 32).asBits, expected(31 downto 0).asBits))
   }
 

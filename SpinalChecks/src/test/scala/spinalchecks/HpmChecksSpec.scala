@@ -25,4 +25,29 @@ class HpmChecksSpec extends AnyFunSuite with ApplicationTest {
   test("masked counter writes preserve unselected increment and carry bits") {
     exercise("hpm_masked", Set("hpm.count"))(new Masked)
   }
+  test("read activation counts only valid responses") {
+    import spinal.core.sim._
+    class ReadView extends Component {
+      val valid = in Bool()
+      val count = Reg(UInt(64 bits)).init(0)
+      count := count + 1
+      HpmChecks.bindHalfRead("read", count, False, count(31 downto 0).asBits, valid)
+    }
+    val (cfg, result) = SpinalChecks.install(SpinalConfig(targetDirectory="generated/hpm_activation",
+      defaultConfigForClockDomains=ClockDomainConfig(resetKind=SYNC)), ChecksConfig(mode=Mode.Monitor))
+    SimConfig.withConfig(cfg).workspacePath("simWorkspace").workspaceName("hpm_activation").withVerilator
+      .compile(new ReadView).doSim(seed=17) { dut =>
+        dut.valid #= false
+        dut.clockDomain.forkStimulus(10)
+        dut.clockDomain.waitSampling(8)
+        dut.clockDomain.waitFallingEdge()
+        val check=result.inserted.find(_.kind=="hpm.read").get
+        assert(check.activationCount.toLong==0)
+        dut.valid #= true
+        dut.clockDomain.waitSampling(6)
+        dut.clockDomain.waitFallingEdge()
+        assert(check.activationCount.toLong>0)
+        assert(ChecksSim.firings(dut).isEmpty)
+      }
+  }
 }
