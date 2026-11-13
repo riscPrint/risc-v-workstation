@@ -80,3 +80,12 @@ source and destination clock/reset signatures, and recognised library class.
 source locations. The top-level endpoint is the first member. Crossings remain
 in the detailed CDC/RDC inventories. Grouping does not establish protection.
 Waiver IDs change because the full diagnostic content changes.
+
+## Conditional declaration scope
+
+SpinalDB signal `tags` can include `spinaldb:conditionalDeclaration`. This
+records a declaration inside a conditional source scope. It is extraction
+metadata, not a user waiver or a proof. The latch rule records incomplete
+assignments on these expressions as unresolved until lowered RTL is checked.
+Imported HDL assignments with source `$dlatch` or `$adlatch` identify actual
+level-sensitive storage and produce `lint.latch` findings.

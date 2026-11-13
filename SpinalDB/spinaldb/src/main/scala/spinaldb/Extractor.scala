@@ -401,8 +401,13 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
       if (vs.forall(_.isDefined)) Some(vs.flatten) else None
     }
 
-  private def signalTags(bt: BaseType, raw: Boolean = false): String =
-    tagsText(bt.getTags(), raw, bt)
+  private def signalTags(bt: BaseType, raw: Boolean = false): String = {
+    val tags = tagsText(bt.getTags(), raw, bt)
+    val scope = bt.rootScopeStatement
+    val local = scope != null && scope.parentStatement != null
+    if (local) Option(tags).filter(_.nonEmpty).map(_ + ";").getOrElse("") + "spinaldb:conditionalDeclaration"
+    else tags
+  }
 
   private def componentTags(c: Component): String = {
     val parts = Seq("instance" -> tagsText(c.getTags()), "definition" -> tagsText(c.definition.getTags()))

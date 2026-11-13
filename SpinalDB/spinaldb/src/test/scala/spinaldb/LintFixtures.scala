@@ -93,8 +93,17 @@ class ReconvergeReference(merge: Boolean) extends Component {
 /** Complete conditional assignments, including a nested elsewhen and enum mux. */
 class CompleteMuxReference extends Component {
   val a, b, data = in Bool()
-  val result, selected = out Bool()
+  val result, selected, localResult = out Bool()
+  localResult := False
+  when(a) {
+    val conditionalLocal = data ^ b
+    localResult := conditionalLocal
+  }
   when(a) { result := data }.elsewhen(b) { result := !data }.otherwise { result := False }
+  val maskResult = out Bits(2 bits)
+  for (i <- 0 until 2) {
+    when(a) { maskResult(i) := data }.otherwise { maskResult(i) := b }
+  }
   val sel = in UInt(2 bits)
   switch(sel) {
     is(0) { selected := a }
