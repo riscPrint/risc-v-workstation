@@ -733,3 +733,18 @@ Activity is the union of service intervals, so overlapping requests do not
 double-count active power. Wake energy is the separate declared `wake_j` cost.
 Missing power data stays null. These are abstract system-energy estimates.
 No cell-level power, PPA signoff or RTL calibration is established.
+
+## Export a shared O3 configuration
+
+`rvw arch gem5-export CORE.json --out NEW_DIRECTORY --json` writes `core.json`,
+a self-contained copy of the existing `model.py` adapter, a normalized
+`ooo.json`, and a report with hashes. `arch_gem5_export` is the cancellable MCP
+tool. The source must be an O3 `rvw.arch-core/1` description with an `ooo`
+latency table. No gem5 build or simulation runs during export.
+
+From the output directory, the generated invocation is
+`gem5.opt --outdir=run model.py --description core.json PROGRAM.elf`.
+The pinned workstation gem5 v25.1.0.1 API and the adapter's bare-metal ROI ELF
+contract still apply. CPU dimensions and the summed issue capacity share one
+source. FU semantics, predictor internals, stage timing and cache policies can
+differ between engines. File equality does not establish model timing parity.

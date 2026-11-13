@@ -329,3 +329,10 @@ with LLVM and GCC fragments, an issue-rate include and source projection data.
 pairs and reservations. The checker rejects drift from the projection.
 Assumed independent resources and unit occupancy remain explicit. Partial
 opcode mappings do not establish native compiler integration or RTL accuracy.
+
+## gem5 configuration file export
+
+`rvw.gem5-export/1` records shared-description and adapter hashes, the target
+gem5 version, invocation, CPU parameters and projected issue capacity. Export
+writes `core.json`, `ooo.json`, `model.py` and `report.json` to a new directory.
+It copies the existing adapter. It does not build gem5 or establish timing parity.
