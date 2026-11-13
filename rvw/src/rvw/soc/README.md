@@ -420,3 +420,36 @@ partial writes to legacy APB3 peripherals. Device binders can select an
 explicit clock/reset domain through `domain`. See
 [SpinalSoc](../../../../SpinalSoc/README.md#bus-ingress-and-clock-domains)
 for the wrapper traits, library adapters, reset rules and current limits.
+
+## Generate and run verification consumers
+
+`rvw soc verify MAP --out NEW_DIR [--manifest verify.json]` generates checks
+and runs configured consumers in one command. MCP tool: `soc_verify`.
+It prints one table with kind, generated, ran and result. Exit 3 means that
+one or more kinds lack complete evidence. Output includes the full per-kind
+reasons in `result.json`. This first runner does not provide automatic whole
+SoC qualification. A missing database or project bench remains explicit.
+
+The manifest has schema `rvw.soc-verify/1` and a `checks` dictionary. Keys are
+`protocol`, `registers`, `vip`, `uvm`, `connectivity`, `decode`, `cdc_rdc`.
+A check can supply `database` for existing bus, VIP, pyuvm and lint generators.
+`connectivity` can supply a connection `manifest`. Paths are relative to the
+verification manifest. Register maps emit `registers.json`; decode windows
+and unmapped intervals emit `decode.json`. Neither file is a proof.
+
+Optional `prepare` is an argument list. It runs once before consumers.
+Each check can supply a `command` argument list. Tokens `{out}`, `{map}` and
+`{result}` name the fresh output directory, captured map and per-kind result.
+Commands run without a shell. Each has a timeout of at most 120 seconds.
+A command must write `rvw.soc-verify-evidence/1` with `kind`, `map_sha256`,
+positive integer `checks`, and `status`. The map hash is the SHA-256 of the
+captured `map.json`. Zero exit alone cannot pass. `decode` and `connectivity`
+require `proven`; a finite simulation pass cannot satisfy those rows. These
+are project consumer claims; their scope and artifacts need project review.
+
+Protocol, VIP and register entries can instead supply a `capture` path.
+The Vex SoC adapter now writes `apb.jsonl` from actual peripheral pins.
+The checker uses the APB VIP and an independent register side-effect oracle.
+Unknown reset values are never learned from DUT responses. Captured matches
+remain inconclusive. Core AXI ingress is outside this peripheral capture.
+Missing end records, pending transfers and unexercised buses remain visible.

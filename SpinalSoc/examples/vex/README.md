@@ -57,3 +57,12 @@ programs and all 49 selected ISA tests. The UART interrupt program reported
 `I`, 15180 cycles and 2028 retired instructions at seed 31 in a separate run.
 Validation used a captured development classpath. The normal sbt launcher,
 RVFI co-simulation, formal proofs, a debug unit and hardware were NOT RUN.
+
+## Verification runner
+
+`verify.S` checks readable register resets and writes on UART, CLINT, PLIC
+and finisher. `verify.json` runs it through `rvw soc verify` and checks the
+sampled APB pins with the VIP and register oracle. See
+[the measured table](VERIFICATION.md) for counts and missing consumers.
+The adapter writes `apb.jsonl` beside C1 output. Its normal source build now
+uses `sbt-soc`, since all build output is private to this worktree.

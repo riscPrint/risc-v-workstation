@@ -126,3 +126,8 @@ property must pass before its check counts. This association
 does not establish activation or input closure. The overall summary remains
 `inconclusive`, or `findings` when a runtime check fired. Exit codes are 3, 1
 and 2 for inconclusive, findings and input errors.
+
+`rvw.checks.soc_registers.RegisterEffects` checks completed peripheral
+register accesses from `rvw.soc/1`. It models read-clear, write-one-to-clear
+and byte masks. Unknown values remain unknown until an independent write or
+clear defines them. This oracle does not model autonomous peripheral changes.
