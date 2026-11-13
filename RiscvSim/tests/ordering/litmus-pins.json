@@ -24,5 +24,10 @@
     "tests/non-mixed-size/BASIC_2_THREAD/SB+fence.rw.rws.litmus": "c568dc70a2548dc4065fe4764e130ad569f6b1cf5928369fbb8959de22058659",
     "tests/non-mixed-size/BASIC_2_THREAD/MP+fence.rw.rws.litmus": "a6078c47d2ff863768fc9426cf40687af3353ff9dc0210a4c352b7bf765d13f8",
     "tests/non-mixed-size/BASIC_2_THREAD/LB+fence.rw.rws.litmus": "87d0d7a1949533168071e86dc5022e9f6d37c5c18325312f8b919367cbb1e250"
+  },
+  "recorded": {
+    "path": "model-results/herd.logs",
+    "sha256": "e3452bfa55884328c75f53debd82a1ef2e44754f60a6135f9aba28c8ed4bbabe",
+    "source": "suite historical herd results; not a new herdtools7 7.58 run"
   }
 }

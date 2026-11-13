@@ -290,3 +290,22 @@ Native Spike smoke tests cover the programs and injected missing CAS, wrong
 return and failed-CAS write defects. No RTL or concurrent observer is supplied
 by these programs. Integer matches do not establish contention atomicity or
 external acquire/release ordering. The default four suites are unchanged.
+
+### Reference fallback without herd7
+
+If herd7 is installed, `--herd-source` remains required. The runner checks the
+pinned executable version, model library and test bytes before execution.
+If herd7 is absent, the runner reads `model-results/herd.logs` from the external
+suite at the same pinned revision. It verifies the full log SHA-256 and each
+test hash. It requires one complete state block for each of the six tests.
+
+```sh
+python RiscvSim/tests/ordering/litmus.py --tests /tmp/rv-litmus --out /tmp/recorded
+```
+
+The fallback report says `reference_source: suite-recorded`. Its native herd
+version and executable hash are null. These are historical suite expectations,
+not a new run of the pinned herdtools7 7.58 model. The fixture planner checks
+their complete allowed-set hashes as before. The DUT remains `not_run` unless
+an adapter supplies complete observations. The same forbidden-outcome checker
+handles both reference sources. Do not use these RVWMO sets to qualify Ztso.
