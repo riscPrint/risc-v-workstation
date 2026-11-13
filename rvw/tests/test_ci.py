@@ -118,4 +118,4 @@ def test_messages_bypass_dependency_install():
     assert text.index('if [ "$mode" = messages ]') < text.index('mktemp')
     assert 'uv lock --check --project rvw' in text
     nightly = text.split('  nightly-python)')[1].split('    ;;')[0]
-    assert 'scala ' not in nightly
+    assert '--component python' in nightly

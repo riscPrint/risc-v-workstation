@@ -1,40 +1,74 @@
 name: Nightly (no BOOM)
 on:
   schedule:
-    # 03:23 GMT / 04:23 BST, both at night in Europe/London.
     - cron: '23 3 * * *'
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' }}
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
   python:
     runs-on: [self-hosted, macOS, ARM64, rvw-local]
-    timeout-minutes: 90
+    timeout-minutes: 125
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["0/4", "1/4", "2/4", "3/4"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5
-      - name: Run isolated local checks
-        run: scripts/ci-local.sh nightly-python
+      - name: Run tier
+        env:
+          CI_COMPONENT: python
+          CI_SHARD: ${{ matrix.part }}
+        run: scripts/ci-local.sh --tier nightly
   scala:
     runs-on: [self-hosted, macOS, ARM64, rvw-local]
-    timeout-minutes: 90
+    timeout-minutes: 125
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["SpinalWaves/spinalwaves", "SpinalTrace/spinaltrace", "SpinalDB/spinaldb", "SpinalChecks", "SpinalKonata", "SpinalBlocks/spinalblocks", "RiscvSim", "SpinalProbes", "SpinalSoc"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+      - name: Run tier
+        env:
+          CI_COMPONENT: scala
+          CI_SCALA_PROJECT: ${{ matrix.part }}
+        run: scripts/ci-local.sh --tier nightly
+  other:
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 125
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["rust", "javascript", "components", "vip"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          distribution: temurin
-          java-version: '21'
-      - uses: sbt/setup-sbt@e9efd6df90910bb94a11ccbb1541acd9e657c1c5
-      - name: Run isolated local checks
-        run: scripts/ci-local.sh nightly-scala
+          persist-credentials: false
+      - name: Run tier
+        env:
+          CI_COMPONENT: ${{ matrix.part }}
+        run: scripts/ci-local.sh --tier nightly
+  native-light:
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: scripts/ci-local.sh --tier native-light
+  examples:
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: scripts/ci-local.sh --tier examples
