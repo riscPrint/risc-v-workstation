@@ -100,19 +100,27 @@ class RvfiProbe(channels: Seq[Bundle], csrSlots: Seq[Map[Int, Data]] = Seq.empty
 class RvfiTraceWriter(file: File, header: ujson.Obj,
                       flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1"),
                       resume: Option[ujson.Value] = None) extends AutoCloseable {
+  require(resume.isEmpty || !sys.env.contains("RVW_COSIM_PORT"),
+    "lockstep cannot resume without a reference checkpoint")
   // Validate the captured prefix before opening or replacing the output.
   private val restored = resume.map(RvfiWriterCheckpoint.decode(_, header))
   file.getAbsoluteFile.getParentFile.mkdirs()
   restored.foreach(s => java.nio.file.Files.write(file.toPath, s.prefix))
   private val w = new PrintWriter(new java.io.OutputStreamWriter(
     new java.io.FileOutputStream(file, restored.nonEmpty), java.nio.charset.StandardCharsets.UTF_8))
+  private val lockstep = sys.env.get("RVW_COSIM_PORT").map(p => new Lockstep(p.toInt))
+  private def emit(line: String): Unit = {
+    w.println(line)
+    if (flushEachRecord || lockstep.nonEmpty) w.flush()
+    lockstep.foreach(_.observe(line))
+  }
   private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
   private val schema = if (snapshot.nonEmpty) "rvw.rvfi/2" else "rvw.rvfi/1"
   require(!header.value.contains("schema"), "trace writer selects the schema")
   private val supplied = if (snapshot.nonEmpty && !header.value.contains("capabilities"))
     header.value.toSeq :+ ("capabilities" -> ujson.Arr("csr")) else header.value.toSeq
   if (restored.isEmpty)
-    w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str(schema)) ++ supplied)))
+    emit(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str(schema)) ++ supplied)))
   if (flushEachRecord) w.flush()
   var records = restored.map(_.records).getOrElse(0L)
   var trapRecords = restored.map(_.traps).getOrElse(0L)
@@ -153,20 +161,20 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     nextOrder = r.order + 1
     records += 1
     if (r.trap) trapRecords += 1
-    w.println(r.toJson)
+    emit(r.toJson)
     if (flushEachRecord) w.flush()
   }
 
   def trap(cycle: Long, cause: BigInt, tval: BigInt, intr: Boolean): Unit = {
     at(cycle)
-    w.println(s"""{"event": "trap", "cycle": $cycle, "cause": "${Hex(cause)}", "tval": "${Hex(tval)}", "intr": $intr}""")
+    emit(s"""{"event": "trap", "cycle": $cycle, "cause": "${Hex(cause)}", "tval": "${Hex(tval)}", "intr": $intr}""")
     if (flushEachRecord) w.flush()
   }
 
   /** Interrupt input levels (in their `mip` bit positions) the harness drives from `cycle` on. */
   def irq(cycle: Long, levels: BigInt): Unit = {
     at(cycle)
-    w.println(s"""{"event": "irq", "cycle": $cycle, "levels": "${Hex(levels)}"}""")
+    emit(s"""{"event": "irq", "cycle": $cycle, "levels": "${Hex(levels)}"}""")
     if (flushEachRecord) w.flush()
   }
 
@@ -192,12 +200,14 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     for ((c, cause, intr) <- pending) trap(c, cause, tval, intr)
     pending = None
     at(cycle)
-    w.println(s"""{"event": "end", "cycle": $cycle, "status": "$status"}""")
+    emit(s"""{"event": "end", "cycle": $cycle, "status": "$status"}""")
     ended = true
     if (flushEachRecord) w.flush()
   }
 
-  def close(): Unit = w.close()
+  def close(): Unit = {
+    try w.close() finally lockstep.foreach(_.close())
+  }
 }
 
 /** Serialized writer state. The outer native envelope binds this to the model. */

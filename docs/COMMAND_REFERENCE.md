@@ -267,9 +267,9 @@ usage: rvw cosim generate [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
-    [--json] --out OUT --simulator ... [--model {spike,sail}] [--history
-    HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL] [--sail-config
-    SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
+    [--json] [--lockstep] --out OUT --simulator ... [--model {spike,sail}]
+    [--history HISTORY] [--strict] [--strict-sync KINDS] [--sail SAIL]
+    [--sail-config SAIL_CONFIG] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw cov`

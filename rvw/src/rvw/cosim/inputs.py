@@ -161,6 +161,8 @@ class Inputs:
             command += ["--out", os.path.abspath(a["out"]), "--max-instructions", str(a["max_instructions"])]
         command += ["--json"]
         if a["cosim_action"] == "live":
+            if a.get("lockstep"):
+                command += ["--lockstep"]
             command += ["--simulator", *a["simulator"]]
         info["replay"] = shlex.join(command)
         return info

@@ -649,6 +649,17 @@ The report is `rvw.memory-check/1`, with `status`, `checks`, `scope` and
 Consistency applies only to the sampled declared serialized boundary.
 
 
+### C2 blocking co-simulation transport
+
+`rvw cosim live --lockstep` supplies a localhost TCP port in `RVW_COSIM_PORT`.
+The producer sends a C2 header and records as UTF-8 JSON lines. It waits for one
+JSON reply after each line. `status: continue` permits the next observation.
+Any other reply is the final `rvw.cosim/1` report. The producer must stop.
+The end event receives the final report. Missing end evidence cannot earn match.
+Events precede affected retirements, including events in the same cycle. This
+transport does not reorder cycles or read ahead. Taken interrupt traps inject
+only platform-declared interrupt inputs. Debug entry is not supported here.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
