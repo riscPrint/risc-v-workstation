@@ -1,0 +1,14 @@
+{
+  "schema": "rvw.instruction-port/1",
+  "config": "rv32im",
+  "word_bytes": 4,
+  "latency_cycles": 1,
+  "signals": {
+    "cmd_valid": "iBus_cmd_valid",
+    "cmd_ready": "iBus_cmd_ready",
+    "address": "iBus_cmd_payload_pc",
+    "rsp_valid": "iBus_rsp_valid",
+    "rdata": "iBus_rsp_payload_inst",
+    "error": "iBus_rsp_payload_error"
+  }
+}

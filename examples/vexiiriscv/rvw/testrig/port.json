@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.instruction-port/1",
+  "config": "rv32im",
+  "word_bytes": 4,
+  "latency_cycles": 1,
+  "signals": {
+    "cmd_valid": "FetchCachelessPlugin_logic_bus_cmd_valid",
+    "cmd_ready": "FetchCachelessPlugin_logic_bus_cmd_ready",
+    "address": "FetchCachelessPlugin_logic_bus_cmd_payload_address",
+    "rsp_valid": "FetchCachelessPlugin_logic_bus_rsp_valid",
+    "rdata": "FetchCachelessPlugin_logic_bus_rsp_payload_word",
+    "error": "FetchCachelessPlugin_logic_bus_rsp_payload_error",
+    "cmd_id": "FetchCachelessPlugin_logic_bus_cmd_payload_id",
+    "rsp_id": "FetchCachelessPlugin_logic_bus_rsp_payload_id"
+  }
+}

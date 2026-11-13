@@ -1,0 +1,155 @@
+{
+  "schema": "rvw.instruction-port-sample/1",
+  "core": "vexiiriscv",
+  "config": "rv32im",
+  "records": [
+    {
+      "case": "match",
+      "c1_status": "pass",
+      "instret": 7,
+      "cycles": 57,
+      "c1_sha256": "8d2056ec9af3aa790704e614dee2685abf43b95e02f9ea9ddbf62ab7cbbfface",
+      "trace_sha256": "9d3cdb581f9e6b996322462594607262004bbfa41d4cffb03f2a92285d33b910",
+      "rtl_sha256": "219f66b23e00b198fc7a1b656e693a07d31accaf3cfd045fa95fa9fc6db47f28",
+      "port": {
+        "attached": true,
+        "requests": 9,
+        "responses": 9,
+        "faults": 2,
+        "binding_sha256": "38157df9848462582f0b64c9548c7cac971b75f0e0aa5a7a3bd94d0f5891adb2",
+        "feed_sha256": "1da3a49241db61e298ca57dc4ab0bd97fe46a826422e394ee5b12ed835b91839",
+        "reference_elf_sha256": "44081b82d181e6fe7f69d0911eeb3308c869815933420352f35ae40714417964",
+        "instruction_source": "bound fetch port"
+      },
+      "comparison": {
+        "status": "match",
+        "instructions": 7,
+        "trace_complete": true,
+        "synchronized": 0,
+        "applied_masks": [],
+        "mismatch": null
+      }
+    },
+    {
+      "case": "mutated",
+      "c1_status": "pass",
+      "instret": 7,
+      "cycles": 57,
+      "c1_sha256": "065c12b8f5b455406ad4d12a7cf1830438eae1869b4d719c1f539a07586e3282",
+      "trace_sha256": "4d3396cc85257a2b5b11f7844dec471beae7d5fa22cf7a50ac1345f050d43c6f",
+      "rtl_sha256": "219f66b23e00b198fc7a1b656e693a07d31accaf3cfd045fa95fa9fc6db47f28",
+      "port": {
+        "attached": true,
+        "requests": 9,
+        "responses": 9,
+        "faults": 2,
+        "binding_sha256": "38157df9848462582f0b64c9548c7cac971b75f0e0aa5a7a3bd94d0f5891adb2",
+        "feed_sha256": "041e9b42efc46395ceb35dc2b8da3bea207523d9d486d52b2912d5db216eacb8",
+        "reference_elf_sha256": "44081b82d181e6fe7f69d0911eeb3308c869815933420352f35ae40714417964",
+        "instruction_source": "bound fetch port"
+      },
+      "comparison": {
+        "status": "mismatch",
+        "instructions": 1,
+        "trace_complete": false,
+        "synchronized": 0,
+        "applied_masks": [],
+        "mismatch": {
+          "instruction_index": 1,
+          "order": 1,
+          "cycle": 44,
+          "pc": "0x80000004",
+          "disassembly": "li      t0, 7",
+          "differences": {
+            "insn": {
+              "expected": "0x700293",
+              "actual": "0x800293"
+            },
+            "rd_wdata": {
+              "expected": "0x7",
+              "actual": "0x8"
+            }
+          },
+          "actual": {
+            "order": 1,
+            "cycle": 44,
+            "pc": "0x80000004",
+            "pc_next": "0x80000008",
+            "insn": "0x800293",
+            "mode": 3,
+            "trap": false,
+            "intr": false,
+            "halt": false,
+            "rs1": 0,
+            "rs1_rdata": "0x0",
+            "rs2": 0,
+            "rs2_rdata": "0x0",
+            "rd": 5,
+            "rd_wdata": "0x8",
+            "mem_addr": "0x0",
+            "mem_rmask": 0,
+            "mem_wmask": 0,
+            "mem_rdata": "0x0",
+            "mem_wdata": "0x0",
+            "mem_fault": false,
+            "csr_state": {}
+          },
+          "expected": {
+            "pc": "0x80000004",
+            "pc_next": "0x80000008",
+            "insn": "0x700293",
+            "mode": 3,
+            "rd": 5,
+            "rd_wdata": "0x7",
+            "mem_addr": "0x0",
+            "mem_rmask": 0,
+            "mem_wmask": 0,
+            "mem_rdata": "0x0",
+            "mem_wdata": "0x0",
+            "trap": 0,
+            "intr": 0,
+            "cause": "0x0",
+            "tval": "0x0",
+            "mem_fault": 0,
+            "halted": 0,
+            "fd_valid": 0,
+            "fd": 0,
+            "fd_wdata": "0x0",
+            "fflags": "0x0",
+            "fcsr": "0x0",
+            "disasm": "li      t0, 7",
+            "debug": {
+              "mode": false,
+              "dpc": "0x0",
+              "dcsr": "0x40000000",
+              "step": false
+            }
+          },
+          "last_matching": [
+            {
+              "order": 0,
+              "cycle": 43,
+              "pc": "0x80000000",
+              "insn": "0x34001073",
+              "disassembly": "csrw    mscratch, zero"
+            }
+          ],
+          "register_diff": [
+            {
+              "reg": "x5",
+              "expected": "0x7",
+              "actual": "0x8"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "notes": [
+    "The reference ELF retains addi x5,zero,7 in both runs.",
+    "The mutated feed replaces that word with addi x5,zero,8. Its expected mismatch proves an independent instruction source.",
+    "The adapter disables its RAM instruction responder while injection is active.",
+    "This is the core-side fetch hook and offline feed. Live TestRIG transport and packet protocol were NOT RUN.",
+    "No physical hardware or C4 acceptance."
+  ]
+}

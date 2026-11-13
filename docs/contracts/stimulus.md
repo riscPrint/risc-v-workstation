@@ -117,3 +117,30 @@ inconclusive C1 record. `new_execution_coverage_credit` stays false. These runs
 do not repeat strict reference qualification or establish C4 acceptance.
 Conclusive C1 fail/assert observations remain failures. A process error or
 missing result remains inconclusive unless the deadline fired.
+
+## Instruction feed and core-side port
+
+`rvw.instruction-port/1` declares `config`, `word_bytes` (4 or 8), optional
+`latency_cycles` (default 1), and `signals`. Required pin roles are `cmd_valid`,
+`cmd_ready`, `address`, `rsp_valid`, and `rdata`. Optional roles are `rsp_ready`,
+`error`, `cmd_id`, and `rsp_id`. IDs require both roles with equal widths. Pin
+roles must name distinct top-level signals. Requests use byte addresses and
+aligned bus words. The driver checks directions and widths. It allows one
+outstanding request. A source with no ready word applies backpressure.
+
+`rvw.instruction-feed/1` declares matching `word_bytes`, a reference ELF SHA-256,
+and unique aligned `words`. Each word has `address`, `data`, and optional
+boolean `error`. Hexadecimal strings preserve exact values. Missing addresses
+return a fetch fault. A port without an error pin cannot represent that fault.
+The reference hash binds the boot/comparison image, not equality of every feed
+word. Deliberate instruction changes remain explicit input data.
+
+C1 `--instruction-port` and `--instruction-feed` must appear together. An
+adapter/config must opt in. C1 records the selected input paths in `options`,
+captures parsed inputs as `instruction_port`/`instruction_feed` artifacts, and
+writes `instruction_requests`. `details.instruction_injection` records input
+hashes, attachment, requests, responses and fault responses. A software pass
+becomes error if a requested hook did not attach or deliver a response.
+Speculative responses do not establish retirement. The hook does not change
+synthesis RTL or the normal path when disabled. It is not a live TestRIG
+transport implementation.

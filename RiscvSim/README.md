@@ -1183,3 +1183,13 @@ stay in the coverage denominator.
 C1 records selected model and observation flags under `options`. Regression
 requires matching receipts for requested coverage and probe capture. Missing
 flags remain inconclusive. Artifact presence alone does not satisfy that check.
+
+### Core-side instruction port
+
+Use `--instruction-port BINDING --instruction-feed FEED` for an opted-in
+adapter/config. `InstructionPort` drives project-bound split fetch pins.
+`InstructionSource` supplies words or applies backpressure. The adapter must
+disable its normal instruction responder. Keep data memory independent.
+The generic driver captures inputs and response receipts. A missing attachment
+or response prevents pass. See the stimulus contract and the two example
+`rvw/testrig/` directories. Live TestRIG transport remains separate work.

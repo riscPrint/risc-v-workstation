@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress", "stimulus-file")
+    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress", "stimulus-file", "instruction-port", "instruction-feed")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -131,6 +131,10 @@ object Cli {
       throw new UsageError("adapter does not support multi-hart inputs")
     if (m.contains("hart-images") && m.contains("boot-payloads"))
       throw new UsageError("hart images and boot payloads cannot be combined")
+    if (m.contains("instruction-port") != m.contains("instruction-feed"))
+      throw new UsageError("instruction injection needs --instruction-port and --instruction-feed")
+    if (m.contains("instruction-port") && !adapter.supportsInstructionPort(config))
+      throw new UsageError("adapter/config does not support instruction injection")
     RunJob(
       elf = file(cwd, need("elf")), out = file(cwd, need("out")), config = config, seed = seed, seedPicked = picked,
       maxCycles = maxCycles, memLatency = memLatency, simThreads = simThreads(m, adapter),
@@ -140,6 +144,7 @@ object Cli {
       hartImages = m.get("hart-images").map(file(cwd, _)),
       bootPayloads = m.get("boot-payloads").map(file(cwd, _)), irqSchedule = schedule, elfLoadBias = long(m, "elf-load-bias", min = 0).getOrElse(0L), socMap = m.get("soc-map").map(p => SimMap.load(file(cwd, p))),
       fault = m.get("fault").map(p => FaultFile.load(file(cwd, p))),
+      instructionPort = m.get("instruction-port").map(p => InstructionMode.load(file(cwd, p), file(cwd, need("instruction-feed")), config)),
       traceIngress = m.get("trace-ingress").map(p => IngressBinding.load(file(cwd, p))),
       stimulus = m.get("stimulus-file").map(p => StimulusMailbox.load(file(cwd, p), p)),
       debug = m.get("debug").map { d =>
@@ -161,6 +166,7 @@ object Cli {
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
       |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON]
       |                  [--debug dmi|jtag:PORT --debug-binding rvw.debug-binding/1 JSON]
+      |                  [--instruction-port BINDING --instruction-feed FEED]
       |                  [--trace-ingress rvw.trace-ingress-binding/1 JSON] [--stimulus-file rvw.stimulus/1 JSON] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--persistent] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout

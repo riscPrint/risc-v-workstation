@@ -1,0 +1,16 @@
+.option norvc
+.option norelax
+.section .text
+.globl _start
+_start:
+csrw mscratch, zero
+addi x5, zero, 7
+li x28, 1
+la x29, tohost
+sw x28, 0(x29)
+1: j 1b
+.section .tohost,"aw",@progbits
+.balign 8
+.globl tohost, fromhost
+tohost: .dword 0
+fromhost: .dword 0

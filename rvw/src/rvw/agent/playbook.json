@@ -847,6 +847,7 @@
         "regress_privilege_build",
         "regress_privilege_check",
         "regress_privilege_reference",
+        "regress_instruction_feed",
         "regress_random",
         "regress_sail_tests",
         "sec_campaign",
