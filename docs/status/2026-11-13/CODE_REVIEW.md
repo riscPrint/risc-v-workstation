@@ -311,3 +311,294 @@ Files read, with line counts:
 | `rvw/tests/test_soc_verification_bindings.py` | 35 |
 | `rvw/tests/test_soc_verify.py` | 140 |
 | `rvw/tests/test_soc_vex.py` | 72 |
+
+## Architecture, OoO timing and component models
+
+Review base: `f3606ad0`. The review covered 242 files and 25,745 lines at the recorded read snapshots. The table includes two supporting architecture study scripts. Later changes on main were not reviewed as a whole.
+
+Confirmed defects:
+
+- C2 conversion discarded shifted and sparse memory-mask byte lanes. Cache-line and page addresses could be wrong. Fixed in [PR #1376](https://github.com/riscPrint/risc-v-workstation/pull/1376).
+- The component CLI used only the first byte of each data access. It omitted further cache lines and pages. Fixed in [PR #1399](https://github.com/riscPrint/risc-v-workstation/pull/1399). Cross-line OPT accesses now return an error because the next-use stream has one value per trace record.
+
+Checks:
+
+- Existing native and Python parity tests passed: 12 tests. They include seeded random small traces and exhaustive compressed instruction words. No new random parity test was needed.
+- Converter tests passed: 19 tests. The shifted-mask regression failed before the fix.
+- Component tests passed: 101 tests. The cross-line and cross-page regression failed before the fix.
+- Assigned Python area tests passed: 921 tests, with 5 skipped.
+- Accounting checks cover retired and squashed instructions, cache hits plus misses, and top-down commit slots. Top-down slots sum to cycles times commit width. They do not have a cycle unit.
+- Read the counter updates, history folds, index and tag widths, replacement state, weighted CPI, absolute error and rank ties. Existing scalar references cover selected models. This review did not establish paper-equivalent behavior for every predictor.
+- Initial fast run: 3,294 passed, 4 skipped and one failure in untouched `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow` because `cov_mutate_core` lacked workflow coverage. Two later fast runs each passed 3,378 tests, with 4 skipped and 7,729 deselected. They emitted 14 and 46 temporary-directory cleanup warnings.
+- NOT RUN: core builds, RTL simulation, proofs, external predictor qualification or the full Python test suite.
+
+Commands for the test groups:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_arch*.py rvw/tests/test_ooo*.py rvw/tests/test_csim*.py rvw/tests/test_perf*.py rvw/tests/test_workload*.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest ComponentSims/tests -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q
+```
+
+Selected paper definitions checked against the source:
+
+| Definition | Source comparison |
+|---|---|
+| [L-TAGE](https://jilp.org/vol9/v9paper6.pdf), sections 2 and 3 | Read the provider and alternate selection, bounded signed counters, weak-correct allocation, usefulness initialization and loop state. Hash and configuration choices are local model choices. This was not a bit-exact comparison. |
+| [RRIP](https://jaleels.org/ajaleel/publications/isca2010-rrip.pdf), sections 3 and 4 | `Rrip` inserts SRRIP at maximum RRPV minus one, promotes hits to zero, ages until a maximum victim exists, and uses distant insertion for most BRRIP fills. The separate scalar SRRIP test passed. |
+| [SHiP](https://www.istc-cc.cmu.edu/publications/papers/2011/SHiP.pdf), section 3.1 | `Rrip` retains each line's signature and reuse bit. Hits raise its stored signature counter. Eviction without reuse lowers it. A zero counter causes distant insertion. This was a source comparison. |
+| [Store sets](https://www.princeton.edu/~rblee/ELE572Papers/MemoryDependencePredictionStoreSets_Emer.pdf), section 6 | `StoreSets` has SSIT and LFST state and chooses the smaller identifier when trained sets meet. Its unresolved-window model omits issue timing and store serialization. The code states this limit. |
+
+Unconfirmed items: 2. No fix or correctness claim is made for these items.
+
+- Translation reserves all missing pages at once. An access that needs more pages than walkers may never gain admission. A failing end-to-end test was not completed.
+- Write-through stores may omit lower-level traffic. The intended traffic and timing scope needs a separate reference test.
+
+Not read: no files were intentionally excluded from the assigned source directories or the associated test inventory below. Unrelated tests, external papers and external reference implementations were not reviewed in full.
+
+Files read and line counts:
+
+| File | Lines |
+|---|---:|
+| `ComponentSims/README.md` | 302 |
+| `ComponentSims/branch_sim.cc` | 78 |
+| `ComponentSims/capi.cc` | 171 |
+| `ComponentSims/csim.cc` | 165 |
+| `ComponentSims/examples/hashed-perceptron-64kb.json` | 82 |
+| `ComponentSims/examples/tage-sc-l-64kb.json` | 117 |
+| `ComponentSims/examples/tage-sc-l-8kb.json` | 63 |
+| `ComponentSims/examples/wide-core.json` | 29 |
+| `ComponentSims/include/csim/common.h` | 241 |
+| `ComponentSims/include/csim/direction.h` | 574 |
+| `ComponentSims/include/csim/memory.h` | 940 |
+| `ComponentSims/include/csim/misc.h` | 227 |
+| `ComponentSims/include/csim/study.h` | 458 |
+| `ComponentSims/include/csim/target.h` | 273 |
+| `ComponentSims/include/csim/trace.h` | 206 |
+| `ComponentSims/qualify/ref_harness.cc` | 40 |
+| `ComponentSims/qualify/shim/bt9.h` | 1 |
+| `ComponentSims/qualify/shim/bt9_reader.h` | 1 |
+| `ComponentSims/qualify/shim/utils.h` | 21 |
+| `ComponentSims/spike.py` | 157 |
+| `ComponentSims/tests/conftest.py` | 23 |
+| `ComponentSims/tests/test_branch.py` | 79 |
+| `ComponentSims/tests/test_csim_engine.py` | 514 |
+| `ComponentSims/tests/test_csim_reference.py` | 139 |
+| `ComponentSims/tests/test_spike.py` | 88 |
+| `rvw/src/rvw/arch/__init__.py` | 1 |
+| `rvw/src/rvw/arch/cli.py` | 178 |
+| `rvw/src/rvw/arch/cli_declarations.py` | 2 |
+| `rvw/src/rvw/arch/commands/__init__.py` | 1 |
+| `rvw/src/rvw/arch/commands/compiler_export.py` | 34 |
+| `rvw/src/rvw/arch/commands/custom_tradeoff.py` | 23 |
+| `rvw/src/rvw/arch/commands/gem5_export.py` | 24 |
+| `rvw/src/rvw/arch/commands/ooo_delta.py` | 31 |
+| `rvw/src/rvw/arch/commands/ooo_designer.py` | 27 |
+| `rvw/src/rvw/arch/commands/ooo_fit.py` | 23 |
+| `rvw/src/rvw/arch/commands/ooo_profile.py` | 50 |
+| `rvw/src/rvw/arch/commands/ooo_sampled.py` | 29 |
+| `rvw/src/rvw/arch/commands/ooo_sensitivity.py` | 27 |
+| `rvw/src/rvw/arch/commands/ooo_whatif.py` | 32 |
+| `rvw/src/rvw/arch/commands/ooo_wrongpath.py` | 32 |
+| `rvw/src/rvw/arch/commands/system_energy.py` | 23 |
+| `rvw/src/rvw/arch/compiler_export.py` | 79 |
+| `rvw/src/rvw/arch/core.py` | 379 |
+| `rvw/src/rvw/arch/custom_tradeoff.py` | 60 |
+| `rvw/src/rvw/arch/dse.py` | 208 |
+| `rvw/src/rvw/arch/energy.py` | 56 |
+| `rvw/src/rvw/arch/fitting.py` | 167 |
+| `rvw/src/rvw/arch/gem5_export.py` | 30 |
+| `rvw/src/rvw/arch/ledger.py` | 50 |
+| `rvw/src/rvw/arch/linux.py` | 287 |
+| `rvw/src/rvw/arch/mcp_tools.py` | 77 |
+| `rvw/src/rvw/arch/measure.py` | 36 |
+| `rvw/src/rvw/arch/memory.py` | 181 |
+| `rvw/src/rvw/arch/sampling.py` | 131 |
+| `rvw/src/rvw/arch/sched.py` | 278 |
+| `rvw/src/rvw/arch/sched_study.py` | 71 |
+| `rvw/src/rvw/arch/search.py` | 162 |
+| `rvw/src/rvw/arch/statistics.py` | 30 |
+| `rvw/src/rvw/arch/traffic.py` | 141 |
+| `rvw/src/rvw/arch/warmup.py` | 90 |
+| `rvw/src/rvw/csim/__init__.py` | 2 |
+| `rvw/src/rvw/csim/cli.py` | 283 |
+| `rvw/src/rvw/csim/cli_declarations.py` | 2 |
+| `rvw/src/rvw/csim/config.py` | 123 |
+| `rvw/src/rvw/csim/engine.py` | 70 |
+| `rvw/src/rvw/csim/lib.py` | 157 |
+| `rvw/src/rvw/csim/mcp_tools.py` | 124 |
+| `rvw/src/rvw/csim/models.py` | 71 |
+| `rvw/src/rvw/csim/qualify.py` | 199 |
+| `rvw/src/rvw/csim/rtl.py` | 267 |
+| `rvw/src/rvw/csim/rtl_cache.py` | 183 |
+| `rvw/src/rvw/csim/simpoint.py` | 181 |
+| `rvw/src/rvw/csim/study.py` | 229 |
+| `rvw/src/rvw/csim/target_status.py` | 13 |
+| `rvw/src/rvw/csim/traces.py` | 351 |
+| `rvw/src/rvw/ooo/README.md` | 1456 |
+| `rvw/src/rvw/ooo/__init__.py` | 1 |
+| `rvw/src/rvw/ooo/attribution.py` | 19 |
+| `rvw/src/rvw/ooo/cli.py` | 23 |
+| `rvw/src/rvw/ooo/cli_declarations.py` | 2 |
+| `rvw/src/rvw/ooo/component_events.py` | 23 |
+| `rvw/src/rvw/ooo/components.py` | 100 |
+| `rvw/src/rvw/ooo/control.py` | 6 |
+| `rvw/src/rvw/ooo/core.py` | 874 |
+| `rvw/src/rvw/ooo/custom.py` | 44 |
+| `rvw/src/rvw/ooo/delta.py` | 127 |
+| `rvw/src/rvw/ooo/dependence.py` | 27 |
+| `rvw/src/rvw/ooo/designer.py` | 85 |
+| `rvw/src/rvw/ooo/evidence.py` | 190 |
+| `rvw/src/rvw/ooo/execution.py` | 46 |
+| `rvw/src/rvw/ooo/fit.py` | 70 |
+| `rvw/src/rvw/ooo/floating.py` | 16 |
+| `rvw/src/rvw/ooo/frontend.py` | 175 |
+| `rvw/src/rvw/ooo/issue_window.py` | 28 |
+| `rvw/src/rvw/ooo/mcp_tools.py` | 29 |
+| `rvw/src/rvw/ooo/memory_rename.py` | 36 |
+| `rvw/src/rvw/ooo/native.c` | 111 |
+| `rvw/src/rvw/ooo/native.py` | 196 |
+| `rvw/src/rvw/ooo/native_c2.c` | 117 |
+| `rvw/src/rvw/ooo/native_decode.c` | 96 |
+| `rvw/src/rvw/ooo/project.py` | 58 |
+| `rvw/src/rvw/ooo/regions.py` | 111 |
+| `rvw/src/rvw/ooo/rename.py` | 32 |
+| `rvw/src/rvw/ooo/sampled.py` | 101 |
+| `rvw/src/rvw/ooo/search.py` | 117 |
+| `rvw/src/rvw/ooo/sensitivity.py` | 82 |
+| `rvw/src/rvw/ooo/speculative.py` | 28 |
+| `rvw/src/rvw/ooo/spike_replay.py` | 131 |
+| `rvw/src/rvw/ooo/structures.py` | 70 |
+| `rvw/src/rvw/ooo/translation.py` | 41 |
+| `rvw/src/rvw/ooo/whatif.py` | 60 |
+| `rvw/src/rvw/ooo/windows.py` | 43 |
+| `rvw/src/rvw/ooo/wrongpath.py` | 129 |
+| `rvw/src/rvw/perf/README.md` | 184 |
+| `rvw/src/rvw/perf/__init__.py` | 1 |
+| `rvw/src/rvw/perf/analysis.py` | 310 |
+| `rvw/src/rvw/perf/classify.py` | 63 |
+| `rvw/src/rvw/perf/cli.py` | 110 |
+| `rvw/src/rvw/perf/cli_declarations.py` | 2 |
+| `rvw/src/rvw/perf/events.py` | 61 |
+| `rvw/src/rvw/perf/function_topdown.py` | 91 |
+| `rvw/src/rvw/perf/inputs.py` | 46 |
+| `rvw/src/rvw/perf/kanata.py` | 153 |
+| `rvw/src/rvw/perf/mcp_tools.py` | 46 |
+| `rvw/src/rvw/perf/prediction.py` | 107 |
+| `rvw/src/rvw/perf/topdown.py` | 75 |
+| `rvw/src/rvw/workloads/README.md` | 261 |
+| `rvw/src/rvw/workloads/__init__.py` | 1 |
+| `rvw/src/rvw/workloads/assets/build_coremark.py` | 24 |
+| `rvw/src/rvw/workloads/assets/build_riscv_tests.py` | 30 |
+| `rvw/src/rvw/workloads/assets/build_zstd.py` | 16 |
+| `rvw/src/rvw/workloads/assets/coremark.json` | 25 |
+| `rvw/src/rvw/workloads/assets/coremark_smoke.c` | 20 |
+| `rvw/src/rvw/workloads/assets/default.json` | 237 |
+| `rvw/src/rvw/workloads/assets/evaluation-platform.json` | 11 |
+| `rvw/src/rvw/workloads/assets/evaluation.json` | 35 |
+| `rvw/src/rvw/workloads/assets/link.ld` | 18 |
+| `rvw/src/rvw/workloads/assets/main.c` | 7 |
+| `rvw/src/rvw/workloads/assets/riscv-tests.json` | 169 |
+| `rvw/src/rvw/workloads/assets/rtl_recipe.py` | 80 |
+| `rvw/src/rvw/workloads/assets/start.S` | 36 |
+| `rvw/src/rvw/workloads/assets/zstd.json` | 25 |
+| `rvw/src/rvw/workloads/assets/zstd_smoke.c` | 18 |
+| `rvw/src/rvw/workloads/cli.py` | 45 |
+| `rvw/src/rvw/workloads/cli_declarations.py` | 2 |
+| `rvw/src/rvw/workloads/commands/compare.py` | 30 |
+| `rvw/src/rvw/workloads/commands/evaluate.py` | 45 |
+| `rvw/src/rvw/workloads/commands/run.py` | 37 |
+| `rvw/src/rvw/workloads/comparison.py` | 69 |
+| `rvw/src/rvw/workloads/core.py` | 229 |
+| `rvw/src/rvw/workloads/evaluation.py` | 96 |
+| `rvw/src/rvw/workloads/mcp_tools.py` | 30 |
+| `rvw/src/rvw/workloads/profile.py` | 52 |
+| `rvw/src/rvw/workloads/rtl.py` | 162 |
+| `rvw/tests/test_arch.py` | 521 |
+| `rvw/tests/test_arch_base_i.py` | 37 |
+| `rvw/tests/test_arch_build_independent.py` | 20 |
+| `rvw/tests/test_arch_compatibility.py` | 74 |
+| `rvw/tests/test_arch_compiler_export.py` | 15 |
+| `rvw/tests/test_arch_custom_tradeoff.py` | 43 |
+| `rvw/tests/test_arch_dse.py` | 131 |
+| `rvw/tests/test_arch_fitting.py` | 169 |
+| `rvw/tests/test_arch_ftq.py` | 91 |
+| `rvw/tests/test_arch_gem5_export.py` | 22 |
+| `rvw/tests/test_arch_injection.py` | 76 |
+| `rvw/tests/test_arch_lifecycle.py` | 91 |
+| `rvw/tests/test_arch_linux.py` | 246 |
+| `rvw/tests/test_arch_memory.py` | 120 |
+| `rvw/tests/test_arch_micro.py` | 27 |
+| `rvw/tests/test_arch_model.py` | 306 |
+| `rvw/tests/test_arch_rv32.py` | 64 |
+| `rvw/tests/test_arch_sampling.py` | 66 |
+| `rvw/tests/test_arch_sched.py` | 197 |
+| `rvw/tests/test_arch_sched_study.py` | 50 |
+| `rvw/tests/test_arch_search.py` | 173 |
+| `rvw/tests/test_arch_soc.py` | 116 |
+| `rvw/tests/test_arch_system_energy.py` | 19 |
+| `rvw/tests/test_arch_traffic.py` | 47 |
+| `rvw/tests/test_arch_warmup.py` | 64 |
+| `rvw/tests/test_csim.py` | 250 |
+| `rvw/tests/test_csim_cache.py` | 113 |
+| `rvw/tests/test_csim_formats.py` | 206 |
+| `rvw/tests/test_ooo.py` | 152 |
+| `rvw/tests/test_ooo_attribution.py` | 12 |
+| `rvw/tests/test_ooo_branch_speculation.py` | 32 |
+| `rvw/tests/test_ooo_checks.py` | 126 |
+| `rvw/tests/test_ooo_component_events.py` | 10 |
+| `rvw/tests/test_ooo_components.py` | 70 |
+| `rvw/tests/test_ooo_control.py` | 41 |
+| `rvw/tests/test_ooo_custom.py` | 52 |
+| `rvw/tests/test_ooo_delta.py` | 75 |
+| `rvw/tests/test_ooo_delta_rank.py` | 23 |
+| `rvw/tests/test_ooo_dependence.py` | 63 |
+| `rvw/tests/test_ooo_designer.py` | 27 |
+| `rvw/tests/test_ooo_evidence.py` | 108 |
+| `rvw/tests/test_ooo_execution.py` | 27 |
+| `rvw/tests/test_ooo_fdip.py` | 66 |
+| `rvw/tests/test_ooo_fetch_blocks.py` | 31 |
+| `rvw/tests/test_ooo_fit.py` | 63 |
+| `rvw/tests/test_ooo_fixture_followup.py` | 26 |
+| `rvw/tests/test_ooo_floating.py` | 46 |
+| `rvw/tests/test_ooo_frontend.py` | 46 |
+| `rvw/tests/test_ooo_inorder.py` | 60 |
+| `rvw/tests/test_ooo_issue_window.py` | 54 |
+| `rvw/tests/test_ooo_memory_rename.py` | 54 |
+| `rvw/tests/test_ooo_mini_example.py` | 38 |
+| `rvw/tests/test_ooo_native.py` | 100 |
+| `rvw/tests/test_ooo_native_c2.py` | 98 |
+| `rvw/tests/test_ooo_native_decode.py` | 79 |
+| `rvw/tests/test_ooo_pipeline.py` | 57 |
+| `rvw/tests/test_ooo_pressure.py` | 307 |
+| `rvw/tests/test_ooo_project.py` | 55 |
+| `rvw/tests/test_ooo_references.py` | 16 |
+| `rvw/tests/test_ooo_regions.py` | 77 |
+| `rvw/tests/test_ooo_rename.py` | 56 |
+| `rvw/tests/test_ooo_resource_study.py` | 25 |
+| `rvw/tests/test_ooo_sampled.py` | 63 |
+| `rvw/tests/test_ooo_sampled_many.py` | 78 |
+| `rvw/tests/test_ooo_search.py` | 33 |
+| `rvw/tests/test_ooo_sensitivity.py` | 37 |
+| `rvw/tests/test_ooo_static_prediction.py` | 43 |
+| `rvw/tests/test_ooo_store_policy.py` | 62 |
+| `rvw/tests/test_ooo_structures.py` | 104 |
+| `rvw/tests/test_ooo_translation.py` | 30 |
+| `rvw/tests/test_ooo_whatif.py` | 42 |
+| `rvw/tests/test_ooo_wrongpath.py` | 66 |
+| `rvw/tests/test_ooo_zero_irq.py` | 35 |
+| `rvw/tests/test_perf.py` | 246 |
+| `rvw/tests/test_perf_capture.py` | 147 |
+| `rvw/tests/test_perf_conclusive.py` | 62 |
+| `rvw/tests/test_perf_events.py` | 172 |
+| `rvw/tests/test_perf_function_topdown.py` | 41 |
+| `rvw/tests/test_perf_topdown.py` | 75 |
+| `rvw/tests/test_workload_evaluation.py` | 65 |
+| `rvw/tests/test_workload_recipes.py` | 41 |
+| `rvw/tests/test_workloads.py` | 195 |
+| `rvw/tests/test_workloads_comparison.py` | 43 |
+| `rvw/tests/test_workloads_native.py` | 35 |
+| `rvw/tests/test_workloads_rtl.py` | 78 |
+| `rvw/tests/test_workloads_sizing.py` | 56 |
+| `examples/naxriscv/rvw/arch/rank.py` | 44 |
+| `examples/naxriscv/rvw/arch/resource-study.py` | 73 |
