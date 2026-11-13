@@ -74,6 +74,24 @@ def _command_tools(package: str, problems: list[str]) -> list[ToolSpec]:
     return tools
 
 
+def discover_resources(only: set[str] | None = None) -> tuple[list[tuple], list[str]]:
+    """Resources from every `rvw.<pkg>.mcp_tools.mcp_resources()`: (uri, name, description, reader)."""
+    resources, problems = [], []
+    for mod in sorted(pkgutil.iter_modules(rvw.__path__), key=lambda m: m.name):
+        if not mod.ispkg or (only and mod.name not in only):
+            continue
+        try:
+            m = importlib.import_module(f"rvw.{mod.name}.mcp_tools")
+        except Exception:
+            continue  # discover() reports import problems
+        if hasattr(m, "mcp_resources"):
+            try:
+                resources.extend(m.mcp_resources())
+            except Exception as e:
+                problems.append(f"rvw.{mod.name}.mcp_tools.mcp_resources(): {type(e).__name__}: {e}")
+    return resources, problems
+
+
 class Registry:
     def __init__(self, tools: list[ToolSpec], jobs: JobManager | None = None, sync_s: float | None = None,
                  max_text: int | None = None, project: str | None = None):
@@ -84,6 +102,7 @@ class Registry:
         patterns = os.environ.get("RVW_MCP_ISOLATE", ISOLATE)
         self._isolate = [x.strip() for x in patterns.split(",") if x.strip()]
         self.tools: dict[str, ToolSpec] = {}
+        self.resources: dict[str, tuple] = {}
         self._validators = {}
         for t in tools + self._job_tools():
             if t.name in self.tools:
@@ -96,7 +115,16 @@ class Registry:
     @classmethod
     def discover(cls, only: set[str] | None = None, *, project: str | None = None) -> tuple["Registry", list[str]]:
         tools, problems = discover(only)
-        return cls(tools, project=project), problems
+        registry = cls(tools, project=project)
+        resources, more = discover_resources(only)
+        for uri, name, description, reader in resources:
+            registry.resources[uri] = (name, description, reader)
+        return registry, problems + more
+
+    def read_resource(self, uri: str) -> str:
+        if uri not in self.resources:
+            raise ToolError(f"unknown resource {uri!r}")
+        return self.resources[uri][2]()
 
     def call(self, name: str, arguments: dict | None) -> Any:
         """Runs a tool. Long tools return a job record at once. Raises ToolError for bad calls."""
