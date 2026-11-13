@@ -173,3 +173,15 @@ UVM errors or fatals. The fault-detection entry requires the specific
 RVFI mismatch and a failed simulation. A timeout, missing evidence or a
 build failure is inconclusive with status `error`. These files have no
 C1 ELF or complete C8 identity. They cannot establish C4 gate acceptance.
+
+## Co-simulation capture inspection
+
+`rvw cosim doctor --trace FILE` and MCP `cosim_doctor` return
+`rvw.cosim-doctor/1`. Status `inspected` means all supplied C2 records validated.
+It never means an architectural match. `compared` is always false.
+`comparisons` describes configured checker scope from capture declarations.
+`conditional_masks` gives allowed synchronization with its reason, not evidence
+that it occurred. `platform_policy` gives explicit reference choices.
+`trace_complete` requires a validated C2 end record. An incomplete valid prefix
+can be inspected. Errors return status `error` and CLI exit 2. Inspection returns
+CLI exit 0, including valid incomplete traces. No reference executable is needed.

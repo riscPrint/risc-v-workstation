@@ -283,7 +283,15 @@ usage: rvw checks generate [-h] --all [--manifest MANIFEST] [--out OUT]
 
 ```text
 usage: rvw cosim [-h] [--project PROJECT]
-    {dii,exchange,vector-source,adjudicate,qemu-check,check,generate,live} ...
+    {doctor,dii,exchange,vector-source,adjudicate,qemu-check,check,generate,live}
+    ...
+```
+
+### `rvw cosim doctor`
+
+```text
+usage: rvw cosim doctor [-h] --trace TRACE [--core CORE] [--platform PLATFORM]
+    [--strict] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim dii`
@@ -2546,6 +2554,14 @@ Check a recorded C2 RVFI trace against Spike or Sail to locate the first archite
 Arguments: `project`, `elf` (required), `core`, `platform`, `trace` (required), `model`, `history`, `strict`, `strict_sync`, `sail_config`, `timeout`.
 
 Starts a background job: yes.
+
+### `cosim_doctor`
+
+Inspect validated C2 capture and configured comparison scope. No reference runs or match claims.
+
+Arguments: `trace` (required), `core`, `platform`, `project`, `strict`.
+
+Starts a background job: no.
 
 ### `cosim_exchange`
 

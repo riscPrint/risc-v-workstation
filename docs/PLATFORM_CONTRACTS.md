@@ -125,7 +125,7 @@ independent order conformance or an ISA proof.
 - [Agent benchmark](contracts/agent-bench.md)
 - [Architecture model extensions](contracts/arch.md)
 - [Connectivity and riscv-formal bindings](contracts/connectivity.md)
-- [Co-simulation transports](contracts/cosim.md)
+- [Co-simulation transports and capture inspection](contracts/cosim.md)
 - [Coverage](contracts/coverage.md)
 - [Component simulations](contracts/csim.md)
 - [CSR and register maps](contracts/csr.md)

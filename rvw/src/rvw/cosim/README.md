@@ -162,3 +162,20 @@ reference. The result retains all three reports. QEMU can expose disagreement
 in the observed fields. It cannot outvote an architectural mismatch. An actual
 native bare-metal smoke is tested. Full Linux and asynchronous injection remain
 NOT RUN/unsupported.
+
+### Inspect a new core trace
+
+Run `rvw cosim doctor --trace OUT/rvfi.jsonl --json` in the core project.
+Use `--core CORE` or `--platform FILE` without a project. The MCP tool is
+`cosim_doctor`. Add `--strict` to inspect scope with synchronization disabled.
+
+The command validates every C2 record. It reports capture capabilities, record
+counts, trace completion, configured comparisons, conditional masks and platform
+policies. CSR-only capture does not imply FP capture. Missing vector, debug,
+hypervisor and CSR snapshots remain visible as absent comparisons.
+
+This command does not run a reference. Its `inspected` status is not a match.
+Conditional masks describe allowed synchronization. Run `cosim check` to see
+which masks were applied and how much state was actually compared. This first
+inspection uses the Spike checker policy. It does not certify reference support,
+multi-hart ordering, trace provenance or full architectural state capture.
