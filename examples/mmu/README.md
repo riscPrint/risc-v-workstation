@@ -108,3 +108,25 @@ claim. The per-level fault matrix now includes instruction-fetch cases.
 masking through henvcfg/senvcfg and confirms that HLVX remains unmasked.
 U-mode HUPMM controls are also checked. Debug-state masking remains open. The independent
 nested walker does not yet model pointer transforms and stays inconclusive.
+
+## RTL results
+
+On 2026-11-13 the VexiiRiscv supervisor profiles ran the satp-mode subsets.
+Strict Spike comparison with `rvw regress cosim`:
+
+| Profile | Description | Generated (mode) | Applicable | C1 pass | Spike match | Finding |
+|---|---|---|---|---|---|---|
+| `rv64imasu` Sv39 | `matrix.json` | 589 (147) | 145 | 143 | 143 | 2 |
+| `rv64imasu` Sv39 | `fault-walks.json` | 84 (18) | 18 | 9 | 9 | 9 |
+| `rv64imasu` Sv39 | `random.json` | 8 (2) | 2 | 2 | 2 | 0 |
+| `rv32imasu` Sv32 | `matrix.json` | 589 (142) | 140 | 138 | 138 | 2 |
+| `rv32imasu` Sv32 | `fault-walks.json` | 84 (12) | 12 | 6 | 6 | 6 |
+| `rv32imasu` Sv32 | `random.json` | 8 (2) | 2 | 2 | 2 | 0 |
+
+Hardware A/D scenarios are not applicable. All findings are one core defect:
+the page walker reads PTEs that PMP denies. The C2 `mmu_walks` check matched
+92 Sv39 and 89 Sv32 matrix scenarios and 10 fault-walk scenarios against the
+independent walker. See the
+[VexiiRiscv README](../vexiiriscv/README.md#generated-suites-on-rtl-2026-11-13)
+for the commands, the exclusions and the inconclusive cases. Sv48, Sv57, H,
+pointer masking, NAPOT, PBMT and shootdown suites have no RTL target yet.

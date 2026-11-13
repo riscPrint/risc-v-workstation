@@ -1,0 +1,20 @@
+{
+  "schema": "rvw.regress-features/1",
+  "isa": "rv32ima_zicsr_zifencei",
+  "privilege_modes": "MSU",
+  "satp_modes": [
+    "sv32"
+  ],
+  "pmp_regions": 8,
+  "harts": 1,
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
+  "capabilities": [
+    "ad:fault",
+    "asid:9",
+    "pmp-granularity:4"
+  ]
+}

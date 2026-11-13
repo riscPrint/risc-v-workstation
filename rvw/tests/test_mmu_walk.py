@@ -96,3 +96,15 @@ def test_c2_capture_and_identity(tmp_path):
 
 def test_unsupported_reference_is_not_a_mismatch():
     assert check([dict(kind='mmu_walk')], [])['status'] == 'inconclusive'
+
+
+def test_identity_allows_runner_source_fields_only():
+    from rvw.regress.mmu_walk import same_run
+    header = dict(core='c', config='x', elf_sha256='e', rtl_sha256='r', seed=1, source=dict(core_rev='a', core_dirty=False))
+    c1 = dict(header, source=dict(header['source'], tools_key='k', adapter={'argv': ['run.sh']}))
+    assert same_run(header, c1)
+    assert not same_run(dict(header, source=dict(core_rev='b', core_dirty=False)), c1)
+    assert not same_run(dict(header, source={}), c1)
+    assert not same_run(dict(header, source=None), c1)
+    assert not same_run(header, dict(c1, rtl_sha256=None))
+    assert not same_run(dict(header, seed=2), c1)

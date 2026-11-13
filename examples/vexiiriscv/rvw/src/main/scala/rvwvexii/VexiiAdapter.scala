@@ -75,6 +75,21 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
     var probes = Option.empty[ProbeCollector]
+    val loadAddresses = mutable.LongMap.empty[(Long, Long)]
+    val storeAddresses = mutable.LongMap.empty[(Long, Long)]
+    val translatedAddresses = mutable.ArrayBuffer.empty[ujson.Value]
+    var walkCapture = Option.empty[WalkCapture]
+    val lastVirtual = mutable.LongMap.empty[Long]
+    def logicalAddress(load: Boolean, id: Long, physical: Long): Long = {
+      // The probe reports an AMO's store half with a stale store id. A store whose tag entry is
+      // absent or names another address binds to the latest hart command at its physical address
+      // (an AMO is one command for both halves).
+      val observed = (if (load) loadAddresses.get(id) else storeAddresses.get(id).filter(_._1 == physical))
+        .orElse(if (load) None else lastVirtual.get(physical).map(v => (physical, v)))
+        .getOrElse(throw new IllegalStateException(s"missing observed address for memory tag $id"))
+      require(observed._1 == physical, "memory tag does not match the observed physical address")
+      observed._2
+    }
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
@@ -90,6 +105,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         val ibusOpt = dut.host.get[FetchCachelessPlugin].map(_.logic.bus)
         // With an LSU L1, the cacheless bus is the LSU plugin's I/O bus (uncached regions only).
         val dbus = dut.host.get[LsuCachelessPlugin].map(_.logic.bus).getOrElse(dut.host[LsuPlugin].logic.bus)
+        walkCapture = tap.walk.map(w => new WalkCapture(xlen, w.va.getBitsWidth))
         if (dut.host[PrivilegedPlugin].p.withSupervisor) priv.int.s.external #= false
         priv.int.m.timer #= false
         priv.int.m.software #= false
@@ -124,6 +140,13 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           priv.int.m.external #= levels.testBit(11)
           if (levels != irqLevels) { events += ((cycle, () => writer.foreach(_.irq(cycle, levels)))); irqLevels = levels }
           if (tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt, tap.tval.toBigInt))
+          for (w <- tap.walk; capture <- walkCapture) {
+            if (w.start.toBoolean) capture.start(w.va.toBigInt, w.read.toBoolean, w.write.toBoolean,
+              w.execute.toBoolean, w.rootPpn.toBigInt)
+            if (w.pteRsp.toBoolean) capture.response(w.pteData.toBigInt, w.pteError.toBoolean)
+            if (w.pteCmd.toBoolean) capture.command(w.pteAddress.toBigInt)
+            if (w.done.toBoolean) capture.done(cycle, w.pageFault.toBoolean, w.accessFault.toBoolean, w.address.toBigInt)
+          }
 
           l1.tick(cycle)
           ibusOpt.foreach { ibus =>
@@ -134,6 +157,17 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           }
           if (dbus.cmd.valid.toBoolean && dbus.cmd.ready.toBoolean) {
             val cmd = dbus.cmd
+            for (va <- tap.lsuVirtualAddress if cmd.fromHart.toBoolean && !cmd.io.toBoolean) {
+              val id = cmd.uopId.toLong
+              val physical = cmd.address.toLong
+              val virtual = va.toBigInt.toLong // XLEN bits; toLong refuses 64-bit signals
+              loadAddresses(id & 15) = (physical, virtual)
+              storeAddresses(id) = (physical, virtual)
+              lastVirtual(physical) = virtual
+              if (physical != virtual) translatedAddresses += ujson.Obj(
+                "cycle" -> RvwJson.num(cycle), "uop_id" -> RvwJson.num(id),
+                "virtual" -> Hex(BigInt(virtual) & ((BigInt(1) << xlen) - 1)), "physical" -> Hex(BigInt(physical)))
+            }
             val addr = cmd.address.toLong & ~(dbytes - 1L)
             val ok = inRam(addr, dbytes)
             val atomic = dbus.p.withAmo && cmd.amoEnable.toBoolean
@@ -179,10 +213,13 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         backend = new C2Backend(xlen, () => ctl.cycle, () => (tap.privilege.toInt & 3),
           () => if (traps.nonEmpty) traps.dequeue() else throw new IllegalStateException("trap reported without trap-entry values"),
           r => {
-            val sampled = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(r.order.toString)) {
+            val faulted = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(r.order.toString)) {
               require(r.rd != 0, "fault target must write a GPR")
               r.copy(rdWdata = r.rdWdata ^ 1)
             } else r
+            // Walks that ended by this retirement's cycle go on it (C2 `mmu_walks`).
+            val walks = walkCapture.map(_.due(r.cycle)).getOrElse(Nil)
+            val sampled = if (walks.isEmpty) faulted else faulted.copy(extra = Seq("mmu_walks" -> ujson.Arr.from(walks)))
             events += ((r.cycle, () => writer.foreach(_.write(sampled))))
           },
           (c, cause, tval, intr) => events += ((c, () => writer.foreach(_.trap(c, cause, tval, intr)))),
@@ -193,7 +230,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
             }
-          })
+          }, if (tap.lsuVirtualAddress.nonEmpty) logicalAddress else (_, _, address) => address)
         val probe = new VexiiRiscvProbe(dut, konataLog, withRvls = false)
         probe.checkLiveness = false
         probe.trace = job.konata
@@ -237,7 +274,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
-        "commit_source" -> "VexiiRiscvProbe"), metrics)
+        "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
+        "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),
+        "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L))), metrics)
   }
 }
 

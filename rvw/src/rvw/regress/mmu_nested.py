@@ -105,7 +105,8 @@ def check_c2(path, scenario, identity, source=None):
     from rvw.cosim.trace import Trace
     trace = Trace(path)
     try:
-        if not identity.get('rtl_sha256') or any(k not in trace.header or k not in identity or trace.header[k] != identity[k] for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed')):
+        from .mmu_walk import same_run
+        if not same_run(trace.header, identity):
             return dict(status='inconclusive', reason='nested C2 identity differs from C1')
         records, ended = [], False
         for row in trace:

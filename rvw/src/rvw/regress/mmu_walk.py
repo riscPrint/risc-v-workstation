@@ -123,11 +123,22 @@ def validate_capture(record):
             raise ValueError('invalid PTE data')
 
 
+def same_run(header, c1):
+    """True when a C2 or observation header names the C1 run's core, config, ELF, RTL and seed,
+    and every one of its source fields equals C1's. `rvw regress run` adds runner fields
+    (adapter, captures, tools key) to C1 `source` after the adapter wrote its header."""
+    if not c1.get('rtl_sha256') or any(k not in header or k not in c1 or header[k] != c1[k]
+                                       for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'seed')):
+        return False
+    a, b = header.get('source'), c1.get('source')
+    return isinstance(a, dict) and isinstance(b, dict) and (a == b or bool(a) and all(k in b and b[k] == v for k, v in a.items()))
+
+
 def check_c2(path, accesses, identity=None):
     from rvw.cosim.trace import Trace
     trace = Trace(path)
     try:
-        if identity is not None and (not identity.get('rtl_sha256') or any(k not in trace.header or k not in identity or trace.header[k] != identity[k] for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))):
+        if identity is not None and not same_run(trace.header, identity):
             return dict(status='inconclusive', reason='C2 identity differs from C1')
         records, ended = [], False
         for row in trace:

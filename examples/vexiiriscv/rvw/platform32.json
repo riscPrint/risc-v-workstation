@@ -1,0 +1,36 @@
+{
+  "name": "vexiiriscv",
+  "xlen": 32,
+  "isa": "rv32ima_zicsr_zifencei",
+  "reference_isa": "rv32ima_zicsr_zifencei",
+  "reset_pc": "0x80000000",
+  "ram": [
+    {
+      "base": "0x80000000",
+      "size": "0x1000000"
+    }
+  ],
+  "mmio": [],
+  "pmp_regions": 8,
+  "aligned_mem": false,
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
+  "privilege_modes": "MSU",
+  "misaligned": {
+    "load": "trap",
+    "store": "trap",
+    "atomic": "trap",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "endianness": {
+    "instruction": "little",
+    "data": "little",
+    "page_table": "little",
+    "device": "little"
+  },
+  "pmp_granularity": 4
+}

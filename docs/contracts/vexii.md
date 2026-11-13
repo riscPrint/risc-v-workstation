@@ -60,3 +60,29 @@ the existing register arrays. Mixed-width and combined synchronous read/write
 ports are refused. This changes native RTL identity. Older snapshots cannot
 restore into the new layout. The caller still owns all bus response and input
 state and must restore at a stopped low clock boundary.
+
+## VexiiRiscv supervisor C2 observations
+
+The supervisor profiles write C2 `mem_addr` as the LSU virtual address that
+the adapter samples when the native bus accepts the request. A micro-op tag
+binds it to the probe's physical access. An AMO store half binds to the latest
+hart command at its physical address. C1 `details.translated_addresses` lists
+requests whose two addresses differ. C2 `tval` uses the core's CSR write
+expression (`expendPc` to XLEN). C2 `mmu_walks` records come from the MMU
+refill state machine: its start request, each PTE read on the walker port and
+its refill response, which includes the walker's permission check. They follow
+the ordered MMU walk observation contract in [mmu](mmu.md). C1 `details`
+counts `mmu_walks` and `mmu_walks_unattached`. RiscvSim `RvfiRecord.extra`
+appends such adapter-observed fields to one C2 line in order.
+
+## Run-level strict reference check (`rvw.regress-cosim/1`)
+
+`rvw regress cosim RUN_DIR --platform P` writes `schema`, `run`, `platform`,
+`model`, `allow_sync`, `counts`, `suites` (counts per suite directory) and `rows`. Each row
+has `suite`, `test`, `c1_status`, `cycles`, `instret` and `status`: `match`,
+`mismatch` (with the first `mismatch`), `fail`, `error` or `inconclusive`
+(with `reason`). `match` needs a passing C1 result and a complete
+comparison whose masks and synchronizations all have reasons allowed by
+`allow_sync` (`reset`: `csr_reset_unknown`; `irq`: `irq`). An empty
+`allow_sync` means strict mode. Match rows record `synchronized`. The exit
+code is 0 only when every row matches.
