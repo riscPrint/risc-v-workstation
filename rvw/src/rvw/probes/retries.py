@@ -31,8 +31,11 @@ def retry_statistics(stream):
                 sequence += 1
             if i in live and p.meta.get('stage') == 'Wb':
                 for cause, start in live[i]['pending']:
-                    spans[cause].append(cycle-start)
-                live[i]['pending'] = []
+                    if cause != 'memory_order_violation':
+                        spans[cause].append(cycle-start)
+                # A stale completion can follow detection before the tail flush.
+                live[i]['pending'] = [(cause, start) for cause, start in live[i]['pending']
+                                      if cause == 'memory_order_violation']
         elif p.kind == 'lsuretry':
             cause = p.meta['cause']
             counts[cause, 'attempts'] += 1
@@ -42,7 +45,7 @@ def retry_statistics(stream):
             else:
                 # A second rejected attempt ends the earlier attempt's wait span.
                 for previous, start in live[i]['pending']:
-                    counts[previous, 'rejected_again'] += 1
+                    counts[previous, 'rejected_again' if previous == cause else 'superseded'] += 1
                 live[i]['pending'] = [(cause, cycle)]
                 counts[cause, 'linked'] += 1
         elif p.kind == 'retire':

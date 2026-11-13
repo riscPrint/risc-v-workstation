@@ -40,6 +40,7 @@ class Config:
     replay_window: bool = False
     dependence_entries: int = 1024
     replay_penalty: int = 5
+    retry_costs: dict = field(default_factory=dict)
     forwarding_latency: int = 1
     frontend: dict = field(default_factory=dict)
     execution: dict = field(default_factory=dict)
@@ -107,6 +108,11 @@ class Config:
             raise ValueError("unsupported branch_prediction")
         if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
             raise ValueError("select static prediction or component prediction")
+        causes = {"memory_order_violation", "store_forward_miss", "cache_miss_retry", "tlb_miss"}
+        if not isinstance(self.retry_costs, dict) or set(self.retry_costs) - causes:
+            raise ValueError("retry_costs must map typed LSU causes to cycle costs")
+        if any(type(v) is not int or v < 0 for v in self.retry_costs.values()):
+            raise ValueError("retry costs must be nonnegative integer cycles")
         if type(self.replay_window) is not bool:
             raise ValueError("replay_window must be boolean")
         if type(self.cache_miss_replay) is not bool:
@@ -163,6 +169,8 @@ class Entry:
     wrong_parent: object = None
     replay_at: int | None = None
     cache_replayed: bool = False
+    retry_seen: set = field(default_factory=set)
+    retry_ready: int = 0
     prediction: int | None = None
     prediction_ticket: object = None
     prediction_delay: int = 0
@@ -311,10 +319,23 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             wrong_fetched.clear()
             wrong_parent = None
             squash_requested = False
-        # A missed load retains its queue line while the request is pending.
-        # At response, replay the load and its younger execution window.
+        # A typed cache retry stays in the local LSU. It must not wait for an IQ
+        # slot occupied by a younger branch that itself waits for this load.
+        local_retries = 0
         for trigger in list(rob):
             if trigger.replay_at is None or trigger.replay_at > cycle:
+                continue
+            if 'cache_miss_retry' in config.retry_costs:
+                if local_retries >= config.ports.get('load', config.issue_width):
+                    continue
+                if not execution.reserve('load', cycle):
+                    continue
+                trigger.replay_at = None
+                trigger.done = cycle + config.latencies['load'] + config.retry_costs['cache_miss_retry']
+                events['cache_miss_replays'] += 1
+                events['replayed_instructions'] += 1
+                events['issued'] += 1
+                local_retries += 1
                 continue
             trigger.replay_at = None
             victims = list(rob)[list(rob).index(trigger):]
@@ -376,9 +397,9 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         if unresolved_branch is not None and unresolved_branch.done is not None and unresolved_branch.done <= cycle:
             unresolved_branch = None
         issued, dependency_blocked = 0, False
-        used_ports = Counter()
+        used_ports = Counter(load=local_retries)
         for entry in list(waiting):
-            if entry not in waiting:
+            if entry not in waiting or cycle < entry.retry_ready:
                 continue
             if config.issue_order == "in_order" and entry is not waiting[0]:
                 break
@@ -440,6 +461,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                                 store.insn.address + store.insn.size >= entry.insn.address + entry.insn.size):
                             if any(p in draining or p.done > cycle for p in overlapping):
                                 events["partial_forward_blocked"] += 1
+                                if ('store_forward_miss' in config.retry_costs and
+                                        'store_forward_miss' not in entry.retry_seen):
+                                    entry.retry_seen.add('store_forward_miss')
+                                    entry.retry_ready = cycle + config.retry_costs['store_forward_miss']
+                                    events['store_forward_miss_retries'] += 1
                                 continue
                         else:
                             latency = config.forwarding_latency
@@ -448,10 +474,15 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     continue
             if kind in ("load", "store") and translation:
                 if entry.translation_ready is None:
+                    misses = translation.events['tlb_misses']
                     delay = translation.access(entry.insn.address, entry.insn.size, cycle)
                     if delay is None:
                         continue
-                    entry.translation_ready = cycle + delay
+                    extra = 0
+                    if translation.events['tlb_misses'] > misses and 'tlb_miss' in config.retry_costs:
+                        extra = config.retry_costs['tlb_miss']
+                        events['tlb_miss_retries'] += 1
+                    entry.translation_ready = cycle + delay + extra
                 if entry.translation_ready > cycle:
                     continue
             if not execution.reserve(kind, cycle):
@@ -519,6 +550,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 younger = entries[entries.index(entry)+1:]
                 violations = dependence.violations(entry.insn, younger)
                 if violations:
+                    if config.replay_window:
+                        # The recovery anchor is the oldest violating load, not
+                        # the store that discovers it. Older independent work survives.
+                        first = min(younger.index(load) for load in violations)
+                        younger = younger[first:]
                     squash_requested = True
                     events["memory_order_replays"] += 1
                     events["memory_order_violations"] += len(violations)
@@ -540,7 +576,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     order = {item: index for index, item in enumerate(rob)}
                     waiting.sort(key=order.__getitem__)
                     unresolved_branch = None
-                    blocked_until = max(blocked_until, cycle + config.replay_penalty)
+                    blocked_until = max(blocked_until, cycle + config.retry_costs.get(
+                        'memory_order_violation', config.replay_penalty))
             entry.done = cycle + latency
             if cache_replay_delay is not None:
                 entry.replay_at = cycle + cache_replay_delay

@@ -1,0 +1,120 @@
+{
+  "schema": "rvw.lsu-retry-statistics/1",
+  "status": "observed",
+  "causes": {
+    "cache_miss_retry": {
+      "counts": {
+        "attempts": 2,
+        "linked": 2,
+        "superseded": 1
+      },
+      "retry_to_completion_cycles": [
+        14
+      ]
+    },
+    "memory_order_violation": {
+      "counts": {
+        "attempts": 1,
+        "linked": 1,
+        "flushed": 1
+      },
+      "retry_to_completion_cycles": []
+    },
+    "store_forward_miss": {
+      "counts": {
+        "attempts": 2,
+        "linked": 2,
+        "flushed": 1
+      },
+      "retry_to_completion_cycles": [
+        9
+      ]
+    },
+    "tlb_miss": {
+      "counts": {
+        "attempts": 1,
+        "linked": 1
+      },
+      "retry_to_completion_cycles": [
+        9
+      ]
+    }
+  },
+  "findings": [],
+  "limits": [
+    "completion spans include service and queue waits; they are not isolated recovery costs",
+    "flushed, repeated and incomplete attempts do not supply a completion span"
+  ],
+  "observations": [
+    {
+      "cycle": 93,
+      "id": 4,
+      "cause": "cache_miss_retry",
+      "pc": "0x80000008",
+      "next_attempt_cycles": 14
+    },
+    {
+      "cycle": 97,
+      "id": 12,
+      "cause": "cache_miss_retry",
+      "pc": "0x80000028",
+      "next_attempt_cycles": 11
+    },
+    {
+      "cycle": 103,
+      "id": 15,
+      "cause": "store_forward_miss",
+      "pc": "0x80000034"
+    },
+    {
+      "cycle": 106,
+      "id": 12,
+      "cause": "memory_order_violation",
+      "pc": "0x80000028",
+      "flush_cycle": 112,
+      "restart_cycle": 113,
+      "recovery_cycles": 7
+    },
+    {
+      "cycle": 123,
+      "id": 25,
+      "cause": "store_forward_miss",
+      "pc": "0x80000034",
+      "next_attempt_cycles": 9
+    },
+    {
+      "cycle": 247,
+      "id": 53,
+      "cause": "tlb_miss",
+      "pc": "0x8000007c",
+      "next_attempt_cycles": 9
+    }
+  ],
+  "retry_costs": {
+    "memory_order_violation": 7,
+    "store_forward_miss": 0,
+    "cache_miss_retry": 0,
+    "tlb_miss": 0
+  },
+  "cost_evidence": {
+    "memory_order_violation": "median detection to first matching-PC rename after inclusive flush; base RTL only",
+    "local_causes": "zero added recovery is an assumption; service waits are modeled separately, not measured isolated costs"
+  },
+  "rtl": {
+    "status": "pass",
+    "cycles": 363,
+    "instret": 40,
+    "seed": 1
+  },
+  "spike": {
+    "status": "match",
+    "instructions": 40,
+    "trace_complete": true,
+    "synchronized": 0
+  },
+  "captures": {
+    "probe-events.jsonl": "b20075f61d4bac3b901b7e1c42d14940c6b2ed88f59e0343b2550f59c00b42fd",
+    "rvfi.jsonl": "6aaf9eb230ce3fe1c584ff43f09525781ea922b84bde1258cef325d0a9eea924",
+    "result.json": "d8b49c501eea5f6b5ada56496d92249016adbf504cc63138fbbf316bcc30e97c"
+  }
+}

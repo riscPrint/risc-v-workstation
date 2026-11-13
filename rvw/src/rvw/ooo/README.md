@@ -1426,3 +1426,22 @@ the configuration, engine hash, absolute errors and paired results.
 The final cross-stage and trust tables are in the
 [project resource study](../../../../examples/naxriscv/README.md#resource-timing-study).
 Exact probe-driven LSU replay remains open.
+
+## Typed retry cost experiment
+
+`retry_costs` gives separate nonnegative cycle counts for
+`memory_order_violation`, `store_forward_miss`, `cache_miss_retry` and
+`tlb_miss`. The model detects causes itself. It does not replay captured RTL
+events into a prediction. With `replay_window`, recovery starts at the oldest
+violating load. Independent work between the detecting store and that load
+survives. A declared cache cost selects a local load retry, with the existing
+`cache_miss_replay` switch. Translation and partial-forward costs apply to
+local waits. See [the contract](../../../../docs/contracts/c9-arch-models.md).
+
+A NaxRiscv directed base run now activates all four typed causes. Its
+memory-order detection-to-restart span is seven cycles. That span includes
+commit waiting and front-end restart. It is an effective cost, not an isolated
+LSU pipeline latency. Local added costs remain unmeasured. Their experimental
+zero values avoid counting component service waits twice. Exact replay is
+still unqualified. In particular, a long component response is not the same
+predicate as an explicit RTL cache retry response.

@@ -69,3 +69,34 @@ workers have at least 30 seconds. Server shutdown honors that job grace.
 MCP exposes arch_build, arch_run, arch_calibrate
 and arch_compare as cancellable jobs. See Arch/README.md for commands and
 limits. gem5 shows trends; RTL is the truth.
+
+## Typed retry costs in the trace timing model
+
+The optional `retry_costs` object maps `memory_order_violation`,
+`store_forward_miss`, `cache_miss_retry` and `tlb_miss` to nonnegative integer
+cycle counts. An omitted cause keeps the earlier policy. The record does not
+contain dynamic RTL events. Each run detects causes from its own schedule,
+addresses, component service and translation state.
+
+With `replay_window`, memory-order recovery starts at the oldest violating
+load. Older independent instructions survive. Its declared cost blocks
+readmission. A declared cache cost selects a local load retry after the
+component response. It does not invalidate independent younger work. The
+`cache_miss_replay` switch still controls activation. A long component
+response remains a miss proxy, not a proven RTL retry predicate.
+
+A partial forward miss sets one local retry interval from detection while
+it waits for older store completion. An own-model TLB miss adds its declared
+cost after the page walk. These two policies do not invalidate younger work.
+Their counters count modeled retry episodes, not each rejected RTL attempt.
+The compiled scheduler refuses nonempty costs and uses Python.
+
+Costs are project declarations. A zero cost is not a measured zero overhead.
+The NaxRiscv experiment measures one detection-to-restart span on its base
+configuration. Local additional costs remain unmeasured. This does not
+establish exact replay, causal cost isolation or cross-program accuracy.
+
+Local cache retries use a local LSU return path. They do not wait for an IQ
+slot. The declared load port limits simultaneous local returns, and shared
+execution ports remain occupied. This avoids a cycle where younger work
+fills the IQ while a dependent branch waits for the missed load.

@@ -135,3 +135,10 @@ latency. TLB miss means an explicit translation redo, not a page fault.
 Register-port conflicts and branch redirects are outside these four causes.
 A core with none of these mechanisms can declare probes with false valid.
 Zero activation does not establish exercised retry behavior.
+
+An LSU attempt can use stage `Ls` in the same ID namespace. The NaxRiscv tap
+samples it at the control result. Consecutive `Ls` records can measure a
+local attempt interval. A memory-order retry can precede stale completion
+records before its flush. The statistics reader excludes those completions
+from its retry-to-completion spans. Detection-to-restart measurements must
+follow the inclusive flush and check the restarted PC separately.
