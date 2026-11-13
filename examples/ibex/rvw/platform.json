@@ -1,0 +1,25 @@
+{
+  "name": "ibex",
+  "isa": "rv32imc_zicsr_zifencei",
+  "xlen": 32,
+  "reset_pc": "0x80000080",
+  "ram": [
+    {
+      "base": "0x80000000",
+      "size": "0x100000"
+    }
+  ],
+  "mmio": [],
+  "irq_inputs": [],
+  "privilege_modes": "MU",
+  "pmp_regions": 0,
+  "aligned_mem": false,
+  "misaligned": {
+    "load": "emulate",
+    "store": "emulate",
+    "atomic": "access_fault",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "scalar_split_ram": true
+}

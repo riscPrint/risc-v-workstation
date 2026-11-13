@@ -1,0 +1,49 @@
+[project]
+schema = "rvw.project/1"
+rvw_version = "0.1.0"
+hdl = "sv"
+root = "."
+
+[core]
+name = "ibex"
+adapter = "./rvw/run.sh"
+configs = ["default"]
+default_config = "default"
+source_repo = "../.."
+source_env = "IBEX_PROJECT_SOURCE"
+lock = "ibex-ibex"
+identity = true
+identity_capture = true
+input_complete = true
+jobs = 1
+cache_paths = ["rvw", "${IBEX_WORK}/hdl.json", "${IBEX_WORK}/files", "${RVW_HOME}/rvw/src/rvw/init/hdl_identity.py", "${RVW_HOME}/RiscvSim/scripts/native-identity.py"]
+input_tools = ["git", "verilator", "make", "riscv64-unknown-elf-nm"]
+input_verilator_toolchain = true
+input_env = ["IBEX_SOURCE", "IBEX_WORK", "PATH", "RVW_HOME"]
+
+[suites.isa]
+dir = "${IBEX_WORK}/isa"
+include = ['^rv32u[imc]-p-']
+max_cycles = 200000
+timeout_s = 120
+mem_latency = 0
+
+[suites.smoke]
+dir = "${IBEX_WORK}/isa"
+include = ["^rv32ui-p-add$"]
+max_cycles = 200000
+timeout_s = 120
+mem_latency = 0
+
+[tiers.quick]
+runs = [{suite = "smoke"}]
+
+[tiers.full]
+runs = [{suite = "isa"}]
+
+[cosim]
+platform = "rvw/platform.json"
+
+[query]
+build = ["./rvw/build-db.sh"]
+db = "${IBEX_WORK}/design.db"
