@@ -136,3 +136,14 @@ clear/set. The delta is in timer ticks. C1 execution bounds the wait. It makes
 no minimum sleep or physical clock-gating claim. Builds include
 `functional-groups.json` for C2 observation coverage. Observation hits do not
 grant the architectural pass groups from `privilege check`.
+
+
+## CFI recovery project data
+
+Privilege campaign kind `landing-recovery` selects the Zicfilp fetch-fault
+recovery matrix. It requires RV64 Zicfilp and `landing.pmp_entries >= 8`.
+A C-capable ISA also selects two-byte-aligned target cases. Project data uses
+the existing `rvw.privilege/1` schema. Generated artifacts and C1 qualification
+use the common privilege campaign contract. Model self-checks do not earn DUT
+coverage. The shadow profile names its selected architectural register in each
+scenario ID and functional bin.

@@ -70,12 +70,14 @@ def programs(config):
  bne t0, t1, fail'''
                 rows.append(row(f'envcfg-{mode.lower()}-{enabled}', access(mode, f' li a1, {value}\n', operation, mode == 'U'), 'priv/machine.html'))
     elif kind == 'landing':
-        for mode in ('S', 'U'):
+        for mode in ('M', 'S', 'U'):
             for enabled in (0, 1):
                 for valid in (0, 1):
                     setup = f''' li t0, {enabled << 2}
  csrw 0x30a, t0
  csrw 0x10a, t0
+ li t0, {enabled << 10}
+ csrw 0x747, t0
 '''
                     operation = f'''la a0, fault_site
  jr a0
@@ -107,9 +109,9 @@ fault_site:
         from .timer_pending import program as pending_program
         rows.append(row('sstc-virtual-pending',pending_program(64,True),'priv/sstc.html'))
     if kind == 'landing':
-        for mode in ('S','U'):
+        for mode in ('M','S','U'):
             for label in (0x12345,0x12346):
-                setup=' li t0, 4\n csrw 0x30a, t0\n csrw 0x10a, t0\n li t2, 0x12345000\n'
+                setup=' li t0, 4\n csrw 0x30a, t0\n csrw 0x10a, t0\n li t0, 1024\n csrw 0x747, t0\n li t2, 0x12345000\n'
                 operation=f'la a0, fault_site\n jr a0\n .balign 4\nfault_site:\n .word {(label<<12)|0x17}'
                 rows.append(row(f'landing-label-{mode.lower()}-{label:x}',
                     access(mode,setup,operation,label!=0x12345,cause=18,tval=2),'priv/priv-cfi.html'))

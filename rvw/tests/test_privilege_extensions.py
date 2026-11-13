@@ -3,7 +3,7 @@ from rvw.privilege.extensions import programs
 
 
 @pytest.mark.parametrize('kind,isa,count', [('sstc','rv64im_zicsr_zicntr_sstc',13),
-    ('stateen','rv64im_zicsr_smstateen',6), ('landing','rv64im_zicsr_zicfilp',12)])
+    ('stateen','rv64im_zicsr_smstateen',6), ('landing','rv64im_zicsr_zicfilp',18)])
 def test_matrices(kind, isa, count):
     rows = programs(dict(kind=kind, isa=isa))
     assert len(rows) == count

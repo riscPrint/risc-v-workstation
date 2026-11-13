@@ -274,8 +274,8 @@ All these campaigns pin the 20260120 privileged specification.
 
 Examples include `sstc-h.json` and `envcfg-h.json` for H profiles. These
 profiles use RV64. The separate RV32 timer profiles are described below. All
-extension-state gates, complete virtualization transitions, interrupted
-landing-pad sequences and guest shadow stacks remain open. No C1 or DUT result is inferred from a native Spike pass.
+extension-state gates, complete virtualization transitions, asynchronous
+landing-pad interruption and guest shadow stacks remain open. No C1 or DUT result is inferred from a native Spike pass.
 
 ## Simultaneous disabled-feature combinations
 
@@ -372,3 +372,29 @@ project timing bound measured from phase_start. Wrong state at the deadline
 fails. A late-only witness stays inconclusive. Without that field, the report
 makes no latency claim. The report binds the capture hash and still requires
 the normal complete strict architectural reference match.
+
+
+## CFI trap recovery and shadow stack boundaries
+
+The ordinary `landing` profile covers M/S/U and `mseccfg.MLPE` as well as
+lower-mode LPE controls. `kind = "landing-recovery"` first blocks fetch at an
+indirect target with PMP. It checks the instruction access fault, saved MPELP
+and exact target PC. The handler repairs PMP, restores x7 and returns. The
+second trap checks the valid, missing or mismatching LPAD outcome. Half the
+cases disable the target mode's LPE before MRET and check that ELP clears.
+With C in the ISA, a two-byte-aligned LPAD also tests the four-byte requirement.
+The example declares eight PMP entries through `landing.pmp_entries`.
+
+These are synchronous fetch-fault recovery tests. They do not establish
+asynchronous interrupt, Debug Mode or guest ELP preservation.
+
+The `shadow` profile crosses S/U with x1 and x5. Its 48 programs cover stack
+round trips, mismatch, read-only page repair, ordinary pages, Bare mode,
+normal stores and loads, forbidden instruction fetch, misaligned pointers,
+and guard pages at each end. Fault cases check the pointer stays unchanged. Misaligned-pointer cases use
+CSR readback. They accept legal WARL alignment and check normal execution, or
+require an access fault if the CSR retains a misaligned pointer.
+Read-only recovery saves x5 before the handler uses it and restores it before
+retry. Ordinary loads check the value stored by SSPUSH. Guest shadow stacks,
+SSAMOSWAP and compressed shadow instructions remain open. Native Spike
+self-checks do not establish DUT coverage.
