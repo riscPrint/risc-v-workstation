@@ -45,5 +45,26 @@
       "active_findings": "number",
       "status": "string"
     }
+  },
+  "csim_study": {
+    "schema": "rvw.csim-study-report/1",
+    "fields": {
+      "results": "array",
+      "aggregate": "object",
+      "rtl_comparison": "string"
+    }
+  },
+  "run": {
+    "schema": "rvw.run/1",
+    "fields": {
+      "status": "string",
+      "artifacts": "object"
+    }
+  },
+  "suite": {
+    "schema": "rvw.results/1",
+    "fields": {
+      "tests": "array"
+    }
   }
 }
