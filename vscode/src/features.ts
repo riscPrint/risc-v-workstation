@@ -1,3 +1,4 @@
+import project from '../features/project/src/feature';
 import navigation from '../features/navigation/src/feature';
 import lsp from '../features/lsp/src/feature';
 import type { Feature } from './api';
@@ -13,6 +14,7 @@ import lint from '../features/lint/src/feature';
 // Every feature under features/ must be listed here. `npm run manifest:check` fails otherwise.
 export const features: Feature[] = [
   navigation,
+  project,
   spinalblocks,
   lsp,
   regress,
