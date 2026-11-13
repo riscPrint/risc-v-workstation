@@ -244,3 +244,9 @@ Do not join a plain database and an instrumented wave without checking paths.
 
 These measurements establish extraction only. Dynamic attribution, typed wave
 rendering and seeded bug hits need separate native wave checks.
+
+## External debug
+
+Standard external debug was not added in this campaign. The core lacks the
+precise halt and abstract access path needed by a Debug Module. See the
+[static integration decision](DEBUG.md). No native debug checks were run.
