@@ -1,0 +1,3 @@
+upf_version 2.1
+create_power_domain PD -elements {core}
+set_retention RET -domain PD -retention_power_net VRET -retention_ground_net VSS -save_signal {save high} -restore_signal {restore high}

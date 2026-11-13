@@ -3246,7 +3246,7 @@ Starts a background job: yes.
 
 ### `formal_upf`
 
-Import literal UPF domain/isolation declarations and generate sampled checks. No verification run.
+Import literal UPF isolation, retention and supply tables. No verification run.
 
 Arguments: `source` (required), `bindings` (required), `out` (required).
 

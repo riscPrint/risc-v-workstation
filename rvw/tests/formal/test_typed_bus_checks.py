@@ -37,8 +37,10 @@ def test_native_typed_protocol(tmp_path, kind, bad):
         if bad and key == 'aw.payload.burst': value=3
         if bad and key == 'b.payload.resp': value=1
         if bad and key == 'd.payload.opcode': value=7
+        if kind == 'tilelink' and key.endswith('ready'): value=0
+        if kind == 'tilelink' and key.endswith('payload.data'): value='changing'
         wires.append(f'wire [{row[3]-1}:0] {row[0]}={value};')
-    source+='module fixture(input clk); reg reset=1; always @(posedge clk) reset<=0;\n'
+    source+='module fixture(input clk); reg reset=1; always @(posedge clk) reset<=0; reg [7:0] changing=0; always @(posedge clk) changing<=changing+1;\n'
     source+='\n'.join(wires)+'\nmonitor dut(.*); endmodule\n'
     (tmp_path/'design.sv').write_text(source)
     (tmp_path/'proof.sby').write_text('''[options]

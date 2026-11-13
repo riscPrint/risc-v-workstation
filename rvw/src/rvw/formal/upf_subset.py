@@ -9,7 +9,7 @@ RTL = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 
 
 def parse(source):
-    domains, strategies = {}, {}
+    domains, strategies, retention, psts = {}, {}, {}, {}
     version = None
     source = source.replace('\\\n',' ')
     for number,line in enumerate(source.splitlines(),1):
@@ -35,6 +35,32 @@ def parse(source):
             if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_./]*|\.',p) for p in opts['-elements'].split()):
                 raise ValueError('unsupported domain element pattern')
             domains[name]=dict(elements=opts['-elements'].split())
+        elif command=='create_pst':
+            if set(opts)!={'-supplies'} or name in psts:
+                raise ValueError('power-state table requires unique name and supplies')
+            supplies=opts['-supplies'].split()
+            if not supplies or len(supplies)!=len(set(supplies)) or any(not RTL.fullmatch(v) for v in supplies):
+                raise ValueError('power-state supplies must be unique literal paths')
+            psts[name]=dict(supplies=supplies,states={})
+        elif command=='add_pst_state':
+            if set(opts)!={'-pst','-state'} or opts['-pst'] not in psts:
+                raise ValueError('power state requires a declared table and literal tuple')
+            table=psts[opts['-pst']]
+            values=opts['-state'].split()
+            if name in table['states'] or len(values)!=len(table['supplies']) or any(not IDENT.fullmatch(v) for v in values):
+                raise ValueError('power-state tuple must name one state per supply')
+            table['states'][name]=values
+        elif command=='set_retention':
+            required={'-domain','-retention_power_net','-retention_ground_net','-save_signal','-restore_signal'}
+            if set(opts)!=required or name in retention or opts['-domain'] not in domains:
+                raise ValueError('retention requires unique strategy, domain, supplies and save/restore controls')
+            for key in ('-retention_power_net','-retention_ground_net'):
+                if not RTL.fullmatch(opts[key]): raise ValueError('retention supplies must be literal paths')
+            for key in ('-save_signal','-restore_signal'):
+                parts=opts[key].split()
+                if len(parts)!=2 or not RTL.fullmatch(parts[0]) or parts[1] not in ('high','low'):
+                    raise ValueError('sampled retention supports literal high/low controls only')
+            retention[name]=opts
         elif command=='set_isolation':
             required={'-domain','-applies_to','-clamp_value','-isolation_signal','-isolation_sense'}
             if set(opts)!=required or name in strategies or opts['-domain'] not in domains:
@@ -50,7 +76,7 @@ def parse(source):
             raise ValueError(f'unsupported UPF command {command}')
     if not domains:
         raise ValueError('declare at least one power domain')
-    return dict(schema='rvw.upf-subset/1',upf_version=version,domains=domains,isolation=strategies)
+    return dict(schema='rvw.upf-subset/1',upf_version=version,domains=domains,isolation=strategies,retention=retention,psts=psts)
 
 
 def render(width, clamp, sense):
@@ -77,7 +103,7 @@ def generate(source, bindings, out):
     raw=Path(source).read_bytes()
     obj=parse(raw.decode())
     binding=json.loads(Path(bindings).read_text())
-    if set(binding)!={'schema','top','event_model','domains'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
+    if set(binding)-{'schema','top','event_model','domains','retention','psts'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
         raise ValueError('require rvw.upf-bindings/1 and always_on_sampled event model')
     if not IDENT.fullmatch(binding['top']): raise ValueError('invalid bind top')
     if set(binding['domains'])!=set(obj['domains']): raise ValueError('bind every declared power domain')
@@ -94,14 +120,67 @@ def generate(source, bindings, out):
         ports={k:v for k,v in b.items() if k!='width'}
         ports['isolate']=strategy['-isolation_signal']
         binds.append('bind '+binding['top']+' '+module+' '+module+'_instance('+', '.join('.'+k+'('+v+')' for k,v in ports.items())+');')
+    rb=binding.get('retention',{})
+    if set(rb)!=set(obj['retention']): raise ValueError('bind every retention strategy exactly')
+    for name,strategy in obj['retention'].items():
+        from .power_checks import render as power_render
+        b=rb[name]
+        if set(b)!={'width','clk','reset','power_good','functional_use','state'}:
+            raise ValueError('retention requires width, sampling clock/reset, power, functional use and state')
+        width=b['width']
+        if type(width) is not int or not 1<=width<=64 or any(not isinstance(v,str) or not RTL.fullmatch(v) for k,v in b.items() if k!='width'):
+            raise ValueError('invalid retention binding')
+        module='rvw_upf_retention_'+name
+        monitors.append(power_render('retention',width,1).replace('module rvw_retention(', 'module '+module+'('))
+        ports={k:v for k,v in b.items() if k!='width'}
+        for key,port in [('-save_signal','save'),('-restore_signal','restore')]:
+            net,sense=strategy[key].split()
+            ports[port]=net if sense=='high' else '~'+net
+        binds.append('bind '+binding['top']+' '+module+' '+module+'_instance('+', '.join('.'+k+'('+v+')' for k,v in ports.items())+');')
+    pb=binding.get('psts',{})
+    if set(pb)!=set(obj['psts']): raise ValueError('bind every power-state table exactly')
+    for name,table in obj['psts'].items():
+        b=pb[name]
+        if set(b)!={'clk','reset','supplies'} or set(b['supplies'])!=set(table['supplies']):
+            raise ValueError('bind table clock/reset and every supply')
+        if not table['states']: raise ValueError('power-state table has no legal states')
+        ports={k:b[k] for k in ('clk','reset')}
+        declarations=[];codes=[]
+        for i,supply in enumerate(table['supplies']):
+            mapping=b['supplies'][supply]
+            if set(mapping)!={'signal','states'} or not mapping['states']:
+                raise ValueError('supply requires signal and explicit state codes')
+            values=list(mapping['states'].values())
+            if any(type(v) is not int or not 0<=v<65536 for v in values) or len(set(values))!=len(values):
+                raise ValueError('supply state codes must be unique unsigned 16-bit integers')
+            width=max(1,max(values).bit_length())
+            declarations.append(f'input [{width-1}:0] supply_{i}')
+            ports[f'supply_{i}']=mapping['signal']
+            codes.append((width,mapping['states']))
+        if any(not isinstance(v,str) or not RTL.fullmatch(v) for v in ports.values()):
+            raise ValueError('invalid table signal path')
+        tuples=[]
+        for values in table['states'].values():
+            terms=[]
+            for i,state in enumerate(values):
+                width,mapping=codes[i]
+                if state not in mapping: raise ValueError('missing supply state code '+state)
+                terms.append(f"supply_{i} == {width}'d{mapping[state]}")
+            tuples.append('('+' && '.join(terms)+')')
+        module='rvw_upf_pst_'+name
+        monitors.append('module '+module+'(input clk, reset, '+', '.join(declarations)+');\n'+
+                        'always @(posedge clk) if(!reset) assert('+' || '.join(tuples)+');\nendmodule\n')
+        binds.append('bind '+binding['top']+' '+module+' '+module+'_instance('+', '.join('.'+k+'('+v+')' for k,v in ports.items())+');')
     report=dict(schema='rvw.upf-generation/1',status='generated' if binds else 'no_checks',
                 source_sha256=hashlib.sha256(raw).hexdigest(),
                 bindings_sha256=hashlib.sha256(Path(bindings).read_bytes()).hexdigest(),intent=obj,
                 event_model='always_on_sampled',
-                unmonitored_domains=sorted(set(obj['domains'])-{s['-domain'] for s in obj['isolation'].values()}),
-                limits=['Only create_power_domain and explicit output set_isolation are supported.',
+                unmonitored_domains=sorted(set(obj['domains'])-{s['-domain'] for s in [*obj['isolation'].values(),*obj['retention'].values()]}),
+                limits=['Only literal domains, output isolation and explicit sampled retention are supported.',
                         'Bindings declare observed outputs and supply availability; completeness is not established.',
-                        'Retention, supply-state tables, clock gating and Tcl evaluation are unsupported.',
+                        'Retention supplies are named, not modeled; save/restore are sampled levels while power is on.',
+                        'Supply tables check sampled declared state codes; no voltage or transition semantics are inferred.',
+                        'Clock gating import, edge controls and Tcl evaluation are unsupported.',
                         'No compilation, simulation, proof or physical power analysis was run.'])
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     (out/'monitors.sv').write_text('\n'.join(monitors)); (out/'binds.sv').write_text('\n'.join(binds)+'\n')

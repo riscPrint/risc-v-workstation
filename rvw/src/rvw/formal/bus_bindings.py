@@ -89,7 +89,7 @@ def generate(db, out):
                     source, channel_ports = render_typed(kind, signals, f'rvw_bus_{bid}')
                     ports.update(channel_ports)
                     width = sum(s[3] for s in signals.values())
-                    row['coverage'] = 'channel_safety'
+                    row['coverage'] = 'opcode_safety' if kind == 'tilelink' else 'channel_safety'
                     row['limitations'] = ['No burst accounting, ID ordering, exclusive-operation or coherence scoreboard.']
                 elif kind == 'axis':
                     width, data = payload([k for k in signals if k.startswith('payload.')])

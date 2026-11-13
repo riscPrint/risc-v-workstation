@@ -83,7 +83,7 @@ def register(sub) -> None:
     events.set_defaults(func=device_events.run)
 
     from . import upf_subset
-    upf = s.add_parser("upf", help="import a literal UPF domain/isolation subset and generate sampled checks")
+    upf = s.add_parser("upf", help="import literal UPF isolation, retention and supply tables")
     upf.add_argument("--source", required=True)
     upf.add_argument("--bindings", required=True)
     upf.add_argument("--out", required=True)
