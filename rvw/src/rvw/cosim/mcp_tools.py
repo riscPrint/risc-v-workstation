@@ -33,10 +33,14 @@ def mcp_tools():
                          "sail_config": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0, "default": 120}},
                         ["elf", "trace"]), handler("rvw.cosim.cli", "check"), long=True,
-                 annotations={"readOnlyHint": True}),
+                 annotations={"readOnlyHint": True},
+        side_effects='long-running; reads trace and ELF; launches selected Spike or Sail reference', native_tools=('Spike', 'Sail'),
+        ),
         ToolSpec("cosim_generate", "Generate a C2 trace from Spike for an ELF, for reference fixtures or later comparison. "
                  "Writes out (refused if out is the ELF or an existing file that is not a C2 trace) and returns "
                  "reproduction metadata; runs as a cancellable job.",
                  schema({**COMMON, "out": S, "max_instructions": {"type": "integer", "minimum": 1, "default": 1000000}},
-                        ["elf", "out"]), handler("rvw.cosim.cli", "generate"), long=True),
+                        ["elf", "out"]), handler("rvw.cosim.cli", "generate"), long=True,
+        side_effects='long-running; launches Spike; writes reference trace under out', native_tools=('Spike',),
+        ),
     ]

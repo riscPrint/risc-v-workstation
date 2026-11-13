@@ -110,4 +110,6 @@ def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     from rvw.mcp.worker import handler
     return [ToolSpec('cosim_qemu_check', 'Compare bounded single-hart C2 boot traces with QEMU single-step CPU logs. Checks PC and integer observations only. Async events remain inconclusive.',
-        schema(dict(trace={'type': 'string'}, log={'type': 'string'}, max_prefix={'type': 'integer', 'minimum': 0, 'default': 4096}), ['trace', 'log']), handler('rvw.cosim.qemu'), long=True)]
+        schema(dict(trace={'type': 'string'}, log={'type': 'string'}, max_prefix={'type': 'integer', 'minimum': 0, 'default': 4096}), ['trace', 'log']), handler('rvw.cosim.qemu'), long=True,
+        side_effects='long-running; reads saved C2 and QEMU logs', native_tools=(),
+        )]

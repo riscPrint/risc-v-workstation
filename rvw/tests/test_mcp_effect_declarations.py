@@ -91,3 +91,12 @@ def test_soc_uvm_and_snapshot_declarations(registry):
     assert registry.tools['uvm_build'].native_tools == ('Verilator',)
     assert registry.tools['sim_profile'].side_effects == 'read-only'
     assert 'adapter' in registry.tools['sim_resume'].side_effects
+
+
+def test_cosim_declarations(registry):
+    tools = [t for n, t in registry.tools.items() if n.startswith('cosim_')]
+    assert tools and all(t.side_effects and t.native_tools is not None for t in tools)
+    assert registry.tools['cosim_doctor'].side_effects == 'read-only'
+    assert registry.tools['cosim_qemu_check'].native_tools == ()
+    assert registry.tools['cosim_check'].native_tools == ('Spike', 'Sail')
+    assert 'git' in registry.tools['cosim_vector_source'].side_effects
