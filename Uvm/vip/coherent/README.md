@@ -24,3 +24,11 @@ with the DUT between campaigns; mid-transaction reset is not qualified.
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_coherent.py -q`.
 Lint the four SV files with pinned UVM. UVM runtime builds, coherent RTL
 bridges and licensed CHI qualification were not run for this change.
+
+## Seeded RTL endpoint result
+
+The [semantic endpoint campaign](../rtl/CONTRACT_RESULTS.md) ran this Python
+agent against good and corrupt RTL on 2026-11-13. The opt-in native suite
+returned 4 passed and 0 skipped across its four profiles. Read that matrix
+for the exact scope and excluded features. This does not qualify an external
+native protocol model, a physical link or the SV UVM agent.

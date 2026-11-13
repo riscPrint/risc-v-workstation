@@ -35,3 +35,17 @@ rvw/.venv/bin/python Uvm/vip/axis/cocotb_smoke.py --out /tmp/axis-new
 
 These use Verilator and three seeds with good and bad RTL. They also
 compile no UVM package. See each protocol README for its fixture scope.
+
+## Semantic endpoint adapters
+
+See [the measured semantic endpoint matrix](CONTRACT_RESULTS.md) for PCIe,
+Ethernet, the DRAM contract and the reduced coherent agent. These use the
+existing Python request APIs through cocotb with bounded RTL endpoints.
+They do not replace native vendor models or qualify physical links.
+
+```sh
+rvw/.venv/bin/python Uvm/vip/rtl/contracts_smoke.py --protocol pcie --out /tmp/pcie-new
+```
+
+Select `ethernet`, `dram` or `coherent` for the other profiles. Each build
+runs good and corrupt RTL at seed 17 and keeps the XML and source hashes.

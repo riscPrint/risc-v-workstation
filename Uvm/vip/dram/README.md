@@ -23,3 +23,11 @@ The Python tests use explicit mock callbacks. They qualify the contract,
 not a native DRAM model. SV lint checks integration syntax only. No native
 DRAM model, controller campaign or UVM runtime build was run. Board signal
 integrity, calibration, electrical compliance and memory signoff are absent.
+
+## Seeded RTL endpoint result
+
+The [semantic endpoint campaign](../rtl/CONTRACT_RESULTS.md) ran this Python
+agent against good and corrupt RTL on 2026-11-13. The opt-in native suite
+returned 4 passed and 0 skipped across its four profiles. Read that matrix
+for the exact scope and excluded features. This does not qualify an external
+native protocol model, a physical link or the SV UVM agent.

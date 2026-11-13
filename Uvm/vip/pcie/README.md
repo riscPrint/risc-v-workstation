@@ -22,3 +22,11 @@ Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_pcie.py -q`.
 Tests use mock model callbacks only. SV lint checks integration syntax.
 Native PCIe models, endpoint RTL, UVM runtime builds and PHY tests were
 not run. Issue #215 remains open for native model qualification.
+
+## Seeded RTL endpoint result
+
+The [semantic endpoint campaign](../rtl/CONTRACT_RESULTS.md) ran this Python
+agent against good and corrupt RTL on 2026-11-13. The opt-in native suite
+returned 4 passed and 0 skipped across its four profiles. Read that matrix
+for the exact scope and excluded features. This does not qualify an external
+native protocol model, a physical link or the SV UVM agent.
