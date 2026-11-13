@@ -17,3 +17,11 @@ independent-reference and RTL C2 paths, and bind every declared microarchitectur
 channel in `observations`. Equal public context and architectural contract traces
 are prerequisites for a leakage comparison. A minimization trial must rerun both
 cases. Unavailable or mismatched evidence cannot earn a clean result.
+
+## Unit latency
+
+Unit manifests bind scalar public clock, active-high synchronous reset, start
+and done. Operand pairs bind all data inputs and vary only declared operands.
+Samples count rising edges from a one-cycle start pulse to first done, after two
+reset cycles. Missing completion is inconclusive. Operation names are declarations,
+not independent instruction decoding evidence.

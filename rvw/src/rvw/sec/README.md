@@ -116,3 +116,31 @@ executed self-checking core suite. These templates do not demonstrate that a cor
 speculates, triggers a gadget, or prevents leakage. Native core execution and
 portable training/flush adapters remain open. RISC-V has no universal predictor
 training or cache-flush interface for all cores.
+
+## Operand-independent latency
+
+`rvw sec latency --manifest latency.json --out out/latency` measures a synchronous
+unit with Verilator. MCP tool: `sec_latency`. Use an exported crypto unit or a
+project wrapper that decodes a declared Zkt instruction. The manifest names
+`rtl`, `top`, `clock`, active-high synchronous `reset`, `start`, `done`, `operands`,
+`max_cycles` and `pairs`.
+
+```
+{"rtl":"unit.sv","top":"Unit","clock":"clk","reset":"reset",
+ "start":"start","done":"done","operands":["a","b"],"max_cycles":100,
+ "declaration":"Zkt project wrapper",
+ "pairs":[{"operation":"declared op","a":{"a":0,"b":1,"opcode":3},
+                                      "b":{"a":255,"b":1,"opcode":3}}]}
+```
+
+Each operand pair binds every data input. Only declared operands can differ.
+Public operation selectors must match. Each case resets the unit for two cycles,
+pulses start for one cycle and samples the first done after each rising edge.
+Different completion cycles are a violation. Missing completion is inconclusive.
+The report retains every measured latency, including unresolved operands.
+
+This tests cold, reset unit latency for supplied operands. It does not check
+functional crypto results, instruction decode, all possible operand values,
+backpressure, warm pipelines or physical leakage. Declaring a Zkt operation is
+not evidence that a wrapper implements it. Whole-core retirement timing can be
+checked through `sec contract` with a project timing observation channel.

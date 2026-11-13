@@ -20,6 +20,8 @@ def publish(out, technique, findings, complete, **details):
     (out/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     test = dict(id=technique, status={'violation':'fail', 'no_leak_observed':'pass',
                                     'inconclusive':'error'}[status], message=status)
+    if status != 'no_leak_observed':
+        test['signature'] = 'sec:'+technique+':'+status
     if status == 'inconclusive':
         test['inconclusive'] = 'missing or incomplete security evidence'
     suite = dict(schema='rvw.results/1', run_id=out.name, suite='sec-'+technique,
