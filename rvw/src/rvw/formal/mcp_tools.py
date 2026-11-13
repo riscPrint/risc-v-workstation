@@ -60,25 +60,37 @@ def _argv(command, args):
     return argv
 
 
+def _command_error(job, code, context):
+    """Keep the CLI's structured input error instead of replacing it with a traceback."""
+    for line in reversed(job.tail(30)):
+        try:
+            data = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get('error'):
+            return {**data, 'status': 'error', 'exit_code': code}
+    raise ToolError(context, {'exit_code': code, 'log_tail': job.tail(30)})
+
+
 def _runner(command):
     def run(job, **args):
-        code = job.run(_argv(command, args))
+        code = job.run([*_argv(command, args), "--json"])
         result = Path(args["out"]) / "result.json"
 
         def error(why):
             return ToolError(f"rvw formal {command}: {why} (exit {code})",
                              {"exit_code": code, "log_tail": job.tail(30)})
         if code not in ((0, 1, 3) if command == "datapath" else (0, 1)):
-            raise error("failed")
+            return _command_error(job, code, f"rvw formal {command}: failed")
         if not result.is_file():
-            raise error("wrote no result")
+            return _command_error(job, code, f"rvw formal {command}: wrote no result")
         try:
             data = json.loads(result.read_text())
         except (OSError, ValueError) as e:
             raise error(f"unreadable result.json: {e}")
         if not isinstance(data, dict):
             raise error("result.json is not an object")
-        if (code == 0) != (data.get("status") == {"datapath":"proved", "equiv":"equivalent"}.get(command,"pass")):
+        if (code == 0) != (data.get("status") == {"datapath":"proved", "equiv":"equivalent", "sva-inspect":"parsed"}.get(command,"pass")):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
     return run
@@ -172,16 +184,17 @@ def _riscv(job, **args):
 
 def _liveness(job, **args):
     argv = [sys.executable, '-m', 'rvw', 'formal', 'liveness', args['source'],
-            '--top', args['top'], '--out', args['out']]
+            '--top', args['top'], '--out', args['out'], '--json']
     if args.get('run'):
         argv.append('--run')
     for key in ('timeout', 'backend', 'reset', 'engine', 'mode', 'depth'):
         if key in args:
             argv += ['--' + key, str(args[key])]
     code = job.run(argv)
-    if code not in (0, 1):
-        raise ToolError('liveness lowering failed', {'exit_code': code, 'log_tail': job.tail(20)})
-    return json.loads((Path(args['out']) / 'result.json').read_text())
+    result = Path(args['out']) / 'result.json'
+    if code not in (0, 1) or not result.is_file():
+        return _command_error(job, code, 'liveness lowering wrote no result; supply supported clocked SVA')
+    return json.loads(result.read_text())
 
 
 def _sail_bitmanip(job, **args):

@@ -72,6 +72,8 @@ def plan(data, backend):
                 deps[name].add(producers[item])
         if deps[name] - actions.keys() or name in deps[name]:
             raise ValueError('invalid action dependency: ' + name)
+    if backend not in data.get('backends', {}):
+        raise ValueError('unknown backend ' + repr(backend) + '; choose: ' + ', '.join(sorted(data.get('backends', {}))))
     binding = data['backends'][backend]
     if not isinstance(binding.get('unit'), str) or not binding['unit']:
         raise ValueError('backend needs a timing unit')
@@ -202,12 +204,13 @@ def mcp_handler(action):
     def handler(job, **args):
         import sys
         from rvw.mcp.spec import ToolError
-        argv = [sys.executable, '-m', 'rvw', 'formal', 'scenario', action, args['source'], '--out', args['out']]
+        argv = [sys.executable, '-m', 'rvw', 'formal', 'scenario', action, args['source'], '--out', args['out'], '--json']
         for name in ('backend','observed'):
             if name in args:
                 argv += ['--' + name, args[name]]
         code = job.run(argv)
         if code not in (0,1) or not Path(args['out']).exists():
-            raise ToolError('scenario operation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+            from .mcp_tools import _command_error
+            return _command_error(job, code, 'scenario operation failed; supply a declared backend and an output file with an existing parent')
         return json.loads(Path(args['out']).read_text())
     return handler
