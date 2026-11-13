@@ -144,3 +144,12 @@ def test_dpi_passes_nondefault_pmp_granularity(capture, tmp_path):
     top = (tmp_path/'cpu_top.svh').read_text()
     assert 'input longint unsigned grain' in top
     assert ',64)!=0)' in top
+
+
+@pytest.mark.parametrize("version", [7, 9])
+def test_reject_unaudited_native_abi(capture, tmp_path, monkeypatch, version):
+    inputs, _, _, _, _ = capture
+    monkeypatch.setattr(uvm_cpu, "SHIM_VERSION", version)
+    with pytest.raises(ValueError, match="native DPI ABI profile"):
+        uvm_cpu.prepare(inputs, tmp_path)
+    assert not (tmp_path / "spike_effect.h").exists()
