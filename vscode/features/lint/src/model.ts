@@ -11,6 +11,7 @@ export interface LintDiagnostic {
   endpoint?: string;
   backend?: string;
   waived?: string;    // waiver reason
+  id?: string;        // finding id for an exact waiver
 }
 
 export interface LintSummary {
@@ -54,7 +55,7 @@ export function parseLint(text: string): LintSummary {
       const waived = f.disposition === 'waived' ? String(f.waiver_reason ?? '') : undefined;
       diagnostics.push({...locate(f), severity: waived !== undefined ? 'hint' : severity(f.severity),
         rule: String(f.rule), message: String(f.message ?? f.rule), endpoint: f.endpoint as string | undefined,
-        backend: name, waived});
+        backend: name, waived, id: f.id as string | undefined});
     }
   }
   for (const f of (data.waiver_findings ?? []) as Record<string, unknown>[]) {
@@ -76,7 +77,7 @@ function fromSarif(data: Record<string, unknown>): LintSummary {
       line: phys?.region?.startLine ?? 1, column: phys?.region?.startColumn ?? 1,
       severity: waived !== undefined ? 'hint' : severity(level), rule: String(r.ruleId),
       message: String(r.message?.text ?? r.ruleId), endpoint: r.properties?.endpoint,
-      backend: r.properties?.backend, waived});
+      backend: r.properties?.backend, waived, id: r.fingerprints?.['rvw/finding-id']});
   }
   return {status: String(props.status ?? 'unknown'), config: props.config as string, top: props.top as string,
     backends: (props.backends ?? {}) as Record<string, string>, diagnostics};
@@ -93,4 +94,11 @@ export function headline(s: LintSummary): string {
 export function messageText(d: LintDiagnostic): string {
   const where = d.endpoint && d.file ? ` [${d.endpoint}]` : d.endpoint ? ` (${d.endpoint})` : '';
   return `${d.message}${where}${d.waived !== undefined ? ` (waived: ${d.waived})` : ''}`;
+}
+
+/** The exact waiver row for a finding (settings `waivers`). The reason must be written by a person. */
+export function waiver(d: LintDiagnostic, config: string | undefined): Record<string, string> {
+  if (d.rule === 'lint.stale_waiver') throw new Error('remove the stale waiver instead of waiving it');
+  if (!d.id || !d.endpoint || !config) throw new Error('this finding has no id, endpoint or configuration to waive');
+  return {config, rule: d.rule, endpoint: d.endpoint, finding_id: d.id, reason: 'TODO: why this finding is safe'};
 }

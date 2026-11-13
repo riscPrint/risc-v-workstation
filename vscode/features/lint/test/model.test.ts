@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import report from './fixtures/report.json';
 import sarif from './fixtures/report.sarif.json';
-import { headline, messageText, parseLint } from '../src/model';
+import { headline, messageText, parseLint, waiver } from '../src/model';
 
 test('rvw.lint/1 report gives located, waived and unlocated diagnostics', () => {
   const s = parseLint(JSON.stringify(report));
@@ -32,4 +32,13 @@ test('errors and unknown inputs never look clean', () => {
   assert.throws(() => parseLint('{"schema":"rvw.perf/1"}'), /not an rvw.lint/);
   const s = parseLint(JSON.stringify({...report, status: 'inconclusive', backends: {}, waiver_findings: []}));
   assert.match(headline(s), /^Lint inconclusive/);
+});
+
+test('waiver rows carry the exact finding id and need a written reason', () => {
+  const s = parseLint(JSON.stringify(report));
+  const w = waiver(s.diagnostics[1], s.config);
+  assert.deepEqual(w, {config: 'c', rule: 'cdc.unsynchronized', endpoint: 'b_sample', finding_id: 'b2',
+    reason: 'TODO: why this finding is safe'});
+  assert.throws(() => waiver(s.diagnostics[4], s.config), /stale/);
+  assert.throws(() => waiver({...s.diagnostics[1], id: undefined}, s.config), /no id/);
 });

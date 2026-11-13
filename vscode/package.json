@@ -88,6 +88,10 @@
         "title": "Lint: Clear Diagnostics"
       },
       {
+        "command": "lint.copyWaiver",
+        "title": "Lint: Copy Waiver for Finding"
+      },
+      {
         "command": "perf.open",
         "title": "Performance: Open Report"
       },
@@ -425,6 +429,12 @@
           "command": "wave.runSaved",
           "when": "view == wave.results && viewItem =~ /query/",
           "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "lint.copyWaiver",
+          "when": "false"
         }
       ],
       "explorer/context": [

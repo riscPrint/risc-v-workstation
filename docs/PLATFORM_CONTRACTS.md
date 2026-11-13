@@ -1964,7 +1964,7 @@ The structural backend also has `cdc`: `clocks` (per clock domain `kind`
 `relationship` (`related`, `asynchronous`, `declared_*`, `unknown`), `stages`,
 `library` and `width`. Settings `intent.clocks` rows declare clock groups with
 reasons. `rvw lint --emit DIR` writes `rvw.cdc-obligations/1`
-(`cdc_obligations.json`: `obligations` with `kind` `gray_code|data_stable`,
+(`cdc_obligations.json`: `obligations` with `kind` `gray_code|data_stable|toggle_stable`,
 `bind` or `unbound_reason`; `checks`; `checked_rtl`; `unbound`), plus
 `cdc_checks.sv` and `checked/` RTL copies. Emitted obligations are not results.
 Lint settings may also have `rules` (rule severities and parameters) and

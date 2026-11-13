@@ -271,7 +271,10 @@ def analyze(design, emit, intent, pairs):
                 # The qualifier's source register is in the data source's domain.
                 q_src = [regs[c['src']]['path'] for c in rows if c['stages'] and
                          regs[c['stages'][-1]]['path'] in qualifiers]
-                obligations.append(dict(kind='data_stable', id=f'stable_{len(obligations)}', signal=src['path'],
+                # A self-toggling one-bit request is a toggle handshake: data may change only when it flips.
+                toggle = bool(q_src) and design.by_path[q_src[0]] in design.upstream_regs(design.by_path[q_src[0]])
+                obligations.append(dict(kind='toggle_stable' if toggle else 'data_stable',
+                                        id=f"{'toggle' if toggle else 'stable'}_{len(obligations)}", signal=src['path'],
                                         width=width, qualifier=q_src[0] if q_src else None,
                                         clock_domain=src['clock_domain_id'], destination=dst['path']))
                 extra.update(obligation=obligations[-1]['id'], qualifiers=qualifiers)
@@ -362,7 +365,7 @@ def bind_obligation(design, ob):
     clock = local_clock(design, ob['clock_domain'], s['component_id'])
     ports = dict(clk=clock, value=s['name'])
     reason = None
-    if ob['kind'] == 'data_stable':
+    if ob['kind'] in ('data_stable', 'toggle_stable'):
         q = design.by_path.get(ob.get('qualifier'))
         if q is None:
             reason = 'qualifier source not found'

@@ -242,3 +242,19 @@ def test_spinal_synchronous_tag(tmp_path):
     r = analyze(b.done())
     assert r['crossings'][0]['relationship'] == 'declared_synchronous'
     assert rules(r) == ['cdc.related_clock_crossing']
+
+
+def test_toggle_qualified_data(tmp_path):
+    b = two_clocks(tmp_path)
+    b.reg('req', 1)
+    b.edge('req', 'req')                      # toggles itself
+    b.reg('data', 1, width=8)
+    b.reg('r0', 2)
+    b.reg('r1', 2)
+    b.chain('req', 'r0', 'r1')
+    b.reg('capture', 2, width=8)
+    b.edge('data', 'capture')
+    b.edge('r1', 'capture', 'cond')
+    r = analyze(b.done())
+    ob = next(o for o in r['cdc']['obligations'] if o['signal'] == 'data')
+    assert ob['kind'] == 'toggle_stable' and ob['qualifier'] == 'req'
