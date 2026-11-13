@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.jtag` | Generic TAP scans and declared chain topology | `Uvm/vip/jtag/` |
 | `rvw.vip.clock_reset` | Integer-time clock and reset pulse/release checks | `Uvm/vip/clock_reset/` |
 | `rvw.vip.interrupt` | Interrupt line levels, pulse widths and scheduled timing | `Uvm/vip/interrupt/` |
 | `rvw.vip.sram` | Single-port SRAM/ROM, word addresses, byte masks and fixed latency | `Uvm/vip/sram/` |
