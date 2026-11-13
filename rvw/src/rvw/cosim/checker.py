@@ -117,6 +117,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     recent = deque(maxlen=history)
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
+    retirements = 0
     translation_count = 0
     csr_snapshot_steps = 0
     vector_memory_steps = 0
@@ -161,7 +162,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
         if external_replay and status == "match":
             extra["external_interrupt_evidence"] = model.finish_external_interrupts()
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
-                "instructions": count, "trap_events": trap_events,
+                "instructions": count, "retirements": retirements, "trap_events": trap_events,
                 "reference_limits": list(getattr(model, "limitations", ())),
                 "state_coverage": {"trace_schema": trace.header["schema"],
                                    "fp": trace.header["schema"] == "rvw.rvfi/2" and trace.state and last_order is not None,
@@ -462,6 +463,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                            "disassembly": expected["disasm"]})
             last_trap = expected if expected["trap"] and not represented_by_event else None
             count += 1
+            retirements += not actual["trap"]
         if reference_end is not None:
             # The reference ended at its own termination (Sail stops at the HTIF tohost store;
             # a core may retire a few more instructions before its harness sees the store).

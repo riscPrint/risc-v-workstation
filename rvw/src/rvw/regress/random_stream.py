@@ -31,7 +31,9 @@ def complete(comparison, run):
             and comparison.get('trace_complete') is True
             and comparison.get('end_status') == 'pass'
             and comparison.get('instructions', 0) > 0
-            and comparison['instructions'] == run.instret)
+            and type(comparison.get('retirements', comparison['instructions'])) is int
+            and 0 <= comparison.get('retirements', comparison['instructions']) <= comparison['instructions']
+            and comparison.get('retirements', comparison['instructions']) == run.instret)
 
 
 def verify(elf, results, platform, coverage_plan=None, test_id=None):
