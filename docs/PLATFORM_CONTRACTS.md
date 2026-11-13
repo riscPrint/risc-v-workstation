@@ -497,6 +497,24 @@ remain strict. The rule is disabled by strict CSR synchronization or by
 `trace_from_reset=false`. Unsupported reference synchronization is an error.
 No other CSR reset state is inferred by this rule. C1/C2 formats do not change.
 
+### Multi-image preparation and serialized byte checking
+
+`rvw memory images` emits `rvw.hart-images/1` with a `harts` array.
+Each entry has a unique non-negative integer `hart`, absolute `elf` path,
+and `elf_sha256`. At least two harts are required. This is input preparation,
+not adapter execution. The project still owns image placement, overlap policy,
+reset PCs and shared-memory initialization.
+
+`rvw memory check` consumes C2/2 plus `rvw.serialized-memory/1`. The latter
+has `boundary`, `initial` regions with hex `address` and hex byte-string `bytes`,
+and `writes` keyed by accepted transaction ID. Each expected write declares
+hex `address`, `data` and byte `mask`. Read-from entries correspond to selected
+byte lanes in increasing order. Capture order does not define memory order.
+The report is `rvw.memory-check/1`, with `status`, `checks`, `scope` and
+`exhaustive_proof:false`. Status is `consistent`, `mismatch` or `inconclusive`.
+Consistency applies only to the sampled declared serialized boundary.
+
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

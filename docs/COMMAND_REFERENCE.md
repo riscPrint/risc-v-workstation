@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,wave,workloads}
     ...
 ```
 
@@ -715,6 +715,25 @@ usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
 
 ```text
 usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
+```
+
+### `rvw memory`
+
+```text
+usage: rvw memory [-h] [--project PROJECT] {images,check} ...
+```
+
+### `rvw memory images`
+
+```text
+usage: rvw memory images [-h] --hart-image HART=ELF [--project PROJECT]
+```
+
+### `rvw memory check`
+
+```text
+usage: rvw memory check [-h] --trace TRACE --reference REFERENCE [--project
+    PROJECT]
 ```
 
 ### `rvw ooo`
@@ -1778,6 +1797,22 @@ Run native lint and structural CDC/RDC. Retain waivers and unrun checks. No sign
 Arguments: `settings` (required).
 
 Starts a background job: yes.
+
+### `memory_check`
+
+Check C2/2 serialized memory against independent stimulus bytes. No RVWMO proof.
+
+Arguments: `trace` (required), `reference` (required).
+
+Starts a background job: no.
+
+### `memory_images`
+
+Prepare pinned per-hart ELF inputs. Does not run a DUT.
+
+Arguments: `hart_images` (required).
+
+Starts a background job: no.
 
 ### `ooo_calibrate`
 
