@@ -257,3 +257,23 @@ operands `b` and `c` can be added this way. They stay unconstrained reference
 arguments and connect to no DUT logic. A reference that depends on an omitted
 hardware operand still produces a counterexample. This feature does not set an
 operand to zero or reduce the reference input domain.
+
+### Additional bit-manipulation forms
+
+The Zb library also supplies `bset`, `bclr`, `binv`, `bext`, `sh1add`, `sh2add`,
+`sh3add`, `xperm4`, `xperm8`, `pack`, `packh` and `brev8` at XLEN 32 and 64.
+ZIP/UNZIP references are RV32-only. RV64 references add unsigned-word ADD and
+shift/add forms, SLLI.UW, ROLW/RORW, CPOPW/CLZW/CTZW and PACKW. Word rotates
+and PACKW sign-extend their 32-bit result. Unsigned-word arithmetic discards
+the upper source word before the operation.
+
+Use files such as `bset32.c`, `sh1add_uw64.c`, `rolw64.c` and `zip32.c`.
+Register/immediate forms with the same functional transform share a reference.
+The bit index or rotation count uses its defined low bits. Instruction and
+reserved-immediate decoding remain project obligations.
+
+XPERM selectors outside the element count produce zero. Native symbolic tests
+check complete 32-bit nibble and 64-bit byte permutation units. Selector mutants
+must produce counterexamples. Integer/polynomial tests also check all model
+families against independent Python expressions. These are functional checks.
+They do not establish instruction timing or complete core-extension compliance.

@@ -78,3 +78,60 @@ def test_models_against_symbolic_rtl(tmp_path,kind,mutant):
           '--width','32','--out',str(out),'--timeout','60'])
     result=json.loads((out/'result.json').read_text())
     assert result['status']==('counterexample' if mutant else 'proved'),result
+
+
+@pytest.mark.parametrize('width',[32,64])
+def test_single_bit_shift_add_permutation_and_pack_models(library,width):
+    rng=random.Random(21);mask=(1<<width)-1
+    values=[0,1,2,31,32,63,64,127,128,32768,mask,mask-1,1<<(width-1),0x01234567&mask,
+            0x76543210&mask,0x0706050403020100&mask]+[rng.getrandbits(width) for _ in range(15)]
+    def xperm(a,b,size):
+        elements=[(a>>i)&((1<<size)-1) for i in range(0,width,size)]
+        indices=[(b>>i)&((1<<size)-1) for i in range(0,width,size)]
+        return sum((elements[index] if index<len(elements) else 0)<<pos for index,pos in zip(indices,range(0,width,size)))
+    for a in values:
+        for b in values:
+            n=b%width;half_mask=(1<<(width//2))-1
+            reverse_bytes=bytes(int(f'{byte:08b}'[::-1],2) for byte in a.to_bytes(width//8,'little'))
+            expected={20:a|(1<<n),21:a&~(1<<n),22:a^(1<<n),23:(a>>n)&1,
+                      24:a*2+b,25:a*4+b,26:a*8+b,27:xperm(a,b,4),28:xperm(a,b,8),
+                      29:(a&half_mask)|((b&half_mask)<<(width//2)),30:(a&255)|((b&255)<<8),
+                      31:int.from_bytes(reverse_bytes,'little')}
+            if width==32:
+                even=sum(((a>>i)&1)<<(2*i) for i in range(16));odd=sum(((a>>(i+16))&1)<<(2*i+1) for i in range(16))
+                expected[32]=even|odd
+                expected[33]=sum(((a>>(2*i))&1)<<i for i in range(16))|sum(((a>>(2*i+1))&1)<<(i+16) for i in range(16))
+            for op,result in expected.items():assert library.zb(op,width,a,b)==result&mask,(op,width,a,b)
+    if width==32:
+        assert library.zb(32,32,0xffff,0)==0x55555555
+        assert library.zb(32,32,0xffff0000,0)==0xaaaaaaaa
+
+
+def test_rv64_word_and_unsigned_word_models(library):
+    rng=random.Random(22);mask=(1<<64)-1
+    values=[0,1,31,32,63,64,0xffffffff,0x80000000,0x8000000000000000,0xffffffffffffffff]+[rng.getrandbits(64) for _ in range(20)]
+    def sign_extend(value):return value|0xffffffff00000000 if value&(1<<31) else value
+    for a in values:
+        for b in values:
+            x=a&0xffffffff;n=b%32
+            left=((x<<n)|(x>>(32-n)))&0xffffffff
+            right=((x>>n)|(x<<(32-n)))&0xffffffff
+            expected={34:x+b,35:x*2+b,36:x*4+b,37:x*8+b,38:x<<(b%64),
+                      39:sign_extend(left),40:sign_extend(right),41:x.bit_count(),42:32-x.bit_length(),
+                      43:32 if x==0 else (x&-x).bit_length()-1,
+                      44:sign_extend((a&65535)|((b&65535)<<16))}
+            for op,result in expected.items():assert library.zb(op,64,a,b)==result&mask,(op,a,b)
+
+
+@pytest.mark.skipif(not all(shutil.which(t) for t in ('yosys','cbmc')),reason='needs native Yosys and CBMC')
+@pytest.mark.parametrize('width,size,mutant',[(32,4,False),(32,4,True),(64,8,False),(64,8,True)])
+def test_symbolic_xperm_unit(tmp_path,width,size,mutant):
+    source=tmp_path/'dut.v'
+    expression=f'a >> ((selector+{1 if mutant else 0})*{size})'
+    source.write_text(f'module dut(input [{width-1}:0] a,b,output [{width-1}:0] y);genvar i;generate for(i=0;i<{width//size};i=i+1)begin:perm '
+                      f'wire [{size-1}:0] selector=b[i*{size}+:{size}];assign y[i*{size}+:{size}]=(selector<{width//size}) ? ({expression}) : 0;end endgenerate endmodule')
+    out=tmp_path/'out'
+    main(['formal','datapath','--rtl',str(source),'--model',str(MODELS/f'xperm{size}{width}.c'),
+          '--reference-tree',str(MODELS),'--reference-include','.','--width',str(width),'--out',str(out),'--timeout','90'])
+    result=json.loads((out/'result.json').read_text())
+    assert result['status']==('counterexample' if mutant else 'proved'),result
