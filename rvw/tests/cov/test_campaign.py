@@ -16,7 +16,7 @@ def setup(tmp_path, monkeypatch):
     settings = tmp_path/'settings.json'; settings.write_text(json.dumps(data))
     compiler=tmp_path/'cc';compiler.write_text('fixture compiler')
     monkeypatch.setattr(c.shutil,'which',lambda _:str(compiler))
-    monkeypatch.setattr(c, 'plan', lambda *a: {'isa_plan': {}, 'groups':[{'bins':[1,2,3]}]})
+    monkeypatch.setattr(c, 'plan', lambda *a: {'isa_plan': {}, 'groups':[{'name':'g','bins':[[1],[2],[3]]}]})
     monkeypatch.setattr(c, 'profile', lambda *a: {'g:[1]':{}, 'g:[2]':{}})
     monkeypatch.setattr(c, 'load_config', lambda **kw: SimpleNamespace(configs=['test']))
     monkeypatch.setattr(c, 'source_for', lambda *a: None)
@@ -47,6 +47,15 @@ def test_feedback_selects_updated_holes_and_resume_validates_artifacts(tmp_path,
     artifact.write_text('changed')
     with pytest.raises(ValueError, match='artifact changed'):
         c.campaign(settings, tmp_path/'out', resume=True)
+
+
+def test_generator_profile_does_not_add_undeclared_semantic_bins(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch)
+    monkeypatch.setattr(c,'plan',lambda *a:{'isa_plan':{},'groups':[{'name':'other','bins':[[9]]}]})
+    result=c.campaign(settings,tmp_path/'out')
+    assert result['supported_bins']==0 and result['generation_profile_bins']==2
+    assert result['full_plan_bins']==1 and result['attempts']==[]
+    assert result['generation_groups']==[{'group':'other','declared_bins':1,'supported_bins':0}]
 
 
 @pytest.mark.parametrize('status', ['mismatch','inconclusive','core_failure','trace_error'])
@@ -282,3 +291,32 @@ def test_replay_never_uses_altered_working_elf(tmp_path,monkeypatch):
     assert result['status']=='qualified' and seen[-1]==b'fake elf'
     with pytest.raises(ValueError,match='resume artifact changed'):
         c.campaign(settings,out,resume=True)
+
+def test_campaign_captures_code_template_before_attempts(tmp_path,monkeypatch):
+    from rvw.cov import code
+    from rvw.cov.rtl import identity
+    from rvw.results.generation import open_generation
+    settings=setup(tmp_path,monkeypatch)
+    (tmp_path/'tiny.v').write_text('module tiny; endmodule\n')
+    dat=tmp_path/'baseline.dat';dat.write_text("C '\x01f\x02tiny.v\x01l\x021\x01t\x02line' 7\n")
+    database=code.merge(['base='+str(dat)],root=tmp_path)
+    db=tmp_path/'db.json';db.write_text(json.dumps(database))
+    point=database['points'][0]['id']
+    plan={'schema':'rvw.code-goals/1','design':'a'*64,'database':'db.json','database_sha256':c.digest(db)}
+    config=tmp_path/'code-plan.json';config.write_text(json.dumps(plan))
+    recipes=tmp_path/'recipes.json';recipes.write_text(json.dumps({
+        'schema':'rvw.event-recipes/1','plan_id':identity(plan),'design':plan['design'],
+        'recipes':[{'goal':'g:[1]','targets':[point]}]}))
+    data=json.loads(settings.read_text());data.update(code_plan=config.name,recipes=recipes.name)
+    settings.write_text(json.dumps(data))
+    monkeypatch.setattr(c,'generate',lambda *a:{'status':'unsupported'})
+    report=c.campaign(settings,tmp_path/'out')
+    assert report['guidance_coverage']['kind']=='code'
+    assert report['guidance_coverage']['unobserved']==[point]
+    assert len(report['attempts'])==data['attempts']
+    seal=report['input_generation'];generation=open_generation(tmp_path/'out'/seal['store'],seal['id'])
+    inputs=json.loads(generation.read_bytes('inputs.json'))
+    assert any(row['resolved']==str((tmp_path/'db.json').resolve()) for row in inputs['capture']['files'])
+    (tmp_path/'db.json').write_text('{}')
+    with pytest.raises(ValueError,match='database hash'):
+        c.campaign(settings,tmp_path/'out',resume=True)

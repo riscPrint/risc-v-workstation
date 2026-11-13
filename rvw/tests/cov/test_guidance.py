@@ -30,6 +30,22 @@ def test_measured_event_changes_selection_and_replay():
         guide.observe('b',report,qualified=True,rtl_sha256=plan['design'])
 
 
+def test_unmapped_targets_and_uncompleted_sequences_remain_holes():
+    plan,recipes,report=settings()
+    plan['sequences']=[{'id':'pair','domain':'speculative','steps':[
+        {'when':{'TOP.x':[0]}},{'when':{'TOP.x':[1]},'delay':[1,2]}]}]
+    recipes['plan_id']=identity(plan);report['plan_id']=identity(plan)
+    report['sequences']=[{'id':'pair','completed':0,'pending':2}]
+    guide=Guide(plan,recipes)
+    guide.observe('a',report,qualified=True,rtl_sha256=plan['design'])
+    summary=guide.coverage_summary({'a'})
+    assert summary['declared_bins']==summary['full_input_bins']==3
+    assert summary['observed']==['zero'] and summary['unobserved']==['one','pair']
+    assert summary['uncompleted_sequences']==['pair']
+    assert summary['last_sample_pending']=={'pair':2}
+    assert summary['unsupported_targets']==['one','pair']
+
+
 @pytest.mark.parametrize('field,value', [('sampling_complete',False),('status','inconclusive'),('design','wrong'),('plan_id','wrong')])
 def test_stale_or_incomplete_samples_cannot_reward(field,value):
     plan, recipes, report = settings()

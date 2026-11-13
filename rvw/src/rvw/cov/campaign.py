@@ -13,6 +13,7 @@ from rvw.regress.config import Suite, load_config
 from rvw.regress.plan import source_for
 from rvw.regress.runner import PlanItem, RunOptions, run_plan
 from rvw.regress.random_stream import complete, digest
+from rvw.regress.run_evidence import owned_run_paths
 from rvw.results import load_run
 from rvw.results.generation import open_current, publish
 from . import captured
@@ -43,7 +44,7 @@ def payload(elf_path, candidate):
 
 def qualify(elf, results, platform, manifest, source_root, candidate, coverage_plan=None):
     region = payload(elf, candidate)
-    matches = [r for p in Path(results).rglob('result.json')
+    matches = [r for p in owned_run_paths(results)
                if (r := load_run(p)).elf_sha256 == region['elf_sha256']]
     if len(matches) != 1:
         return {'status': 'adapter_error', 'new_hits': []}
@@ -84,7 +85,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
                 'runtime', 'linker', 'platform', 'compiler', 'isa', 'abi', 'attempts', 'seed'}
-    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'recipes'}
+    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'code_plan', 'recipes'}
     if data.keys()-required-optional or required-data.keys() or data['schema'] != 'rvw.stimulus-loop/1':
         raise ValueError('expected rvw.stimulus-loop/1 with declared fields')
     if type(data['attempts']) is not int or not 1 <= data['attempts'] <= 1000:
@@ -94,7 +95,10 @@ def campaign(settings, work_dir, resume=False, replay=None):
         return p.resolve() if p.is_absolute() else (settings.parent/p).resolve()
     manifest, root = path('manifest'), path('source_root')
     pinned = plan(manifest, root)
-    supported = set(profile(pinned['isa_plan']))
+    profile_goals=set(profile(pinned['isa_plan']))
+    declared={group['name']+':'+json.dumps(value,separators=(',',':'))
+              for group in pinned['groups'] for value in group.get('bins',[])}
+    supported = profile_goals & declared
     sequence_settings = data.get('sequences')
     sequence_groups = []
     if sequence_settings is not None:
@@ -109,15 +113,24 @@ def campaign(settings, work_dir, resume=False, replay=None):
         raise ValueError('compiler is not installed: '+data['compiler'])
     inputs = {'compiler': captured.sha256(compiler)}
     inputs.update({key: captured.sha256(path(key)) for key in ('manifest','runtime','linker','platform','project')})
-    if bool(data.get('rtl_plan')) != bool(data.get('recipes')):
-        raise ValueError('rtl_plan and recipes must be declared together')
-    if data.get('rtl_plan'):
-        inputs.update({key:captured.sha256(path(key)) for key in ('rtl_plan','recipes')})
+    guidance_key='rtl_plan' if data.get('rtl_plan') else 'code_plan' if data.get('code_plan') else None
+    if data.get('rtl_plan') and data.get('code_plan'):
+        raise ValueError('select one RTL or code guidance plan')
+    if bool(guidance_key)!=bool(data.get('recipes')):
+        raise ValueError('guidance plan and recipes must be declared together')
+    guide=None
+    if guidance_key:
+        inputs.update({key:captured.sha256(path(key)) for key in (guidance_key,'recipes')})
+        from .guidance import load_guide
+        guide=load_guide(path(guidance_key),path('recipes'))
     implementation = implementation_id()
     identity = sha256(json.dumps([data, inputs, pinned, implementation], sort_keys=True).encode()).hexdigest()
     out = Path(work_dir).resolve()
     report = {'schema': 'rvw.stimulus-loop/1', 'identity': identity, 'attempts': [], 'hits': [],
-              'supported_bins': len(supported), 'full_plan_bins': sum(len(g.get('bins', [])) for g in pinned['groups']+sequence_groups),
+              'supported_bins': len(supported), 'generation_profile_bins':len(profile_goals),
+              'generation_groups':[{'group':g['name'],'declared_bins':len(g.get('bins',[])),
+                  'supported_bins':sum(g['name']+':'+json.dumps(b,separators=(',',':')) in supported for b in g.get('bins',[]))}
+                  for g in pinned['groups']+sequence_groups], 'full_plan_bins': sum(len(g.get('bins', [])) for g in pinned['groups']+sequence_groups),
               'implementation_sha256':implementation, 'status': 'inconclusive', 'cpu_accounting': 'inconclusive', 'bins_per_cpu_hour': None,
               'notes': ['os.times includes reaped child CPU; descendant completeness is not qualified.',
                         'No C4 acceptance or comparative closure rate is granted.',
@@ -143,11 +156,8 @@ def campaign(settings, work_dir, resume=False, replay=None):
     if replay is not None:
         from .campaign_replay import replay_attempt
         return replay_attempt(out,report,replay,selected,data,manifest,root,path('platform'))
-    guide = None
-    if data.get('rtl_plan'):
-        from .guidance import Guide
-        guide = Guide(json.loads(captured.read_text(path('rtl_plan'))),
-                      json.loads(captured.read_text(path('recipes'))),report.get('guidance_history',[]))
+    if guide is not None:
+        guide.history=list(report.get('guidance_history',[]))
         report['unsupported_recipes'] = sorted(set(guide.recipes)-supported)
     hits = set(report['hits'])
     attempted = {a['goal'] for a in report['attempts']}
@@ -155,6 +165,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
         report['hits'] = sorted(hits)
         if guide is not None:
             report['guidance_history'] = guide.history
+            report['guidance_coverage'] = guide.coverage_summary(supported)
         publish(out/'state', lambda directory: (directory/'report.json').write_text(json.dumps(report, indent=2)+'\n'))
     save()
     for index in range(len(report['attempts']), data['attempts']):
@@ -219,7 +230,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
                     attempt.update(evidence)
                     if guide is not None:
                         from .feedback_campaign import collect
-                        attempt['feedback'] = collect(guide,goal,elf,directory/'run',path('rtl_plan'),
+                        attempt['feedback'] = collect(guide,goal,elf,directory/'run',path(guidance_key),
                                                       evidence['status']=='qualified')
                     if evidence['status'] == 'qualified':
                         measured = identifiers(evidence['coverage']) & supported
