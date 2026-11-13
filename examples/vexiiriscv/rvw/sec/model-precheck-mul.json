@@ -1,0 +1,38 @@
+{
+  "contract": "constant-time",
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "binding": "core.json",
+  "template": "case.S",
+  "model": "../arch/own.json",
+  "planned": "planned multiplier that finishes in 1 cycle when rs2 fits in 16 bits, else 4",
+  "operand_latency": {
+    "multiply": {
+      "rule": "early_out",
+      "operand": "rs2",
+      "width": 16,
+      "short": 1,
+      "long": 4
+    }
+  },
+  "program": [
+    "mul x10, x6, x7",
+    "mul x11, x10, x7",
+    "mul x12, x11, x7",
+    "mul x13, x12, x7",
+    "add x14, x13, x13"
+  ],
+  "secrets": [
+    {
+      "x6": 12345,
+      "x7": 3
+    },
+    {
+      "x6": 12345,
+      "x7": 305419896
+    }
+  ]
+}

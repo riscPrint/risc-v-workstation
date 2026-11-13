@@ -118,3 +118,14 @@ one design netname, or the binding's `csr_signals` map gives it. The
 `rvw.sec/1` IFT report adds `csrs` (name to netname), the resolved
 `memory_regions` and `tainted_memory` (`words`: tainted RAM words at the end;
 `propagated`: up to 64 `[address, mask]` words outside the secret regions).
+
+## Model pre-check manifest
+
+`rvw sec model-check` manifests name `contract`, `clauses`, `binding` (for the
+template, link script and Spike platform; RTL is not needed), `template`,
+`model` (an `rvw.arch-core/1` description or an `ooo` table), `program`,
+`secrets` (two) and `operand_latency` (class to rule: `fixed` `latency`;
+`quotient_bits` `base`, `per_bit`; `early_out` `operand`, `width`, `short`,
+`long`). The `rvw.sec/1` report (`technique` `model-precheck`) records each
+case's `predicted_cycles` and rule latencies, and `evidence` states that it is
+a model prediction, not RTL evidence.
