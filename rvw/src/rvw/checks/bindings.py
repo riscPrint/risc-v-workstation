@@ -4,6 +4,9 @@ from pathlib import Path
 
 
 def generate(kind,entry,base,out):
+    if kind=='cdc':
+        from .cdc import generate as generate_cdc
+        return generate_cdc(entry,base,out)
     if not isinstance(entry,dict): return None
     base=Path(base)
     if kind=='streams':

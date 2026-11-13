@@ -4,7 +4,7 @@ Run `rvw checks generate --all --project PATH --out out/checks`.
 MCP: `checks_generate`, with `project`, `out` and optional `manifest`.
 The default manifest is `checks.generate.json` beside `rvw.toml`.
 It has schema `rvw.check-generation/1`. Optional keys `streams`, `buses`,
-`csrs`, `queues`, and `power` name inputs relative to the manifest. Use
+`csrs`, `queues`, `power`, and `cdc` name inputs relative to the manifest. Use
 `--json` for JSON errors as well as successful summaries.
 
 - `streams`: a property-library JSON document with a `properties` list.
@@ -18,6 +18,9 @@ It has schema `rvw.check-generation/1`. Optional keys `streams`, `buses`,
 - `csrs`: a CSR model or catalog selection.
 - `queues`: an `rvw.micro-checks/1` document.
 - `power`: an `rvw.power-intent/1` document.
+- `cdc`: an object with a `report` path to a structural lint report. It reuses
+  reviewed CDC signal bindings. Unsupported kinds and absent bindings keep
+  their reasons. Digital checks do not model metastability.
 
 The output has one directory per supplied kind and `result.json` with schema
 `rvw.check-generation-summary/1`. Missing data and bindings retain a reason.

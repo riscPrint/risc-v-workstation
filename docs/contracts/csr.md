@@ -225,3 +225,10 @@ Bus rows record `instance_path`, `clock_source`, `clock_domain_id`,
 `target_instance` and `bind_scope`. A module used once in the captured design
 uses a module bind. A repeated module uses an instance bind so each bus keeps
 its own declared controls. These are generation results, not native test results.
+
+## CDC generation inputs
+
+The optional `cdc` entry of `rvw.check-generation/1` has a `report` path.
+It selects structural lint CDC obligations with supported checker kinds and
+signal bindings. The summary retains unsupported and unbound obligations.
+Emission supplies no simulation or proof result.
