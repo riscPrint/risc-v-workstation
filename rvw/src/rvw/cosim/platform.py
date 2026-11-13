@@ -1,7 +1,7 @@
 """Explicit platform inputs; no core-specific behavior in the checker."""
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 
 
@@ -81,6 +81,11 @@ class Platform:
         if obj.get("schema") == "rvw.soc/1":
             from rvw.soc.model import load, platform
             obj = platform(load(path))
+        unknown = obj.keys() - {f.name for f in fields(cls)} - {"schema", "review_required"}
+        if unknown:
+            raise ValueError(f"unknown cosim platform settings: {sorted(unknown)}")
+        if "schema" in obj and obj["schema"] != "rvw.cosim-platform/1":
+            raise ValueError("unsupported cosim platform schema")
         def ranges(key):
             return [(number(r["base"]), number(r["size"])) for r in obj[key]]
         p = cls(obj["name"], obj["xlen"], obj["isa"], number(obj["reset_pc"]),

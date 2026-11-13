@@ -107,6 +107,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     translation_count = 0
     instret_synced = False
     sync_recent = deque(maxlen=history)
+    applied_masks = {}
     quirks = deque(maxlen=history)
     last_trap = None
     after_trap = False
@@ -146,6 +147,11 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                                    "hypervisor": bool(trace.header.get("hypervisor") and last_order is not None),
                                    "two_stage_translations": translation_count,
                                    "csr_snapshot": trace.header.get("csr_snapshot", [])},
+                "platform_policy": {key: getattr(platform, key) for key in
+                                    ("privilege_modes", "misaligned", "endianness",
+                                     "absent_pmp_csrs", "ecall_tval")},
+                "applied_masks": [{"reason": reason, "csr": hex(csr), "mask": hex(mask)}
+                                  for (reason, csr), mask in sorted(applied_masks.items())],
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),
                 "trace_complete": ended, "end_status": end_status,
                 "last_order": last_order, "last_cycle": last_cycle, "pending_handler": after_trap,
@@ -355,11 +361,16 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                          "reference": hex(expected["rd_wdata"]), "core": hex(actual["rd_wdata"])}
                 if sync_mask is not None:
                     entry.update(csr=hex(csr), mask=hex(sync_mask))
+                    key = (sync_reason, csr)
+                    applied_masks[key] = applied_masks.get(key, 0) | sync_mask
                 if sync_reason == "csr_reset_unknown":
                     entry["source"] = "rd_wdata"
                 sync_recent.append(entry)
             sync_count += len(reset_entries)
             sync_recent.extend(reset_entries)
+            for entry in reset_entries:
+                key = (entry["reason"], int(entry["csr"], 16))
+                applied_masks[key] = applied_masks.get(key, 0) | int(entry["mask"], 16)
             if actual["rd"]:
                 core_regs[actual["rd"]] = actual["rd_wdata"]
             if not expected["trap"] and expected["insn"] in XRET:

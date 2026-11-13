@@ -818,3 +818,10 @@ This rule uses the existing `csr` synchronization kind. `--strict` or
 strict for this rule. Missing reference support gives an error. No other CSR,
 software-written bit, trap, instruction, PC or memory effect is masked.
 The Spike shim uses ABI version 5 and must be rebuilt with `Cosim/build.sh`.
+
+Platform files reject unknown top-level settings and unknown schema versions.
+An optional schema is `rvw.cosim-platform/1`. Each comparison result includes
+`platform_policy` and `applied_masks`. The latter lists the union of masks
+actually used for each CSR and synchronization reason. This list does not
+lose entries when the recent-history buffer fills. A configured mask that was
+not used is absent. Exact absent-PMP and ECALL policies do not apply masks.
