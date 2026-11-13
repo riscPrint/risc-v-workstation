@@ -195,3 +195,10 @@ ACT4 and complete functional coverage of each logical OoO block remain open.
 The [M/U PMP formal run](rvw/formal.md) closes no property or ISA check.
 Seven depth-8 property jobs time out. Two declared-trigger covers reach.
 ADD, LUI and retirement cover time out at the measured-budget depth of 40.
+
+## Qualified recovery observations
+
+The [probe campaign](rvw/probes.md) passes 307 executions with 24 monitors
+and zero firings. It qualifies a full-ROB interrupt, a discarded speculative
+fault and forwarding before branch recovery. Consecutive-cycle recovery stays
+unhit. These are finite observations, not whole-core proof.
