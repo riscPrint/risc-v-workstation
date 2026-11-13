@@ -3445,6 +3445,12 @@ hash, `interval`, `intervals`, `instructions`, chosen `k`, `bic`, `dims`,
 `rvw csim run-points` writes `rvw.csim-simpoint-report/1` with each point's
 report and metrics, the `weighted` metrics and the weighting statement.
 
+`rvw csim compare BASE CANDIDATE` writes `rvw.csim-compare/1`: per trace (paired
+by input sha256, else path) each shared metric's base and candidate values,
+change, relative change and `better`, `worse` or `same` (within `tolerance`).
+MPKI, PKI, storage and false dependences are lower-is-better; the others are
+higher-is-better. Unpaired traces are counted, not compared.
+
 `rvw csim qualify` writes `rvw.csim-qualify/1`: `status=reported`, the
 reference name, URL, pinned `reference_sha256` and `reference_patch`, the study
 hash, the tolerance and, per trace, input hash, conditional branch count,

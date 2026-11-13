@@ -480,7 +480,7 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw csim [-h] [--project PROJECT]
-    {run,sweep,budget,convert,models,compare-rtl,qualify,simpoint,run-points,build}
+    {run,sweep,budget,convert,models,compare-rtl,qualify,compare,simpoint,run-points,build}
     ...
 ```
 
@@ -537,6 +537,13 @@ usage: rvw csim qualify [-h] [--reference REFERENCE] [--study STUDY] [--format
     {auto,csim,branch,c2,bt9,spike,champsim}] [--tolerance TOLERANCE]
     [--archive ARCHIVE] [--out OUT] [--json] [--project PROJECT] traces
     [traces ...]
+```
+
+### `rvw csim compare`
+
+```text
+usage: rvw csim compare [-h] [--tolerance TOLERANCE] [--out OUT] [--json]
+    [--project PROJECT] base candidate
 ```
 
 ### `rvw csim simpoint`
@@ -2420,6 +2427,14 @@ Starts a background job: yes.
 Storage accounting (bits/KiB per table) of a component study without running a trace.
 
 Arguments: `study` (required), `sets`.
+
+Starts a background job: no.
+
+### `csim_compare`
+
+Per-trace metric deltas (better/worse/same) between two rvw csim run reports, paired by trace hash.
+
+Arguments: `base` (required), `candidate` (required), `tolerance`.
 
 Starts a background job: no.
 
