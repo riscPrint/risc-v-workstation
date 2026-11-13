@@ -1,7 +1,7 @@
 {
   "schema": "rvw.nax-check-binding-review/1",
   "source": "examples/naxriscv/rvw/micro-checks.json",
-  "source_sha256": "3121acb8645f5f3e918ddeb7f2d19c5cfd32a1285a41c58de78ebe7bef13748a",
+  "source_sha256": "4ed836962b7060a466bb9440ca8f6193b5faaf7097586def192367c5f6dd9712",
   "generation": {
     "schema": "rvw.micro-generation/1",
     "status": "generated",
@@ -37,6 +37,65 @@
           "reset": "reset",
           "active": "rvw_checks_active",
           "value": "BranchContextPlugin_logic_ptr_occupancy"
+        }
+      },
+      {
+        "id": "rob_conservation",
+        "kind": "rob_pointers",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "alloc_ptr": "CommitPlugin_logic_ptr_alloc",
+          "free_ptr": "CommitPlugin_logic_ptr_free",
+          "push": "FrontendPlugin_allocated_isFireing",
+          "pop": "CommitPlugin_logic_ptr_canFree"
+        },
+        "lanes": {
+          "push_step": 2,
+          "pop_step": 2
+        }
+      },
+      {
+        "id": "int_freelist_ghost",
+        "kind": "freelist_ghost",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "alloc_fire": "FrontendPlugin_allocated_isFireing",
+          "alloc_valid": "integer_RfAllocationPlugin_logic_allocator_io_pop_mask",
+          "alloc_tags": [
+            "integer_RfAllocationPlugin_logic_allocator_io_pop_values_0",
+            "integer_RfAllocationPlugin_logic_allocator_io_pop_values_1"
+          ],
+          "free_valid": [
+            "integer_RfAllocationPlugin_logic_allocator_io_push_0_valid",
+            "integer_RfAllocationPlugin_logic_allocator_io_push_1_valid"
+          ],
+          "free_tags": [
+            "integer_RfAllocationPlugin_logic_allocator_io_push_0_payload",
+            "integer_RfAllocationPlugin_logic_allocator_io_push_1_payload"
+          ]
+        },
+        "lanes": {
+          "alloc_lanes": 2,
+          "free_lanes": 2
+        }
+      },
+      {
+        "id": "sq_forward_youngest",
+        "kind": "store_forward_window",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "Lsu2Plugin_logic_sharedPip_stages_1_isFireing",
+          "is_load": "Lsu2Plugin_logic_sharedPip_stages_1_IS_LOAD",
+          "hits": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_HITS",
+          "selected": "Lsu2Plugin_logic_sharedPip_stages_1_OLDER_STORE_OH",
+          "start_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_feed_SQ_PTR_FREE",
+          "end_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_END_ID"
         }
       },
       {
@@ -82,9 +141,13 @@
       "No proof or simulator was run."
     ]
   },
+  "previous_review": {
+    "source_sha256": "3121acb8645f5f3e918ddeb7f2d19c5cfd32a1285a41c58de78ebe7bef13748a",
+    "generated_rules": 6
+  },
   "limits": [
-    "Generation only. No new NaxRiscv native run.",
-    "Existing main records 59 ISA passes and zero firings for these six rules. Activation was not measured.",
-    "Free-list mask, multi-lane ROB events, forwarding age/data and full recovery remain unbound."
+    "Nine rules generated. No new NaxRiscv native run by this worker.",
+    "The historical 59-program zero-firing record applies to the original six rules only.",
+    "Ghost allocation events do not expose the allocator RAM state. Forwarding-window checks do not establish byte-data correctness. Full recovery remains unbound."
   ]
 }

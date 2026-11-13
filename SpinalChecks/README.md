@@ -1224,15 +1224,18 @@ The fixture README lists the missing template and consumer bindings.
 
 ### NaxRiscv on main
 
-The out-of-order NaxRiscv example is present. Its project already declares six
-rules: three counter bounds and three command-channel pipeline checks.
-The [binding review](nax-binding-review.json) regenerated all six successfully.
-This review did not run a new native core campaign. The example's existing
-record has 59 ISA passes and zero firings. Activation is unmeasured.
-Free-list masks, two-lane ROB conservation, store forwarding age/data and full
-recovery remain unbound. The RAM allocator and multi-lane ROB cannot be bound
-to a single-lane template by renaming signals. See the example README for
-its source-interface limits.
+The out-of-order NaxRiscv example is present. The reviewed snapshot declares
+nine rules: three counter bounds, three command-channel pipeline checks,
+ROB-pointer conservation, free-list ghost events and a forwarding window.
+The [binding review](nax-binding-review.json) regenerated all nine successfully.
+It retains the source hash of the earlier six-rule review.
+
+This worker did not run a new native NaxRiscv campaign. The existing 59-program
+zero-firing record applies to the original six rules. It does not cover the
+three new declarations. Activation remains unmeasured on NaxRiscv.
+Ghost events do not expose the allocator RAM state. The forwarding window
+does not establish forwarded byte-data correctness. Full recovery remains
+unbound. See the example README for its source-interface limits.
 
 ### Which checks can bind
 

@@ -521,7 +521,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [SpinalWaves](../SpinalWaves/README.md) | Native checker evidence | Interactive Surfer rendering is separate; use the vendored limits. |
 | [SpinalTrace](../SpinalTrace/README.md) | Bounded VCD/Verilator validation | FST and other simulators remain unqualified. Source paths need the original sources. |
 | [SpinalBlocks](../SpinalBlocks/README.md) | Extraction/diagram tests | Native HDL diagram export in #688 did not run ELK/SVG rendering or VS Code. |
-| [SpinalChecks](../SpinalChecks/README.md) | Native core activation and bounded OoO fixture evidence | All bound core checks have measured triggers. Wider VexiiRiscv PC/divider findings stay open. Selected enum induction samples do not qualify a core. |
+| [SpinalChecks](../SpinalChecks/README.md) | Native core activation and bounded OoO fixture evidence | All 82 bound VexRiscv/VexiiRiscv checks have measured triggers. Wider VexiiRiscv PC/divider findings stay open. Selected enum induction samples do not qualify a core. |
 | [SpinalKonata](../SpinalKonata/README.md) | Captured trace analysis | Standalone compiled-model capture is incomplete; retain its C1 error and null cache key. |
 | [RiscvSim](../RiscvSim/README.md) | Ran on RTL, selected adapters | Fault, DPI and SystemC checks have different scopes. BOOM small has bounded fault and DPI evidence. No all-option qualification follows. See the BOOM table below. |
 
@@ -1115,8 +1115,10 @@ All seven bug variants fire in simulation and fail their selected depth-16
 formal check. Clean free-list conservation remains inconclusive at depth 16;
 it passes at depth 8. Other clean checks pass depth 16. Full template binding
 and direct perf, timing-model and fault adapters remain incomplete.
-NaxRiscv has six existing generation bindings. Free-list, multi-lane ROB,
-forwarding and full recovery bindings remain open.
+The reviewed NaxRiscv snapshot has nine generated declarations, including
+ROB-pointer, free-list ghost-event and forwarding-window rules. The previous
+59-program native result applies only to the original six rules. Actual
+allocator RAM conservation, forwarded byte data and full recovery remain open.
 
 The [kind-level induction samples](../SpinalChecks/kind-induction-results.json)
 select one instance of each bound kind. Only the selected enum sample closes

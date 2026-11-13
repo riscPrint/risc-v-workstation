@@ -274,6 +274,9 @@ microarchitecture templates to NaxRiscv signal names:
 |---|---|---|
 | `lq_free_bound`, `sq_free_bound` | `counter_bounds` (16) | `Lsu2Plugin_logic_{lq,sq}_tracker_free` |
 | `branch_context_bound` | `counter_bounds` (16) | `BranchContextPlugin_logic_ptr_occupancy` |
+| `rob_conservation` | `rob_pointers` (64; two-lane steps) | commit allocation/free pointers and accepted transfers |
+| `int_freelist_ghost` | `freelist_ghost` (64; two allocation/free lanes) | accepted allocation tags and free events |
+| `sq_forward_youngest` | `store_forward_window` (16) | load-stage hits, selected store and age-window pointers |
 | `fetch_refill_cmd`, `dcache_refill_cmd`, `peripheral_cmd` | `pipeline` (valid/payload stable while stalled) | the refill and peripheral command streams |
 
 ```sh
@@ -296,26 +299,16 @@ each instance is listed with that reason). The ISA suite with the check model:
 (`rvw/micro-checks-control.json`, load-queue free count at most 8):
 `rv32ui-p-add` fails with 1,004 firings of `control_lq_free_le_8`.
 
-Not bound: free-list and ROB conservation. The `allocation_pool` and
-`freelist_conservation` templates compare against a live-tag mask; NaxRiscv
-keeps its free list in a RAM (`AllocatorMultiPortMem`) and has no such mask.
-The `rob` template accepts one push and one pop per cycle; NaxRiscv's ROB
-moves two. Store-queue forwarding and age-matrix rules need per-entry signals
-that Lsu2 does not expose under stable names. The probe counters give a weak
-conservation check instead: `freelist_free - freelist_alloc` ends at the reset
-fill less the registers in flight (31 or 32) on every benchmark. SpinalChecks
-(the Scala inserted checks behind `streams` and CSR models) does not compile on
-the legacy SpinalHDL axis yet (about 37 errors).
+The current project declares nine rules. The three new declarations above
+regenerate successfully. The native result above applies only to the original
+six rules. No new native nine-rule result is claimed here.
 
-## What an out-of-order core project needs
-
-The [integration guide](../../docs/INTEGRATION_GUIDE.md#out-of-order-spinal-core-naxriscv-measured-2026-11-13)
-lists, per tool, what an out-of-order Spinal core project supplies and what
-this example measured. In short: a SpinalHDL axis selection when the core pins
-its own SpinalHDL; bus models and a commit-probe-to-C2 backend (xepc from the
-trapping ROB entry); a tap plugin on existing ROB, rename, issue-queue, LSQ,
-refill and branch-learn signals; a predictor study; an OoO model description;
-and `rvw.micro-checks/1` bindings.
+The ghost model checks allocation/free event consistency. It does not observe
+the allocator RAM state, so it cannot establish complete free-list state
+conservation. The ROB rule checks pointer movement for two-lane transfers.
+The forwarding-window rule checks selection within the declared window, not
+forwarded byte data. Full recovery is still unbound. The Scala SpinalChecks
+library also retains the legacy SpinalHDL compile limit below.
 
 ## Limits
 
