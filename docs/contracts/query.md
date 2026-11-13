@@ -69,3 +69,13 @@ empty results. Ambiguous names return a query error. `lsp_request` gives agents
 the same navigation without starting a server. Optional `--lint-settings PATH`
 runs the shared lint report on open and save. Active located findings become
 publishDiagnostics notifications. This is captured navigation, not live parsing.
+
+## HDL source-hash cache
+
+`build-hdl --cache-dir DIR` and MCP `query_build_hdl(cache_dir=DIR)` reuse a
+whole-design database under a SHA-256 source/options/tool/translator key.
+Receipts include the database content hash. A damaged database or changed key
+requires native rebuild. Output publication uses a temporary file and rename.
+The result reports cache key, status (`hit` or `rebuilt`) and scope
+(`whole-design`). This is build reuse, not semantic equivalence or per-module
+incremental elaboration. The cache directory must be outside source directories.

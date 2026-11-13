@@ -46,7 +46,18 @@ def _slang_plugin(tool, plugin):
     return bundled
 
 
-def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys', include_dirs=(),
+def build_hdl(sources, top, out, *, cache_dir=None, **options):
+    """Build normally, or reuse a whole-design source-hash cache when requested."""
+    sources = list(sources)
+    if not sources or Path(out).resolve() in {Path(p).resolve() for p in sources}:
+        raise ValueError('supply sources; output must not alias an input')
+    if cache_dir is not None:
+        from .build_cache import cached_build
+        return cached_build(_build_hdl, sources, top, out, cache_dir, options)
+    return _build_hdl(sources, top, out, **options)
+
+
+def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys', include_dirs=(),
               defines=(), parameters=(), std=None, slang=None, ghdl_plugin=None, library='work',
               firtool=None, source_roots=()):
     """Capture, elaborate, translate and atomically publish. Errors keep old output.

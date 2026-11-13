@@ -46,6 +46,7 @@ def register(subparsers) -> None:
     hdl.add_argument("--firtool", help="firtool executable (chisel; default $RVW_FIRTOOL, then PATH)")
     hdl.add_argument("--source-root", action="append", default=[], dest="source_roots",
                      help="directory the Scala paths in FIRRTL locations are relative to (chisel; default the .fir directory)")
+    hdl.add_argument("--cache-dir", help="source-hash cache outside the source directories")
     hdl.add_argument("--yosys", default="yosys")
     hdl.add_argument("--timeout", type=int, default=120)
     hdl.add_argument("--json", action="store_true")
@@ -396,4 +397,4 @@ def _build_hdl(args):
                      frontend=args.frontend, include_dirs=args.include_dirs, defines=args.defines,
                      parameters=args.parameters, std=args.std, slang=args.slang,
                      ghdl_plugin=args.ghdl_plugin, library=args.library, firtool=args.firtool,
-                     source_roots=args.source_roots)
+                     source_roots=args.source_roots, cache_dir=args.cache_dir)
