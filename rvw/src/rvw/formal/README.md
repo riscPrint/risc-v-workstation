@@ -3445,8 +3445,8 @@ are accepted. Source must be preprocessed. Other assertions and assumptions
 need separate jobs. Sampled functions, reset cancellation and temporal
 consequents remain unsupported in this path.
 
-This path uses `multiclock on` and Yosys `clk2fflogic`. All clock inputs start
-low. Each global step can change inputs. The property samples settled values
+This path uses `multiclock on` and Yosys `clk2fflogic`. Both property clock
+inputs start low. Each global step can change inputs. The property samples settled values
 from before that step's transition. The nearest eligible target event completes
 all outstanding requests. An overlapped implication includes requests born at
 a simultaneous target edge. A nonoverlapped implication retains those requests
