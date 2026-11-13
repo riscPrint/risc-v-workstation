@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-13",
+  "core": "vexiiriscv",
+  "configuration": "rv32im",
+  "scope": "bounded native simulation; no C4 acceptance or full ISA qualification",
+  "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "campaigns": [
+    {
+      "path": "rvw/out/dv/vexii-native/campaign.json",
+      "sha256": "c85bab7a03cf8feb0a792267206973cc3d71a44d20f2b8c7deaeb661e86e0890",
+      "status": "pass",
+      "counts": {
+        "pass": 1
+      },
+      "attempts": [
+        {
+          "seed": 48,
+          "status": "pass",
+          "elf_sha256": "9243dc0b742d983796296037302136ad6548a25ba00caac59208c3db4e2b4166",
+          "runtime_sha256": {
+            "user_init.s": "af41b0d8432e94146010a68f876b9bc6601c5393d3d5c99b8910125c32d75e0b"
+          },
+          "platform_sha256": "f7ce397a8231b2c94e49c074638de5ec3823e58a8516d315dc30a3e657703876",
+          "trace_sha256": "63b8b4c7755279ce689370a9ab0f50923bddf52c2301625fc1a18fa6daad5434",
+          "generation": {
+            "status": "generated",
+            "generator_revision": "f557b89ed6881a20515481a2585e9d004cd9642b",
+            "target": "rv32imc",
+            "seed": 48,
+            "instructions": 50,
+            "profile": "bare-integer-alu",
+            "pyboolector": "3.2.4.38488416565",
+            "pyvsc": "0.9.1.10086043874",
+            "returncode": 0,
+            "timed_out": false,
+            "source_sha256": "f11075032fdf9c0713de9e9a211b03db9993fea29cbb0ce91880d444a676d91b"
+          },
+          "comparison": {
+            "status": "match",
+            "instructions": 125,
+            "trace_complete": true,
+            "end_status": "pass",
+            "synchronized": 0,
+            "applied_masks": [],
+            "state_coverage": {
+              "trace_schema": "rvw.rvfi/1",
+              "fp": false,
+              "vector": null,
+              "hypervisor": false,
+              "two_stage_translations": 0,
+              "csr_snapshot": [],
+              "csr_snapshot_steps": 0,
+              "vector_memory_steps": 0,
+              "vector_memory_accesses": 0,
+              "fault_access_steps": 0
+            }
+          },
+          "c1": {
+            "path": "rvw/out/dv/vexii-native/seed-48/run/generations/3e774044005a40f89ebd17f78941da1d/riscv-dv/rv32im/tests/program/result.json",
+            "sha256": "6ced6a8d24b2dbcd805858dd9f46cb89e32c1448962501f98d7dc9fedf243409",
+            "status": "pass",
+            "inconclusive": null,
+            "instret": 125,
+            "rtl_sha256": "e6d89f1aceac2ce7a94669f943bb7929e40f784c083421c91e88eb27c9a2624c",
+            "tools_revision": "31f593a08d327874689644fee31e268b2559b244",
+            "tools_dirty": true,
+            "verilator": "Verilator 5.049 devel rev v5.048-26-g25d4827bd (mod)",
+            "java": "openjdk 21.0.13 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+            "trace_sha256": "63b8b4c7755279ce689370a9ab0f50923bddf52c2301625fc1a18fa6daad5434"
+          }
+        }
+      ]
+    },
+    {
+      "path": "rvw/out/dv/vexii-scratch-init/campaign.json",
+      "sha256": "7866f92d9fc4ef9fe0d1c71169368881f6eabc5b10c189f0cadf9761f7e4bd2b",
+      "status": "pass",
+      "counts": {
+        "pass": 1
+      },
+      "attempts": [
+        {
+          "seed": 49,
+          "status": "pass",
+          "elf_sha256": "a969c2541cf02e6e19e1e68e6c77ec37af2bd7f893c67db797e6807b7cac83fe",
+          "runtime_sha256": {
+            "user_init.s": "bc0109b57c93ffab5393b49d79b6b292e02b300876edba417c231e9b5b27e39a"
+          },
+          "platform_sha256": "f7ce397a8231b2c94e49c074638de5ec3823e58a8516d315dc30a3e657703876",
+          "trace_sha256": "a3c58b29570cc2d1d118103ae18c36bfa065785b4f994b243989df4ed914fdc6",
+          "generation": {
+            "status": "generated",
+            "generator_revision": "f557b89ed6881a20515481a2585e9d004cd9642b",
+            "target": "rv32imc",
+            "seed": 49,
+            "instructions": 50,
+            "profile": "bare-integer-alu",
+            "pyboolector": "3.2.4.38488416565",
+            "pyvsc": "0.9.1.10086043874",
+            "returncode": 0,
+            "timed_out": false,
+            "source_sha256": "7b5846a09307ba6d6364f231fa154bef0cf1d932da3342fa16c17eba1c1cb3c9"
+          },
+          "comparison": {
+            "status": "match",
+            "instructions": 113,
+            "trace_complete": true,
+            "end_status": "pass",
+            "synchronized": 0,
+            "applied_masks": [],
+            "state_coverage": {
+              "trace_schema": "rvw.rvfi/1",
+              "fp": false,
+              "vector": null,
+              "hypervisor": false,
+              "two_stage_translations": 0,
+              "csr_snapshot": [],
+              "csr_snapshot_steps": 0,
+              "vector_memory_steps": 0,
+              "vector_memory_accesses": 0,
+              "fault_access_steps": 0
+            }
+          },
+          "c1": {
+            "path": "rvw/out/dv/vexii-scratch-init/seed-49/run/generations/e6e9ab18840e4e0ba9510ce4f112bb78/riscv-dv/rv32im/tests/program/result.json",
+            "sha256": "eedf6ba0281ff456906cba8170389644622abb966431549cf3db3415d7dd00da",
+            "status": "pass",
+            "inconclusive": null,
+            "instret": 113,
+            "rtl_sha256": "e6d89f1aceac2ce7a94669f943bb7929e40f784c083421c91e88eb27c9a2624c",
+            "tools_revision": "31f593a08d327874689644fee31e268b2559b244",
+            "tools_dirty": true,
+            "verilator": "Verilator 5.049 devel rev v5.048-26-g25d4827bd (mod)",
+            "java": "openjdk 21.0.13 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+            "trace_sha256": "a3c58b29570cc2d1d118103ae18c36bfa065785b4f994b243989df4ed914fdc6"
+          }
+        }
+      ]
+    }
+  ]
+}

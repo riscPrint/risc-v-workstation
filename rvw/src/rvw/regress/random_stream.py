@@ -1,5 +1,6 @@
 """Seeded upstream pygen programs through C1, Spike and functional coverage."""
 from pathlib import Path
+from collections import Counter
 import hashlib
 import json
 import sys
@@ -24,6 +25,7 @@ def digest(path):
 
 def complete(comparison, run):
     return (comparison.get('status') == 'match'
+            and comparison.get('synchronized', 0) == 0
             and comparison.get('trace_complete') is True
             and comparison.get('end_status') == 'pass'
             and comparison.get('instructions', 0) > 0
@@ -44,7 +46,7 @@ def verify(elf, results, platform, coverage_plan=None):
     trace = run.artifact('rvfi_trace')
     if trace is None:
         return dict(status='trace_error', message='C1 result has no C2 trace')
-    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike', core=run.core)
+    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike', strict=True, core=run.core)
     if comparison.get('status') == 'mismatch':
         return dict(status='mismatch', comparison=comparison)
     if not complete(comparison, run):
@@ -156,6 +158,7 @@ def execute_json(out, settings=None, seeds=1, seed_base=1, project=None, core=No
             attempt.update(status=stage, message=str(exc))
         save()
     statuses = [a['status'] for a in report['attempts']]
+    report['counts'] = dict(sorted(Counter(statuses).items()))
     report['status'] = ('fail' if any(s in ('core_failure', 'mismatch') for s in statuses)
                         else 'pass' if statuses and all(s == 'pass' for s in statuses) else 'inconclusive')
     save()

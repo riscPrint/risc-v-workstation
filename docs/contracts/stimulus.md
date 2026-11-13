@@ -25,3 +25,11 @@ Each C1 run retains the runner's source/native identity and ELF replay records.
 
 The project schema accepts `[stimulus] random_settings = "random.toml"`.
 This path resolves from `rvw.toml`. An explicit `--settings` overrides it.
+
+## Native random campaign counts
+
+`rvw.random-campaign/1` includes `counts` when execution finishes. The keys are
+attempt status names. The values count attempts with each status. Missing keys
+mean zero attempts with that status. `pass` requires a complete, nonempty strict
+Spike comparison and passing C1 completion. A synchronized match earns no credit.
+Generator and compiler errors remain separate from a core failure or mismatch.
