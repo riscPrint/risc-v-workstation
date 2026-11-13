@@ -112,8 +112,13 @@ def generate(plan, root, out):
         engine = selection.get('engine', 'abc bmc3')
         if engine not in ('abc bmc3', 'smtbmc bitwuzla', 'smtbmc yices'):
             raise ValueError('unsupported machine engine')
-        (directory/'check.sby').write_text('[tasks]\ncheck\ncover\n[options]\ncheck: mode bmc\ncover: mode cover\ndepth ' + str(depth) + '\n[engines]\ncheck: ' + engine + '\ncover: smtbmc bitwuzla\n[script]\nread -formal -sv -noautowire ' + ' '.join(names) + '\nprep -top ' + plan['top'] + '\n[files]\n' + '\n'.join(names) + '\n')
-        rows.append(dict(check=check,status='generated',depth=depth,evidence=f'{check}/check.sby'))
+        cuts = selection.get('cone_cuts', [])
+        if not isinstance(cuts, list) or len(cuts) != len(set(cuts)) or any(
+                not isinstance(c, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_$]*', c) for c in cuts):
+            raise ValueError('cone cuts must be unique local RTL identifiers')
+        cut_script = ''.join('select -assert-count 1 ' + plan['top'] + '/w:' + c + '\ncutpoint ' + plan['top'] + '/w:' + c + '\n' for c in cuts)
+        (directory/'check.sby').write_text('[tasks]\ncheck\ncover\n[options]\ncheck: mode bmc\ncover: mode cover\ndepth ' + str(depth) + '\n[engines]\ncheck: ' + engine + '\ncover: smtbmc bitwuzla\n[script]\nread -formal -sv -noautowire ' + ' '.join(names) + '\nprep -top ' + plan['top'] + '\n' + cut_script + 'opt_clean\n[files]\n' + '\n'.join(names) + '\n')
+        rows.append(dict(check=check,status='generated',depth=depth,evidence=f'{check}/check.sby', scope='local cone contract' if cuts else 'pipeline', cone_cuts=cuts))
     report = dict(schema='rvw.machine-check-results/1',status='generated',rows=rows,
                   source_sha256={str(p):hashlib.sha256(d.encode()).hexdigest() for p,d in sources},
                   limits=['RV32 transition slices; not a complete privileged ISA model.',
@@ -143,6 +148,10 @@ def run(plan, root, out, timeout):
             tokens['check'] = 'INVALID_BINDING'
         row['status'] = 'failed' if tokens['check'] == 'FAIL' else 'bounded' if all(t == 'PASS' for t in tokens.values()) else 'inconclusive'
         row['native'] = tokens
+        if row.get('cone_cuts') and row['status'] == 'bounded':
+            row['local_status'] = 'bounded'
+            row['status'] = 'inconclusive'
+            row['reason'] = 'Local cone contract passed; pipeline composition is not established.'
     report['status'] = 'fail' if any(r['status']=='failed' for r in report['rows']) else 'inconclusive'
     (Path(out)/'result.json').write_text(json.dumps(report,indent=2)+'\n')
     return report

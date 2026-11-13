@@ -132,3 +132,34 @@ Source for both rules: [Machine-level ISA, MEPC and privilege stack](https://doc
 The directed run follows the ELF/hex recipe in MACHINE_M.md with pc-chain.S.
 Use the matching pc-chain-tb.sv. The first data store records MEPC; the
 subsequent store of 1 ends the test.
+
+## CSR decomposition follow-up
+
+`csr_slices.py` discovers 21 registered CSR address-decode terms in the pinned
+export. The shared catalog supplies the names. This includes machine CSRs and
+user counter aliases. Missing reference/update bindings remain unsupported.
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/formal/csr_slices.py \
+  --rtl BUILD/VexRiscv.v --out CAPTURE --run --timeout 50
+```
+
+The first slice cuts `execute_SRC1`. Its boundary contract requires a zero
+operand for x0 and the encoded value for immediate forms. All other operands
+are symbolic. Without that contract, an arbitrary nonzero x0 operand produces
+a local counterexample at step 7. This is an abstraction artifact, not a core
+CSR defect. The corrected slice returned assertion PASS and cover PASS at
+bound 25 with a 50-second limit on 2026-11-13. It remains inconclusive for
+whole-pipeline signoff. A separate proof must establish the operand contract.
+The original whole-pipeline bound-15 result is unchanged.
+
+This is partial item-2 work. Only mscratch has a consistency binding. The
+other 20 rows require independent read-only, WARL, counter and hardware-update
+models. The inventory and decomposition do not certify those rows. Private
+native evidence is in `.local/csr-slices-v2`. The one-net cut was measured;
+a wider control-cut experiment is separate and is not the checked-in binding.
+
+[csr-slice-results.json](csr-slice-results.json) retains the measured rows,
+source digest and native tokens. To display per-CSR rows in the signoff table,
+pass the generated `slices.json` to `rvw formal isa --machine`. This reruns the
+selected local checks. It does not reuse the committed measurement as a pass.
