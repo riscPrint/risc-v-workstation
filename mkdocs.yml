@@ -1,0 +1,23 @@
+site_name: RISC-V Workstation
+site_description: Local tool guides and contracts
+repo_url: https://github.com/riscPrint/risc-v-workstation
+use_directory_urls: false
+theme:
+  name: mkdocs
+nav:
+  - Home: README.md
+  - Build the site: docs/DOCS_SITE.md
+  - Getting started: docs/AGENT_SETUP.md
+  - Bring your own core: docs/BRING_YOUR_OWN_CORE.md
+  - Architecture: docs/AGENT_ARCH.md
+  - Install versions: docs/TOOL_VERSIONS.md
+  - Linux recipes: docs/LINUX_INSTALL.md
+  - Native archives: docs/NATIVE_ARCHIVES.md
+  - Command reference: docs/COMMAND_REFERENCE.md
+  - Contracts: docs/PLATFORM_CONTRACTS.md
+validation:
+  nav:
+    omitted_files: ignore
+  links:
+    not_found: warn
+    anchors: warn
