@@ -22,6 +22,8 @@
     "onCommand:coverage.open",
     "onView:coverage.results",
     "onCommand:debug.open",
+    "onCommand:lint.run",
+    "onCommand:lint.open",
     "onCommand:perf.open",
     "onView:perf.results",
     "onCommand:regress.open",
@@ -68,6 +70,22 @@
       {
         "command": "debug.open",
         "title": "Debug: Open Integrated Session"
+      },
+      {
+        "command": "lint.run",
+        "title": "Lint: Run rvw lint"
+      },
+      {
+        "command": "lint.rerun",
+        "title": "Lint: Run Again"
+      },
+      {
+        "command": "lint.open",
+        "title": "Lint: Open Saved Report or SARIF"
+      },
+      {
+        "command": "lint.clear",
+        "title": "Lint: Clear Diagnostics"
       },
       {
         "command": "perf.open",
@@ -512,6 +530,28 @@
             "default": "",
             "description": "Path to rvw/src for the local debug backend.",
             "restricted": true
+          }
+        }
+      },
+      {
+        "title": "Lint",
+        "properties": {
+          "lint.rvwExecutable": {
+            "type": "string",
+            "default": "rvw",
+            "description": "Path to rvw.",
+            "restricted": true
+          },
+          "lint.settings": {
+            "type": "string",
+            "default": "",
+            "description": "Lint settings file (rvw.lint-settings/1), relative to the first workspace folder. Empty: ask.",
+            "restricted": true
+          },
+          "lint.timeoutMs": {
+            "type": "number",
+            "default": 600000,
+            "description": "Timeout for one rvw lint run."
           }
         }
       },

@@ -10,6 +10,7 @@ One VS Code extension for the tools in this repository. Each tool adds a **featu
 | `coverage` | Saved coverage reports, holes and limits | [features/coverage/README.md](features/coverage/README.md) |
 | `perf` | Saved perf measurements and scope | [features/perf/README.md](features/perf/README.md) |
 | `wave` | Saved `rvw wave` queries: expression search, driver traces, sequences, transactions, wave diffs | [features/wave/README.md](features/wave/README.md) |
+| `lint` | `rvw lint` findings (lint rules, CDC, RDC, SDC intent, native lint) in the Problems panel, from a run or a saved report/SARIF | [features/lint/README.md](features/lint/README.md) |
 
 The result views include manual source navigation through `rvw query where`.
 They also open selected waves in Surfer and selected dependency traces in SpinalTrace.
