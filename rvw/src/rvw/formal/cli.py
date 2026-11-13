@@ -103,6 +103,15 @@ def register(sub) -> None:
     library.add_argument("--out", required=True)
     library.set_defaults(func=property_library.run)
 
+    from . import liveness
+    live = s.add_parser("liveness", help="lower eventual response SVA to a native SBY live job")
+    live.add_argument("source")
+    live.add_argument("--top", required=True)
+    live.add_argument("--out", required=True)
+    live.add_argument("--run", action="store_true")
+    live.add_argument("--timeout", type=float, default=60)
+    live.set_defaults(func=liveness.run)
+
     from . import temporal
     lowering = s.add_parser("sva-lower", help="lower finite temporal SVA to native Yosys assertions")
     lowering.add_argument("source")

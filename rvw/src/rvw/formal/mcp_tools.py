@@ -94,9 +94,27 @@ def _template(job, **args):
     return {'status': 'generated', 'out': args['out']}
 
 
+def _liveness(job, **args):
+    argv = [sys.executable, '-m', 'rvw', 'formal', 'liveness', args['source'],
+            '--top', args['top'], '--out', args['out']]
+    if args.get('run'):
+        argv.append('--run')
+    if 'timeout' in args:
+        argv += ['--timeout', str(args['timeout'])]
+    code = job.run(argv)
+    if code not in (0, 1):
+        raise ToolError('liveness lowering failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return json.loads((Path(args['out']) / 'result.json').read_text())
+
+
 def mcp_tools():
     from .deep_cli import mcp_tools as deep_tools
     return [*deep_tools(),
+
+        ToolSpec("formal_liveness", "Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.",
+                 schema({"source": S, "top": S, "out": S, "run": B,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["source", "top", "out"]),
+                 _liveness, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
