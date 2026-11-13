@@ -17,6 +17,7 @@ import contextlib
 import datetime as dt
 import fcntl
 import hashlib
+import io
 import json
 import math
 import os
@@ -1188,11 +1189,9 @@ os.execvpe(command[0], command, os.environ)
                         (j.dir / 'replay.elf').unlink(missing_ok=True)
                     r.artifacts['replay_elf'] = os.path.relpath(saved, j.dir)
                     try:
-                        argv = shlex.split(r.replay)
-                        previous_elf = argv[argv.index('--elf') + 1]
-                    except (ValueError, IndexError):
-                        previous_elf = str(elf.copy)
-                    r.replay = r.replay.replace(shlex.quote(previous_elf), shlex.quote(str(saved)))
+                        r.replay = _replay_elf(r.replay, saved)
+                    except ValueError:
+                        r.replay = r.replay.replace(shlex.quote(str(elf.copy)), shlex.quote(str(saved)))
             save_run(r, j.dir)
         cycles, cycles_origin = _lookup_origin(raw, j.suite.cycles_key)
         instret, instret_origin = _lookup_origin(raw, j.suite.instret_key)
@@ -1249,6 +1248,24 @@ os.execvpe(command[0], command, os.environ)
                          cycles=cycles if isinstance(cycles, int) else None,
                          instret=instret if isinstance(instret, int) else None,
                          wall_s=r.wall_s, run=j.rel, signature=run_signature(r), metrics=metrics, extra=extra)
+
+
+
+def _replay_elf(replay: str, elf: Path) -> str:
+    """Replace the ELF argument without changing other shell text or assignments."""
+    stream = io.StringIO(replay)
+    lexer = shlex.shlex(stream, posix=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    start, wanted = 0, False
+    for token in lexer:
+        end = stream.tell()
+        if wanted or token.startswith("--elf="):
+            value = str(elf) if wanted else "--elf=" + str(elf)
+            return replay[:start] + " " + shlex.quote(value) + " " + replay[end:]
+        wanted = token == "--elf"
+        start = end
+    raise ValueError("replay has no ELF argument")
 
 
 def _group_alive(pgid: int) -> bool:
