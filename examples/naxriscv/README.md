@@ -2,9 +2,8 @@
 
 This folder holds the project files for an external
 [NaxRiscv](https://github.com/SpinalHDL/NaxRiscv) checkout. NaxRiscv is an
-out-of-order RISC-V core written in SpinalHDL. It is the first out-of-order core
-in the workstation that builds in seconds: the light RTL target for the tools that
-are specific to out-of-order execution. Install the workstation as described in
+out-of-order RISC-V core written in SpinalHDL. This example tests the generic
+out-of-order tools on a small native RTL target. Install the workstation as described in
 [Bring your own core](../../docs/BRING_YOUR_OWN_CORE.md). Set `RVW_HOME` to that
 installation. Keep the core outside the workstation repository. The adapter
 does not change NaxRiscv's source.
@@ -34,6 +33,25 @@ rvw/build-tests.sh
 Use JDK 21, sbt, Verilator, a C++ compiler and make. The other submodules
 (`NaxSoftware`, `riscv-isa-sim`) are not necessary. To keep the core checkout
 clean, set `NAXRISCV` to it and run the project from a copy of this folder.
+
+## Private worker layout
+
+In the `saviour` worker layout, set `SAVIOUR` to the parent project directory.
+The pinned private core is in `wt/.nax/dbg/NaxRiscv`. Warm Scala outputs and
+native models stay under the worker checkout. Reuse them.
+
+```sh
+export RVW_HOME="$SAVIOUR/wt/dbg"
+export NAXRISCV="$SAVIOUR/wt/.nax/dbg/NaxRiscv"
+export RISCVSIM_WORK="$RVW_HOME/examples/naxriscv/rvw/target/work"
+export RVW_NAX_LOCK=nax-dbg
+export RVW_NAX_SBT_LOCK=sbt-dbg
+export RVW_SPINAL_SOURCE="$NAXRISCV/ext/SpinalHDL"
+```
+
+`run.sh` selects Scala 2.12.18 and the pinned SpinalHDL source. Use `nice -n 15`
+for new jobs. Keep each native run to a few minutes. Keep planted bugs in this
+private core. The normal adapter does not patch a core checkout.
 
 ## SpinalHDL and Scala versions
 
@@ -111,7 +129,7 @@ checkout.
   24,801 + 28 instructions, 177 + 1 traps, no synchronization, no applied masks.
 - Random memory timing (seeds 3 and 7, zero to three wait cycles per refill) on
   `lw`, `sb`, `div`, `amoadd_w`, `lrsc` and `fence_i`: 12 pass, 12 match.
-- No negative control was run.
+- The ISA negative control and three-register fault sample are reported below.
 - `rvw/build-db.sh rv32imasu rvw/out/nax.db`: 17 s (elaboration 3.3 s,
   extraction 6.0 s). 30 components, 8278 signals, 1482 registers, 154 memories,
   10,826 assignments, 17,363 dependency edges. PDG, SpinalBlocks and HGLDD
@@ -213,9 +231,8 @@ model's `branches` count on the eight calibrated programs. `freelist_free` minus
 list, less registers still allocated in flight).
 
 Limits: the top-down predicates are the model's simple commit-slot partition,
-not the hardware top-down method. No Kanata pipeline view (`--to kanata`) is
-bound: a flush retires many ROB IDs at once, which the stage/flush probe kinds
-do not express. No TLB probe: the benchmarks run in M-mode without
+not the hardware top-down method. The Kanata follow-up below now binds reused
+ROB IDs and bulk flushes. No TLB probe: the benchmarks run in M-mode without
 translation. The `gshare` study is unqualified.
 
 ## Out-of-order timing model
@@ -223,18 +240,25 @@ translation. The `gshare` study is unqualified.
 `rvw/arch/ooo.json` describes this configuration for the workstation's
 trace-driven OoO model (`rvw ooo`): two-wide fetch, rename and commit, 64 ROB
 entries, 32 issue-queue entries, 16 load and 16 store entries, 64 physical
-registers, address disambiguation, and shared components for NaxRiscv's GShare
+registers, speculative load issue, buffered stores, and shared components for NaxRiscv's GShare
 (16384 counters), 512-entry BTB and 16 KiB 4-way I$ and D$. Latencies, the
 branch penalty and front-end delays are timing approximations, not extracted
 values. `rvw/arch/calibrate.py RUNS OUT` builds the calibration plan from the
 probe runs above, maps the RTL `branches` counter to the model's `branches`
-event, fits branch penalty, fetch latency and load latency on the training
-programs only (`rvw arch ooo-fit`) and scores the held-out programs.
+event, fits branch penalty and load latency on the training programs only
+(`rvw arch ooo-fit`) and scores the held-out programs. Fetch latency stays at
+3. The calibration plan allows 5,000,000 cycles, including `spmv`.
 
 ```sh
 rvw ooo rvw/arch/ooo.json rvw/out/probe/median/rvfi.jsonl --json
 python3 rvw/arch/calibrate.py rvw/out/probe rvw/out/calib
+rvw ooo rvw/arch/ooo.json rvw/out/probe/spmv/rvfi.jsonl --max-cycles 5000000 --json
 ```
+
+### Initial correlation
+
+This table records the earlier description. The current memory-model follow-up
+below reports the revised description and its mixed results.
 
 Measured on 2026-11-13 (results: [`rvw/arch/results-2026-11-13.json`](rvw/arch/results-2026-11-13.json)).
 Training: median, qsort, multiply. Held out: towers, vvadd, rsort, memcpy,
@@ -291,7 +315,7 @@ pass with any firing becomes `fail`; a run whose output was not captured is an
 error, never a pass. `TapPlugin` adds the constant `rvw_checks_active` wire for
 the counter-bound enables.
 
-Measured on 2026-11-13: `rvw checks generate --all` bound all six rules
+Initial six-rule baseline on 2026-11-13: `rvw checks generate --all` bound six rules
 (`complete: false` overall: no stream contracts, no CSR model, and the bus
 generator has no checker for NaxRiscv's FetchL1/DataMem/peripheral bus types;
 each instance is listed with that reason). The ISA suite with the check model:
@@ -299,22 +323,28 @@ each instance is listed with that reason). The ISA suite with the check model:
 (`rvw/micro-checks-control.json`, load-queue free count at most 8):
 `rv32ui-p-add` fails with 1,004 firings of `control_lq_free_le_8`.
 
-The current project declares nine rules. The three new declarations above
-regenerate successfully. The native result above applies only to the original
-six rules. No new native nine-rule result is claimed here.
+The current project declares nine rules. The follow-up native ISA run has
+59 passes, 59 captured reports and zero firings across all nine rules. Each
+new rule also caught its private planted bug with seed 1. See the wide-check
+follow-up and `rvw/plants/check-results.json` for the counts and limits.
 
 The ghost model checks allocation/free event consistency. It does not observe
 the allocator RAM state, so it cannot establish complete free-list state
 conservation. The ROB rule checks pointer movement for two-lane transfers.
 The forwarding-window rule checks selection within the declared window, not
-forwarded byte data. Full recovery is still unbound. The Scala SpinalChecks
-library also retains the legacy SpinalHDL compile limit below.
+forwarded byte data. Full recovery is still unbound. SpinalChecks compiles
+its library and test sources on both API axes. Four naming/elaboration tests
+pass on each axis. Other compiled Scala tests did not run.
 
 ## Limits
 
-- One configuration. No RVC, FPU, interrupt schedules, devices, Konata or
-  riscv-formal monitor (`--irq-schedule`, `--konata`, `--rvfi-check` and
-  `--soc-map` are refused).
+- The default configuration has the 59-test ISA result. The IQ16 variant has
+  only the measured `memcpy` run.
+- No RVC, FPU, interrupt schedules, devices or riscv-formal monitor.
+  `--irq-schedule`, `--rvfi-check` and `--soc-map` are refused.
+- Native C1 `--konata` is refused. Convert the probe stream with `--to kanata`.
+- Unseeded directed-check firings remain unresolved. Fixed-seed controls use 1.
+- Store-buffer drain, forwarded byte checks and full recovery checks remain open.
 - SpinalChecks has compile support on the legacy axis. Native qualification
   remains separate from compilation.
 - `rvw query build` sets `NAXRISCV` to the project root. Keep the project files in
@@ -463,8 +493,8 @@ matches. No masks or synchronization hide the error. The native trace later
 ends on an assertion at cycle 381. Co-simulation stops at the first mismatch;
 it does not claim a complete mutant-trace match.
 
-The unmodified golden run passes and matches all 501 instructions and 3 trap
-events. The private mutation is in `rvw/plants/isa-negative.patch`. Set
+With the mutation disabled, the golden run passes and matches all 501
+instructions and 3 trap events. The private mutation is in `rvw/plants/isa-negative.patch`. Set
 `RVW_NAX_PLANT=alu` only for that control. The project captures this environment
 variable in its input identity.
 

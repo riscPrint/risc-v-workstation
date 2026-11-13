@@ -350,22 +350,33 @@ Spike-only scope or qualify interrupts, extended CSR capture or a second core.
 
 ## Out-of-order Spinal core (NaxRiscv, measured 2026-11-13)
 
-The [NaxRiscv example](../examples/naxriscv/README.md) is the first light
-out-of-order target: RV32IMA, M/S/U, Sv32, two-wide rename and commit, 64-entry
-ROB, Lsu2 with 16-entry load/store queues, GShare and BTB. The model builds in
-about 10 s. No NaxRiscv source is edited. What an out-of-order Spinal core
-project needs from each tool, and what the example measured:
+The [NaxRiscv example](../examples/naxriscv/README.md) uses RV32IMA, M/S/U,
+Sv32, two-wide rename and commit, a 64-entry ROB, Lsu2 with 16-entry load/store
+queues, GShare and BTB. The default issue queue has 32 entries. The `rv32imasu-iq16`
+variant has 16. Only the default has the retained 59-test ISA result. The IQ16
+variant has one measured benchmark. Normal runs do not patch the core. Negative
+controls use a private patched checkout and private locks.
 
 | Tool | What the core project supplies | Measured on NaxRiscv | Open |
 |---|---|---|---|
-| Build (`scripts/sbt/SpinalAxis.scala`) | `RVW_SPINAL_SOURCE` for a core that pins its own SpinalHDL; `'++V!'` for its Scala | Pinned SpinalHDL `c3626570`, Scala 2.12.18: RiscvSim, SpinalProbes, SpinalTrace, SpinalWaves, SpinalDB compile; release axis unchanged | SpinalChecks on the legacy axis |
-| C1/C2 (`rvw/run.sh`) | Bus models for the refill ports; C2 from the commit probe; xepc from the trapping ROB entry; instruction word from the committed memory image | 59/59 ISA, 2/2 smoke, 12/12 seeded memory timing, 9/9 benchmarks pass | interrupts, devices, RVC/FPU configs |
-| Cosim (`rvw cosim check`) | Platform JSON | Spike matched all 59 ISA traces (24,801 instructions, 177 traps) and nine benchmarks (2,464,620 instructions); no sync, no masks | negative control |
-| Query (`rvw query`, SpinalBlocks) | `build-db.sh` entry | 30 components, 8,278 signals, PDG, 24 block diagrams in 17 s | |
-| Probes (`rvw probes`, `rvw perf topdown`) | A tap plugin on existing ROB, rename, issue, LSQ, refill and branch-learn signals | Commit-slot top-down on nine programs, `retiring` = C2 = C1; branch events 1:1 with C2 | Kanata view for bulk ROB flushes; TLB events |
-| Predictor (`rvw csim compare-rtl`) | A study describing the core's predictor | Direction agreement 80.4 % to 99.8 % against a 16384-counter gshare | qualified study (reversed-PC hash, speculative history) |
-| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | `arch/ooo.json`; probe counts for event mapping | Mean absolute IPC error 14.3 % on three training and 24.9 % on five held-out programs (max 42.7 %, memcpy); `branches` event exact; top-down partitions side by side | memory-heavy code underpredicted; one event family only |
-| Generated checks (`rvw checks generate`) | `rvw.micro-checks/1` bindings; a check model in the adapter | 6 rules bound; 59 ISA runs, 0 firings; control fires | free-list/ROB conservation needs a live-tag mask; SpinalChecks |
+| Build (`scripts/sbt/SpinalAxis.scala`) | Pinned `RVW_SPINAL_SOURCE` and Scala axis | SpinalChecks library and all test sources compile on legacy Scala 2.12.18 and release Scala 2.13.14; four naming/elaboration tests pass per axis | Other compiled Scala tests and native Scala-inserted core checks |
+| C1/C2 (`rvw/run.sh`) | Refill bus models and commit-probe C2 backend | Retained default results: 59/59 ISA, 2/2 smoke, 12/12 seeded memory timing and 9/9 benchmarks pass | Interrupts, devices, RVC/FPU configurations; broader IQ16 tests |
+| Cosim (`rvw cosim check`) | Platform JSON and an independent observation path | Retained 59 ISA and nine benchmark matches; ALU negative control finds the wrong write at order 1, PC `0x80000050`; no masks or synchronization | More negative controls and broader architecture coverage |
+| Query (`rvw query`, SpinalBlocks) | `build-db.sh` entry | Default database: 30 components, 8,278 signals, PDG and 24 block diagrams | IQ16 database and broader configurations |
+| Probes and Kanata (`rvw probes`) | Entry, issue, completion, commit and ROB-tail flush taps | 501 native retirement PCs and cycles match C2; 1,003-cycle view; probes-off RTL is identical with and without the tap | 32 orphan events and seven open instructions at shutdown; TLB events |
+| Function top-down (`rvw perf`) | Per-cycle partition samples, C2 and ELF symbols | IQ32/IQ16 `memcpy`: 25,375/28,999 cycles; both completely match Spike; added back-end slots map to `main`; measured queue-push blocking rises | Lost slots use the next retirement as time attribution; more programs and configurations |
+| Predictor (`rvw csim compare-rtl`) | Project predictor study | Retained direction agreement 80.4% to 99.8% against gshare | Qualified study, exact PC hash and speculative history |
+| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | Project description and probe event map | Revised mean IPC error: 20.7% training; 13.0% on the original five held-out programs; 12.4% across six including `spmv`; 5,000,000-cycle plan | Training worsens from 14.3%; finite store-buffer drain and replay fidelity; one event family |
+| Generated checks (`rvw checks generate`) | Queue, pointer and tag-event bindings | Nine rules; 59 ISA passes with zero firings; seed-1 ROB/free-list/forwarding controls fire their target rules 29/135/2 times | Actual RAM-state conservation, forwarded byte data, full recovery; unseeded directed-run firings |
+| Register faults (`rvw fault`) | Register sites from the database and a fixed-seed adapter | Three applied bit flips on ROB allocation, commit and free pointers; all detected by native assert/fail statuses | Three selected bits at one cycle do not qualify safety or broad fault coverage |
+
+The current records are in the example's `rvw/arch/memory-results-2026-11-13.json`,
+`rvw/probes/pipeline-results.json`, `rvw/perf/results.json` and `rvw/plants/`.
+The model improves held-out error while training error worsens. Function loss
+attribution is temporal. Queue-blocked counters can overlap other stalls.
+Keep these limits beside the measured results. No result here is hardware,
+whole-core, safety or general timing-model qualification.
+
 ### Generated-suite counts on RTL
 
 These are retained 2026-11-13 results from the suite runs above. The RV32 PMP
@@ -1121,10 +1132,12 @@ All seven bug variants fire in simulation and fail their selected depth-16
 formal check. Clean free-list conservation remains inconclusive at depth 16;
 it passes at depth 8. Other clean checks pass depth 16. Full template binding
 and direct perf, timing-model and fault adapters remain incomplete.
-The reviewed NaxRiscv snapshot has nine generated declarations, including
-ROB-pointer, free-list ghost-event and forwarding-window rules. The previous
-59-program native result applies only to the original six rules. Actual
-allocator RAM conservation, forwarded byte data and full recovery remain open.
+The NaxRiscv follow-up has nine generated rules, including ROB-pointer,
+free-list ghost-event and forwarding-window rules. All nine have a fixed-seed
+59-program native run with zero firings. Each new rule catches its private
+planted bug. The ghost checks tag-event consistency. Actual allocator RAM
+conservation, forwarded byte data and full recovery remain open. Unseeded
+directed-run firings remain unresolved. See the example's saved check results.
 
 The [kind-level induction samples](../SpinalChecks/kind-induction-results.json)
 select one instance of each bound kind. Only the selected enum sample closes
