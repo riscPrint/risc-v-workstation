@@ -113,6 +113,7 @@ errors. Tool input paths must exist when the command consumes them.
 | `arch` | `description`, `sources`, `benchmarks` | Paths to the core description JSON, riscv-tests benchmark sources, and native ELF build directory. See C9. |
 | `cosim` | `platform` | Platform JSON used unless `--platform` is explicit. A selected project with no platform is an error for cosim. |
 | `debug` | `config` | Debug TOML for bundle, reduce and bisect. It must describe the recorded core. |
+| `debug_module` | `profile` | Debug profile (`rvw.debug-profile/1`) for `rvw debug suite` and `rvw debug serve`. See "C1 debug transport". |
 | `checks` | `settings`, `waivers` | Project adapter settings and waiver file paths. Their format belongs to the adapter. The launcher must consume them. |
 | `query` | `build`, `db` | Build command list and output database path. `rvw query build` calls `build CONFIG OUT`; `--config` and `--out` override the core default and `db`. Query reads use `db` unless `--db` is explicit. |
 | `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports`, `check_options`, `instruction_models` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
@@ -474,6 +475,40 @@ full trace identity. Input/reference identities stay in `reproduction`.
 An incomplete live stream returns `inconclusive`, with cause
 `live_trace_incomplete`. The API stops the producer on a checked divergence.
 
+
+### C1 debug transport (optional)
+
+A core adapter can expose its simulated Debug Module in one of two ways.
+The debug profile (`rvw.debug-profile/1`, see `rvw/src/rvw/debug/README.md`)
+names the way in `[transport]`.
+
+- `remote_bitbang`: the simulation contains a JTAG DTM and serves OpenOCD's
+  remote_bitbang protocol on a TCP port. rvw drives TCK/TMS/TDI and reads TDO.
+- `dmi_process`: the profile gives a command. rvw starts it and speaks a line
+  protocol on its standard input and output. The adapter prints `ready ABITS`
+  first. rvw then writes `r ADDR`, `w ADDR DATA`, `t CYCLES` or `q`. The adapter
+  answers each `r` or `w` with `ok DATA`, `busy` or `fail`, and each `t` with
+  `ok 0x0` after it advances the simulation by that many cycles. Values are
+  hexadecimal with a `0x` prefix. `busy` means the request did not start; rvw
+  sends it again. `fail` is a DMI failure (status 2). Diagnostics go to stderr.
+
+`rvw debug serve` wraps a `dmi_process` bus in the reference JTAG DTM, so
+OpenOCD can attach to a core that has only a DMI bus. A transport response is
+not evidence that a debug operation worked. The campaigns check effects through
+a separate path, for example memory read back by another access method.
+
+The debug compliance suite writes C3 with `suite: "debug-compliance"`, `core`
+set to the profile name and `config` set to `debug-<version>`. Each test entry
+has `group`, `observations` and `dmi_accesses`. Against a non-model target it
+also has `reference_status` and `reference_diff`, the result of the same check
+on the reference model. A check the reference model cannot pass makes the entry
+inconclusive. Different observations make it fail. Checks for options the
+profile does not declare, or that the profile skips with a reason, are listed in
+the top-level `unsupported` array and are not tests. An entry that could not
+exercise its rule has status `error`, signature `inconclusive` and an
+`inconclusive` reason. `rvw debug tap` writes the same layout with
+`suite: "jtag-dtm"`. Exit codes: 0 all pass, 1 any fail, 3 inconclusive or no
+checks.
 
 ### Optional multi-hart extension (C1 and C2)
 

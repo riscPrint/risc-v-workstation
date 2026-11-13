@@ -60,6 +60,7 @@ class Project:
         return [value for section, keys in {
             "stimulus": ("random_settings",),
             "cosim": ("platform",), "debug": ("config",),
+            "debug_module": ("profile",),
             "checks": ("settings", "waivers"),
         }.items() for key in keys if (value := self.get(section, key)) is not None]
 
@@ -72,6 +73,7 @@ def parse_project(raw, path, environment):
         "stimulus": {"random_settings"},
         "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
+        "debug_module": {"profile"},
         "query": {"build", "db"},
         "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},

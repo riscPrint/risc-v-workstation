@@ -440,7 +440,8 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 ### `rvw debug`
 
 ```text
-usage: rvw debug [-h] [--project PROJECT] {openocd,ingress,etrace} ...
+usage: rvw debug [-h] [--project PROJECT]
+    {openocd,ingress,etrace,suite,tap,serve} ...
 ```
 
 ### `rvw debug openocd`
@@ -462,6 +463,30 @@ usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
 usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
     --static-config STATIC_CONFIG --user-config USER_CONFIG --toolchain
     TOOLCHAIN --rvfi RVFI --out OUT [--loss] [--timeout TIMEOUT] [--project
+    PROJECT]
+```
+
+### `rvw debug suite`
+
+```text
+usage: rvw debug suite [-h] [--profile PROFILE] --out OUT [--group GROUP]
+    [--check CHECK] [--no-reference] [--port PORT] [--log LOG] [--list]
+    [--project PROJECT]
+```
+
+### `rvw debug tap`
+
+```text
+usage: rvw debug tap [-h] [--host HOST] --port PORT [--irlen IRLEN] [--idcode
+    IDCODE] [--no-busy-probe] --out OUT [--project PROJECT]
+```
+
+### `rvw debug serve`
+
+```text
+usage: rvw debug serve [-h] [--profile PROFILE] [--host HOST] [--port PORT]
+    [--dtm-latency DTM_LATENCY] [--idle IDLE] [--ticks-per-ms TICKS_PER_MS]
+    [--port-file PORT_FILE] [--duration DURATION] [--log LOG] [--project
     PROJECT]
 ```
 
@@ -1833,6 +1858,30 @@ Starts a background job: yes.
 Cartesian sweep of dotted study keys over traces, with storage-budget marking and a Pareto front on one lower-is-better metric (e.g. direction_mpki, l1d_mpki). Runs as a job.
 
 Arguments: `study` (required), `traces` (required), `params` (required), `format`, `sets`, `budget_kib`, `budget_scope`, `metric`, `jobs`, `timeout`.
+
+Starts a background job: yes.
+
+### `debug_checks`
+
+List the Debug Specification compliance checks and the rule each one tests.
+
+Arguments: none.
+
+Starts a background job: no.
+
+### `debug_suite`
+
+Run the Debug Specification compliance campaign over a declared debug profile (model, remote_bitbang or adapter DMI bus). Writes C3 results; undeclared options are unsupported, never passed. A reference-model pass is not core evidence.
+
+Arguments: `out` (required), `profile`, `groups`, `checks`, `reference`, `project`, `port`.
+
+Starts a background job: yes.
+
+### `debug_tap`
+
+Check a remote_bitbang JTAG TAP and RISC-V DTM: TAP resets, IR capture, IDCODE, BYPASS, DTMCS, DMI status, sticky busy and resets. Writes C3 results.
+
+Arguments: `port` (required), `out` (required), `host`, `irlen`, `busy_probe`.
 
 Starts a background job: yes.
 

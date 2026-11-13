@@ -1,0 +1,43 @@
+# Debug profile for native Spike 1.1.1-dev as a remote_bitbang reference target.
+# Start: spike --rbb-port=PORT --halted -p2 --dm-sba=64 -m0x7ffff000:0x1001000 loop.elf
+# Run:   rvw debug suite --profile examples/debug/spike.toml --port PORT --out /tmp/spike-debug
+# These values declare what Spike implements. They are not a core default.
+schema = "rvw.debug-profile/1"
+name = "spike"
+version = "0.13.2"
+xlen = 64
+harts = 2
+hartsellen = 1
+hart_array = true
+haltgroups = true
+progbufsize = 2
+impebreak = true
+datacount = 2
+abstract = ["gpr", "csr", "fpr"]
+postincrement = false       # Spike ignores aarpostincrement on Access Register
+resethaltreq = false        # dmstatus.hasresethaltreq is 0
+csr_missing_cmderr = 3
+modes = "MSU"
+reset_vector = 0x1000
+scratch = 0x80010000
+memory = [
+  { base = 0x7ffff000, size = 0x1001000 },
+  { base = 0x1000, size = 0x1000, kind = "readonly" },
+]
+sba = { sizes = [8, 16, 32, 64], asize = 64, misaligned_error = 2, size_error = 3 }
+
+[triggers]
+count = 4
+types = [2, 3, 4, 5, 6, 15]
+matches = [0, 1, 2, 3, 4, 5]
+timing = [0]
+tcontrol = false
+store_data_timing = "before"
+
+[skip]
+"dm.dmactive_reset" = "Spike keeps data0 when dmactive is cleared; the check expects the reset value 0"
+"dm.haltsum0" = "Spike has no haltsum0 register; DMI reads of 0x40 fail"
+
+[transport]
+kind = "remote_bitbang"
+port = 0
