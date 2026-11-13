@@ -28,6 +28,12 @@
     "onCommand:coverage.plan",
     "onCommand:coverage.clearLines",
     "onCommand:debug.open",
+    "onCommand:formal.open",
+    "onCommand:formal.child",
+    "onCommand:formal.wave",
+    "onCommand:formal.highlight",
+    "onCommand:formal.clear",
+    "onView:formal.results",
     "onCommand:lint.run",
     "onCommand:lint.open",
     "onCommand:lsp.start",
@@ -109,6 +115,26 @@
       {
         "command": "debug.open",
         "title": "Debug: Open Integrated Session"
+      },
+      {
+        "command": "formal.open",
+        "title": "Formal Properties: Open Saved Formal Result"
+      },
+      {
+        "command": "formal.child",
+        "title": "Formal Properties: Open Selected Property Result"
+      },
+      {
+        "command": "formal.wave",
+        "title": "Formal Properties: Open Counterexample Wave"
+      },
+      {
+        "command": "formal.highlight",
+        "title": "Formal Properties: Highlight Saved Proof Core"
+      },
+      {
+        "command": "formal.clear",
+        "title": "Formal Properties: Clear Proof Core"
       },
       {
         "command": "lint.run",
@@ -311,6 +337,10 @@
           "name": "RVW Coverage Holes and Plan"
         },
         {
+          "id": "formal.results",
+          "name": "RVW Formal Properties"
+        },
+        {
           "id": "perf.results",
           "name": "RVW Performance"
         },
@@ -383,6 +413,31 @@
         {
           "command": "coverage.clearLines",
           "when": "view == coverage.holes",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.open",
+          "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.child",
+          "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.wave",
+          "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.highlight",
+          "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.clear",
+          "when": "view == formal.results",
           "group": "navigation"
         },
         {
@@ -495,6 +550,16 @@
         {
           "command": "coverage.source",
           "when": "view == coverage.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.child",
+          "when": "view == formal.results",
+          "group": "navigation"
+        },
+        {
+          "command": "formal.wave",
+          "when": "view == formal.results",
           "group": "navigation"
         },
         {

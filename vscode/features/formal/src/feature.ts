@@ -1,0 +1,23 @@
+import * as vscode from 'vscode';
+import {dirname,resolve} from 'node:path';
+import type {Feature} from '../../../src/api';
+import {children,label,object,type Row} from '../../../src/results/model';
+import {parse,coreLines} from './model';
+const feature:Feature={id:'formal',activate(context){let report:Record<string,unknown>|undefined,file:vscode.Uri|undefined;
+ const changed=new vscode.EventEmitter<Row|undefined>();
+ const decoration=vscode.window.createTextEditorDecorationType({isWholeLine:true,backgroundColor:new vscode.ThemeColor('editor.findMatchHighlightBackground')});
+ const clear=()=>{for(const e of vscode.window.visibleTextEditors)e.setDecorations(decoration,[]);};
+ context.subscriptions.push(changed,decoration,vscode.window.createTreeView('formal.results',{treeDataProvider:{onDidChangeTreeData:changed.event,getChildren:(row?:Row)=>row?children(row.value):report?children(report):[{key:'Open saved formal regress, autocheck, ISA or proof core JSON',value:null}],getTreeItem:(row:Row)=>{const item=new vscode.TreeItem(label(row),children(row.value).length?1:0);item.contextValue='formal.property';return item;}}}));
+ const command=(name:string,fn:(row?:Row)=>Promise<unknown>)=>context.subscriptions.push(vscode.commands.registerCommand(`formal.${name}`,async row=>{try{await fn(row);}catch(e){void vscode.window.showErrorMessage(`Formal: ${String(e)}`);}}));
+ async function load(uri:vscode.Uri){report=undefined;clear();changed.fire(undefined);report=parse(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString());file=uri;changed.fire(undefined);}
+ command('open',async()=>{const uri=(await vscode.window.showOpenDialog({canSelectMany:false,filters:{JSON:['json']}}))?.[0];if(uri)await load(uri);});
+ command('child',async row=>{const result=object(row?.value).result;if(!file||typeof result!=='string')throw new Error('Select a property with a saved result path.');await load(vscode.Uri.file(resolve(dirname(file.fsPath),result)));});
+ command('wave',async row=>{if(!vscode.workspace.isTrusted)throw new Error('Trust the workspace before opening Surfer.');
+ const r=object(row?.value??report),wave=object(r.artifacts).wave??r.vcd;
+ const uri=typeof wave==='string'&&file?vscode.Uri.file(resolve(dirname(file.fsPath),wave)):(await vscode.window.showOpenDialog({title:'Saved counterexample wave',canSelectMany:false}))?.[0];if(!uri)return;
+ await vscode.workspace.fs.stat(uri);
+ await vscode.tasks.executeTask(new vscode.Task({type:'formal'},vscode.TaskScope.Workspace,'Formal counterexample','formal',new vscode.ProcessExecution(vscode.workspace.getConfiguration('wave').get('surferExecutable','surfer'),[uri.fsPath])));});
+ command('highlight',async()=>{clear();const mapped=coreLines(report);if(!mapped.length)throw new Error('No mapped proof-core source lines. Open a successful saved solver-core report with design bindings.');
+ for(const path of new Set(mapped.map(l=>l.file))){const doc=await vscode.workspace.openTextDocument(vscode.Uri.file(resolve(file?dirname(file.fsPath):'.',path))),editor=await vscode.window.showTextDocument(doc);editor.setDecorations(decoration,mapped.filter(l=>l.file===path&&l.line<=doc.lineCount).map(l=>({range:new vscode.Range(l.line-1,0,l.line-1,0),hoverMessage:'Saved bounded solver core. Source identity is not revalidated. No unbounded proof claim.'})));}});
+ command('clear',async()=>clear());
+}};export default feature;

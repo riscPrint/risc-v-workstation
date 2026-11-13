@@ -1,0 +1,3 @@
+# Formal properties
+
+Open saved formal regress, autocheck application results, ISA signoff, individual formal results or solver cores. Expand properties or rows for status, proof kind and limits. Select a property row and use Open Selected Property Result. Open Counterexample Wave uses a declared wave path or asks for a saved wave. It starts Surfer in a trusted workspace. Highlight Saved Proof Core uses selected labels and design bindings from a successful solver-core result. Missing or stale mappings give a message. Source identity is not revalidated. Highlights show bounded query membership, not unbounded proof or exclusion authority. Clear Proof Core removes them. No solver starts.

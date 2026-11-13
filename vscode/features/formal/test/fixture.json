@@ -1,0 +1,1 @@
+{"schema": "rvw.solver-core/1", "status": "pass", "labels": ["c1"], "design": [{"label": "c1", "location": {"loc": "A.scala:9"}}, {"label": "other", "location": {"loc": "B.scala:3"}}]}
