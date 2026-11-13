@@ -71,7 +71,7 @@ def qualify(elf, results, platform, manifest, source_root, candidate, coverage_p
         native_identity = execution_identity(run,comparison)
     except ValueError as exc:
         return {'status':'identity_error','comparison':comparison,'new_hits':[],'reason':str(exc)}
-    coverage = functional([trace], platform=platform, manifest=manifest, source_root=source_root,
+    coverage = functional([trace], run_results={str(Path(trace).resolve()): run.path/'result.json'}, platform=platform, manifest=manifest, source_root=source_root,
                           payload_regions={digest(trace): region}, config=coverage_plan)
     visits = next(iter(coverage['traces'].values())).get('payload_visits',{})
     expected_visits = {hex(pc):1 for start,end in region['ranges'] for pc in range(start,end,4)}

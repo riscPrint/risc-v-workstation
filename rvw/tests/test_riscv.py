@@ -97,7 +97,7 @@ def test_rv32_reserved_shifts_stay_out_of_coverage_bins(tmp_path):
     trace.write_text("\n".join(map(json.dumps, [header, *rows])) + "\n")
     report = functional([trace])
     assert report["unknown_encodings"] == {hex(word): 1 for word in words}
-    assert report["groups"]["mnemonic_mode"]["hits"] == [{"bin": ["unknown", "M"], "count": 3}]
+    assert report["unqualified"]["mnemonic_mode"] == [{"bin": ["unknown", "M"], "count": 3}]
 
 
 # Round 15: forms with a rounding-mode field named reserved rm values (5, 6) as valid
@@ -145,7 +145,7 @@ def test_reserved_rounding_mode_stays_out_of_coverage_bins(tmp_path):
     trace = tmp_path / "t.jsonl"
     trace.write_text(json.dumps(header) + "\n" + json.dumps(row) + "\n")
     report = functional([trace])
-    bins = [h["bin"][0] for h in report["groups"]["mnemonic_mode"]["hits"]]
+    bins = [h["bin"][0] for h in report["unqualified"]["mnemonic_mode"]]
     assert "fadd.s" not in bins and bins == ["unknown"], bins
     assert report["unknown_encodings"] == {"0x3150d3": 1}
 

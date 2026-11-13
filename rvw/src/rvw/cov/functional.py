@@ -178,8 +178,36 @@ def trace_platform(header, platform=None):
     return found
 
 
+def qualification(item, result_path=None):
+    """Credit only a complete passing C2 trace bound to a conclusive C1 pass."""
+    from rvw.results import load_run
+    from rvw.cosim.trace import Trace
+    result_path = Path(result_path) if result_path else Path(item.resolved).parent / 'result.json'
+    if not result_path.is_file():
+        return {'qualified': False, 'reason': 'missing C1 result'}
+    captured.file(result_path)
+    run = load_run(result_path)
+    if run.status != 'pass' or run.why_inconclusive:
+        return {'qualified': False, 'reason': 'C1 did not pass conclusively'}
+    artifact = run.artifact('rvfi_trace')
+    if artifact is None or captured.sha256(artifact) != item.sha256:
+        return {'qualified': False, 'reason': 'C1 trace differs'}
+    reader = Trace(item.copy)
+    try:
+        rows = list(reader)
+        ends = [r for r in rows if r.get('event') == 'end']
+        retired = sum('event' not in r for r in rows)
+        ok = (len(ends) == 1 and ends[0].get('status') == 'pass'
+              and retired == run.instret and retired > 0
+              and reader.header.get('elf_sha256') == run.elf_sha256)
+        return {'qualified': ok, 'reason': None if ok else 'incomplete or inconsistent C2',
+                'end_status': ends[0].get('status') if ends else None}
+    finally:
+        reader.close()
+
+
 @captured.command
-def functional(paths, config=None, platform=None, manifest=None, source_root=None, payload_regions=None):
+def functional(paths, config=None, platform=None, manifest=None, source_root=None, payload_regions=None, run_results=None):
     saved_paths = captured.current().files(Path(p) for p in paths)
     custom = json.loads(captured.read_text(config)) if config else None
     config = json.loads(json.dumps(DEFAULT))
@@ -210,6 +238,7 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
         raise ValueError('duplicate coverage group names')
     fingerprint = sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
     counters = {name: Counter() for name in names}
+    unqualified = {name: Counter() for name in names}
     traces, unknown, records, context = {}, Counter(), 0, None
     for item in saved_paths:
         path = item.copy
@@ -221,6 +250,11 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                 raise ValueError(f'{path}: incompatible functional coverage plan')
             if traces.keys() & saved['traces'].keys():
                 raise ValueError(f'{path}: duplicate trace in functional merge')
+            if saved.get('qualification_policy') != 'c1-pass-complete-c2-v1':
+                raise ValueError('functional report has no run qualification')
+            for name, hits in saved.get('unqualified', {}).items():
+                for hit in hits:
+                    unqualified[name][json.dumps(hit['bin'], separators=(',', ':'))] += hit['count']
             saved_context = {(t['header']['xlen'], t['header']['isa']) for t in saved['traces'].values()}
             if len(saved_context) != 1 or (context is not None and context not in saved_context):
                 raise ValueError('cannot merge different XLEN/ISA trace contexts')
@@ -232,6 +266,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                 for hit in g['hits']:
                     counters[name][json.dumps(hit['bin'], separators=(',', ':'))] += hit['count']
             continue
+        evidence = qualification(item, (run_results or {}).get(item.resolved))
+        trace_counters = {name: Counter() for name in names}
         with path.open() as stream:
             first = json.loads(next(stream))
             if first.get('schema') not in ('rvw.rvfi/1', 'rvw.rvfi/2') or first.get('xlen') not in (32, 64):
@@ -252,7 +288,7 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                 raise ValueError('payload region does not bind the trace ELF')
             plat = trace_platform(first, platform)
             aligned_mem = plat.aligned_mem if plat else None
-            traces[file_hash] = {"path": item.resolved, "header": first,
+            traces[file_hash] = {"path": item.resolved, "header": first, "qualification": evidence,
                                  "platform": plat.name if plat else None,
                                  **({'payload_region': region, 'payload_visits': {}} if region is not None else {}),
                                  "address_convention": {True: "aligned_mem", False: "byte", None: "unknown"}[aligned_mem]}
@@ -263,6 +299,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             hart_contexts = {}
             for line_no, line in enumerate(stream, 2):
                 row = json.loads(line)
+                if row.get('event') == 'end':
+                    traces[file_hash]['qualification']['end_status'] = row.get('status')
                 hart_key = None
                 if first.get('harts') and row.get('event') not in ('external', 'end'):
                     if row.get('hart') not in first['harts'] or type(row.get('epoch')) is not int:
@@ -311,9 +349,12 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                             continue
                         if matches(obs, condition) and all(f in obs for f in group['fields']):
                             key = json.dumps([obs[f] for f in group['fields']], separators=(',', ':'))
-                            counters[group['name']][key] += 1
+                            trace_counters[group['name']][key] += 1
                 if hart_key is not None:
                     hart_contexts[hart_key] = (previous, order, history, semantic)
+        target = counters if evidence['qualified'] else unqualified
+        for name in names:
+            target[name].update(trace_counters[name])
     result = {}
     for group in groups:
         counter = counters[group['name']]
@@ -329,6 +370,9 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                 json.dumps(row['bin'], separators=(',', ':')), 0)) for row in group['classifications']]
     return {"schema": "rvw.functional-coverage/1", "config": config, "config_sha256": fingerprint,
             "traces": traces, "retired": records, "groups": result,
+            "qualification_policy": "c1-pass-complete-c2-v1",
+            "unqualified": {name: [{"bin": json.loads(k), "count": v} for k, v in sorted(c.items())]
+                            for name, c in unqualified.items()},
             "unknown_encodings": dict(unknown),
             "notes": ["Default domains are a coverage plan, not claims of ISA support or reachability.",
                       "C2 trap events without mode retain mode=unknown; mode is not inferred.",

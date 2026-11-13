@@ -4,6 +4,12 @@ import pytest
 from rvw.cov.functional import decode, functional, observations
 
 
+@pytest.fixture(autouse=True)
+def decoded_observations_only(monkeypatch):
+    # These are decoder fixtures, not C1 qualification tests.
+    monkeypatch.setattr('rvw.cov.functional.qualification', lambda *a, **k: {'qualified': True})
+
+
 def trace(path, rows):
     header = {"schema": "rvw.rvfi/1", "xlen": 64, "isa": "rv64imc"}
     path.write_text('\n'.join(json.dumps(r) for r in [header, *rows]) + '\n')
