@@ -7,7 +7,10 @@ import sys
 
 def register(subparsers) -> None:
     p = subparsers.add_parser("mcp", help="MCP server (stdio) exposing the rvw tools to agents", description=__doc__)
-    p.add_argument("action", nargs="?", choices=("audit", "command-map"), help="audit interface declarations")
+    p.add_argument("action", nargs="?", choices=("audit", "command-map", "call", "describe", "smoke"), help="audit interface declarations")
+    p.add_argument("tool", nargs="?", help="tool name for call or describe")
+    p.add_argument("--arguments", default="{}", help="JSON object for call")
+    p.add_argument("--dry-run", action="store_true", help="schema help without executing a handler")
     p.add_argument("--list", action="store_true", help="print the tools and exit (needs no MCP SDK)")
     p.add_argument("--profile", choices=("core", "verification", "formal", "arch", "debug", "soc", "all"), default="all")
     p.add_argument("--workflow", help="workflow id from rvw agent guide")
@@ -54,6 +57,36 @@ def run(args) -> int:
     registry, problems = Registry.discover(only, project=str(selected.path) if selected else None, profile=args.profile, workflow=args.workflow)
     for msg in problems:
         print(f"rvw mcp: skipped {msg}", file=sys.stderr)
+    if getattr(args, "action", None) in ("call", "describe", "smoke"):
+        action = args.action
+        if action == "smoke":
+            results = [registry.call_json(name, {}, dry_run=True) for name in registry.tools]
+            errors = [data for _, data, error in results if error]
+            print(json.dumps({"tools": len(results), "errors": errors, "problems": problems,
+                              "summary": "Schema help only; all handlers NOT RUN."}))
+            return 2 if errors or problems else 0
+        if not args.tool:
+            print("rvw mcp: tool name is required", file=sys.stderr)
+            return 2
+        if action == "call" and not args.dry_run:
+            from .errors import error_result
+            from .spec import ToolError
+            print(json.dumps(error_result(args.tool, ToolError(
+                "Use --dry-run for schema help. Execute tools through MCP or their CLI commands.",
+                code="invalid_arguments"))))
+            return 2
+        try:
+            arguments = json.loads(args.arguments)
+        except ValueError as exc:
+            from .errors import error_result
+            print(json.dumps(error_result(args.tool, exc)))
+            return 2
+        if action == "describe":
+            text, data, error = registry.call_json("rvw_tools_describe", {"name": args.tool})
+        else:
+            text, data, error = registry.call_json(args.tool, arguments, dry_run=args.dry_run)
+        print(text)
+        return 2 if error else 0
     if getattr(args, "action", None) == "audit":
         from .audit import audit
         report = audit(registry, problems)
@@ -66,8 +99,8 @@ def run(args) -> int:
                     print(f'{row["name"]}: {finding["code"]}: {finding["detail"]}')
         return 2 if problems else 0
     if args.list:
-        tools = [{"name": t.name, "long": t.long, "description": t.description, "input_schema": t.input_schema}
-                 for t in registry.tools.values()]
+        from .profiles import describe
+        tools = [describe(t) for t in registry.tools.values()]
         if args.json:
             print(json.dumps({"tools": tools, "problems": problems}, indent=1))
         else:
