@@ -77,6 +77,16 @@ configs = ["small"]
 max_cycles = 5000000
 timeout_s = 900
 
+[suites.act4-project]
+description = "project-owned ACT4 build with Sail signatures; execution not measured"
+dir = "${ACT4_PROJECT_OUT:-../out/act4-boom}/work/rvw-act4/elfs"
+act4_manifest = "${ACT4_PROJECT_OUT:-../out/act4-boom}/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["small"]
+max_cycles = 5000000
+timeout_s = 900
+
 [suites.vm-tests]
 description = "directed virtual-memory tests (spinal-boom tests/vm)"
 dir = "${VM_TESTS:-../../../spinal-boom-eda/tests/vm/build}"
