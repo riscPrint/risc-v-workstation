@@ -227,3 +227,19 @@ Generated profiles retain bounded dimensions: up to eight source bits and ten
 sink bits. The cached hub uses nine sink bits. Singleton source IDs are exposed
 as a constant zero bit in the passive projection. The recorder includes async
 reset edges even when the clock is stopped. Replay preserves these reset events.
+
+## Cacheless SMP PLIC race controls
+
+`RVW_SMP_PLIC_SOURCE_MASK` selects held-high sources in the simulation PLIC.
+The default is zero. Bit zero is reserved. Valid masks are even integers from
+zero through 254. When set, the replay command records this setting.
+`details.plic.source_mask` records the selected mask. `claims` and `completions`
+are arrays in machine-context order, one context per hart. They count nonzero
+claims and completions for busy, enabled sources. These are model observations.
+CPU claim/complete programs check mutual exclusion and the shared result.
+They do not qualify PLIC RTL or starvation freedom.
+
+Timing summaries require one run-many worker. They read the seed and timing
+controls from every C1 result. They refuse mixed controls, missing harts or
+unequal C2 replay hashes. One warmup precedes three timing samples per N.
+Simulation wall time comes from the simulator log and excludes model builds.

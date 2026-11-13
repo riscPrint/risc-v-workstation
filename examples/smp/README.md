@@ -59,7 +59,7 @@ Shared RAM and atomic service are simulation models, not synthesized fabric.
 There are no caches and no TileLink-C channels. Cache and coherence observer
 bindings are therefore absent. This example cannot qualify coherent caches.
 CLINT and a seven-source machine-context PLIC are simulation models.
-CPU-level PLIC claim/complete is NOT RUN. The sections below describe the
+CPU claim/complete races against this model are described below. The sections below describe the
 bounded IPI, HSM and cross-hart instruction visibility programs. Do not use this example as a Linux-capable SoC.
 The identity is available, but complete reusable build-input capture is not
 claimed. `input_complete` remains false.
@@ -262,8 +262,7 @@ after setup. Use a base temporary directory under `rvw/out` for retained runs.
 See `rvw/stress-results.json` and the stress checker JSON files.
 
 The default-timing three-hart control passed at 86 cycles and 35 retirements.
-All three clock-stall counters were zero. Native checks cover N=2 and N=3.
-N=4 through N=8 were NOT RUN. Clock enables test synchronous state stalls.
+All three clock-stall counters were zero. Native checks now cover N=2 through N=8. Clock enables test synchronous state stalls.
 Independent clock frequencies, CDC, physical clock gates, reset and power
 control remain outside this example's measured scope.
 
@@ -382,3 +381,59 @@ These finite checks cover data coherence on the selected handoff line.
 Instruction-cache visibility, replacement and reset during traffic remain open.
 See `rvw/cached-results.json` for hashes and separate evidence results.
 The generated monitor, bind and profile are in `rvw/monitors/`.
+
+## N=2..8 stress and PLIC races
+
+`rvw/scaling.py prepare --out DIR` builds seven smoke cases and seven PLIC
+race cases. Run `rvw/run.sh run-many --manifest DIR/jobs.jsonl --jobs 1`.
+Use the workstation Python for `scaling.py`.
+Set `RVW_SMP_PLIC_SOURCE_MASK=2` to hold source 1 high in the simulation PLIC.
+The replay command records the mask. Use delay 0..11, readiness 60% and clock
+enables 70%, as in the earlier stress commands.
+
+Each race has eight rounds. All harts try to claim the same source before a
+shared barrier. The winner checks that a second claim returns zero. It then
+completes the interrupt. All harts reach a second barrier before the next round.
+The program checks one winner per round. C1 records claims and completions per
+machine context. The peripheral is a simulation model. The CPUs execute RTL.
+
+All 14 seed-17 cases passed. Each race case recorded eight claims and eight
+completions. The budget has 56 successful claim/complete pairs. Some contexts
+won no rounds. This budget does not establish starvation freedom.
+Use `scaling.py summarize --out DIR --log ADAPTER_LOG` to check C1/C2 counts
+and device totals. See `rvw/scaling-results.json`.
+
+| Harts | Smoke cycles | Smoke retirements | PLIC race cycles | PLIC race retirements |
+|---:|---:|---:|---:|---:|
+| 2 | 144 | 23 | 1979 | 485 |
+| 3 | 157 | 35 | 1930 | 697 |
+| 4 | 141 | 45 | 1908 | 914 |
+| 5 | 153 | 59 | 2014 | 1177 |
+| 6 | 140 | 71 | 2043 | 1406 |
+| 7 | 148 | 83 | 2115 | 1679 |
+| 8 | 163 | 95 | 2148 | 1938 |
+
+## Simulation time and replay at N=2..8
+
+`scaling.py timing-prepare --out DIR` builds a 1000-iteration ALU loop per hart.
+Run its manifest with one worker and the same timing settings. Set the PLIC
+source mask to zero. Each N has one warmup and three measured runs.
+Use `scaling.py timing-summarize --out DIR --log ADAPTER_LOG` after the run.
+The summary checks the actual C1 seed and controls. It rejects mixed settings
+or non-identical C2 captures. All 28 native runs passed. The four C2 captures
+at each N have identical bytes.
+
+| Harts | Cycles | Retirements | Median simulation seconds |
+|---:|---:|---:|---:|
+| 2 | 25946 | 4025 | 10.681 |
+| 3 | 25968 | 6037 | 4.462 |
+| 4 | 25894 | 8051 | 6.862 |
+| 5 | 26121 | 10065 | 13.490 |
+| 6 | 26263 | 12077 | 17.718 |
+| 7 | 26097 | 14090 | 14.439 |
+| 8 | 26017 | 16103 | 25.621 |
+
+These are the simulator's wall times. They exclude model builds. The host was
+shared, and the samples vary with host load. Raw samples and trace hashes are
+in `rvw/timing-results.json`. The RTL cycles and retirement counts are separate
+from host simulation cost.

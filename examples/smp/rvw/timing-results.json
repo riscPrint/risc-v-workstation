@@ -1,0 +1,112 @@
+{
+  "schema": "rvw.smp-timing/1",
+  "seed": 17,
+  "loop_iterations": 1000,
+  "timing": {
+    "random_max_delay": 11,
+    "ready_percent": 60,
+    "clock_enable_percent": 70,
+    "fixed_latency": null
+  },
+  "runs": [
+    {
+      "harts": 2,
+      "cycles": 25946,
+      "instret": 4025,
+      "simulation_wall_samples": [
+        12.13203,
+        8.388208,
+        10.680888
+      ],
+      "median_simulation_wall_s": 10.680888,
+      "trace_sha256": "63c032d3373223ad6f2b816bbef6615df9ec627992aa178cdff8ae68bc8050ee",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 3,
+      "cycles": 25968,
+      "instret": 6037,
+      "simulation_wall_samples": [
+        5.784257,
+        4.46211,
+        4.079055
+      ],
+      "median_simulation_wall_s": 4.46211,
+      "trace_sha256": "a64d7dcfdc6f25aa7c230f9243f5fabf92aace6dff8e38787cf2cbe386333342",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 4,
+      "cycles": 25894,
+      "instret": 8051,
+      "simulation_wall_samples": [
+        6.862451,
+        8.297095,
+        6.690583
+      ],
+      "median_simulation_wall_s": 6.862451,
+      "trace_sha256": "b48953856b7826de02ed3f4bc089af92d3d694a8e0eebce03f828445d1084af5",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 5,
+      "cycles": 26121,
+      "instret": 10065,
+      "simulation_wall_samples": [
+        9.728419,
+        15.680619,
+        13.489693
+      ],
+      "median_simulation_wall_s": 13.489693,
+      "trace_sha256": "4af7ff8e75934be105b382c1e875075272db314339079e12eac7fd414b418be2",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 6,
+      "cycles": 26263,
+      "instret": 12077,
+      "simulation_wall_samples": [
+        28.742751,
+        14.015189,
+        17.717735
+      ],
+      "median_simulation_wall_s": 17.717735,
+      "trace_sha256": "9343bd230867f14145c418a54c6f263b10af108d3865c43d4e5467c1ec80e00e",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 7,
+      "cycles": 26097,
+      "instret": 14090,
+      "simulation_wall_samples": [
+        13.96778,
+        14.438633,
+        25.96552
+      ],
+      "median_simulation_wall_s": 14.438633,
+      "trace_sha256": "586bba128dc497eecca0ae59fb4f19b662fe2da4230327a590f873dbdb1189b7",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    },
+    {
+      "harts": 8,
+      "cycles": 26017,
+      "instret": 16103,
+      "simulation_wall_samples": [
+        26.33487,
+        22.140122,
+        25.621077
+      ],
+      "median_simulation_wall_s": 25.621077,
+      "trace_sha256": "95fa8b0b246f4dfcbd1d710767df8213da2fbf8522a1f10f0ea89e9a0f9f6b73",
+      "replay": "four byte-identical captures",
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+    }
+  ],
+  "scope": "one warmup then three samples per N on a shared host; model build excluded"
+}
