@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 
 import rvw
-from .optional import sim_script
+from .optional import sim_script, build_files
 
 PROTOCOLS = {
     'req-rsp': ({'cmd_valid', 'address', 'rsp_valid', 'rdata'},
@@ -249,6 +249,8 @@ def mapped_scaffold(path='.', *, isa, name=None, top=None, verilog_top=None, ver
             if len(found) != 1:
                 raise ValueError('Supply --sbt-project with the core project ID.')
             sbt_project = found[0]
+        # Reuse build-wiring checks. A Scala 2.12 core cannot load in the 2.13 adapter JVM.
+        build_files((root / 'build.sbt').read_text(), sbt_project=sbt_project, db_top=top)
         ports = None
         top_entry = {'kind': 'spinal', 'class': top}
     else:

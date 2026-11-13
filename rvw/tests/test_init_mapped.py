@@ -122,3 +122,12 @@ def test_cli_mapped_mode_requires_reset_pc(verilog_core, capsys):
     assert code == 2
     assert 'reset-pc' in json.loads(capsys.readouterr().out)['error']
 
+
+
+def test_spinal_mapping_refuses_incompatible_scala(tmp_path):
+    (tmp_path / 'build.sbt').write_text('ThisBuild / scalaVersion := "2.12.18"\nlazy val cpu = project\n')
+    with pytest.raises(ValueError, match='Scala 2.13.14'):
+        mapped.mapped_scaffold(tmp_path, isa='rv32i', top='demo.Top', sbt_project='cpu',
+                               reset_pc='0x80000000', buses=[
+            'm:valid-ready:valid=v,ready=r,address=a,rdata=d'])
+    assert not (tmp_path / 'rvw').exists()
