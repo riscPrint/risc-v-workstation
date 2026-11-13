@@ -1,0 +1,140 @@
+{
+  "schema": "rvw.real-mul-configs/1",
+  "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "source_path": "src/main/scala/vexiiriscv/misc/Utils.scala",
+  "source_sha256": "ad26fe032e70dfcd3acb052e039cb53d31c8f67663e15027ff42e07a46b35c9b",
+  "component_sha256": "d15bdacf1f96eb6b922d6af95855f0d93e4b86e0cf906091b8bd068eb57bd129",
+  "spinal_version": "1.15.0",
+  "sbt_version": "1.10.7",
+  "scala_version": "2.13.14",
+  "scope": "real MulSpliter and AdderAggregator; signed byte inputs extended to 33 bits; full 64-bit product; combinational arithmetic only",
+  "configurations": {
+    "gold": {
+      "split_a": 17,
+      "split_b": 17
+    },
+    "gate": {
+      "split_a": 9,
+      "split_b": 9
+    },
+    "shared": {
+      "internal_operand_bits": 33,
+      "sum_stages": [
+        [
+          44,
+          8
+        ],
+        [
+          1000,
+          1000
+        ]
+      ],
+      "signed_a": true,
+      "signed_b": true
+    }
+  },
+  "result": {
+    "status": "equivalent",
+    "partitions": [
+      {
+        "name": "rvw_equiv.y",
+        "crossbits": {},
+        "status": "PASS"
+      }
+    ],
+    "state_mapping": [],
+    "unmatched": {
+      "gold": [],
+      "gate": []
+    },
+    "restrictions": {
+      "clock": "clk",
+      "reset": "reset",
+      "reset_active": "high",
+      "reset_cycles": 1,
+      "settle": 12,
+      "latency": 0,
+      "unmatched_state": "prove",
+      "blackboxes": "refused",
+      "state_model": "two-state",
+      "latency_map": {
+        "y": 0
+      }
+    },
+    "exports": {
+      "gold": {
+        "revision": "3c2d9926193fa8db40ea703a6837fba3f03a1e8a",
+        "module": "VexiiMul",
+        "config": "default",
+        "generator_dependencies": [
+          {
+            "repository": "$RUN_ROOT/mul-configs-1113/generator",
+            "revision": "134f63d3d3a582038bfd0b7af6f7f6745dc60f4a"
+          }
+        ],
+        "command": [
+          "$CHECKOUT/rvw/.venv/bin/python",
+          "$RUN_ROOT/mul-configs-1113/generator/build.py",
+          "default",
+          "$RUN_ROOT/mul-config-proof-1113/mul/gold-export/design.db",
+          "--rtl",
+          "$RUN_ROOT/mul-config-proof-1113/mul/gold-export/rtl",
+          "--no-pdg",
+          "--no-blocks",
+          "--no-hgldd"
+        ],
+        "rtl": [
+          {
+            "path": "rtl/VexiiMul.v",
+            "sha256": "ffd897bc5bd4e353f250b619ec15a1b602690a71148f75cd9cb9bb197bf62381"
+          }
+        ],
+        "module_sha256": "4a7c10802c5d05766837da5bc8dfc007a6e35c2224c4ca2792ed3e0330d00d30",
+        "lock": "vex-equiv"
+      },
+      "gate": {
+        "revision": "09d042c0c737e15e3b271bca5a055287cf3cb2ef",
+        "module": "VexiiMul",
+        "config": "default",
+        "generator_dependencies": [
+          {
+            "repository": "$RUN_ROOT/mul-configs-1113/generator",
+            "revision": "134f63d3d3a582038bfd0b7af6f7f6745dc60f4a"
+          }
+        ],
+        "command": [
+          "$CHECKOUT/rvw/.venv/bin/python",
+          "$RUN_ROOT/mul-configs-1113/generator/build.py",
+          "default",
+          "$RUN_ROOT/mul-config-proof-1113/mul/gate-export/design.db",
+          "--rtl",
+          "$RUN_ROOT/mul-config-proof-1113/mul/gate-export/rtl",
+          "--no-pdg",
+          "--no-blocks",
+          "--no-hgldd"
+        ],
+        "rtl": [
+          {
+            "path": "rtl/VexiiMul.v",
+            "sha256": "e14369930a955286814e5a3b3a1c072bf05eb709f452dea1186f2e41221228d2"
+          }
+        ],
+        "module_sha256": "e43d2602471097f29211107a40fba99e07bcd37a09aa4999b1864321d75970b2",
+        "lock": "vex-equiv"
+      }
+    },
+    "config": {
+      "path": "equiv.eqy",
+      "sha256": "60ff994ef68c4e4679599b6117523e908936329553e8f6e3e4645d4863e34675"
+    },
+    "solver_exit": 0,
+    "wall_s": 230.351
+  },
+  "native_result_sha256": "25aa83535c6e4f690abb12a45f42a3d07bbff8a4d0be8c45312f4d081b8645f4",
+  "reproduce": "prepare-mul-configs.py --source CORE --out CASES; run.py --cases CASES/cases.json --out PROOFS --timeout 240",
+  "limits": [
+    "not unrestricted 32-bit or 33-bit inputs",
+    "no multiplier pipeline or issue/control proof",
+    "no C reference comparison in this equivalence run"
+  ]
+}
