@@ -249,3 +249,11 @@ export at the top, and `irq`, an interrupt-name to IO-member dictionary.
 The default interrupt member is `irq`. `soc_peripheral` returns `region` in
 the existing map format and `binder` for the composition file. This metadata
 covers register addresses. It does not describe every dynamic device effect.
+
+## RV32 stub example runner
+
+The project under `SpinalSoc/examples/stub` supplies C1 build, identity, run
+and serialized run-many. It supports fixed APB word latency only. C1 results
+report the bounded instruction profile and the scheduled PLIC source event.
+UART hello checks use actual TX pin samples. These fixture results do not
+qualify an ISA or provide C2 retirement traces.
