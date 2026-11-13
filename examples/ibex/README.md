@@ -5,7 +5,8 @@ This project uses lowRISC Ibex v2.1.0 at
 repository. No Ibex source file is changed. The configuration has two pipeline
 stages, slow RV32M, RV32C, a flip-flop register file, no instruction cache,
 no security mode and no PMP. U-mode is present. The boot vector is
-`0x80000080`. RAM is 1 MiB at `0x80000000`. There are no MMIO devices.
+`0x80000080`. RAM is 1 MiB at `0x80000000`. The harness maps single-hart CLINT registers at `0x02000000` and a machine
+external interrupt control word at `0x0c000004`. These are simulation devices.
 
 ## Setup
 
@@ -39,7 +40,8 @@ captures the resolved source tree. Build and run output stays outside Git.
 The adapter rejects another source checkout until `prepare.py` is rerun.
 It serves instruction and data requests with one-cycle responses. It supports
 zero added memory latency and one simulation at a time. Unsupported CLI
-options are errors. There is no wave capture or interrupt schedule.
+options are errors. There is no wave capture or user IRQ schedule. The device model drives machine
+software, timer and external interrupts. C2 records each input-level change.
 
 ## Trace decisions
 

@@ -3,7 +3,9 @@
 This profile selects all applicable RV32IMC machine and user tests from ACT4
 `56d40ab301dba23dd3104c17bd969afbaaea1931`. PMP is disabled in the RTL.
 The standard Sm bootstrap remains in use. No bootstrap access is removed.
-Interrupt inputs are tied low. Sail-only devices do not qualify DUT devices.
+The harness drives software, timer and external interrupts through declared
+MMIO devices. Fast IRQ and NMI inputs remain low. Sail generates signatures
+with its independent devices. Native C1 and strict C2 results remain separate.
 UDB has no exact word-split policy. The profile declares `custom` for Ibex.
 
 Keep the ACT4 checkout and its own Python venv outside the repository. Use the

@@ -3,6 +3,7 @@
 #include "verilated.h"
 #include "verilated_cov.h"
 #include <cstdint>
+#include "devices.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -22,6 +23,8 @@ int main(int argc, char **argv) {
   std::string out=argv[4], status="timeout";
   auto valid=[&](uint32_t a) {return a>=0x80000000u && a<0x80100000u;};
   auto read=[&](uint32_t a) {uint32_t v=0; a &= ~3u; if(valid(a)) for(int b=0;b<4;b++) v|=uint32_t(mem[a-0x80000000u+b])<<(8*b); return v;};
+  Devices devices;
+  uint32_t driven=0;
   std::ofstream trace(out+"/rvfi.jsonl");
   trace << "{\"schema\":\"rvw.rvfi/1\",\"core\":\"ibex\",\"config\":\"default\",\"xlen\":32,\"isa\":\"rv32imc_zicsr_zifencei\"}\n";
   d.boot_addr_i=0x80000000; d.hart_id_i=0; d.fetch_enable_i=5;
@@ -37,7 +40,10 @@ int main(int argc, char **argv) {
     d.instr_gnt_i=1; d.data_gnt_i=1; d.eval();
     ip=d.instr_req_o; dp=d.data_req_o;
     ir=read(d.instr_addr_o); ie=ip&&!valid(d.instr_addr_o);
-    dr=read(d.data_addr_o); de=dp&&!valid(d.data_addr_o);
+    dr=Devices::mapped(d.data_addr_o) ? devices.read(d.data_addr_o) : read(d.data_addr_o);
+    de=dp && !valid(d.data_addr_o) && !Devices::mapped(d.data_addr_o);
+    if(dp && d.data_we_o && Devices::mapped(d.data_addr_o))
+      devices.write(d.data_addr_o,d.data_wdata_o,d.data_be_o);
     if(dp && d.data_we_o && valid(d.data_addr_o)) {
       auto a=d.data_addr_o & ~3u;
       for(int b=0;b<4;b++) if((d.data_be_o>>b)&1) mem[a-0x80000000u+b]=d.data_wdata_o>>(8*b);
@@ -73,8 +79,15 @@ int main(int argc, char **argv) {
         status=finish==1 ? "pass" : "fail"; break;
       }
     }
+    devices.tick();
+    uint32_t next=devices.levels();
+    if(cycles==1 || next!=driven)
+      trace << "{\"event\":\"irq\",\"cycle\":" << cycles << ",\"levels\":\"0x" << std::hex << next << std::dec << "\"}\n";
+    driven=next;
+    d.irq_software_i=(driven>>3)&1; d.irq_timer_i=(driven>>7)&1; d.irq_external_i=(driven>>11)&1;
     d.clk_i=0; d.eval(); context.timeInc(1);
   }
+  if(cycles>limit) cycles=limit;
   d.final();
   trace << "{\"event\":\"end\",\"cycle\":" << cycles << ",\"status\":\"" << status << "\"}\n";
   std::ofstream result(out+"/native.json");

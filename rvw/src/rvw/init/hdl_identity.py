@@ -35,6 +35,7 @@ def collect(manifest, *, preprocess=None):
     spec = json.loads(manifest.read_text())
     sources = [str(root / p) for p in spec['sources']]
     harness = [root / p for p in spec['harness_sources']]
+    extra_inputs = [root / p for p in spec.get('harness_inputs', [])]
     includes = ['-I' + str(root / p) for p in spec.get('include_dirs', [])]
     defines = ['-D' + p for p in spec.get('defines', [])]
     flags = spec.get('verilator_flags', [])
@@ -48,7 +49,7 @@ def collect(manifest, *, preprocess=None):
         preprocessed = preprocess(args)
     # Include manifest, ordered source bytes, harness bytes, and included RTL.
     inputs = {str(p.relative_to(root)) if p.is_relative_to(root) else str(p): digest(p.read_bytes())
-              for p in [manifest, *map(Path, sources), *harness]}
+              for p in [manifest, *map(Path, sources), *harness, *extra_inputs]}
     native = native_identity()
     rtl = digest(preprocessed)
     model = digest(json.dumps(dict(inputs=inputs, rtl=rtl, spec=spec, native=native['sha256']), sort_keys=True).encode())

@@ -203,3 +203,12 @@ be positive. The wave time of logical cycle N is
 `wave_time_origin + (N - wave_cycle_origin) * wave_time_per_cycle`.
 This mapping can imply a negative time for cycle 1, which is outside the
 captured window. Consumers must use the explicit origin pair when present.
+## Project-owned Verilator harness inputs
+
+An HDL build manifest can list `harness_inputs` beside `harness_sources`.
+These files are hashed into `tools.hdl_model_sha256` but are not compiler
+translation units. Use this list for project C++ headers and device models.
+`harness_sources` continues to select the compiled translation units.
+Changing a declared header changes the model identity and requires a build.
+Declare the files in regression `cache_paths` too, directly or through their
+parent directory. System headers remain native toolchain inputs.

@@ -177,12 +177,10 @@
     "link.ld": "link.ld"
   },
   "limits": [
-    "No PMP in this configuration. No program-controlled interrupt devices.",
-    "Standard Sm bootstrap is retained. A build or plan is not a DUT pass.",
-    "Interrupt inputs are tied low. No interrupt-device behavior is qualified.",
+    "PMP is disabled in this configuration.",
+    "Machine software, timer and external inputs use harness devices. Fast IRQ and NMI inputs remain tied low.",
     "Ibex splits misaligned accesses at word boundaries. UDB has no exact word-split policy; custom is explicit.",
-    "Sail-only CLINT and interrupt-generator regions are not DUT devices.",
-    "Interrupt CSR bits are implemented. Interrupt delivery is unqualified because the harness ties the inputs low."
+    "Sail devices generate signatures independently. C1 and complete strict Spike results determine qualification."
   ],
   "include_priv_tests": true,
   "all_applicable": true
