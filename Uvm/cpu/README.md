@@ -137,3 +137,18 @@ Unit tests qualify the generator and comparator. The live VexRiscv binding
 does not yet implement the instruction-execution callback. Native CSR,
 architectural interrupt and debug qualification remain open. The selected
 VexTop has no debug port. No pin-only test establishes debug architecture.
+
+## Architectural event service
+
+`rvw.uvm.cpu_events.CpuEvents` synchronizes separate project trap pulses with
+independent Spike steps. Supply the selected XLEN and platform IRQ causes.
+For an interrupt, also supply the independently driven IRQ mask at the
+accepted boundary. An unrequested cause fails. Trap cause and tval must
+match Spike before the next retirement is checked. No DUT register value
+is copied into the reference.
+
+The debug service compares acknowledged halt/observe snapshots with Spike's
+debug state, DPC, DCSR, step bit and PC. Call it at a synchronized retirement
+boundary. Do not call it merely because a request pin was asserted.
+Resume is explicitly unsupported. These services have unit tests.
+Their presence does not qualify a project's interrupt or debug wiring.
