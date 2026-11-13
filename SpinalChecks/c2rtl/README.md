@@ -154,7 +154,7 @@ SoftFloat wrappers cover F/D add, multiply, fused multiply-add, divide and
 square root. Each sets after-rounding tininess and clears flags before the
 call. `--rounding 0..4` selects the RISC-V rounding mode. NaNs are canonical.
 Subnormals and signed zeros use SoftFloat behavior. Bind the `flags` output.
-`--case` splits on operand a: all, finite, nan, infinity, zero or subnormal.
+`--case` splits on operand a: all, finite, normal, nan, infinity, zero or subnormal.
 A case proof applies only to that case. It is not a whole-domain result.
 Fetch SoftFloat outside the repository and pin revision
 `07ebd29db0cfb55723a79fbbffe99103ef38e305` from
@@ -277,3 +277,49 @@ check complete 32-bit nibble and 64-bit byte permutation units. Selector mutants
 must produce counterexamples. Integer/polynomial tests also check all model
 families against independent Python expressions. These are functional checks.
 They do not establish instruction timing or complete core-extension compliance.
+
+### Mixed-width ports and source format cases
+
+A binding can adapt a physical unit to the reference word size. This example
+checks a physical F32 input against an F64 output with `--width 64`:
+
+```json
+{
+  "top": "Convert",
+  "ports": {"a": "operand", "y": "result", "flags": "flags"},
+  "unused_inputs": {"b": 64},
+  "input_widths": {"a": 64}
+}
+```
+
+The extra high input bits remain symbolic. The C reference must ignore them.
+For `f32_to_f64`, the SoftFloat wrapper casts `a` to F32. No input bits are
+truncated or constrained by this adapter. Use `--case-width 32` to split on the
+F32 input when the reference word has width 64. Case `normal` selects finite
+nonzero normal inputs. Other existing cases keep their meaning.
+
+A one-bit comparison result can use `"output_widths": {"y": 32}` with
+`--width 32`. The adapter pads the result with zeros. It does not change its
+physical width. Input widening supports only `a`, `b` and `c`. Output widening
+supports only `y`. Flag and handshake widths remain fixed.
+
+### Definedness before comparison
+
+The Boolean C backend tracks literal X/Z values through each mapped gate and
+register update. It proves that observed result, flag and completion bits are
+defined before it can return either `proved` or `counterexample`. Controlling
+values can mask unknown inputs. Unobservable unknown branches do not block a
+proof when the propagation rules establish defined outputs. A reachable unknown
+or an incomplete definedness check makes the result inconclusive. The result
+records `rtl_definedness` and retains each CBMC definedness assertion.
+
+This propagation is conservative at reconvergent logic. It can refuse a circuit
+whose outputs are defined. Initial registers keep their existing arbitrary
+binary state. Use the separate initialization security app to check whether
+uninitialised state can reach outputs after reset. The datapath check is not a
+four-state simulation.
+
+Native small fixtures now check F32-to-F64 conversion, one-bit F32 comparison,
+source-format cases and signaling-NaN flags against the pinned SoftFloat tree.
+They do not qualify a project's FPU. The SoftFloat dependency helper includes
+the exception handler used by RISC-V NaN conversion macros.
