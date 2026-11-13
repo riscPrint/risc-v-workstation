@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     if(dp && d.data_we_o && valid(d.data_addr_o)) {
       auto a=d.data_addr_o & ~3u;
       for(int b=0;b<4;b++) if((d.data_be_o>>b)&1) mem[a-0x80000000u+b]=d.data_wdata_o>>(8*b);
-      if(a==tohost) finish=read(a); if(finish==1) finish=3; // planted gate fault
+      if(a==tohost) finish=read(a);
     }
     d.clk_i=1; d.eval(); context.timeInc(1);
     if(d.rvfi_valid) {
