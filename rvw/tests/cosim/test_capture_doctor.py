@@ -69,3 +69,23 @@ def test_mcp_doctor_dispatches_without_a_job_argument(tmp_path):
     assert not error, result
     assert result['status'] == 'inspected' and result['instructions'] == 1
     assert result['compared'] is False
+
+
+@pytest.mark.parametrize('ended_harts,complete', [([0], False), ([0, 1], True)])
+def test_multihart_completion(tmp_path, ended_harts, complete):
+    header, row = fixture()
+    header.update(harts=[0, 1], capabilities=['multihart', 'state'])
+    rows = [header]
+    for hart in (0, 1):
+        rows.append(dict(event='reset', cycle=0, hart=hart, epoch=0))
+    for hart in (0, 1):
+        rows.append(dict(row, hart=hart, epoch=0, order='0'))
+    for hart in ended_harts:
+        rows.append(dict(event='hart_end', cycle=2, hart=hart, epoch=0, status='pass'))
+    for sequence, record in enumerate(rows[1:]):
+        record['capture_seq'] = str(sequence)
+    path = tmp_path / 'multi.jsonl'
+    path.write_text('\n'.join(map(json.dumps, rows)))
+    result = execute_json(trace=path, core='boom')
+    assert result['status'] == 'inspected', result
+    assert result['trace_complete'] is complete
