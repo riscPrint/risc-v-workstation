@@ -108,6 +108,11 @@ def test_support_table():
         and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
     rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; Boolean guard |'
              for feature in features]
+    live_sim = ast.parse(Path('rvw/tests/formal/test_live_sim.py').read_text())
+    features = ast.literal_eval(next(node.value for node in live_sim.body if isinstance(node, ast.Assign)
+        and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
+    rows += [f'| `{feature}` | positive and negative native case | finite witness, failure and pending counts; both simulators |'
+             for feature in features]
     expected = '\n'.join(rows) + '\n'
     assert Path('rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').read_text() == expected
 

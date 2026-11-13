@@ -41,7 +41,7 @@ def events(data, inputs, clocks):
     return scale, rows
 
 
-def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cross_steps=None):
+def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cross_steps=None, unbounded=None):
     lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
     inputs = [p for p in ports if p.direction == 'input']
     outputs = [p for p in ports if p.direction == 'output']
@@ -100,7 +100,12 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
         for name in observed:
             lines.append(f'$strobe("RVW_OBSERVE {at} {name} %b", {common.vid(name)});')
         previous = at
-    lines += ['#1; $display("RVW_EVENT_DONE"); $finish;', 'end', 'endmodule']
+    lines += ['#1;']
+    for prop in unbounded or []:
+        prefix=prop['monitor']
+        pending=f'dut.{prefix}_pending'+(f' + dut.{prefix}_delayed' if prop['nonoverlap'] else '')
+        lines.append(f'$display("RVW_PENDING {prefix} %0d", {pending});')
+    lines += ['$display("RVW_EVENT_DONE"); $finish;', 'end', 'endmodule']
     return '\n'.join(lines) + '\n'
 
 
@@ -112,10 +117,19 @@ def counts(output, properties):
             raise ValueError('unattributed simulation assertion output')
         field = {'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed'}[outcome]
         result[tag][field] += 1
+    for tag,value in re.findall(r'^RVW_PENDING (\w+) (\d+)$',output,re.M):
+        if tag not in result:
+            raise ValueError('unattributed pending obligation output')
+        result[tag]['pending']=int(value)
     return list(result.values())
 
 
 def run(args):
+    with common.sigterm_raises():
+        return _run(args)
+
+
+def _run(args):
     from rvw.common.capture import Capture
     started = time.monotonic()
     out = common.check_path('--out', args.out)
@@ -160,15 +174,17 @@ def run(args):
         if args.backend == 'verilator' and (args.check_x or any(set(v.lower()) & set('xz') for _, row in rows for v in row.values())):
             raise ValueError('four-state replay and --check-x require Icarus')
         original = '\n'.join((out / r['frontend']).read_text() for r in snap.files if r['kind'] == 'source')
+        from .live_sim import rewrite as live_rewrite
+        original, unbounded = live_rewrite(original,args.top,simulation=True)
         from .cross_clock import rewrite as cross_rewrite, schedule
         original, cross = cross_rewrite(original,args.top,simulation=True)
-        original, _ = rewrite(original, args.top, force=state is not None or bool(cross))
+        original, _ = rewrite(original, args.top, force=state is not None or bool(cross) or bool(unbounded))
         simulation, properties = lower(original, simulation=True)
-        properties += cross
+        properties += cross + unbounded
         model = out / 'simulation.sv'
         model.write_text(simulation)
         bench = out / 'testbench.sv'
-        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state, schedule(rows,cross,inputs)))
+        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state, schedule(rows,cross,inputs), unbounded))
         snap.seal(model); snap.seal(bench)
         result = RunResult(status='error', config='formal-event-simulation',
                            source={'model_sha256': digest(model)},
@@ -198,12 +214,22 @@ def run(args):
                 failures = sum(p['failed'] for p in checks if p['kind'] == 'assert')
                 assumptions = sum(p['failed'] for p in checks if p['kind'] == 'assume')
                 attempts = sum(p['passed'] + p['failed'] for p in checks if p['kind'] == 'assert')
+                pending=sum(p.get('pending',0) for p in checks if p['kind']=='assert')
+                pending_assumptions=sum(p.get('pending',0) for p in checks if p['kind']=='assume')
                 if assumptions:
                     reason, status = 'stimulus violates a declared assumption', 'error'
+                elif pending_assumptions:
+                    reason, status = 'pending unbounded assumptions', 'error'
+                elif failures:
+                    reason, status = None, 'assert'
+                elif args.check_x and unknowns:
+                    reason, status = None, 'fail'
+                elif pending:
+                    reason, status = 'pending unbounded obligations', 'error'
                 elif not attempts and not (args.check_x and observations):
                     reason, status = 'no_checks', 'error'
                 else:
-                    reason, status = None, 'assert' if failures else 'fail' if args.check_x and unknowns else 'pass'
+                    reason, status = None, 'pass'
                 result.update(status=status, assertions=checks, unknowns=unknowns,
                               observations=observations, inconclusive=reason or False,
                               scope='finite timestamped simulation; pending future obligations are not discharged')
@@ -216,7 +242,7 @@ def run(args):
                 (out / 'coverage.dat').write_text('\n'.join(coverage) + '\n')
         result.update(wall_s=time.monotonic()-started, backend=args.backend, x_semantics='four-state' if args.backend == 'icarus' else 'two-state; X not measured',
                       event_capture=spec_capture.record(), tools={'backend': args.backend},
-                      state_load=state, property_events=bindings, cross_clock_properties=cross, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
+                      state_load=state, property_events=bindings, cross_clock_properties=cross, unbounded_properties=unbounded, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
         snap.finish(result)
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2))
