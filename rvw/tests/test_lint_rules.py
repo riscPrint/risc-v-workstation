@@ -205,6 +205,24 @@ def test_each_bit_needs_complete_assignment(tmp_path):
         c.execute("DELETE FROM assignments WHERE range='(1)' AND cond_id=2")
     assert ('lint.latch', 'mask') in found(lint(db))
 
+@pytest.mark.parametrize('key', ['a', None])
+def test_repeated_predicate_scopes_cover_each_bit(tmp_path, key):
+    b = base(tmp_path)
+    b.sig('mask', width=2)
+    # The first scope assigns another signal. Each later pair assigns one bit.
+    for i, kind in [(1, 'when'), (2, 'when'), (3, 'else'), (4, 'when'), (5, 'else')]:
+        b.c.execute('INSERT INTO conds(id,component_id,kind,key) VALUES(?,1,?,?)', (i, kind, key))
+    for cond, bit in [(2, 0), (3, 0), (4, 1), (5, 1)]:
+        b.assign('mask', ' := i:Bool', cond=cond)
+        b.c.execute('UPDATE assignments SET range=? WHERE id=?', (f'({bit})', b.assign_id))
+    db = b.done()
+    assert (('lint.latch', 'mask') in found(lint(db))) == (key is None)
+    import sqlite3
+    with sqlite3.connect(db) as c:
+        c.execute('DELETE FROM assignments WHERE cond_id=5')
+    assert ('lint.latch', 'mask') in found(lint(db))
+
+
 def test_hashed_enum_literal_is_not_absence_evidence(tmp_path):
     b = base(tmp_path)
     b.reg('state', 1, type_='State@seq[1]{idle=0,run=1}', init='idle')
