@@ -56,3 +56,31 @@ See [the new supervisor coverage review](review/README.md). It adds a
 stable 270-case ACT4 rerun, four generated privilege programs and 394
 generated PMP programs. It has 717 observed and 447 qualified traces.
 The historical corpora above remain unchanged.
+
+Run-output JSON files with `summary_only` contain historical counts only.
+They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+Regenerate full records outside the repository before using those tools.
+
+Historical `machine/corpus.json`: {"core":"vexiiriscv","date":"2026-11-13","observed_traces":107,"path_policy":"paths rebased for publication; source hashes identify original bytes","profile":"machine","qualified_traces":107,"raw_trace_hashes":true,"scope":"whole C2 execution including boot and signature checks; failed prefixes remain in merged.json; not test-body coverage","verification":"unique C2 content; exact SHA membership; summed retired records and all bin counts checked"}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+
+Historical `machine/merged.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":186927,"traces":{"entries":107},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+
+Historical `machine/qualified.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":186927,"traces":{"entries":107},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+
+Historical `supervisor/corpus.json`: {"core":"vexiiriscv","date":"2026-11-13","observed_traces":319,"path_policy":"paths rebased for publication; source hashes identify original bytes","profile":"supervisor","qualified_traces":49,"raw_trace_hashes":true,"scope":"whole C2 execution including boot and signature checks; failed prefixes remain in merged.json; not test-body coverage","verification":"unique C2 content; exact SHA membership; summed retired records and all bin counts checked"}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+
+Historical `supervisor/merged.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":334592,"traces":{"entries":319},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+
+Historical `supervisor/qualified.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":17735,"traces":{"entries":49},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).

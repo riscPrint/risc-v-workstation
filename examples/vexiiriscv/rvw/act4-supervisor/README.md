@@ -88,3 +88,11 @@ See `bootstrap-review.json` for each ELF hash, C2 hash and first difference.
 The run used one persistent worker with fresh simulation instances.
 The comparison uses zero masks and zero synchronization.
 It ran after the worktree refresh on a stable source checkout.
+
+Historical `bootstrap-review.json`: {"date":"2026-11-13","selection":"unchanged standard Sm bootstrap; no accesses removed","counts":{"fail":270},"reference_counts":{"mismatch":270},"tests":{"records":270},"decision":"declared Sm CSR compatibility finding; no bootstrap access removed","source":"rvw/out/act4-triage/supervisor-stable"}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw regress run --suite act4-supervisor --rvfi-trace --out RUN_ROOT; rvw regress cosim RUN_ROOT --platform rvw/platform32.json`. Use the pinned inputs and options from [PR #1178](https://github.com/riscPrint/risc-v-workstation/pull/1178).
+
+Historical `observations.json`: {"date":"2026-11-13","evidence":"native RTL simulation; standard Sm scaffold; zero passing ACT4 tests; not certification","source":{"core_dirty":true,"tools_dirty":true},"build_inputs":{"entries":4},"tools":{"entries":2},"counts":{"entries":37},"tests":{"records":270},"reference_policy":"strict; zero synchronization; zero output masks; first-difference comparisons only, not full trace matches","representative_comparisons":{"records":37},"body_visits":{"tests":270,"entry_retired":0,"instructions_in_symbol_range":0},"triage":{"tool_bug":0,"platform_setting":0,"core_finding":270,"distinct_first_trap_sites":1,"no_waiver":true},"same_profile_controls":{"riscv_tests_built":49,"riscv_tests_run":49,"riscv_tests_pass":49,"riscv_tests_strict_spike_match":49},"post_run_changes":{"records":1}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw regress run --suite act4-supervisor --rvfi-trace --out RUN_ROOT; rvw regress cosim RUN_ROOT --platform rvw/platform32.json`. Use the pinned inputs and options from [PR #1161](https://github.com/riscPrint/risc-v-workstation/pull/1161).

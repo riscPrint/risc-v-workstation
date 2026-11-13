@@ -1,0 +1,11 @@
+# Raw tool output stays in an external run directory.
+**/out/
+**/*-results.json
+**/verification-status.json
+**/act4-functional/**/*.json
+**/act4/observations.json
+**/act4-supervisor/observations.json
+**/act4-supervisor/bootstrap-review.json
+**/act4-64su/results.json
+**/source-coverage/source-report.json
+**/*.kanata

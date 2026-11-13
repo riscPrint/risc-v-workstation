@@ -23,3 +23,7 @@ Use `rvw regress act4-build --profile rvw/act4-64su/profile.json --checkout
 "$ACT4_CHECKOUT" --out rvw/out/act4-rv64`. Select `rvw64.toml` and suite
 `act4-rv64`. Compare with `rvw/platform64.json`. Device-model interrupts
 in Sail do not establish DUT device support.
+
+Run-output JSON files with `summary_only` contain historical counts only.
+They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+Regenerate full records outside the repository before using those tools.

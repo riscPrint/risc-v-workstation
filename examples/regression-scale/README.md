@@ -58,7 +58,7 @@ attempt locations in import metadata. It does not create executions.
 rvw farm live --root HISTORY --owner native --out recorded.html
 ```
 
-[The recorded example](../../docs/examples/regression-dashboard.html) has seven
+The historical dashboard (regenerate with the command above) has seven
 native queue records and 221 test observations. It includes two VexiiRiscv ISA
 runs, two VexRiscv ISA shards, a 25-test retry, a cancelled job and a planted
 VexRiscv fault run. Both VexiiRiscv runs passed all 49 tests. The fault changes
