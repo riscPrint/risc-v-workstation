@@ -74,6 +74,7 @@ def test_each_resolved_native_file_is_read_once(native, monkeypatch):
     '_', 'PWD', 'OLDPWD', 'SHLVL', 'RVW_CAPTURE_INPUTS', 'RVW_CAPTURE_SOURCE',
     'RVW_LOCKS_HELD', 'RVW_LOCK_FD_BOOM', 'RVW_LOCK_PYTHON', 'RVW_PYTHON',
     'RISCVSIM_WORK', 'RISCVSIM_CP_CACHE', 'RISCVSIM_XMX', 'RISCVSIM_CACHE_ENTRIES',
+    'CODEX_TOOL_CALL_ID', 'CODEX_THREAD_ID', 'CODEX_SESSION_ID', 'T3CODE_THREAD_ID',
 ])
 def test_native_identity_ignores_launch_bookkeeping(native, monkeypatch, variable):
     before = native.module.collect()

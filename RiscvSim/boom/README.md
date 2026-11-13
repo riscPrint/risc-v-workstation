@@ -147,3 +147,13 @@ elaboration, native lockstep and native fault injection are NOT RUN. The
 reset FP-state mismatch above must be resolved by an explicit initialization
 policy before a full-state online match can succeed. Checkpoint restore
 still has no BOOM binding.
+
+## Stable native launch identity
+
+Native identity v28 excludes the agent call, thread and session IDs. These
+values change between launches. The standard native tools do not use them.
+Unknown environment settings, tool bytes, compiler flags and generated RTL
+still identify the build. The namespace change invalidates old cache receipts;
+old binaries are not promoted into the new namespace without verification.
+Unit tests change each frontend ID and require the same native identity.
+They also require changed compiler flags and unknown settings to change it.
