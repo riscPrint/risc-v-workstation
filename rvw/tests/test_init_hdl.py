@@ -51,7 +51,7 @@ def test_scaffold_files(tmp_path, capfd):
     r = json.loads(capfd.readouterr().out)
     assert r['frontend'] == 'slang' and r['sources'] == ['rtl/top.sv'] and r['candidate_tops'] == ['leaf', 'top']
     assert set(r['files']) == {'rvw.toml', 'rvw/run.sh', 'rvw/build-db.sh', 'rvw/sim/harness.cpp',
-                               'rvw/.gitignore', 'rvw/README.md'}
+                               'rvw/.gitignore', 'rvw/README.md', 'rvw/hdl.json'}
     assert 'build = ["./rvw/build-db.sh"]' in r['files']['rvw.toml']
     assert '--frontend slang' in r['files']['rvw/build-db.sh'] and '-I inc' in r['files']['rvw/build-db.sh']
     assert not (root / 'rvw.toml').exists()

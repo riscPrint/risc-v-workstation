@@ -156,3 +156,16 @@ effects inventory. Validate bytes, identity and adapter state before mutation.
 Discard an instance after a failed restore. A restored snapshot is not an
 equivalence verdict. Qualification needs a fresh-process native restore and
 complete C2 suffix and terminal-counter comparison with uninterrupted execution.
+
+## Plain HDL adapter identity
+
+The SV scaffold uses `rvw/hdl.json` as its Verilator build manifest. It lists
+ordered RTL files, include directories, defines, Verilator flags and harness
+sources. `rvw.init.hdl_identity.collect` preprocesses that file set with the
+same arguments as the build. `rtl_sha256` hashes the preprocessed RTL, including
+transitive includes. `tools.hdl_model_sha256` also binds the manifest and harness
+bytes. The identity command emits C1 result claims. A mapped harness must copy
+these claims from the identity saved by its build, and must rebuild when the
+current identity differs. It must not relabel an old binary with a new identity.
+Native tools and declared environment remain captured by the regression runner.
+The generated harness still refuses execution until the project maps its buses.

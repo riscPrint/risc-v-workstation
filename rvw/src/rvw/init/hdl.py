@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from .inputs import INPUT_ENV, INPUT_COMMANDS
 import re
 import shlex
 
@@ -131,6 +132,14 @@ fi
 printf '%s\\n' 'run is not mapped: drive reset and clock, serve the instruction and data buses, detect tohost completion and write C1 result.json in rvw/sim/harness.cpp. See rvw/README.md.' >&2
 exit 2
 '''
+    if hdl == 'sv':
+        launcher = launcher[:launcher.index('if [ "$cmd" = build ]; then')] + f'''if [ "$cmd" = build ] || [ "$cmd" = identity ]; then
+  shift
+  exec "${{RVW_PYTHON:-${{RVW_HOME:?set RVW_HOME}}/rvw/.venv/bin/python}}" -m rvw.init.hdl_identity rvw/hdl.json "$cmd" "$@"
+fi
+printf '%s\\n' 'run is not mapped: complete rvw/sim/harness.cpp and bind its C1 claims to rvw/hdl.json' >&2
+exit 2
+'''
     harness = f'''// Verilator harness skeleton for {top}. It compiles for any top and maps nothing.
 // Map: clock and reset, instruction/data bus to an ELF-loaded memory, tohost completion,
 // and the C1 result (docs/contracts/c1-run.md). Until then it refuses with exit 2.
@@ -201,6 +210,16 @@ rvw lint --db rvw/out/design.db         # structural CDC/RDC on the same databas
 '''
     files = {'rvw.toml': config, 'rvw/run.sh': launcher, 'rvw/build-db.sh': build_db,
              'rvw/sim/harness.cpp': harness, 'rvw/.gitignore': '/out/\n', 'rvw/README.md': readme}
+    if hdl == 'sv':
+        files['rvw/hdl.json'] = json.dumps(dict(top=top, sources=files_in, include_dirs=incs,
+            defines=[], verilator_flags=['-O2', '-Wno-fatal'],
+            harness_sources=['rvw/sim/harness.cpp'], build_dir='rvw/out/obj_dir'), indent=2) + '\n'
+        files['rvw.toml'] = config.replace('input_complete = false', 'input_complete = true').replace('identity = false', 'identity = true').replace(
+            'identity_capture = false', 'identity_capture = true') + '\n'
+        files['rvw.toml'] = files['rvw.toml'].replace('jobs = 1',
+            'cache_paths = ' + q(['rvw/hdl.json', 'rvw/run.sh', 'rvw/sim/harness.cpp', *files_in, *incs]) + '\n'
+            'input_tools = ["verilator", "make", "git"]\ninput_verilator_toolchain = true\n'
+            'input_env = ' + INPUT_ENV + '\ninput_commands = ' + INPUT_COMMANDS.replace('\"sbt\", ', '') + '\njobs = 1')
     conflicts = [key for key in files if (root / key).exists() or (root / key).is_symlink()]
     if conflicts and not force:
         raise ValueError('Refusing to overwrite: ' + ', '.join(conflicts) + '. Use --force only for intended replacement.')

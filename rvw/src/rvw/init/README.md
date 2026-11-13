@@ -196,3 +196,10 @@ fetch and decode flushes on redirect and separate measured fetch/data stalls.
 Bind actual slot-valid bits and IDs. Adapt the stages for the actual pipeline.
 Use `rvw probes check --require flush/fetch --require flush/decode --require stall`
 with `--events` after an instrumented run to name missing declarations.
+The SV scaffold declares its build inputs in `rvw/hdl.json`. Change this file
+when you add RTL, includes, defines, flags or harness sources. `rvw/run.sh identity`
+preprocesses RTL with the build arguments and emits `rvw.adapter-capture/2`.
+`build` writes `identity.json` beside the binary. A mapped C1 launcher must check
+this identity before reuse and copy its result claims into each C1 record.
+The generated stub refuses run until memory and completion are mapped. Review
+input declarations again when you add project code or external dependencies.
