@@ -213,3 +213,56 @@ Use `summarize.py RUN...` to validate C1/C2 count and completion consistency.
 See [the cache and coherence scope](COHERENCE.md). Both observer groups are
 unbound because these profiles have no caches or TileLink-C ports. C1 reports
 `cache_coherence: not_present`. Native program passes do not change that limit.
+
+## Timing stress and replay
+
+The top gives each hart its own synchronous clock enable. The harness changes
+these enables after sampling. It holds responses until the target hart has an
+enabled clock edge. Disabled harts cannot accept bus requests. Fetch and LSU
+command backpressure are separate per-hart draws. Response waits and same-edge
+hart service order also use the run seed.
+
+| Variable | Default | Range | Effect |
+|---|---:|---:|---|
+| `RVW_SMP_MAX_DELAY` | 3 | 0..1024 | Seeded response wait in base-clock cycles. |
+| `RVW_SMP_READY_PERCENT` | 100 | 1..100 | Probability that an enabled hart's fetch/LSU command port is ready. |
+| `RVW_SMP_CLOCK_PERCENT` | 100 | 1..100 | Probability that each hart's next clock edge is enabled. |
+
+`--mem-latency` selects a fixed response wait instead of the seeded delay.
+C1 `details.timing` records all settings, the seed and each hart's disabled
+clock-edge count. Its base sample count includes the terminal sample and can
+exceed `cycles` by one. The replay command includes the three environment
+variables when set. A C1 pass still requires every hart to complete.
+
+For example, set these variables before the existing C1 command:
+
+```sh
+export RVW_SMP_MAX_DELAY=11
+export RVW_SMP_READY_PERCENT=60
+export RVW_SMP_CLOCK_PERCENT=70
+# Pass --seed 17 to rvw/run.sh run, as in the examples above.
+```
+
+The native stress control used those settings:
+
+| Case | Seed | Cycles | Retirements | Result |
+|---|---:|---:|---:|---|
+| LR/SC run A | 17 | 2132 | 498 | pass |
+| LR/SC replay B | 17 | 2132 | 498 | byte-identical C2 |
+| AMO | 23 | 35860 | 8326 | pass |
+| Generated shared program | 7 | 230 | 39 | RVWMO allowed after 6 candidates |
+| HSM | 17 | 2813 | 520 | two starts, one stop, two IPIs |
+| Serialized shared AMO | 23 | 152 | 30 | Spike match; zero masks/sync |
+
+Both LR/SC runs recorded 585 disabled edges on hart 0 and 603 on hart 1.
+Their full C2 SHA-256 values match. The native test checks settings in each
+replay command, nonzero stalls on every hart, completion and C1/C2 counts.
+Run `pytest -c rvw/pyproject.toml examples/smp/rvw/tests/test_timing_native.py`
+after setup. Use a base temporary directory under `rvw/out` for retained runs.
+See `rvw/stress-results.json` and the stress checker JSON files.
+
+The default-timing three-hart control passed at 86 cycles and 35 retirements.
+All three clock-stall counters were zero. Native checks cover N=2 and N=3.
+N=4 through N=8 were NOT RUN. Clock enables test synchronous state stalls.
+Independent clock frequencies, CDC, physical clock gates, reset and power
+control remain outside this example's measured scope.

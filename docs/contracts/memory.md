@@ -162,3 +162,17 @@ It releases service at that memory instruction's retirement. Its common ELF
 and per-hart tohost slots support shared-RAM Spike comparison. WFI and interrupt
 programs are outside its qualified scope. The HSM profile uses concurrent
 memory service and does not declare serialized-retirement ordering.
+
+## SMP timing stress observations
+
+The example's C1 `details.timing` records `seed`, `random_max_delay`,
+`ready_percent`, `clock_enable_percent`, optional `fixed_latency`,
+`base_sample_edges` and `clock_stall_edges` by hart. The terminal sample is
+included in the edge count. It can exceed C1 `cycles` by one.
+
+Clock enables change after capture. The memory service accepts a command only
+on that hart's enabled edge. A response stays pending until an enabled edge
+consumes it. The three `RVW_SMP_*` timing variables are included in replay.
+They do not change the core source or the selected ISA. A replay claim requires
+actual equality of the captured streams under the same inputs and settings.
+These synchronous stalls do not qualify CDC or physical clock gating.
