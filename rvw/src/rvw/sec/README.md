@@ -419,7 +419,10 @@ microarchitectural. `budget` bounds pairs and seconds. `state.json` is written
 after each pair; `--resume` continues until the budget (raise it in the
 manifest to continue a finished campaign). Outputs: `report.json` (`rvw.sec/1`),
 `results.json` (one C3 `fail` per signature, or one `pass`/`error`) and
-`report.md`. A clean campaign is `no_leak_observed` for the pairs it ran.
+`report.md`. A clean campaign is `no_leak_observed` for the pairs it ran, and
+only when at least `min_eligible_fraction` (default 0.5) of them were eligible.
+Otherwise it is `inconclusive`. The report gives `eligible_pairs` and
+`min_eligible_pairs`.
 
 Results with `examples/*/rvw/sec/campaign.json` (both contracts, seed 11,
 24 pairs each, RTL from the pinned revisions):

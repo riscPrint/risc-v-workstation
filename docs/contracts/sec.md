@@ -121,8 +121,12 @@ a side channel);
 `count`, reduced `program`, `secrets`, `contracts`), `statuses` and `errors`.
 A signature is the reduced program's sorted mnemonics and the differing
 channels, `MNEMONICS|CHANNELS`. `results.json` has one C3 `fail` per signature
-(`signature` `sec:campaign:...`), else one `pass` when at least one pair was
-eligible, else an `error` with `inconclusive`. Each pair keeps its paired
+(`signature` `sec:campaign:...`), else one `pass` when at least
+`min_eligible_pairs` pairs were eligible, else an `error` with `inconclusive`.
+`min_eligible_pairs` is `ceil(min_eligible_fraction × pairs)`, at least 1; the
+manifest key `min_eligible_fraction` defaults to 0.5. `report.json` gives
+`eligible_pairs`, `min_eligible_pairs` and `pairs`. Below the minimum, a
+campaign without a signature is `inconclusive`, not `no_leak_observed`. Each pair keeps its paired
 `report.json` under `pair-NNNN/run`, and its reduction under `pair-NNNN/reduced`.
 
 ## Automatic IFT bindings

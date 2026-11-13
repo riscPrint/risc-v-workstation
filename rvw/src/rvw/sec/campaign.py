@@ -11,6 +11,7 @@ State is saved after each iteration; `resume` continues until the budget is used
 import datetime
 import hashlib
 import json
+import math
 from pathlib import Path
 import random
 import time
@@ -196,26 +197,33 @@ def run(manifest, out, resume=False):
 def finish(out, state, plan, max_pairs, max_seconds):
     sigs = state['signatures']
     eligible = state['statuses'].get('violation', 0)+state['statuses'].get('no_leak_observed', 0)
-    status = 'violation' if sigs else 'no_leak_observed' if eligible else 'inconclusive'
+    # A clean result needs a stated share of the pairs run to be eligible, not just one of them.
+    fraction = plan.get('min_eligible_fraction', 0.5)
+    if not isinstance(fraction, (int, float)) or not 0 < fraction <= 1:
+        raise ValueError('min_eligible_fraction must be in (0, 1]')
+    minimum = max(1, math.ceil(fraction*state['pairs']))
+    enough = eligible >= minimum
+    status = 'violation' if sigs else 'no_leak_observed' if enough else 'inconclusive'
     tests = [dict(id=f'sec-campaign:{k}', status='fail', message=v['signature'],
                   signature='sec:campaign:'+v['signature']) for k, v in sorted(sigs.items())]
     if not sigs:
-        t = dict(id='sec-campaign', status='pass' if eligible else 'error', message=status)
-        if not eligible:
-            t['inconclusive'] = 'no eligible pair'
+        t = dict(id='sec-campaign', status='pass' if enough else 'error', message=status)
+        if not enough:
+            t['inconclusive'] = f'{eligible} of {state["pairs"]} pairs eligible; minimum {minimum}'
         tests.append(t)
     results = dict(schema='rvw.results/1', run_id=out.name, suite='sec-campaign', core='project',
                    config='declared', source={}, created=datetime.datetime.now(datetime.timezone.utc).isoformat(),
                    tests=tests)
     (out/'results.json').write_text(json.dumps(results, indent=2)+'\n')
-    report = dict(schema='rvw.sec/1', technique='campaign', status=status, complete=bool(eligible),
+    report = dict(schema='rvw.sec/1', technique='campaign', status=status, complete=enough, eligible_pairs=eligible, min_eligible_pairs=minimum,
                   findings=[dict(key=k, **v) for k, v in sorted(sigs.items())], pairs=state['pairs'],
                   statuses=state['statuses'], coverage_keys=len(state['coverage']), corpus=len(state['corpus']),
                   budget=dict(pairs=max_pairs, seconds=max_seconds), seconds=round(state['seconds'], 1),
                   errors=state['errors'][-5:])
     (out/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     lines = ['# Leakage campaign', '', f'Status: `{status}`. Pairs: {state["pairs"]} '
-             f'(budget {max_pairs} pairs, {max_seconds} s). Outcomes: {state["statuses"]}.',
+             f'(budget {max_pairs} pairs, {max_seconds} s). Eligible: {eligible} (minimum {minimum}). '
+             f'Outcomes: {state["statuses"]}.',
              f'Coverage keys: {len(state["coverage"])}. Corpus: {len(state["corpus"])} programs.', '',
              '`no_leak_observed` covers only these pairs. It does not mean secure.', '']
     if sigs:
