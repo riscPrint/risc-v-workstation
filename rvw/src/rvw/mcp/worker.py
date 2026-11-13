@@ -44,14 +44,14 @@ def _label(module: str) -> str:
     return parts[0] if parts else module
 
 
-def handler(module: str, action: str | None = None, *, lock: str | None = None):
+def handler(module: str, action: str | None = None, *, lock: str | None = None, function: str = "execute_json"):
     """A long ToolSpec handler calling a package's execute_json Python function."""
     def call(job, **arguments):
         if action is not None and "action" in arguments:
             raise TypeError("action is fixed by the tool name")
         if action is not None:
             arguments = {"action": action, **arguments}
-        return run_function(job, module, "execute_json", arguments, lock)
+        return run_function(job, module, function, arguments, lock)
     return call
 
 

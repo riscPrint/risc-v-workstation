@@ -30,6 +30,8 @@ def render(plan):
 
 
 def collect(plan, root):
+    if not plan.get('shards') or any(not shard.get('results') for shard in plan['shards']):
+        raise ValueError('collection requires explicit nonempty expected cells')
     root = Path(root).resolve()
     evidence, missing, errors = [], [], []
     for shard in plan['shards']:
@@ -111,7 +113,25 @@ def batch(plan, action='render', executor='local', root='.', ids=None, kubectl='
     if action == 'render':
         return render(plan)
     if action == 'collect':
-        return collect(plan, root)
+        report = collect(plan, root)
+        if executor == 'k8s':
+            expected = {(j['metadata']['name'], j['metadata']['namespace']) for j in render(plan)['items']}
+            actual = {(j['name'], j['namespace']) for j in (ids or [])}
+            if actual != expected or len(ids or []) != len(expected):
+                report.update(status='inconclusive', execution_error='missing or different cluster Job IDs')
+                return report
+            try:
+                states = KubernetesExecutor(kubectl).status(ids)
+                report['execution'] = states
+                complete = lambda state: (state.get('status', {}).get('succeeded', 0) >= 1
+                    and not state.get('status', {}).get('failed', 0)
+                    and any(c.get('type') == 'Complete' and c.get('status') == 'True'
+                            for c in state.get('status', {}).get('conditions', [])))
+                if not all(complete(s) for s in states) or len(states) != len(expected):
+                    report.update(status='inconclusive', execution_error='cluster Job incomplete or failed')
+            except (RuntimeError, OSError, ValueError) as exc:
+                report.update(status='inconclusive', execution_error=str(exc))
+        return report
     backend = LocalExecutor(root) if executor == 'local' else KubernetesExecutor(kubectl)
     if action == 'submit':
         return backend.submit(plan)
