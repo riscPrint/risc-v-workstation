@@ -729,3 +729,165 @@ The UART profile is still a subset. Full 16550 behavior, boot-from-flash,
 native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
 external-IP import and composed debug-module integration remain separate work.
 The existing standalone SMP example is unchanged.
+## Write properties for your core
+
+Keep signal bindings beside your elaboration code. Do not put core signal names
+in the generic formal library. The VexRiscv example uses
+`examples/vexriscv/rvw/src/main/scala/rvwvex/CoreProperties.scala`.
+It adds observation ports and writes the Scala DSL statements to a separate
+file. It does not edit the upstream core.
+
+Add the `SpinalChecks` project dependency to your build. Import
+`spinalchecks.Sva._`. Use typed signals where possible:
+
+```scala
+import spinal.core._
+import spinalchecks.Sva
+import spinalchecks.Sva._
+def observe(name: String, value: BaseType): Expr = {
+  val port = out(cloneOf(value)).setName(name)
+  port.assignFromBits(value.asBits)
+  signal(port)
+}
+val fire = observe("check_fire", bus.fire)
+val valid = observe("check_valid", bus.valid)
+val payload = observe("check_payload", bus.payload.asBits)
+val stalled = observe("check_stalled", bus.valid && !bus.ready)
+val checks = Seq(
+  fire.sequence.implies(valid.sequence).assertOn("fire_valid", signal("clk"), Some(signal("reset"))),
+  stalled.sequence.implies(payload.equal(payload.past).sequence, overlap = false)
+    .assertOn("stall_payload", signal("clk"), Some(signal("reset")))
+Sva.write(outputPath, checks)
+```
+
+Place this code in the top component, as in the example. `outputPath` is a
+`java.nio.file.Path`. The writer emits statements. It does not insert assertion
+hardware in your design. Bind the emitted signal names to ports or names that
+remain visible in the RTL. Add the monitor integration to your project harness.
+The example's `core-properties-sim.py` shows the finite monitor integration.
+Its `core-progress.py` shows eventual-response accounting.
+
+A wrapper around `assertOn` can pass `sourceDepth = 1` to retain its caller's
+DSL line. Check that the generated `rvw-source` annotation identifies that call.
+C1 assertion rows and C3 property rows retain this location. A failed program
+and a failed property are separate results. A passing finisher value must not
+hide a failed assertion.
+
+### Run simulation and formal checks
+
+Use a private core copy. Keep build outputs in your worktree. Use the private
+core and sbt locks named in your worker brief. The VexRiscv commands are in its
+[Scala property campaign](../examples/vexriscv/README.md#scala-dsl-property-campaign).
+Compile once. Run each ISA program in a fresh native process.
+
+Read each property's `failed` and `activated` counts. Assertion pass counts
+include false antecedents. Zero failures with zero activations gives no exercised
+implication. Covers record reached conditions. Eventual-response checks also
+need `pending`. A finite test with pending requests is inconclusive. Completion
+of every observed request does not prove behavior on an infinite execution.
+
+For formal checks, export one self-contained SBY job per property. Prepare a
+`regress.toml` with `[[property]]` rows. Each row needs `id`, `sby` and `top`.
+Record the assumptions and the DSL source location. Add `activation_sby` for a
+separate antecedent-cover job. Use the same reset and environment assumptions
+in both jobs. A cover not reached within N cycles is not an unreachability proof.
+
+```sh
+rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-1 --json
+rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-2 --json
+```
+
+Keep C3, JUnit and the per-property logs. Read `formal_status` and the depth.
+A `bounded-pass` result checks only its bound. A cache hit restores a prior
+conditional engine observation. It is not a new proof. Changes to captured
+sources, tools or relevant code invalidate an eligible cache entry. Missing
+source closure can make a job ineligible for caching.
+
+### Measured VexRiscv table
+
+The safety rows below come from the earlier 49-program native campaign on
+VexRiscv `a62c145a`, SpinalHDL 1.15.0 and Verilator 5.049. Formal used at most
+three workers and two initial reset clocks. Other inputs were arbitrary. Each
+safety assertion has a bounded result at depth 12. Six antecedents were not
+exercised in simulation. The table records those gaps.
+
+The final row is a separate native eventual-release campaign from this run.
+It uses the same 49 aligned programs. Its formal lasso search uses one startup
+reset clock and no progress fairness. It does not prove infinite-trace liveness.
+
+| Property | Sim pass | Sim fail | Sim active | Sim cover | Formal | Antecedent cover |
+|---|---:|---:|---:|---:|---|---|
+| `stage0_fire_valid` | 42769 | 0 | 17931 | 0 | bounded 12 | reached |
+| `stage0_fire_not_stuck` | 42769 | 0 | 17931 | 0 | bounded 12 | reached |
+| `stage0_fire_not_removed` | 42769 | 0 | 17931 | 0 | bounded 12 | reached |
+| `stage0_stall_pc` | 42720 | 0 | 1546 | 0 | bounded 12 | reached |
+| `stage1_fire_valid` | 42769 | 0 | 17735 | 0 | bounded 12 | reached |
+| `stage1_fire_not_stuck` | 42769 | 0 | 17735 | 0 | bounded 12 | reached |
+| `stage1_fire_not_removed` | 42769 | 0 | 17735 | 0 | bounded 12 | reached |
+| `stage1_stall_pc` | 42720 | 0 | 588 | 0 | bounded 12 | reached |
+| `stage2_fire_valid` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage2_fire_not_stuck` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage2_fire_not_removed` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage2_stall_pc` | 42720 | 0 | 1188 | 0 | bounded 12 | reached |
+| `stage3_fire_valid` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage3_fire_not_stuck` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage3_fire_not_removed` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `stage3_stall_pc` | 42720 | 0 | 0 | 0 | bounded 12 | not_reached_within_bound |
+| `pc_chain_0` | 42720 | 0 | 17931 | 0 | bounded 12 | reached |
+| `pc_chain_1` | 42720 | 0 | 17735 | 0 | bounded 12 | reached |
+| `pc_chain_2` | 42720 | 0 | 17686 | 0 | bounded 12 | reached |
+| `ibus_hold_valid` | 42720 | 0 | 19737 | 0 | bounded 12 | reached |
+| `ibus_hold_pc` | 42720 | 0 | 19737 | 0 | bounded 12 | reached |
+| `ibus_pc_aligned` | 42769 | 0 | 40196 | 0 | bounded 12 | reached |
+| `dbus_hold_valid` | 42720 | 0 | 0 | 0 | bounded 12 | reached |
+| `dbus_hold_address` | 42720 | 0 | 0 | 0 | bounded 12 | reached |
+| `dbus_hold_data` | 42720 | 0 | 0 | 0 | bounded 12 | reached |
+| `dbus_hold_write` | 42720 | 0 | 0 | 0 | bounded 12 | reached |
+| `dbus_hold_size` | 42720 | 0 | 0 | 0 | bounded 12 | reached |
+| `x0_write_zero` | 42769 | 0 | 4747 | 0 | bounded 12 | reached |
+| `retire_machine` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `retire_rv32` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `retire_pc_aligned` | 42769 | 0 | 17686 | 0 | bounded 12 | reached |
+| `trap_mie_clear` | 42769 | 0 | 196 | 0 | bounded 12 | reached |
+| `trap_mpp_machine` | 42769 | 0 | 196 | 0 | bounded 12 | reached |
+| `trap_mepc_aligned` | 42769 | 0 | 196 | 0 | bounded 12 | reached |
+| `retirement_reached` | 0 | 0 | 0 | 17686 | NOT RUN: cover | NOT RUN |
+| `trap_reached` | 0 | 0 | 0 | 196 | NOT RUN: cover | NOT RUN |
+| `stage0_eventual_release` | 1742 | 0 | 1742 | 0 | bounded lasso 12 | reached |
+
+See [the safety source table](../examples/vexriscv/property-results.md) for its
+measurement limits. Register-file checks observe RVFI writes. They do not check
+every physical storage write. The memory model does not exercise data-bus
+backpressure. Instruction identity and eventual retirement remain open.
+
+### Review mined candidates
+
+`rvw formal trace-mine` emits Scala DSL candidates from pre-edge signal samples.
+Supply a manifest with unsigned signal widths. Pass one `--trace` per program.
+Trace boundaries prevent false transitions between independent runs. The tool
+drops refuted candidates and candidates with too few active samples.
+
+The [measured mining run](../examples/vexriscv/mining-results.md) used 42,769
+samples from 49 aligned ISA programs. It retained 87 candidates and dropped
+730 refuted candidates and 57 inactive candidates. The emitted source is
+not enabled by default. Some relations depend on signals constant in this
+suite. Review each candidate. Then run a fresh proof with explicit assumptions.
+Do not use an observed candidate as an assumption.
+
+### Current limits
+
+The generated [SVA support table](../rvw/src/rvw/formal/TEMPORAL_SUPPORT.md)
+identifies tested subsets. Default clocking and default disable conditions are
+module-local subsets. Nested eventual milestones accept two to eight ordered
+Boolean terms. General nested unbounded composition and formal reset
+cancellation remain unsupported. `rvw formal cross-prove` checks a Boolean two-clock
+implication in a discrete global-step model. It samples pre-update values and
+adds no clock fairness. Positive native induction jobs and negative jobs cover
+both implication forms. This does not qualify full multi-clock SVA or events
+between global samples. Multi-clock native replay is finite simulation evidence.
+
+The [scenario example](../examples/vexriscv/scenarios/README.md) compiles 12
+literal MMIO actions to a bare-metal image and a CPU-backed pyuvm virtual
+sequence. Both run on the real composed SoC. Their 24 observations match.
+They use the same CPU image. Independent stimulus executors, dynamic produced
+data, symbolic constraints, randomized schedules and PSS parsing remain open.
