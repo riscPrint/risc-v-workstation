@@ -44,3 +44,20 @@ def test_zero_activation_is_explicit():
     r=retry_statistics(stream([(0,0,[1]),(1,3,[1])]))
     assert r['causes']['cache_miss_retry']['retry_to_completion_cycles']==[]
     assert not r['causes']['cache_miss_retry']['counts']
+
+
+def test_order_violation_does_not_time_stale_completion():
+    s=stream([(0,0,[1]),(2,1,[1]),(3,2,[1]),(4,4,[1,1])])
+    s.probes[1].meta['cause']='memory_order_violation'
+    r=retry_statistics(s)['causes']['memory_order_violation']
+    assert r['retry_to_completion_cycles']==[]
+    assert r['counts']['flushed']==1
+
+
+def test_distinct_cause_supersedes_wait_without_counting_same_retry():
+    s=stream([(0,0,[1]),(1,1,[1]),(2,5,[1]),(3,2,[1])])
+    s.probes.append(Probe(5,'lsuretry','forward',[('id',4)],dict(cause='store_forward_miss')))
+    r=retry_statistics(s)['causes']
+    assert r['cache_miss_retry']['counts']['superseded']==1
+    assert 'rejected_again' not in r['cache_miss_retry']['counts']
+    assert r['store_forward_miss']['retry_to_completion_cycles']==[1]

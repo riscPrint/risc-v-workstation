@@ -875,3 +875,41 @@ Raw records are no longer tracked. Regenerate outside the repository:
 Historical `rvw/probes/add.kanata`: {}.
 Raw records are no longer tracked. Regenerate outside the repository:
 `rvw probes convert rvw/out/pipeline/probe-events.jsonl --to kanata --out RUN_ROOT/add.kanata`. Use the pinned inputs and options from [PR #1127](https://github.com/riscPrint/risc-v-workstation/pull/1127).
+## Directed retry observations and typed timing
+
+`rvw/programs/retry-directed.S` is a short base-configuration program. It
+exercises all four retry causes. It passes in 363 cycles with 40 retirements.
+All 40 instructions match Spike. The six typed retry records have live IDs.
+[The profile](rvw/arch/retry-profile-results.json) retains the observations
+and capture hashes. The memory-order event occurs at cycle 106. Its inclusive
+flush occurs at 112. The same PC restarts at rename at 113. A stale completion
+at 108 does not measure recovery. The tap now records local LSU attempts as
+stage `Ls` as well as the existing pipeline stages.
+
+`rvw/arch/retry-profile.py CAPTURE NEW_OUTPUT` repeats extraction. Its local
+attempt intervals include service waiting. Zero added local cost is an
+assumption. It is not a measured zero overhead. One memory-order restart
+sample is not a stable cross-program latency. The model uses its own cause
+detection. Captured dynamic retry rows do not enter a prediction.
+
+The [typed window experiment](rvw/arch/typed-replay-results.json) keeps one
+base-only cost profile across all variants. It meets the criterion on 15/24
+pairs, including 6/15 nonzero changes. Training MAE is 7.31%. Extended held-out
+MAE is 9.05%. [Local cache retry](rvw/arch/typed-cache-results.json) lowers
+held-out MAE to 7.52%, but meets only 12/24 pairs and 3/15 nonzero changes.
+It loses IQ multiply, IQ memcpy and LQ memcpy. It therefore stays disabled.
+Improved absolute IPC alone does not meet the activation rule.
+
+The optional costs are in [ooo-typed.json](rvw/arch/ooo-typed.json).
+The rejected cache candidate remains in
+[ooo-typed-cache.json](rvw/arch/ooo-typed-cache.json). Local retry uses the LSU
+return path and does not need an IQ slot. A dependent wrong-path branch
+cannot prevent that return. Exact local cost isolation, cache retry predicate
+agreement and broad replay accuracy remain open.
+
+The optional `replay_at_commit` experiment separates that seven-cycle span.
+The model predicts the wait for the violating load to reach the ROB head.
+The base capture supplies one cycle from flush to rename. A targeted schedule
+changes an older instruction's latency by 30 cycles. Predicted commit waiting
+also changes by 30 cycles, with the restart cost held fixed. This is a
+mechanism check. Full matrix and absolute-error results remain separate.

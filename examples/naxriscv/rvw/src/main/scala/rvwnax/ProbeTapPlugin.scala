@@ -92,6 +92,7 @@ class ProbeTapPlugin extends Plugin {
       // Read the explicit LSU control result, not cache latency or aggregate reschedules.
       val control = lsu.logic.get.sharedPip.ctrl.stage
       val retry = control.isFireing
+      Probe.stageAt("lsu_attempt", "Ls", retry, control(ROB.ID))
       val status = control(lsu.keys.CTRL)
       Probe.lsuRetry("translation", retry && status === Lsu2Plugin.CTRL_ENUM.MMU_REDO,
         control(ROB.ID), "tlb_miss")

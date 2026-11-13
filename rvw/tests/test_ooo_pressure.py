@@ -202,3 +202,106 @@ def test_memory_order_window_can_run_without_component_cache():
 def test_replay_window_flag_is_boolean():
     with pytest.raises(ValueError,match='replay_window'):
         config(replay_window=1)
+
+
+def test_order_recovery_preserves_work_before_violating_load():
+    c = Config(4,16,4,32,4,8,8,8,4,
+               dict(alu=1,divide=12,load=2,store=2),
+               memory_policy='speculate', replay_window=True)
+    ops = [Instruction('divide',dest=1), Instruction('store',(1,),address=16,size=4),
+           Instruction('alu',dest=4),
+           Instruction('load',dest=2,address=16,size=4), Instruction('alu',(2,),3)]
+    result = simulate(ops,c,backend='python')
+    assert result['events']['memory_order_replays'] == 1
+    assert result['events']['replayed_instructions'] == 2
+    assert result['events']['issued'] == 7
+    assert result['instret'] == 5
+
+
+def test_typed_cache_retry_keeps_independent_younger_work():
+    from rvw.ooo.core import _simulate
+    class Miss:
+        def __init__(self): self.calls = 0
+        def access(self, *args):
+            self.calls += 1
+            return 20 if self.calls == 1 else 1
+    c = config(cache_miss_replay=True,
+               retry_costs={'cache_miss_retry': 0},
+               components={'memory': {'l1d': {'size_kib':16,'ways':4,'latency':1}}})
+    ops = [Instruction('load',dest=1,address=128,size=4),Instruction('alu',dest=2)]
+    result = _simulate(ops,c,memory=Miss(),backend='python')
+    assert result['events']['cache_miss_replays'] == 1
+    assert result['events']['replayed_instructions'] == 1
+    assert result['events']['issued'] == 3
+    assert result['instret'] == 2
+
+
+def test_typed_costs_reject_unknown_causes_and_non_cycles():
+    for costs in ({'branch': 1}, {'tlb_miss': True}, {'cache_miss_retry': -1}):
+        with pytest.raises(ValueError,match='retry'):
+            config(retry_costs=costs)
+
+
+def test_typed_translation_cost_applies_once_after_walk():
+    c = Config(2,8,2,16,2,8,8,8,2,dict(load=1),
+               translation=dict(entries=4,page_bytes=4096,hit_latency=1,walk_latency=10,walkers=1))
+    ops=[Instruction('load',dest=1,address=128,size=4)]
+    baseline=simulate(ops,c,backend='python')
+    retry=simulate(ops,replace(c,retry_costs={'tlb_miss':4}),backend='python')
+    assert retry['cycles']==baseline['cycles']+4
+    assert retry['events']['tlb_miss_retries']==1
+
+
+def test_partial_forward_retry_is_local_and_waits_for_store():
+    c=Config(2,8,2,16,2,8,8,8,2,dict(load=1,store=8),
+             memory_policy='disambiguate',retry_costs={'store_forward_miss':10})
+    ops=[Instruction('store',address=128,size=4),Instruction('load',dest=1,address=128,size=8)]
+    r=simulate(ops,c,backend='python')
+    assert r['instret']==2
+    assert r['events']['store_forward_miss_retries']==1
+    assert r['events']['issued']==2
+
+
+def test_local_cache_retry_cannot_deadlock_behind_dependent_wrong_path():
+    from rvw.ooo.core import _simulate
+    class Miss:
+        def __init__(self): self.calls=0
+        def access(self,*args):
+            self.calls+=1
+            return 30 if self.calls==1 else 1
+    c=config(cache_miss_replay=True,wrong_path_occupancy=True,
+             issue_queue_policy='compacting',retry_costs={'cache_miss_retry':0},
+             components={'memory':{'l1d':{'size_kib':16,'ways':4,'latency':1}}})
+    ops=[Instruction('load',dest=1,address=128,size=4),
+         Instruction('branch',sources=(1,),pc=4,next_pc=100)]+[Instruction('alu') for _ in range(20)]
+    r=_simulate(ops,c,memory=Miss(),max_cycles=200,backend='python')
+    assert r['instret']==len(ops)
+    assert r['events']['cache_miss_replays']==1
+    assert r['max_occupancy']['issue_entries']<=c.issue_entries
+
+
+def test_commit_replay_models_wait_instead_of_charging_fixed_detection_cost():
+    c=Config(4,16,4,64,4,32,16,16,4,
+             dict(alu=1,divide=12,multiply=40,load=2,store=4),
+             memory_policy='speculate',replay_window=True,replay_at_commit=True,
+             retry_costs={'memory_order_violation':1})
+    ops=[Instruction('divide',dest=1),Instruction('store',(1,),address=16,size=4),
+         Instruction('multiply',dest=4),Instruction('load',dest=2,address=16,size=4),
+         Instruction('alu',(2,),3)]
+    a=simulate(ops,c,backend='python')
+    b=simulate(ops,replace(c,latencies=dict(c.latencies,multiply=70)),backend='python')
+    immediate=simulate(ops,replace(c,replay_at_commit=False),backend='python')
+    assert a['events']['memory_order_replays']==1
+    assert a['events']['replayed_instructions']==2
+    assert a['events']['issued']==7
+    assert a['events']['memory_order_commit_wait']>0
+    assert b['events']['memory_order_commit_wait']-a['events']['memory_order_commit_wait']==30
+    assert b['cycles']-a['cycles']==30
+    assert a['cycles']>immediate['cycles']
+    assert a['instret']==b['instret']==len(ops)
+
+
+def test_commit_replay_requires_speculation_and_a_finite_window():
+    for args in ({'replay_at_commit':1}, {'replay_at_commit':True}):
+        with pytest.raises(ValueError,match='replay_at_commit'):
+            config(**args)
