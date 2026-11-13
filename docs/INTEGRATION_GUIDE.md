@@ -334,21 +334,130 @@ Use `rvw vip list`, `rvw vip buses --db design.db` and
 reset, stimulus and expected results. For a custom typed bus, use
 `rvw uvm new --adapter adapter.json` with a project scenario and explicit pins.
 
-## 14. Scale to a farm
+## 14. Run regressions at scale
 
-Install matching tools on every worker. Configure SSH keys and trusted host
-keys. Capture an exact adapter identity and a C1 run-many manifest first.
+The local management path now has native execution evidence on VexRiscv and
+VexiiRiscv. The measured scope is the selected 49 ISA self-checks per core.
+Use a private core copy and a committed workstation checkout. Keep source,
+ELF, native-build and generated RTL identities with every result. Initial
+history used a dirty harness. The later gate cases used clean commits on both
+sides. Do not use the initial history as C4 acceptance evidence.
+
+Prepare a C1 JSONL manifest with absolute ELF paths, config, seed and requested
+options. An optional `id` names each test. Enable `rvfi_trace` for drill-down.
+Use an adapter that supports `run-many --persistent --jobs 1`. Set its source
+variable to the private copy. Set `RVW_VEX_LOCK=vex-priv` and
+`RVW_SBT_LOCK=sbt-priv` for these examples. Use a private `RISCVSIM_WORK` path.
+Limit make and JVM workers for the shared host. The measured later runs used
+`RISCVSIM_MAKE_JOBS=2` and `JDK_JAVA_OPTIONS=-XX:ActiveProcessorCount=2`.
 
 ```sh
-rvw farm run --help
-rvw farm dashboard --root "$HOME/.cache/rvw/results" --out run/dashboard.html
+nice -n 10 "$RVW_HOME/rvw/.venv/bin/python" \
+  "$RVW_HOME/examples/regression-scale/submit.py" \
+  --manifest jobs.jsonl --adapter '["/absolute/core/rvw/run.sh"]' \
+  --root run/queue --shards 2
+rvw farm queue --root run/queue --operation work
+rvw farm queue --root run/queue --operation work
+rvw farm live --root run/queue --owner local --out run/history.html
 ```
 
-Use the full command in [farm](../rvw/src/rvw/farm/README.md) with project-owned
-hosts, manifest and identity command arrays. Working means every expected cell
-has a collected result and matching identity. Collection exit 0 is not a DUT
-pass. New cluster shard plans have fake-adapter tests. Native cluster/RTL parity
-is not established. Missing hosts, acknowledgements or artifacts stay inconclusive.
+Each `work` call executes one job. Start at most three simulation workers on
+the shared machine. A private core lock can serialize them. Queue retries
+get fresh attempt directories. The native wrapper checks C1 input identities
+and server execution mode before it writes C3. Missing evidence stays
+inconclusive. Complete collection can contain DUT failures. It is not C4 accept.
+
+The [native example](../examples/regression-scale/README.md) contains the
+controller-crash and cancellation recipe. It checked native activity before
+killing the controller. Checked recovery stopped the owned processes and
+reran 25 tests. A separate cancel received acknowledgement and left no live
+members in either captured native process group.
+
+### Measured management results
+
+These are shared-host observations from 2026-11-13. Test startup, lock waits
+and different build states prevent a speedup claim. Repeated observations are
+not unique tests. CPU charges use declared cores, not measured CPU time.
+
+| Check | Native observation | Limit |
+|---|---|---|
+| Initial local ISA queue | VexRiscv 49 passes in 25/24 shards; 65.799 and 130.713 seconds; 0.249 tests/second from their summed time. | Includes startup and private-lock wait. Earlier invalid-manifest attempts collected no tests and are excluded. [Record](../examples/regression-scale/local-results.json). |
+| Shared persistent shard plan | A fresh 49-test VexRiscv run passed in 54.016 queue seconds, or 0.907 tests/second. Two complete C3 suites. | One simulation at a time. This was a later build state. No speedup comparison. [Record](../examples/regression-scale/k8s-results.json). |
+| Dual-core history | Seven queue records, 221 test observations, two VexiiRiscv runs with 49/49 passes, a VexRiscv retry and planted failures. | The first VexiiRiscv cold run took 666.017 seconds. Recorded C1 passes do not establish fresh full Spike parity. [Record](../examples/regression-scale/dashboard-results.json). |
+| Failure triage | Good-to-fault diff rejects two new failures. First mismatch is XORI at PC `0x80000198`, instruction `0xf0f6c713`, and XOR at `0x800001a0`, instruction `0xc5c733`. Two clusters have two C5 bundles. | Comparisons allow one unknown scratch-CSR reset synchronization. The original native bisect attempt stopped at an unsupported tracked gitlink before simulation. Trap-cause grouping was not exercised by these XOR failures. [Record](../examples/regression-scale/triage-results.json). |
+| Impact selection | Baseline has 1,033 database signals and 1,585 native coverage points. Full and selected runs each give 47 passes and two failures. | Two changed elaboration lines were unmapped. Safe fallback kept all 49 tests, estimated 61.89 seconds against a two-second advisory budget. The eight-test coverage rank passed and missed the fault. No reduced selection is qualified. [Record](../examples/regression-scale/selection-results.json). |
+| Enforced budgets | One-job run budget stops a DUT-failure retry. One-job agent budget blocks the next launch. A 0.2-second wall budget stops a launch before C1; cleanup charges 0.399 seconds. | Three attempts cost 0.080973 declared core-hours. At an illustrative rate of 1 unit/core-hour, cost is 0.040486 units per conclusive C1 observation. C4 cost is null in this experiment. [Record](../examples/regression-scale/budget-results.json). |
+| Committed gates | Base, repeat and a distinct passing revision each pass 49 tests. A committed fault gives 47 passes and two failures. The gate accepts the repeat and passing change, then rejects the fault. | Ten queue jobs include formatter debugging runs. Three recorded C4 reports cost 0.088844 units/report at the illustrative rate, including upstream simulation charges. This is not a provider bill or whole-core qualification. [Record](../examples/regression-scale/gate-results.json). |
+| Evidence and plan rollup | 583 reports indexed: 564 C1, 13 C3, three C4 and three C5. All recorded hashes rechecked unchanged. A modified copy becomes inconclusive. The same finite plan moves from zero holes to two on the fault case. | Index build took 0.668 seconds; query took 0.137 seconds. These are single local samples. The plan links only the 49 self-checks and their recorded gate. It does not establish requirement completeness. [Record](../examples/regression-scale/management-rollup.json). |
+| Kubernetes rendering | The same 25/24 persistent shard plan renders two Jobs. Both pass the official pinned OpenAPI schema. Removing `containers` fails validation. | Image build, cluster admission, storage binding, pod execution and cluster cancellation NOT RUN. [Example](../examples/regression-scale/k8s-example/plan.json). |
+
+### History, triage and test selection
+
+`farm serve` reads a token-to-owner map. Its live API enforces owner scope.
+The native check received HTTP 401 without a token. Another owner saw zero
+jobs. Drill-down retained failures and C5 summaries. The static export contains
+that owner's recorded evidence and has no access control. Review it before
+sharing. See the [whole history](examples/regression-dashboard.html) and
+[single fault run](examples/regression-dashboard-run.html).
+
+```sh
+rvw farm serve --root run/queue --tokens tokens.json
+rvw farm triage --root CANDIDATE --baseline BASE --bundles BUNDLES --core-env VEXRISCV
+rvw farm observe --db design.db --root BASE --wave-prefix TOP.Module --out observations.json
+rvw farm select --db design.db --changed '["src/Elaboration.scala"]' --catalogue observations-with-coverage-ranking.json --seconds 2
+```
+
+Triage binds first differences to captured ELF and C2 bytes. It emits exact
+commit ranges and `rvw bisect` argument arrays. A generated command is not a
+completed bisect. Keep its `not_run` state until execution succeeds. Never
+weaken input capture to make a bisect run. Freeze source-impact observations
+and coverage ranking before the candidate run. Keep unknown impacts mandatory.
+Compare the chosen tests with a separate full run. Coverage point ranking
+alone missed the planted fault in this experiment.
+
+### Budgets, gates and evidence
+
+Set cumulative scopes with `farm budget --scope run:JOB_ID`, `agent:OWNER` or
+`project:NAME`. Supply `--limits` with jobs, wall seconds or core hours. The
+queue checks admission and runtime. Cleanup can exceed a nominal wall limit.
+All attempts remain charged. Read C1/C3 outcomes and C4 reports separately.
+A missing rate or denominator leaves the corresponding unit cost null.
+
+```sh
+rvw farm gate --base BASE --candidate CANDIDATE --project PROJECT --tier TIER --rvfi-trace --out run/verdict.json
+rvw evidence index --root run --db run/evidence.sqlite
+rvw evidence query --db run/evidence.sqlite --schema rvw.verdict
+rvw plan status verification-plan.json --out run/status.json --json
+```
+
+Use a project tier that exactly names the stored ISA manifest, seeds and
+options. Native gate intake requires clean full core and harness revisions,
+ELF/RTL/native-build hashes and matching C1/C3 identities. It invokes the
+existing `regress gate` checks. Missing identities cannot earn accept. For a
+queue-owned report, invoke `python -m rvw.farm.gate_job --out {attempt_dir}`
+with the same base, candidate and plan arguments. Queue completion then means
+C4 was collected. Its recorded value can be accept, reject or inconclusive.
+The public gate command retains C4 exit codes. Evidence queries preserve these
+original values. Plan status can compare snapshots of the same plan with
+`--previous`. Neither tool infers new C4 acceptance.
+
+### Use the same plan on a cluster
+
+`farm plan --persistent --jobs 1 --python /absolute/worker/python` writes
+hashed inputs, shard manifests and expected C1/C3 cells for both executors.
+Use a new output root for each shared-plan retry. `farm batch --action render`
+writes Jobs. `farm batch --action validate --openapi FILE` checks them offline.
+The schema URL and SHA-256 are in the native example. Explicit path relocation
+preserves shard membership and input identities. It does not establish native
+build parity across operating systems.
+
+Follow the [cluster prerequisites](../examples/regression-scale/README.md#same-native-shard-plan-and-kubernetes-jobs)
+before submission. They cover a pinned tested Linux image, staged hashed
+inputs, private writable builds, PVC access, RBAC, quotas, saved Job IDs,
+C1/C3 collection, full native gate identities and foreground cancellation.
+Local cumulative budgets do not enforce Kubernetes quotas or provider costs.
+No real cluster run is claimed. Native SSH remains a separate executor path
+with exact adapter identity checks. See [farm](../rvw/src/rvw/farm/README.md).
 
 ## Evidence reviewed on 2026-11-13
 
@@ -376,7 +485,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 | arch native scheduler | Native reference parity only | [#655](https://github.com/riscPrint/risc-v-workstation/pull/655): 250 seeded parity schedules; no RTL/application accuracy check. |
 | UVM | Ran on RTL, bounded CPU and component cases | [UVM README](../Uvm/README.md): bounded Accellera RAM/pin tests; [#668](https://github.com/riscPrint/risc-v-workstation/pull/668) later passed six live VexRiscv programs; [#690](https://github.com/riscPrint/risc-v-workstation/pull/690) checked bounded IRQ/mscratch cases. Debug and C4 remain open. |
 | VIP native model adapters | Fixture only | [#642](https://github.com/riscPrint/risc-v-workstation/pull/642), [#647](https://github.com/riscPrint/risc-v-workstation/pull/647), [#656](https://github.com/riscPrint/risc-v-workstation/pull/656): mock callbacks and lint; no native DRAM/PCIe/MAC qualification. Other bounded RTL VIP fixtures have separate evidence in the README. |
-| farm shard plans | Fixture only | [#652](https://github.com/riscPrint/risc-v-workstation/pull/652): local fake adapter; native cluster and RTL NOT RUN. |
+| farm shard plans | Native local execution; offline cluster schema check | Two persistent shards collected 49 C1 passes and two C3 suites in 54.016 seconds. The same relocated plan passed official Kubernetes schema validation. Cluster runtime NOT RUN. See [measured management results](#measured-management-results). |
 
 A later bounded scalar cosim run in [#692](https://github.com/riscPrint/risc-v-workstation/pull/692)
 matched real VexRiscv RTL through the DPI path and detected its injected writeback
@@ -545,9 +654,9 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [privilege](../rvw/src/rvw/privilege/README.md) | Spike only for recorded program slices | Generated cases and reference self-checks do not establish DUT privilege correctness. [#622](https://github.com/riscPrint/risc-v-workstation/pull/622). |
 | [memory: cached SMP](../examples/smp/README.md#cached-smp-path) | Selected-line cached RTL handoff | Two cached cores and a coherent hub: 686 cycles, 99 retirements, 10 grants and 7 shrinks. Independent byte checks cover one line. Generated monitor replay passed on 688 clock/reset events and rejected corrupted GrantData. In-simulation SV bind NOT RUN. [Earlier fixture tests](https://github.com/riscPrint/risc-v-workstation/pull/653) are separate evidence. |
 | [privilege](../rvw/src/rvw/privilege/README.md) | Ran on RTL for controls, PMP and scheduled WFI; Spike only for the other slices | VexiiRiscv and VexRiscv results are in the README. Other generated cases and reference self-checks do not establish DUT privilege correctness. [#622](https://github.com/riscPrint/risc-v-workstation/pull/622). |
-| [evidence](../rvw/src/rvw/evidence/README.md) | Fixture only | Original JSON and declared hashes are checked; native semantic validation remains open. [#604](https://github.com/riscPrint/risc-v-workstation/pull/604). |
+| [evidence](../rvw/src/rvw/evidence/README.md) | Native-history discovery check | 583 native-history reports indexed; all hashes rechecked unchanged. A modified copy became inconclusive. Semantic validation remains with producer tools. [Record](../examples/regression-scale/management-rollup.json). |
 | [checks](../rvw/src/rvw/checks/README.md) | Fixture/source binding only | Queued HPM elaboration is not a completed RTL campaign. [#639](https://github.com/riscPrint/risc-v-workstation/pull/639). |
-| [plan](../rvw/src/rvw/plan/README.md) | Fixture only | Status rollups do not run tests, prove properties or establish feature closure. [#567](https://github.com/riscPrint/risc-v-workstation/pull/567). |
+| [plan](../rvw/src/rvw/plan/README.md) | Native C3/C4 rollup | A finite 49-test plan moves from zero holes to two on the fault case. Rollups do not run tests or establish whole-core closure. [Record](../examples/regression-scale/management-rollup.json). |
 | [soc](../rvw/src/rvw/soc/README.md) | Fixture only for new tagged pairing | Tagged pairing still needs fresh DUT capture. Separate connected APB/AXI-Lite/UART tests ran natively in #674, and bounded CLINT/PLIC tests ran in #694; no CPU boot was claimed. [#650](https://github.com/riscPrint/risc-v-workstation/pull/650). |
 | [doctor](../rvw/src/rvw/doctor/README.md) | Presence and fixture checks | No complete native combination is qualified. |
 | [bundle](../rvw/src/rvw/bundle/README.md) | Fixture oracles for new event replay | A reproduced symptom needs matching real-core identities; fixtures cannot establish a causal core defect. |

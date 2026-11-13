@@ -82,3 +82,10 @@ Entries, features and the report include `verdict`. The report retains the
 weakest selected input verdict. Missing evidence and unassigned requirements
 prevent pass. `reported_closed` is a planning count. It does not grant C4 acceptance.
 See `docs/contracts/evidence.md` for layer ownership and aggregation rules.
+
+`examples/regression-scale/management-rollup.json` records a finite plan over
+real native C3 and C4 reports. Its one requirement names the selected 49 ISA
+self-checks and their committed gate. The passing case has zero holes. The
+same plan on the planted-fault case has two holes: failed tests and a rejected
+gate. Its hole delta is two and its verdict is fail. The rollup does not expand
+that requirement into ISA completeness or whole-core closure.
