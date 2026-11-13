@@ -536,25 +536,25 @@ comparison is the resumed run. Counts are programs, not individual assertions.
 The MMU generated counts include all satp modes. Applicability excludes other
 modes and hardware A/D updates. Findings can overlap C1 failures.
 
-| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| Vexii RV64 | MMU matrix | 589 | 145 | 145 | 143 | 2 | 143 | 2 |
-| Vexii RV64 | Fault walks | 84 | 18 | 18 | 9 | 9 | 9 | 9 |
-| Vexii RV64 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV64 | Privilege controls | 30 | 30 | 30 | 30 | 0 | 30 | 0 |
-| Vexii RV64 | PMP | 264 | 264 | 264 | 264 | 0 | 264 | 0 |
-| Vexii RV64 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
-| Vexii RV64 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
-| Vexii RV64 + CLINT | WFI | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 + PLIC | PLIC and delivery | 12 | 12 | 12 | 12 | 0 | 12 | 0 |
-| Vexii RV32 | MMU matrix | 589 | 140 | 140 | 138 | 2 | 138 | 2 |
-| Vexii RV32 | Fault walks | 84 | 12 | 12 | 6 | 6 | 6 | 6 |
-| Vexii RV32 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV32 | PMP | 394 | 394 | 394 | 394 | 0 | 394 | 0 |
-| Vexii RV32 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
-| Vexii RV32 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
-| VexRiscv RV32 M only | FENCE / FENCE.I | 2 | 2 | 2 | 2 | 0 | 2 | 0 |
-| VexRiscv RV32 M only | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 3 | 3 |
+| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Known finding | Not run |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Vexii RV64 | MMU matrix | 589 | 145 | 145 | 143 | 2 | 143 | 2 | 0 |
+| Vexii RV64 | Fault walks | 84 | 18 | 18 | 9 | 9 | 9 | 9 | 0 |
+| Vexii RV64 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 | 0 |
+| Vexii RV64 | Privilege controls | 30 | 30 | 30 | 30 | 0 | 30 | 0 | 0 |
+| Vexii RV64 | PMP | 264 | 264 | 264 | 264 | 0 | 264 | 0 | 0 |
+| Vexii RV64 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 | 0 |
+| Vexii RV64 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 | 0 |
+| Vexii RV64 + CLINT | WFI | 4 | 4 | 4 | 4 | 0 | 4 | 0 | 0 |
+| Vexii RV64 + PLIC | PLIC and delivery | 12 | 12 | 12 | 12 | 0 | 12 | 0 | 0 |
+| Vexii RV32 | MMU matrix | 589 | 140 | 140 | 138 | 2 | 138 | 2 | 0 |
+| Vexii RV32 | Fault walks | 84 | 12 | 12 | 6 | 6 | 6 | 6 | 0 |
+| Vexii RV32 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 | 0 |
+| Vexii RV32 | PMP | 394 | 394 | 394 | 394 | 0 | 394 | 0 | 0 |
+| Vexii RV32 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 | 0 |
+| Vexii RV32 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 | 0 |
+| VexRiscv RV32 M only | FENCE / FENCE.I | 2 | 2 | 2 | 2 | 0 | 2 | 0 | 0 |
+| VexRiscv RV32 M only | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 3 | 3 | 0 |
 
 IRQ, MMIO and unspecified-reset synchronizations retain the limits in the
 linked family READMEs. Fresh PLIC traces declare the external-interrupt
@@ -568,33 +568,42 @@ inconclusive.
 
 The matrix and ordering rows below split the retained RTL campaign. They are
 subsets of the aggregate rows above. Do not add them to those totals.
-The eight random privilege runs are new RTL captures. All eight match Spike
+The detailed table uses separate pass, fail and known-finding dispositions.
+A known finding is never a pass. Raw C1 failures remain in the aggregate table.
+Not run means applicable minus run. Generated programs outside applicability
+are excluded, not failed. Superpage rows are subsets of the translation row.
+The aligned superpage rows exclude level-0 4 KiB pages.
+The eight random privilege runs were captured in #1128. All eight match Spike
 strictly with zero synchronizations and no masks. Each crosses 32 seeded
 M/S/U transitions, traps, delegation and returns. The planner selects these
 families, and `prepare-suites.py` now builds them under `random-privilege`.
 The project files select all four ELFs per XLEN with `--suite random-privilege`.
 
-| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+| Profile | Family | Generated | Applicable | Run | Pass and match | Fail | Known finding | Not run |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| Vexii RV32 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV32 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
-| Vexii RV32 | Translation matrix beyond walk levels | 533 | 128 | 128 | 126 | 2 | 126 | 2 |
-| Vexii RV32 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 2 | 0 |
-| Vexii RV64 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 10 | 0 |
-| Vexii RV64 | Translation matrix beyond walk levels | 533 | 133 | 133 | 131 | 2 | 131 | 2 |
-| Vexii RV64 | lrsc | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | amo | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | amo-fault | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | fence | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 1 | 0 |
-| Vexii RV32 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 | Random privilege | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 | Reset events | 3 | 3 | 3 | 3 | 0 | 3 | 0 |
+| Vexii RV32 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV32 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 0 | 0 |
+| Vexii RV32 | Translation matrix beyond walk levels | 533 | 128 | 128 | 126 | 0 | 2 | 0 |
+| Vexii RV32 | lrsc | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | amo | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | amo-fault | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | fence | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | fence-i | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | Aligned superpages | 10 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | Misaligned superpages | 10 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV32 | random privilege | 4 | 4 | 4 | 4 | 0 | 0 | 0 |
+| Vexii RV64 | Accessed/dirty (Svade) | 16 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | TLB/ASID and fences | 40 | 10 | 10 | 10 | 0 | 0 | 0 |
+| Vexii RV64 | Translation matrix beyond walk levels | 533 | 133 | 133 | 131 | 0 | 2 | 0 |
+| Vexii RV64 | lrsc | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | amo | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | amo-fault | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | fence | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | fence-i | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Vexii RV64 | Aligned superpages | 10 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | Misaligned superpages | 10 | 2 | 2 | 2 | 0 | 0 | 0 |
+| Vexii RV64 | random privilege | 4 | 4 | 4 | 4 | 0 | 0 | 0 |
+| Vexii RV64 | reset | 3 | 3 | 3 | 3 | 0 | 0 | 0 |
 
 [The family record](../examples/vexiiriscv/family-results.json) retains the random run identities and
 names every matrix subset member. Matrix generated counts span all four satp
@@ -1582,3 +1591,16 @@ reports exact reviewed evidence as `known_finding`, with its ID and original
 failure or mismatch. These rows never count as matches. C1 status is retained.
 The earlier table's Finding column includes 19 denied walks with ID
 `VEXII-PTW-PMP-001` and three interrupt mismatches with ID `VEX-MTVAL-IRQ-001`.
+
+### Final generated-family audit
+
+[The audit](../examples/vexiiriscv/suite-family-audit.json) records selected
+families and exact planner exclusion reasons for both Vexii supervisor profiles
+and the VexRiscv M-only profile. Every applicable family has RTL numbers.
+Not run means applicable minus run. Generated counts can include excluded
+programs. The raw C1 status and reference disposition remain separate.
+Timer extensions, hardware A/D updates, cache-block operations and other
+unsupported capabilities receive no execution credit. MTIP and CLINT results
+do not establish Sstc support. Superpage rows overlap the translation matrix.
+Only the repeated-reset campaign is new in this final audit. Other counts
+refer to retained captures. No result is hardware or whole-core qualification.

@@ -34,6 +34,16 @@ The privileged ISA requires MEPC bit 0 to read as zero.
 The original SRET formal witness remains inconclusive in Icarus because its
 redirect has X values. It does not establish an MRET redirect defect.
 
+[Six ACT4 decisions](rvw/act4/MEPC_DECISIONS.md) confirm the same readback
+rule with writes 1, 2 and 3 and six CSR read forms. This profile has IALIGN=32.
+Both MEPC bits 1:0 must read zero. All six fresh minimal programs fail C1 and
+strict Spike comparison, with zero masks and synchronizations. Build
+`rvw/act4/mepc-case.S` with `CASE=0..5`. The adjacent `mepc-review.json`
+retains ELF and C2 hashes and each first difference. The original six full
+ACT4 cases were not rerun in that review. Source:
+[#1179](https://github.com/riscPrint/risc-v-workstation/pull/1179).
+
+
 ## VEX-DEBUG-001 through VEX-DEBUG-005
 
 Five target deviations were observed on `rv32im_dmi` and `rv32im_jtag`
@@ -76,3 +86,13 @@ The deliberately patched transient-load core is a positive control, not a
 finding on the unmodified core. `rvw/sec/README.md` records those variants.
 Formal portfolio timeouts and witness reconstruction failures remain
 inconclusive. They do not establish core defects.
+
+## VEX-CSR-BOOT-001
+
+Open standard-bootstrap compatibility finding. The default RV32 profile traps
+on `mstatush` (CSR `0x310`) in the standard ACT4 boot. The reduced bootstrap
+results do not resolve that contract. Minimal reproduction:
+[missing-boot-csr.S](rvw/act4/missing-boot-csr.S), built with `-DCSR_ADDR=0x310`.
+See [the ACT4 record](rvw/act4/README.md). The selected scaffold expects this
+access to complete. Resolve the declared machine CSR contract before calling
+this a specification defect. No mask or waiver changes the observation.

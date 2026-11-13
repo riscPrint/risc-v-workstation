@@ -1120,3 +1120,22 @@ Exact reviewed traces and trap differences report `known_finding` with ID
 `VEX-MTVAL-IRQ-001`. They do not count as Spike matches. C1 program passes
 remain distinct from failed reference comparisons. A changed trace or
 mismatch field requires review. The command still exits 1.
+
+## Final generated-family audit
+
+The M-only feature file selects scheduled WFI, FENCE and FENCE.I.
+No applicable family lacks RTL numbers. These are retained captures.
+Pass and match requires the reference settings stated in the WFI results.
+The three interrupt mismatches are known findings, not matches.
+
+| Family | Generated | Applicable | Run | Pass and match | Fail | Known finding | Not run |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Scheduled WFI | 6 | 6 | 6 | 3 | 0 | 3 | 0 |
+| FENCE | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| FENCE.I | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+
+All six WFI programs pass C1. Three fail reference comparison with
+`VEX-MTVAL-IRQ-001`. The A extension, supervisor translation, Sstc, cache-block
+operations and RV64 reset family are outside this M-only profile.
+[The audit](../vexiiriscv/suite-family-audit.json) records each planner exclusion.
+The optional Linux configuration is not qualified by these M-only results.
