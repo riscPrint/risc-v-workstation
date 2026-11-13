@@ -45,7 +45,11 @@ def mcp_tools():
     string = {'type': 'string'}
     return [ToolSpec('agent_bench_repair_prepare', 'Reproduce a seeded failure in a disposable core copy. Missing evidence is inconclusive.',
                      schema({'pack': string, 'task': string, 'source': string, 'out': string,
-                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['pack','task','source','out']), prepare, long=True),
+                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['pack','task','source','out']), prepare, long=True,
+        side_effects='long-running; launches Git and configured native workloads in disposable source copies; writes artifacts under out', native_tools=(),
+        ),
             ToolSpec('agent_bench_repair_check', 'Independently check candidate source changes with fail-to-pass and pass-to-pass workloads. Retain a patch for human review.',
                      schema({'challenge': string, 'out': string, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}},
-                            ['challenge','out']), check, long=True)]
+                            ['challenge','out']), check, long=True,
+        side_effects='long-running; launches Git and configured native workloads in disposable source copies; writes artifacts under out', native_tools=(),
+        )]
