@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.interrupt` | Interrupt line levels, pulse widths and scheduled timing | `Uvm/vip/interrupt/` |
 | `rvw.vip.sram` | Single-port SRAM/ROM, word addresses, byte masks and fixed latency | `Uvm/vip/sram/` |
 | `rvw.vip.wishbone` | Wishbone Classic, 32-bit, byte selects and ACK/ERR | `Uvm/vip/wishbone/` |
 | `rvw.vip.gpio` | GPIO direction, synchronization and edge/level interrupts | `Uvm/vip/gpio/` |
