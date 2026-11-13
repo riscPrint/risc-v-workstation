@@ -17,6 +17,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("wave", help="query and cut VCD/FST waveforms or indexed snapshots",
                        description=__doc__)
     w = p.add_subparsers(dest="wave_cmd", required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.wave", w)
 
     q = w.add_parser("index", help="build an identity-bound SQLite waveform snapshot")
     q.add_argument("wave")

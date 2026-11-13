@@ -661,7 +661,8 @@
         "wave_session_save",
         "wave_txn",
         "wave_value",
-        "wave_why"
+        "wave_why",
+        "wave_why_run"
       ]
     },
     {
