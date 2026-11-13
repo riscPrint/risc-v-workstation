@@ -11,7 +11,7 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
                       rs1: Int, rs1Rdata: BigInt, rs2: Int, rs2Rdata: BigInt, rd: Int, rdWdata: BigInt,
                       pc: BigInt, pcNext: BigInt,
                       memAddr: BigInt, memRmask: Int, memWmask: Int, memRdata: BigInt, memWdata: BigInt,
-                      memFault: Boolean) {
+                      memFault: Boolean, csrState: Map[Int, BigInt] = Map.empty) {
   /** One C2 (`rvw.rvfi/1`) JSONL line. */
   def toJson: String = {
     val sb = new StringBuilder(400)
@@ -25,6 +25,14 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
     sb ++= "\", \"mem_addr\": \"" ++= Hex(memAddr) ++= "\", \"mem_rmask\": " ++= memRmask.toString
     sb ++= ", \"mem_wmask\": " ++= memWmask.toString ++= ", \"mem_rdata\": \"" ++= Hex(memRdata)
     sb ++= "\", \"mem_wdata\": \"" ++= Hex(memWdata) ++= "\", \"mem_fault\": " ++= memFault.toString ++= "}"
+    if (csrState.nonEmpty) {
+      sb.setLength(sb.length - 1)
+      sb ++= ", \"csr_state\": {"
+      sb ++= csrState.toSeq.sortBy(_._1).map { case (address, value) =>
+        s"\"${Hex(BigInt(address))}\": \"${Hex(value)}\""
+      }.mkString(", ")
+      sb ++= "}}"
+    }
     sb.toString
   }
 }
@@ -34,8 +42,14 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
  * fields use riscv-formal's names, with or without the `rvfi_` prefix (`valid`, `order`,
  * `insn`, `pc_rdata`, `rd_wdata`, ...). `mem_fault` and `ixl` are optional.
  */
-class RvfiProbe(channels: Seq[Bundle]) {
-  private class Channel(b: Bundle) {
+class RvfiProbe(channels: Seq[Bundle], csrSlots: Seq[Map[Int, Data]] = Seq.empty) {
+  require(csrSlots.isEmpty || csrSlots.size == channels.size,
+    "CSR observations require one map per RVFI slot")
+  require(csrSlots.isEmpty || csrSlots.map(_.keySet).distinct.size == 1,
+    "all RVFI slots must expose the same CSR set")
+  require(csrSlots.forall(_.keys.forall(a => a >= 0 && a < 4096)), "invalid CSR address")
+
+  private class Channel(b: Bundle, csrs: Map[Int, Data]) {
     private val byName: Map[String, Data] = b.elements.map { case (n, d) => n.stripPrefix("rvfi_") -> d }.toMap
     private def get(n: String): Data = byName.getOrElse(n, throw new IllegalArgumentException(
       s"RVFI channel ${b.getName()} has no field '$n' (fields: ${byName.keys.mkString(", ")})"))
@@ -61,10 +75,13 @@ class RvfiProbe(channels: Seq[Bundle]) {
       rs1 = int("rs1_addr"), rs1Rdata = num("rs1_rdata"), rs2 = int("rs2_addr"), rs2Rdata = num("rs2_rdata"),
       rd = int("rd_addr"), rdWdata = num("rd_wdata"), pc = num("pc_rdata"), pcNext = num("pc_wdata"),
       memAddr = num("mem_addr"), memRmask = int("mem_rmask"), memWmask = int("mem_wmask"),
-      memRdata = num("mem_rdata"), memWdata = num("mem_wdata"), memFault = memFault.exists(d => big(d) != 0))
+      memRdata = num("mem_rdata"), memWdata = num("mem_wdata"), memFault = memFault.exists(d => big(d) != 0),
+      csrState = csrs.map { case (address, signal) => address -> big(signal) })
   }
 
-  private val chans = channels.map(new Channel(_))
+  private val chans = channels.zipWithIndex.map { case (channel, slot) =>
+    new Channel(channel, if (csrSlots.isEmpty) Map.empty else csrSlots(slot))
+  }
 
   /** The records retiring this cycle, in `order`. */
   def sample(cycle: Long): Seq[RvfiRecord] = {
@@ -84,7 +101,12 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
                       flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1")) extends AutoCloseable {
   file.getAbsoluteFile.getParentFile.mkdirs()
   private val w = new PrintWriter(new BufferedWriter(new FileWriter(file), 1 << 20))
-  w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str("rvw.rvfi/1")) ++ header.value)))
+  private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
+  private val schema = if (snapshot.nonEmpty) "rvw.rvfi/2" else "rvw.rvfi/1"
+  require(!header.value.contains("schema"), "trace writer selects the schema")
+  private val supplied = if (snapshot.nonEmpty && !header.value.contains("capabilities"))
+    header.value.toSeq :+ ("capabilities" -> ujson.Arr("csr")) else header.value.toSeq
+  w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str(schema)) ++ supplied)))
   if (flushEachRecord) w.flush()
   var records = 0L
   var trapRecords = 0L
@@ -99,6 +121,8 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
   }
 
   def write(r: RvfiRecord): Unit = {
+    require(r.csrState.keySet.map(a => Hex(BigInt(a))) == snapshot,
+      "CSR state must contain exactly the header snapshot set")
     at(r.cycle)
     if (nextOrder >= 0 && r.order != nextOrder) orderGaps += 1
     nextOrder = r.order + 1

@@ -811,3 +811,20 @@ It checks fresh DUT, PRNG, tohost device and progress-monitor state after three
 injected simulation failures and across repeated successful requests. It is a
 bounded native test. It does not qualify all core devices, native process
 cancellation, coverage reset or long-lived resource use.
+
+## Per-slot CSR observations
+
+Pass `csrSlots: Seq[Map[Int, Data]]` to `RvfiProbe`. Each map selects independent
+DUT signals for one RVFI channel. The key is the numeric CSR address. All slots
+must have the same address set. Signals must hold the state after that slot,
+including its synchronous trap entry. Do not connect a cycle-final CSR bank
+to every slot. The probe samples each map with its channel before sorting by
+retirement order.
+
+Add `csr_snapshot` to the trace writer header with the same hex addresses.
+The writer selects C2/2 and the `csr` capability. Each record must contain the
+complete declared set. Missing or undeclared observations cause an error.
+No CSR state is copied from the reference. Core adapters must expose the
+per-slot signals. This API does not add those signals to a core. The existing
+BOOM adapter does not yet select these observations. Sail full-state CSR
+snapshots remain unavailable through its current public write log.

@@ -144,7 +144,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
                 "state_coverage": {"trace_schema": trace.header["schema"],
-                                   "fp": trace.header["schema"] == "rvw.rvfi/2" and last_order is not None,
+                                   "fp": trace.header["schema"] == "rvw.rvfi/2" and trace.state and last_order is not None,
                                    "vector": trace.header.get("vector") if last_order is not None else None,
                                    "hypervisor": bool(trace.header.get("hypervisor") and last_order is not None),
                                    "two_stage_translations": translation_count,
@@ -262,7 +262,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError("reference cannot check two-stage translation records")
                 expected["hypervisor"]["translations"] = model.translations(expected)
             fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
-            if trace.header["schema"] == "rvw.rvfi/2":
+            if trace.header["schema"] == "rvw.rvfi/2" and trace.state:
                 state_fields = ["fd_valid", "fflags", "fcsr"]
                 if actual["fd_valid"] or expected.get("fd_valid"):
                     state_fields += ["fd", "fd_wdata"]
