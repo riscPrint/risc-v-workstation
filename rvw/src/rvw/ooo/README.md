@@ -803,3 +803,11 @@ cached integer, 483,155 for diverse integer and 282,968 for diverse components.
 The cached stream regressed in wall time. The other two streams improved.
 These shared-host results do not meet millions/s end-to-end throughput.
 See [the method, CPU rates and all trials](../../../../Arch/ooo/NATIVE_DECODE.md).
+
+## One-parameter what-if report
+
+Run `rvw arch ooo-what-if CONFIG TRACE --set PARAMETER=JSON --out NEW_DIRECTORY`.
+It validates one numeric, Boolean or string change and reports cycle, IPC and
+event deltas. Both runs use the same trace. The source configuration stays
+unchanged. Outputs include JSON and Markdown. MCP: `arch_ooo_what_if`.
+See [usage and limits](../../../../Arch/ooo/WHAT_IF.md).
