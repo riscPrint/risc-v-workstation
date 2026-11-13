@@ -103,7 +103,8 @@ class Session:
                       and e['arguments']['statement'] == truth['cause']
                       and e['arguments']['evidence']
                       and set(e['arguments']['evidence']) <= valid), None)
-        correct = bool(self.finished and self.candidate
+        needs_inconclusive = truth.get('requires_inconclusive', False)
+        correct = bool(not needs_inconclusive and self.finished and self.candidate
                        and self.candidate['statement'] == truth['cause']
                        and all(evaluate(self.candidate['expression'], a, b) == expected
                                for a, b, expected in truth['vectors']))
@@ -114,6 +115,8 @@ class Session:
                 'time_to_root_cause_s': cause, 'root_cause_censored': cause is None,
                 'correct_fix': correct, 'claimed_fix': self.claimed,
                 'false_fix': self.claimed and not correct,
+                'requires_inconclusive': needs_inconclusive,
+                'preserved_inconclusive': bool(needs_inconclusive and self.finished and not self.claimed),
                 'defects': len(actual), 'detected': len(rejections & actual),
                 'false_rejections': len(rejections - actual),
                 'candidate': self.candidate, 'transcript': copy.deepcopy(self.events)}
@@ -125,7 +128,7 @@ class Session:
             ToolSpec('bench_diagnose', 'Record a cause and supporting artifact IDs.',
                      schema({'statement': string, 'evidence': {'type': 'array', 'items': string, 'minItems': 1}}, ['statement', 'evidence']), self.diagnose),
             ToolSpec('bench_reject', 'Reject an artifact with the mismatched identity field.',
-                     schema({'artifact': string, 'reason': {'type': 'string', 'enum': ['rtl_sha256', 'elf_sha256']}}, ['artifact', 'reason']), self.reject),
+                     schema({'artifact': string, 'reason': {'type': 'string', 'enum': ['rtl_sha256', 'elf_sha256', 'unsupported_fields', 'coverage', 'completion']}}, ['artifact', 'reason']), self.reject),
             ToolSpec('bench_patch', 'Replace one statement expression in the fixture.',
                      schema({'statement': string, 'expression': string}, ['statement', 'expression']), self.patch),
             ToolSpec('bench_finish', 'Finish without access to hidden test results.',
@@ -139,11 +142,20 @@ def scripted(call, careless=False):
     valid = []
     for e in task['evidence']:
         mismatches = [k for k, v in task['identity'].items() if e['identity'].get(k) != v]
+        if e.get('unsupported_fields'):
+            mismatches.append('unsupported_fields')
+        if e.get('coverage', {}).get('observed', 0) < e.get('coverage', {}).get('required', 0):
+            mismatches.append('coverage')
+        if e.get('complete') is False:
+            mismatches.append('completion')
         if mismatches and not careless:
             for reason in mismatches:
                 call('bench_reject', {'artifact': e['id'], 'reason': reason})
         else:
             valid.append(e['id'])
+    if not valid and not careless:
+        call('bench_finish', {'claimed_fix': False})
+        return
     statement = next(s['id'] for s in task['statements'] if s['source'].startswith('io.result := '))
     call('bench_diagnose', {'statement': statement, 'evidence': valid})
     expression = 'U(0, 32 bits)' if careless else EXPRESSIONS[task['requirement']]
@@ -162,6 +174,8 @@ def report(scores, digest, agent):
                         'root_causes': len(times), 'censored_root_causes': n - len(times),
                         'median_time_to_root_cause_s': statistics.median(times) if times else None,
                         'correct_fixes': sum(s['correct_fix'] for s in scores),
+                        'inconclusive_required': sum(s.get('requires_inconclusive', False) for s in scores),
+                        'inconclusive_preserved': sum(s.get('preserved_inconclusive', False) for s in scores),
                         'correct_fix_rate': sum(s['correct_fix'] for s in scores) / n,
                         'false_fixes': sum(s['false_fix'] for s in scores),
                         'false_fix_rate': sum(s['false_fix'] for s in scores) / claimed if claimed else None,

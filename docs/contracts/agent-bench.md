@@ -174,3 +174,13 @@ passing controls and repaired workloads, complete C2, matching ELF/seed/config
 identities and changed RTL hashes. Other verdicts are `unqualified` and
 `inconclusive`. The evaluator supplies the repair. No agent reasoning, automatic
 root cause or C4 acceptance follows from qualification.
+
+## Inconclusive fixture tasks
+
+Fixture task private data can set `requires_inconclusive: true`. Such a task
+cannot earn `correct_fix`, even with a correct expression. A completed attempt
+without a claimed fix sets `preserved_inconclusive`. Reports retain
+`inconclusive_required` and `inconclusive_preserved` counts. Artifact rejection
+reasons also accept `unsupported_fields`, `coverage` and `completion`.
+Public evidence declares unsupported fields, observed and required coverage,
+or `complete: false`. These are fixture claims, not native artifact checks.
