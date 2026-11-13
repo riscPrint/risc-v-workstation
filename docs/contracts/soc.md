@@ -529,3 +529,18 @@ resume against the retirement counter. Both require a CPU write through the
 composed GPIO before debug checks. The ndmreset output is a request requiring
 a project system reset-controller binding. The example does not assert
 complete Debug Specification compliance or system reset qualification.
+
+## Mapped project CPU wrapper
+
+`soc new` uses the selected project's `rvw/core-map.json` when present.
+A single RV32 Spinal req/rsp bus maps to `SimpleCoreWrapper`. It buffers the
+accepted request and holds the simple bus until completion. The generated
+build binds the project's core dependency directly. With RVFI, retirement
+ports are exported for independent consumers. Without a core map, the
+existing idle scaffold remains available and is labelled `idle_wrapper`.
+Generation does not establish native execution or verification closure.
+
+A `rvw.cocotb/1` manifest can list `data_files` for generated RAM initialization
+files. Paths resolve relative to the manifest. Basenames must be distinct.
+The worker copies these files to its test directory. Their hashes are retained
+with sources, and changed inputs invalidate the run.

@@ -1845,3 +1845,24 @@ instructions. The generated memory has stable symbolic bytes and ordered
 writes. It returns read responses one cycle after acceptance. Review this
 choice against the core. Machine-state and observer conformance rows remain
 unsupported until their separate bindings exist.
+
+## Compose the mapped CPU
+
+In the mapped core project, run:
+
+```sh
+rvw soc new board --out rvw/out/board --json
+rvw soc compose rvw/out/board/compose.json --out rvw/out/board/generated --elf rvw/out/programs/smoke --json
+```
+
+For one Spinal RV32 req/rsp bus, the scaffold uses the real CPU through the
+simple-bus bridge. It buffers requests and returns completion to the declared
+response pins. RVFI outputs are exported when declared. The build references
+the core project directly. Compile the generated SoC from its directory with
+`sbt "runMain generated.Generate"`. Use the private sbt lock on a shared host.
+Run `rvw soc verify` on its map to inspect each consumer and its remaining
+bindings. An emitted wrapper or verify table is not a native pass.
+
+For a cocotb run of generated RAM, list the emitted `.bin` files in the bench
+manifest's `data_files`. The worker copies them into the simulation directory
+and captures their hashes. Missing RAM images otherwise leave memory empty.

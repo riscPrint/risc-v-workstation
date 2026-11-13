@@ -19,21 +19,24 @@ def load(path: Path) -> dict:
     path = path.resolve(strict=True)
     data = json.loads(path.read_text())
     allowed = {'schema', 'name', 'backend', 'top', 'sources', 'test_module',
-               'python_paths', 'requires', 'clock', 'reset'}
+               'python_paths', 'requires', 'clock', 'reset', 'data_files'}
     if not isinstance(data, dict) or set(data) - allowed or data.get('schema') != 'rvw.cocotb/1':
         raise ValueError('invalid cocotb manifest schema or fields')
     for key in ('name', 'top', 'test_module'):
         if not isinstance(data.get(key), str) or not data[key].strip():
             raise ValueError(f'{key} must be a nonempty string')
-    for key in ('sources', 'python_paths', 'requires'):
+    for key in ('sources', 'python_paths', 'requires', 'data_files'):
         value = data.get(key, [])
         if not isinstance(value, list) or not all(isinstance(x, str) and x for x in value):
             raise ValueError(f'{key} must be a string list')
     require(data.get('backend'), data.get('requires', []))
     if not data.get('sources'):
         raise ValueError('sources must not be empty')
-    for key in ('sources', 'python_paths'):
+    for key in ('sources', 'python_paths', 'data_files'):
         data[key] = [str((path.parent / p).resolve(strict=True)) for p in data.get(key, [])]
+    names=[Path(p).name for p in data['data_files']]
+    if len(names)!=len(set(names)):
+        raise ValueError('data_files must have distinct basenames')
     clock = data.get('clock')
     if clock is not None:
         if (not isinstance(clock, dict) or set(clock) != {'signal', 'period_ns'}
@@ -89,7 +92,7 @@ def run(manifest: Path, out: Path, *, seed=1, timeout=120) -> dict:
     out.mkdir(parents=True, exist_ok=False)  # No stale XML or reuse.
     write_json(out / 'request.json', data)
     inputs = {str(manifest.resolve()): hashlib.sha256(manifest.read_bytes()).hexdigest()}
-    paths = list(data['sources'])
+    paths = [*data['sources'], *data['data_files']]
     for directory in data['python_paths']:
         paths.extend(str(p) for p in Path(directory).rglob('*.py'))
     for path in paths:

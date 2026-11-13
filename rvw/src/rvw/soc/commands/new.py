@@ -3,7 +3,7 @@ from rvw.soc.scaffold import new
 
 
 def register(sub):
-    p=sub.add_parser('new',help='create a small editable SoC project with an idle core wrapper')
+    p=sub.add_parser('new',help='create a small editable SoC project with a mapped core wrapper when a core-map exists')
     p.add_argument('name')
     p.add_argument('--out',required=True)
     p.add_argument('--json',action='store_true')
@@ -12,7 +12,7 @@ def register(sub):
 
 def run(args):
     try:
-        print(json.dumps(new(args.name,args.out)))
+        print(json.dumps(new(args.name,args.out,getattr(args,'project',None))))
         return 0
     except (OSError,ValueError) as exc:
         print(json.dumps(dict(status='error',error=str(exc))))
@@ -21,4 +21,4 @@ def run(args):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    return [ToolSpec('soc_new','Create an editable APB3 SoC scaffold with an idle wrapper.',schema({k:{'type':'string'} for k in ('name','out')},['name','out']),new, side_effects='writes generated artifacts and reports to out', native_tools=())]
+    return [ToolSpec('soc_new','Create an editable APB3 SoC scaffold with a mapped wrapper when the selected project has a core-map.',schema({k:{'type':'string'} for k in ('name','out','project')},['name','out']),new, side_effects='writes generated artifacts and reports to out', native_tools=())]
