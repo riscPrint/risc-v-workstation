@@ -14,6 +14,7 @@
 | `$stable` | positive and negative native case | finite, single clock |
 | `$changed` | positive and negative native case | finite, single clock |
 | `local variables` | positive and negative native case | finite, single clock |
+| `local assignment flow` | positive and negative native case | finite, single clock |
 | `s_eventually` | positive and negative native case | infinite trace, single clock; `formal liveness` |
 | `until` | positive and negative native case | infinite trace, single clock; `formal liveness` |
 | `until_with` | positive and negative native case | infinite trace, single clock; `formal liveness` |

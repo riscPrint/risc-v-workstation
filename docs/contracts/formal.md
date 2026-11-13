@@ -464,10 +464,13 @@ Missing outcomes and zero expected comparisons remain inconclusive. See
 
 Typed finite local captures add optional `local_variables` to each
 `rvw.sva-lowering/1` property row. The map records local names, widths and
-signedness. A named property can capture independent design expressions in one
-Boolean antecedent and use them in a finite consequent. History keeps overlapping
-attempts independent. Local-variable flow beyond this form, reassignment,
-initializers, slices and sampled uses of locals remain unsupported. The existing
+signedness. A named property can capture design expressions in one Boolean
+antecedent and use them in a finite consequent. Capture-list assignments run in
+order. Each assignment applies the declared width and sign. Later assignments
+can read or reassign a previously assigned local. An earlier assignment keeps
+its value even when that local is later reassigned. History keeps overlapping
+attempts independent. Reads before assignment, general sequence-local flow,
+initializers, consequent slices and sampled uses of locals remain unsupported. The existing
 single-clock sampled history and finite deadline limits still apply.
 
 ## Finite temporal SVA and parallel SBY observations
