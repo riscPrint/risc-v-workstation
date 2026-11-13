@@ -511,3 +511,13 @@ See [`rvw/plants/negative-control.json`](rvw/plants/negative-control.json),
 in [`rvw/plants/README.md`](rvw/plants/README.md). The saved adapter fixes the
 native seed and memory wait across golden and faulty runs. The earlier seed-7
 sample touched only the free pointer and is recorded separately.
+
+## Independent nine-declaration rerun
+
+[The independent rerun](checks-nine-rerun.json) uses a separate clean pinned
+core copy. All 59 ISA programs pass. Each program captures nine compiled
+checks with zero firings. The regenerated declarations and monitor/bind hashes
+are retained. The run uses seed 1, zero memory latency and one simulation worker.
+This result supersedes the six-rule coverage limit for this campaign. Native
+activation remains unmeasured. It does not establish allocator RAM-state
+conservation, forwarded byte-data correctness, full recovery or core qualification.

@@ -1,0 +1,1359 @@
+{
+  "schema": "rvw.nax-nine-check-rerun/1",
+  "core_revision": "9f452d50560d02fb391bc8039f5453c54e0911af",
+  "private_source_clean": true,
+  "seed": 1,
+  "mem_latency": 0,
+  "workers": 1,
+  "programs": 59,
+  "pass_count": 59,
+  "firings": 0,
+  "spec_sha256": "4ed836962b7060a466bb9440ca8f6193b5faaf7097586def192367c5f6dd9712",
+  "declarations": [
+    {
+      "id": "lq_free_bound",
+      "kind": "counter_bounds",
+      "entries": 16,
+      "width": 5,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "active": "rvw_checks_active",
+        "value": "Lsu2Plugin_logic_lq_tracker_free"
+      }
+    },
+    {
+      "id": "sq_free_bound",
+      "kind": "counter_bounds",
+      "entries": 16,
+      "width": 5,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "active": "rvw_checks_active",
+        "value": "Lsu2Plugin_logic_sq_tracker_free"
+      }
+    },
+    {
+      "id": "branch_context_bound",
+      "kind": "counter_bounds",
+      "entries": 16,
+      "width": 5,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "active": "rvw_checks_active",
+        "value": "BranchContextPlugin_logic_ptr_occupancy"
+      }
+    },
+    {
+      "id": "rob_conservation",
+      "kind": "rob_pointers",
+      "entries": 64,
+      "lanes": {
+        "push_step": 2,
+        "pop_step": 2
+      },
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "alloc_ptr": "CommitPlugin_logic_ptr_alloc",
+        "free_ptr": "CommitPlugin_logic_ptr_free",
+        "push": "FrontendPlugin_allocated_isFireing",
+        "pop": "CommitPlugin_logic_ptr_canFree"
+      }
+    },
+    {
+      "id": "int_freelist_ghost",
+      "kind": "freelist_ghost",
+      "entries": 64,
+      "width": 6,
+      "lanes": {
+        "alloc_lanes": 2,
+        "free_lanes": 2
+      },
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "alloc_fire": "FrontendPlugin_allocated_isFireing",
+        "alloc_valid": "integer_RfAllocationPlugin_logic_allocator_io_pop_mask",
+        "alloc_tags": [
+          "integer_RfAllocationPlugin_logic_allocator_io_pop_values_0",
+          "integer_RfAllocationPlugin_logic_allocator_io_pop_values_1"
+        ],
+        "free_valid": [
+          "integer_RfAllocationPlugin_logic_allocator_io_push_0_valid",
+          "integer_RfAllocationPlugin_logic_allocator_io_push_1_valid"
+        ],
+        "free_tags": [
+          "integer_RfAllocationPlugin_logic_allocator_io_push_0_payload",
+          "integer_RfAllocationPlugin_logic_allocator_io_push_1_payload"
+        ]
+      }
+    },
+    {
+      "id": "sq_forward_youngest",
+      "kind": "store_forward_window",
+      "entries": 16,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "active": "Lsu2Plugin_logic_sharedPip_stages_1_isFireing",
+        "is_load": "Lsu2Plugin_logic_sharedPip_stages_1_IS_LOAD",
+        "hits": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_HITS",
+        "selected": "Lsu2Plugin_logic_sharedPip_stages_1_OLDER_STORE_OH",
+        "start_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_feed_SQ_PTR_FREE",
+        "end_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_END_ID"
+      }
+    },
+    {
+      "id": "fetch_refill_cmd",
+      "kind": "pipeline",
+      "width": 32,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "valid": "FetchCachePlugin_mem_cmd_valid",
+        "ready": "FetchCachePlugin_mem_cmd_ready",
+        "payload": "FetchCachePlugin_mem_cmd_payload_address"
+      }
+    },
+    {
+      "id": "dcache_refill_cmd",
+      "kind": "pipeline",
+      "width": 32,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "valid": "DataCachePlugin_mem_read_cmd_valid",
+        "ready": "DataCachePlugin_mem_read_cmd_ready",
+        "payload": "DataCachePlugin_mem_read_cmd_payload_address"
+      }
+    },
+    {
+      "id": "peripheral_cmd",
+      "kind": "pipeline",
+      "width": 32,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "valid": "LsuPlugin_peripheralBus_cmd_valid",
+        "ready": "LsuPlugin_peripheralBus_cmd_ready",
+        "payload": "LsuPlugin_peripheralBus_cmd_payload_address"
+      }
+    }
+  ],
+  "generated": {
+    "schema": "rvw.micro-generation/1",
+    "status": "generated",
+    "rules": [
+      {
+        "id": "lq_free_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "Lsu2Plugin_logic_lq_tracker_free"
+        }
+      },
+      {
+        "id": "sq_free_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "Lsu2Plugin_logic_sq_tracker_free"
+        }
+      },
+      {
+        "id": "branch_context_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "BranchContextPlugin_logic_ptr_occupancy"
+        }
+      },
+      {
+        "id": "rob_conservation",
+        "kind": "rob_pointers",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "alloc_ptr": "CommitPlugin_logic_ptr_alloc",
+          "free_ptr": "CommitPlugin_logic_ptr_free",
+          "push": "FrontendPlugin_allocated_isFireing",
+          "pop": "CommitPlugin_logic_ptr_canFree"
+        },
+        "lanes": {
+          "push_step": 2,
+          "pop_step": 2
+        }
+      },
+      {
+        "id": "int_freelist_ghost",
+        "kind": "freelist_ghost",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "alloc_fire": "FrontendPlugin_allocated_isFireing",
+          "alloc_valid": "integer_RfAllocationPlugin_logic_allocator_io_pop_mask",
+          "alloc_tags": [
+            "integer_RfAllocationPlugin_logic_allocator_io_pop_values_0",
+            "integer_RfAllocationPlugin_logic_allocator_io_pop_values_1"
+          ],
+          "free_valid": [
+            "integer_RfAllocationPlugin_logic_allocator_io_push_0_valid",
+            "integer_RfAllocationPlugin_logic_allocator_io_push_1_valid"
+          ],
+          "free_tags": [
+            "integer_RfAllocationPlugin_logic_allocator_io_push_0_payload",
+            "integer_RfAllocationPlugin_logic_allocator_io_push_1_payload"
+          ]
+        },
+        "lanes": {
+          "alloc_lanes": 2,
+          "free_lanes": 2
+        }
+      },
+      {
+        "id": "sq_forward_youngest",
+        "kind": "store_forward_window",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "Lsu2Plugin_logic_sharedPip_stages_1_isFireing",
+          "is_load": "Lsu2Plugin_logic_sharedPip_stages_1_IS_LOAD",
+          "hits": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_HITS",
+          "selected": "Lsu2Plugin_logic_sharedPip_stages_1_OLDER_STORE_OH",
+          "start_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_feed_SQ_PTR_FREE",
+          "end_ptr": "Lsu2Plugin_logic_sharedPip_stages_1_SQCHECK_END_ID"
+        }
+      },
+      {
+        "id": "fetch_refill_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "FetchCachePlugin_mem_cmd_valid",
+          "ready": "FetchCachePlugin_mem_cmd_ready",
+          "payload": "FetchCachePlugin_mem_cmd_payload_address"
+        }
+      },
+      {
+        "id": "dcache_refill_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "DataCachePlugin_mem_read_cmd_valid",
+          "ready": "DataCachePlugin_mem_read_cmd_ready",
+          "payload": "DataCachePlugin_mem_read_cmd_payload_address"
+        }
+      },
+      {
+        "id": "peripheral_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "LsuPlugin_peripheralBus_cmd_valid",
+          "ready": "LsuPlugin_peripheralBus_cmd_ready",
+          "payload": "LsuPlugin_peripheralBus_cmd_payload_address"
+        }
+      }
+    ],
+    "complete": true,
+    "limitations": [
+      "Project signal bindings are declared, not extracted or compiled.",
+      "No proof or simulator was run."
+    ]
+  },
+  "monitors_sha256": "1897913d790a636f608be321053822395498334d397f33c5a8285f1c7f645135",
+  "binds_sha256": "f24767146529cef42a76a3cc3b7071f4bcbad48432201d3e1ca5a28514b4b2c7",
+  "runs": [
+    {
+      "program": "rv32ua-p-amoadd_w",
+      "elf_sha256": "80c20113ce12bd4bf50baebcfa90c4a230e8792eb44eeb19fd7cf717ebc85554",
+      "status": "pass",
+      "cycles": 544,
+      "instret": 102,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amoand_w",
+      "elf_sha256": "86aacbfe36e482facc59c88d264ac4139e8534dcdbe2079d82b83f41d1dd8f96",
+      "status": "pass",
+      "cycles": 545,
+      "instret": 100,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amomax_w",
+      "elf_sha256": "ee221a4cb7e669601234dec16306c507136c64cb74ee16d48d02376b605cd82b",
+      "status": "pass",
+      "cycles": 590,
+      "instret": 114,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amomaxu_w",
+      "elf_sha256": "03f10d07da86b69d5b03f2c50fd5c0b976b13ed9d5b53fa3dc120b30ec5f22c0",
+      "status": "pass",
+      "cycles": 548,
+      "instret": 101,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amomin_w",
+      "elf_sha256": "0bf4b450241dd3bca17cb8117e7965b8494ff94415de6eff213c6340581ebb58",
+      "status": "pass",
+      "cycles": 590,
+      "instret": 114,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amominu_w",
+      "elf_sha256": "f3135dd8387a3cc0e15016a58fe58579f812bfacb874028e96b09342deea6614",
+      "status": "pass",
+      "cycles": 548,
+      "instret": 101,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amoor_w",
+      "elf_sha256": "5bea80030ff6cd799e39edcfe2425c1fcda3950776c645ee58f19be2861bb1fe",
+      "status": "pass",
+      "cycles": 545,
+      "instret": 100,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amoswap_w",
+      "elf_sha256": "fb0de80c1b25f55724dc9cab147a7283108786d73d03b0d328c0164dc1a3b4f6",
+      "status": "pass",
+      "cycles": 545,
+      "instret": 100,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-amoxor_w",
+      "elf_sha256": "30d80688f6fbd26d05cb238dcd12eccc17ad736f1a2e4709e3a1a0fd80cd2672",
+      "status": "pass",
+      "cycles": 548,
+      "instret": 104,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ua-p-lrsc",
+      "elf_sha256": "5fe8a51b64b0f4a20a32056af8ca120d24016dafe049c063b4607c6095726a42",
+      "status": "pass",
+      "cycles": 38589,
+      "instret": 6277,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-add",
+      "elf_sha256": "6f47785fae57fb603483a0728acdc422df0b058e7593d81960b89055d3a1c5c2",
+      "status": "pass",
+      "cycles": 1003,
+      "instret": 501,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-addi",
+      "elf_sha256": "d30220b20223b2d700f15058c0c0e2c9105ab536735db43582d104d334e5e119",
+      "status": "pass",
+      "cycles": 727,
+      "instret": 278,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-and",
+      "elf_sha256": "56bf5698fde75f866b37375f1a06a784bebde6ac93929790bbe06445ffc301d3",
+      "status": "pass",
+      "cycles": 987,
+      "instret": 521,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-andi",
+      "elf_sha256": "aeb3c986c581e7b74dd2fc7bc154561a482eaeab9d94e6e9aaf881aa2d50da7e",
+      "status": "pass",
+      "cycles": 659,
+      "instret": 234,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-auipc",
+      "elf_sha256": "e8e46f117bd502c190c6791d3db9c29509583913631505a8a5ad2370f9a19a25",
+      "status": "pass",
+      "cycles": 496,
+      "instret": 94,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-beq",
+      "elf_sha256": "e84ab47d1edd9cf6f0360a02486ffe7b824c4b9375ccd98d993135812525d8f7",
+      "status": "pass",
+      "cycles": 926,
+      "instret": 327,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-bge",
+      "elf_sha256": "a159d28b1c16a776361562d5635608b7330c7cff65d307a4c8d6a6e3c569ef29",
+      "status": "pass",
+      "cycles": 1017,
+      "instret": 345,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-bgeu",
+      "elf_sha256": "7eecb9752ac575d1ae4a6a45ee71f4132d79a66681ddbd3fdb03da8650af580b",
+      "status": "pass",
+      "cycles": 1035,
+      "instret": 370,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-blt",
+      "elf_sha256": "7588a9fb3bf2f97211b3dca94ccc47aaeab007c17fbba7d73002f21f64ba833e",
+      "status": "pass",
+      "cycles": 927,
+      "instret": 327,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-bltu",
+      "elf_sha256": "9eb6f4633dfc1a9b56c299852c43b5ad7dd6f894c57c4321fb6b71edbdaf1246",
+      "status": "pass",
+      "cycles": 937,
+      "instret": 352,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-bne",
+      "elf_sha256": "5b87a0a4563b9d84e8a0d9afb55c4eff4057f17f00d247f8c44afa23c557a321",
+      "status": "pass",
+      "cycles": 937,
+      "instret": 327,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-fence_i",
+      "elf_sha256": "4539dc9a331cfb9d78bcd03577438e269e82054104fd0fc207525a463ae50e06",
+      "status": "pass",
+      "cycles": 1280,
+      "instret": 332,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-jal",
+      "elf_sha256": "c82f640c192beb22b68d52bbea5a215fe89b1e9c45a07731c400c6288dbfd5db",
+      "status": "pass",
+      "cycles": 492,
+      "instret": 91,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-jalr",
+      "elf_sha256": "d87989e3f18fd81fcacefae0349e4a68ebbeb2ea358433e5cd4c8c81edf0aa12",
+      "status": "pass",
+      "cycles": 606,
+      "instret": 151,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lb",
+      "elf_sha256": "f809d516a1759800421d6e85dd4a96effb05be97659e74af501df31e316085f5",
+      "status": "pass",
+      "cycles": 717,
+      "instret": 289,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lbu",
+      "elf_sha256": "589355bbce1d95b4e4076bd419d72030f19eb93ebf30e8e5d742372546c2eb18",
+      "status": "pass",
+      "cycles": 717,
+      "instret": 289,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-ld_st",
+      "elf_sha256": "5110ee1cb4216d42f159282ac2ba63c1d4a864bac95bd57349467df349d3f709",
+      "status": "pass",
+      "cycles": 2181,
+      "instret": 999,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lh",
+      "elf_sha256": "e75b1dc1d655e3e500295afe6623f001fe7f7605de960d6ffc302219331e1658",
+      "status": "pass",
+      "cycles": 724,
+      "instret": 305,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lhu",
+      "elf_sha256": "f553194c09531caec13d44a4bdbc0f617b1febeae5f9ee6c561490300f919fc2",
+      "status": "pass",
+      "cycles": 755,
+      "instret": 314,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lui",
+      "elf_sha256": "b9aa538e4e3defcfed1f4d31318cd04784c57932f05b76e80668f3e047386e00",
+      "status": "pass",
+      "cycles": 484,
+      "instret": 101,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-lw",
+      "elf_sha256": "1767a4b1cac78a95a6a4bdd0d2756e359601ccb7914e5eaf5f92aeb34c6505cd",
+      "status": "pass",
+      "cycles": 756,
+      "instret": 319,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-or",
+      "elf_sha256": "c171b49ca10c4a12e9a527e71656935db1efd405fb40cd444e193dc0fcc587ca",
+      "status": "pass",
+      "cycles": 987,
+      "instret": 524,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-ori",
+      "elf_sha256": "f69d4643b85ca42c1ecf5f7505a71c48629c77a4d80705071321cbb660885f45",
+      "status": "pass",
+      "cycles": 658,
+      "instret": 241,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sb",
+      "elf_sha256": "57ee4b3b040f3de42995d58e2cb6d39d68da98f1a8547a843ecc79369aa2c41d",
+      "status": "pass",
+      "cycles": 1033,
+      "instret": 490,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sh",
+      "elf_sha256": "d6b1d4185d31d91547a9e979b2c696951126ea235bcaeeb259b9eef30d83bc01",
+      "status": "pass",
+      "cycles": 1132,
+      "instret": 543,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-simple",
+      "elf_sha256": "1d0f3e8cc7bc990775784b98934aae4ef349587e41517daa90292b013d7c1848",
+      "status": "pass",
+      "cycles": 457,
+      "instret": 77,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sll",
+      "elf_sha256": "a11f87a8394d7db48a107d2bf861dbf54829cd6f7dfd510c36902b8f6ef08783",
+      "status": "pass",
+      "cycles": 1036,
+      "instret": 529,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-slli",
+      "elf_sha256": "21d9c8898ce713fb8326ab14d68214d3d6a8677e907588ed31bd6de8a83a210b",
+      "status": "pass",
+      "cycles": 725,
+      "instret": 277,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-slt",
+      "elf_sha256": "1e8b76d0748254cb5e5186b2b156ab752996845e02124d1ce00f1a821c0b30d1",
+      "status": "pass",
+      "cycles": 994,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-slti",
+      "elf_sha256": "81d9f503d72b6508054a358cc59d086c3bc18c2915345ff100d729260256e9c6",
+      "status": "pass",
+      "cycles": 703,
+      "instret": 273,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sltiu",
+      "elf_sha256": "c7270d844c237e902688a05f45f5018cf99b24d40102845e2800b87409246b10",
+      "status": "pass",
+      "cycles": 703,
+      "instret": 273,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sltu",
+      "elf_sha256": "b0caf7743ffba20b04e03259573d79fddf98d11b163de392035c67a23856a38b",
+      "status": "pass",
+      "cycles": 994,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sra",
+      "elf_sha256": "4fc86e56a6f2d9eb7489ae4ccf3779a476fbaa1bdb815feaff389243d4949c09",
+      "status": "pass",
+      "cycles": 1050,
+      "instret": 548,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-srai",
+      "elf_sha256": "60bf482f88c19720bc98b9f24ea4bd1b66733ac1456f89762b1e9422e3b23655",
+      "status": "pass",
+      "cycles": 723,
+      "instret": 292,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-srl",
+      "elf_sha256": "71a76351ee9f31c101ab1a2591cc4af6a1233227c67516bc2e7ea7cc2abb5ae9",
+      "status": "pass",
+      "cycles": 1047,
+      "instret": 542,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-srli",
+      "elf_sha256": "58d027257107f0e88924b99c254907d175f9ca176f6d63e2b24866d0aec4c763",
+      "status": "pass",
+      "cycles": 729,
+      "instret": 286,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-st_ld",
+      "elf_sha256": "72fe601d4b5190ce0bbf2f8ae91e23142f0c413315882448817b45220494217f",
+      "status": "pass",
+      "cycles": 1427,
+      "instret": 519,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sub",
+      "elf_sha256": "0e5b0eabb75e48105a800f690310ff40b33f43b45d819da902a53044430e7e84",
+      "status": "pass",
+      "cycles": 987,
+      "instret": 493,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-sw",
+      "elf_sha256": "031acdf59c4188c6c820d7ac7daee7b229e14beef2f7674a13013cf744b94d79",
+      "status": "pass",
+      "cycles": 1116,
+      "instret": 550,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-xor",
+      "elf_sha256": "6f45adc89f354de749af967560e8b21eed5b90db0b3b37826f6930afe4ea8240",
+      "status": "pass",
+      "cycles": 995,
+      "instret": 523,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32ui-p-xori",
+      "elf_sha256": "820bea9a53abbc87cb49a88cd4a986cd096f4d2229a0c03c80c55f055b6d8c18",
+      "status": "pass",
+      "cycles": 656,
+      "instret": 243,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-div",
+      "elf_sha256": "9c506ab66914258dbf45785e9ffe158a7c0e091b44c3df36b858aecf2b9a4327",
+      "status": "pass",
+      "cycles": 559,
+      "instret": 132,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-divu",
+      "elf_sha256": "305a4051d2dceba3712dd7af35b2f99ce9c09bfff2a4dc20c0984ea9cac845af",
+      "status": "pass",
+      "cycles": 585,
+      "instret": 133,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-mul",
+      "elf_sha256": "c787466d9bd9378ebb7e9e23a4eb6715efc7cd8104d13c3b5250e80eff49edf9",
+      "status": "pass",
+      "cycles": 986,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-mulh",
+      "elf_sha256": "bf515dd4553118d67193a63bcf8b707285f953a621e1beb1cc1ae3f184741892",
+      "status": "pass",
+      "cycles": 976,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-mulhsu",
+      "elf_sha256": "a4f4854ba4ad226ff9e85c4db28f80165642ad7bf46c0e47eb242b69228ca1c6",
+      "status": "pass",
+      "cycles": 976,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-mulhu",
+      "elf_sha256": "4a13fc2d1b84fbf001d7069c69174b553b281928dd74aa94266da7ddda20532f",
+      "status": "pass",
+      "cycles": 976,
+      "instret": 495,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-rem",
+      "elf_sha256": "f1d2294cee70786b97e624d4291010db6e1289bcfad6894a3ddaec73dbba69d0",
+      "status": "pass",
+      "cycles": 559,
+      "instret": 132,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    },
+    {
+      "program": "rv32um-p-remu",
+      "elf_sha256": "7ad1372a4a5ab34350285dd4a0fb9bb0acd87ed1497a81b8d115bfd8923ab5d7",
+      "status": "pass",
+      "cycles": 585,
+      "instret": 132,
+      "checks": {
+        "schema": "rvw.checks-run/1",
+        "toplevel": "NaxRiscv",
+        "source": "$RUN_ROOT/checks",
+        "inserted": 9,
+        "fired": 0,
+        "capture": true,
+        "status": "pass",
+        "firings": []
+      },
+      "checks_sha256": "984ea2fbd293cf8b241401823a46fa3abfc8faeca6ce67e346a43484a87ae85d"
+    }
+  ],
+  "attempts": [
+    "Initial launcher refused shallow source history; full history was fetched without source changes."
+  ],
+  "limits": [
+    "All nine declarations are generated, compiled and captured in this campaign.",
+    "No native activation counts, formal proof or whole-core qualification.",
+    "The free-list ghost tracks declared events, not allocator RAM contents. Forwarding selection does not prove byte-data correctness."
+  ]
+}
