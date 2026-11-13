@@ -79,3 +79,73 @@ Private evidence is stored in `pico-state-source-v1` and
 formal source snapshot is retained under `miter_check/src`; generated comparison
 source can later differ. The source revision and hash are in `source.json`.
 The native runs held `vex-conn` and used `nice -n 10`.
+
+## Trap decision
+
+The failing comparison is a trap-write difference, not a missing IRQ-state
+binding. This profile disables IRQ. The saved misaligned JAL writes the link
+value 4 to physical x14 before the terminal trap is reported. Native RVFI
+retains rd=x14 and that value. The independent post-state snapshot sees the
+same register change. The strict architectural monitor expects a trapping
+instruction to preserve the register frame and suppresses the destination.
+Thus the frame assertion and stream comparison fail together.
+
+Decision: retain the strict trap-frame rule and the failed equivalence result.
+Do not copy native RVFI destination fields into the state map. Do not suppress
+trap comparisons or assume away the counterexample. The current kit cannot
+certify full PicoRV32 RVFI equivalence on this profile. Its demonstrated
+simulation matches apply to the specific nontrapping programs only. A kit
+that reports observed writes on terminal traps needs a separate explicit
+contract; it must not be described as proof of precise architectural traps.
+The program-3 negative control remains a required failure.
+
+## Full RV32UI simulation comparison
+
+`suite.py` compares all base RVFI fields on every retirement until the final
+`tohost` store retires. It also checks the register frame. The simulation
+waits one time unit after the completion retirement so the comparison can
+finish before `$finish`. It returns 0 only when every selected test matches.
+Failed comparisons return 1. Missing completion or a time limit returns 3
+when there is no separate failed comparison.
+
+```sh
+scripts/with-lock.sh vex-conn nice -n 10 rvw/.venv/bin/python \
+  examples/picorv32/formal/suite.py --source "$PICORV32" \
+  --riscv-formal "$RISCV_FORMAL" --tests "$RISCV_TESTS/isa/rv32ui" \
+  --out "$CAPTURE" --prefix riscv64-unknown-elf-
+```
+
+Without `--tests`, the helper selects the 37 RV32UI tests bundled with the
+pinned PicoRV32 source. The external upstream directory has 42 tests at
+revision `d7e86f701b929b5d801f8cda1a4871ab05f452bb`. The generated receipt
+records the selected source-file hashes. It does not certify the complete
+transitive preprocessor source closure.
+
+The harness uses one MiB of zero-filled RAM, reset PC `0x80000000`, zero
+register reset state, immediate memory service, no interrupts and no PCPI.
+The ELF uses the existing project linker script and no-CSR test environment.
+The assembler enables Zifencei so `fence_i` can build. This does not add that
+extension to the RTL. Each test has a one-million-cycle RTL limit and a
+90-second host limit. A terminal trap without a test completion remains
+inconclusive; it is not a stream match.
+
+### Measured upstream result
+
+The 2026-11-13 native run selected all 42 upstream RV32UI sources. It used
+Icarus and the unchanged strict monitor. Forty programs reached completion
+with matching base RVFI streams and register frames. `fence_i` and `ma_data`
+did not complete before the configured limits. Both remain inconclusive.
+No test was silently removed from the denominator.
+
+The separately replayed `0xfeeff76f` negative control returned exit 1 at its
+first retirement, time 115000 ps. Native RVFI reported x14=4. Both the frame
+assertion and destination-address comparison failed. This confirms the trap
+limit above. No new bounded equivalence pass is claimed.
+
+See [suite-results.json](suite-results.json) for every selected test, source
+hash, ELF hash, retirement count and outcome. The ELF hashes were added to
+the receipt from the retained run artifacts. The helper now emits those
+hashes directly on future runs. Private native evidence is in
+`pico-upstream-final` under the local run directory. The earlier 37-program
+bundled-test run stopped at the completion bus request, before the final
+store retired. It is not substituted for the final upstream run.
