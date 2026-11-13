@@ -159,8 +159,16 @@ Use `--workflow test-fails` to select the exact playbook tools and core tools.
 The profile and workflow filters intersect when both are set.
 `rvw_tools_search(keyword)` searches the available catalog.
 `rvw_tools_describe(name)` returns arguments, effects and profile.
-Search can describe tools outside the loaded profile. Restart with that profile
-to call them. Remote catalogs contain only tools from the client's allowlist.
+Search can describe tools outside the loaded profile. Call
+`rvw_tools_load(profile)` to add that profile's tools to the running server.
+The server then sends `notifications/tools/list_changed` and advertises
+`tools.listChanged`. A client that ignores the notification must list tools
+again. There is no unload. `core` alone holds only setup, guide, plan,
+evidence, job and catalog tools: a bring-up agent loads `verification`
+(regress, cosim, coverage, privilege, checks, sec, fault), `debug` (query,
+bundle, bisect, wave), `formal`, `arch` (csim, perf) and `soc` (lint, probes)
+as it needs them. Remote catalogs contain only tools from the client's
+allowlist; loading cannot add tools outside it.
 
 ## Common results
 

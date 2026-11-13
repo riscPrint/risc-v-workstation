@@ -113,10 +113,25 @@ class Registry:
         for t in select_tools(tools, profile, workflow) + self._job_tools() + self._meta_tools():
             if t.name in self.tools:
                 raise ValueError(f"duplicate MCP tool name {t.name!r}")
-            self.tools[t.name] = t
-            validator = validator_for(t.input_schema)
-            validator.check_schema(t.input_schema)
-            self._validators[t.name] = validator(t.input_schema)
+            self._add(t)
+
+    def _add(self, t: ToolSpec) -> None:
+        self.tools[t.name] = t
+        validator = validator_for(t.input_schema)
+        validator.check_schema(t.input_schema)
+        self._validators[t.name] = validator(t.input_schema)
+
+    def load_profile(self, profile: str) -> list[str]:
+        """Add one profile's catalog tools to the live server. Returns the new names."""
+        from .profiles import PROFILES, select_tools
+        if profile not in PROFILES and profile != "all":
+            raise ToolError(f"unknown profile {profile!r}; choose one of {sorted(PROFILES) + ['all']}")
+        added = []
+        for t in select_tools(list(self.catalog.values()), profile):
+            if t.name not in self.tools:
+                self._add(t)
+                added.append(t.name)
+        return sorted(added)
 
     @classmethod
     def discover(cls, only: set[str] | None = None, *, project: str | None = None, profile: str = "all", workflow: str | None = None) -> tuple["Registry", list[str]]:
@@ -139,7 +154,18 @@ class Registry:
             if name not in self.catalog and name not in self.tools:
                 raise ToolError(f"unknown tool {name!r}")
             return describe(self.catalog.get(name) or self.tools[name])
+        def load(profile: str):
+            added = self.load_profile(profile)
+            return {"profile": profile, "added": added, "count": len(added),
+                    "summary": f"loaded {len(added)} tools; the server sent tools/list_changed",
+                    "hint": "Clients that ignore tools/list_changed must list tools again."}
+        from .profiles import PROFILES
         return [
+            ToolSpec("rvw_tools_load", "Add a profile's tools to this running server (no restart). "
+                     "Use after rvw_tools_search names a profile that is not loaded.",
+                     schema({"profile": {"type": "string", "enum": sorted(PROFILES) + ["all"]}}, ["profile"]), load,
+                     annotations={"readOnlyHint": False, "idempotentHint": True}, side_effects="server-state",
+                     native_tools=(), result_envelope=True),
             ToolSpec("rvw_tools_search", "Find tools by keywords and show their loading profiles.",
                      schema({"keyword": {"type": "string"}}, ["keyword"]), search,
                      annotations={"readOnlyHint": True}, side_effects="read-only", native_tools=(), result_envelope=True),

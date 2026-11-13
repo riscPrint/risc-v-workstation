@@ -79,7 +79,8 @@ class Remote:
         registry, server, transport = client
         if scope['path'] == '/sse' and scope['method'] == 'GET':
             async with transport.connect_sse(scope, receive, send) as streams:
-                await server.run(*streams, server.create_initialization_options())
+                from mcp.server.lowlevel import NotificationOptions
+                await server.run(*streams, server.create_initialization_options(NotificationOptions(tools_changed=True)))
         elif scope['path'] == '/messages':
             await transport.handle_post_message(scope, receive, send)
         else:
