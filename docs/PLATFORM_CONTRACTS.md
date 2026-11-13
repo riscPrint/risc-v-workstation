@@ -3485,6 +3485,28 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Nested C2 walk captures
+
+C2 retirements may contain `mmu_nested_walks`. Each record gives `access_id`,
+boolean `complete`, `vs_mode`, `vs_root`, `g_mode`, `g_root`, `va`, `access`
+and `result`. Access is the permission operation; HLVX uses fetch permission.
+The result has `status`, optional `pa` or fault `stage`/`htval`, `vs_walk` and
+ordered `g_walks`. Each walk gives `status`, ordered PTE `reads` (level/address/
+data/fault), and `pa` on success. G walks also give the translated `gpa` and
+`access`. A G fault during a VS PTE read can leave `vs_walk` null.
+
+`complete = true` declares capture of all VS/G table reads used by the modeled
+translation. Cached or partial captures must set it false. They remain
+inconclusive. The adapter must not reconstruct missing DUT reads from the
+reference. `mmu report` compares complete records with the independent nested
+walker. It uses table words from the hash-bound generated source and checks
+G translation of every VS PTE read and the final payload. It supports fixed
+preset-A/D mappings and fenced G-root reuse. Missing or unsupported references
+remain inconclusive. C2 needs a passing end and complete C1 identity binding.
+Incorrect complete records are mismatches. These checks do not fill
+architectural bins. Functional groups can observe nested VS and G reads
+separately, including partial capture observations.
+
 ### Random MMU programs and functional groups
 
 `rvw.mmu/1` may contain `random` with selected `modes`, integer `seeds`, `pages`

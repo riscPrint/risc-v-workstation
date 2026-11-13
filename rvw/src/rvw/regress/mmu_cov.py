@@ -5,6 +5,7 @@ def groups():
     return dict(replace_defaults=True, groups=[
         dict(name='vm_mode_access_result', fields=['vm_mode', 'access', 'result'], when=dict(event='mmu_walk'),
              domains=[['sv32', 'sv39', 'sv48', 'sv57'], ['load', 'store', 'fetch'], ['success', 'page-fault', 'access-fault']]),
+        dict(name='vm_nested_stage', fields=['stage', 'vm_mode', 'access', 'result'], when=dict(event='mmu_walk')),
         dict(name='vm_level_fault', fields=['vm_mode', 'level', 'fault'], when=dict(event='mmu_pte')),
         dict(name='vm_pte_permissions', fields=['R', 'W', 'X', 'U', 'A', 'D'], when=dict(event='mmu_pte'), domains=[[False, True]] * 6),
         dict(name='vm_protocol_hart', fields=['kind', 'hart'], when=dict(event='mmu_protocol')),
@@ -24,9 +25,16 @@ def observations(row):
     from .mmu import number, FLAGS
     from .mmu_walk import validate_capture
     result = []
-    for walk in row.get('mmu_walks', []):
+    walks = list(row.get('mmu_walks', []))
+    for record in row.get('mmu_nested_walks', []):
+        nested = record.get('result') or {}
+        if nested.get('vs_walk'):
+            walks.append(dict(nested['vs_walk'], kind='mmu_walk', access_id=record['access_id'], mode=record['vs_mode'], root=record['vs_root'], va=record['va'], access=record['access'], stage='vs'))
+        for guest in nested.get('g_walks', []):
+            walks.append(dict(guest, kind='mmu_walk', access_id=record['access_id'], mode=record['g_mode'], root=record['g_root'], va=guest['gpa'], stage='g'))
+    for walk in walks:
         validate_capture(walk)
-        common = dict(vm_mode=walk['mode'], access=walk['access'], result=walk['status'])
+        common = dict(vm_mode=walk['mode'], access=walk['access'], result=walk['status'], stage=walk.get('stage', 'single'))
         result.append(dict(common, event='mmu_walk'))
         for read in walk['reads']:
             item = dict(common, event='mmu_pte', level=read['level'], fault=read['fault'])

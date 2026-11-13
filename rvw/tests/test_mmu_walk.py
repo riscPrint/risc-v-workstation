@@ -92,3 +92,7 @@ def test_c2_capture_and_identity(tmp_path):
     plans = scenario_accesses(s)
     assert walk(**plans[1])['pa'] == walk(**plans[0])['pa'] + 4096
     assert scenario_accesses(dict(s, root_switch=True)) == []
+
+
+def test_unsupported_reference_is_not_a_mismatch():
+    assert check([dict(kind='mmu_walk')], [])['status'] == 'inconclusive'

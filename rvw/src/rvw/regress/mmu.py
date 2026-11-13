@@ -723,6 +723,13 @@ def report(directory, results, checked=None, protocol_config=None):
             trace_name = run.artifacts.get('rvfi_trace')
             if trace_name and (run.path / trace_name).is_file():
                 observed['c2_walk_check'] = check_c2(run.path / trace_name, scenario_accesses(s), raw)
+                if s.get('guest'):
+                    from .mmu_nested import check_c2 as check_nested_c2
+                    source_path = directory / (s['id'] + '.S')
+                    if source_path.is_file() and digest(source_path) == s.get('source_sha256'):
+                        observed['nested_walk_check'] = check_nested_c2(run.path / trace_name, s, raw, source_path.read_text())
+                    else:
+                        observed['nested_walk_check'] = dict(status='inconclusive', reason='missing hash-bound generated source')
         rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,
                          bins=s['bins'], observations=observed))
     universe = sorted({b for s in rows for b in s['bins']})

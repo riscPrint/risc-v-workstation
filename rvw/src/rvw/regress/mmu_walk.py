@@ -59,6 +59,8 @@ def check(records, accesses):
     are mismatches. Each access snapshot describes memory at that access.
     """
     records, accesses = list(records), list(accesses)
+    if not accesses:
+        return dict(status='inconclusive', checked=0, expected=0, reason='no supported reference accesses')
     errors = []
     for index, (record, access) in enumerate(zip(records, accesses)):
         reference = walk(**access)
@@ -125,7 +127,7 @@ def check_c2(path, accesses, identity=None):
     from rvw.cosim.trace import Trace
     trace = Trace(path)
     try:
-        if identity is not None and (not identity.get('rtl_sha256') or any(trace.header.get(k) != identity.get(k) for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))):
+        if identity is not None and (not identity.get('rtl_sha256') or any(k not in trace.header or k not in identity or trace.header[k] != identity[k] for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))):
             return dict(status='inconclusive', reason='C2 identity differs from C1')
         records, ended = [], False
         for row in trace:
