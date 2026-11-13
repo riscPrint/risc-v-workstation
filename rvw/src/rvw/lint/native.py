@@ -1,6 +1,7 @@
 """Adapters retain native output, including diagnostics we cannot parse."""
 import re
 import shutil
+from pathlib import Path
 from rvw.common.proc import run_group
 
 
@@ -50,3 +51,35 @@ def run(tool, files, top, timeout):
                 version=(version.stdout or "") + (version.stderr or ""),
                 exit_code=result.returncode, timed_out=result.timed_out,
                 raw_output=output, findings=findings)
+
+
+# These rules prescribe source spelling, formatting or optional unused fields.
+# Keep functional diagnostics, including truncation and undriven values, unchanged.
+GENERATED_ADVICE = {
+    'verible.always-comb', 'verible.line-length',
+    'verible.explicit-parameter-storage-type', 'verible.unpacked-dimensions-range-ordering',
+    'verible.explicit-function-lifetime', 'verible.explicit-function-task-parameter-type',
+    'verilator.DECLFILENAME', 'verilator.UNUSEDSIGNAL', 'verilator.UNUSEDPARAM',
+}
+
+
+def summarize_generated(result, files):
+    """Count source-style advice on exact RTL files recorded by a Spinal database."""
+    generated = {str(Path(f).resolve()) for f in files}
+    groups, findings = {}, []
+    for f in result['findings']:
+        if (f['rule'] not in GENERATED_ADVICE or f['severity'] != 'warning' or
+                str(Path(f.get('file') or '').resolve()) not in generated):
+            findings.append(f)
+            continue
+        key = (f['rule'], f['file'])
+        if key not in groups:
+            groups[key] = dict(f, severity='info', count=0, members=[])
+            findings.append(groups[key])
+        group = groups[key]
+        group['count'] += 1
+        group['members'].append({k: f.get(k) for k in ('endpoint', 'file', 'line', 'column')})
+    for group in groups.values():
+        group['message'] = f"{group['count']} generated-RTL style advisories: " + group['message']
+    result['findings'] = findings
+    return result

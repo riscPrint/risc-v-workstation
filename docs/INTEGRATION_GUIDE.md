@@ -1166,8 +1166,8 @@ per-connection source cuts after a structural pre-check. All four transfers
 proved with activation witnesses. Clock and reset contracts are sampled
 values. They do not establish sequencing or reset-release correctness.
 
-Multi-domain lint found 2 clock sources, 293 registers, 9 CDC paths and 2,507
-structural findings. It recognizes BufferCC and FlowCCUnsafeByToggle. These
+Multi-domain lint found 2 clock sources, 293 registers and 9 CDC paths.
+The 2026-11-13 noise review reduced 2,507 structural diagnostics to 43 groups. It recognizes BufferCC and FlowCCUnsafeByToggle. These
 findings and unrun temporal obligations remain open. The aggregate can report
 `findings` when every scoped consumer finishes and structural findings remain.
 It keeps a nonzero exit code. Read the [measured record](../SpinalSoc/examples/vex/VERIFICATION.md)
@@ -2006,3 +2006,21 @@ Scala stub shows that call. A declaration is not monitor execution evidence.
 If the installed Spike shim is stale, `rvw doctor --features cosim` now gives
 one exact `nice -n 10 .../Cosim/build.sh` command in its `spike_shim` check.
 Run that command, then repeat doctor. Rebuilding does not qualify the core.
+
+
+### Lint noise measurement, 2026-11-13
+
+| Design | Structural before / after | Rules errors before / after | Native warnings after | Precision |
+|---|---:|---:|---:|---|
+| VexRiscv | 1012 / 2 | 26 / 0 | 0 | Partial samples only |
+| VexiiRiscv | 4285 / 3 | 11 / 0 | 3 | Partial samples only |
+| NaxRiscv | 13765 / 3 | 77 / 0 | 120 | Partial samples only |
+| OoO Mini | 0 / 0 | 0 / 0 | 16 | Partial samples only |
+| SoC | 2507 / 43 | 28 / 0 | 5 | Partial samples only |
+
+Counts include informational findings; the native-warning column excludes info
+advice. All six backends ran. SoC Yosys exceeded the 90-second limit.
+Precision is established only for the small samples in the
+[lint README](../rvw/src/rvw/lint/README.md#five-design-noise-measurement-2026-11-13).
+Native functional-warning triage, functional reset review and pipeline fault
+activation remain open. Grouping does not establish CDC/RDC protection.

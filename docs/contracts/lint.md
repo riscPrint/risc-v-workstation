@@ -89,3 +89,14 @@ metadata, not a user waiver or a proof. The latch rule records incomplete
 assignments on these expressions as unresolved until lowered RTL is checked.
 Imported HDL assignments with source `$dlatch` or `$adlatch` identify actual
 level-sensitive storage and produce `lint.latch` findings.
+
+
+## Generated RTL source advice
+
+Native source-style advice on exact `rtl_files` paths from a database with
+`spinalhdl` metadata is counted per rule and file at info severity. Findings
+use the existing `count` and `members` fields. Raw native output remains.
+The advice whitelist does not include truncation, undriven signals, missing
+switch defaults or errors. Files without that database provenance retain the
+native severity and individual diagnostics. Backend completion status does
+not change. Content-bound waiver IDs change when the diagnostic is regrouped.

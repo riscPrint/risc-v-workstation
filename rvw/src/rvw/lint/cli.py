@@ -91,6 +91,8 @@ def load(path):
 
 def report(path):
     cfg, identity = load(path)
+    generated = run_on(cfg['db'], lambda db: [r[0] for r in db.conn.execute('SELECT path FROM rtl_files')]
+                       if db.meta.get('spinalhdl') else []) if cfg.get('db') else []
     runs = {}
     for backend in BACKENDS:
         if backend not in cfg['backends']:
@@ -115,7 +117,8 @@ def report(path):
                 raise ValueError('yosys top must be a plain identifier')
             runs[backend] = yosys.run(cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
         else:
-            runs[backend] = native.run(backend, cfg['files'], cfg['top'], cfg.get('timeout_s', 120))
+            runs[backend] = native.summarize_generated(
+                native.run(backend, cfg['files'], cfg['top'], cfg.get('timeout_s', 120)), generated)
     waivers = [{**w, 'matches': 0} for w in cfg.get('waivers', [])]
     for backend, run in runs.items():
         for f in run['findings']:
