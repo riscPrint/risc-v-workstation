@@ -1,0 +1,20 @@
+SAMPLE after t=0 reset=x ibus=x dbus=x
+SAMPLE before t=1000 reset=1 ibus=x dbus=x
+SAMPLE after t=2000 reset=1 ibus=0 dbus=0
+SAMPLE before t=3000 reset=1 ibus=0 dbus=0
+SAMPLE after t=4000 reset=1 ibus=0 dbus=0
+SAMPLE before t=5000 reset=0 ibus=0 dbus=0
+SAMPLE after t=6000 reset=0 ibus=1 dbus=0
+SAMPLE before t=7000 reset=0 ibus=1 dbus=0
+SAMPLE after t=8000 reset=0 ibus=0 dbus=0
+SAMPLE before t=9000 reset=0 ibus=1 dbus=0
+SAMPLE after t=10000 reset=0 ibus=1 dbus=0
+SAMPLE before t=11000 reset=0 ibus=1 dbus=0
+SAMPLE after t=12000 reset=0 ibus=1 dbus=1
+SAMPLE before t=13000 reset=0 ibus=1 dbus=1
+SAMPLE after t=14000 reset=0 ibus=1 dbus=0
+SAMPLE before t=15000 reset=0 ibus=1 dbus=0
+SAMPLE after t=16000 reset=0 ibus=1 dbus=0
+SAMPLE before t=17000 reset=0 ibus=1 dbus=0
+SAMPLE after t=18000 reset=0 ibus=1 dbus=0
+RVW_DONE
