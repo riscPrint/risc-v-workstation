@@ -41,14 +41,16 @@ Principles (from `ROADMAP.md`):
 
 ## Area contracts
 
+- [ACT4 suite builds](contracts/act4.md)
 - [Agent benchmark](contracts/agent-bench.md)
 - [Architecture model extensions](contracts/arch.md)
+- [RTL benchmark campaigns](contracts/bench.md)
 - [Connectivity and riscv-formal bindings](contracts/connectivity.md)
-- [Custom instruction effects and backends](contracts/custom-isa.md)
 - [Co-simulation transports and capture inspection](contracts/cosim.md)
 - [Coverage](contracts/coverage.md)
 - [Component simulations](contracts/csim.md)
 - [CSR, registers and generated checks](contracts/csr.md)
+- [Custom instruction effects and backends](contracts/custom-isa.md)
 - [Debug module and sessions](contracts/debug.md)
 - [Equivalence, datapath and control bindings](contracts/equiv.md)
 - [Cross-tool evidence](contracts/evidence.md)
@@ -65,10 +67,14 @@ Principles (from `ROADMAP.md`):
 - [Performance and pipeline events](contracts/perf.md)
 - [Power intent](contracts/power.md)
 - [Privilege, interrupt and timer suites](contracts/privilege.md)
+- [Probe declaration checks](contracts/probes.md)
 - [Design queries](contracts/query.md)
+- [Strict reference mismatch reduction](contracts/reduce-reference.md)
+- [Generated-suite selection](contracts/regress.md)
 - [Simulation security](contracts/sec.md)
 - [Setup and adapter selection](contracts/setup.md)
 - [Simulation server and native ports](contracts/sim.md)
+- [External SoC IP import](contracts/soc-ip.md)
 - [SoC project data](contracts/soc.md)
 - [Random stimulus](contracts/stimulus.md)
 - [UVM flow](contracts/uvm.md)
@@ -87,12 +93,3 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
-
-- [Generated-suite selection](contracts/regress.md)
-
-- [Probe declaration checks](contracts/probes.md)
-
-- [ACT4 suite builds](contracts/act4.md)
-- [External SoC IP import](contracts/soc-ip.md)
-
-- [RTL benchmark campaigns](contracts/bench.md)

@@ -56,6 +56,7 @@ from ..runs.hang import validate_hang_cycles, hang_check, read_evidence
 class Options:
     out: Path | None = None
     signature: str | None = None
+    cosim_platform: str | None = None
     modes: list[str] = field(default_factory=lambda: ["cycles", "seeds", "latency"])
     seeds: int = 12
     seed_start: int = 1
@@ -85,7 +86,15 @@ class Reducer:
         self.inputs = DebugInputs()
         self.run = runs.open_run(run_dir, capture=self.inputs.capture)
         self.core = self.run.get("core")
+        self.reference_platform = (self.inputs.capture.file(o.cosim_platform).copy
+                                   if o.cosim_platform else None)
+        self.reference_results = {}
         orig = runs.signature(self.run.data)
+        if self.reference_platform:
+            reference = self.reference_check(self.run)
+            if reference['status'] != 'mismatch':
+                raise ValueError('original run has no conclusive strict Spike mismatch: '+reference.get('message', reference['status']))
+            orig = reference['signature']
         self.sig = o.signature or orig
         if orig == "pass":
             raise ValueError(f"{self.run.dir}: the run passed; nothing to reduce")
@@ -103,7 +112,7 @@ class Reducer:
             self.notes.append(f"original timeout: {why}" if hung else
                               f"original timeout: {why}; only trials with a usable trace can show a hang")
         # Trials need an RVFI trace whenever `timeout` could count as the target signature
-        self.want_trace = runs.signature_matches("timeout", self.sig)
+        self.want_trace = bool(self.reference_platform) or runs.signature_matches("timeout", self.sig)
         self.out.mkdir(parents=True, exist_ok=True)
         self.report_dir = adapter.fresh_dir(self.out / "reports")
         self.trials: list[dict] = []
@@ -126,6 +135,25 @@ class Reducer:
         c = self.best["cycles"] or self.run.get("max_cycles") or 200000
         return int(c) + self.o.margin
 
+    def reference_check(self, run):
+        from .reference import check
+        from rvw.runs.inputs import snapshot_elf
+        try:
+            elf = Path(run.get('elf')).resolve()
+            if self.inputs.capture.root in elf.parents:
+                bound = next((row for row in self.inputs.capture.record()['files']
+                              if self.inputs.capture.root/row['copy'] == elf), None)
+                if (bound is None or bound['sha256'] != run.get('elf_sha256')
+                        or hashlib.sha256(elf.read_bytes()).hexdigest() != bound['sha256']):
+                    raise ValueError('trial ELF differs from its C1 or captured identity')
+            else:
+                elf = snapshot_elf(run, self.inputs.capture.root.parent, self.inputs.capture, root=self.inputs.root)
+            result = check(run, elf, self.reference_platform)
+        except (OSError, ValueError) as exc:
+            result = dict(status='inconclusive', message=str(exc))
+        self.reference_results[str(run.dir)] = result
+        return result
+
     def matches(self, r) -> tuple[bool | None, str | None]:
         """(does trial run `r` reproduce the target, why not / hang evidence). None: a timeout whose
         RVFI trace cannot tell a hang from the cap; the trial is inconclusive, not a non-match."""
@@ -133,6 +161,12 @@ class Reducer:
             return False, None
         if r.inconclusive:           # harness error, synthesized, wall clock, C1 mark (rvw.results rule)
             return None, f"inconclusive: {r.inconclusive}"
+        if getattr(self, 'reference_platform', None):
+            reference = self.reference_check(r)
+            if reference['status'] == 'inconclusive':
+                return None, reference.get('message', 'reference check is inconclusive')
+            return (reference['status'] == 'mismatch' and
+                    runs.signature_matches(reference.get('signature', ''), self.sig)), None
         if "hart_instructions" in self.o.modes and self.run.get("status") == "fail":
             expected = self.run.get("details", {}).get("hart_failures")
             actual = r.get("details", {}).get("hart_failures")
@@ -184,6 +218,10 @@ class Reducer:
                 rec["hang"] = why
             if r is None and at.error:
                 rec["error"] = at.error
+            if self.reference_platform and r is not None:
+                reference = self.reference_results.get(str(r.dir), {})
+                rec['reference'] = reference
+                rec['signature'] = reference.get('signature', rec['signature'])
             rec["_cmd"] = c
             self.trials.append(rec)
             recs.append(rec)
@@ -475,6 +513,8 @@ class Reducer:
     def save(self, final: bool = False) -> dict:
         b = self.best
         rep = {"schema": "rvw.reduce/1", "run": str(self.run.dir), "out": str(self.out), "signature": self.sig,
+               "reference_platform": str(self.reference_platform) if self.reference_platform else None,
+               "original_reference": self.reference_results.get(str(self.run.dir)),
                "original": {"cycles": self.run.get("cycles"), "seed": self.run.get("seed"),
                             "elf": self.run.get("elf"),
                             "mem_latency": self.run.get("mem_latency"), "max_cycles": self.run.get("max_cycles")},

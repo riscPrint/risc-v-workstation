@@ -16,6 +16,7 @@ def register(sub: argparse._SubParsersAction) -> None:
                        description=__doc__)
     p.add_argument("run_dir", help="C1 run directory of the failure")
     p.add_argument("--out", help="output directory (default RUN_DIR/reduce)")
+    p.add_argument("--cosim-platform", help="preserve a strict Spike mismatch on a C1-passing run")
     p.add_argument("--signature", help="signature to preserve (default: the run's; 're:REGEX' for a family)")
     p.add_argument("--modes", default="cycles,seeds,latency",
                    help="comma list of cycles, seeds, latency, symbols, instructions, irq, stimulus, uart_rx, hart_instructions (default cycles,seeds,latency)")
@@ -48,7 +49,7 @@ def register(sub: argparse._SubParsersAction) -> None:
 def execute_json(run_dir: str, *, out=None, signature=None, modes="cycles,seeds,latency", seeds=12,
                  seed_start=1, latencies="1,2,5,10,20,50", symbol=None, margin=100,
                  hang_cycles=5000, jobs=1, batch=4, budget=64, timeout=None, monotone=False,
-                 exhaustive=False, instruction_symbol=None, hart_symbol=None, project=None) -> dict:
+                 exhaustive=False, instruction_symbol=None, hart_symbol=None, project=None, cosim_platform=None) -> dict:
     """Shared CLI/MCP options and reduction result."""
     modes = [m.strip() for m in modes.split(",") if m.strip()]
     if symbol and "symbols" not in modes:
@@ -60,7 +61,7 @@ def execute_json(run_dir: str, *, out=None, signature=None, modes="cycles,seeds,
     bad = [m for m in modes if m not in ("cycles", "seeds", "latency", "symbols", "instructions", "irq", "stimulus", "uart_rx", "hart_instructions")]
     if bad:
         raise ValueError(f"unknown mode(s) {bad}")
-    o = Options(project=project, out=out, signature=signature, modes=modes, seeds=seeds, seed_start=seed_start,
+    o = Options(project=project, out=out, signature=signature, cosim_platform=cosim_platform, modes=modes, seeds=seeds, seed_start=seed_start,
                 latencies=[int(x) for x in latencies.split(",") if x.strip()], symbols=symbol or [],
                 instructions=instruction_symbol or [], hart_symbols=hart_symbol or [], margin=margin, hang_cycles=hang_cycles, jobs=jobs, batch=batch, budget=budget,
                 timeout=timeout, monotone=monotone, exhaustive=exhaustive)
@@ -69,7 +70,7 @@ def execute_json(run_dir: str, *, out=None, signature=None, modes="cycles,seeds,
 
 def run(a) -> int:
     try:
-        r = execute_json(a.run_dir, project=getattr(a, "project", None), out=a.out, signature=a.signature, modes=a.modes, seeds=a.seeds,
+        r = execute_json(a.run_dir, cosim_platform=getattr(a, 'cosim_platform', None), project=getattr(a, "project", None), out=a.out, signature=a.signature, modes=a.modes, seeds=a.seeds,
                          seed_start=a.seed_start, latencies=a.latencies, symbol=a.symbol, margin=a.margin,
                          hang_cycles=a.hang_cycles, jobs=a.jobs, batch=a.batch, budget=a.budget,
                          instruction_symbol=a.instruction_symbol, hart_symbol=a.hart_symbol, timeout=a.timeout, monotone=a.monotone, exhaustive=a.exhaustive)
