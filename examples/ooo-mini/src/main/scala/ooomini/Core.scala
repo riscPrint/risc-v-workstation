@@ -23,9 +23,13 @@ case class Retire() extends Bundle {
   * Slots retain physical source tags until commit. A ready bit wakes dependents.
   * Stores change memory only at commit. Recovery restores the committed map.
   */
-class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component {
+class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: Int = 8,
+    val storeEntries: Int = 8, val loadEntries: Int = 8, val predictorEntries: Int = 16) extends Component {
   require(isPow2(entries) && entries >= 4)
   require(physicalCount >= 32 + entries)
+  require(issueEntries >= 1 && storeEntries >= 1 && loadEntries >= 1)
+  require(isPow2(predictorEntries) && predictorEntries >= 2)
+  val predictorBits = log2Up(predictorEntries)
   val tagWidth = log2Up(physicalCount)
   val slotWidth = log2Up(entries)
   val io = new Bundle {
@@ -92,12 +96,12 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   cycles := cycles + 1
 
   // A direct-mapped BTB and two-bit direction table. Train at commit.
-  val btbValid = Vec.fill(16)(Reg(Bool()).init(False))
-  val btbTag = Vec.fill(16)(Reg(UInt(26 bits)).init(0))
-  val btbTarget = Vec.fill(16)(Reg(UInt(32 bits)).init(0))
-  val direction = Vec.fill(16)(Reg(UInt(2 bits)).init(1))
-  val pi = pc(5 downto 2)
-  val predictTaken = btbValid(pi) && btbTag(pi) === pc(31 downto 6) && direction(pi)(1)
+  val btbValid = Vec.fill(predictorEntries)(Reg(Bool()).init(False))
+  val btbTag = Vec.fill(predictorEntries)(Reg(UInt((30-predictorBits) bits)).init(0))
+  val btbTarget = Vec.fill(predictorEntries)(Reg(UInt(32 bits)).init(0))
+  val direction = Vec.fill(predictorEntries)(Reg(UInt(2 bits)).init(1))
+  val pi = pc(predictorBits+1 downto 2)
+  val predictTaken = btbValid(pi) && btbTag(pi) === pc(31 downto predictorBits+2) && direction(pi)(1)
   val prediction = Mux(predictTaken, btbTarget(pi), pc + 4)
   val allocation = UInt(tagWidth bits)
   allocation := 0
@@ -125,7 +129,12 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     (csrWrite(head) && (csrAddress(head) === 0x300 || csrAddress(head) === 0x3a0 ||
       (csrAddress(head) >= 0x3b0 && csrAddress(head) < 0x3b4))))
   val redirect = systemRedirect || interrupt || (pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction))
-  val push = started && count < entries && (!writeRd || free.orR) && !redirect
+  val issueUsed = CountOne((0 until entries).map(i => valid(i) && !issued(i)))
+  val storesUsed = CountOne((0 until entries).map(i => valid(i) && isStore(i)))
+  val loadsUsed = CountOne((0 until entries).map(i => valid(i) && isLoad(i)))
+  val loadSpace = opcode =/= B(3,7 bits) || loadsUsed < loadEntries
+  val queueSpace = loadSpace && issueUsed < issueEntries && (opcode =/= B(0x23,7 bits) || storesUsed < storeEntries)
+  val push = queueSpace && started && count < entries && (!writeRd || free.orR) && !redirect
   val allocatedMask = Mux(push && writeRd, B(1,physicalCount bits) |<< allocation, B(0,physicalCount bits))
   val releasedMask = Mux(pop && writes(head) && !faults(head), B(1,physicalCount bits) |<< old(head), B(0,physicalCount bits))
   free := (free | releasedMask) & ~allocatedMask
@@ -408,9 +417,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     handlerPending := faults(head)
     when(writes(head) && !faults(head)) { committed(rds(head)) := dest(head) }
     when(isBranch(head) && !faults(head)) {
-      val index = pcs(head)(5 downto 2)
+      val index = pcs(head)(predictorBits+1 downto 2)
       val taken = nextPc(head) =/= pcs(head)+4
-      btbValid(index) := True; btbTag(index) := pcs(head)(31 downto 6); btbTarget(index) := nextPc(head)
+      btbValid(index) := True; btbTag(index) := pcs(head)(31 downto predictorBits+2); btbTarget(index) := nextPc(head)
       when(taken && direction(index) =/= 3) { direction(index) := direction(index)+1 }
       when(!taken && direction(index) =/= 0) { direction(index) := direction(index)-1 }
     }

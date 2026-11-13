@@ -1,0 +1,42 @@
+{
+  "schema": "ooo-mini.matrix-interruptions/1",
+  "attempts": [
+    {
+      "campaign": "historical-pre-PMP",
+      "config": "rob16",
+      "program": "qsort",
+      "status": "timeout",
+      "cycles": 161147,
+      "instret": 146037,
+      "wall_limit_seconds": 120,
+      "result_sha256": "8d70ea6aecaf812662161135614921d16d8a0c8aed16ffb380886ea4cb948d79",
+      "trace_sha256": "fceebe91f5e46fbdce5bbbd633c646899ed385fcf1420fc8f3ddcbd5b38c8023",
+      "included_in_ipc_table": false
+    },
+    {
+      "campaign": "current-PMP",
+      "config": "rob16",
+      "program": "qsort",
+      "status": "timeout",
+      "cycles": 177678,
+      "instret": 159809,
+      "wall_limit_seconds": 120,
+      "result_sha256": "d20705e91c5e3fcd5b624220f55c7eb9ac7e2d821d53e3e7c47710ef89a0298e",
+      "trace_sha256": "c3917082a2847d3eada9c307cee0d1fdec2e4ab27e2d6a3dcea601282b37a8db",
+      "included_in_ipc_table": false
+    },
+    {
+      "campaign": "current-PMP",
+      "config": "rob16",
+      "program": "qsort",
+      "status": "timeout",
+      "cycles": 198185,
+      "instret": 176787,
+      "wall_limit_seconds": 120,
+      "result_sha256": "bd659577f8bd51638a2f85f9197ec8f7238eaa84db9f53f58ad6dde361b8e0fc",
+      "trace_sha256": "22053c9de08f73ccbe4d6df5175155b1fc6d3353bd76ccfa14a60ac201a79a92",
+      "included_in_ipc_table": false
+    }
+  ],
+  "limit": "incomplete runs contribute no IPC or delta"
+}

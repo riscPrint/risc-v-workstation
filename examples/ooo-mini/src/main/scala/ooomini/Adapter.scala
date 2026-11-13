@@ -10,7 +10,7 @@ import riscvsim._
 object Adapter extends CoreAdapter {
   type Model = SimCompiled[Core]
   def core = "ooo-mini"
-  def configs = Seq("default", "rob16")
+  def configs = Seq("default", "rob16", "iq4", "sq4", "predictor4")
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def xlen = 32
   def sourceDir = new File(sys.env("OOO_MINI_SOURCE"))
@@ -20,7 +20,10 @@ object Adapter extends CoreAdapter {
   def report(key: ModelKey, work: File) = Probe.enabled(key.probes) {
     val (config,_) = SpinalChecks.install(SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC)),
       ChecksConfig(mode = Mode.Monitor,enable = Seq("ooo.*","queue.*","freelist.*","execution.*")))
-    RiscvSimConfig.elaborate(key, work, config)(new Core(if(key.config == "rob16") 16 else 8))
+    RiscvSimConfig.elaborate(key, work, config)(new Core(if(key.config == "rob16") 16 else 8,
+      issueEntries = (if(key.config == "iq4") 4 else 8),
+      storeEntries = (if(key.config == "sq4") 4 else 8),
+      predictorEntries = (if(key.config == "predictor4") 4 else 16)))
   }
   def compile(key: ModelKey, work: File, cache: File): Model = {
     val rtl = report(key,work)
@@ -78,15 +81,23 @@ object Adapter extends CoreAdapter {
           }
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
           require((levels & ~BigInt(0x888)) == 0,"only machine software, timer and external interrupts are mapped")
+          val levelsChanged = levels != previousLevels
           dut.io.interrupts #= levels
-          if(levels != previousLevels) {
+          if(levelsChanged) {
             writer.foreach(_.irq(cycle,levels))
             previousLevels = levels
           }
-          dut.io.instruction #= word(dut.io.fetch.toLong)
-          sleep(1)
-          dut.io.loadData #= word(dut.io.loadAddress.toLong)
-          sleep(1)
+          // Settle an interrupt change before reading the selected load address.
+          if(levelsChanged) sleep(1)
+          // Both addresses depend on registered core state. The new fetch word
+          // cannot change the selected older ROB operation's load address.
+          val instruction = word(dut.io.fetch.toLong)
+          val loadData = word(dut.io.loadAddress.toLong)
+          dut.io.instruction #= instruction
+          dut.io.loadData #= loadData
+          // Probe rename fields observe the new fetch word. Architectural commit
+          // fields are registered and do not depend on these RAM inputs.
+          if(job.probes) sleep(1)
           // Sample pre-edge commit signals. Apply stores after the same edge.
           if(dut.io.interruptTaken.toBoolean) {
             val cause = dut.io.interruptCause.toBigInt

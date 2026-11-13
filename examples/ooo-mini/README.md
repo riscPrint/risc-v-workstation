@@ -250,3 +250,147 @@ rendering and seeded bug hits need separate native wave checks.
 Standard external debug was not added in this campaign. The core lacks the
 precise halt and abstract access path needed by a Debug Module. See the
 [static integration decision](DEBUG.md). No native debug checks were run.
+
+## Independent structure limits
+
+The core has independent `issueEntries`, `loadEntries`, `storeEntries` and
+`predictorEntries` parameters. The ROB stores the queue records. Capacity
+controls allocation separately. Issue entries release at issue. Load and
+store entries release at commit. Defaults are eight for each queue and 16
+for prediction. `rob16` changes only ROB capacity. The earlier historical
+ROB16 experiment also expanded implicit queues. It is not a one-structure
+measurement of this implementation.
+
+## Current structure matrix
+
+All 45 RTL runs pass. All 45 complete traces match Spike. Decoded instruction
+semantics match base on every variant. Seed is one. Added memory latency is
+zero. The captures include the current M/U, PMP and interrupt core.
+
+Six programs are shared with the NaxRiscv matrix. Three extra held-out
+programs stress ROB, IQ and SQ capacity. All variants run the same nine ELFs.
+The variants change only ROB 8 to 16, IQ 8 to 4, SQ 8 to 4, or the shared
+predictor table 16 to 4. Load entries stay at eight. Physical registers stay
+at 48. Counter reads synchronize six times per shared benchmark. The pressure
+programs have no counter synchronization. No architectural differences are
+masked.
+
+### RTL IPC
+
+| Program | Base | ROB16 | IQ4 | SQ4 | Predictor4 |
+|---|---:|---:|---:|---:|---:|
+| median | 0.825046 | 0.825046 | 0.825046 | 0.825046 | 0.749894 |
+| qsort | 0.885618 | 0.885618 | 0.885618 | 0.885618 | 0.830667 |
+| multiply | 0.980479 | 0.980479 | 0.980479 | 0.980479 | 0.970108 |
+| towers | 0.941123 | 0.941123 | 0.941123 | 0.941123 | 0.919004 |
+| vvadd | 0.988877 | 0.988877 | 0.988877 | 0.988877 | 0.988877 |
+| memcpy | 0.997792 | 0.997792 | 0.997792 | 0.997792 | 0.997728 |
+| rob-pressure | 0.327217 | 0.389800 | 0.327217 | 0.327217 | 0.327217 |
+| iq-pressure | 0.279141 | 0.299835 | 0.261119 | 0.279141 | 0.279141 |
+| sq-pressure | 0.254237 | 0.275229 | 0.254237 | 0.230769 | 0.254237 |
+
+### Fixed base calibration
+
+The model uses one shared non-pipelined multiply/divide port. These priors
+come from `MulDiv.scala` and the core writeback register. Multiply uses four
+issue-to-dependent cycles and a four-cycle issue interval. Divide uses 33
+for both. This prevents false overlap of consecutive divide operations.
+The priors apply to every variant. They are not fitted to a capacity result.
+
+Branch penalty is the only fitted value. Base median, qsort and multiply
+select one cycle from four candidates. No variant or held-out result enters
+selection. Training MAE is 3.17%. Held-out MAE is 1.23% on the other six
+base programs. Each prediction uses the frozen base C2 stream. RTL cycle
+values do not enter prediction.
+
+### IPC changes
+
+A pair meets the criterion when its sign matches and error is at most half
+of the measured change. A zero change requires a zero prediction. Values
+are percent changes from base IPC.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| rob16 | median | +0.0000 | +0.0000 | within |
+| iq4 | median | +0.0000 | +0.0000 | within |
+| sq4 | median | +0.0000 | +0.0000 | within |
+| predictor4 | median | -9.1088 | -3.6687 | outside |
+| rob16 | qsort | +0.0000 | +0.0000 | within |
+| iq4 | qsort | +0.0000 | +0.0000 | within |
+| sq4 | qsort | +0.0000 | +0.0000 | within |
+| predictor4 | qsort | -6.2048 | -4.0524 | within |
+| rob16 | multiply | +0.0000 | +0.0000 | within |
+| iq4 | multiply | +0.0000 | +0.0000 | within |
+| sq4 | multiply | +0.0000 | +0.0000 | within |
+| predictor4 | multiply | -1.0577 | -1.3985 | within |
+| rob16 | towers | +0.0000 | +0.0000 | within |
+| iq4 | towers | +0.0000 | +0.0000 | within |
+| sq4 | towers | +0.0000 | +0.0000 | within |
+| predictor4 | towers | -2.3503 | -1.8186 | within |
+| rob16 | vvadd | +0.0000 | +0.0000 | within |
+| iq4 | vvadd | +0.0000 | +0.0000 | within |
+| sq4 | vvadd | +0.0000 | +0.0000 | within |
+| predictor4 | vvadd | +0.0000 | +0.0000 | within |
+| rob16 | memcpy | +0.0000 | +0.0000 | within |
+| iq4 | memcpy | +0.0000 | +0.0000 | within |
+| sq4 | memcpy | +0.0000 | +0.0000 | within |
+| predictor4 | memcpy | -0.0064 | -0.0064 | within |
+| rob16 | rob-pressure | +19.1257 | +17.3592 | within |
+| iq4 | rob-pressure | +0.0000 | +0.0000 | within |
+| sq4 | rob-pressure | +0.0000 | +0.0000 | within |
+| predictor4 | rob-pressure | +0.0000 | +0.0000 | within |
+| rob16 | iq-pressure | +7.4135 | +7.8008 | within |
+| iq4 | iq-pressure | -6.4562 | -6.7480 | within |
+| sq4 | iq-pressure | +0.0000 | +0.0000 | within |
+| predictor4 | iq-pressure | +0.0000 | +0.0000 | within |
+| rob16 | sq-pressure | +8.2569 | +5.9314 | within |
+| iq4 | sq-pressure | +0.0000 | +0.0000 | within |
+| sq4 | sq-pressure | -9.2308 | -9.7869 | within |
+| predictor4 | sq-pressure | +0.0000 | +0.0000 | within |
+
+The model meets the criterion on 35/36 pairs and 9/10 nonzero changes.
+All 36 directions match. Predictor4 median has the right direction but
+underestimates the loss. The pressure programs supply nonzero capacity
+changes. They prevent the 26 zero-change matches from dominating the claim.
+
+| Structure | Direction / 9 | Direction and size / 9 | Observed coverage |
+|---|---:|---:|---|
+| ROB | 9 | 9 | 3 nonzero changes |
+| IQ | 9 | 9 | 1 nonzero changes |
+| SQ | 9 | 9 | 1 nonzero changes |
+| Predictor | 9 | 8 | 5 nonzero changes |
+
+All observed ROB, IQ and SQ pairs meet the criterion. Some predictor pairs
+meet it. This is finite simulation evidence on a small cacheless scalar core.
+The core trains prediction at commit. The component predictor trains at
+issue. Cache, MMU, wider-core accuracy and an elaborated model snapshot
+remain unchecked. Accuracy status stays inconclusive.
+
+### Capture and replay limits
+
+The matrix uses C1/C2 without per-cycle probes. The adapter avoids redundant
+RAM settling waits when probes are off. It still settles an interrupt change
+before it reads the selected load address. Probe rename fields also keep a
+settling wait. The earlier [paired adapter control](adapter-control.json)
+compares all C2 records and the end marker before and after the RAM change.
+Both runs retire 10,653 instructions in 12,910 cycles on the pre-PMP core.
+The refreshed core takes 12,912 cycles for that program. These are separate
+source versions. All current matrix captures have complete Spike checks.
+
+Incomplete ROB16 qsort attempts stay in [timeout receipts](matrix-interruptions.json).
+They contribute no IPC. One 240-second retry was explicitly authorized. It
+passed and matched all 226,061 instructions. All other limits stay at 120
+seconds. The worker keeps inherited niceness instead of adding it repeatedly.
+
+[RTL receipts](rvw/arch/matrix-results.json) retain source and capture hashes.
+[Model receipts](rvw/arch/model-results.json) retain the fixed fit, every
+change, per-program errors and engine identity. Raw captures and build output
+stay outside Git. The full native ISA suite was not rerun for these variants.
+
+Use `rvw/arch/build-pressure.sh SHARED_BENCH NEW_BENCH` to add the pressure
+ELFs. Run `rvw/arch/matrix.py NEW_BENCH OUTPUT` with workstation Python and
+private native and sbt lock names. Each batch uses one worker and preserves
+the per-program wall limit. Run `rvw/arch/score-matrix.py OUTPUT NEW_MODEL`
+to fit on the base training set and freeze predictions. Repeat scoring after
+collection if it finishes early. `--allow-incomplete` writes an inconclusive
+partial report. It never fills missing measurements with zero deltas.
