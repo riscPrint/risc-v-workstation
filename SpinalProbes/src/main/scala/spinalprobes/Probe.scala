@@ -124,6 +124,18 @@ object Probe {
       opt("level", level) ++ opt("fault", fault), Map("walker" -> walker, "event" -> event))
   }
 
+  /** The end of one page-table walk of `walker`: translated `va`, `access` (0 load, 1 store,
+    * 2 fetch), `root` table address, `status` (0 success, 1 page fault, 2 access fault) and `pa`
+    * (read on success). The walker's `response` events since its previous result are the walk's
+    * PTE reads. `mode` is the translation mode word (sv32, sv39, sv48, sv57). Probe only
+    * walks whose access is architectural: a squashed speculative walk would be an extra record. */
+  def walkResult(walker: String, mode: String, valid: Bool, va: Data, access: Data, root: Data,
+      status: Data, pa: Data): Unit = {
+    require(Set("sv32", "sv39", "sv48", "sv57")(mode), "walk mode must be sv32, sv39, sv48 or sv57")
+    site("walk", s"${walker}_result", valid, Seq("va" -> va, "access" -> access, "root" -> root,
+      "status" -> status, "pa" -> pa), Map("walker" -> walker, "event" -> "result", "mode" -> mode))
+  }
+
   /** The instruction `id` is in stage `stage` this cycle (occupancy). IDs must be unique for
     * the run: carry a counter assigned once per instruction down the pipeline. */
   def stage(stage: String, valid: Bool, id: Data, pc: Option[Data] = None, lane: String = "0"): Unit =

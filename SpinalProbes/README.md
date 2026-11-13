@@ -75,13 +75,15 @@ them. The table gives the format each tool reads and the probe that now feeds it
 | RiscvSim `CacheEventObserver` | JSONL cycle, hart, event, physical_address, bytes, mask | `cacheAccess` | `cache` |
 | `rvw regress mmu report --protocol-config` | `rvw.mmu-observations/1` tlb_fill, tlb_hit, tlb_invalidate | `tlb` | `mmu` |
 | MMU observation capture | `rvw.mmu-observations/1` walk_request, walk_response | `pageWalk` | `mmu` |
-| `rvw regress mmu report` ordered walks | C2 `mmu_walks` per-access records | `pageWalk` | not yet (needs per-access grouping) |
+| `rvw regress mmu report` ordered walks | C2 `mmu_walks` per-access records | `pageWalk` responses + `walkResult` | `mmu-walks` |
 | `rvw arch ooo-calibrate` | RTL event counts `{c1_sha256, trace_sha256, counts}` | `counter` | `counts` |
 | HPM monitors (`SpinalChecks.HpmControlChecks`) | `rvw.hpm-bindings/1` selector, counter, total | `counter(..., hpm)` | `hpm` |
 | `rvw debug etrace`, `etrace-check` | encoder ingress CSV (`itype_0 ... ilastsize_0`) | `traceIngress` | `etrace-ingress` |
 | `rvw cosim` interrupt evidence | C2 trap events with `intr` | `interruptTaken` | `interrupts` (independent check) |
 | `rvw cosim` per-slot CSR state | C2/2 `csr_snapshot` | `csrWrite` | no (needs `RvfiProbe csrSlots` per-slot state) |
-| `rvw fault` | design database register sites, C1 `--fault` | `faultSite` | no (adapter `--fault` support) |
+| CSR write port check | C2 CSR instructions and operands | `csrWrite` | `csr-writes` (independent check) |
+| Data bus check | C2 loads and stores | `bus` | `bus` (independent check) |
+| `rvw fault plan --sites` | site list `{sites: [{path, width}]}`, C1 `--fault` | `faultSite` | `fault-sites` |
 | N-Trace checks | vendor packet capture | none | no |
 
 `rvw probes list` prints this matrix for one design: which consumers its probes enable and
@@ -118,5 +120,5 @@ the event rows, the counter totals and the end record.
   events; the converters refuse what they can detect (count or PC differences against C2).
 - Single hart. The converters write hart 0.
 - Counter totals are JSON numbers; values above 2^53 lose precision.
-- `csrWrite` and `faultSite` have no converter yet (see the table).
+- `csrWrite` events do not fill a C2 `csr_snapshot` (see the table).
 - The library does not add probes to any core. A core or its adapter calls the API.

@@ -132,12 +132,14 @@ Kinds: `branch` (pc, taken, target, optional predicted_taken, predicted_target; 
 `semantics`, `covers`), `cache` (address, optional hit, write, data, mask, way; meta `cache`,
 `event`), `tlb` (optional va, pa, asid, entry, size, global, pte_address, pte; meta `event`
 fill/hit/miss/invalidate), `walk` (address, optional data, level, fault; meta `event`
-request/response), `stage` (id, optional pc; meta `stage`, `lane`; occupancy), `retire` (id),
+request/response; or the result of one walk: va, access 0 load/1 store/2 fetch, root, status
+0 success/1 page-fault/2 access-fault, pa; meta `event` result, `mode` sv32/39/48/57), `stage` (id, optional pc; meta `stage`, `lane`; occupancy), `retire` (id),
 `flush` (id), `bus` (address, optional write, data, mask, size; meta `bus`; one accepted
 request at a core port, before any cache), `stall` (no fields; meta `scope`, `cause`, `evidence`; level), `csr` (address,
 value), `interrupt` (cause, pc, optional tval), `trace` (itype, iaddr, iretire, ilastsize,
 priv, optional cause, tval), `counter` (inc, summed each cycle and written only in the end
-record; optional meta `hpm`), `fault` (a register site, never sampled) and `custom`.
+record; optional meta `hpm`), `fault` (a register site, never
+sampled; meta `path` is the register path that C1 `--fault` resolves) and `custom`.
 
 `rvw probes convert` writes consumer formats: `rvw.bp-events/1` (events aligned 1:1 with C2
 branch retirements of the covered kinds, matching PC and taken outcome, else refused),
@@ -154,7 +156,12 @@ stores one to one (bytes and values, in order), and each retired C2 load covered
 bus read in order; `unretired_reads` counts reads no load used. `--to csr-writes` writes
 `rvw.probe-csr-writes/1`: each retired C2 instruction that writes a CSR matches the next
 `csr` event by address, and by value when C2 operands give it (`csrrw*` always, `csrrs*`/
-`csrrc*` when `rd` is not x0); a trapped CSR write may consume one event. Both have `status`
+`csrrc*` when `rd` is not x0); a trapped CSR write may consume one event, as may an event
+followed by a C2 exception before the next retirement (an illegal-instruction `tval` must
+name the same CSR). `--to mmu-walks` writes a new C2 trace: each walker's `response` events
+up to its `result` become one `mmu_walk` record (sequential `access_id`), on the first
+retirement at or after the result cycle. `--to fault-sites` writes `{source, identity, sites:
+[{path, width, clock_domain, probe}], bits}` for `rvw fault plan --sites`. Both have `status`
 `consistent`, `mismatch` or `inconclusive` and a `mismatches` list.
 `rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
 counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one

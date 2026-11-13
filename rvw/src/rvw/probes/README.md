@@ -17,8 +17,11 @@ rvw probes convert run/probe-events.jsonl --to counts --c1 run/result.json --c2 
 Targets: `bp-events` (for `rvw csim compare-rtl`), `kanata` (for `rvw perf`), `cache` (RiscvSim
 `CacheEventObserver`), `mmu` (`rvw.mmu-observations/1` for `rvw regress mmu report`),
 `counts` (`rvw arch ooo-calibrate` RTL event counts), `hpm` (`rvw.hpm-bindings/1`),
-`etrace-ingress` (`rvw debug etrace` encoder input CSV) and `interrupts` (an independent check
-of C2 interrupt traps). Output files must be new. Exit 0 on success, 2 with a JSON error.
+`etrace-ingress` (`rvw debug etrace` encoder input CSV), `interrupts` (an independent check
+of C2 interrupt traps), `bus` and `csr-writes` (independent checks of the data bus and CSR
+write port against C2), `mmu-walks` (a copy of the C2 trace with `mmu_walks` records for
+`rvw regress mmu report`) and `fault-sites` (a site list for `rvw fault plan --sites`).
+Output files must be new. Exit 0 on success, 2 with a JSON error.
 
 MCP tools: `probes_list`, `probes_summary`, `probes_convert`.
 
@@ -27,7 +30,7 @@ MCP tools: `probes_list`, `probes_summary`, `probes_convert`.
 `list` gives one row per consumer tool. `enabled`: the probes it needs exist. `missing`: the
 row names the probe kind and fields to add. `unknown`: the design database has no probe meta
 (for example the `hpm` selector); check an event stream. `no_converter`: the probes exist but
-no writer exists yet (per-slot CSR state, fault sites).
+no writer exists yet (per-slot CSR state).
 
 ## Decisions
 
@@ -44,8 +47,10 @@ no writer exists yet (per-slot CSR state, fault sites).
 - One hart. Rows are written for hart 0.
 - `interrupts` compares causes in order; `consistent` is agreement of two sources, not a
   cosim result.
-- Prediction records in Kanata, C2 `mmu_walks` grouping and C2/2 `csr_snapshot` are not
-  written yet.
+- Prediction records in Kanata and C2/2 `csr_snapshot` are not written yet.
+- `mmu-walks` takes the walks the probe declares. A squashed speculative walk gives an extra
+  record (a checker mismatch). Each record goes on the first retirement at or after its
+  result cycle; a walk after the last retirement is reported as `unattached`.
 
 ## Check required bindings
 

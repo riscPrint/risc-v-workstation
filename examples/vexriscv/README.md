@@ -717,6 +717,16 @@ rvw csim compare-rtl rvw/probes/btfn.json --trace RUN/rvfi.jsonl --events RUN/bp
   `csrw satp`, which then traps (C2 trap event, cause 2). `--to hpm` gives 60 loads and
   61 stores. `rvw cosim check` against Spike matches, with the per-slot `mscratch` snapshot
   on all 382 steps.
+- Fault sites: `Probe.faultSite("mscratch", ...)` gives `CsrPlugin_mscratch` (32 bits) through
+  `--to fault-sites`. `rvw fault plan --sites` (flip, stuck1, window 100:1700, 4 samples,
+  seed 7) and `rvw fault run` on `memcsr`: 4 of 4 injected, 4 `silent_corruption` (the
+  program reads `mscratch` back and does not check it).
+- OoO calibration: `--to counts` for `branches` (training) and `smoke` (held out), with
+  `rvw/probes/ooo/vex-inorder.json` and `event-map.json`. `rvw arch ooo-calibrate` reports
+  `retired` and `branches` equal to the probe counters. Mispredicts on `branches`: model
+  7854, core 4855 (the model predicts the sequential PC; the core uses static BTFN). IPC
+  error 224.5 % and 105.2 % (the core's fetch is slow). Accuracy stays `inconclusive`
+  (two samples).
 - No cache probes: this config has no caches (`IBusSimplePlugin`, `DBusSimplePlugin`), so the
   cache observer has no input. A cached config would change the bus type that the other
   example tools drive.
