@@ -134,3 +134,10 @@ A complete match requires both references to compare the same complete trace.
 A disagreement never becomes a pass. Automatic reduction and specification-rule
 attribution remain future work. Inspect the original synchronization records
 before interpreting a disagreement. Use `--strict` to disable synchronization.
+
+### CHERI assessment hook
+
+The optional platform `cheri` object records a pinned reference and capability
+width. See [the short assessment](../../../../Cosim/CHERI.md). Stock comparison
+reports unsupported reference evidence when it is selected. The hook does not
+compare capabilities or establish standard RISC-V profile compliance.

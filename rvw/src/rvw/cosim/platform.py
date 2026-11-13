@@ -71,6 +71,7 @@ class Platform:
         "instruction": "little", "data": "little", "page_table": "little", "device": "little"})
     absent_pmp_csrs: str = "trap"
     pmp_granularity: int = 4  # minimum PMP region size in bytes
+    cheri: dict | None = None
     reference_extensions: list = field(default_factory=list)
     ecall_tval: str = "zero"
 
@@ -94,6 +95,8 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        from .cheri import validate as validate_cheri
+        p.cheri = validate_cheri(obj.get("cheri"))
         from .custom import validate_extensions
         p.reference_extensions = validate_extensions(obj.get("reference_extensions", []))
         p.privilege_modes = obj.get("privilege_modes", "MSU")

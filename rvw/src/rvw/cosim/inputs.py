@@ -62,6 +62,8 @@ class Inputs:
         platform_path = args.platform or Path(__file__).parent / "configs" / f"{args.core}.json"
         self.files["platform"] = c.file(platform_path)
         self.platform = Platform.load(args.core, self.files["platform"].copy)
+        if self.platform.cheri is not None:
+            raise CaptureError("unsupported_reference:cheri", "CHERI capability comparison is not implemented")
         from .custom import capture_extensions
         self.platform.reference_extensions = capture_extensions(
             self.platform.reference_extensions, c, platform_path)
