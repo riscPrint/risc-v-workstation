@@ -122,6 +122,8 @@ def mcp_tools():
                          "reference_include": {"type": "array", "items": S},
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "model", "width", "out"]),
                  _runner("datapath"), long=True),
+        ToolSpec("formal_testplan", "Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.",
+                 schema({"manifest": S, "out": S}, ["manifest", "out"]), _runner("testplan"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},

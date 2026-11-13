@@ -132,6 +132,12 @@ def register(sub) -> None:
     strengthen.add_argument("--engine", default="smtbmc:yices")
     strengthen.add_argument("--json", action="store_true")
     strengthen.set_defaults(func=mining.run)
+    from . import testplan
+    report = s.add_parser("testplan", help="join property inventory, proof, activation and mutation evidence")
+    report.add_argument("--manifest", required=True)
+    report.add_argument("--out", required=True)
+    report.add_argument("--json", action="store_true")
+    report.set_defaults(func=testplan.run)
     from . import cores
     core = s.add_parser("proof-core", help="extract a deletion-minimal core from a named SMT query")
     core.add_argument("--smt2")
