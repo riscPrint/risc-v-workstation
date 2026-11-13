@@ -1490,3 +1490,66 @@ records whether each cell occurs in the returned core. Conflicting environments
 also get deletion-minimal constraint reduction. A cell outside that core is not
 needed for this query. This is not a general assumption-adequacy result. A SAT
 property query does not produce a proof core or certify assumption necessity.
+## Engine portfolio and explicit-model proofs
+
+`rvw formal engines --out OUT` reports optional engine dependencies. Installer
+checks with `scripts/install.sh --with-formal --check` also list these tools.
+Missing optional tools report `not_installed`. They do not block the base install.
+
+`rvw formal engine-race --manifest examples/formal/deep/race.json --out OUT`
+races installed SBY engines and EBMC on the same captured, hash-pinned RTL.
+The source must include its assertions, clock semantics, initialization and
+assumptions. Literal includes and external memory data are not supported here.
+Yosys must find an elaborated assertion. No clock, reset or vacuity guard is
+added by this raw engine experiment. Source assumptions remain restrictions.
+The first conclusive answer wins. Other process groups stop. Use `--cross-check`
+to keep engines running until they answer or reach `--timeout`. Conflicting
+answers make the final result inconclusive. A missing or cancelled answer does
+not establish agreement. Bounded success never wins an unbounded proof race.
+
+Adapters cover SBY SMTBMC/Yices and Z3, ABC PDR and BMC3, Pono BMC, Avy,
+rIC3, and direct EBMC BMC/k-induction. SBY must support the selected backend.
+An old SBY backend, a crash, or an unrecognized result reports an error.
+The rIC3 adapter follows the upstream SBY
+[aiger adapter](https://github.com/YosysHQ/sby/blob/main/sbysrc/sby_engine_aiger.py).
+EBMC uses its documented `--k-induction` and `--bound` options.
+
+`rvw formal engine-bench --manifest examples/formal/deep/seeded.json --out OUT`
+runs every engine/case pair separately. It records each engine command, executable
+hash, source hashes, result and wall time. Requested depth is not reached depth.
+The committed suite contains a safe counter and a seeded overflow fault. Supply
+other self-contained exported suites with SHA-256 source entries. No HWMCC data
+is bundled. No speedup or commercial capacity claim follows from these fixtures.
+
+`rvw formal model-grid --manifest MODEL.json --out OUT --workers 4` splits
+properties of an explicit finite transition system across local workers. A model
+has `states` mapping state IDs to integer fields, `initial` state IDs, `edges`
+with pairs of state IDs, and `properties` mapping names to bad state IDs.
+Dead ends have no successors. All nondeterministic choices must be explicit.
+Optional `visible` fields seed CEGAR localization. Optional `samples` contain
+integer state observations for `--method induction`. The default CEGAR method
+projects state fields, searches the quotient graph, replays each abstract trace,
+and adds a field after a spurious counterexample. RAM words, counters and cut
+signals can be fields. Hidden fields give an existential overapproximation.
+The refinement limit leaves a spurious result inconclusive.
+
+Induction checks the reachable base and the k-step condition over all states.
+It mines ranges, pairwise order and constant differences. Each helper needs an
+independent initiation and consecution proof. Failed helpers are discarded.
+These algorithms prove only the supplied graph. They do not extract an RTL
+transition graph or certify a memory/RTL translation. Use the existing
+`formal contracts` command for typed module contracts, provider checks, cycle
+rejection and the final closed composition proof.
+
+Add `--hosts hosts.json` to `model-grid` to run one local shard and one shard
+per configured host. Host records use the farm fields `name`, `address`,
+`python`, `ssh_options`, `resources` and `limits`. Remote hosts need the same
+installed adapter source. The adapter checks source identities, payload hashes,
+artifact hashes and property coverage. It uses the existing `rvw.farm.worker`
+SSH endpoint, resource reservations and cancellation. Its payload is JSON in the
+farm's byte transport field. It does not create a simulation C1 result.
+Tests exercise that endpoint locally. Real SSH distribution was not tested.
+
+Raw HWMCC AIGER input is not supported. Export its safety properties and
+constraints to self-contained RTL before making a source manifest. No HWMCC
+subset was run in this increment.

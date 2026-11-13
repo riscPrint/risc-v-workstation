@@ -1,0 +1,18 @@
+{
+  "id": "counter",
+  "top": "counter",
+  "mode": "prove",
+  "depth": 20,
+  "sources": [
+    {
+      "path": "counter.sv",
+      "sha256": "ff32595a0b9014583673202eae02ec0bf4d7f33660287ca20ba637582734809a"
+    }
+  ],
+  "engines": [
+    "abc:pdr",
+    "smtbmc:yices",
+    "aiger:rIC3",
+    "ebmc"
+  ]
+}
