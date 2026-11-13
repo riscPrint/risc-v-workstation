@@ -2,7 +2,7 @@
 import json
 
 COMPATIBLE={'Clint':'riscv,clint0','Plic':'riscv,plic0','Uart16550':'rvw,uart16550-subset',
-            'Gpio':'rvw,gpio','Spi':'rvw,spinal-spi','I2c':'rvw,spinal-i2c','Timer':'rvw,timer','Finisher':'rvw,test-finisher'}
+            'Uart16550Full':'ns16550a','Gpio':'rvw,gpio','Spi':'rvw,spinal-spi','I2c':'rvw,spinal-i2c','Timer':'rvw,timer','Finisher':'rvw,test-finisher'}
 
 
 def board_dts(obj,spec):
@@ -37,7 +37,7 @@ def board_dts(obj,spec):
             if causes:
                 lines += ['      interrupts-extended = '+', '.join(f'<&rvw_cpu_intc {i}>' for i in causes)+';']
             if cls=='Plic':lines+=['      interrupt-controller;','      #interrupt-cells = <1>;','      riscv,ndev = <7>;']
-            if cls=='Uart16550':lines+=['      reg-shift = <2>;','      reg-io-width = <4>;',f'      clock-frequency = <{frequency(name)}>;']
+            if cls in ('Uart16550','Uart16550Full'):lines+=['      reg-shift = <2>;','      reg-io-width = <4>;',f'      clock-frequency = <{frequency(name)}>;']
         lines += ['    };']
     return '\n'.join(lines+['  };','};'])+'\n'
 
