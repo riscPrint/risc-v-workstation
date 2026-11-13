@@ -117,6 +117,31 @@ campaign.
 There were four native builds across three RTL hashes in this work session.
 The last capture rebuilt the same `f7fd1396...` RTL hash as the corrected add
 capture instead of reusing its cache. This violates the requested one-build
-limit for that variant. Cache identity/reuse needs follow-up. No further BOOM
+limit for that variant. The recorded native tool and declared environment
+fields match. Only the inherited-environment digest and native identity digest
+differ. Cache identity/reuse needs follow-up. No further BOOM
 build was run. All five short jobs used `small`, the BOOM lock, two make jobs
 and `nice -n 15`. No regression suite or BOOM formal job was run.
+
+## Fault injection and online DPI
+
+Generic harness support is on main. BOOM uses `RiscvSimConfig`'s `_fault`
+public-register phase and `SimSession`'s `FaultInjector`. No second BOOM
+injection engine is needed. Supply `--fault FILE` with register paths from
+the matching design database. An unknown site is recorded as unapplied.
+A fault campaign must inspect `details.fault.applied`, not just C1 status.
+Native BOOM injection is NOT RUN in this update. Refs: #52.
+
+The adapter adds an optional `LockstepDpi` mailbox when
+`RVW_COSIM_DPI=1`. It initializes the mailbox before creating the C2 writer.
+With `RVW_COSIM_PORT`, each header, instruction, trap, IRQ and end record
+uses the generic blocking DPI observer. Without a mailbox, the writer keeps
+its existing socket path. The mailbox is absent by default.
+
+Use `rvw cosim live --lockstep --elf ELF --core boom --out OUT
+--simulator COMMAND` with the adapter command. The generic launcher selects
+the DPI environment. The binding compiles with the adapter. Enabled DPI
+elaboration, native lockstep and native fault injection are NOT RUN. The
+reset FP-state mismatch above must be resolved by an explicit initialization
+policy before a full-state online match can succeed. Checkpoint restore
+still has no BOOM binding.

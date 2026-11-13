@@ -140,7 +140,10 @@ object BoomAdapter extends CoreAdapter {
         "this configuration has no SEIP input")
       if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
         new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
-      rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), stateHeader)) else None
+      dut.lockstepDpi.foreach(_.initialize())
+      rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), stateHeader,
+        observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+          .map(m => (line: String) => m.observe(line)))) else None
       probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
       val cd = dut.clockDomain
       cd.forkStimulus(10)
@@ -401,4 +404,9 @@ object Main {
 class BoomTop(key: ModelKey, monitor: Option[String])(implicit p: rocketchip.config.Parameters)
     extends BoomSimTop(BoomSim.resetVector, monitor, key.konata) {
   val state = if (key.rvfi && key.config == "small") Some(tile.core.rework { new BoomState(this) }) else None
+  val lockstepDpi = if (sys.env.get("RVW_COSIM_DPI").contains("1")) {
+    val mailbox = new LockstepDpi
+    mailbox.io.simPublic()
+    Some(mailbox)
+  } else None
 }
