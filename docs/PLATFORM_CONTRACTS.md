@@ -87,3 +87,13 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
+
+### VIP bench skeleton contract
+
+`rvw vip list` and MCP `vip_list` return an agent inventory. `vip_buses`
+reads exact Spinal bundle classes from C6. `vip_bench` writes one new Python
+cocotb skeleton and returns `status: skeleton`, the selected bus and explicit
+pin bindings. It never reports verification success. The skeleton stops
+until project stimulus and expectations are supplied. Clock and active-low
+reset paths are caller selections. Output files are never overwritten.
+Unsupported types and ambiguous bus selections are errors.

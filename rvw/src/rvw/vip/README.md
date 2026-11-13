@@ -38,5 +38,26 @@ pass and no simulator dependency at package import. Native smoke results
 apply only to their declared profile and fixture.
 
 See `Uvm/vip/rtl/README.md` for bounded good/bad cocotb RTL campaigns for
-all agent modules. This evidence establishes real RTL adapter execution
+the nine modules present in that campaign. This evidence establishes real RTL adapter execution
 within the stated fixture scope. It does not qualify every protocol mode.
+## Agent discovery and bench skeletons
+
+`rvw vip list` lists Python and SV agents. `rvw vip buses --db design.db`
+finds buses by exact Spinal bundle class. It does not guess from pin names.
+`rvw vip bench --db design.db --bus io.bus --out test_bus.py` writes a
+cocotb skeleton with captured RTL pin bindings. Use `--clock` and `--reset`
+to select the test clock and active-low reset. Paths are relative to the
+cocotb DUT handle. The generator refuses existing output files.
+
+MCP tools are `vip_list`, `vip_buses` and `vip_bench`. They use the same
+implementation. A generated skeleton raises `NotImplementedError` until
+the project adds reset, stimulus and expected results. It is not a pass.
+Inspect all bindings before use. Select the DUT hierarchy root to match
+the database paths. Unsupported bundle types need a project adapter.
+
+Type discovery currently supports APB3/APB4, AHB-Lite, AXI4/AXI4-Lite,
+UART and SPI. APB3 configurations without the APB4 agent's optional pins
+need an explicit project adapter. Missing APB/AHB pins cause an error.
+Other generated bindings need project review for width and optional pins.
+Generic Stream payloads and TileLink configuration classes do not yet have
+an automatic mapping. Agent inventory remains available for these profiles.
