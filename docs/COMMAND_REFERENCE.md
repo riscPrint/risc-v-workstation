@@ -948,7 +948,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,lazy-ram,reset-audit,sail-state,uf-prove}
     ...
 ```
 
@@ -976,7 +976,8 @@ usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
 ### `rvw formal buses`
 
 ```text
-usage: rvw formal buses [-h] --db DB --out OUT [--project PROJECT]
+usage: rvw formal buses [-h] --db DB --out OUT [--depth DEPTH] [--max-beats
+    MAX_BEATS] [--type-report TYPE_REPORT] [--project PROJECT]
 ```
 
 ### `rvw formal csr`
@@ -1118,8 +1119,9 @@ usage: rvw formal simulate [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ### `rvw formal liveness`
 
 ```text
-usage: rvw formal liveness [-h] --top TOP --out OUT [--run] [--timeout
-    TIMEOUT] [--project PROJECT] source
+usage: rvw formal liveness [-h] --top TOP --out OUT [--run] [--backend
+    {suprove,l2s}] [--reset RESET] [--engine ENGINE] [--mode {prove,bmc}]
+    [--depth DEPTH] [--timeout TIMEOUT] [--project PROJECT] source
 ```
 
 ### `rvw formal scenario`
@@ -1153,7 +1155,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds,fifo_order,pipeline,mutex,arbiter,age_matrix,store_forward,axis,apb,ahb_lite}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,axis,apb,ahb_lite}
 ```
 
 ### `rvw formal contracts`
@@ -1319,8 +1321,8 @@ usage: rvw formal sail-zicond [-h] --model MODEL [--compiler COMPILER] --out
 ### `rvw formal custom-isa`
 
 ```text
-usage: rvw formal custom-isa [-h] --out OUT [--json] [--project PROJECT]
-    manifest
+usage: rvw formal custom-isa [-h] [--backend-sources BACKEND_SOURCES] --out
+    OUT [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw formal custom-effects`
@@ -1366,9 +1368,9 @@ usage: rvw formal internal-path [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ```text
 usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
     --width {8,16,32,64} [--max-latency MAX_LATENCY] [--latency LATENCY]
-    [--unwind UNWIND] [--case {all,finite,nan,infinity,zero,subnormal}]
-    [--rounding {0,1,2,3,4}] [--reference-tree REFERENCE_TREE]
-    [--reference-source REFERENCE_SOURCE] [--reference-include
+    [--unwind UNWIND] [--case {all,finite,normal,nan,infinity,zero,subnormal}]
+    [--case-width {16,32,64}] [--rounding {0,1,2,3,4}] [--reference-tree
+    REFERENCE_TREE] [--reference-source REFERENCE_SOURCE] [--reference-include
     REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT [--json] [--project
     PROJECT]
 ```
@@ -1377,13 +1379,13 @@ usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
 
 ```text
 usage: rvw formal equiv [-h] [--sampled-events] [--stable-at-edge INPUT]
-    [--blackbox-contract BLACKBOX_CONTRACT] [--gold GOLD [GOLD ...]] [--gate
-    GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config
-    CONFIG] --top TOP [--clock CLOCK] [--reset RESET] [--reset-active
-    {high,low}] [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec]
-    [--pair GOLD=GATE] [--latency LATENCY] [--latency-map OUTPUT=CYCLES]
-    [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}] [--timeout
-    TIMEOUT] --out OUT [--json] [--project PROJECT]
+    [--state-encoding STATE_ENCODING] [--blackbox-contract BLACKBOX_CONTRACT]
+    [--gold GOLD [GOLD ...]] [--gate GATE [GATE ...]] [--gold-rev GOLD_REV]
+    [--gate-rev GATE_REV] [--config CONFIG] --top TOP [--clock CLOCK] [--reset
+    RESET] [--reset-active {high,low}] [--reset-cycles RESET_CYCLES] [--settle
+    SETTLE] [--dsec] [--pair GOLD=GATE] [--latency LATENCY] [--latency-map
+    OUTPUT=CYCLES] [--output-map GOLD=GATE] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -1456,6 +1458,72 @@ usage: rvw formal x-sweep [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--first-failure] [--project PROJECT]
 ```
 
+### `rvw formal aiger-live`
+
+```text
+usage: rvw formal aiger-live [-h] --manifest MANIFEST --out OUT [--method
+    {l2s,k-live,rlive}] [--k K] [--timeout TIMEOUT] [--json] [--project
+    PROJECT]
+```
+
+### `rvw formal counter-quotient`
+
+```text
+usage: rvw formal counter-quotient [-h] --manifest MANIFEST --out OUT
+    [--timeout TIMEOUT] [--engine ENGINE] [--depth DEPTH] [--json] [--project
+    PROJECT]
+```
+
+### `rvw formal cover-hunt`
+
+```text
+usage: rvw formal cover-hunt [-h] --manifest MANIFEST --out OUT [--budget
+    BUDGET] [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw formal ic3-lemmas`
+
+```text
+usage: rvw formal ic3-lemmas [-h] --manifest MANIFEST --out OUT [--library
+    LIBRARY] [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw formal initial-split`
+
+```text
+usage: rvw formal initial-split [-h] --manifest MANIFEST --out OUT [--timeout
+    TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw formal lazy-ram`
+
+```text
+usage: rvw formal lazy-ram [-h] --manifest MANIFEST --out OUT [--timeout
+    TIMEOUT] [--budget BUDGET] [--json] [--project PROJECT]
+```
+
+### `rvw formal reset-audit`
+
+```text
+usage: rvw formal reset-audit [-h] --rtl RTL --top TOP [--clock CLOCK] --reset
+    RESET [--reset-active {high,low}] [--cycles CYCLES] [--timeout TIMEOUT]
+    --out OUT [--json] [--project PROJECT]
+```
+
+### `rvw formal sail-state`
+
+```text
+usage: rvw formal sail-state [-h] --model MODEL --compiler COMPILER --out OUT
+    [--json] [--project PROJECT]
+```
+
+### `rvw formal uf-prove`
+
+```text
+usage: rvw formal uf-prove [-h] --manifest MANIFEST --out OUT [--timeout
+    TIMEOUT] [--cross-check] [--json] [--project PROJECT]
+```
+
 ### `rvw init`
 
 ```text
@@ -1487,7 +1555,7 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--transport {stdio,sse}]
 
 ```text
 usage: rvw memory [-h] [--project PROJECT]
-    {images,check,axiomatic,generate,tilelink-bind,directory,concurrent-smoke}
+    {images,check,axiomatic,generate,tilelink-bind,directory,concurrent-smoke,concurrent-build,concurrent-run}
     ...
 ```
 
@@ -1540,6 +1608,24 @@ usage: rvw memory directory [-h] [--profile {mesi,moesi}] [--lines LINES]
 usage: rvw memory concurrent-smoke [-h] --out OUT [--seed SEED] [--harts
     HARTS] [--length LENGTH] [--gcc GCC] [--spike SPIKE] [--timeout TIMEOUT]
     [--project PROJECT]
+```
+
+### `rvw memory concurrent-build`
+
+```text
+usage: rvw memory concurrent-build [-h] --out OUT [--seed SEED] [--harts
+    HARTS] [--length LENGTH] [--gcc GCC] [--base BASE] [--shared-base
+    SHARED_BASE] [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw memory concurrent-run`
+
+```text
+usage: rvw memory concurrent-run [-h] --out OUT --adapter ADAPTER --config
+    CONFIG [--seed SEED] [--harts HARTS] [--length LENGTH] [--model
+    {rvwmo,ztso}] [--gcc GCC] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT]
+    [--limit LIMIT] [--base BASE] [--shared-base SHARED_BASE] [--project
+    PROJECT]
 ```
 
 ### `rvw ooo`
@@ -2055,7 +2141,7 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 
 ```text
 usage: rvw sec [-h] [--project PROJECT]
-    {ift,contract,gadgets,isolation,latency} ...
+    {ift,contract,fault,gadgets,isolation,latency,suite} ...
 ```
 
 ### `rvw sec ift`
@@ -2070,6 +2156,12 @@ usage: rvw sec ift [-h] --rtl RTL --top TOP --policy POLICY --stimulus
 
 ```text
 usage: rvw sec contract [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+```
+
+### `rvw sec fault`
+
+```text
+usage: rvw sec fault [-h] --manifest MANIFEST --out OUT [--project PROJECT]
 ```
 
 ### `rvw sec gadgets`
@@ -2090,6 +2182,12 @@ usage: rvw sec isolation [-h] --manifest MANIFEST --out OUT [--project
 
 ```text
 usage: rvw sec latency [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+```
+
+### `rvw sec suite`
+
+```text
+usage: rvw sec suite [-h] --report REPORT --out OUT [--project PROJECT]
 ```
 
 ### `rvw sim`
@@ -2198,8 +2296,15 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw soc [-h] [--project PROJECT]
-    {compose,feedback,handoff,peripheral,pair,generate,import-ipxact,capture-check,check}
+    {audit,compose,export-ipxact,feedback,handoff,mbist,new,observe,observe-pack,peripheral,pair,generate,import-ipxact,capture-check,check}
     ...
+```
+
+### `rvw soc audit`
+
+```text
+usage: rvw soc audit [-h] --source SOURCE --db DB --bindings BINDINGS --out
+    OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw soc compose`
@@ -2207,6 +2312,13 @@ usage: rvw soc [-h] [--project PROJECT]
 ```text
 usage: rvw soc compose [-h] --out OUT [--elf ELF] [--json] [--project PROJECT]
     spec
+```
+
+### `rvw soc export-ipxact`
+
+```text
+usage: rvw soc export-ipxact [-h] --out OUT [--json] [--project PROJECT]
+    source
 ```
 
 ### `rvw soc feedback`
@@ -2221,6 +2333,33 @@ usage: rvw soc feedback [-h] --db DB --source SOURCE --out OUT [--json]
 ```text
 usage: rvw soc handoff [-h] --db DB --out OUT [--settings SETTINGS] [--json]
     [--project PROJECT]
+```
+
+### `rvw soc mbist`
+
+```text
+usage: rvw soc mbist [-h] --db DB --source SOURCE --out OUT [--json]
+    [--project PROJECT]
+```
+
+### `rvw soc new`
+
+```text
+usage: rvw soc new [-h] --out OUT [--json] [--project PROJECT] name
+```
+
+### `rvw soc observe`
+
+```text
+usage: rvw soc observe [-h] --binding BINDING --out OUT [--json] [--project
+    PROJECT]
+```
+
+### `rvw soc observe-pack`
+
+```text
+usage: rvw soc observe-pack [-h] --binding BINDING --pins PINS --trace TRACE
+    --result RESULT --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw soc peripheral`
@@ -3272,6 +3411,14 @@ Arguments: `db` (required), `include`, `exclude`, `generated`.
 
 Starts a background job: no.
 
+### `formal_aiger_live`
+
+Check one fair AIGER bad justice group with native rIC3. Reaching a k-liveness bound stays inconclusive.
+
+Arguments: `manifest` (required), `out` (required), `method`, `k`, `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_app_deadlock`
 
 Check exact finite-graph progress possibility with explicit state justice.
@@ -3322,9 +3469,9 @@ Starts a background job: yes.
 
 ### `formal_buses`
 
-Generate typed simple-bus monitors and instance binds from SpinalDB. No proof run.
+Generate typed bus monitors and bounded AXI transaction trackers from SpinalDB. No proof run.
 
-Arguments: `db` (required), `out` (required).
+Arguments: `db` (required), `out` (required), `depth`, `max_beats`, `type_report`.
 
 Starts a background job: yes.
 
@@ -3341,6 +3488,22 @@ Starts a background job: yes.
 Resolve project connection tables, report undeclared drivers and optionally prove observed RTL contracts. Overall design acceptance remains incomplete.
 
 Arguments: `manifest` (required), `db` (required), `out` (required), `run`, `proof_mode`, `clock`, `reset`, `depth`, `max_nodes`, `engine`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_counter_quotient`
+
+Prove a reset-qualified modulo relation between a typed concrete counter and a smaller model.
+
+Arguments: `manifest` (required), `out` (required), `engine`, `depth`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_cover_hunt`
+
+Search selected RTL covers with bounded engines and rIC3 seeds. Coverage hits do not prove safety or unreachability.
+
+Arguments: `manifest` (required), `out` (required), `budget`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3362,9 +3525,9 @@ Starts a background job: yes.
 
 ### `formal_custom_isa`
 
-Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.
+Export pure custom semantics, GNU hooks, GCC/LLVM patches and Spike extension source. Compiler and DUT qualification remain separate.
 
-Arguments: `manifest` (required), `out` (required).
+Arguments: `manifest` (required), `out` (required), `backend_sources`.
 
 Starts a background job: yes.
 
@@ -3372,7 +3535,7 @@ Starts a background job: yes.
 
 Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.
 
-Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
+Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `case_width`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3420,7 +3583,7 @@ Starts a background job: yes.
 
 Prove closed RTL output cones. Blackbox models produce conditional evidence only.
 
-Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `latency_map`, `output_map`, `sampled_events`, `stable_at_edge`, `timeout`.
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `state_encoding`, `latency_map`, `output_map`, `sampled_events`, `stable_at_edge`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3432,6 +3595,22 @@ Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `res
 
 Starts a background job: yes.
 
+### `formal_ic3_lemmas`
+
+Export ABC PDR predicates and certify them, or select a saved library by transition-cone hash. Target proofs are fresh.
+
+Arguments: `manifest` (required), `out` (required), `library`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_initial_split`
+
+Split every initial value of an RTL variable while retaining full transitions.
+
+Arguments: `manifest` (required), `out` (required), `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_internal_path`
 
 Check conservative internal RTL paths. No Boolean influence or design acceptance verdict.
@@ -3440,11 +3619,19 @@ Arguments: `source` (required), `destination` (required), `top` (required), `out
 
 Starts a background job: yes.
 
+### `formal_lazy_ram`
+
+Abstract untracked RAM words and restore addressed entries after abstract failures.
+
+Arguments: `manifest` (required), `out` (required), `budget`, `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_liveness`
 
-Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.
+Lower supported unbounded SVA to native live jobs or finite-state liveness-to-safety. Engine passes remain inconclusive.
 
-Arguments: `source` (required), `top` (required), `out` (required), `run`, `timeout`.
+Arguments: `source` (required), `top` (required), `out` (required), `run`, `backend`, `reset`, `engine`, `mode`, `depth`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3520,6 +3707,14 @@ Arguments: `out` (required), `manifest` (required), `budget`, `depth`, `engine`.
 
 Starts a background job: yes.
 
+### `formal_reset_audit`
+
+Inventory conservative reset constants and potential initial-state output paths. No reachability proof.
+
+Arguments: `rtl` (required), `top` (required), `clock`, `reset` (required), `out` (required), `reset_active`, `cycles`, `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_riscv`
 
 Run selected project riscv-formal checks through SBY. Return C3 outcomes and a C4 verdict. Bounded passes cannot accept a core.
@@ -3557,6 +3752,14 @@ Starts a background job: yes.
 Compile pinned Sail RV32 binary Zba/Zbb/Zbs/Zbc result checks. Full-machine and disabled-extension traps are excluded.
 
 Arguments: `model` (required), `compiler`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_sail_state`
+
+Generate pinned Sail FP sign results, CSR intents and privileged entry decisions. Excludes full machine state.
+
+Arguments: `model` (required), `compiler` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -3656,6 +3859,14 @@ Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `formal_uf_prove`
+
+Prove safety with typed global uninterpreted multiplication/division. Abstract failures stay inconclusive.
+
+Arguments: `manifest` (required), `out` (required), `timeout`, `cross_check`.
+
+Starts a background job: yes.
+
 ### `formal_upf`
 
 Import literal UPF isolation, retention and supply tables. No verification run.
@@ -3741,6 +3952,22 @@ Starts a background job: no.
 Check C2/2 serialized memory against independent stimulus bytes. No RVWMO proof.
 
 Arguments: `trace` (required), `reference` (required).
+
+Starts a background job: no.
+
+### `memory_concurrent_build`
+
+Compile seeded RV64 per-hart ELFs, image manifest and axiomatic initial state. Does not execute a DUT.
+
+Arguments: `out` (required), `seed`, `harts`, `length`, `gcc`, `base`, `shared_base`, `timeout`.
+
+Starts a background job: no.
+
+### `memory_concurrent_run`
+
+Build seeded per-hart programs, invoke a project C1 adapter and check its captured C2 under RVWMO or Ztso.
+
+Arguments: `out` (required), `adapter` (required), `config` (required), `seed`, `harts`, `length`, `model`, `gcc`, `max_cycles`, `timeout`, `limit`, `base`, `shared_base`.
 
 Starts a background job: no.
 
@@ -4136,6 +4363,14 @@ Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `sec_fault`
+
+Run single-bit critical-register faults using rvw fault and digital observations.
+
+Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `sec_gadgets`
 
 Generate v1, v2, v4 and return-predictor gadget templates.
@@ -4167,6 +4402,14 @@ Measure operand-paired declared instruction or crypto-unit latency.
 Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
+
+### `sec_suite`
+
+Collect executed digital security reports as honest C3 outcomes.
+
+Arguments: `reports` (required), `out` (required).
+
+Starts a background job: no.
 
 ### `sim_checkpoint`
 
@@ -4216,11 +4459,27 @@ Arguments: `manifest` (required), `capabilities` (required).
 
 Starts a background job: no.
 
+### `soc_audit`
+
+Check complete declared bindings and export structural SoC checks. No proof result is inferred.
+
+Arguments: `source` (required), `db_path` (required), `bindings` (required), `out` (required).
+
+Starts a background job: no.
+
 ### `soc_compose`
 
 Generate an APB3 RV32 Spinal top. Generation is not simulation evidence.
 
 Arguments: `source` (required), `out` (required), `elf`.
+
+Starts a background job: no.
+
+### `soc_export_ipxact`
+
+Export the register memoryMap subset. No bus interface or CPU model is inferred.
+
+Arguments: `source` (required), `out` (required).
 
 Starts a background job: no.
 
@@ -4239,6 +4498,38 @@ Export captured implementation inputs. This is not signoff evidence.
 Arguments: `db_path` (required), `out` (required), `settings`.
 
 Starts a background job: no.
+
+### `soc_mbist`
+
+Export memory BIST intent and unrun functional isolation obligations.
+
+Arguments: `db_path` (required), `source` (required), `out` (required).
+
+Starts a background job: no.
+
+### `soc_new`
+
+Create an editable APB3 SoC scaffold with an idle wrapper.
+
+Arguments: `name` (required), `out` (required).
+
+Starts a background job: no.
+
+### `soc_observe`
+
+Generate or package independently sampled RTL transaction tags. Matching samples remain inconclusive.
+
+Arguments: `binding` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `soc_observe_pack`
+
+Generate or package independently sampled RTL transaction tags. Matching samples remain inconclusive.
+
+Arguments: `binding` (required), `pins` (required), `trace` (required), `result` (required), `out` (required).
+
+Starts a background job: yes.
 
 ### `soc_pair`
 
