@@ -31,3 +31,18 @@ SystemVerilog adapters can link `Cosim/lockstep_dpi.cc` and import
 `int rvw_cosim_observe(input string c2)` through DPI-C. Send a header first.
 Stop on any nonzero return. Call `rvw_cosim_close()` at shutdown. The Scala
 harness uses the same protocol through `riscvsim.Lockstep`.
+
+### Observation exchange
+
+`rvw cosim exchange --source INPUT --from c2 --to rvvi --out OUTPUT` exports
+RVVI-TEXT 0.5. Select `--from rvvi --to c2` to restore a complete exported trace.
+The `rvw.c2` vendor STATE extension retains C2 fields that have no native mapping.
+The standard source is [RVVI-TEXT 0.5](https://github.com/riscv-verification/RVVI/blob/04dc469012f718ffe104c1c1d0cd8cea66f96724/RVVI-TEXT/README.md).
+
+Use `spike` for commit logs. Exports include lossless `# RVW-C2` comments.
+Plain Spike logs can be imported with `--to observations`. They lack sources,
+next PC, memory observations and asynchronous events needed for full C2 checks.
+They cannot be converted to full C2. Unsupported effects are errors. The bounded
+RVVI importer retains raw elements for sparse retirements. It does not implement
+all RVVI state latching. `cosim_exchange` provides the same operation over MCP.
+Format exchange does not run an independent reference or establish a match.

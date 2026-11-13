@@ -19,6 +19,8 @@ def register(subparsers):
     subs = parser.add_subparsers(dest="cosim_action", required=True)
     from .dii_cli import register as register_dii
     register_dii(subs)
+    from .exchange_cli import register as register_exchange
+    register_exchange(subs)
     for action in ("check", "generate", "live"):
         cmd = subs.add_parser(action, help={"check": "check C2 against a model", "generate": "make a C2 trace from Spike",
                                           "live": "launch an adapter and check C2 during simulation"}[action])

@@ -222,7 +222,8 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {dii,check,generate,live} ...
+usage: rvw cosim [-h] [--project PROJECT] {dii,exchange,check,generate,live}
+    ...
 ```
 
 ### `rvw cosim dii`
@@ -244,6 +245,14 @@ usage: rvw cosim dii replay [-h] --tokens TOKENS --core-endpoint CORE_ENDPOINT
 ```text
 usage: rvw cosim dii serve [-h] [--listen LISTEN] --hook HOOK [--max-streams
     MAX_STREAMS] [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw cosim exchange`
+
+```text
+usage: rvw cosim exchange [-h] --source SOURCE --out OUT --from
+    {c2,rvvi,spike} --to {c2,rvvi,spike,observations} [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -1811,6 +1820,14 @@ Starts a background job: yes.
 Check a recorded C2 RVFI trace against Spike or Sail to locate the first architectural mismatch. Preserves synchronization scope and matching-prefix/end status. A match does not mean the program passed: check end_status. The Sail executable comes from RVW_SAIL on the server. Large traces run as a cancellable job.
 
 Arguments: `project`, `elf` (required), `core`, `platform`, `trace` (required), `model`, `history`, `strict`, `strict_sync`, `sail_config`, `timeout`.
+
+Starts a background job: yes.
+
+### `cosim_exchange`
+
+Exchange C2 and RVVI-TEXT 0.5 or Spike commit logs. Sparse logs produce observations only. No independent check is claimed.
+
+Arguments: `source` (required), `out` (required), `source_format` (required), `target_format` (required).
 
 Starts a background job: yes.
 
