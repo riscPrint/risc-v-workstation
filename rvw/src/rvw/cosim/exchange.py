@@ -141,7 +141,7 @@ def import_stream(text, kind):
             trace.close()
         if kind == 'spike':
             rows = [r for r in restored[1:] if 'event' not in r]
-            if len(rows) != len(observations) or any(any(o[k] != r[k] for k in ('mode', 'pc', 'insn')) or o.get('rd', 0) != r['rd'] or (r['rd'] and o['rd_wdata'] != r['rd_wdata']) for o, r in zip(observations, rows)):
+            if len(rows) != len(observations) or any(o['hart'] != r.get('hart', 0) or any(o[k] != r[k] for k in ('mode', 'pc', 'insn')) or o.get('rd', 0) != r['rd'] or (r['rd'] and o['rd_wdata'] != r['rd_wdata']) for o, r in zip(observations, rows)):
                 raise ValueError('Spike fields conflict with C2 state')
         if kind == 'rvvi':
             if observations:
