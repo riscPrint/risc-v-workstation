@@ -69,6 +69,13 @@ end'''
     return f'module rvw_{kind}{params}(input clk, reset, '+ports+');\n'+body+'\nendmodule\n'
 
 PORTS = {
+    'allocation_pool': ('live','alloc0_valid','alloc1_valid','free0_valid','free1_valid','alloc0','alloc1','free0','free1'),
+    'freelist_conservation': ('free_bits','live','alloc0_valid','alloc1_valid','free0_valid','free1_valid','alloc0','alloc1','free0','free1'),
+    'rob': ('count','push','pop'),
+    'credit': ('count','push','pop'),
+    'freelist': ('free_bits','allocated'),
+    'cam_match': ('active','require_match','match_bits'),
+    'counter_bounds': ('active','value'),
     'fifo_order': ('push', 'pop', 'push_data', 'pop_data'),
     'pipeline': ('valid', 'ready', 'payload'),
     'mutex': ('grants',),
@@ -104,13 +111,27 @@ def generate(spec, out):
                 raise ValueError('bind exactly: '+', '.join(sorted(required)))
             if any(not isinstance(v,str) or not path.fullmatch(v) for v in rule['ports'].values()):
                 raise ValueError('ports must name project RTL signals')
-            source=render(kind,rule.get('width',8),rule.get('entries',4))
+            from .invariants import render as render_any
+            entries=rule.get('entries',4)
+            source=render_any(kind,entries,rule.get('width',8))
             module='rvw_rule_'+name
             sources.append(source.replace('module rvw_'+kind,'module '+module,1))
             bound=rule.get('bound',8)
             if type(bound) is not int or not 1<=bound<=1024:
                 raise ValueError('fairness bound must be in 1..1024')
             params=f' #(.BOUND({bound}))' if kind=='arbiter' else ''
+            if kind in ('allocation_pool','freelist_conservation'):
+                if kind=='allocation_pool' and 'usable' in rule:
+                    raise ValueError('usable requires freelist_conservation')
+                initial=rule.get('initial_live',0)
+                usable=rule.get('usable',(1<<entries)-1)
+                if any(type(v) is not int or not 0<=v<(1<<entries) for v in (initial,usable)) or initial & ~usable:
+                    raise ValueError('initial_live and usable must fit entries, with initial_live a subset')
+                params=f" #(.INITIAL_LIVE({entries}'d{initial})"
+                if kind=='freelist_conservation':params+=f",.USABLE({entries}'d{usable})"
+                params+=')'
+                row['initial_live']=initial
+                if kind=='freelist_conservation':row['usable']=usable
             binds.append('bind '+spec['top']+' '+module+params+' '+module+'_instance('+', '.join(
                 '.'+k+'('+v+')' for k,v in sorted(rule['ports'].items()))+');')
             row.update(status='generated', ports=rule['ports'])

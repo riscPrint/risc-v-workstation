@@ -72,8 +72,24 @@ Every rule requires `clk` and active-high `reset`.
 | `age_matrix` | `valid`, packed row-major `older`. Live entries form a strict total order. It checks consistency, not temporal allocation order. |
 | `store_forward` | `load_fire`, `forwarded`, `valid`, `older`, `address_match`, `selected`, `load_data`, packed `store_data`. Higher slot indices are younger. The highest eligible slot must supply the full data unit. Byte merging needs separate per-byte instances. |
 
-The library also retains ROB, credit and allocation-pool conservation templates.
-Use `rvw formal template KIND` or declare the six new rule kinds in project data.
+The project document also accepts these existing resource rules:
+
+| Kind | Ports beyond `clk` and `reset` |
+|---|---|
+| `rob`, `credit` | `count`, `push`, `pop`. One accepted increment/decrement per cycle. |
+| `allocation_pool` | `live`, `alloc0_valid`, `alloc1_valid`, `free0_valid`, `free1_valid`, `alloc0`, `alloc1`, `free0`, `free1`. Independent expected ownership. |
+| `freelist_conservation` | Allocation-pool ports plus `free_bits`. Free and live masks partition literal `usable` tags. |
+| `freelist` | `free_bits`, `allocated`. Legacy disjointness check only. |
+| `cam_match` | `active`, `require_match`, `match_bits`. At most one match; optional required hit. |
+| `counter_bounds` | `active`, `value`. Inclusive unsigned bound `entries`. |
+
+Ownership rules accept literal `initial_live`, default zero. The stronger
+free-list rule also accepts literal `usable`, default all entries. Initial
+ownership must be a subset of usable tags. Release precedes allocation on the
+same edge. These are project declarations. The generator does not infer reset
+ownership or multi-entry recovery from a core's implementation.
+The overall report lists missing bindings directly in `unbound`. A partial
+transaction binding cannot make the overall result complete.
 
 ## Decisions
 
