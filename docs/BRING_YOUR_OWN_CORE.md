@@ -13,6 +13,9 @@ For architecture work, use [AGENT_ARCH.md](AGENT_ARCH.md).
 
 ## Install the workstation
 
+See the [macOS fresh checkout trial](FRESH_CLONE_2026-11-13.md) for measured
+steps, repair PRs and limits. Linux was not tested in that trial.
+
 Run the installer from your workstation checkout on macOS, Debian, Ubuntu,
 Fedora or RHEL. The default installs the Python CLI and MCP server in this
 checkout. It needs Python 3.11 or later. It installs missing core tools through
