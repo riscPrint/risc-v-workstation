@@ -15,7 +15,7 @@ def capabilities(a):
     return 0
 
 
-def register(sub):
+def register(sub, *, regression=False):
     from rvw.sim.live import register as register_live
     register_live(sub)
     from pathlib import Path
@@ -48,7 +48,8 @@ def register(sub):
     p.set_defaults(func=capabilities)
 
     from rvw.sim.uvm import register as register_uvm
-    register_uvm(sub)
+    if regression:
+        register_uvm(sub)
     from rvw.sim.ral import register as register_ral
     register_ral(sub)
     from rvw.sim.uvm_cpu import register as register_cpu

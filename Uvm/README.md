@@ -226,3 +226,75 @@ VexRiscv live UVM bind, interrupt/debug architecture or C4 acceptance.
 See [the feature table](FEATURES.md) for explicit profile diagnostics and
 workarounds. `rvw regress uvm --require-feature NAME` rejects a requirement
 outside the qualified profile before it creates output or starts tools.
+## Project bench adapters
+
+`rvw uvm` runs a user's SystemVerilog UVM bench. The manifest lists source
+files in compile order, the top module and the test classes. Paths are relative
+to the manifest. See `examples/adapter/bench.json` for a complete fixture.
+
+```sh
+rvw uvm list Uvm/examples/adapter/bench.json
+rvw uvm build Uvm/examples/adapter/bench.json --out /tmp/bench-build
+rvw uvm run --build /tmp/bench-build --test adapter_smoke --seed 3 --out /tmp/bench-run
+rvw uvm regress --build /tmp/bench-build --seeds 1 3 9 --out /tmp/bench-regress
+rvw uvm coverage-merge /tmp/bench-run/coverage.dat --out /tmp/merged.dat
+```
+
+The manifest schema is `rvw.uvm/1`. Required fields are `name`, `top`,
+`sources` and `tests`. Optional fields are `include_dirs`, `defines`,
+`build_args`, `plusargs`, `register_map` and `bindings`. `build_args` passes
+native compiler and DPI link options as argument strings. It never invokes a
+shell. `bindings` stores project data for bench-specific signal adapters.
+The flow does not infer signal connections from that object.
+`register_map` selects a validated `rvw.soc/1` map and emits RAL before the
+bench sources. Include directories and sources are hashed. A changed input
+or executable requires a new build.
+
+The bench must print exactly one line `RVW_UVM_DONE TEST checks=N` in its
+report phase. `TEST` must match the requested test. `N` must be positive.
+The bench author is responsible for counting actual checks. The base test
+prints the marker only after scoreboard checks and with no UVM errors.
+A missing marker is an error. A UVM error or fatal is a failure, including
+when UVM ends simulation with exit zero. Each run writes C1 `result.json`.
+A regression writes C3 `results.json` and keeps each C1 result and log.
+The C3 reader and comparison commands can consume these results. Source
+identity remains incomplete. These component results do not earn C4 core
+acceptance or add jobs to core regression tiers.
+
+`base/rvw_base_pkg.sv` supplies an in-order expected/actual scoreboard,
+virtual sequencer, transaction coverage bitmap, objection helpers and a base
+test. Derive the environment and connect protocol monitors to its analysis
+inputs. Create components through the factory. A project test can call
+`rvw_env::type_id::set_type_override(project_env::get_type())` before its
+base build phase. Set `registers` through `uvm_config_db` and call
+`bind_frontdoor` with the bus sequencer and adapter. Use UVM `read`/`write`
+with `UVM_FRONTDOOR`. For backdoor access, supply a project-specific
+`uvm_reg_backdoor` with `set_backdoor`, or HDL paths when the engine has a
+working HDL backend. Then use `peek`/`poke` or `UVM_BACKDOOR`.
+
+## Engine limits
+
+Accellera DPI is disabled with `UVM_NO_DPI`. Standard Accellera HDL path
+backdoors are not qualified on this engine. A user DPI bridge can be linked
+through `build_args`. Its ABI and behaviour need separate tests. VPI access
+and imported commercial VIP are not qualified by the adapter fixture.
+Assertions use `--assert`; this is simulation, not formal proof. Native
+coverage is written by the generated C++ timing harness and merged with
+`verilator_coverage`. The eight-bin base subscriber is a portable functional
+coverage counter. It does not replace a project's coverage plan.
+
+## CORE-V-VERIF practices adopted
+
+The [research note](../docs/design/core-v-verif-uvm.md) records the inspected
+upstream revision and paths. This flow adopts separate reusable components,
+project-owned core wiring, a virtual sequencer, monitor-to-scoreboard analysis
+connections and named test/seed matrices. The existing Spike DPI replay keeps
+its reference model separate from stimulus. Live CPU agents and architectural
+interrupt/debug tests remain open. No CORE-V-VERIF source is copied here.
+
+`rvw uvm features RESULTS` produces a Markdown feature table from C3 conformance
+results. It reports only test IDs present with passing rows as checked. Missing
+features remain `not established`. It lists the workaround for each bounded
+feature and keeps unqualified HDL backdoor/VPI and full upstream bench support
+visible. Feed results from `rvw regress uvm` or `rvw regress uvm-cpu`, not a
+Python unit test, to report native engine evidence.

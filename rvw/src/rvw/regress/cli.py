@@ -67,7 +67,7 @@ def register(sub) -> None:
     rs = p.add_subparsers(dest="regress_cmd", required=True)
 
     from rvw.sim.cli import register as register_sim
-    register_sim(rs)
+    register_sim(rs, regression=True)
     from . import random_stream
     random_stream.register(rs)
     from . import sail_tests
