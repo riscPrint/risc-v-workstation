@@ -763,3 +763,11 @@ Monitor histories restart. C1 `state_load` records the captured trace hash,
 timestamp, timescale, scope, loaded register values, state-bit count and limits.
 Native four-state observations retain finite-continuation scope. This format
 adds no multi-clock state loading to the formal solver.
+
+## PSL to SVA lowering
+
+CLI `formal psl` and MCP `formal_psl` translate a finite Verilog-flavor PSL subset
+to the existing SVA frontend. An explicit rising-edge clock or matching default
+clock is required. Generation reports `rvw.psl-lowering/1`, `status=generated`,
+and the output path. This is not a verification result. Unsupported PSL forms
+are errors. The adapter does not silently replace liveness with finite bounds.
