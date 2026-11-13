@@ -27,7 +27,9 @@ class Queue:
     def save(self, db, job):
         db.execute('INSERT OR REPLACE INTO jobs VALUES (?,?,?,?,?)',
                    (job['id'], job['owner'], job['priority'], job['state'], json.dumps(job)))
-        db.execute('INSERT INTO events(data) VALUES (?)', (json.dumps(dict(job_id=job['id'], state=job['state'], time=time.time())),))
+        db.execute('INSERT INTO events(data) VALUES (?)', (json.dumps(dict(job_id=job['id'], state=job['state'], time=time.time(),
+                          owner=job['owner'], workflow_id=job['metadata'].get('workflow'),
+                          node=job['metadata'].get('node'))),))
 
     def submit(self, owner, command, priority=0, retries=0, timeout=600, **metadata):
         if not owner or not isinstance(command, list) or not command or not all(isinstance(x, str) for x in command):

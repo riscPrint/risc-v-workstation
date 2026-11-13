@@ -193,3 +193,13 @@ failed test with recorded traps can use `trap:CAUSE` as its grouping key.
 The original C1 signature and any C5 signature remain unchanged. Invalid trap
 evidence adds an issue and cannot replace the original failure signature.
 A cause grouping is an observation, not a root-cause or core-bug claim.
+
+## Plan-scoped HTTP event replay
+
+`GET /events?workflow_id=ID` checks the workflow owner before replay.
+An unknown or foreign plan returns HTTP 404. Returned events belong only to
+that plan and its queue jobs. `Last-Event-ID` and `after` retain their existing
+sequence semantics. Workflow creation emits `planned`. Queue transition events
+include owner, workflow_id and node. Inspecting a plan records its terminal
+state after its jobs finish. Replay remains finite. It is not a persistent
+push subscription. Completion is execution state, not a DUT verdict.
