@@ -602,3 +602,251 @@ Files read and line counts:
 | `rvw/tests/test_workloads_sizing.py` | 56 |
 | `examples/naxriscv/rvw/arch/rank.py` | 44 |
 | `examples/naxriscv/rvw/arch/resource-study.py` | 73 |
+
+
+## Generic simulation harness and Python simulation services
+
+Read 210 files. This includes every tracked source and documentation file under `RiscvSim/src/`, `RiscvSim/scripts/`, and `rvw/src/rvw/sim/`, the listed Python tests, and the shared device and Spinal axis sources. The table gives the line counts at report publication. Confirmed defects: 7. Fix PRs: 5. Unconfirmed findings retained: 0.
+
+### Confirmed defects
+
+- Mapped completion stores shifted data twice on nonzero byte lanes, which could lose or change tohost results. PR [#1404](https://github.com/riscPrint/risc-v-workstation/pull/1404), merged.
+- The socket server could block past its request deadline after a partial native JSONL reply. PR [#1405](https://github.com/riscPrint/risc-v-workstation/pull/1405), merged.
+- Generated header lookup split build paths at spaces and missed required Verilator member-name repairs. PR [#1407](https://github.com/riscPrint/risc-v-workstation/pull/1407), merged.
+- PLIC claim polling incorrectly applied the notification threshold. PR [#1408](https://github.com/riscPrint/risc-v-workstation/pull/1408), merged.
+- The PLIC lost a pending request when its source went low before claim. PR [#1408](https://github.com/riscPrint/risc-v-workstation/pull/1408), merged.
+- UART IIR reads did not acknowledge a pending THRE interrupt. PR [#1408](https://github.com/riscPrint/risc-v-workstation/pull/1408), merged.
+- External adapter classpath reuse ignored the selected Spinal source SDK, its files, and the shared axis script. PR [#1409](https://github.com/riscPrint/risc-v-workstation/pull/1409), merged.
+
+PLIC claim behavior was checked against the [ratified claim specification](https://docs.riscv.org/reference/plic/plic-claims.html). UART acknowledgement behavior was checked against Table IV of the [manufacturer PC16550D data sheet](https://media.digikey.com/pdf/Data%20Sheets/Texas%20Instruments%20PDFs/PC16550D.pdf).
+
+### Validation and limits
+
+Each defect has a regression that failed with the original behavior. The mapped store check compiled production ToHost with the extracted completion helper and passed 12 RV32/RV64 lane cases after the fix. The generic sbt `testOnly riscvsim.MappedAdapterSpec` attempt used the private `sbt-rv-sim` lock and `nice -n 15`. It was canceled during project setup on the loaded machine. The full project regression is NOT RUN.
+
+Direct Scala checks compiled production LiveDevices, SimMap and Hex with small RunJob and RunContext type stubs. All 12 tests in LiveDevicesSpec passed. This includes snapshot and reset checks. Five pure writer suites passed 8 tests. That check used the production writer source with the hardware RvfiProbe class omitted. It checked pending late traps, C2/2 CSR and environment records, external-interrupt ordering, flushing and writer checkpoints. These checks do not compile the full Spinal harness or exercise its native bridge.
+
+Python server tests passed 10 tests. Script-name and coverage-writer tests passed 7 tests. Classpath tests passed 2 tests. A separate group of checkpoint, injection, profile, CPU-service, native-identity and capability tests passed 114 tests and skipped one optional test. The affected post-rebase Python set, including release hygiene, passed 55 tests. `bash -n RiscvSim/scripts/make-jobs.sh` passed. `rvw mcp --list` completed without skipped tools.
+
+The required command `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q` completed with 3294 passed, 4 skipped, 1 failed and 7724 deselected. The failure was in the untouched `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`: `cov_mutate_core` had no workflow entry. The brief permits publication with an unrelated failure. The later classpath regression passed its targeted run. No raw test output is committed.
+
+No BOOM build or simulation ran. Native whole-core, debug DMI/JTAG, fault-injection, coverage, cache and multi-hart simulation suites are NOT RUN. The direct checks are unit evidence. They do not establish whole-core qualification or complete device specification compliance.
+
+### Read boundary
+
+No source file remains unread in the three assigned directory trees. Files outside the inventory were not reviewed, including the BOOM adapter, external core adapters, and further integration tests and fixtures. Shared reference files in the inventory were read only. No unconfirmed defect is counted as a finding.
+
+### Files read
+
+| File read | Lines |
+|---|---:|
+| `RiscvSim/scripts/build-devices.py` | 65 |
+| `RiscvSim/scripts/classpath.py` | 74 |
+| `RiscvSim/scripts/make-jobs.sh` | 55 |
+| `RiscvSim/scripts/native-identity.py` | 284 |
+| `RiscvSim/scripts/replay-checkpoint.py` | 105 |
+| `RiscvSim/scripts/source-identity.py` | 16 |
+| `RiscvSim/scripts/supervise.py` | 47 |
+| `RiscvSim/src/main/cpp/Checkpoint.h` | 37 |
+| `RiscvSim/src/main/cpp/DEVICES.md` | 127 |
+| `RiscvSim/src/main/cpp/DeviceDpi.cpp` | 29 |
+| `RiscvSim/src/main/cpp/DevicePlugin.h` | 82 |
+| `RiscvSim/src/main/cpp/PythonDevices.cpp` | 98 |
+| `RiscvSim/src/main/cpp/TlmMemory.h` | 54 |
+| `RiscvSim/src/main/scala/riscvsim/AssertIndex.scala` | 45 |
+| `RiscvSim/src/main/scala/riscvsim/AtomicMemoryObserver.scala` | 94 |
+| `RiscvSim/src/main/scala/riscvsim/BootImage.scala` | 54 |
+| `RiscvSim/src/main/scala/riscvsim/BridgeState.scala` | 102 |
+| `RiscvSim/src/main/scala/riscvsim/BusObservationWriter.scala` | 27 |
+| `RiscvSim/src/main/scala/riscvsim/ByteMemory.scala` | 21 |
+| `RiscvSim/src/main/scala/riscvsim/CacheEventObserver.scala` | 69 |
+| `RiscvSim/src/main/scala/riscvsim/CacheScoreboard.scala` | 90 |
+| `RiscvSim/src/main/scala/riscvsim/Cli.scala` | 177 |
+| `RiscvSim/src/main/scala/riscvsim/CoherenceMonitor.scala` | 35 |
+| `RiscvSim/src/main/scala/riscvsim/DebugPort.scala` | 206 |
+| `RiscvSim/src/main/scala/riscvsim/DmaAgent.scala` | 64 |
+| `RiscvSim/src/main/scala/riscvsim/DmaTransport.scala` | 10 |
+| `RiscvSim/src/main/scala/riscvsim/Driver.scala` | 859 |
+| `RiscvSim/src/main/scala/riscvsim/ElfFile.scala` | 129 |
+| `RiscvSim/src/main/scala/riscvsim/FairnessMonitor.scala` | 39 |
+| `RiscvSim/src/main/scala/riscvsim/FaultInjector.scala` | 197 |
+| `RiscvSim/src/main/scala/riscvsim/HartImages.scala` | 73 |
+| `RiscvSim/src/main/scala/riscvsim/HartLifecycleObserver.scala` | 78 |
+| `RiscvSim/src/main/scala/riscvsim/Hex.scala` | 22 |
+| `RiscvSim/src/main/scala/riscvsim/InstructionPort.scala` | 152 |
+| `RiscvSim/src/main/scala/riscvsim/InstructionVisibility.scala` | 39 |
+| `RiscvSim/src/main/scala/riscvsim/InterruptSchedule.scala` | 24 |
+| `RiscvSim/src/main/scala/riscvsim/LiveDevices.scala` | 260 |
+| `RiscvSim/src/main/scala/riscvsim/Lockstep.scala` | 22 |
+| `RiscvSim/src/main/scala/riscvsim/LockstepDpi.scala` | 69 |
+| `RiscvSim/src/main/scala/riscvsim/MappedAdapter.scala` | 380 |
+| `RiscvSim/src/main/scala/riscvsim/Model.scala` | 147 |
+| `RiscvSim/src/main/scala/riscvsim/MultiHart.scala` | 120 |
+| `RiscvSim/src/main/scala/riscvsim/MultiHartExecutor.scala` | 66 |
+| `RiscvSim/src/main/scala/riscvsim/NativeBuild.scala` | 110 |
+| `RiscvSim/src/main/scala/riscvsim/NativeOutput.scala` | 147 |
+| `RiscvSim/src/main/scala/riscvsim/PluginDevice.scala` | 58 |
+| `RiscvSim/src/main/scala/riscvsim/ProbeCollector.scala` | 98 |
+| `RiscvSim/src/main/scala/riscvsim/ProgressMonitor.scala` | 33 |
+| `RiscvSim/src/main/scala/riscvsim/ResetSchedule.scala` | 57 |
+| `RiscvSim/src/main/scala/riscvsim/ResourceWaitMonitor.scala` | 17 |
+| `RiscvSim/src/main/scala/riscvsim/RtlCoverage.scala` | 76 |
+| `RiscvSim/src/main/scala/riscvsim/Rvfi.scala` | 304 |
+| `RiscvSim/src/main/scala/riscvsim/SimEncoding.scala` | 13 |
+| `RiscvSim/src/main/scala/riscvsim/SimMap.scala` | 88 |
+| `RiscvSim/src/main/scala/riscvsim/SimSession.scala` | 238 |
+| `RiscvSim/src/main/scala/riscvsim/SpeedMetrics.scala` | 10 |
+| `RiscvSim/src/main/scala/riscvsim/SpinalCompat.scala` | 9 |
+| `RiscvSim/src/main/scala/riscvsim/StimulusMailbox.scala` | 55 |
+| `RiscvSim/src/main/scala/riscvsim/TileLinkDmaTransport.scala` | 39 |
+| `RiscvSim/src/main/scala/riscvsim/TileLinkProgressObserver.scala` | 121 |
+| `RiscvSim/src/main/scala/riscvsim/ToHost.scala` | 69 |
+| `RiscvSim/src/main/scala/riscvsim/TraceIngress.scala` | 82 |
+| `RiscvSim/src/test/scala/riscvsim/AtomicFixture.scala` | 86 |
+| `RiscvSim/src/test/scala/riscvsim/AtomicFixtureSpec.scala` | 229 |
+| `RiscvSim/src/test/scala/riscvsim/AtomicMemoryObserverSpec.scala` | 43 |
+| `RiscvSim/src/test/scala/riscvsim/BootImageSpec.scala` | 128 |
+| `RiscvSim/src/test/scala/riscvsim/BridgeStateSpec.scala` | 44 |
+| `RiscvSim/src/test/scala/riscvsim/BusObservationWriterSpec.scala` | 27 |
+| `RiscvSim/src/test/scala/riscvsim/ByteMemorySnapshotSpec.scala` | 22 |
+| `RiscvSim/src/test/scala/riscvsim/ByteMemorySpec.scala` | 19 |
+| `RiscvSim/src/test/scala/riscvsim/CacheEventObserverSpec.scala` | 48 |
+| `RiscvSim/src/test/scala/riscvsim/CacheScoreboardSpec.scala` | 78 |
+| `RiscvSim/src/test/scala/riscvsim/CoherenceModelFixtureSpec.scala` | 68 |
+| `RiscvSim/src/test/scala/riscvsim/CoherenceMonitorSpec.scala` | 23 |
+| `RiscvSim/src/test/scala/riscvsim/CoherentCacheNativeSpec.scala` | 158 |
+| `RiscvSim/src/test/scala/riscvsim/CoverageLocationsSpec.scala` | 33 |
+| `RiscvSim/src/test/scala/riscvsim/CoverageVersionSpec.scala` | 22 |
+| `RiscvSim/src/test/scala/riscvsim/CsrSnapshotSpec.scala` | 44 |
+| `RiscvSim/src/test/scala/riscvsim/DmaAgentSpec.scala` | 79 |
+| `RiscvSim/src/test/scala/riscvsim/EnvironmentTraceSpec.scala` | 26 |
+| `RiscvSim/src/test/scala/riscvsim/ExternalInterruptSpec.scala` | 28 |
+| `RiscvSim/src/test/scala/riscvsim/FairnessMonitorSpec.scala` | 32 |
+| `RiscvSim/src/test/scala/riscvsim/FaultInjectorNativeSpec.scala` | 50 |
+| `RiscvSim/src/test/scala/riscvsim/GenericAdapterSpec.scala` | 94 |
+| `RiscvSim/src/test/scala/riscvsim/HartImagesSpec.scala` | 74 |
+| `RiscvSim/src/test/scala/riscvsim/HartLifecycleObserverSpec.scala` | 39 |
+| `RiscvSim/src/test/scala/riscvsim/InstructionPortSpec.scala` | 37 |
+| `RiscvSim/src/test/scala/riscvsim/InstructionVisibilitySpec.scala` | 34 |
+| `RiscvSim/src/test/scala/riscvsim/InterruptScheduleSpec.scala` | 28 |
+| `RiscvSim/src/test/scala/riscvsim/LiveDevicesSpec.scala` | 193 |
+| `RiscvSim/src/test/scala/riscvsim/LiveTraceSpec.scala` | 55 |
+| `RiscvSim/src/test/scala/riscvsim/MappedAdapterSpec.scala` | 64 |
+| `RiscvSim/src/test/scala/riscvsim/MultiHartExecutorNativeSpec.scala` | 146 |
+| `RiscvSim/src/test/scala/riscvsim/MultiHartExecutorSpec.scala` | 107 |
+| `RiscvSim/src/test/scala/riscvsim/MultiHartSpec.scala` | 102 |
+| `RiscvSim/src/test/scala/riscvsim/NativeFlagsProbe.scala` | 56 |
+| `RiscvSim/src/test/scala/riscvsim/PersistentNativeSpec.scala` | 60 |
+| `RiscvSim/src/test/scala/riscvsim/PluginDeviceSpec.scala` | 41 |
+| `RiscvSim/src/test/scala/riscvsim/ProbeCollectorSpec.scala` | 60 |
+| `RiscvSim/src/test/scala/riscvsim/ProgressMonitorSpec.scala` | 27 |
+| `RiscvSim/src/test/scala/riscvsim/ResetScheduleSpec.scala` | 31 |
+| `RiscvSim/src/test/scala/riscvsim/RiscvSimSpec.scala` | 633 |
+| `RiscvSim/src/test/scala/riscvsim/RtlCoverageSpec.scala` | 43 |
+| `RiscvSim/src/test/scala/riscvsim/RtlIdentitySpec.scala` | 56 |
+| `RiscvSim/src/test/scala/riscvsim/Rv64AtomicFixtureSpec.scala` | 162 |
+| `RiscvSim/src/test/scala/riscvsim/SerializedMemorySpec.scala` | 25 |
+| `RiscvSim/src/test/scala/riscvsim/ServerSpec.scala` | 183 |
+| `RiscvSim/src/test/scala/riscvsim/SimEncodingSpec.scala` | 41 |
+| `RiscvSim/src/test/scala/riscvsim/SimMapSpec.scala` | 30 |
+| `RiscvSim/src/test/scala/riscvsim/SimThreadsSpec.scala` | 44 |
+| `RiscvSim/src/test/scala/riscvsim/SpeedMetricsSpec.scala` | 17 |
+| `RiscvSim/src/test/scala/riscvsim/SpinalTraceFlagSpec.scala` | 72 |
+| `RiscvSim/src/test/scala/riscvsim/TileLinkProgressObserverSpec.scala` | 87 |
+| `RiscvSim/src/test/scala/riscvsim/TileLinkSdkCompat.scala` | 36 |
+| `RiscvSim/src/test/scala/riscvsim/TwoHartNativeSpec.scala` | 169 |
+| `RiscvSim/src/test/scala/riscvsim/TypedCacheBindSpec.scala` | 182 |
+| `RiscvSim/src/test/scala/riscvsim/WriterCheckpointSpec.scala` | 33 |
+| `rvw/src/rvw/cosim/devices.py` | 261 |
+| `rvw/src/rvw/sim/INJECTION.md` | 61 |
+| `rvw/src/rvw/sim/README.md` | 470 |
+| `rvw/src/rvw/sim/REVERSE.md` | 39 |
+| `rvw/src/rvw/sim/__init__.py` | 1 |
+| `rvw/src/rvw/sim/arcilator_install.py` | 49 |
+| `rvw/src/rvw/sim/backends.py` | 67 |
+| `rvw/src/rvw/sim/bench.py` | 28 |
+| `rvw/src/rvw/sim/checkpoint.py` | 113 |
+| `rvw/src/rvw/sim/cli.py` | 105 |
+| `rvw/src/rvw/sim/cli_declarations.py` | 2 |
+| `rvw/src/rvw/sim/cocotb.py` | 135 |
+| `rvw/src/rvw/sim/commands/__init__.py` | 1 |
+| `rvw/src/rvw/sim/commands/server.py` | 41 |
+| `rvw/src/rvw/sim/cpu_env.py` | 197 |
+| `rvw/src/rvw/sim/devices.py` | 175 |
+| `rvw/src/rvw/sim/hdl.py` | 152 |
+| `rvw/src/rvw/sim/injection.py` | 110 |
+| `rvw/src/rvw/sim/live.py` | 147 |
+| `rvw/src/rvw/sim/mcp_tools.py` | 59 |
+| `rvw/src/rvw/sim/native_models.py` | 195 |
+| `rvw/src/rvw/sim/native_profiles.py` | 96 |
+| `rvw/src/rvw/sim/native_wave.py` | 24 |
+| `rvw/src/rvw/sim/persistent.py` | 34 |
+| `rvw/src/rvw/sim/profile.py` | 69 |
+| `rvw/src/rvw/sim/ral.py` | 69 |
+| `rvw/src/rvw/sim/reverse.py` | 39 |
+| `rvw/src/rvw/sim/server.py` | 110 |
+| `rvw/src/rvw/sim/speed.py` | 230 |
+| `rvw/src/rvw/sim/spike_bootstrap.py` | 36 |
+| `rvw/src/rvw/sim/timing.py` | 90 |
+| `rvw/src/rvw/sim/uvm.py` | 191 |
+| `rvw/src/rvw/sim/uvm_cpu.py` | 237 |
+| `rvw/src/rvw/sim/uvm_features.py` | 41 |
+| `rvw/src/rvw/sim/uvm_models.py` | 134 |
+| `rvw/src/rvw/sim/worker.py` | 38 |
+| `rvw/tests/devices/test_plic.py` | 94 |
+| `rvw/tests/devices/test_reset.py` | 53 |
+| `rvw/tests/devices/test_timer.py` | 81 |
+| `rvw/tests/fixtures/cocotb/semantic_bench.py` | 71 |
+| `rvw/tests/test_arch_injection.py` | 76 |
+| `rvw/tests/test_backend_capabilities.py` | 20 |
+| `rvw/tests/test_c1_capabilities.py` | 62 |
+| `rvw/tests/test_cocotb.py` | 84 |
+| `rvw/tests/test_cocotb_data_files.py` | 15 |
+| `rvw/tests/test_cocotb_native.py` | 24 |
+| `rvw/tests/test_coverage_writer.py` | 39 |
+| `rvw/tests/test_cpu_controls.py` | 59 |
+| `rvw/tests/test_cpu_env.py` | 97 |
+| `rvw/tests/test_device_build_library.py` | 43 |
+| `rvw/tests/test_device_events.py` | 69 |
+| `rvw/tests/test_device_plugin.py` | 125 |
+| `rvw/tests/test_external_classpath.py` | 67 |
+| `rvw/tests/test_hdl_declared_ports.py` | 102 |
+| `rvw/tests/test_hdl_identity.py` | 40 |
+| `rvw/tests/test_hdl_semantics.py` | 131 |
+| `rvw/tests/test_live_checkpoint.py` | 51 |
+| `rvw/tests/test_make_jobs_names.py` | 44 |
+| `rvw/tests/test_native_checkpoint.py` | 90 |
+| `rvw/tests/test_native_checkpoint_verilator.py` | 107 |
+| `rvw/tests/test_native_identity.py` | 172 |
+| `rvw/tests/test_native_port_wave.py` | 19 |
+| `rvw/tests/test_native_profiles.py` | 50 |
+| `rvw/tests/test_native_scalar_models.py` | 45 |
+| `rvw/tests/test_native_wide_models.py` | 60 |
+| `rvw/tests/test_regress_persistent.py` | 148 |
+| `rvw/tests/test_replay_checkpoint.py` | 69 |
+| `rvw/tests/test_reverse_checkpoint.py` | 40 |
+| `rvw/tests/test_riscvsim_scripts.py` | 615 |
+| `rvw/tests/test_sim_accel_launcher.py` | 48 |
+| `rvw/tests/test_sim_linux_recipe.py` | 19 |
+| `rvw/tests/test_sim_profile.py` | 34 |
+| `rvw/tests/test_sim_socket_server.py` | 123 |
+| `rvw/tests/test_sim_speed.py` | 242 |
+| `rvw/tests/test_spike_bootstrap.py` | 32 |
+| `rvw/tests/test_standard_devices.py` | 164 |
+| `rvw/tests/test_timing_handoff.py` | 39 |
+| `rvw/tests/test_uvm.py` | 112 |
+| `rvw/tests/test_uvm_cpu.py` | 155 |
+| `rvw/tests/test_uvm_cpu_native.py` | 50 |
+| `rvw/tests/test_uvm_events_native.py` | 25 |
+| `rvw/tests/test_uvm_features.py` | 28 |
+| `rvw/tests/test_uvm_flow.py` | 166 |
+| `rvw/tests/test_uvm_gate.py` | 115 |
+| `rvw/tests/test_uvm_models.py` | 86 |
+| `rvw/tests/test_uvm_native.py` | 42 |
+| `rvw/tests/test_uvm_profiles.py` | 56 |
+| `rvw/tests/test_uvm_pyuvm_native.py` | 17 |
+| `rvw/tests/test_uvm_ral.py` | 58 |
+| `rvw/tests/test_uvm_ral_sequences_native.py` | 31 |
+| `rvw/tests/test_uvm_soc_native.py` | 19 |
+| `rvw/tests/test_uvm_vex_live.py` | 43 |
+| `scripts/sbt/SpinalAxis.scala` | 56 |
