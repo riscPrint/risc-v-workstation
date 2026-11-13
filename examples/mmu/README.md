@@ -77,3 +77,9 @@ the optional project probe and PBMT policy declaration for `mmu report
 --protocol-config`. Replace all probe paths with the project's capture points.
 No type policy means no PBMT transaction verdict. Missing protocol evidence
 remains inconclusive. Ordering and shared-TLB hardware validation remain open.
+
+`hypervisor-matrix.json` selects 102 programs with VS Sv39/48/57 and G x4
+geometries, HLV/HLVX/HSV, VS/G faults, VS A/D, virtual-instruction traps,
+HS fault CSRs and same-VMID root reuse. The root-reuse cases allocate a second
+payload 2 MiB away. This is a bounded reference campaign. Independent nested
+DUT captures, full HFENCE scopes and guest fetch matrices remain open.

@@ -2,6 +2,9 @@
 
 
 def assembly(s):
+    if 'guest_mode' in s or 'guest_op' in s or 'ad_expect' in s or s.get('mode') != 'sv39':
+        from .mmu_hypervisor import assembly as extended_assembly
+        return extended_assembly(s)
     from .mmu import ROOT, DATA, FLAGS
     from .mmu_paging import MODES, page_tables
     g = MODES['sv39']
@@ -92,7 +95,7 @@ fromhost: .dword 0
 
 def validate(s):
     from .mmu import FLAGS
-    if s.get('mode') != 'sv39' or s['level'] != 0 or s['access'] != 'load' or s['expect'] not in ('success', 'page-fault'):
+    if s.get('mode') not in ('sv39', 'sv48', 'sv57') or s['level'] != 0 or s['access'] not in ('load', 'store') or s['expect'] not in ('success', 'page-fault', 'virtual-instruction'):
         raise ValueError('guest requires Sv39 level-zero load with success or page-fault')
     if not isinstance(s.get('guest'), bool) or s['guest'] is not True:
         raise ValueError('guest must be true')
@@ -100,5 +103,20 @@ def validate(s):
         raise ValueError('invalid G-stage flags')
     if type(s.get('guest_fault', False)) is not bool or type(s.get('vmid', 0)) is not int or not 0 <= s.get('vmid', 0) < 16384:
         raise ValueError('invalid guest fault or VMID')
-    if s.keys() - {'id', 'mode', 'level', 'flags', 'access', 'expect', 'bins', 'guest', 'guest_flags', 'guest_fault', 'vmid'}:
+    if s.keys() - {'id', 'mode', 'level', 'flags', 'access', 'expect', 'bins', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'guest_mode', 'guest_op', 'ad_mode', 'ad_expect', 'guest_trap', 'guest_switch'}:
         raise ValueError('unsupported guest scenario option')
+
+    if s.get('guest_mode', 'sv39') not in ('sv39', 'sv48', 'sv57') or s.get('guest_op', 'hlv.d') not in ('hlv.d', 'hlvx.wu', 'hsv.d', 'vs-satp', 'vs-sfence', 'vs-sret'):
+        raise ValueError('unsupported guest mode or operation')
+    if (s.get('guest_op') == 'hsv.d') != (s['access'] == 'store'):
+        raise ValueError('guest operation differs from access')
+
+    if s.get('guest_op', '').startswith('vs-') and s['expect'] != 'virtual-instruction':
+        raise ValueError('VS control operations require virtual-instruction')
+
+    if s.get('guest_trap', 'm') not in ('m', 'hs'):
+        raise ValueError('guest_trap must be m or hs')
+    if 'guest_switch' in s and type(s['guest_switch']) is not bool:
+        raise ValueError('guest_switch must be boolean')
+    if s.get('guest_switch') and (s.get('guest_op', 'hlv.d') != 'hlv.d' or s['expect'] != 'success' or s.get('guest_trap', 'm') != 'm'):
+        raise ValueError('guest_switch requires a successful M-mode HLV.D')

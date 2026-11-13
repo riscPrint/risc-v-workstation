@@ -8,7 +8,7 @@ from .mmu_paging import MODES
 
 
 def walk(*, mode, root, va, access, memory, privilege='S', sum=False,
-         mxr=False, denied=()):
+         mxr=False, denied=(), x4=False, pte_reader=None):
     g = MODES[mode]
     va, table = number(va), number(root)
     if access not in ('fetch', 'load', 'store') or privilege not in ('S', 'U'):
@@ -18,16 +18,16 @@ def walk(*, mode, root, va, access, memory, privilege='S', sum=False,
     reads = []
     def result(status, **kw):
         return dict(status=status, reads=reads, **kw)
-    if not g.canonical(va):
+    if not (0 <= va < 1 << (g.va_bits + 2) if x4 else g.canonical(va)):
         return result('page-fault')
     for level in reversed(range(g.levels)):
-        address = table + ((va >> (12 + level * g.vpn_bits)) & ((1 << g.vpn_bits) - 1)) * g.width
+        address = table + ((va >> (12 + level * g.vpn_bits)) & ((1 << (g.vpn_bits + (2 if x4 and level == g.levels - 1 else 0))) - 1)) * g.width
         if address in denied:
             reads.append(dict(level=level, address=address, fault=True))
             return result('access-fault')
-        if address not in memory:
+        if pte_reader is None and address not in memory:
             raise ValueError(f'missing reference PTE at {address:#x}')
-        pte = memory[address]
+        pte = pte_reader(address) if pte_reader else memory[address]
         if not 0 <= pte < 1 << g.xlen:
             raise ValueError('PTE is outside XLEN')
         reads.append(dict(level=level, address=address, data=pte, fault=False))

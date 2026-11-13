@@ -860,6 +860,14 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+The `examples/mmu/hypervisor-matrix.json` campaign crosses VS Sv39/48/57 and
+G Sv39x4/48x4/57x4. It checks HLV.D, HLVX.WU and HSV.D, VS/G permission faults,
+VS-stage A/D, HS guest faults, virtual-instruction controls and same-VMID G-root
+reuse. Guest faults check htval/mtval2 and legal htinst/mtinst values. The
+independent Python nested walker checks G translations for VS PTE reads and
+payloads. No DUT nested capture is inferred. This bounded matrix does not
+cover all HFENCE scopes, guest fetch permissions or hardware A/D atomicity.
+
 The `examples/mmu/protocol.json` campaign adds two-hart A/D and software RSW
 updates plus IPI-based shootdowns. Replace its software-interrupt address with
 the project map. Use a two-hart C1 configuration. Optional `mmu report
