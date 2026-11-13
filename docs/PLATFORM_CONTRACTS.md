@@ -2895,6 +2895,24 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core decoupled pipeline timing
+
+The optional `rvw.ooo-run/1` configuration objects `frontend`, `execution`,
+and `translation` select decoupled fetch/decode, shared execution port binding,
+per-class issue capacity and fixed page-walk timing. Fields and units are in
+`rvw/ooo/README.md`. Omission preserves the original schedule.
+
+The additional `topdown` object gives `unit=commit_slots`, `total_slots`,
+`slots`, `fractions`, and `method`. Categories are `retiring`, `frontend_bound`,
+`bad_speculation`, and `backend_bound`. Total slots equal cycles times commit
+width. This is a model partition, not a hardware top-down measurement.
+Events include uop-cache block hits/misses, FTQ stalls, predictor delay cycles,
+shared-port stalls, per-port issued counts, TLB hits/misses, page walks and
+walker-capacity stalls. Translation events count admitted memory operations;
+walker-full counts failed admission attempts. Wrong-path fetch slots are a
+penalty-based estimate. No wrong-path instructions execute. Accuracy remains
+inconclusive. Native speed and RTL correlation are not established.
+
 ### Own-core timing configuration snapshots
 
 `rvw.ooo-run/1` accepts optional timing policies for per-class issue counts,
