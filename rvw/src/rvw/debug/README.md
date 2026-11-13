@@ -1,10 +1,113 @@
-# Debug transport and instruction trace
+# Debug transport, Debug Module compliance and instruction trace
 
 `rvw debug` checks simulated debug targets and baseline E-Trace streams.
-OpenOCD is the debug client. Spike supplies the reference JTAG DTM and Debug
-Module. A reference-model pass does not prove a core implementation.
+It has a reference model of the Debug Module, JTAG and DMI drivers, a
+remote_bitbang server, a self-checking compliance campaign and a TAP/DTM
+campaign. A reference-model pass does not prove a core implementation.
 
-## Debug campaign
+## Debug profile
+
+A debug profile (`rvw.debug-profile/1`, TOML) declares the option set of one
+target. Put it beside `rvw.toml` and name it in `[debug_module] profile`, or
+give `--profile`. The campaigns test only declared options. A check for an
+undeclared option is `unsupported`, never a pass. `[skip]` maps a check id to a
+reason; a skipped check is listed with its reason and is not a test.
+
+| Key | Meaning (default) |
+|---|---|
+| `version` | `"0.13.2"` or `"1.0"` (`"1.0"`) |
+| `xlen`, `harts`, `hartsellen` | 32 or 64; hart count; implemented hartsel bits (from `harts`) |
+| `unavailable`, `hart_array`, `haltgroups` | unavailable hart indices; hasel window; dmcs2 halt groups |
+| `progbufsize`, `impebreak`, `datacount`, `autoexec`, `postincrement` | program buffer and data registers |
+| `abstract`, `aarsizes`, `csr_missing_cmderr` | command kinds (`gpr`, `csr`, `fpr`, `memory`, `quick`); sizes; cmderr for a missing CSR (2) |
+| `hartreset`, `resethaltreq`, `reset_vector` | reset options and the reset PC |
+| `modes`, `scratch`, `memory` | privilege modes; RAM the campaign may overwrite (code at +0, handler at +0x400, data at +0x800, U code at +0xc00); memory regions with `kind` ram/readonly/error/off and `sberror` |
+| `[triggers]` | `count`, `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing` |
+| `sba` | `sizes`, `asize`, `misaligned_error` (3), `size_error` (4) |
+| `[transport]` | `kind` = `model`, `jtag-model`, `remote_bitbang` (`host`, `port`, `irlen`) or `dmi_process` (`command`) |
+| model only | `abstract_latency`, `sba.latency`, `ticks_per_access`, `ips`, `elf` |
+
+`examples/debug/spike.toml` declares native Spike 1.1.1-dev. It is a reference
+target, not a core default.
+
+## Drivers
+
+- `dmi.JtagDMI` drives a JTAG DTM: TAP reset, DTMCS, pipelined DMI scans,
+  sticky-busy clear with dmireset and a bounded idle increase. It runs over
+  `dmi.SocketJtag` (remote_bitbang, batched TCK) or `jtag.InProcessJtag`.
+- `dmi.RemoteDMI(host, port)` is `JtagDMI` over remote_bitbang.
+- `dmi.BusDMI` drives a DMI bus object directly, with busy retry.
+- `dmi.ProcessBus` is a core adapter's simulated DMI bus over the C1 line
+  protocol (`docs/PLATFORM_CONTRACTS.md`, "C1 debug transport").
+- `jtag.DTM` is the reference JTAG DTM (IEEE 1149.1 TAP, IDCODE, DTMCS, DMI,
+  BYPASS, request latency, sticky busy, dmireset, dmihardreset) over any DMI bus.
+- `dm.DebugModule` is the reference Debug Module with `hart.Hart` (RV I+M,
+  Zicsr, traps, Debug Mode, a few compressed forms) and `triggers.TriggerUnit`.
+
+## Compliance campaign
+
+```sh
+rvw debug suite --profile rvw-debug.toml --out /tmp/debug-results
+rvw debug suite --profile examples/debug/spike.toml --port 9824 --out /tmp/spike-debug
+rvw debug suite --list
+```
+
+Each check drives the target only through DMI and asserts one spec rule. It
+also records observations. For a non-model target, the runner repeats each check
+on a fresh reference model built from the same profile. Different observations
+fail the check. A check the reference cannot pass is inconclusive. Timing
+checks (busy collisions) skip the comparison. Results are C3 in
+`OUT/results.json`. Exit 0 means all tests passed, 1 a failure, 3 inconclusive
+or no checks.
+
+| Group | Rules |
+|---|---|
+| `dm` (#127) | dmactive reset, version, HARTSELLEN, hart enumeration and nonexistent harts, halt, resume, resumereq with haltreq, unavailable harts, ndmreset and havereset, reset-halt (cause 5 at the reset vector), hartreset, haltsum0, independent multi-hart halt, hart-array mask, halt groups (cause 6), and an independent observer: memory written by a running hart stops changing while halted |
+| `abs`, `pb` (#153) | GPR/CSR round trip, x0, 32-bit reads, unsupported regno/size/cmdtype, sticky cmderr and W1C, cmderr 4 on a running hart, postincrement with autoexec, resume at dpc, busy collision (cmderr 1), Access Memory sizes and postincrement, cross-checks between Access Memory and the program buffer, Quick Access, program-buffer execution, exceptions (cmderr 3; mepc, mcause, dpc and dcsr.cause unchanged), ebreak end, autoexecprogbuf, fence.i on rewritten code |
+| `dbg` | dcsr debugver/prv/cause, ebreak in M/S/U with ebreakm/s/u on and off (Debug Mode entry or breakpoint exception, MPP), dcsr.prv switch, step (cause 4), step over a trap, step over ebreak, stepie, dret and dpc illegal outside Debug Mode |
+| `trig` (#144) | enumeration and tinfo, WARL type/action/vs-vu, dmode protection from M-mode, execute matches for every declared match type, hit, load/store address (before), load/store data at the declared timing, privilege filters, chains, mcontrol timing=1, icount, etrigger, itrigger, action 0 in M (tcontrol.mte) and in U, mte gating, no firing in Debug Mode |
+| `sba` (#156) | capabilities, every size with an independent read-back path, autoincrement, readonaddr/readondata, alignment, unsupported size, error, read-only and powered-off regions with declared sberror, errors block new accesses, sbbusyerror, accesses while the hart runs (SBA sees hart stores; the hart sees an SBA store) |
+
+A check writes code into `scratch`, sets dpc, resumes and waits for a halt. Use a
+disposable simulation. The campaign changes GPRs, CSRs, triggers and scratch memory.
+
+## JTAG TAP and DTM checks
+
+```sh
+rvw debug tap --port 9824 --idcode 0xdeadbeef --out /tmp/tap-results
+```
+
+The checks drive raw TMS/TDI (#133): five TMS=1 cycles reset the TAP from every
+one of the 16 states, IR capture is `01`, IDCODE loads after reset, BYPASS adds one
+bit of delay, DTMCS fields, DMI read status, a Pause-DR mid-scan, sticky busy with
+zero Run-Test/Idle cycles, dmireset and dmihardreset. A DTM that never reports busy
+gives `inconclusive` for the busy check.
+
+## remote_bitbang server
+
+```sh
+rvw debug serve --profile rvw-debug.toml --port 9824 --dtm-latency 2
+```
+
+The server wraps the reference DTM around the reference Debug Module, or around
+a `dmi_process` adapter bus. OpenOCD attaches with `adapter driver remote_bitbang`.
+A model hart keeps running between JTAG accesses (`--ticks-per-ms`).
+`--port-file` records the port. `--duration` stops the server.
+
+## Spike findings
+
+The campaign ran against native Spike 1.1.1-dev (source revision checked:
+`41b3525938644fc517cbb7d7d6cd3f32394113b3`) with `examples/debug/spike.toml`.
+Spike passes the TAP campaign and most DM checks. The profile records these
+Spike choices: Debug 0.13.2, no resethaltreq, no Access Register postincrement
+(the bit is ignored, not refused), match types 0 to 5 only, no tcontrol,
+mcontrol timing 0 only, store-data triggers before the store, SBA misaligned
+error 2 and unsupported-size error 3. Spike skips two checks with reasons:
+it keeps data0 when dmactive is cleared, and it has no haltsum0. Spike does not
+implement dcsr.stepie and takes pending interrupts while stepping; the stepie
+check reports unsupported because the bit reads 0.
+
+## OpenOCD reference campaign
 
 The selected profile is Debug 0.13.2, one RV64 machine-mode hart, five-bit
 JTAG IR, abstract GPR/CSR access, and one `mcontrol` execute trigger.
@@ -92,26 +195,27 @@ ingress, runs the reference encoder, and decodes both CSV and raw streams.
 Negative tests remove the final support packet, truncate raw data, and inject
 trace-loss status. These are reference streams, not RTL encoder captures.
 
-## Proposed core hooks and remaining work
+## Core hooks and remaining work
 
-A core adapter must expose a simulated DMI request/response bus or a JTAG DTM
-through remote_bitbang. It must declare the DM version, harts, abstract command
-options and triggers. It must supply an independent hart-state observer.
-An encoder adapter must export actual packet bytes and its static/runtime
-configuration, plus independent C2 retirement data from the same run.
-These are proposals. This change does not add or test core hooks.
+A core adapter exposes either a JTAG DTM through remote_bitbang or a DMI bus
+through the `dmi_process` line protocol. It declares its options in a debug
+profile. No core adapter in this repository implements either hook yet.
 
-Open acceptance items remain:
+Open items:
 
-- #127: unavailable harts, reset entry, multi-hart groups and core-state observers.
-- #133: a declared RTL DMI bus adapter, full TAP/busy/reset fault injection and core validation.
-- #144: load/store, count/chained triggers, privilege, virtualization and WARL campaigns.
-- #168: RTL encoder ingress, independent exception/context streams and wider options.
-- #172: overflow, dropped packets, buffer wrap and certified sync recovery windows.
-- #194: a separate versioned N-Trace decoder and campaign. E-Trace cannot count as N-Trace.
+- #127: the independent observer uses memory effects only; a C2-trace observer is not added.
+- #133: no RTL DMI adapter exists yet; physical transports are out of scope.
+- #144: virtualization (vs/vu with H), textra/tdata3, size matching and NMI itrigger are not tested.
+- #153: abstract FPR access and relaxedpriv are not tested.
+- #156: concurrent-traffic ordering beyond visibility is not tested.
+- #168, #172, #194: see the E-Trace section and the trace modules.
 
 ## Decisions and sources
 
+The reference model is written from the specification text. It is used to
+validate the campaigns (every check passes on it, and seeded model bugs make the
+matching checks fail) and as the comparison reference. It is not an ISA
+simulator. Use Spike for ISA conformance.
 Reuse the [OpenOCD RISC-V client](https://openocd.org/doc-release/html/Architecture-and-Core-Commands.html)
 and [Spike remote JTAG support](https://github.com/riscv-software-src/riscv-isa-sim#debugging-with-gdb).
 The debug profile follows [Debug 0.13.2](https://github.com/riscv/riscv-debug-spec/releases/tag/0.13.2).
