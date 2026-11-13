@@ -2536,6 +2536,16 @@ adds expected output values after reset edges. `reset_coverage` counts declared,
 total output and proved bits. A nonpassing proof has zero proved bits. This
 format does not record internal-register or whole-core security qualification.
 
+### Equivalence witness simulation
+
+`rvw.formal.cex/1` can set `source_flow` to `equiv`. The input must be a
+`not_equivalent` result with a witness inside a failed native eqy partition.
+Simulation uses the captured partition RTLIL model and retains both source
+snapshots. `reproduced` requires the same observed assertion path and source
+in baseline and edited replay, without an assumption failure. It is simulation
+evidence only. Status remains `inconclusive` and CLI exit remains 1. Generated
+model and testbench files keep their existing generation-only contract.
+
 ### Sequential equivalence result (`rvw.formal.equiv/1`)
 
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
