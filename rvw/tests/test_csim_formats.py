@@ -183,3 +183,24 @@ def test_mode_changes_become_context_rows(tmp_path):
     src.write_text(SPIKE_LOG.replace("core   0: 3 0x000000008000000c", "core   0: 0 0x000000008000000c"))
     info = traces.from_spike(src, tmp_path / 's.csim')
     assert info["context_changes"] == 2
+
+
+def test_c2_mask_lanes_preserve_memory_addresses(tmp_path):
+    rows = [(0x1000, 0x1004, LW, 5,
+             {"mem_addr": "0x203c", "mem_rmask": 0xf0}),
+            (0x1004, 0x1008, SW, 0,
+             {"mem_addr": "0x2ffc", "mem_wmask": 0xf0})]
+    out = tmp_path / 'lanes.csim'
+    traces.from_c2(c2(tmp_path, rows), out)
+    body = out.read_text().splitlines()
+    assert 'L 1 1000 2040 4' in body
+    assert 'S 2 1004 3000 4' in body
+
+
+def test_c2_sparse_mask_keeps_only_selected_bytes(tmp_path):
+    out = tmp_path / 'sparse.csim'
+    info = traces.from_c2(c2(tmp_path, [(0x1000, 0x1004, LW, 5,
+                         {"mem_addr": "0x203c", "mem_rmask": 0x91})]), out)
+    assert [r for r in out.read_text().splitlines() if r.startswith('L ')] == [
+        'L 1 1000 203c 1', 'L 1 1000 2040 1', 'L 1 1000 2043 1']
+    assert info['memory_rows'] == 3
