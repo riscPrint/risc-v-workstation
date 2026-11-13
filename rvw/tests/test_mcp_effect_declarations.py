@@ -42,3 +42,13 @@ def test_query_declarations(registry):
     assert registry.tools['query_build_db'].native_tools == ('JDK', 'sbt')
     assert set(registry.tools['query_build_hdl'].native_tools) == {'Yosys', 'yosys-slang', 'GHDL', 'firtool'}
     assert 'writes' in registry.tools['query_export'].side_effects
+
+
+def test_wave_declarations_include_conditional_cache_writes(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith('wave_')]
+    assert tools
+    assert all(tool.side_effects and tool.native_tools is not None for tool in tools)
+    assert 'index cache' in registry.tools['wave_changes'].side_effects
+    assert 'out' in registry.tools['wave_cut'].side_effects
+    assert registry.tools['wave_index_verify'].side_effects == 'read-only'
+    assert registry.tools['wave_session_open'].native_tools == ('GTKWave tools',)
