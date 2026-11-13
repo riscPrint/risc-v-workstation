@@ -10,9 +10,13 @@ It accepts one `set_isolation` per domain with explicit `-domain`,
 `-applies_to outputs`, binary `-clamp_value`, `-isolation_signal` and high/low
 `-isolation_sense`. These command options follow the
 [OpenROAD UPF command documentation](https://openroad.readthedocs.io/en/latest/main/src/upf/README.html).
-The importer does not invoke Tcl. It rejects substitutions, command separators,
-nested lists, unknown commands, unknown options and unsupported strategies.
-Line continuation and full-line comments are supported. Supply networks,
+The importer does not invoke Tcl. It accepts literal quoted or braced words,
+semicolon and newline command separators, line continuation, and comments at
+command starts. A comment after a command needs a separator first. Separators
+inside quoted or braced words remain part of the word. These lexical rules
+follow the [Tcl command syntax](https://www.tcl-lang.org/man/tcl8.6/TclCmd/Tcl.htm).
+It rejects substitutions, nested braced lists, other backslash escapes, unknown
+commands, unknown options and unsupported strategies. Supply networks,
 level shifting, clock gating and general Tcl are refused.
 This is an explicit subset, not general IEEE 1801 compatibility.
 
@@ -74,3 +78,17 @@ transients before that bound. The control path and sense come from UPF.
 The observation clock must remain active. This checks a project settling
 contract. It does not model analog power ramps or physical gating cells.
 Clock-gating import remains unsupported.
+
+## Literal command examples
+
+The following source has the same supported domain semantics as the braced form:
+
+```tcl
+upf_version "2.1"; # comment starts after a command separator
+create_power_domain PD -elements "core bus"
+```
+
+Each command still passes the UPF command and option checks. A trailing
+`source`, `puts`, variable substitution or command substitution is not executed.
+Unrepresented syntax is an error. This change adds lexical forms only. It adds
+no clock-gate import, dynamic Tcl evaluation, new UPF strategy, or physical check.
