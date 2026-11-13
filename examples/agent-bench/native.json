@@ -12,7 +12,10 @@
   "config": "rv32im",
   "seed": 1,
   "environment": {
-    "RVW_VEX_LOCK": "vex-agent"
+    "RVW_VEX_LOCK": "vex-agentbench",
+    "RVW_SBT_LOCK": "sbt-agentbench",
+    "RVW_NICE": "15",
+    "RISCVSIM_MAKE_JOBS": "2"
   },
   "run_args": [
     "--mem-latency",
@@ -280,7 +283,7 @@
     {
       "file": "rvw.toml",
       "find": "lock = \"vex\"",
-      "replace": "lock = \"vex-agent\""
+      "replace": "lock = \"vex-agentbench\""
     }
   ],
   "program_copy": [
@@ -288,5 +291,7 @@
       "source": "../vexriscv/rvw/out/isa",
       "dest": "rvw/out/isa"
     }
-  ]
+  ],
+  "platform": "../vexriscv/rvw/platform.json",
+  "nice": 15
 }

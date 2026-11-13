@@ -219,3 +219,17 @@ no C4 acceptance. Changed evaluator packs are refused.
 
 Native qualification also requires equal, present `source.tools_rev` values
 for seeded and repaired runs. A changed harness revision is inconclusive.
+
+## Three-phase native qualification
+
+Native qualification records `baseline`, `seeded` and `repaired` results.
+Each workload has `batch_wall_s`. This is the total adapter batch duration,
+including compilation. It is not a separate per-program runtime.
+Each `cosim` record has status, first `mismatch`, wall seconds, exit code,
+timeout state and the path to the full output. The pack declares `platform`
+relative to itself. Qualification uses strict Spike comparison. Baseline and
+repair must pass C1 and match Spike. Seeded failing tests must fail C1 and have
+an explicit Spike mismatch. Seeded controls must pass and match. Missing
+reference evidence is inconclusive. Baseline and repair retain equal ELF,
+seed, config and harness revision. Existing repair-loop scores remain separate;
+the three-phase rule applies to `native-qualify`.
