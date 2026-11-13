@@ -43,10 +43,10 @@ The BOOM adapter runs through `SimSession`, but it is not tested with faults.
 
 | Class | Meaning |
 |---|---|
-| `detected` | The run failed (fail, assert, rvfi_error), a declared mechanism fired, or (with `--watchdog`) it timed out |
+| `detected` | The run failed (fail, assert, rvfi_error), a declared mechanism fired, or (with `--watchdog`) the adapter stopped it at the cycle limit under which the golden run passed |
 | `silent_corruption` | The run passed, but its architectural C2 records (pc, insn, rd, rd_wdata, memory writes, traps, mode) differ from the golden run |
 | `safe` | The run passed with the golden architectural trace |
-| `timeout` | The run did not end, and no watchdog is declared |
+| `timeout` | The run did not end, and no watchdog is declared, or it hit a wall-clock limit |
 | `not_injected` | The adapter did not confirm the injection |
 | `inconclusive` | Harness error, a missing trace, or an unknown status |
 

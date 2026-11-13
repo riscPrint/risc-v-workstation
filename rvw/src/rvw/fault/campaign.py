@@ -9,7 +9,9 @@ against the golden run's C2 trace:
 - `detected`: the run reported a failure status or a declared detection mechanism fired.
 - `silent_corruption`: the run passed but its architectural trace differs from the golden run.
 - `safe`: the run passed with the golden architectural trace.
-- `timeout`: the run did not end (detected only when the profile declares a watchdog).
+- `timeout`: the run did not end. With a declared watchdog, a hang counts as detected only when
+  the adapter stopped it at the cycle limit under which the golden run passed; a wall-clock
+  timeout stays `timeout`.
 - `not_injected`: the adapter did not confirm the injection; it is not in the denominator.
 - `inconclusive`: the harness failed or evidence is missing.
 
@@ -197,8 +199,11 @@ def classify(c1, timed_out, golden, out, *, detections=None, watchdog=False):
                    ({detections['status'][status]} if status in detections.get('status', {}) else set()))
     evidence = {'status': status, 'applied': applied}
     if status == 'timeout' or timed_out:
-        evidence['detected_by'] = ['watchdog'] if watchdog else []
-        return ('detected' if watchdog else 'timeout'), evidence
+        # A wall-clock limit says nothing about the core (C1); only a cycle-limit hang is a detection.
+        from rvw.results import inconclusive_cause
+        cycle_hang = watchdog and not timed_out and status == 'timeout' and inconclusive_cause(status, c1) is None
+        evidence['detected_by'] = ['watchdog'] if cycle_hang else []
+        return ('detected' if cycle_hang else 'timeout'), evidence
     if status == 'error' or c1.get('inconclusive'):
         return 'inconclusive', {**evidence, 'reason': c1.get('message') or c1.get('inconclusive') or 'adapter error'}
     trace = (c1.get('artifacts') or {}).get('rvfi_trace')

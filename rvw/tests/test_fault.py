@@ -125,6 +125,11 @@ def test_adapter_without_confirmation_is_not_injected(tmp_path):
     c1 = {'status': 'timeout', 'details': {'fault': {'applied': True}}}
     assert campaign.classify(c1, False, [], tmp_path)[0] == 'timeout'
     assert campaign.classify(c1, False, [], tmp_path, watchdog=True)[0] == 'detected'
+    # A wall-clock timeout (harness or adapter) says nothing about the core.
+    assert campaign.classify(c1, True, [], tmp_path, watchdog=True)[0] == 'timeout'
+    wall = dict(c1, wall_clock_timeout=True)
+    assert campaign.classify(wall, False, [], tmp_path, watchdog=True)[0] == 'timeout'
+    assert campaign.classify(None, True, [], tmp_path, watchdog=True)[0] == 'timeout'
     c1 = {'status': 'pass', 'details': {'fault': {'applied': True}}, 'artifacts': {}}
     assert campaign.classify(c1, False, [], tmp_path)[0] == 'inconclusive'
 
