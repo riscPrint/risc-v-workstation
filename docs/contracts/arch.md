@@ -581,3 +581,13 @@ load. The load and younger ROB window re-enter finite issue capacity after
 `replay_penalty`. Memory-order recoveries use the same pending admission queue.
 Reports distinguish cache retries from memory-order recoveries. Mixed RTL
 reschedule totals are not treated as typed LSU events or exact replay evidence.
+
+## Replay-window ablation and stable filler
+
+`replay_window` is Boolean, default false. True uses finite memory-order retry
+admission without requiring a component cache. `cache_miss_replay: true` also
+enables that admission path. False for both fields keeps the earlier admission
+policy for explicit ablation. All recoveries still squash active wrong work.
+Statistical filler starts from the dynamic branch's fixed trace position.
+Unused capture capacity does not advance a global mix cursor. Different
+structure capacities therefore use the same per-branch filler prefix.

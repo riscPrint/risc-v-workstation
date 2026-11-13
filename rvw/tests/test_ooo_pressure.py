@@ -172,3 +172,33 @@ def test_retry_squashes_wrong_work_before_queue_readmission():
     assert result['events']['cache_miss_replays'] == 1
     assert result['events']['wrong_path_squashed'] == result['events']['wrong_path_renamed']
     assert result['max_occupancy']['issue_entries'] <= c.issue_entries
+
+
+def test_filler_prefix_is_independent_of_rob_capacity():
+    from rvw.ooo.speculative import MixWork
+    ops = [Instruction('alu'), Instruction('load', address=128, size=4), Instruction('store', address=128, size=4)]
+    small = config(wrong_path_occupancy=True)
+    large = replace(small, rob_entries=128)
+    a, b = MixWork(ops), MixWork(ops)
+    for branch in ops:
+        # A longer unused capture must not change any later branch's mix.
+        x = a.begin(branch, 10, small.rob_entries, small, None)
+        y = b.begin(branch, 10, large.rob_entries, large, None)
+        assert x == y[:len(x)]
+
+
+def test_memory_order_window_can_run_without_component_cache():
+    c = Config(4,16,4,32,4,8,8,8,4,
+               dict(alu=1,divide=12,load=2,store=2),
+               memory_policy='speculate', replay_window=True)
+    ops = [Instruction('divide',dest=1), Instruction('store',(1,),address=16,size=4),
+           Instruction('load',dest=2,address=16,size=4), Instruction('alu',(2,),3)]
+    result = simulate(ops,c,backend='python')
+    assert result['events']['memory_order_replays'] == 1
+    assert result['events']['replay_readmitted'] > 0
+    assert result['instret'] == len(ops)
+
+
+def test_replay_window_flag_is_boolean():
+    with pytest.raises(ValueError,match='replay_window'):
+        config(replay_window=1)

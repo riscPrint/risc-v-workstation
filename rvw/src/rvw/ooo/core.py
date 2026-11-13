@@ -37,6 +37,7 @@ class Config:
     wrong_path_occupancy: bool = False
     store_drain_width: int = 0
     cache_miss_replay: bool = False
+    replay_window: bool = False
     dependence_entries: int = 1024
     replay_penalty: int = 5
     forwarding_latency: int = 1
@@ -106,6 +107,8 @@ class Config:
             raise ValueError("unsupported branch_prediction")
         if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
             raise ValueError("select static prediction or component prediction")
+        if type(self.replay_window) is not bool:
+            raise ValueError("replay_window must be boolean")
         if type(self.cache_miss_replay) is not bool:
             raise ValueError("cache_miss_replay must be boolean")
         if self.cache_miss_replay and not self.components.get("memory", {}).get("l1d"):
@@ -525,12 +528,15 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                         victim.replay_at = None
                         victim.translation_ready = None
                         victim.predicted_correct = None
-                    if issue_window:
-                        issue_window.drop(set(younger))
                     younger_set = set(younger)
                     waiting[:] = [item for item in waiting if item not in younger_set]
-                    replay_pending = deque(e for e in rob if e in replay_pending or (e in younger_set and not e.bypass_ready))
-                    # Keep oldest-ready arbitration after rebuilding the queue.
+                    if config.replay_window or config.cache_miss_replay:
+                        if issue_window:
+                            issue_window.drop(younger_set)
+                        replay_pending = deque(e for e in rob if e in replay_pending or (e in younger_set and not e.bypass_ready))
+                    else:
+                        # Preserve the earlier replay policy for explicit ablation.
+                        waiting.extend(e for e in younger if not e.bypass_ready)
                     order = {item: index for index, item in enumerate(rob)}
                     waiting.sort(key=order.__getitem__)
                     unresolved_branch = None

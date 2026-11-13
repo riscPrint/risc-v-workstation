@@ -1189,3 +1189,226 @@ No variant result selects a parameter.
 
 [Retained results](../../../../examples/naxriscv/rvw/arch/replay-results.json) include
 the configuration, engine hash, absolute errors and paired results.
+
+## Filler independence and corrected ablation
+
+The earlier cursor advanced for every generated filler instruction, including
+instructions never admitted. A larger ROB could therefore change a later
+branch's mix. That was an artifact of generation capacity. Filler now starts
+at the same dynamic branch position in the measured trace for every variant.
+The per-branch prefix is independent of ROB and queue sizes.
+
+`replay_window: true` selects bounded memory-order readmission without a
+component cache. `cache_miss_replay: true` also enables this path. With both
+false, the earlier memory-order admission policy stays available for ablation.
+Recovery still discards active wrong work in every policy.
+
+The corrected baseline, occupancy, drain and retry scores below share one
+engine and the same fitted timing parameters. The earlier stage tables and
+`*-preseed-results.json` files are historical. They must not be mixed with
+the corrected stage results when comparing mechanism effects.
+
+## Resource study: baseline
+
+This stage meets the criterion on 11/24 pairs and 2/15 nonzero changes.
+Training mean absolute IPC error is 10.67%.
+Held-out mean absolute IPC error is 7.47% across six programs.
+Same-step pooled elasticity rank tau-b is 0.667, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.155 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.276 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.088 | outside |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -0.860 | within |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.108 | outside |
+| sq8 | towers | -4.393 | -0.054 | outside |
+| iq16 | vvadd | -8.244 | -7.976 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.000 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -5.890 | outside |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -3.490 | outside |
+| sq8 | memcpy | -10.902 | -2.602 | outside |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/baseline-results.json) include
+the configuration, engine hash, absolute errors and paired results.
+
+## Resource study: occupancy
+
+This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
+Training mean absolute IPC error is 7.15%.
+Held-out mean absolute IPC error is 9.11% across six programs.
+Same-step pooled elasticity rank tau-b is 0.667, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.825 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.342 | within |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.214 | within |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.477 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.804 | within |
+| sq8 | towers | -4.393 | -0.216 | outside |
+| iq16 | vvadd | -8.244 | -8.659 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.596 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -8.691 | within |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.072 | within |
+| sq8 | memcpy | -10.902 | -3.079 | outside |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/occupancy-results.json) include
+the configuration, engine hash, absolute errors and paired results.
+
+## Resource study: drain
+
+This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
+Training mean absolute IPC error is 7.31%.
+Held-out mean absolute IPC error is 9.11% across six programs.
+Same-step pooled elasticity rank tau-b is 1.000, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.825 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.173 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.214 | within |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.477 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.804 | within |
+| sq8 | towers | -4.393 | -0.658 | outside |
+| iq16 | vvadd | -8.244 | -8.659 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.596 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -8.691 | within |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.072 | within |
+| sq8 | memcpy | -10.902 | -9.605 | within |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/drain-results.json) include
+the configuration, engine hash, absolute errors and paired results.
+
+## Resource study: replay
+
+This stage meets the criterion on 10/24 pairs and 1/15 nonzero changes.
+Training mean absolute IPC error is 9.46%.
+Held-out mean absolute IPC error is 9.55% across six programs.
+Same-step pooled elasticity rank tau-b is 1.000, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | +0.649 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | +0.400 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.064 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | +0.182 | outside |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.384 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.816 | within |
+| sq8 | towers | -4.393 | -0.590 | outside |
+| iq16 | vvadd | -8.244 | -0.981 | outside |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.000 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -0.770 | outside |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | +0.037 | outside |
+| sq8 | memcpy | -10.902 | -0.734 | outside |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/replay-results.json) include
+the configuration, engine hash, absolute errors and paired results.
+
+## Resource study: window
+
+This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
+Training mean absolute IPC error is 7.31%.
+Held-out mean absolute IPC error is 9.08% across six programs.
+Same-step pooled elasticity rank tau-b is 1.000, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.825 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.173 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.214 | within |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.384 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.816 | within |
+| sq8 | towers | -4.393 | -0.590 | outside |
+| iq16 | vvadd | -8.244 | -8.659 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.596 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -8.691 | within |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.072 | within |
+| sq8 | memcpy | -10.902 | -9.605 | within |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/window-results.json) include
+the configuration, engine hash, absolute errors and paired results.
