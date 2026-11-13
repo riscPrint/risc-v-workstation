@@ -241,6 +241,12 @@ def verify(source, out, manifest=None, timeout=120):
                                  build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source,profile=row["kind"],lock=entry.get("lock", "sbt-soc"))
                 row.update(generated=report['generated'],ran=report['ran'],result=report['status'],details=report,complete=report['status']=='pass')
                 row.pop('reason',None)
+            if row['kind'] == 'protocol' and entry.get('classpath_file') and not entry.get('command'):
+                from .protocol_proof import prove
+                report = prove(source, out/'protocol-proof', Path(entry['classpath_file']).read_text().strip(), min(timeout,30))
+                row.update(generated=True, ran=True, result=report['status'], details=report,
+                           complete=report['status']=='pass', scope=report.get('scope'))
+                row.pop('reason',None)
             if row['kind'] == 'decode' and entry.get('classpath_file'):
                 from .decode_proof import prove
                 report = prove(source, out/'decode-proof', Path(entry['classpath_file']).read_text().strip(), min(timeout,60))

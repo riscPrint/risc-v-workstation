@@ -544,3 +544,13 @@ A `rvw.cocotb/1` manifest can list `data_files` for generated RAM initialization
 files. Paths resolve relative to the manifest. Basenames must be distinct.
 The worker copies these files to its test directory. Their hashes are retained
 with sources, and changed inputs invalidate the run.
+
+## Composed consumer input files
+
+Composition emits verify.json, connections.json and register-checks.json beside
+composition.json. The protocol entry selects the composition and its bridge
+monitors. The register list comes from the selected map. Clock/reset transfers
+come from each device's selected domain. Direct scalar interrupt transfers are
+included. Aggregated or synchronized interrupts need a project temporal contract.
+The manifest names runtime-classpath.txt, soc.db and apb.jsonl explicitly.
+These are required native inputs. Generation does not earn a consumer pass.
