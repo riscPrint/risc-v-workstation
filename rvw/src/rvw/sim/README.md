@@ -288,3 +288,28 @@ A native smoke test uses a direct Verilator `--savable` accumulator. It saves
 the model, clock time, PRNG, memory word and monitor counter at cycle 8. A fresh
 process restores these values. Its remaining 12 samples must equal the
 uninterrupted suffix. This does not qualify the Spinal bridge or a RISC-V core.
+
+## Live checkpoint commands
+
+`rvw sim checkpoint adapter.json --cycle 100 --out snapshot.json` advances a
+project port to a stopped boundary. Use `--instruction N` instead for a retired
+instruction boundary. The port must stop at exactly that count. Capture refuses
+a different count. `rvw sim resume adapter.json snapshot.json --out NEW_DIR`
+creates a fresh port, validates the identity envelope, restores and finishes.
+MCP tools are `sim_checkpoint`, `sim_resume` and `sim_suffix_check`.
+
+The `rvw.snapshot-adapter/1` project manifest contains `module` (a Python file),
+`identity_files` (nonempty ordered file lists for `rtl`, `native_build`, `harness`
+and `stimulus`), and optional `options`. Paths resolve beside the manifest.
+This is executable trusted project code. Its `create(options)` returns a
+`SnapshotPort` with `advance(unit, target)`, `position(unit)`, `finish(out)` and
+`close()`. Units are `cycles` and `instructions`. `finish` must create a fresh
+C1/C2 run directory. The adapter owns native stepping and all state inventories.
+The manifest and module bytes also contribute to harness identity. List all
+transitive native inputs. This declaration does not infer a complete inventory.
+
+Run `rvw sim suffix-check ORIGINAL_C2 RESUMED_C2 --position BYTE_OFFSET` after
+resume. The offset comes from the captured writer. Both traces must include a
+C2 header and end event. Exact prefix and nonempty suffix bytes must match.
+This check proves byte equality only. Run C1 terminal checks and independent
+ISA checks separately. No bundled Spinal port is qualified by these commands.

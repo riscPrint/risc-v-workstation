@@ -98,24 +98,49 @@ class RvfiProbe(channels: Seq[Bundle], csrSlots: Seq[Map[Int, Data]] = Seq.empty
  * Cycles never decrease in the file (C2 requires it); a write that would break this fails.
  */
 class RvfiTraceWriter(file: File, header: ujson.Obj,
-                      flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1")) extends AutoCloseable {
+                      flushEachRecord: Boolean = sys.env.get("RVW_RVFI_FLUSH").contains("1"),
+                      resume: Option[ujson.Value] = None) extends AutoCloseable {
+  // Validate the captured prefix before opening or replacing the output.
+  private val restored = resume.map(RvfiWriterCheckpoint.decode(_, header))
   file.getAbsoluteFile.getParentFile.mkdirs()
-  private val w = new PrintWriter(new BufferedWriter(new FileWriter(file), 1 << 20))
+  restored.foreach(s => java.nio.file.Files.write(file.toPath, s.prefix))
+  private val w = new PrintWriter(new java.io.OutputStreamWriter(
+    new java.io.FileOutputStream(file, restored.nonEmpty), java.nio.charset.StandardCharsets.UTF_8))
   private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
   private val schema = if (snapshot.nonEmpty) "rvw.rvfi/2" else "rvw.rvfi/1"
   require(!header.value.contains("schema"), "trace writer selects the schema")
   private val supplied = if (snapshot.nonEmpty && !header.value.contains("capabilities"))
     header.value.toSeq :+ ("capabilities" -> ujson.Arr("csr")) else header.value.toSeq
-  w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str(schema)) ++ supplied)))
+  if (restored.isEmpty)
+    w.println(ujson.write(ujson.Obj.from(Seq("schema" -> ujson.Str(schema)) ++ supplied)))
   if (flushEachRecord) w.flush()
-  var records = 0L
-  var trapRecords = 0L
-  var orderGaps = 0L
-  private var nextOrder: BigInt = -1
-  private var lastCycle = -1L
-  private var pending: Option[(Long, BigInt, Boolean)] = None
+  var records = restored.map(_.records).getOrElse(0L)
+  var trapRecords = restored.map(_.traps).getOrElse(0L)
+  var orderGaps = restored.map(_.gaps).getOrElse(0L)
+  private var nextOrder: BigInt = restored.map(_.nextOrder).getOrElse(BigInt(-1))
+  private var lastCycle = restored.map(_.lastCycle).getOrElse(-1L)
+  private var pending: Option[(Long, BigInt, Boolean)] = restored.flatMap(_.pending)
+  private var ended = false
+
+  /** Call only while the adapter has stopped all writers at a cycle boundary.
+    * Prefix bytes and pending late-tval events belong to the same snapshot. */
+  def checkpoint(): ujson.Value = {
+    require(!ended, "cannot checkpoint an ended C2 writer")
+    w.flush()
+    require(!w.checkError(), "C2 flush failed")
+    val bytes = java.nio.file.Files.readAllBytes(file.toPath)
+    ujson.Obj("schema" -> "rvw.rvfi-writer/1", "header" -> header,
+      "prefix" -> java.util.Base64.getEncoder.encodeToString(bytes),
+      "sha256" -> RvfiWriterCheckpoint.digest(bytes), "position" -> bytes.length.toString,
+      "records" -> records.toString, "traps" -> trapRecords.toString,
+      "gaps" -> orderGaps.toString, "next_order" -> nextOrder.toString,
+      "last_cycle" -> lastCycle.toString,
+      "pending" -> pending.map { case (c, cause, intr) =>
+        ujson.Arr(c.toString, cause.toString, intr) }.getOrElse(ujson.Null))
+  }
 
   private def at(cycle: Long): Unit = {
+    require(!ended, "C2 writer has ended")
     if (cycle < lastCycle) throw new IllegalStateException(s"C2 cycles must not decrease: $cycle after $lastCycle")
     lastCycle = cycle
   }
@@ -168,8 +193,35 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     pending = None
     at(cycle)
     w.println(s"""{"event": "end", "cycle": $cycle, "status": "$status"}""")
+    ended = true
     if (flushEachRecord) w.flush()
   }
 
   def close(): Unit = w.close()
+}
+
+/** Serialized writer state. The outer native envelope binds this to the model. */
+private[riscvsim] object RvfiWriterCheckpoint {
+  case class State(prefix: Array[Byte], records: Long, traps: Long, gaps: Long,
+                   nextOrder: BigInt, lastCycle: Long, pending: Option[(Long, BigInt, Boolean)])
+  def digest(bytes: Array[Byte]): String = java.security.MessageDigest.getInstance("SHA-256")
+    .digest(bytes).map(b => f"${b & 0xff}%02x").mkString
+  def decode(v: ujson.Value, header: ujson.Obj): State = {
+    require(v("schema").str == "rvw.rvfi-writer/1", "unsupported C2 writer snapshot")
+    require(v("header") == header, "C2 snapshot header mismatch")
+    val prefix = java.util.Base64.getDecoder.decode(v("prefix").str)
+    require(prefix.length.toString == v("position").str && digest(prefix) == v("sha256").str,
+      "C2 snapshot prefix mismatch")
+    val records = v("records").str.toLong
+    val traps = v("traps").str.toLong
+    val gaps = v("gaps").str.toLong
+    require(records >= 0 && traps >= 0 && traps <= records && gaps >= 0 && gaps <= records,
+      "invalid C2 snapshot counters")
+    val pending = if (v("pending") == ujson.Null) None else {
+      val a = v("pending").arr
+      require(a.size == 3, "invalid pending C2 trap")
+      Some((a(0).str.toLong, BigInt(a(1).str), a(2).bool))
+    }
+    State(prefix, records, traps, gaps, BigInt(v("next_order").str), v("last_cycle").str.toLong, pending)
+  }
 }
