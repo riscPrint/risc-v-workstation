@@ -21,6 +21,7 @@ def parser():
     p.add_argument('--checkout', type=Path, required=True)
     p.add_argument('--python', default=sys.executable)
     p.add_argument('--target', choices=['rv32imc', 'rv64imc'], required=True)
+    p.add_argument('--target-profile', type=Path)
     p.add_argument('--seed', type=int, required=True)
     p.add_argument('--instructions', type=int, default=50)
     p.add_argument('--out', type=Path, required=True)
@@ -49,6 +50,13 @@ def worker(a):
                 '--disable_compressed_instr=1', '--bare_program_mode=1',
                 '--asm_file_name='+str(a.out/'program'),
                 '--log_file_name='+str(a.out/'generator.log')]
+    if a.target_profile:
+        from importlib import import_module
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'rvw/src'))
+        from rvw.regress.dv_target import apply
+        package = import_module('pygen_src.riscv_instr_pkg')
+        module = import_module('pygen_src.target.'+a.target+'.riscv_core_setting')
+        apply(json.loads(a.target_profile.read_text()), module, package)
     # The pinned base class has no directed streams and honors instr_cnt.
     # The upstream rand test overrides it to 10,000 and adds directed streams.
     from pygen_src.test.riscv_instr_base_test import riscv_instr_base_test
@@ -72,17 +80,20 @@ def main():
     if revision != REVISION or dirty:
         raise ValueError('generator checkout must be clean at '+REVISION)
     a.out.mkdir(parents=True, exist_ok=False)
+    extra = ['--target-profile', str(a.target_profile.resolve())] if a.target_profile else []
     with (a.out/'worker.log').open('w') as log:
         r = run_group([a.python, str(Path(__file__).resolve()), '--worker',
                        '--checkout', str(a.checkout), '--target', a.target,
                        '--seed', str(a.seed), '--instructions', str(a.instructions),
-                       '--out', str(a.out)], timeout=a.timeout, stdout=log, stderr=log)
+                       '--out', str(a.out), *extra], timeout=a.timeout, stdout=log, stderr=log)
     source = a.out/'program_0.S'
     metadata = dict(status='generated' if not r.timed_out and r.returncode == 0 and source.is_file() else 'error',
                     generator_revision=revision, target=a.target, seed=a.seed,
                     instructions=a.instructions, profile='bare-integer-alu',
                     pyboolector='3.2.4.38488416565', pyvsc='0.9.1.10086043874',
                     returncode=r.returncode, timed_out=r.timed_out)
+    if a.target_profile:
+        metadata['target_profile_sha256'] = hashlib.sha256(a.target_profile.read_bytes()).hexdigest()
     if source.is_file():
         metadata['source_sha256'] = hashlib.sha256(source.read_bytes()).hexdigest()
     (a.out/'generation.json').write_text(json.dumps(metadata, indent=2)+'\n')
