@@ -3678,3 +3678,14 @@ and `summary` per engine with solved, bounded passes, cases, and total wall time
 Only `pass` and `fail` count as solved. Missing tools and unsupported modes do
 not count. SBY `UNKNOWN` with exit 4 is inconclusive. Inconsistent status and
 exit code pairs are errors.
+
+
+### Eventual-response liveness jobs
+
+`rvw.formal-live/1` records `status`, `observation`, property ids, clock names,
+`live` or `fair` cell wires, input capture and restrictions. The frontend accepts
+single-clock Boolean eventual response and emits SBY `mode live` with
+`aiger suprove`. It never substitutes a bounded response. Generated jobs report
+`not_run`. Missing tools report `missing_tool`. Engine PASS remains unknown;
+engine FAIL is a failure. The result does not certify activation or non-vacuity.
+CLI `formal liveness` and MCP `formal_liveness` share this result.

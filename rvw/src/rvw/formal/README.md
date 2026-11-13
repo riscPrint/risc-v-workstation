@@ -1643,3 +1643,27 @@ This small subset does not establish full-block capacity.
 Raw results and tool hashes: `/tmp/rvw-deep-hwmcc-run2/result.json`.
 Avy crashed. Induction exhaustion stays inconclusive. Missing engines were
 not run. No licensed comparison or open-core property campaign ran.
+
+
+### Eventual-response liveness
+
+```sh
+rvw formal liveness response.sv --top dut --out live-job
+rvw formal liveness response.sv --top dut --out live-job --run --timeout 60
+```
+
+This command accepts `assert property (@(posedge clk) req |-> s_eventually ack)`
+and the corresponding `assume` form. A bare `s_eventually ack` uses a constant
+request. Each pending request remains pending until a sampled acknowledgement.
+The generated SBY job uses native `$live` or `$fair` cells and `aiger suprove`.
+The same response can discharge all earlier identical response obligations.
+No finite deadline replaces eventuality. The clock is one abstract rising-edge
+clock. Reset cancellation, cross-clock properties, nested temporal response
+expressions and mixed safety/liveness jobs remain refused.
+
+Without `--run`, the command writes a job and reports `observation=not_run`.
+With `--run`, a missing SBY or suprove gives `missing_tool`. Engine passes remain
+`status=unknown` because attribution, activation and non-vacuity are not certified.
+An engine failure is recorded as a failure. `formal_liveness` exposes the same
+operation through MCP. Native lowering tests check `$live` creation. They do not
+establish a liveness proof when suprove is absent.

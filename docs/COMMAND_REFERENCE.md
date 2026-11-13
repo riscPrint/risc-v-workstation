@@ -554,7 +554,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -655,6 +655,13 @@ usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
 ```text
 usage: rvw formal properties [-h] [--channels CHANNELS] --out OUT [--project
     PROJECT] spec
+```
+
+### `rvw formal liveness`
+
+```text
+usage: rvw formal liveness [-h] --top TOP --out OUT [--run] [--timeout
+    TIMEOUT] [--project PROJECT] source
 ```
 
 ### `rvw formal sva-lower`
@@ -2108,6 +2115,14 @@ Starts a background job: yes.
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `trace` (required), `cycle`, `time`, `scope`, `memories`, `first_failure`.
+
+Starts a background job: yes.
+
+### `formal_liveness`
+
+Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.
+
+Arguments: `source` (required), `top` (required), `out` (required), `run`, `timeout`.
 
 Starts a background job: yes.
 
