@@ -87,6 +87,12 @@ def run(args):
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     capture = Capture(out / 'inputs')
+    exported = None
+    if getattr(args, "result", None):
+        from .core_model import export
+        args.smt2, args.mapping, exported = export(args.result, out, capture, args.timeout, getattr(args, "depth", None), getattr(args, "property", None))
+    if not args.smt2 or not args.mapping:
+        raise ValueError("provide --result or both --smt2 and --mapping")
     source = capture.file(Path(args.smt2)).copy
     bindings = json.loads(capture.file(Path(args.mapping)).copy.read_text())
     if bindings.get('schema') != 'rvw.smt-bindings/1' or not bindings.get('property_id'):
@@ -114,12 +120,23 @@ def run(args):
         core = re.findall(r'[A-Za-z_][A-Za-z0-9_]*', '\n'.join(lines[1:])) if status == 'unsat' else []
         calls.append({'query': query.name, 'status': status, 'exit_code': result.returncode})
         return status, core
-    report = extract(background, assertions, solve)
+    feasibility = None
+    if exported:
+        feasibility, conflict = solve(background, {k: v for k, v in assertions.items() if k != "failure"})
+    if feasibility is not None and feasibility != "sat":
+        report = {"status": "inconclusive", "solver_status": feasibility, "labels": [],
+                  "minimal": False, "reason": "bounded environment is not shown feasible",
+                  "environment_core": conflict}
+    else:
+        report = extract(background, assertions, solve)
     report.update(schema='rvw.solver-core/1', property_id=bindings['property_id'],
                   requirement_ids=bindings.get('requirement_ids', []),
                   query_sha256=sha256(source.read_bytes()).hexdigest(), calls=calls,
                   constraints={k: bindings['constraints'][k] for k in report['labels']},
                   scope='One SMT query. Not an unbounded RTL proof or a coverage exclusion.')
+    if exported:
+        report['bounded_model'] = {'top': exported['top'], 'depth': exported['depth'], 'feasibility': feasibility,
+            'scope': 'Aggregate bounded assertion query from captured SBY RTLIL, including AIGER engine runs. Core units are sample constraints, not logic cells. No exclusion authority.'}
     if args.db:
         from rvw.query.db import DesignDB, QueryError
         db = DesignDB(args.db, capture=capture)

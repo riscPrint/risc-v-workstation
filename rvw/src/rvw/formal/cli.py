@@ -134,8 +134,11 @@ def register(sub) -> None:
     strengthen.set_defaults(func=mining.run)
     from . import cores
     core = s.add_parser("proof-core", help="extract a deletion-minimal core from a named SMT query")
-    core.add_argument("--smt2", required=True)
-    core.add_argument("--mapping", required=True)
+    core.add_argument("--smt2")
+    core.add_argument("--result", help="captured formal result; export SMT from its SBY model")
+    core.add_argument("--depth", type=int)
+    core.add_argument("--property", help="exact assertion cell name from the captured model")
+    core.add_argument("--mapping")
     core.add_argument("--db")
     core.add_argument("--solver", default="z3")
     core.add_argument("--timeout", type=float, default=60)

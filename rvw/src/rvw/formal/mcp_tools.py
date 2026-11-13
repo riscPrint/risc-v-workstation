@@ -123,9 +123,9 @@ def mcp_tools():
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "model", "width", "out"]),
                  _runner("datapath"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
-                 schema({"smt2": S, "mapping": S, "db": S, "solver": S,
+                 schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
-                        ["smt2", "mapping", "out"]), _runner("proof-core"), long=True),
+                        ["out"]), _runner("proof-core"), long=True),
         ToolSpec("formal_csr", "Generate CSR monitors, directed assembly and coverage. Does not run verification.",
                  schema({"model": S, "out": S}, ["model", "out"]), _csr, long=True),
 
