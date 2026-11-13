@@ -39,6 +39,15 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
         if (corrupt) tb.slavesStuff.head.model.mem.write(63,Array[Byte](1))
         val agent = tb.mastersStuff.head.agent
         val cd = agent.cd
+        // Establish a fixed clock coordinate before issuing any client traffic.
+        cd.waitSampling(); val clockOrigin = simTime()
+        cd.waitSampling(); val clockPeriod = simTime()-clockOrigin
+        require(clockPeriod > 2)
+        def cycle(): Long = (simTime()-clockOrigin)/clockPeriod
+        val progress = new TileLinkProgressObserver(2048, 32,
+          "seeded finite client service; B/D ready gaps checked separately at 256 cycles", () => cycle())
+        tb.mastersStuff.head.monitor.add(progress)
+        val environment = new FairnessMonitor(Set("B", "D"), 256, 1)
         val permissions = new CoherenceMonitor(64, Set(0,1))
         var interventions = 0; var releases = 0; var writebacks = 0
         var stalls = 0; var outstanding = Set.empty[Int]; var racing = false
@@ -73,6 +82,17 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
         })
         val bus = tb.dut.masters.node.bus
         cd.onSamplings {
+          val offered = Set("B", "D").filter {
+            case "B" => bus.b.valid.toBoolean
+            case _ => bus.d.valid.toBoolean
+          }
+          val enabled = Set("B", "D").filter {
+            case "B" => bus.b.ready.toBoolean
+            case _ => bus.d.ready.toBoolean
+          }
+          environment.sample(cycle(), offered, enabled, offered intersect enabled)
+          // Run after all accepted-message callbacks at this edge.
+          fork { sleep(1); progress.tick() }
           if ((bus.a.valid.toBoolean && !bus.a.ready.toBoolean) ||
               (bus.c.valid.toBoolean && !bus.c.ready.toBoolean) ||
               (bus.d.valid.toBoolean && !bus.d.ready.toBoolean)) stalls += 1
@@ -117,6 +137,10 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
         assert(interventions > 0 && releases > 0 && writebacks > 0, "required coherence transitions not observed")
         assert(stalls > 0 && racing, "backpressure or overlapping requests not observed")
         tb.waitCheckers()
+        cd.waitSampling(); sleep(2)
+        progress.finish(Set("a", "b", "c_probe_ack", "c_release_complete", "d_grant", "d_release_ack", "e"))
+        environment.finish(Set("B", "D"))
+        info(s"accepted TL-C progress: ${progress.coverage}; max B/D ready gap=${environment.maxDisabled}")
       }
       // TilelinkTester accumulates exceptions. Never infer success from doSim alone.
       if (corrupt) assert(tester.errors.toString.contains("cache response byte mismatch"), tester.errors.toString)
