@@ -69,12 +69,14 @@ def run(rtl, programs, out, samples=False):
         observations = {}
         for monitor, outcome, value in re.findall(r'RVW_COUNT (\w+) (\w+) (\d+)', text):
             observations.setdefault(monitor, {})[{'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed', 'activated': 'activated'}[outcome]] = int(value)
-        checks = [dict(id=p['id'], kind=p['kind'], source=p.get('source'), **observations.get(p['monitor'], {})) for p in props]
+        pending = {monitor: int(value) for monitor, value in re.findall(r'RVW_PENDING (\w+) (\d+)', text)}
+        checks = [dict(pending=pending.get(p['monitor'], 0), id=p['id'], kind=p['kind'], source=p.get('source'), **observations.get(p['monitor'], {})) for p in props]
         complete = all(set(observations.get(p['monitor'], {})) == {'passed', 'failed', 'covered', 'missed', 'activated'} for p in props)
+        complete = complete and all(not p.get('pending_required') or p['monitor'] in pending for p in props)
         failed = sum(p.get('failed', 0) for p in checks if p['kind'] == 'assert')
         totals = re.search(r'RVW_PROGRAM (\d+) (\d+) (\d+)', text)
         result = dict(schema='rvw.run/1', core='vexriscv', config='rv32im-dsl',
-                      status='pass' if proc.returncode == 0 and complete and not failed else 'fail',
+                      status=('inconclusive' if any(pending.values()) else 'pass') if proc.returncode == 0 and complete and not failed else 'fail',
                       program_status='pass' if proc.returncode == 0 else 'fail',
                       cycles=int(totals[1]) if totals else 0, instret=int(totals[2]) if totals else 0,
                       assertions=checks, elf_sha256=hashlib.sha256(program.read_bytes()).hexdigest(),

@@ -12,6 +12,7 @@ object CoreProperties {
     val directory = Paths.get(args(0))
     Files.createDirectories(directory)
     val statements = ArrayBuffer.empty[String]
+    val progress = ArrayBuffer.empty[String]
     val report = VexTop.spinalConfig.copy(targetDirectory = args(0)).generateVerilog {
       val top = new VexTop
       top.rework {
@@ -25,6 +26,10 @@ object CoreProperties {
         }
         def check(name: String, when: Expr, expect: Expr, next: Boolean = false): Unit =
           statements += when.sequence.implies(expect.sequence, overlap = !next).assertOn(name, clock, reset, sourceDepth = 1)
+        val waiting = signal("property_stage0_valid") && signal("property_stage0_stuck") && !signal("reset")
+        val released = !signal("property_stage0_valid") || !signal("property_stage0_stuck") ||
+          signal("property_stage0_removed") || signal("property_stage0_flush")
+        progress += waiting.sequence.implies(released.eventually).assertOn("stage0_eventual_release", clock)
         val stages = top.stages.toSeq
         val pcs = stages.zipWithIndex.map { case (stage, index) =>
           val prefix = "stage" + index
@@ -84,6 +89,7 @@ object CoreProperties {
       top
     }
     Sva.write(directory.resolve("properties.sv"), statements.toSeq)
+    Sva.write(directory.resolve("liveness.sv"), progress.toSeq)
     println(s"CORE_PROPERTIES ${statements.size} ${report.generatedSourcesPaths.mkString(",")}")
   }
 }
