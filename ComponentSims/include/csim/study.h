@@ -98,6 +98,64 @@ public:
     Json report(uint64_t instructions) const;
 };
 
+// Micro-op cache: entries hold decoded ops of one aligned fetch window; a window
+// with more ops than one line uses several lines of its set. A hit delivers ops at
+// op_width per cycle and skips the I-cache and legacy decode. Owner-written.
+class OpCache {
+public:
+    struct L { bool valid = false; uint64_t window = 0; unsigned part = 0; uint64_t stamp = 0; };
+    std::vector<L> l; uint64_t sets; unsigned ways, ops_per_line, window_bits, max_lines, latency, switch_penalty, op_bits;
+    double op_width; bool flush_on_context; uint64_t clock = 0;
+    uint64_t lookups = 0, hits = 0, ops_hit = 0, ops_total = 0, fills = 0, uncacheable = 0, switches = 0, flushes = 0;
+    explicit OpCache(const Config& c) {
+        uint64_t entries = c.u("entries", 512, 1, 1u << 20); ways = unsigned(c.u("ways", 8, 1, 64));
+        if (entries % ways || !pow2(entries / ways)) throw Error("op cache entries/ways must give a power-of-two set count");
+        sets = entries / ways; ops_per_line = unsigned(c.u("ops_per_line", 6, 1, 64));
+        uint64_t wb = c.u("window_bytes", 64, 4, 4096); if (!pow2(wb)) throw Error("op cache window_bytes must be a power of two");
+        window_bits = log2u(wb); max_lines = unsigned(c.u("max_lines_per_window", 3, 1, 64));
+        op_width = c.f("op_width", 8, 0.125, 64); latency = unsigned(c.u("latency", 1, 0, 100));
+        switch_penalty = unsigned(c.u("switch_penalty", 1, 0, 100)); op_bits = unsigned(c.u("op_bits", 56, 8, 256));
+        flush_on_context = c.choice("context", "flush", {"shared", "flush"}) == "flush";
+        l.assign(entries, L());
+    }
+    L* find(uint64_t w, unsigned part) {
+        L* s = &l[(w & (sets - 1)) * ways];
+        for (unsigned k = 0; k < ways; ++k) if (s[k].valid && s[k].window == w && s[k].part == part) return &s[k];
+        return nullptr;
+    }
+    unsigned need(uint64_t n) const { return unsigned((n + ops_per_line - 1) / ops_per_line); }
+    bool lookup(uint64_t addr, uint64_t n, bool measure) {
+        uint64_t w = addr >> window_bits; unsigned k = need(n);
+        if (measure) { ++lookups; ops_total += n; }
+        if (k > max_lines) return false;
+        std::vector<L*> got;
+        for (unsigned p = 0; p < k; ++p) { L* x = find(w, p); if (!x) return false; got.push_back(x); }
+        for (L* x : got) x->stamp = ++clock;
+        if (measure) { ++hits; ops_hit += n; }
+        return true;
+    }
+    void fill(uint64_t addr, uint64_t n, bool measure) {
+        uint64_t w = addr >> window_bits; unsigned k = need(n);
+        if (k > max_lines || k > ways) { if (measure) ++uncacheable; return; }
+        L* s = &l[(w & (sets - 1)) * ways];
+        for (unsigned p = 0; p < k; ++p) {
+            if (L* x = find(w, p)) { x->stamp = ++clock; continue; }
+            L* v = &s[0];
+            for (unsigned q = 0; q < ways; ++q) { if (!s[q].valid) { v = &s[q]; break; } if (s[q].stamp < v->stamp) v = &s[q]; }
+            *v = L(); v->valid = true; v->window = w; v->part = p; v->stamp = ++clock; if (measure) ++fills;
+        }
+    }
+    void context() { if (flush_on_context) { for (auto& x : l) x.valid = false; ++flushes; } }
+    Storage storage() const { Storage s; s.add("ops", uint64_t(l.size()) * ops_per_line * op_bits); s.add("tags", uint64_t(l.size()) * (40 + 3 + log2u(ways))); return s; }
+    Json stats() const {
+        Json j = Json::object(); j["entries"] = uint64_t(l.size()); j["ways"] = ways; j["ops_per_line"] = ops_per_line;
+        j["lookups"] = lookups; j["hits"] = hits; j["hit_rate"] = ratio(double(hits), double(lookups));
+        j["ops_from_op_cache"] = ops_hit; j["op_coverage"] = ratio(double(ops_hit), double(ops_total));
+        j["fills"] = fills; j["uncacheable_windows"] = uncacheable; j["mode_switches"] = switches; j["context_flushes"] = flushes;
+        return j;
+    }
+};
+
 // Decoupled front-end throughput model: a branch prediction unit fills a fetch target
 // queue; fetch consumes it through the instruction cache; decode drains at a fixed
 // width. Redirect latencies are fixed parameters. The back end never stalls.
@@ -106,7 +164,7 @@ public:
     unsigned fetch_width, ftq_entries, decode_redirect, resolve_latency, bpu_to_fetch, fetch_to_decode;
     double preds_per_cycle, decode_width;
     bool fdip, wrong_path_icache;
-    Cache* icache = nullptr; BranchStudy* bs = nullptr;
+    Cache* icache = nullptr; BranchStudy* bs = nullptr; std::unique_ptr<OpCache> opc; bool op_mode = false;
     double bpu_t = 0, dec_t = 0, redirect_t = 0, fetch_t = 0;
     std::deque<double> ftq;
     uint64_t prev_ord = 0, groups = 0, blocks = 0;
@@ -124,6 +182,7 @@ public:
         fetch_to_decode = unsigned(c.u("fetch_to_decode", 3, 0, 100));
         fdip = c.flag("fdip", false);
         wrong_path_icache = c.flag("wrong_path_icache", false);
+        if (c.at("op_cache").any()) opc = std::make_unique<OpCache>(c.at("op_cache"));
     }
     template <class F> void lines(uint64_t a, uint64_t b, F f) {
         unsigned lb = icache ? icache->line_bits : 6;
@@ -140,6 +199,18 @@ public:
         if (fdip && icache) lines(first_pc, last_pc, [&](uint64_t l) { icache->prefetch_into(l, last_pc, uint64_t(start)); });
         double fs = std::max(fetch_t, start + bpu_to_fetch);
         double done = fs;
+        if (opc && first_pc) {
+            bool hit = opc->lookup(first_pc, n, measure);
+            if (hit != op_mode) { op_mode = hit; if (measure) ++opc->switches; dec_t = std::max(dec_t, fs) + opc->switch_penalty; }
+            if (hit) {
+                fetch_t = fs + 1;
+                double ds = std::max(dec_t, fs + opc->latency);
+                dec_t = ds + double(n) / opc->op_width;
+                ftq.push_back(fs); while (ftq.size() > ftq_entries) ftq.pop_front();
+                ++groups; return;
+            }
+            opc->fill(first_pc, n, measure);
+        }
         if (icache) {
             uint64_t worst = 0;
             lines(first_pc, last_pc, [&](uint64_t l) { uint64_t d = icache->access(l << icache->line_bits, last_pc, uint64_t(fs), false, false, UINT64_MAX, nullptr); worst = std::max(worst, d); });
@@ -205,6 +276,7 @@ public:
         lost["execute_redirects"] = redirect_lost; lost["decode_redirects"] = decode_redirect_lost;
         j["bubble_cycles"] = lost; j["execute_redirects"] = exec_redirects; j["decode_redirects"] = decode_redirects;
         j["fdip"] = fdip; j["wrong_path_icache_lines"] = wrong_path_lines;
+        if (opc) { Json o = opc->stats(); o["storage"] = opc->storage().json(); j["op_cache"] = o; }
         Json p = Json::object();
         p["fetch_width"] = fetch_width; p["predictions_per_cycle"] = preds_per_cycle; p["ftq_entries"] = ftq_entries; p["decode_width"] = decode_width;
         p["decode_redirect_latency"] = decode_redirect; p["resolve_latency"] = resolve_latency;

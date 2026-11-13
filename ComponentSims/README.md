@@ -10,7 +10,7 @@ core. The OoO timing model (`rvw ooo`) can call them in process through
 |------|--------|
 | Direction | bimodal, gshare, local (two-level), tournament (21264 style), perceptron, hashed perceptron / GEHL, TAGE, L-TAGE, TAGE-SC-L, always-taken, BTFN, perfect bound |
 | Targets | multi-level set-associative BTB with partial tags and level latencies; RAS with `none`, `pointer`, `pointer_top` and `full` repair; indirect targets from the BTB or ITTAGE |
-| Front end | decoupled BPU → FTQ → I-cache → decode delivery model with FDIP, BTB level bubbles, decode and execute redirects, wrong-path I-cache fetch |
+| Front end | decoupled BPU → FTQ → I-cache → decode delivery model with FDIP, BTB level bubbles, decode and execute redirects, wrong-path I-cache fetch, micro-op cache |
 | Caches | L1I, L1D, L2, LLC; LRU, random, tree PLRU, SRRIP, BRRIP, DRRIP, SHiP, Hawkeye, Mockingjay, Belady OPT bound (L1D); perfect level |
 | Prefetchers | next-line, IP-stride, stream, BOP, SPP, SMS, Bingo, IPCP, Berti (data); EIP and FDIP (instruction) |
 | Translation | L1/L2 TLB, radix page walks with per-level page walk caches, walks through the data cache |
@@ -188,6 +188,14 @@ section. No result is a match or fidelity verdict.
   have no MSHR or bandwidth limit.
 - The front-end model gives a delivery bound with a back end that never stalls.
   Bubble categories can overlap.
+- The micro-op cache (`frontend.op_cache`) keys lines by aligned fetch window
+  (`window_bytes`). A window needs `ceil(ops / ops_per_line)` lines of one set;
+  more than `max_lines_per_window` is uncacheable. A fetch group hits only when
+  all its lines are present; it then skips the I-cache and legacy decode and
+  delivers `op_width` ops per cycle. Each change between op-cache and legacy
+  delivery costs `switch_penalty` cycles. One instruction counts as one op (no
+  cracking or fusion). Context rows flush it by default; the trace has no
+  `fence.i` events, so self-modifying code is out of scope.
 - The memory dependence model has no timing: every older store inside
   `unresolved_window` instructions is unresolved when the load issues.
 - Context rows (`X`) mark privilege-mode or address-space changes. The BTB can
