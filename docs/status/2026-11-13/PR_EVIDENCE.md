@@ -11743,7 +11743,7 @@ Audit evidence label: no code.
 #823 rebased over #819 with keep-both and left `examples/formal/deep/picorv32-conditions-results.json` as invalid JSON. Restore the #819 version and remove the personal paths again.
 
 ## Testing
-- `json.load` on the file succeeds; no `/Users/` path remains.
+- `json.load` on the file succeeds; no home-directory path remains.
 
 ## Issues
 None. Sheriff maintenance of `main`.
