@@ -99,3 +99,25 @@ def test_live_command_captures_elf_without_launching_a_source_tree(tmp_path, mon
     data['replay'] += ' --' + option + ' unsupported.json'
     with pytest.raises(ValueError, match='structured input'):
         inputs.live_command(run)
+
+
+def test_partial_native_reply_cannot_bypass_request_timeout():
+    directory = tempfile.TemporaryDirectory(prefix="rvwp-", dir="/tmp")
+    endpoint = Path(directory.name) / "server.sock"
+    ready = threading.Event()
+    # A readable stdout descriptor does not mean a complete JSONL reply exists.
+    command = [sys.executable, '-c',
+               'import sys,time; sys.stdin.readline(); '
+               'sys.stdout.write("{"); sys.stdout.flush(); time.sleep(2)']
+    worker = threading.Thread(target=serve, args=(endpoint, command, .05),
+                              kwargs={'ready': ready}, daemon=True)
+    worker.start()
+    assert ready.wait(5)
+    try:
+        with pytest.raises(ValueError, match='timed out'):
+            request(endpoint, {'seed': 1}, timeout=1)
+    finally:
+        worker.join(5)
+        directory.cleanup()
+    assert not worker.is_alive()
+    assert not endpoint.exists()
