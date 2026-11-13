@@ -273,6 +273,17 @@ at every change; records of cycle `N` may come before it. `rvw cosim` takes an i
 `mip`/`sip` read from the core only with such evidence (see `rvw/src/rvw/cosim/README.md`).
 Tools that report C2 values (for example `rvw cosim` mismatch JSON) use the same hex strings.
 
+### Cosim platform policy audit
+
+Cosim platform JSON permits the optional schema `rvw.cosim-platform/1`.
+Unknown top-level settings and other schema values are errors. The existing
+schema-free platform format remains supported. `rvw.cosim/1` results include
+`platform_policy` with the selected privilege, misaligned, endian, absent-PMP
+and ECALL choices. `applied_masks` contains objects with `reason`, `csr` and
+`mask`. The CSR and mask are hex strings. Each entry is the union of masks
+actually used for that reason and CSR across the compared trace. This list
+is independent of the bounded recent synchronization history.
+
 The cosim platform JSON declares `privilege_modes`, `misaligned` outcomes,
 `endianness`, `absent_pmp_csrs` and `ecall_tval`. Missing keys retain the legacy
 MSU, alignment-trap, little-endian, absent-PMP-trap and ECALL-zero defaults.
