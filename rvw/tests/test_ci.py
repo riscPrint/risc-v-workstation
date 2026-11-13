@@ -178,3 +178,20 @@ def test_linux_apt_packages_come_from_inventory():
     for tier in ('fast', 'native-light', 'examples', 'nightly'):
         assert set(packages(tier)) <= allowed
     assert packages('fast') == []
+
+
+@pytest.mark.fast
+def test_ci_uses_python3_without_versioned_alias(tmp_path):
+    import os
+    import subprocess
+    binary = tmp_path / 'python3'
+    binary.write_text('#!/bin/sh\necho selected-python3\nexit 73\n')
+    binary.chmod(0o755)
+    env = {k: v for k, v in os.environ.items() if k not in ('CI_PYTHON', 'RVW_PYTHON')}
+    env['PATH'] = str(tmp_path) + ':/usr/bin:/bin'
+    env['TMPDIR'] = str(tmp_path)
+    result = subprocess.run(['/bin/bash', str(REPO / 'scripts/ci-local.sh'), '--tier', 'fast'],
+                            env=env, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 73, result.stderr
+    assert 'selected-python3' in result.stdout
+    assert 'command not found' not in result.stderr

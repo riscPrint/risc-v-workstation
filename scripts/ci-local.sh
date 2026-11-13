@@ -5,6 +5,7 @@ if [ "${1:-}" = --tier ]; then shift; fi
 mode="${1:-fast}"
 case "$mode" in fast|native-light|examples|nightly|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 --tier fast|native-light|examples|nightly" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
+export CI_PYTHON="${CI_PYTHON:-${RVW_PYTHON:-python3}}"
 # Commit policy needs only the standard library and the event's Git history.
 if [ "$mode" = messages ]; then
   exec "${CI_PYTHON:-python3}" "$root/scripts/check-conventional.py"
@@ -21,7 +22,7 @@ cleanup() {
   fi
   # Keep reports outside the disposable tree, including reports from failed jobs.
   if [ -d "$job/work" ]; then
-    "${CI_PYTHON:-python3.11}" "$root/scripts/ci-copy-reports.py" "$job/work" "${CI_REPORT_DIR:-$root/rvw/out/ci}" || true
+    "${CI_PYTHON:-python3}" "$root/scripts/ci-copy-reports.py" "$job/work" "${CI_REPORT_DIR:-$root/rvw/out/ci}" || true
   fi
   # Tests publish read-only result generations. Restore owner access in this
   # job's private directory before removal. Do not follow directory symlinks.
@@ -33,7 +34,7 @@ trap cleanup EXIT
 export RVW_CI_SOURCE="$root" RVW_CI_WORK="$job/work"
 echo "Local CI mode: $mode"
 # Copy tracked files, including local edits. Exclude all old build output and venvs.
-"${CI_PYTHON:-python3.11}" - <<'PY'
+"${CI_PYTHON:-python3}" - <<'PY'
 import os, pathlib, shutil, subprocess
 src = pathlib.Path(os.environ['RVW_CI_SOURCE'])
 dst = pathlib.Path(os.environ['RVW_CI_WORK'])
@@ -66,7 +67,7 @@ export SPINAL_BOOM="$job/no-boom" VEXRISCV="$job/no-vex"
 export VEXIIRISCV="$job/no-vexii" NAXRISCV="$job/no-nax" RVW_CORE_SOURCE="$job/no-core"
 unset RVW_SPINAL_SOURCE
 export RVW_RESULTS="$job/results" RVW_SRC_CACHE="$job/src-cache"
-"${CI_PYTHON:-python3.11}" -m venv rvw/.venv
+"${CI_PYTHON:-python3}" -m venv rvw/.venv
 export PATH="$PWD/rvw/.venv/bin:$PATH"
 export RVW_LOCK_PYTHON="$PWD/rvw/.venv/bin/python"
 lock() { scripts/with-lock.sh "$1" nice -n 10 "${@:2}"; }
