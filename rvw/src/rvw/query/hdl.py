@@ -31,6 +31,13 @@ def _quote(value):
 
 
 FRONTENDS = {'yosys': 'yosys-verilog', 'slang': 'yosys-slang', 'ghdl': 'yosys-ghdl', 'chisel': 'yosys-firtool'}
+def strip_comments(text):
+    """Remove HDL comments while retaining strings and line numbers."""
+    pattern = r'"(?:\\.|[^"\\])*"|//[^\n]*|/\*[\s\S]*?\*/'
+    return re.sub(pattern, lambda m: m[0] if m[0].startswith('"') else
+                  ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
+
+
 SOURCE_REMAP = r'\$(?:readmem\w*|fopen)\b|`line\b|``'
 
 
@@ -136,7 +143,7 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
             from .hdl_slang import capture_sources
             copies, includes, used = capture_sources(capture, sources, include_dirs)
             for path in copies:
-                if re.search(SOURCE_REMAP, path.read_text(errors='replace')):
+                if re.search(SOURCE_REMAP, strip_comments(path.read_text(errors='replace'))):
                     raise ValueError('unsupported file input or source remapping')
             plugin = capture.file(_slang_plugin(tool, slang))
         paths = {os.path.realpath(i.copy): i.source for i in used}
