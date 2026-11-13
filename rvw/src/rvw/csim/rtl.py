@@ -49,6 +49,10 @@ def read_bp_events(path: Path) -> tuple[dict, dict[int, dict]]:
             if order in rows:
                 raise ValueError(f"line {n}: duplicate event for order {order}")
             e = {"pc": _addr(r["pc"]), "kind": r.get("kind", "cond")}
+            if "btb_hit" in r:
+                if type(r["btb_hit"]) is not bool:
+                    raise ValueError("btb_hit must be boolean")
+                e["btb_hit"] = r["btb_hit"]
             if "predicted_taken" in r:
                 e["direction"] = (bool(r["predicted_taken"]), bool(r["taken"]))
             if "predicted_target" in r:
@@ -100,12 +104,15 @@ def read_kanata(path: Path) -> tuple[dict, dict[int, dict], dict]:
 def read_model(path: Path) -> dict[int, dict]:
     rows = {}
     with Path(path).open() as f:
-        if f.readline().strip() != "rvw.csim-predictions/1":
+        version = f.readline().strip()
+        if version not in ("rvw.csim-predictions/1", "rvw.csim-predictions/2"):
             raise ValueError("bad predictions file")
         for line in f:
-            o, pc, kind, taken, pt, tgt, ptgt = line.split()
+            fields = line.split()
+            o, pc, kind, taken, pt, tgt, ptgt = fields[:7]
+            hit = (None if int(fields[7]) == -2 else int(fields[7]) >= 0) if version.endswith("/2") else None
             rows[int(o)] = {"pc": int(pc, 16), "kind": kind, "taken": taken == "1", "pred_taken": pt == "1",
-                            "target": int(tgt, 16), "pred_target": int(ptgt, 16)}
+                            "target": int(tgt, 16), "pred_target": int(ptgt, 16), "btb_hit": hit, "btb_level": int(fields[7]) if version.endswith("/2") else None}
     return rows
 
 
@@ -167,6 +174,9 @@ def compare(study_path, c2_path, events_path, roi_start: int | None = None, roi_
                 first = int(r["order"]); break
     first = first or 0
     d = defaultdict(int); t = defaultdict(int)
+    for side in ('rtl', 'model'):
+        for status in ('btb-miss','not-predicted','wrong-target','correct','not-taken','unknown'):
+            t[side + '_' + status] = 0
     per = defaultdict(lambda: defaultdict(int))
     misaligned = missing = 0
     for ordn, m in model.items():
@@ -204,8 +214,19 @@ def compare(study_path, c2_path, events_path, roi_start: int | None = None, roi_
         elif is_dir:
             missing += 1
         if "target" in e or "target_correct" in e:
-            model_ok = m["pred_target"] == m["target"] or not m["taken"]
-            rtl_ok = not m["taken"] or ((e["target"][0] == e["target"][1]) if "target" in e else bool(e["target_correct"]))
+            from .target_status import classify
+            model_status = classify(taken=m['taken'], predicted_taken=m['pred_taken'],
+                                    btb_hit=m.get('btb_hit') if m['kind'] in ('cond','jump','call') else None, predicted_target=None if m.get('btb_level') == -2 and m['kind'] in ('cond','jump','call') else m['pred_target'], target=m['target'])
+            rtl_status = classify(taken=m['taken'], predicted_taken=e.get('direction', (None,None))[0],
+                                  btb_hit=e.get('btb_hit') if m['kind'] in ('cond','jump','call') else None, predicted_target=e.get('target',(None,None))[0], target=m['target'])
+            t['model_' + model_status] += 1
+            t['rtl_' + rtl_status] += 1
+            t['status_disagreements'] += model_status != rtl_status
+            comparable = model_status in ('correct','wrong-target') and rtl_status in ('correct','wrong-target')
+            t['address_comparable'] += comparable
+            t['address_disagreements'] += comparable and e['target'][0] != m['pred_target']
+            model_ok = model_status in ('correct', 'not-taken')
+            rtl_ok = rtl_status in ('correct', 'not-taken') if rtl_status != 'unknown' else (not m['taken'] or bool(e.get('target_correct',False)))
             t["events"] += 1
             t["rtl_misses"] += not rtl_ok; t["model_misses"] += not model_ok
             t["disagree"] += rtl_ok != model_ok

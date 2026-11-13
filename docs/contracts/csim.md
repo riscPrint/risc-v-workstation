@@ -109,3 +109,22 @@ Target comparison ignores the target value when the actual branch is not taken.
 Both RTL and model target-miss counts use this rule. Direction and target
 agreement are separate metrics. A target-error indication alone cannot supply
 the predicted direction. Project probes must carry the actual prediction bits.
+
+## Predictor target status
+
+The native prediction stream `rvw.csim-predictions/2` adds one signed decimal
+BTB lookup level after the seven prediction columns. A nonnegative level is a
+hit. `-1` is a miss. `-2` means no BTB model was selected. The comparison reader
+also accepts `rvw.csim-predictions/1` without inventing hit evidence.
+
+`rvw.bp-events/1` accepts optional boolean `btb_hit`. Probe conversion retains
+this field. Target summaries separate `btb-miss`, `not-predicted`,
+`wrong-target`, `correct`, `not-taken`, and `unknown` for RTL and model.
+An actual not-taken branch needs no target. A taken branch with no taken
+prediction is not an incorrect target address. BTB hit evidence distinguishes
+its miss from a direction decision. Indirect and return predictors can use
+other target sources, so their BTB lookup is not used to classify availability.
+`address_comparable` counts cases where both sides predicted a target address.
+`address_disagreements` compares the two addresses only within that set.
+Status counts and status disagreements remain separate. These measurements
+do not establish predictor equivalence.

@@ -105,6 +105,8 @@ def bp_events(stream: Stream, c2_path, out, probe: str | None = None, roi: tuple
             if "predicted_taken" in e:
                 row["predicted_taken"] = bool(e["predicted_taken"])
                 stats["direction_misses"] += kind == "cond" and row["predicted_taken"] != taken
+            if "btb_hit" in e:
+                row["btb_hit"] = bool(e["btb_hit"])
             if "predicted_target" in e:
                 row["predicted_target"] = _hex(e["predicted_target"])
             stats[kind] += 1
