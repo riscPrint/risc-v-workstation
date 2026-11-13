@@ -2188,6 +2188,13 @@ for the supported subset and initialization limits. This contract is separate fr
 bounded assertion results in `rvw.formal/1`; equivalence is an unbounded proof under
 the recorded restrictions. A wall-time budget does not bound the cycles proved.
 
+#### Register relocation matching
+
+`state_mapping.method=unique_leaf` records an unmatched register pair with the
+same leaf name and width. Each leaf must occur once on each unmatched side.
+Manual and exact-name pairs have priority. This mapping adds no assumptions.
+Ambiguous leaves and width changes remain unmatched.
+
 ### Directed MMU regression inputs
 
 `rvw regress mmu` extends the existing ELF suite flow. It does not change C1–C4.
