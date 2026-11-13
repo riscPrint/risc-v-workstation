@@ -9,6 +9,7 @@ nav:
   - Build the site: docs/DOCS_SITE.md
   - Getting started: docs/AGENT_SETUP.md
   - Bring your own core: docs/BRING_YOUR_OWN_CORE.md
+  - Integration guide: docs/INTEGRATION_GUIDE.md
   - Architecture: docs/AGENT_ARCH.md
   - Install versions: docs/TOOL_VERSIONS.md
   - Linux recipes: docs/LINUX_INSTALL.md
