@@ -47,7 +47,19 @@ def task_config(text, task=None):
     return '\n'.join(lines) + '\n'
 
 
-def observe(prop, directory, job, mode, tools, timeout, depth):
+def observe(prop, directory, job, mode, tools, timeout, depth, cache=None):
+    from . import regression_cache
+    identity = regression_cache.identity(job, tools) if cache else None
+    if identity is not None:
+        identity["property"] = prop
+    if cache:
+        tools.verify()
+        hit = regression_cache.restore(cache, identity, directory)
+        if hit is not None:
+            tools.verify()
+            hit["job_sha256"] = hashlib.sha256(job.read_bytes()).hexdigest()
+            hit["cache"] = {"hit": True, "scope": "conditional engine observation"}
+            return hit
     rc, seconds = execute(tools.command(['sby', '-j', '1', '-f', '-d', 'sby', str(job)]),
                           directory, directory / 'run.log', timeout, env=tools.env)
     log = directory / 'sby' / 'logfile.txt'
@@ -68,7 +80,7 @@ def observe(prop, directory, job, mode, tools, timeout, depth):
         outcome, status = 'vacuous', 'unknown'
     traces = sorted(str(p.relative_to(directory.parent)) for p in
                     (directory / 'sby').glob('engine_*/trace*.vcd'))
-    return {'id': prop['id'], 'status': status if status in ('pass', 'fail', 'timeout') else 'error',
+    result = {'id': prop['id'], 'status': status if status in ('pass', 'fail', 'timeout') else 'error',
             'seed': None, 'signature': None if status == 'pass' else 'formal:' + outcome,
             'wall_s': seconds, 'run': str((directory / 'run.log').relative_to(directory.parent)),
             'formal_status': outcome, 'mode': mode, 'depth': depth if mode == 'bmc' else None,
@@ -77,6 +89,10 @@ def observe(prop, directory, job, mode, tools, timeout, depth):
             'job_sha256': hashlib.sha256(job.read_bytes()).hexdigest(),
             'activation': 'not_measured',
             'inconclusive': 'Engine observation; transitive input closure, attribution and non-vacuity are not certified.'}
+    if cache:
+        result["cache"] = {"hit": False, "eligible": identity is not None, "scope": "conditional engine observation"}
+        regression_cache.publish(cache, identity, directory, result)
+    return result
 
 
 # Signal handlers must only be installed in the calling thread. execute owns
@@ -124,7 +140,7 @@ def run(args):
             job = directory / 'job.sby'
             job.write_text(config)
             tools = Toolchain(capture, Namespace(engine=engines), directory / 'tools')
-            prepared.append((prop, directory, job, mode, tools, args.timeout, depth))
+            prepared.append((prop, directory, job, mode, tools, args.timeout, depth, getattr(args, 'proof_cache', None)))
         except ValueError as error:
             if 'unsupported:' not in str(error):
                 raise

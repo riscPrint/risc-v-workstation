@@ -842,3 +842,19 @@ are errors. The adapter does not silently replace liveness with finite bounds.
 `async_reset` (CLI `--event-model --async-reset`). These select the existing
 constant-value ASYNC-reset event BMC model. Default single-clock flows still
 refuse asynchronous state before proof execution and give a fix hint.
+
+## Exact regression observation cache
+
+`formal regress --proof-cache DIR` and MCP `formal_regress(proof_cache=DIR)`
+can reuse a conditional successful engine observation. C3 rows add `cache.hit`
+and `cache.scope`. The scope is `conditional engine observation`. A cache hit
+preserves `formal_status`, BMC depth and activation limits. It does not upgrade
+a bounded pass or certify non-vacuity. JUnit retains the conditional outcome.
+
+The cache accepts self-contained `read_verilog`, `prep`, `async2sync` and
+`dffunmap` scripts. It refuses includes, memory files, file I/O and other script
+commands. Keys include captured source bytes, job settings, property metadata,
+formal/common Python code, executable identities and the tool environment.
+Restoration checks stored artifact hashes and current tool bindings. Failed,
+vacuous, unknown and timeout outcomes are not published. General SBY input
+closure remains outside this restricted cache route.
