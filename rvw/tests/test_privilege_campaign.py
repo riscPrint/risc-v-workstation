@@ -130,3 +130,38 @@ def test_c1_failure_precedes_missing_device_samples(tmp_path,monkeypatch):
     checked=campaign.check(tmp_path,tmp_path,'platform.json')
     assert checked['status']=='fail'
     assert checked['scenarios'][0]['reason']=='C1 self-check failed'
+
+
+def mip_mismatch(actual, expected, insn='0x344022f3', extra=None, address='0x0'):
+    differences = {'rd_wdata': {}} | (extra or {})
+    return {'status': 'mismatch', 'mismatch': {'differences': differences,
+            'actual': {'insn': insn, 'rd_wdata': actual, 'mem_addr': address}, 'expected': {'rd_wdata': expected}}}
+
+
+LW = '0x0002a303'
+
+
+@pytest.mark.parametrize('comparison,inputs,expected', [
+    (mip_mismatch('0x8', '0x0'), [3, 7, 11], 'inconclusive'),
+    (mip_mismatch('0x880', '0x0'), [3, 7, 11], 'inconclusive'),
+    (mip_mismatch('0x8', '0x0'), [], 'fail'),
+    (mip_mismatch('0x2', '0x0'), [3, 7, 11], 'fail'),
+    (mip_mismatch('0x8', '0x0', insn='0x300022f3'), [3, 7, 11], 'fail'),
+    (mip_mismatch('0x8', '0x0', extra={'pc_next': {}}), [3, 7, 11], 'fail'),
+    (mip_mismatch('0x19', '0x0', insn=LW, extra={'mem_rdata': {}}, address='0x200bff8'), [], 'inconclusive'),
+    (mip_mismatch('0x19', '0x0', insn=LW, extra={'mem_rdata': {}}, address='0x80000000'), [], 'fail'),
+    (mip_mismatch('0x19', '0x0', insn=LW, extra={'mem_rdata': {}, 'rd': {}}, address='0x200bff8'), [], 'fail'),
+])
+def test_external_irq_mip_read_is_not_a_core_failure(tmp_path, monkeypatch, comparison, inputs, expected):
+    import rvw.results
+    elf = make_build(tmp_path)
+    (tmp_path / 'result.json').write_text('{}')
+    (tmp_path / 'trace.jsonl').write_text('trace')
+    platform = tmp_path / 'platform.json'
+    platform.write_text(json.dumps({'irq_inputs': inputs, 'mmio': [{'base': '0x02000000', 'size': '0x10000'}]}))
+    run = SimpleNamespace(elf_sha256=campaign.digest(elf), path=tmp_path, why_inconclusive=None,
+                          status='pass', artifacts={'rvfi_trace': 'trace.jsonl'})
+    monkeypatch.setattr(rvw.results, 'load_run', lambda _: run)
+    monkeypatch.setattr(campaign, 'run_group', lambda *a, **k:
+        SimpleNamespace(timed_out=False, returncode=1, stdout=json.dumps(comparison)))
+    assert campaign.check(tmp_path, tmp_path, platform)['status'] == expected

@@ -21,3 +21,20 @@ def owned_run_paths(directory):
     else:
         return sorted(root.rglob('result.json'))  # Legacy unowned adapter output.
     return [suite.path/test.run for suite in suites for test in suite.tests if test.run]
+
+
+def run_paths_under(directory):
+    """C1 members of every owned result below DIRECTORY, each once.
+
+    A regression output holds each run twice (its sealed generation and the
+    current view), so a plain rglob counts every C1 result two times. Stop at
+    the first owned root on each branch and read only its members."""
+    root=Path(directory)
+    if not root.is_dir():
+        return []
+    if has_store(root) or (root/'run.json').is_file() or (root/'result.json').is_file():
+        return owned_run_paths(root)
+    paths=[]
+    for child in sorted(p for p in root.iterdir() if p.is_dir() and not p.is_symlink()):
+        paths.extend(run_paths_under(child))
+    return paths

@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 from rvw.common.proc import run_group
+from rvw.regress.run_evidence import run_paths_under
 
 SPEC = 'https://docs.riscv.org/reference/isa/v20260120/priv/supervisor.html'
 FLAGS = dict(zip('VRWXUGAD', (1, 2, 4, 8, 16, 32, 64, 128)))
@@ -634,7 +635,7 @@ def check(directory, results, platform, model, timeout, sail=None):
     from rvw.results import load_run
     directory = Path(directory).resolve()
     manifest = json.loads((directory / 'manifest.json').read_text())
-    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    runs = [load_run(p) for p in run_paths_under(results)]
     rows = []
     for s in manifest['scenarios']:
         elf = directory / s['elf']
@@ -697,7 +698,7 @@ def report(directory, results, checked=None, protocol_config=None):
     if oracle and (oracle.get('schema') != 'rvw.mmu-check/1' or oracle.get('manifest_sha256') != digest(directory / 'manifest.json')):
         raise ValueError('coverage needs an rvw.mmu-check/1 report')
     checks = oracle['scenarios'] if oracle else []
-    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    runs = [load_run(p) for p in run_paths_under(results)]
     rows = []
     for s in manifest['scenarios']:
         if digest(directory / s['elf']) != s['elf_sha256']:

@@ -3,6 +3,7 @@ from argparse import Namespace
 from pathlib import Path
 import hashlib
 import json
+from rvw.regress.run_evidence import run_paths_under
 
 
 def check(elf_dir, results, platform_path, *, project=None):
@@ -21,7 +22,7 @@ def check(elf_dir, results, platform_path, *, project=None):
     elfs = sorted(p for p in Path(elf_dir).iterdir() if p.is_file() and p.read_bytes()[:4] == b'\x7fELF')
     if not elfs:
         raise ValueError('no ELF tests in suite directory')
-    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    runs = [load_run(p) for p in run_paths_under(results)]
     rows = []
     for elf in elfs:
         digest = hashlib.sha256(elf.read_bytes()).hexdigest()

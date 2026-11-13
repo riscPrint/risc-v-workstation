@@ -31,6 +31,14 @@ rvw regress privilege check rvw/out/controls --results rvw/out/controls-dut --pl
 Spike match. A mismatch fails. Missing C1, missing traces, duplicate results,
 incomplete comparison and synchronized comparison stay inconclusive. Functional
 groups use all-member pass. Spike self-check results never earn DUT groups.
+Two strict mismatch shapes are missing reference evidence, not core failures,
+and stay inconclusive: a CSR read of `mip` that differs only in bits listed in
+the platform's `irq_inputs`, and a load inside a platform `mmio` region that
+differs only in the loaded value. Spike models neither the project's interrupt
+pins nor its devices. Use `rvw cosim check` with irq/mmio synchronization as
+separate, explicitly synchronized evidence for these programs.
+`--results` may be a parent of several regression outputs. Each owned C1
+member is read once (a regression keeps a sealed generation and a current view).
 MCP tools expose build, reference and check with the same inputs.
 
 ## Decisions

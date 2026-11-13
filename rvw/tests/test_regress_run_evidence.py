@@ -30,3 +30,27 @@ def test_run_manifest_controls_c1_members(tmp_path,monkeypatch):
     suites=[SimpleNamespace(path=tmp_path/'suite',tests=[SimpleNamespace(run='test/result.json')])]
     monkeypatch.setattr(evidence,'load_run_set',lambda path:suites)
     assert evidence.owned_run_paths(tmp_path)==[tmp_path/'suite/test/result.json']
+
+
+def test_run_paths_under_counts_each_regression_run_once(tmp_path):
+    # A regression output keeps a sealed generation and the current view.
+    root=tmp_path/'results'/'priv-rtl';root.mkdir(parents=True)
+    def build(path):
+        (path/'run.json').write_text('{}')
+        (path/'suite/test').mkdir(parents=True)
+        (path/'suite/test/result.json').write_text('{}')
+    publish(root,build)
+    build(root)
+    other=tmp_path/'results'/'single';other.mkdir()
+    populate(other)
+    generation=open_current(root)
+    suites=[SimpleNamespace(path=generation.path/'suite',tests=[SimpleNamespace(run='test/result.json')])]
+    import rvw.regress.run_evidence as module
+    original=module.load_run_set
+    module.load_run_set=lambda path:suites
+    try:
+        paths=evidence.run_paths_under(tmp_path/'results')
+    finally:
+        module.load_run_set=original
+    assert paths==[generation.path/'suite/test/result.json',other/'result.json']
+    assert len(list((tmp_path/'results').rglob('result.json')))>len(paths)
