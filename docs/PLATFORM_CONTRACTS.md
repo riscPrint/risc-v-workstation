@@ -1523,6 +1523,20 @@ rows declare qualifiers with reasons. `waiver_findings` holds a
 `lint.stale_waiver` error for each waiver that matched nothing in a backend that
 ran; each waiver records `stale` (`true`, `false`, or `null` when its backend
 did not run).
+The structural backend also has `cdc`: `clocks` (per clock domain `kind`
+`primary|divided|gated|generated|unknown`, `source`, `master`, `divide_by`,
+`enables`), `obligations`, `memories`, `clock_groups` and `hierarchy`
+(findings per component path). `crossings[]` rows gain `kind`,
+`relationship` (`related`, `asynchronous`, `declared_*`, `unknown`), `stages`,
+`library` and `width`. Settings `intent.clocks` rows declare clock groups with
+reasons. `rvw lint --emit DIR` writes `rvw.cdc-obligations/1`
+(`cdc_obligations.json`: `obligations` with `kind` `gray_code|data_stable`,
+`bind` or `unbound_reason`; `checks`; `checked_rtl`; `unbound`), plus
+`cdc_checks.sv` and `checked/` RTL copies. Emitted obligations are not results.
+Lint settings may also have `rules` (rule severities and parameters) and
+select backend `rules`, whose `findings` use `lint.*` rule IDs and whose `fsm`
+list records `checked` or `inconclusive` state registers. `rvw lint --sarif PATH`
+writes the same findings as SARIF 2.1.0 with fingerprint `rvw/finding-id`.
 
 ## Native backend semantic profiles
 

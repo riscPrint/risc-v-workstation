@@ -58,3 +58,27 @@ def test_extracted_release_order(ordered):
         return analyze(db, intent)
     result = run_on(Path(root) / 'reset-independent/design.db', check)
     assert ('rdc.release_order_unproved' in {f['rule'] for f in result['findings']}) != ordered
+
+
+def test_extracted_library_structures():
+    """Run after Test/runMain spinaldb.LintLibraryFixtures into the same directory."""
+    root = os.environ.get('RVW_LINT_FIXTURES')
+    if not root or not (Path(root) / 'library/design.db').exists():
+        pytest.skip('set RVW_LINT_FIXTURES with the library fixture')
+    from rvw.lint import rules
+    result = run_on(Path(root) / 'library/design.db', analyze)
+    kinds = {c['destination']: (c['kind'], (c['library'] or {}).get('kind')) for c in result['crossings']}
+    assert kinds['a_flagReg_buffercc.buffers_0'] == ('sync_3ff', 'buffer_cc')
+    assert kinds['fifo.popToPushGray_buffercc.buffers_0'][0] == 'gray_sync'
+    assert kinds['fifo.pushToPopGray_buffercc.buffers_0'][0] == 'gray_sync'
+    assert kinds['pulseIn_pulseCCByToggle.inArea_target_buffercc.buffers_0'][0] == 'sync_2ff'
+    assert kinds['slow_x'][0] == 'synchronous_related'
+    clocks = {c['clock']: c for c in result['cdc']['clocks']}
+    assert clocks['a_toggle']['kind'] == 'divided' and clocks['a_toggle']['master'] == 'clkA'
+    assert 'cdc.async_fifo_candidate' in {f['rule'] for f in result['findings']}
+    bound = [o for o in result['cdc']['obligations'] if o['bind']]
+    assert len(bound) == 2 and {o['bind']['module'] for o in bound} == {'StreamFifoCC'}
+    release = {d['reset']: d['release'] for d in result['rdc']['domains'] if d['reset']}
+    assert release == {'rawReset': 'synchronizer_stages', 'resetB': 'synchronized'}
+    lint = run_on(Path(root) / 'library/design.db', lambda d: rules.analyze(d, {}))
+    assert lint['status'] == 'completed'
