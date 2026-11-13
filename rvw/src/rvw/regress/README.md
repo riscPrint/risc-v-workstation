@@ -982,3 +982,19 @@ adapter-owned identities replace their captured dependencies. See
 A local fake-adapter test confirms that an unchanged adapter identity can miss a
 changed declared command. Generic capture correctly invalidates reuse in that
 case. Removal is blocked on complete replacement identities and negative tests.
+
+### Generated-suite selection
+
+`rvw regress plan --features verification.json --json` lists generated suite
+families and each missing requirement. MCP exposes `regress_plan`. The project
+supplies `{"schema":"rvw.regress-features/1","capabilities":["xlen:32",
+"mode:S","mode:U","satp:sv32","pmp","ad:fault"]}`. Capability names are
+explicit. The planner does not infer an MMU, devices or privilege modes from
+an ISA string. Declare each supported feature separately. Omitted features
+exclude a family. Selection gives no execution evidence.
+
+`--catalog requirements.json` selects a project-owned list of objects with
+`name`, `source` and `requires` fields. The bundled catalog lists bounded
+campaigns. A family can contain additional optional scenarios. Select those
+scenarios from the source description before generation. The planner does not
+claim that all combinations within a family are supported.

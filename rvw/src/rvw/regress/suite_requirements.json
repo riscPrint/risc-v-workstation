@@ -1,0 +1,223 @@
+[
+  {
+    "name": "mmu-sv32",
+    "source": "examples/mmu/matrix.json",
+    "requires": [
+      "xlen:32",
+      "mode:S",
+      "mode:U",
+      "pmp",
+      "satp:sv32",
+      "ad:fault"
+    ]
+  },
+  {
+    "name": "mmu-sv39",
+    "source": "examples/mmu/matrix.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp",
+      "satp:sv39",
+      "ad:fault"
+    ]
+  },
+  {
+    "name": "mmu-sv48",
+    "source": "examples/mmu/matrix.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp",
+      "satp:sv48",
+      "ad:fault"
+    ]
+  },
+  {
+    "name": "mmu-sv57",
+    "source": "examples/mmu/matrix.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp",
+      "satp:sv57",
+      "ad:fault"
+    ]
+  },
+  {
+    "name": "mmu-extensions",
+    "source": "examples/mmu/extensions.json",
+    "requires": [
+      "xlen:64",
+      "satp:sv39",
+      "ext:svnapot",
+      "ext:svpbmt"
+    ]
+  },
+  {
+    "name": "hypervisor",
+    "source": "examples/mmu/hypervisor-matrix.json",
+    "requires": [
+      "xlen:64",
+      "ext:h",
+      "mode:S",
+      "mode:U"
+    ]
+  },
+  {
+    "name": "pointer-masking",
+    "source": "examples/mmu/pointer.json",
+    "requires": [
+      "xlen:64",
+      "ext:smnpm"
+    ]
+  },
+  {
+    "name": "shootdown",
+    "source": "examples/mmu/shootdown.json",
+    "requires": [
+      "xlen:64",
+      "harts:2",
+      "satp:sv39"
+    ]
+  },
+  {
+    "name": "privilege-controls",
+    "source": "examples/privilege/controls.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp"
+    ]
+  },
+  {
+    "name": "scheduled-wfi",
+    "source": "examples/privilege/scheduled-wfi.json",
+    "requires": [
+      "xlen:64",
+      "irq:msip",
+      "irq:mtip",
+      "irq:meip"
+    ]
+  },
+  {
+    "name": "wfi-clint",
+    "source": "examples/privilege/spike-wfi.json",
+    "requires": [
+      "xlen:64",
+      "device:clint"
+    ]
+  },
+  {
+    "name": "pmp",
+    "source": "examples/privilege/pmp.json",
+    "requires": [
+      "xlen:64",
+      "mode:U",
+      "pmp"
+    ]
+  },
+  {
+    "name": "epmp",
+    "source": "examples/privilege/epmp.json",
+    "requires": [
+      "xlen:64",
+      "ext:smepmp"
+    ]
+  },
+  {
+    "name": "memory-concurrent",
+    "source": "rvw/src/rvw/memory/concurrent_build.py",
+    "requires": [
+      "xlen:64",
+      "ext:a",
+      "harts:2"
+    ]
+  },
+  {
+    "name": "lrsc-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-fault-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a",
+      "pmp"
+    ]
+  },
+  {
+    "name": "fence-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "fence-i-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "lrsc-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "amo-fault-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a",
+      "pmp"
+    ]
+  },
+  {
+    "name": "fence-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  },
+  {
+    "name": "fence-i-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a"
+    ]
+  }
+]
