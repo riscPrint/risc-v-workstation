@@ -214,7 +214,7 @@ physical peripheral. The standard access sequence reports
 
 See [the CPU environment](cpu/README.md) for live RVFI monitoring, independent
 Spike DPI checks, shared memory response services, control sequences, Python
-services and a bounded RV32I ADDI fixture. The bridge uses the current Spike
+services and a bounded RV32I_Zicsr ADDI/MISA fixture. The bridge uses the current Spike
 shim ABI 6 and passes the platform PMP granularity. The previous ABI 5 setup
 cannot initialize a current shim.
 

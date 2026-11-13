@@ -29,8 +29,8 @@ correctness. CSR instructions step through Spike. Set `state_valid` to check all
 architectural GPRs after retirement. Set `csr_count` and the CSR address/value
 arrays to check up to eight CSR snapshots through Spike. An unavailable CSR
 is an explicit error. Project wrappers must supply committed state. Native
-qualification covers GPR snapshots. CSR snapshots have Python unit checks;
-native CPU CSR behavior remains unqualified. These limits must remain explicit in test plans.
+qualification covers GPR snapshots and read-only `misa` snapshots on the
+small fixture. Other CSR behavior remains unqualified. These limits must remain explicit in test plans.
 
 The Python equivalents are `rvw.sim.cpu_env.CpuMemory`, `CpuScoreboard`,
 `CpuCoverage` and `monitor`. They use the same memory/error policy and scalar
@@ -51,10 +51,10 @@ nice -n 10 rvw/.venv/bin/python Uvm/examples/cpu/run.py \
 ```
 
 Build the matched shim first with `Cosim/build.sh`. The fixture builds a
-four-instruction RV32I ELF, loads its bytes into memory, inserts seeded fetch
-response delays, and compares all four live retirements through Spike DPI.
-It runs seeds 1 and 3. Separate runs corrupt destination data and a GPR snapshot. Each must stop
-on `SPIKE_MISMATCH`. The fixture supports ADDI only. It is not VexRiscv,
+six-instruction RV32I_Zicsr ELF, loads its bytes into memory, inserts seeded fetch
+response delays, and compares all six live retirements through Spike DPI.
+It runs seeds 1 and 3. Separate runs corrupt destination data, a GPR snapshot and a CSR snapshot. Each must stop
+on `SPIKE_MISMATCH`. The fixture supports ADDI and read-only MISA only. It is not VexRiscv,
 full ISA qualification, interrupt/debug qualification or C4 gate acceptance.
 The runner writes the existing C1/C3 formats. Their source identity
 remains incomplete. The existing VexRiscv captured-replay path is unchanged.
@@ -71,7 +71,7 @@ nice -n 10 rvw/.venv/bin/rvw regress cocotb \
 ```
 
 The wrapper exposes the same small ADDI core without SV UVM classes. The
-Python scoreboard compares four live retirements against Spike. The optional
+Python scoreboard compares six live retirements against Spike. The optional
 `Uvm/pyuvm/cpu_env.py` wraps these services as a pyuvm environment. Its project
 configuration supplies the DUT bindings, reference, ELF and expected count.
 
@@ -83,5 +83,5 @@ rvw cov functional /tmp/live-cpu-new/seed-1/rvfi.jsonl \
  /tmp/live-cpu-new/seed-3/rvfi.jsonl --out /tmp/cpu-coverage.json --json
 ```
 
-Coverage counts describe the four ADDI instructions. Unhit CSR, interrupt and
+Coverage counts describe five ADDI instructions and one MISA read per seed. Unhit CSR, interrupt and
 exception bins remain unhit. No coverage closure is claimed.

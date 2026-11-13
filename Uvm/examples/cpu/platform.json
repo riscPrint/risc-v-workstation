@@ -1,5 +1,5 @@
 {
- "name":"addi_fixture", "xlen":32, "isa":"rv32i", "reference_isa":"rv32i",
+ "name":"addi_fixture", "xlen":32, "isa":"rv32i_zicsr", "reference_isa":"rv32i_zicsr",
  "reset_pc":"0x80000000", "ram":[{"base":"0x80000000","size":"0x1000"}],
  "mmio":[], "pmp_regions":0, "pmp_granularity":4,
  "privilege_modes":"M", "aligned_mem":true, "irq_inputs":[]

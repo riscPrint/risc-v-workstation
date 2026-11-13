@@ -47,9 +47,10 @@ async def live_addi(dut):
                         record = dict(zip(fields,(int(dut.values[i].value) for i in range(19))))
                         record['order'] = int(dut.order.value)
                         record['gpr_state'] = [int(dut.core.registers[i].value) for i in range(32)]
+                        record['csr_state'] = {'0x301':int(dut.core.misa_value.value)}
                         sc.observe(record)
-                        if sc.checks == 4: break
-                sc.finish(4)
+                        if sc.checks == 6: break
+                sc.finish(6)
             finally:
                 agent.cancel()
         finally:

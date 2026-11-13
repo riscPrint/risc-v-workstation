@@ -22,12 +22,12 @@ package cpu_smoke_pkg;
    if(!$value$plusargs("image=%s",image)) `uvm_fatal("IMAGE","missing ELF byte image")
    env.memory.preload(image);
    controls.reset();
-   wait(env.scoreboard.checks==4);
+   wait(env.scoreboard.checks==6);
    phase.drop_objection(this);
   endtask
   function void report_phase(uvm_phase phase);
    uvm_report_server server=uvm_report_server::get_server();
-   if(server.get_severity_count(UVM_ERROR)==0 && server.get_severity_count(UVM_FATAL)==0 && env.scoreboard.checks==4)
+   if(server.get_severity_count(UVM_ERROR)==0 && server.get_severity_count(UVM_FATAL)==0 && env.scoreboard.checks==6)
     $display("RVW_UVM_DONE cpu_smoke checks=%0d",env.scoreboard.checks);
   endfunction
  endclass
@@ -43,7 +43,9 @@ module top;
  longint unsigned order;
  addi_core core(clk,bus.reset_n,grant,instruction,request,address,valid,order,values);
  always_comb begin
-  bus.state_valid=1; bus.csr_count=0;
+  bus.state_valid=1; bus.csr_count=1;
+  bus.csr_addresses[0]=12'h301; bus.csr_values[0]=core.misa_value;
+  if($test$plusargs("corrupt_csr")) bus.csr_values[0]^=1;
   foreach(bus.gpr_state[i]) bus.gpr_state[i]=core.registers[i];
   if($test$plusargs("corrupt_state")) bus.gpr_state[5]^=1;
   bus.rvfi_valid=valid; bus.rvfi_order=order; bus.retirement=values;
