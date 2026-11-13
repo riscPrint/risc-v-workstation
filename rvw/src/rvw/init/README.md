@@ -231,3 +231,12 @@ MCP `init_scaffold` uses the existing Spinal/sbt scaffold generator. Set `out` t
 Mapped MCP init accepts `spinal_top` or `verilog_top`, `reset_pc`, `buses`,
 `rvfi_prefix`, clock/reset settings, interrupt inputs and constants.
 These values have the same meaning as the CLI mapped options.
+
+Mapped RV32 req/rsp cores with RVFI also get `rvw/sec/core.json`, a paired
+constant-time case and a flow policy. The security harness uses one-cycle,
+in-order responses and active-high reset. Other protocols need a binding.
+Run `rvw/export-rtl.sh` before the security commands. It exports the same
+elaboration as simulation. Set `RVW_SBT_LOCK` for a private build lock.
+The paired case uses two secret register values. The flow policy marks the
+smoke program's `scratch` word as secret and watches the bus address.
+A result applies only to the supplied program, observations and policy.

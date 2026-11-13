@@ -139,3 +139,11 @@ a model prediction, not RTL evidence.
 ## Missing evidence and positive results
 
 Security suite completion requires conclusive child outcomes and complete evidence. Canonical verdicts must agree with technique status. A selected observer needs reference retirements in both runs. Missing observer data yields `inconclusive`. A conclusive violation remains a failure even when another technique is incomplete.
+
+## Mapped init binding
+
+Mapped RV32 req/rsp init with RVFI emits `rvw.sec-core/1` under `rvw/sec`.
+It translates declared bus roles without guessing signal names. The default
+native environment supplies one-cycle responses and active-high reset.
+`rvw/export-rtl.sh` exports simulation elaboration to `rvw/out/export/core.v`.
+The sample pair and flow policy are bounded examples. They are not qualification.

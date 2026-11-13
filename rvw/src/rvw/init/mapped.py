@@ -460,6 +460,9 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
     if top is not None:
         files['rvw/templates/RvfiPort.scala'] = RVFI_TEMPLATE
         files['rvw/templates/CoreProbes.scala'] = PROBE_TEMPLATE
+    from . import native_bindings
+    files.update(native_bindings.files(core_map))
+    files.update(native_bindings.security(core_map))
     conflicts = write_files(root, files, force=force, dry_run=dry_run)
     return dict(schema='rvw.init/1', status='planned' if dry_run else 'created', exit_code=0, root=str(root),
                 isa=isa, xlen=xlen, mapped=True, files=files, overwritten=conflicts if force else [],
