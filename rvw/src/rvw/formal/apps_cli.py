@@ -91,3 +91,13 @@ def register(s):
     c.add_argument("--open", action="store_true", help="open Surfer after typed lookup succeeds")
     from . import cex
     c.set_defaults(func=cex.run)
+    from . import liveness_app
+    live = s.add_parser('app-live', help='reduce fair response liveness to a full-state loop safety check')
+    live.add_argument('--manifest', required=True)
+    live.add_argument('--out', required=True)
+    live.add_argument('--depth', type=int, default=20)
+    live.add_argument('--engine', default='abc:pdr')
+    live.add_argument('--timeout', type=float, default=60)
+    live.add_argument('--mode', choices=['bmc', 'prove'], default='prove')
+    live.add_argument('--json', action='store_true')
+    live.set_defaults(func=liveness_app.run)

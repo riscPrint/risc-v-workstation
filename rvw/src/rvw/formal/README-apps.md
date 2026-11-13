@@ -280,3 +280,22 @@ accuracy status. Missing accuracy is incomplete. The chain is observed trace
 evidence. It does not prove counterfactual causality or a source repair.
 
 See [formal apps and proof coverage](README-apps.md).
+
+## Fair response liveness
+
+`rvw formal app-live --manifest PLAN.json --out DIR` reduces response liveness
+to safety. The `rvw.liveness-app/1` plan supplies `verilog`, `top`, `clock`,
+`reset`, Boolean `request` and `response` expressions, and a `fairness` list.
+Each fairness expression must hold infinitely often. Expressions use top ports.
+The tool maps memories, flattens the design and saves every synchronous state
+bit. It detects a nonempty loop with an outstanding request, no response and
+all fairness conditions observed. The native safety proof rules out these loops.
+The default mode is `prove`. Mode `bmc` only searches bounded lassos.
+
+A handshake request must remain represented until completion. A transient request
+can still leave an obligation. Fair `ready` cannot repair a design that drops it.
+The native smoke test proves a retained request under fair `ready`. A mutant
+that never acknowledges fails. All state must use one rising-edge clock.
+Unsupported state and black boxes cause an error. Fairness feasibility is not
+proved. This command checks universal fair response. It does not establish the
+CTL claim that every reachable state has some path to progress.

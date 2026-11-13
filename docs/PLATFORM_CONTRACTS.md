@@ -4816,3 +4816,13 @@ graph. Node IDs refer to its vertex order. Each node records source location,
 timestamp, observed value and `causes` with node ID, edge kind and clock flag.
 Trace accuracy is retained. Missing accuracy becomes incomplete. These records
 are not an unbounded proof or a repair certificate.
+
+### Formal app liveness-to-safety
+
+`rvw.liveness-app/1` binds self-contained RTL, top, clock, active-high reset,
+request, response and state-justice fairness expressions. `rvw.liveness-app-result/1`
+retains the full state width, native safety result and captured inputs. Only an
+unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
+is a bounded lasso search. Justice feasibility and existential CTL deadlock
+freedom are not established. Existing safety assertions are removed from this
+separate job. Original assumptions remain.
