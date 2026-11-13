@@ -1,0 +1,23 @@
+package clock_reset_test;
+  import uvm_pkg::*; import clock_reset_vip::*;
+  `include "uvm_macros.svh"
+  class test_env extends uvm_test;
+    `uvm_component_utils(test_env)
+    agent source; scoreboard sc;
+    function new(string name="test_env",uvm_component parent=null); super.new(name,parent); endfunction
+    function void build_phase(uvm_phase phase); source=new("source",this); sc=new("sc",this); endfunction
+    function void connect_phase(uvm_phase phase); source.m.ap.connect(sc.analysis_export); endfunction
+    task run_phase(uvm_phase phase);
+      directed ds=new(); random_sequence rs=new(); phase.raise_objection(this);
+      ds.start(source.s); repeat(8) @(negedge source.d.b.clk);
+      sc.check_phase(phase); $display("RVW_CLOCK_RESET_DONE samples=%0d",sc.count); phase.drop_objection(this);
+    endtask
+  endclass
+endpackage
+module top;
+  import uvm_pkg::*;
+  bit clk=0; always #5 clk=~clk;
+  clock_reset_if bus(clk); clock_reset_fixture dut(bus);
+  initial begin uvm_config_db#(virtual clock_reset_if)::set(null,"uvm_test_top.source*","bus",bus); run_test("test_env"); end
+  initial begin #1000000; $fatal(1,"CLOCK_RESET_WATCHDOG"); end
+endmodule
