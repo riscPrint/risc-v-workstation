@@ -75,6 +75,7 @@ def sc_witness(events, initial):
             remaining -= 1
             progress = True
         if not progress:
-            return None
+            from rvw.memory.sc_schedule import schedule
+            return schedule(harts, initial)
     return {'global_order': order, 'co': co, 'rf': rf,
             'certificate': 'sequential consistency; co contains adjacent edges'}

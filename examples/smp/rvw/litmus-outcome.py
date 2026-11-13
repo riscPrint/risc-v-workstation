@@ -14,7 +14,7 @@ from litmus_programs import parse
 def outcome(test):
     _,_,projection,digest=parse(test)
     base=Path(os.environ.get('RVW_SMP_LITMUS_OUT',Path(__file__).parent/'out/litmus'))
-    root=base/Path(test).stem
+    root=base/(os.environ.get('RVW_SMP_LITMUS_PREFIX','')+Path(test).stem)
     run=root.with_name(root.name+'-run')
     metadata=json.loads((root/'litmus.json').read_text())
     if metadata['test_sha256']!=digest or metadata['projection']!=projection:
