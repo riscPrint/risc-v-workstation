@@ -7,6 +7,9 @@ package interrupt_test;
     function new(string name="test_env",uvm_component parent=null); super.new(name,parent); endfunction
     function void build_phase(uvm_phase phase); source=new("source",this); sc=new("sc",this); endfunction
     function void connect_phase(uvm_phase phase); source.d.expected.connect(sc.input_port);source.m.ap.connect(sc.output_port); endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);
+      set_report_severity_action_hier(UVM_FATAL,UVM_DISPLAY|UVM_STOP);
+    endfunction
     task run_phase(uvm_phase phase);
       directed ds=new(); random_sequence rs=new(); phase.raise_objection(this);
       ds.start(source.s); rs.start(source.s); repeat(8) @(negedge source.d.b.clk);

@@ -61,3 +61,10 @@ need an explicit project adapter. Missing APB/AHB pins cause an error.
 Other generated bindings need project review for width and optional pins.
 Generic Stream payloads and TileLink configuration classes do not yet have
 an automatic mapping. Agent inventory remains available for these profiles.
+
+## SV runtime qualification
+
+The [SV runtime campaign](../../../../Uvm/vip/qualification/README.md)
+builds each protocol once and records compile, good-DUT and corrupt-DUT
+checks separately. Empty native-model stubs remain unqualified. Read its
+measured matrix before choosing an SV agent for a project.

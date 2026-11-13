@@ -23,7 +23,7 @@ package apb_test;
           fork
             es.start(a.s);
             begin
-              wait(a.d.b.psel && !a.d.b.penable);
+              wait(a.m.pending!=null);
               #1; a.d.b.reset_n=0;
               repeat(3) @(negedge a.d.b.clk);
               a.d.b.reset_n=1; sc.reset_model();

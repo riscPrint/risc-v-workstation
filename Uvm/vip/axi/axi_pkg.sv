@@ -148,6 +148,9 @@ package axi_vip;
           aws.delete(); ws.delete();
           foreach(reads[i]) begin reads[i].delete(); writes[i].delete(); read_index[i]=0; end
         end else begin
+          if($test$plusargs("trace_channels"))
+            $display("AXI_CHANNELS t=%0t AW=%0b%0b W=%0b%0b B=%0b%0b BID=%0d pending=%0d aws=%0d ws=%0d",
+              $time,b.awvalid,b.awready,b.wvalid,b.wready,b.bvalid,b.bready,b.bid,writes[b.bid].size(),aws.size(),ws.size());
           if(b.bvalid) begin
             if(writes[b.bid].size()==0) `uvm_fatal("AXI_B_WITHOUT_WRITE","unknown BID")
             a=writes[b.bid][0];

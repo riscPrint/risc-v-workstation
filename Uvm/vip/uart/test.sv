@@ -12,6 +12,9 @@ package uart_test;
     function void connect_phase(uvm_phase phase);
       tx_monitor.ap.connect(sc.input_port); source.m.ap.connect(sc.output_port);
     endfunction
+    function void end_of_elaboration_phase(uvm_phase phase);
+      set_report_severity_action_hier(UVM_FATAL,UVM_DISPLAY|UVM_STOP);
+    endfunction
     task run_phase(uvm_phase phase);
       directed ds=new(); random_sequence rs=new(); error_sequence es=new();
       phase.raise_objection(this); ds.data_bits=source.d.b.data_bits; rs.data_bits=ds.data_bits;
