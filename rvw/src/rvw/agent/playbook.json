@@ -1214,7 +1214,8 @@
         "workloads_list",
         "workloads_run",
         "workloads_verify",
-        "sample_run"
+        "sample_run",
+        "sample_validate"
       ]
     },
     {
