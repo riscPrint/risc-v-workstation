@@ -42,13 +42,14 @@ def test_interrupt_before_claim_does_not_commit_the_preview(tmp_path,monkeypatch
         def step(self,interrupt,mmio):
             assert interrupt==(1<<63)|11 and mmio==(0x200004,42)
             self.count+=1
-            return dict(pc=0x80000000,pc_next=0x80000000+4*(self.count==2),trap=self.count==1,
+            return dict(insn=0x0000a103,before=list(self.regs),mode=3,rd=2,rd_wdata=42,mem_rdata=42,mem_wdata=0,
+                        pc=0x80000000,pc_next=0x80000000+4*(self.count==2),trap=self.count==1,
                         intr=self.count==1,cause=(1<<63)|11,mem_rmask=15 if self.count==2 else 0,
                         mem_wmask=0,mem_fault=0,mem_addr=0x200004)
         def close(self):pass
     monkeypatch.setattr(spike_plic,'Plic',Device);monkeypatch.setattr(spike_device,'Spike',CPU)
     layout=dict(priority=0x1000,pending=0x2000,enable=0x3000,enable_stride=128,context=0x200000,context_stride=4096,sources=1,contexts=1)
-    scenario=dict(id='plic-delivery-m-0-global',elf='one.elf',events=[],reference_model=dict(layout=layout,context=0))
+    scenario=dict(id='plic-delivery-m-0-global',elf='one.elf',elf_sha256='0'*64,events=[],reference_model=dict(layout=layout,context=0))
     result=spike_plic.run(tmp_path,scenario,{},2,{'library':{'sha256':'shim'},'manifest':{'sha256':'manifest'}})
     assert result['status']=='pass' and result['instructions']==2
     assert instances[0].reads==1

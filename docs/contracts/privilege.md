@@ -258,3 +258,23 @@ selected timing bounds. It records the capture hash and retains missing or
 short observations as inconclusive. A sampled digital pass is not analog or
 PLL qualification. Existing handshake capture and strict architectural evidence
 remain required.
+
+## Model-based C2 observation scope
+
+A scenario may declare reference_mode=model-observations, model_bindings and
+model_required_pcs. The selected versioned model must reproduce those bindings.
+Each binding supplies symbol, kind, expected values and optional mask/mode.
+CSR bindings name csr. Load bindings name address and width. Wide values are
+hex strings. Required PCs may be numeric hex strings or ELF symbol objects.
+
+`rvw.privilege-check/1` adds per-scenario model_subset and aggregate model_groups
+and model_counts. All group members must have evidence. This scope requires a
+conclusive passing C1 result, matching input identity, a complete C2 trace,
+matching ELF/core/config identity, exact ELF instructions at observation sites
+and the model's read values/counts. It records evidence=model-based and hashes
+of the trace and Python model sources. Reference-tagged traces cannot qualify.
+
+Architectural groups and overall pass keep the strict full-reference gate.
+Model subset pass leaves architecture inconclusive when no complete ISA model
+exists. A known subset mismatch fails. Native device reference traces carry
+config=reference and evidence=model-based and remain oracle evidence only.

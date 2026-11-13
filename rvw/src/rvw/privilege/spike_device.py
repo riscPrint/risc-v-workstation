@@ -1,9 +1,12 @@
 """Bounded native Spike execution with a Python MMIO device model."""
 from copy import deepcopy
 import ctypes
+import json
 from pathlib import Path
 import time
 from .events import MailboxDriver
+from .campaign import digest
+from rvw.cosim.trace import record
 from rvw.cosim.platform import Platform
 from rvw.cosim.spike import Spike
 
@@ -15,6 +18,11 @@ def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,sc
     cpu=Spike(platform,Path(directory)/scenario['elf'],shim=shim_inputs)
     driver=MailboxDriver(scenario['events']);symbols=cpu.elf.symbols;pending_ack=[]
     status='inconclusive';reason='reference instruction or time bound reached';count=0;traps=[]
+    trace_path=Path(directory)/(scenario['id']+'.reference.jsonl')
+    trace=trace_path.open('w')
+    trace.write(json.dumps(dict(schema='rvw.rvfi/1',xlen=64,isa=platform.isa,core='spike-python-device',
+        config='reference',elf=scenario['elf'],elf_sha256=scenario['elf_sha256'],capabilities=['state'],evidence='model-based'))+'\n')
+    handler_entry=False
     def read(address):
         value=ctypes.c_uint64()
         if cpu.lib.rvw_read_physical(cpu.handle,address,ctypes.byref(value)):raise ValueError(cpu.error())
@@ -41,6 +49,8 @@ def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,sc
                     injected=(address,deepcopy(model).read(address,size))
             interrupt=irq()
             effect=cpu.step(interrupt=interrupt,mmio=injected)
+            trace.write(json.dumps(record(effect,count,intr=handler_entry))+'\n')
+            handler_entry=bool(effect['trap'])
             count+=1;pc=effect['pc_next']
             if effect['trap']:traps.append(dict(cause=effect['cause'],interrupt=bool(effect['intr']),pc=hex(effect['pc'])))
             if effect['mem_rmask'] and not effect['mem_fault'] and injected:
@@ -60,8 +70,10 @@ def run(directory,scenario,config,timeout,shim_inputs,*,device,mmio,irq,drive,sc
                 break
     except ValueError as exc:
         reason=str(exc)
-    finally:cpu.close()
+    finally:
+        cpu.close()
+        trace.write(json.dumps(dict(event='end',cycle=count,status=status))+'\n');trace.close()
     return dict(id=scenario['id'],status=status,reason=reason,evidence='model-based',
                 scope=scope,instructions=count,
-                traps=traps,stimulus_complete=driver.complete,shim_sha256=shim_inputs['library']['sha256'],
+                traps=traps,stimulus_complete=driver.complete,reference_trace=str(trace_path),reference_trace_sha256=digest(trace_path),shim_sha256=shim_inputs['library']['sha256'],
                 shim_manifest_sha256=shim_inputs['manifest']['sha256'])
