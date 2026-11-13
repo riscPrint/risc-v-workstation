@@ -20,6 +20,7 @@ def triage(root, baseline=None, known=None, bundles=None):
             if test.status == 'pass' and test.conclusive:
                 continue
             details = test.extra.get('details', {})
+            details = details if isinstance(details, dict) else {}
             mismatch = details.get('first_mismatch', {})
             if isinstance(mismatch, dict) and mismatch.get('pc') is not None and mismatch.get('instruction') is not None:
                 signature = 'mismatch:' + json.dumps([mismatch['pc'], mismatch['instruction']], sort_keys=True)

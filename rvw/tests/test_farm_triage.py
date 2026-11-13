@@ -41,3 +41,8 @@ def test_recorded_commit_range_and_regression_diff(tmp_path):
     result = triage(candidate, baseline=base)
     assert result['clusters'][0]['commit_ranges'] == ['a'*40 + '..' + 'b'*40]
     assert result['diff']['new_failures']
+
+
+def test_unknown_details_keep_assertion_identity(tmp_path):
+    report(tmp_path, [TestEntry('test', 'assert', signature='assert:Unit.scala:12', extra=dict(details=None))])
+    assert triage(tmp_path)['clusters'][0]['signature'] == 'assert:Unit.scala:12'
