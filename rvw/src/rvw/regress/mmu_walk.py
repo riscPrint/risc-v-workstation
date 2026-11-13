@@ -148,6 +148,12 @@ def scenario_accesses(s):
     """
     from .mmu import ROOT, DATA, FLAGS
     from .mmu_paging import geometry, page_tables
+    if 'random_program' in s:
+        from .mmu_random import plan
+        p = plan(s)
+        g = geometry(s)
+        memory = {ROOT + d * 4096 + i * g.width: value for d, table in enumerate(p['tables']) for i, value in enumerate(table)}
+        return [dict(mode=s['mode'], root=ROOT, va=0x40000000 + a['page'] * 4096, access=a['access'], memory=memory) for a in p['accesses']]
     if any(k in s for k in ('control', 'guest', 'shootdown', 'pointer_mask', 'pbmt', 'napot', 'ad_expect')) or s.get('access') not in ('load', 'store') or s.get('root_switch') or s.get('switch_asid') or s.get('unfenced') or s.get('mode_switch') or s.get('satp_mode') == 'bare' or not s.get('mprv', True):
         return []
     g = geometry(s)

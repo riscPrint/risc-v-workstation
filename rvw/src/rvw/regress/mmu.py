@@ -34,6 +34,9 @@ def number(value):
 
 def load(path):
     raw = json.loads(Path(path).read_text())
+    if set(raw) == {'schema', 'random'} and raw['schema'] == 'rvw.mmu/1':
+        from .mmu_random import matrix as random_matrix
+        raw = dict(schema=raw['schema'], scenarios=random_matrix(raw['random']))
     if set(raw) == {'schema', 'pointer_matrix'} and raw['schema'] == 'rvw.mmu/1':
         from .mmu_pointer import matrix as pointer_matrix
         raw = dict(schema=raw['schema'], scenarios=pointer_matrix(raw['pointer_matrix']))
@@ -57,6 +60,9 @@ def load(path):
 
 
 def validate(s):
+    if isinstance(s, dict) and 'random_program' in s:
+        from .mmu_random import validate as validate_random
+        return validate_random(s)
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
     from .mmu_paging import geometry
@@ -162,6 +168,9 @@ def validate(s):
 
 
 def assembly(s):
+    if 'random_program' in s:
+        from .mmu_random import assembly as random_assembly
+        return random_assembly(s)
     if 'control' in s:
         return control_assembly(s)
     validate(s)
@@ -555,6 +564,8 @@ def build(description, out, gcc, pma=None):
         rows.append(dict(s, elf=elf.name, elf_sha256=digest(elf), source_sha256=digest(source)))
     manifest = {'schema': 'rvw.mmu-build/1', 'spec': SPEC, 'description_sha256': digest(description),
                 'scenarios': rows, 'pma': attributes, 'pma_sha256': digest(pma) if pma else None}
+    from .mmu_cov import groups
+    (out / 'functional-groups.json').write_text(json.dumps(groups(), indent=2) + '\n')
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     return manifest
 
