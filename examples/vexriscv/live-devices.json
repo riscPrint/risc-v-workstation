@@ -1,0 +1,89 @@
+{
+  "schema": "rvw.sim-map/1",
+  "address_bits": 32,
+  "regions": [
+    {
+      "name": "ram",
+      "kind": "ram",
+      "base": "0x80000000",
+      "size": "0x1000000",
+      "permissions": "rwx",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "uart",
+      "kind": "mmio",
+      "base": "0x10000000",
+      "size": "0x1000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "clint",
+      "kind": "mmio",
+      "base": "0x2000000",
+      "size": "0x10000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "plic",
+      "kind": "mmio",
+      "base": "0xc000000",
+      "size": "0x400000",
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": []
+    }
+  ],
+  "interrupts": [],
+  "devices": [
+    {
+      "region": "uart",
+      "model": "ns16550",
+      "rx": [
+        {
+          "cycle": 3000,
+          "byte": 101
+        },
+        {
+          "cycle": 3000,
+          "byte": 99
+        },
+        {
+          "cycle": 3000,
+          "byte": 104
+        },
+        {
+          "cycle": 3000,
+          "byte": 111
+        },
+        {
+          "cycle": 3000,
+          "byte": 10
+        }
+      ]
+    },
+    {
+      "region": "clint",
+      "model": "clint",
+      "cycles_per_tick": 10,
+      "software_bit": 3,
+      "timer_bit": 7
+    },
+    {
+      "region": "plic",
+      "model": "plic",
+      "interrupt_bit": 11,
+      "sources": [
+        {
+          "device": "uart",
+          "id": 1
+        }
+      ]
+    }
+  ]
+}

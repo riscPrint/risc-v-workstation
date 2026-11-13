@@ -49,7 +49,9 @@ object VexAdapter extends CoreAdapter {
     require(ctx.elf.entry == 0x80000000L, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
       throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
-    job.socMap.foreach(m => require(m.regions.forall(r => r.kind == "ram" && !r.cacheable && r.base + r.size <= (BigInt(1) << 32)) && m.interrupts.isEmpty, "VexRiscv adapter supports RAM only"))
+    job.socMap.foreach(m => require(m.regions.forall(r => !r.cacheable && r.base + r.size <= (BigInt(1) << 32)) && m.interrupts.isEmpty, "VexRiscv requires uncached 32-bit regions and device-owned routes"))
+    val devices = job.socMap.map(new LiveDevices(_))
+    devices.foreach(d => require((d.interruptMask & ~irqInputMask) == 0, "unsupported device interrupt pin"))
     val memory = mutable.LongMap.empty[Int]
     def inRam(a: Long, n: Long, permission: Char = 'r'): Boolean = job.socMap match {
       case Some(m) => m.region(BigInt(a), BigInt(n), permission).exists(_.kind == "ram")
@@ -140,17 +142,25 @@ object VexAdapter extends CoreAdapter {
             if (respond) pending = None
             if (dut.dbus.cmd.valid.toBoolean && dut.dbus.cmd.ready.toBoolean) {
               val cmd = dut.dbus.cmd
-              val addr = cmd.address.toLong & ~3L
+              val byteAddress = cmd.address.toLong
+              val addr = byteAddress & ~3L
+              val bytes = 1 << cmd.size.toInt
+              val lane = (byteAddress & 3).toInt
               val permission = if (cmd.wr.toBoolean) 'w' else 'r'
-              val selected = job.socMap.flatMap(_.region(BigInt(addr), 4, permission))
-              capture.foreach(_.request(cycle, "dbus", BigInt(addr), 4, cmd.wr.toBoolean, selected))
+              val selected = job.socMap.flatMap(_.region(BigInt(byteAddress), bytes, permission))
+              capture.foreach(_.request(cycle, "dbus", BigInt(byteAddress), bytes, cmd.wr.toBoolean, selected))
+              val device = devices.filter(_.contains(byteAddress, bytes))
               val valid = inRam(addr, 4, permission)
               if (cmd.wr.toBoolean) {
-                require(valid, f"store outside RAM at 0x$addr%x")
                 val data = cmd.data.toBigInt
-                for (i <- 0 until 4 if (cmd.mask.toInt & (1 << i)) != 0)
-                  memory(addr + i) = ((data >> (8 * i)) & 255).toInt
-              } else pending = Some((cycle + delay(), readWord(addr), !valid))
+                device match {
+                  case Some(d) => d.write(byteAddress, bytes, (data >> (8 * lane)) & ((BigInt(1) << (8 * bytes)) - 1))
+                  case None =>
+                    require(valid, f"store outside RAM at 0x$addr%x")
+                    for (i <- 0 until 4 if (cmd.mask.toInt & (1 << i)) != 0)
+                      memory(addr + i) = ((data >> (8 * i)) & 255).toInt
+                }
+              } else pending = Some((cycle + delay(), device.map(_.read(byteAddress, bytes) << (8 * lane)).getOrElse(readWord(addr)), !valid && device.isEmpty))
             }
           }
         }
@@ -160,7 +170,8 @@ object VexAdapter extends CoreAdapter {
           cd.waitSampling()
           ctl.tick()
           probes.foreach(_.sample(ctl.cycle))
-          val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(BigInt(0))
+          val deviceLevels = devices.map(_.tick(ctl.cycle)).getOrElse(BigInt(0))
+          val levels = job.irqSchedule.map(_.levelsAt(ctl.cycle)).getOrElse(deviceLevels)
           dut.csr.timerInterrupt #= levels.testBit(7)
           dut.csr.softwareInterrupt #= levels.testBit(3)
           dut.csr.externalInterrupt #= levels.testBit(11)
@@ -243,7 +254,7 @@ object VexAdapter extends CoreAdapter {
     }
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
-        "rvfi_monitor" -> false, "memory_bytes" -> job.socMap.map(m => ujson.Str(m.regions.map(_.size).sum.toString)).getOrElse(ujson.Num(16777216)), "roi_markers" -> markers), metrics)
+        "device_output" -> devices.map(_.outputs).getOrElse(ujson.Obj()), "rvfi_monitor" -> false, "memory_bytes" -> job.socMap.map(m => ujson.Str(m.regions.map(_.size).sum.toString)).getOrElse(ujson.Num(16777216)), "roi_markers" -> markers), metrics)
   }
 }
 
