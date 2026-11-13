@@ -17,6 +17,8 @@ from .generate import generate
 def register(subparsers):
     parser = subparsers.add_parser("cosim", help="trace-driven architectural comparison")
     subs = parser.add_subparsers(dest="cosim_action", required=True)
+    from .doctor import register as register_doctor
+    register_doctor(subs)
     from .dii_cli import register as register_dii
     register_dii(subs)
     from .exchange_cli import register as register_exchange

@@ -523,3 +523,23 @@ The installer checks the release archive SHA256 before extraction. Linux x86_64,
 Linux arm64 and macOS are supported. The macOS release uses the upstream binary;
 Apple Silicon can need Rosetta. Run `scripts/install.sh --with-lint --check` to
 check the pinned version. `rvw lint` finds it through `PATH`.
+
+### Inspect co-simulation capture first
+
+After the adapter writes its first C2 trace, run this in the core project:
+
+```sh
+rvw cosim doctor --trace OUT/rvfi.jsonl --json
+rvw cosim doctor --trace OUT/rvfi.jsonl --strict --json
+```
+
+Set `[cosim].platform` in `rvw.toml`. The report lists captured capabilities,
+configured comparisons and absent state. It also lists conditional masks with
+reasons and exact platform choices. Inspect these before a reference run.
+For example, CSR-only capture must not claim FP state. A scalar trace cannot
+establish vector correctness. Add the missing capture to the core adapter.
+
+`inspected` means that C2 validation finished. No model ran. The report cannot
+claim a match. Next run `rvw cosim check --elf ELF --trace OUT/rvfi.jsonl --json`.
+Read its actual state coverage and applied masks. Use the `cosim_doctor` MCP
+tool for the same inspection from an agent.
