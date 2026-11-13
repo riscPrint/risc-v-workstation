@@ -145,6 +145,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
             return irq_handler
         start = previous_cycle - platform.irq_input_latency
         return sum(1 << bit for bit, (_, low) in irq_inputs.items() if low is None or low > start)
+    environment = None
     def result(status, **extra):
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
@@ -158,7 +159,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                                    "csr_snapshot_steps": csr_snapshot_steps,
                                    "vector_memory_steps": vector_memory_steps,
                                    "vector_memory_accesses": vector_memory_accesses,
-                                   "fault_access_steps": fault_access_steps},
+                                   "fault_access_steps": fault_access_steps,
+                                   "environment": trace.header.get("environment"),
+                                   "environment_events": environment.events if environment else 0},
                 "platform_policy": {key: getattr(platform, key) for key in
                                     ("privilege_modes", "misaligned", "endianness",
                                      "absent_pmp_csrs", "ecall_tval", "pmp_granularity", "memory_read_convention", "scalar_split_ram")},
@@ -185,14 +188,25 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     try:
         if trace.header["xlen"] != platform.xlen or trace.header["isa"].lower() != platform.isa.lower():
             raise ValueError("trace ISA/XLEN must exactly match the selected platform")
-        records = iter(trace) if ordered_events else irq_first_by_cycle(iter(trace))
+        from .environment import Environment
+        environment = Environment() if getattr(trace, "environment", False) else None
+        records = iter(trace) if ordered_events or environment else irq_first_by_cycle(iter(trace))
         reference_end = None
         for actual in records:
             if 'event' not in actual:
                 actual = platform.normalize_record(actual)
             last_cycle = actual["cycle"]
             if actual.get("event") == "end":
+                if environment and (environment.read is not None or environment.write is not None):
+                    raise ValueError("unconsumed device response at end")
                 ended, end_status = True, actual["status"]
+                continue
+            if actual.get("event") == "environment":
+                environment.event(actual, model, platform)
+                if actual['kind'] == 'pins':
+                    if irq_inputs is None:
+                        irq_inputs = {}
+                    irq_level(actual['cycle'], actual['levels'])
                 continue
             if actual.get("event") == "irq":
                 if irq_inputs is None:
@@ -214,6 +228,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                     return mismatch(actual, expected, diff, count)
                 continue
             if actual.get("event") == "trap":
+                if environment and actual.get("before_order") != environment.order:
+                    raise ValueError("trap lacks its environment retirement boundary")
                 represented = last_trap is not None
                 # With recorded input levels, an input interrupt is injected only when its input
                 # was high (same window as the mip/sip evidence). A trap whose input stayed low
@@ -276,7 +292,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
             last_order = actual["order"]
             # intr marks the first handler instruction after any trap. An
             # interrupt event supplies cause; never infer a cause from a boolean.
-            mmio = platform.mmio_read(actual) if "mmio" in enabled else None
+            mmio = environment.retire(actual) if environment else platform.mmio_read(actual) if "mmio" in enabled else None
             represented_by_event = (event_effect is not None and not event_effect["intr"]
                                     and actual["trap"] and actual["pc"] == event_effect["pc"])
             try:
@@ -369,7 +385,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                         if not is_instret or not instret_synced:
                             sync_reason = "counter"
                             initial_instret = is_instret
-                elif mmio and expected["mem_addr"] == actual["mem_addr"] and expected["mem_rmask"]:
+                elif mmio and not environment and expected["mem_addr"] == actual["mem_addr"] and expected["mem_rmask"]:
                     sync_reason = "mmio"
                 elif csr in platform.csr_masks and "csr" in enabled:
                     sync_reason, sync_mask = "csr", platform.csr_masks[csr]

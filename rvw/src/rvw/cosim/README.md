@@ -202,3 +202,9 @@ The checker validates the raw address and full read strobe before deriving the
 instruction's byte lanes. Other modes retain strict architectural masks. Store
 strobes and register values remain strict. This option refuses MMIO, misaligned,
 compressed and trapping loads. Review the RTL capture before choosing it.
+
+C2/2 can carry `environment: "retirement-ordered/1"` and the `environment`
+capability for harness-owned interrupt pins and device-model responses.
+See `docs/contracts/c2-rvfi-trace.md`. Strict comparison consumes those inputs
+without copying DUT read results. Rebuild the Spike shim for this extension.
+The current pin backend supports machine software, timer and external inputs.

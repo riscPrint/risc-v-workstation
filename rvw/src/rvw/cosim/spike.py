@@ -209,6 +209,8 @@ class Spike:
         lib.rvw_set_mscratch.argtypes = [C.c_void_p, C.c_uint64]
         if hasattr(lib, "rvw_seed_fcsr"):
             lib.rvw_seed_fcsr.argtypes = [C.c_void_p, C.c_uint64]
+        if hasattr(lib, "rvw_external_mip"):
+            lib.rvw_external_mip.argtypes = [C.c_void_p, C.c_uint64]
         lib.rvw_read_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
@@ -250,6 +252,16 @@ class Spike:
         if self.handle:
             self.lib.rvw_destroy(self.handle)
             self.handle = None
+
+    def environment_inputs(self, levels):
+        if self.platform.irq_input_mask & ~0x888:
+            raise ValueError('ordered pin replay currently supports machine software, timer and external pins')
+        if levels & ~self.platform.irq_input_mask:
+            raise ValueError('environment pins exceed declared platform IRQ inputs')
+        if not hasattr(self.lib, 'rvw_external_mip'):
+            raise ValueError('rebuild Spike shim for ordered external input evidence')
+        if self.lib.rvw_external_mip(self.handle, levels):
+            raise ValueError(self.error())
 
     def step(self, interrupt=0, mmio=None):
         """One reference step. `interrupt` is the cause of a core's interrupt trap event. Only a

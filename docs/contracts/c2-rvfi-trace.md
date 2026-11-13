@@ -557,3 +557,40 @@ successful program result.
 `RvfiTraceWriter.externalInterrupt` emits this envelope. The C2 reader checks
 the declaration, sequence, retirement boundary and payload types. Checkpoint
 resume with this extension is not supported; a fresh capture starts at seq 0.
+## Retirement-ordered environment inputs
+
+Single-hart C2/2 can declare capability `environment` and header field
+`environment: "retirement-ordered/1"`. This extension does not require the
+`state` capability. The harness records its driven inputs and device-model
+responses. It must not copy DUT result values as reference inputs.
+
+An `environment` event has numeric `cycle` and `before_order`, plus `kind`:
+
+- `pins` supplies `levels` as a lowercase XLEN hex string in `mip` bit positions.
+- `device-read` supplies lowercase hex `address` and `data`, plus byte `size`.
+  The data comes from the device model before the DUT consumes it.
+- `device-write` records the device model's accepted write with the same fields.
+
+Events stay in file order, including events in the same cycle. `before_order`
+is the next retirement index. Retirements start at zero and are contiguous.
+The stream starts with a pin event, including when all inputs are low. Every
+trap event also has `before_order`. This records the interrupt delivery point
+separately from changes in its input pin. Scalar device events bind to one
+retirement. Unmatched or duplicate responses are errors. Device reads must
+lie within declared platform MMIO. Environment data is not a synchronization
+from DUT register or memory results. Strict comparison still checks those
+results and all architectural writes.
+
+The Spike backend currently supports machine software, timer and external
+input pins. It overlays these pins on architectural `mip` reads and delivers
+interrupts only at recorded trap boundaries. Software-owned CSR state remains
+in Spike. This represents an asynchronous DUT's observed delivery timing; it
+does not prove the DUT's interrupt arbitration or latency policy. Device
+read inputs replay the captured device-model response. Separate device-model
+qualification is required. The C1 input declaration must capture the device
+configuration and implementation. Missing pins, unsupported pin sets, absent
+shim support or incomplete event bindings cannot earn a strict match.
+
+Select one environment evidence protocol per stream. Do not combine the
+`environment` capability with an `external_interrupts` declaration. The
+separate external-interrupt record protocol retains its own model binding.

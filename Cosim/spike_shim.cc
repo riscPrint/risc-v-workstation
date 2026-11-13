@@ -26,6 +26,18 @@ struct Effect {
   char disasm[256];
 };
 }
+// Architectural CSR reads observe recorded external pins. Interrupt delivery
+// remains explicit at the recorded retirement boundary, not at Spike time.
+struct external_mip_csr_t : csr_t {
+  csr_t_p original;
+  uint64_t levels = 0;
+  external_mip_csr_t(processor_t* p, csr_t_p c) : csr_t(p, 0x344), original(c) {}
+  reg_t read() const noexcept override { return original->read() | levels; }
+  void verify_permissions(insn_t insn, bool write) const override {
+    original->verify_permissions(insn, write);
+  }
+  bool unlogged_write(reg_t value) noexcept override { original->write(value); return false; }
+};
 struct Region { uint64_t base, size; };
 struct Machine : simif_t {
   cfg_t cfg;
@@ -36,6 +48,7 @@ struct Machine : simif_t {
   std::unique_ptr<processor_t> cpu;
   std::map<unsigned, std::unique_ptr<processor_t>> parked;
   unsigned selected = 0;
+  std::shared_ptr<external_mip_csr_t> external_mip;
   std::ostringstream sout;
   FILE* log = nullptr;
   char* memory_log = nullptr;
@@ -355,6 +368,19 @@ int rvw_redirect(void* m,uint64_t pc) {
     machine->cpu->get_state()->pc=pc;
     return 0;
   } catch(const std::exception& e) { error=e.what();return -1; }
+}
+int rvw_external_mip(void* m, uint64_t levels) {
+  try {
+    auto& machine = *static_cast<Machine*>(m);
+    if(!machine.parked.empty()) throw std::runtime_error("external pin evidence requires single-hart reference");
+    if(!machine.external_mip) {
+      auto* s = machine.cpu->get_state();
+      machine.external_mip = std::make_shared<external_mip_csr_t>(machine.cpu.get(), s->csrmap.at(0x344));
+      s->add_csr(0x344, machine.external_mip);
+    }
+    machine.external_mip->levels = levels;
+    return 0;
+  } catch(const std::exception& e) { error=e.what(); return -1; }
 }
 int rvw_step(void* m,Effect* out,uint64_t cause,uint64_t io_addr,uint64_t io_value,int inject) {
   try { auto& machine=*static_cast<Machine*>(m); machine.io_addr=io_addr;
