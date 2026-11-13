@@ -3,7 +3,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from rvw.results import find_results
+from .recorded_results import recorded_results as find_results
 from rvw.regress.compare import compare, with_assertion_identity
 from rvw.regress.known import load_known
 

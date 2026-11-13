@@ -431,3 +431,11 @@ Queue cancellation and checked recovery allow 25 seconds for cooperative
 SIGTERM cleanup before SIGKILL. The native shard wrapper installs a TERM
 handler so its adapter group can unwind. Keep cancellation controls separate
 from a DUT verdict. A dead controller with a pending cancel does not retry.
+
+`rvw farm live --root QUEUE --owner OWNER --out recorded.html` exports the
+same owner-scoped live view as standalone HTML. MCP `farm_live` accepts the
+same `out` option. The file embeds recorded trends, per-test history, failure
+clusters and referenced C5 summaries. It needs no HTTP service or token.
+Review its contents before sharing it. The export contains that owner's
+evidence. It does not infer gate acceptance. Cluster bundles written under
+`JOB/bundles/CLUSTER_ID/summary.json` appear in live and exported drill-down.

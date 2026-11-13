@@ -1,7 +1,7 @@
 """Owner-scoped live views over validated C3 evidence in local job directories."""
 import json
 from pathlib import Path
-from rvw.results import find_results
+from .recorded_results import recorded_results as find_results
 from .triage import triage
 
 
@@ -24,11 +24,16 @@ def snapshot(queue, owner):
                 for cluster in triage(folder)['clusters']:
                     cluster['job_id'] = job['id']
                     cluster['bundles'] = []
+                    candidates = [folder / 'bundles' / cluster['id'] / 'summary.json']
                     for member in cluster['members']:
                         if member['run']:
-                            candidate = (Path(member['run']) / 'bundle' / 'summary.json').resolve()
-                            if candidate.is_relative_to(folder.resolve()) and candidate.is_file():
-                                cluster['bundles'].append(candidate.relative_to(folder.resolve()).as_posix())
+                            candidates.append(Path(member['run']) / 'bundle' / 'summary.json')
+                    for candidate in candidates:
+                        candidate = candidate.resolve()
+                        if candidate.is_relative_to(folder.resolve()) and candidate.is_file():
+                            relative = candidate.relative_to(folder.resolve()).as_posix()
+                            if relative not in cluster['bundles']:
+                                cluster['bundles'].append(relative)
                     clusters.append(cluster)
         except (ValueError, OSError) as exc:
             issues.append(str(exc))

@@ -64,7 +64,8 @@ def execute(manifest, adapter, out, suite='isa', timeout=600):
                                source=source, tests=tests)
         write_json(out / 'results.json', results.to_dict())
     wall = time.monotonic() - start
-    complete = not errors and not process.timed_out and process.returncode == 0 and all(t.conclusive for t in tests)
+    expected_exit = process.returncode == 0 or (process.returncode == 1 and any(t.failed for t in tests))
+    complete = not errors and not process.timed_out and expected_exit and all(t.conclusive for t in tests)
     report = dict(schema='rvw.native-shard/1', status='complete' if complete else 'inconclusive',
                   expected=len(rows), collected=len(tests), errors=errors, wall_seconds=wall,
                   tests_per_second=len(tests)/wall, adapter_returncode=process.returncode)

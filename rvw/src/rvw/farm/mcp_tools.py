@@ -44,8 +44,8 @@ def mcp_tools():
                         ["manifest", "adapter", "root", "image", "claim"]), plan, long=True,
         side_effects='long-running; writes shard plan files under root', native_tools=(),
         ), ToolSpec("farm_live", "Read owner-scoped runs, trends, test history and failure clusters.",
-                 schema({"root": string, "owner": string}, ["root", "owner"]), live_json, long=True,
-        side_effects='long-running; reads run evidence; creates queue database under root if absent', native_tools=(),
+                 schema({"root": string, "owner": string, "out": string}, ["root", "owner"]), live_json, long=True,
+        side_effects='long-running; reads run evidence; creates queue database under root if absent; writes optional static export under out', native_tools=(),
         ), ToolSpec("farm_workflow", "Create, resume or inspect a command dependency plan. Completion is execution state, not verification.",
                  schema({"root": string, "action": string, "plan": {"type": "object"}, "workflow_id": string, "owner": string}, ["root"]),
                  workflow, long=True,
@@ -114,7 +114,10 @@ def batch_json(**options):
     return batch(**options)
 
 
-def live_json(root, owner):
+def live_json(root, owner, out=None):
     from .live import snapshot
     from .service import Queue
+    if out:
+        from .live_export import export
+        return export(Queue(root), owner, out)
     return snapshot(Queue(root), owner)

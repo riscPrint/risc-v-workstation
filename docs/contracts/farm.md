@@ -105,3 +105,16 @@ directory. Collection completeness is not a DUT pass or a C4 verdict.
 Queue cancellation sends SIGTERM first. It allows 25 seconds for a wrapper to
 stop nested native groups before SIGKILL. Checked recovery uses the same grace
 period. A recovered cancellation stays cancelled and must not launch a retry.
+
+## Recorded live dashboard export
+
+The optional `farm live --out` embeds one owner-scoped snapshot and its C5
+summary documents in standalone HTML. The export uses the live view renderer.
+It does not embed authentication tokens. Script payloads escape less-than
+characters. Unknown or absent bundle documents remain errors. Cluster bundles
+can use `JOB/bundles/CLUSTER_ID/summary.json` or the existing per-cell location.
+
+Native shard exit code 1 is collection complete only when every expected C1
+cell is valid and conclusive and at least one cell failed. Exit code 1 with
+only passes remains inconclusive. Farm history discovery treats a C5 summary
+and its owned storage as a bundle, not as a C3 regression generation.

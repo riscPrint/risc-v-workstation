@@ -8,7 +8,7 @@ from rvw.results import load_results
 pytestmark = pytest.mark.fast
 
 
-def adapter(tmp_path, mutation=''):
+def adapter(tmp_path, mutation='', exit_code=0):
     script = tmp_path / 'adapter.py'
     script.write_text('''import json,sys,hashlib
 from pathlib import Path
@@ -18,7 +18,7 @@ for line in Path(sys.argv[sys.argv.index('--manifest')+1]).read_text().splitline
  d=dict(schema='rvw.run/1',status='pass',core='fixture',config=r['config'],seed=r['seed'],elf_sha256=hashlib.sha256(Path(r['elf']).read_bytes()).hexdigest(),execution_mode='server')
  ''' + mutation + '''
  (p/'result.json').write_text(json.dumps(d))
-''')
+''' + f'sys.exit({exit_code})\n')
     elf = tmp_path / 'program'; elf.write_bytes(b'elf')
     manifest = tmp_path / 'jobs.jsonl'
     manifest.write_text(json.dumps(dict(elf=str(elf), config='small', seed=1, id='program'))+'\n')
@@ -59,3 +59,14 @@ def test_recovery_does_not_retry_cancelled_worker(tmp_path):
     recovered = queue.recover()
     assert recovered[0]['state'] == 'cancelled'
     assert queue.work_once() is None
+
+
+def test_native_dut_exit_is_complete_collection(tmp_path):
+    manifest, command = adapter(tmp_path, "d.update(status='fail',fail_code=3)", exit_code=1)
+    assert execute(manifest, command, tmp_path/'out')['status'] == 'complete'
+    assert load_results(tmp_path/'out/results.json').tests[0].failed
+
+
+def test_nonzero_exit_with_only_passes_is_not_complete(tmp_path):
+    manifest, command = adapter(tmp_path, exit_code=1)
+    assert execute(manifest, command, tmp_path/'out')['status'] == 'inconclusive'

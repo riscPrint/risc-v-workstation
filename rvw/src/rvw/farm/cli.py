@@ -35,6 +35,7 @@ def register(sub):
     live = commands.add_parser("live")
     live.add_argument("--root", required=True)
     live.add_argument("--owner", required=True)
+    live.add_argument("--out", help="standalone recorded HTML with C5 summaries")
     live.set_defaults(func=live_command)
     workflow = commands.add_parser("workflow")
     workflow.add_argument("--root", required=True)
@@ -161,7 +162,11 @@ def workflow_command(args):
 def live_command(args):
     from .live import snapshot
     from .service import Queue
-    print(json.dumps(snapshot(Queue(args.root), args.owner)))
+    if args.out:
+        from .live_export import export
+        print(json.dumps(export(Queue(args.root), args.owner, args.out)))
+    else:
+        print(json.dumps(snapshot(Queue(args.root), args.owner)))
 
 
 def plan_command(args):
