@@ -92,7 +92,7 @@ usage: rvw agent-bench trial [-h] --pack PACK --task TASK --out OUT
 
 ```text
 usage: rvw arch [-h] [--project PROJECT] [--json]
-    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,ooo-wrong-path,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -160,6 +160,14 @@ usage: rvw arch ooo-sampled [-h] --out OUT [--warmup WARMUP] [--max-cycles
 ```text
 usage: rvw arch ooo-sensitivity [-h] --out OUT [--json] [--project PROJECT]
     plan
+```
+
+### `rvw arch ooo-wrong-path`
+
+```text
+usage: rvw arch ooo-wrong-path [-h] --out OUT [--max-branches MAX_BRANCHES]
+    [--max-wrong-instructions MAX_WRONG_INSTRUCTIONS] [--max-cycles
+    MAX_CYCLES] [--json] [--project PROJECT] config trace elf platform
 ```
 
 ### `rvw arch system-energy`
@@ -506,8 +514,15 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT] [--json]
-    {campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
+```
+
+### `rvw cov source-report`
+
+```text
+usage: rvw cov source-report [-h] --database DATABASE --functional FUNCTIONAL
+    --bindings BINDINGS [--json] [--project PROJECT]
 ```
 
 ### `rvw cov campaign`
@@ -1017,7 +1032,7 @@ usage: rvw fault report [-h] [--project PROJECT] [--json] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT] [--json]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-abstract,riscv-proof,sail-m,sail-state,scenario-compile,strategy,sva-inspect,uf-prove}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,cross-prove,equiv-partitions,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-abstract,riscv-proof,sail-m,sail-state,scenario-compile,strategy,sva-inspect,trace-mine,uf-prove}
     ...
 ```
 
@@ -1563,6 +1578,15 @@ usage: rvw formal cover-hunt [-h] --manifest MANIFEST --out OUT [--budget
     BUDGET] [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
+### `rvw formal cross-prove`
+
+```text
+usage: rvw formal cross-prove [-h] --source SOURCE --top TOP --out OUT
+    [--depth DEPTH] [--timeout TIMEOUT] [--engine
+    {smtbmc:yices,smtbmc:z3,abc:pdr}] [--mode {bmc,prove}] [--proof-cache
+    PROOF_CACHE] [--json] [--project PROJECT]
+```
+
 ### `rvw formal equiv-partitions`
 
 ```text
@@ -1673,6 +1697,13 @@ usage: rvw formal strategy [-h] --model MODEL [--history HISTORY] --out OUT
 usage: rvw formal sva-inspect [-h] --verilog VERILOG [VERILOG ...] --top TOP
     --out OUT [--plugin PLUGIN] [--timeout TIMEOUT] [--project PROJECT]
     [--json]
+```
+
+### `rvw formal trace-mine`
+
+```text
+usage: rvw formal trace-mine [-h] --manifest MANIFEST --trace TRACE --out OUT
+    [--minimum MINIMUM] [--json] [--project PROJECT]
 ```
 
 ### `rvw formal uf-prove`
@@ -2685,7 +2716,8 @@ usage: rvw soc observe-pack [-h] --binding BINDING --pins PINS --trace TRACE
 
 ```text
 usage: rvw soc peripheral [-h] --name NAME --base BASE --out OUT [--json]
-    [--project PROJECT] {clint,plic,gpio,timer,finisher,uart16550,spi,i2c}
+    [--project PROJECT]
+    {clint,plic,gpio,timer,finisher,uart16550,spi,i2c,watchdog,block}
 ```
 
 ### `rvw soc verify`
@@ -3004,7 +3036,8 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 ### `rvw workloads`
 
 ```text
-usage: rvw workloads [-h] [--project PROJECT] [--json] {list,build,verify} ...
+usage: rvw workloads [-h] [--project PROJECT] [--json]
+    {list,build,verify,evaluate} ...
 ```
 
 ### `rvw workloads list`
@@ -3027,6 +3060,14 @@ usage: rvw workloads build [-h] [--json] [--manifest MANIFEST | --recipe
 ```text
 usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
     ORACLE] [--trace] [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw workloads evaluate`
+
+```text
+usage: rvw workloads evaluate [-h] [--source RECIPE=PATH] [--build
+    RECIPE=BUILD_JSON] [--trace WORKLOAD=C2] [--manifest MANIFEST] --out OUT
+    [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ## MCP tools
@@ -3235,6 +3276,14 @@ Starts a background job: yes.
 Rank local model parameter effects; no fidelity verdict.
 
 Arguments: `plan` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `arch_ooo_wrong_path`
+
+Fetch real Spike wrong paths and compare bounded cache-side timing with committed-path modeling.
+
+Arguments: `config` (required), `trace` (required), `elf` (required), `platform` (required), `out` (required), `max_branches`, `max_wrong_instructions`, `max_cycles`.
 
 Starts a background job: yes.
 
@@ -3557,6 +3606,14 @@ Select regression tests covering Scala changes in BASE..HEAD. Uses BASE-side map
 Arguments: `database` (required), `diff` (required), `repo`.
 
 Starts a background job: yes.
+
+### `cov_source_report`
+
+Join native counters and project-declared functional source links.
+
+Arguments: `database` (required), `functional` (required), `bindings` (required).
+
+Starts a background job: no.
 
 ### `csim_budget`
 
@@ -3923,6 +3980,14 @@ Starts a background job: yes.
 Search selected RTL covers with bounded engines and rIC3 seeds. Coverage hits do not prove safety or unreachability.
 
 Arguments: `manifest` (required), `out` (required), `budget`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_cross_prove`
+
+Check a Boolean two-clock implication. Global samples, pre-update values; no clock fairness or between-sample event claim.
+
+Arguments: `source` (required), `top` (required), `out` (required), `depth`, `timeout`, `mode`, `engine`, `proof_cache`.
 
 Starts a background job: yes.
 
@@ -4373,6 +4438,14 @@ Join a formal inventory with captured proof, core, activation and mutation evide
 Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
+
+### `formal_trace_mine`
+
+Emit Scala DSL candidates from finite signal traces. Does not prove candidates.
+
+Arguments: `manifest` (required), `trace` (required), `out` (required), `minimum`.
+
+Starts a background job: no.
 
 ### `formal_uf_prove`
 
@@ -5539,6 +5612,14 @@ Starts a background job: no.
 Build or reference-check pinned open workloads. No RTL accuracy claim.
 
 Arguments: `manifest`, `recipe`, `source` (required), `out` (required), `cc`, `bench`.
+
+Starts a background job: yes.
+
+### `workloads_evaluate`
+
+Build pinned workloads, check Spike outputs, capture C2 and time shared simulation points. Approximate model evidence.
+
+Arguments: `out` (required), `manifest`, `sources`, `builds`, `traces`, `timeout`.
 
 Starts a background job: yes.
 
