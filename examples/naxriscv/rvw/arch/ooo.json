@@ -1,0 +1,76 @@
+{
+  "fetch_width": 2,
+  "fetch_entries": 8,
+  "rename_width": 2,
+  "rob_entries": 64,
+  "issue_width": 3,
+  "issue_entries": 32,
+  "load_entries": 16,
+  "store_entries": 16,
+  "commit_width": 2,
+  "physical_registers": 64,
+  "memory_policy": "disambiguate",
+  "latencies": {
+    "alu": 1,
+    "multiply": 3,
+    "divide": 18,
+    "load": 3,
+    "store": 1,
+    "branch": 1,
+    "jump": 1,
+    "csr": 4,
+    "fence": 4,
+    "system": 4
+  },
+  "ports": {
+    "alu": 2,
+    "multiply": 1,
+    "divide": 1,
+    "load": 1,
+    "store": 1,
+    "branch": 2,
+    "jump": 2,
+    "csr": 1,
+    "fence": 1,
+    "system": 1
+  },
+  "branch_penalty": 6,
+  "frontend": {
+    "decode_width": 2,
+    "decode_entries": 8,
+    "decode_latency": 2,
+    "fetch_latency": 3,
+    "ftq_entries": 8,
+    "block_bytes": 8,
+    "predictor_latency": 1
+  },
+  "components": {
+    "branch": {
+      "model": "gshare",
+      "entries": 16384,
+      "history": 13
+    },
+    "btb": {
+      "levels": [
+        {
+          "entries": 512,
+          "ways": 1,
+          "latency": 1
+        }
+      ]
+    },
+    "memory": {
+      "dram_latency": 10,
+      "l1i": {
+        "size_kib": 16,
+        "ways": 4,
+        "latency": 1
+      },
+      "l1d": {
+        "size_kib": 16,
+        "ways": 4,
+        "latency": 1
+      }
+    }
+  }
+}

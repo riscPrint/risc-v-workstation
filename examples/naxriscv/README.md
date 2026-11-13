@@ -217,6 +217,52 @@ bound: a flush retires many ROB IDs at once, which the stage/flush probe kinds
 do not express. No TLB probe: the benchmarks run in M-mode without
 translation. The `gshare` study is unqualified.
 
+## Out-of-order timing model
+
+`rvw/arch/ooo.json` describes this configuration for the workstation's
+trace-driven OoO model (`rvw ooo`): two-wide fetch, rename and commit, 64 ROB
+entries, 32 issue-queue entries, 16 load and 16 store entries, 64 physical
+registers, address disambiguation, and shared components for NaxRiscv's GShare
+(16384 counters), 512-entry BTB and 16 KiB 4-way I$ and D$. Latencies, the
+branch penalty and front-end delays are timing approximations, not extracted
+values. `rvw/arch/calibrate.py RUNS OUT` builds the calibration plan from the
+probe runs above, maps the RTL `branches` counter to the model's `branches`
+event, fits branch penalty, fetch latency and load latency on the training
+programs only (`rvw arch ooo-fit`) and scores the held-out programs.
+
+```sh
+rvw ooo rvw/arch/ooo.json rvw/out/probe/median/rvfi.jsonl --json
+python3 rvw/arch/calibrate.py rvw/out/probe rvw/out/calib
+```
+
+Measured on 2026-11-13 (results: [`rvw/arch/results-2026-11-13.json`](rvw/arch/results-2026-11-13.json)).
+Training: median, qsort, multiply. Held out: towers, vvadd, rsort, memcpy,
+dhrystone. `spmv` exceeds the model's 1,000,000-cycle budget and is left out.
+Round 1 used four-entry fetch and decode buffers; round 2 uses eight, a change
+chosen on the training programs only (multiply went from -31.7 % to -12.4 %).
+Selected: branch penalty 6, fetch latency 3, load latency 2. Top-down columns
+are percent retiring / bad speculation / back end / front end.
+
+| Program | Split | RTL IPC | Model IPC | IPC error | Round 1 | RTL top-down | Model top-down |
+|---|---|---:|---:|---:|---:|---|---|
+| median | training | 0.590 | 0.671 | +13.7 % | +14.9 % | 29/20/49/1 | 34/22/44/1 |
+| qsort | training | 0.770 | 0.641 | -16.9 % | -12.7 % | 39/15/46/0 | 32/22/46/0 |
+| multiply | training | 1.421 | 1.245 | -12.4 % | -31.7 % | 71/3/26/0 | 62/3/34/1 |
+| towers | held out | 0.819 | 0.755 | -7.8 % | -5.1 % | 41/10/47/2 | 38/8/53/0 |
+| vvadd | held out | 1.243 | 1.055 | -15.1 % | -26.6 % | 62/6/28/3 | 53/5/42/1 |
+| rsort | held out | 1.735 | 1.371 | -21.0 % | -30.2 % | 87/2/11/0 | 69/0/31/0 |
+| memcpy | held out | 1.229 | 0.705 | -42.7 % | -42.6 % | 61/2/36/1 | 35/1/64/0 |
+| dhrystone | held out | 1.429 | 0.888 | -37.9 % | -40.3 % | 71/1/27/0 | 44/11/44/1 |
+
+Mean absolute IPC error: 14.3 % on training, 24.9 % held out (maximum 42.7 %).
+The `branches` event matches exactly on every program (Pearson r = 1). Only
+towers is inside the 10 % IPC budget; `sufficient_coverage` is false (one event
+family). The model is too slow on high-IPC memory-heavy code: its back-end share
+on memcpy is 64 % against 36 % in RTL. Candidate causes, not yet tested: the
+single load/store port and in-order store issue of the model against NaxRiscv's
+Lsu2, and component cache latency added on every access. This is the first
+out-of-order RTL correlation of the model; it is not a fidelity verdict.
+
 ## Generated checks
 
 `checks.generate.json` selects the design database (bus checks) and
