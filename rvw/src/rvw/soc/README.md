@@ -18,6 +18,29 @@ rvw soc generate examples/boom/soc.json --out /tmp/boom-soc --json
 rvw cosim check --platform /tmp/boom-soc/platform.json --trace TRACE --elf ELF --json
 ```
 
+## Observed request-tag pairing
+
+Use `rvw soc pair --capture bus.jsonl --trace rvfi.jsonl --result result.json --out pairs.json`.
+MCP tool `soc_pair` uses the same command. The trace is independently observed
+C2 retirement data. The capture must use `rvw.soc-events/1` with observation
+`rtl_request_response_retire_tags`. Its header binds the C2 file hash, C1
+source/RTL/ELF/seed identity, simulation run ID and `data_bytes`.
+
+Each accepted bus request has a unique captured `tag`, cycle, aligned address,
+write direction, byte mask and data. Responses carry the same tag, cycle, data
+and error bit. A `retire_link` records the independently observed retirement
+order, cycle and request tag list. A project monitor must observe that linkage.
+The tool never infers it from equal addresses or copied software requests.
+
+The checker compares split-beat byte addresses, data, direction, completion time
+and memory faults. Missing responses or links remain gaps. Duplicate or reused
+tags are refused. Posted-store responses after retirement need separate error
+reporting evidence. Unretired requests need independent kill/flush evidence.
+Matching samples remain inconclusive. Multi-hart tags, address translation,
+big-endian beats, AMO pairing and full bridge/register semantics remain outside
+this increment. Existing version-1 harness captures do not emit these tags.
+Actual core capture integration and fresh DUT evidence remain open under #134.
+
 ## Data
 
 `rvw.soc/1` has `name`, `address_bits`, `platform`, `regions` and `interrupts`.

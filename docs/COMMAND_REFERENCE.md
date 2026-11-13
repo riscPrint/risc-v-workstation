@@ -2052,7 +2052,14 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw soc [-h] [--project PROJECT]
-    {generate,import-ipxact,capture-check,check} ...
+    {pair,generate,import-ipxact,capture-check,check} ...
+```
+
+### `rvw soc pair`
+
+```text
+usage: rvw soc pair [-h] --capture CAPTURE --trace TRACE --result RESULT --out
+    OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw soc generate`
@@ -3865,6 +3872,14 @@ Check declared external gate-netlist/SDF cell, delay, timing-check and unknown b
 Arguments: `manifest` (required), `capabilities` (required).
 
 Starts a background job: no.
+
+### `soc_pair`
+
+Pair observed bus request tags with independent C2 retirements. Matching samples remain inconclusive.
+
+Arguments: `capture` (required), `trace` (required), `result` (required), `out` (required).
+
+Starts a background job: yes.
 
 ### `uvm_build`
 
