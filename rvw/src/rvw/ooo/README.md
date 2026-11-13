@@ -5,13 +5,9 @@ complete single-hart C2 trace. This engine does not use gem5. Spike traces
 must first be exported as C2. RTL cycle timestamps are validated but do not
 drive the prediction. The full trace is the measured region.
 
-The latest NaxRiscv retry stage meets the criterion on 9 of 24 total pairs
-and 1 of 15 nonzero RTL changes. Training/held-out IPC MAE is 9.46%/9.54%.
-The earlier drain stage reached 5 of 15; PR #1218 reached 2 of 15. See
-[the retry stage](#resource-study-replay) and
-[PR #1238](https://github.com/riscPrint/risc-v-workstation/pull/1238).
-Structure-size choices still need RTL measurements.
-See the measured structure-delta section below.
+The final resource study meets the delta criterion on 15/24 pairs,
+including 6/15 nonzero changes. Structure-size choices still need RTL.
+See the resource-stage tables below and the final project summary.
 
 Create CONFIG in your core project. This generic example is not a core preset:
 
@@ -352,8 +348,8 @@ inputs are ready, in any order with other memory operations. Its component
 access still updates cache state, but the service delay is not added: a store
 buffer writes the line after commit. The counter
 `buffered_store_service_cycles` sums the hidden delay. `buffered` needs
-`memory_policy` `disambiguate` or `speculate`. The model has no store-buffer
-drain: a store queue entry is free at commit. The Python engine runs this
+`memory_policy` `disambiguate` or `speculate`. With `store_drain_width: 0`, a store queue entry is free at commit.
+A positive width enables the finite policy below. The Python engine runs this
 policy. NaxRiscv's Lsu2 is an example (see `examples/naxriscv/README.md`).
 This is a timing approximation. It does not model a finite store buffer or
 prove memory-order correctness.
@@ -915,6 +911,9 @@ different candidates. The fit report names its objective.
 
 ## Measured structure deltas
 
+This section records the earlier frozen policy. See the later resource study
+for the cumulative mechanism results.
+
 The PR #1218 model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. The later drain stage reaches five of 15; ten deltas still fail. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
 
 | Variant | Initial outside criterion | Revised outside criterion |
@@ -933,7 +932,8 @@ criterion. Sensitivity identifies IQ first but ties SQ, LQ and ROB;
 Kendall tau-b is 0.707 with three unresolved pairs.
 
 See [all RTL, delta, fit and rank tables](../../../../examples/naxriscv/README.md#measured-delta-study-2026-11-13).
-Finite store drain, wrong-path queue pressure and exact replay remain open.
+This earlier policy lacks finite store drain and wrong-path queue pressure.
+The resource study below adds both. Exact probe-driven replay remains open.
 
 ## Delta diagnosis before resource changes
 
@@ -959,17 +959,17 @@ a sum over cycles, not a peak. B is the back-end slot fraction.
 | sq8 | memcpy | -10.902 / -2.602 | sq_full_cycles: 2982 to 8768 | 36.30 to 43.26 |
 
 IQ: four failures. Median, qsort and multiply have small losses below 2%.
-Memcopy has a 12.5% loss. Dispatch blocking increases in both groups.
+`memcpy` has a 12.5% loss. Dispatch blocking increases in both groups.
 The model has compacting lines, but committed instructions omit speculative
 queue demand. Missing demand and registered scheduling can hide capacity cost.
 
 LQ: six failures. Five predicted changes are zero or below 0.11% in size.
-Memcopy loses 7.99% in RTL and 3.49% in the model. Smaller capacity increases
+`memcpy` loses 7.99% in RTL and 3.49% in the model. Smaller capacity increases
 back-end slots. The committed trace omits loads that are later squashed.
 Replay can also retain entries while a miss or address hazard resolves.
 
 SQ: three failures. Qsort predicts zero for a 0.294% loss. Towers predicts
-0.054% loss for 4.393%. Memcopy predicts 2.602% loss for 10.902%.
+0.054% loss for 4.393%. `memcpy` predicts 2.602% loss for 10.902%.
 The buffered model frees stores at commit. RTL can retain stores until drain.
 This hides store pressure and forwarding from undrained stores.
 
@@ -1001,6 +1001,9 @@ Predictor training occurs at issue. Nested speculation and speculative
 history repair remain absent. These limits can hide queue-size costs.
 
 ## Resource study: occupancy
+
+This is a historical score before the stable filler correction.
+See the corrected resource study below.
 
 This stage meets the criterion on 13/24 pairs and 4/15 nonzero changes.
 Training mean absolute IPC error is 7.15%.
@@ -1059,6 +1062,9 @@ after the measured program ends. `stores_drained`, `store_drain_blocked`,
 This model does not reproduce cache-coherence acknowledgement or device I/O.
 
 ## Resource study: drain
+
+This is a historical score before the stable filler correction.
+See the corrected resource study below.
 
 This stage meets the criterion on 14/24 pairs and 5/15 nonzero changes.
 Training mean absolute IPC error is 7.33%.
@@ -1152,6 +1158,9 @@ totals, and no matching-event error ratio is reported.
 
 ## Resource study: replay
 
+This is a historical score before the stable filler correction.
+See the corrected resource study below.
+
 This stage meets the criterion on 9/24 pairs and 1/15 nonzero changes.
 Training mean absolute IPC error is 9.46%.
 Held-out mean absolute IPC error is 9.54% across six programs.
@@ -1209,7 +1218,7 @@ engine and the same fitted timing parameters. The earlier stage tables and
 `*-preseed-results.json` files are historical. They must not be mixed with
 the corrected stage results when comparing mechanism effects.
 
-## Resource study: baseline
+## Corrected resource study: baseline
 
 This stage meets the criterion on 11/24 pairs and 2/15 nonzero changes.
 Training mean absolute IPC error is 10.67%.
@@ -1250,7 +1259,7 @@ No variant result selects a parameter.
 [Retained results](../../../../examples/naxriscv/rvw/arch/baseline-results.json) include
 the configuration, engine hash, absolute errors and paired results.
 
-## Resource study: occupancy
+## Corrected resource study: occupancy
 
 This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
 Training mean absolute IPC error is 7.15%.
@@ -1291,7 +1300,7 @@ No variant result selects a parameter.
 [Retained results](../../../../examples/naxriscv/rvw/arch/occupancy-results.json) include
 the configuration, engine hash, absolute errors and paired results.
 
-## Resource study: drain
+## Corrected resource study: drain
 
 This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
 Training mean absolute IPC error is 7.31%.
@@ -1332,7 +1341,7 @@ No variant result selects a parameter.
 [Retained results](../../../../examples/naxriscv/rvw/arch/drain-results.json) include
 the configuration, engine hash, absolute errors and paired results.
 
-## Resource study: replay
+## Corrected resource study: replay
 
 This stage meets the criterion on 10/24 pairs and 1/15 nonzero changes.
 Training mean absolute IPC error is 9.46%.
@@ -1373,7 +1382,7 @@ No variant result selects a parameter.
 [Retained results](../../../../examples/naxriscv/rvw/arch/replay-results.json) include
 the configuration, engine hash, absolute errors and paired results.
 
-## Resource study: window
+## Corrected resource study: window
 
 This stage meets the criterion on 15/24 pairs and 6/15 nonzero changes.
 Training mean absolute IPC error is 7.31%.
@@ -1413,3 +1422,7 @@ No variant result selects a parameter.
 
 [Retained results](../../../../examples/naxriscv/rvw/arch/window-results.json) include
 the configuration, engine hash, absolute errors and paired results.
+
+The final cross-stage and trust tables are in the
+[project resource study](../../../../examples/naxriscv/README.md#resource-timing-study).
+Exact probe-driven LSU replay remains open.
