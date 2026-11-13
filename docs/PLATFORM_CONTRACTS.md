@@ -682,6 +682,22 @@ Events precede affected retirements, including events in the same cycle. This
 transport does not reorder cycles or read ahead. Taken interrupt traps inject
 only platform-declared interrupt inputs. Debug entry is not supported here.
 
+### C2 observation exchange
+
+`rvw cosim exchange` writes a new output only. C2 export to RVVI-TEXT 0.5
+uses RET/TRAP, ORDER, MODE, X and NET elements. A vendor STATE string named
+`rvw.c2` retains the complete C2 header and each original record. This includes
+asynchronous events, extension snapshots and synchronization inputs. Imports
+check retirement PC, instruction and register writes against the vendor state.
+The format source is RVVI commit `04dc469012f718ffe104c1c1d0cd8cea66f96724`.
+This is a bounded subset, not a complete RVVI implementation.
+
+Spike commit-log export retains C2 in `# RVW-C2` comments. Trapping retirements
+are refused. Plain logs without that extension produce `rvw.observations/1`
+with explicit missing fields. Sparse imports cannot produce C2 or a match.
+Unsupported Spike effects fail instead of being discarded. Conversion reports
+`independent_check: false`; format conversion is not architectural validation.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
