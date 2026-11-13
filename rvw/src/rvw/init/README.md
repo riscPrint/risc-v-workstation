@@ -182,3 +182,11 @@ The adapter supplies `elaborate` and `generatedVerilog(model)`. Keep both hooks.
 and SpinalDB. Formal and lint consume the RTL recorded by that database.
 Set the actual clock/reset policy in that entry. Rebuild the database after edits.
 The run method still requires the core's memory, reset, completion and RVFI mapping.
+
+## External launch cache
+
+The wired launcher compiles once and saves `target/rvw-classpath.json`.
+Later launches use Java directly while the sources, build settings and runtime
+files match. Source, class or JAR edits trigger compilation. Compilation failures
+refuse the launch. The lock is `sbt-<project-name>`; choose distinct project names
+for separate builds. Native identity still captures every runtime entry.

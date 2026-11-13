@@ -132,12 +132,7 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
   exit 2
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$RVW_CORE_SOURCE" "$repo" > "$launch_owner/source.json"
-output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
-  sbt -J-Xmx3g -batch 'root/compile' 'export root/Runtime/fullClasspath' 2>&1 | tee /dev/stderr)" || {
-  echo "$output" >&2; exit 2;
-}
-cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
-if [ -z "$cp" ]; then echo "$output" >&2; echo 'No classpath in sbt output.' >&2; exit 2; fi
+cp="$("$RVW_PYTHON" "$sim/scripts/classpath.py" "$here" "$RVW_CORE_SOURCE" "$repo" sbt-CORE_LOCK)" || exit 2
 exec "$RVW_PYTHON" "$sim/scripts/native-identity.py" launch "$native_identity" "$launch_owner" \
   -Xss64m -Xmx"${RISCVSIM_XMX:-3g}" -XX:+UseParallelGC \
   -Driscvsim.cwd="$PWD" -Driscvsim.script="$here/run.sh" \
