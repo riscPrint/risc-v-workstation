@@ -345,3 +345,12 @@ the selected config and the final calibration/held-out evidence. Training-only
 cycle and event errors select the winner. Missing training events are errors.
 Probe `counts` exports use the existing C1/C2-bound event-count input. No RTL
 job, continuous service or accuracy qualification is implied.
+
+## Shared simulation-point timing
+
+`rvw.ooo-sampled/1` joins a C2 trace with `rvw.csim-simpoints/1`. The normalized
+trace hash and full instruction count must match. Each point records actual
+warmup, measured instructions/cycles and weight. Weighted CPI produces estimated
+cycles and IPC. An optional complete model run reports signed cycle error.
+Cold starts, bounded warmup and end drain remain explicit bias sources. Without
+a full run, sampling error stays unmeasured. Accuracy remains inconclusive.
