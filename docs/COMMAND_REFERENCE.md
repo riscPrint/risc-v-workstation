@@ -824,7 +824,7 @@ usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
 ### `rvw debug suite`
 
 ```text
-usage: rvw debug suite [-h] [--profile PROFILE] --out OUT [--group GROUP]
+usage: rvw debug suite [-h] [--profile PROFILE] [--out OUT] [--group GROUP]
     [--check CHECK] [--no-reference] [--port PORT] [--log LOG] [--list]
     [--project PROJECT] [--json]
 ```
@@ -905,10 +905,10 @@ usage: rvw debug trace-adapter [-h] [--project PROJECT] [--json] adapter
 ### `rvw doctor`
 
 ```text
-usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
-    [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
-    [--conformance] [--install FEATURES] [--yes] [--dry-run] [--json]
-    [--project PROJECT]
+usage: rvw doctor [-h] [--skip-adapter-info] [--features FEATURES]
+    [--smoke-elf SMOKE_ELF] [--smoke-options SMOKE_OPTIONS] [--smoke-platform
+    SMOKE_PLATFORM] [--conformance] [--install FEATURES] [--yes] [--dry-run]
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw evidence`
@@ -2001,7 +2001,7 @@ usage: rvw probes convert [-h] --to
 
 ```text
 usage: rvw query [-h] [--project PROJECT] [--json]
-    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff,definition,references,port-status,parameters,explain-module,type,hierarchy-diff}
+    {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff,navigate,definition,references,port-status,parameters,explain-module,type,hierarchy-diff}
     ...
 ```
 
@@ -2120,6 +2120,12 @@ usage: rvw query diff [-h] [--json] [--scope SCOPE] [--limit LIMIT]
     [--no-connections] [--project PROJECT] old new
 ```
 
+### `rvw query navigate`
+
+```text
+usage: rvw query navigate [-h] [--db DB] [--json] [--project PROJECT] signal
+```
+
 ### `rvw query definition`
 
 ```text
@@ -2167,12 +2173,13 @@ usage: rvw query hierarchy-diff [-h] [--json] [--project PROJECT] old new
 ### `rvw reduce`
 
 ```text
-usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
-    [--seeds SEEDS] [--seed-start SEED_START] [--latencies LATENCIES]
-    [--symbol SYMBOL] [--instruction-symbol INSTRUCTION_SYMBOL] [--hart-symbol
-    HART_SYMBOL] [--monotone] [--exhaustive] [--margin MARGIN] [--hang-cycles
-    HANG_CYCLES] [--jobs JOBS] [--batch BATCH] [--budget BUDGET] [--timeout
-    TIMEOUT] [--json] [--project PROJECT] run_dir
+usage: rvw reduce [-h] [--out OUT] [--cosim-platform COSIM_PLATFORM]
+    [--signature SIGNATURE] [--modes MODES] [--seeds SEEDS] [--seed-start
+    SEED_START] [--latencies LATENCIES] [--symbol SYMBOL]
+    [--instruction-symbol INSTRUCTION_SYMBOL] [--hart-symbol HART_SYMBOL]
+    [--monotone] [--exhaustive] [--margin MARGIN] [--hang-cycles HANG_CYCLES]
+    [--jobs JOBS] [--batch BATCH] [--budget BUDGET] [--timeout TIMEOUT]
+    [--json] [--project PROJECT] run_dir
 ```
 
 ### `rvw regress`
@@ -2599,7 +2606,7 @@ usage: rvw sec model-check [-h] --manifest MANIFEST --out OUT [--project
 
 ```text
 usage: rvw sec spec-suite [-h] --binding BINDING --template TEMPLATE --out OUT
-    [--gadget GADGET] [--project PROJECT] [--json]
+    [--gadget GADGET] [--observation OBSERVATION] [--project PROJECT] [--json]
 ```
 
 ### `rvw sec suite`
@@ -3123,7 +3130,7 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw workloads [-h] [--project PROJECT] [--json]
-    {list,build,verify,evaluate} ...
+    {list,build,verify,evaluate,run} ...
 ```
 
 ### `rvw workloads list`
@@ -3154,6 +3161,14 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 usage: rvw workloads evaluate [-h] [--source RECIPE=PATH] [--build
     RECIPE=BUILD_JSON] [--trace WORKLOAD=C2] [--manifest MANIFEST] --out OUT
     [--timeout TIMEOUT] [--json] [--project PROJECT]
+```
+
+### `rvw workloads run`
+
+```text
+usage: rvw workloads run [-h] --out OUT [--settings SETTINGS] [--source
+    SOURCE] [--config CONFIG] [--timeout TIMEOUT] [--repeats REPEATS]
+    [--resume] [--json] [--project PROJECT]
 ```
 
 ## MCP tools
@@ -5021,6 +5036,14 @@ Arguments: `project`, `db`, `signal` (required), `limit`.
 
 Starts a background job: no.
 
+### `query_navigate`
+
+Return source, diagram, wave and dependency entry points for one signal.
+
+Arguments: `project`, `db`, `signal` (required).
+
+Starts a background job: no.
+
 ### `query_parameters`
 
 Captured design parameters
@@ -5089,7 +5112,7 @@ Starts a background job: no.
 
 Shrink a failing C1 run while preserving its signature. Tries cycles, seeds, latencies and optional integer data symbols. Returns a job; simulations take the core lock. The result's `reproduced` is false when no trial matched; a timeout matches only as a hang (no retirement in the last hang_cycles cycles, from an RVFI trace). A symbol's `smallest_failing` is the smallest tested failing value, or null when the original value did not reproduce in this search. It is `exact` only with monotone or exhaustive after the failing upper bound is confirmed.
 
-Arguments: `project`, `run_dir` (required), `out`, `signature`, `modes`, `seeds`, `seed_start`, `latencies`, `hart_symbol`, `instruction_symbol`, `symbol`, `margin`, `hang_cycles`, `jobs`, `batch`, `budget`, `timeout`, `monotone`, `exhaustive`.
+Arguments: `project`, `run_dir` (required), `out`, `signature`, `cosim_platform`, `modes`, `seeds`, `seed_start`, `latencies`, `hart_symbol`, `instruction_symbol`, `symbol`, `margin`, `hang_cycles`, `jobs`, `batch`, `budget`, `timeout`, `monotone`, `exhaustive`.
 
 Starts a background job: yes.
 
@@ -5377,7 +5400,7 @@ Starts a background job: yes.
 
 Run RV32 speculative-leakage self-tests on a bound core in Verilator.
 
-Arguments: `binding` (required), `template` (required), `out` (required), `gadget`.
+Arguments: `binding` (required), `template` (required), `out` (required), `gadget`, `observation`.
 
 Starts a background job: yes.
 
@@ -5826,6 +5849,14 @@ Starts a background job: yes.
 Build or reference-check pinned open workloads. No RTL accuracy claim.
 
 Arguments: `manifest`, `recipe`.
+
+Starts a background job: yes.
+
+### `workloads_run`
+
+Run project-owned checked RTL benchmarks serially. Writes a resumable result table.
+
+Arguments: `out` (required), `project`, `settings`, `source`, `config`, `timeout`, `repeats`, `resume`.
 
 Starts a background job: yes.
 
