@@ -85,3 +85,25 @@ def test_changed_pack_refuses_evaluation(tmp_path, challenge_inputs):
     pack.write_text(pack.read_text() + '\n')
     with pytest.raises(ValueError, match='changed'):
         repair.check_challenge(tmp_path / 'challenge/challenge.json', tmp_path / 'checked')
+
+
+def test_named_pass_cannot_hide_independent_failure(tmp_path, challenge_inputs, monkeypatch):
+    source, pack_path, _ = challenge_inputs
+    pack = json.loads(pack_path.read_text())
+    pack['tasks'][0]['private']['pass_to_pass'].append('hidden')
+    pack_path.write_text(json.dumps(pack))
+    original = native.run_tests
+    def run_tests(pack, base, workspace, out, tests, timeout):
+        result = original(pack, base, workspace, out, tests, timeout)
+        if (Path(workspace) / 'src/core.scala').read_text() == 'named-test-only':
+            result['broken']['status'] = 'pass'
+            result['hidden']['status'] = 'fail'
+        return result
+    monkeypatch.setattr(native, 'run_tests', run_tests)
+    state = repair.prepare_challenge(pack_path, 'broken', source, tmp_path / 'challenge')
+    assert state['reproduced']
+    (Path(state['workspace']) / 'src/core.scala').write_text('named-test-only')
+    result = repair.check_challenge(tmp_path / 'challenge/challenge.json', tmp_path / 'checked')
+    assert result['repaired']['broken']['status'] == 'pass'
+    assert result['repaired']['hidden']['status'] == 'fail'
+    assert result['status'] == 'repair_rejected'
