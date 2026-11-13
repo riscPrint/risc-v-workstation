@@ -131,8 +131,7 @@ Workspace: crates renamed (`chiseltrace-rs` → `spinaltrace-rs`, `chiseltrace-c
   kept side by side (conservative).
 * Selects/indexes/conditions that are still anonymous expressions (should not happen after the naming
   phase) are handled conservatively and reported: all mux inputs / both `when` branches count.
-* The static `slice` command's CFG reduction does not renumber predicates (inherited; only the vertex
-  list is written, so there is no visible effect).
+* Static slices retain predicate entries so CFG predicate indexes remain valid.
 * Signals assigned straight from clock-domain signals are treated as clock plumbing only if they are
   child ports or anonymous wires; user-named signals derived from `reset` stay traceable.
 * Switch keys other than literals, enum literals, masked literals and named signals are unsupported
