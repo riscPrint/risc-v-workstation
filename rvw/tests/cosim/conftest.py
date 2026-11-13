@@ -11,6 +11,29 @@ def platform():
     return Platform.load("boom")
 
 
+@pytest.fixture
+def integer_platform(platform):
+    """Select only the ISA exercised by integer reference fixtures."""
+    import copy
+    p = copy.deepcopy(platform)
+    p.isa = 'rv64imac_zicsr_zifencei_zba_zbb_zbs'
+    p.reference_isa = p.isa + '_zicntr_zihpm'
+    for extension in ('F', 'D'):
+        p.sail_overrides['extensions'][extension]['supported'] = False
+    return p
+
+
+@pytest.fixture
+def integer_platform_path(tmp_path, integer_platform):
+    import json
+    settings = integer_platform.describe()
+    for key in ('ram', 'mmio'):
+        settings[key] = [dict(base=base, size=size) for base, size in getattr(integer_platform, key)]
+    path = tmp_path / 'integer-platform.json'
+    path.write_text(json.dumps(settings))
+    return path
+
+
 from cosim_build import _build  # noqa: E402
 @pytest.fixture(scope="session")
 def elf(tmp_path_factory, platform):

@@ -43,7 +43,8 @@ def mip_read(rows, model_elf):
     return next(r for r in rows if r.get("insn") == "0x344024f3")   # csrr s1, mip
 
 
-def test_software_set_ssip_survives_interrupt_entry(tmp_path, ssip_elf, platform):
+def test_software_set_ssip_survives_interrupt_entry(tmp_path, ssip_elf, integer_platform):
+    platform = integer_platform
     rows = core_trace(ssip_elf, platform, tmp_path)
     assert any(r.get("event") == "trap" and int(r["cause"], 16) == SSIP for r in rows)
     read = mip_read(rows, ssip_elf)

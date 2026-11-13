@@ -55,18 +55,55 @@ def rv32(platform):
     return p
 
 
-def test_sail_checks_native_rv32_compressed_fp(tmp_path, rv32_cfp_elf, platform, sail):
-    """A native RV32 trace (Spike) with c.flw, c.fsw, c.flwsp and c.fswsp: Sail's
-    physical addresses agree with the decoded virtual ones, and the comparison matches."""
+def test_sail_checks_native_rv32_compressed_fp_address_scope(tmp_path, rv32_cfp_elf, platform, sail):
+    """Check native RV32 compressed FP addresses. Refuse full FP-state comparison."""
     p = rv32(platform)
     trace = tmp_path / "rv32.jsonl"
     generated = generate(rv32_cfp_elf, trace, p, 100)
     assert generated["status"] == "generated" and generated["termination"] == "pass"
+    original = trace.read_bytes()
+    full_rows = [json.loads(line) for line in original.splitlines()]
+    assert full_rows[0]['schema'] == 'rvw.rvfi/2'
+    assert any(row.get('fd_valid') for row in full_rows[1:])
     model = Sail(p, rv32_cfp_elf, trace, sail, timeout=60)
     try:
-        result = check(trace, model, p)
+        # Sail has no FP-state observations. Keep the full-state refusal.
+        with pytest.raises(ValueError, match='reference cannot check C2 state fields'):
+            check(trace, model, p)
     finally:
         model.close()
+    # This test checks address decoding. Retain the full trace and make a
+    # separate C2/1 projection with an explicit no-FP-state comparison scope.
+    rows = copy.deepcopy(full_rows)
+    rows[0]['schema'] = 'rvw.rvfi/1'
+    rows[0].pop('capabilities')
+    rows[0]['config'] = 'address-scope-no-fp-state'
+    for row in rows[1:]:
+        for key in ('fd_valid', 'fd', 'fd_wdata', 'fflags', 'fcsr'):
+            row.pop(key, None)
+    scoped = tmp_path / 'address-scope.jsonl'
+    scoped.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+    model = Sail(p, rv32_cfp_elf, scoped, sail, timeout=60)
+    try:
+        result = check(scoped, model, p)
+    finally:
+        model.close()
+    assert result['scope'] == 'no_fp_state'
+    assert result['state_coverage']['fp'] is False
+    assert trace.read_bytes() == original
+    # An address error must still fail the scoped comparison.
+    bad_rows = copy.deepcopy(rows)
+    load = next(row for row in bad_rows[1:] if row.get('mem_rmask'))
+    load['mem_addr'] = hex(int(load['mem_addr'], 16) + 4)
+    bad = tmp_path / 'bad-address.jsonl'
+    bad.write_text(''.join(json.dumps(row)+'\n' for row in bad_rows))
+    model = Sail(p, rv32_cfp_elf, bad, sail, timeout=60)
+    try:
+        rejected = check(bad, model, p)
+    finally:
+        model.close()
+    assert rejected['status'] == 'mismatch'
+    assert 'mem_addr' in rejected['mismatch']['differences']
     assert result["status"] == "match", result
     assert result["trace_complete"] and result["instructions"] >= 10
     accesses = [json.loads(x) for x in trace.read_text().splitlines()]
