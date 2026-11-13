@@ -237,3 +237,25 @@ an early grant, a corrupt middle D beat, a truncated ProbeAckData, a changed D
 header, a corrupt middle C beat and a truncated ReleaseData. The original
 single-beat cases remain regression checks. This is scripted channel evidence.
 It does not establish refinement of a real cache/home implementation.
+
+
+## Production multicore RTL evidence
+
+The [SMP example](../../../../examples/smp/README.md#measured-results) now declares
+two to eight cacheless VexiiRiscv RTL harts. Each hart has a C2/2 stream and
+completion record. Shared RAM, atomic service, CLINT and PLIC are simulation
+models. The example also has separate serialized comparison and S-mode HSM
+profiles.
+
+At seed 17, LR/SC passed in 1060 cycles with 498 retirements. AMO passed in
+18630 cycles with 8346 retirements. Six pinned litmus captures are consistent
+with native herd7 7.58 outcomes. Cross-hart FENCE.I passed at 191/62 cycles/
+retirements; IPI at 247/74; HSM at 1431/530. Spike matched all 38 instructions
+in a shared-RAM two-hart capture with zero masks and zero synchronizations.
+
+Generated seeds 7, 17 and 23 are allowed by the independent RVWMO checker after
+project dependency binding. Seed 1 remains inconclusive at 100000 candidates.
+The original captures retain unavailable dependency status. The binding writes
+a separate trace and records its input/source hashes. These are finite results.
+They do not qualify a coherent cache, complete RVWMO implementation or all SBI
+behavior. See the example's full counts, reproduction commands and JSON evidence.
