@@ -57,9 +57,8 @@ Each check is a `conformance.*` record:
 | `no_completion` | A copy of the ELF whose entry instruction is `jal x0, 0` ends as `timeout` with exit 1, never `pass`. |
 | `wall_timeout` | When `[core] wall_timeout` is declared: the looping copy with `--wall-timeout 3` ends as a wall-clock timeout. |
 
-`adapter_conformance.full_c1` is `ready` only when every conformance check is
-ready, `error` otherwise, and `inconclusive` without `--conformance`. These
-checks cover one ELF and the default config's options. They do not check
+`adapter_conformance.requested_checks` reports these selected checks.
+`full_c1` stays inconclusive. These checks cover one ELF and the default config's options. They do not check
 coverage, Konata or SpinalTrace models, interrupt delivery or other programs.
 On the PicoRV32 example all eleven checks are ready.
 
@@ -138,3 +137,16 @@ Explicit environment selectors are authoritative. Invalid selectors do not fall
 back to another executable. Slang and GHDL need their plugin files; a
 `yosys-config` executable alone does not establish plugin presence. File presence
 still does not establish that a plugin can load into the selected Yosys ABI.
+
+## Per-config C2 conformance
+
+`--conformance --smoke-elf ELF` also requests RVFI for each advertised config.
+Each run must pass and write a complete C2 stream with the selected core,
+config, ISA and XLEN. Missing, invalid and truncated streams give a named error.
+Use `--smoke-options rvfi --smoke-platform PLATFORM` for independent reference
+checks. Without a platform, signal mapping stays inconclusive.
+
+`adapter_conformance.requested_checks` reports the selected checks. `full_c1`
+and `full_c2` stay inconclusive. One ELF cannot test all option interactions,
+interrupt acceptance, memory faults or architectural trace fields. Replay must
+also exit successfully; a result file alone cannot establish replay success.

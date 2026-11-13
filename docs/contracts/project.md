@@ -224,3 +224,16 @@ fields, unknown protocols and unknown or missing bus signals are errors. A
 missing named port is a run error. The C1 `rtl_sha256` of a Verilog top covers
 the generated wrapper, the defines and every source file. See
 `RiscvSim/README.md`, "Mapped adapter".
+
+## Adapter conformance diagnostics
+
+`rvw doctor --conformance --smoke-elf ELF` adds named `conformance.*` checks
+under `rvw.doctor/1`. It requests C2 for each adapter config. Each trace must
+have a valid header, instructions and a passing end event. The header must
+match the project's core, selected config, ISA and XLEN. An independent
+reference check needs the reviewed `--smoke-platform`.
+
+`adapter_conformance.requested_checks` is `ready`, `error`, `inconclusive` or
+`not_run`. `full_c1` and `full_c2` stay `inconclusive`: this bounded program set
+does not establish all-option or all-program conformance. A failed replay
+command is an error even if it leaves a passing result file.

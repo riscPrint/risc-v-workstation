@@ -55,7 +55,7 @@ if cmd == 'run':
     job = dict(elf=opt('--elf'), out=opt('--out'), seed=opt('--seed'), max_cycles=opt('--max-cycles'),
                mem_latency=opt('--mem-latency'), irq_schedule=opt('--irq-schedule'), wall_timeout=opt('--wall-timeout'))
     r = run_one(job)
-    sys.exit(0 if r['status'] == 'pass' else 2 if r['status'] == 'error' else 1)
+    sys.exit(2 if fault == 'replay_exit' and '-replay' in job['out'] else 0 if r['status'] == 'pass' else 2 if r['status'] == 'error' else 1)
 if cmd == 'run-many':
     jobs = [json.loads(l) for l in Path(opt('--manifest')).read_text().splitlines()]
     sys.exit(0 if all(run_one(j)['status'] == 'pass' for j in jobs) else 1)
@@ -113,6 +113,7 @@ def test_conforming_adapter_is_ready(adapter, tmp_path, monkeypatch):
     ('nondeterministic', 'determinism'),
     ('drop_seed', 'options.recorded'),
     ('pass_on_loop', 'no_completion'),
+    ('replay_exit', 'replay'),
 ])
 def test_each_fault_is_reported(adapter, tmp_path, monkeypatch, fault, failing):
     cfg, elf = adapter
