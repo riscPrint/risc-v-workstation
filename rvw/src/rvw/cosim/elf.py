@@ -4,8 +4,9 @@ from pathlib import Path
 
 
 class Elf:
-    def __init__(self, path, load_bias=0):
-        self.data = Path(path).read_bytes()
+    def __init__(self, path, load_bias=0, *, data=None):
+        # C1 adapters can parse symbols from the exact bytes loaded into RAM.
+        self.data = Path(path).read_bytes() if data is None else bytes(data)
         d = self.data
         if len(d) < 64 or d[:4] != b"\x7fELF" or d[5] != 1 or d[4] not in (1, 2):
             raise ValueError("expected a little-endian ELF32 or ELF64 file")

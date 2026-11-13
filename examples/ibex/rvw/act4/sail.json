@@ -132,7 +132,7 @@
         }
       },
       "order_decreasing": false,
-      "default_allowed_within_exp": 32,
+      "default_allowed_within_exp": 12,
       "byte_by_byte": false
     },
     "dtb_address": {

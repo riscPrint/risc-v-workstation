@@ -16,8 +16,8 @@ identity = true
 identity_capture = true
 input_complete = true
 jobs = 1
-cache_paths = ["rvw", "${IBEX_WORK}/hdl.json", "${IBEX_WORK}/files", "${RVW_HOME}/rvw/src/rvw/init/hdl_identity.py", "${RVW_HOME}/RiscvSim/scripts/native-identity.py"]
-input_tools = ["git", "verilator", "make", "riscv64-unknown-elf-nm"]
+cache_paths = ["rvw", "${IBEX_WORK}/hdl.json", "${IBEX_WORK}/files", "${RVW_HOME}/rvw/src/rvw/init/hdl_identity.py", "${RVW_HOME}/rvw/src/rvw/cosim/elf.py", "${RVW_HOME}/RiscvSim/scripts/native-identity.py"]
+input_tools = ["git", "verilator", "make"]
 input_verilator_toolchain = true
 input_env = ["IBEX_SOURCE", "IBEX_WORK", "PATH", "RVW_HOME"]
 
