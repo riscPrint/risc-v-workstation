@@ -1349,7 +1349,9 @@ Native fixture results are bounded observation checks, not whole-core proof.
 ### Properties beside Spinal RTL
 
 `spinalchecks.Sva` emits the same module-local SVA consumed by the temporal
-frontend. It supports finite sequence composition and sampled-value functions.
+frontend. It supports finite sequence composition, sampled-value functions,
+unbounded repetition, explicit strong or weak sequences, `s_eventually` and
+the Boolean `until` family. The selected lowering route keeps its own limits.
 Render after Spinal assigns RTL names, then include the snippet in the reviewed
 module or checker wrapper. See [the Scala API](../../../../SpinalChecks/README.md#scala-property-builder).
 The builder does not insert properties into a design or run verification.
