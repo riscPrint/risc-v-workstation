@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "ssstateen-only",
+  "isa": "rv64ima_zicsr_zifencei_ssstateen_sscsrind_zfinx",
+  "compiler_isa": "rv64ima_zicsr_zifencei",
+  "reference_backend": "python",
+  "spec_version": "Ssstateen-1.0",
+  "stateen": {
+    "writable_bits": [
+      1
+    ],
+    "probes": [
+      "stateen",
+      "envcfg",
+      "csrind",
+      "zfinx"
+    ]
+  }
+}

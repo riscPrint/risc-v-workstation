@@ -314,3 +314,14 @@ selected gate, plus bits 1 and 63 used for low/high retention checks. Indirect
 CSR probes also require Sscsrind. H in the reference ISA adds VS/VU cases.
 The compiler ISA may omit extension names when all instructions use numeric
 CSR encodings. Functional CSR domains include the RV32 M/H high-half banks.
+
+## Ssstateen-only input and model observations
+
+`kind = "ssstateen-only"` requires RV64 Ssstateen without Smstateen. Its pinned
+field is `spec_version = "Ssstateen-1.0"`. `stateen.probes` selects distinct
+`stateen`, `envcfg`, `csrind`, `zfinx`, `jvt` or `zfinx-op` entries. Selected
+user-state gates must appear in `writable_bits`; with H, all selected H gates
+must appear. The model has no machine gate. A plan that adds machine denial
+is invalid. Named observation bindings follow the existing model subset contract
+and include the shared state hierarchy helper in the model source hashes.
+The examples use the Python backend because installed Spike lacks Ssstateen.
