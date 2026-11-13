@@ -112,4 +112,4 @@ def test_native_unknown_and_pending_attempts(tmp_path,req,ack,target,status,fail
     assert result.extra['assertions'][0]['failed']==failed
     assert result.extra['assertions'][0]['passed']==0
     if status=='error':
-        assert result.extra['inconclusive']=='no_checks'
+        assert result.extra['inconclusive']==('no_checks' if target else 'pending unbounded obligations')

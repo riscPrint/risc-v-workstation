@@ -41,7 +41,7 @@ def events(data, inputs, clocks):
     return scale, rows
 
 
-def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cross_steps=None, unbounded=None):
+def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cross_steps=None, unbounded=None, cross=None):
     lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
     inputs = [p for p in ports if p.direction == 'input']
     outputs = [p for p in ports if p.direction == 'output']
@@ -105,6 +105,9 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
         prefix=prop['monitor']
         pending=f'dut.{prefix}_pending'+(f' + dut.{prefix}_delayed' if prop['nonoverlap'] else '')
         lines.append(f'$display("RVW_PENDING {prefix} %0d", {pending});')
+    for prop in cross or []:
+        prefix = prop['monitor']
+        lines.append(f'$display("RVW_PENDING {prefix} %0d", dut.{prefix}_pending);')
         if prop.get('disable_iff') is not None:
             lines.append(f'$display("RVW_CANCELLED {prefix} %0d", dut.{prefix}_cancelled);')
     lines += ['$display("RVW_EVENT_DONE"); $finish;', 'end', 'endmodule']
@@ -197,7 +200,7 @@ def _run(args):
         model = out / 'simulation.sv'
         model.write_text(simulation)
         bench = out / 'testbench.sv'
-        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state, schedule(rows,cross,inputs), unbounded))
+        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state, schedule(rows,cross,inputs), unbounded, cross))
         snap.seal(model); snap.seal(bench)
         result = RunResult(status='error', config='formal-event-simulation',
                            source={'model_sha256': digest(model)},
