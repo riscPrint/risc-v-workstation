@@ -161,47 +161,18 @@ def sequence(text, names=None, stack=()):
     if reserved:
         raise Unsupported(reserved[0])
     try:
-        _expression(text)
+        from .sampled import validate
+        validate(text)
+    except Unsupported:
+        raise
     except ValueError as error:
         raise Unsupported('expression', str(error)) from error
     return [(text,)]
 
 
 def sampled(expression, clock, prefix):
-    """Sample full vectors; edge functions compare only the least significant bit.
-
-    History has no forced initial value. A reference before the first clock is
-    unconstrained in formal, as is an uninitialized sampled design expression.
-    """
-    lines = []
-    count = 0
-    def replace(match):
-        nonlocal count
-        body, end = _group(expression, match.end() - 1)
-        if '$' in body or ',' in body:
-            raise Unsupported('nested_sampled_function')
-        name = f'{prefix}_{count}'
-        count += 1
-        lines.extend([f'wire [$bits({body})-1:0] {name}_now = ({body});',
-                      f'reg [$bits({body})-1:0] {name}_old;',
-                      f'always @(posedge {clock}) {name}_old <= {name}_now;'])
-        kind = match[1]
-        value = {'past': f'{name}_old',
-                 'rose': f'({name}_now[0] && !{name}_old[0])',
-                 'fell': f'(!{name}_now[0] && {name}_old[0])',
-                 'stable': f'({name}_now == {name}_old)',
-                 'changed': f'({name}_now != {name}_old)'}[kind]
-        return end, value
-    output, start = '', 0
-    pattern = re.compile(r'\$(past|rose|fell|stable|changed)\s*\(')
-    while match := pattern.search(expression, start):
-        end, value = replace(match)
-        output += expression[start:match.start()] + value
-        start = end
-    output += expression[start:]
-    if '$' in output:
-        raise Unsupported('sampled_function', output)
-    return output, lines
+    from .sampled import emit
+    return emit(expression, clock, prefix)
 
 
 @dataclass

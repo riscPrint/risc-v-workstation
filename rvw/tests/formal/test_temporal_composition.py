@@ -12,6 +12,10 @@ CASES = [
     ('throughout', 'a throughout (1 ##2 b)', 'a=1,b=1', 'a=0,b=1'),
     ('within', 'a within (1 ##2 b)', 'a=1,b=1', 'a=0,b=1'),
     ('intersect', '(1 ##2 a) intersect (1 ##2 b)', 'a=1,b=1', 'a=1,b=0'),
+    ('$past depth', '1 |-> 1 ##3 ($past(a,2) == a)', '[7:0] a=128', '[7:0] a=n'),
+    ('$past nested', '1 |-> 1 ##3 ($past($past(a)) == a)', '[7:0] a=128', '[7:0] a=n'),
+    ('$past signed', '1 |-> 1 ##3 ($past(a,2) < 0)', 'signed [7:0] a=-1', 'signed [7:0] a=1'),
+    ('$past unsigned', '1 |-> 1 ##3 ($past(a,2) > 0)', '[7:0] a=128', '[7:0] a=0'),
     ('$past', '1 |=> $past(a) == a', '[7:0] a=128', '[7:0] a=n'),
     ('$rose', '1 |=> $rose(a)', '[7:0] a=n[0] ? 1 : 0', '[7:0] a=128'),
     ('$fell', '1 |=> $fell(a)', '[7:0] a=n[0] ? 0 : 1', '[7:0] a=1'),
@@ -62,7 +66,7 @@ m.sv
 
 def test_sampled_guard():
     with pytest.raises(Unsupported):
-        lower('module m; assert property (@(posedge clk) $past($past(a))); endmodule')
+        lower('module m; assert property (@(posedge clk) $past(a,0)); endmodule')
 
 
 def test_support_table():

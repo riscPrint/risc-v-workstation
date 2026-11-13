@@ -4346,7 +4346,10 @@ The finite temporal frontend also accepts finite `throughout`, `within`, and
 `intersect`. Endpoints remain part of the path semantics. Single-argument
 sampled-value functions use the property clock, with unconstrained history
 before the first event. `$rose` and `$fell` use bit zero; `$stable` and `$changed`
-compare full vectors. Explicit depths and nested sampled calls remain refused.
+compare full vectors. Positive decimal `$past` depths from 1 to 64 and up to
+eight nested sampled calls are supported. Historic values retain expression
+width and signedness. Simulation comparisons preserve X/Z changes. Gated history,
+alternate clock arguments and sampled reset conditions remain refused.
 These are sampled formal observations, not simulator-region qualification.
 ### Verification obligation plans
 

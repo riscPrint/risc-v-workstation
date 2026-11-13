@@ -4,6 +4,10 @@
 | `throughout` | positive and negative native case | finite, single clock |
 | `within` | positive and negative native case | finite, single clock |
 | `intersect` | positive and negative native case | finite, single clock |
+| `$past depth` | positive and negative native case | finite, single clock |
+| `$past nested` | positive and negative native case | finite, single clock |
+| `$past signed` | positive and negative native case | finite, single clock |
+| `$past unsigned` | positive and negative native case | finite, single clock |
 | `$past` | positive and negative native case | finite, single clock |
 | `$rose` | positive and negative native case | finite, single clock |
 | `$fell` | positive and negative native case | finite, single clock |
