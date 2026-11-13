@@ -860,6 +860,20 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+`rvw regress mmu iommu --generate --seed 1 --mode sv39` emits a decoded
+IOMMU scenario description. Save stdout as a project file. Run `rvw regress
+mmu iommu DESCRIPTION` to inspect reference expectations. It remains
+inconclusive without independent device observations and a bound C1 result.
+Use `--observations FILE --result C1` to compare captures. MCP tools are
+`regress_mmu_iommu_generate` and `regress_mmu_iommu`.
+
+The device agent accepts a project exchange callback. The bounded model covers
+decoded device/process contexts, first/second stages, translation isolation,
+fault/command queues, scoped invalidation and page MSI remapping. The pin in
+its report identifies the upstream C reference source. The C reference is not
+run here. Raw DDT/PDT/register formats, ATS/PRI and architectural MSI encodings
+remain unsupported. A matching decoded fixture is not IOMMU qualification.
+
 The `examples/mmu/pointer-privileges.json` campaign selects Ssnpm U-mode and
 Smmpm M-mode data tests. Sspm/Supm use explicit project controller declarations.
 It also checks that enabled data masking does not mask tagged fetch addresses.

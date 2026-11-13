@@ -1244,8 +1244,8 @@ usage: rvw regress privilege check [-h] --results RESULTS --platform PLATFORM
 ### `rvw regress mmu`
 
 ```text
-usage: rvw regress mmu [-h] [--project PROJECT] {build,reference,check,report}
-    ...
+usage: rvw regress mmu [-h] [--project PROJECT]
+    {build,reference,check,report,iommu} ...
 ```
 
 ### `rvw regress mmu build`
@@ -1275,6 +1275,14 @@ usage: rvw regress mmu check [-h] --results RESULTS --platform PLATFORM
 ```text
 usage: rvw regress mmu report [-h] --results RESULTS [--checked CHECKED]
     [--protocol-config PROTOCOL_CONFIG] [--json] [--project PROJECT] directory
+```
+
+### `rvw regress mmu iommu`
+
+```text
+usage: rvw regress mmu iommu [-h] [--generate] [--seed SEED] [--mode
+    {sv39,sv48,sv57}] [--observations OBSERVATIONS] [--result RESULT] [--json]
+    [--project PROJECT] [description]
 ```
 
 ### `rvw regress vector`
@@ -2515,6 +2523,22 @@ Starts a background job: no.
 Discover a core's suites, tiers and configurations before running; pass suite to list test IDs.
 
 Arguments: `project`, `core`, `suite`.
+
+Starts a background job: no.
+
+### `regress_mmu_iommu`
+
+Compare decoded IOMMU scenario steps with independently captured device responses. A consistent result requires C1 binding. Raw context and register conformance remain unsupported.
+
+Arguments: `description` (required), `observations`, `result`.
+
+Starts a background job: no.
+
+### `regress_mmu_iommu_generate`
+
+Generate decoded IOMMU translation, isolation, queue and MSI scenario data. This is not a DUT run.
+
+Arguments: `seed`, `mode`.
 
 Starts a background job: no.
 
