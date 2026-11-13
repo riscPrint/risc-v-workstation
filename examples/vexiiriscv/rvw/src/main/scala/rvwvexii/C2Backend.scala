@@ -18,7 +18,8 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
                 resolveAddress: (Boolean, Long, Long) => Long = (_, _, address) => address,
                 fpSnapshot: Option[() => (BigInt, BigInt)] = None,
                 instructionAt: Option[BigInt => Long] = None,
-                lateFlags: () => BigInt = () => BigInt(0)) extends TraceBackend {
+                lateFlags: () => BigInt = () => BigInt(0),
+                commitObserved: RvfiRecord => Unit = _ => ()) extends TraceBackend {
   private val mask = (BigInt(1) << xlen) - 1
   val regs: Array[BigInt] = Array.fill(32)(BigInt(0))
   var retired = 0L
@@ -102,6 +103,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
       rs1 = rs1, rs1Rdata = regs(rs1), rs2 = rs2, rs2Rdata = regs(rs2), rd = rd, rdWdata = wdata,
       pc = pcValue, pcNext = 0, memAddr = memAddr, memRmask = rmask, memWmask = wmask,
       memRdata = rdataMem, memWdata = wdataMem, memFault = false, csrState = snapshot.map(s => Map(0x300 -> s._2)).getOrElse(Map.empty), fpState = fp)
+    commitObserved(r)
     if (rd != 0) regs(rd) = wdata
     order += 1
     retired += 1
