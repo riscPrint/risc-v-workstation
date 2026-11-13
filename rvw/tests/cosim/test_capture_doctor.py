@@ -57,3 +57,15 @@ def test_declared_masks_are_reported(tmp_path):
     r = execute_json(trace=write(tmp_path, h, row), platform=path)
     assert r['status'] == 'inspected', r
     assert any(m.get('csr') == '0x301' and m['mask'] == '0x6' for m in r['conditional_masks'])
+
+
+def test_mcp_doctor_dispatches_without_a_job_argument(tmp_path):
+    from rvw.cosim.doctor import mcp_tools
+    from rvw.mcp.registry import Registry
+    h, row = fixture()
+    registry = Registry(mcp_tools(), sync_s=20)
+    _, result, error = registry.call_json('cosim_doctor',
+        {'trace': str(write(tmp_path, h, row)), 'core': 'boom'})
+    assert not error, result
+    assert result['status'] == 'inspected' and result['instructions'] == 1
+    assert result['compared'] is False

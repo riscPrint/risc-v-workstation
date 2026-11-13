@@ -192,3 +192,6 @@ The exact instruction-valued ECALL trap policy is reported as a quirk. Sail's
 own CSR state remains unchanged. A later `mtval` read is refused until a full
 independent write or another trap removes the state difference. The checker
 never takes arbitrary trap bits from the DUT to make a match.
+
+`cosim_doctor` uses an isolated read-only MCP call. Small traces return the
+inspection inline. A longer inspection returns a job ID. No reference runs.
