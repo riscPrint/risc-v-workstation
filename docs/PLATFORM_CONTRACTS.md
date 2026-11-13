@@ -46,7 +46,6 @@ Principles (from `ROADMAP.md`):
 - [Connectivity and riscv-formal bindings](contracts/connectivity.md)
 - [Co-simulation transports and capture inspection](contracts/cosim.md)
 - [Coverage](contracts/coverage.md)
-- [Archived stimulus replay](contracts/coverage.md#archived-stimulus-replay)
 - [Component simulations](contracts/csim.md)
 - [CSR and register maps](contracts/csr.md)
 - [Debug module and sessions](contracts/debug.md)
@@ -56,6 +55,7 @@ Principles (from `ROADMAP.md`):
 - [Proof cores and counterexamples](contracts/formal-cex.md)
 - [Deep formal runs](contracts/formal-deep.md)
 - [Formal checks, SVA and local captures](contracts/formal.md)
+- [Installation and release diagnostics](contracts/install.md)
 - [Hardware leakage](contracts/leakage.md)
 - [Lint and CDC/RDC](contracts/lint.md)
 - [Memory order and multi-hart](contracts/memory.md)
@@ -65,6 +65,7 @@ Principles (from `ROADMAP.md`):
 - [Power intent](contracts/power.md)
 - [Privilege and interrupt suites](contracts/privilege.md)
 - [Design queries](contracts/query.md)
+- [Simulation security](contracts/sec.md)
 - [Setup and adapter selection](contracts/setup.md)
 - [Simulation server and native ports](contracts/sim.md)
 - [SoC project data](contracts/soc.md)
@@ -85,15 +86,3 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
-
-## AIA field-layout supplement
-
-`rvw.csr-catalog/1` retains the base UDB revision and can expose a `supplements`
-list with independently pinned sources. Supplemental rows retain their own
-revision, source hashes and license notices. The AIA supplement fills the
-26 recorded layout gaps without changing the base UDB data. Definition flag
-`requires_environment_model` prevents simple CSR selection from discarding
-interrupt-controller side effects. Field availability does not establish
-behavioral or privilege coverage.
-
-- [Installation and release diagnostics](contracts/install.md)
