@@ -53,7 +53,7 @@ def test_generated_bench_loads_and_selects_spinal_bus(tmp_path):
 def test_unsupported_bus_is_explicit(tmp_path):
     db,soc=fixture(tmp_path)
     conn=sqlite3.connect(db)
-    conn.execute("UPDATE bundles SET class_name='spinal.lib.bus.amba4.axi.Axi4'")
+    conn.execute("UPDATE bundles SET class_name='spinal.lib.bus.amba3.ahblite.AhbLite3'")
     conn.commit();conn.close()
     with pytest.raises(ValueError,match='APB bus'):
         generate(db,soc,tmp_path/'bench')

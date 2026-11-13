@@ -13,7 +13,18 @@ def bus_type(class_name):
     return BUS_TYPES.get(leaf)
 
 
-def generate(db, soc, out, *, rtl=None):
+def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
+    from .profiles import classify
+    with_db = DesignDB(Path(db).resolve())
+    try:
+        discovered = [classify(c) for c, in with_db.conn.execute(
+            'SELECT b.class_name FROM bundles b JOIN components c ON b.component_id=c.id WHERE c.parent_id IS NULL')
+            if classify(c)]
+    finally:
+        with_db.close()
+    if language != 'pyuvm' or profile != 'auto' or (discovered and discovered != ['apb']):
+        from .profiles import generate as generate_profile
+        return generate_profile(db,soc,out,rtl=rtl,language=language,profile=profile)
     db, soc, out = Path(db).resolve(), Path(soc).resolve(), Path(out).resolve()
     model = load(soc)
     regions = [r for r in model['regions'] if r['kind']=='mmio']

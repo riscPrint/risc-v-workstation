@@ -12,7 +12,7 @@ def mcp_tools():
     string = {'type': 'string'}
     timeout = {'type': 'number', 'default': 600}
     return [
-        ToolSpec('uvm_new', 'Generate an APB pyuvm register-reset bench from SpinalDB and a SoC map.', schema({'db': string, 'soc': string, 'out': string, 'rtl': {'type':'array','items':string}}, ['db','soc','out']), scaffold),
+        ToolSpec('uvm_new', 'Generate a database-selected project profile or an automatic APB reset bench.', schema({'db': string, 'soc': string, 'out': string, 'rtl': {'type':'array','items':string}, 'language': {'type':'string','enum':['pyuvm','sv']}, 'profile': string}, ['db','soc','out']), scaffold),
         ToolSpec('uvm_features', 'Derive a bounded engine feature table from C3 results.', schema({'path': string}, ['path']), table),
         ToolSpec('uvm_list', 'List tests declared by a project UVM bench.', schema({'manifest': string}, ['manifest']), list_tests),
         ToolSpec('uvm_build', 'Build a pinned Accellera UVM bench on Verilator.', schema({'required_features': {'type':'array','items':string}, 'manifest': string, 'out': string, 'archive': string, 'verilator': string, 'timeout': timeout}, ['manifest', 'out']), flow.build, long=True),
