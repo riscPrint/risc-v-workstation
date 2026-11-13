@@ -31,6 +31,8 @@ def command(a):
 def register(sub):
     p = sub.add_parser('uvm', help='build and run project-owned UVM benches')
     commands = p.add_subparsers(dest='action', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.uvm', commands)
     from .scaffold_cli import register as register_scaffold
     register_scaffold(commands)
     f = commands.add_parser('features', help='derive engine feature table from C3 conformance results')
