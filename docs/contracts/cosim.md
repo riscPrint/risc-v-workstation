@@ -222,3 +222,14 @@ count and IRQ NET values against that state, in addition to PC, instruction
 and integer write values. Conflicts are errors. Mixed sparse retirement lines
 and complete C2 state are rejected. Sparse input remains observations only.
 A format conversion is not an independent architectural check.
+
+## Full-word scalar read capture
+
+A platform can set `memory_read_convention` to `full_word` with `aligned_mem=true`.
+The default is `architectural`. Full-word capture must report an aligned bus
+address, every read lane, and no write lanes for each scalar load. The checker
+uses the retired instruction and its rs1 value to check that address and derive
+the accessed lanes. Data in those lanes and the destination register remain
+strictly compared. Store masks are unchanged. Misaligned, compressed, trapping
+and MMIO reads are refused by this convention. It does not check extra bus read
+bytes as architectural effects or establish MMIO side-effect correctness.

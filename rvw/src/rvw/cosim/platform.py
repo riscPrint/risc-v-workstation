@@ -75,6 +75,7 @@ class Platform:
     reference_extensions: list = field(default_factory=list)
     ecall_tval: str = "zero"
     sail_reference_isa: str | None = None
+    memory_read_convention: str = "architectural"
 
     @classmethod
     def load(cls, core, path=None):
@@ -96,6 +97,11 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        p.memory_read_convention = obj.get('memory_read_convention', 'architectural')
+        if p.memory_read_convention not in ('architectural', 'full_word'):
+            raise ValueError('memory_read_convention must be architectural or full_word')
+        if p.memory_read_convention == 'full_word' and not p.aligned_mem:
+            raise ValueError('full_word reads require aligned_mem=true')
         p.sail_reference_isa = obj.get("sail_reference_isa")
         from .cheri import validate as validate_cheri
         p.cheri = validate_cheri(obj.get("cheri"))
@@ -200,6 +206,40 @@ class Platform:
 
     def is_mmio(self, addr, size):
         return any(base <= addr and addr + size <= base + length for base, length in self.mmio)
+
+    def normalize_record(self, record):
+        """Project-declared read bus representation to architectural byte lanes.
+
+        Only ordinary scalar loads use this convention. Stores keep their exact
+        strobes. Reject unknown encodings and inconsistent raw bus evidence.
+        """
+        if self.memory_read_convention != 'full_word' or not record['mem_rmask']:
+            return record
+        insn = record['insn']
+        if insn & 0x7f != 0x03 or record['trap']:
+            raise ValueError('full_word read convention requires a nontrapping scalar load')
+        width_code = (insn >> 12) & 7
+        widths = {0: 1, 1: 2, 2: 4, 4: 1, 5: 2}
+        if self.xlen == 64:
+            widths.update({3: 8, 6: 4})
+        if width_code not in widths:
+            raise ValueError('unsupported scalar load width for full_word read')
+        size = widths[width_code]
+        immediate = insn >> 20
+        if immediate & 0x800:
+            immediate -= 0x1000
+        address = (record['rs1_rdata'] + immediate) & ((1 << self.xlen) - 1)
+        bus_bytes = self.xlen // 8
+        offset = address % bus_bytes
+        if offset + size > bus_bytes or address % size:
+            raise ValueError('full_word read convention does not support misaligned loads')
+        if (record['mem_addr'] != address - offset
+                or record['mem_rmask'] != (1 << bus_bytes) - 1
+                or record['mem_wmask']):
+            raise ValueError('raw read address or strobes contradict full_word convention')
+        if self.is_mmio(address - offset, bus_bytes):
+            raise ValueError('full_word MMIO reads need a project device model')
+        return {**record, 'mem_rmask': ((1 << size) - 1) << offset}
 
     def normalize_effect(self, effect):
         if self.aligned_mem and (effect["mem_rmask"] or effect["mem_wmask"]):
