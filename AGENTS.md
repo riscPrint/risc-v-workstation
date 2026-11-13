@@ -29,6 +29,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/doctor/` | Setup diagnostics, explicit installer forwarding and `rvw_doctor` MCP. See its `README.md`. |
 | `rvw/src/rvw/farm/` | Native SSH shards and a static C3/C4 history dashboard. |
 | `rvw/src/rvw/soc/` | Project-owned SoC map validation, software exports and bounded design checks. See its `README.md`. |
+| `rvw/src/rvw/bugmem/` | Bug-pattern memory: stored failure signatures, root causes and similarity matching. See its `README.md`. |
 | `rvw/src/rvw/agent_bench/` | Restricted agent fixture benchmark and scoring. See its `README.md`. |
 | `rvw/src/rvw/privilege/` | Project-configured privilege verification campaigns. See its `README.md`. |
 | `rvw/src/rvw/memory/` | Multi-image inputs and independent serialized memory checks. See its `README.md`. |
