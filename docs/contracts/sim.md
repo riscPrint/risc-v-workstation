@@ -241,3 +241,13 @@ assets. Instruction reduction retains code addresses through NOP replacement.
 IRQ reduction retains the required initial event. A conclusive native pass
 after removing the final retained item supports `one_minimal`, never a global
 minimum claim. Deliberate fixture failures do not establish a core defect.
+
+## Native server process observation
+
+C1 `details.simulation_session.process_id` is the host JVM process ID as an
+integer. It identifies the process that ran the model. It is observational
+metadata, separate from model identity and C4 reuse. It does not enter C2.
+A completed server request does not establish process teardown. A caller can
+check this PID after EOF, shutdown or launcher cancellation. PID exit proves
+that the process and its threads stopped. It does not prove that each
+simulation thread was released between requests in a live JVM.

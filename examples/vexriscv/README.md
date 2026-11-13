@@ -630,3 +630,15 @@ nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_rvvi_
 The current generic harness has no DMI endpoint. This VexRiscv configuration
 has no debug unit. Debug-halt comparison with the reference Debug Module path
 was NOT RUN. A format round trip does not establish debug support.
+
+## Native server lifecycle controls
+
+`rvw/tests/test_server.py` under this example runs a cycle timeout and a
+failing ELF before repeated passing ELFs. It compares the passing C2 bytes
+with a fresh process and a persistent batch. `rvw/tests/test_server_cancel.py`
+observes retirement in a second ELF before it cancels the launcher. Both
+use the private `RVW_VEX_LOCK` setting. C1 records the native JVM PID, which
+the tests check after teardown. See
+[the generic limits](../../RiscvSim/README.md#native-server-teardown-observation)
+and [the native sample](rvw/server-lifecycle.json). These controls do not
+establish complete device reset coverage or a thread count between requests.

@@ -28,6 +28,8 @@ def test_server_reset_matches_fresh_process(tmp_path):
     sessions = [r['details']['simulation_session'] for r in replies]
     assert len({s['id'] for s in sessions}) == 1
     assert [s['model_run'] for s in sessions] == [1, 2, 3, 4]
+    assert len({s['process_id'] for s in sessions}) == 1
+    assert_stopped(int(sessions[0]['process_id']))
     # The server has compiled Scala. Start a fresh JVM with that exact classpath.
     # Do not queue another sbt build just to run the same classes.
     repo = Path(os.environ['RVW_HOME'])
@@ -41,7 +43,7 @@ def test_server_reset_matches_fresh_process(tmp_path):
     native = run_group([sys.executable, str(repo / 'RiscvSim/scripts/native-identity.py')],
                        env=env, capture=True, text=True, timeout=30)
     assert native.returncode == 0, native.stderr
-    fresh = run_group([str(repo / 'scripts/with-lock.sh'), 'vex', 'nice', '-n', '10',
+    fresh = run_group([str(repo / 'scripts/with-lock.sh'), os.environ.get('RVW_VEX_LOCK', 'vex'), 'nice', '-n', '10',
         sys.executable, str(repo / 'RiscvSim/scripts/native-identity.py'), 'launch',
         native.stdout, str(tmp_path), '-Xmx3g', '-Xss64m',
         '-Driscvsim.tools=' + str(repo), '-Driscvsim.source=' + str(source_path),
@@ -85,3 +87,11 @@ def test_server_reset_matches_fresh_process(tmp_path):
     saved = tmp_path / 'checkpoint.json'
     checkpoint.create(tmp_path / 'second/result.json', 2, saved)
     assert checkpoint.verify(saved, tmp_path / 'fresh/result.json')['status'] == 'equivalent'
+
+
+def assert_stopped(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return
+    raise AssertionError(f'native JVM {pid} is still alive after server teardown')
