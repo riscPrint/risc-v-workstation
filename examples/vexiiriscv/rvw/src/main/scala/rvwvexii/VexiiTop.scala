@@ -13,7 +13,7 @@ import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
   * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
   def liveMap = riscvsim.SimMap.load(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "live-devices.json"))
-  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
+  val configs = Seq("rv32im", "rv32imasu", "rv64ima", "rv64imasu", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
 
   def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")
   def compressed(config: String) = config.startsWith("rv64imacsu")
@@ -26,6 +26,7 @@ object VexiiTop {
       p.divImpl = "bitpasta"
       p.divArea = !config.endsWith("_ipc")
     }
+    if (config == "rv64ima") p.addISA("a")
     if (supervisor(config)) {
       p.addISA("a", "s", "u")
       p.asidWidth = if (p.xlen == 64) 16 else 9

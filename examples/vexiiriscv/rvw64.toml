@@ -7,7 +7,7 @@ root = "."
 backend = "riscvsim-verilator"
 name = "vexiiriscv"
 adapter = "./rvw/run64.sh"
-configs = ["rv64imasu"]
+configs = ["rv64ima", "rv64imasu"]
 default_config = "rv64imasu"
 lock = "vex-suites"                     # suite lock; run.sh takes RVW_VEX_LOCK (use another name)
 source_repo = "."
@@ -226,3 +226,13 @@ timeout_s = 30
 mem_latency = 0
 [suites.reset-local.options]
 stimulus_file = "rvw/out/suites64/reset/reset-local.stimulus.json"
+
+[suites.isa-rv64]
+description = "RV64 UI/UM/UA physical-memory tests, aligned accesses"
+dir = "rvw/out/isa64"
+include = ['^rv64u[ima]-p-']
+exclude = ['\.dump$', '^rv64ui-p-ma_data$']
+configs = ["rv64imasu"]
+max_cycles = 200000
+timeout_s = 60
+mem_latency = 0
