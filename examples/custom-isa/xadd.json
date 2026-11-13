@@ -1,0 +1,50 @@
+{
+  "schema": "rvw.custom-isa/1",
+  "version": "1.0.0",
+  "xlen": 32,
+  "instructions": [
+    {
+      "name": "xadd",
+      "mask": "0xfe00707f",
+      "match": "0x0000000b",
+      "operands": [
+        "rd",
+        "rs1",
+        "rs2"
+      ],
+      "state": [],
+      "effects": {
+        "memory": "none",
+        "trap": "none",
+        "pc": "next"
+      },
+      "result": [
+        "add",
+        "rs1",
+        "rs2"
+      ],
+      "reference_vectors": [
+        {
+          "rs1": 3,
+          "rs2": 5,
+          "expected": 8
+        },
+        {
+          "rs1": 4294967295,
+          "rs2": 1,
+          "expected": 0
+        }
+      ],
+      "mutants": [
+        {
+          "id": "wrong-xor",
+          "result": [
+            "xor",
+            "rs1",
+            "rs2"
+          ]
+        }
+      ]
+    }
+  ]
+}

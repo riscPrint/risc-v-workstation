@@ -713,7 +713,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -990,6 +990,13 @@ usage: rvw formal rvfi-generate [-h] --out OUT [--json] [--project PROJECT]
 ```text
 usage: rvw formal sail-zicond [-h] --model MODEL [--compiler COMPILER] --out
     OUT [--json] [--project PROJECT]
+```
+
+### `rvw formal custom-isa`
+
+```text
+usage: rvw formal custom-isa [-h] --out OUT [--json] [--project PROJECT]
+    manifest
 ```
 
 ### `rvw formal riscv`
@@ -2525,6 +2532,14 @@ Starts a background job: yes.
 Generate CSR monitors, directed assembly and coverage. Does not run verification.
 
 Arguments: `model` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_custom_isa`
+
+Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 

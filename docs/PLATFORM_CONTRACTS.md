@@ -4435,3 +4435,21 @@ trap-handler state and the C2 writer snapshot. It binds the ELF and emitted RTL
 and the compiled harness classes with SHA-256. A SHA-256 envelope checks
 the saved payload before restore. Its fixed-latency, one-hart RAM harness has no devices or RNG.
 This is a native continuation probe, not the general snapshot-port envelope.
+### Custom R-type instruction interface
+
+`rvw.custom-isa/1` declares a semantic version, XLEN 32/64 and instruction rows.
+Each row supplies `name`, `mask`, `match`, `operands=[rd,rs1,rs2]`, `state=[]`,
+`effects={memory:none,trap:none,pc:next}` and a `result` bitvector expression.
+Encodings use the four custom opcode spaces and mask `0xfe00707f`. Expressions
+use operands, unsigned constants and binary add/sub/xor/and/or/sll/srl trees.
+The evaluator and Verilog export wrap to XLEN and mask shift amounts.
+`reference_vectors` supply rs1, rs2 and expected values. `mutants` supply an ID
+and alternate result expression. Their independence remains an author obligation.
+
+`rvw.custom-plan/1` records generated/reference vectors, dependency cases,
+reference comparisons, detected/surviving mutants and gaps. No DUT execution
+is implied. `rvw.custom-generation/1` records the input hash, checks, gaps,
+toolchain/license scope and `generated` or `mismatch`. Generation exits 0;
+a reference mismatch exits 1; malformed input exits 2. No result is a core
+acceptance verdict. The GCC fragment and standalone decoder are integration
+hooks. They are not installed compiler or disassembler plugins.

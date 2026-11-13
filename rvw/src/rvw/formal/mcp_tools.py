@@ -164,6 +164,18 @@ def _sail_zicond(job, **args):
     return json.loads((Path(args['out']) / 'manifest.json').read_text())
 
 
+def _custom_isa(job, **args):
+    manifest = args.pop('manifest')
+    code = job.run(_argv('custom-isa', args) + [manifest])
+    path = Path(args['out']) / 'result.json'
+    if code not in (0,1) or not path.is_file():
+        raise ToolError('custom ISA generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    result = json.loads(path.read_text())
+    if (code == 1) != (result.get('status') == 'mismatch'):
+        raise ToolError('custom ISA result and exit code disagree')
+    return result
+
+
 def mcp_tools():
     from .deep_cli import mcp_tools as deep_tools
     return [*deep_tools(),
@@ -184,6 +196,8 @@ def mcp_tools():
                  schema({"source": S, "bindings": S, "out": S}, ["source", "bindings", "out"]), _upf, long=True),
         ToolSpec("formal_sail_zicond", "Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.",
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),
+        ToolSpec("formal_custom_isa", "Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.",
+                 schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_isa, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

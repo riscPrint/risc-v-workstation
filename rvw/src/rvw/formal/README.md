@@ -2013,3 +2013,38 @@ checks result selection, encoding, register fields, x0, PC and memory effects.
 Result, decode and PC mutations must fail. A separate campaign runs both new
 models through upstream riscv-formal against a correct and a faulty RVFI unit.
 MCP tool `formal_sail_zicond` exposes generation.
+Custom instruction interfaces (#122, #169, #155)
+----------------------------------------------
+
+`rvw formal custom-isa examples/custom-isa/xadd.json --out generated` reads a
+versioned core-owned interface. `rvw.custom-isa/1` supports XLEN 32 or 64 and
+pure R-type instructions in custom opcode spaces 0, 1, 2 and 3. Each instruction
+declares its encoding, operands, extra state, effects and result expression.
+Extra state must be empty. Memory and trap effects must be `none`. PC behavior
+must be `next`. Unknown effects and incomplete semantics are errors. A repeated
+encoding is an error. Standard opcode spaces are refused.
+
+A result is `rs1`, `rs2`, an unsigned XLEN constant or a tree such as
+`["add", "rs1", "rs2"]`. Supported operations are add, sub, xor, and, or, sll
+and srl. Results wrap to XLEN. Shifts use the low log2(XLEN) shift bits.
+
+Exports include a stable `interface.json`, pure Verilog result modules, GNU
+assembler macros, GNU C inline functions, a standalone Python disassembler,
+and a GCC RISC-V machine-description fragment. The GCC fragment needs manual
+backend integration and a toolchain build. It is not an installed plugin.
+GCC and binutils use GPL-3.0-or-later. The standalone decoder is generated
+project code. No objdump plugin is installed. Native tests compile GNU hooks
+and assembly for RV32I/ILP32 and RV64I/LP64. They check the compiled instruction
+and register operands. They do not run a custom instruction on a DUT.
+
+`plan.json` contains operand boundary bins, vectors and dependency cases.
+`tests.S` tests those vectors, destination/source aliases, equal sources and
+x0 discard. It returns zero for success and one for failure. Generated expected
+values share the declared semantics. Project `reference_vectors` provide
+independent expected values. Project `mutants` provide alternate result trees.
+The report checks reference vectors and requires every supplied mutant to be
+detected. Missing independent inputs and surviving mutants remain explicit gaps.
+A mismatching independent vector gives exit 1. Generation otherwise gives
+exit 0, which is not a DUT pass. Extra state, memory, custom exceptions and
+runtime trap/calling-convention qualification remain outside this subset.
+MCP tool `formal_custom_isa` exposes the same generator.
