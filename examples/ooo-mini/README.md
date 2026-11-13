@@ -73,8 +73,9 @@ The Scala property DSL describes 14 properties beside the RTL. Native monitors
 add ROB FIFO order/count, free-list conservation and ready-source checks. All
 50 ISA programs pass with 19 inserted monitors per run and zero firings.
 `rvw checks generate --all --out rvw/out/generated-all` emits project-bound
-SV templates. Generation does not load these SV binds into the native simulator.
-The native monitor results apply to the Scala checks.
+SV templates. The default native adapter now loads all eight SV binds and enables Verilator
+assertions. A 50-program ISA run passes with these binds and 19 Scala monitors.
+The 16-entry variant uses the Scala monitors only.
 
 The topdown smoke partition is 54 commit slots: 17 retiring, 35 waiting at
 a nonempty ROB head, and two empty-ROB slots. These project counters agree
@@ -92,7 +93,7 @@ The runner retains overall `unknown`: these are engine observations, with two
 reset samples and arbitrary inputs. Input closure and universal activation are
 not certified.
 
-Set `RISCV_FORMAL` to a pinned riscv-formal checkout for `rvw formal isa`.
+Set `RISCV_FORMAL` to a pinned riscv-formal checkout. Run `rvw formal isa --project formal.toml`.
 The example wrapper exposes RTL retirement directly and leaves RAM data arbitrary.
 ADD, LUI and the retirement cover timed out after 15 seconds at depth 8.
 No ISA property closed. See [formal results](formal-results.json).
@@ -116,3 +117,29 @@ window benefit. It lacks wrong-path execution and differs in branch timing
 and shared multiply/divide occupancy. Parameters are project declarations,
 not an elaborated parameter export. No accuracy qualification is claimed.
 See [timing results](timing-results.json).
+
+## Faults, coverage, lint and the gate
+
+The sampled fault campaign confirms four flips in the rename map and ROB count.
+Two faults are detected and two have unchanged architectural traces. No sampled
+fault remains unresolved. The adapter reports native assertion failures as
+`assert` and uses a clock counter that the injector can validate.
+
+Code coverage comes from one smoke program. Functional coverage comes from the
+ISA traces. Functional instruction-record counts include trapping records.
+Lint and structural CDC/RDC use the generated RTL and a SpinalDB database.
+Lint findings and unresolved source-scope temporaries remain visible.
+The measured values are in [qualification results](qualification-results.json).
+
+The directed self-modifying-code test failed before the core's `FENCE.I`
+recovery fix. Its old C2 trace mismatched Spike at the stale instruction.
+The fixed test passes and strictly matches. Reserved load, branch and ALU
+encodings now trap. Machine trap entry and return update the implemented
+`mstatus` bits. The trap test also checks that `minstret` excludes trapping
+instructions. C2 order uses a separate counter.
+
+`rvw/gate-controls.py` creates committed good, planted-bug and repair controls
+without changing the working tree or real Git index. It flips the multiplier's
+low result bit in the bug commit. Use the printed revisions with
+`rvw regress gate --tier quick --base-rev GOOD --cand-rev BUG`, then compare
+GOOD with FIX. No missing-test or known-failure waiver is needed.
