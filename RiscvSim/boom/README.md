@@ -139,3 +139,50 @@ trace position. Lockstep resume also needs matched reference state.
 The [stream review](../../SpinalChecks/boom/STREAM_REVIEW.md) maps the internal
 `arbiter.ups_0_a` stage by source. It adds no waiver or native pass claim.
 The original historical firing inventory remains incomplete. Refs: #5.
+
+## Expanded small probe run, 2026-11-13
+
+These fresh runs use private BOOM revision `0cb0b69`, preset `small`,
+the BOOM lock and `nice -n 10`. The core RTL is unchanged. Random memory
+timing and whole-program regions include startup. No model fitting was done.
+
+| Program | RTL cycles | Instructions | RTL IPC | Model cycles | Model IPC | Model / RTL IPC |
+|---|---:|---:|---:|---:|---:|---:|
+| add-timing | 266 | 57 | 0.21429 | 96 | 0.59375 | 2.77083 |
+| sfb-predication | 339 | 84 | 0.24779 | 160 | 0.52500 | 2.11875 |
+| rv64ui-p-beq | 1802 | 333 | 0.18479 | unsupported traps | unavailable | unavailable |
+| rv64uf-p-fadd | 1668 | 217 | 0.13010 | unsupported traps | unavailable | unavailable |
+
+| Conditional branch stream | Events | RTL misses | Model misses | Direction disagreements |
+|---|---:|---:|---:|---:|
+| add-timing | 16 | 8 | 2 | 6 |
+| sfb-predication | 33 | 18 | 5 | 13 |
+| rv64ui-p-beq | 76 | 45 | 43 | 62 |
+| rv64uf-p-fadd | 25 | 21 | 5 | 24 |
+
+All four programs pass their C1 completion checks. Each predictor report has
+status `compared` with `examples/boom/csim/tage-l.json`. The predictor is
+approximate. These disagreements do not establish core defects.
+`rvw perf topdown` rejects all four captures: the binding lacks
+`topdown_slots`, `topdown_retiring`, `topdown_bad_speculation`,
+`topdown_backend_bound` and `topdown_frontend_bound`. No slot partition
+or top-down percentage is earned. Existing stall samples are separate.
+
+Regenerate the timing ELFs from `tests/add-timing.S` and
+`tests/sfb-predication.S` with GCC `-nostdlib -nostartfiles -march=rv64im
+-mabi=lp64 -Wl,-Ttext=0x80000000,--no-relax`. Run each with:
+
+```sh
+scripts/with-lock.sh boom nice -n 10 RiscvSim/boom/run.sh run \
+  --config small --elf "$ELF" --out "$RUN" --rvfi-trace --probes --json
+rvw probes convert "$RUN/probe-events.jsonl" --to bp-events \
+  --probe conditional_commit_0 --c2 "$RUN/rvfi.jsonl" --out "$RUN/bp.jsonl"
+rvw csim compare-rtl examples/boom/csim/tage-l.json \
+  --trace "$RUN/rvfi.jsonl" --events "$RUN/bp.jsonl" --json
+rvw perf topdown "$RUN/probe-events.jsonl" --c2 "$RUN/rvfi.jsonl" --json
+rvw ooo examples/boom/ooo/small.json "$RUN/rvfi.jsonl" --json
+```
+
+The fresh beq strict comparison also exposes unspecified initial mscratch and
+FP status values. It is not counted as a strict match. No synchronization or
+output mask was used for that comparison. Raw captures remain local.
