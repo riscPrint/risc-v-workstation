@@ -6,4 +6,6 @@ from .ift import run
 def mcp_tools():
     return [ToolSpec('sec_ift','Run bounded digital information flow tracking in Verilator.',
             schema({k:{'type':'string'} for k in ('rtl','top','policy','stimulus','out','mode','db')},
-                   ['rtl','top','policy','stimulus','out']),run,long=True)]
+                   ['rtl','top','policy','stimulus','out']),run,long=True,
+        side_effects='long-running; launches Yosys and Verilator; writes digital IFT artifacts under out', native_tools=('Verilator', 'Yosys'),
+        )]

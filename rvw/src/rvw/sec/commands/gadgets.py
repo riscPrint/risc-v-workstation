@@ -18,4 +18,6 @@ def execute(a):
 def mcp_tools():
     return [ToolSpec('sec_gadgets','Generate v1, v2, v4 and return-predictor gadget templates.',
                     schema({'out':{'type':'string'},'seed':{'type':'integer'},
-                            'threshold':{'type':'integer'},'declares_speculation':{'type':'boolean'}},['out']),generate)]
+                            'threshold':{'type':'integer'},'declares_speculation':{'type':'boolean'}},['out']),generate,
+        side_effects='writes assembly templates under out', native_tools=(),
+        )]

@@ -19,4 +19,6 @@ def execute(args):
 
 def mcp_tools():
     return [ToolSpec('sec_contract','Run bounded paired RTL leakage tests and reduce a witness.',
-                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True)]
+                    schema({'manifest':{'type':'string'},'out':{'type':'string'}},['manifest','out']),run,long=True,
+        side_effects='long-running; launches configured native RTL adapter; writes paired evidence under out', native_tools=(),
+        )]
