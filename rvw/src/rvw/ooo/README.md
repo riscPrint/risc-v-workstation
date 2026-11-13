@@ -482,3 +482,26 @@ Cache requests include replay attempts and can include page-walk traffic
 when the component TLB uses the cache. Instruction requests are line accesses,
 not retired instructions. RTL event maps must declare matching predicates,
 units and regions. Equal counter names alone do not establish comparability.
+
+## Correct-path branch overlap
+
+`branch_speculation` defaults to false for the original conservative schedule.
+Set it to true to let younger operations issue under a correctly predicted
+branch before that branch completes. Rename and fetch can also continue.
+A branch must issue and obtain its prediction before younger work can pass it.
+Mispredictions keep the existing recovery cost. Serial CSR/fence operations
+and system returns retain their ordering rules.
+
+`correct_path_speculative_issues` counts execution requests made while an
+older correctly predicted branch is unresolved. Memory replay clears younger
+branch prediction decisions before reexecution. Shared predictor history is
+not checkpointed or restored by this approximation. Prediction still occurs
+at issue, and miss handling stops committed-path work rather than executing
+wrong-path bytes. Use this option for timing exploration, not predictor
+recovery qualification.
+
+Front-end events also report `decode_output_full`, `decode_input_not_ready`,
+`decode_width_limited`, `uop_cache_width_limited`, and `fetch_buffer_full`.
+They sample the named phase and can overlap. Reports name the optional decode
+phase in `cycle_order`. These are model predicates, not measured hardware
+stall classifications.

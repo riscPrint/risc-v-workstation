@@ -48,6 +48,10 @@ class Frontend:
             self.events['frontend_recovery_cycles'] += 1
             return
         # Decode runs before fetch. Ready uops become visible to rename next cycle.
+        if self.fetch and self.fetch[0][1] <= cycle and len(self.decoded) >= c.decode_entries:
+            self.events["decode_output_full"] += 1
+        if self.fetch and self.fetch[0][1] > cycle:
+            self.events["decode_input_not_ready"] += 1
         decoded = hits = 0
         while self.fetch and len(self.decoded) < c.decode_entries:
             op, ready, hit, last, signature = self.fetch[0]
@@ -55,10 +59,12 @@ class Frontend:
                 break
             if hit:
                 if hits >= c.uop_cache_width:
+                    self.events["uop_cache_width_limited"] += 1
                     break
                 hits += 1
             else:
                 if decoded >= c.decode_width:
+                    self.events["decode_width_limited"] += 1
                     break
                 decoded += 1
             self.fetch.popleft()
@@ -71,6 +77,8 @@ class Frontend:
         if cycle < self.blocked_until:
             self.events['predictor_latency_cycles'] += 1
             return
+        if self.position < len(instructions) and len(self.fetch) >= self.capacity:
+            self.events["fetch_buffer_full"] += 1
         active = {op.pc // c.block_bytes for op, *_ in self.fetch}
         for _ in range(self.width):
             if self.position == len(instructions) or len(self.fetch) >= self.capacity:

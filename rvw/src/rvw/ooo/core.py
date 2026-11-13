@@ -28,6 +28,7 @@ class Config:
     physical_registers: int = 0
     physical_float_registers: int = 0
     branch_penalty: int = 0
+    branch_speculation: bool = False
     memory_policy: str = "ordered"
     dependence_entries: int = 1024
     replay_penalty: int = 5
@@ -83,6 +84,8 @@ class Config:
             raise ValueError("physical_registers must be zero (unbounded) or at least 33")
         if type(self.physical_float_registers) is not int or (self.physical_float_registers != 0 and self.physical_float_registers < 33):
             raise ValueError("physical_float_registers must be zero (unbounded) or at least 33")
+        if type(self.branch_speculation) is not bool:
+            raise ValueError("branch_speculation must be boolean")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
             raise ValueError("branch_penalty must be nonnegative")
         if self.memory_policy not in ("ordered", "disambiguate", "speculate"):
@@ -116,6 +119,7 @@ class Entry:
     bypass_ready: int = 0
     register: bool = True
     translation_ready: int | None = None
+    predicted_correct: bool | None = None
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
@@ -237,8 +241,9 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     break
                 if previous.insn.kind in ("branch", "jump") or previous.insn.kind in SERIAL:
                     older_branches.append(previous)
-            if cycle < blocked_until or any(p.done is None or p.done > cycle for p in older_branches):
+            if cycle < blocked_until or any((p.done is None or p.done > cycle) and not (config.branch_speculation and p.insn.kind in ("branch", "jump") and p.predicted_correct is True) for p in older_branches):
                 continue
+            speculating = config.branch_speculation and any(p.insn.kind in ("branch", "jump") and p.predicted_correct is True and p.done is not None and p.done > cycle for p in older_branches)
             kind = entry.insn.kind
             if kind in SERIAL:
                 older = list(rob)[:list(rob).index(entry)]
@@ -313,12 +318,14 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 else:
                     predicted = predictor.predict(entry.insn.pc, entry.insn.pc + entry.insn.length)
                     predictor.update(entry.insn.pc, entry.insn.next_pc)
+                entry.predicted_correct = predicted == entry.insn.next_pc
                 events["branches"] += 1
                 if predicted != entry.insn.next_pc:
                     events["branch_misses"] += 1
                     blocked_until = max(blocked_until, cycle + latency + config.branch_penalty)
                     events["wrong_path_fetch_slots_estimate"] += config.branch_penalty * config.fetch_width
-                unresolved_branch = entry
+                if kind == "system" or not config.branch_speculation or not entry.predicted_correct:
+                    unresolved_branch = entry
             if config.memory_policy == "speculate" and kind == "load":
                 if any(p.insn.kind == "store" and p.done is None for p in list(rob)[:list(rob).index(entry)]):
                     events["speculative_loads"] += 1
@@ -333,6 +340,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     for victim in younger:
                         victim.done = None
                         victim.translation_ready = None
+                        victim.predicted_correct = None
                     younger_set = set(younger)
                     waiting[:] = [item for item in waiting if item not in younger_set]
                     waiting.extend(item for item in younger if not item.bypass_ready)
@@ -346,6 +354,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             waiting.remove(entry)
             issued += 1
             events["issued"] += 1
+            if speculating:
+                events["correct_path_speculative_issues"] += 1
         events["dependency_blocked"] += dependency_blocked
         for _ in range(config.rename_width):
             if cycle < blocked_until or unresolved_branch is not None:
@@ -493,4 +503,4 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
                         "cache timing needs a component service; no replay or translation faults",
                         "topdown is an approximate commit-slot partition",
                         "disambiguation uses traced addresses after store issue"],
-                cycle_order=["commit", "issue", "rename", "fetch"])
+                cycle_order=["commit", "issue", "rename", *(["decode"] if config.frontend else []), "fetch"])

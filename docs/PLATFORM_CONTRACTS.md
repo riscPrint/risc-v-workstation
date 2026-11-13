@@ -3533,6 +3533,16 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core correct-path branch overlap
+
+`branch_speculation` is an optional boolean, default false. When enabled,
+younger work can issue after an older branch's correct prediction and before
+its completion. Mispredictions retain recovery stalls. Serial control rules
+remain active. `correct_path_speculative_issues` counts such issues. Replay
+clears younger prediction decisions. Predictor history checkpoint/restore is
+not modeled. Optional front-end phase counters expose decode/fetch pressure,
+and `cycle_order` includes decode when configured. Accuracy stays inconclusive.
+
 ### Own-core component event projection
 
 Native cache demand/writeback/prefetch counts and TLB/walk counts are copied
