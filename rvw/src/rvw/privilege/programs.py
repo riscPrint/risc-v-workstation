@@ -69,10 +69,12 @@ def head(config):
     priv = config.get('priv', 'msu')
     if priv == 'm':
         return M_HEAD
+    text = HEAD
     if priv == 'mu':
-        # M and U only: no satp or delegation CSRs.
-        return HEAD.replace(' csrw medeleg, zero\n', '').replace(' csrw mideleg, zero\n', '').replace(' csrw satp, zero\n', '')
-    return HEAD
+        text = text.replace(' csrw medeleg, zero\n', '').replace(' csrw mideleg, zero\n', '').replace(' csrw satp, zero\n', '')
+    if config.get('pmp', {}).get('entries', 1) == 0:
+        text = text.replace(' li t0, -1\n csrw pmpaddr0, t0\n li t0, 15\n csrw pmpcfg0, t0\n', '', 1)
+    return text
 
 
 def tail(config):
@@ -113,7 +115,7 @@ def control_program(control, instruction, mode, enabled, config=None):
     # SRET in M returns to S. SRET in S also returns to S (SPP=1).
     exit_mode = 'S' if instruction == 'sret' and not denied else mode
     wake = 'li t0, 2\n csrw mie, t0\n csrw mideleg, t0\n csrs mip, t0'
-    code = HEAD + f''' la t0, trap
+    code = head(config or {}) + f''' la t0, trap
  csrw mtvec, t0
  li s0, 0
  li s1, {int(enabled) << bit}

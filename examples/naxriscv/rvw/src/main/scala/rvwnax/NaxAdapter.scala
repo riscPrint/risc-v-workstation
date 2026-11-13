@@ -28,6 +28,7 @@ class NaxAdapter extends CoreAdapter {
   val ramBase = 0x80000000L
   val ramSize = 0x1000000
 
+  override def irqInputMask: BigInt = Seq(3, 7, 9, 11).map(BigInt(1) << _).reduce(_ | _)
   override def supportsProbes = true
   private def report(key: ModelKey, work: File): SpinalReport[NaxRiscv] = spinalprobes.Probe.enabled(key.probes) {
     RiscvSimConfig.elaborate(key, work, NaxTop.spinalConfig,
@@ -61,7 +62,7 @@ class NaxAdapter extends CoreAdapter {
     val busBytes = xlen / 8
     require(!job.rvfiCheck, "NaxRiscv adapter has no riscv-formal monitor; use --rvfi-trace")
     require(job.socMap.isEmpty, "NaxRiscv adapter does not support --soc-map")
-    require(job.irqSchedule.isEmpty, "NaxRiscv adapter does not drive interrupt schedules")
+    require(job.model.config != "rv64ima" || job.irqSchedule.forall(s => !s.mask.testBit(9)), "M-only config has no supervisor interrupt pin")
     require(!job.konata, "NaxRiscv adapter has no Konata backend; use --probes")
     require(ctx.elf.entry == ramBase, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
@@ -81,6 +82,12 @@ class NaxAdapter extends CoreAdapter {
       if (inRam(addr, n)) for (i <- 0 until n) mem((addr - ramBase).toInt + i) = ((data >> (8 * i)) & 0xff).toByte
 
     var writer = Option.empty[RvfiTraceWriter]
+    var mmuLog = Option.empty[java.io.PrintWriter]
+    val irqEvents = mutable.Queue.empty[(Long, BigInt)]
+    def flushIrqs(until: Long): Unit = while (irqEvents.headOption.exists(_._1 <= until)) {
+      val (cycle, levels) = irqEvents.dequeue()
+      writer.foreach(_.irq(cycle, levels))
+    }
     var finish = Option.empty[(Status, Option[Long], Option[String])]
     var traceEnded = false
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
@@ -104,6 +111,12 @@ class NaxAdapter extends CoreAdapter {
         val priv = fw.getService[PrivilegedPlugin]
         val int = priv.io.get.int
         val tap = fw.getService[TapPlugin].logic.get
+        val observed = fw.getService[ProbeTapPlugin].logic.get
+        if (observed.mmuWalk.nonEmpty) {
+          mmuLog = Some(new java.io.PrintWriter(new File(job.out, "mmu-observations.jsonl")))
+          mmuLog.foreach(_.println(ujson.write(ujson.Obj("schema" -> "rvw.mmu-observations/1",
+            "elf_sha256" -> ctx.rvfiHeader("elf_sha256"), "identity" -> ctx.rvfiHeader))))
+        }
         val reschedule = fw.getService[CommitPlugin].logic.get.whitebox.reschedule
 
         int.machine.timer #= false
@@ -140,9 +153,36 @@ class NaxAdapter extends CoreAdapter {
         var epc = Option.empty[BigInt]
         var probe: CommitProbe = null
 
+        var observedTval = Option.empty[Long]
+        var pendingPte = Option.empty[BigInt]
+        var irqLevels = BigInt(0)
+        def observation(cycle: Long, kind: String, values: (String, ujson.Value)*): Unit =
+          mmuLog.foreach(_.println(ujson.write(ujson.Obj.from(Seq("cycle" -> RvwJson.num(cycle), "kind" -> ujson.Str(kind)) ++ values))))
         cd.onSamplings {
           ctl.tick()
           val cycle = ctl.cycle
+          val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
+          int.machine.timer #= levels.testBit(7)
+          int.machine.software #= levels.testBit(3)
+          int.machine.external #= levels.testBit(11)
+          if (priv.p.withSupervisor) int.supervisor.external #= levels.testBit(9)
+          if (levels != irqLevels) { irqEvents.enqueue((cycle, levels)); irqLevels = levels }
+          if (observed.c2TrapTvalWrite.exists(_.toBoolean))
+            observedTval = Some(observed.c2TrapTval.get.toBigInt.toLong)
+          observed.mmuWalk.foreach { w =>
+            if (w.response.toBoolean) {
+              val address = pendingPte.getOrElse(throw new IllegalStateException("PTE response without a request"))
+              if (w.retry.toBoolean) observation(cycle, "walk_retry", "address" -> ujson.Str(Hex(address)))
+              else observation(cycle, "walk_response", "address" -> ujson.Str(Hex(address)),
+                "data" -> ujson.Str(Hex(w.data.toBigInt)), "fault" -> ujson.Bool(w.fault.toBoolean))
+              pendingPte = None
+            }
+            if (w.command.toBoolean) {
+              require(pendingPte.isEmpty, "two outstanding PTE reads")
+              pendingPte = Some(w.address.toBigInt)
+              observation(cycle, "walk_request", "address" -> ujson.Str(Hex(w.address.toBigInt)), "command" -> ujson.Num(0))
+            }
+          }
           probes.foreach(_.sample(cycle))
           if (reschedule.valid.toBoolean && reschedule.trap.toBoolean)
             epc = Some(BigInt(probe.robArray(reschedule.robId.toInt).pc) & ((BigInt(1) << xlen) - 1))
@@ -151,6 +191,8 @@ class NaxAdapter extends CoreAdapter {
             fetchPending = Some((SimEncoding.longBits(ibus.cmd.address) & ~(ibus.p.lineSize - 1L), ibeats, cycle + latency()))
           if (dmem.read.cmd.valid.toBoolean && dmem.read.cmd.ready.toBoolean) {
             val id = if (dmem.p.readIdWidth > 0) dmem.read.cmd.id.toInt else 0
+            observation(cycle, "memory_read", "address" -> ujson.Str(Hex(dmem.read.cmd.address.toBigInt & ~BigInt(dmem.p.lineSize - 1))),
+              "size_log2" -> ujson.Num(log2Up(dmem.p.lineSize)))
             reads.enqueue((id, SimEncoding.longBits(dmem.read.cmd.address) & ~(dmem.p.lineSize - 1L), dbeats, cycle + latency()))
           }
           if (dmem.write.cmd.valid.toBoolean && dmem.write.cmd.ready.toBoolean) {
@@ -200,21 +242,44 @@ class NaxAdapter extends CoreAdapter {
           }
         }
 
-        backend = new C2Backend(xlen, () => ctl.cycle, () => tap.privilege.toInt & 3,
-          pc => read(arch, pc, 4).toLong,
-          () => { val e = epc.getOrElse(throw new IllegalStateException("trap reported without a trapping ROB entry")); epc = None; e },
-          r => writer.foreach(_.write(r)),
-          (c, cause, tval, intr) => writer.foreach(_.trap(c, cause, tval, intr)),
+        backend = new C2Backend(xlen, () => ctl.cycle, () => if (job.probes) probe.currentMode.getOrElse(throw new IllegalStateException("missing allocated privilege")) else tap.privilege.toInt & 3,
+          pc => if (job.probes) probe.currentInstruction.getOrElse(throw new IllegalStateException("missing allocated instruction")) else read(arch, pc, 4).toLong,
+          () => {
+            val e = if (job.probes) {
+              val signal = observed.c2TrapEpc.getOrElse(throw new IllegalStateException("missing trap EPC tap"))
+              val raw = signal.toBigInt
+              (if (raw.testBit(signal.getBitsWidth - 1)) raw - (BigInt(1) << signal.getBitsWidth) else raw) & ((BigInt(1) << xlen) - 1)
+            } else epc.getOrElse(throw new IllegalStateException("trap reported without a trapping ROB entry"))
+            epc = None; e
+          },
+          r => { flushIrqs(r.cycle); writer.foreach(_.write(r)) },
+          (c, cause, tval, intr) => { flushIrqs(c); writer.foreach(_.trap(c, cause, tval, intr)) },
           (addr, sizeLog2, data) => {
-            write(arch, addr.toLong, 1 << sizeLog2, data)
-            bench.foreach(_.onStore(addr, sizeLog2, data))
-            tohost.onStore(addr, sizeLog2, data) match {
+            val physical = if (job.probes) probe.currentPhysicalAddress.map(a => BigInt(a) & ((BigInt(1) << xlen) - 1)).getOrElse(addr) else addr
+            write(arch, physical.toLong, 1 << sizeLog2, data)
+            bench.foreach(_.onStore(physical, sizeLog2, data))
+            tohost.onStore(physical, sizeLog2, data) match {
               case Some(ToHost.Pass) => finish = Some((Status.Pass, None, None))
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
             }
           })
         probe = new CommitProbe(dut, 0)
+        if (job.probes) {
+          require(observed.c2Instructions.size == 2 && observed.c2VirtualAddress.nonEmpty, "missing C2 pipeline taps")
+          probe.trapValue = Some(() => {
+            val value = observedTval.getOrElse(throw new IllegalStateException("trap without observed TVAL write"))
+            observedTval = None
+            value
+          })
+          probe.instructionAt = Some(i => observed.c2Instructions(i).toBigInt.toLong)
+          probe.modeAtAllocation = Some(() => tap.privilege.toInt & 3)
+          probe.virtualAddress = Some(() => {
+            val signal = observed.c2VirtualAddress.get
+            val raw = signal.toBigInt
+            (if (raw.testBit(signal.getBitsWidth - 1)) raw - (BigInt(1) << signal.getBitsWidth) else raw).toLong
+          })
+        }
         probe.add(backend, isa(job.model.config))
         fork {
           while (true) {
@@ -222,7 +287,7 @@ class NaxAdapter extends CoreAdapter {
             sleep(1) // The upstream probe callbacks finish first.
             finish.foreach { case (s, c, m) =>
               backend.drain()
-              writer.foreach(_.end(ctl.cycle, s.name)); traceEnded = true
+              flushIrqs(ctl.cycle); writer.foreach(_.end(ctl.cycle, s.name)); traceEnded = true
               ctl.finish(s, c, m)
             }
           }
@@ -232,6 +297,7 @@ class NaxAdapter extends CoreAdapter {
       probes.foreach(_.close(result._4))
       result
     } finally {
+      mmuLog.foreach(_.close())
       probes.foreach(_.abandon())
       if (backend != null && !traceEnded) backend.drain()
       if (capture) { NativeOutput.drain(); NativeOutput.unsubscribe(onLine) }
@@ -253,7 +319,7 @@ class NaxAdapter extends CoreAdapter {
         (Status.Fail, None, Some(s"generated checks fired: ${fired.map(_._1).mkString(", ")}"))
       case _ => (status0, code0, message0)
     }
-    if (!traceEnded) writer.foreach(_.end(cycles, status.name))
+    if (!traceEnded) { flushIrqs(cycles); writer.foreach(_.end(cycles, status.name)) }
     writer.foreach(_.close())
     val retired = if (backend == null) 0L else backend.retired
     val metrics = ujson.Obj()
@@ -265,6 +331,7 @@ class NaxAdapter extends CoreAdapter {
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize.toLong),
         "commit_source" -> "NaxriscvProbe",
+        "mmu_observations" -> (if (mmuLog.nonEmpty) ujson.Str("mmu-observations.jsonl") else ujson.Null),
         "generated_checks" -> checks.map { case (c, f) => ujson.Obj("captured" -> c, "fired" -> f.size,
           "firings" -> RvwJson.num(f.map(_._2).sum)) }.getOrElse(ujson.Null)), metrics)
   }

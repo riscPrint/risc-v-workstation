@@ -16,8 +16,8 @@ def check_walk(s, events):
     """
     from .mmu_paging import geometry
     g = geometry(s)
-    limit = 'successful immutable ' + s.get('mode', 'sv39') + ' mapping with preset A/D bits only'
-    if ('random_program' in s or 'pointer_mask' in s or 'guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
+    limit = 'successful immutable load/store ' + s.get('mode', 'sv39') + ' mapping with preset A/D bits only'
+    if (s.get('access') == 'fetch' or 'random_program' in s or 'pointer_mask' in s or 'guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
             or s.get('satp_mode', 'sv39') != 'sv39' or not s.get('mprv', True)
             or s.get('walk_deny') or s.get('mode_switch') or 'pbmt' in s or s.get('napot') or not {'A', 'D'} <= set(s['flags'])):
         return dict(status='inconclusive', reason=limit)
@@ -43,7 +43,7 @@ def check_walk(s, events):
             raise ValueError('observation cycles must be ordered')
         previous = cycle
         kind = event['kind']
-        if kind not in ('walk_request', 'walk_response', 'bus_a'):
+        if kind not in ('walk_request', 'walk_response', 'bus_a', 'memory_read'):
             continue
         address = number(event['address'])
         if kind == 'walk_request':
@@ -54,16 +54,18 @@ def check_walk(s, events):
         elif kind == 'walk_response':
             if address not in requests:
                 errors.append('PTE response has no preceding expected request')
+            elif event.get('fault', False):
+                errors.append('PTE response reports a fault')
             elif number(event['data']) != expected[address]:
                 errors.append('PTE response differs from declared table contents')
             else:
                 responses.add(address)
-        elif kind == 'bus_a':
+        elif kind in ('bus_a', 'memory_read'):
             size = event['size_log2']
             if type(size) is not int or not 0 <= size <= 6:
                 raise ValueError('unsupported TileLink size')
             # Get, AcquireBlock and AcquirePerm are possible cache paths.
-            if event['opcode'] in (4, 6, 7) and address <= physical < address + (1 << size):
+            if (kind == 'memory_read' or event['opcode'] in (4, 6, 7)) and address <= physical < address + (1 << size):
                 target = True
     status = 'mismatch' if errors else 'consistent' if responses == expected.keys() and target else 'inconclusive'
     return dict(status=status, scope=limit, errors=errors,

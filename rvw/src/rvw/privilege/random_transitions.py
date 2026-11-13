@@ -1,6 +1,6 @@
 """Seeded RV32/RV64 trap, delegation and return sequences."""
 import random
-from .programs import HEAD, tail
+from .programs import head, tail
 
 VERSION = 'privileged-20260120'
 
@@ -30,11 +30,19 @@ def programs(config):
         raise ValueError('seeds must be distinct nonnegative integers')
     if type(steps) is not int or not 1 <= steps <= 256:
         raise ValueError('steps must be between 1 and 256')
+    delegatable = options.get('delegatable_causes')
+    if delegatable is not None and (not isinstance(delegatable, list) or
+            any(type(c) is not int or not 0 <= c < 64 for c in delegatable) or
+            len(set(delegatable)) != len(delegatable)):
+        raise ValueError('delegatable_causes must be distinct exception codes from 0 to 63')
     rows = []
     for seed in seeds:
         sequence = plan(seed, steps, modes)
+        if delegatable is not None:
+            for step in sequence:
+                step['delegated'] = step['delegated'] and step['cause'] in delegatable
         bins = sorted({f"random.{s['mode']}.{s['operation']}.{'S' if s['delegated'] else 'M'}" for s in sequence})
-        code = HEAD
+        code = head(config)
         for i, step in enumerate(sequence):
             code += stage(i, step)
         code += f'step_{steps}:\n j pass\n' + tail(config)

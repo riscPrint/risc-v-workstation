@@ -62,9 +62,27 @@ root / Compile / sourceGenerators += Def.task {
   val wires = Seq("port.data", "csrAccess.write", "csrAccess.read",
     "trapWb.trap.tval", "ioBus.cmd.address", "ioBus.cmd.data", "ioBus.rsp.data",
     "lsuWb.address", "lsuWb.readData", "aguWb.data", "amoLoadWb.readData", "amoStoreWb.storeData")
-  val body = wires.foldLeft(body0.replace("commitRobToPcValue(i).toLong", "riscvsim.SimEncoding.longBits(commitWb.robToPc.pc(i))")) { (text, wire) =>
+  val body1 = wires.foldLeft(body0.replace("commitRobToPcValue(i).toLong", "riscvsim.SimEncoding.longBits(commitWb.robToPc.pc(i))")) { (text, wire) =>
     text.replace(wire + ".toLong", "riscvsim.SimEncoding.longBits(" + wire + ")")
   }
+  val body = body1
+    .replace("    var pc = -1l;", "    var pc = -1l;\n    var instruction = Option.empty[Long]\n    var mode = Option.empty[Int]\n    var physicalAddress = 0L")
+    .replace("  var cycleSinceLastCommit = 0", """  var trapValue = Option.empty[() => Long]
+  var instructionAt = Option.empty[Int => Long]
+  var modeAtAllocation = Option.empty[() => Int]
+  var virtualAddress = Option.empty[() => Long]
+  var currentInstruction = Option.empty[Long]
+  var currentMode = Option.empty[Int]
+  var currentPhysicalAddress = Option.empty[Long]
+  var cycleSinceLastCommit = 0""")
+    .replace("        ctx.pc = pc", "        ctx.pc = pc\n        ctx.instruction = instructionAt.map(f => f(i))\n        ctx.mode = modeAtAllocation.map(f => f())")
+    .replace("        backends.foreach(_.commit(hartId, robCtx.pc))", """        currentInstruction = robCtx.instruction
+        currentMode = robCtx.mode
+        currentPhysicalAddress = if (robCtx.loadValid || robCtx.storeValid) Some(robCtx.physicalAddress) else None
+        backends.foreach(_.commit(hartId, robCtx.pc))""")
+    .replace("val tval : Long = riscvsim.SimEncoding.longBits(trapWb.trap.tval)", "val tval : Long = trapValue.map(f => f()).getOrElse(riscvsim.SimEncoding.longBits(trapWb.trap.tval))")
+    .replace("      ctx.lsuAddress = riscvsim.SimEncoding.longBits(lsuWb.address)", """      ctx.physicalAddress = riscvsim.SimEncoding.longBits(lsuWb.address)
+      ctx.lsuAddress = virtualAddress.map(f => f()).getOrElse(ctx.physicalAddress)""")
   val out = (root / Compile / sourceManaged).value / "rvwnax" / "CommitProbe.scala"
   IO.write(out, header + body)
   Seq(out)

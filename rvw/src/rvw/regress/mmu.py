@@ -72,9 +72,16 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'guest_pointer', 'napot_remap', 'pointer_extension', 'pointer_controller', 'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'pmp_regions', 'guest_pointer', 'napot_remap', 'pointer_extension', 'pointer_controller', 'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
+    regions = s.get('pmp_regions', 1)
+    if type(regions) is not int or regions < 0:
+        raise ValueError('pmp_regions must be a nonnegative integer')
+    if regions == 0 and (s.get('walk_deny') or 'walk_deny_level' in s):
+        raise ValueError('walk denial requires PMP regions')
+    if regions == 0 and any(k in s for k in ('guest', 'guest_pointer', 'shootdown', 'atomic_ad', 'napot_remap')):
+        raise ValueError('pmp_regions=0 requires a base translation scenario')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
         raise ValueError('invalid scenario id')
     if type(s['level']) is not int or s['level'] not in range(g.levels):
@@ -406,6 +413,8 @@ trap:
         code = re.sub(r'\bld\b', 'lw', code)
         code = re.sub(r'\bsd\b', 'sw', code)
         code = code.replace('li t0, 0x2000000000000000\n csrs menvcfg, t0', 'li t0, 0x20000000\n csrs menvcfgh, t0')
+    if s.get('pmp_regions', 1) == 0:
+        code = code.replace(' li t0, -1\n csrw pmpaddr0, t0\n li t0, 15\n csrw pmpcfg0, t0\n', '', 1)
     return code
 
 
@@ -729,9 +738,8 @@ def report(directory, results, checked=None, protocol_config=None):
                 from .mmu_observe import check_walk, check_pma
                 from .mmu_protocol import configured_check
                 identity = events[0].get('identity', {})
-                bound = bool(identity.get('rtl_sha256')) and all(
-                    k in identity and identity[k] == raw.get(k)
-                    for k in ('core', 'config', 'elf_sha256', 'rtl_sha256', 'source', 'seed'))
+                from .mmu_walk import same_run
+                bound = same_run(identity, raw)
                 unbound = dict(status='inconclusive', reason='observation identity is not bound to C1')
                 # Keep bounded walk consistency separate from architectural coverage.
                 observed = dict(status='recorded', path=str(path), sha256=digest(path),
@@ -740,7 +748,8 @@ def report(directory, results, checked=None, protocol_config=None):
                     pma_check=check_pma(s, events[1:], (manifest.get("pma") or {}).get("regions")) if bound else unbound,
                     protocol_check=configured_check(events[1:], protocol_config) if bound else unbound,
                     counts={k: sum(e.get('kind') == k for e in events[1:])
-                            for k in ('walk_request', 'walk_response', 'bus_a')})
+                            for k in ('walk_request', 'walk_response', 'walk_retry', 'bus_a', 'memory_read')
+                            if k in ('walk_request', 'walk_response', 'bus_a') or any(e.get('kind') == k for e in events[1:])})
             from .mmu_walk import check_c2, scenario_accesses
             trace_name = run.artifacts.get('rvfi_trace')
             if trace_name and (run.path / trace_name).is_file():

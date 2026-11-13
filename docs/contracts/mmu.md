@@ -242,3 +242,22 @@ must exist in the selected page table. The first option invalidates its PTE.
 The second denies PMP reads of only that table page. Programs check the exact
 page/access fault, tval and PC. These fields require the matching fault
 expectation and exclude remapping and blanket walk denial.
+
+## Base translation without PMP
+
+A base translation scenario can set `pmp_regions` to zero. This removes only
+the initial allow-all PMP writes. The default is one. Page-walk denial still
+requires PMP. Extended scenarios do not accept this option.
+
+`rvw.mmu-observations/1` can carry `memory_read` events from an accepted native
+cache refill read. Each event has `cycle`, `address` and `size_log2`. This is
+an alternative to a TileLink read for the physical target witness. It does
+not identify the architectural access or prove TLB behavior. A PTE response
+with `fault: true` cannot count as a valid table read. Observation identity
+uses the same-run check. Added runner source fields are allowed. Changed
+source fields are rejected.
+
+The bounded PTE check covers load/store scenarios. Instruction-fetch streams
+can include speculative walks for other PCs. They stay inconclusive in this
+check. Their recorded walk events and strict retirement comparison remain
+separate evidence.

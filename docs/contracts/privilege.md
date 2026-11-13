@@ -472,3 +472,17 @@ The three bins describe program intent. A reference self-check pass gives
 no DUT credit. Native C1 and complete strict C2/2 comparison, including
 mstatus, fcsr and FP destinations, are separate evidence requirements.
 The slice does not test context save/restore, lower modes or migration.
+
+## Control programs without PMP
+
+For control, random-transition and scheduled-WFI programs, `pmp.entries: 0`
+omits the allow-all PMP bootstrap. The program body and trap checks remain
+the same. The default bootstrap is unchanged. This option does not enable
+the protection-region suite on a core without PMP.
+
+`random_transitions.delegatable_causes` can list the exception codes that
+MEDELEG can delegate on the selected platform. Codes must be distinct
+integers from 0 to 63. A generated transition outside this list still tests
+the same operation, cookie and mode. It routes the expected trap to M. The
+default selection is unchanged. This models declared WARL limits. It does
+not suppress a mismatch for a selected delegatable exception.

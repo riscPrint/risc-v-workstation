@@ -1030,3 +1030,12 @@ rvw/.venv/bin/python examples/naxriscv/rvw/arch/resource-study.py CALIBRATION_PL
 The receipts retain their hashes. Keep new output directories outside Git.
 Use each receipt's recorded engine revision for a historical reproduction.
 These commands do not rebuild RTL or select parameters from variant results.
+
+
+## RV64 supervisor suites
+
+The [supervisor campaign](rvw/supervisor/README.md) supplies capability
+selection, external corpus preparation, C1 suite entries, scheduled inputs
+and native page-walk observations for `rv64imasu`. It keeps the base project
+and its RV32 default unchanged. The measured MMU failures are in
+[FINDINGS.md](FINDINGS.md#rv64-sv39-functional-findings).

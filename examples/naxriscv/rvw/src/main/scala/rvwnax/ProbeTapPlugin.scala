@@ -1,6 +1,7 @@
 package rvwnax
 
 import spinal.core._
+import spinal.core.sim._
 import spinal.lib._
 import spinalprobes.Probe
 import naxriscv.Global
@@ -9,7 +10,7 @@ import naxriscv.{Frontend, ROB}
 import naxriscv.frontend.{DispatchPlugin, FrontendPlugin, RfAllocationPlugin}
 import naxriscv.lsu.DataCachePlugin
 import naxriscv.lsu2.Lsu2Plugin
-import naxriscv.misc.{CommitPlugin, RobPlugin}
+import naxriscv.misc.{CommitPlugin, RobPlugin, MmuPlugin, PrivilegedPlugin}
 import naxriscv.prediction.{BranchContextPlugin, Prediction}
 import naxriscv.utilities.Plugin
 
@@ -33,6 +34,12 @@ class ProbeTapPlugin extends Plugin {
   }
 
   val logic = create late new Area {
+    val c2Instructions = scala.collection.mutable.ArrayBuffer.empty[Bits]
+    var c2VirtualAddress = Option.empty[UInt]
+    var c2TrapEpc = Option.empty[UInt]
+    var c2TrapTvalWrite = Option.empty[Bool]
+    var c2TrapTval = Option.empty[Bits]
+    var mmuWalk = Option.empty[MmuWalkTap]
     val bcp = getService[BranchContextPlugin]
     // The learn values must be requested while this plugin holds the branch-context lock. Release
     // it before waiting on any other plugin, so the branch context builds with the pipeline.
@@ -119,8 +126,20 @@ class ProbeTapPlugin extends Plugin {
       // Pipeline view (Kanata): one instruction per ROB entry, from ROB allocation (rename,
       // the first stage) through dispatch, issue, operand read/execute, completion and commit.
       // A commit-time reschedule flushes every younger entry, and the entry itself on a trap.
+      val privileged = getService[PrivilegedPlugin]
+      c2TrapTvalWrite = Some(CombInit(privileged.logic.get.fsm.isActive(privileged.logic.get.fsm.TVAL_WRITE) &&
+        privileged.setup.get.ramWrite.valid && privileged.setup.get.ramWrite.ready)
+        .setName("rvw_c2_trap_tval_write").simPublic())
+      c2TrapTval = Some(CombInit(privileged.setup.get.ramWrite.data)
+        .setName("rvw_c2_trap_tval").simPublic())
+      c2TrapEpc = Some(CombInit(privileged.logic.get.reschedule.epc)
+        .setName("rvw_c2_trap_epc").simPublic())
       val cols = ROB.COLS
       val allocated = setup.get.frontend.pipeline.allocated
+      for (i <- 0 until cols) c2Instructions += CombInit(allocated(Frontend.MICRO_OP, i))
+        .setName(s"rvw_c2_instruction_$i").simPublic()
+      c2VirtualAddress = Some(CombInit(lsu.logic.get.sharedPip.cacheRsp.stage(lsu.keys.ADDRESS_PRE_TRANSLATION))
+        .setName("rvw_c2_virtual_address").simPublic())
       val dispatch = getService[DispatchPlugin].logic.get.push.stage
       for (i <- 0 until cols) {
         Probe.stageAt(s"rename_$i", "Rn", allocated.isFireing && allocated(Frontend.DISPATCH_MASK, i),
@@ -137,6 +156,7 @@ class ProbeTapPlugin extends Plugin {
       for ((port, i) <- getService[RobPlugin].logic.get.whitebox.completionsPorts.zipWithIndex)
         Probe.stageAt(s"complete_$i", "Wb", port.valid, port.payload.id)
       Probe.flushYounger("reschedule", wb.reschedule.valid, wb.reschedule.robId, wb.reschedule.skipCommit)
+      mmuWalk = getServicesOf[MmuPlugin].headOption.map(new MmuWalkTap(_))
 
     }
   }
@@ -158,4 +178,15 @@ class ProbeTapPlugin extends Plugin {
       Probe.counter("cond_taken", learn && ctx.taken)
     }
   }
+}
+
+
+/** Samples the MMU's own cache-load port. A redo is a retry, not a returned PTE. */
+class MmuWalkTap(mmu: MmuPlugin) extends Area {
+  val command = CombInit(mmu.setup.get.cacheLoad.cmd.fire).setName("rvw_ptw_command").simPublic()
+  val address = CombInit(mmu.setup.get.cacheLoad.cmd.virtual).setName("rvw_ptw_address").simPublic()
+  val response = CombInit(mmu.logic.get.refill.load.rsp.valid).setName("rvw_ptw_response").simPublic()
+  val retry = CombInit(mmu.logic.get.refill.load.rsp.redo).setName("rvw_ptw_retry").simPublic()
+  val fault = CombInit(mmu.logic.get.refill.load.rsp.fault).setName("rvw_ptw_fault").simPublic()
+  val data = CombInit(mmu.logic.get.refill.load.readed).setName("rvw_ptw_data").simPublic()
 }
