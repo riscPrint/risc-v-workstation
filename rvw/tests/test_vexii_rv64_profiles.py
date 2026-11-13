@@ -24,3 +24,14 @@ def test_rv64_profiles_keep_machine_and_supervisor_platforms_separate():
         assert suite['configs'] == [config]
         assert '^rv64ui-p-ma_data$' in suite['exclude']
 
+
+
+def test_machine_plan_excludes_paging_and_pmp():
+    from rvw.regress.commands.applicability import plan
+    rows = plan(ROOT / 'rvw/features64m.json')['suites']
+    selected = {row['name'] for row in rows if row['applicable']}
+    assert {'lrsc-rv64', 'amo-rv64', 'fence-rv64', 'fence-i-rv64'} <= selected
+    assert not any(name.startswith('mmu-') for name in selected)
+    assert 'pmp' not in selected
+    assert 'privilege-controls' not in selected
+    assert 'amo-fault-rv64' not in selected

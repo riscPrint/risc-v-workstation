@@ -1,0 +1,65 @@
+{
+  "schema": "rvw.regress-cosim/1",
+  "run": "$CHECKOUT/rvw/out/rv64m-ordering",
+  "platform": "$CHECKOUT/examples/vexiiriscv/rvw/platform64m.json",
+  "model": "spike",
+  "allow_sync": [],
+  "counts": {
+    "match": 4,
+    "fail": 1
+  },
+  "suites": {
+    "ordering": {
+      "match": 4,
+      "fail": 1
+    }
+  },
+  "rows": [
+    {
+      "suite": "ordering",
+      "test": "amo-1",
+      "c1_status": "pass",
+      "cycles": 15990,
+      "instret": 4158,
+      "status": "match",
+      "synchronized": 0
+    },
+    {
+      "suite": "ordering",
+      "test": "amo-fault-1",
+      "c1_status": "fail",
+      "cycles": 105,
+      "instret": 15,
+      "status": "fail",
+      "reason": "tohost = 0x3"
+    },
+    {
+      "suite": "ordering",
+      "test": "fence-1",
+      "c1_status": "pass",
+      "cycles": 1294,
+      "instret": 401,
+      "status": "match",
+      "synchronized": 0
+    },
+    {
+      "suite": "ordering",
+      "test": "fence-i-1",
+      "c1_status": "pass",
+      "cycles": 1035,
+      "instret": 246,
+      "status": "match",
+      "synchronized": 0
+    },
+    {
+      "suite": "ordering",
+      "test": "lrsc-1",
+      "c1_status": "pass",
+      "cycles": 821,
+      "instret": 249,
+      "status": "match",
+      "synchronized": 0
+    }
+  ],
+  "scope": "Fresh machine-mode RTL run. Four selected families match strictly. The exploratory PMP-only AMO-fault failure is excluded by the machine plan."
+}

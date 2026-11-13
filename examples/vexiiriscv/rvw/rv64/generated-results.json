@@ -1,0 +1,58 @@
+{
+  "scope": "Retained supervisor RTL campaign, not rerun in this item. Strict reference counts exclude IRQ-synchronized cases.",
+  "c1_counts": {
+    "pass": 459,
+    "fail": 11
+  },
+  "strict_spike_counts": {
+    "match": 456,
+    "fail": 11,
+    "mismatch": 3
+  },
+  "families": {
+    "faultwalk": {
+      "match": 9,
+      "fail": 9
+    },
+    "mmu": {
+      "match": 143,
+      "fail": 2
+    },
+    "mmu-random": {
+      "match": 2
+    },
+    "ordering": {
+      "match": 5
+    },
+    "pmp": {
+      "match": 264
+    },
+    "privilege": {
+      "match": 30
+    },
+    "scheduled-wfi-11-0": {
+      "mismatch": 1
+    },
+    "scheduled-wfi-11-1": {
+      "match": 1
+    },
+    "scheduled-wfi-3-0": {
+      "mismatch": 1
+    },
+    "scheduled-wfi-3-1": {
+      "match": 1
+    },
+    "scheduled-wfi-7-0": {
+      "mismatch": 1
+    },
+    "scheduled-wfi-7-1": {
+      "match": 1
+    }
+  },
+  "c1_sha256": "7ae2e2958c489c9fca1b4556e3d5279f90e85a2a99f9edf1b64473559294768b",
+  "comparison_sha256": "5f9a5401ccab885449ef639548454e950da2e2db384981108e0b7c967c28a4cc",
+  "triage": {
+    "11 C1 failures": "documented PTW PMP core defect; findings/ptw-pmp",
+    "3 strict Spike differences": "disabled interrupt reads mip while external input is asserted; require allow-sync irq; not strict matches"
+  }
+}
