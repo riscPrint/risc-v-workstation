@@ -26,6 +26,7 @@ def execute_json(*, trace, core=None, platform=None, project=None, strict=False)
             counts = {}
             instructions = 0
             complete = False
+            completed_harts = set()
             interrupt_traps = 0
             for row in t:
                 kind = row.get('event', 'retirement')
@@ -33,6 +34,10 @@ def execute_json(*, trace, core=None, platform=None, project=None, strict=False)
                 instructions += kind == 'retirement'
                 interrupt_traps += kind == 'trap' and row.get('intr', False)
                 complete |= kind == 'end'
+                if kind == 'hart_end':
+                    completed_harts.add(row['hart'])
+            if t.multihart:
+                complete = completed_harts == set(h['harts'])
         finally:
             t.close()
         caps = h.get('capabilities', ['multihart'] if t.multihart else ['state'])
