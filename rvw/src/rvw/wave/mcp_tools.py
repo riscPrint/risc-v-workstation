@@ -140,6 +140,16 @@ def _diff(wave, other, signals=None, t0=None, t1=None, offset=0, map=None, on_cl
                 offset, clock if on_clock else None, tuple(map.split("=", 1)) if map else None, limit, not all)
 
 
+def _session_save(out, wave, db=None, signals=None, cursors=None, queries=None, artifacts=None, note=None):
+    from .session import save
+    return save(out, wave, db, signals, cursors, queries, artifacts, note)
+
+
+def _session_open(session, root=None):
+    from .session import open_session
+    return open_session(session, root)
+
+
 def mcp_tools():
     return [
         ToolSpec("wave_info", "Inspect timescale, signal count, time range and clock period of a waveform.",
@@ -187,6 +197,15 @@ def mcp_tools():
                          "align": {**S, "description": "event expression: compare the k-th clock edge where it holds in A and B"},
                          "align_b": {**S, "description": "event expression in B when it differs"}},
                         ["wave", "other"]), _indexed(_diff), annotations=RO),
+        ToolSpec("wave_session_save", "Write a portable debug session: signals (regexes resolved now), cursor times, "
+                 "embedded saved queries and the SHA-256 identity of the wave, database and other artifacts.",
+                 schema({"out": S, "wave": WAVE["wave"], "db": S, "signals": {"type": "array", "items": S},
+                         "cursors": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+                         "queries": {"type": "array", "items": S}, "artifacts": {"type": "array", "items": S},
+                         "note": S}, ["out", "wave"]), _session_save),
+        ToolSpec("wave_session_open", "Open a debug session: locate each artifact (recorded path, or under the session "
+                 "directory or root), verify SHA-256, and report missing or changed artifacts and signals.",
+                 schema({"session": S, "root": S}, ["session"]), _session_open, annotations=RO),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
                          "reader": {"enum": ["auto", "vcd", "wellen"], "default": "auto"}}, ["wave", "out"]), _index),

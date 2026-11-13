@@ -137,6 +137,25 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--limit", type=int, default=50, help="signals to list (default 50)")
     q.set_defaults(func=_diff)
 
+    q = w.add_parser("session", help="save or open a portable debug session (signals, cursors, queries, artifacts)")
+    ss = q.add_subparsers(dest="session_cmd", required=True)
+    q = ss.add_parser("save", help="write a session file bound to artifact SHA-256 hashes")
+    q.add_argument("out")
+    q.add_argument("--wave", required=True)
+    q.add_argument("--db", help="design database to bind")
+    q.add_argument("--signal", action="append", default=[], help="signal regex to keep (repeat)")
+    q.add_argument("--cursor", action="append", type=int, default=[], help="cursor time (repeat)")
+    q.add_argument("--query", action="append", default=[], help="saved *.rvwq.json query to embed (repeat)")
+    q.add_argument("--artifact", action="append", default=[], help="another file to bind (repeat)")
+    q.add_argument("--note")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_session_save)
+    q = ss.add_parser("open", help="locate and verify a session's artifacts; report missing or changed ones")
+    q.add_argument("session")
+    q.add_argument("--root", help="directory to search for moved artifacts")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_session_open)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -371,6 +390,42 @@ def _diff(a):
         if r.get('only_in_a_count'):
             print(f"# {r['only_in_a_count']} signals only in A")
     return 0 if r['status'] == 'match' else 1
+
+
+def _session_save(a):
+    from .session import save
+    try:
+        r = save(a.out, a.wave, a.db, a.signal, a.cursor, a.query, a.artifact, a.note)
+        if a.json:
+            jsonout.write(r)
+        else:
+            print(f"wrote {a.out}: {len(r['artifacts'])} artifacts, {len(r['signals'])} signals")
+        return 0
+    except (WaveError, CaptureError, jsonout.JsonOutputError) as e:
+        if a.json:
+            jsonout.write({'error': str(e)})
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2
+
+
+def _session_open(a):
+    from .session import open_session
+    try:
+        r = open_session(a.session, a.root)
+        if a.json:
+            jsonout.write(r)
+        else:
+            print(f"# session {r['status']}")
+            for k, v in r['artifacts'].items():
+                print(f"{k}: {v['status']} {v.get('path') or v.get('recorded')}")
+            if r['missing_signals']:
+                print(f"missing signals: {', '.join(r['missing_signals'])}")
+        return 0 if r['status'] == 'complete' else 1
+    except (WaveError, CaptureError, jsonout.JsonOutputError) as e:
+        if a.json:
+            jsonout.write({'error': str(e)})
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2
 
 
 def _why(a):

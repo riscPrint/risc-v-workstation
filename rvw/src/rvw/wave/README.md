@@ -122,6 +122,22 @@ index and both times. A run with fewer events is `diverged` with that cause. Use
 compare runs with different timing (two configurations, a fix, another core). Equal events
 do not prove equal timing.
 
+## Debug sessions
+
+```sh
+rvw wave session save S.json --wave run/wave.vcd [--db design.db] [--signal RX ...] \
+  [--cursor T ...] [--query q.rvwq.json ...] [--artifact FILE ...] [--note TEXT]
+rvw wave session open S.json [--root DIR]     # exit 1 when incomplete
+```
+
+A session (`rvw.debug-session/1`) keeps the selected signals (regexes resolved when saved),
+cursor times, embedded saved queries and the path, size and SHA-256 of the wave, the database,
+an adjacent C1 `result.json` and other bound files. `open` looks for each artifact at its
+recorded path, then by its last one to three path parts under `--root` and the session's
+directory. Each artifact is `ok`, `changed` (other SHA-256) or `missing`; signals absent from the
+found wave are listed. The status is `complete` only when everything matches. Hashing reads each
+artifact once. MCP: `wave_session_save`, `wave_session_open`.
+
 Python API (used by `rvw bundle`): `rvw.wave.ops.{list_signals, changes, changes_page, sample, sample_raw,
 cut, info, detect_period}` (`changes` has no default limit; `changes_page` has the CLI's).
 

@@ -1665,6 +1665,15 @@ and exits. Diagnostic readiness does not imply a gate accept or native flow qual
 `uncertain_items` and `basis`. `effect.status` is `not_measured` or `measured` (whole change).
 A covering selection is a coverage claim on the base revision, not a gate verdict.
 
+## Debug session (`rvw.debug-session/1`)
+
+`rvw wave session save` writes JSON with `schema`, `artifacts` (map of role to `path`, `name`,
+`size`, `sha256`; roles `wave`, `database`, `result`, `extraN`), `signals` (full wave names),
+`cursors` (sorted non-negative wave times), `queries` (embedded `rvw.wave-query/1` objects as
+saved) and `note`. `session open` returns `status` (`complete` or `incomplete`), per-role
+`artifacts` status (`ok`, `changed`, `missing`), `missing_signals`, and the saved fields. A
+session binds file bytes only; it is not a run identity or verdict.
+
 ## Wave index (`rvw.wave-index/1`)
 
 `rvw wave index INPUT -o SNAPSHOT.rvwi` publishes an explicit SQLite snapshot.
