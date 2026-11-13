@@ -1,4 +1,4 @@
-"""Literal domain/isolation UPF subset. No Tcl interpreter is invoked."""
+"""Literal sampled UPF safety subset. No Tcl interpreter is invoked."""
 import hashlib
 import json
 import re
@@ -9,7 +9,7 @@ RTL = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 
 
 def parse(source):
-    domains, strategies, retention, psts = {}, {}, {}, {}
+    domains, strategies, retention, psts, switches = {}, {}, {}, {}, {}
     version = None
     source = source.replace('\\\n',' ')
     for number,line in enumerate(source.splitlines(),1):
@@ -35,6 +35,10 @@ def parse(source):
             if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_./]*|\.',p) for p in opts['-elements'].split()):
                 raise ValueError('unsupported domain element pattern')
             domains[name]=dict(elements=opts['-elements'].split())
+        elif command=='create_power_switch':
+            from .upf_switches import parse as parse_switch
+            if name in switches: raise ValueError('duplicate power switch')
+            switches[name]=parse_switch(name,opts,domains)
         elif command=='create_pst':
             if set(opts)!={'-supplies'} or name in psts:
                 raise ValueError('power-state table requires unique name and supplies')
@@ -76,7 +80,7 @@ def parse(source):
             raise ValueError(f'unsupported UPF command {command}')
     if not domains:
         raise ValueError('declare at least one power domain')
-    return dict(schema='rvw.upf-subset/1',upf_version=version,domains=domains,isolation=strategies,retention=retention,psts=psts)
+    return dict(schema='rvw.upf-subset/1',upf_version=version,domains=domains,isolation=strategies,retention=retention,psts=psts,switches=switches)
 
 
 def render(width, clamp, sense):
@@ -103,7 +107,7 @@ def generate(source, bindings, out):
     raw=Path(source).read_bytes()
     obj=parse(raw.decode())
     binding=json.loads(Path(bindings).read_text())
-    if set(binding)-{'schema','top','event_model','domains','retention','psts'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
+    if set(binding)-{'schema','top','event_model','domains','retention','psts','switches'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
         raise ValueError('require rvw.upf-bindings/1 and always_on_sampled event model')
     if not IDENT.fullmatch(binding['top']): raise ValueError('invalid bind top')
     if set(binding['domains'])!=set(obj['domains']): raise ValueError('bind every declared power domain')
@@ -171,15 +175,19 @@ def generate(source, bindings, out):
         monitors.append('module '+module+'(input clk, reset, '+', '.join(declarations)+');\n'+
                         'always @(posedge clk) if(!reset) assert('+' || '.join(tuples)+');\nendmodule\n')
         binds.append('bind '+binding['top']+' '+module+' '+module+'_instance('+', '.join('.'+k+'('+v+')' for k,v in ports.items())+');')
+    from .upf_switches import generate as generate_switches
+    switch_sources,switch_binds=generate_switches(obj['switches'],binding.get('switches',{}),binding['top'])
+    monitors.extend(switch_sources);binds.extend(switch_binds)
     report=dict(schema='rvw.upf-generation/1',status='generated' if binds else 'no_checks',
                 source_sha256=hashlib.sha256(raw).hexdigest(),
                 bindings_sha256=hashlib.sha256(Path(bindings).read_bytes()).hexdigest(),intent=obj,
                 event_model='always_on_sampled',
-                unmonitored_domains=sorted(set(obj['domains'])-{s['-domain'] for s in [*obj['isolation'].values(),*obj['retention'].values()]}),
-                limits=['Only literal domains, output isolation and explicit sampled retention are supported.',
+                unmonitored_domains=sorted(set(obj['domains'])-{s['-domain'] for s in [*obj['isolation'].values(),*obj['retention'].values(),*obj['switches'].values()]}),
+                limits=['Literal domains, isolation, retention, supply tables and single-control switches are supported.',
                         'Bindings declare observed outputs and supply availability; completeness is not established.',
                         'Retention supplies are named, not modeled; save/restore are sampled levels while power is on.',
                         'Supply tables check sampled declared state codes; no voltage or transition semantics are inferred.',
+                        'Power-switch checking uses declared sampled settle bounds; no physical power behavior is inferred.',
                         'Clock gating import, edge controls and Tcl evaluation are unsupported.',
                         'No compilation, simulation, proof or physical power analysis was run.'])
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
