@@ -31,7 +31,11 @@ object CsrChecksRuntime {
     var campaignFailed = false
     val (config, checks) = SpinalChecks.install(VexiiTop.spinalConfig.copy(targetDirectory = new File(out,"rtl").getPath,
       debugComponents = scala.collection.mutable.HashSet[Class[_]](classOf[VexiiRiscv])),
-      ChecksConfig(mode = Mode.Both, enable = if (allChecks) Seq("*") else Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
+      ChecksConfig(mode = Mode.Both,
+        streamCancellations = if (allChecks) Seq(StreamCancelBinding(
+          "PcPlugin_logic_harts_0_output", "PcPlugin_logic_harts_0_holdReg", false,
+          "PcPlugin.scala:88-97 withdraws the PC offer on registered hold; pre-edge wave windows 760-780 and 1260-1280 ps")) else Nil,
+        enable = if (allChecks) Seq("*") else Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
     def design(): VexiiRiscv = {
       val plugins = VexiiTop.param("rv32im").plugins()
       plugins += new TrapTapPlugin
@@ -43,8 +47,10 @@ object CsrChecksRuntime {
       config.includeFormal.generateVerilog(design())
       return
     }
-    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native")
-      .withVerilator.addSimulatorFlag("--assert").compile(design())
+    val sim = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native")
+      .withVerilator.addSimulatorFlag("--assert")
+    if (sys.env.get("RVW_CHECKS_WAVE").contains("1")) sim.withWave
+    val compiled = sim.compile(design())
     require(checks.inserted.count(_.kind == "csr.read") == 1)
     for ((path,index) <- args.drop(3).zipWithIndex) {
       val elf = ElfFile(path)
@@ -54,7 +60,7 @@ object CsrChecksRuntime {
       def word(address: Long, bytes: Int): BigInt = (0 until bytes).foldLeft(BigInt(0))((v,i) =>
         v | (BigInt(memory.getOrElse(address+i,0)) << (8*i)))
       val host = new ToHost(ToHost.find(elf).get,4)
-      compiled.doSim(name=s"program_$index") { dut =>
+      compiled.doSim(name=s"program_$index", seed = 17) { dut =>
         val cd=dut.clockDomain
         val priv=dut.host[PrivilegedPlugin].logic.harts(0)
         val tap=dut.host[TrapTapPlugin].logic

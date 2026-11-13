@@ -468,12 +468,13 @@ unbounded proof was obtained. The other checks remain unproven.
 | Design | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
 | VexRiscv | 57 | 57 | 0 | 1 | 0 / 0 | 0; native bindings present |
-| VexiiRiscv | 25 | 25 | 0 | 1 | 1 / 2 | 0; native bindings present |
+| VexiiRiscv | 25 | 25 | 0 | 1 | 0 / 0 | 0; native bindings present |
 | Composed RV32 stub SoC | 17 | 17 | 0 | 1 | 0 / 0 | 0; native bindings present |
 
 VexRiscv passed 49 aligned ISA programs with 49 C1 passes. VexiiRiscv ran two
-CSR programs. The absent-CSR program has an open PC-stream valid-hold finding,
-so its C1 result is fail. The composed SoC passed hello with UART output checked.
+CSR programs. Both have C1 passes after an exact PC hold cancellation binding.
+The two original valid-hold firings are retained as tool false positives with
+wave windows. The composed SoC passed hello with UART output checked.
 Its core is a limited instruction stub. These results do not qualify whole cores,
 all CSR addresses, all peripherals, or all protocol behavior.
 

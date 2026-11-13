@@ -423,10 +423,13 @@ directory. Native RTL identity and C1 capture still run on every launch.
 Set `RVW_CHECKS_ISA=1` on `rvwvexii.CsrChecksRuntime` to include all available
 generated rules and write C1 records beside the check observations. The recorded
 capture uses core revision `9b63f47fe559dbba7874af9196746412fa1294c1`.
-It generated and bound 25 checks. Scratch passed with no firings. The absent-CSR
-program fired `stream.valid_hold:PcPlugin_logic_harts_0_output` twice. Its C1
-result is fail and its disposition remains open. One external fetch-command
-check passed BMC through depth 4. No activation or unbounded proof was measured.
+It generated and bound 25 checks. Both scratch and absent-CSR programs passed
+with zero firings after the source-reviewed PC hold cancellation binding.
+The original two PC valid-hold firings were tool false positives. The PC offer
+can be withdrawn on registered hold. See the retained [wave windows](checks-evidence/pc-hold-wave.json).
+Set `RVW_CHECKS_WAVE=1` to retain waves from this runtime. Runs use seed 17.
+One external fetch-command check passed BMC through depth 4 in the earlier
+capture. No activation or unbounded proof was measured.
 See [the record](checks-qualification.json). Set `RVW_CHECKS_FORMAL=1` as well
 to emit formal RTL without simulating. This opt-in path keeps the default adapter.
 
