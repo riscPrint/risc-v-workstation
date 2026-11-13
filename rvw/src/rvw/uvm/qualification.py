@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 from rvw.results import load_results
+from rvw.common.verdicts import producer_verdict
 
 
 def generate(cpu_results, probes, out):
@@ -27,11 +28,14 @@ def generate(cpu_results, probes, out):
         'spike_csr_fault_detection':'CSR snapshot corruption must fail'}
     for name in required:
         rows=[r for r in cpu.tests if r.id==name]
-        status='checked' if rows and all(r.status=='pass' for r in rows) else 'not established'
+        status='checked' if rows and all(r.conclusive and producer_verdict(dict(r.extra,status=r.status))=='pass' for r in rows) else 'not established'
         lines.append(f'| {name} | {len(rows)} | {status} | {scopes[name]} |')
     for name in ('randc','transition'):
         rows=[r for r in measured.get('probes',[]) if r['feature']==name]
         status=rows[0]['status'] if len(rows)==1 else 'not established'
+        if len(rows)==1 and status in ('pass','checked','proven','match','accept'):
+            if rows[0].get('ignored_feature_warning') or producer_verdict(rows[0])!='pass':
+                status='not established'
         if rows and rows[0].get('ignored_feature_warning'):
             status+='; ignored-feature warning'
         workaround=('use pyuvm observed bins and rvw cov functional; do not infer transition coverage from compilation'

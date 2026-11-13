@@ -30,6 +30,8 @@ def bundle(plan, root):
 
 
 def local(model, out, *, workers=1, **unused):
+    if not model.get('properties'):
+        raise ValueError('grid needs properties')
     if workers < 1:
         raise ValueError('positive workers required')
     out = Path(out)

@@ -135,3 +135,7 @@ template, link script and Spike platform; RTL is not needed), `template`,
 `long`). The `rvw.sec/1` report (`technique` `model-precheck`) records each
 case's `predicted_cycles` and rule latencies, and `evidence` states that it is
 a model prediction, not RTL evidence.
+
+## Missing evidence and positive results
+
+Security suite completion requires conclusive child outcomes and complete evidence. Canonical verdicts must agree with technique status. A selected observer needs reference retirements in both runs. Missing observer data yields `inconclusive`. A conclusive violation remains a failure even when another technique is incomplete.

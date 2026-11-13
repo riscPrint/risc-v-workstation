@@ -16,6 +16,8 @@ from .grid_adapter import identity
 
 
 def distributed(model, hosts, out, *, timeout=60, **settings):
+    if not model.get('properties'):
+        raise ValueError('grid needs properties')
     is_rtl = model.get('input_kind') == 'rtl'
     if not is_rtl:
         validate(model)
