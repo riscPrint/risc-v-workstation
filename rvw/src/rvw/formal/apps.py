@@ -101,11 +101,24 @@ def generate(plan, prop):
                  f' if ({reset}) begin rvwa_model <= {width}\'d{initial}; rvwa_valid <= 1; end',
                  f' else if ({write}) rvwa_model <= {update}; end']
         assertion = f'!rvwa_valid || ({state} == rvwa_model)'
-    elif kind in ('deadlock', 'livelock'):
+    elif kind in ('deadlock', 'livelock', 'arbiter_starvation', 'handshake_progress'):
         bound = prop['bound']
         if type(bound) is not int or not 1 <= bound <= 65535:
             raise ValueError('progress bound must be 1..65535')
-        pending, progress = expr(prop['pending']), expr(prop['progress'])
+        if 'fairness' in prop:
+            raise ValueError('fairness requires a general liveness engine; bounded progress does not model it')
+        if kind == 'arbiter_starvation':
+            request, grant = signal(prop['request']), signal(prop['grant'])
+            if ports[request]['width'] != 1 or ports[grant]['width'] != 1:
+                raise ValueError('arbiter request and grant must be one bit')
+            pending, progress = request, grant
+        elif kind == 'handshake_progress':
+            valid, ready = signal(prop['valid']), signal(prop['ready'])
+            if ports[valid]['width'] != 1 or ports[ready]['width'] != 1:
+                raise ValueError('handshake valid and ready must be one bit')
+            pending, progress = f'{valid} && !{ready}', f'{valid} && {ready}'
+        else:
+            pending, progress = expr(prop['pending']), expr(prop['progress'])
         body += [f'reg [{bound.bit_length()}:0] rvwa_age = 0;',
                  f'always @(posedge {clock}) begin',
                  f' if ({reset} || !({pending}) || ({progress})) rvwa_age <= 0;',
@@ -118,6 +131,10 @@ def generate(plan, prop):
     elif kind == 'entropy':
         from .security.entropy import generate as entropy_monitor
         extra, assertion = entropy_monitor(prop, ports, signal, clock, reset)
+        body.extend(extra)
+    elif kind in ('onehot', 'mutex', 'array_bound', 'arithmetic_overflow', 'toggle', 'fifo'):
+        from .app_monitors import generate as monitor
+        extra, assertion = monitor(prop, ports, signal, expr, clock, reset)
         body.extend(extra)
     elif kind == 'unr':
         assertion = f'!({expr(prop["target"])})'
@@ -150,6 +167,9 @@ def run(args):
     ids = [ident(p['id']) for p in properties]
     if not ids or len(set(ids)) != len(ids):
         raise ValueError('properties need unique stable IDs')
+    waivers = plan.get('waivers', {})
+    if not isinstance(waivers, dict) or set(waivers) - set(ids) or any(not isinstance(reason, str) or not reason.strip() for reason in waivers.values()):
+        raise ValueError('waivers need known property IDs and nonempty reasons')
     # Validate all rows before launching a solver.
     wrappers = [generate(plan, p) for p in properties]
     out = Path(args.out).resolve()
@@ -167,6 +187,10 @@ def run(args):
     common.write_json(out / 'spec.json', plan)
     rows = []
     for prop, text in zip(properties, wrappers):
+        if prop['id'] in waivers:
+            rows.append({'property_id': prop['id'], 'kind': prop['kind'], 'status': 'waived',
+                         'reason': waivers[prop['id']], 'proof_kind': 'none'})
+            continue
         wrapper = out / (prop['id'] + '.sv')
         wrapper.write_text(text)
         result = flow([*files, wrapper], 'rvwa_top', plan['clock'], plan['reset'],
@@ -175,15 +199,19 @@ def run(args):
         rows.append({'property_id': prop['id'], 'requirement_ids': prop.get('requirement_ids', []),
                      'kind': prop['kind'], 'status': result['status'],
                      'proof_kind': result['proof_kind'], 'result': f'{prop["id"]}/result.json',
-                     'activation': 'not_measured', 'proof_core': 'unavailable'})
+                     'activation': 'not_measured', 'proof_core': 'unavailable',
+                     'depth': result.get('depth'), 'module': prop.get('module', plan['top']),
+                     'origin': prop.get('origin', 'hand_written'), 'source': prop.get('source')})
         from .automonitors import observation
         rows[-1]['observation'] = observation(prop['kind'], result)
     status = 'fail' if any(r['status'] == 'fail' for r in rows) else (
         'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive')
-    if any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code') for p in properties):
+    if all(r['status'] == 'waived' for r in rows):
+        status = 'no_checks'
+    if status != 'no_checks' and any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle') for p in properties):
         status = 'inconclusive'  # Reachability targets use assertion failures as observations.
     report = {'schema': 'rvw.formal-app-results/1', 'status': status, 'properties': rows,
-              'limits': 'Reviewed port map; no SpinalDB resolution. Progress is a bounded response contract, '
+              'limits': 'Reviewed port map. Progress is a bounded response contract, '
                         'not general liveness. No activation or solver core claim. UNR app results do not '
                         'authorize exclusions; use rvw cov prove for guarded exclusion export.'}
     common.write_json(out / 'result.json', report)

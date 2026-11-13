@@ -216,7 +216,7 @@ def mcp_tools():
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
         ToolSpec("formal_autocheck", "Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.",
-                 schema({"manifest": S, "out": S, "max_properties": I, "depth": I,
+                 schema({"manifest": S, "out": S, "db": S, "kind": {"type": "array", "items": S}, "max_properties": I, "depth": I,
                          "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0},
                          "mode": {**S, "enum": ["bmc", "prove"]}, "xprop": B}, ["manifest", "out"]),
                  _runner("autocheck"), long=True),

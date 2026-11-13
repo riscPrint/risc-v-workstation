@@ -4195,6 +4195,24 @@ checker scheduling extensions remain unsupported.
 
 
 
+
+### Database autocheck candidates
+
+`rvw.autocheck/1` can supply semantic `contracts`, `toggle` and a `waivers` map
+from property ID to reason. Database mode derives ports, complete output enum
+state and transition targets, simple arithmetic candidates and exposed memory
+address candidates. `rvw.formal-app-results/1` can include `database` diagnostics
+and `database_capture`. Skipped extraction is explicit. Waived property rows use
+`status=waived`, `proof_kind=none` and a reason. An all-waived result has
+`status=no_checks`. No waiver is a proof or a coverage exclusion. `toggle`
+assertion failure means a transition was reached. Bounded non-observation is
+not unreachability. FIFO contracts use accepted events and a combinational read
+interface without empty fall-through. They are safety checks, not liveness.
+Generated app properties can retain `module`, `origin=generated` and `source`
+with the database's Spinal file and line. The testplan reader also accepts an
+app `spec.json` inventory and captures its existing per-property C7 results.
+Missing results are not run. Waived entries remain waived.
+
 ### Captured-model solver cores
 
 `rvw.solver-core/1` can contain `bounded_model` with `top`, `depth` and `scope`.

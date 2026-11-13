@@ -920,9 +920,11 @@ usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
 ### `rvw formal autocheck`
 
 ```text
-usage: rvw formal autocheck [-h] --out OUT [--max-properties MAX_PROPERTIES]
-    [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] [--mode {bmc,prove}]
-    [--xprop] [--json] [--project PROJECT] manifest
+usage: rvw formal autocheck [-h] --out OUT [--db DB] [--kind
+    {stuck_at,toggle,fsm_state,fsm_transition,dead_code,onehot,mutex,array_bound,arithmetic_overflow,fifo,deadlock,livelock,arbiter_starvation,handshake_progress}]
+    [--max-properties MAX_PROPERTIES] [--depth DEPTH] [--engine ENGINE]
+    [--timeout TIMEOUT] [--mode {bmc,prove}] [--xprop] [--json] [--project
+    PROJECT] manifest
 ```
 
 ### `rvw formal bench`
@@ -2505,7 +2507,7 @@ Starts a background job: yes.
 
 Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.
 
-Arguments: `manifest` (required), `out` (required), `max_properties`, `depth`, `engine`, `timeout`, `mode`, `xprop`.
+Arguments: `manifest` (required), `out` (required), `db`, `kind`, `max_properties`, `depth`, `engine`, `timeout`, `mode`, `xprop`.
 
 Starts a background job: yes.
 

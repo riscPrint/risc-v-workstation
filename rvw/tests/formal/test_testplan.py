@@ -50,3 +50,18 @@ def test_cli_capture_and_outputs(tmp_path):
     assert run(Namespace(manifest=str(path), out=str(out), json=False)) == 1
     assert (out / 'report.html').exists()
     assert json.loads((out / 'result.json').read_text())['input_capture']
+
+
+def test_generated_app_spec_is_an_inventory(tmp_path):
+    spec = {'schema': 'rvw.formal-apps/1', 'top': 'Top', 'properties': [
+        {'id': 'generated_check', 'module': 'Top', 'origin': 'generated', 'source': {'file': 'Top.scala', 'line': 9}}]}
+    path = tmp_path / 'spec.json'
+    path.write_text(json.dumps(spec))
+    proof = tmp_path / 'generated_check'
+    proof.mkdir()
+    (proof / 'result.json').write_text(json.dumps({'schema': 'rvw.formal/1', 'status': 'pass', 'depth': 5, 'proof_kind': 'bounded'}))
+    out = tmp_path / 'testplan'
+    run(Namespace(manifest=str(path), out=str(out), json=False))
+    report = json.loads((out / 'result.json').read_text())
+    assert report['properties'][0]['status'] == 'pass'
+    assert report['source_lines'][0]['line'] == 9

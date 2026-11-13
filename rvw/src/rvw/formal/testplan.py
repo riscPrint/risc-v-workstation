@@ -52,7 +52,7 @@ def build(plan, evidence):
         key = p['property_id']
         result, core, cone = results.get(key, {}), cores.get(key, {}), cones.get(key, {})
         activation = cone.get('activation', {'status': 'not_measured'})
-        row = dict(p, status=result.get('status', 'not_run'), depth=result.get('depth'),
+        row = dict(p, status=result.get('status', p.get('status', 'not_run')), depth=result.get('depth'),
                    proof_kind=result.get('proof_kind', 'unknown'), activation=activation,
                    vacuity='not_established' if activation.get('status') != 'reached' else 'activation_reached',
                    proof_core={'status': core.get('status', 'unavailable'),
@@ -102,6 +102,17 @@ def run(args):
     capture = Capture(out / 'inputs')
     path = Path(args.manifest).resolve()
     plan = json.loads(capture.file(path).copy.read_text())
+    if plan.get('schema') == 'rvw.formal-apps/1':
+        inventory, records = [], []
+        for prop in plan['properties']:
+            row = dict(prop, property_id=prop['id'], module=prop.get('module', plan['top']), origin=prop.get('origin', 'hand_written'))
+            if prop['id'] in plan.get('waivers', {}):
+                row.update(status='waived', waiver_reason=plan['waivers'][prop['id']])
+            inventory.append(row)
+            result_path = path.parent / prop['id'] / 'result.json'
+            if prop['id'] not in plan.get('waivers', {}) and result_path.is_file():
+                records.append({'kind': 'result', 'property_id': prop['id'], 'path': str(result_path)})
+        plan = {'schema': 'rvw.formal-testplan/1', 'properties': inventory, 'evidence': records}
     evidence = []
     for row in plan.get('evidence', []):
         evidence.append(dict(row, data=json.loads(capture.file(path.parent / row['path']).copy.read_text())))
