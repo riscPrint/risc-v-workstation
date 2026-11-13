@@ -950,6 +950,30 @@ adapter samples them with `ProbeCollector` in its cycle loop and writes
 [SpinalProbes](../SpinalProbes/README.md) for the API and `rvw probes` for the converters.
 An adapter declares `supportsProbes`; otherwise the flag is refused.
 
+## Accepted TileLink progress
+
+`TileLinkProgressObserver` attaches to a typed TileLink simulation Monitor.
+It keeps each accepted A request's deadline through D and E. A D grant does
+not renew the deadline. Probes use source/address identities. Releases use a
+separate source namespace and complete at ReleaseAck. The first accepted C
+release beat starts its deadline, so a missing tail cannot disappear before
+complete-message capture. A deadlines start at complete accepted messages;
+request presentation and partial A data need separate project checks.
+
+Call `tick` after the clock's accepted-message callbacks. The cycle callback
+must identify one physical clock edge consistently. Same-cycle messages are
+ordered so prerequisites can arrive later in callback order and old source/sink
+identities can be reused. Finish requires explicit event coverage and no pending
+requests. Reset during a pending transaction is outside this observer's scope.
+
+The real CacheFiber smoke now attaches this observer to its accepted A/B/C/D/E
+messages. It checks a 2048-cycle completion bound. It separately measures B/D
+environment ready gaps against 256 cycles. The observed maximum gap was 74
+cycles at seed 42. Both the baseline and corrupt-backing-byte negative test
+passed. Seven unit tests cover missing responses, unrelated traffic, capacity,
+same-cycle identities and truncated release data. These are bounded observations
+under the named service conditions. They are not unbounded RTL liveness proofs.
+
 ## SystemC and TLM memory target
 
 `src/main/cpp/TlmMemory.h` provides a blocking TLM-2 memory target with byte
