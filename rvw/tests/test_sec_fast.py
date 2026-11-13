@@ -31,3 +31,15 @@ def test_result_is_not_security_proof(tmp_path):
     r=publish(tmp_path,'ift',[],False)
     assert r['status']=='inconclusive'
     assert json.loads((tmp_path/'results.json').read_text())['tests'][0]['status']=='error'
+
+
+def test_contract_eligibility():
+    from rvw.sec.pairs import compare, generate
+    plan=dict(contract='constant-time',observations=['cache'],clauses=['pc','memory'])
+    row=dict(pc=16,insn=0x33,mem_addr=0,mem_rmask=0,mem_wmask=0)
+    a=dict(reference=[row],public={},secret=0,observations={'cache':[1]})
+    b={**a,'secret':1,'observations':{'cache':[2]}}
+    assert compare(a,b,plan)['status']=='violation'
+    assert compare(a,{**b,'reference':[{**row,'pc':20}]},plan)['status']=='ineligible'
+    assert generate(12,4)==generate(12,4)
+    with pytest.raises(ValueError): compare(a,a,plan)

@@ -8,3 +8,12 @@ means no leak was observed in this bounded sample. It is never a security proof.
 IFT findings record cycle, sink, structural candidate path and matched C6 paths.
 Sources, sinks, reset, release permission and stimulus belong to the project.
 Physical power and EM channels are outside the contract.
+
+## Paired program adapter
+
+`rvw.sec-case/1` requests contain a program instruction list, secret, public
+context and contract name. Responses confirm reset and completion, name complete
+independent-reference and RTL C2 paths, and bind every declared microarchitectural
+channel in `observations`. Equal public context and architectural contract traces
+are prerequisites for a leakage comparison. A minimization trial must rerun both
+cases. Unavailable or mismatched evidence cannot earn a clean result.
