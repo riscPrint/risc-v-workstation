@@ -8,6 +8,15 @@ MACHINE_CHECKS = ('exception_entry', 'interrupt_entry', 'trap_return', 'csr_cons
                   'instruction_memory', 'x0', 'flush_retirement', 'trap_pc_chain')
 
 
+def abstraction_native(row, directory):
+    native=row.get('rtlil_retry') or row.get('native_portfolio')
+    if native is None and row.get('rounds'):
+        path=directory/row['rounds'][-1]['result']
+        if path.is_file():
+            native=json.loads(path.read_text())
+    return native or {}
+
+
 def bounded_rows(suite):
     rows = []
     for test in suite['tests']:
@@ -74,6 +83,13 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
                                  status='proven' if row['status'] == 'pass' else
                                  'failed' if row['status'] == 'fail' else 'inconclusive',
                                  reason=row.get('reason', 'See portfolio assumptions and activation limits.'),
+                                 assumptions=row.get('assumptions'),
+                                 environment_check=row.get('environment_check','unknown'),
+                                 condition_model=row.get('condition_model'),
+                                 proof_kind=row.get('proof_kind','none'),
+                                 depth=row.get('depth',cfg['depth']),
+                                 conditional_native_proof=bool(row['status']=='inconclusive' and
+                                     (row.get('winner') or {}).get('status')=='pass' and row.get('cross_check')!='disagree'),
                                  **{k:row[k] for k in ('wall_s','timeout_s','load_average_start',
                                       'load_average_end','next_setting','capacity_classification') if k in row},
                                  engine_attempts=[{k:v for k,v in attempt.items() if k in
@@ -93,10 +109,18 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
         plan = json.loads(Path(abstraction).read_text())
         result = abstract(proof_cfg, plan, out / 'abstract', timeout=timeout, budget=2*timeout)
         for row in result['rows']:
+            native=abstraction_native(row,out/'abstract'/row['check'])
             rows.append(dict(check=row['check'] + ':abstraction',
                              status='failed' if row['status']=='fail' else 'inconclusive',
                              conditional_native_proof=row.get('conditional_native_proof',False),
-                             engine_attempts=row.get('rtlil_retry', {}).get('rows', []),
+                             assumptions=native.get('assumptions'),
+                             environment_check=native.get('environment_check','unknown'),
+                             condition_model=native.get('condition_model'),
+                             abstraction=dict(pipeline_restriction=result.get('pipeline_restriction',True),
+                                 ram_abstraction=result.get('ram_abstraction',True),
+                                 restriction=result.get('restriction'),memory=row.get('memory'),
+                                 retained_words=row.get('watched')),
+                             engine_attempts=native.get('rows', []),
                              reason='Native proof closed for the declared abstraction; full pipeline signoff is incomplete.'
                              if row.get('conditional_native_proof') else 'The conditional abstraction did not close.',
                              evidence='abstract/result.json'))
@@ -139,6 +163,8 @@ def table(report):
     lines = ['Check | Outcome | Reason', '--- | --- | ---']
     for row in report['rows']:
         outcome = f"bounded {row['depth']}" if row['status'] == 'bounded' else row['status']
+        if row.get('conditional_native_proof'):
+            outcome += '; conditional native proof'
         if row.get('reason') in ('wall-clock timeout', 'timeout', 'preparation_timeout'):
             outcome += f"; ran {row.get('wall_s', 'unknown')} s; limit {row.get('timeout_s', 'unknown')} s; load {row.get('load_average_start', 'unknown')}"
         lines.append(f"{row['check']} | {outcome} | {row.get('reason', '')} {row.get('action', row.get('next_setting', ''))}")

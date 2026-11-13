@@ -1166,3 +1166,19 @@ Retirement covers retain their own elapsed time, limit and host load.
 All source assumptions remain. Conditional engine success does not certify
 whole-pipeline or observer correctness. Existing combined-model behavior stays
 the default. No core-specific signals or invariants are added to generic code.
+
+## ISA proof conditions in result rows
+
+Unbounded ISA rows retain the portfolio's `assumptions`, `environment_check`,
+`condition_model`, `proof_kind` and depth. A conditional native engine proof
+has `conditional_native_proof: true` while its ISA status stays inconclusive.
+A timeout with no winner cannot set that flag. Engine disagreement cannot
+set it. An absent assumption record is null, not an invented empty list.
+
+Abstraction rows retain the selected pipeline and RAM flags, exact pipeline
+restriction, memory and retained words. They copy assumptions and condition
+model identity from the RTLIL retry, direct single-flight portfolio or last
+RAM round. Referenced condition-model paths remain relative to their native
+portfolio directory. Source predicates, enable conditions and available source
+excerpts stay in the assumption records. No condition is discharged by this
+summary. The native evidence remains authoritative.
