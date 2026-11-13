@@ -3668,6 +3668,16 @@ and zero. Hardware clear follows software effects; hardware set has final
 priority. Failed bus accesses suppress software effects, but not hardware events.
 These fields describe independently observed events over the transaction interval.
 
+### Concurrent register event observations
+
+`rvw.device-events/1` declares accepted-request linearization and a cycle-ordered
+event array. Array order resolves events at the same cycle. Requests and responses
+use `(master,id)` keys. Hardware increments, clear/set masks and state observations
+are independent events. The SoC map supplies reset, access and side-effect rules.
+`rvw.device-event-check/1` records comparisons and outstanding keys. Mismatch is
+exit 1. Matching or incomplete observations remain inconclusive with exit 3.
+This does not establish capture completeness or a real-device binding.
+
 ### Standard CSR catalog selection
 
 `rvw.csr-catalog/1` stores pinned UDB definitions, source paths, source hashes

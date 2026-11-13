@@ -169,6 +169,31 @@ This is a register subset import, not a lossless IP-XACT round trip.
 The subset follows the [Accellera 1685-2014 memory map schema](https://www.accellera.org/XMLSchema/IPXACT/1685-2014/memoryMap.xsd).
 The importer checks its subset; it does not run full XSD validation.
 
+### Concurrent device events
+
+`rvw formal device-events --model soc.json --trace events.json --out result.json`
+checks independent register state across concurrent masters. MCP:
+`formal_device_events`. The map is the existing `rvw.soc/1` format.
+The trace uses `rvw.device-events/1`, `linearization=accepted_request`, and an
+`events` array. Each event has a nonnegative `cycle`. Array order declares the
+order within one cycle. Cycles must not decrease.
+
+A `request` has `master`, nonnegative `id`, `address`, byte `size`, boolean
+`write`, write `data`, and optional expanded bit `write_mask`. IDs are unique
+within each master's outstanding requests. A `response` has `master`, `id`,
+boolean `error` and read `data`. Responses can reorder across IDs and masters.
+A `hardware` event has `address`, optional nonnegative `increment`, and optional
+`clear` and `set` bit masks. Increment wraps to register width; clear then set
+follow it. A `state` event has `address` and observed `value`.
+
+The oracle starts from map reset values. It never starts from DUT read data.
+Accepted requests apply software effects in array order. Read responses compare
+against the value before read-clear. The model checks decode/access errors and
+exact full-width accesses. Outstanding requests at trace end remain listed.
+A mismatch returns 1. Matching observations remain inconclusive and return 3.
+This contract does not bind a real device or establish trace completeness,
+independent event provenance, interrupt behavior, or device-specific latency.
+
 ### Paired bridge beat samples
 
 Bridge bindings can set `byteorder` and `software_byteorder` to `little` or
