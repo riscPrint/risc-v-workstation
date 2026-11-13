@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 SCHEMA = "rvw.probe-events/1"
-KINDS = ("branch", "cache", "tlb", "walk", "stage", "retire", "flush", "stall", "csr", "interrupt",
+KINDS = ("branch", "cache", "bus", "tlb", "walk", "stage", "retire", "flush", "stall", "csr", "interrupt",
          "trace", "counter", "fault", "custom")
 
 

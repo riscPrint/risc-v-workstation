@@ -689,6 +689,8 @@ source and adds no hardware unless the run uses C1 `--probes`.
 | `stall` (evidence `inferred`) | stage `haltItself` and `haltByOther`, split by instruction class; an empty decode stage is `fetch/empty` |
 | `counter` | cycles, retired, branches, mispredicts (HPM 3), loads (HPM 4), stores (HPM 5), wait and flush cycles |
 | `interruptTaken irq` | registered CSR jump strobe with `mcause` and `mepc` |
+| `bus ibus`, `bus dbus` | accepted `iBus`/`dBus` commands (`cmd.fire`): address; data bus also write, data, mask, size |
+| `csrWrite csr` | `csrMapping.onAnyWrite` strobe (the plugin's `writeEnable`), instruction bits 31..20, `writeDataSignal` |
 
 Results on VexRiscv `baf7dc82` (core sources), `rv32im` config, seed 1, random memory timing:
 
@@ -708,6 +710,16 @@ rvw csim compare-rtl rvw/probes/btfn.json --trace RUN/rvfi.jsonl --events RUN/bp
 - `irqs` with `--irq-schedule '1:0x0,2000:0x80,2200:0x0,4000:0x800,4200:0x0,6000:0x80,6200:0x0'`:
   `--to interrupts` finds 3 probe events and 3 C2 interrupts, consistent. `--to counts` and
   `--to hpm` give the counter totals (3 HPM bindings).
+- `memcsr` (382 instructions, 1855 cycles): `--to bus` is consistent: 61 bus writes match the
+  61 retired C2 stores one to one by bytes and values, and 60 bus reads cover the 60 loads with
+  no unretired read. `--to csr-writes` is consistent: 123 write events, 122 retired CSR writes,
+  122 values checked from C2 operands. One event is the write strobe of the illegal
+  `csrw satp`, which then traps (C2 trap event, cause 2). `--to hpm` gives 60 loads and
+  61 stores. `rvw cosim check` against Spike matches, with the per-slot `mscratch` snapshot
+  on all 382 steps.
+- No cache probes: this config has no caches (`IBusSimplePlugin`, `DBusSimplePlugin`), so the
+  cache observer has no input. A cached config would change the bus type that the other
+  example tools drive.
 
 The first BTFN comparison found one disagreement at the loop exit. The C2 trace converter
 wrote the fall-through as the target of a not-taken branch, so the model's BTFN rule saw

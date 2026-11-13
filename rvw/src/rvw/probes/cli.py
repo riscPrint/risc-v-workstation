@@ -23,7 +23,7 @@ def register(subparsers):
     cv.add_argument("events", type=Path)
     cv.add_argument("--to", required=True, choices=sorted(CONVERTERS))
     cv.add_argument("--out", required=True, type=Path, help="new output file")
-    cv.add_argument("--c2", type=Path, help="the run's rvfi.jsonl (bp-events, counts, interrupts, mmu identity)")
+    cv.add_argument("--c2", type=Path, help="the run's rvfi.jsonl (bp-events, counts, interrupts, bus, csr-writes, mmu identity)")
     cv.add_argument("--c1", type=Path, help="the run's result.json (counts)")
     cv.add_argument("--probe", help="probe name when several probes of the kind exist")
     cv.add_argument("--roi", help="START:END C2 orders (bp-events)")

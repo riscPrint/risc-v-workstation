@@ -139,6 +139,13 @@ object Probe {
     site("stall", s"${scope}_$cause", valid, Nil, Map("scope" -> scope, "cause" -> cause, "evidence" -> evidence))
   }
 
+  /** One accepted request on a memory bus at the core's load/store or fetch port (before any
+    * cache): `address`, optional `write`, `data`, byte-lane `mask` and log2 `size` in bytes. */
+  def bus(bus: String, valid: Bool, address: Data, write: Option[Bool] = None, data: Option[Data] = None,
+      mask: Option[Data] = None, size: Option[Data] = None): Unit =
+    site("bus", bus, valid, Seq("address" -> address) ++ opt("write", write) ++ opt("data", data) ++
+      opt("mask", mask) ++ opt("size", size), Map("bus" -> bus))
+
   /** A CSR write that takes effect this cycle. */
   def csrWrite(name: String, valid: Bool, address: Data, value: Data): Unit =
     site("csr", name, valid, Seq("address" -> address, "value" -> value))
