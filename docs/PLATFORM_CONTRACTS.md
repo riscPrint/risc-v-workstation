@@ -3429,6 +3429,15 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core custom operation timing
+
+`custom_instructions` declares nonoverlapping mask/match rules in reserved
+32-bit custom major opcodes. A rule names a `custom_` latency class, source
+register fields and destination-write behavior. C2 registers must match the
+encoding. Only register operations with sequential next PC and no memory
+mask are supported. Timing does not establish custom-operation correctness,
+software cost or physical PPA. Search can vary declared custom latencies.
+
 ### Repeated scheduling studies
 
 `rvw.sched-study/1` captures repeated N/2N/4N scheduling measurements. Each
