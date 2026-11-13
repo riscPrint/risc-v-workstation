@@ -18,11 +18,19 @@ def validator():
 
 
 def parameters(description):
-    if description.get('schema') != 'rvw.arch-core/1' or description.get('kind') != 'o3':
-        raise ValueError('own-model projection requires an O3 rvw.arch-core/1 description')
+    if description.get('schema') != 'rvw.arch-core/1' or description.get('kind') not in ('o3', 'minor'):
+        raise ValueError('own-model projection requires an O3 or Minor rvw.arch-core/1 description')
     validator()(description)
     if not isinstance(description.get('ooo'), dict):
         raise ValueError('project description requires an ooo parameter table')
+    if description['kind'] == 'minor':
+        own = deepcopy(description['ooo'])
+        if own.get('issue_order') != 'in_order':
+            raise ValueError('Minor projection requires issue_order=in_order')
+        for key, field in [('issue_width', 'executeIssueLimit'), ('commit_width', 'executeCommitLimit')]:
+            if own.get(key) != description['cpu'].get(field):
+                raise ValueError(f'ooo.{key} conflicts with cpu.{field}')
+        return own
     cpu = description['cpu']
     own = deepcopy(description['ooo'])
     if 'latencies' not in own:

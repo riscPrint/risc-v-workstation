@@ -27,8 +27,8 @@ def calibrate(plan, out, project=None):
         return (plan.parent / value).resolve()
     config, event_map = path(data["config"]), path(data["event_map"])
     mapping = json.loads(event_map.read_text())
-    if not mapping:
-        raise ValueError("empty event map")
+    if not isinstance(mapping, dict):
+        raise ValueError("event map must be an object")
     for name, spec in mapping.items():
         if not isinstance(spec, dict) or any(not spec.get(k) for k in
             ("model_event", "rtl_event", "edge", "unit", "identity", "family")):
@@ -97,7 +97,7 @@ def calibrate(plan, out, project=None):
         for r in held if r["events"][name]["measured"] is not None]) for name in mapping}
     enough = len(held) >= 5 and len({s["family"] for s in mapping.values()}) >= 3
     ipc_ok = all(abs(r["ipc_error_percent"]) <= 10 for r in held)
-    event_ok = all(e["error_percent"] is not None and abs(e["error_percent"]) <= 15
+    event_ok = bool(mapping) and all(e["error_percent"] is not None and abs(e["error_percent"]) <= 15
                    for r in held for e in r["events"].values())
     return store(out, dict(schema="rvw.ooo-calibration/1", created_at=now(),
         status="reported", accuracy_status="inconclusive", captures=captures,

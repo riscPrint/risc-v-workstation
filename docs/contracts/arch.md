@@ -408,3 +408,16 @@ filtering, or -1 when the handle has no instruction cache. The Python API is
 `Components.prefetch_instruction(cycle, pc, address)`. It validates unsigned
 64-bit arguments. Submission does not promise an issued request or a completed
 fill. Use native prefetch statistics to distinguish those outcomes.
+
+## In-order own-model descriptions
+
+Minor `rvw.arch-core/1` descriptions can supply an `ooo` object with the full
+own-model configuration. `issue_order` must be `in_order`. The own-model
+issue and commit widths must equal the corresponding explicit Minor limits.
+No other Minor defaults are projected. In-order issue blocks younger unissued
+operations at the oldest unissued operation. Completion can overlap.
+Native scheduling does not yet support this mode.
+
+The `rvw.ooo-calibration-plan/1` event map can be an empty object for IPC-only
+scoring. Such a result has no event correlation and insufficient event
+coverage. It does not treat unavailable RTL probes as zero counts.

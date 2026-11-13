@@ -29,6 +29,7 @@ class Config:
     physical_float_registers: int = 0
     branch_penalty: int = 0
     branch_speculation: bool = False
+    issue_order: str = "out_of_order"
     memory_policy: str = "ordered"
     dependence_entries: int = 1024
     replay_penalty: int = 5
@@ -89,6 +90,8 @@ class Config:
             raise ValueError("physical_registers must be zero (unbounded) or at least 33")
         if type(self.physical_float_registers) is not int or (self.physical_float_registers != 0 and self.physical_float_registers < 33):
             raise ValueError("physical_float_registers must be zero (unbounded) or at least 33")
+        if self.issue_order not in ("in_order", "out_of_order"):
+            raise ValueError("issue_order must be in_order or out_of_order")
         if type(self.branch_speculation) is not bool:
             raise ValueError("branch_speculation must be boolean")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
@@ -256,6 +259,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         issued, dependency_blocked = 0, False
         used_ports = Counter()
         for entry in list(waiting):
+            if config.issue_order == "in_order" and entry is not waiting[0]:
+                break
             if issued >= config.issue_width:
                 break
             if any(dep.done is None or dep.done > cycle for dep in entry.deps):
@@ -470,6 +475,8 @@ def _instructions(data, custom_instructions=()):
                     raise ValueError("trace end is not pass")
                 ended = True
                 continue
+            if row.get("event") == "irq" and row["levels"] == 0:
+                continue  # Inactive input declaration has no timing effect.
             if "event" in row or any(row[k] for k in ("trap", "intr", "halt", "mem_fault")):
                 raise ValueError("traps, interrupts and external events are unsupported")
             from .custom import decode as decode_custom

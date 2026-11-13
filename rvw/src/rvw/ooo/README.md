@@ -726,3 +726,43 @@ contains debug registers, not a restorable processor and memory snapshot.
 A replay producer needs that interface before it can supply independent
 wrong-path instruction and memory traffic. The integration does not label
 synthetic traffic or committed-path comparisons as Spike replay evidence.
+
+## In-order RTL correlation
+
+`issue_order: in_order` prevents a ready instruction from passing an older
+unissued instruction. Fetch, decode, completion and commit can overlap.
+A blocked queue head stops issue. This is a generic in-order timing mode.
+It does not reproduce all interlocks or bypass paths of an RTL pipeline.
+The default remains `out_of_order`. In-order mode uses the Python engine.
+
+Minor `rvw.arch-core/1` descriptions can carry an `ooo` table. They require
+`issue_order: in_order`. Their issue and commit widths must match
+`cpu.executeIssueLimit` and `cpu.executeCommitLimit`. Other own-model values
+must be explicit in that table. gem5 still uses its Minor configuration.
+
+The example descriptions are `examples/vexriscv/rvw/arch/own.json` and
+`examples/vexiiriscv/rvw/arch/own.json`. Both represent a single-issue RV32IM
+pipeline with uncached physical memory. These are timing approximations.
+They are not elaborated parameter snapshots.
+
+`Arch/ooo/correlation/prepare.py OUT` builds six distinct RV32IM programs and
+C1 manifests. Run each manifest with the matching example's `run-many`.
+Use a private core copy, the `vex-arch` lock, and private `RISCVSIM_WORK`.
+Then run `Arch/ooo/correlation/score.py OUT vexriscv` or `vexiiriscv`.
+The scorer converts VexRiscv probe counters with `rvw probes convert counts`.
+It runs the fitting command `rvw arch ooo-fit`.
+Training uses chain, multiply and memory. Held-out scoring uses independent,
+divide and branch. The fit searches only fetch delay and branch recovery.
+
+An empty event map selects IPC-only calibration. VexiiRiscv uses this mode
+because its adapter has no SpinalProbes binding. Missing events are not zero
+observations. IPC-only calibration cannot satisfy event coverage budgets.
+
+An inactive C2 `irq` declaration with `levels=0` has no timing effect.
+Asserted interrupt inputs and actual interrupt or trap records are refused.
+
+The [native correlation sample](../../../../Arch/ooo/correlation/README.md#native-sample-on-2026-11-13)
+records six real RTL runs per core. On VexRiscv, fitted held-out IPC errors are
++3.41% for independent, +11.34% for divide and -6.20% for branch. Divide is
+outside the 10% budget. The linked table also records VexiiRiscv results.
+The sample has insufficient event coverage for an accuracy verdict.
