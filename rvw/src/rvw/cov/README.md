@@ -1205,3 +1205,8 @@ Timeout remains timeout, even if all C1 files already exist. Cleanup can add
 time after the deadline. The result keeps historical signature coverage and
 new C1 status separate. Execution earns no new Spike or coverage credit.
 The full native point denominator stays visible.
+
+### Measure your tests on exported core RTL
+
+See [whole-core mutation campaigns](CORE_MUTATION.md) for `cov mutate-core`,
+MCP, build-failure classification, ordered tiers, resume and study limits.
