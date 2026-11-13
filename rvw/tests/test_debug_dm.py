@@ -332,7 +332,8 @@ def test_serve_process_protocol():
 
 def test_cli_suite_writes_c3(tmp_path):
     path = tmp_path / 'p.toml'
-    path.write_text('schema = "rvw.debug-profile/1"\nscratch = 0x80010000\n[triggers]\ncount = 2\n')
+    path.write_text('schema = "rvw.debug-profile/1"\nscratch = 0x80010000\n[triggers]\ncount = 2\n'
+                    '[transport]\nkind = "model"\n')
     out = tmp_path / 'out'
     run = subprocess.run([sys.executable, '-m', 'rvw', 'debug', 'suite', '--profile', str(path), '--out', str(out),
                           '--group', 'dm', '--group', 'trig'], capture_output=True, text=True, timeout=120)

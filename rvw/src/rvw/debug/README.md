@@ -24,7 +24,7 @@ reason; a skipped check is listed with its reason and is not a test.
 | `modes`, `scratch`, `memory` | privilege modes; RAM the campaign may overwrite (code at +0, handler at +0x400, data at +0x800, U code at +0xc00); memory regions with `kind` ram/readonly/error/off and `sberror` |
 | `[triggers]` | `count`, `accesses` (`execute`, `load`, `store`; default all), `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing`, `sizes` (access-size match values; default `[0]`, any size) |
 | `sba` | `sizes`, `asize`, `misaligned_error` (3), `size_error` (4) |
-| `[transport]` | `kind` = `model`, `jtag-model`, `remote_bitbang` (`host`, `port`, `irlen`) or `dmi_process` (`command`) |
+| `[transport]` | `kind` = `model`, `jtag-model`, `remote_bitbang` (`host`, `port`, `irlen`) or `dmi_process` (`command`). Required for `rvw debug suite` unless `--port` is given. `model` and `jtag-model` run the built-in reference model, not the core. |
 | model only | `abstract_latency`, `sba.latency`, `ticks_per_access`, `ips`, `elf` |
 
 `examples/debug/spike.toml` declares native Spike 1.1.1-dev. It is a reference
