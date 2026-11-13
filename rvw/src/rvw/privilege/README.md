@@ -807,3 +807,27 @@ and enable bits, source configuration and claims. Results and subset groups
 remain model-based. No native APLIC device, DUT execution or whole-ISA match
 is claimed. The suite does not cover arbitrary child trees, MSI delegation,
 wire-source transitions during reassignment or complete interrupt delivery.
+
+## Native ISA execution with APLIC MMIO
+
+`reference_backend = "spike-python-aplic"` runs actual `aplic` and
+`aplic-delegation` programs through the captured Spike library. Set
+`reference_shim` to the project's built shim library. The existing capture
+records the library and manifest hashes. The shared runner writes normalized
+reference C2 traces, program status and instruction counts. Programs without
+mailbox events need no artificial stimulus symbols.
+
+Python supplies the APLIC registers. This model supports little-endian aligned
+32-bit accesses, Inactive/Detached sources, direct delivery register state,
+per-context priorities/thresholds, claims and one parent/child domain. It checks
+target context, masks unowned state and resets new child configuration. It uses
+8-bit priority and threshold fields and supports context indices 0..511 within
+a 32-KiB control map per domain. Unsupported wire modes, MSI mode, access shapes,
+child indices and uninitialized target fields fail closed. Claim preview does
+not consume a source when a load has not executed.
+
+Native results remain model-based. The IRQ input is held clear, so this backend
+makes no IRQ-line delivery claim. A native pass checks ISA execution and the
+Python register behavior. It is not a hardware APLIC or DUT pass. Reference-tagged
+C2 traces cannot earn C1 model groups. The normal DUT checker still requires a
+separate C1 result with matching input identity and actual DUT observations.
