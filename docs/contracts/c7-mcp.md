@@ -100,3 +100,13 @@ to the server session. Worker execution retains process-group cancellation.
 Previously inline sim_checkpoint, sim_resume, sim_suffix_check, csim_convert
 and soc_audit now use jobs. Small metadata tools remain inline.
 
+
+## CLI discovery and JSON fallback
+
+Every CLI parser accepts --json and shows a generated example in --help.
+Commands with native JSON output keep their contract schemas and exit codes.
+Other commands wrap their text in output with the common envelope. Exit 3
+stays inconclusive. Exceptions use the common error object and exit 2.
+Exit 0 means command completion; it does not create a verification pass.
+rvw mcp command-map --json generates command paths and workflow steps from
+the actual parsers and agent playbook. It is not a second command registry.

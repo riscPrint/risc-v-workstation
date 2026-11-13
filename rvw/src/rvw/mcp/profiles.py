@@ -11,7 +11,9 @@ PROFILES = {
 
 
 def profile_for(name):
-    prefix = name.split("_", 1)[0]
+    if name.startswith(("job_", "rvw_tools_")):
+        return "core"
+    prefix = name.removeprefix("rvw_").split("_", 1)[0]
     return next((p for p, packages in PROFILES.items() if prefix in packages), "all")
 
 
