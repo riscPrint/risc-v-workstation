@@ -176,6 +176,18 @@ def _custom_isa(job, **args):
     return result
 
 
+def _profiles(job, **args):
+    manifest = args.pop('manifest')
+    code = job.run(_argv('profiles', args) + [manifest])
+    path = Path(args['out']) / 'result.json'
+    if code != 3 or not path.is_file():
+        raise ToolError('profile report unavailable', {'exit_code': code, 'log_tail': job.tail(20)})
+    result = json.loads(path.read_text())
+    if result.get('schema') != 'rvw.profile-report/1' or result.get('status') != 'inconclusive':
+        raise ToolError('invalid profile report')
+    return result
+
+
 def mcp_tools():
     from .deep_cli import mcp_tools as deep_tools
     return [*deep_tools(),
@@ -198,6 +210,8 @@ def mcp_tools():
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),
         ToolSpec("formal_custom_isa", "Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_isa, long=True),
+        ToolSpec("formal_profiles", "Track pinned RVA23/RVB23 named requirements, configuration declarations and hash-bound proof evidence. No full profile acceptance verdict.",
+                 schema({"manifest": S, "baseline": S, "out": S}, ["manifest", "out"]), _profiles, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

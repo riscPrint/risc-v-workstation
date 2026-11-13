@@ -713,7 +713,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -997,6 +997,13 @@ usage: rvw formal sail-zicond [-h] --model MODEL [--compiler COMPILER] --out
 ```text
 usage: rvw formal custom-isa [-h] --out OUT [--json] [--project PROJECT]
     manifest
+```
+
+### `rvw formal profiles`
+
+```text
+usage: rvw formal profiles [-h] [--baseline BASELINE] --out OUT [--json]
+    [--project PROJECT] manifest
 ```
 
 ### `rvw formal riscv`
@@ -2620,6 +2627,14 @@ Starts a background job: yes.
 Check fair recurrent progress on an explicit finite graph. No RTL translation claim.
 
 Arguments: `out` (required), `manifest` (required).
+
+Starts a background job: yes.
+
+### `formal_profiles`
+
+Track pinned RVA23/RVB23 named requirements, configuration declarations and hash-bound proof evidence. No full profile acceptance verdict.
+
+Arguments: `manifest` (required), `baseline`, `out` (required).
 
 Starts a background job: yes.
 

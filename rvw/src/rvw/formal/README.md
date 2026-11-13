@@ -2048,3 +2048,41 @@ A mismatching independent vector gives exit 1. Generation otherwise gives
 exit 0, which is not a DUT pass. Extra state, memory, custom exceptions and
 runtime trap/calling-convention qualification remain outside this subset.
 MCP tool `formal_custom_isa` exposes the same generator.
+Pinned profile obligations (#104, #80, #141)
+-------------------------------------------
+
+`rvw formal profiles plan.json --out report` imports named RVA23/RVB23 extension
+obligations from hash-pinned profile AsciiDoc files. It handles user and supervisor
+profiles separately. Supervisor profiles inherit unprivileged mandatory and
+selected optional extensions. Inherited mandatory requirements cannot become
+optional. Optional extension obligations activate when the ISA manifest selects
+the extension. The full captured bullet text retains its normative conditions.
+
+The project-owned `rvw.profile-plan/1` file supplies `isa_manifest`, `profiles`
+and `documents` (path and SHA-256). `examples/profiles/profiles.example.json`
+pins two documents at riscv-profiles commit
+`e030b70992447784ad9081045d47ce6e278f381e`. Set `RISCV_PROFILES` to that checkout
+and `RVW_ISA_MANIFEST` to the project's existing `rvw.isa/1` file. Paths can use
+these environment variables. The report also runs the existing ISA consumer
+configuration check for compiler, DUT, reference, ACT and coverage probes.
+Missing probes and unknown versions remain inconclusive.
+
+Each profile lists `implemented`, `verified`, `missing`, `unsupported` and
+`not_selected` IDs. Implemented means declared in project data. `unsupported`
+can list obligation IDs or extension names. A `proofs` entry needs `result`,
+its `sha256` and the exact `obligation_sha256`. Verified requires a matching
+unbounded formal pass, at least one assertion and a reachable environment.
+The mapping of the obligation to the proved property requires review. Captured
+proof restrictions remain visible. A bounded pass cannot mark an item verified.
+
+`tests` and `checkers` map obligation IDs to project test paths and checker IDs.
+The report records existing test hashes and missing test files. Empty test lists
+are missing evidence. Add `--baseline old-plan.json` to list added, removed and
+changed obligation text or selection, affected checkers and missing tests.
+Changes require explicit adoption. The command changes no source pin or model.
+
+Scope is the named-extension inventory. Base/endian/ECALL paragraphs, notes,
+recommendations and implicit extension dependencies are not expanded. Conditions
+inside an obligation are retained as text for its reviewed proof mapping.
+This report never grants full profile compliance. It always exits 3 for a valid
+report. MCP tool `formal_profiles` returns the same result.
