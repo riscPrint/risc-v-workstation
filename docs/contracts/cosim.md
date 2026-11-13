@@ -361,3 +361,11 @@ remain checked. An unplanned source event is still an error. A nonempty
 stimulus plan still requires both mailbox addresses and matching ELF symbols.
 A core can then test a fixed external source without an unused mailbox
 protocol. It does not add dynamic source delivery or reset.
+
+## Scalar FP reference generation
+
+Spike generation selects C2 version 2 with the state capability for F or D,
+even when V and H are absent. Each retirement includes the FP destination,
+its full 64-bit transport value, fflags and fcsr. Integer-only generation
+keeps C2 version 1. The dedicated Vexii FP platforms require FP state.
+A trace with no FP state cannot earn a strict FP match on those platforms.

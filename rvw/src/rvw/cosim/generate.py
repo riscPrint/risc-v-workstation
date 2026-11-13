@@ -22,9 +22,11 @@ def generate(elf, out, platform, limit=1000000, *, shim, verify=lambda: None,
             def emit(obj):
                 stream.write(json.dumps(obj, separators=(",", ":")) + "\n")
             from .extensions import has_extension, serialize
-            extensions = has_extension(platform.isa, "v") or has_extension(platform.isa, "h")
+            extensions = any(has_extension(platform.isa, letter) for letter in ("f", "d", "v", "h"))
             header = {"schema": "rvw.rvfi/2" if extensions else "rvw.rvfi/1", "xlen": platform.xlen, "isa": platform.isa,
                   "core": platform.name, "config": "reference", "elf": elf_source or str(Path(elf).resolve())}
+            if extensions:
+                header["capabilities"] = ["state"]
             for i in range(limit):
                 e = model.step()
                 if i == 0:

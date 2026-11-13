@@ -18,4 +18,5 @@ def test_fp_profile(width, config):
     assert platform['isa'] == platform['reference_isa'] == config + '_zicsr_zifencei'
     assert platform['privilege_modes'] == 'M' and platform['pmp_regions'] == 0
     assert not platform.get('csr_masks')
+    assert platform['require_fp_state'] is True
     assert tomllib.loads((ROOT / 'rvw.toml').read_text())['core']['default_config'] == 'rv32im'
