@@ -14,6 +14,10 @@ rvw sec spec-suite --binding rvw/sec/core.json --template rvw/sec/spec.S --out o
 
 - `core.json`: the example `rv32im` configuration. `core-mu.json`: the same core
   with user mode (`SecRtl` variant `rv32imu`) and the Spike platform `platform-mu.json`.
+- `core-pmp.json`: user mode plus a 4-region NAPOT PMP (`SecRtl` variant
+  `rv32imu-pmp`, Spike platform `platform-mu-pmp.json`). `isolation-pmp.json`
+  and `pmp.S` deny U-mode access to the keystore; `ift/pmp-meltdown.S` and
+  `ift/pmp-policy.json` are the IFT form of the same case.
 - `core-leaky.json`: RTL built from a private copy with `leaky-transient-load.patch`
   applied. The patch lets flushed loads reach the data bus. It is a positive
   control for the speculative receiver, not a core change.

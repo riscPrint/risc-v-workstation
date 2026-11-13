@@ -1,0 +1,9 @@
+{
+  "memory_regions": [{"soc_region": "keystore"}],
+  "sinks": [
+    {"signal": "dBus_cmd_payload_address", "when": "dBus_cmd_valid"},
+    {"signal": "dBus_cmd_valid"},
+    {"signal": "iBus_cmd_payload_pc", "when": "iBus_cmd_valid"},
+    {"signal": "iBus_cmd_valid"}
+  ]
+}

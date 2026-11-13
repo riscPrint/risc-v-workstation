@@ -16,7 +16,7 @@ example revisions (details in the sections below).
 | Unit IFT | `ift` | a secret input or register reaches a sink of a small unit under given stimulus | whole-core behavior; source-level provenance | seeded Verilog units |
 | Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv |
 | Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34) |
-| Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`) | PMP/ePMP behavior (neither core has PMP); state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles) |
+| Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`); with `pmp`, what a denied access exposes | ePMP; state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles). VexRiscv with PMP: a denied U-mode load never reaches the bus; a dependent load sees no secret (pairs and IFT clean) |
 | Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb |
 | Campaign | `campaign` | new leak signatures from generated and mutated pairs, deduplicated | coverage of the whole input space; a clean campaign is bounded by its budget | VexiiRiscv: `remu` and `div` signatures in 24 pairs; VexRiscv: none in 24 pairs |
 | Model pre-check | `model-check` | predicted timing leakage of a planned unit before RTL | transient, cache or predictor leaks; exact cycle counts | predicts the direction of both cores' divide results |
@@ -349,6 +349,8 @@ compared case (all C2 fields on VexRiscv; `pc` and `insn` on VexiiRiscv).
 | `contract` constant-time | VexiiRiscv | same program | **violation**, reduced to one `remu x13, x6, x7`: 14 cycles for 7 % 3, 38 cycles for 0x7fffffff % 1. The full program took 113 against 209 cycles. |
 | `isolation` M/U | VexRiscv `rv32imu` | U-mode `ecall`s, constant-time M handler with a `div` on the secret | `no_leak_observed`: 68 cycles per call for both secrets |
 | `isolation` M/U | VexRiscv `rv32imu` | handler loop count from the secret (control) | violation: 48 against 84 cycles per call, reduced to `add; ecall` |
+| `isolation` pmp | VexRiscv `rv32imu-pmp` | U-mode load of a PMP-denied keystore word, then a load indexed by it | `no_leak_observed`: access fault (cause 0xd) as in Spike; the denied load is absent from the bus trace; 30 cycles for both secrets |
+| `ift-core` keystore | VexRiscv `rv32imu-pmp` | same sequence, keystore words as secrets | `no_leak_observed`; no tainted data left the keystore |
 | `spec-suite` | VexRiscv | v1, v2, rsb, v4 | `no_leak_observed` for all four |
 | `spec-suite` | VexRiscv patched | same | violation in `dbus_trace` for v1, v2 and rsb; v4 `no_leak_observed` |
 
@@ -453,8 +455,10 @@ prediction on RTL with `sec contract` when RTL exists.
 
 - Cache and TLB observation channels exist but no example core has caches or a
   TLB. They need a core with them and its probes.
-- Neither example core has PMP or a supervisor mode in these runs. ePMP and
-  supervisor isolation need such a configuration.
+- The VexRiscv `rv32imu-pmp` variant has a NAPOT-only PMP (upstream
+  `PmpPluginNapot`, 32-byte granularity). The general `PmpPlugin` makes a
+  combinational loop with `DBusSimplePlugin`. ePMP and supervisor isolation
+  need another configuration.
 - VexiiRiscv has no RVFI. Its C2 check compares `pc` and `insn` only, and its CSR
   storage is a RAM, so CSR secrets cannot be bound there.
 - The campaign grammar is RV32IM without CSRs, privilege changes or loops.
