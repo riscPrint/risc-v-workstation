@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "nmi",
+  "nmi": {
+    "cause": 1,
+    "vector": 2147549184
+  },
+  "isa": "rv64im_zicsr_zifencei_smrnmi"
+}

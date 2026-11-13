@@ -1,0 +1,14 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "plic",
+  "plic": {
+    "priority": 201326592,
+    "pending": 201330688,
+    "enable": 201334784,
+    "enable_stride": 128,
+    "context": 203423744,
+    "context_stride": 4096,
+    "sources": 2,
+    "contexts": 2
+  }
+}

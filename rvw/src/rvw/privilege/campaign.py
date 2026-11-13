@@ -16,14 +16,14 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi'):
+    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -33,7 +33,13 @@ def load(path):
 
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    if config.get('kind') == 'scheduled-wfi':
+    if config.get('kind') == 'plic':
+        from .plic import programs
+        rows = programs(config)
+    elif config.get('kind') in ('reset', 'nmi'):
+        from .lifecycle import programs
+        rows = programs(config)
+    elif config.get('kind') == 'scheduled-wfi':
         from .scheduled import programs
         rows = programs(config)
     elif config.get('kind') == 'disabled':
@@ -55,10 +61,19 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
         source.write_text(row.pop('assembly'))
         command = [gcc, '-march=' + config.get('isa', 'rv64im_zicsr_zifencei'), '-mabi=lp64',
                    '-nostdlib', '-nostartfiles', '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'),
-                   '-o', str(elf), str(source)]
+                   *row.get('link_options', []), '-o', str(elf), str(source)]
         result = run_group(command, capture=True, timeout=30)
         if result.returncode:
             raise ValueError(f'{name}: compiler failed: {result.stderr}')
+        if row.get('events'):
+            events = [dict(id=f'event-{i}', kind='device', hart=0,
+                           after=[f'event-{i-1}'] if i else [], group=f'event-{i}', required=True,
+                           payload={**event, 'request_symbol': 'stimulus_step', 'ack_symbol': 'stimulus_ack'})
+                      for i, event in enumerate(row['events'])]
+            stimulus = out / (name + '.stimulus.json')
+            stimulus.write_text(json.dumps(dict(schema='rvw.stimulus/1', events=events), indent=2) + '\n')
+            row['stimulus_sha256'] = digest(stimulus)
+            row.setdefault('options', {})['stimulus_file'] = str(stimulus)
         row.update(elf=elf.name, elf_sha256=digest(elf), source_sha256=digest(source))
     manifest = dict(schema='rvw.privilege-build/1', spec=SPEC, config=config,
                     description_sha256=digest(description), scenarios=rows)
@@ -144,10 +159,23 @@ def check(directory, results, platform, timeout=10):
         if len(candidates) == 1:
             run = candidates[0]
             row['c1_sha256'] = digest(run.path / 'result.json')
-            if any(run.extra.get(k) != v for k, v in scenario.get('options', {}).items()):
+            if (any(run.extra.get(k) != v for k, v in scenario.get('options', {}).items() if k != 'stimulus_file')
+                or (scenario.get('stimulus_sha256') and run.extra.get('stimulus_sha256') != scenario['stimulus_sha256'])):
                 row['reason'] = 'C1 stimulus options differ'
                 rows.append(row)
                 continue
+            if scenario.get('reset_contract'):
+                from .events import reset_check
+                artifact = run.artifacts.get('privilege_reset')
+                observed = reset_check(scenario['reset_contract'],
+                                       json.loads((run.path / artifact).read_text()) if artifact else [])
+                row['reset'] = observed
+                if artifact:
+                    row['reset_sha256'] = digest(run.path / artifact)
+                if observed['status'] != 'pass':
+                    row.update(status=observed['status'], reason='reset observations incomplete or differ')
+                    rows.append(row)
+                    continue
             if scenario.get('clock_state'):
                 from .scheduled import clock_check
                 artifact = run.artifacts.get('privilege_clock')
