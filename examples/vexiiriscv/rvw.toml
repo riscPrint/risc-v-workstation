@@ -114,3 +114,14 @@ configs = ["rv32im"]
 max_cycles = 2000000
 timeout_s = 120
 mem_latency = 0
+
+[suites.act4-supervisor]
+description = "ACT4 MSU/Sv32 profile with standard Sm boot and no waived failures"
+dir = "rvw/out/act4-supervisor/work/rvw-act4/elfs"
+act4_manifest = "rvw/out/act4-supervisor/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["rv32imasu"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0
