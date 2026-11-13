@@ -1,0 +1,12 @@
+checkout = "~/.cache/rvw/riscv-dv"
+python = "~/.cache/rvw/riscv-dv-venv/bin/python"
+target = "rv32imc"
+isa = "rv32im_zicsr_zifencei"
+abi = "ilp32"
+compiler = "riscv64-unknown-elf-gcc"
+linker = "link.ld"
+runtime = "runtime"
+platform = "../platform.json"
+instructions = 50
+max_cycles = 100000
+timeout_s = 180

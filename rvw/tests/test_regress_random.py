@@ -24,7 +24,7 @@ def fixture(tmp_path, monkeypatch):
 @pytest.mark.parametrize('changes,status', [({}, 'pass'), ({'trace_complete':False}, 'cosim_error'),
     ({'end_status':'rvfi_error'}, 'cosim_error'), ({'instructions':1}, 'cosim_error'),
     ({'instructions':0}, 'cosim_error'), ({'status':'mismatch'}, 'mismatch'),
-    ({'status':'error'}, 'cosim_error')])
+    ({'status':'error'}, 'cosim_error'), ({'synchronized':1}, 'cosim_error')])
 def test_credit_requires_complete_spike_match(tmp_path, monkeypatch, changes, status):
     elf, run, comparison = fixture(tmp_path, monkeypatch)
     comparison.update(changes)
@@ -96,6 +96,7 @@ compiler = "riscv64-unknown-elf-gcc"
     assert [a['seed'] for a in result['attempts']] == [48, 49]
     assert result['status'] == ('pass' if stage == 'success' else 'inconclusive')
     assert all(a['status'] == ('pass' if stage == 'success' else stage+'_error') for a in result['attempts'])
+    assert result['counts'] == {('pass' if stage == 'success' else stage+'_error'): 2}
     assert json.loads((tmp_path/'out/campaign.json').read_text()) == result
     if stage == 'success':
         assert [o.seed_base for _, o in plans] == [48,49]
@@ -134,6 +135,7 @@ def test_reference_uses_c1_core_outside_project_directory(tmp_path,monkeypatch):
     elf,run,comparison=fixture(tmp_path,monkeypatch)
     seen=[]
     def compare(*args,**kwargs):
+        assert kwargs['strict'] is True
         seen.append(kwargs['core']);return comparison
     monkeypatch.setattr(random,'cosim',compare)
     assert random.verify(elf,tmp_path,'platform')['status']=='pass'
