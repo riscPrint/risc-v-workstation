@@ -215,3 +215,18 @@ machine-mode Sail signature model for both target configs. It retains all
 passes and 98 complete strict Spike matches, with zero synchronization
 and no output masks. Standard Sm, S/U ACT4 and Sv39 ACT4 remain NOT RUN.
 The generated supervisor suites are separate results.
+
+
+## Extra VexiiRiscv FP profiles
+
+| Config | ACT4 groups | Built | C1 pass | Strict Spike match |
+|---|---|---:|---:|---:|
+| RV32IMAFC | F 80, Zca 26, Zcf 4 | 110 | 110 | 110 |
+| RV64IMAFDC | F 84, D 116, Zca 32, Zcd 4 | 236 | 236 | 236 |
+
+These machine-mode profiles use core `9b63f47fe559dbba7874af9196746412fa1294c1`
+and ACT4 `56d40ab301dba23dd3104c17bd969afbaaea1931`. They use the reduced
+CSR bootstrap and complete C2/2 FP/CSR captures. There is no synchronization
+or mask. The [FP README](../examples/vexiiriscv/rvw/fpu/README.md) gives the
+commands and limits. A separate flags-only FS test finds a core defect on
+both widths. The ACT4 passes do not close that defect or establish certification.

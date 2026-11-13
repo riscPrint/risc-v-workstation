@@ -174,7 +174,8 @@ they differ. Measured identical on 2026-11-13.
 
 ## Limits
 
-- Compressed and FPU configurations have no validated trace mapping.
+- The extra FP machine profiles have strict C2/2 results below. Other
+  compressed/FPU configurations and supervisor FP remain unqualified.
   The additional supervisor configurations below are experimental.
 - No riscv-formal monitor. The probe is the only commit source.
 - `rvw query` cannot see the `rvw_trap_*` tap signals. They are simulation-only.
@@ -1038,23 +1039,26 @@ attribution, GUI rendering or other configurations.
 
 ## Extra floating-point profiles
 
-The FP attempt uses private core revision
-`9b63f47fe559dbba7874af9196746412fa1294c1`. It has no tracked source changes.
+The extra profiles use private core revision
+`9b63f47fe559dbba7874af9196746412fa1294c1` with no tracked source changes.
 This differs from the older integer profile pin in the Setup table.
+Existing defaults stay unchanged.
 
-| Config | ISA | Mode | Default change | Verification state |
-|---|---|---|---|---|
-| `rv32imafc` | RV32IMAFC | M | None | Adapter compiled; RTL qualification pending |
-| `rv64imafdc` | RV64IMAFDC | M | None | Adapter compiled; RTL qualification pending |
+| Config | ISA and mode | riscv-tests strict matches | ACT4 strict matches | Directed strict matches | Open core finding |
+|---|---|---:|---:|---:|---|
+| `rv32imafc` | RV32IMAFC, M | 12 | 110 | 33 | Flags-only FEQ.S changes NV without setting FS Dirty |
+| `rv64imafdc` | RV64IMAFDC, M | 24 | 236 | 69 | Same FS defect |
 
-Use `rvw32fp.toml` or `rvw64fp.toml`. Set `RVW_FPU_RUN_ROOT` outside the
-repository. Set the private core and lock environment as in the setup above.
-Use `RVW_VEX_LOCK=vex-fpu`, `RVW_SBT_LOCK=sbt-fpu` and `RVW_NICE=15`.
-`rvw/fpu/build-tests.sh 32` builds F/C; `64` builds F/D/C. Select `fp-isa`
-with `rvw regress run --rvfi-trace --jobs 2`. Compare with the matching
-`rvw/platform32fp.json` or `platform64fp.json` using `rvw regress cosim`.
-The C2/2 capture includes FP destinations, fcsr and mstatus. Their native
-retirement timing still needs strict Spike validation. No FP match is claimed.
+The 484 passing runs compare FP bits, fflags, frm/fcsr and mstatus at
+retirement with no synchronization or mask. A separate flags-only probe
+fails on each width. It is not included in the passing counts.
+Use `rvw32fp.toml` or `rvw64fp.toml` with a private core and external output.
+Set `RVW_VEX_LOCK=vex-fpu`, `RVW_SBT_LOCK=sbt-fpu` and `RVW_NICE=15`.
+Use at most two simulation workers and reuse each cached configuration build.
+The [FP README](rvw/fpu/README.md) gives pins, commands, coverage holes,
+real-unit SoftFloat checks and bounded proof limits. The
+[FS finding](FINDINGS.md#vexii-fp-fs-001) gives the minimal operation and rule.
+No supervisor FP, OS context-switch or whole-core qualification is claimed.
 
 ## Boot checkpoint debug windows
 

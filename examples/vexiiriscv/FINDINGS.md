@@ -213,3 +213,18 @@ The suite reports a C1 failure. To inspect the first reference difference,
 use `rvw cosim check --strict` on that ELF and its C2 trace. The regression
 cosim command preserves the C1 failure and does not label it a match.
 The core fix and its retest remain open. No platform setting hides this defect.
+
+## FP capture timing corrections
+
+| Diagnostic trigger | Classification | Correction and final evidence |
+|---|---|---|
+| Adjacent FP instructions and CSR reads; sticky flags update before or after the probe event | Tool capture defect | Capture enabled real flag ports with their instruction IDs; project their effects in retirement order; 484 passing corpus runs strictly match |
+| FP destination write reaches storage before the corresponding probe event; FS snapshot belongs to another instruction | Tool capture defect | Generic FP commit-state tracker checks actual RF/FCSR/FS effects and rejects unexplained or unretired writes; Scala unit tests include negative controls |
+| First mret snapshot retains the preceding MPIE value | Tool capture defect | Capture the real XRET_APPLY transition with its registered instruction; the basic FS trap/return cases strictly match on both widths |
+
+The early RV32/64 riscv-tests and RV64 ACT4 mismatch reports are diagnostic
+runs. They are superseded by the final strict replay counts in the
+[FP README](rvw/fpu/README.md). Their differences were capture timing errors.
+No canonical NaN replacement, flag mask, FS mask or platform waiver was used.
+The later VEXII-FP-FS-001 finding remains a real core difference: the real
+FCSR changes while the real FS state does not.
