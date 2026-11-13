@@ -1,0 +1,24 @@
+{
+  "memory_regions": [
+    {
+      "soc_region": "keystore"
+    }
+  ],
+  "sources": [],
+  "sinks": [
+    {
+      "signal": "LsuCachelessPlugin_logic_bus_cmd_payload_address",
+      "when": "LsuCachelessPlugin_logic_bus_cmd_valid"
+    },
+    {
+      "signal": "LsuCachelessPlugin_logic_bus_cmd_valid"
+    },
+    {
+      "signal": "FetchCachelessPlugin_logic_bus_cmd_payload_address",
+      "when": "FetchCachelessPlugin_logic_bus_cmd_valid"
+    },
+    {
+      "signal": "FetchCachelessPlugin_logic_bus_cmd_valid"
+    }
+  ]
+}

@@ -108,3 +108,13 @@ channels, `MNEMONICS|CHANNELS`. `results.json` has one C3 `fail` per signature
 (`signature` `sec:campaign:...`), else one `pass` when at least one pair was
 eligible, else an `error` with `inconclusive`. Each pair keeps its paired
 `report.json` under `pair-NNNN/run`, and its reduction under `pair-NNNN/reduced`.
+
+## Automatic IFT bindings
+
+An `ift-core` policy entry `{"soc_region": NAME}` (optional `offset`, `size`
+or `register`) resolves to `{base, size, soc_region[, register]}` through a
+`rvw.soc/1` map. `csrs` lists catalog CSR names or addresses; each resolves to
+one design netname, or the binding's `csr_signals` map gives it. The
+`rvw.sec/1` IFT report adds `csrs` (name to netname), the resolved
+`memory_regions` and `tainted_memory` (`words`: tainted RAM words at the end;
+`propagated`: up to 64 `[address, mask]` words outside the secret regions).

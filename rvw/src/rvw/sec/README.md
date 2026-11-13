@@ -281,6 +281,36 @@ With `probe-ct.json` (a loop of divides): VexRiscv gives `no_leak_observed` on
 cycles, handshakes, branch events and counters. VexiiRiscv differs in cycles,
 handshakes and branch-event timing, reduced to one `remu`.
 
+### Automatic secret bindings
+
+An `ift-core` policy can name secrets by their project meaning:
+
+- `{"soc_region": "keystore"}` in `memory_regions`, optionally with
+  `offset`/`size` or a `register` of an MMIO region, resolves through the
+  project's `rvw.soc/1` map (`--soc`, or `soc` in the core binding).
+- `"csrs": ["mscratch", "0x341"]` checks each name or address against the
+  pinned CSR catalog and finds the one design netname that stores it (name ends
+  in `_<csr>`; flop outputs and internal names win over copies and ports). A
+  binding `csr_signals` map overrides the search. No match or several matches
+  is an error that lists the candidates.
+
+Taint is kept per RAM word. The report lists the resolved `csrs` and
+`memory_regions` and `tainted_memory`: the number of tainted words at the end
+and the words outside the secret regions that received tainted data.
+
+Results (`ift/auto-policy.json`: the SoC `keystore` region, plus `mscratch` on
+VexRiscv; the same programs on both cores):
+
+| Core | Program | Result | Tainted RAM outside the secrets |
+|---|---|---|---|
+| VexRiscv | `keystore-ct` (keystore XOR mscratch, stored) | `no_leak_observed`; `mscratch` resolved to `CsrPlugin_mscratch` | the 4 output words |
+| VexRiscv | `keystore-index` (table lookup by a keystore word) | violation: data bus address at cycle 17 | none |
+| VexiiRiscv | `keystore-ct` | `no_leak_observed` | the 4 output words |
+| VexiiRiscv | `keystore-index` | violation: LSU address at cycle 75 | none |
+
+On VexiiRiscv, `csrs` gives "no storage signal": its CSRs live in a RAM.
+
+
 ### Results on the example cores (2026-11-13, Verilator 5.049, Spike)
 
 Each row is one command on RTL generated from the pinned example revisions

@@ -56,5 +56,6 @@
     "branch:vex_static": {
       "semantics": "final-prediction"
     }
-  }
+  },
+  "soc": "soc-sec.json"
 }
