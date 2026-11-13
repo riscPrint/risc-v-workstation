@@ -507,6 +507,7 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 - Exit codes: 0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.
 - Stop: A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.
 - Locks: Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.
+- Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core.
 
 ### New core bring-up (`bring-up`)
 
@@ -523,7 +524,7 @@ A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
    - If exit 0: go to `init`.
 4. **init**: Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook. `rvw init --isa <ISA> --wire-build --json`
    - If exit 0: go to `map-adapter`.
-5. **map-adapter**: Map the core's buses, RVFI and tohost in rvw/src/main/scala/rvwcore/CoreAdapter.scala. Use docs/AGENT_SETUP.md steps 4 and 5. Build a smoke ELF. (manual)
+5. **map-adapter**: Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF. (manual)
    - If the adapter compiles: go to `smoke`.
 6. **smoke**: Build the model and run one ELF through C1. `rvw doctor --smoke-elf <ELF> --smoke-options rvfi --json` / MCP `rvw_doctor`
    - If smoke run fails: go to `test-fails`.
@@ -548,28 +549,36 @@ A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
 
 A C1 run or a regression test reports fail, assert, timeout or rvfi_error.
 
-1. **bundle**: Write the failure report from the failed run directory. `rvw bundle <RUN> --json` / MCP `bundle_make`
+1. **identity**: Check the source revision, RTL hash, ELF hash, config and seed of the failing run and each cited artifact. Reject stale waves, wrong ELFs and incomplete runs before cause analysis. (manual)
+   - If identities match and the failure is reproduced: go to `bundle`.
+   - If evidence is missing or inconsistent: go to `stop`. Record the missing evidence. Do not claim a cause or fix.
+2. **bundle**: Write the failure report from the failed run directory. `rvw bundle <RUN> --json` / MCP `bundle_make`
    - If the bundle has a C2 trace: go to `cosim`.
    - If no C2 trace: go to `stop`. Rerun the test with --rvfi-trace.
-2. **cosim**: Find the first instruction where the core and Spike differ. `rvw cosim check --elf <ELF> --trace <RUN>/rvfi.jsonl --json` / MCP `cosim_check`
+3. **cosim**: Find the first instruction where the core and Spike differ. `rvw cosim check --elf <ELF> --trace <RUN>/rvfi.jsonl --json` / MCP `cosim_check`
    - If mismatch at a retirement: go to `known-bug`.
    - If match but the run failed: go to `wave`. The failure is not architectural: look at the end condition, hang or assertion.
-3. **known-bug**: Compare the failure signature with stored bug patterns. `rvw bugmem match <BUNDLE>/report.json` / MCP `bugmem_match`
+4. **known-bug**: Compare the failure signature with stored bug patterns. `rvw bugmem match <BUNDLE>/report.json` / MCP `bugmem_match`
    - If a high score: go to `drivers`. Check the stored root cause first.
    - If no match: go to `drivers`.
-4. **drivers**: Ask what drives the wrong register or signal. `rvw query drivers <SIGNAL> --json` / MCP `query_drivers`
+5. **drivers**: Ask what drives the wrong register or signal. `rvw query drivers <SIGNAL> --json` / MCP `query_drivers`
    - If the driver logic is clear: go to `wave`.
-5. **wave**: Explain the wrong value at the failing cycle. `rvw wave why <WAVE> <SIGNAL> --at <TIME> --json` / MCP `wave_why`
+6. **wave**: Explain the wrong value at the failing cycle. `rvw wave why <WAVE> <SIGNAL> --at <TIME> --json` / MCP `wave_why`
    - If the cause is a Scala statement: go to `fix`.
-6. **fix**: Edit the core. Keep the change small. Do not edit the workstation. (manual)
-   - If edited: go to `gate`.
-7. **gate**: Judge the fix on the committed revision. `rvw regress gate --tier quick --base-rev <REV> --json` / MCP `regress_gate`
+   - If no observed statement explains the value: go to `stop`. Keep the cause unknown. Static drivers alone do not prove a dynamic cause.
+7. **fix**: Edit the core. Keep the change small. Do not edit the workstation. (manual)
+   - If edited: go to `reproduce`.
+8. **reproduce**: Rerun the failing test and the required passing tests with the repair. Use a new output directory. Keep all results. `rvw regress run --tier quick --rvfi-trace --out <REPAIRED_RUN> --json` / MCP `regress_run`
+   - If the failing test passes and the required passing tests stay passing: go to `gate`.
+   - If a test fails: go to `bundle`.
+   - If coverage is incomplete: go to `stop`. Do not report a repair.
+9. **gate**: Judge the fix on the committed revision. `rvw regress gate --tier quick --base-rev <REV> --json` / MCP `regress_gate`
    - If reject: go to `bundle`.
    - If inconclusive (exit 3): go to `stop`. Do not claim a fix.
    - If accept: go to `done`.
-8. **reduce** (optional): Optional: shrink a long failing program before debugging. `rvw reduce <RUN> --json` / MCP `reduce_run`
+10. **reduce** (optional): Optional: shrink a long failing program before debugging. `rvw reduce <RUN> --json` / MCP `reduce_run`
    - If a smaller reproduction: go to `bundle`.
-9. **bisect** (optional): Optional: find the commit that introduced a regression. `rvw bisect <RUN> --good <REV> --json` / MCP `bisect_run`
+11. **bisect** (optional): Optional: find the commit that introduced a regression. `rvw bisect <RUN> --good <REV> --json` / MCP `bisect_run`
    - If a first bad commit: go to `drivers`.
 
 ### Add coverage (`add-coverage`)

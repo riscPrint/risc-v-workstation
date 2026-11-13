@@ -27,3 +27,8 @@ target exists and that the document block equals the generated text.
 - A step with `manual: true` is work the agent does in the core repository.
 - The guide names tools and decisions. It is not evidence: every verdict still
   comes from the named command's own result and exit code.
+
+The bring-up workflow follows [the integration guide](../../../../docs/INTEGRATION_GUIDE.md).
+The failure workflow checks artifact identities before cause analysis. It requires
+a reproduced failure, repair runs and a committed gate result. Missing dynamic
+evidence leaves the cause unknown.

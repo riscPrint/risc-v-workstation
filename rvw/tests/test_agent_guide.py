@@ -70,3 +70,13 @@ def test_guide_resource_over_mcp_stdio():
                 result = await s.call_tool('agent_guide', {'workflow': 'add-coverage'})
                 assert json.loads(result.content[0].text)['workflows'][0]['id'] == 'add-coverage'
     anyio.run(session)
+
+
+def test_failure_workflow_requires_identity_and_repair_runs():
+    data = guide.load()
+    assert 'docs/INTEGRATION_GUIDE.md' in data['conventions']['integration_guide']
+    steps = guide.select(data, 'test-fails')['workflows'][0]['steps']
+    assert steps[0]['id'] == 'identity'
+    fix = next(s for s in steps if s['id'] == 'fix')
+    assert fix['decide'][0]['then'] == 'reproduce'
+    assert any(d['then'] == 'stop' for s in steps if s['id'] == 'wave' for d in s['decide'])
