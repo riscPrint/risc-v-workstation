@@ -335,3 +335,22 @@ Limits: native Spike checks architectural byte assertions. No clean/flush
 writeback, device observation, RTL cache behavior, privilege-control matrix
 or concurrent agent campaign is established. Those require a project observer.
 The default suites are unchanged. Unsupported extensions must not be selected.
+
+### Pinned Ztso model selection
+
+Use `litmus.py --model ztso --herd /path/to/herd7 --herd-source /path/to/source`
+with the same pinned suite. The model is `riscv-tso.cat` in herdtools7 7.58 at
+`1ca343e16a2038e406d1ac674e7e3a1b722b36c7`. The existing full library hash
+covers this model and its includes. Reports record `memory_model`, `model_file`
+and the reference source. Allowed-set hashes are separate for RVWMO and Ztso.
+The fixture planner validates the selected model's complete pinned sets.
+
+Add `--declared-ztso` only when the project declares DUT support. A Ztso DUT
+adapter run requires that declaration. Reference-only generation leaves
+implementation support `not_verified`. No RVWMO recorded fallback is available
+for Ztso. Missing native herd gives inconclusive. Device ordering remains a
+separate platform obligation.
+
+Native model smoke checks retain SB's all-zero outcome and exclude the MP
+message-passing violation and LB's all-one outcome. These are model results,
+not evidence that a DUT implements Ztso. No target Ztso support is inferred.

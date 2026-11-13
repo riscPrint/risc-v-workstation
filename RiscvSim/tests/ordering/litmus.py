@@ -128,13 +128,19 @@ def main():
     p.add_argument('--tests', type=Path, required=True)
     p.add_argument('--herd-source', type=Path, help='required when herd7 is installed')
     p.add_argument('--herd', default='herd7')
+    p.add_argument('--model', choices=['rvwmo', 'ztso'], default='rvwmo')
+    p.add_argument('--declared-ztso', action='store_true', help='project declares DUT Ztso support')
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--dut-adapter', type=Path, help='project executable: TEST.litmus -> outcome JSON on stdout')
     args = p.parse_args()
     pins = json.loads(PINS.read_text())
     args.out.mkdir(parents=True, exist_ok=True)
     try:
+        if args.model == 'ztso' and args.dut_adapter and not args.declared_ztso:
+            raise ValueError('Ztso DUT checks require --declared-ztso')
         native = shutil.which(args.herd)
+        if args.model == 'ztso' and not native:
+            raise ValueError('Ztso needs native herd7; suite records are RVWMO only')
         if native and args.herd_source is None:
             raise ValueError('--herd-source required for installed herd7')
         if not native:
@@ -151,10 +157,14 @@ def main():
             executable = Path(shutil.which(args.herd) or args.herd).resolve()
             report = {'pins': pins, 'herd_version': version,
                       'herd_executable_sha256': hashlib.sha256(executable.read_bytes()).hexdigest(), 'cases': [], 'dut': 'not_run'}
+        report['memory_model'] = args.model
+        report['implementation_support'] = 'declared' if args.declared_ztso else 'not_verified'
+        model = pins['models'][args.model]
+        report['model_file'] = model
         for case in pins['cases']:
             test = args.tests / case
             if native:
-                output = checked([args.herd, '-I', str(libdir), '-model', str(libdir / 'riscv.cat'), str(test)])
+                output = checked([args.herd, '-I', str(libdir), '-model', str(libdir / model), str(test)])
                 (args.out / (test.stem + '.herd.log')).write_text(output)
                 allowed = parse_states(output)
                 report['reference_source'] = 'native-herd7'

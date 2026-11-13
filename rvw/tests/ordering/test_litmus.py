@@ -143,3 +143,37 @@ def test_recorded_official_suite(tmp_path):
     states = {Path(c['test']).stem: {litmus.canonical(s) for s in c['allowed']} for c in report['cases']}
     zero = litmus.canonical({'0:x7': 0, '1:x7': 0})
     assert zero in states['SB'] and zero not in states['SB+fence.rw.rws']
+
+
+def test_native_ztso_model(tmp_path):
+    import json
+    import os
+    import sys
+    tests, source, herd = (os.environ.get(k) for k in ('RVW_LITMUS_TESTS', 'RVW_HERD_SOURCE', 'RVW_HERD'))
+    if not all((tests, source, herd)):
+        pytest.skip('set pinned native herd and suite paths for Ztso checks')
+    command = [sys.executable, str(litmus.PINS.with_name('litmus.py')), '--tests', tests,
+               '--herd-source', source, '--herd', herd, '--model', 'ztso', '--out', str(tmp_path)]
+    run = litmus.run_group(command, timeout=30, capture=True)
+    assert run.returncode == 0, run.stdout
+    report = json.loads(run.stdout)
+    assert report['memory_model'] == 'ztso' and report['model_file'] == 'riscv-tso.cat'
+    assert report['implementation_support'] == 'not_verified' and report['dut'] == 'not_run'
+    states = {Path(c['test']).stem: {litmus.canonical(s) for s in c['allowed']} for c in report['cases']}
+    assert litmus.canonical({'0:x7': 0, '1:x7': 0}) in states['SB']
+    assert litmus.canonical({'1:x5': 1, '1:x7': 0}) not in states['MP']
+    assert litmus.canonical({'0:x5': 1, '1:x5': 1}) not in states['LB']
+    plan = litmus.run_group([sys.executable, str(litmus.PINS.with_name('fixture.py')),
+                             '--reference', str(tmp_path/'outcomes.json'), '--tests', tests,
+                             '--out', str(tmp_path/'plan.json')], timeout=10, capture=True)
+    assert plan.returncode == 0, (plan.stdout, plan.stderr)
+    run = litmus.run_group(command+['--dut-adapter', '/missing/adapter'], timeout=30, capture=True)
+    assert run.returncode == 3 and '--declared-ztso' in run.stdout
+
+
+def test_no_ztso_recorded_fallback(tmp_path):
+    import sys
+    run = litmus.run_group([sys.executable, str(litmus.PINS.with_name('litmus.py')),
+                           '--tests', str(tmp_path), '--herd', '/missing/herd7',
+                           '--model', 'ztso', '--out', str(tmp_path/'out')], timeout=10, capture=True)
+    assert run.returncode == 3 and 'RVWMO only' in run.stdout

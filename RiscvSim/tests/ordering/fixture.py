@@ -61,10 +61,14 @@ def validate_reference(reference):
             or len(cases) != len(pins['cases'])
             or {c['test'] for c in cases} != set(pins['cases'])):
         raise ValueError('complete pinned reference required')
+    model = reference.get('memory_model', 'rvwmo')
+    if model not in ('rvwmo', 'ztso'):
+        raise ValueError('unsupported reference memory model')
+    hashes = pins['ztso_allowed_sha256'] if model == 'ztso' else pins['allowed_sha256']
     for case in cases:
         states = sorted(canonical(s) for s in case['allowed'])
         digest = hashlib.sha256(json.dumps(states, separators=(',', ':')).encode()).hexdigest()
-        if digest != pins['allowed_sha256'][case['test']]:
+        if digest != hashes[case['test']]:
             raise ValueError('allowed states differ from complete pinned model outcomes')
 
 
