@@ -351,3 +351,43 @@ There was not enough time to review these areas in depth:
 - Privilege, memory-order, CSR, VexiiRiscv and arch-model areas.
 - VIP protocol agents' own monitors (`vip/*.py`) and Uvm/ conformance runs.
 - The VS Code extension, SpinalWaves, SpinalTrace and SpinalBlocks (no verdicts).
+
+# Part 2
+
+Date: 2026-11-13. Base: `origin/main` at `79488348` (after #1258). Same method and labels as
+Part 1. Part 2 has two jobs: fix the cheap reporting defects that Part 1
+recorded as unusual, and review the areas that Part 1 did not read.
+
+## Part 2a: reporting defects from Part 1
+
+| ID | Change | PR |
+|---|---|---|
+| D5 | `rvw plan status` exits 0 for `pass`, 1 for `fail`, 3 for any other verdict, 2 for input errors. Before the fix, a plan with a failing C1 test gave `verdict: fail` and exit 0. | [#1264](https://github.com/riscPrint/risc-v-workstation/pull/1264) |
+| R1 | The farm contract already decides the exit code: `rvw.farm-gate/1` is collection state, so exit 0 means "a C4 report was collected", and the report names `recorded_verdict`. The exit code stays. The defect was in the in-tree caller that read exit 0 as accept: a farm workflow admitted dependents of a `complete` gate job. Reproduction: workflow `gate -> merge`, where `gate` collects `verdict: reject` and exits 0. After one worker step, `merge` was `queued`. Now a node whose last attempt collected `reject` shows `dut_failure`, and `inconclusive` shows `inconclusive`. Both block dependents. | [#1269](https://github.com/riscPrint/risc-v-workstation/pull/1269) |
+| M1 | The MCP envelope maps a C4 report (`schema: rvw.verdict/*`) faithfully: `accept` to `pass`, `reject` to `fail`, `inconclusive` to `inconclusive`. `legacy_verdict` keeps the C4 word. An error result never maps to `pass`. Other legacy verdicts stay `inconclusive`. | [#1285](https://github.com/riscPrint/risc-v-workstation/pull/1285) |
+| D3 | `rvw fault run --watchdog` counts a hang as `detected` only when the adapter stopped the run at the cycle limit (C1 `status: timeout` without `wall_clock_timeout`), the limit under which the golden run passed. A harness wall-clock timeout or a C1 `wall_clock_timeout` stays `timeout`, and the report stays `inconclusive`. | [#1286](https://github.com/riscPrint/risc-v-workstation/pull/1286) |
+| D2 | A security campaign without a signature is `no_leak_observed` only when at least `min_eligible_pairs = max(1, ceil(min_eligible_fraction × pairs))` pairs were eligible. `min_eligible_fraction` is a manifest key with default 0.5. Below the minimum, the report and C3 entry are `inconclusive`. The report gives `eligible_pairs`, `min_eligible_pairs` and `pairs`. A found signature is still `violation`. | [#1287](https://github.com/riscPrint/risc-v-workstation/pull/1287) |
+| C1 | The cosim contract did not define the offline result for a matching prefix of a trace without an end record. `rvw cosim live` and lockstep already make it `inconclusive`. `rvw cosim check` (CLI and MCP) now does the same: `status: inconclusive`, `cause: trace_incomplete`, exit 3. `scope: trace prefix` and `instructions` still describe the compared prefix. The library function `checker.check` keeps its prefix result, because every in-tree consumer checks `trace_complete` itself. | [#1288](https://github.com/riscPrint/risc-v-workstation/pull/1288) |
+
+### Owner decisions (not changed)
+
+**D4.** `rvw regress gate --filter REGEX` can accept on a subset. C3 records
+the filter in `extra.filter`, but the C4 `gate` block (`regress/plan.py`)
+records only `tier`, `base`, `candidate` and `known_failures_file`. Proposed
+text for `docs/contracts/c4-verdict.md`:
+
+> The C4 `gate` block records `filter`: the `--filter` regular expression, or
+> null when all tests of the tier ran. A gate with a non-null filter is a
+> subset gate. Its `accept` covers only the selected tests. A consumer that
+> needs a tier acceptance (a plan `check` of kind `gate`, the farm gate intake)
+> treats a subset `accept` as `inconclusive` with cause `filtered_gate`.
+
+**C2.** A C2/1 trace has no FP state. On an F/D core, a `match` compares FP
+effects only where they reach integer registers or memory. The result says so
+in `state_coverage.fp: false`. Proposed text for
+`docs/contracts/c2-rvfi-trace.md`, section "C2 version 2":
+
+> When the platform ISA includes F or D and the trace does not declare the
+> `state` capability, `rvw cosim check` returns `inconclusive` with cause
+> `fp_state_not_observed` instead of `match`. `--allow-integer-scope` keeps the
+> integer-only `match`, and the result records `scope: integer state only`.
