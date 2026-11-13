@@ -35,3 +35,17 @@ def test_machine_plan_excludes_paging_and_pmp():
     assert 'pmp' not in selected
     assert 'privilege-controls' not in selected
     assert 'amo-fault-rv64' not in selected
+
+
+def test_act4_profiles_declare_rv64_and_sv39():
+    from rvw.regress.act4 import description, selection
+    for suffix in ['64m', '64su']:
+        profile = ROOT / f'rvw/act4-{suffix}/profile.json'
+        data, platform, groups = description(profile)
+        assert platform.xlen == data['params']['MXLEN'] == 64
+        assert {'i', 'm', 'zaamo', 'zalrsc'} <= set(groups)
+    supervisor = json.loads((ROOT / 'rvw/act4-64su/profile.json').read_text())
+    assert 'sv39' in supervisor['extensions'] and 'sv32' not in supervisor['extensions']
+    assert supervisor['params']['PMP_GRANULARITY'] == 4
+    assert supervisor['params']['PMP_NA4_SUPPORTED'] is False
+    assert selection(ROOT / 'rvw/act4-64su/profile.json')['csr_contract']['missing_required'] == 1
