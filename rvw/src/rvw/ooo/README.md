@@ -467,3 +467,18 @@ This remains a bounded pressure model, not a physical free-list implementation.
 The Python loop handles these streams. Vector operations, FP result validation,
 rounding semantics and trapping execution remain unsupported. The C2 producer
 and independent execution checks must establish architectural correctness.
+
+### Component events for RTL comparison
+
+Native cache and translation counts also enter the flat `events` map used
+by `ooo-calibrate`. Cache names have the level prefix, for example
+`l1d_demand_accesses`, `l1d_demand_misses`, `llc_demand_misses`,
+`l2_prefetch_issued` and `l1d_prefetch_useful`. Translation examples are
+`tlb_walks`, `tlb_walk_memory_references`, `tlb_l1_accesses` and `tlb_l2_misses`.
+Only present integer counts are copied. Ratios, configuration sizes and
+latency averages are not event counts. The nested native report stays intact.
+
+Cache requests include replay attempts and can include page-walk traffic
+when the component TLB uses the cache. Instruction requests are line accesses,
+not retired instructions. RTL event maps must declare matching predicates,
+units and regions. Equal counter names alone do not establish comparability.

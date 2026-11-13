@@ -132,6 +132,8 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                            backend="python", instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
         result["events"].update(adapter.events)
         result["components"] = adapter.stats(result["instret"])
+        from .component_events import counters
+        result["events"].update(counters(result["components"]))
         return result
 
 
@@ -472,7 +474,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

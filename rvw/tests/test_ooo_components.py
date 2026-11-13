@@ -22,6 +22,8 @@ def test_native_cache_hierarchy_and_warm_reuse():
     memory = r['components']['memory']
     assert memory['l1d']['demand_accesses'] == 4
     assert memory['l1d']['demand_misses'] == 1
+    assert r['events']['l1d_demand_misses'] == 1
+    assert r['events']['l1d_demand_accesses'] == 4
     assert r['cycles'] > simulate(ops, config())['cycles']
 
 
