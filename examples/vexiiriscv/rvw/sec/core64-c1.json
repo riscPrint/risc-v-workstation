@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.sec-c1/1",
+  "name": "vexiiriscv",
+  "platform": "../platform64m.json",
+  "adapter": "../run64.sh",
+  "config": "rv64ima",
+  "link": "../programs/link.ld"
+}

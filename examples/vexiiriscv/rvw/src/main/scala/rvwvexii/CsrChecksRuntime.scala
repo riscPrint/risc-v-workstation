@@ -4,7 +4,7 @@ import java.io.File
 import spinal.core._
 import spinal.core.sim._
 import spinalchecks._
-import riscvsim.{ElfFile, ToHost}
+import riscvsim.{ElfFile, ToHost, RvfiTraceWriter}
 import vexiiriscv.{ParamSimple, VexiiRiscv}
 import vexiiriscv.execute.lsu.LsuCachelessPlugin
 import vexiiriscv.fetch.FetchCachelessPlugin
@@ -18,13 +18,15 @@ object CsrChecksRuntime {
     val source = scala.io.Source.fromFile(args(0))
     val model = try ujson.read(source.mkString) finally source.close()
     val bankModel = model("schema").str == "rvw.csr-bank/1"
-    require(model("xlen").num == 32)
+    val xlen = model("xlen").num.toInt
+    require(Set(32,64)(xlen))
+    require(!bankModel || xlen == 32, "CSR bank binding remains RV32 only")
     if (!bankModel) {
-    require(model("schema").str == "rvw.csr/1" && model("xlen").num == 32)
+    require(model("schema").str == "rvw.csr/1" && model("xlen").num == xlen)
     val scratch = model("csrs").arr.find(_("name").str == "mscratch").get
     require(scratch("address").num == 0x340 && scratch("privilege").str == "M")
     val fields = scratch("fields").arr
-    require(fields.size == 1 && fields.head("lsb").num == 0 && fields.head("width").num == 32 &&
+    require(fields.size == 1 && fields.head("lsb").num == 0 && fields.head("width").num == xlen &&
       fields.head("access")("M").str == "RW" && scratch("reset_known").bool == false)
     }
     val out = new File(args(1)).getCanonicalFile
@@ -46,7 +48,7 @@ object CsrChecksRuntime {
             "DivRadix.scala:113-116 clears done on flush; DivPlugin.scala:116-117 consumes by flush with ready low")) else Nil,
         enable = if (allChecks) Seq("*") else Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
     def design(): VexiiRiscv = {
-      val plugins = VexiiTop.param("rv32im").plugins()
+      val plugins = VexiiTop.param(if(xlen == 64) "rv64ima" else "rv32im").plugins()
       plugins += new TrapTapPlugin
       if (bankModel) plugins += new CsrBankPlugin(model, fault)
       else plugins += new CsrChecksPlugin(fault)
@@ -64,7 +66,7 @@ object CsrChecksRuntime {
     require(checks.inserted.count(_.kind == "csr.read") == (if(bankModel) model("views").arr.count(_.obj.get("present").forall(_.bool)) else 1))
     for ((path,index) <- args.drop(3).zipWithIndex) {
       val elf = ElfFile(path)
-      require(elf.xlen == 32 && elf.entry == 0x80000000L)
+      require(elf.xlen == xlen && elf.entry == 0x80000000L)
       val memory = mutable.LongMap.empty[Int]
       elf.load { (base,bytes) => bytes.indices.foreach(i => memory(base+i) = bytes(i) & 255) }
       def word(address: Long, bytes: Int): BigInt = (0 until bytes).foldLeft(BigInt(0))((v,i) =>
@@ -76,6 +78,7 @@ object CsrChecksRuntime {
         val tap=dut.host[TrapTapPlugin].logic
         val ibus=dut.host[FetchCachelessPlugin].logic.bus
         val dbus=dut.host[LsuCachelessPlugin].logic.bus
+        if(xlen == 64) dbus.rsp.scMiss #= false
         val ibytes=ibus.p.dataWidth/8
         val dbytes=dbus.p.dataWidth/8
         val fetch=mutable.Queue.empty[(BigInt,Int)]
@@ -88,9 +91,13 @@ object CsrChecksRuntime {
         dut.host[PrivilegedPlugin].logic.rdtime #= 0
         ibus.cmd.ready #= true;ibus.rsp.valid #= false;ibus.rsp.word #= 0;ibus.rsp.error #= false;ibus.rsp.id #= 0
         dbus.cmd.ready #= true;dbus.rsp.valid #= false;dbus.rsp.data #= 0;dbus.rsp.error #= false;dbus.rsp.id #= 0
-        val backend=new C2Backend(32,()=>cycle,()=>tap.privilege.toInt & 3,
+        val trace = new RvfiTraceWriter(new File(out,s"rvfi_$index.jsonl"),
+          ujson.Obj("xlen" -> xlen, "isa" -> s"rv${xlen}im${if(xlen == 64) "a" else ""}_zicsr_zifencei",
+            "core" -> "vexiiriscv", "config" -> s"rv${xlen}im-generated-checks", "elf" -> elf.file.getCanonicalPath))
+        try {
+        val backend=new C2Backend(xlen,()=>cycle,()=>tap.privilege.toInt & 3,
           ()=>if(traps.nonEmpty) traps.dequeue() else throw new IllegalStateException("missing trap observation"),
-          _=>retired+=1, (_,_,_,_)=>(),
+          record=>{trace.write(record);retired+=1}, (at,cause,tval,intr)=>trace.trap(at,cause,tval,intr),
           (addr,size,value)=>{ if(host.onStore(addr,size,value).nonEmpty && done.isEmpty) done=Some(cycle) })
         cd.onSamplings { if(tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt,tap.tval.toBigInt)) }
         val probe=new VexiiRiscvProbe(dut,None,withRvls=false)
@@ -129,11 +136,12 @@ object CsrChecksRuntime {
           "elf" -> Json.Str(elf.file.getCanonicalPath),"elf_sha256" -> Json.Str(elf.sha256),
           "cycles" -> Json.Num(BigDecimal(cycle)),"retired" -> Json.Num(BigDecimal(retired))))
         val status = if(done.isEmpty) "timeout" else if(host.value != 1 || fs.nonEmpty) "fail" else "pass"
+        trace.end(cycle,status)
         if (allChecks) {
           import Json._
           campaignFailed ||= status != "pass"
           ChecksSim.writeFile(new File(out, s"c1_$index.json").getPath, Json.write(obj(
-            "schema" -> "rvw.run/1", "core" -> "vexiiriscv", "config" -> "rv32im-generated-checks",
+            "schema" -> "rvw.run/1", "core" -> "vexiiriscv", "config" -> s"rv${xlen}im-generated-checks",
             "status" -> status, "elf" -> elf.file.getCanonicalPath, "elf_sha256" -> elf.sha256,
             "cycles" -> cycle, "instret" -> retired, "max_cycles" -> 20000,
             "artifacts" -> obj("checks" -> s"run_$index.json", "inventory" -> "checks.json"),
@@ -146,6 +154,7 @@ object CsrChecksRuntime {
           if(!fault) require(fs.isEmpty,fs.map(_.check.id).mkString(","))
         }
         if(fault && index==0) require(fs.exists(_.check.kind=="csr.read"),"read fault was not detected")
+        } finally trace.close()
       }
     }
     require(!campaignFailed, "generated checks or software failed; see C1 reports")

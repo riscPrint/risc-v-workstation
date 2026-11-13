@@ -1,0 +1,1207 @@
+{
+  "scope": "Native RV64IMA machine tool smoke. Supervisor walk evidence is separate. No full-core proof.",
+  "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "functional": {
+    "traces": 85,
+    "retired": 33733,
+    "unknown_encodings": {},
+    "mnemonic_hits": [
+      {
+        "bin": [
+          "add",
+          "M"
+        ],
+        "count": 1077
+      },
+      {
+        "bin": [
+          "addi",
+          "M"
+        ],
+        "count": 14904
+      },
+      {
+        "bin": [
+          "addiw",
+          "M"
+        ],
+        "count": 1851
+      },
+      {
+        "bin": [
+          "addw",
+          "M"
+        ],
+        "count": 52
+      },
+      {
+        "bin": [
+          "amoadd.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoadd.w",
+          "M"
+        ],
+        "count": 4
+      },
+      {
+        "bin": [
+          "amoand.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoand.w",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amomax.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amomax.w",
+          "M"
+        ],
+        "count": 3
+      },
+      {
+        "bin": [
+          "amomaxu.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amomaxu.w",
+          "M"
+        ],
+        "count": 3
+      },
+      {
+        "bin": [
+          "amomin.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amomin.w",
+          "M"
+        ],
+        "count": 3
+      },
+      {
+        "bin": [
+          "amominu.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amominu.w",
+          "M"
+        ],
+        "count": 3
+      },
+      {
+        "bin": [
+          "amoor.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoor.w",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoswap.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoswap.w",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoxor.d",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "amoxor.w",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "and",
+          "M"
+        ],
+        "count": 41
+      },
+      {
+        "bin": [
+          "andi",
+          "M"
+        ],
+        "count": 19
+      },
+      {
+        "bin": [
+          "auipc",
+          "M"
+        ],
+        "count": 1282
+      },
+      {
+        "bin": [
+          "beq",
+          "M"
+        ],
+        "count": 436
+      },
+      {
+        "bin": [
+          "bge",
+          "M"
+        ],
+        "count": 132
+      },
+      {
+        "bin": [
+          "bgeu",
+          "M"
+        ],
+        "count": 46
+      },
+      {
+        "bin": [
+          "blt",
+          "M"
+        ],
+        "count": 40
+      },
+      {
+        "bin": [
+          "bltu",
+          "M"
+        ],
+        "count": 40
+      },
+      {
+        "bin": [
+          "bne",
+          "M"
+        ],
+        "count": 5200
+      },
+      {
+        "bin": [
+          "csrrs",
+          "M"
+        ],
+        "count": 255
+      },
+      {
+        "bin": [
+          "csrrw",
+          "M"
+        ],
+        "count": 510
+      },
+      {
+        "bin": [
+          "csrrwi",
+          "M"
+        ],
+        "count": 170
+      },
+      {
+        "bin": [
+          "div",
+          "M"
+        ],
+        "count": 10
+      },
+      {
+        "bin": [
+          "divu",
+          "M"
+        ],
+        "count": 9
+      },
+      {
+        "bin": [
+          "divuw",
+          "M"
+        ],
+        "count": 9
+      },
+      {
+        "bin": [
+          "divw",
+          "M"
+        ],
+        "count": 10
+      },
+      {
+        "bin": [
+          "fence",
+          "M"
+        ],
+        "count": 86
+      },
+      {
+        "bin": [
+          "fence.i",
+          "M"
+        ],
+        "count": 2
+      },
+      {
+        "bin": [
+          "jal",
+          "M"
+        ],
+        "count": 121
+      },
+      {
+        "bin": [
+          "jalr",
+          "M"
+        ],
+        "count": 13
+      },
+      {
+        "bin": [
+          "lb",
+          "M"
+        ],
+        "count": 107
+      },
+      {
+        "bin": [
+          "lbu",
+          "M"
+        ],
+        "count": 48
+      },
+      {
+        "bin": [
+          "ld",
+          "M"
+        ],
+        "count": 205
+      },
+      {
+        "bin": [
+          "lh",
+          "M"
+        ],
+        "count": 108
+      },
+      {
+        "bin": [
+          "lhu",
+          "M"
+        ],
+        "count": 48
+      },
+      {
+        "bin": [
+          "lr.w",
+          "M"
+        ],
+        "count": 1025
+      },
+      {
+        "bin": [
+          "lui",
+          "M"
+        ],
+        "count": 1736
+      },
+      {
+        "bin": [
+          "lw",
+          "M"
+        ],
+        "count": 133
+      },
+      {
+        "bin": [
+          "lwu",
+          "M"
+        ],
+        "count": 48
+      },
+      {
+        "bin": [
+          "mret",
+          "M"
+        ],
+        "count": 85
+      },
+      {
+        "bin": [
+          "mul",
+          "M"
+        ],
+        "count": 47
+      },
+      {
+        "bin": [
+          "mulh",
+          "M"
+        ],
+        "count": 43
+      },
+      {
+        "bin": [
+          "mulhsu",
+          "M"
+        ],
+        "count": 43
+      },
+      {
+        "bin": [
+          "mulhu",
+          "M"
+        ],
+        "count": 45
+      },
+      {
+        "bin": [
+          "mulw",
+          "M"
+        ],
+        "count": 43
+      },
+      {
+        "bin": [
+          "or",
+          "M"
+        ],
+        "count": 41
+      },
+      {
+        "bin": [
+          "ori",
+          "M"
+        ],
+        "count": 19
+      },
+      {
+        "bin": [
+          "rem",
+          "M"
+        ],
+        "count": 9
+      },
+      {
+        "bin": [
+          "remu",
+          "M"
+        ],
+        "count": 9
+      },
+      {
+        "bin": [
+          "remuw",
+          "M"
+        ],
+        "count": 9
+      },
+      {
+        "bin": [
+          "remw",
+          "M"
+        ],
+        "count": 10
+      },
+      {
+        "bin": [
+          "sb",
+          "M"
+        ],
+        "count": 109
+      },
+      {
+        "bin": [
+          "sc.w",
+          "M"
+        ],
+        "count": 1028
+      },
+      {
+        "bin": [
+          "sd",
+          "M"
+        ],
+        "count": 176
+      },
+      {
+        "bin": [
+          "sh",
+          "M"
+        ],
+        "count": 111
+      },
+      {
+        "bin": [
+          "sll",
+          "M"
+        ],
+        "count": 60
+      },
+      {
+        "bin": [
+          "slli",
+          "M"
+        ],
+        "count": 1029
+      },
+      {
+        "bin": [
+          "slliw",
+          "M"
+        ],
+        "count": 34
+      },
+      {
+        "bin": [
+          "sllw",
+          "M"
+        ],
+        "count": 61
+      },
+      {
+        "bin": [
+          "slt",
+          "M"
+        ],
+        "count": 52
+      },
+      {
+        "bin": [
+          "slti",
+          "M"
+        ],
+        "count": 30
+      },
+      {
+        "bin": [
+          "sltiu",
+          "M"
+        ],
+        "count": 30
+      },
+      {
+        "bin": [
+          "sltu",
+          "M"
+        ],
+        "count": 52
+      },
+      {
+        "bin": [
+          "sra",
+          "M"
+        ],
+        "count": 57
+      },
+      {
+        "bin": [
+          "srai",
+          "M"
+        ],
+        "count": 33
+      },
+      {
+        "bin": [
+          "sraiw",
+          "M"
+        ],
+        "count": 36
+      },
+      {
+        "bin": [
+          "sraw",
+          "M"
+        ],
+        "count": 61
+      },
+      {
+        "bin": [
+          "srl",
+          "M"
+        ],
+        "count": 57
+      },
+      {
+        "bin": [
+          "srli",
+          "M"
+        ],
+        "count": 30
+      },
+      {
+        "bin": [
+          "srliw",
+          "M"
+        ],
+        "count": 34
+      },
+      {
+        "bin": [
+          "srlw",
+          "M"
+        ],
+        "count": 61
+      },
+      {
+        "bin": [
+          "sub",
+          "M"
+        ],
+        "count": 55
+      },
+      {
+        "bin": [
+          "subw",
+          "M"
+        ],
+        "count": 51
+      },
+      {
+        "bin": [
+          "sw",
+          "M"
+        ],
+        "count": 208
+      },
+      {
+        "bin": [
+          "xor",
+          "M"
+        ],
+        "count": 41
+      },
+      {
+        "bin": [
+          "xori",
+          "M"
+        ],
+        "count": 19
+      }
+    ],
+    "raw_report_sha256": "a279a1b56ac1df62cace9a91a077eb1b4bbc20fae8b3348a69a9f21ee41d506b"
+  },
+  "code_coverage": {
+    "summary": {
+      "total": 1674,
+      "excluded": 0,
+      "eligible": 1674,
+      "hit": 1403,
+      "never_hit": 271,
+      "percent": 83.81123058542413
+    },
+    "types": {
+      "branch": {
+        "total": 796,
+        "excluded": 0,
+        "eligible": 796,
+        "hit": 656,
+        "never_hit": 140,
+        "percent": 82.41206030150754
+      },
+      "line": {
+        "total": 878,
+        "excluded": 0,
+        "eligible": 878,
+        "hit": 747,
+        "never_hit": 131,
+        "percent": 85.07972665148064
+      }
+    },
+    "raw_report_sha256": "b2697cba3e06b106c4f90cd0d3a17b862b06c452b484bb1936def9243e2fdd94"
+  },
+  "perf": {
+    "start": 0,
+    "end_exclusive": 855,
+    "cycles": 855,
+    "fetched": 166,
+    "instret": 140,
+    "flushed": 26,
+    "open": 0,
+    "ipc": 0.16374269005847952,
+    "flush_fraction": 0.1566265060240964,
+    "dependencies": 0
+  },
+  "probe_counters": {
+    "cycles": 852,
+    "retired": 138,
+    "branches": 18,
+    "cond_branches": 17,
+    "mispredicts": 5,
+    "loads": 0,
+    "stores": 1,
+    "flushes": 23
+  },
+  "probe_events": [
+    {
+      "kind": "branch",
+      "name": "learn0",
+      "events": 17
+    },
+    {
+      "kind": "stage",
+      "name": "C",
+      "events": 138
+    },
+    {
+      "kind": "retire",
+      "name": "commit",
+      "events": 138
+    },
+    {
+      "kind": "stall",
+      "name": "frontend_mispredict_recovery",
+      "events": 4
+    },
+    {
+      "kind": "counter",
+      "name": "cycles",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "retired",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "branches",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "cond_branches",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "mispredicts",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "loads",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "stores",
+      "events": 0
+    },
+    {
+      "kind": "counter",
+      "name": "flushes",
+      "events": 0
+    },
+    {
+      "kind": "csr",
+      "name": "csr",
+      "events": 8
+    },
+    {
+      "kind": "interrupt",
+      "name": "irq",
+      "events": 0
+    },
+    {
+      "kind": "bus",
+      "name": "dbus",
+      "events": 1
+    },
+    {
+      "kind": "bus",
+      "name": "ibus",
+      "events": 192
+    },
+    {
+      "kind": "fault",
+      "name": "privilege",
+      "events": 0
+    }
+  ],
+  "checks": [
+    {
+      "schema": "rvw.checks-run/1",
+      "toplevel": "VexiiRiscv",
+      "checks_report": "$CHECKOUT/rvw/out/rv64-checks-trace/checks.json",
+      "inserted": 25,
+      "fired": 0,
+      "status": "pass",
+      "elf": "$CHECKOUT/rvw/out/rv64-csr/mscratch.elf",
+      "elf_sha256": "cb2dab2c096c6d432012db87aaa9fb48a99fbd2a6161c704e9dc221afde92508",
+      "cycles": 203,
+      "retired": 49,
+      "activations": [
+        {
+          "id": "csr.read:mscratch",
+          "count": 4,
+          "status": "activated"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:LsuCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:LsuCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:early0_BranchPlugin_logic_jumpLogic_learn",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_BranchPlugin_logic_jumpLogic_learn",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:LearnPlugin_logic_arbitrated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:LearnPlugin_logic_arbitrated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:PcPlugin_logic_harts_0_output",
+          "count": 111,
+          "status": "activated"
+        },
+        {
+          "id": "stream.payload_stable:PcPlugin_logic_harts_0_output",
+          "count": 111,
+          "status": "activated"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_forked",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_halted",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_translated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_translated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_persistent",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_persistent",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "enum.legal:execute_ctrl2_up_BranchPlugin_BRANCH_CTRL_lane0",
+          "count": 211,
+          "status": "activated"
+        },
+        {
+          "id": "fsm.state_legal:TrapPlugin_logic_harts_0_trap_fsm_stateReg",
+          "count": 212,
+          "status": "activated"
+        },
+        {
+          "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_rsp",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:streamArbiter.io_inputs_0",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:streamArbiter.io_inputs_0",
+          "count": 0,
+          "status": "no_activation"
+        }
+      ],
+      "firings": [],
+      "strict_spike_match": "match",
+      "compared_instructions": 49,
+      "synchronized": 0,
+      "applied_masks": [],
+      "trace_sha256": "4917ae265168401f2139e801f4da98bd181eb3e56849cca513056e90fc128da5"
+    },
+    {
+      "schema": "rvw.checks-run/1",
+      "toplevel": "VexiiRiscv",
+      "checks_report": "$CHECKOUT/rvw/out/rv64-checks-trace/checks.json",
+      "inserted": 25,
+      "fired": 0,
+      "status": "pass",
+      "elf": "$CHECKOUT/rvw/out/rv64-csr/sscratch.elf",
+      "elf_sha256": "31e0080a04f763f8ea0a8a25d3bddc0400920d0d0d5329a23986d2c8da4234d7",
+      "cycles": 158,
+      "retired": 26,
+      "activations": [
+        {
+          "id": "csr.read:mscratch",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:LsuCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:LsuCachelessPlugin_logic_bus_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:early0_BranchPlugin_logic_jumpLogic_learn",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_BranchPlugin_logic_jumpLogic_learn",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:LearnPlugin_logic_arbitrated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:LearnPlugin_logic_arbitrated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:PcPlugin_logic_harts_0_output",
+          "count": 59,
+          "status": "activated"
+        },
+        {
+          "id": "stream.payload_stable:PcPlugin_logic_harts_0_output",
+          "count": 59,
+          "status": "activated"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_forked",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_halted",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_translated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_translated",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:FetchCachelessPlugin_logic_fork_persistent",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:FetchCachelessPlugin_logic_fork_persistent",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "enum.legal:execute_ctrl2_up_BranchPlugin_BRANCH_CTRL_lane0",
+          "count": 166,
+          "status": "activated"
+        },
+        {
+          "id": "fsm.state_legal:TrapPlugin_logic_harts_0_trap_fsm_stateReg",
+          "count": 167,
+          "status": "activated"
+        },
+        {
+          "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_cmd",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:early0_DivPlugin_logic_processing_div.io_rsp",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:early0_DivPlugin_logic_processing_div.io_rsp",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.valid_hold:streamArbiter.io_inputs_0",
+          "count": 0,
+          "status": "no_activation"
+        },
+        {
+          "id": "stream.payload_stable:streamArbiter.io_inputs_0",
+          "count": 0,
+          "status": "no_activation"
+        }
+      ],
+      "firings": [],
+      "strict_spike_match": "match",
+      "compared_instructions": 26,
+      "synchronized": 0,
+      "applied_masks": [],
+      "trace_sha256": "a5f9612a6e7921af49b4d2984202f47c77eb4ff71e71ab60dace98f26e4fd4b5"
+    }
+  ],
+  "formal": {
+    "rows": [
+      {
+        "action": "Increase --timeout or select riscv_formal.solver/check_options.engine.",
+        "check": "insn_addw_ch0",
+        "status": "inconclusive",
+        "depth": 32,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_addw_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "action": "Increase --timeout or select riscv_formal.solver/check_options.engine.",
+        "check": "insn_slliw_ch0",
+        "status": "inconclusive",
+        "depth": 32,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_slliw_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "action": "Increase --timeout or select riscv_formal.solver/check_options.engine.",
+        "check": "insn_mulw_ch0",
+        "status": "inconclusive",
+        "depth": 32,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": {
+          "status": "timeout",
+          "evidence": "riscv-formal/cores/project/checks/insn_mulw_ch0-activation",
+          "reason": "Selected instruction cover did not close with a trace."
+        }
+      },
+      {
+        "action": "Increase --timeout or select riscv_formal.solver/check_options.engine.",
+        "check": "cover",
+        "status": "inconclusive",
+        "depth": 32,
+        "reason": "wall-clock timeout",
+        "evidence": "bounded/results.json",
+        "instruction_activation": null
+      }
+    ],
+    "scope": "32-cycle attempts; 15 seconds per check. All inconclusive. No proof or activation earned.",
+    "rtl_sha256": "0ba679e3f405ef17cfd02b02da51791b276808eb2859036b01052140643497ce"
+  },
+  "security": {
+    "status": "violation",
+    "comparison": {
+      "status": "violation",
+      "channels": [
+        "cycles",
+        "retire_cycles"
+      ]
+    },
+    "scope": "One cold-reset divider pair. Fixed public setup length, separate strict reference per side, timing limited to case..case_end. Full observed trace is strict-checked before scoping to the actual passing tohost store.",
+    "pairs": [
+      {
+        "side": "initial-a",
+        "observations": {
+          "cycles": 42,
+          "retire_cycles": [
+            41,
+            1,
+            0
+          ]
+        },
+        "full_strict_match": "match",
+        "instructions": 39,
+        "synchronized": 0,
+        "applied_masks": [],
+        "original_trace_sha256": "34035a010c1625dfdc61d14e389f14387dc657809c583dd6a6baea911fe27ec7",
+        "scoped_trace_sha256": "d983a5b44292d7270e0683aa3a0f1b49e61d1b920bdb47dbc720ac23f597b53f",
+        "reference_sha256": "00a52bf93021e423bdcc750ac2562808d195f72a2453fcb45d7be6ae9f8b508b"
+      },
+      {
+        "side": "initial-b",
+        "observations": {
+          "cycles": 138,
+          "retire_cycles": [
+            137,
+            1,
+            0
+          ]
+        },
+        "full_strict_match": "match",
+        "instructions": 39,
+        "synchronized": 0,
+        "applied_masks": [],
+        "original_trace_sha256": "bde31061ddadabcc2c22a33591a824d1339c2136aa1834bc5ba6ff733af59f7c",
+        "scoped_trace_sha256": "7c8c895fff8a3695cbc9f9d2276fb47ab99cdf816966fe1d3f7c11d61ce68ef1",
+        "reference_sha256": "a1ca52187e718c5eea17fe96f75d6d584d967da27437179727a6b4db6da07b65"
+      }
+    ]
+  },
+  "csr_views": [
+    {
+      "name": "mstatus",
+      "xlen": 64,
+      "scope": "pinned catalog layout only; no runtime CSR readback claim",
+      "fields": [
+        {
+          "name": "SD",
+          "lsb": 63,
+          "width": 1
+        },
+        {
+          "name": "SXL",
+          "lsb": 34,
+          "width": 2
+        },
+        {
+          "name": "UXL",
+          "lsb": 32,
+          "width": 2
+        }
+      ]
+    },
+    {
+      "name": "satp",
+      "xlen": 64,
+      "scope": "pinned catalog layout only; no runtime CSR readback claim",
+      "fields": [
+        {
+          "name": "MODE",
+          "lsb": 60,
+          "width": 4
+        },
+        {
+          "name": "ASID",
+          "lsb": 44,
+          "width": 16
+        },
+        {
+          "name": "PPN",
+          "lsb": 0,
+          "width": 44
+        }
+      ]
+    }
+  ]
+}

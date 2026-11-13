@@ -1,0 +1,11 @@
+{
+  "contract": "constant-time",
+  "clauses": ["pc", "memory", "branch"],
+  "observations": ["cycles", "retire_cycles"],
+  "public": {"reset": "cold"},
+  "program": ["div x10, x6, x7", "divu x11, x6, x7"],
+  "secrets": [{"x6": 7, "x7": 3}, {"x6": 9223372036854775807, "x7": 1}],
+  "minimize_runs": 0,
+  "timeout": 120,
+  "adapter_command": ["{python}", "-m", "rvw.sec.c1_adapter", "--binding", "core64-c1.json", "--template", "case64.S", "{request}", "{out}"]
+}
