@@ -89,7 +89,12 @@ def _runner(command):
             raise error(f"unreadable result.json: {e}")
         if not isinstance(data, dict):
             raise error("result.json is not an object")
-        if (code == 0) != (data.get("status") == {"datapath":"proved", "equiv":"equivalent", "sva-inspect":"parsed"}.get(command,"pass")):
+        successes = {
+            "datapath": {"proved"}, "equiv": {"equivalent"}, "sva-inspect": {"parsed"},
+            "equiv-partitions": {"equivalent"}, "cover-hunt": {"covered"},
+            "trace-mine": {"candidates", "no_candidates"}, "scenario-compile": {"generated"},
+        }.get(command, {"pass"})
+        if (code == 0) != (data.get("status") in successes):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
     return run
