@@ -1121,8 +1121,8 @@ Protocols:
 Latency is `--mem-latency`, or zero to three seeded wait cycles. Addresses outside
 RAM get `error` (req-rsp) or read zero (valid-ready). With RVFI, completion is the
 retired store to `tohost`. Without RVFI, completion is a bus store to `tohost`, and
-`--rvfi-trace` is refused. The adapter ignores RVFI while reset is asserted. It
-asserts reset for 16 clocked cycles after Spinal's initial unclocked reset, so a
-synchronous reset works. Trap events are not written: C2 has trap records only, so
+`--rvfi-trace` is refused. The adapter asserts reset for 16 clocked cycles after
+Spinal's initial unclocked reset, so a synchronous reset works. It reads no RVFI
+and answers no bus request until that reset ends. Trap events are not written: C2 has trap records only, so
 cosim checks trap redirection but not `cause`/`tval`. Konata, SpinalTrace models,
 `--rvfi-check` and `--soc-map` are refused.

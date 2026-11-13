@@ -38,6 +38,31 @@ native build locks. Without this flag build/run conformance stays inconclusive.
 The default smoke check does not test optional artifacts or replay completeness.
 Use the explicit options below for bounded C2 and artifact checks.
 
+## C1 option conformance
+
+`--conformance` (with `--smoke-elf`) runs more C1 checks around the same ELF.
+Each check is a `conformance.*` record:
+
+| Check | Requirement |
+|---|---|
+| `build.CONFIG` | Every config in `info --json` builds. |
+| `options.recorded` | Seed 7, `--mem-latency 0` and `--max-cycles 100000` are recorded; the run passes and has a replay command. |
+| `determinism` | A second identical run has the same status, cycles, instret and `rtl_sha256`. |
+| `max_cycles` | A limit below the run's cycle count ends as `timeout`. |
+| `run_many` | A two-line manifest runs each line with its own seed and latency. |
+| `replay` | The recorded replay command (run from `RVW_HOME`) reproduces status, cycles, instret, seed and identities. |
+| `unknown_config` | An unknown config exits 2; a written result says `error`. |
+| `bad_elf` | A file that is not an ELF gives `error` and exit 2. |
+| `irq_schedule` | `--irq-schedule 1:0x0` passes and is recorded. |
+| `no_completion` | A copy of the ELF whose entry instruction is `jal x0, 0` ends as `timeout` with exit 1, never `pass`. |
+| `wall_timeout` | When `[core] wall_timeout` is declared: the looping copy with `--wall-timeout 3` ends as a wall-clock timeout. |
+
+`adapter_conformance.full_c1` is `ready` only when every conformance check is
+ready, `error` otherwise, and `inconclusive` without `--conformance`. These
+checks cover one ELF and the default config's options. They do not check
+coverage, Konata or SpinalTrace models, interrupt delivery or other programs.
+On the PicoRV32 example all eleven checks are ready.
+
 ## Output and exits
 
 `rvw.doctor/1` has `status`, `exit_code`, `checks`, `native`, `native_output`

@@ -774,7 +774,8 @@ usage: rvw debug trace-adapter [-h] [--project PROJECT] adapter
 ```text
 usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
     [--smoke-options SMOKE_OPTIONS] [--smoke-platform SMOKE_PLATFORM]
-    [--install FEATURES] [--yes] [--dry-run] [--json] [--project PROJECT]
+    [--conformance] [--install FEATURES] [--yes] [--dry-run] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw evidence`

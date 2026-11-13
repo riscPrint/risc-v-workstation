@@ -311,7 +311,9 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
         cd.forkStimulus(10)
         // forkStimulus holds reset while the clock is stopped. A synchronous reset needs edges:
         // assert it again for 16 clocked cycles.
-        fork { cd.waitSampling(); cd.assertReset(); cd.waitRisingEdge(16); cd.deassertReset() }
+        // Core outputs are not defined before this reset ends: sample nothing until then.
+        var live = false
+        fork { cd.waitSampling(); cd.assertReset(); cd.waitRisingEdge(16); cd.deassertReset(); live = true }
         var irqLevels = BigInt(-1)
         cd.onSamplings {
           ctl.tick()
@@ -319,8 +321,7 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
           for ((bit, n) <- map.irq) set(n, if (levels.testBit(bit)) 1 else 0)
           if (writer.nonEmpty && levels != irqLevels) { writer.foreach(_.irq(cycle, levels)); irqLevels = levels }
-          // RVFI outputs are not defined while reset is asserted.
-          for (r <- rvfi.toSeq.filter(_ => !cd.isResetAsserted).flatMap(_.sample(cycle))) {
+          for (r <- rvfi.toSeq.filter(_ => live).flatMap(_.sample(cycle))) {
             retired += 1
             if (r.trap) traps += 1
             writer.foreach(_.write(r))
@@ -331,7 +332,7 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
               onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata >> (8 * lane))
             }
           }
-          models.foreach(_(cycle))
+          if (live) models.foreach(_(cycle))
         }
         cd.waitSamplingWhere(false)
       }

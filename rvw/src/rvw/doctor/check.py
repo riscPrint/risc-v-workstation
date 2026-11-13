@@ -48,7 +48,7 @@ def native_records(output, table=None):
     return records
 
 
-def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None):
+def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dry_run=False, smoke_elf=None, smoke_flags='', smoke_platform=None, conformance=False):
     checks = []
     def add(name, status, detail, fix=''):
         checks.append(dict(name=name, status=status, detail=detail, fix=fix))
@@ -62,6 +62,8 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             raise ValueError('--smoke-options and --smoke-platform need --smoke-elf')
         if smoke_platform and 'rvfi' not in options:
             raise ValueError('--smoke-platform needs rvfi in --smoke-options')
+        if conformance and smoke_elf is None:
+            raise ValueError('--conformance needs --smoke-elf')
         if (yes or dry_run) and install is None:
             raise ValueError('--yes and --dry-run need --install FEATURES')
     except ValueError as exc:
@@ -175,6 +177,12 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
                                                 core=cfg.name, config=cfg.default_config, platform=smoke_platform))
             except (OSError, ValueError, TypeError) as exc:
                 add('adapter.build_run', 'error', str(exc), 'Implement C1 build/run and use a valid small ELF.')
+            if conformance:
+                from .c1suite import conformance as c1_conformance
+                try:
+                    checks.extend(c1_conformance(cfg, info, smoke_elf, home=home))
+                except (OSError, ValueError, TypeError, KeyError) as exc:
+                    add('conformance', 'error', str(exc), 'Fix the adapter or the smoke ELF and rerun --conformance.')
         for name, suite in cfg.suites.items():
             tests = []
             try:
@@ -194,9 +202,11 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             head = run_group(['git', '-C', str(root), 'rev-parse', '--verify', 'HEAD'], timeout=10, capture=True)
             add('gate.' + label, 'ready' if done.returncode == head.returncode == 0 and not done.stdout else 'inconclusive',
                 {'revision': (head.stdout or '').strip(), 'changes': done.stdout}, 'Commit reviewed changes in this repository.')
-    result['adapter_conformance'] = {'scope': 'one config and ELF; selected options only',
-                                     'full_c1': 'inconclusive',
-                                     'checks': [c for c in checks if c['name'].startswith('adapter.')]}
+    suite = [c for c in checks if c['name'].startswith('conformance')]
+    result['adapter_conformance'] = {
+        'scope': 'C1 option checks around one ELF' if suite else 'one config and ELF; selected options only',
+        'full_c1': 'inconclusive' if not suite else 'ready' if all(c['status'] == 'ready' for c in suite) else 'error',
+        'checks': [c for c in checks if c['name'].startswith(('adapter.', 'conformance'))]}
     ready = all(c['status'] == 'ready' for c in checks)
     result.update(status='ready' if ready else 'not_ready', exit_code=0 if ready else 1)
     return result
