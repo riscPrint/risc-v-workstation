@@ -58,6 +58,8 @@ def register(sub: argparse._SubParsersAction) -> None:
                         "JSON output says whether the result was truncated")
     q.add_argument("--dec", action="store_true", help="decimal instead of hex")
     q.add_argument("--db", help="SpinalDB design database: show and compare Spinal enum element names")
+    q.add_argument("--elf", help="ELF: name PC values (signals matching --pc) by symbol")
+    q.add_argument("--pc", default=r"(?i)pc", help="regex of PC-valued signals for --elf (default: names with pc)")
     q.set_defaults(func=_changes)
 
     q = w.add_parser("sample", help="value of matching signals at one time")
@@ -172,6 +174,16 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=_bench)
 
+    q = w.add_parser("profile", help="clock edges per ELF function from a PC signal (time-aligned phases)")
+    common(q, regex=False)
+    q.add_argument("pc", help="PC signal name")
+    q.add_argument("--elf", required=True)
+    q.add_argument("--valid", help="expression: count only edges where it holds (e.g. commit valid)")
+    q.add_argument("--from", dest="t0", help=TIME_HELP)
+    q.add_argument("--to", dest="t1", help=TIME_HELP)
+    q.add_argument("--phases", type=int, default=50, help="list the first N runs of one function (default 50)")
+    q.set_defaults(func=_profile)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -245,11 +257,15 @@ def _changes(a):
     if a.db:
         from .typed import annotate_changes, enums
         annotate_changes(page, enums(a.db))
+    if a.elf:
+        from .symbols import annotate_changes as name_pcs
+        name_pcs(page, a.elf, a.pc)
     if a.json:
         jsonout.write(page)
     else:
         for r in page["changes"]:
-            print(f"{r['time']:10d} {r['signal']} = {r['value']}" + (f" ({r['enum']})" if 'enum' in r else ""))
+            print(f"{r['time']:10d} {r['signal']} = {r['value']}" + (f" ({r['enum']})" if 'enum' in r else "")
+                  + (f" <{r['symbol']}>" if 'symbol' in r else ""))
     if page["truncated"]:
         print(f"rvw wave: truncated at {page['limit']} changes; narrow --from/--to or the regex, "
               "or raise --limit (0 = no limit)", file=sys.stderr)
@@ -354,6 +370,19 @@ def _value(a):
         show(r['value'], "  ")
         if r['missing_in_wave']:
             print(f"# not in the wave: {', '.join(r['missing_in_wave'][:8])}")
+    return 0
+
+
+@_wrap
+def _profile(a):
+    from .symbols import profile
+    r = profile(a.wave, a.pc, a.elf, a.valid, _t(a, a.t0) or 0, _t(a, a.t1), a.clock, a.phases)
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# {r['edges']} edges on {r['clock']} ({r['unknown']} unknown PC)")
+        for f in r['functions']:
+            print(f"{f['edges']:10d} {f['fraction'] * 100:6.2f}% {f['function']}")
     return 0
 
 
