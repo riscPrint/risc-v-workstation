@@ -14,6 +14,7 @@ Usage: scripts/install.sh [OPTIONS]
   --with-riscv-gcc   Bare-metal RISC-V GCC and binutils.
   --with-cosim       Spike headers/libraries and the workstation shim.
   --with-formal      OSS CAD Suite plus a pinned native yosys-slang build.
+  --with-ooo         Build the optional C integer OoO scheduler.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
   --with-lint        Pinned native Verible syntax and style lint.
   --with-sail        Pinned Sail model (bundle mode only).
@@ -38,7 +39,7 @@ show() { printf '  +'; printf ' %q' "$@"; printf '\n'; }
 run() { show "$@"; if [ "$dry" = 0 ]; then "$@"; fi; }
 value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a value"; }
 
-dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
+dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 ooo=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
 waves=0 lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
 while [ "$#" -gt 0 ]; do
@@ -57,8 +58,9 @@ while [ "$#" -gt 0 ]; do
     --with-riscv-gcc) gcc=1; shift ;;
     --with-cosim) cosim=1; shift ;;
     --with-formal) formal=1; shift ;;
+    --with-ooo) ooo=1; shift ;;
     --with-gem5) gem5=1; shift ;;
-    --all) dv=1; waves=1; lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
+    --all) dv=1; waves=1; lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; ooo=1; shift ;;
     --yes) yes=1; shift ;;
     --dry-run) dry=1; shift ;;
     --check) check=1; shift ;;
@@ -274,6 +276,9 @@ optional_check() {
   fi
   if [ "$lint" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-verible.py" --home "$rvw_home" --check || failed=1; fi
   if [ "$dv" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-riscv-dv.py" --check || failed=1; fi
+  if [ "$ooo" = 1 ]; then
+    "$rvw_home/rvw/.venv/bin/python" -m rvw.ooo.native --check "$tools/ooo/libooo.so" || failed=1
+  fi
   if [ "$gem5" = 1 ]; then gem5_check || failed=1; fi
   if [ "$sim" = 1 ]; then sim_check || failed=1; fi
   if [ "$gcc" = 1 ]; then
@@ -632,6 +637,10 @@ if [ "$waves" = 1 ]; then
   fi
   run env CARGO_BUILD_JOBS=2 "$rvw_home/scripts/with-lock.sh" sbt nice -n 10 \
     bash "$rvw_home/SpinalWaves/scripts/install.sh" --copy --prefix "$tools/bin"
+fi
+
+if [ "$ooo" = 1 ]; then
+  run nice -n 10 "$rvw_home/rvw/.venv/bin/python" -m rvw.ooo.native --build "$tools/ooo/libooo.so"
 fi
 
 # Quote values for both bash and zsh. Do not change shell startup files by default.

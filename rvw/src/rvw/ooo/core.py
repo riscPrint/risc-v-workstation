@@ -89,7 +89,7 @@ class Entry:
     done: int | None = None
 
 
-def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None):
+def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
     """Commit, issue, rename, fetch. Latency 1 completes next cycle.
 
     Memory instructions issue only after older memory instructions complete.
@@ -110,6 +110,15 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                 raise ValueError("disambiguate requires memory address and size")
         if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 32):
             raise ValueError("invalid destination register")
+    if backend not in ("auto", "python", "native"):
+        raise ValueError("backend must be auto, python or native")
+    if backend != "python" and predictor is None and memory is None:
+        from .native import simulate as native_simulate
+        result = native_simulate(instructions, config, max_cycles)
+        if result is not None:
+            return dict(result, backend="native")
+        if backend == "native":
+            raise ValueError("native scheduler unavailable for this configuration")
     from .frontend import Frontend
     from .execution import Execution
     from .translation import Translation
@@ -146,7 +155,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             if translation:
                 events.update(translation.events)
             cycles = cycle + 1
-            return dict(cycles=cycles, instret=retired, ipc=retired / cycles,
+            return dict(backend="python", cycles=cycles, instret=retired, ipc=retired / cycles,
                         events=dict(events), max_occupancy=dict(peaks),
                         topdown=attribution.report())
         if unresolved_branch is not None and unresolved_branch.done <= cycle:
@@ -335,7 +344,11 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native"))
+    engine += Path(__file__).with_name("native.c").read_bytes()
+    if result["backend"] == "native":
+        from .native import library_path
+        engine += library_path().read_bytes()
     return dict(schema="rvw.ooo-run/1", **result, config=asdict(config),
                 config_sha256=sha256(config_bytes).hexdigest(),
                 trace_sha256=sha256(trace_bytes).hexdigest(),
