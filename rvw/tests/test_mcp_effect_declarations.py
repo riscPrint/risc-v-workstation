@@ -136,3 +136,10 @@ def test_sec_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert tool.native_tools is not None
+
+
+@pytest.mark.parametrize('name', ['farm_plan', 'farm_live', 'farm_workflow', 'farm_select', 'farm_triage', 'farm_budget', 'farm_batch', 'farm_queue', 'farm_run', 'farm_notifications', 'farm_classify', 'farm_dashboard', 'farm_recover', 'farm_cancel'])
+def test_farm_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert (tool.native_tools is None) == (name == 'farm_batch')
