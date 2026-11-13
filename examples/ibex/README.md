@@ -67,7 +67,7 @@ See [FINDINGS.md](FINDINGS.md) for limits and measured results.
 | Strict Spike with the device harness | 51/51 complete matches; 14,596 retirements; zero synchronization and masks |
 | Committed gate control | Accept, 51 tests compared |
 | Committed harness fault | Reject, 51 new failures; fault removed |
-| Fast Python set | 3,098 passed, 4 skipped, 8,096 deselected |
+| Initial integration fast Python set | 3,098 passed, 4 skipped, 8,096 deselected |
 
 The platform enables misaligned scalar RAM accesses. The full strict batch
 uses that policy. The gate fault changes a completed pass to
@@ -94,6 +94,7 @@ rvw query export --db "$IBEX_WORK/design.db" blocks "$IBEX_WORK/blocks.json"
 
 | Measurement | Count |
 | --- | ---: |
+| Distinct module types | 22 |
 | Elaborated components | 41 |
 | Signals | 41,387 |
 | Assignments | 33,813 |
@@ -263,3 +264,25 @@ project selects `insn_add_ch0` and retirement cover at depth 16. SBY uses
 The instruction activation check prevents an unearned bounded result. No
 unbounded run was made. The formal wrapper keeps raw Ibex RVFI order and masks.
 The simulation exporter normalizes their conventions as described above.
+
+## Result scope
+
+| Scope | Status |
+| --- | --- |
+| Ibex source | Pinned, private, unchanged |
+| Native ISA | 51 C1 passes and complete strict Spike matches |
+| Native ACT4 | 148 C1 passes; 148 strict first differences at reset mtvec |
+| Final targeted formal/lint/hygiene tests | 130 passed, 15 skipped |
+| Final fast Python set | 3,621 passed, 4 skipped; two unchanged nice-priority test failures |
+| Release hygiene | Passed |
+| Packages, enum parameters and generate blocks | Exercised by the whole functional core import |
+| SystemVerilog interfaces | Not exercised by this configuration |
+| Failure bundle and rendered diagram | NOT RUN for Ibex |
+| Whole-core architectural or formal qualification | Not established |
+
+The two fast failures are the parameter cases of
+`test_boot_profile.py::test_launcher_reaches_nice_ten_once`. They expect nice 10.
+This job requires nice 15. The observed child priority is 15. The tests are
+outside this change. Heavy jobs use the private `ibex-ibex` lock and at most two
+native build jobs. Regression runs one RTL simulation at a time. Generated
+sources, corpora, traces, databases and coverage reports stay outside Git.
