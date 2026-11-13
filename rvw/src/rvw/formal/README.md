@@ -466,7 +466,7 @@ No database inference, fairness, full ROB recovery or real-core proof is claimed
 imports a literal UPF 2.1 domain/isolation subset and generates sampled isolation
 checks. MCP: `formal_upf`. See `SpinalChecks/upf/README.md` for exact commands,
 binding fields, event semantics and unsupported constructs. Literal retention, supply tables and power-switch gating are also supported.
-See the UPF README for their explicit binding maps. Clock-gate import and
+See the UPF README for their explicit binding maps. Clock-gate Tcl import and
 general Tcl remain unsupported. No verification
 runs during generation.
 ## Simple bus protocol generation
@@ -3418,3 +3418,24 @@ also need observations of every member. The default is two observations.
 Output rows remain candidates. Review them and use a fresh formal job before
 claiming an invariant. The emitted properties are assertions, not assumptions.
 See the [measured VexRiscv run](../../../../examples/vexriscv/mining-results.md).
+
+## Dynamic IMSIC indirect CSR oracle
+
+`rvw.formal.csr_aia_indirect.ImsicIndirectModel` supplies a bounded independent
+reference for selector-dependent IMSIC registers. It supports RV32/RV64 EIP
+and EIE words, eidelivery, legal eithreshold values, separate M/S files, and
+VS routing to a supplied guest file. It follows the register layout and
+unspecified reset state in the [AIA IMSIC specification](https://docs.riscv.org/reference/aia/v1.0/IMSIC.html).
+It does not materialize dynamic aliases as independent static catalog CSRs.
+
+Call `select(context, value)`, `write(context, data, guest=0)` and
+`read(context, guest=0)`. Call `msi(file, identity)` at accepted delivery to the
+interrupt file, not at issue of a possibly delayed bus store. The returned
+expectation has a value and known mask. Its `compare` method returns match,
+mismatch or inconclusive. Initial implemented bits are unknown. Reserved bits
+are zero in this declared subset. Unsupported selections remain model gaps.
+
+Eleven unit cases cover selector routing, guest-file changes, pending-bit
+updates, unknown initial state, RV64 words, bounds and non-power-of-two identity
+capacity. No core binding, CSR denial test, delivery timing proof, APLIC model,
+major-priority model or complete AIA qualification was run.

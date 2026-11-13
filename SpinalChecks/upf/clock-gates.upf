@@ -1,0 +1,2 @@
+upf_version 2.1
+create_power_domain CORE -elements {u_core}

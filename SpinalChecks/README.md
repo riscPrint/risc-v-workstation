@@ -1110,3 +1110,43 @@ proof, byte-data check or full memory-order qualification is claimed.
 The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
 eight Spike passes and one retained `marchid` configuration mismatch. The new
 33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
+
+### Programmable HPM events and mode filters
+
+`HpmEventChecks.bind` tracks an independent 64-bit control view from accepted
+software writes. A project declares up to 56 additive event bits and supplies
+independent event counts. The expected selector drives the reference count.
+Observed DUT selectors do not drive expected events. A control write affects
+counting after the edge. Counter writes and modular wrap use `HpmChecks`.
+
+The helper uses MINH, SINH, UINH, VSINH and VUINH at bits 62 through 58, as
+specified by [Sscofpmf](https://docs.riscv.org/reference/isa/priv/sscofpmf.html).
+It checks the declared event and filter bits only. It does not check OF,
+reserved bits or unsupported-mode legalization. This binding declares all five
+filter modes. Event encoding is a project policy; it is not inferred from the
+standard. Overflow interrupts remain a separate `HpmControlChecks` binding.
+The native fixture covers all five filters, selector changes, simultaneous
+events, inhibit, write priority and wrap. Selector and count faults fire their
+separate rules. No core HPM binding is claimed.
+
+### Small coherent cache and reservation oracle
+
+`spinalchecks.sim.TileLinkCacheModel` checks completed accepted transactions
+for one client. It tracks byte data, N/B/T permission, dirty writeback, probes,
+Grant/GrantAck, Release/ReleaseAck, and a local reservation. Dirty downgrades
+and releases require matching data. Probes and eviction invalidate a matching
+reservation. SC may fail spuriously; success requires a valid reservation and
+T permission. Local stores are independent expected observations.
+
+`fromNegotiated` selects one exact source mapping from `NodeParameters`.
+It uses that mapping's Acquire capabilities and the reverse Probe size range.
+Missing metadata or an ambiguous source fails construction. A node-wide union
+cannot grant a source permissions that its own mapping lacks.
+
+This is a serialized reference subset. It accepts one complete transaction at
+a time and requires eviction before reacquisition. It does not replace the
+beat-level `ProtocolChecks`, handle concurrent coherence races, or bind itself
+to a cache. A project must supply accepted channel and local-operation events.
+Its three Scala tests cover a legal dirty probe/writeback flow, reservation
+loss, data/ownership/ack faults and negotiated-capability refusal. They are
+model tests, not an RTL cache qualification.
