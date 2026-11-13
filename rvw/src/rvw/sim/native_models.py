@@ -1,4 +1,4 @@
-"""Native scalar-port models. Project adapters own clocks, buses and C1/C2."""
+"""Native packed-port models. Project adapters own clocks, buses and C1/C2."""
 import ctypes
 import hashlib
 import json
@@ -24,12 +24,12 @@ def step(argv, out, timeout=90, env=None):
 
 
 class Model:
-    def __init__(self, backend, sources, top, ports, out, *, circt=None, profile=None):
+    def __init__(self, backend, sources, top, ports, out, *, circt=None, profile=None, wave=None):
         if backend not in ('arcilator', 'verilator') or not IDENT.fullmatch(top):
             raise ValueError('unsupported engine or top identifier')
-        if not ports or any(not IDENT.fullmatch(n) or d not in ('input','output') or not 1 <= w <= 64
+        if not ports or any(not IDENT.fullmatch(n) or d not in ('input','output') or type(w) is not int or not 1 <= w <= 65536
                             for n, (d,w) in ports.items()):
-            raise ValueError('ports must have scalar names, directions and widths in 1..64')
+            raise ValueError('ports must have scalar names, directions and widths in 1..65536')
         started=time.monotonic()
         self.profile=None
         self.ports = ports
@@ -90,8 +90,12 @@ class Model:
             step([verilator, '--cc', '--build', '-j', '2', '--top-module', top, '--prefix', 'RVWModel',
                   '--Mdir', obj, '-Wno-fatal', '--x-initial', '0', '--x-assign', '0', '-CFLAGS', cpp, *self.profile.flags, *sources], self.out, env=environment)
             wrapper = self.out/'wrapper.cpp'
-            getters = ''.join(f'case {i}: return m->{name};' for i,name in enumerate(ports))
-            setters = ''.join(f'case {i}: m->{name}=v; break;' for i,(name,(d,w)) in enumerate(ports.items()) if d=='input')
+            getters = ''.join(f'case {i}: return m->{name};' for i,(name,(d,w)) in enumerate(ports.items()) if w<=64)
+            setters = ''.join(f'case {i}: m->{name}=v; break;' for i,(name,(d,w)) in enumerate(ports.items()) if d=='input' and w<=64)
+            wide_getters = ''.join(f'case {i}: for(unsigned j=0;j<{(w+7)//8};++j) b[j]=m->{n}[j/4]>>(8*(j%4)); break;'
+                                   for i,(n,(d,w)) in enumerate(ports.items()) if w>64)
+            wide_setters = ''.join(f'case {i}: for(unsigned j=0;j<{(w+31)//32};++j) m->{n}[j]=0; for(unsigned j=0;j<{(w+7)//8};++j) m->{n}[j/4]|=uint32_t(b[j])<<(8*(j%4)); break;'
+                                   for i,(n,(d,w)) in enumerate(ports.items()) if d=='input' and w>64)
             wrapper.write_text('''#include "RVWModel.h"
 #include <cstdint>
 double sc_time_stamp(){return 0;}
@@ -101,6 +105,8 @@ void model_delete(void* p){delete static_cast<RVWModel*>(p);}
 void model_eval(void* p){static_cast<RVWModel*>(p)->eval();}
 uint64_t model_read(void* p,unsigned id){auto* m=static_cast<RVWModel*>(p);switch(id){'''+getters+'''default:return 0;}}
 void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(p);switch(id){'''+setters+'''default:break;}}
+void model_read_wide(void* p,unsigned id,uint8_t* b){auto* m=static_cast<RVWModel*>(p);switch(id){'''+wide_getters+'''default:break;}}
+void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<RVWModel*>(p);switch(id){'''+wide_setters+'''default:break;}}
 }
 ''')
             if self.profile.raw:
@@ -124,11 +130,16 @@ void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(
             self.library=ctypes.CDLL(str(library))
             signatures={'model_create':([],ctypes.c_void_p),'model_delete':([ctypes.c_void_p],None),
                 'model_eval':([ctypes.c_void_p],None),'model_read':([ctypes.c_void_p,ctypes.c_uint],ctypes.c_uint64),
-                'model_write':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_uint64],None)}
+                'model_write':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_uint64],None),
+                'model_read_wide':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p],None),
+                'model_write_wide':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p],None)}
             for name,(args,result) in signatures.items():
                 f=getattr(self.library,name);f.argtypes=args;f.restype=result
             self.memory=self.library.model_create()
             self.ids={n:i for i,n in enumerate(ports)}
+        from .native_wave import PortWave
+        self.wave = PortWave(wave, ports) if wave is not None else None
+        self.evaluations = 0
         self.build_seconds=time.monotonic()-started
         self.child_peak_rss_bytes=resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss*(1 if platform.system()=='Darwin' else 1024)
         self.identity[str(library)] = hashlib.sha256(library.read_bytes()).hexdigest()
@@ -140,6 +151,9 @@ void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(
         if self.backend=='arcilator':
             s=self.states[name];size=(width+7)//8
             ctypes.memmove(ctypes.addressof(self.memory)+s['offset'],value.to_bytes(size,'little'),size)
+        elif width>64:
+            data=ctypes.create_string_buffer(value.to_bytes((width+7)//8,'little'))
+            self.library.model_write_wide(self.memory,self.ids[name],data)
         else:self.library.model_write(self.memory,self.ids[name],value)
 
     def read(self,name):
@@ -147,13 +161,20 @@ void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(
         if self.backend=='arcilator':
             s=self.states[name];size=(width+7)//8
             return int.from_bytes(ctypes.string_at(ctypes.addressof(self.memory)+s['offset'],size),'little') & ((1<<width)-1)
+        if width>64:
+            data=ctypes.create_string_buffer((width+7)//8)
+            self.library.model_read_wide(self.memory,self.ids[name],data)
+            return int.from_bytes(data.raw,'little') & ((1<<width)-1)
         return self.library.model_read(self.memory,self.ids[name])
 
     def eval(self):
         if self.backend=='arcilator':self.function(self.memory)
         else:self.library.model_eval(self.memory)
+        if self.wave:self.wave.sample(self.evaluations,self.read)
+        self.evaluations+=1
 
     def close(self):
+        if self.wave:self.wave.close();self.wave=None
         if self.backend=='verilator' and self.memory:
             if self.profile and self.profile.raw:
                 flush=self.library.model_flush_profile;flush.argtypes=[];flush.restype=ctypes.c_int

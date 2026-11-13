@@ -1,0 +1,80 @@
+{
+  "schema": "rvw.native-engine-comparison/1",
+  "rows": [
+    {
+      "repeat": 0,
+      "engine": "arcilator",
+      "wave": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 15.760234832996503,
+      "build_s": 2.4734743339940906,
+      "instructions_per_s": 952.2066237604856,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 0,
+      "engine": "verilator",
+      "wave": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 13.58075204200577,
+      "build_s": 11.354594625066966,
+      "instructions_per_s": 1105.019806972603,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "engine": "verilator",
+      "wave": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.9429378749337047,
+      "build_s": 13.24796399998013,
+      "instructions_per_s": 5099.326128431461,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "engine": "arcilator",
+      "wave": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.5150161660276353,
+      "build_s": 3.9676097920164466,
+      "instructions_per_s": 4269.397149589671,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "engine": "arcilator",
+      "wave": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.415061292005703,
+      "build_s": 3.5047877080505714,
+      "instructions_per_s": 4394.357441001073,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "engine": "verilator",
+      "wave": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.0441937079885975,
+      "build_s": 13.205280415946618,
+      "instructions_per_s": 4929.71257401213,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    }
+  ],
+  "median_instructions_per_s": {
+    "arcilator": 4331.877295295372,
+    "verilator": 5014.519351221796
+  },
+  "arcilator_over_verilator": 0.8638669016682333,
+  "scope": "execution includes Python bus/RVFI handling and C2 write/validation; build measured separately; bounded workload only",
+  "rtl_sha256": "361c0dc2afa470a76628b0d3e2620a8d6f03ba95d26034062d7e4eaafa67b0e8",
+  "elf_sha256": "df90843cf1e3628d7ba037798989c4dda604a331aaed1002406b23f5c0dc8260",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870"
+}

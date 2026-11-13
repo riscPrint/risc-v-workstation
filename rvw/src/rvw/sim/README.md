@@ -382,7 +382,7 @@ The check rejects a different CIRCT version or missing native tools.
 Unsupported hosts fail. No source build or simulator fallback occurs.
 
 `rvw.sim.native_models.Model` compiles captured RTL with `circt-verilog`,
-Arcilator and LLVM `llc`. It exposes scalar ports up to 64 bits through the
+Arcilator and LLVM `llc`. It exposes packed ports through 65,536 bits through the
 emitted state layout. Project adapters own clocks, reset, memory, interrupts,
 C1 terminal predicates and C2 observation. The same interface has a Verilator
 backend for paired native runs. Both start with zero state and then use the
@@ -417,3 +417,13 @@ records native build/setup time, execution plus trace time, child-process RSS,
 compiler-cache hits and complete C2 equality for eight real profiles. It includes
 a compiler-profile capture and reuse. `rvw sim profile` reports these recorded
 fields when present. It does not apply profiles or qualify a runtime winner.
+
+## Native packed ports and public waves
+
+The native model API accepts packed input and output widths through 65,536 bits
+on both Arcilator and Verilator. `Model(..., wave=PATH)` records public ports
+in a two-state VCD. Timestamps count model evaluations. They do not describe
+physical time. Internal signal waves remain outside this API.
+See [the native comparison](../../../../examples/vexriscv/rvw/native-wide/README.md)
+for wide-register controls, complete whole-core C2 checks and measured engine
+throughput. Wave capture adds cost and is excluded from untraced comparisons.
