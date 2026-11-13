@@ -56,6 +56,7 @@ Use `scripts/qualify-install.py` to record new install and runtime evidence.
 | btormc | not verified | unverified; optional OSS CAD Suite engine | `--with-formal` | No measured version in this inventory |
 | yosys-smtbmc | not verified | unverified; optional OSS CAD Suite engine | `--with-formal` | No measured version in this inventory |
 | firtool | not verified | firtool-1.163.0 | `--with-arcilator` | No measured version in this inventory |
+| EQY | not verified | OSS CAD Suite 2026-10-22 | `--with-formal` | Version and runtime NOT RUN in this change |
 
 ## Python lock
 

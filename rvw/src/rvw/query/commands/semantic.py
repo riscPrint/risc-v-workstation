@@ -45,6 +45,6 @@ def register(sub):
 def mcp_tools():
     return [ToolSpec('query_' + name.replace('-', '_'), 'Captured design ' + name,
                      schema({**DB, arg: {'type': 'string'}}, [] if arg == 'path' else [arg]),
-                     _wrap(fn), annotations=RO) for name, (arg, fn) in COMMANDS.items()] + [
+                     _wrap(fn), annotations=RO, side_effects='read-only', native_tools=()) for name, (arg, fn) in COMMANDS.items()] + [
         ToolSpec('query_hierarchy_diff', 'Compare structural hierarchy and parameters; no equivalence claim',
-                 schema({'old': {'type': 'string'}, 'new': {'type': 'string'}}, ['old', 'new']), compare, annotations=RO)]
+                 schema({'old': {'type': 'string'}, 'new': {'type': 'string'}}, ['old', 'new']), compare, annotations=RO, side_effects='read-only', native_tools=())]

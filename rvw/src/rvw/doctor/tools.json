@@ -1808,6 +1808,41 @@
           ]
         }
       ]
+    },
+    {
+      "name": "EQY",
+      "area": "formal",
+      "executables": [
+        "eqy"
+      ],
+      "flag": "formal",
+      "purpose": "Partitioned sequential equivalence checking",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "OSS CAD Suite 2026-10-22",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "Version and runtime NOT RUN in this change",
+      "probes": [
+        {
+          "name": "eqy",
+          "kind": "executable",
+          "env": null,
+          "candidates": [
+            "eqy"
+          ]
+        }
+      ]
     }
   ],
   "discovery": [

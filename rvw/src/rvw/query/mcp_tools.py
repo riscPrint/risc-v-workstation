@@ -130,59 +130,59 @@ def mcp_tools() -> list[ToolSpec]:
                          "cache_dir": {"type": "string", "description": "source-hash cache outside source directories"},
                          "source_roots": {"type": "array", "items": {"type": "string"}}, "timeout": {"type": "integer", "default": 300}},
                         ["sources", "top", "out"]),
-                 _build_hdl),
+                 _build_hdl, side_effects='long-running; writes database and HDL artifacts to out and optional cache; launches native tools', native_tools=('Yosys', 'yosys-slang', 'GHDL', 'firtool')),
         ToolSpec("query_info", "What a design database holds: toplevel, configuration, counts, clock domains, "
-                 "artifacts (blocks, pdg, hgldd), RTL files, warnings.", schema(DB), _wrap(ops.info), annotations=RO),
+                 "artifacts (blocks, pdg, hgldd), RTL files, warnings.", schema(DB), _wrap(ops.info), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_where", "Where a signal (or bundle/Area) is: Scala source line, Verilog module/name/line, "
                  "waveform path, Spinal path, type, width, clock domain and reset value.",
-                 schema({**DB, **SIG}, ["signal"]), _wrap(lambda d, signal: ops.where(d, signal)), annotations=RO),
+                 schema({**DB, **SIG}, ["signal"]), _wrap(lambda d, signal: ops.where(d, signal)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_drivers", "What drives a signal: every assignment with its source expression, when/switch "
                  "conditions, enables, Scala location; for registers the clock, reset signal/kind/value; for "
                  "memories the ports. Assignments are in elaboration order (later wins).",
-                 schema({**DB, **SIG}, ["signal"]), _wrap(lambda d, signal: ops.drivers(d, signal)), annotations=RO),
+                 schema({**DB, **SIG}, ["signal"]), _wrap(lambda d, signal: ops.drivers(d, signal)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_loads", "What reads a signal: reader signals with how (data, cond, sel), the statements "
                  "and the conditions that use it.", schema({**DB, **SIG, **LIMIT}, ["signal"]),
-                 _wrap(lambda d, signal, limit=500: ops.loads(d, signal, limit=limit)), annotations=RO),
+                 _wrap(lambda d, signal, limit=500: ops.loads(d, signal, limit=limit)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_fanin", "Transitive drivers of a signal or interface up to `depth`, through logic "
                  "(compiler temporaries are transparent). Lists signals, edges, registers and ports reached.",
                  schema({**DB, "signal": IFACE, **GRAPH}, ["signal"]),
-                 _wrap(lambda d, signal, **kw: ops.fanin(d, signal, **kw)), annotations=RO),
+                 _wrap(lambda d, signal, **kw: ops.fanin(d, signal, **kw)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_fanout", "Transitive readers of a signal or interface up to `depth` (see query_fanin).",
                  schema({**DB, "signal": IFACE, **GRAPH}, ["signal"]),
-                 _wrap(lambda d, signal, **kw: ops.fanout(d, signal, **kw)), annotations=RO),
+                 _wrap(lambda d, signal, **kw: ops.fanout(d, signal, **kw)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_path", "Shortest dependency paths from `a` (read) to `b` (driven): each hop with the "
                  "statement linking it and its Scala location, and the number of register stages. "
                  "comb_only stops at registers, memories and synchronous read state; data_only ignores conditions and selects.",
                  schema({**DB, "a": IFACE, "b": IFACE, "comb_only": {"type": "boolean", "default": False},
                          "data_only": {"type": "boolean", "default": False},
                          "max_paths": {"type": "integer", "default": 3}}, ["a", "b"]),
-                 _wrap(lambda d, a, b, **kw: ops.path(d, a, b, **kw)), annotations=RO),
+                 _wrap(lambda d, a, b, **kw: ops.path(d, a, b, **kw)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_search", "Find signals and components by name: substring, glob (*, ?) or regex; "
                  "filter by kind (reg, wire, port, mem, component) and scope (component path).",
                  schema({**DB, "pattern": {"type": "string"}, "kind": {"type": "string",
                          "enum": ["reg", "wire", "port", "mem", "component"]}, "regex": {"type": "boolean", "default": False},
                          "scope": {"type": "string"}, "include_generated": {"type": "boolean", "default": False},
                          "limit": {"type": "integer", "default": 100}}, ["pattern"]),
-                 _wrap(lambda d, pattern, **kw: ops.search(d, pattern, **kw)), annotations=RO),
+                 _wrap(lambda d, pattern, **kw: ops.search(d, pattern, **kw)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_hierarchy", "Component tree below `path` (default: toplevel): instance names, Verilog "
                  "modules, Scala classes, source locations.",
                  schema({**DB, "path": {"type": "string"}, "depth": {"type": "integer", "default": 2}}),
-                 _wrap(lambda d, path=None, depth=2: ops.hierarchy(d, path, depth)), annotations=RO),
+                 _wrap(lambda d, path=None, depth=2: ops.hierarchy(d, path, depth)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_component", "One component: ports, interfaces (Stream/Flow/bundles), children, registers, "
                  "memories, Areas, counts.", schema({**DB, "path": {"type": "string"}}),
-                 _wrap(lambda d, path=None: ops.component(d, path)), annotations=RO),
+                 _wrap(lambda d, path=None: ops.component(d, path)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_regs", "Registers of a component (recursive: of its subtree) with width, clock, reset "
                  "value and Scala location.", schema({**DB, "path": {"type": "string"},
                                                        "recursive": {"type": "boolean", "default": False},
                                                        "include_generated": {"type": "boolean", "default": False}}),
-                 _wrap(lambda d, path=None, **kw: ops.regs(d, path, **kw)), annotations=RO),
+                 _wrap(lambda d, path=None, **kw: ops.regs(d, path, **kw)), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_diff", "What changed in the elaborated hardware between two databases (e.g. before and "
                  "after a Scala edit): components, ports, registers, memories, signals, connections between "
                  "named signals, and the logic of each changed signal.",
                  schema({"old": {"type": "string"}, "new": {"type": "string"}, "scope": {"type": "string"},
                          "limit": {"type": "integer", "default": 200},
                          "connections": {"type": "boolean", "default": True}}, ["old", "new"]),
-                 _diff, annotations=RO),
+                 _diff, annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_explain", "Explain a design diff: each hardware difference with its Scala locations, the "
                  "tests that hit base coverage points on those lines (coverage: rvw.coverage/1 of the OLD revision), "
                  "and a measured effect of the whole change (effect: perf/arch compare JSON). Uncertain items make "
@@ -190,11 +190,11 @@ def mcp_tools() -> list[ToolSpec]:
                  schema({"old": {"type": "string"}, "new": {"type": "string"}, "coverage": {"type": "string"},
                          "effect": {"type": "string"}, "scope": {"type": "string"},
                          "limit": {"type": "integer", "default": 500}}, ["old", "new"]),
-                 _explain, annotations=RO),
+                 _explain, annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("query_export", "Write an artifact stored in the database to a file: `blocks` (SpinalBlocks "
                  "diagram JSON), `pdg` (SpinalTrace PDG JSON), `hgldd` (SpinalWaves HGLDD for Surfer).",
                  schema({**DB, "artifact": {"type": "string"}, "out": {"type": "string"}}, ["artifact", "out"]),
-                 _wrap(lambda d, artifact, out: ops.export(d, artifact, out))),
+                 _wrap(lambda d, artifact, out: ops.export(d, artifact, out)), side_effects='writes exported artifact to out', native_tools=()),
         ToolSpec("query_build_db", "Elaborate a design and write its design database (minutes for a CPU). Either "
                  "`design` (a Spinal component class with a no-argument constructor, on the classpath of `sbt_dir`, "
                  "default SpinalDB/spinaldb) or `entry` plus `config`: a named entry of SpinalDB/build-db.sh "
@@ -207,5 +207,5 @@ def mcp_tools() -> list[ToolSpec]:
                          "options": {"type": "array", "items": {"type": "string"},
                                      "description": "extra SpinalDB options, e.g. --no-pdg, --source-root DIR"}},
                         ["out"]),
-                 _build_db, long=True),
+                 _build_db, long=True, side_effects='long-running; writes database and build artifacts; launches native tools and project build command', native_tools=('JDK', 'sbt')),
     ]
