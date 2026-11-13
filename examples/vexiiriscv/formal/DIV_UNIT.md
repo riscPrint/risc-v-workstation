@@ -73,3 +73,15 @@ Icarus reproduced the same `1 / 0` mismatch. The 12-clock M-model check returned
 a counterexample in 105.869 seconds. The runner returned exit one.
 The source class is therefore also present at the example pin.
 Full-core behavior and the pinned development SpinalHDL build remain unchecked.
+
+## Default divider implementation
+
+Use `--implementation DivRadix` to export the default radix-two arithmetic unit.
+Its normalization can change the response latency. The same stable-operand,
+first-completion contract applies. Use the default 40-clock bound.
+
+On the example pin, DIVU and REMU both proved for every 32-bit dividend with
+divisor zero. Times were 59.056 and 45.531 seconds. Icarus returned
+`0xffffffff` for the separate `1 / 0` sample. These results apply to
+`DivRadix`. They do not clear the `DivRadix2` mismatch above.
+Nonzero unrestricted divisors and signed operations remain open.
