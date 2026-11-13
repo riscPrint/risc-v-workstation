@@ -1,0 +1,20 @@
+{
+  "retired": {
+    "model_event": "issued",
+    "rtl_event": "architectural_commits",
+    "edge": "rising",
+    "unit": "instructions",
+    "identity": "architectural",
+    "family": "throughput",
+    "region": "whole-program; trap-free timing loop only"
+  },
+  "branch_corrections": {
+    "model_event": "branch_misses",
+    "rtl_event": "branch_mispredict",
+    "edge": "rising",
+    "unit": "events",
+    "identity": "microarchitectural",
+    "family": "prediction",
+    "region": "whole-program; includes all RTL correction pulses"
+  }
+}

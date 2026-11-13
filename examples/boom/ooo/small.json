@@ -1,0 +1,388 @@
+{
+  "schema": "rvw.arch-core/1",
+  "config": "small",
+  "isa": "rv64gc_zba_zbb_zbs",
+  "kind": "o3",
+  "cpu": {
+    "fetchWidth": 4,
+    "fetchBufferSize": 8,
+    "fetchQueueSize": 8,
+    "numFTQEntries": 16,
+    "decodeWidth": 1,
+    "renameWidth": 1,
+    "dispatchWidth": 1,
+    "commitWidth": 1,
+    "squashWidth": 1,
+    "issueWidth": 5,
+    "wbWidth": 5,
+    "fetchToDecodeDelay": 3,
+    "decodeToRenameDelay": 1,
+    "renameToIEWDelay": 2,
+    "issueToExecuteDelay": 2,
+    "iewToCommitDelay": 1,
+    "iewToFetchDelay": 2,
+    "commitToFetchDelay": 1,
+    "numROBEntries": 32,
+    "numPhysIntRegs": 52,
+    "numPhysFloatRegs": 48,
+    "LQEntries": 8,
+    "SQEntries": 8,
+    "cacheLoadPorts": 1,
+    "cacheStorePorts": 1
+  },
+  "queues": [
+    {
+      "entries": 8,
+      "units": [
+        {
+          "ops": [
+            "MemRead",
+            "MemWrite",
+            "FloatMemRead",
+            "FloatMemWrite",
+            "InstPrefetch"
+          ],
+          "count": 2,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 8,
+      "units": [
+        {
+          "ops": [
+            "IntMult"
+          ],
+          "count": 1,
+          "latency": 3,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntDiv"
+          ],
+          "count": 1,
+          "latency": 34,
+          "pipelined": false
+        },
+        {
+          "ops": [
+            "System"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntAlu",
+            "IntMult",
+            "IntDiv",
+            "FloatAdd",
+            "FloatCmp",
+            "FloatCvt",
+            "FloatMult",
+            "FloatMultAcc",
+            "FloatDiv",
+            "FloatMisc",
+            "FloatSqrt",
+            "SimdAdd",
+            "SimdAddAcc",
+            "SimdAlu",
+            "SimdCmp",
+            "SimdCvt",
+            "SimdMisc",
+            "SimdMult",
+            "SimdMultAcc",
+            "SimdMatMultAcc",
+            "SimdShift",
+            "SimdShiftAcc",
+            "SimdDiv",
+            "SimdSqrt",
+            "SimdFloatAdd",
+            "SimdFloatAlu",
+            "SimdFloatCmp",
+            "SimdFloatCvt",
+            "SimdFloatDiv",
+            "SimdFloatMisc",
+            "SimdFloatMult",
+            "SimdFloatMultAcc",
+            "SimdFloatMatMultAcc",
+            "SimdFloatSqrt",
+            "SimdReduceAdd",
+            "SimdReduceAlu",
+            "SimdReduceCmp",
+            "SimdFloatReduceAdd",
+            "SimdFloatReduceCmp",
+            "SimdAes",
+            "SimdAesMix",
+            "SimdSha1Hash",
+            "SimdSha1Hash2",
+            "SimdSha256Hash",
+            "SimdSha256Hash2",
+            "SimdShaSigma2",
+            "SimdShaSigma3",
+            "SimdSha3",
+            "SimdSm4e",
+            "SimdCrc",
+            "SimdPredAlu",
+            "SimdDotProd",
+            "Matrix",
+            "MatrixMov",
+            "MatrixOP",
+            "MemRead",
+            "MemWrite",
+            "FloatMemRead",
+            "FloatMemWrite",
+            "InstPrefetch",
+            "SimdUnitStrideLoad",
+            "SimdUnitStrideStore",
+            "SimdUnitStrideMaskLoad",
+            "SimdUnitStrideMaskStore",
+            "SimdStridedLoad",
+            "SimdStridedStore",
+            "SimdIndexedLoad",
+            "SimdIndexedStore",
+            "SimdWholeRegisterLoad",
+            "SimdWholeRegisterStore",
+            "SimdUnitStrideFaultOnlyFirstLoad",
+            "SimdUnitStrideSegmentedLoad",
+            "SimdUnitStrideSegmentedStore",
+            "SimdUnitStrideSegmentedFaultOnlyFirstLoad",
+            "SimdStrideSegmentedLoad",
+            "SimdStrideSegmentedStore",
+            "SimdExt",
+            "SimdFloatExt",
+            "SimdConfig",
+            "SimdBf16Add",
+            "SimdBf16Cmp",
+            "SimdBf16Cvt",
+            "SimdBf16DotProd",
+            "SimdBf16MatMultAcc",
+            "SimdBf16Mult",
+            "SimdBf16MultAcc",
+            "Bf16Cvt",
+            "System"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 8,
+      "units": [
+        {
+          "ops": [
+            "IntAlu"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 8,
+      "units": [
+        {
+          "ops": [
+            "FloatAdd",
+            "FloatCmp",
+            "FloatCvt",
+            "FloatMult",
+            "FloatMultAcc",
+            "FloatMisc",
+            "Bf16Cvt"
+          ],
+          "count": 1,
+          "latency": 4,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "FloatDiv",
+            "FloatSqrt"
+          ],
+          "count": 1,
+          "latency": 30,
+          "pipelined": false
+        }
+      ]
+    }
+  ],
+  "predictor": {
+    "tage": {
+      "nHistoryTables": 6,
+      "minHist": 2,
+      "maxHist": 64,
+      "tagTableTagWidths": [
+        0,
+        7,
+        7,
+        8,
+        8,
+        9,
+        9
+      ],
+      "logTagTableSizes": [
+        13,
+        9,
+        9,
+        10,
+        10,
+        9,
+        9
+      ],
+      "logUResetPeriod": 11
+    },
+    "loop": {
+      "logSizeLoopPred": 6,
+      "logLoopTableAssoc": 2
+    },
+    "btb": {
+      "numEntries": 1024,
+      "associativity": 2
+    },
+    "ras_entries": 32
+  },
+  "icache": {
+    "size": "16384B",
+    "assoc": 4,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 1,
+    "tgts_per_mshr": 1,
+    "write_buffers": 1,
+    "is_read_only": true,
+    "writeback_clean": false
+  },
+  "dcache": {
+    "size": "16384B",
+    "assoc": 4,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 2,
+    "tgts_per_mshr": 4,
+    "write_buffers": 1,
+    "writeback_clean": false
+  },
+  "itlb_entries": 32,
+  "dtlb_entries": 8,
+  "line_bytes": 64,
+  "bus_bytes": 8,
+  "memory_latency": 20,
+  "ooo": {
+    "latencies": {
+      "alu": 1,
+      "multiply": 3,
+      "divide": 34,
+      "load": 4,
+      "store": 2,
+      "branch": 1,
+      "jump": 1,
+      "system": 1
+    },
+    "branch_penalty": 5,
+    "memory_policy": "ordered",
+    "frontend": {
+      "decode_width": 1,
+      "decode_entries": 8,
+      "decode_latency": 1,
+      "fetch_latency": 3,
+      "ftq_entries": 16,
+      "block_bytes": 16,
+      "predictor_latency": 3
+    },
+    "components": {
+      "schema": "rvw.csim-study/1",
+      "name": "boom-tage-l",
+      "description": "BOOM v4 withTAGELBPD predictor sizes as a component study (all presets small..giga share it).",
+      "source": {
+        "core": "spinal-boom",
+        "revision": "0cb0b694413c6eba5837560536cde80dad62ca00",
+        "files": [
+          "src/main/scala/boom/ifu/bpd/tage.scala",
+          "src/main/scala/boom/ifu/bpd/loop.scala",
+          "src/main/scala/boom/ifu/bpd/bim.scala",
+          "src/main/scala/boom/ifu/bpd/btb.scala",
+          "src/main/scala/boom/common/config-mixins.scala",
+          "src/main/scala/boom/common/parameters.scala"
+        ],
+        "fidelity": "approximate",
+        "approximations": [
+          "TAGE index/tag hashing, allocation and u-bit clearing follow the generic csim TAGE, not BOOM's folded-history and wrbypass logic",
+          "BOOM predicts per fetch bank (bankWidth columns); csim predicts per branch instruction",
+          "BIM is modelled as one 2048-entry table; BOOM banks it by column",
+          "the FA2 micro BTB, slow BTB fill timing and banking are not modelled; the BTB is one 256-entry 2-way level",
+          "the loop predictor uses the Seznec rules with 3-bit confidence (BOOM threshold 7), not BOOM's exact update",
+          "history is speculative in BOOM and repaired; csim trains on the actual path with immediate update",
+          "RAS repair follows the csim pointer_top policy"
+        ]
+      },
+      "branch": {
+        "model": "ltage",
+        "pc_shift": 1,
+        "base_entries": 2048,
+        "base_ctr_bits": 2,
+        "ctr_bits": 3,
+        "u_bits": 2,
+        "u_reset_period": 2048,
+        "path_bits": 0,
+        "tables": [
+          {
+            "entries": 128,
+            "history": 2,
+            "tag_bits": 7
+          },
+          {
+            "entries": 128,
+            "history": 4,
+            "tag_bits": 7
+          },
+          {
+            "entries": 256,
+            "history": 8,
+            "tag_bits": 8
+          },
+          {
+            "entries": 256,
+            "history": 16,
+            "tag_bits": 8
+          },
+          {
+            "entries": 128,
+            "history": 32,
+            "tag_bits": 9
+          },
+          {
+            "entries": 128,
+            "history": 64,
+            "tag_bits": 9
+          }
+        ],
+        "loop": {
+          "entries": 64,
+          "ways": 4,
+          "tag_bits": 10,
+          "iter_bits": 10,
+          "conf_bits": 3
+        }
+      },
+      "btb": {
+        "entries": 256,
+        "ways": 2,
+        "tag_bits": 13
+      },
+      "ras": {
+        "entries": 32,
+        "repair": "pointer_top"
+      }
+    }
+  }
+}
