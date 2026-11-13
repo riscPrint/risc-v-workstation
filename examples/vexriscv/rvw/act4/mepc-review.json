@@ -1,0 +1,152 @@
+{
+  "schema": "rvw.act4-mepc-review/1",
+  "date": "2026-11-13",
+  "config": "rv32im",
+  "selection": "six minimal CSR readback programs; IALIGN=32",
+  "counts": {
+    "fail": 6
+  },
+  "reference_counts": {
+    "mismatch": 6
+  },
+  "tests": [
+    {
+      "test": "mepc-0.elf",
+      "elf_sha256": "8af8fffcc3b3fde064ae12201c95444cfa5f7a7bbcd9106d4ce236c98efd0e61",
+      "trace_sha256": "5b88b92db4cd4e8a1e75ec3223555f697e3cb53341456f00dbb1fb14105ca4a6",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrrc   t1, mepc, zero",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x3"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 0
+    },
+    {
+      "test": "mepc-1.elf",
+      "elf_sha256": "0eb70ab9b6e4aff96e34366717c72784cba2f455ae8fd47627a50ad418cc6eba",
+      "trace_sha256": "04f2798c488800df32843be4e6c40536559e59488dfe690a11f71ded585de594",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrrci  t1, mepc, 0",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x2"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 1
+    },
+    {
+      "test": "mepc-2.elf",
+      "elf_sha256": "aa6b72af1d739bfa6a3af64b04e597efff9237e1a2e7feb94100974cd35c5b5f",
+      "trace_sha256": "c61ed24bfcc1d06fb05277297d73d1561b915cc1a7d8a603a28785c08cd70227",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrr    t1, mepc",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x2"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 2
+    },
+    {
+      "test": "mepc-3.elf",
+      "elf_sha256": "fa1437a84c40a07f9936057fb5c24894f162055032f93c996ca208843649fc1b",
+      "trace_sha256": "ab27705a85c7ce92370dd60a3a30152b75dffc62f283868d65b6709601b05bbb",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrrsi  t1, mepc, 0",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x3"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 3
+    },
+    {
+      "test": "mepc-4.elf",
+      "elf_sha256": "1fdd1e546e27926370b8e6c89e9dba1b444d58d994fa99eda3a2637d76165e34",
+      "trace_sha256": "d7f58bd045b5382273c344477a7965b1043bef663e11bb2866916efd4d5461d0",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrrw   t1, mepc, zero",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x1"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 4
+    },
+    {
+      "test": "mepc-5.elf",
+      "elf_sha256": "674233f716919ac1140bfb5cd021a3d8f554f1c99ddc4f6da9e549cfaaa98112",
+      "trace_sha256": "f3dc0fa12bbaca91d0d1680b699aa97ed8e1526e09fd2bbaad0155cb2cb549fb",
+      "c1": "fail",
+      "spike": "mismatch",
+      "first_trap": null,
+      "first_difference": {
+        "order": 5,
+        "cycle": 26,
+        "pc": "0x80000048",
+        "disassembly": "csrrwi  t1, mepc, 13",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x1"
+          }
+        }
+      },
+      "synchronized": 0,
+      "applied_masks": [],
+      "case": 5
+    }
+  ]
+}

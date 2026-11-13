@@ -67,3 +67,7 @@ rvw cosim check --core vexriscv --platform rvw/platform.json \
 UDB 0.1.17 `csr/mepc.yaml` requires bits 1:0 to read zero for this
 uncompressed ISA. The VexRiscv source pin maps MEPC as an unrestricted
 read/write register in `CsrPlugin.scala`. Core sources remain unchanged.
+
+See [the six MEPC decisions](MEPC_DECISIONS.md) for minimal programs,
+strict Spike first differences and comparison with the formal ISA and
+interrupt findings. All six remain core readback differences.
