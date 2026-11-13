@@ -170,3 +170,8 @@ is one `diff` entry (component, port, register, memory, signal, logic or connect
 `selection.tests` lists every coverage test. With `--effect` (an `rvw perf compare` or
 `rvw arch compare` JSON), `effect.status` is `measured` for the whole change; it is never
 attributed to one difference. No performance model runs here.
+
+The slang native tests also cover SERV `serv_top` at revision
+`f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8`. They compare 16 cross-instance
+path queries with an independent traversal of the native netlist. Set
+`RVW_HDL_REF` to a directory with the external `serv` checkout to run this test.
