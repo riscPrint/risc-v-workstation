@@ -41,16 +41,6 @@
         "yosys-abc": {
           "sha256": "91bc02357beb61ace477cf8d8c0a84541ccb44f224c36dab4a8a6f4db689100f",
           "executable": "yosys-abc"
-          "path": "~/.cache/rvw/formal-engines/oss-cad-suite/bin/sby",
-          "sha256": "b43ee46c216089921ab0f84b645f7e92df8a4b024038c3d06433093921f684dc"
-        },
-        "yosys": {
-          "path": "~/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys",
-          "sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9"
-        },
-        "yosys-abc": {
-          "path": "~/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys-abc",
-          "sha256": "91bc02357beb61ace477cf8d8c0a84541ccb44f224c36dab4a8a6f4db689100f"
         }
       },
       "returncode": 0,
@@ -122,16 +112,6 @@
         "rIC3": {
           "sha256": "9881155812ec6be9c3754f7f10e3d7b80c020c7bde2168afeebd3b1835ef031f",
           "executable": "rIC3"
-          "path": "~/.cache/rvw/formal-engines/oss-cad-suite/bin/sby",
-          "sha256": "b43ee46c216089921ab0f84b645f7e92df8a4b024038c3d06433093921f684dc"
-        },
-        "yosys": {
-          "path": "~/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys",
-          "sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9"
-        },
-        "rIC3": {
-          "path": "~/.cache/rvw/formal-engines/bin/rIC3",
-          "sha256": "9881155812ec6be9c3754f7f10e3d7b80c020c7bde2168afeebd3b1835ef031f"
         }
       },
       "returncode": 0,
