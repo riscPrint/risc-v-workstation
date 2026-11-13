@@ -124,14 +124,16 @@ def test_sail_reads_captured_config(tmp_path, sail_inputs, sail, race_injector, 
 
 
 @pytest.mark.parametrize("replace,revert", [(True, False), (False, True)])
-def test_changed_sail_tool_refuses_verdict(tmp_path, sail_elf, platform, sail, race_injector, replace, revert):
+def test_changed_sail_tool_refuses_verdict(tmp_path, sail_elf, integer_platform, integer_platform_path, sail, race_injector, replace, revert):
     executable = tmp_path / "sail"
     shutil.copyfile(sail, executable)
     executable.chmod(0o755)
     trace = tmp_path / "trace.jsonl"
-    generate(sail_elf, trace, platform, 100)
+    generate(sail_elf, trace, integer_platform, 100)
     hook = race_injector.file(cli, "check", executable, b"changed executable", replace=replace, revert=revert)
-    result, code = cli.calculate(arguments(sail_elf, trace, model="sail", sail=str(executable)))
+    args = arguments(sail_elf, trace, model="sail", sail=str(executable))
+    args.platform = integer_platform_path
+    result, code = cli.calculate(args)
     assert hook.fired
     assert code == 3 and result["status"] == "inconclusive", result
     assert result["cause"].startswith("input_not_captured:")

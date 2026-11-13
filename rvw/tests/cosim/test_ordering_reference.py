@@ -19,7 +19,8 @@ SPEC.loader.exec_module(suite)
 # Extension generators need explicit ISA/CMO profiles and have dedicated tests
 # under tests/ordering. Keep this base-profile cross-model corpus portable.
 @pytest.mark.parametrize('name', [*suite.DEFAULT_SUITES, 'amo-fault'])
-def test_spike_sail_ordering(tmp_path_factory, tmp_path, platform, sail, name):
+def test_spike_sail_ordering(tmp_path_factory, tmp_path, integer_platform, sail, name):
+    platform = integer_platform
     source = tmp_path / (name + '.S')
     source.write_text(suite.GENERATORS[name](64, 7))
     elf = _build(tmp_path_factory, source, march='rv64ima_zicsr_zifencei')

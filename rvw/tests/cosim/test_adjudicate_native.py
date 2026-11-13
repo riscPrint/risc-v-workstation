@@ -1,11 +1,10 @@
 """Native integration when Spike, Sail and the compiler are installed."""
 
-def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch):
+def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch, integer_platform, integer_platform_path):
     from pathlib import Path
     import pytest
     from cosim_build import _build
     from model_fixtures import generate
-    from rvw.cosim.platform import Platform
     from rvw.cosim.adjudicate import execute_json
     import os
     import shutil
@@ -30,7 +29,7 @@ tohost: .dword 0
 ''')
     elf = _build(tmp_path_factory, source)
     trace = tmp_path/'trace.jsonl'
-    assert generate(elf, trace, Platform.load('boom'), 100)['termination'] == 'pass'
-    result = execute_json(elf=str(elf), trace=str(trace), core='boom', strict=True)
+    assert generate(elf, trace, integer_platform, 100)['termination'] == 'pass'
+    result = execute_json(elf=str(elf), trace=str(trace), core='boom', platform=str(integer_platform_path), strict=True)
     assert result['status'] == 'match', result
     assert set(result['matched_references']) == {'spike', 'sail'}
