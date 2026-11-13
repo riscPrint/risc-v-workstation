@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
 ```
 
@@ -1845,14 +1845,6 @@ usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
     [--project PROJECT]
 ```
 
-### `rvw uvm`
-
-```text
-usage: rvw uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE] [--verilator
-    VERILATOR] [--seed SEED] [--seeds SEEDS] [--timeout TIMEOUT]
-    [--require-feature REQUIRE_FEATURE] [--json] [--project PROJECT]
-```
-
 ### `rvw uvm-ral`
 
 ```text
@@ -1914,6 +1906,54 @@ usage: rvw soc capture-check [-h] --capture CAPTURE --result RESULT [--json]
 ```text
 usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
     TRANSACTIONS] [--connections CONNECTIONS] [--json] [--project PROJECT] map
+```
+
+### `rvw uvm`
+
+```text
+usage: rvw uvm [-h] [--project PROJECT]
+    {features,build,run,list,regress,coverage-merge} ...
+```
+
+### `rvw uvm features`
+
+```text
+usage: rvw uvm features [-h] [--project PROJECT] results
+```
+
+### `rvw uvm build`
+
+```text
+usage: rvw uvm build [-h] --out OUT [--timeout TIMEOUT] [--archive ARCHIVE]
+    [--verilator VERILATOR] [--project PROJECT] manifest
+```
+
+### `rvw uvm run`
+
+```text
+usage: rvw uvm run [-h] --out OUT [--timeout TIMEOUT] --build BUILD --test
+    TEST [--seed SEED] [--project PROJECT]
+```
+
+### `rvw uvm list`
+
+```text
+usage: rvw uvm list [-h] [--project PROJECT] manifest
+```
+
+### `rvw uvm regress`
+
+```text
+usage: rvw uvm regress [-h] --out OUT [--timeout TIMEOUT] --build BUILD
+    [--tests TESTS [TESTS ...]] [--seeds SEEDS [SEEDS ...]] [--project
+    PROJECT]
+```
+
+### `rvw uvm coverage-merge`
+
+```text
+usage: rvw uvm coverage-merge [-h] --out OUT [--timeout TIMEOUT] [--tool TOOL]
+    [--project PROJECT] inputs [inputs ...]
 ```
 
 ### `rvw verification-plan`
@@ -3467,6 +3507,54 @@ Check declared external gate-netlist/SDF cell, delay, timing-check and unknown b
 Arguments: `manifest` (required), `capabilities` (required).
 
 Starts a background job: no.
+
+### `uvm_build`
+
+Build a pinned Accellera UVM bench on Verilator.
+
+Arguments: `manifest` (required), `out` (required), `archive`, `verilator`, `timeout`.
+
+Starts a background job: yes.
+
+### `uvm_coverage_merge`
+
+Merge native Verilator coverage files.
+
+Arguments: `inputs` (required), `out` (required), `tool`, `timeout`.
+
+Starts a background job: yes.
+
+### `uvm_features`
+
+Derive a bounded engine feature table from C3 results.
+
+Arguments: `path` (required).
+
+Starts a background job: no.
+
+### `uvm_list`
+
+List tests declared by a project UVM bench.
+
+Arguments: `manifest` (required).
+
+Starts a background job: no.
+
+### `uvm_regress`
+
+Run declared UVM tests and seeds and write C3 results.
+
+Arguments: `build_dir` (required), `out` (required), `tests`, `seeds`, `timeout`.
+
+Starts a background job: yes.
+
+### `uvm_run`
+
+Run one UVM test and write C1 bench evidence.
+
+Arguments: `build_dir` (required), `out` (required), `test` (required), `seed`, `timeout`.
+
+Starts a background job: yes.
 
 ### `verification_plan_check`
 
