@@ -700,3 +700,19 @@ same-event disable cancellation and properties outside the top module.
 It does not change the formal solver's event or state model. Simulation counts
 and code coverage retain finite-prefix evidence limits. A failed compilation
 cannot retain earlier coverage or runtime logs.
+## Sail state slices
+
+`rvw formal sail-state` and MCP `formal_sail_state` emit
+`rvw.sail-state-slices/1` in `manifest.json`. Status `generated` means source
+compilation succeeded. It is not a proof verdict. The manifest records the
+pinned model commit, each source path/hash, each rule's source text and line,
+operand and result widths, lowerings, compiler/library hashes and output
+hashes. Each output has a pure kernel and a clocked result checker.
+
+The exported slices cover H/S/D sign injection, RV32 CSR access and proposed
+write values, and MRET/SRET/WFI entry decisions. The command README defines
+each port and control field. Project wrappers must bind decoded operands,
+valid operation events and observed results. FP outputs have no x0
+suppression. Invalid privilege encodings disable privileged entry checks.
+Full CSR, privileged and FP state transitions remain excluded. A passing
+kernel oracle does not prove a core instruction implementation.
