@@ -24,7 +24,7 @@ def mcp_tools():
         ToolSpec("formal_autocheck", "Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.",
                  schema({"manifest": S, "out": S, "db": S, "kind": {"type": "array", "items": S}, "max_properties": I, "depth": I,
                          "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0},
-                         "mode": {**S, "enum": ["bmc", "prove"]}, "xprop": B}, ["manifest", "out"]),
+                         "mode": {**S, "enum": ["bmc", "prove"]}, "xprop": B, "event_model": B, "async_reset": B}, ["manifest", "out"]),
                  _runner("autocheck"), long=True),
         ToolSpec("formal_apps", "Run reviewed connectivity, CSR, bounded progress, UNR and FSM monitor contracts.",
                  schema({"manifest": S, "out": S, "depth": I, "engine": S,

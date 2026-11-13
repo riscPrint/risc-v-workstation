@@ -22,6 +22,8 @@ def instrument(design, top):
     cells = mod.get('cells', {})
     supported = {'$_NOT_', '$_AND_', '$_OR_', '$_XOR_', '$_MUX_', '$_DFF_P_'}
     bad = sorted({c['type'] for c in cells.values()} - supported)
+    if any(kind.startswith('$_DFF_') and kind != '$_DFF_P_' for kind in bad):
+        raise ValueError('unsupported reset or clock in IFT shadow pass: use a public rising-edge clock and SYNC reset in the shared project Elaboration.config; rebuild simulation and SpinalDB before retrying')
     if bad:
         raise ValueError(f'unmodeled cells: {bad}')
     clocks = {c['connections']['C'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}
@@ -30,7 +32,10 @@ def instrument(design, top):
     clock_ports = {p for p, d in ports.items() if d['direction'] == 'input' and d['bits'] == list(clocks)} if clocks else set()
     if clocks and len(clock_ports) != 1:
         raise ValueError('clock must be a scalar public input port')
-    bits = {b for d in mod['netnames'].values() for b in d['bits'] if isinstance(b, int)}
+    # Yosys can retain unused slices of temporary vector netnames. Only live
+    # port/cell bits need drivers; live undriven inputs still fail below.
+    bits = {b for d in ports.values() for b in d['bits'] if isinstance(b, int)}
+    bits.update(b for c in cells.values() for values in c['connections'].values() for b in values if isinstance(b, int))
     port_names = {name for p in ports for name in (p, p + '__t')}
     prefix = ''
     while any(f'{prefix}{kind}{b}' in port_names for kind in ('n', 't') for b in bits):
@@ -38,11 +43,13 @@ def instrument(design, top):
     def v(b):
         if isinstance(b, int):
             return f'{prefix}n{b}'
+        if b in ('x', 'z'):
+            return "1'b0"  # Representative value; t(b)=1 admits both Boolean values.
         if b not in ('0', '1'):
             raise ValueError('X/Z constants are unmodeled')
         return f"1'b{b}"
     def t(b):
-        return f'{prefix}t{b}' if isinstance(b, int) else "1'b0"
+        return f'{prefix}t{b}' if isinstance(b, int) else ("1'b1" if b in ('x', 'z') else "1'b0")
     names = [n for p in ports for n in ([p] if p in clock_ports else [p, p+'__t'])]
     lines = [f'module {top}__ift({", ".join(names)});']
     for p, d in ports.items():

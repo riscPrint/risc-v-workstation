@@ -812,3 +812,10 @@ to the existing SVA frontend. An explicit rising-edge clock or matching default
 clock is required. Generation reports `rvw.psl-lowering/1`, `status=generated`,
 and the output path. This is not a verification result. Unsupported PSL forms
 are errors. The adapter does not silently replace liveness with finite bounds.
+
+## Autocheck event reset selection
+
+`formal autocheck` and MCP `formal_autocheck` accept `event_model` and
+`async_reset` (CLI `--event-model --async-reset`). These select the existing
+constant-value ASYNC-reset event BMC model. Default single-clock flows still
+refuse asynchronous state before proof execution and give a fix hint.

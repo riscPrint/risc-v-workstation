@@ -36,6 +36,10 @@ def shadow(design, top, policy, mode='precise'):
     for name in policy['sinks']:
         if name not in nets:
             raise ValueError('unknown sink: '+name)
+    live = {b for d in ports.values() for b in d['bits']}
+    live.update(b for c in mod['cells'].values() for values in c['connections'].values() for b in values)
+    if any(b not in live for name in (*policy['sources'], *policy['sinks']) for b in nets[name]['bits']):
+        raise ValueError('source or sink contains unused bits removed by synthesis')
     text = instrument(design, top)
     # The reference transform selects this prefix to avoid port collisions.
     bits = {b for n in nets.values() for b in n['bits'] if isinstance(b, int)}
@@ -49,7 +53,7 @@ def shadow(design, top, policy, mode='precise'):
                 continue
             c = cell['connections']
             target = f'{prefix}t{c["Y"][0]}'
-            terms = [f'{prefix}t{b}' for p in ('A','B','S') for b in c.get(p,[]) if isinstance(b,int)]
+            terms = [f'{prefix}t{b}' if isinstance(b,int) else "1'b1" for p in ('A','B','S') for b in c.get(p,[]) if isinstance(b,int) or b in ('x','z')]
             text = re.sub(r'assign '+re.escape(target)+r' = [^;]+;',
                           f'assign {target} = '+(' | '.join(terms) or "1'b0")+';', text)
     # Force taint at declared internal or input sources. Actual values stay intact.
@@ -104,7 +108,7 @@ def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', top):
         raise ValueError('simple top identifier required')
     (out/'input.v').write_bytes(Path(rtl).read_bytes())
-    native(['yosys','-Q','-p',f'read_verilog -sv input.v; hierarchy -check -top {top}; proc; flatten; memory_map; techmap; simplemap; write_json mapped.json'],out)
+    native(['yosys','-Q','-p',f'read_verilog -sv input.v; hierarchy -check -top {top}; proc; flatten; memory_map; techmap; simplemap; opt_clean -purge; write_json mapped.json'],out)
     design = json.loads((out/'mapped.json').read_text())
     text, prefix = shadow(design,top,policy,mode)
     (out/'shadow.v').write_text(text)
@@ -129,11 +133,11 @@ def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
         if sample[reset] == 0 and not sample.get(policy.get('declassifier'),0):
             checked_cycles+=1
             for index,sink in enumerate(policy['sinks']):
-                ts = [f'dut.{prefix}t{b}' if isinstance(b,int) else "1'b0" for b in design['modules'][top]['netnames'][sink]['bits']]
+                ts = [f'dut.{prefix}t{b}' if isinstance(b,int) else ("1'b1" if b in ('x','z') else "1'b0") for b in design['modules'][top]['netnames'][sink]['bits']]
                 lines.append(f'if ({" | ".join(ts)}) $display("SEC {cycle} {index}");')
     lines += ['$display("SEC_END"); $finish; end endmodule']
     (out/'tb.sv').write_text('\n'.join(lines))
-    native(['verilator','--binary','--timing','-Wno-fatal','--top-module','tb','shadow.v','tb.sv'],out)
+    native(['verilator','--binary','--build-jobs','2','-CFLAGS','-O0','--timing','-Wno-fatal','--top-module','tb','shadow.v','tb.sv'],out)
     log = native([str(out/'obj_dir/Vtb')],out)
     (out/'simulation.log').write_text(log)
     findings = []
@@ -150,4 +154,4 @@ def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
         findings.append(dict(database_dependency_paths=database_cache.get(sink,{}),cycle=int(cycle), sink=sink, candidate_path=steps,
                              database_paths=[p for p in db_paths if p in steps or p.split('.')[-1] in steps]))
     return publish(out,'ift',findings,'SEC_END' in log and checked_cycles>0,mode=mode,policy=policy,checked_cycles=checked_cycles,
-                   path_kind='structural candidate, not dynamic provenance',samples=len(samples))
+                   unknown_constants='x/z represent either Boolean value with taint set; no electrical high-impedance model',path_kind='structural candidate, not dynamic provenance',samples=len(samples))

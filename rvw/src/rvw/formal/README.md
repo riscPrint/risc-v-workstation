@@ -3201,3 +3201,9 @@ simulation comparisons and a retained bounded equivalence failure. See
 `rvw formal sva-lower` returns exit 2 and structured `status: unsupported`
 for unsupported source constructs. Preprocess macro-bearing RTL first. Input
 or output file errors return `status: error`. Neither result writes lowered RTL.
+
+For constant-value ASYNC-reset FFs, `bmc`, `apps` and `autocheck` accept
+`--event-model --async-reset`. The event model samples clock and reset events.
+Default single-clock flows refuse ASYNC state and give a configuration fix hint.
+Use one project elaboration entry if a SYNC reset implementation is selected.
+Rebuild the database after changing that entry.
