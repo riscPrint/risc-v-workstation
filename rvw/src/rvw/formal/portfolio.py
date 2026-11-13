@@ -90,12 +90,13 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
     out = Path(out)
     out.mkdir(parents=True, exist_ok=False)
     sources, hashes, transforms = [], [], []
+    reads = []
     for i, source in enumerate(plan['sources']):
         data = (Path(root) / source['path']).read_bytes()
         digest = sha256(data).hexdigest()
         if digest != source['sha256']:
             raise ValueError('source hash mismatch')
-        if b'`include' in data or b'$readmem' in data:
+        if source.get('format', 'verilog') != 'rtlil' and (b'`include' in data or b'$readmem' in data):
             raise ValueError('portfolio requires self-contained RTL including memory initial data')
         if source.get('format') == 'aiger':
             from . import aiger_input
@@ -103,9 +104,11 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
             data = aiger_input.to_verilog(data, plan['top']).encode()
             transforms.append({'source_sha256': digest, 'verilog_sha256': sha256(data).hexdigest(),
                                'importer_sha256': sha256(Path(aiger_input.__file__).read_bytes()).hexdigest()})
-        elif source.get('format', 'verilog') != 'verilog':
-            raise ValueError('source format must be verilog or aiger')
-        path = out / f'input{i}.sv'
+        elif source.get('format', 'verilog') not in ('verilog', 'rtlil'):
+            raise ValueError('source format must be verilog, rtlil or aiger')
+        rtlil = source.get('format') == 'rtlil'
+        path = out / (f'input{i}.il' if rtlil else f'input{i}.sv')
+        reads.append(('read_rtlil ' if rtlil else 'read -formal ') + path.name)
         path.write_bytes(data)
         sources.append(path.resolve())
         hashes.append(digest)
@@ -114,7 +117,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
     if not sources:
         raise ValueError('no RTL sources')
     (out / 'manifest.json').write_text(json.dumps(plan, indent=2) + '\n')
-    read_script = 'read -formal ' + ' '.join(p.name for p in sources)
+    read_script = '; '.join(reads)
     inventory = installed()
     assumptions = []
     if any(inventory[n]['status'] == 'installed' and mode in ENGINES[n][2] for n in names):
@@ -162,6 +165,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
         row = {'engine': name, **inventory[name], 'wall_s': None}
         if row['status'] == 'not_installed':
             return row
+        if backend == 'ebmc' and any(s.get('format') == 'rtlil' for s in plan['sources']):
+            return {**row, 'status': 'unsupported_input', 'reason': 'ebmc_does_not_read_rtlil'}
         if mode not in modes:
             return {**row, 'status': 'unsupported_mode'}
         directory = out / name.replace(':', '_')
@@ -235,7 +240,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
                 pids.pop(name, None)
             return {**row, 'status': 'error', 'reason': str(exc), 'wall_s': time.monotonic() - began}
 
-    with ThreadPoolExecutor(max_workers=len(names)) as pool:
+    with ThreadPoolExecutor(max_workers=min(3, len(names))) as pool:
         futures = [pool.submit(run, name) for name in names]
         try:
             for future in as_completed(futures):

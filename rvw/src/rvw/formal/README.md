@@ -3046,3 +3046,21 @@ attributes remain intact. The default still refuses memories. Native controls
 prove a four-word RAM against registers with zero and one read cycle of lag.
 A changed data bit produces a counterexample. These controls do not prove a
 cache, a memory macro or automatic internal cut-point matching.
+### Compiled property portfolios
+
+Engine-race and engine-bench accept pinned `format: "rtlil"` sources. Each
+source uses `read_rtlil` directly. No Verilog export/reparse is required.
+EBMC reports `unsupported_input` for this source class. Native races use at
+most three engine workers.
+
+`compiled_variants.build` retains compiled assumptions and makes conservative
+cell-output cuts for RAM, all adders, or flip-flops. RAM cuts free all memory
+outputs. Adder cuts are broader than counter quotient abstraction. They do
+not certify a reduced counter. State cuts can expose spurious failures.
+Use these variant answers only as abstraction observations. A transformed
+failure cannot establish a DUT failure. No automatic refinement is added.
+
+The 2026-11-13 VexRiscv capacity table and exact limits are in
+`examples/formal/deep/vexriscv-capacity.md`. All 43 compiled safety problems
+remain unsolved. RAM, adder, UF and state-cut attempts earned no qualified gain.
+The table lists missing property classes and witness-reconstruction failures.
