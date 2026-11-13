@@ -1650,8 +1650,9 @@ Its optional roles are `cmd_ready`, `write`, `wdata`, `mask`, `error` and
 Its optional roles are `wdata` and `mask`. Add `write_response=1` when the
 bus acknowledges stores through its response interface. Review actual
 acceptance and response timing. Help lists roles; it does not infer timing.
-The MCP `init_scaffold` tool currently creates the manual skeleton only.
-Use this CLI path for mapped init.
+MCP `init_scaffold` also accepts the mapped options. Use `spinal_top`,
+`reset_pc`, `buses` and `rvfi_prefix` with the same values as the CLI.
+Use `dry_run=true` to inspect files before writing them.
 
 Review `rvw/cosim.json` before removing `review_required`. Its `aligned_mem`
 field selects the C2 address convention. With `true`, report the word-aligned

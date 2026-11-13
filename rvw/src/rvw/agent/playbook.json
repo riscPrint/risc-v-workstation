@@ -121,7 +121,7 @@
         },
         {
           "id": "map-adapter",
-          "do": "Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF.",
+          "do": "Use init_scaffold with spinal_top, reset_pc, buses and rvfi_prefix for a mapped adapter. Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF.",
           "manual": true,
           "decide": [
             {
