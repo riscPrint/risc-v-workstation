@@ -26,6 +26,9 @@ class Trace:
             h = self.header
             if not isinstance(h, dict) or h.get("schema") not in ("rvw.rvfi/1", "rvw.rvfi/2") or h.get("xlen") not in (32, 64):
                 raise ValueError("expected rvw.rvfi/1 header with xlen 32 or 64")
+            if "external_interrupts" in h:
+                from .external_interrupts import declaration
+                declaration(h["external_interrupts"])
             self.multihart = "harts" in h
             caps = h.get("capabilities", ["multihart"] if self.multihart else ["state"])
             if not isinstance(caps, list) or not caps or any(c not in ("state", "multihart", "csr", "fault") for c in caps) or len(set(caps)) != len(caps):
@@ -61,6 +64,7 @@ class Trace:
         order, cycle, ended = -1, -1, False
         xlen = self.header["xlen"]
         epochs, orders, done, ids = {}, {}, set(), set()
+        external_sequence = 0
         capture = 0
         for line, text in enumerate(self.file, 2):
             try:
@@ -112,6 +116,12 @@ class Trace:
                             raise ValueError("missing external source")
                         for key in ("address", "data", "mask"):
                             hexnum(obj[key], xlen)
+                    elif obj["event"] == "external_interrupt":
+                        if self.multihart:
+                            raise ValueError("external interrupt extension currently requires one hart")
+                        from .external_interrupts import validate
+                        validate(obj, self.header, external_sequence, order + 1)
+                        external_sequence += 1
                     elif obj["event"] == "debug":
                         if not self.header.get("debug") or obj.get("action") not in ("halt", "observe"):
                             raise ValueError("debug event requires declared debug state and halt/observe action")

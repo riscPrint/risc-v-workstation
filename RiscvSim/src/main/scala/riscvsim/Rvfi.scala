@@ -125,6 +125,8 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
                       observe: Option[String => Unit] = None) extends AutoCloseable {
   require(resume.isEmpty || (!sys.env.contains("RVW_COSIM_PORT") && observe.isEmpty),
     "lockstep cannot resume without a reference checkpoint")
+  require(resume.isEmpty || !header.value.contains("external_interrupts"),
+    "external interrupt evidence cannot resume without its event state")
   // Validate the captured prefix before opening or replacing the output.
   private val restored = resume.map(RvfiWriterCheckpoint.decode(_, header))
   file.getAbsoluteFile.getParentFile.mkdirs()
@@ -202,6 +204,24 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     at(cycle)
     emit(s"""{"event": "irq", "cycle": $cycle, "levels": "${Hex(levels)}"}""")
     if (flushEachRecord) w.flush()
+  }
+
+  private var externalSequence = 0L
+
+  /** Ordered input/bus evidence. The retirement boundary is assigned at emission,
+    * after the adapter has drained earlier retirement records. */
+  def externalInterrupt(cycle: Long, kind: String, fields: ujson.Obj): Unit = {
+    require(header.value.get("external_interrupts").exists(_("schema").str == "rvw.external-interrupts/1"),
+      "external interrupt evidence needs a declared extension")
+    require(Set("pins", "source", "mmio", "ack", "taken")(kind), "unknown external interrupt kind")
+    require(!fields.value.keys.exists(Set("event", "cycle", "seq", "before_order", "kind")),
+      "external evidence cannot replace ordering fields")
+    at(cycle)
+    emit(ujson.write(ujson.Obj.from(Seq(
+      "event" -> ujson.Str("external_interrupt"), "cycle" -> RvwJson.num(cycle),
+      "seq" -> RvwJson.num(externalSequence), "before_order" -> RvwJson.num(records),
+      "kind" -> ujson.Str(kind)) ++ fields.value.toSeq)))
+    externalSequence += 1
   }
 
   /** A trap seen at `cycle` whose tval is only known one cycle later. The next `cycle` call writes it. */
