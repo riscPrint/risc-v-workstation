@@ -415,3 +415,11 @@ The `watchdog` register map uses the existing `rvw.soc/1` register format.
 Autonomous count and expiry status have unknown reset values for generic
 readback checking. Expiry status has W1C semantics. Service is write-only.
 The key, counter precedence and reset-request binding are in SpinalSoc's README.
+
+## Volatile block profile
+
+The `block` register profile uses existing `rvw.soc/1` data. Eight 512-byte
+sectors are available through full-word DATA accesses. Controller state and
+command semantics are in SpinalSoc's README. DATA and autonomous status have
+unknown values for generic register checking. The profile supplies no SD wire
+protocol, filesystem, disk image binding or persistent storage claim.

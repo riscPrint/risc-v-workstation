@@ -263,3 +263,29 @@ The reset request is a level output. Export `resetRequest` and bind it to the
 project reset controller. The composer does not connect it to its own reset.
 The profile uses the peripheral clock. It is not an independent safety clock.
 See [the composed test](examples/watchdog/README.md).
+
+## Volatile block device
+
+`rvw soc peripheral block --name disk --base 0x10000000 --out disk.json`
+exports an eight-sector verification block device. Each sector has 512 bytes.
+It has no physical SD signalling or persistent storage. The words are:
+
+| Offset | Register | Meaning |
+|---|---|---|
+| 0 | LBA | Sector number, 0 to 7. Writes during a transfer return an error. |
+| 4 | COMMAND | Write 1 to read, 2 to write, or 0 to abort. Reads return an error. |
+| 8 | STATUS | Bit 0 active, bit 1 command error, bit 2 done. Bits 1 and 2 are W1C. |
+| 12 | SECTORS | Read-only sector count, 8. |
+| 16 | DATA | One full 32-bit word per access, in sector order. |
+| 20 | INDEX | Read-only current word index, 0 to 127. |
+
+A successful command clears error and done. Exactly 128 DATA accesses complete
+a transfer and set done. The index stays at 127 after completion. DATA must
+match the selected read/write direction. An inactive or wrong-direction
+access returns an APB error and does not advance the index. An invalid LBA,
+unknown command or overlapping command returns an APB error and sets error.
+IRQ is the OR of done and error. Abort stops the transfer; it does not clear
+status or undo accepted writes. Stores are initialized to zero at elaboration.
+Controller reset aborts a transfer and clears status. It retains stored data.
+Byte access and a disk-image preload interface are outside this profile.
+See [the composed test](examples/block/README.md).
