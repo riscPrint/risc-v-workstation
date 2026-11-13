@@ -2946,3 +2946,10 @@ inputs. These are explicit environment restrictions. They are not ISA rules.
 Both declarations are recorded in `rvfi-generation/1` output. Remove them to
 retain the unconstrained wrapper. A passing finite liveness check remains bounded
 and applies only to the recorded environment.
+### Prepared RTLIL name compatibility
+
+The shared assertion counter accepts escaped hierarchy names from older Yosys
+and public interned names from Yosys 0.70. It resolves `leaf` and `suffix`
+entries in the `twines` table. Missing name entries cannot qualify a pass.
+The pinned-suite counter relation and seeded bad increment both passed their
+expected-outcome tests on 2026-11-13: six targeted tests passed in 6.99 s.
