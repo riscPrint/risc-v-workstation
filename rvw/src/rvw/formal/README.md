@@ -1499,6 +1499,52 @@ option, all assertions are checked together. A separate bounded feasibility
 query must be SAT. A conflicting environment remains inconclusive and retains
 its solver core in `environment_core`.
 
+
+### Database autocheck candidates and waivers
+
+`rvw formal autocheck PLAN.json --db DESIGN.db --out DIR` derives the module
+ports and complete output enum encodings from a current SpinalDB database.
+The plan still supplies `top`, `clock`, `reset` and `verilog`. `database_component`
+selects a component path when a module has several instances. No state list is
+needed. Each enum value and each pair of enum values becomes a reachability
+target. Hashed encodings and internal enums without exported RTL ports are
+listed as skipped. The database input capture is retained beside the result.
+
+Database candidates also include output bit constants and toggles, one-hot
+checks for complete one-hot enums, direct whole-width port addition/subtraction,
+and memory addresses whose address and enable are exposed ports. Arithmetic
+candidates require equal operand and destination widths and types. Conditional,
+partial and widened assignments are not inferred. Unsupported address expressions
+are skipped. These are candidates, not a complete inventory of design checks.
+Use `--kind` repeatedly to select kinds. Use `--max-properties` to set the limit.
+
+The plan can supply `contracts` for semantic endpoint roles that the database
+does not encode. Available kinds include `onehot`, `mutex`, `array_bound`,
+`arithmetic_overflow`, and `fifo`, plus the existing bounded progress kinds.
+One-hot requires a nonzero value by default. Mutex permits zero. Array bounds
+use `signal`, `size` and optional `enable`. Arithmetic checks use equal-width
+`signal` and `other`, `operation=add|sub`, optional `signed`, and optional `enable`.
+FIFO checks use accepted `push` and `pop` pulses, `write_data`, combinational
+`read_data`, and `capacity`. They check overflow, underflow and ordering. Empty
+fall-through and delayed read interfaces require another contract.
+
+`waivers` maps generated property IDs to nonempty review reasons. Waived checks
+run no solver and retain status `waived`. All-waived plans return `no_checks`.
+Waivers do not earn proofs or coverage exclusions. General liveness under
+fairness, automatic FIFO/arbiter role discovery and internal RTL exposure remain
+open. Existing bounded progress contracts do not establish general liveness.
+
+Generated database checks retain their module and Spinal source location.
+`rvw formal testplan --manifest RUN/spec.json --out REPORT` can read the generated
+app inventory directly and join the saved per-property formal results. Waived
+checks retain their waiver status. Missing results stay `not_run`. This also
+works with an explicitly written `rvw.formal-testplan/1` inventory for hand-written
+properties and further core, activation and mutation evidence.
+`arbiter_starvation` checks one-bit `request` and `grant` within a declared
+`bound`. `handshake_progress` checks `valid` and `ready` within that bound.
+These are bounded response contracts. They reject a `fairness` field because
+this flow cannot establish general fairness-constrained liveness.
+
 ### Formal testplan evidence
 
 `rvw formal testplan --manifest PLAN.json --out DIR` writes JSON and HTML.
