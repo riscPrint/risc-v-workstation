@@ -1,0 +1,1840 @@
+{
+  "schema": "rvw.act4-observations/1",
+  "date": "2026-11-13",
+  "evidence": "native instruction-only ACT4 with reduced CSR boot; not Sm compatibility or certification",
+  "config": "rv32im",
+  "core_revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+  "act4_revision": "56d40ab301dba23dd3104c17bd969afbaaea1931",
+  "profile_sha256": "62605ec04d72433f1d4ec64640e21e8f9bb0fcf8cf0cc2e83e964801414f4182",
+  "build_inputs": {
+    "rvmodel_macros.h": "2c67825416a51256f4a0100f0c854dd7c0228fb7528e31d48a31f7028e373b0f",
+    "sail.json": "5f04804ef8422b15202c73cfc98dbcb8587866afb79510080d24be4774a40b99",
+    "link.ld": "16436cce5774e46eb4ec1c52b2e4085bf7348ad014fbe8eeb77e4de602bf8593",
+    "udb.yaml": "b8c5fe4d2d6bf6738e125e57d630299da29e1964a23b9c49b6469603da731511"
+  },
+  "tools": {
+    "compiler": {
+      "executable": "riscv64-unknown-elf-gcc",
+      "sha256": "6c0e92e65ba405484890891a760ebd431e41186a912b4718fea2a8ea57416234",
+      "version": [
+        "riscv64-unknown-elf-gcc (g1b306039a) 15.1.0"
+      ]
+    },
+    "reference": {
+      "executable": "sail_riscv_sim",
+      "sha256": "8c2ffbcfa7004d55a42fa8759b66927d1305b973a801e4425cc2f98fbac779e8",
+      "version": [
+        "0.15"
+      ]
+    }
+  },
+  "reference_policy": "strict; no synchronization or masks",
+  "counts": {
+    "I": {
+      "built": 39,
+      "run": 39,
+      "fail": 0,
+      "finding": 0,
+      "spike_match": 39,
+      "spike_mismatch": 0,
+      "pass": 39
+    },
+    "M": {
+      "built": 8,
+      "run": 8,
+      "fail": 0,
+      "finding": 0,
+      "spike_match": 8,
+      "spike_mismatch": 0,
+      "pass": 8
+    },
+    "Zicsr": {
+      "built": 6,
+      "run": 6,
+      "fail": 6,
+      "finding": 6,
+      "spike_match": 0,
+      "spike_mismatch": 6,
+      "pass": 0
+    },
+    "Zifencei": {
+      "built": 1,
+      "run": 1,
+      "fail": 0,
+      "finding": 0,
+      "spike_match": 1,
+      "spike_mismatch": 0,
+      "pass": 1
+    },
+    "Zmmul": {
+      "built": 4,
+      "run": 4,
+      "fail": 0,
+      "finding": 0,
+      "spike_match": 4,
+      "spike_mismatch": 0,
+      "pass": 4
+    }
+  },
+  "tests": [
+    {
+      "id": "rv32i/I/I-add-00",
+      "extension": "I",
+      "elf_sha256": "716639c32ae6a20c710cfc557e8ff77946bdda426f859af30f0d87521f8c0fa3",
+      "c1": "pass",
+      "cycles": 13227,
+      "instret": 3593,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-addi-00",
+      "extension": "I",
+      "elf_sha256": "13f3c0fa4ccbfbf1b105bbb74e689e0c5e1197d9e73860e0300b0877d8b108a4",
+      "c1": "pass",
+      "cycles": 10227,
+      "instret": 2641,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-and-00",
+      "extension": "I",
+      "elf_sha256": "b341090bd3b8496c3993674e7b061120c358345fed5da6d3f18430a4d3f69cf3",
+      "c1": "pass",
+      "cycles": 13275,
+      "instret": 3609,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-andi-00",
+      "extension": "I",
+      "elf_sha256": "fcaa1604160792a6235c762e41a32df02897e3d847b031661b88cb5cdc77ff78",
+      "c1": "pass",
+      "cycles": 10227,
+      "instret": 2641,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-auipc-00",
+      "extension": "I",
+      "elf_sha256": "7700f3119efdec0082210abea36020f8fa6c6b2be3bd4b169a40807f4ca4258f",
+      "c1": "pass",
+      "cycles": 2418,
+      "instret": 656,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-beq-00",
+      "extension": "I",
+      "elf_sha256": "43c5543e70d872742dc8ef15b2d498ff88d14d2df7c180cc17d3245469734968",
+      "c1": "pass",
+      "cycles": 14946,
+      "instret": 3939,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-bge-00",
+      "extension": "I",
+      "elf_sha256": "dec872e8e1e1928ea0c5b17ab2d76d4df1cbc0aa28a83af61062d721ae7ce1a2",
+      "c1": "pass",
+      "cycles": 15144,
+      "instret": 3963,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-bgeu-00",
+      "extension": "I",
+      "elf_sha256": "77c302312dd2604ab1f63b130acb9df957cf00af216fb718e3bf6f1f7daef7d9",
+      "c1": "pass",
+      "cycles": 15144,
+      "instret": 3963,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-blt-00",
+      "extension": "I",
+      "elf_sha256": "599400b2cc71e18866ffc3476bfa469188e9fb42c537aeec4f41fa25ae43492f",
+      "c1": "pass",
+      "cycles": 15108,
+      "instret": 3975,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-bltu-00",
+      "extension": "I",
+      "elf_sha256": "76ca0e00fa185248fafa2c63225657e06a41127d5317f67c26957964fef9a9b9",
+      "c1": "pass",
+      "cycles": 15108,
+      "instret": 3973,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-bne-00",
+      "extension": "I",
+      "elf_sha256": "d7ac21dee7bc776331304d63ed311bc5594a80b2933fa1ad6fc0e75143016c4e",
+      "c1": "pass",
+      "cycles": 15306,
+      "instret": 4003,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-fence-00",
+      "extension": "I",
+      "elf_sha256": "3467663e3e1dfd17a7a305bdea061cb958cadf18f149a2f2750479c43c8e3b3b",
+      "c1": "pass",
+      "cycles": 2178,
+      "instret": 688,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-jal-00",
+      "extension": "I",
+      "elf_sha256": "6ab6119d2d67048bb3d4aeda704fb4dca686a011b8546d4acc78c02c747da658",
+      "c1": "pass",
+      "cycles": 50382,
+      "instret": 16462,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-jalr-00",
+      "extension": "I",
+      "elf_sha256": "dd44e4ab47cf4e735e9db7e56be142d8c8fa96cdbd18b6fdb9fb3910a8503343",
+      "c1": "pass",
+      "cycles": 12039,
+      "instret": 3384,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lb-00",
+      "extension": "I",
+      "elf_sha256": "534be8ec9aa2d7ebbd25ac05e7c32157fccd219e728fb146e214bbbbba4bf923",
+      "c1": "pass",
+      "cycles": 4806,
+      "instret": 1316,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lbu-00",
+      "extension": "I",
+      "elf_sha256": "bc6e551ca0d2256cfc24937e4597e5831c28e856294052cac1f8bf78ebeae8c0",
+      "c1": "pass",
+      "cycles": 4806,
+      "instret": 1316,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lh-00",
+      "extension": "I",
+      "elf_sha256": "231edadfe5a47288dced49dd4c2d67acdb72961dded6b0ce7979f45ca859eb78",
+      "c1": "pass",
+      "cycles": 4530,
+      "instret": 1232,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lhu-00",
+      "extension": "I",
+      "elf_sha256": "8f7df4662fb0308023f35916a76871c90d6e9ac5242a96d596604d7fef799c65",
+      "c1": "pass",
+      "cycles": 4530,
+      "instret": 1232,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lui-00",
+      "extension": "I",
+      "elf_sha256": "ae0d3348f19e1b54296537d6a94a492ba45ed90336bd86eb829bfe11a1ddb3b4",
+      "c1": "pass",
+      "cycles": 2418,
+      "instret": 656,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-lw-00",
+      "extension": "I",
+      "elf_sha256": "960f6eddf1925f0f93c44309ae4352d104714061cae8f1c99632950ce77e9c9f",
+      "c1": "pass",
+      "cycles": 4392,
+      "instret": 1190,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-nop-00",
+      "extension": "I",
+      "elf_sha256": "491966652d934f20c5d745c84a5552139dd549a8917b15a99518261d8709e1f6",
+      "c1": "pass",
+      "cycles": 1323,
+      "instret": 409,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-or-00",
+      "extension": "I",
+      "elf_sha256": "53e53146d998fabfd6a077bdcddeb48d2b6dbfb173f8bcdeab29648086b92f4a",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-ori-00",
+      "extension": "I",
+      "elf_sha256": "32921e6cd5fbb1bf50f17100770a47414bef8944b12a6492ba577ae327bcbe3b",
+      "c1": "pass",
+      "cycles": 10227,
+      "instret": 2641,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sb-00",
+      "extension": "I",
+      "elf_sha256": "0a377920f080d32e07d0b31f8d4ed3676577b3bdd93946a9be3b8b2a03c46a64",
+      "c1": "pass",
+      "cycles": 8694,
+      "instret": 2644,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sh-00",
+      "extension": "I",
+      "elf_sha256": "11641768e467b47eb9c6342aab19a3f241be733acf69f04ae7029e0c265b3b40",
+      "c1": "pass",
+      "cycles": 8334,
+      "instret": 2540,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sll-00",
+      "extension": "I",
+      "elf_sha256": "80e29e91ed1920b55162a74aff20391fe2a4755e234add76b4b2237d32ee127e",
+      "c1": "pass",
+      "cycles": 13227,
+      "instret": 3593,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-slli-00",
+      "extension": "I",
+      "elf_sha256": "53973cf2e075825927bad425039513c26f8a19983233097d193c845a6d3bd446",
+      "c1": "pass",
+      "cycles": 6153,
+      "instret": 1623,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-slt-00",
+      "extension": "I",
+      "elf_sha256": "689e20f0b31cfac9642586c55394959a76a81e4d14388ae38d6203192e97b346",
+      "c1": "pass",
+      "cycles": 13119,
+      "instret": 3565,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-slti-00",
+      "extension": "I",
+      "elf_sha256": "8f7ea9d72683ff2f316f31ae69071064e9b2c2e822a3343674ff65925c5840e2",
+      "c1": "pass",
+      "cycles": 10185,
+      "instret": 2631,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sltiu-00",
+      "extension": "I",
+      "elf_sha256": "585b2784f9dec9e7a27744162c36713bdced7ec2258c2eb51373e76cb75b921b",
+      "c1": "pass",
+      "cycles": 10185,
+      "instret": 2631,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sltu-00",
+      "extension": "I",
+      "elf_sha256": "fd735556b2d9aeeafa71bf815933b67b12ea89855948841658e7d0c99a714c5a",
+      "c1": "pass",
+      "cycles": 13143,
+      "instret": 3573,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sra-00",
+      "extension": "I",
+      "elf_sha256": "50501dae28ac47ddf7709eb363037fbd9b4f454eed4788cf76b598725376b474",
+      "c1": "pass",
+      "cycles": 13227,
+      "instret": 3593,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-srai-00",
+      "extension": "I",
+      "elf_sha256": "89e3ed4084365fd39658569209271be965d9cbdf0f7e5a87a923a593ca27c21e",
+      "c1": "pass",
+      "cycles": 6153,
+      "instret": 1623,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-srl-00",
+      "extension": "I",
+      "elf_sha256": "d5146430c2af978bd46003d8e0607380a89e1bab1dc38a9c7204d6f746bbe962",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-srli-00",
+      "extension": "I",
+      "elf_sha256": "ca019f512aca0dfd2b332c7b1b6ed6de063307491aebb6db48b17b05184797e3",
+      "c1": "pass",
+      "cycles": 6153,
+      "instret": 1623,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sub-00",
+      "extension": "I",
+      "elf_sha256": "67e542fdcc469672ee3bfbb260009be4ad937fd9953ce44e43bac45824329624",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-sw-00",
+      "extension": "I",
+      "elf_sha256": "94f65166d3e340b1d75975d615d4c0bf6935230706716116d755ad23283315cb",
+      "c1": "pass",
+      "cycles": 8154,
+      "instret": 2488,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-xor-00",
+      "extension": "I",
+      "elf_sha256": "8382006e2c8be271fb684c41850cc6ff7797a861a288163abd8269ce9469733c",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/I/I-xori-00",
+      "extension": "I",
+      "elf_sha256": "3c45d7e7bd809a7c0c620d5d8aaa301639490ac7f22bcb93ab970332a10d4c47",
+      "c1": "pass",
+      "cycles": 10227,
+      "instret": 2641,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-div-00",
+      "extension": "M",
+      "elf_sha256": "f541d8b53653c6ee5010b56965c8872cfe384039af777e9f79500154ee0afa3e",
+      "c1": "pass",
+      "cycles": 25795,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-divu-00",
+      "extension": "M",
+      "elf_sha256": "1cf5650d5c1ff2df04de5295667f4c4dc56bc4cbbd5f80446468aa642d2328f3",
+      "c1": "pass",
+      "cycles": 25795,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-mul-00",
+      "extension": "M",
+      "elf_sha256": "bb92bd31ba81f8a6e9700a9624c71d35d9e68f19e53bc8ce8b62989fd7d65691",
+      "c1": "pass",
+      "cycles": 13275,
+      "instret": 3609,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-mulh-00",
+      "extension": "M",
+      "elf_sha256": "55aa3e976b60a0eb0960e4d269dc556abcbc9723d6c395a3fdf6197c5d3e1819",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-mulhsu-00",
+      "extension": "M",
+      "elf_sha256": "e4990fdbf5a809a0710985045a5d0c1983622fd074b5ee9c10d0a74a018c97c4",
+      "c1": "pass",
+      "cycles": 13275,
+      "instret": 3609,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-mulhu-00",
+      "extension": "M",
+      "elf_sha256": "521745cca36272aa7a4c5426df4b611c7e0476b6a39c586d9218cb47526b6992",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-rem-00",
+      "extension": "M",
+      "elf_sha256": "34dc1d989c44142d8d6753c88608d834db78f52717543b61be3aa846ad8cb42c",
+      "c1": "pass",
+      "cycles": 25795,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/M/M-remu-00",
+      "extension": "M",
+      "elf_sha256": "59e16a33aa97ca024239aa4b0f9f6c6b8b678a8e80ea287ef488ea9e95bc5162",
+      "c1": "pass",
+      "cycles": 25771,
+      "instret": 3593,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrc-00",
+      "extension": "Zicsr",
+      "elf_sha256": "6d8863de3bfc4716b1eb84a937fd7c35fdd62cae32b4879c7bc433bbeba60b60",
+      "c1": "fail",
+      "cycles": 3461,
+      "instret": 1024,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 211,
+        "pc": "0x80000094",
+        "disassembly": "csrrc   s10, mepc, zero",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0xfaf331c",
+            "actual": "0xfaf331f"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 3,
+      "matched_prefix": 211
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrci-00",
+      "extension": "Zicsr",
+      "elf_sha256": "5aabfa33859a9e250ad5563a1fe583e96940a426beafafa29b5a0d5f70e2b7f8",
+      "c1": "fail",
+      "cycles": 3461,
+      "instret": 1022,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 213,
+        "pc": "0x800000a8",
+        "disassembly": "csrr    s10, mepc",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x262b870c",
+            "actual": "0x262b870e"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 2,
+      "matched_prefix": 213
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrs-00",
+      "extension": "Zicsr",
+      "elf_sha256": "b7f1991843afa51a3f7230b66fee2a3af7c01fe2dd768b83af0155d134cdeb49",
+      "c1": "fail",
+      "cycles": 3416,
+      "instret": 1009,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 211,
+        "pc": "0x80000094",
+        "disassembly": "csrr    s0, mepc",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0xd5991564",
+            "actual": "0xd5991566"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 2,
+      "matched_prefix": 211
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrsi-00",
+      "extension": "Zicsr",
+      "elf_sha256": "00afb6560fa200ade23dabc8f5ceae5351cbacb49c68e5fe7b569eb73055321d",
+      "c1": "fail",
+      "cycles": 3473,
+      "instret": 1026,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 213,
+        "pc": "0x800000a8",
+        "disassembly": "csrr    s2, mepc",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x8b4b5cfc",
+            "actual": "0x8b4b5cff"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 3,
+      "matched_prefix": 213
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrw-00",
+      "extension": "Zicsr",
+      "elf_sha256": "c34fd470dc2cd1776fc3b0062f284855c437460b95165700f682958d400fd17f",
+      "c1": "fail",
+      "cycles": 3446,
+      "instret": 1019,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 211,
+        "pc": "0x80000094",
+        "disassembly": "csrrw   a1, mepc, zero",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x2f76bb90",
+            "actual": "0x2f76bb91"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 1,
+      "matched_prefix": 211
+    },
+    {
+      "id": "rv32i/Zicsr/Zicsr-csrrwi-00",
+      "extension": "Zicsr",
+      "elf_sha256": "de654eeac83218ae0a8e8f6e4106e161f727ef49adca63df088e4f8364606910",
+      "c1": "fail",
+      "cycles": 3524,
+      "instret": 1037,
+      "spike": "mismatch",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "classification": "core finding",
+      "finding": "mepc retains alignment bits",
+      "first_difference": {
+        "order": 232,
+        "pc": "0x80000118",
+        "disassembly": "csrrwi  sp, mepc, 13",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0xcb07a0c8",
+            "actual": "0xcb07a0c9"
+          }
+        }
+      },
+      "reproduction": "mepc-alignment.S",
+      "repro_value": 1,
+      "matched_prefix": 232
+    },
+    {
+      "id": "rv32i/Zifencei/Zifencei-fence.i-00",
+      "extension": "Zifencei",
+      "elf_sha256": "d7ef6ddd721dbe05eed74175f4e9e1f3d65f33256f7a2c713b6a7ec885c798b5",
+      "c1": "pass",
+      "cycles": 1716,
+      "instret": 530,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/Zmmul/Zmmul-mul-00",
+      "extension": "Zmmul",
+      "elf_sha256": "fd1dd979d67f5c8302f8936d5436965096cd8fdf25777d21706fdeb888a8979c",
+      "c1": "pass",
+      "cycles": 13275,
+      "instret": 3609,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/Zmmul/Zmmul-mulh-00",
+      "extension": "Zmmul",
+      "elf_sha256": "c494ee0284931bf3a74a1f5f926ef0e715352ed56588a78689df17bc16f20d4b",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/Zmmul/Zmmul-mulhsu-00",
+      "extension": "Zmmul",
+      "elf_sha256": "92de9193a743c277c70aae5b5e0edbf9f41fe49566c9747daaafe20a8354df71",
+      "c1": "pass",
+      "cycles": 13275,
+      "instret": 3609,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    },
+    {
+      "id": "rv32i/Zmmul/Zmmul-mulhu-00",
+      "extension": "Zmmul",
+      "elf_sha256": "c9b95289765c83affcfc44835d5be850ecf669b50fd25eb34b40fa8e45db8c50",
+      "c1": "pass",
+      "cycles": 13251,
+      "instret": 3601,
+      "spike": "match",
+      "strict": true,
+      "synchronized": 0,
+      "applied_masks": []
+    }
+  ],
+  "baseline": {
+    "note": "Original standard bootstrap; test bodies were not reached. These are retained failures, not final instruction-suite counts.",
+    "tests": [
+      {
+        "test": "I-add-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-addi-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-and-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-andi-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-auipc-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-beq-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-bge-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-bgeu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-blt-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-bltu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-bne-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-fence-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-jal-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-jalr-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lb-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lbu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lh-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lhu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lui-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-lw-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-nop-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-or-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-ori-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sb-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sh-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sll-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-slli-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-slt-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-slti-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sltiu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sltu-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sra-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-srai-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-srl-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-srli-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sub-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-sw-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-xor-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "I-xori-00",
+        "extension": "I",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-div-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-divu-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-mul-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-mulh-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-mulhsu-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-mulhu-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-rem-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "M-remu-00",
+        "extension": "M",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrc-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrci-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrs-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrsi-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrw-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zicsr-csrrwi-00",
+        "extension": "Zicsr",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zifencei-fence.i-00",
+        "extension": "Zifencei",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zmmul-mul-00",
+        "extension": "Zmmul",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zmmul-mulh-00",
+        "extension": "Zmmul",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zmmul-mulhsu-00",
+        "extension": "Zmmul",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      },
+      {
+        "test": "Zmmul-mulhu-00",
+        "extension": "Zmmul",
+        "c1": "fail",
+        "first_trap": {
+          "event": "trap",
+          "cycle": 175,
+          "cause": "0x2",
+          "tval": "0x31001073",
+          "intr": false
+        },
+        "classification": "core finding",
+        "finding": "mstatush absent under the Sm 1.12 scaffold",
+        "reproduction": "missing-boot-csr.S",
+        "csr": "0x310"
+      }
+    ]
+  },
+  "minimal_reproduction_counts": {
+    "fail": 2
+  },
+  "minimal_reproductions": [
+    {
+      "test": "boot-csr",
+      "c1": "fail",
+      "elf_sha256": "3e58963bfc8731fdf2f2e2a70e43a4364475ee919b06e55aa3914ac7b05885bc",
+      "instret": 18
+    },
+    {
+      "test": "mepc-low-bit",
+      "c1": "fail",
+      "elf_sha256": "d2cc981e37f59d783623cdcb1ff50281eb8a5402221f143000c0a1a72dd9dea8",
+      "instret": 13
+    },
+    {
+      "test": "mepc-2",
+      "c1": "fail",
+      "elf_sha256": "6146dcfbcac1b71b322baafeb467515e515976032f347b68dce05e9d3d6a8a3b",
+      "instret": 13
+    },
+    {
+      "test": "mepc-3",
+      "c1": "fail",
+      "elf_sha256": "1706db8aaac3a4c0681c18e15168f621962cb4c8510be98582272022d3c7c1f9",
+      "instret": 13
+    }
+  ],
+  "workstation_revision": "ad698434729f1d5eb8a74304fee415c398db5696",
+  "workstation_dirty": true,
+  "core_dirty": true,
+  "core_fingerprint": "ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191",
+  "tools_key": "fb39d5a7314b62e7c95cf7da0943d8169f24f7c9e0f18d002abbc1cf6a2f139d"
+}

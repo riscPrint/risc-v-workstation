@@ -17,9 +17,18 @@ from rvw.regress.run_evidence import owned_run_paths
 from rvw.results import load_run
 
 
-def _suite(path):
-    parts = Path(path).parts
-    return parts[-5] if len(parts) >= 5 and parts[-3] == 'tests' else 'unknown'
+def _member(path, root):
+    # Test ids can contain directories. Locate the C3 membership boundary.
+    try:
+        parts = Path(path).resolve().relative_to(Path(root).resolve()).parts
+        boundary = parts.index('tests')
+        prefix = Path(root).resolve().parts
+        absolute = prefix + parts
+        if len(prefix) + boundary >= 2:
+            return absolute[len(prefix) + boundary - 2], '/'.join(parts[boundary + 1:-1])
+    except ValueError:
+        pass
+    return 'unknown', Path(path).parent.name
 
 
 # Allowed synchronization: checker kind to enable, and the only applied reason it may show.
@@ -71,7 +80,8 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=()):
     for path in owned_run_paths(run_dir):
         run = load_run(path)
         elf = run.elf.get('path') if isinstance(run.elf, dict) else run.elf
-        row = dict(suite=_suite(path), test=Path(path).parent.name, c1_status=run.status,
+        suite, test = _member(path, run_dir)
+        row = dict(suite=suite, test=test, c1_status=run.status,
                    cycles=run.cycles, instret=run.instret, status='inconclusive')
         trace = run.artifact('rvfi_trace')
         if run.why_inconclusive:

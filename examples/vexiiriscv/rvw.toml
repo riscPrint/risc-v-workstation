@@ -103,3 +103,14 @@ configs = ["rv32im"]
 max_cycles = 200000
 timeout_s = 180
 mem_latency = 0
+
+[suites.act4]
+description = "ACT4 instruction tests with reduced CSR boot; Sm findings remain open"
+dir = "rvw/out/act4/work/rvw-act4/elfs"
+act4_manifest = "rvw/out/act4/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["rv32im"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0

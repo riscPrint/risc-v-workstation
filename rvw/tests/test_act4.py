@@ -74,6 +74,8 @@ def test_build_retains_reference_inputs_and_final_elf(tmp_path, monkeypatch):
         (tmp_path/n).write_text('fixture')
     out = tmp_path/'out'
     def command(argv, **kw):
+        if '--version' in argv:
+            return Result(0, stdout='test tool 1.0')
         if 'rev-parse' in argv:
             return Result(0, stdout='a'*40)
         if 'status' in argv:
@@ -86,5 +88,19 @@ def test_build_retains_reference_inputs_and_final_elf(tmp_path, monkeypatch):
     report = act4.build(p, tmp_path, out)
     assert report['status'] == 'built'
     assert report['counts'] == {'I':1}
+    assert report['tools']['reference']['version'] == ['test tool 1.0']
     assert 'sail.json' in report['files']
     verify_manifest(out/'manifest.json', out/'work/rvw-act4/elfs')
+
+
+def test_all_applicable_uses_udb_metadata(tmp_path):
+    p, data = profile(tmp_path)
+    data['all_applicable'] = True
+    p.write_text(json.dumps(data))
+    assert selection(p)['test_selection'] == 'all-applicable'
+    assert selection(p)['include_priv_tests'] is True
+    assert 'sm' in selection(p)['extensions']
+    data['test_extensions'] = ['i']
+    p.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='mutually exclusive'):
+        selection(p)
