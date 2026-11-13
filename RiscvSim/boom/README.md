@@ -150,13 +150,15 @@ still has no BOOM binding.
 
 ## Stable native launch identity
 
-Native identity v28 excludes the agent call, thread and session IDs. These
+Native identity v29 excludes the agent call, thread and session IDs,
+macOS XPC service labels, the runtime cosim port and trace flush setting. These
 values change between launches. The standard native tools do not use them.
 Unknown environment settings, tool bytes, compiler flags and generated RTL
 still identify the build. The namespace change invalidates old cache receipts;
 old binaries are not promoted into the new namespace without verification.
 Unit tests change each frontend ID and require the same native identity.
-They also require changed compiler flags and unknown settings to change it.
+They also require changed compiler flags, DPI elaboration and unknown settings
+to change it. Generated RTL still identifies the DPI mailbox binding.
 
 ## Full-state comparison follow-up
 

@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "rvw/src"))
 from rvw.common.proc import run_group, _defer_cancellation
 
 
-NAMESPACE = "native-inputs-v28"
+NAMESPACE = "native-inputs-v29"
 # The bundled build tools do not read shell bookkeeping or the inherited lock descriptor.
 # Custom wrappers and shell expansions are excluded from native reuse below.
 BOOKKEEPING = {"_", "PWD", "OLDPWD", "SHLVL", "RVW_LOCKS_HELD", "RVW_PYTHON",
@@ -29,8 +29,11 @@ BOOKKEEPING = {"_", "PWD", "OLDPWD", "SHLVL", "RVW_LOCKS_HELD", "RVW_PYTHON",
 # Agent frontends assign a new call ID to each shell invocation. Standard native
 # tools do not read these UI identifiers. Keep unknown settings in the digest.
 FRONTEND_BOOKKEEPING = {"CODEX_TOOL_CALL_ID", "CODEX_THREAD_ID", "CODEX_SESSION_ID",
-                        "T3CODE_THREAD_ID"}
-BOOKKEEPING |= FRONTEND_BOOKKEEPING
+                        "T3CODE_THREAD_ID", "XPC_SERVICE_NAME"}
+# These settings select runtime transport and record flushing. DPI elaboration
+# remains identified by its generated RTL and RVW_COSIM_DPI.
+RUNTIME_SETTINGS = {"RVW_COSIM_PORT", "RVW_RVFI_FLUSH"}
+BOOKKEEPING |= FRONTEND_BOOKKEEPING | RUNTIME_SETTINGS
 VARIABLES = """SPINAL_BOOM SPINAL_VERILATOR_FLAGS SPINAL_MAKE_CMD RISCVSIM_MAKE RISCVSIM_MAKE_JOBS
 RISCVSIM_COVERAGE CXX CC CPP LINK AR CFLAGS CXXFLAGS CPPFLAGS LDFLAGS LDLIBS
 USER_CPPFLAGS USER_LDFLAGS USER_LDLIBS OPT OPT_FAST OPT_SLOW OPT_GLOBAL OBJCACHE
