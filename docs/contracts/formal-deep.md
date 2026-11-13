@@ -212,3 +212,28 @@ hash, log paths and return code. Native rIC3 SAT/10, UNSAT/20 and UNKNOWN/30
 pairs are required. Errors, timeouts and inconsistent pairs stay inconclusive.
 CLI `aiger-live` and MCP `formal_aiger_live` share these semantics. This does
 not certify an SVA translation or independently validate engine certificates.
+
+## IC3/PDR invariant libraries and reuse
+
+`rvw.formal-lemma-cone/1` identifies a named predicate's complete transition
+cone. It contains root expression hashes, deterministic expression records,
+named sequential state, initialization and all sequential inputs and
+parameters. Numeric wire ids and generated deterministic cell names are
+excluded. Input names, widths, clock/reset/enable logic and nondeterministic
+cell identities remain dependencies. Unsupported cones cannot match.
+
+`rvw.formal-lemma-library/1` stores mapped PDR cube predicates with `id`,
+`literals`, `expression`, `cone_sha256` and `certification: fresh_unbounded`.
+It records source and PLA/AIM hashes and the separate certification result.
+Library publication requires a fresh unbounded conjunction proof with source
+assertions removed. Auxiliary or unmapped PDR columns are not RTL predicates.
+
+`rvw.formal-ic3-lemmas/1` records export or reuse mode, source hashes, selected
+entries, rejected entries, discovery/certification or fresh target results,
+and `proof_kind`. Export pass uses `unbounded_candidate_certification`.
+Reuse pass uses `fresh_unbounded_with_helpers`. Source assumptions and empty
+original property sets are refused. Cone or certification mismatch rejects
+an entry. A cache supplies candidates, never an acceptance verdict. Helpers
+remain assertions in the fresh target proof. A failure with selected helpers
+stays inconclusive. A failure without helpers is the original target's
+native result. CLI `ic3-lemmas` and MCP `formal_ic3_lemmas` share this report.
