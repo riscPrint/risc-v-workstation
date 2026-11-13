@@ -30,6 +30,8 @@ def report_run(args):
 def register(sub):
     parser=sub.add_parser('checks',help='generate checks from project data')
     commands=parser.add_subparsers(dest='checks_command',required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.checks', commands)
     p=commands.add_parser('generate',help='emit available check kinds and missing-binding reasons')
     p.add_argument('--all',action='store_true',required=True)
     p.add_argument('--json',action='store_true',help='emit JSON results and errors')

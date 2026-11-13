@@ -794,6 +794,7 @@
       "profile": "verification",
       "tools": [
         "checks_generate",
+        "checks_plan",
         "checks_report",
         "cosim_adjudicate",
         "cosim_doctor",

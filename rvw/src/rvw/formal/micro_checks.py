@@ -83,6 +83,9 @@ end'''
     return f'module rvw_{kind}{params}(input clk, reset, '+ports+');\n'+body+'\nendmodule\n'
 
 PORTS = {
+    'rename': ('valid','tags'),
+    'issue': ('issued','valid','ready'),
+    'lsq': ('load_fire','older_store','address_match','forwarded','load_data','store_data'),
     'allocation_pool': ('live','alloc0_valid','alloc1_valid','free0_valid','free1_valid','alloc0','alloc1','free0','free1'),
     'freelist_conservation': ('free_bits','live','alloc0_valid','alloc1_valid','free0_valid','free1_valid','alloc0','alloc1','free0','free1'),
     'rob': ('count','push','pop'),

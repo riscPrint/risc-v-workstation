@@ -410,3 +410,12 @@ Neither record establishes whole-core correctness or unbounded closure.
 `rvw.nax-check-binding-review/1` records the project binding source hash and
 fresh generation output. Its limits distinguish generation from historical
 native results. It does not transfer fixture proof or activation to NaxRiscv.
+
+## Designer check plan
+
+`rvw.check-plan/1` lists `kind`, `needs`, declarations and generator binding
+status. Per-instance reasons retain unsupported or incomplete declarations.
+Optional `native_bindings` and `native_inserted` come only from an explicit
+`rvw.checks/1` inventory. Generation uses temporary output and does not modify
+project files. Neither a generated binding nor an inserted check is passing
+execution evidence.
