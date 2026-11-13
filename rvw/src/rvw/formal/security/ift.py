@@ -2,7 +2,7 @@
 import re
 
 
-def instrument(design, top):
+def instrument(design, top, *, state_sources=()):
     """Return Verilog with a taint port for each data port. Refuse unknown cells.
 
     Each taint bit means that either value is possible at that bit. Gate transfer
@@ -26,6 +26,15 @@ def instrument(design, top):
         raise ValueError('unsupported reset or clock in IFT shadow pass: use a public rising-edge clock and SYNC reset in the shared project Elaboration.config; rebuild simulation and SpinalDB before retrying')
     if bad:
         raise ValueError(f'unmodeled cells: {bad}')
+    state = {c['connections']['Q'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}
+    source_bits = set()
+    if len(set(state_sources)) != len(state_sources):
+        raise ValueError('distinct internal state sources required')
+    for name in state_sources:
+        net = mod['netnames'].get(name)
+        if not net or not net['bits'] or any(type(b) is not int or b not in state for b in net['bits']):
+            raise ValueError('internal source must name synchronous register Q bits: ' + name)
+        source_bits.update(net['bits'])
     clocks = {c['connections']['C'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}
     if len(clocks) > 1:
         raise ValueError('one public rising-edge clock required')
@@ -49,6 +58,8 @@ def instrument(design, top):
             raise ValueError('X/Z constants are unmodeled')
         return f"1'b{b}"
     def t(b):
+        if b in source_bits:
+            return "1'b1"
         return f'{prefix}t{b}' if isinstance(b, int) else ("1'b1" if b in ('x', 'z') else "1'b0")
     names = [n for p in ports for n in ([p] if p in clock_ports else [p, p+'__t'])]
     lines = [f'module {top}__ift({", ".join(names)});']
@@ -57,9 +68,9 @@ def instrument(design, top):
             raise ValueError('inout ports are unmodeled')
         for n in ([p] if p in clock_ports else [p, p+'__t']):
             lines.append(f'{d["direction"]} [{len(d["bits"])-1}:0] {n};')
-    state = {c['connections']['Q'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}
     for b in sorted(bits):
-        lines.append(f'{"reg" if b in state else "wire"} {prefix}n{b}, {prefix}t{b};')
+        shadow = '' if b in source_bits else f', {prefix}t{b}'
+        lines.append(f'{"reg" if b in state else "wire"} {prefix}n{b}{shadow};')
     driven = set()
     for p, d in ports.items():
         for i, b in enumerate(d['bits']):
@@ -78,7 +89,8 @@ def instrument(design, top):
         driven.add(out)
         if kind == '$_DFF_P_':
             d, clk = con['D'][0], con['C'][0]
-            lines.append(f'always @(posedge {v(clk)}) begin {v(out)} <= {v(d)}; {t(out)} <= {t(d)}; end')
+            shadow = '' if out in source_bits else f' {t(out)} <= {t(d)};'
+            lines.append(f'always @(posedge {v(clk)}) begin {v(out)} <= {v(d)};{shadow} end')
             continue
         args = [con[p][0] for p in ('A', 'B', 'S') if p in con]
         a = v(args[0])

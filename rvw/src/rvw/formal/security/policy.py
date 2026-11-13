@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 import shutil
 import sys
+import time
 
 from rvw.common.proc import run_group
 from rvw.formal.common import check_ident
@@ -14,9 +15,9 @@ from .ift import instrument
 def bind(design, top, policy):
     ports = design['modules'][top]['ports']
     clock, reset = policy['clock'], policy['reset']
-    sources, sinks = policy['sources'], policy['sinks']
+    sources, sinks = policy.get('sources', []), policy['sinks']
     release = policy.get('declassifier')
-    if not sources or not sinks or len(set(sources)) != len(sources) or len(set(sinks)) != len(sinks):
+    if not (sources or policy.get('internal_sources')) or not sinks or len(set(sources)) != len(sources) or len(set(sinks)) != len(sinks):
         raise ValueError('distinct nonempty sources and sinks required')
     if not policy.get('adversary') or not policy.get('unmodeled_channels'):
         raise ValueError('declare adversary and unmodeled_channels')
@@ -49,7 +50,7 @@ def bind(design, top, policy):
             connections.append(f'.{name}__t({name}__t)')
     condition = f'!{reset}' + (f' && !{release}' if release else '')
     assertions = [f'always @(posedge {clock}) if ({condition}) assert ({name}__t == 0);' for name in sinks]
-    return (instrument(design, top) + '\nmodule rvw_secure_path('+', '.join(declarations)+');\n'
+    return (instrument(design, top, state_sources=policy.get('internal_sources', ())) + '\nmodule rvw_secure_path('+', '.join(declarations)+');\n'
             +'\n'.join(wires)+f'\n{top}__ift dut('+', '.join(connections)+');\n'
             +'\n'.join(assertions)+'\nendmodule\n')
 
@@ -119,6 +120,12 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     result = {'schema':'rvw.secure-path/1','status':'inconclusive',
               'limits':'Conservative digital taint only. No physical or whole-core security claim.'}
+    started = time.monotonic()
+    def budget():
+        left = args.timeout - (time.monotonic() - started)
+        if left <= 0:
+            raise ValueError('total policy proof time limit')
+        return left
     try:
         if not math.isfinite(args.timeout) or not 0 < args.timeout <= 300:
             raise ValueError('timeout must be in (0,300] seconds')
@@ -131,16 +138,25 @@ def run(args):
         (out/'dut.v').write_bytes(raw)
         policy = json.loads(Path(args.policy).read_text())
         (out/'policy.json').write_text(json.dumps(policy,indent=2))
+        from .pair import proof_settings
+        mode, depth, engine = proof_settings(policy)
+        result['proof_kind'] = 'bounded' if mode == 'bmc' else 'unbounded'
+        result['depth'] = depth if mode == 'bmc' else None
+        if policy.get('source_regions'):
+            raise ValueError('region-specific source alignment is unsupported')
+        if type(policy.get('memory_map', False)) is not bool:
+            raise ValueError('memory_map must be Boolean')
         result['policy'] = policy
         result['rtl_sha256'] = hashlib.sha256(raw).hexdigest()
         script = (f'read_verilog dut.v\nhierarchy -check -top {args.top}\nproc\nflatten\n'
-                  'check -assert\ntechmap\nopt_clean -purge\ncheck -assert\nwrite_json mapped.json\n')
+                  'check -assert\n' + ('memory_map\n' if policy.get('memory_map') else '') +
+                  'techmap\nopt_clean\ncheck -assert\nwrite_json -noscopeinfo mapped.json\n')
         (out/'map.ys').write_text(script)
         tool=shutil.which('yosys')
         if not tool:
             raise ValueError('missing yosys')
         result['mapping_tool']={'path':tool,'sha256':hashlib.sha256(Path(tool).read_bytes()).hexdigest()}
-        r=run_group([tool,'-Q','-s','map.ys'],cwd=out,timeout=args.timeout,capture=True)
+        r=run_group([tool,'-Q','-s','map.ys'],cwd=out,timeout=budget(),capture=True)
         (out/'map.log').write_text((r.stdout or '')+(r.stderr or ''))
         if r.timed_out or r.returncode:
             raise ValueError('RTL mapping failed or timed out')
@@ -152,10 +168,11 @@ def run(args):
         if policy.get("kind") == "isolation":
             wrapper.write_bytes(raw + b"\n" + wrapper.read_bytes())
         # Run the existing assertion flow. Its captures bind the generated RTL and tools.
-        argv=[sys.executable,'-m','rvw','formal','prove','--verilog',str(wrapper),
+        proof_budget = budget()
+        argv=[sys.executable,'-m','rvw','formal',mode,'--verilog',str(wrapper),
               '--top','rvw_secure_path','--clock',policy['clock'],'--reset',policy['reset'],
-              '--engine','abc:pdr','--timeout',str(args.timeout),'--out',str(out/'proof'),'--json']
-        r=run_group(argv,cwd=out,timeout=args.timeout+15,capture=True)
+              '--engine',engine,'--depth',str(depth),'--timeout',str(proof_budget),'--out',str(out/'proof'),'--json']
+        r=run_group(argv,cwd=out,timeout=proof_budget+5,capture=True)
         (out/'proof.log').write_text((r.stdout or '')+(r.stderr or ''))
         proof_path=out/'proof/result.json'
         if not r.timed_out and proof_path.is_file():

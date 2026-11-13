@@ -262,3 +262,22 @@ state. It compares fetch-valid, fetch-PC and data-command-valid observations.
 Both checks use one public reset clock. No bus protocol assumptions are added.
 These are bounded controls on the supplied export. They do not certify the
 source revision or establish core security. See the example's recorded limits.
+
+## Internal state sources and bounded taint
+
+A secure-path policy can name synchronous register nets in `internal_sources`.
+Each selected Q bit has taint one on every sample, including after public reset.
+The original value register and its next-state logic stay unchanged. This is an
+ongoing secret-state model. It does not model a one-time CSR write or secret
+erasure. A source must resolve entirely to synchronous register Q bits.
+Missing nets, non-register nets and repeated names cause an error.
+Input sources can be empty when the policy names internal state sources.
+
+Set `mode` to `bmc` and `depth` to an integer from 1 through 128 for a bounded
+taint check. Results record `proof_kind: bounded` and the depth. The default
+remains unbounded. A bounded pass says nothing about later samples or source
+activation. No bus fairness or program constraints are inferred.
+
+Set `memory_map: true` to lower finite memories with Yosys before instrumentation.
+This preserves every memory word as register state. It is not a memory abstraction.
+Region-specific source alignment is unsupported and causes an error.
