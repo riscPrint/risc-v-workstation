@@ -186,12 +186,7 @@ def assembly(c, width):
     return '\n'.join(lines)
 
 
-def generate(path, out):
-    obj = load(path)
-    out = Path(out)
-    out.mkdir(parents=True, exist_ok=False)
-    (out/'model.json').write_text(json.dumps(obj, indent=2)+'\n')
-    (out/'csr.sv').write_text(monitor(obj))
+def write_binding(path,obj,out):
     if 'binding' in obj:
         binding = obj['binding']
         if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', binding['top']):
@@ -207,6 +202,18 @@ def generate(path, out):
         (out/'csr.sby').write_text(
             '[options]\nmode bmc\ndepth 20\n[engines]\nsmtbmc z3\n[script]\n' +
             script + '\nprep -top ' + binding['top'] + '\n[files]\ncsr.sv\n' + files + '\n')
+
+
+def generate(path, out):
+    if json.loads(Path(path).read_text()).get('schema') == 'rvw.csr-bank/1':
+        from .csr_bank import generate as generate_bank
+        return generate_bank(path,out)
+    obj = load(path)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=False)
+    (out/'model.json').write_text(json.dumps(obj, indent=2)+'\n')
+    (out/'csr.sv').write_text(monitor(obj))
+    write_binding(path,obj,out)
     groups = [{'name': c['name'], 'fields': ['csr', 'csr_access', 'mode'],
                'when': {'class': 'csr', 'csr': f'0x{c["address"]:03x}'},
                'domains': [[f'0x{c["address"]:03x}'], ['read', 'write', 'read_write'], ['U', 'S', 'M']]} for c in obj['csrs']]

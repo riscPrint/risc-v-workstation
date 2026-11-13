@@ -90,3 +90,16 @@ revision, source hashes and license notices. The AIA supplement fills the
 `requires_environment_model` prevents simple CSR selection from discarding
 interrupt-controller side effects. Field availability does not establish
 behavioral or privilege coverage.
+
+
+## Shared CSR bank model
+
+`rvw.csr-bank/1` declares canonical banks, static addressable views, supported
+M/S/U modes, optional setup and directed sequences. Each view names a bank,
+bit shift, readable mask and explicit writable mask. Catalog selections provide
+address and minimum privilege only. They do not infer dynamic semantics.
+Independent hardware clear/set inputs apply to canonical state every cycle.
+The existing `formal csr` CLI/MCP emits `rvw.csr-generation/1`, canonical-bank
+RTL, directed assembly, coverage groups and optional wrapper SBY files.
+Conditional aliases, dynamic state enables and WARL/WLRL are outside this model.
+Generation is not proof or architectural acceptance.
