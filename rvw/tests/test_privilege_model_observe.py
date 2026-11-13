@@ -8,28 +8,41 @@ from rvw.privilege import campaign,model_observe
 pytestmark=pytest.mark.fast
 
 
-def fixture(tmp_path,monkeypatch,profile='fast-preemption'):
-    c=campaign.load('examples/privilege/'+profile+'.json');scenario=campaign.scenarios(c)[0]
+def fixture(tmp_path,monkeypatch,profile='fast-preemption',select=None):
+    c=campaign.load('examples/privilege/'+profile+'.json');scenarios=campaign.scenarios(c);scenario=next(r for r in scenarios if r['id']==select) if select else scenarios[0]
     elf=tmp_path/'one.elf';elf.write_bytes(b'ELF fixture')
     scenario.update(elf=elf.name,elf_sha256=campaign.digest(elf),stimulus_sha256='1'*64)
     symbols={b['symbol']:0x80000000+4*i for i,b in enumerate(scenario['model_bindings'])}
     symbols['vector_wait']=0x80002000
+    for b in scenario['model_bindings']:
+        for value in b['expected']:
+            if isinstance(value,dict) and value['symbol'] not in symbols:symbols[value['symbol']]=0x80003000+4*len(symbols)
     segments=[];rows=[]
-    def append(pc,insn,value,rd=5):
-        row=dict(order=len(rows),cycle=len(rows),mode=3,rs1=0,rs2=0,rd=rd,mem_rmask=0,mem_wmask=0,
+    def append(pc,insn,value,rd=5,mode=3,virtual=False):
+        row=dict(order=len(rows),cycle=len(rows),mode=mode,rs1=0,rs2=0,rd=rd,mem_rmask=0,mem_wmask=0,
                  trap=False,intr=False,halt=False,mem_fault=False,pc=hex(pc),pc_next=hex(pc+4),insn=hex(insn),
                  rs1_rdata='0x0',rs2_rdata='0x0',rd_wdata=hex(value),mem_addr='0x0',mem_rdata='0x0',mem_wdata='0x0')
+        if 'h' in c['isa'].split('_')[0][4:]:
+            from rvw.cosim.extensions import H_CSRS
+            row.update(fd_valid=False,fd=0,fd_wdata='0x0',fflags='0x0',fcsr='0x0',hypervisor=dict(virtual=virtual,mode_after=mode,virtual_after=virtual,csrs={hex(a):'0x0' for a in H_CSRS},translations=[]))
         rows.append(row)
     for b in scenario['model_bindings']:
-        pc=symbols[b['symbol']];insn=(int(b['csr'],0)<<20)|(2<<12)|(5<<7)|0x73
+        pc=symbols[b['symbol']];insn=int(b['insn'],0) if b['kind']=='writeback' else (int(b['csr'],0)<<20)|(2<<12)|(5<<7)|0x73
         segments.append((pc,insn.to_bytes(4,'little'),4))
         for value in b['expected']:
             value=symbols[value['symbol']] if isinstance(value,dict) else int(value,0)
-            append(pc,insn,value)
+            append(pc,insn,value,rd=(insn>>7)&31,mode=b.get('mode',3),virtual=b.get('virtual',False))
+    for address in scenario.get('model_forbidden_pcs',[]):
+        from rvw.privilege.state_hierarchy import PROBES
+        plan=scenario['reference_model'];pc=symbols[address['symbol']]
+        csr=0x10c+plan['index'] if plan['probe']=='stateen' else PROBES[plan['probe']][1]
+        insn=0x00c58553 if plan['probe']=='zfinx-op' else (csr<<20)|(2<<12)|(10<<7)|0x73
+        segments.append((pc,insn.to_bytes(4,'little'),4))
     for address in scenario.get('model_required_pcs',[]):
         pc=int(address,0);segments.append((pc,(0x13).to_bytes(4,'little'),4));append(pc,0x13,0,0)
     monkeypatch.setattr(model_observe,'Elf',lambda _:SimpleNamespace(xlen=64,symbols=symbols,segments=segments))
     header=dict(schema='rvw.rvfi/1',xlen=64,isa=c['isa'],core='fixture',config='fixture',elf='one.elf',elf_sha256=scenario['elf_sha256'])
+    if 'h' in c['isa'].split('_')[0][4:]:header.update(schema='rvw.rvfi/2',hypervisor=True)
     path=tmp_path/'trace.jsonl'
     def write(data=None,end=True):
         data=rows if data is None else data
@@ -118,3 +131,24 @@ def test_model_groups_require_every_member_even_without_bindings(tmp_path,monkey
     monkeypatch.setattr(rvw.results,'load_run',lambda _:run)
     result=campaign.check(tmp_path,tmp_path,'platform.json')
     assert result['model_counts']['pass']==0 and result['model_counts']['inconclusive']==1
+
+
+def test_stateen_forbidden_instruction_and_guest_mode(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'stateen-extensions',select='stateen-hierarchy-jvt-0-s-000')
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    image=model_observe.Elf(elf);pc=image.symbols['access_site']
+    insn=int.from_bytes(next(data for address,data,_ in image.segments if address==pc),'little')
+    extra=deepcopy(rows[-1]);extra.update(pc=hex(pc),pc_next=hex(pc+4),insn=hex(insn),order=len(rows),cycle=len(rows),rd=10,rd_wdata='0x0')
+    write(rows+[extra]);assert model_observe.observe(elf,s,path)['status']=='fail'
+    second=tmp_path/'guest';second.mkdir()
+    elf,s,path,rows,write=fixture(second,monkeypatch,'stateen-extensions-h',select='stateen-hierarchy-jvt-0-vs-110')
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    rows[-1]['hypervisor']['virtual']=False;rows[-1]['hypervisor']['virtual_after']=False;write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'
+
+
+def test_zfinx_instruction_result_binding(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'stateen-extensions',select='stateen-hierarchy-zfinx-op-0-s-100')
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    rows[-1]['rd_wdata']='0x40000000';write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'
