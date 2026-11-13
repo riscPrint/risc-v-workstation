@@ -356,8 +356,15 @@ Reports retain full-plan and supported denominators, input and artifact hashes,
 wall time, controller CPU and reaped-child CPU. Descendant completeness is not
 qualified. Rate stays null. No paired random comparison or C4 acceptance follows.
 State uses immutable C8 generations. Resume pins one generation and checks all
-recorded attempt artifacts and declared input identities. Raw attempts remain
-outside the state generation. Transitive dependency closure is not established.
+recorded attempt artifacts and declared input identities. Declared initial inputs and implementation files are archived in a separate
+immutable input generation. Raw attempts have their own immutable generations.
+State pins each ID and manifest hash. Resume verifies those generations and
+retained working files. Older unsealed state cannot resume under a changed
+implementation identity. C1 input capture/source completeness, RTL hash and
+reference C8 dependency identities gate credit. Native identity changes stop
+the loop without new hits. Program-specific ELF/C2/C1 records and Python caches
+are excluded from reference backend identity. Transitive dependency closure
+and full cost accounting remain unqualified until native campaign validation.
 
 ### Bounded ISA candidate report
 

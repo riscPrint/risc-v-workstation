@@ -43,7 +43,7 @@ def verify(elf, results, platform, coverage_plan=None):
     trace = run.artifact('rvfi_trace')
     if trace is None:
         return dict(status='trace_error', message='C1 result has no C2 trace')
-    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike')
+    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike', core=run.core)
     if comparison.get('status') == 'mismatch':
         return dict(status='mismatch', comparison=comparison)
     if not complete(comparison, run):

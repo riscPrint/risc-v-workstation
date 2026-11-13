@@ -42,17 +42,26 @@ observations. Incidental hits remove later goals. Failures keep zero credit.
 A mismatch or core failure stops the loop.
 
 Payload reports use a separate plan identity. Setup and termination are excluded.
-The loop records source, ELF, C1 and trace hashes. It records every attempt's wall
+The loop records source, ELF, C1 and trace hashes. It passes the C1 core name
+to the public cosim API, including when settings select a project from another
+working directory. It records every attempt's wall
 time, controller CPU time, and reaped-child CPU time. Descendant completeness on
 macOS is not qualified. CPU-hour metrics remain null. This command does not run
 a paired random baseline and does not establish a comparative closure rate.
 
 State uses immutable C8 generations. Resume checks settings, declared input
 hashes, pinned opcode data, and saved attempt artifacts. An interrupted attempt
-is not reused. Hard-kill cost is unknown. Raw attempts remain beside the state
-store; they are hash-checked but are not copied into its sealed generation.
+is not reused. Hard-kill cost is unknown. Declared initial inputs and coverage implementation files have an immutable
+input generation. Each completed attempt publishes its raw files once in an
+immutable attempt generation. State pins those generation IDs and manifest hashes.
+Resume verifies both sealed evidence and retained working files. Older unsealed
+state cannot resume under the new implementation identity.
+Accepted hits require C1 input capture, complete source identity, generated RTL
+hash and captured reference dependencies. A changed C1/reference execution
+identity stops the loop without new credit. Interpreter caches and per-program
+ELF, C2 and adjacent C1 records do not change the reference backend identity.
 Transitive project/native dependency closure and cross-host replay remain
-unqualified. The campaign status stays inconclusive unless a checked defect
+unqualified until native campaign validation. The campaign status stays inconclusive unless a checked defect
 makes it fail. No C4 acceptance follows from coverage.
 
 ## Measured RTL feedback

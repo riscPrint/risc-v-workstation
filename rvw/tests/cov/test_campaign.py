@@ -14,6 +14,8 @@ def setup(tmp_path, monkeypatch):
                 config='test', registers=[5,6,7], runtime='runtime', linker='linker', platform='platform',
                 compiler='cc', isa='rv32i', abi='ilp32', attempts=2, seed=1)
     settings = tmp_path/'settings.json'; settings.write_text(json.dumps(data))
+    compiler=tmp_path/'cc';compiler.write_text('fixture compiler')
+    monkeypatch.setattr(c.shutil,'which',lambda _:str(compiler))
     monkeypatch.setattr(c, 'plan', lambda *a: {'isa_plan': {}, 'groups':[{'bins':[1,2,3]}]})
     monkeypatch.setattr(c, 'profile', lambda *a: {'g:[1]':{}, 'g:[2]':{}})
     monkeypatch.setattr(c, 'load_config', lambda **kw: SimpleNamespace(configs=['test']))
@@ -32,7 +34,7 @@ def setup(tmp_path, monkeypatch):
 
 def test_feedback_selects_updated_holes_and_resume_validates_artifacts(tmp_path, monkeypatch):
     settings = setup(tmp_path, monkeypatch)
-    monkeypatch.setattr(c, 'qualify', lambda *a: {'status':'qualified', 'coverage':{
+    monkeypatch.setattr(c, 'qualify', lambda *a: {'status':'qualified', 'execution_identity':'fixture-native', 'coverage':{
         'groups':{'g':{'hits':[{'bin':[1], 'count':1}, {'bin':[2], 'count':1}]}}}})
     result = c.campaign(settings, tmp_path/'out')
     assert len(result['attempts']) == 1  # The incidental hit removes the second goal.
@@ -114,7 +116,7 @@ def test_sequence_settings_use_same_verifier_and_keep_denominator(tmp_path,monke
     def qualify(*args):
         seen.append(args[5])
         assert args[6].is_file()
-        return {'status':'qualified','coverage':{'groups':{}}}
+        return {'status':'qualified','execution_identity':'fixture-native','coverage':{'groups':{}}}
     monkeypatch.setattr(c,'qualify',qualify)
     result=c.campaign(settings,tmp_path/'out')
     assert result['attempts'][0]['goal']=='sequence:["RAW",1]'
@@ -136,7 +138,7 @@ def test_rtl_pending_goal_retries_after_isa_saturation(tmp_path,monkeypatch):
     (tmp_path/'rtl.json').write_text(json.dumps(plan));(tmp_path/'recipes.json').write_text(json.dumps(recipes))
     data=json.loads(settings.read_text());data.update(rtl_plan='rtl.json',recipes='recipes.json')
     settings.write_text(json.dumps(data))
-    monkeypatch.setattr(c,'qualify',lambda *a:{'status':'qualified','coverage':{'groups':{'g':{
+    monkeypatch.setattr(c,'qualify',lambda *a:{'status':'qualified','execution_identity':'fixture-native','coverage':{'groups':{'g':{
         'hits':[{'bin':[1],'count':1},{'bin':[2],'count':1}]}}}})
     def collect(guide,goal,*args):
         record={'goal':goal,'samples':[str(len(guide.history))],
@@ -148,3 +150,72 @@ def test_rtl_pending_goal_retries_after_isa_saturation(tmp_path,monkeypatch):
     assert len(result['attempts'])==2
     assert [a['goal'] for a in result['attempts']]==['g:[1]','g:[1]']
     assert result['guidance_history'][-1]['new_events']==['event']
+
+
+def test_changed_native_identity_cannot_add_hits(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch);calls=[]
+    def qualify(*args):
+        calls.append(1);number=len(calls)
+        return {'status':'qualified','execution_identity':'model-'+str(number),
+                'coverage':{'groups':{'g':{'hits':[{'bin':[number],'count':1}]}}}}
+    monkeypatch.setattr(c,'qualify',qualify)
+    result=c.campaign(settings,tmp_path/'out')
+    assert result['hits']==['g:[1]']
+    assert result['attempts'][1]['status']=='identity_error'
+    assert result['attempts'][1]['new_hits']==[]
+
+
+def test_sealed_raw_attempt_is_verified_on_resume(tmp_path,monkeypatch):
+    from rvw.results.generation import open_generation
+    settings=setup(tmp_path,monkeypatch)
+    monkeypatch.setattr(c,'qualify',lambda *a:{'status':'inconclusive','new_hits':[]})
+    result=c.campaign(settings,tmp_path/'out')
+    attempt=result['attempts'][0];seal=attempt['sealed_generation']
+    generation=open_generation(tmp_path/'out'/seal['store'],seal['id'])
+    name=next(iter(attempt['artifacts']))
+    assert generation.read_bytes(name)==(tmp_path/'out'/name).read_bytes()
+    (generation.path/name).chmod(0o600)
+    (generation.path/name).write_text('changed')
+    with pytest.raises(ValueError):
+        c.campaign(settings,tmp_path/'out',resume=True)
+
+
+def test_qualifier_supplies_c1_core_to_public_cosim_api(tmp_path,monkeypatch):
+    result=tmp_path/'run/result.json';result.parent.mkdir();result.write_text('{}')
+    run=SimpleNamespace(core='project-owned-core',elf_sha256='a'*64,status='pass',instret=2,
+                        why_inconclusive=None,artifact=lambda _:tmp_path/'trace')
+    monkeypatch.setattr(c,'payload',lambda *a:{'elf_sha256':'a'*64})
+    monkeypatch.setattr(c,'load_run',lambda *a:run)
+    seen=[]
+    def compare(*args,**kwargs):
+        seen.append(kwargs['core']);return {'status':'inconclusive'}
+    monkeypatch.setattr(c,'cosim',compare)
+    c.qualify('elf',result.parent,'platform','manifest','root',{})
+    assert seen==['project-owned-core']
+
+
+def test_initial_inputs_are_archived_with_campaign_identity(tmp_path,monkeypatch):
+    import json
+    from rvw.results.generation import open_generation
+    settings=setup(tmp_path,monkeypatch)
+    monkeypatch.setattr(c,'qualify',lambda *a:{'status':'inconclusive','new_hits':[]})
+    result=c.campaign(settings,tmp_path/'out')
+    seal=result['input_generation'];generation=open_generation(tmp_path/'out'/seal['store'],seal['id'])
+    record=json.loads(generation.read_bytes('inputs.json'))
+    assert record['identity']==result['identity']
+    assert record['capture']['files']
+    for row in record['capture']['files']:
+        assert generation.read_bytes('input-capture/'+row['copy'])
+
+
+def test_complete_match_without_native_identity_retains_reference_but_no_hits(tmp_path,monkeypatch):
+    result=tmp_path/'run/result.json';result.parent.mkdir();result.write_text('{}')
+    run=SimpleNamespace(core='fixture',config='test',tools={},source={},extra={},elf_sha256='a'*64,
+                        status='pass',instret=1,why_inconclusive=None,artifact=lambda _:tmp_path/'trace')
+    monkeypatch.setattr(c,'payload',lambda *a:{'elf_sha256':'a'*64})
+    monkeypatch.setattr(c,'load_run',lambda *a:run)
+    comparison={'status':'match','trace_complete':True,'end_status':'pass','instructions':1}
+    monkeypatch.setattr(c,'cosim',lambda *a,**kw:comparison)
+    report=c.qualify('elf',result.parent,'platform','manifest','root',{})
+    assert report['status']=='identity_error' and report['new_hits']==[]
+    assert report['comparison']==comparison
