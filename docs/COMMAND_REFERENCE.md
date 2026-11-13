@@ -1087,50 +1087,74 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
 ### `rvw wave`
 
 ```text
-usage: rvw wave [-h] [--project PROJECT] {index,list,changes,sample,cut,info}
-    ...
+usage: rvw wave [-h] [--project PROJECT]
+    {index,verify,list,changes,sample,cut,find,edges,info} ...
 ```
 
 ### `rvw wave index`
 
 ```text
-usage: rvw wave index [-h] -o OUT [--json] [--project PROJECT] wave
+usage: rvw wave index [-h] -o OUT [--reader {auto,vcd,wellen}] [--json]
+    [--project PROJECT] wave
+```
+
+### `rvw wave verify`
+
+```text
+usage: rvw wave verify [-h] [--source SOURCE] [--json] [--project PROJECT]
+    index
 ```
 
 ### `rvw wave list`
 
 ```text
 usage: rvw wave list [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--project PROJECT] wave [regex]
+    [--indexed] [--project PROJECT] wave [regex]
 ```
 
 ### `rvw wave changes`
 
 ```text
 usage: rvw wave changes [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--from T0] [--to T1] [--limit LIMIT] [--dec] [--project PROJECT] wave
-    regex
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--dec] [--project
+    PROJECT] wave regex
 ```
 
 ### `rvw wave sample`
 
 ```text
-usage: rvw wave sample [-h] [--json] [--period PERIOD] [--clock CLOCK] --at AT
-    [--dec] [--project PROJECT] wave regex
+usage: rvw wave sample [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] --at AT [--dec] [--project PROJECT] wave regex
 ```
 
 ### `rvw wave cut`
 
 ```text
-usage: rvw wave cut [-h] [--json] [--period PERIOD] [--clock CLOCK] --from T0
-    [--to T1] [--signals SIGNALS] [--rebase] -o OUT [--project PROJECT] wave
+usage: rvw wave cut [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] --from T0 [--to T1] [--signals SIGNALS] [--rebase] -o OUT
+    [--project PROJECT] wave
+```
+
+### `rvw wave find`
+
+```text
+usage: rvw wave find [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--project PROJECT] wave
+    expr
+```
+
+### `rvw wave edges`
+
+```text
+usage: rvw wave edges [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] [--from T0] [--to T1] [--project PROJECT] wave regex
 ```
 
 ### `rvw wave info`
 
 ```text
 usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--project PROJECT] wave
+    [--indexed] [--project PROJECT] wave
 ```
 
 ### `rvw workloads`
@@ -1162,7 +1186,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 80 built-in tools, including the four job tools.
+The default server exposes 84 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1773,7 +1797,7 @@ Starts a background job: no.
 
 Read changes of matching signals within a time window. Returns {changes, truncated, limit}; limit defaults to 10000 (0 = no limit) and truncated says more matched.
 
-Arguments: `wave` (required), `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`.
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`.
 
 Starts a background job: no.
 
@@ -1781,7 +1805,39 @@ Starts a background job: no.
 
 Write a self-contained waveform window, optionally keeping selected signals and rebasing time.
 
-Arguments: `wave` (required), `period`, `clock`, `t0` (required), `t1`, `out` (required), `signals`, `rebase`.
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0` (required), `t1`, `out` (required), `signals`, `rebase`.
+
+Starts a background job: no.
+
+### `wave_edges`
+
+Count value changes, rising and falling edges and x/z transitions per matching signal.
+
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`.
+
+Starts a background job: no.
+
+### `wave_find`
+
+Find when an expression over several signals holds: first time, last interval and all intervals in a window. Syntax: && || ! == < + & bit selects sig[7:0], rose(s), fell(s), changed(s), stable(s), known(s); x/z make the result unknown, which never counts as true.
+
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `expr` (required), `limit`.
+
+Starts a background job: no.
+
+### `wave_index`
+
+Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.
+
+Arguments: `wave` (required), `out` (required), `reader`.
+
+Starts a background job: no.
+
+### `wave_index_verify`
+
+Check a .rvwi index against its source wave by full SHA-256 (fresh true/false).
+
+Arguments: `index` (required), `source`.
 
 Starts a background job: no.
 
@@ -1789,7 +1845,7 @@ Starts a background job: no.
 
 Inspect timescale, signal count, time range and clock period of a waveform.
 
-Arguments: `wave` (required), `clock`.
+Arguments: `wave` (required), `indexed`, `clock`.
 
 Starts a background job: no.
 
@@ -1797,7 +1853,7 @@ Starts a background job: no.
 
 List waveform signal paths, widths, kinds and codes, optionally matching a regex.
 
-Arguments: `wave` (required), `regex`.
+Arguments: `wave` (required), `indexed`, `regex`.
 
 Starts a background job: no.
 
@@ -1805,6 +1861,6 @@ Starts a background job: no.
 
 Read matching signal values at a wave time, cycle Nc, or end.
 
-Arguments: `wave` (required), `regex` (required), `period`, `clock`, `at` (required), `dec`.
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `at` (required), `dec`.
 
 Starts a background job: no.

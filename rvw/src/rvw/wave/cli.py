@@ -21,8 +21,17 @@ def register(sub: argparse._SubParsersAction) -> None:
     q = w.add_parser("index", help="build an identity-bound SQLite waveform snapshot")
     q.add_argument("wave")
     q.add_argument("-o", "--out", required=True)
+    q.add_argument("--reader", choices=["auto", "vcd", "wellen"], default="auto",
+                   help="vcd: strict VCD text reader (FST via fst2vcd); wellen: wellen library, "
+                        "FST read natively; auto: wellen for FST when pywellen is installed")
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=_index)
+
+    q = w.add_parser("verify", help="check an index against its source wave by full SHA-256")
+    q.add_argument("index")
+    q.add_argument("--source", help="wave to compare (default: the path recorded in the index)")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_verify)
 
     def common(q, regex=True, regex_required=True):
         q.add_argument("wave", help=".vcd, .vcd.gz, .fst or .rvwi")
@@ -32,6 +41,9 @@ def register(sub: argparse._SubParsersAction) -> None:
         q.add_argument("--json", action="store_true", help="JSON output")
         q.add_argument("--period", type=int, help="clock period in wave time units (for 'Nc')")
         q.add_argument("--clock", default=ops.CLOCK_RX, help="clock signal regex for period detection")
+        q.add_argument("--indexed", action="store_true",
+                       help="query a cached index of the wave (RVW_WAVE_INDEX_DIR); built on first "
+                            "use and rebuilt when the wave's size or mtime changes")
 
     q = w.add_parser("list", help="list signals (name and width)")
     common(q, regex_required=False)
@@ -62,6 +74,20 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("-o", "--out", required=True, help="output .vcd, .vcd.gz, .fst or .rvwi")
     q.set_defaults(func=_cut)
 
+    q = w.add_parser("find", help="times where an expression over signals holds (first, last, intervals)")
+    common(q, regex=False)
+    q.add_argument("expr", help="expression, e.g. 'valid && ready && data[7:0] == 0x2a', 'rose(clk)'")
+    q.add_argument("--from", dest="t0", help=TIME_HELP)
+    q.add_argument("--to", dest="t1", help=TIME_HELP)
+    q.add_argument("--limit", type=int, default=1000, help="intervals to list (default 1000; 0 = all)")
+    q.set_defaults(func=_find)
+
+    q = w.add_parser("edges", help="value changes, rising and falling edges per signal in a window")
+    common(q)
+    q.add_argument("--from", dest="t0", help=TIME_HELP)
+    q.add_argument("--to", dest="t1", help=TIME_HELP)
+    q.set_defaults(func=_edges)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -83,6 +109,9 @@ def _t(a, s):
 def _wrap(fn):
     def run(a):
         try:
+            if getattr(a, 'indexed', False):
+                from .index import ensure
+                a.wave = ensure(a.wave)
             original = a.wave
             if fn.__name__ == '_cut':
                 import os
@@ -176,10 +205,55 @@ def _info(a):
     return 0
 
 
+@_wrap
+def _find(a):
+    from .search import find
+    r = find(a.wave, a.expr, _t(a, a.t0) or 0, _t(a, a.t1), a.limit)
+    if a.json:
+        jsonout.write(r)
+    else:
+        print(f"# {r['count']} intervals; first {r['first']}; signals "
+              + ", ".join(f"{k}={v}" for k, v in r['signals'].items()))
+        for m in r['matches']:
+            print(f"{m['start']:10d} .. {m['end'] if m['end'] is not None else 'end'}")
+    if r['truncated']:
+        print(f"rvw wave: listed {r['limit']} of {r['count']} intervals", file=sys.stderr)
+    return 0
+
+
+@_wrap
+def _edges(a):
+    from .search import edges
+    r = edges(a.wave, a.regex, _t(a, a.t0) or 0, _t(a, a.t1))
+    if a.json:
+        jsonout.write(r)
+    else:
+        for s in r['signals']:
+            extra = f" rising {s['rising']} falling {s['falling']}" if 'rising' in s else ''
+            print(f"{s['signal']}: changes {s['changes']}{extra} unknown {s['unknown']}")
+    return 0
+
+
+def _verify(a):
+    from .index import verify
+    try:
+        r = verify(a.index, a.source)
+        if a.json:
+            jsonout.write(r)
+        else:
+            print(f"{a.index}: {'fresh' if r['fresh'] else 'STALE: ' + r['reason']}")
+        return 0 if r['fresh'] else 1
+    except (WaveError, jsonout.JsonOutputError) as e:
+        if a.json:
+            jsonout.write({'error': str(e)})
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2
+
+
 def _index(a):
     from .index import build
     try:
-        result = build(a.wave, a.out)
+        result = build(a.wave, a.out, a.reader)
         if a.json:
             jsonout.write(result)
         else:
