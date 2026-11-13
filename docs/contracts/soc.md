@@ -298,3 +298,13 @@ reset and region binders. Paths are relative to the composition file. Merge
 order is the listed order, then the main file. Device binders replace by
 region name. Nested fragments and fragment map changes are refused.
 `rvw.soc-composed/1` adds fragment hashes and the effective configuration.
+
+## Composed software exports and scaffold
+
+Composition adds `board.dts`, a CPU/memory/peripheral description for known
+profiles, and `link.ld` when executable and writable memory exist. The linker
+script includes `memory.ld`. Startup code and driver policy remain project-owned.
+`registers.ipxact.xml` uses the existing strict register memoryMap subset.
+`registers.svd` retains the existing CMSIS-SVD subset. Neither is a lossless
+full SoC interchange model. Scaffold output references the installed SpinalSoc
+source path and contains an explicitly idle project core wrapper.
