@@ -11,7 +11,9 @@ COMMON = {"project": {**S, "description": "project file or directory"}, "elf": {
 def mcp_tools():
     from .exchange_cli import mcp_tools as exchange_tools
     from .vector_source import mcp_tools as vector_tools
+    from .adjudicate import mcp_tools as adjudication_tools
     return [
+        *adjudication_tools(),
         *exchange_tools(),
         *vector_tools(),
         ToolSpec("cosim_check", "Check a recorded C2 RVFI trace against Spike or Sail to locate the first architectural mismatch. "

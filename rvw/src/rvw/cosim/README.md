@@ -120,3 +120,17 @@ It refuses later resets, external-agent events, custom reference extensions and
 absent-PMP emulation. Stores are visible to subsequent captured retirements.
 A valid weak-memory execution can fall outside this profile. This does not check
 RVWMO, coherent bus transactions or store-buffer visibility.
+
+### Two independent references
+
+Use `rvw cosim adjudicate --elf ELF --trace TRACE --core CORE --json`.
+The MCP tool is `cosim_adjudicate`. Set `RVW_SAIL` for the Sail executable.
+Both references receive the same inputs through their normal captured flow.
+The output retains both full reports and checks their input hashes. It names
+which reference the DUT matches at the first disagreement. If neither matches,
+that list is empty. A missing model or unsupported capability is inconclusive.
+
+A complete match requires both references to compare the same complete trace.
+A disagreement never becomes a pass. Automatic reduction and specification-rule
+attribution remain future work. Inspect the original synchronization records
+before interpreting a disagreement. Use `--strict` to disable synchronization.

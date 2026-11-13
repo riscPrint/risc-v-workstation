@@ -262,7 +262,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 
 ```text
 usage: rvw cosim [-h] [--project PROJECT]
-    {dii,exchange,vector-source,check,generate,live} ...
+    {dii,exchange,vector-source,adjudicate,check,generate,live} ...
 ```
 
 ### `rvw cosim dii`
@@ -299,6 +299,14 @@ usage: rvw cosim exchange [-h] --source SOURCE --out OUT --from
 ```text
 usage: rvw cosim vector-source [-h] --out OUT [--timeout TIMEOUT] [--json]
     [--project PROJECT]
+```
+
+### `rvw cosim adjudicate`
+
+```text
+usage: rvw cosim adjudicate [-h] --elf ELF --trace TRACE [--core CORE]
+    [--platform PLATFORM] [--sail-config SAIL_CONFIG] [--timeout TIMEOUT]
+    [--strict] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -2091,6 +2099,14 @@ Starts a background job: no.
 Build a failure bundle with retirement history, waveform window and suspected unit. May re-run the adapter and invoke SpinalTrace. Returns a job; re-runs take the core lock.
 
 Arguments: `run_dir` (required), `out`, `retired`, `cut_cycles`, `no_rerun`, `rerun_window`, `konata`, `core_config`, `project`, `pdg`, `trace_wave`, `trace_cycles`, `no_spinaltrace`, `timeout`.
+
+Starts a background job: yes.
+
+### `cosim_adjudicate`
+
+Check a DUT trace against Spike and Sail. Preserve both reports and identify which reference the DUT matches at a disagreement. No majority vote.
+
+Arguments: `elf` (required), `trace` (required), `core`, `platform`, `project`, `sail_config`, `timeout`, `strict`.
 
 Starts a background job: yes.
 
