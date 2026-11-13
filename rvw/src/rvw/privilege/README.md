@@ -55,6 +55,14 @@ ticks. `examples/privilege/spike-wfi.json` declares the native Spike CLINT map.
 Copy and change that data for the project's map. The generator does not choose
 addresses for a core.
 
+RV32 and machine-only cores: set `isa` to an `rv32` string and `priv` to `m`
+(see `spike-wfi-rv32.json` and `scheduled-wfi-rv32.json`). The programs then
+use word stores, a high/low/high `mtime` read, a high-word-first `mtimecmp`
+write and bit 31 interrupt causes. The `m` preamble does not touch `satp`,
+delegation or PMP CSRs, which an M-only core may not have. `priv = "m"` is
+accepted only for `wfi` and `scheduled-wfi`. `rvw regress plan` selects
+`wfi-clint-rv32` and `scheduled-wfi-rv32` for `xlen:32` features.
+
 The four programs cross software/timer sources with global MIE clear/set.
 They enable the local source. They drive the software event or program a future
 timer compare. A masked case requires eventual pending and retained register

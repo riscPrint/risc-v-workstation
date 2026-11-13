@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "scheduled-wfi",
+  "isa": "rv32i_zicsr",
+  "priv": "m",
+  "wake": {
+    "assert_cycle": 1000,
+    "clear_cycle": 20000
+  }
+}

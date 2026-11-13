@@ -45,6 +45,39 @@ _start:
 '''
 
 
+# Machine-only preamble. A core without S-mode or PMP has no satp, medeleg,
+# mideleg or pmp CSRs, and the full HEAD traps on them.
+M_HEAD = '''.option norvc
+.section .text
+.globl _start
+_start:
+ la t0, fail
+ csrw mtvec, t0
+ csrw mie, zero
+ li t0, 0x7e190a
+ csrc mstatus, t0
+'''
+TAIL32 = TAIL.replace(' sd t1, 0(t0)', ' sw t1, 0(t0)\n sw zero, 4(t0)')
+
+
+def xlen(config):
+    """XLEN from the campaign isa. The default stays RV64."""
+    return 32 if config.get('isa', 'rv64').startswith('rv32') else 64
+
+
+def head(config):
+    return M_HEAD if config.get('priv', 'msu') == 'm' else HEAD
+
+
+def tail(config):
+    return TAIL32 if xlen(config) == 32 else TAIL
+
+
+def interrupt_cause(config, cause):
+    """mcause value of an interrupt: the top XLEN bit plus the code."""
+    return (1 << (xlen(config) - 1)) | cause
+
+
 def controls(config):
     """Cross TVM/TW/TSR with real M/S/U entry and both bit states.
 

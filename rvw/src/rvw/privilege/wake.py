@@ -1,5 +1,5 @@
 """Locally enabled WFI programs using a project-owned CLINT map."""
-from .programs import HEAD, TAIL
+from .programs import head, tail, xlen, interrupt_cause
 
 
 def programs(config):
@@ -11,18 +11,36 @@ def programs(config):
         raise ValueError('timer delta must be in 1..1000000')
     if timer['mtime'] % 8 or timer['mtimecmp'] % 8 or timer['msip'] % 4:
         raise ValueError('timer registers must be aligned')
+    wide = xlen(config) == 64
     rows = []
     for source, cause in [('software', 3), ('timer', 7)]:
         for enabled in [False, True]:
             bit = 1 << cause
+            store_max = ' sd t1, 0(t0)\n' if wide else ' sw t1, 4(t0)\n sw t1, 0(t0)\n'
             setup = f''' li t0, {timer['mtimecmp']}
  li t1, -1
- sd t1, 0(t0)
- li t0, {timer['msip']}
+{store_max} li t0, {timer['msip']}
  sw zero, 0(t0)
 '''
             if source == 'software':
                 stimulus = f"li t0, {timer['msip']}\n li t1, 1\n sw t1, 0(t0)"
+            elif not wide:
+                # RV32 reads mtime high/low/high and writes mtimecmp high last.
+                stimulus = f'''li t0, {timer['mtime']}
+read_mtime:
+ lw t2, 4(t0)
+ lw t1, 0(t0)
+ lw t3, 4(t0)
+ bne t2, t3, read_mtime
+ li t4, {timer['delta']}
+ add t1, t1, t4
+ sltu t4, t1, t4
+ add t2, t2, t4
+ li t0, {timer['mtimecmp']}
+ li t4, -1
+ sw t4, 4(t0)
+ sw t1, 0(t0)
+ sw t2, 4(t0)'''
             else:
                 stimulus = f'''li t0, {timer['mtime']}
  ld t1, 0(t0)
@@ -32,7 +50,7 @@ def programs(config):
  sd t1, 0(t0)'''
             # The handler checks an independent instruction interval. WFI may
             # return early; only eventual pending and completion are required.
-            text = HEAD + setup + f''' la t0, handler
+            text = head(config) + setup + f''' la t0, handler
  csrw mtvec, t0
  li s0, 0x12345
  li t0, {bit}
@@ -52,7 +70,7 @@ wake_end:
  j fail
 handler:
  csrr t0, mcause
- li t1, {(1 << 63) | cause}
+ li t1, {interrupt_cause(config, cause)}
  bne t0, t1, fail
  csrr t0, mepc
  la t1, wake_start
@@ -70,7 +88,7 @@ check_state:
  csrci mstatus, 8
  {setup}
  j pass
-''' + TAIL
+''' + tail(config)
             rows.append(dict(id=f'wfi-{source}-mie-{int(enabled)}', family='wfi', source=source,
                 enabled=enabled, bins=[f'wfi.{source}.mie.{int(enabled)}'], assembly=text))
     return rows

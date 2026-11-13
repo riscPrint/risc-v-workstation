@@ -1,5 +1,5 @@
 """Input-scheduled WFI. The adapter, not Spike, drives the input pins."""
-from .programs import HEAD, TAIL
+from .programs import head, tail, interrupt_cause
 
 
 def programs(config):
@@ -12,7 +12,7 @@ def programs(config):
         if cause not in (3, 7, 11):
             raise ValueError('wake causes must be 3, 7 or 11')
         for enabled in (0, 1):
-            assembly = HEAD + f''' la t0, handler
+            assembly = head(config) + f''' la t0, handler
  csrw mtvec, t0
  li s0, 0x12345
  li t0, {1 << cause}
@@ -30,7 +30,7 @@ wake_end:
  j fail
 handler:
  csrr t0, mcause
- li t1, {(1 << 63) | cause}
+ li t1, {interrupt_cause(config, cause)}
  bne t0, t1, fail
  csrr t0, mepc
  la t1, wake_start
@@ -44,7 +44,7 @@ check_state:
  csrw mie, zero
  csrci mstatus, 8
  j pass
-''' + TAIL
+''' + tail(config)
             rows.append(dict(id=f'scheduled-wfi-{cause}-{enabled}', family='wfi',
                 bins=[f'wfi.scheduled.{cause}.{enabled}'], assembly=assembly,
                 options={'irq_schedule': f'1:0x0,{on}:0x{1 << cause:x},{off}:0x0'},

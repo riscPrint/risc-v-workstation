@@ -113,6 +113,24 @@
     ]
   },
   {
+    "name": "scheduled-wfi-rv32",
+    "source": "examples/privilege/scheduled-wfi-rv32.json",
+    "requires": [
+      "xlen:32",
+      "irq:msip",
+      "irq:mtip",
+      "irq:meip"
+    ]
+  },
+  {
+    "name": "wfi-clint-rv32",
+    "source": "examples/privilege/spike-wfi-rv32.json",
+    "requires": [
+      "xlen:32",
+      "device:clint"
+    ]
+  },
+  {
     "name": "pmp",
     "source": "examples/privilege/pmp.json",
     "requires": [
