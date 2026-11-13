@@ -3,7 +3,7 @@
 | Check | Result |
 |---|---|
 | ISA groups | F, Zca and Zcf; C metadata is also declared |
-| Build | NOT RUN |
+| Reference build | 110 self-checking ELFs: F 80, Zca 26, Zcf 4 |
 | DUT run and strict Spike comparison | NOT RUN |
 
 Use the RV64 profile commands with `32` in place of `64`. This profile has
