@@ -206,3 +206,25 @@ slot estimate is recovery penalty times fetch width per branch miss. It does
 not consume issue or cache resources. Synthetic tests establish timing rules;
 they do not establish RTL accuracy. Macro-op fusion, move/zero elimination,
 memory renaming, and speculative dependence replay remain open.
+
+## Optional compiled scheduler
+
+Use `scripts/install.sh --with-ooo` to compile the C scheduler with the host C
+compiler. Use the same flag with `--check` to check its ABI. No download is
+needed. The library is `.tools/ooo/libooo.so` on Linux and macOS. The suffix
+is fixed for discovery; macOS builds a native dynamic library.
+
+The engine selects the library for integer ALU, multiply and divide streams
+with at most two source registers. It preserves fetch, rename, ROB, issue,
+commit, fixed execution latencies and physical-register pressure. Other
+streams and configurations use Python. Front-end, translation, execution port
+objects, class port limits, branches and memory are not accelerated yet.
+Reports name the selected `backend`. Missing libraries use Python. An invalid
+selected library is an error. Set `RVW_OOO_NATIVE=0` to force Python, or set it
+to an explicit library path. Python callers can select `backend="python"` or
+`backend="native"`. The latter requires a supported stream and installed
+library. C2 parsing and input conversion still use Python.
+
+The parity test checks 100 seeded synthetic integer schedules against Python,
+including queue limits, dependencies, and physical-register capacity. This is
+schedule parity with the reference model. It does not establish RTL accuracy.

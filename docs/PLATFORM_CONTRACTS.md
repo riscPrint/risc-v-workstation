@@ -2925,6 +2925,14 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core native scheduler selection
+
+`rvw.ooo-run/1` adds `backend` (`python` or `native`). The optional native
+integer scheduler preserves the reference schedule. Unsupported streams use
+Python. The report engine hash includes the native source and wrapper, and
+also the selected library bytes when native execution occurs. This is model
+identity, not a hardware accuracy claim. See `rvw/ooo/README.md` for support.
+
 ### Own-core decoupled pipeline timing
 
 The optional `rvw.ooo-run/1` configuration objects `frontend`, `execution`,
