@@ -87,10 +87,13 @@ rvw_selected_check rvw_selected_check_instance(.clk({clock}), .reset_active({act
                 'always @(posedge clk) if (!reset_active) cover(fail);\nendmodule\n')
             job = (directory/'job.sby').read_text()
             cover_job = job.replace('mode ' + mode, 'mode cover').replace('monitor.sv', 'activation.sv')
+            activation_files = {}
             for source in list(directory.glob('*.v')):
                 text = source.read_text()
                 (directory/('activation_' + source.name)).write_text(text.replace('.fail(' + fail + ')', '.fail(' + trigger + ')'))
-                cover_job = cover_job.replace(source.name, 'activation_' + source.name)
+                activation_files[source.name] = 'activation_' + source.name
+            # Replace whole tokens once. A.v can also be a suffix of BA.v.
+            cover_job = re.sub(r'\S+', lambda token: activation_files.get(token.group(), token.group()), cover_job)
             cover_job = cover_job.replace('chformal -assert -remove', 'chformal -assert -remove\nchformal -cover -remove')
             (directory/'activation.sby').write_text(cover_job)
             manifest.append(f'activation_sby = "{index}/activation.sby"')
