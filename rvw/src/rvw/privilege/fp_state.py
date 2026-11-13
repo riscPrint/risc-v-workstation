@@ -60,6 +60,54 @@ fromhost: .dword 0
 
 
 
+def flags_state():
+    """Require Dirty when an integer-destination FP compare changes fflags."""
+    return '''.section .text
+.globl _start
+.option norvc
+_start:
+  la t0, trap
+  csrw mtvec, t0
+  li t0, 0x6000
+  csrs mstatus, t0
+  la t0, input
+  flw f1, 0(t0)
+  csrw fcsr, zero
+  li t0, 0x6000
+  csrc mstatus, t0
+  li t0, 0x4000
+  csrs mstatus, t0
+flags_only_compare:
+  feq.s t1, f1, f1
+  bnez t1, fail
+  csrr t1, mstatus
+  li t0, 0x6000
+  and t1, t1, t0
+  bne t1, t0, fail
+  frflags t1
+  li t0, 16
+  bne t1, t0, fail
+  li t0, 1
+  j finish
+trap:
+fail:
+  li t0, 3
+finish:
+  la t1, tohost
+  sw t0, 0(t1)
+  j finish
+.section .data
+.balign 4
+input: .word 0x7f800001
+.section .tohost,"aw",@progbits
+.balign 64
+.globl tohost
+tohost: .dword 0
+.globl fromhost
+fromhost: .dword 0
+'''
+
+
 def programs(config):
     base = config.get('isa', '').split('_')[0]
     if not base.startswith(('rv32', 'rv64')) or 'f' not in base[4:]:
@@ -69,4 +117,6 @@ def programs(config):
     # The campaign linker collects .text, so do not use a separate init section.
     return [dict(id='fp-context-fs', family='fp-state',
                  bins=['fp.fs.off.trap', 'fp.fs.initial', 'fp.fs.clean.dirty'],
-                 assembly=lazy_state().replace('.text.init', '.text'))]
+                 assembly=lazy_state().replace('.text.init', '.text')),
+            dict(id='fp-context-flags', family='fp-state',
+                 bins=['fp.fs.flags.clean.dirty'], assembly=flags_state())]

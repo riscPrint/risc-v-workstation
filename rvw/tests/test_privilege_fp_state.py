@@ -10,11 +10,18 @@ ROOT = Path(__file__).resolve().parents[2] / 'examples/vexiiriscv/rvw/fpu'
 def test_fp_campaign_selects_machine_slice(width):
     config = campaign.load(ROOT / f'fs{width}.json')
     rows = campaign.scenarios(config)
-    assert len(rows) == 1
+    assert len(rows) == 2
     assert len(rows[0]['bins']) == 3
     assert '.section .text.init' not in rows[0]['assembly']
     assert 'li t0, 0x4000' in rows[0]['assembly']
     assert 'li t1, 2' in rows[0]['assembly']
+    flags = rows[1]
+    assert flags['bins'] == ['fp.fs.flags.clean.dirty']
+    source = flags['assembly']
+    assert 'input: .word 0x7f800001' in source
+    assert 'feq.s t1, f1, f1' in source
+    assert source.index('csrr t1, mstatus') < source.index('frflags t1')
+    assert 'li t0, 16' in source
 
 
 def test_fp_campaign_refuses_no_f_and_unimplemented_modes():
