@@ -9,6 +9,12 @@ from rvw.common.proc import run_group
 from .riscv import FIELDS
 
 
+def _assert(condition, message):
+    # Yosys reads the formal branch. Simulators must return a failing exit code.
+    return '\n'.join(('`ifdef YOSYS', f'assert({condition});', '`else',
+                       f'assert({condition}) else $fatal(1, "{message}");', '`endif'))
+
+
 def monitor(xlen, csrs=(), *, halt=False):
     """The project supplies retirement-aligned pre/post state, not guessed latency."""
     widths = dict(retire=1, insn=32, pc_before=xlen, pc_after=xlen,
@@ -35,9 +41,11 @@ def monitor(xlen, csrs=(), *, halt=False):
     values.update({f:f for f in FIELDS if f.startswith('mem_')})
     text += [f'assign rvfi_{field} = {values[field]};' for field in FIELDS]
     text += ['integer index;', 'always @(posedge clock) if(!reset && retire) begin',
-             f'assert(regs_before[0 +: {xlen}] == 0 && regs_after[0 +: {xlen}] == 0);',
+             _assert(f'regs_before[0 +: {xlen}] == 0 && regs_after[0 +: {xlen}] == 0', 'architectural x0 changed'),
              'for(index=1;index<32;index=index+1)',
-             f'if(trap || index != rd) assert(regs_before[index*{xlen} +: {xlen}] == regs_after[index*{xlen} +: {xlen}]);',
+             'if(trap || index != rd) begin',
+             _assert(f'regs_before[index*{xlen} +: {xlen}] == regs_after[index*{xlen} +: {xlen}]', 'architectural register frame changed'),
+             'end',
              'end', 'endmodule']
     return '\n'.join(text)+'\n', widths, rvfi_widths
 

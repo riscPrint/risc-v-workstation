@@ -55,6 +55,25 @@ monitor suppresses destination writes on a trap and detects the changed register
 frame. This is an unresolved difference. The kit does not certify PicoRV32's
 RVFI or the state map as equivalent. The simulation matches do not remove it.
 
+### Simulation failure checks
+
+The generated monitor stops simulation with a nonzero exit code for a failed
+x0 or register-frame assertion. The comparison stops on a validity mismatch,
+including an unknown validity bit. Plain Icarus assertions could previously
+print an error and still return zero.
+
+The corrected comparison was run on the same pin. Programs 0, 1 and 2 each
+matched 30 retirements. Program 3 places the counterexample JAL at address zero.
+It returned exit code 1 on the first retirement. Both the register-frame
+check and the destination-address comparison failed. Native RVFI reported
+x14 with value 4. The monitor suppressed that trapping write. Run this
+negative control with `vvp sim +program=3`. Its expected result is failure.
+This reproduces the mismatch in simulation. It does not resolve it.
+
+Nine small simulation tests cover legal writes, x0 changes, unrelated register
+writes, trap writes, unknown state and both validity mismatch directions.
+Private evidence: `pico-state-sim-fatal-v1` under the worker's evidence tree.
+
 Private evidence is stored in `pico-state-source-v1` and
 `pico-state-monitor-v1` under the worker's private evidence directory. The
 formal source snapshot is retained under `miter_check/src`; generated comparison

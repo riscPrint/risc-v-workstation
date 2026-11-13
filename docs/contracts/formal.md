@@ -720,6 +720,9 @@ are observations only. No signal defaults silently to zero.
 manifest hashes, derived file hashes, widths, a runnable `rvw.toml` project and
 explicit limits. Yosys flatten/expose retains observation drivers. The monitor
 asserts x0 and register frame effects. Order is derived from retirement events.
+In simulation, a failed x0 or frame assertion stops with a nonzero exit code.
+Unknown compared state also fails the simulation assertion. Formal checks keep
+their native assertions. The PicoRV32 example also stops on validity mismatches.
 Generation does not establish snapshot alignment, memory pairing, CSR semantics,
 independent order conformance or an ISA proof.
 
