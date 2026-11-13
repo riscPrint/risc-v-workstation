@@ -391,3 +391,142 @@ in `state_coverage.fp: false`. Proposed text for
 > `state` capability, `rvw cosim check` returns `inconclusive` with cause
 > `fp_state_not_observed` instead of `match`. `--allow-integer-scope` keeps the
 > integer-only `match`, and the result records `scope: integer state only`.
+
+## Part 2b: areas not read in Part 1
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `Cosim/spike_shim.cc` (step, split and memory effects, policies) | 535 |
+| `Cosim/spike_replay.cc` | 126 |
+| `Cosim/lockstep_dpi.cc` | 52 |
+| `rvw/src/rvw/cosim/checker.py` (synchronization, tval, mode and FCSR policies) | 495 |
+| `rvw/src/rvw/cosim/platform.py` (policy parsing, normalization) | 276 |
+| `rvw/src/rvw/cosim/spike.py` (policy application) | 424 |
+| `rvw/src/rvw/cosim/sail.py` | 496 |
+| `rvw/src/rvw/cosim/reset_fp.py` | 14 |
+| `rvw/src/rvw/cosim/online.py`, `lockstep.py` (prefix rule) | 222, 58 |
+| `rvw/src/rvw/cosim/cli.py` | 171 |
+| `rvw/src/rvw/formal/datapath.py`, `operand_partition.py` | 220, 21 |
+| `SpinalChecks/c2rtl/hardfloat.py` | 126 |
+| `rvw/src/rvw/formal/ic3_lemmas.py`, `lemma_cone.py` (identity only) | 205, 102 |
+| `rvw/src/rvw/formal/fair_live.py`, `liveness_app.py`, `liveness_safety.py` | 73, 116, 65 |
+| `rvw/src/rvw/formal/isa.py`, `riscv_proof.py`, `riscv_abstract.py` (verdicts) | 134, 97, 134 |
+| `rvw/src/rvw/formal/sail_zicond.py` | 229 |
+| `rvw/src/rvw/formal/security/pair.py`, `policy.py` (binding and verdict) | 129, 199 |
+| `rvw/src/rvw/cov/functional.py` | 343 |
+| `rvw/src/rvw/cov/mutation.py` (classification) | 609 |
+| `rvw/src/rvw/cov/exchange.py` (status only) | 209 |
+| `rvw/src/rvw/lint/cdc.py`, `rdc.py` | 382, 213 |
+| `rvw/src/rvw/regress/mmu.py` (reference and check) | 826 |
+| `rvw/src/rvw/memory/axiomatic.py`, `multihart.py` | 383, 99 |
+| `rvw/src/rvw/privilege/epmp_matrix.py` | 93 |
+| `rvw/src/rvw/vip/` `axi`, `axis`, `tilelink`, `wishbone`, `uart`, `spi`, `sram`, `gpio`, `interrupt` (`finish`), `catalog`, `declared` | 396, 228, 278, 127, 175, 165, 98, 104, 76, 122, 46 |
+| `rvw/src/rvw/csr/` | 173 |
+| Part 2a fixes: `plan/cli.py`, `farm/workflows.py`, `farm/service.py`, `mcp/envelope.py`, `fault/campaign.py`, `sec/campaign.py` | 42, 65, 235, 29, 339, 226 |
+
+### Findings
+
+| ID | Finding | Label | Action |
+|---|---|---|---|
+| F1 | `rvw formal app-live` gave `pass`, `proof_kind: liveness_to_safety`, exit 0 for a unit that hangs forever, when the fairness predicate was a DUT output that the hang keeps false. Reproduction: `module hang` sets `stuck` on the first `req`, never drives `resp`, and outputs `busy = stuck`. Plan: `request: req`, `response: resp`, `fairness: ["!busy"]`, `--mode prove`. The hung loop never satisfies `!busy`, so the loop monitor never fires. The same design with `fairness: ["ready"]` (a free input) gave `fail`. The limits text said "Fairness feasibility is not established", but the status and exit code said proof. Fairness of the form "the unit is idle infinitely often" is a normal thing to write. | realistic | Fixed in [#1283](https://github.com/riscPrint/risc-v-workstation/pull/1283). `fairness_check` is now `no_fairness`, `free_inputs` or `not_checked`. A safety pass is a proof only for `no_fairness` or `free_inputs` (every fairness expression names only top-level inputs other than clock and reset, and the design has no assumptions). Otherwise it is `inconclusive`, exit 3. A `fail` stays `fail`. The native regression test failed before the fix. |
+| F2 | `rvw cov functional` credits bins from every supplied C2 trace, including traces of failing runs and traces without an end record. The report does not record each trace's end status. A plan counts these bins toward `reported_closed`. | unusual | Not fixed. Coverage reports have no `pass` verdict, and the plan contract says `reported_closed` is a planning count. Recording each trace's end status, and leaving out traces that did not end with `pass`, is a small owner decision. |
+| F3 | The AXI, AXI-Stream, TileLink-UL and Wishbone monitors accept `finish()` with zero sampled transactions. The GPIO, interrupt, UART and SRAM agents refuse it. A project bench that relies only on `finish()` passes with a monitor on the wrong clock. | unusual | Not fixed. The generated declared-bus bench asserts `monitor.transfers > 0` and a positive check count. The typed-bus skeleton raises `NotImplementedError` until the project writes its scoreboard. |
+| F4 | A `--case` split or `--operand-prefix` partition of `rvw formal datapath` reports `status: proved` for its sub-domain. The operand partition adds "only the recorded operand b partition" to `scope`; an FP case split records only `case`. | unusual | Not fixed. No code composes partitions into a full-width claim. The HardFloat campaign ledger keeps one row per case, and the contract says a case pass applies only to its recorded case. |
+
+| F5 | `rvw memory axiomatic` (`memory/axiomatic.py`) takes address, data and control dependencies from the core adapter's C2 events when the header says `memory_dependencies: complete`. It does not derive them from the RVFI register fields. An adapter that declares `complete` but leaves out an edge removes preserved-program-order edges, so a forbidden execution can be reported `allowed`. | unusual | Not fixed. The header is an explicit adapter declaration, and the check refuses traces without it. Deriving register dependencies from `rs1`/`rs2`/`rd` and checking them against the declared sets would be a small owner decision. |
+
+### What holds
+
+- Cosim Spike shim (`scalar_split_ram`): the policy aggregates a misaligned
+  access only when misaligned emulation is on, the access is an ordinary
+  scalar load or store to bare RAM (M-mode, or U-mode without S), PMP decides
+  every byte the same way, no byte is in MMIO, the access stays in one page,
+  and the logged byte effects cover the access exactly once. Anything else is
+  a refusal, never a match. The record keeps the unaligned address, so a core
+  that reports another address gives a mismatch, not a match.
+- Cosim synchronization: `mmio` sync injects the core's bus data into the
+  reference and then still compares `rd_wdata` on all bits. A fixture with an
+  MMIO `lb` that the core zero-extends gave `mismatch` with every sync kind on.
+  Only `counter` reads take the whole `rd` value, as the name says.
+  `illegal_insn_tval=zero` accepts zero only for cause 2.
+  `ecall_tval` takes one declared value, never the core's. `mode_after_change`
+  accepts the core's mode only when it equals the reference's mode after the
+  trap or xRET, and the next instruction's mode is still compared.
+  `fcsr_reset=unspecified` seeds FCSR once, before a state-neutral first
+  instruction from reset.
+- Sail adapter: the core trace gives only the step count and the refusal of
+  counter, MMIO and input-interrupt records. Expected values come from Sail's
+  own trace. A Sail run that ends early is an error. Sail cannot synchronize.
+- Spike replay shim: restore replays the action history in a fresh machine
+  and checks every step's effect hash. A failed action poisons the session.
+- Formal ISA: unbounded instruction checks give `proven` rows only from a
+  portfolio pass, and the overall `rvw.riscv-proof/1` and
+  `rvw.riscv-abstract/1` statuses are never `pass` (`fail` or
+  `inconclusive`). Sail-generated Zicond, M and bitmanip modules
+  are generation only. They refuse live exception logic and record every
+  lowering.
+- IC3 lemma reuse: cached lemmas need `fresh_unbounded` certification and an
+  equal transition-cone hash. They enter the target only as extra
+  assertions, never assumptions, and the target always needs a fresh native
+  proof. A stale lemma after an RTL change can only fail or miss the cone.
+- Finite-graph fair liveness (`fair_live`) is `inconclusive` when no fair
+  infinite path exists. The AIGER liveness path keeps a fairness pass
+  `inconclusive` without a separate feasibility result.
+- Formal security pair: secrets must be inputs and observations outputs. DUT
+  formal cells and nondeterministic cells are refused. The micro-observation
+  assertion is conditional on equal architectural prefixes, as the
+  `semantics` field states.
+- Formal IFT secure path (`security/policy.py`): sources must be inputs and
+  sinks outputs, DUT formal cells are refused, and the sink assertion is
+  gated only by reset and an optional declassifier that is a free public
+  input. Taint over-approximates (a tainted bit may take either value), so a
+  pass is conservative.
+- Mutation: a mutant is `killed` only on a test `FAIL`. The unmutated control
+  must pass every detection and equivalence test, so a broken build
+  environment makes the whole report `inconclusive`. Any result other than
+  `PASS` or `FAIL` is `error`.
+- CDC: Spinal library class names only annotate a crossing. The kind comes
+  from structure (stage count, direct path, fanout, width, Gray source). A
+  library match never makes a crossing safe.
+- RDC: `protected` needs a declared isolation with a reason whose qualifier
+  is structurally in the destination fan-in, or a declared reset order. A
+  qualifier outside the fan-in is an error finding.
+- MMU suites: a scenario passes only with one conclusive C1 pass for its ELF
+  and a complete strict Spike or Sail trace match with no synchronization. The
+  self-checking expectations come from the scenario declaration, and
+  `mmu reference` runs them on Spike separately.
+- Privilege: the Smepmp matrix takes its expectations from a hand-written
+  specification table, not from the checker. The campaign check needs the
+  C1 self-check and a strict reference match.
+- Coverage exchange exports have status `reported` and
+  `proof_exclusions_verified: false`. They carry no verdict.
+- CSR checks never report a pass: a matching device-event check stays
+  `inconclusive`.
+
+### Summary of Part 2
+
+| Label | Count | Findings |
+|---|---|---|
+| realistic | 1 | F1 (fixed in [#1283](https://github.com/riscPrint/risc-v-workstation/pull/1283)) |
+| unusual, fixed | 6 | D5, R1, M1, D3, D2, C1 (from Part 1) |
+| unusual, recorded | 4 | F2, F3, F4, F5 |
+| owner decision | 2 | D4, C2 (contract text above) |
+
+### Not reviewed
+
+- Cosim: the online and lockstep transports beyond their prefix rule, DII,
+  external PLIC replay, device environment replay, QEMU observations,
+  `sail_config.py`, the vector and hypervisor paths of the shim.
+- Formal: Sail state slices and bitmanip details, SVA liveness lowering (`liveness.py`,
+  `nested_eventually.py`), deep grids, native SVA, the IFT
+  cell transfer rules in `security/ift.py`, memory refinement, equivalence partitions, UF proofs.
+- Coverage: the proof-exclusion builder beyond
+  `apply_exclusions`, probe goals, semantic observers.
+- Lint: SDC backend, `structural.py`, lint waivers beyond Part 1.
+- Suites: MMU submodules (`mmu_*.py`), privilege device models
+  (PLIC/APLIC/AIA, timers), the memory-order candidate search beyond its
+  input rules, concurrent memory campaigns, VexiiRiscv
+  and arch-model areas.
+- VIP agents other than the monitors' `finish()` checks; Uvm/ conformance.
