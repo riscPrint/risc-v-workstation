@@ -1,0 +1,70 @@
+{
+  "schema": "rvw.vexii-initialization/1",
+  "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "spinal_revision": "de72faf6062206a89b445e5cc07e32ed982712c8",
+  "rvls_revision": "847ce99fd2b28a5c0ccb1ec2683311cf97a9fefc",
+  "generator_revision": "3602526cf4bd12af6260502206e64a2a8bd26878",
+  "rtl_sha256": "320e2209bdcd776fc056db108a0c79c5d41b9f6b65a89ced05e7368a86ee6471",
+  "export": {
+    "entry": "rvwvexii.SecRtl",
+    "config": "rv32im",
+    "reset_style": "ASYNC",
+    "property": "riscvsim.script points to the example rvw/run.sh",
+    "status": "succeeded"
+  },
+  "source_assertions_per_copy": 8,
+  "source_assumptions": 0,
+  "attempts": [
+    {
+      "kind": "native xprop",
+      "depth": 8,
+      "reset_cycles": 2,
+      "exit": 2,
+      "status": "unsupported",
+      "solver_ran": false,
+      "reason": "single-clock X model refuses asynchronous FFs"
+    },
+    {
+      "kind": "event app initialization",
+      "depth": 16,
+      "bound_unit": "global_samples",
+      "status": "unsupported",
+      "solver_ran": false,
+      "reason": "app attribution refuses DUT source assertions"
+    },
+    {
+      "kind": "combined event BMC",
+      "depth": 16,
+      "bound_unit": "global_samples",
+      "reset_cycles": 2,
+      "exit": 2,
+      "status": "unsupported",
+      "solver_ran": false,
+      "reason": "reset-triggered source assertions are outside the declared-clock model"
+    }
+  ],
+  "rejected_guard_experiment": {
+    "shipped": false,
+    "positive_condition": "reset",
+    "negative_condition": "!reset",
+    "experimental_event_bmc": {
+      "positive": "fail",
+      "negative": "pass"
+    },
+    "reference_icarus": [
+      {
+        "condition": "reset",
+        "exit": 0,
+        "assertion_errors": 0
+      },
+      {
+        "condition": "!reset",
+        "exit": 0,
+        "assertion_errors": 2
+      }
+    ],
+    "outcome": "qualification failed; restore and retain the existing refusal"
+  },
+  "initialization_verdict": "inconclusive",
+  "source_changed": false
+}
