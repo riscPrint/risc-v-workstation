@@ -401,3 +401,19 @@ runs captured Verilog through Icarus with an initial X reset interval. It
 separates active retirement unknowns from inactive memory-data unknowns.
 A native injected-output-X test checks that active unknowns cannot pass.
 This is a bounded project probe. It adds no pessimistic X-propagation guarantee.
+
+## Captured scalar build profiles
+
+The native scalar model accepts an optional `rvw.native-build-profile/1` file.
+It supports explicit thread counts, hierarchy boundaries, a private ccache and
+Clang compiler PGO capture/reuse. `rvw.common.capture.Capture` freezes profile,
+RTL, training ELF, SDK settings, make rules and reused profile data. Bindings
+reject changed inputs. Outdated and unprofiled compiler diagnostics remain
+errors. The scalar namespace is `scalar-native-profile-v3`. No C4 model-cache
+reuse is enabled. The production Spinal collector keeps its existing refusals.
+
+The [VexRiscv campaign](../../../../examples/vexriscv/rvw/profiles/README.md)
+records native build/setup time, execution plus trace time, child-process RSS,
+compiler-cache hits and complete C2 equality for eight real profiles. It includes
+a compiler-profile capture and reuse. `rvw sim profile` reports these recorded
+fields when present. It does not apply profiles or qualify a runtime winner.

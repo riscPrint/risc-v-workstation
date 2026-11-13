@@ -1,0 +1,12 @@
+{
+  "profiles": [
+    {"name":"flat", "threads":1},
+    {"name":"ccache-cold", "threads":1, "ccache":true},
+    {"name":"ccache-warm", "threads":1, "ccache":true},
+    {"name":"threads-2", "threads":2},
+    {"name":"threads-4", "threads":4},
+    {"name":"hierarchy", "threads":1, "hierarchy":["StreamFifo"]},
+    {"name":"pgo-train", "threads":1, "compiler_pgo":"generate"},
+    {"name":"pgo-use", "threads":1, "compiler_pgo":"use"}
+  ]
+}

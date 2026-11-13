@@ -200,3 +200,25 @@ unsupported and cannot fall back to the current adapter. The existing
 C1 source identity preserves that selection. The launch descriptor includes
 registry dependencies. This extension applies to debug launches and bisect.
 It does not provide historical gate selection or C4 acceptance.
+
+### Captured scalar native build profiles
+
+The opt-in `rvw.native-build-profile/1` has `threads`, `hierarchy`, `ccache`,
+`ccache_dir`, `compiler_pgo`, `training_elf` and `reuse_manifest` fields.
+Compiler PGO mode is `off`, `generate` or `use`. Paths resolve from the profile
+file. Unknown fields and unsupported inherited compiler/make flags are refused.
+The capture freezes profile configuration, RTL, generated hierarchy control,
+SDK settings, make rules, training ELF and reused raw/merged profile bytes.
+A `rvw.compiler-pgo/1` binding includes exact input and compiler/tool hashes,
+flags, thread count and hierarchy. A changed binding or profile digest fails.
+`PROFOUTOFDATE` and compiler outdated/unprofiled diagnostics fail too.
+The namespace is `scalar-native-profile-v3`. These build records are not C4
+cache identities. The production Spinal collector remains unchanged.
+
+C1 `details.model_compile_s` records model build/setup duration for the scalar
+probe. `details.execution_s` includes its port bridge and C2 publication.
+`details.child_peak_rss_bytes` is normalized maximum child-process RSS during
+build. It is not total concurrent memory. `details.native_profile` records the
+captured request and binding. The existing `rvw.sim-profile/1` report exposes
+these fields as `native_probe_profile`, `peak_rss_bytes` and `peak_rss_scope`.
+A report never applies a profile or establishes a throughput improvement.
