@@ -23,10 +23,18 @@ refinement result. Independent-model cross-check status remains explicit.
 
 `rvw.tlc-bind/1` is a project profile for two typed Spinal TileLink Bus bundles
 and explicit channel signal IDs in one SpinalDB component. It declares bus
-widths, a single single-beat line address, a bounded service assumption and
+widths, one line address, a bounded service assumption and
 an independent expected-data signal. `rvw.tlc-monitor/1` reports generated
 monitor and bind paths with `executed:false`. Generation is not a monitor
-runtime pass. This profile rejects multi-beat, other-line and error traffic.
+runtime pass. C/D data messages can span several equal beats. The expected
+data signal contains one full line. This profile rejects other-line and
+error traffic. C6 simple `Bus` types need `bus_family: spinal-tilelink`, typed
+ChannelA through ChannelE descendants and exact signal member paths. B/D
+param fields use the three-bit Spinal carriers. The result records the
+finite model source SHA256 and generated permission relation under
+`permission_model`. That relation hides channel and data state.
+The monitor requires reset before clocks after time zero. Reset is active
+high and clears the monitor asynchronously.
 Actual protocol refinement and project oracle independence remain separate
 obligations. The memory tool README defines profile fields and runtime limits.
 

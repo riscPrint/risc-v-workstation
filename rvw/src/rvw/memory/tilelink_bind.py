@@ -8,14 +8,14 @@ import sqlite3
 FIELDS = {
     'a_valid': 1, 'a_ready': 1, 'a_opcode': 3, 'a_param': 3,
     'a_source': 'source', 'a_address': 'address', 'a_size': 'size',
-    'b_valid': 1, 'b_ready': 1, 'b_opcode': 3, 'b_param': 2, 'b_source': 'source', 'b_address': 'address', 'b_size': 'size',
+    'b_valid': 1, 'b_ready': 1, 'b_opcode': 3, 'b_param': 3, 'b_source': 'source', 'b_address': 'address', 'b_size': 'size',
     'c_valid': 1, 'c_ready': 1, 'c_opcode': 3, 'c_param': 3, 'c_source': 'source', 'c_data': 'data', 'c_address': 'address', 'c_size': 'size', 'c_corrupt': 1,
-    'd_valid': 1, 'd_ready': 1, 'd_opcode': 3, 'd_param': 2, 'd_source': 'source', 'd_sink': 'sink', 'd_data': 'data', 'd_size': 'size', 'd_denied': 1, 'd_corrupt': 1,
+    'd_valid': 1, 'd_ready': 1, 'd_opcode': 3, 'd_param': 3, 'd_source': 'source', 'd_sink': 'sink', 'd_data': 'data', 'd_size': 'size', 'd_denied': 1, 'd_corrupt': 1,
     'e_valid': 1, 'e_ready': 1, 'e_sink': 'sink',
 }
 
 
-def monitor(source_bits, sink_bits, address_bits, data_bits, line_address, bound, dirty, size_bits=4):
+def monitor(source_bits, sink_bits, address_bits, data_bits, line_address, bound, dirty, size_bits=4, projection=None):
     widths = dict(source=source_bits, sink=sink_bits, address=address_bits, data=data_bits, size=size_bits)
     ports = ['input wire clock', 'input wire reset', f'input wire [{data_bits-1}:0] expected_data']
     for c in range(2):
@@ -35,9 +35,11 @@ integer probe_cap[0:1];
 integer probe_age[0:1];
 integer i,j,next_permission;
 reg bad;
-always @(posedge clock) begin
+reg reset_seen = 0;
+always @(posedge clock or posedge reset) begin
   bad = 0;
   if (reset) begin
+    reset_seen = 1;
     for(i=0;i<2;i=i+1) begin
       permission[i]=0; probe[i]=0; probe_age[i]=0;
       for(j=0;j<{1 << source_bits};j=j+1) begin
@@ -45,6 +47,8 @@ always @(posedge clock) begin
       end
       for(j=0;j<{1 << sink_bits};j=j+1) begin grant[i][j]=0; grant_age[i][j]=0; end
     end
+  end else if(!reset_seen) begin
+    if($realtime>0) $fatal(1,"rvw TL-C monitor requires reset before clocks");
   end else begin
     for(i=0;i<2;i=i+1) begin
       if(probe[i]) begin probe_age[i]=probe_age[i]+1; if(probe_age[i]>{bound}) bad=1; end
@@ -126,7 +130,20 @@ always @(posedge clock) begin
       grant[{c}][{p}e_sink]=0;
     end
 '''
-    return text + '    if(bad) $fatal(1,"rvw TL-C monitor violation");\n  end\nend\nendmodule\n'
+    if projection is not None:
+        text = text.replace('integer i,j,next_permission;', 'integer i,j,next_permission;\ninteger projection_previous;')
+        text = text.replace('  if (reset) begin', '  if (reset) begin\n    projection_previous=0;')
+        edges = projection['edges']
+        condition = ' || '.join(f'(projection_previous=={a[0]+3*a[1]} && (permission[0]+3*permission[1])=={b[0]+3*b[1]})' for a, b in edges)
+        text += '    // Generated finite permission projection; channel/data checks remain separate.\n'
+        text += f'    if(!({condition})) bad=1;\n'
+        text += '    projection_previous=permission[0]+3*permission[1];\n'
+    text = text.replace('integer i,j,next_permission;', 'integer i,j,next_permission;\ninteger why;')
+    text = text.replace('  bad = 0;', '  bad = 0; why = 0;')
+    pieces = text.split('bad=1;')
+    text = pieces[0] + ''.join(f'begin bad=1; if(why==0) why={index}; end'+piece for index, piece in enumerate(pieces[1:], 1))
+    return text + '    if(bad) $fatal(1,"rvw TL-C monitor violation code=%0d state=%0d,%0d reset=%0d",why,permission[0],permission[1],reset);\n  end\nend\nendmodule\n'
+
 
 
 def generate(database, profile, out):
@@ -157,8 +174,21 @@ def generate(database, profile, out):
         bundles = {r['id']: dict(r) for r in connection.execute('SELECT * FROM bundles')}
         components = {r['id']: dict(r) for r in connection.execute('SELECT * FROM components')}
         clients = [bundles[c['bundle_id']] for c in config['clients']]
-        if len({b['id'] for b in clients}) != 2 or any('tilelink' not in (b['class_name'] or '').lower() or not b['class_name'].endswith('.Bus') for b in clients):
-            raise ValueError('selected bundles must be two Spinal TileLink Bus types')
+        if len({b['id'] for b in clients}) != 2:
+            raise ValueError('two distinct project-selected Bus bundles required')
+        type_evidence = []
+        for bus in clients:
+            name = bus['class_name'] or ''
+            if name == 'spinal.lib.bus.tilelink.Bus':
+                type_evidence.append('qualified-name')
+            elif name == 'Bus' and config.get('bus_family') == 'spinal-tilelink':
+                children = {b['class_name'].rsplit('.', 1)[-1] for b in bundles.values()
+                            if b['component_id'] == bus['component_id'] and b.get('path', '').startswith(bus['path']+'.')}
+                if not {'ChannelA', 'ChannelB', 'ChannelC', 'ChannelD', 'ChannelE'} <= children:
+                    raise ValueError('Bus is missing the typed TileLink channel structure')
+                type_evidence.append('declared-family-and-channel-structure')
+            else:
+                raise ValueError('selected bundles need a qualified TileLink type or declared family and channel structure')
         component = clients[0]['component_id']
         if clients[1]['component_id'] != component:
             raise ValueError('selected client ports must share one bind component')
@@ -183,9 +213,17 @@ def generate(database, profile, out):
             if set(client['signals']) != set(FIELDS):
                 raise ValueError('complete TL-C channel field mapping required')
             for name, width in FIELDS.items():
+                bus = clients[c]
+                if bus['class_name'] == 'Bus':
+                    channel, field = name.split('_', 1)
+                    suffix = '.'+field if field in ('valid', 'ready') else '.payload.'+field
+                    if signals[client['signals'][name]].get('spinal_path') != bus['path']+'.'+channel+suffix:
+                        raise ValueError('field mapping does not match its typed Bus member')
                 mappings.append(f'.c{c}_{name}({signal(client["signals"][name], widths.get(width, width))})')
+        from .permission_model import load as load_projection
+        projection = load_projection()
         rtl = monitor(config['source_bits'], config['sink_bits'], config['address_bits'], config['line_bytes']*8,
-                      int(config['line_address'], 0), config['bound_cycles'], config.get('trunk_dirty', False), config['size_bits'])
+                      int(config['line_address'], 0), config['bound_cycles'], config.get('trunk_dirty', False), config['size_bits'], projection)
         from .tilelink_beats import wrap
         rtl = wrap(rtl, FIELDS, config['source_bits'], config['sink_bits'], config['address_bits'], config['data_bits'],
                    config['size_bits'], config['line_bytes'], config['bound_cycles'])
@@ -199,6 +237,6 @@ def generate(database, profile, out):
         with path.open('x') as stream:
             stream.write(data)
     return {'schema': 'rvw.tlc-monitor/1', 'status': 'generated', 'monitor': str(monitor_path),
-            'bind': str(bind_path), 'executed': False, 'fairness': config['fairness'],
-            'beats_per_line': config['line_bytes']*8//config['data_bits'],
+            'bind': str(bind_path), 'executed': False, 'permission_model': projection, 'fairness': config['fairness'],
+            'beats_per_line': config['line_bytes']*8//config['data_bits'], 'bus_type_evidence': type_evidence,
             'scope': 'two-client single-line complete accepted messages; bounded progress'}

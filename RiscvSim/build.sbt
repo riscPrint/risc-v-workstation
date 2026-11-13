@@ -11,6 +11,7 @@ lazy val riscvsim = (project in file("."))
   .dependsOn(ProjectRef(file("../SpinalTrace/spinaltrace"), "spinaltrace"))
   .dependsOn(ProjectRef(file("../SpinalProbes"), "spinalprobes"))
   .dependsOn(ProjectRef(file("../SpinalChecks"), "spinalchecks") % "test->compile")
+  .dependsOn(ProjectRef(file("../SpinalDB/spinaldb"), "spinaldb") % "test->compile")
   .settings(
     name := "riscvsim",
     libraryDependencies ++= Seq(
