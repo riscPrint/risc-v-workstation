@@ -8,6 +8,7 @@ def database(path, domain=True, multiselect=False):
     db = Builder(path)
     db.c.execute("UPDATE components SET module='Top'")
     db.domain(1, reset='reset', kind='SYNC')
+    db.sig('clk',direction='in'); db.sig('reset',direction='in')
     db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(1,1,'io.bus','Apb3')")
     widths = dict(PSEL=2 if multiselect else 1,PENABLE=1,PREADY=1,PADDR=8,PWRITE=1,PWDATA=8,PRDATA=8)
     for field,width in widths.items():
@@ -73,6 +74,7 @@ def test_recorded_stream_payload_type_and_parent(tmp_path):
     path=tmp_path/'axis.db'
     db=Builder(path)
     db.domain(1,reset='reset',kind='SYNC')
+    db.sig('clk',direction='in'); db.sig('reset',direction='in')
     db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(10,1,'io.tx','Stream')")
     db.c.execute("INSERT INTO bundles(id,component_id,parent_id,path,class_name) VALUES(11,1,10,'io.tx.payload','Axi4StreamBundle')")
     for field,width in [('valid',1),('ready',1),('payload.data',8),('payload.last',1)]:
@@ -88,3 +90,41 @@ def test_recorded_stream_payload_type_and_parent(tmp_path):
     assert row['width']==9
     assert row['ports']['payload']=='{io_tx_payload_data, io_tx_payload_last}'
     assert row['ports']['valid']=='io_tx_valid'
+
+
+def test_axi4_five_channels_bind(tmp_path):
+    from test_typed_bus_checks import fields
+    path=tmp_path/'axi.db'
+    db=Builder(path)
+    db.domain(1, reset='reset', kind='SYNC')
+    db.sig('clk',direction='in');db.sig('reset',direction='in')
+    db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(1,1,'io.bus','Axi4')")
+    for key,row in fields('axi4').items():
+        name='io_bus_'+row[0]
+        db.sig(name,width=row[3],domain=1)
+        db.c.execute('UPDATE signals SET spinal_path=? WHERE name=?',('io.bus.'+key,name))
+    db.done()
+    report=generate(path,tmp_path/'out')
+    assert report['buses'][0]['status']=='generated'
+    assert report['buses'][0]['coverage']=='channel_safety'
+    assert len([k for k in report['buses'][0]['ports'] if k.endswith('_valid')])==5
+    assert 'No burst accounting' in report['buses'][0]['limitations'][0]
+
+
+def test_nested_bus_uses_its_own_controls(tmp_path):
+    path=tmp_path/'nested.db'
+    db=Builder(path)
+    cid=db.component('child','Child')
+    db.c.execute("UPDATE components SET module='Child' WHERE id=?",(cid,))
+    db.domain(1,clock='child.clk',reset='child.reset',kind='SYNC')
+    db.sig('child.clk',direction='in',comp='child');db.sig('child.reset',direction='in',comp='child')
+    db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(1,?,'io.bus','Apb3')",(cid,))
+    for key,width in dict(PSEL=1,PENABLE=1,PREADY=1,PADDR=8,PWRITE=1,PWDATA=8,PRDATA=8).items():
+        name='io_bus_'+key
+        db.sig('child.'+name,name=name,width=width,domain=1,comp='child')
+        db.c.execute('UPDATE signals SET spinal_path=? WHERE name=?',('io.bus.'+key,name))
+    db.done()
+    report=generate(path,tmp_path/'out')
+    assert report['buses'][0]['status']=='generated'
+    assert report['buses'][0]['target']=='Top.child'
+    assert report['buses'][0]['ports']['clk']=='clk'
