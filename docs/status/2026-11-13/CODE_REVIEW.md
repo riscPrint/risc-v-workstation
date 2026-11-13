@@ -3235,3 +3235,254 @@ nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q
 Scope incident: a positional stash pop selected another worker's stash from the shared Git stash list. The original stash entry was restored. The four unrelated paths were restored before commit. No unrelated files were included in the review PRs. Later stash access used an exact object ID.
 
 Report checks: release hygiene had 45 passed. The report fast set had 3568 passed, 4 skipped, 8167 deselected and the same two unrelated boot-profile niceness failures.
+
+## Farm, MCP, agent tools, scaffolds and installer
+
+Review scope: persistent jobs, scheduling, budgets, executors, MCP dispatch and transport, agent tools, project scaffolds, doctor, CLI discovery and installation. The review started at `f3606ad0`. It also checked relevant changes merged before the individual fixes. Main continued to change during the review. The file list does not claim a new full read of each later revision. Tests use controlled inputs. They do not qualify an RTL core.
+
+### Confirmed defects
+
+- Crash recovery ignored `retry_on` and requeued jobs that excluded infrastructure errors. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1366.
+- Mapped smoke ELFs started at RAM base when the declared reset PC differed. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1397.
+- Remote path checks rewrote task IDs and sbt project IDs as file paths. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1420. Another worker corrected hierarchical signal handling before this fix.
+- Cancellation could overwrite a concurrent claim and acknowledge cancellation without executor cleanup. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1437.
+- Stale recovery could erase a new attempt and queue the same job again. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1446.
+- A remote worker bypassed wrapped handlers, so `soc_audit` rejected the documented `db` argument. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1456.
+- Installer help described legacy `--all` as the full inventory. Fixed in PR https://github.com/riscPrint/risc-v-workstation/pull/1461.
+- An init/doctor test still expected an error for a missing optional suite after the workflow rules changed that state to a warning. Corrected in PR https://github.com/riscPrint/risc-v-workstation/pull/1464.
+
+### Validation
+
+- Recovery regression before the fix: 2 failed and 1 passed. Recovery, service and budget tests after the fix: 14 passed.
+- First fast set: 3,295 passed, 4 skipped, 1 failed and 7,724 deselected. The failure was `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`: `cov_mutate_core` was missing from the guide. Another worker fixed that entry on main before the next fix.
+- Broader targeted run: 98 passed, 2 skipped and 1 failed. The failure was the stale init/doctor expectation listed above.
+- RV32/RV64 smoke entry regression before the fix: 2 failed and 2 passed. Smoke entry and mapped scaffold tests after the fix: 16 passed. The test links a small assembly ELF. It does not build a core.
+- Symbolic remote arguments on the updated main: 2 failed and 8 passed before the fix. Remote symbol and path tests after the fix: 20 passed.
+- Concurrent cancellation regression: 1 failed before the fix. Cancellation and service tests after the fix: 12 passed.
+- Concurrent recovery regression: 1 failed before the fix. Queue, budget and process cleanup tests after the fix: 18 passed.
+- Wrapped remote handler regression: 1 failed and 1 passed before the fix. Remote handler tests after the fix: 22 passed.
+- Installer help regression: 1 failed before the fix. Help and usage tests after the fix: 9 passed.
+- Init/doctor regression: 1 failed before the correction. Doctor workflow tests after the correction: 6 passed.
+- Generated Spinal, SystemVerilog, VHDL and Chisel scaffolds in temporary directories. All generated TOML and shell files parsed. The three C++ harnesses passed a syntax check with stub headers.
+- `bash -n scripts/install.sh` passed. Dry runs passed for profiles `minimal`, `verification`, `formal`, `arch` and `all`. No package installation ran.
+- Fast sets before the smoke-entry, remote-selector and cancellation pushes passed: respectively 3,360, 3,475 and 3,499 passed, with 4 skips in each set.
+- Later fast sets before the recovery, wrapped-handler, help and doctor pushes each had only two failures in untouched boot-profile tests: `rvw/tests/test_boot_profile.py::test_launcher_reaches_nice_ten_once[1-3]` and `[2-0]`. The last of these sets had 3,575 passed, 4 skipped and 8,165 deselected. Those tests expect niceness 10 but inherit the required niceness 15.
+- Report checks: release hygiene 45 passed. The fast set had 3,576 passed, 4 skipped, 8,165 deselected and the same two untouched boot-profile failures. Command: `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q`. An owned temporary `--basetemp` directory kept test cleanup separate from other workers.
+- HTTP checks refused missing and wrong tokens with 401. Project and core overrides were refused. Project-relative paths, traversal, escaping symlinks and symbolic selectors were checked through the remote path policy.
+- Scala compilation, RTL simulation, proof runs, native SSH and Kubernetes execution: NOT RUN.
+
+### Suspected but unconfirmed
+
+None remain from the tested cases. This review does not prove that the area has no other defects.
+
+### Read limits
+
+The table lists source, declarations, documentation, inventory data and test modules read. Shared test helpers, fixture corpora, the tiny bring-up core implementation and native tool source trees were not reviewed in full. Inventory pin and package recipes were read as repository data. Their external sources and Linux installation were not verified. Native integration tests were read but were not all run.
+
+### Files read
+
+201 files are listed. Line counts refer to the reviewed worktree snapshots.
+
+| File | Lines |
+|---|---:|
+| `rvw/src/rvw/agent/README.md` | 62 |
+| `rvw/src/rvw/agent/__init__.py` | 1 |
+| `rvw/src/rvw/agent/bringup.py` | 278 |
+| `rvw/src/rvw/agent/bringup/CoreAdapter.scala` | 87 |
+| `rvw/src/rvw/agent/cli.py` | 49 |
+| `rvw/src/rvw/agent/cli_declarations.py` | 2 |
+| `rvw/src/rvw/agent/guide.py` | 96 |
+| `rvw/src/rvw/agent/mcp_tools.py` | 39 |
+| `rvw/src/rvw/agent/playbook.json` | 1327 |
+| `rvw/src/rvw/agent_bench/README.md` | 267 |
+| `rvw/src/rvw/agent_bench/__init__.py` | 1 |
+| `rvw/src/rvw/agent_bench/audit.py` | 64 |
+| `rvw/src/rvw/agent_bench/cli.py` | 48 |
+| `rvw/src/rvw/agent_bench/cli_declarations.py` | 2 |
+| `rvw/src/rvw/agent_bench/commands/__init__.py` | 0 |
+| `rvw/src/rvw/agent_bench/commands/audit.py` | 31 |
+| `rvw/src/rvw/agent_bench/commands/native.py` | 37 |
+| `rvw/src/rvw/agent_bench/commands/repair.py` | 58 |
+| `rvw/src/rvw/agent_bench/commands/solver.py` | 39 |
+| `rvw/src/rvw/agent_bench/commands/tool_trial.py` | 43 |
+| `rvw/src/rvw/agent_bench/commands/trial.py` | 43 |
+| `rvw/src/rvw/agent_bench/engine.py` | 186 |
+| `rvw/src/rvw/agent_bench/expressions.json` | 12 |
+| `rvw/src/rvw/agent_bench/external.py` | 114 |
+| `rvw/src/rvw/agent_bench/external_client.py` | 36 |
+| `rvw/src/rvw/agent_bench/native.py` | 267 |
+| `rvw/src/rvw/agent_bench/repair.py` | 103 |
+| `rvw/src/rvw/agent_bench/solver.md` | 38 |
+| `rvw/src/rvw/agent_bench/solver.py` | 110 |
+| `rvw/src/rvw/agent_bench/solver_client.py` | 27 |
+| `rvw/src/rvw/agent_bench/tool_trial.py` | 100 |
+| `rvw/src/rvw/cli.py` | 158 |
+| `rvw/src/rvw/doctor/README.md` | 188 |
+| `rvw/src/rvw/doctor/__init__.py` | 0 |
+| `rvw/src/rvw/doctor/backends.py` | 33 |
+| `rvw/src/rvw/doctor/c1suite.py` | 190 |
+| `rvw/src/rvw/doctor/check.py` | 303 |
+| `rvw/src/rvw/doctor/cli.py` | 43 |
+| `rvw/src/rvw/doctor/cli_declarations.py` | 2 |
+| `rvw/src/rvw/doctor/conformance.py` | 64 |
+| `rvw/src/rvw/doctor/inventory.py` | 53 |
+| `rvw/src/rvw/doctor/mcp_tools.py` | 30 |
+| `rvw/src/rvw/doctor/tools.json` | 2355 |
+| `rvw/src/rvw/farm/README.md` | 638 |
+| `rvw/src/rvw/farm/__init__.py` | 1 |
+| `rvw/src/rvw/farm/batch.py` | 168 |
+| `rvw/src/rvw/farm/classify.py` | 63 |
+| `rvw/src/rvw/farm/cli.py` | 180 |
+| `rvw/src/rvw/farm/cli_declarations.py` | 2 |
+| `rvw/src/rvw/farm/commands/__init__.py` | 1 |
+| `rvw/src/rvw/farm/commands/gate.py` | 31 |
+| `rvw/src/rvw/farm/commands/observe.py` | 31 |
+| `rvw/src/rvw/farm/comparison_signature.py` | 34 |
+| `rvw/src/rvw/farm/costs.py` | 104 |
+| `rvw/src/rvw/farm/dashboard.py` | 80 |
+| `rvw/src/rvw/farm/executor.py` | 230 |
+| `rvw/src/rvw/farm/gate_intake.py` | 74 |
+| `rvw/src/rvw/farm/gate_job.py` | 42 |
+| `rvw/src/rvw/farm/http.py` | 108 |
+| `rvw/src/rvw/farm/k8s_validate.py` | 29 |
+| `rvw/src/rvw/farm/limits.py` | 39 |
+| `rvw/src/rvw/farm/live.py` | 59 |
+| `rvw/src/rvw/farm/live_export.py` | 27 |
+| `rvw/src/rvw/farm/mcp_tools.py` | 156 |
+| `rvw/src/rvw/farm/native_shard.py` | 102 |
+| `rvw/src/rvw/farm/notifications.py` | 29 |
+| `rvw/src/rvw/farm/observations.py` | 74 |
+| `rvw/src/rvw/farm/outcome_costs.py` | 29 |
+| `rvw/src/rvw/farm/recorded_results.py` | 24 |
+| `rvw/src/rvw/farm/recovery.py` | 52 |
+| `rvw/src/rvw/farm/resources.py` | 120 |
+| `rvw/src/rvw/farm/selection.py` | 65 |
+| `rvw/src/rvw/farm/service.py` | 255 |
+| `rvw/src/rvw/farm/shard_plan.py` | 66 |
+| `rvw/src/rvw/farm/trap_signature.py` | 48 |
+| `rvw/src/rvw/farm/triage.py` | 94 |
+| `rvw/src/rvw/farm/verdict_costs.py` | 35 |
+| `rvw/src/rvw/farm/worker.py` | 99 |
+| `rvw/src/rvw/farm/workflows.py` | 66 |
+| `rvw/src/rvw/init/README.md` | 254 |
+| `rvw/src/rvw/init/__init__.py` | 0 |
+| `rvw/src/rvw/init/cli.py` | 98 |
+| `rvw/src/rvw/init/cli_declarations.py` | 2 |
+| `rvw/src/rvw/init/formal_scaffold.py` | 76 |
+| `rvw/src/rvw/init/hdl.py` | 241 |
+| `rvw/src/rvw/init/hdl_identity.py` | 106 |
+| `rvw/src/rvw/init/inputs.py` | 25 |
+| `rvw/src/rvw/init/mapped.py` | 502 |
+| `rvw/src/rvw/init/mcp_tools.py` | 37 |
+| `rvw/src/rvw/init/native_bindings.py` | 92 |
+| `rvw/src/rvw/init/optional.py` | 141 |
+| `rvw/src/rvw/init/scaffold.py` | 248 |
+| `rvw/src/rvw/init/soc_scaffold.py` | 52 |
+| `rvw/src/rvw/mcp/README.md` | 293 |
+| `rvw/src/rvw/mcp/__init__.py` | 9 |
+| `rvw/src/rvw/mcp/aliases.py` | 32 |
+| `rvw/src/rvw/mcp/audit.py` | 61 |
+| `rvw/src/rvw/mcp/cli.py` | 120 |
+| `rvw/src/rvw/mcp/cli_declarations.py` | 2 |
+| `rvw/src/rvw/mcp/command_map.py` | 27 |
+| `rvw/src/rvw/mcp/core_calls.py` | 246 |
+| `rvw/src/rvw/mcp/envelope.py` | 37 |
+| `rvw/src/rvw/mcp/errors.py` | 36 |
+| `rvw/src/rvw/mcp/execution.py` | 36 |
+| `rvw/src/rvw/mcp/jobs.py` | 315 |
+| `rvw/src/rvw/mcp/lazy.py` | 48 |
+| `rvw/src/rvw/mcp/paths.py` | 72 |
+| `rvw/src/rvw/mcp/profiles.py` | 43 |
+| `rvw/src/rvw/mcp/registry.py` | 486 |
+| `rvw/src/rvw/mcp/remote.py` | 106 |
+| `rvw/src/rvw/mcp/server.py` | 110 |
+| `rvw/src/rvw/mcp/spec.py` | 65 |
+| `rvw/src/rvw/mcp/worker.py` | 80 |
+| `rvw/tests/cosim/test_mcp_cosim.py` | 155 |
+| `rvw/tests/test_agent_audit.py` | 45 |
+| `rvw/tests/test_agent_bench.py` | 167 |
+| `rvw/tests/test_agent_bringup.py` | 23 |
+| `rvw/tests/test_agent_external.py` | 49 |
+| `rvw/tests/test_agent_guide.py` | 82 |
+| `rvw/tests/test_agent_misleading.py` | 59 |
+| `rvw/tests/test_agent_native.py` | 189 |
+| `rvw/tests/test_agent_ooo_pack.py` | 29 |
+| `rvw/tests/test_agent_repair.py` | 109 |
+| `rvw/tests/test_agent_solver.py` | 61 |
+| `rvw/tests/test_agent_tool_trial.py` | 48 |
+| `rvw/tests/test_cli_without_mcp.py` | 16 |
+| `rvw/tests/test_doctor.py` | 162 |
+| `rvw/tests/test_doctor_c1suite.py` | 122 |
+| `rvw/tests/test_doctor_c2suite.py` | 39 |
+| `rvw/tests/test_doctor_conformance.py` | 85 |
+| `rvw/tests/test_doctor_hdl.py` | 33 |
+| `rvw/tests/test_doctor_workflows.py` | 73 |
+| `rvw/tests/test_farm_batch.py` | 55 |
+| `rvw/tests/test_farm_cancel_claim.py` | 31 |
+| `rvw/tests/test_farm_classify.py` | 63 |
+| `rvw/tests/test_farm_comparison_signature.py` | 54 |
+| `rvw/tests/test_farm_control.py` | 227 |
+| `rvw/tests/test_farm_costs.py` | 34 |
+| `rvw/tests/test_farm_crash_recovery.py` | 38 |
+| `rvw/tests/test_farm_gate_intake.py` | 86 |
+| `rvw/tests/test_farm_interfaces.py` | 21 |
+| `rvw/tests/test_farm_live.py` | 36 |
+| `rvw/tests/test_farm_live_export.py` | 47 |
+| `rvw/tests/test_farm_mcp_owned.py` | 17 |
+| `rvw/tests/test_farm_native_shard.py` | 76 |
+| `rvw/tests/test_farm_notifications.py` | 40 |
+| `rvw/tests/test_farm_observations.py` | 87 |
+| `rvw/tests/test_farm_outcome_costs.py` | 47 |
+| `rvw/tests/test_farm_persistent_plan.py` | 79 |
+| `rvw/tests/test_farm_project_resources.py` | 74 |
+| `rvw/tests/test_farm_recovery_claim.py` | 26 |
+| `rvw/tests/test_farm_recovery_policy.py` | 16 |
+| `rvw/tests/test_farm_selection.py` | 48 |
+| `rvw/tests/test_farm_service.py` | 111 |
+| `rvw/tests/test_farm_shard_plan.py` | 34 |
+| `rvw/tests/test_farm_trap_signature.py` | 66 |
+| `rvw/tests/test_farm_triage.py` | 53 |
+| `rvw/tests/test_farm_verdict_costs.py` | 46 |
+| `rvw/tests/test_farm_workflows.py` | 68 |
+| `rvw/tests/test_init.py` | 255 |
+| `rvw/tests/test_init_capture.py` | 41 |
+| `rvw/tests/test_init_formal_scaffold.py` | 18 |
+| `rvw/tests/test_init_hdl.py` | 119 |
+| `rvw/tests/test_init_hdl_build.py` | 64 |
+| `rvw/tests/test_init_mapped.py` | 168 |
+| `rvw/tests/test_init_mapped_native.py` | 23 |
+| `rvw/tests/test_init_mcp_mapped.py` | 21 |
+| `rvw/tests/test_init_native_bindings.py` | 50 |
+| `rvw/tests/test_init_smoke_entry.py` | 30 |
+| `rvw/tests/test_init_soc_scaffold.py` | 27 |
+| `rvw/tests/test_init_spinal_native.py` | 48 |
+| `rvw/tests/test_init_sv_mapped.py` | 28 |
+| `rvw/tests/test_init_vhdl_synth.py` | 31 |
+| `rvw/tests/test_install_qualification.py` | 77 |
+| `rvw/tests/test_install_script.py` | 598 |
+| `rvw/tests/test_mcp.py` | 156 |
+| `rvw/tests/test_mcp_aliases.py` | 40 |
+| `rvw/tests/test_mcp_capture.py` | 69 |
+| `rvw/tests/test_mcp_coherence.py` | 128 |
+| `rvw/tests/test_mcp_debug.py` | 236 |
+| `rvw/tests/test_mcp_effect_declarations.py` | 173 |
+| `rvw/tests/test_mcp_explicit_status.py` | 17 |
+| `rvw/tests/test_mcp_failure_status.py` | 41 |
+| `rvw/tests/test_mcp_inventory_gaps.py` | 35 |
+| `rvw/tests/test_mcp_jobs.py` | 333 |
+| `rvw/tests/test_mcp_load_profile.py` | 52 |
+| `rvw/tests/test_mcp_remote.py` | 101 |
+| `rvw/tests/test_mcp_remote_paths.py` | 99 |
+| `rvw/tests/test_mcp_remote_symbols.py` | 35 |
+| `rvw/tests/test_mcp_remote_wrappers.py` | 46 |
+| `rvw/tests/test_mcp_schema.py` | 147 |
+| `rvw/tests/test_mcp_smoke.py` | 58 |
+| `rvw/tests/test_mcp_surface_replay.py` | 90 |
+| `rvw/tests/test_mcp_tools.py` | 440 |
+| `rvw/tests/test_mcp_workflow_coverage.py` | 55 |
+| `rvw/tests/test_mcp_wrapped_isolation.py` | 52 |
+| `rvw/tests/test_native_farm.py` | 214 |
+| `rvw/tests/test_remote_processes.py` | 138 |
+| `rvw/tests/test_startup_budget.py` | 191 |
+| `scripts/install.sh` | 805 |
+| `scripts/tool-inventory.py` | 95 |
