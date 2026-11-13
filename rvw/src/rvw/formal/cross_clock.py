@@ -21,6 +21,8 @@ def boolean(text):
 
 
 def rewrite(source,top,simulation=False):
+    from .property_names import expand
+    source=expand(source,lambda body: body.count('@')>1)
     text=re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"',lambda m:' '*len(m[0]),source,flags=re.S)
     if PREFIX in text:
         raise Unsupported('reserved_identifier',PREFIX)

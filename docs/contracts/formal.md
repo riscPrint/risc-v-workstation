@@ -720,7 +720,7 @@ kernel oracle does not prove a core instruction implementation.
 
 ## Boolean two-clock assertion replay
 
-Timed Icarus replay accepts inline top-module Boolean implication from one
+Timed Icarus replay accepts top-module Boolean implication from one
 explicit input-clock edge to another. `|->` selects the nearest target event,
 including a simultaneous event. `|=>` selects the nearest strictly later event.
 The replay coordinator samples both domains before the timestamp input update.
@@ -732,7 +732,9 @@ C1 `cross_clock_properties` records each property id, kind, `clock`,
 False or unknown antecedents do not activate requests. An unknown consequent
 fails an active assertion. Pending obligations at the trace end do not become
 passes. The route refuses sequences, sampled functions, non-top properties and
-implicit clocks. It does not enable cross-clock properties in formal lowering.
+implicit clocks. Zero-argument named properties and module-local aliases expand
+before replay lowering. Finite named properties with local captures keep their
+existing scope. This does not enable cross-clock properties in formal lowering.
 
 
 ## Trace-selected timed replay state

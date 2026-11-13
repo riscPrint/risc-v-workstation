@@ -108,7 +108,9 @@ weak. Explicit strong sequences require finite completion for every request.
 A latched fatal predicate records finite impossibility. Count buckets retain
 overlapping attempts. A separate owed set gives acceptance when each old group
 finishes, even when requests continue. It never resets an old attempt on a new
-request. Both native-live and liveness-to-safety routes use these predicates.
+request. Both native-live and liveness-to-safety routes use these predicates. Module-local
+zero-argument named properties and aliases expand before this lowering. They
+retain the assertion label. Recursive and duplicate definitions are refused.
 
 The supported syntax and tested capacity limits are in the formal README and
 generated support table. No finite cutoff replaces an unbounded endpoint.

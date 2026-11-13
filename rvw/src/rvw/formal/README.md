@@ -1744,7 +1744,11 @@ do not qualify an engine. The `l2s` route below has separate native checks.
 The same command accepts Boolean `until`, `until_with`, `s_until` and
 `s_until_with`. Exclusive `until` does not test the left operand at the completion
 sample. Inclusive `until_with` does. The `s_` forms require eventual completion.
-Both `|->` and `|=>` are supported for a Boolean antecedent.
+Both `|->` and `|=>` are supported for a Boolean antecedent. Zero-argument named
+properties and module-local aliases are accepted. A named property carries its
+own explicit clock. Recursive references, duplicate names and unused property
+declarations remain refused. Property arguments and local captures remain
+outside this unbounded subset.
 
 Supported unbounded sequences are `a ##[M:$] b`, `a[*M:$] ##1 b`,
 `a[*] ##1 b`, `a[->N]` and `a[=N]`. Goto and nonconsecutive repetition can have
@@ -1913,9 +1917,9 @@ same event mapping. Counts report activated obligations. They do not count a
 false antecedent as a passing attempt.
 
 This subset requires one scalar input edge per clock, a Boolean antecedent and
-a Boolean consequent. Either edge can be posedge or negedge. It requires inline
-properties in the top module. Named cross-clock properties, sequence operands,
-sampled functions and disable cancellation remain refused. It is a finite native
+a Boolean consequent. Either edge can be posedge or negedge. Properties must
+belong to the top module. Sequence operands, sampled functions and disable cancellation remain refused.
+Zero-argument named properties and module-local aliases are accepted. It is a finite native
 simulation route. Formal lowering keeps its cross-clock refusal. C1
 `cross_clock_properties` records the clocks, terms, operator and monitor id.
 The rules for simultaneous and strictly later events follow IEEE 1800-2017
