@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
 ```
 
@@ -55,8 +55,34 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {ooo-profile,ooo-diff,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {compiler-export,compiler-check,gem5-export,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch compiler-export`
+
+```text
+usage: rvw arch compiler-export [-h] --out OUT [--json] [--project PROJECT]
+    description
+```
+
+### `rvw arch compiler-check`
+
+```text
+usage: rvw arch compiler-check [-h] [--json] [--project PROJECT] directory
+```
+
+### `rvw arch gem5-export`
+
+```text
+usage: rvw arch gem5-export [-h] --out OUT [--json] [--project PROJECT]
+    description
+```
+
+### `rvw arch ooo-fit`
+
+```text
+usage: rvw arch ooo-fit [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch ooo-profile`
@@ -70,6 +96,20 @@ usage: rvw arch ooo-profile [-h] [--elf ELF | --regions REGIONS] [--max-cycles
 
 ```text
 usage: rvw arch ooo-diff [-h] [--json] [--project PROJECT] base candidate
+```
+
+### `rvw arch ooo-sampled`
+
+```text
+usage: rvw arch ooo-sampled [-h] --out OUT [--warmup WARMUP] [--max-cycles
+    MAX_CYCLES] [--full] [--json] [--project PROJECT] config trace points
+```
+
+### `rvw arch ooo-sensitivity`
+
+```text
+usage: rvw arch ooo-sensitivity [-h] --out OUT [--json] [--project PROJECT]
+    plan
 ```
 
 ### `rvw arch traffic`
@@ -895,7 +935,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1267,6 +1307,13 @@ usage: rvw formal sail-zicond [-h] --model MODEL [--compiler COMPILER] --out
 
 ```text
 usage: rvw formal custom-isa [-h] --out OUT [--json] [--project PROJECT]
+    manifest
+```
+
+### `rvw formal custom-effects`
+
+```text
+usage: rvw formal custom-effects [-h] --out OUT [--json] [--project PROJECT]
     manifest
 ```
 
@@ -1991,6 +2038,20 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
     PROJECT]
 ```
 
+### `rvw sec`
+
+```text
+usage: rvw sec [-h] [--project PROJECT] {ift} ...
+```
+
+### `rvw sec ift`
+
+```text
+usage: rvw sec ift [-h] --rtl RTL --top TOP --policy POLICY --stimulus
+    STIMULUS --out OUT [--mode {precise,conservative}] [--db DB] [--project
+    PROJECT]
+```
+
 ### `rvw sim`
 
 ```text
@@ -2097,7 +2158,21 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw soc [-h] [--project PROJECT]
-    {pair,generate,import-ipxact,capture-check,check} ...
+    {compose,peripheral,pair,generate,import-ipxact,capture-check,check} ...
+```
+
+### `rvw soc compose`
+
+```text
+usage: rvw soc compose [-h] --out OUT [--elf ELF] [--json] [--project PROJECT]
+    spec
+```
+
+### `rvw soc peripheral`
+
+```text
+usage: rvw soc peripheral [-h] --name NAME --base BASE --out OUT [--json]
+    [--project PROJECT] {clint,plic,gpio,timer,finisher,uart16550,spi,i2c}
 ```
 
 ### `rvw soc pair`
@@ -2144,8 +2219,9 @@ usage: rvw uvm [-h] [--project PROJECT]
 ### `rvw uvm new`
 
 ```text
-usage: rvw uvm new [-h] --db DB --soc SOC --out OUT [--rtl RTL [RTL ...]]
-    [--project PROJECT]
+usage: rvw uvm new [-h] --db DB --soc SOC --out OUT [--language {pyuvm,sv}]
+    [--profile {auto,cpu,apb,axi,axi-lite,tilelink,axis,uart,spi,i2c}] [--rtl
+    RTL [RTL ...]] [--project PROJECT]
 ```
 
 ### `rvw uvm features`
@@ -2430,11 +2506,35 @@ Arguments: `base` (required), `candidate` (required).
 
 Starts a background job: yes.
 
+### `arch_compiler_check`
+
+Partial compiler model export or syntax check.
+
+Arguments: `directory` (required).
+
+Starts a background job: yes.
+
+### `arch_compiler_export`
+
+Partial compiler model export or syntax check.
+
+Arguments: `description` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `arch_fit`
 
 Select saved model candidates on training events and score the winner on held-out workloads.
 
 Arguments: `plan` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_gem5_export`
+
+Export shared O3 configuration files; does not run gem5.
+
+Arguments: `description` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -2478,6 +2578,14 @@ Arguments: `base` (required), `candidate` (required).
 
 Starts a background job: yes.
 
+### `arch_ooo_fit`
+
+Fit a bounded declared grid to saved training evidence; report heldout errors.
+
+Arguments: `plan` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `arch_ooo_profile`
 
 Model slot estimates; accuracy inconclusive.
@@ -2486,11 +2594,27 @@ Arguments: `config` (required), `trace` (required), `elf`, `regions`, `max_cycle
 
 Starts a background job: yes.
 
+### `arch_ooo_sampled`
+
+Time shared simulation points; quantify sampling gap with optional full run.
+
+Arguments: `config` (required), `trace` (required), `points` (required), `out` (required), `warmup`, `max_cycles`, `full`.
+
+Starts a background job: yes.
+
 ### `arch_ooo_search`
 
 Run bounded own-model sweeps or Bayesian cycle search with project cost estimates.
 
 Arguments: `plan` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_ooo_sensitivity`
+
+Rank local model parameter effects; no fidelity verdict.
+
+Arguments: `plan` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -3139,6 +3263,14 @@ Starts a background job: yes.
 Generate CSR monitors, directed assembly and coverage. Does not run verification.
 
 Arguments: `model` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_custom_effects`
+
+Generate project-declared custom state, memory and trap transitions. Reference fixtures do not qualify a DUT.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -3910,6 +4042,14 @@ Arguments: `project`, `features`.
 
 Starts a background job: no.
 
+### `sec_ift`
+
+Run bounded digital information flow tracking in Verilator.
+
+Arguments: `rtl` (required), `top` (required), `policy` (required), `stimulus` (required), `out` (required), `mode`, `db`.
+
+Starts a background job: yes.
+
 ### `sim_checkpoint`
 
 Save a stopped project native model and harness. Requires a snapshot port; from-reset replay is separate.
@@ -3958,6 +4098,14 @@ Arguments: `manifest` (required), `capabilities` (required).
 
 Starts a background job: no.
 
+### `soc_compose`
+
+Generate an APB3 RV32 Spinal top. Generation is not simulation evidence.
+
+Arguments: `source` (required), `out` (required), `elf`.
+
+Starts a background job: no.
+
 ### `soc_pair`
 
 Pair observed bus request tags with independent C2 retirements. Matching samples remain inconclusive.
@@ -3965,6 +4113,14 @@ Pair observed bus request tags with independent C2 retirements. Matching samples
 Arguments: `capture` (required), `trace` (required), `result` (required), `out` (required).
 
 Starts a background job: yes.
+
+### `soc_peripheral`
+
+Get a bounded SpinalSoc register map and project binder.
+
+Arguments: `kind` (required), `name` (required), `base` (required).
+
+Starts a background job: no.
 
 ### `uvm_build`
 
@@ -4000,9 +4156,9 @@ Starts a background job: no.
 
 ### `uvm_new`
 
-Generate an APB pyuvm register-reset bench from SpinalDB and a SoC map.
+Generate a database-selected project profile or an automatic APB reset bench.
 
-Arguments: `db` (required), `soc` (required), `out` (required), `rtl`.
+Arguments: `db` (required), `soc` (required), `out` (required), `rtl`, `language`, `profile`.
 
 Starts a background job: no.
 

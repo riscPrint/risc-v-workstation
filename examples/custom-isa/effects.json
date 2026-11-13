@@ -1,0 +1,275 @@
+{
+  "schema": "rvw.custom-isa/2",
+  "version": "1.0.0",
+  "xlen": 32,
+  "state": {
+    "acc": 32,
+    "last_cause": 32
+  },
+  "instructions": [
+    {
+      "name": "xstacc",
+      "mask": "0xfe00707f",
+      "match": "0x0000000b",
+      "operands": [
+        "rd",
+        "rs1",
+        "rs2"
+      ],
+      "result": [
+        "add",
+        "state.acc",
+        "rs2"
+      ],
+      "pc_after": [
+        "add",
+        "pc",
+        4
+      ],
+      "state_updates": {
+        "acc": [
+          "add",
+          "state.acc",
+          "rs2"
+        ]
+      },
+      "memory": {
+        "kind": "store",
+        "address": "rs1",
+        "size": 4,
+        "data": "rs2"
+      },
+      "trap": {
+        "when": [
+          "ne",
+          [
+            "and",
+            "rs1",
+            3
+          ],
+          0
+        ],
+        "cause": 6,
+        "target": 256,
+        "memory_fault_cause": 7,
+        "state_updates": {
+          "last_cause": "trap_cause"
+        }
+      },
+      "reference_vectors": [
+        {
+          "inputs": {
+            "rs1": 8192,
+            "rs2": 3,
+            "pc": 4096,
+            "rd": 3,
+            "mem_rdata": 0,
+            "mem_fault": false,
+            "state": {
+              "acc": 7,
+              "last_cause": 0
+            }
+          },
+          "expected": {
+            "result": 10,
+            "rd_write": true,
+            "pc_after": 4100,
+            "trap": false,
+            "cause": 0,
+            "state": {
+              "acc": 10,
+              "last_cause": 0
+            },
+            "memory": {
+              "kind": "store",
+              "address": 8192,
+              "size": 4,
+              "data": 3,
+              "commit": true
+            }
+          }
+        },
+        {
+          "inputs": {
+            "rs1": 8192,
+            "rs2": 3,
+            "pc": 4096,
+            "rd": 3,
+            "mem_rdata": 0,
+            "mem_fault": true,
+            "state": {
+              "acc": 7,
+              "last_cause": 0
+            }
+          },
+          "expected": {
+            "result": 0,
+            "rd_write": false,
+            "pc_after": 256,
+            "trap": true,
+            "cause": 7,
+            "state": {
+              "acc": 7,
+              "last_cause": 7
+            },
+            "memory": {
+              "kind": "store",
+              "address": 8192,
+              "size": 4,
+              "data": 3,
+              "commit": false
+            }
+          }
+        },
+        {
+          "inputs": {
+            "rs1": 8193,
+            "rs2": 3,
+            "pc": 4096,
+            "rd": 3,
+            "mem_rdata": 0,
+            "mem_fault": false,
+            "state": {
+              "acc": 7,
+              "last_cause": 0
+            }
+          },
+          "expected": {
+            "result": 0,
+            "rd_write": false,
+            "pc_after": 256,
+            "trap": true,
+            "cause": 6,
+            "state": {
+              "acc": 7,
+              "last_cause": 6
+            },
+            "memory": null
+          }
+        },
+        {
+          "inputs": {
+            "rs1": 8192,
+            "rs2": 3,
+            "pc": 4096,
+            "rd": 0,
+            "mem_rdata": 0,
+            "mem_fault": false,
+            "state": {
+              "acc": 7,
+              "last_cause": 0
+            }
+          },
+          "expected": {
+            "result": 0,
+            "rd_write": false,
+            "pc_after": 4100,
+            "trap": false,
+            "cause": 0,
+            "state": {
+              "acc": 10,
+              "last_cause": 0
+            },
+            "memory": {
+              "kind": "store",
+              "address": 8192,
+              "size": 4,
+              "data": 3,
+              "commit": true
+            }
+          }
+        },
+        {
+          "inputs": {
+            "rs1": 8192,
+            "rs2": 1,
+            "pc": 4096,
+            "rd": 3,
+            "mem_rdata": 0,
+            "mem_fault": false,
+            "state": {
+              "acc": 4294967295,
+              "last_cause": 0
+            }
+          },
+          "expected": {
+            "result": 0,
+            "rd_write": true,
+            "pc_after": 4100,
+            "trap": false,
+            "cause": 0,
+            "state": {
+              "acc": 0,
+              "last_cause": 0
+            },
+            "memory": {
+              "kind": "store",
+              "address": 8192,
+              "size": 4,
+              "data": 1,
+              "commit": true
+            }
+          }
+        }
+      ],
+      "mutants": [
+        {
+          "id": "wrong_accumulator",
+          "override": {
+            "state_updates": {
+              "acc": [
+                "xor",
+                "state.acc",
+                "rs2"
+              ]
+            }
+          }
+        },
+        {
+          "id": "wrong_fault_code",
+          "override": {
+            "trap": {
+              "when": [
+                "ne",
+                [
+                  "and",
+                  "rs1",
+                  3
+                ],
+                0
+              ],
+              "cause": 6,
+              "target": 256,
+              "memory_fault_cause": 5,
+              "state_updates": {
+                "last_cause": "trap_cause"
+              }
+            }
+          }
+        },
+        {
+          "id": "wrong_trap_target",
+          "override": {
+            "trap": {
+              "when": [
+                "ne",
+                [
+                  "and",
+                  "rs1",
+                  3
+                ],
+                0
+              ],
+              "cause": 6,
+              "target": 260,
+              "memory_fault_cause": 7,
+              "state_updates": {
+                "last_cause": "trap_cause"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -34,8 +34,7 @@ def expression(tree, xlen, a=None, b=None, depth=0):
     return value & mask
 
 
-def load(path):
-    data = json.loads(Path(path).read_text())
+def validate(data):
     if data.get('schema') != 'rvw.custom-isa/1' or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', data.get('version', '')):
         raise ValueError('custom ISA needs schema rvw.custom-isa/1 and semantic version')
     xlen = data['xlen']
@@ -67,6 +66,10 @@ def load(path):
             if (row['match'] ^ other['match']) & (row['mask'] & other['mask']) == 0:
                 raise ValueError('custom encoding conflict')
     return data
+
+
+def load(path):
+    return validate(json.loads(Path(path).read_text()))
 
 
 def encode(row, rd, rs1, rs2):
