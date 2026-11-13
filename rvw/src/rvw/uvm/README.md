@@ -195,3 +195,10 @@ uses `rvw.hdl-ports/1`. The project must implement `scenario.py`, including
 clock/reset, stimulus and positive expected-result checks. Generation is not
 native verification. The declared path currently supports one ready/valid
 channel and pyuvm. See `docs/contracts/vip.md`.
+
+Untyped mapped RV32 req/rsp cores with RVFI can use `uvm new` without a second
+bus declaration. The selected database must match the core-map top. The
+bench uses the reviewed adapter roles, the project smoke ELF and the live
+Spike scoreboard. Export RTL with `rvw/export-rtl.sh` first. Set `RVW_ELF`
+for another finite program. Install the pyuvm extra with a supported Python.
+The default bench does not establish whole-core or protocol qualification.
