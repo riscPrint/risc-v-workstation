@@ -2344,6 +2344,17 @@ Signal names are relative to the design top. Unavailable signal names are null.
 This field records the check's Spinal domain, not a relationship constraint.
 Older reports without this field remain readable.
 
+### Digital entropy monitor
+
+`rvw.formal-apps/1` property kind `entropy` binds a 32/64-bit `seed` output,
+scalar `illegal` output and scalar input events `access`, `write`, `allowed`,
+`refill`, `fatal`. Seed state is continuously exposed at bits 31:30. Controls
+are sampled at the declared clock. A refill denotes fresh accepted entropy.
+The monitor checks access errors, inactive data masking, RV64 extension,
+consumption, BIST retention and fatal/DEAD persistence. It uses the existing
+native app proof report. No result establishes physical entropy quality,
+health-test certification, privilege decoding or independence of refill data.
+
 ### Two-copy security and reset contract
 
 `rvw.security-pair/1` uses a reviewed top/port map, one RTL source, public clock

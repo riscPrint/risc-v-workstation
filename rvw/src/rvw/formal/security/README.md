@@ -128,3 +128,34 @@ The command captures the plan and self-contained RTL. It rejects DUT assertions,
 assumptions and nondeterministic cells. The existing single-clock proof flow
 checks the generated wrapper and records native evidence under `proof/`.
 Missing tools, a timeout or incomplete evidence cannot produce `pass`.
+
+## Digital entropy interface
+
+The existing `rvw formal apps` command and `formal_apps` MCP tool accept an
+`entropy` property. It binds `seed` (32/64-bit output), `illegal` (scalar output),
+and scalar input events `access`, `write`, `allowed`, `refill`, `fatal`.
+The project must expose a continuous seed word and clock-sampled control events.
+`write` identifies a read-write CSR operation. `allowed` is the independently
+bound access policy. `refill` means fresh entropy was accepted on that edge.
+`fatal` reports the project health interface's fatal event.
+
+Example property inside an `rvw.formal-apps/1` plan:
+
+```json
+{"id":"seed_protocol", "kind":"entropy", "seed":"seed_word",
+ "access":"csr_access", "write":"csr_write", "allowed":"access_allowed",
+ "illegal":"illegal", "refill":"fresh_word", "fatal":"health_failure"}
+```
+
+The monitor checks an illegal response for read-only or denied access. It checks
+zero entropy bits outside ES16 and zero upper bits for RV64. It checks that a
+successful poll consumes ES16 unless fresh entropy is accepted on that edge.
+It retains BIST until a poll and requires DEAD after a fatal event. DEAD persists
+until reset. Custom and reserved bits are not constrained. Equal successive
+entropy values are allowed. The monitor does not measure randomness or check
+that a refill event represents independent physical entropy.
+
+The digital rules use the
+[seed CSR contract in scalar crypto 1.0.1](https://docs.riscv.org/reference/isa/v20240411/unpriv/scalar-crypto.html#_the_seed_csr).
+CSR address decoding, privilege-policy generation, ignored write data, physical
+health tests and entropy certification retain separate proof obligations.
