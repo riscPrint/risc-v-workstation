@@ -1885,7 +1885,7 @@ The event file can load a captured register state before replay:
   "trace": "capture.fst",
   "time": 125,
   "scope": "testbench.dut",
-  "registers": ["counter_a", "counter_b"]
+  "registers": ["left.counter", "right.counter"]
 }
 ```
 
@@ -1896,9 +1896,16 @@ must cover all DUT register bits. The loader checks this against the elaborated
 model. It excludes generated property-history registers. A Boolean monitor wire
 that aliases DUT state does not remove that state from the coverage check.
 
-This route requires Icarus and flat top-level register state. It refuses memory
-state, child-module state, derived clocks and internal asynchronous reset controls.
-The loader lets setup settle, then deposits the recorded four-state values.
+This route requires Icarus and complete elaborated flip-flop state. Register paths
+can name child instances. Repeated instances have distinct state-bit identities.
+The loader reads the RTLIL flip-flop destinations before JSON aliases merge.
+A combinational register alias cannot substitute for an actual flip-flop output.
+Memory and black-box state remain refused.
+
+The loader lets input setup settle, then forces all recorded register values.
+It waits for derived-clock and asynchronous-control events to settle while every
+register remains forced. It then releases the registers. This prevents setup
+from overwriting loaded four-state values. Clock and control logic can be internal.
 Logical event time zero starts at that point. No assertion is checked during
 setup. Property histories start empty and count subsequent property events.
 Result `state_load` records the trace hash, timestamp, scope, register values and

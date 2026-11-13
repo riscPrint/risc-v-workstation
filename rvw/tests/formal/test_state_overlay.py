@@ -39,7 +39,18 @@ $enddefinitions $end
 
 def run(tmp_path,capture,item,model,names=('q',)):
     (tmp_path/'module_ports.json').write_text(json.dumps(dict(modules=model)))
-    return load(dict(trace='state.vcd',time=5,scope='dut',registers=list(names)),capture,item,tmp_path,
+    lines=[]
+    for module,definition in model.items():
+        lines.append('module \\'+module)
+        for index,cell in enumerate(definition.get('cells',{}).values()):
+            if cell['type'].startswith(('$dff','$adff','$sdff','$ff')):
+                wires=[name for name,net in definition.get('netnames',{}).items()
+                       if set(cell['connections']['Q'])<=set(net['bits'])]
+                lines += ['  cell '+cell['type']+' ff'+str(index),
+                          '    connect \\Q \\'+wires[0], '  end']
+        lines.append('end')
+    (tmp_path/'module_ports.il').write_text('\n'.join(lines)+'\n')
+    return load(dict(trace='state.vcd' ,time=5,scope='dut',registers=list(names)),capture,item,tmp_path,
                 'm',dict(clk=1),dict(clk='0'),1)
 
 
@@ -51,22 +62,22 @@ def test_complete_state(tmp_path):
     assert len(result['trace_sha256'])==64
 
 
-def test_child_and_memory_state_refused(tmp_path):
+def test_hierarchy_requires_child_paths_and_memory_is_refused(tmp_path):
     capture,item,model=setup(tmp_path)
     model['child']=model['m'].copy()
     model['m']['cells']={'inst':dict(type='child')}
-    with pytest.raises(ValueError,match='flat top-level state'):
+    with pytest.raises(ValueError,match='does not map to DUT register bits'):
         run(tmp_path,capture,item,model)
     model['m']['cells']={'memory':dict(type='$mem_v2')}
     with pytest.raises(ValueError,match='does not yet load memories'):
         run(tmp_path,capture,item,model)
 
 
-def test_internal_clock_refused(tmp_path):
+def test_register_alias_cannot_replace_state(tmp_path):
     capture,item,model=setup(tmp_path)
-    model['m']['cells']['ff']['connections']['CLK']=[3]
-    with pytest.raises(ValueError,match='must be top-level inputs'):
-        run(tmp_path,capture,item,model)
+    model['m']['netnames']['extra']=dict(bits=[2])
+    with pytest.raises(ValueError,match='does not map to DUT register bits'):
+        run(tmp_path,capture,item,model,('extra',))
 
 
 def test_monitor_registers_excluded_but_alias_wires_are_not(tmp_path):
@@ -93,3 +104,27 @@ def test_selected_registers_are_exact(tmp_path):
         run(tmp_path,capture,item,model,('extra',))
     with pytest.raises(ValueError,match='once'):
         run(tmp_path,capture,item,model,('q','q'))
+
+
+def test_repeated_child_instances_have_distinct_state(tmp_path):
+    capture,item,model=setup(tmp_path)
+    child=model['m'].copy()
+    model['child']=child
+    model['m']['cells']={'left':dict(type='child'),'right':dict(type='child')}
+    path=tmp_path/'state.vcd'
+    text=path.read_text().replace('$upscope $end',
+        '$scope module left $end\n$var reg 1 $ q $end\n$upscope $end\n'
+        '$scope module right $end\n$var reg 1 % q $end\n$upscope $end\n$upscope $end')
+    text=text.replace('#5','1$\n0%\n#5')
+    path.write_text(text)
+    result=run(tmp_path,capture,item,model,('left.q','right.q'))
+    assert result['state_bits']==2
+    assert [row['value'] for row in result['registers']]==['1','0']
+
+
+def test_black_box_state_refused(tmp_path):
+    capture,item,model=setup(tmp_path)
+    model['child']=dict(attributes={'blackbox':'0'*31+'1'},ports={},netnames={},cells={})
+    model['m']['cells']['box']=dict(type='child')
+    with pytest.raises(ValueError,match='black-box state'):
+        run(tmp_path,capture,item,model)
