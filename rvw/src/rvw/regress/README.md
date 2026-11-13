@@ -1088,3 +1088,82 @@ reviewed failures by ID. Project catalogs are in
 trace hash, core, program and observed failure status. The report retains the
 failure or mismatch as `observed_status`. `known_finding` counts separately
 from `match`, and exits 1. New traces require review. Gate waivers are separate.
+
+## Persistent random batches and resume
+
+`rvw regress random --jobs 4` compiles the seeded payloads, then submits all
+compiled programs through one C1 suite. Persistent adapters reuse one server
+per worker. The run seed for memory timing is `seed_base`; each payload retains
+its own generator seed. Generator and compiler failures do not prevent other
+compiled programs from running. Each runner job has a wall timeout.
+
+Repeat the same command with `--resume` to keep completed attempts. Resume
+checks settings bytes, platform, linker, runtime, target and core source
+identity. An interrupted attempt is regenerated. Reports are replaced
+atomically. Changed inputs are refused. Use a new output directory after an
+input change. The runner retains C1 replay artifacts for each program.
+
+`summary` separates generated, compiled, RTL run, strict match, mismatch,
+timeout and generator-or-compile error counts. `wall_s` includes generation,
+compilation, adapter startup and reference checks. `programs_per_hour` counts
+programs with C1 cycle evidence over that wall time. This is campaign throughput.
+It is not simulator instruction throughput. No native rate is qualified by
+the fixture tests.
+
+Select the upstream stream mix with settings `test_classes = ["arithmetic",
+"branches", "load-store"]`. Payload seeds cycle through these classes.
+The branch class inserts upstream JAL streams. The load/store class inserts
+upstream random and hazard streams. CSR, illegal-instruction and interrupt
+profiles remain open. These classes grant no credit for those missing profiles.
+Set `[run_options] coverage = true` to request native code coverage through
+the existing C1 adapter. Set top-level `mem_latency` for a fixed memory delay.
+Use `rvw cov functional` and `rvw cov merge` on qualified C1 artifacts to merge
+random and directed evidence. Keep code and functional denominators separate.
+
+The pinned pygen memory stream needs compatibility corrections. Its original
+RV32 path can emit misaligned accesses even with unaligned access disabled.
+It can also select x0 as a data-page base and share instruction register fields.
+The launcher corrects these paths in worker memory and records the compatibility
+module hash. The external pinned checkout remains clean. The native pre-fix
+sample generated and compiled all three classes. Arithmetic and branches each
+matched Spike once. The memory class timed out after a load-misaligned trap.
+That timeout is a generator defect, not a new VexRiscv finding.
+
+### Native batch sample, 2026-11-13
+
+These VexRiscv RV32IM runs use the declared platform and shared-catalog scratch
+selection. Strict comparisons have zero masks and zero synchronizations.
+The memory pre-fix run trapped on a generated misaligned load and restarted.
+The corrected memory run retired 164 instructions in 605 cycles. Native resume
+retained its one completed attempt without another program execution.
+
+| Class and implementation | Generated | Compiled | Run | Match | Mismatch | Timeout | Generator or compile error |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Arithmetic, seed 48 | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Branches, seed 49 | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+| Load/store, seed 50, before compatibility fix | 1 | 1 | 1 | 0 | 0 | 1 | 0 |
+| Load/store, seed 50, after compatibility fix | 1 | 1 | 1 | 1 | 0 | 0 | 0 |
+
+The three-program pre-fix batch took 331.28 seconds, including lock waits,
+generation, compilation, model startup and comparisons: 32.60 programs/hour.
+The corrected one-program memory run took 108.68 seconds: 33.13 programs/hour.
+These small startup-dominated samples do not establish sustained throughput.
+No new core difference was found in these samples. The 100-program-per-core
+matrix, CSR/trap/IRQ random profiles, directed coverage deltas and hung-job
+recovery measurements remain open.
+
+Regenerate a corrected three-class sample from the workstation root:
+
+```sh
+python scripts/riscv-dv-project.py examples/vexriscv/rvw/platform.json \
+  --csrs examples/vexriscv/csr.json --out "$RUN_ROOT/profile"
+# Add test_classes = ["arithmetic", "branches", "load-store"] to random.toml.
+# Add mem_latency = 0 and [run_options] coverage = true.
+nice -n 10 rvw --project "$VEXRISCV/rvw.toml" regress random \
+  --settings "$RUN_ROOT/profile/random.toml" --seed-base 48 --seeds 3 \
+  --out "$RUN_ROOT/campaign" --json
+# Repeat with --resume to keep the completed attempts.
+```
+
+Use private source and output directories. Set the private lock variables as
+described in the native runtime README. Full raw data stays outside Git.
