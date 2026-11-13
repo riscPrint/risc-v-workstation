@@ -24,7 +24,7 @@ def load(path):
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
-    if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu') and not (raw.get('kind') in ('wfi', 'scheduled-wfi') and raw.get('priv') == 'm'):
+    if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu') and not (raw.get('kind') in ('wfi', 'scheduled-wfi') and raw.get('priv') == 'm') and not (raw.get('kind') == 'pmp' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
     if raw.get('kind', 'controls') not in ('aplic-priority', 'aplic-delegation', 'wfi-stop', 'ssstateen-only', 'stateen-rv32', 'random-transitions', 'fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')

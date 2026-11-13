@@ -66,7 +66,13 @@ def xlen(config):
 
 
 def head(config):
-    return M_HEAD if config.get('priv', 'msu') == 'm' else HEAD
+    priv = config.get('priv', 'msu')
+    if priv == 'm':
+        return M_HEAD
+    if priv == 'mu':
+        # M and U only: no satp or delegation CSRs.
+        return HEAD.replace(' csrw medeleg, zero\n', '').replace(' csrw mideleg, zero\n', '').replace(' csrw satp, zero\n', '')
+    return HEAD
 
 
 def tail(config):

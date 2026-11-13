@@ -141,6 +141,16 @@
     ]
   },
   {
+    "name": "pmp-rv32",
+    "source": "examples/privilege/pmp-rv32.json",
+    "requires": [
+      "xlen:32",
+      "mode:U",
+      "pmp",
+      "pmp:4"
+    ]
+  },
+  {
     "name": "epmp",
     "source": "examples/privilege/epmp.json",
     "requires": [
