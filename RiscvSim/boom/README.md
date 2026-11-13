@@ -186,3 +186,25 @@ rvw ooo examples/boom/ooo/small.json "$RUN/rvfi.jsonl" --json
 The fresh beq strict comparison also exposes unspecified initial mscratch and
 FP status values. It is not counted as a strict match. No synchronization or
 output mask was used for that comparison. Raw captures remain local.
+
+## Quick-tier generated checks, 2026-11-13
+
+| Programs | Inserted checks | Existing waived/disabled | Distinct firing IDs | Clean instrumented passes |
+|---:|---:|---:|---:|---:|
+| 174 | 519 | 101 | 10 | 0 |
+
+All 24 named source-review stream IDs are absent from the new firing set.
+The original historical mapping remains incomplete. The 10 current IDs
+cover one A request violation, one simulation-agent D response violation,
+and two stream binding gaps. Wave reruns reproduce every current ID.
+See [the findings and wave windows](../../examples/boom/FINDINGS.md).
+No waiver or core RTL change was made. Refs: #5.
+
+Regenerate with `spinalchecks.boom.BoomChecks run small OUT --max-cycles
+200000 ELFS` from `SpinalChecks/boom`, through
+`scripts/with-lock.sh boom nice -n 10 sbt -J-Xmx8g -batch`.
+Select ELFs from `tier_plan(load_config('boom'), 'quick', None)` and
+`discover(item.suite, item.include)`. Use `--wave` on add, icache-alias
+and ae_ptw for the windows. Reuse the first run's `sim/.cache` directory
+for another output directory. These checks use the private clone's
+simulation harness; they do not capture C2 for an independent Spike run.
