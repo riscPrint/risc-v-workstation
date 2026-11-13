@@ -1,12 +1,7 @@
 # New tools and command families
 
-Implementation review uses a separate collection at 2026-11-13T14:16:50.600662+00:00: 772 midnight merges, including 229 since 08:00 UTC. Its 209 additions to the earlier 563-record ledger are all included in the newer 775-record collection below. Keep the newer census and source records. The afternoon review sections add scope corrections for MCP, CSR, verdicts and native evidence. No native artifact was rerun for this document audit. Document checks and the fast unit set are reported in this PR.
-
-Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
-
-Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. PR bodies report the evidence. Their artifacts were not independently rerun.
-
-The requested examples include tools that do have issue references. Thus this inventory distinguishes a new family from an unsolicited family. A reference can cover only part of a tool. The owner must decide whether a new standalone tracker is needed. Existing families with major extensions are retained here so that the Components table does not miss their new scope.
+Current census: 846 merged PR bodies, through 2026-11-13T16:12:30Z.
+Each row reports the strongest executed slice. Native evidence is read from PR bodies. It was not rerun. A real-core report consumed by an index or plan is analysis of that report, not execution of a new core workflow. Full bodies are in [PR_EVIDENCE.md](PR_EVIDENCE.md).
 
 ## ComponentSims / rvw csim
 
@@ -14,15 +9,9 @@ Path: `ComponentSims/; rvw/src/rvw/csim/`.
 
 Purpose: Trace-driven predictor, cache, prefetch and timing studies.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv and VexiiRiscv cached; BOOM small has earlier probe comparisons. Source: [#1219](https://github.com/riscPrint/risc-v-workstation/pull/1219).
 
-Sources: [#447](https://github.com/riscPrint/risc-v-workstation/pull/447), [#483](https://github.com/riscPrint/risc-v-workstation/pull/483), [#510](https://github.com/riscPrint/risc-v-workstation/pull/510), [#576](https://github.com/riscPrint/risc-v-workstation/pull/576), [#784](https://github.com/riscPrint/risc-v-workstation/pull/784), [#862](https://github.com/riscPrint/risc-v-workstation/pull/862).
-
-Issue association: [#37](https://github.com/riscPrint/risc-v-workstation/issues/37), [#72](https://github.com/riscPrint/risc-v-workstation/issues/72), [#124](https://github.com/riscPrint/risc-v-workstation/issues/124), [#351](https://github.com/riscPrint/risc-v-workstation/issues/351), [#355](https://github.com/riscPrint/risc-v-workstation/issues/355), [#357](https://github.com/riscPrint/risc-v-workstation/issues/357), [#358](https://github.com/riscPrint/risc-v-workstation/issues/358), [#360](https://github.com/riscPrint/risc-v-workstation/issues/360), [#365](https://github.com/riscPrint/risc-v-workstation/issues/365).
-
-Proposed Components row:
-
-| ComponentSims / rvw csim | `ComponentSims/; rvw/src/rvw/csim/` | ARCH | No new BOOM qualification claimed | Trace-driven predictor, cache, prefetch and timing studies. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: The component models are approximate. Instruction-cache model alignment retains the completion/commit tail difference. Direct non-link jumps and ordinary indirect jumps are outside the declared predictor scope. Cache spans can overlap and do not measure a total of lost CPU cycles. The data-cache model does not reproduce the final dirty-line clean. Neither timing study establishes fidelity. Source: [#1219](https://github.com/riscPrint/risc-v-workstation/pull/1219).
 
 ## SpinalProbes / rvw probes
 
@@ -30,15 +19,9 @@ Path: `SpinalProbes/; rvw/src/rvw/probes/`.
 
 Purpose: Optional simulation probes and consumer conversion.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: Stepper; VexRiscv, VexiiRiscv, NaxRiscv and BOOM small in earlier campaigns. Source: [#1230](https://github.com/riscPrint/risc-v-workstation/pull/1230).
 
-Sources: [#612](https://github.com/riscPrint/risc-v-workstation/pull/612), [#614](https://github.com/riscPrint/risc-v-workstation/pull/614), [#784](https://github.com/riscPrint/risc-v-workstation/pull/784), [#829](https://github.com/riscPrint/risc-v-workstation/pull/829).
-
-Issue association: [#49](https://github.com/riscPrint/risc-v-workstation/issues/49).
-
-Proposed Components row:
-
-| SpinalProbes / rvw probes | `SpinalProbes/; rvw/src/rvw/probes/` | ARCH, DBG | No new BOOM qualification claimed | Optional simulation probes and consumer conversion. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: Check stubs need actual semantic signals and activation conditions. Native optional probe regression needs an external mapped fixture. It does not qualify whole-core probes. Source: [#1230](https://github.com/riscPrint/risc-v-workstation/pull/1230).
 
 ## rvw sec
 
@@ -46,15 +29,9 @@ Path: `rvw/src/rvw/sec/`.
 
 Purpose: Dynamic simulation security experiments and contract suites.
 
-Evidence level: ran on seeded RTL fixture. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv and VexiiRiscv; Stepper paired control. Source: [#955](https://github.com/riscPrint/risc-v-workstation/pull/955).
 
-Sources: [#696](https://github.com/riscPrint/risc-v-workstation/pull/696), [#700](https://github.com/riscPrint/risc-v-workstation/pull/700), [#703](https://github.com/riscPrint/risc-v-workstation/pull/703), [#715](https://github.com/riscPrint/risc-v-workstation/pull/715), [#717](https://github.com/riscPrint/risc-v-workstation/pull/717), [#720](https://github.com/riscPrint/risc-v-workstation/pull/720), [#726](https://github.com/riscPrint/risc-v-workstation/pull/726).
-
-Issue association: No reference to a collected issue. Treat as unsolicited until the owner assigns scope..
-
-Proposed Components row:
-
-| rvw sec | `rvw/src/rvw/sec/` | VER | No new BOOM qualification claimed | Dynamic simulation security experiments and contract suites. | Experimental; reported evidence: ran on seeded RTL fixture. Scope limits remain in the cited PRs. |
+What remains: Flow completion and broader protocol/reset support remain. CSR storage resolution reuses the existing explicit policy resolver; ambiguous storage still requires a signal declaration. Source: [#1224](https://github.com/riscPrint/risc-v-workstation/pull/1224).
 
 ## rvw fault
 
@@ -62,15 +39,9 @@ Path: `rvw/src/rvw/fault/; RiscvSim/`.
 
 Purpose: Fault plans, native public-access injection and C2 classification.
 
-Evidence level: ran on seeded RTL fixture. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: NaxRiscv; VexRiscv, VexiiRiscv and BOOM small in earlier injections. Source: [#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143).
 
-Sources: [#556](https://github.com/riscPrint/risc-v-workstation/pull/556), [#689](https://github.com/riscPrint/risc-v-workstation/pull/689).
-
-Issue association: [#52](https://github.com/riscPrint/risc-v-workstation/issues/52).
-
-Proposed Components row:
-
-| rvw fault | `rvw/src/rvw/fault/; RiscvSim/` | VER | No new BOOM qualification claimed | Fault plans, native public-access injection and C2 classification. | Experimental; reported evidence: ran on seeded RTL fixture. Scope limits remain in the cited PRs. |
+What remains: One ISA mutation and three selected register bits do not qualify ISA support, safety or broad fault coverage. Source: [#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143).
 
 ## rvw bugmem
 
@@ -78,15 +49,9 @@ Path: `rvw/src/rvw/bugmem/`.
 
 Purpose: Store failure patterns and find similar reports.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Source: [#484](https://github.com/riscPrint/risc-v-workstation/pull/484).
 
-Sources: [#484](https://github.com/riscPrint/risc-v-workstation/pull/484).
-
-Issue association: [#32](https://github.com/riscPrint/risc-v-workstation/issues/32).
-
-Proposed Components row:
-
-| rvw bugmem | `rvw/src/rvw/bugmem/` | DBG | No new BOOM qualification claimed | Store failure patterns and find similar reports. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: - Signatures are weighted features from an `rvw bundle` summary (or a C1 result): C3 signature, assertion file, suspected unit, oldest unretired instruction class, traps, stalled channels, last function, spin loop, old open requests, message words without numbers. - Store: JSON lines (`rvw.bugmem/1`) outside the repository (`--store`, `RVW_BUGMEM`, `~/.local/share/rvw/bugmem.jsonl`), with the report SHA-256 and recorded source/core/config/ELF identity. Duplicate report bytes are refused; a cause is required. - Not run: matching accuracy on real held-out defects (no labelled defect set exists yet). Refs: #32. Stores failure signatures with causes, fixes and scope with source identities, and measures leave-one-out accuracy. Remaining: build a held-out set of real defects and tune the weights on it. Source: [#484](https://github.com/riscPrint/risc-v-workstation/pull/484).
 
 ## SpinalSoc / rvw soc compose
 
@@ -94,15 +59,9 @@ Path: `SpinalSoc/; rvw/src/rvw/soc/`.
 
 Purpose: Compose map-driven peripheral SoCs and generate software data.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv composed SoC; Stepper. Source: [#1195](https://github.com/riscPrint/risc-v-workstation/pull/1195).
 
-Sources: [#683](https://github.com/riscPrint/risc-v-workstation/pull/683), [#694](https://github.com/riscPrint/risc-v-workstation/pull/694), [#709](https://github.com/riscPrint/risc-v-workstation/pull/709), [#805](https://github.com/riscPrint/risc-v-workstation/pull/805), [#851](https://github.com/riscPrint/risc-v-workstation/pull/851).
-
-Issue association: No reference to a collected issue. Treat as unsolicited until the owner assigns scope..
-
-Proposed Components row:
-
-| SpinalSoc / rvw soc compose | `SpinalSoc/; rvw/src/rvw/soc/` | SIM, PLAT | No new BOOM qualification claimed | Compose map-driven peripheral SoCs and generate software data. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: Native CPU execution is established for this finite RAM profile. The generated verify table does not establish peripheral, connectivity, CDC or full SoC qualification. Consumer automation remains work. Source: [#1227](https://github.com/riscPrint/risc-v-workstation/pull/1227).
 
 ## rvw vip / protocol families
 
@@ -110,15 +69,9 @@ Path: `rvw/src/rvw/vip/; Uvm/vip/`.
 
 Purpose: Protocol agents, RTL controls and optional external-model contracts.
 
-Evidence level: ran on seeded RTL fixture. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv CPU/DMA profile; peripheral RTL fixtures. Source: [#1165](https://github.com/riscPrint/risc-v-workstation/pull/1165).
 
-Sources: [#396](https://github.com/riscPrint/risc-v-workstation/pull/396), [#413](https://github.com/riscPrint/risc-v-workstation/pull/413), [#439](https://github.com/riscPrint/risc-v-workstation/pull/439), [#462](https://github.com/riscPrint/risc-v-workstation/pull/462), [#478](https://github.com/riscPrint/risc-v-workstation/pull/478), [#493](https://github.com/riscPrint/risc-v-workstation/pull/493), [#516](https://github.com/riscPrint/risc-v-workstation/pull/516), [#527](https://github.com/riscPrint/risc-v-workstation/pull/527), [#571](https://github.com/riscPrint/risc-v-workstation/pull/571), [#579](https://github.com/riscPrint/risc-v-workstation/pull/579), [#586](https://github.com/riscPrint/risc-v-workstation/pull/586), [#595](https://github.com/riscPrint/risc-v-workstation/pull/595), [#603](https://github.com/riscPrint/risc-v-workstation/pull/603), [#609](https://github.com/riscPrint/risc-v-workstation/pull/609), [#620](https://github.com/riscPrint/risc-v-workstation/pull/620), [#627](https://github.com/riscPrint/risc-v-workstation/pull/627), [#636](https://github.com/riscPrint/risc-v-workstation/pull/636), [#642](https://github.com/riscPrint/risc-v-workstation/pull/642), [#647](https://github.com/riscPrint/risc-v-workstation/pull/647), [#656](https://github.com/riscPrint/risc-v-workstation/pull/656), [#662](https://github.com/riscPrint/risc-v-workstation/pull/662), [#853](https://github.com/riscPrint/risc-v-workstation/pull/853).
-
-Issue association: [#48](https://github.com/riscPrint/risc-v-workstation/issues/48), [#182](https://github.com/riscPrint/risc-v-workstation/issues/182), [#190](https://github.com/riscPrint/risc-v-workstation/issues/190), [#199](https://github.com/riscPrint/risc-v-workstation/issues/199), [#202](https://github.com/riscPrint/risc-v-workstation/issues/202), [#204](https://github.com/riscPrint/risc-v-workstation/issues/204), [#205](https://github.com/riscPrint/risc-v-workstation/issues/205), [#209](https://github.com/riscPrint/risc-v-workstation/issues/209), [#211](https://github.com/riscPrint/risc-v-workstation/issues/211), [#212](https://github.com/riscPrint/risc-v-workstation/issues/212), [#213](https://github.com/riscPrint/risc-v-workstation/issues/213), [#215](https://github.com/riscPrint/risc-v-workstation/issues/215), [#216](https://github.com/riscPrint/risc-v-workstation/issues/216), [#217](https://github.com/riscPrint/risc-v-workstation/issues/217).
-
-Proposed Components row:
-
-| rvw vip / protocol families | `rvw/src/rvw/vip/; Uvm/vip/` | VER | No new BOOM qualification claimed | Protocol agents, RTL controls and optional external-model contracts. | Experimental; reported evidence: ran on seeded RTL fixture. Scope limits remain in the cited PRs. |
+What remains: Add a pinned OpenCores UART example outside the repository. Its 8-bit Wishbone interface becomes a word-spaced composer peripheral. No upstream source is edited. The descriptor intentionally describes two ordinary registers, not the complete UART model. Roadmap notes: external Verilog IP with a small TOML now has a composed native example. IP-XACT bus import, port inference, parameters, active-low reset and pipelined/retry Wishbone remain open. Source: [#1181](https://github.com/riscPrint/risc-v-workstation/pull/1181).
 
 ## rvw uvm / CPU and RAL families
 
@@ -126,15 +79,9 @@ Path: `rvw/src/rvw/uvm/; Uvm/`.
 
 Purpose: Project benches, RAL and CPU verification sequences.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: Stepper; VexRiscv live CPU in earlier campaigns. Source: [#1229](https://github.com/riscPrint/risc-v-workstation/pull/1229).
 
-Sources: [#394](https://github.com/riscPrint/risc-v-workstation/pull/394), [#414](https://github.com/riscPrint/risc-v-workstation/pull/414), [#469](https://github.com/riscPrint/risc-v-workstation/pull/469), [#536](https://github.com/riscPrint/risc-v-workstation/pull/536), [#592](https://github.com/riscPrint/risc-v-workstation/pull/592), [#600](https://github.com/riscPrint/risc-v-workstation/pull/600), [#605](https://github.com/riscPrint/risc-v-workstation/pull/605), [#618](https://github.com/riscPrint/risc-v-workstation/pull/618), [#624](https://github.com/riscPrint/risc-v-workstation/pull/624), [#668](https://github.com/riscPrint/risc-v-workstation/pull/668), [#674](https://github.com/riscPrint/risc-v-workstation/pull/674), [#690](https://github.com/riscPrint/risc-v-workstation/pull/690), [#704](https://github.com/riscPrint/risc-v-workstation/pull/704), [#711](https://github.com/riscPrint/risc-v-workstation/pull/711).
-
-Issue association: [#296](https://github.com/riscPrint/risc-v-workstation/issues/296).
-
-Proposed Components row:
-
-| rvw uvm / CPU and RAL families | `rvw/src/rvw/uvm/; Uvm/` | VER | No new BOOM qualification claimed | Project benches, RAL and CPU verification sequences. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: Extended architectural observations and other bus protocols still need project bindings. These finite workloads do not establish whole-core or VIP qualification. Source: [#1229](https://github.com/riscPrint/risc-v-workstation/pull/1229).
 
 ## rvw lsp
 
@@ -142,15 +89,9 @@ Path: `rvw/src/rvw/lsp/`.
 
 Purpose: Database-backed language navigation and an editor client.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Source: [#577](https://github.com/riscPrint/risc-v-workstation/pull/577).
 
-Sources: [#798](https://github.com/riscPrint/risc-v-workstation/pull/798).
-
-Issue association: [#26](https://github.com/riscPrint/risc-v-workstation/issues/26), [#55](https://github.com/riscPrint/risc-v-workstation/issues/55).
-
-Proposed Components row:
-
-| rvw lsp | `rvw/src/rvw/lsp/` | IDE | No new BOOM qualification claimed | Database-backed language navigation and an editor client. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: - Not run: real core waves with a workload ELF. Refs: #24. Starts "join symbols, workload phases and hardware events in one time-aligned report". Remaining: DWARF line/stack views, multi-hart joins, flame views. Source: [#577](https://github.com/riscPrint/risc-v-workstation/pull/577).
 
 ## rvw plan
 
@@ -158,15 +99,9 @@ Path: `rvw/src/rvw/plan/`.
 
 Purpose: Roll up project verification evidence and trends.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Scope: VexRiscv retained C1/C3/C4 evidence. Source: [#1182](https://github.com/riscPrint/risc-v-workstation/pull/1182).
 
-Sources: [#567](https://github.com/riscPrint/risc-v-workstation/pull/567).
-
-Issue association: [#167](https://github.com/riscPrint/risc-v-workstation/issues/167).
-
-Proposed Components row:
-
-| rvw plan | `rvw/src/rvw/plan/` | PLAT | No new BOOM qualification claimed | Roll up project verification evidence and trends. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: The guide states the remaining cluster image/storage/RBAC/quota/cleanup work. Coverage ranking alone missed the planted fault. The original native bisection endpoint check did not reach simulation. A separate small real trap-cause negative control is being completed as a follow-up; it does not expand the XOR comparison evidence. Source: [#1182](https://github.com/riscPrint/risc-v-workstation/pull/1182).
 
 ## rvw agent guide
 
@@ -174,15 +109,9 @@ Path: `rvw/src/rvw/agent/`.
 
 Purpose: Expose the agent playbook through CLI and MCP.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: Stepper. Source: [#1230](https://github.com/riscPrint/risc-v-workstation/pull/1230).
 
-Sources: [#649](https://github.com/riscPrint/risc-v-workstation/pull/649), [#792](https://github.com/riscPrint/risc-v-workstation/pull/792).
-
-Issue association: [#27](https://github.com/riscPrint/risc-v-workstation/issues/27), [#106](https://github.com/riscPrint/risc-v-workstation/issues/106).
-
-Proposed Components row:
-
-| rvw agent guide | `rvw/src/rvw/agent/` | PLAT | No new BOOM qualification claimed | Expose the agent playbook through CLI and MCP. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: 52 targeted tests passed. Fast set: 2977 passed, one skipped. An opt-in native terminal-probe regression passed in 8.40 seconds on Stepper: C1 and C2 each had 15 retirements; the converted probes had 15 retirements and zero open IDs. Actual stdio MCP mapped init dry run and checks_plan returned successfully in 0.819 and 0.872 seconds. MCP discovery printed no skipped module. Full Python, BOOM and long proofs NOT RUN. Source: [#1230](https://github.com/riscPrint/risc-v-workstation/pull/1230).
 
 ## rvw evidence
 
@@ -190,15 +119,9 @@ Path: `rvw/src/rvw/evidence/`.
 
 Purpose: Index original cross-tool evidence and dependencies.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Scope: VexRiscv retained reports, no new CPU run for indexing. Source: [#1182](https://github.com/riscPrint/risc-v-workstation/pull/1182).
 
-Sources: [#604](https://github.com/riscPrint/risc-v-workstation/pull/604).
-
-Issue association: [#95](https://github.com/riscPrint/risc-v-workstation/issues/95).
-
-Proposed Components row:
-
-| rvw evidence | `rvw/src/rvw/evidence/` | PLAT | No new BOOM qualification claimed | Index original cross-tool evidence and dependencies. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: The guide states the remaining cluster image/storage/RBAC/quota/cleanup work. Coverage ranking alone missed the planted fault. The original native bisection endpoint check did not reach simulation. A separate small real trap-cause negative control is being completed as a follow-up; it does not expand the XOR comparison evidence. Source: [#1182](https://github.com/riscPrint/risc-v-workstation/pull/1182).
 
 ## Standard device plugins
 
@@ -206,15 +129,9 @@ Path: `rvw/src/rvw/sim/; RiscvSim/`.
 
 Purpose: Device models, live input wiring and device-aware checkpoints.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexiiRiscv RV64 supervisor. Source: [#1119](https://github.com/riscPrint/risc-v-workstation/pull/1119).
 
-Sources: [#485](https://github.com/riscPrint/risc-v-workstation/pull/485), [#635](https://github.com/riscPrint/risc-v-workstation/pull/635), [#801](https://github.com/riscPrint/risc-v-workstation/pull/801), [#814](https://github.com/riscPrint/risc-v-workstation/pull/814).
-
-Issue association: [#187](https://github.com/riscPrint/risc-v-workstation/issues/187), [#295](https://github.com/riscPrint/risc-v-workstation/issues/295).
-
-Proposed Components row:
-
-| Standard device plugins | `rvw/src/rvw/sim/; RiscvSim/` | SIM | No new BOOM qualification claimed | Device models, live input wiring and device-aware checkpoints. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: Final native control: OpenSBI v1.6 with the project-owned UART/CLINT platform passed at cycle 304429 with 126162 retirements. It observed 14 S-mode instructions, the supervisor ecall and SBI version 2.0. Complete C2 passed the shared parser. No PMP warning remained. The native pytest passed in 107.56 seconds. Eight Scala tests passed. A real store of 1 under the bounded Linux profile did not pass; C2 validated that store and C1 timed out at cycle 500. Failed discovery runs are retained locally: generic DTB firmware exceeded 240/600/900-second limits. The fixed-map platform exposed missing 64-bit CLINT MMIO, which is fixed and tested. Its initial narrow PMP ranges were corrected to the standard compare bank. The final control rejects PMP warnings. Latest fast set: 2052 passed, 1 skipped, 8323 deselected. One unrelated failure: `rvw/tests/test_docs_site.py::test_docs_staging_does_not_write_sources`. Release hygiene: 40 passed. MCP discovery emitted no skipped tools. Full Linux boot, initramfs/user-space checks, native checkpoint restore and second-machine replay were not run or implemented. The native Spinal adapter's checkpoint gap remains open. Source: [#1119](https://github.com/riscPrint/risc-v-workstation/pull/1119).
 
 ## Arcilator adapter
 
@@ -222,15 +139,9 @@ Path: `rvw/src/rvw/sim/; RiscvSim/`.
 
 Purpose: Alternate native engine and controlled comparison with Verilator.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv. Source: [#769](https://github.com/riscPrint/risc-v-workstation/pull/769).
 
-Sources: [#654](https://github.com/riscPrint/risc-v-workstation/pull/654), [#714](https://github.com/riscPrint/risc-v-workstation/pull/714), [#826](https://github.com/riscPrint/risc-v-workstation/pull/826).
-
-Issue association: [#45](https://github.com/riscPrint/risc-v-workstation/issues/45), [#335](https://github.com/riscPrint/risc-v-workstation/issues/335), [#345](https://github.com/riscPrint/risc-v-workstation/issues/345).
-
-Proposed Components row:
-
-| Arcilator adapter | `rvw/src/rvw/sim/; RiscvSim/` | SIM | No new BOOM qualification claimed | Alternate native engine and controlled comparison with Verilator. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: The instruction and concurrent IRQ native reduction piece is measured. General stimulus streams and unknown upstream failures remain outside this recipe. The source capture omits the unused VexRiscv regression-data submodule in a pinned private local commit. The report retains the actual captured revision and fingerprint. Source: [#769](https://github.com/riscPrint/risc-v-workstation/pull/769).
 
 ## slang front end
 
@@ -238,15 +149,9 @@ Path: `rvw/src/rvw/query/`.
 
 Purpose: Build a database from elaborated SystemVerilog.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: riscv-mini static import plus native simulation. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
-Sources: [#601](https://github.com/riscPrint/risc-v-workstation/pull/601), [#788](https://github.com/riscPrint/risc-v-workstation/pull/788), [#832](https://github.com/riscPrint/risc-v-workstation/pull/832), [#839](https://github.com/riscPrint/risc-v-workstation/pull/839), [#859](https://github.com/riscPrint/risc-v-workstation/pull/859).
-
-Issue association: [#55](https://github.com/riscPrint/risc-v-workstation/issues/55), [#370](https://github.com/riscPrint/risc-v-workstation/issues/370), [#371](https://github.com/riscPrint/risc-v-workstation/issues/371).
-
-Proposed Components row:
-
-| slang front end | `rvw/src/rvw/query/` | IDE | No new BOOM qualification claimed | Build a database from elaborated SystemVerilog. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: No issue is closed. The report ranks the remaining bus-check, tool-version, lowering, query-semantics and full-qualification gaps. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
 ## GHDL front end
 
@@ -254,15 +159,9 @@ Path: `rvw/src/rvw/query/`.
 
 Purpose: Build a database from the supported VHDL synthesis subset.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: NEORV32 via GHDL and Verilator. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
-Sources: [#633](https://github.com/riscPrint/risc-v-workstation/pull/633), [#811](https://github.com/riscPrint/risc-v-workstation/pull/811).
-
-Issue association: [#370](https://github.com/riscPrint/risc-v-workstation/issues/370), [#371](https://github.com/riscPrint/risc-v-workstation/issues/371).
-
-Proposed Components row:
-
-| GHDL front end | `rvw/src/rvw/query/` | IDE | No new BOOM qualification claimed | Build a database from the supported VHDL synthesis subset. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: No issue is closed. The report ranks the remaining bus-check, tool-version, lowering, query-semantics and full-qualification gaps. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
 ## FIRRTL/CIRCT front end
 
@@ -270,15 +169,9 @@ Path: `rvw/src/rvw/query/`.
 
 Purpose: Build a database from Chisel-generated FIRRTL through CIRCT.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: riscv-mini via CIRCT and Verilator. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
-Sources: [#657](https://github.com/riscPrint/risc-v-workstation/pull/657), [#818](https://github.com/riscPrint/risc-v-workstation/pull/818).
-
-Issue association: [#372](https://github.com/riscPrint/risc-v-workstation/issues/372).
-
-Proposed Components row:
-
-| FIRRTL/CIRCT front end | `rvw/src/rvw/query/` | IDE | No new BOOM qualification claimed | Build a database from Chisel-generated FIRRTL through CIRCT. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: No issue is closed. The report ranks the remaining bus-check, tool-version, lowering, query-semantics and full-qualification gaps. Source: [#1069](https://github.com/riscPrint/risc-v-workstation/pull/1069).
 
 ## rvw checks
 
@@ -286,15 +179,9 @@ Path: `rvw/src/rvw/checks/`.
 
 Purpose: Generate project checks and report connected qualification gaps.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: NaxRiscv RV32IMA; VexRiscv and VexiiRiscv. Source: [#1167](https://github.com/riscPrint/risc-v-workstation/pull/1167).
 
-Sources: [#602](https://github.com/riscPrint/risc-v-workstation/pull/602), [#732](https://github.com/riscPrint/risc-v-workstation/pull/732), [#775](https://github.com/riscPrint/risc-v-workstation/pull/775), [#800](https://github.com/riscPrint/risc-v-workstation/pull/800), [#840](https://github.com/riscPrint/risc-v-workstation/pull/840), [#861](https://github.com/riscPrint/risc-v-workstation/pull/861).
-
-Issue association: [#65](https://github.com/riscPrint/risc-v-workstation/issues/65), [#66](https://github.com/riscPrint/risc-v-workstation/issues/66), [#85](https://github.com/riscPrint/risc-v-workstation/issues/85), [#98](https://github.com/riscPrint/risc-v-workstation/issues/98), [#146](https://github.com/riscPrint/risc-v-workstation/issues/146).
-
-Proposed Components row:
-
-| rvw checks | `rvw/src/rvw/checks/` | FV | No new BOOM qualification claimed | Generate project checks and report connected qualification gaps. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: Six current activation gaps, retained backpressure findings, unbounded OoO conservation and NaxRiscv activation remain open. The short proof limits did not close them. Source: [#1171](https://github.com/riscPrint/risc-v-workstation/pull/1171).
 
 ## Farm service and workflows
 
@@ -302,15 +189,9 @@ Path: `rvw/src/rvw/farm/`.
 
 Purpose: Queue work, plan shards and retain recovery and cost evidence.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv. Source: [#1189](https://github.com/riscPrint/risc-v-workstation/pull/1189).
 
-Sources: [#570](https://github.com/riscPrint/risc-v-workstation/pull/570), [#574](https://github.com/riscPrint/risc-v-workstation/pull/574), [#581](https://github.com/riscPrint/risc-v-workstation/pull/581), [#594](https://github.com/riscPrint/risc-v-workstation/pull/594), [#598](https://github.com/riscPrint/risc-v-workstation/pull/598), [#615](https://github.com/riscPrint/risc-v-workstation/pull/615), [#641](https://github.com/riscPrint/risc-v-workstation/pull/641), [#652](https://github.com/riscPrint/risc-v-workstation/pull/652), [#658](https://github.com/riscPrint/risc-v-workstation/pull/658), [#680](https://github.com/riscPrint/risc-v-workstation/pull/680).
-
-Issue association: [#25](https://github.com/riscPrint/risc-v-workstation/issues/25), [#54](https://github.com/riscPrint/risc-v-workstation/issues/54), [#57](https://github.com/riscPrint/risc-v-workstation/issues/57), [#59](https://github.com/riscPrint/risc-v-workstation/issues/59), [#123](https://github.com/riscPrint/risc-v-workstation/issues/123).
-
-Proposed Components row:
-
-| Farm service and workflows | `rvw/src/rvw/farm/` | SIM, PLAT | No new BOOM qualification claimed | Queue work, plan shards and retain recovery and cost evidence. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: This completes the native trap-cause observation left unexercised by the XOR failures. A cause fingerprint is not a root-cause diagnosis. Original-core bisection still stops on its unsupported gitlink. Kubernetes runtime and a reduced selection that catches the planted bug remain unqualified. Source: [#1189](https://github.com/riscPrint/risc-v-workstation/pull/1189).
 
 ## Debug Module campaign commands
 
@@ -318,15 +199,9 @@ Path: `rvw/src/rvw/debug/`.
 
 Purpose: Reference Debug Module, DMI/JTAG drivers and trace campaigns.
 
-Evidence level: reference model only (Spike/Sail/Python). This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv rv32im_dmi and rv32im_jtag. Source: [#1186](https://github.com/riscPrint/risc-v-workstation/pull/1186).
 
-Sources: [#455](https://github.com/riscPrint/risc-v-workstation/pull/455), [#473](https://github.com/riscPrint/risc-v-workstation/pull/473), [#512](https://github.com/riscPrint/risc-v-workstation/pull/512), [#541](https://github.com/riscPrint/risc-v-workstation/pull/541), [#568](https://github.com/riscPrint/risc-v-workstation/pull/568).
-
-Issue association: [#127](https://github.com/riscPrint/risc-v-workstation/issues/127), [#133](https://github.com/riscPrint/risc-v-workstation/issues/133), [#144](https://github.com/riscPrint/risc-v-workstation/issues/144), [#153](https://github.com/riscPrint/risc-v-workstation/issues/153), [#156](https://github.com/riscPrint/risc-v-workstation/issues/156), [#161](https://github.com/riscPrint/risc-v-workstation/issues/161), [#168](https://github.com/riscPrint/risc-v-workstation/issues/168), [#172](https://github.com/riscPrint/risc-v-workstation/issues/172), [#194](https://github.com/riscPrint/risc-v-workstation/issues/194), [#195](https://github.com/riscPrint/risc-v-workstation/issues/195), [#207](https://github.com/riscPrint/risc-v-workstation/issues/207).
-
-Proposed Components row:
-
-| Debug Module campaign commands | `rvw/src/rvw/debug/` | DBG | No new BOOM qualification claimed | Reference Debug Module, DMI/JTAG drivers and trace campaigns. | Experimental; reported evidence: reference model only (Spike/Sail/Python). Scope limits remain in the cited PRs. |
+What remains: Roadmap notes: composed DMI halt/resume and all nine public TAP checks now have native evidence. The exported ndmreset request needs a system reset-controller binding. Complete debug compliance and composed OpenOCD/GDB remain open. - Public rvw debug tap: 9 passed, 0 failed, 0 inconclusive through composed JTAG pins. Final run drove 5,140 pin writes. No reference DTM served the socket. - No BOOM, long proof, full Python suite, complete debug/ISA compliance, system reset, composed OpenOCD/GDB, C1 acceptance or hardware run. Refs: #134. Owner retains closure. Standalone debug defects and unsupported capabilities remain distinct from this finite integration test. Source: [#1186](https://github.com/riscPrint/risc-v-workstation/pull/1186).
 
 ## Native HDL project scaffolds
 
@@ -334,15 +209,9 @@ Path: `rvw/src/rvw/init/`.
 
 Purpose: Generate mapped external-core projects and launchers.
 
-Evidence level: ran on seeded RTL fixture. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: Stepper RV32IM. Source: [#1217](https://github.com/riscPrint/risc-v-workstation/pull/1217).
 
-Sources: [#666](https://github.com/riscPrint/risc-v-workstation/pull/666), [#787](https://github.com/riscPrint/risc-v-workstation/pull/787), [#820](https://github.com/riscPrint/risc-v-workstation/pull/820), [#847](https://github.com/riscPrint/risc-v-workstation/pull/847), [#854](https://github.com/riscPrint/risc-v-workstation/pull/854), [#856](https://github.com/riscPrint/risc-v-workstation/pull/856), [#869](https://github.com/riscPrint/risc-v-workstation/pull/869).
-
-Issue association: [#26](https://github.com/riscPrint/risc-v-workstation/issues/26), [#35](https://github.com/riscPrint/risc-v-workstation/issues/35), [#55](https://github.com/riscPrint/risc-v-workstation/issues/55), [#70](https://github.com/riscPrint/risc-v-workstation/issues/70).
-
-Proposed Components row:
-
-| Native HDL project scaffolds | `rvw/src/rvw/init/` | PLAT | No new BOOM qualification claimed | Generate mapped external-core projects and launchers. | Experimental; reported evidence: ran on seeded RTL fixture. Scope limits remain in the cited PRs. |
+What remains: Flow completion, whole-core ISA/state proof and automatic SoC consumer bindings remain incomplete. These results are an informed rerun, not an independent newcomer trial or release qualification. Source: [#1232](https://github.com/riscPrint/risc-v-workstation/pull/1232).
 
 ## Agent trial and evidence benchmark
 
@@ -350,15 +219,9 @@ Path: `rvw/src/rvw/agent_bench/`.
 
 Purpose: Score fixture tasks and run bounded external MCP client trials.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Source: [#817](https://github.com/riscPrint/risc-v-workstation/pull/817).
 
-Sources: [#806](https://github.com/riscPrint/risc-v-workstation/pull/806), [#809](https://github.com/riscPrint/risc-v-workstation/pull/809), [#817](https://github.com/riscPrint/risc-v-workstation/pull/817), [#830](https://github.com/riscPrint/risc-v-workstation/pull/830).
-
-Issue association: [#27](https://github.com/riscPrint/risc-v-workstation/issues/27), [#106](https://github.com/riscPrint/risc-v-workstation/issues/106), [#364](https://github.com/riscPrint/risc-v-workstation/issues/364), [#366](https://github.com/riscPrint/risc-v-workstation/issues/366).
-
-Proposed Components row:
-
-| Agent trial and evidence benchmark | `rvw/src/rvw/agent_bench/` | PLAT | No new BOOM qualification claimed | Score fixture tasks and run bounded external MCP client trials. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: External client tests: 6 passed. The tests include repeated MCP trials, false repairs, disconnects, process-group timeout, exhausted call budgets and a missing executable. MCP discovery reports no skipped modules. Public fast set: 1397 passed, 1 skipped, 7994 deselected, 1 unrelated release-hygiene failure. `test_release_hygiene.py::test_tracked_text_has_no_personal_paths` finds personal paths in existing formal files. Those files are outside this change. The brief permits delivery with this unrelated failure. The CLI smoke trial on the incomplete-coverage task preserved the inconclusive result. LLM/API calls, native RTL repair trials and OS sandboxing NOT RUN. The external CLI must disable its own non-MCP tools. The runner exposes no shell or file tools over MCP. Hostile clients are outside C8 scope. Refs: #366, #27. This completes the bounded fixture-client runner. Provider-specific CLI configuration and scored LLM/native trials remain separate work. Source: [#817](https://github.com/riscPrint/risc-v-workstation/pull/817).
 
 ## MCP profiles and tool catalog
 
@@ -366,15 +229,9 @@ Path: `rvw/src/rvw/mcp/`.
 
 Purpose: Authenticated sessions, profile filtering and common result envelopes.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Source: [#1075](https://github.com/riscPrint/risc-v-workstation/pull/1075).
 
-Sources: [#623](https://github.com/riscPrint/risc-v-workstation/pull/623), [#841](https://github.com/riscPrint/risc-v-workstation/pull/841), [#846](https://github.com/riscPrint/risc-v-workstation/pull/846), [#857](https://github.com/riscPrint/risc-v-workstation/pull/857), [#867](https://github.com/riscPrint/risc-v-workstation/pull/867).
-
-Issue association: [#54](https://github.com/riscPrint/risc-v-workstation/issues/54).
-
-Proposed Components row:
-
-| MCP profiles and tool catalog | `rvw/src/rvw/mcp/` | PLAT | No new BOOM qualification claimed | Authenticated sessions, profile filtering and common result envelopes. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
+What remains: No issue closure requested. These are static and unit checks. They do not qualify a native core workflow. Source: [#1075](https://github.com/riscPrint/risc-v-workstation/pull/1075).
 
 ## Cacheless multi-hart example
 
@@ -382,15 +239,9 @@ Path: `examples/smp/`.
 
 Purpose: Run two to eight external VexiiRiscv harts with simulation RAM and devices.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexiiRiscv two to eight cacheless harts; two cached harts. Source: [#1133](https://github.com/riscPrint/risc-v-workstation/pull/1133).
 
-Sources: [#835](https://github.com/riscPrint/risc-v-workstation/pull/835).
-
-Issue association: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90).
-
-Proposed Components row:
-
-| Cacheless multi-hart example | `examples/smp/` | VER | No new BOOM qualification claimed | Run two to eight external VexiiRiscv harts with simulation RAM and devices. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: No issue is closed. The documented limits remain open. Source: [#1154](https://github.com/riscPrint/risc-v-workstation/pull/1154).
 
 ## rvw memory
 
@@ -398,15 +249,9 @@ Path: `rvw/src/rvw/memory/`.
 
 Purpose: Serialized and axiomatic memory observation checks and concurrent campaigns.
 
-Evidence level: ran on real core RTL. This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexiiRiscv SMP. Source: [#917](https://github.com/riscPrint/risc-v-workstation/pull/917).
 
-Sources: [#385](https://github.com/riscPrint/risc-v-workstation/pull/385), [#398](https://github.com/riscPrint/risc-v-workstation/pull/398), [#477](https://github.com/riscPrint/risc-v-workstation/pull/477), [#606](https://github.com/riscPrint/risc-v-workstation/pull/606), [#741](https://github.com/riscPrint/risc-v-workstation/pull/741), [#753](https://github.com/riscPrint/risc-v-workstation/pull/753), [#835](https://github.com/riscPrint/risc-v-workstation/pull/835).
-
-Issue association: [#90](https://github.com/riscPrint/risc-v-workstation/issues/90), [#91](https://github.com/riscPrint/risc-v-workstation/issues/91), [#97](https://github.com/riscPrint/risc-v-workstation/issues/97), [#151](https://github.com/riscPrint/risc-v-workstation/issues/151), [#170](https://github.com/riscPrint/risc-v-workstation/issues/170).
-
-Proposed Components row:
-
-| rvw memory | `rvw/src/rvw/memory/` | VER | No new BOOM qualification claimed | Serialized and axiomatic memory observation checks and concurrent campaigns. | Experimental; reported evidence: ran on real core RTL. Scope limits remain in the cited PRs. |
+What remains: No issue is closed. The documented limits remain open. Source: [#1154](https://github.com/riscPrint/risc-v-workstation/pull/1154).
 
 ## rvw privilege
 
@@ -414,15 +259,9 @@ Path: `rvw/src/rvw/privilege/`.
 
 Purpose: Project-owned privilege and interrupt programs with independent observation checks.
 
-Evidence level: reference model only (Spike/Sail/Python). This is the strongest reported slice, not qualification of the family.
+Evidence level: ran on real core RTL. Scope: VexRiscv RV32IM, VexiiRiscv RV32/RV64 supervisor. Source: [#1194](https://github.com/riscPrint/risc-v-workstation/pull/1194).
 
-Sources: [#393](https://github.com/riscPrint/risc-v-workstation/pull/393), [#428](https://github.com/riscPrint/risc-v-workstation/pull/428), [#466](https://github.com/riscPrint/risc-v-workstation/pull/466), [#791](https://github.com/riscPrint/risc-v-workstation/pull/791), [#812](https://github.com/riscPrint/risc-v-workstation/pull/812), [#821](https://github.com/riscPrint/risc-v-workstation/pull/821), [#836](https://github.com/riscPrint/risc-v-workstation/pull/836), [#860](https://github.com/riscPrint/risc-v-workstation/pull/860).
-
-Issue association: [#112](https://github.com/riscPrint/risc-v-workstation/issues/112), [#138](https://github.com/riscPrint/risc-v-workstation/issues/138), [#139](https://github.com/riscPrint/risc-v-workstation/issues/139), [#149](https://github.com/riscPrint/risc-v-workstation/issues/149), [#176](https://github.com/riscPrint/risc-v-workstation/issues/176).
-
-Proposed Components row:
-
-| rvw privilege | `rvw/src/rvw/privilege/` | VER | No new BOOM qualification claimed | Project-owned privilege and interrupt programs with independent observation checks. | Experimental; reported evidence: reference model only (Spike/Sail/Python). Scope limits remain in the cited PRs. |
+What remains: The fresh VexRiscv replay reports five matches and three known interrupt-mtval findings. Its documented reset/IRQ input synchronization policy remains explicit. The audit also records the CLINT/PLIC feature plan; device reset remains excluded. Final pre-rebase fast set: 2,896 passed, one skipped, 8,074 deselected. Rebase applied cleanly. The final fresh RV64 reference replay finished: 459 matches and 11 known findings, with no unexpected failure, mismatch or inconclusive row. The same retained RTL captures supply these reference checks; they are not new RTL runs. Final reference replay summary: RV32 151 matches and eight known findings; RV64 459 matches and 11 known findings; VexRiscv five matches and three known findings. All 22 known records report their finding IDs and retain the original failure or mismatch. The reset campaign adds three strict matches over 507 instructions and nine pulses. Total across these selected reports: 618 matches, 22 known findings, zero unexpected failures and zero inconclusive rows. IRQ/reset synchronization policies remain explicit for the retained interrupt rows; this total is not a claim of zero synchronization across every family. Source: [#1194](https://github.com/riscPrint/risc-v-workstation/pull/1194).
 
 ## rvw verification-plan
 
@@ -430,82 +269,6 @@ Path: `rvw/src/rvw/verification_plan/`.
 
 Purpose: Versioned extension and environment-control verification plans.
 
-Evidence level: unit tests only. This is the strongest reported slice, not qualification of the family.
+Evidence level: unit tests only. Source: [#736](https://github.com/riscPrint/risc-v-workstation/pull/736).
 
-Sources: [#403](https://github.com/riscPrint/risc-v-workstation/pull/403), [#631](https://github.com/riscPrint/risc-v-workstation/pull/631).
-
-Issue association: [#155](https://github.com/riscPrint/risc-v-workstation/issues/155), [#177](https://github.com/riscPrint/risc-v-workstation/issues/177), [#178](https://github.com/riscPrint/risc-v-workstation/issues/178), [#296](https://github.com/riscPrint/risc-v-workstation/issues/296).
-
-Proposed Components row:
-
-| rvw verification-plan | `rvw/src/rvw/verification_plan/` | VER | No new BOOM qualification claimed | Versioned extension and environment-control verification plans. | Experimental; reported evidence: unit tests only. Scope limits remain in the cited PRs. |
-
-## Inventory completeness check
-
-Static Git tree comparison against the last main commit before midnight, `324b2958be30578f95312a958615e9061a121f98`, finds 15 new top-level CLI packages: `agent`, `bugmem`, `checks`, `csim`, `evidence`, `fault`, `lsp`, `memory`, `plan`, `privilege`, `probes`, `sec`, `uvm`, `verification_plan`, `vip`. All are listed above. Other entries are new libraries, adapters or major extensions to existing families. No CLI was executed for this check. Issue references above prevent an unsupported claim that every listed family was unsolicited.
-
-## Refresh scope updates
-
-These updates supersede only the matching earlier scope statements. Keep all acceptance cells and milestone assignments unchanged.
-
-| Family | Added evidence | Remaining scope |
-|---|---|---|
-| Generated checks | [#893](https://github.com/riscPrint/risc-v-workstation/pull/893): 57 bound Vex checks, 49 C1 passes, zero firings. [#921](https://github.com/riscPrint/risc-v-workstation/pull/921): Vexii and stub SoC connected captures; three selected depth-4 passes. | Vexii PC valid-hold fires twice. BOOM [#910](https://github.com/riscPrint/risc-v-workstation/pull/910)/[#929](https://github.com/riscPrint/risc-v-workstation/pull/929) remains source-only, with one historical ID unmapped. [#940](https://github.com/riscPrint/risc-v-workstation/pull/940) adds review metadata, not waivers or passes. |
-| Debug | [#896](https://github.com/riscPrint/risc-v-workstation/pull/896): real Vex DMI/JTAG and OpenOCD runs. [#914](https://github.com/riscPrint/risc-v-workstation/pull/914): four RTL ingress cases match C2 and reference trace flow. | Five target deviations; breakpoint stop at target+4 unexplained. No physical JTAG or hardware encoder capture. |
-| Security | [#899](https://github.com/riscPrint/risc-v-workstation/pull/899)/[#920](https://github.com/riscPrint/risc-v-workstation/pull/920): real two-core timing/IFT and probe channels. | Vexii remu takes 14 versus 38 cycles. Bounded no_leak_observed results are not security proofs. Cache/TLB channels remain unrun. |
-| UVM and VIP | [#903](https://github.com/riscPrint/risc-v-workstation/pull/903): live SV CPU and same-revision C4 accept. [#918](https://github.com/riscPrint/risc-v-workstation/pull/918): 49/50 passes per core; live Vex pyuvm and Vexii capture replay differ. [#944](https://github.com/riscPrint/risc-v-workstation/pull/944)/[#950](https://github.com/riscPrint/risc-v-workstation/pull/950): seeded peripheral/semantic RTL. | ma_data fails on both cores. No live Vexii pyuvm pins or complete physical protocol models. |
-| SoC | [#886](https://github.com/riscPrint/risc-v-workstation/pull/886)/[#894](https://github.com/riscPrint/risc-v-workstation/pull/894)/[#915](https://github.com/riscPrint/risc-v-workstation/pull/915): CPU register capture, seven fabric assertions proved, independent peripheral pyuvm reads with a negative control. | Core ingress, connectivity, CDC/RDC and full automatic verification remain open. Peripheral test-master execution is not CPU execution. |
-| Multicore | [#917](https://github.com/riscPrint/risc-v-workstation/pull/917)/[#935](https://github.com/riscPrint/risc-v-workstation/pull/935): cacheless two-hart atomics, six litmus outcomes, FENCE.I, IPI and selected HSM; 38 strict Spike matches. | One RVWMO search remains inconclusive at 100000 candidates. No coherent-cache RTL or full SBI qualification. |
-| Formal SVA | [#875](https://github.com/riscPrint/risc-v-workstation/pull/875): typed parsing. [#892](https://github.com/riscPrint/risc-v-workstation/pull/892)/[#948](https://github.com/riscPrint/risc-v-workstation/pull/948): emitted forms and module-local defaults. [#923](https://github.com/riscPrint/risc-v-workstation/pull/923)/[#937](https://github.com/riscPrint/risc-v-workstation/pull/937): 34 depth-12 assertion passes, 33 antecedents reached, one not reached. | Six simulation antecedents inactive. No unbounded core proof or full multi-clock/nested composition. [#924](https://github.com/riscPrint/risc-v-workstation/pull/924) core M assertions time out despite arithmetic slice checks. |
-| Probes and models | [#938](https://github.com/riscPrint/risc-v-workstation/pull/938)/[#939](https://github.com/riscPrint/risc-v-workstation/pull/939): second-core streams and validation. [#943](https://github.com/riscPrint/risc-v-workstation/pull/943): disabled-probe generated Verilog identical. [#945](https://github.com/riscPrint/risc-v-workstation/pull/945): BOOM 258 RTL cycles versus 96 model cycles. | Vexii retire counter differs by two. Generated equality is static evidence. Timing accuracy stays inconclusive. |
-| BOOM state | [#919](https://github.com/riscPrint/risc-v-workstation/pull/919)/[#928](https://github.com/riscPrint/risc-v-workstation/pull/928): small native probes and FP/CSR C2/2 capture. [#934](https://github.com/riscPrint/risc-v-workstation/pull/934): optional DPI source plumbing. | Reset fflags/fcsr disagree with Spike at order zero. Native DPI/fault qualification and wider presets remain open. |
-| Integration and replay | [#911](https://github.com/riscPrint/risc-v-workstation/pull/911)/[#922](https://github.com/riscPrint/risc-v-workstation/pull/922): PicoRV32 identity and 46 strict matches. [#926](https://github.com/riscPrint/risc-v-workstation/pull/926): separate scratch core 42 native passes, 41 matches and split-access refusal. [#931](https://github.com/riscPrint/risc-v-workstation/pull/931): relocated offline Vex replay passes 16 checks. | Keep the two core campaigns distinct. Replay executes from reset; no second-machine run or live-state portability. |
-| Interfaces | [#876](https://github.com/riscPrint/risc-v-workstation/pull/876)/[#884](https://github.com/riscPrint/risc-v-workstation/pull/884)/[#887](https://github.com/riscPrint/risc-v-workstation/pull/887)/[#916](https://github.com/riscPrint/risc-v-workstation/pull/916) and metadata PRs add jobs, JSON, schema smoke and aliases. [#942](https://github.com/riscPrint/risc-v-workstation/pull/942) removes inapplicable JVM requirements. | Schema smoke runs no handlers. Metadata is not native qualification. Other declaration debt remains. |
-
-## Reviewed delta at 2026-11-13T14:22:26.916089+00:00
-
-These notes supersede only matching earlier scope statements. Historical failures and hand-reviewed fixes remain. No acceptance rule or milestone is changed. All results are reported by PR bodies and were not rerun in this audit.
-
-New or extended families include `examples/naxriscv`, the Spinal source axis, `rvw perf topdown` and function/configuration reports, `rvw sec campaign` and `model-check`, `rvw cov source-report`, `probe-goals` and `smoke`, `rvw_tools_load`, `rvw checks plan`, generic ACT4 profiles, `rvw regress instruction-feed`, external-interrupt evidence replay, SoC watchdog/block/UART/flash profiles, and SystemC multi-initiator memory. Existing Components proposals must retain these limits. No new tracker or milestone is inferred from a command.
-
-| Family | Added reported evidence | Remaining scope | Sources |
-|---|---|---|---|
-| Core integration | NaxRiscv has 59 ISA passes and native probes, nine-rule seed-1 checks, Kanata and selected fault controls. Chisel and VHDL each have 41 strict matches and one ma_data failure/timeout. | Nax unseeded check firings, RAM-state/data/recovery checks and orphan events remain. Non-Spinal fault mapping and full ISA qualification remain open. | [#979](https://github.com/riscPrint/risc-v-workstation/pull/979), [#1108](https://github.com/riscPrint/risc-v-workstation/pull/1108), [#1127](https://github.com/riscPrint/risc-v-workstation/pull/1127), [#1131](https://github.com/riscPrint/risc-v-workstation/pull/1131), [#1143](https://github.com/riscPrint/risc-v-workstation/pull/1143), [#1150](https://github.com/riscPrint/risc-v-workstation/pull/1150) |
-| BOOM | Small has four FP/CSR matches with explicit initial FCSR alignment, retained prediction probes, register flips and a clean 218-instruction DPI match. | SFB endpoint differs by one. Wider presets, checkpoint restore, plugin bindings and model accuracy remain open. | [#961](https://github.com/riscPrint/risc-v-workstation/pull/961), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091), [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101), [#1103](https://github.com/riscPrint/risc-v-workstation/pull/1103), [#1116](https://github.com/riscPrint/risc-v-workstation/pull/1116) |
-| Generated checks | Cancellation fixes give 51 Vexii passes with zero firings. Activation follow-up adds 20 simulation activations and 13 conditional unreachability results. | Five original activation gaps and new backpressure failures remain. Bounded engine observations without reached triggers are not activated passes. One historical BOOM ID remains missing. | [#1107](https://github.com/riscPrint/risc-v-workstation/pull/1107), [#1122](https://github.com/riscPrint/risc-v-workstation/pull/1122), [#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136), [#1144](https://github.com/riscPrint/risc-v-workstation/pull/1144) |
-| Formal ISA | M-only MPP update and MEPC bit-zero readback have defect dispositions. Pico has 40 finite matches and two unsupported profiles. Conditional LUI model proof is retained. | 37 later instruction portfolio attempts add zero proofs. Twenty CSR bindings, observer conformance and full pipeline signoff remain open. | [#967](https://github.com/riscPrint/risc-v-workstation/pull/967), [#1035](https://github.com/riscPrint/risc-v-workstation/pull/1035), [#1061](https://github.com/riscPrint/risc-v-workstation/pull/1061), [#1070](https://github.com/riscPrint/risc-v-workstation/pull/1070), [#1074](https://github.com/riscPrint/risc-v-workstation/pull/1074), [#1117](https://github.com/riscPrint/risc-v-workstation/pull/1117), [#1134](https://github.com/riscPrint/risc-v-workstation/pull/1134), [#1139](https://github.com/riscPrint/risc-v-workstation/pull/1139) |
-| Datapath and equivalence | Real extracted unit proofs, reduced operand partitions, RAM/vector FIFO equivalence and a payload-corruption control have receipts. | Optional DivRadix2 has a concrete mismatch. Default divider zero-divisor proof is separate. Partial operands and small widths do not prove unrestricted whole units or cores. | [#1053](https://github.com/riscPrint/risc-v-workstation/pull/1053), [#1076](https://github.com/riscPrint/risc-v-workstation/pull/1076), [#1125](https://github.com/riscPrint/risc-v-workstation/pull/1125), [#1146](https://github.com/riscPrint/risc-v-workstation/pull/1146), [#1155](https://github.com/riscPrint/risc-v-workstation/pull/1155) |
-| MMU and interrupts | RV32 PMP has 394 strict matches. Twelve fresh PLIC traces now match with checked ordered device evidence, no masks or synchronization. Eight random privilege runs match. | Nineteen PMP-denied walks and three interrupt mtval failures are core findings. Reset-event binding and unsupported modes remain open. | [#1111](https://github.com/riscPrint/risc-v-workstation/pull/1111), [#1121](https://github.com/riscPrint/risc-v-workstation/pull/1121), [#1124](https://github.com/riscPrint/risc-v-workstation/pull/1124), [#1128](https://github.com/riscPrint/risc-v-workstation/pull/1128), [#1147](https://github.com/riscPrint/risc-v-workstation/pull/1147) |
-| ACT4 | Instruction campaigns give 52 passing VexRiscv and 58 passing Vexii cases with strict matches. Functional merges retain observed and qualified populations separately. | Six Vex MEPC failures remain. All 270 supervisor cases fail in bootstrap. Only 37 representative reference checks ran; 233 are NOT RUN. BOOM is config/unit-test only. | [#1100](https://github.com/riscPrint/risc-v-workstation/pull/1100), [#1148](https://github.com/riscPrint/risc-v-workstation/pull/1148), [#1153](https://github.com/riscPrint/risc-v-workstation/pull/1153), [#1156](https://github.com/riscPrint/risc-v-workstation/pull/1156), [#1161](https://github.com/riscPrint/risc-v-workstation/pull/1161) |
-| SMP | Cacheless stress, serialized full-program replay and N=2..8 races/replay have native results. Cached two-hart RTL handoff has one-line byte checks and monitor replay. | Simulation PLIC races do not qualify RTL PLIC. Cached in-simulation SV bind is NOT RUN. Full coherence and RVWMO qualification remain open. | [#1012](https://github.com/riscPrint/risc-v-workstation/pull/1012), [#1027](https://github.com/riscPrint/risc-v-workstation/pull/1027), [#1115](https://github.com/riscPrint/risc-v-workstation/pull/1115), [#1133](https://github.com/riscPrint/risc-v-workstation/pull/1133), [#1154](https://github.com/riscPrint/risc-v-workstation/pull/1154) |
-| Devices and boot | Live Vexii UART/CLINT/PLIC and an OpenSBI supervisor payload run. SystemC has a native multi-initiator example and RTL bridge. | Linux times out after 600 seconds with empty UART, no completed boot and no C2. Checkpoint restore remains absent. TLM effects occur at call time. | [#1018](https://github.com/riscPrint/risc-v-workstation/pull/1018), [#1119](https://github.com/riscPrint/risc-v-workstation/pull/1119), [#1162](https://github.com/riscPrint/risc-v-workstation/pull/1162) |
-| SoC and VIP | Scoped source-cut connectivity proofs, protocol/register consumers, UART, block device and SPI ROM-copy boot have native controls. Repaired SV fixtures pass their declared matrix. | CDC/RDC has 2507 findings. Peripheral masters are not CPUs. Four inert model stubs, physical protocols, complete UART compliance and full SoC acceptance remain open. | [#987](https://github.com/riscPrint/risc-v-workstation/pull/987), [#1008](https://github.com/riscPrint/risc-v-workstation/pull/1008), [#1063](https://github.com/riscPrint/risc-v-workstation/pull/1063), [#1083](https://github.com/riscPrint/risc-v-workstation/pull/1083), [#1112](https://github.com/riscPrint/risc-v-workstation/pull/1112) |
-| Coverage and feed | Native point/source reports, probe goals, suite minimisation and offline independent instruction-feed controls run on both examples. | Single-seed directed closure does not beat random. Smoke earns no new coverage credit. Live TestRIG transport, operand holes and full statement attribution remain open. | [#994](https://github.com/riscPrint/risc-v-workstation/pull/994), [#1022](https://github.com/riscPrint/risc-v-workstation/pull/1022), [#1081](https://github.com/riscPrint/risc-v-workstation/pull/1081), [#1114](https://github.com/riscPrint/risc-v-workstation/pull/1114), [#1145](https://github.com/riscPrint/risc-v-workstation/pull/1145) |
-| Timing and probes | Cached data observers, branch target categories, Nax function comparisons and project-bound causal/dependency events have measured slices. | Timing accuracy stays inconclusive. Nax training error worsens to 20.7%; original held-out error is 13.0%. Vexii commit-port/C2 tail boundaries remain different. | [#1098](https://github.com/riscPrint/risc-v-workstation/pull/1098), [#1138](https://github.com/riscPrint/risc-v-workstation/pull/1138), [#1141](https://github.com/riscPrint/risc-v-workstation/pull/1141), [#1142](https://github.com/riscPrint/risc-v-workstation/pull/1142), [#1149](https://github.com/riscPrint/risc-v-workstation/pull/1149), [#1151](https://github.com/riscPrint/risc-v-workstation/pull/1151) |
-| Security | Real paired campaigns find Vexii div/remu signatures. Memory/CSR bindings and PMP variant runs add bounded observations. | Model-check uses Spike/model predictions. No_leak_observed is not proof. X candidates remain unconfirmed; async-reset guards refuse unsupported semantics. | [#955](https://github.com/riscPrint/risc-v-workstation/pull/955), [#958](https://github.com/riscPrint/risc-v-workstation/pull/958), [#959](https://github.com/riscPrint/risc-v-workstation/pull/959), [#968](https://github.com/riscPrint/risc-v-workstation/pull/968), [#1025](https://github.com/riscPrint/risc-v-workstation/pull/1025), [#1036](https://github.com/riscPrint/risc-v-workstation/pull/1036), [#1140](https://github.com/riscPrint/risc-v-workstation/pull/1140) |
-| Farm and agent | Queued native shards, failure signatures, dashboards, budgets and a prepared tiny-core bring-up walk add measured slices. | Eight-test ranking misses the planted fault. Safe selection falls back to all 49. No C4 cost/acceptance, Kubernetes runtime or LLM repair success is inferred. | [#966](https://github.com/riscPrint/risc-v-workstation/pull/966), [#1031](https://github.com/riscPrint/risc-v-workstation/pull/1031), [#1057](https://github.com/riscPrint/risc-v-workstation/pull/1057), [#1067](https://github.com/riscPrint/risc-v-workstation/pull/1067), [#1090](https://github.com/riscPrint/risc-v-workstation/pull/1090), [#1109](https://github.com/riscPrint/risc-v-workstation/pull/1109) |
-| Evidence and CI | Shared CSR catalog, MCP metadata and weakest-input verdict fixes have unit/static evidence. Suite repair reports retain exact component results. | CI plans are not workflow runs. Linux is disabled and untested. Remaining UVM random-data, slang SVA and Spike PLIC failures remain. Full rebased-main suite was NOT RUN. | [#1092](https://github.com/riscPrint/risc-v-workstation/pull/1092), [#1099](https://github.com/riscPrint/risc-v-workstation/pull/1099), [#1123](https://github.com/riscPrint/risc-v-workstation/pull/1123), [#1152](https://github.com/riscPrint/risc-v-workstation/pull/1152), [#1160](https://github.com/riscPrint/risc-v-workstation/pull/1160) |
-
-## Afternoon family updates
-
-These updates supplement the earlier component entries. They are implementation status, not acceptance receipts. [PR_EVIDENCE.md](PR_EVIDENCE.md) has all 209 added source bodies.
-
-| Family | Added capability | Reported evidence | Remaining scope | Sources |
-|---|---|---|---|---|
-| MCP and agent guide | Effect/dependency declarations, exact audit-gap guard, workflow/profile coverage, scaffold and bounded smoke job wrappers. | Unit/schema walks; 22-tool core profile. | Three installer inventory IDs; native new-core workflow not rerun by this change. | #997–#1065, [#1075](https://github.com/riscPrint/risc-v-workstation/pull/1075) |
-| Shared CSR API | `rvw csr show`, `csr_describe`, one catalog API for formal, RAL, SoC and cosim data. | Generator output parity and unit guard against private tables. | Native semantic qualification; keep independent checkers. | [#1099](https://github.com/riscPrint/risc-v-workstation/pull/1099) |
-| Evidence and planning | Producer ownership contract and weakest-input verdict propagation. | Unit tests for blockers, child conflicts, farm completion and advice. | Native evidence integrity still belongs to producers. | [#1123](https://github.com/riscPrint/risc-v-workstation/pull/1123), [#1152](https://github.com/riscPrint/risc-v-workstation/pull/1152) |
-| Probe and component models | Branch prediction records, cache/stall observations, reused-ID Kanata lifetimes, dependency events, function and configuration reports. | Real cached Vex/Vexii/Nax and BOOM slices; explicit source/retirement checks. | Tail events, open lifetimes, timing-model errors and unseen configurations. | [#953](https://github.com/riscPrint/risc-v-workstation/pull/953), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091), [#1127](https://github.com/riscPrint/risc-v-workstation/pull/1127), [#1138](https://github.com/riscPrint/risc-v-workstation/pull/1138), [#1141](https://github.com/riscPrint/risc-v-workstation/pull/1141), [#1151](https://github.com/riscPrint/risc-v-workstation/pull/1151) |
-| Coverage feedback | Probe goals, measured subset selection, bounded instruction feed, ACT4/ISA observed and qualified merges. | Four fresh sequence-controller attempts; saved-run merges; four instruction-feed C1 controls. | Multi-seed advantage, unhit goals, full protocol and qualification coverage. | [#1081](https://github.com/riscPrint/risc-v-workstation/pull/1081), [#1114](https://github.com/riscPrint/risc-v-workstation/pull/1114), [#1145](https://github.com/riscPrint/risc-v-workstation/pull/1145), [#1153](https://github.com/riscPrint/risc-v-workstation/pull/1153) |
-| Generated checks | Trigger counts, cover jobs, helper groups, cancellation terms, declared emitted-module and OoO resource bindings. | Real-core bounded campaigns and seeded OoO controls. | Five original activation misses, new backpressure failures and all-instance proof closure. | [#1060](https://github.com/riscPrint/risc-v-workstation/pull/1060), [#1122](https://github.com/riscPrint/risc-v-workstation/pull/1122), [#1126](https://github.com/riscPrint/risc-v-workstation/pull/1126), [#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136), [#1144](https://github.com/riscPrint/risc-v-workstation/pull/1144), [#1157](https://github.com/riscPrint/risc-v-workstation/pull/1157) |
-| Formal modules | Real source export recipes, small multiplier/FIFO/divider equivalence, closed internal observations and operand-prefix jobs. | Bounded/restricted real modules and seeded controls; negative mutations. | Full-width arithmetic, pipeline composition and whole-core ISA proof. | [#1086](https://github.com/riscPrint/risc-v-workstation/pull/1086), [#1125](https://github.com/riscPrint/risc-v-workstation/pull/1125), [#1146](https://github.com/riscPrint/risc-v-workstation/pull/1146), [#1155](https://github.com/riscPrint/risc-v-workstation/pull/1155) |
-| SoC composition | Protocol ingress bindings, typed connectivity, UART profile, flash bootstrap and register consumers. | Composed Vex native programs, 240 UART checks and deliberate bad flash control. | Multidomain/CDC signoff, complete UART compliance, full protocol and bootloader qualification. | [#956](https://github.com/riscPrint/risc-v-workstation/pull/956), [#1006](https://github.com/riscPrint/risc-v-workstation/pull/1006), [#1083](https://github.com/riscPrint/risc-v-workstation/pull/1083), [#1112](https://github.com/riscPrint/risc-v-workstation/pull/1112) |
-| Memory and SMP | Cached two-hart coherent hub handoff; cacheless N=2..8 race/replay; private per-hart code reduction. | One-line cached byte oracle, 14 stressed smoke/race passes, 28 timing runs and native reducer controls. | General coherence, PLIC RTL, starvation, stress and async reset. | [#1115](https://github.com/riscPrint/risc-v-workstation/pull/1115), [#1133](https://github.com/riscPrint/risc-v-workstation/pull/1133), [#1158](https://github.com/riscPrint/risc-v-workstation/pull/1158) |
-| Cosim platform inputs | Ordered external pins and device transactions with independent PLIC replay. | Twelve fresh RTL/strict Spike matches and wrong-input controls. | Other devices/cores, full asynchronous timing and reset event binding. | [#1132](https://github.com/riscPrint/risc-v-workstation/pull/1132), [#1137](https://github.com/riscPrint/risc-v-workstation/pull/1137), [#1147](https://github.com/riscPrint/risc-v-workstation/pull/1147) |
-| Generic ACT4 | Project source selection, profile-aware manifests, strict comparisons and functional merges. | Two 58-program instruction campaigns; 270 retained supervisor bootstrap failures. | Bootstrap CSR compatibility and privileged body execution. BOOM is config-only. | [#1100](https://github.com/riscPrint/risc-v-workstation/pull/1100), [#1148](https://github.com/riscPrint/risc-v-workstation/pull/1148), [#1153](https://github.com/riscPrint/risc-v-workstation/pull/1153), [#1156](https://github.com/riscPrint/risc-v-workstation/pull/1156) |
-| Simulation and replay | Device reset, selected thread counts, firmware inputs, UART and private-code reduction. | Native reset controls, OpenSBI supervisor success and shrinking failing RTL inputs. | Linux completion, second-machine replay, live Vexii/BOOM checkpoints and general speed gain. | [#998](https://github.com/riscPrint/risc-v-workstation/pull/998), [#1119](https://github.com/riscPrint/risc-v-workstation/pull/1119), [#1158](https://github.com/riscPrint/risc-v-workstation/pull/1158) |
-| Farm and CI | Native shard history, costs/budgets, observation selection, local tiers and retained reports. | Native farm slices plus CI dispatch/report unit checks. | Committed C4 acceptance, Kubernetes and Linux/native CI runtime qualification. | [#1057](https://github.com/riscPrint/risc-v-workstation/pull/1057), [#1090](https://github.com/riscPrint/risc-v-workstation/pull/1090), [#1109](https://github.com/riscPrint/risc-v-workstation/pull/1109), [#1092](https://github.com/riscPrint/risc-v-workstation/pull/1092) |
-
-Proposed additional Components row:
-
-| Shared CSR data / rvw csr | `rvw/src/rvw/csr/; SpinalChecks/csr/` | FV, VER, PLAT | Shared data used by existing consumers; no new BOOM native result | One pinned register catalog API with independent consumer checkers. | Unit/static output parity; native semantic qualification remains open. |
+What remains: Compiler build and runtime feature qualification remain open. These exports support pure R-type RV32I/RV64I instructions only. Generated artifact licensing is not specified; upstream compiler licenses are recorded and the installed Spike license is not verified. Source: [#736](https://github.com/riscPrint/risc-v-workstation/pull/736).
