@@ -2052,3 +2052,73 @@ It does not prove those models against a physical blackbox or an independent
 implementation. No conditional result can grant unconditional equivalence.
 `formal_equiv` exposes the same source inputs, revision exports, state hints and
 blackbox contract. It returns conditional evidence without granting a pass.
+
+### Sail binary bit-manipulation rules
+
+`rvw formal sail-bitmanip --model SAIL_RISCV --compiler SAIL --out OUT`
+compiles pinned Sail RV32 result rules for 19 binary instructions. MCP tool
+`formal_sail_bitmanip` uses the same generator. The subset contains Zba
+`sh1add/sh2add/sh3add`, Zbb `andn/orn/xnor/min/max/minu/maxu/rol/ror`, Zbs
+`bclr/bext/binv/bset`, and Zbc `clmul/clmulh/clmulr`.
+
+The generator extracts result expressions and encodings from sail-riscv commit
+`549e723031b34b5ffea5bbb56367be15c7a38a9e`. It checks each source hash. It also
+checks the hashes of the arithmetic and prelude helpers. Sail 0.20.1 compiles
+these expressions. The manifest records source text, encodings, helper hashes,
+compiler identity, compiler library hashes and generated file hashes.
+
+This is a binary result slice. It assumes that the selected extension is enabled.
+The RVFI shell supplies register fields, x0 suppression, PC advance and empty
+memory effects. Immediate instructions, unary instructions, RV64, floating-point
+state, CSR effects and privileged transitions are not generated. These limits
+remain open under #64. No generated model establishes a core proof by itself.
+
+### Architectural state without RVFI
+
+`rvw formal state-generate state.json --out OUT` generates a private formal
+project for a core without RVFI. MCP tool `formal_state_generate` uses the same
+operation. Run the project with `rvw --project OUT/rvw.toml formal riscv`.
+
+The project-owned JSON uses schema `rvw.architectural-state/1`. Declare `xlen`
+as 32 or 64, the DUT `top`, `clock`, `reset`, and its `verilog` file list. Declare
+`riscv_formal` settings with `root`, `isa`, `nret=1`, `checks`, `depth`, `solver`
+and optional per-check options. Paths are relative to the state map. Source
+files must be self-contained SystemVerilog files.
+
+The `signals` object maps each observation below to a distinct named RTL wire.
+Hierarchical paths use dots. The generator flattens the design and exposes
+observations as output ports. It does not cut their drivers.
+
+| Observation | Width | Meaning |
+| --- | --- | --- |
+| `retire` | 1 | One architectural retirement at this edge |
+| `insn` | 32 | Retired instruction |
+| `pc_before`, `pc_after` | XLEN | PC across that retirement |
+| `regs_before`, `regs_after` | 32 * XLEN | Complete register snapshots, x0 in the low word |
+| `rs1`, `rs2`, `rd` | 5 | Architectural read and write indices; unused indices are zero |
+| `trap`, `intr` | 1 | Retirement trap and interrupt observations |
+| `mode` | 2 | Architectural privilege mode |
+| `mem_addr`, `mem_rdata`, `mem_wdata` | XLEN | Retirement-aligned memory observation |
+| `mem_rmask`, `mem_wmask` | XLEN / 8 | Byte masks; zero for no memory access |
+
+An optional `csrs` name list adds `csr_NAME_before` and `csr_NAME_after` mappings,
+each XLEN bits wide. These snapshots are exposed in the wrapper. No CSR
+instruction semantics are inferred from their names.
+
+The monitor reads source values from the pre-state and destination values from
+the post-state. It checks x0 and unchanged registers outside the selected write.
+It generates retirement order from the observed events. It records input hashes,
+derived RTL hashes and a no-proof generation status. A project must review
+snapshot alignment, instruction indices, bus pairing and fairness. This first
+kit does not infer speculative retirement, multiple retirement lanes, CSR
+semantics, or independent order conformance. Its native ADD fixtures are not
+core conformance evidence.
+
+Native result checks use independent bitvector formulas and wrong-result
+mutations. The Zbc checks restrict the multiplier to zero or one selected basis
+bit. They keep the other operand arbitrary. Full arbitrary-operand Zbc oracle
+comparisons timed out within the short native budget. The basis results do not
+discharge those comparisons. Generated instruction models contain no basis
+restriction. The RV32 lowering expands the pinned rotate helpers and carryless
+loops. It replaces inequality with negated equality, fixes zero widths, and
+replaces temporary-concatenation slices with equivalent sized casts for Yosys.

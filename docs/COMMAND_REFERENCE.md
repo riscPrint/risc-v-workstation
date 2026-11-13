@@ -847,7 +847,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1172,11 +1172,25 @@ usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
     PROJECT]
 ```
 
+### `rvw formal state-generate`
+
+```text
+usage: rvw formal state-generate [-h] --out OUT [--json] [--project PROJECT]
+    manifest
+```
+
 ### `rvw formal rvfi-generate`
 
 ```text
 usage: rvw formal rvfi-generate [-h] --out OUT [--json] [--project PROJECT]
     manifest
+```
+
+### `rvw formal sail-bitmanip`
+
+```text
+usage: rvw formal sail-bitmanip [-h] --model MODEL [--compiler COMPILER] --out
+    OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal sail-zicond`
@@ -3164,6 +3178,14 @@ Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `formal_sail_bitmanip`
+
+Compile pinned Sail RV32 binary Zba/Zbb/Zbs/Zbc result checks. Full-machine and disabled-extension traps are excluded.
+
+Arguments: `model` (required), `compiler`, `out` (required).
+
+Starts a background job: yes.
+
 ### `formal_sail_zicond`
 
 Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.
@@ -3209,6 +3231,14 @@ Starts a background job: yes.
 Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.
 
 Arguments: `verilog` (required), `top` (required), `events` (required), `out` (required), `backend`, `observe`, `check_x`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_state_generate`
+
+Expose project architectural state without cuts and generate a one-retirement RVFI-like monitor. Generation is not conformance evidence.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 

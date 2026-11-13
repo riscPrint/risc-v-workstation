@@ -219,12 +219,25 @@ def register(sub) -> None:
     search.add_argument("--first-failure", action="store_true")
     from .search import depth_search
     search.set_defaults(func=depth_search)
+    state = s.add_parser("state-generate", help="generate a formal project from retirement-aligned architectural state")
+    state.add_argument("manifest")
+    state.add_argument("--out", required=True)
+    state.add_argument("--json", action="store_true")
+    from .architectural_state import main as state_main
+    state.set_defaults(func=state_main)
     binding = s.add_parser("rvfi-generate", help="generate a project RVFI wrapper from a JSON port binding")
     binding.add_argument("manifest")
     binding.add_argument("--out", required=True)
     binding.add_argument("--json", action="store_true")
     from .rvfi_binding import main as binding_main
     binding.set_defaults(func=binding_main)
+    bitmanip = s.add_parser("sail-bitmanip", help="compile pinned Sail RV32 Zba/Zbb/Zbs/Zbc binary result checks")
+    bitmanip.add_argument("--model", required=True)
+    bitmanip.add_argument("--compiler", default="sail")
+    bitmanip.add_argument("--out", required=True)
+    bitmanip.add_argument("--json", action="store_true")
+    from .sail_bitmanip import main as bitmanip_main
+    bitmanip.set_defaults(func=bitmanip_main)
     sail = s.add_parser("sail-zicond", help="compile pinned Sail RV32 Zicond result rules and RVFI checks")
     sail.add_argument("--model", required=True)
     sail.add_argument("--compiler", default="sail")
