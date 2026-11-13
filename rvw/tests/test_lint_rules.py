@@ -177,3 +177,30 @@ def test_switch_default_must_assign_target(tmp_path):
         b.c.execute('INSERT INTO conds(id,component_id,kind,signal_id,file_id,line) VALUES(?,1,?,1,1,10)', (i, kind))
     b.assign('x', ' := i:Bool', cond=1)
     assert ('lint.latch', 'x') in found(lint(b.done()))
+
+
+def test_conditional_declaration_needs_lowered_rtl(tmp_path):
+    b = base(tmp_path)
+    b.sig('local', tags='spinaldb:conditionalDeclaration')
+    b.assign('local', ' := i:Bool', cond=1)
+    b.edge('local', 'o')
+    r = lint(b.done())
+    assert ('lint.latch', 'local') not in found(r)
+    assert any(f['endpoint'] == 'local' for f in r['unresolved'])
+
+
+def test_each_bit_needs_complete_assignment(tmp_path):
+    b = base(tmp_path)
+    b.sig('mask', width=2)
+    for i, kind in [(1, 'when'), (2, 'else')]:
+        b.c.execute('INSERT INTO conds(id,component_id,kind,key,file_id,line) VALUES(?,1,?,\'a\',1,10)', (i, kind))
+    for bit in range(2):
+        for cond in (1, 2):
+            b.assign('mask', ' := i:Bool', cond=cond)
+            b.c.execute('UPDATE assignments SET range=? WHERE id=?', (f'({bit})', b.assign_id))
+    db = b.done()
+    assert ('lint.latch', 'mask') not in found(lint(db))
+    import sqlite3
+    with sqlite3.connect(db) as c:
+        c.execute("DELETE FROM assignments WHERE range='(1)' AND cond_id=2")
+    assert ('lint.latch', 'mask') in found(lint(db))

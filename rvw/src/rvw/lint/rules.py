@@ -102,12 +102,19 @@ def sccs(nodes, succ):
     return out
 
 
-def complete_assignment(assigns, conditions):
+def complete_assignment(assigns, conditions, width):
     """Reduce full-width assignments through exhaustive source condition branches."""
-    covered = {a['cond_id'] for a in assigns if a['range'] is None}
-    # Partial writes need bit coverage; do not infer completeness from their conditions.
+    if not isinstance(width, int) or width < 1:
+        return False
+    covered = {}
+    for a in assigns:
+        match = re.fullmatch(r'\((\d+)(?: downto (\d+))?\)', a['range'] or '')
+        bits = set(range(width)) if a['range'] is None else set(
+            range(int(match[2] or match[1]), int(match[1]) + 1)) if match else set()
+        covered.setdefault(a['cond_id'], set()).update(bits)
+
     changed = True
-    while changed and None not in covered:
+    while changed and len(covered.get(None, ())) < width:
         changed = False
         for i in list(covered):
             c = conditions.get(i)
@@ -122,10 +129,13 @@ def complete_assignment(assigns, conditions):
             else:
                 siblings = [x for x in siblings if x['kind'] in ('case', 'default')]
                 exhaustive = any(x['kind'] == 'default' for x in siblings)
-            if exhaustive and all(x['id'] in covered for x in siblings) and c['parent_id'] not in covered:
-                covered.add(c['parent_id'])
-                changed = True
-    return None in covered
+            if exhaustive and all(x['id'] in covered for x in siblings):
+                common = set.intersection(*(covered[x['id']] for x in siblings))
+                parent = covered.setdefault(c['parent_id'], set())
+                if not common <= parent:
+                    parent.update(common)
+                    changed = True
+    return len(covered.get(None, ())) == width
 
 
 def analyze(db, config=None):
@@ -176,19 +186,21 @@ def analyze(db, config=None):
             continue
         s = live[t]
         data = [a for a in assigns if a['kind'] == 'data']
+        if any(a['source'] in ('$dlatch', '$adlatch') for a in data):
+            emit('lint.latch', t, 'Lowered HDL contains a level-sensitive latch.')
         comps = {a['component_id'] for a in data}
         if len(comps) > 1:
             emit('lint.multiple_drivers', t, components=sorted(
                 (d.components.get(c) or {}).get('path', '?') for c in comps))
         if data and d.is_top_input(t):
             emit('lint.input_driven', t)
-        if s['kind'] == 'wire' and data and all(a['cond_id'] is not None for a in data) and t not in role and not complete_assignment(data, conditions):
-            if s.get('generated') and len(data) == 1 and data[0]['range'] is None:
+        if s['kind'] == 'wire' and data and all(a['cond_id'] is not None for a in data) and t not in role and not complete_assignment(data, conditions, s['width']):
+            if 'spinaldb:conditionalDeclaration' in (s.get('tags') or '') or (s.get('generated') and len(data) == 1 and data[0]['range'] is None):
                 # Spinal can hoist generated expression temporaries out of their
                 # source scope. A condition in this database is not a lowered
                 # RTL enable, so it cannot establish latch inference.
                 unresolved.append(dict(rule='lint.latch', endpoint=s['path'],
-                    reason='Generated full-width expression has only source-scope condition evidence; inspect lowered RTL.'))
+                    reason='Expression has source-scope condition evidence; inspect lowered RTL.'))
             else:
                 emit('lint.latch', t)
         for a in data:

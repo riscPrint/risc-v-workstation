@@ -576,3 +576,12 @@ a `BufferCC` destination. A one-bit payload from a recognised toggle bridge
 can use its synchronized qualifier, as a wider payload can. Each such path
 keeps a data-stability obligation. Neither the tag nor the library class
 proves that the source holds the data for enough destination cycles.
+
+### Declaration scope and imported latches
+
+Rebuild the database to obtain `spinaldb:conditionalDeclaration` tags.
+Expressions declared inside a source conditional are not latch errors merely
+because their assignments have that same condition. They remain unresolved
+until lowered RTL is checked. The rules backend now detects actual Yosys
+`$dlatch` and `$adlatch` assignments. This also catches missing switch defaults
+that infer a latch in imported HDL. Native Verilator remains a separate check.
