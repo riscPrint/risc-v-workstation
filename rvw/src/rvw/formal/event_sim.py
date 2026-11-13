@@ -1,0 +1,161 @@
+"""Native timed replay and assertion observations from finite SVA monitors."""
+from argparse import Namespace
+import json
+from pathlib import Path
+import re
+import time
+
+from rvw.common.proc import run_group
+from rvw.results import RunResult
+from . import common
+from .snapshot import InputSnapshot, digest
+from .temporal import lower
+
+
+def events(data, inputs, clocks):
+    if data.get('schema') != 'rvw.formal-events/1':
+        raise ValueError('expected rvw.formal-events/1')
+    scale = data.get('timescale', '1ns')
+    if not re.fullmatch(r'1(s|ms|us|ns|ps|fs)', scale):
+        raise ValueError('timescale must be 1<unit>')
+    rows, state, last = [], {}, -1
+    for entry in data.get('events', []):
+        at, changes = entry['time'], entry['inputs']
+        if type(at) is not int or at <= last or at < 0:
+            raise ValueError('event times must be nonnegative and strictly increasing')
+        if set(changes) - set(inputs):
+            raise ValueError('event contains an unknown input')
+        for name, value in changes.items():
+            if not isinstance(value, str) or len(value) != inputs[name] or set(value.lower()) - set('01xz'):
+                raise ValueError('input values need exact-width binary four-state strings')
+        changed = {name for name, value in changes.items() if state.get(name) != value}
+        if last >= 0 and changed & clocks and changed - clocks:
+            raise ValueError('data/reset changes must use a separate timestamp from property clock changes')
+        state.update(changes)
+        if set(state) != set(inputs) or (last < 0 and at != 0):
+            raise ValueError('first event must set every input at time zero')
+        rows.append((at, dict(changes)))
+        last = at
+    if not rows:
+        raise ValueError('declare at least one event')
+    return scale, rows
+
+
+def testbench(top, ports, observed, scale, rows):
+    lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
+    inputs = [p for p in ports if p.direction == 'input']
+    outputs = [p for p in ports if p.direction == 'output']
+    lines += ['reg ' + p.decl() + ';' for p in inputs]
+    lines += ['wire ' + p.decl() + ';' for p in outputs]
+    lines += [f'{top} dut(' + ', '.join(f'.{common.vid(p.name)}({common.vid(p.name)})' for p in ports) + ');',
+              'initial begin']
+    previous = 0
+    for at, changes in rows:
+        if at > previous:
+            lines.append(f'#{at-previous};')
+        for name, value in changes.items():
+            lines.append(f"{common.vid(name)} <= {len(value)}'b{value};")
+        for name in observed:
+            lines.append(f'$strobe("RVW_OBSERVE {at} {name} %b", {common.vid(name)});')
+        previous = at
+    lines += ['#1; $display("RVW_EVENT_DONE"); $finish;', 'end', 'endmodule']
+    return '\n'.join(lines) + '\n'
+
+
+def counts(output, properties):
+    result = {p['monitor']: dict(id=p['id'], kind=p['kind'], passed=0, failed=0, covered=0, missed=0)
+              for p in properties}
+    for tag, kind, outcome in re.findall(r'^RVW_SVA (\w+) (assert|assume|cover) (pass|fail|cover|miss)$', output, re.M):
+        if tag not in result or kind != result[tag]['kind']:
+            raise ValueError('unattributed simulation assertion output')
+        field = {'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed'}[outcome]
+        result[tag][field] += 1
+    return list(result.values())
+
+
+def run(args):
+    from rvw.common.capture import Capture
+    started = time.monotonic()
+    out = common.check_path('--out', args.out)
+    common.check_ident('top', args.top)
+    fd = common.lock_out(out)
+    try:
+        (out / 'result.json').unlink(missing_ok=True)
+        spec_capture = Capture(out / 'event-inputs')
+        event_file = spec_capture.file(Path(args.events))
+        snap = InputSnapshot(Namespace(verilog=args.verilog, checks=None, frontend='temporal'), out)
+        ports = common.module_ports(snap.sources, args.top, out, args.timeout,
+                                    snapshot=snap, allow_async_reset=True)
+        if any(p.direction == 'inout' for p in ports):
+            raise ValueError('event replay refuses inout ports')
+        inputs = {p.name: p.width for p in ports if p.direction == 'input'}
+        event_data = json.loads(event_file.copy.read_text())
+        clocks = {p['clock'] for p in snap.temporal_properties} | set(event_data.get('clocks', []))
+        if not clocks <= inputs.keys() or any(inputs[c] != 1 for c in clocks):
+            raise ValueError('property clocks must be scalar top-level inputs')
+        observed = args.observe or [p.name for p in ports if p.direction == 'output']
+        if set(observed) - {p.name for p in ports if p.direction == 'output'}:
+            raise ValueError('observations must name top-level outputs')
+        scale, rows = events(event_data, inputs, clocks)
+        if args.backend == 'verilator' and (args.check_x or any(set(v.lower()) & set('xz') for _, row in rows for v in row.values())):
+            raise ValueError('four-state replay and --check-x require Icarus')
+        original = '\n'.join((out / r['frontend']).read_text() for r in snap.files if r['kind'] == 'source')
+        simulation, properties = lower(original, simulation=True)
+        model = out / 'simulation.sv'
+        model.write_text(simulation)
+        bench = out / 'testbench.sv'
+        bench.write_text(testbench(args.top, ports, observed, scale, rows))
+        snap.seal(model); snap.seal(bench)
+        result = RunResult(status='error', config='formal-event-simulation',
+                           source={'model_sha256': digest(model)},
+                           artifacts={'log': 'run.log', 'coverage': 'coverage.dat'},
+                           extra={'inconclusive': 'simulation did not complete'}).to_dict()
+        if args.backend == 'icarus':
+            compile_cmd = ['iverilog', '-g2012', '-s', 'rvw_event_top', '-o', 'simulation.vvp', model.name, bench.name]
+            run_cmd = ['vvp', 'simulation.vvp']
+        else:
+            compile_cmd = ['verilator', '--binary', '--timing', '-Wno-fatal', '--top-module', 'rvw_event_top',
+                           '--Mdir', 'obj', '-o', 'simulation', model.name, bench.name]
+            run_cmd = ['./obj/simulation']
+        def execute(command, name):
+            with (out / name).open('w') as log:
+                return run_group(['nice', '-n', '10', *command], cwd=out, stdout=log, stderr=log, timeout=args.timeout)
+        compiled = execute(compile_cmd, 'compile.log')
+        if compiled.returncode == 0 and not compiled.timed_out:
+            completed = execute(run_cmd, 'run.log')
+            output = (out / 'run.log').read_text()
+            if completed.returncode == 0 and not completed.timed_out and 'RVW_EVENT_DONE' in output:
+                observations = [dict(time=int(t), signal=s, value=v) for t,s,v in
+                                re.findall(r'^RVW_OBSERVE (\d+) (\w+) ([01xz]+)$', output, re.M)]
+                unknowns = [r for r in observations if set(r['value']) & set('xz')]
+                if len(observations) != len(rows) * len(observed):
+                    raise ValueError('incomplete simulation observation output')
+                checks = counts(output, properties)
+                failures = sum(p['failed'] for p in checks if p['kind'] == 'assert')
+                assumptions = sum(p['failed'] for p in checks if p['kind'] == 'assume')
+                attempts = sum(p['passed'] + p['failed'] for p in checks if p['kind'] == 'assert')
+                if assumptions:
+                    reason, status = 'stimulus violates a declared assumption', 'error'
+                elif not attempts and not (args.check_x and observations):
+                    reason, status = 'no_checks', 'error'
+                else:
+                    reason, status = None, 'assert' if failures else 'fail' if args.check_x and unknowns else 'pass'
+                result.update(status=status, assertions=checks, unknowns=unknowns,
+                              observations=observations, inconclusive=reason or False,
+                              scope='finite timestamped simulation; pending future obligations are not discharged')
+                coverage = []
+                for index, prop in enumerate(checks):
+                    if prop['kind'] == 'assume':
+                        continue
+                    key = f'\x01f\x02simulation.sv\x01l\x021\x01page\x02sva-{prop["kind"]}\x01o\x02{index}:{prop["id"]}'
+                    coverage.append(f"C '{key}' {prop['covered'] if prop['kind'] == 'cover' else prop['passed']}")
+                (out / 'coverage.dat').write_text('\n'.join(coverage) + '\n')
+        result.update(wall_s=time.monotonic()-started, backend=args.backend, x_semantics='four-state' if args.backend == 'icarus' else 'two-state; X not measured',
+                      event_capture=spec_capture.record(), tools={'backend': args.backend})
+        snap.finish(result)
+        (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+        print(json.dumps(result, indent=2))
+        return 0 if result['status'] == 'pass' else 1
+    finally:
+        import os
+        os.close(fd)

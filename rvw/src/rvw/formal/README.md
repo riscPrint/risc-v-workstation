@@ -1702,3 +1702,41 @@ counter and found its seeded fault. It proved both pinned HWMCC cases in
 The build used Rust nightly-2025-11-20 and Homebrew GMP/MPFR. Evidence and binary
 hashes are in `/tmp/rvw-deep-ric3-{counters,hwmcc}/result.json`.
 This does not establish full-block capacity or a representative comparison.
+
+
+### Timed event simulation and assertion counts
+
+```sh
+rvw formal simulate --verilog dut.sv checks.sv --top dut --events events.json --out sim --backend icarus --check-x
+rvw cov merge sim --source-root sim
+rvw cov merge case1=sim/coverage.dat --source-root sim
+```
+
+The event file uses `rvw.formal-events/1`. It declares `timescale` as `1ns` or
+another unit, `clocks` as input port names, and an `events` list. Each event has
+an integer `time` and an `inputs` map of exact-width binary strings. Strings can
+contain X/Z with Icarus. The first event sets every input at time zero. Later
+events can set a subset. Times must increase. Clock changes and data/reset
+changes use separate timestamps after initialization. No clock is invented.
+
+The runner samples output observations after all updates at each timestamp.
+`--observe PORT` selects outputs. The default selects all outputs. Icarus
+preserves four-state values; `--check-x` fails on any observed X/Z, including
+startup. Use a declared reset sequence when startup state matters. Verilator
+uses two-state simulation and refuses X checks and X/Z input values.
+
+The same finite SVA set runs as simulation monitors on either backend. This
+includes separate checker files and properties clocked by an asynchronous input.
+The runner records assertion pass/fail and cover hit/miss counts per property.
+An assumption failure makes the stimulus inconclusive. No assertion samples and
+no requested X checks gives `error` with `inconclusive=no_checks`. A finite
+simulation pass does not discharge pending future obligations or establish a
+proof. Full SystemVerilog simulator scheduling is not qualified.
+
+`result.json` is C1 with counts, event observations and input snapshots. Its
+coverage artifact uses the Verilator point-record format for sampled assertion
+passes and SVA cover hits. These are monitor observations, not RTL code coverage.
+The source is generated `simulation.sv`. Use explicit `name=coverage.dat` inputs
+when merging multiple event tests. `formal_simulate` exposes the same runner
+through MCP. Native smoke tests cover both simulators, unrelated clocks, async
+reset, an asynchronous property input, seeded assertion faults and Icarus X data.

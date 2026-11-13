@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench"}
+FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x"}
 
 
 def _argv(command, args):
@@ -111,6 +111,12 @@ def mcp_tools():
     from .deep_cli import mcp_tools as deep_tools
     return [*deep_tools(),
 
+        ToolSpec("formal_simulate", "Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.",
+                 schema({"verilog": {"type": "array", "items": S}, "top": S, "events": S,
+                         "out": S, "backend": {**S, "enum": ["icarus", "verilator"]},
+                         "observe": {"type": "array", "items": S}, "check_x": B,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}},
+                        ["verilog", "top", "events", "out"]), _runner("simulate"), long=True),
         ToolSpec("formal_liveness", "Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.",
                  schema({"source": S, "top": S, "out": S, "run": B,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["source", "top", "out"]),

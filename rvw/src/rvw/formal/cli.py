@@ -103,6 +103,18 @@ def register(sub) -> None:
     library.add_argument("--out", required=True)
     library.set_defaults(func=property_library.run)
 
+    from . import event_sim
+    simulation = s.add_parser("simulate", help="replay timed input events and count finite SVA observations")
+    simulation.add_argument("--verilog", nargs="+", required=True)
+    simulation.add_argument("--top", required=True)
+    simulation.add_argument("--events", required=True)
+    simulation.add_argument("--out", required=True)
+    simulation.add_argument("--backend", choices=["icarus", "verilator"], default="icarus")
+    simulation.add_argument("--observe", action="append")
+    simulation.add_argument("--check-x", action="store_true")
+    simulation.add_argument("--timeout", type=float, default=60)
+    simulation.set_defaults(func=event_sim.run)
+
     from . import liveness
     live = s.add_parser("liveness", help="lower eventual response SVA to a native SBY live job")
     live.add_argument("source")
