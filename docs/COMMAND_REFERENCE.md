@@ -733,8 +733,8 @@ usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
 ### `rvw formal properties`
 
 ```text
-usage: rvw formal properties [-h] [--channels CHANNELS] --out OUT [--project
-    PROJECT] spec
+usage: rvw formal properties [-h] [--channels CHANNELS] [--db DB] --out OUT
+    [--project PROJECT] spec
 ```
 
 ### `rvw formal simulate`
@@ -2375,7 +2375,7 @@ Starts a background job: yes.
 
 Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.
 
-Arguments: `spec` (required), `channels`, `out` (required).
+Arguments: `spec` (required), `channels`, `db`, `out` (required).
 
 Starts a background job: yes.
 
