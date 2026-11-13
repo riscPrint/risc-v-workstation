@@ -21,6 +21,9 @@ ROOT = Path(__file__).resolve().parents[4]
 REVISION = 'f557b89ed6881a20515481a2585e9d004cd9642b'
 
 
+CLASSES = ('arithmetic', 'branches', 'load-store', 'traps', 'csr')
+
+
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -94,8 +97,10 @@ def execute_json(out, settings=None, seeds=1, seed_base=1, project=None, core=No
     if instructions > 1000:
         raise ValueError('instructions must be at most 1000')
     classes = data.get('test_classes', ['arithmetic'])
-    if not isinstance(classes, list) or not classes or any(c not in ('arithmetic', 'branches', 'load-store') for c in classes):
-        raise ValueError('test_classes must select arithmetic, branches or load-store')
+    if not isinstance(classes, list) or not classes or any(c not in CLASSES for c in classes):
+        raise ValueError('test_classes must select from '+', '.join(CLASSES))
+    if {'traps', 'csr'} & set(classes) and not data.get('target_profile'):
+        raise ValueError('traps and csr classes need target_profile')
     timeout = finite_number(data.get('timeout_s', 120), 'timeout_s', positive=True)
     def path(key):
         p = Path(data[key]).expanduser()

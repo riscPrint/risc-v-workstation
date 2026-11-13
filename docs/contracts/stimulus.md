@@ -171,9 +171,20 @@ compiled, RTL run, strict match, mismatch, timeout and generation/compile error
 counts. `wall_s` includes all stages. `programs_per_hour` counts attempts with
 C1 cycle evidence divided by the campaign wall time.
 
-`test_classes` selects arithmetic, branches or load-store. Seeds cycle through
-the selected classes in order. Branch and memory profiles use upstream directed
-streams. Trap, CSR and interrupt generation are not provided by these profiles.
+`test_classes` selects arithmetic, branches, load-store, traps or csr. Seeds
+cycle through the selected classes in order. Branch and memory profiles use
+upstream directed streams. Interrupt generation is not provided.
+
+`traps` and `csr` need `target_profile`. They insert `instructions // 10`
+seeded instructions into the pinned main program. `traps` inserts 32-bit
+encodings that the declared ISA leaves undefined: undefined major opcodes, the
+all-zero word, and undefined funct3/funct7 values. funct7 values are skipped
+when the ISA declares a Z extension other than Zicsr and Zifencei. The program
+sets `RVW_TRAP_SKIP`; the runtime then installs an M-mode handler that resumes
+at `mepc + 4`. That class emits no generator CSR instructions, so the handler
+owns `mscratch`. `csr` inserts CSR instructions on present, assembly-safe CSRs
+of the project selection only. Generation metadata adds `injected` (one record
+per inserted instruction) and `injection_sha256`.
 
 Resume also binds the workstation source identity. Completed ELF and C1 hashes
 are checked before their status is retained. The load/store generation metadata

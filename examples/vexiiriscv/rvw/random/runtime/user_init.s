@@ -1,6 +1,22 @@
 # Initialize architectural inputs before upstream pygen setup.
 # Define scratch state before the first per-retirement CSR snapshot.
 csrw mscratch, zero
+.ifdef RVW_TRAP_SKIP
+# Trap class only: resume after each trapping 32-bit instruction.
+# The generator emits no CSR instructions in this class, so mscratch is free.
+la t0, rvw_trap_skip
+csrw mtvec, t0
+j rvw_trap_skip_end
+.balign 4
+rvw_trap_skip:
+csrrw t0, mscratch, t0
+csrr t0, mepc
+addi t0, t0, 4
+csrw mepc, t0
+csrrw t0, mscratch, t0
+mret
+rvw_trap_skip_end:
+.endif
 li x1, 0
 li x2, 0
 li x3, 0

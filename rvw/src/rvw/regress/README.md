@@ -1113,8 +1113,11 @@ the fixture tests.
 Select the upstream stream mix with settings `test_classes = ["arithmetic",
 "branches", "load-store"]`. Payload seeds cycle through these classes.
 The branch class inserts upstream JAL streams. The load/store class inserts
-upstream random and hazard streams. CSR, illegal-instruction and interrupt
-profiles remain open. These classes grant no credit for those missing profiles.
+upstream random and hazard streams. The `traps` class inserts seeded encodings
+that the declared ISA leaves undefined; a runtime handler resumes after each
+trap. The `csr` class inserts accesses to the selection's assembly-safe CSRs.
+Both derive every choice from `target_profile` (`rvw/src/rvw/regress/dv_inject.py`).
+Random interrupt schedules remain open.
 Set `[run_options] coverage = true` to request native code coverage through
 the existing C1 adapter. Set top-level `mem_latency` for a fixed memory delay.
 Use `rvw cov functional` and `rvw cov merge` on qualified C1 artifacts to merge
