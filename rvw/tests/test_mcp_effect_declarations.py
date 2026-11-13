@@ -100,3 +100,11 @@ def test_cosim_declarations(registry):
     assert registry.tools['cosim_qemu_check'].native_tools == ()
     assert registry.tools['cosim_check'].native_tools == ('Spike', 'Sail')
     assert 'git' in registry.tools['cosim_vector_source'].side_effects
+
+
+def test_debug_declarations(registry):
+    tools = [t for n, t in registry.tools.items() if n.startswith('debug_')]
+    assert tools and all(t.side_effects and t.native_tools is not None for t in tools)
+    assert registry.tools['debug_checks'].side_effects == 'read-only'
+    assert registry.tools['debug_interop'].native_tools == ('OpenOCD', 'GDB')
+    assert 'remote JTAG/DTM state' in registry.tools['debug_tap'].side_effects
