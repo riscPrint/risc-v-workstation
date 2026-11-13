@@ -72,7 +72,14 @@ def write_bytes(path, content):
 @captured.command
 def calculate(args):
     """Calculate a command result, including requested output artifacts, for CLI and MCP."""
-    if args.cov_command == 'merge':
+    if args.cov_command == 'generate':
+        from .stimulus import generate
+        registers = args.registers
+        if isinstance(registers, str):
+            registers = [int(r) for r in registers.split(',')]
+        result = generate(args.manifest, args.source_root, args.goal, args.work_dir,
+                          registers, args.seed, args.timeout_ms)
+    elif args.cov_command == 'merge':
         result = code.merge(args.inputs, args.source_root, args.source_map, args.hgldd, args.revision, args.scala_root, args.design_db)
         if args.dat:
             originals = [p for _, p, _ in code.inputs(args.inputs)]
@@ -163,6 +170,8 @@ def execute(args):
     try:
         result = calculate(args)
         emit(args, result)
+        if args.cov_command == 'generate' and result.get('status') != 'generated':
+            return 3
         if result.get('status') == 'inconclusive':
             return 3
         return 1 if result.get('run_exit_code', 0) or result.get('counts', {}).get('error') else 0
@@ -177,6 +186,14 @@ def execute(args):
 def register(subparsers):
     parser = subparsers.add_parser('cov', help='code, RVFI functional, formal and mutation coverage')
     sub = parser.add_subparsers(dest='cov_command', required=True)
+    generate = sub.add_parser('generate', help='solve one pinned integer ISA coverage goal; no coverage credit')
+    generate.add_argument('--manifest', required=True)
+    generate.add_argument('--source-root', required=True)
+    generate.add_argument('--goal', required=True)
+    generate.add_argument('--work-dir', required=True)
+    generate.add_argument('--registers', required=True, help='project-owned rd,rs1,rs2 register numbers')
+    generate.add_argument('--seed', type=int, default=1)
+    generate.add_argument('--timeout-ms', type=int, default=1000)
     merge = sub.add_parser('merge', help='merge test=coverage.dat files or C1/C3 results')
     merge.add_argument('inputs', nargs='+')
     merge.add_argument('--source-root', default='.')
@@ -231,7 +248,7 @@ def register(subparsers):
     mutate.add_argument('--jobs', type=int, default=1)
     mutate.add_argument('--test', action='append', help='detection test name; repeatable, defaults to saved roles on inspection or all non-equivalence tests on a fresh run')
     mutate.add_argument('--equivalence-test', action='append', help='equivalence test name; repeatable, defaults to saved roles on inspection or none on a fresh run; FAIL is not a kill')
-    for command in (merge, report, rank, select, functional, rtl, prove, mutate, isa_check, isa_diff, closure):
+    for command in (generate, merge, report, rank, select, functional, rtl, prove, mutate, isa_check, isa_diff, closure):
         command.add_argument('--json', action='store_true')
         command.add_argument('--out', help='write structured JSON result')
         command.set_defaults(func=execute)
@@ -239,7 +256,7 @@ def register(subparsers):
 
 def execute_json(action: str, **options) -> dict:
     from argparse import Namespace
-    defaults = dict(inputs=[], source_root=".", source_map=None, hgldd=[], revision=None,
+    defaults = dict(goal=None, registers=None, seed=1, timeout_ms=1000, inputs=[], source_root=".", source_map=None, hgldd=[], revision=None,
                     scala_root=None, design_db=None, dat=None, traces=[], config=None, database=None,
                     work_dir=None, timeout=60 if action == "prove" else 120, project=None,
                     run=False, jobs=1, baseline=None, test=None, equivalence_test=None,

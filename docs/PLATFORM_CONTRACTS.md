@@ -110,6 +110,25 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Bounded ISA candidate report
+
+`rvw cov generate` and `cov_generate` return `rvw.stimulus-candidate/1`.
+Inputs are a pinned ISA manifest, its opcode source root, a semantic goal ID,
+three project-owned writable integer registers, a uint32 seed, a solver limit
+in milliseconds and a new output directory. Goal IDs use the closure reader's
+`group:JSON-array` syntax. The backend is `z3-solver==4.13.4.0`.
+
+Statuses are `generated`, `unsupported`, `unsat`, `timeout` and `inconclusive`.
+A generated result binds plan, SMT constraints and source hashes. It includes
+the solved instruction and source values. The saved source has one payload
+word and start/end symbols. The report records the full plan bin count and
+the 170-bin supported profile separately. `measured_hits` is always empty.
+Unsupported goals and missing backends do not create an output directory.
+UNSAT applies only to the declared instruction template and register resources.
+It cannot exclude a bin from coverage. A candidate report grants no C1 pass,
+reference match, gate acceptance or measured closure result.
+
+
 ## C1. Run contract (core adapter)
 
 RiscvSim supports the optional `--spinaltrace` model flag on `build`, `run`,

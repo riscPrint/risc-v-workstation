@@ -33,6 +33,12 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_generate", "Solve one declared pinned integer ISA goal with Z3. Emits a bounded payload and solver evidence. A generated candidate earns no coverage hits and is not a core correctness result.",
+                 schema({"manifest": S, "source_root": S, "goal": S, "work_dir": S,
+                         "registers": {"type": "array", "items": I, "minItems": 3, "maxItems": 3},
+                         "seed": {**I, "default": 1}, "timeout_ms": {**I, "default": 1000}, **OUT},
+                        ["manifest", "source_root", "goal", "work_dir", "registers"]),
+                 handler("rvw.cov.cli", "generate"), long=True),
         ToolSpec("cov_closure", "List unhit bins with project-declared candidate tests. Suggestions are not hits.",
                  schema({"database": S, "candidates": S, "exclusions": S, **OUT}, ["database", "candidates"]),
                  handler("rvw.cov.cli", "closure"), long=True, annotations={"readOnlyHint": True}),

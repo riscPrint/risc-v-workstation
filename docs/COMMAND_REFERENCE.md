@@ -237,8 +237,16 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-    {merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
+```
+
+### `rvw cov generate`
+
+```text
+usage: rvw cov generate [-h] --manifest MANIFEST --source-root SOURCE_ROOT
+    --goal GOAL --work-dir WORK_DIR --registers REGISTERS [--seed SEED]
+    [--timeout-ms TIMEOUT_MS] [--json] [--out OUT] [--project PROJECT]
 ```
 
 ### `rvw cov merge`
@@ -1428,6 +1436,14 @@ Starts a background job: yes.
 Report RVFI functional coverage bins and holes from C2 traces or saved functional reports. Use config for a declarative coverage plan; large traces run as a job.
 
 Arguments: `traces` (required), `config`, `manifest`, `source_root`, `platform`.
+
+Starts a background job: yes.
+
+### `cov_generate`
+
+Solve one declared pinned integer ISA goal with Z3. Emits a bounded payload and solver evidence. A generated candidate earns no coverage hits and is not a core correctness result.
+
+Arguments: `manifest` (required), `source_root` (required), `goal` (required), `work_dir` (required), `registers` (required), `seed`, `timeout_ms`, `out`.
 
 Starts a background job: yes.
 

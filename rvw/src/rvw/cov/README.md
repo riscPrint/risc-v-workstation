@@ -1067,3 +1067,42 @@ structural cones and the unavailable solver core through `property_id`. Every
 requirement status stays `inconclusive`. A list of linked properties is not a
 complete set of functional obligations. A structural cone is not a solver core.
 These fields do not change exclusion or gate verdicts.
+
+## Bounded integer stimulus candidates
+
+`rvw cov generate` solves one semantic operand or immediate bin with pinned
+Z3. It reuses `rvw.isa/1`, the pinned opcode files and the existing semantic
+coverage plan. Install the optional backend with
+`uv pip install --python rvw/.venv/bin/python z3-solver==4.13.4.0`.
+A missing or different backend gives `inconclusive`.
+
+```sh
+rvw cov generate --manifest /path/to/core/isa.json \
+  --source-root /path/to/riscv-opcodes --goal 'sem_add_rs1:["zero"]' \
+  --registers 5,6,7 --seed 48 --work-dir /tmp/candidate-48 --json
+```
+
+The MCP tool is `cov_generate`. Declare three writable integer registers as
+`rd,rs1,rs2`. The core project must keep these registers free for the payload.
+The source fragment initializes both source registers. It disables compressed
+assembly and relaxation. It marks the single payload word with
+`rvw_payload_start` and `rvw_payload_end`. Include this fragment in a reviewed
+project runtime. It has no startup or termination code of its own.
+
+The profile has 170 goals per XLEN: `add`, `sub`, `xor`, `or`, `and`, `slt`,
+`sltu` source classes and `addi`, `xori`, `ori`, `andi`, `slti`, `sltiu` source
+and imm12 classes. All 13 instructions must exist in the pinned opcode plan.
+The selected goal must also exist in its semantic coverage plan. Other goals
+remain unsupported. The report retains the full declared plan denominator.
+
+`candidate.json` records seed, registers, plan identity, solver version,
+constraint hash, model and source hash. `constraints.smt2` preserves the solver
+input. Each request uses a separate Z3 context for deterministic replay.
+A bounded template can return `unsat`, `timeout` or `inconclusive`.
+UNSAT does not prove that a coverage bin is unreachable.
+
+No candidate earns a coverage hit. The source must still compile, pass C1,
+match the complete Spike trace, and pass ELF-bound payload sampling. The closed
+loop, payload-region qualification, full attempt CPU accounting, safe resume,
+held-out mutants and five-seed paired native campaigns in #349 remain open.
+This command is not the random baseline and is not a PSS implementation.
