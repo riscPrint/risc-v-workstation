@@ -1,0 +1,366 @@
+{
+  "schema": "rvw.ooo-fixture-formal/1",
+  "depth": 16,
+  "checks": [
+    {
+      "variant": "clean",
+      "requirements": [
+        "queue.capacity:rob"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 2.353585791075602,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "queue.occupancy:rob"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 2.4245596249820665,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_1/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "queue.order:rob"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.6881008750060573,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_2/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "arbiter.exclusive:issue"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.8314001669641584,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_3/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "arbiter.requested:issue"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.8609680420486256,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_4/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "freelist.conservation:rename"
+      ],
+      "formal_status": "timeout",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.7142260000109673,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_5/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": false
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "freelist.allocate:rename"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.814377542003058,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_6/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "execution.operands:iq"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.920676332898438,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_7/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "store.forward_age:sq"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.6583349589491263,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_8/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "recovery.map:rename"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.76279558299575,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_9/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "clean",
+      "requirements": [
+        "recovery.flush:rob"
+      ],
+      "formal_status": "bounded-pass",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 2.1437248749425635,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "clean_check_10/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "bounded-pass",
+      "matched": true
+    },
+    {
+      "variant": "leak",
+      "requirements": [
+        "freelist.conservation:rename"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.665984916035086,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "leak_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "double_allocate",
+      "requirements": [
+        "freelist.allocate:rename"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 2.0212955420138314,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "double_allocate_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "commit_order",
+      "requirements": [
+        "queue.order:rob"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.9071748750284314,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "commit_order_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "not_ready",
+      "requirements": [
+        "execution.operands:iq"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.747249791980721,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "not_ready_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "young_store",
+      "requirements": [
+        "store.forward_age:sq"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.4311030840035528,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "young_store_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "stale_map",
+      "requirements": [
+        "recovery.map:rename"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.5108249579789117,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "stale_map_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    },
+    {
+      "variant": "lost_flush",
+      "requirements": [
+        "recovery.flush:rob"
+      ],
+      "formal_status": "failed",
+      "activation": {
+        "status": "reached",
+        "depth": 16,
+        "wall_s": 1.4577277499483898,
+        "engine": "smtbmc:yices",
+        "traces": [
+          "lost_flush_check_0/activation-sby/engine_0/trace0.vcd"
+        ],
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      },
+      "expected": "failed",
+      "matched": true
+    }
+  ],
+  "status": "inconclusive",
+  "limitations": [
+    "Bounded native fixture evidence, not an unbounded proof or core qualification."
+  ],
+  "retry": "timeout",
+  "depth8_conservation": {
+    "formal_status": "bounded-pass",
+    "activation": {
+      "status": "reached",
+      "depth": 8,
+      "wall_s": 2.235585083020851,
+      "engine": "smtbmc:yices",
+      "traces": [
+        "clean_check_5/activation-sby/engine_0/trace0.vcd"
+      ],
+      "scope": "one bounded antecedent cover; not a proof of universal activation"
+    }
+  }
+}

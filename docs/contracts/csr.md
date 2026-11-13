@@ -396,3 +396,11 @@ The connected preparer supports bmc and prove modes. Prove requests SMTBMC
 k-induction. Activation stays bounded. The portfolio exporter writes a
 `rvw.check-proof-plan/1` index and standard hashed formal portfolio manifests.
 Prepared is not proven. FIFO helper bounds are assertions, never assumptions.
+
+## Small out-of-order fixture records
+
+`rvw.ooo-fixture-sim/1` records each variant's check firings, activation counts,
+seed, cycle count and source hashes. `rvw.ooo-fixture-formal/1` records each
+selected check's bounded outcome and activation observation. A matched
+negative control requires the expected failed check. Timeouts are inconclusive.
+Neither record establishes whole-core correctness or unbounded closure.
