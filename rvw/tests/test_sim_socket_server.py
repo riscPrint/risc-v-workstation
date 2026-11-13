@@ -74,7 +74,8 @@ def test_live_reproduction_requires_session_and_rtl(session, rtl, error):
     assert found is None if error is None else error in found
 
 
-def test_live_command_captures_elf_without_launching_a_source_tree(tmp_path, monkeypatch):
+@pytest.mark.parametrize("option", ["boot-payloads", "stimulus-file"])
+def test_live_command_captures_elf_without_launching_a_source_tree(tmp_path, monkeypatch, option):
     import hashlib
     from types import SimpleNamespace
     from rvw.common.capture import Capture
@@ -95,6 +96,6 @@ def test_live_command_captures_elf_without_launching_a_source_tree(tmp_path, mon
     with pytest.raises(ValueError, match='sha256 mismatch'):
         inputs.live_command(run)
     data['elf_sha256'] = hashlib.sha256(elf.read_bytes()).hexdigest()
-    data['replay'] += ' --boot-payloads unsupported.json'
+    data['replay'] += ' --' + option + ' unsupported.json'
     with pytest.raises(ValueError, match='structured input'):
         inputs.live_command(run)

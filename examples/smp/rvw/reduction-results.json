@@ -1,0 +1,135 @@
+{
+  "schema": "rvw.native-reduction-sample/1",
+  "date": "2026-11-13",
+  "core_revision": "9b63f47fe559dbba7874af9196746412fa1294c1",
+  "snapshot_revision": "54f316415f23388c54ff525856abda0ce4b34bc8",
+  "original_rtl_sha256": "c2fd0ef65da06c648acf30a1bff7c5038f1192ecaa56d65fbe203da6564dc122",
+  "capture_rtl_change": "generator Git comment only; all other Verilog bytes equal",
+  "stream": {
+    "original": 3,
+    "remaining": 1,
+    "kept": [
+      1
+    ],
+    "completion": "one_minimal",
+    "one_minimal": true,
+    "global_minimum": false
+  },
+  "reproduced": true,
+  "controls": {
+    "original": {
+      "status": "fail",
+      "fail_code": 7,
+      "cycles": 86,
+      "instret": 28,
+      "hart_failures": {
+        "1": 7
+      }
+    },
+    "reduced": {
+      "status": "fail",
+      "fail_code": 7,
+      "cycles": 86,
+      "instret": 28,
+      "hart_failures": {
+        "1": 7
+      }
+    },
+    "empty": {
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 84,
+      "instret": 28,
+      "hart_failures": {}
+    },
+    "wrong_hart": {
+      "status": "fail",
+      "fail_code": 7,
+      "cycles": 84,
+      "instret": 33,
+      "hart_failures": {
+        "0": 7
+      }
+    }
+  },
+  "trials": [
+    {
+      "trial": "t000-stream0",
+      "status": "fail",
+      "fail_code": 7,
+      "hart_failures": {
+        "1": 7
+      },
+      "cycles": 86,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "7661aa1291c1c42d3f9b6d0d32bbfb17a0db3a97413a9e469bdbb02ae21c7302",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    },
+    {
+      "trial": "t001-stream1",
+      "status": "pass",
+      "fail_code": null,
+      "hart_failures": {},
+      "cycles": 84,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "a5d6f5943d6f03ed55b82770854e593fa5078755f41fe1a7d35ba4ce4d253047",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    },
+    {
+      "trial": "t002-stream2",
+      "status": "fail",
+      "fail_code": 7,
+      "hart_failures": {
+        "1": 7
+      },
+      "cycles": 86,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "906c53b065523edf82475a096db2d9c2b1f46e7c885acab59acedb4091a98a37",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    },
+    {
+      "trial": "t003-stream3",
+      "status": "fail",
+      "fail_code": 7,
+      "hart_failures": {
+        "1": 7
+      },
+      "cycles": 86,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "4f30e026e17db270e0f5c352bb17b8311f6b75309313fc3a79083c74baee6634",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    },
+    {
+      "trial": "t004-stream4",
+      "status": "pass",
+      "fail_code": null,
+      "hart_failures": {},
+      "cycles": 84,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "742185900eccdf0964a74ee7247d2698307fae4b6568e72e07b7f912a068c8c2",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    },
+    {
+      "trial": "t005-confirm",
+      "status": "fail",
+      "fail_code": 7,
+      "hart_failures": {
+        "1": 7
+      },
+      "cycles": 86,
+      "instret": 28,
+      "c2_records": 32,
+      "c2_sha256": "4f30e026e17db270e0f5c352bb17b8311f6b75309313fc3a79083c74baee6634",
+      "rtl_sha256": "0279884d9b31474ff8f76288d5dfb11ae8f8853bdd892de7679ce0f9c1b3750e"
+    }
+  ],
+  "limits": [
+    "stage-local one-minimal result, not a global minimum",
+    "no core defect or ISA qualification claim"
+  ]
+}

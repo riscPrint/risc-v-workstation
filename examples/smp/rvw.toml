@@ -18,3 +18,6 @@ build_timeout_s = 5400
 startup_s = 300
 [cosim]
 platform = "rvw/platform.json"
+
+[debug]
+config = "rvw/debug.toml"

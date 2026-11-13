@@ -80,7 +80,7 @@ def pack(run_dir, recipe, out, *, checkpoint_cycle=None):
     job = adapter._manifest_entry(command)
     for name in ('out', 'json'):
         job.pop(name, None)
-    for name in ('boot_payloads', 'hart_images', 'fault', 'debug', 'debug_binding', 'trace_ingress'):
+    for name in ('boot_payloads', 'hart_images', 'fault', 'debug', 'debug_binding', 'trace_ingress', 'stimulus_file'):
         if name in job:
             raise ValueError('portable replay does not capture structured input: ' + name)
     elf = Path(raw['elf']).resolve(strict=True)

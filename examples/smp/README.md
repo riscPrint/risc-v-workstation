@@ -440,3 +440,31 @@ These are the simulator's wall times. They exclude model builds. The host was
 shared, and the samples vary with host load. Raw samples and trace hashes are
 in `rvw/timing-results.json`. The RTL cycles and retirement counts are separate
 from host simulation cost.
+
+## Private per-hart reduction
+
+`reduction_programs.py --out DIR` builds a two-hart failure and three controls.
+Hart 1 reports fail code 7. Only one of its three `fault_region` instructions
+causes the failure. The controls retain that instruction, remove it, or move
+the same failure code to hart 0.
+
+C8 source capture requires regular files. For a pinned checkout with dependency
+Git links, `rvw/flat-source.py --source CORE --revision REV --out NEW_DIR`
+creates a private Git snapshot with the pinned dependency files. It records
+the component revisions in `rvw-source-pins.json`. It checks tracked changes
+and dependency pins. It does not change the source checkout. Use that snapshot
+as `VEXIIRISCV` before recording the original run.
+
+```sh
+export RVW_VEX_LOCK=vex-simsrv RVW_SBT_LOCK=sbt-simsrv
+rvw/.venv/bin/python examples/smp/rvw/reduction_programs.py --out INPUTS
+examples/smp/rvw/run.sh run --config smp2 --elf INPUTS/original/hart-0.elf --hart-images INPUTS/original/hart-images.json --out RUN --rvfi-trace --seed 17
+rvw reduce RUN --project examples/smp/rvw.toml --hart-symbol 1:fault_region --modes hart_instructions --out REDUCED
+```
+
+The native sample reduced three slots to slot 1. It confirmed fail code 7 on
+hart 1. The empty and wrong-hart controls were rejected. All six reducer
+trials used one captured RTL hash. Source capture changed only the generator
+Git comment relative to the original RTL. See `rvw/reduction-results.json`.
+This is a stage-local one-minimal result. It is not a global minimum or
+proof of a core defect. Other hart images and the hart inventory stay fixed.

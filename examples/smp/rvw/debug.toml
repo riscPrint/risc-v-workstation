@@ -1,0 +1,4 @@
+[core]
+name = "smp"
+source_env = "VEXIIRISCV"
+period = 10
