@@ -748,7 +748,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -771,6 +771,12 @@ usage: rvw formal upf [-h] --source SOURCE --bindings BINDINGS --out OUT
 ```text
 usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
     PROJECT]
+```
+
+### `rvw formal buses`
+
+```text
+usage: rvw formal buses [-h] --db DB --out OUT [--project PROJECT]
 ```
 
 ### `rvw formal csr`
@@ -919,7 +925,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds,axis,apb,ahb_lite}
 ```
 
 ### `rvw formal contracts`
@@ -2590,6 +2596,14 @@ Starts a background job: yes.
 Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.
 
 Arguments: `out` (required), `manifest` (required), `budget`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_buses`
+
+Generate typed simple-bus monitors and instance binds from SpinalDB. No proof run.
+
+Arguments: `db` (required), `out` (required).
 
 Starts a background job: yes.
 

@@ -94,6 +94,11 @@ def register(sub) -> None:
     power.add_argument("--db")
     power.add_argument("--out", required=True)
     power.set_defaults(func=power_intent.run)
+    from . import bus_bindings
+    buses = s.add_parser("buses", help="generate typed simple-bus monitors and instance binds from SpinalDB")
+    buses.add_argument("--db", required=True)
+    buses.add_argument("--out", required=True)
+    buses.set_defaults(func=bus_bindings.run)
 
     from . import csr
     c = s.add_parser("csr", help="generate project CSR checks, assembly and coverage")

@@ -221,6 +221,8 @@ def mcp_tools():
                  schema({"manifest": S, "baseline": S, "out": S}, ["manifest", "out"]), _profiles, long=True),
         ToolSpec("formal_power", "Generate sampled low-power checks and declared DFT inventory. No proof or ATPG run.",
                  schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),
+        ToolSpec("formal_buses", "Generate typed simple-bus monitors and instance binds from SpinalDB. No proof run.",
+                 schema({"db": S, "out": S}, ["db", "out"]), _buses, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
@@ -344,3 +346,10 @@ def _properties(job, **args):
     if code:
         raise ToolError("SVA intent generation failed", {"exit_code": code, "log_tail": job.tail(30)})
     return {"output": args["out"]}
+
+
+def _buses(job, **args):
+    code = job.run([sys.executable, "-m", "rvw", "formal", "buses", "--db", args['db'], "--out", args['out']])
+    if code not in (0, 3):
+        raise ToolError("bus generation failed", {"exit_code": code, "log_tail": job.tail(30)})
+    return json.loads((Path(args['out'])/'result.json').read_text())

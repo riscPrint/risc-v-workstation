@@ -3998,6 +3998,15 @@ monitor inputs and complete output vectors with an always-on sampled clock.
 domains. Generation is not proof or physical power evidence. No generated monitor
 returns `no_checks`, exit 3. Unsupported commands and Tcl constructs are errors.
 Retention, supply tables and clock-gating import remain unsupported.
+### Typed simple-bus monitor generation
+
+`rvw.bus-checks/1` records generated or unsupported typed bundle rows, derived
+ports, packed width, bind target and captured database provenance. `complete`
+means all selected rows generated. It does not mean verification passed.
+The aggregate is `no_checks` when no monitor generated, with exit 3. Otherwise
+it is `generated`, with exit 0. Unsupported rows retain their reasons.
+Only top-component APB3, AHB-Lite3 and AXI4-Stream types are selected.
+Missing recorded clock/reset metadata is not inferred from signal names.
 
 ### Standard CSR catalog selection
 
