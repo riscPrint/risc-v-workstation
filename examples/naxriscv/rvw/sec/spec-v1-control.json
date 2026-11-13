@@ -1,0 +1,53 @@
+{
+  "contract": "speculative-constant-time",
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "observations": [
+    "cycles",
+    "retire_cycles",
+    "branch_events",
+    "probe_counters"
+  ],
+  "public": {
+    "reset": "cold",
+    "gadget": "v1-control"
+  },
+  "program": [
+    "andi t0, x7, 0x7c0",
+    "la s1, sec_probe",
+    "add t0, s1, t0",
+    "li a0, 64",
+    "li a1, 16",
+    "bgeu a0, a1, 1f",
+    "nop",
+    "lw t2, 0(t1)",
+    "1:",
+    "nop",
+    "lw t5, 64(s1)",
+    "lw t5, 1024(s1)"
+  ],
+  "secrets": [
+    {
+      "x7": 64
+    },
+    {
+      "x7": 1024
+    }
+  ],
+  "minimize_runs": 0,
+  "timeout": 1800,
+  "adapter_command": [
+    "{python}",
+    "-m",
+    "rvw.sec.run_adapter",
+    "--binding",
+    "run.json",
+    "--template",
+    "spec.S",
+    "{request}",
+    "{out}"
+  ]
+}

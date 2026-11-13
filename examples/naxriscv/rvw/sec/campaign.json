@@ -1,0 +1,45 @@
+{
+  "contracts": [
+    "constant-time",
+    "speculative-constant-time"
+  ],
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "observations": [
+    "cycles",
+    "retire_cycles",
+    "branch_events",
+    "cache_events",
+    "tlb_events",
+    "probe_events",
+    "probe_counters"
+  ],
+  "public": {
+    "reset": "cold"
+  },
+  "seed": 13,
+  "length": [
+    3,
+    10
+  ],
+  "budget": {
+    "pairs": 24,
+    "seconds": 3000
+  },
+  "minimize_runs": 8,
+  "timeout": 1800,
+  "adapter_command": [
+    "{python}",
+    "-m",
+    "rvw.sec.run_adapter",
+    "--binding",
+    "run.json",
+    "--template",
+    "campaign.S",
+    "{request}",
+    "{out}"
+  ]
+}

@@ -113,3 +113,18 @@ mask and IXL constants, missing W-opcode operand mapping, the CSR runtime's
 Each fix has targeted tests. RV32 defaults remain unchanged. The mapped RTL
 security harness remains RV32-only; the generic C1 path runs the RV64 pair.
 No incomplete formal result is promoted to a proof.
+## VEXII-SEC-DIV-001
+
+Confirmed leakage finding, not a functional defect. Cacheless `rv32im`, core
+`9f70315deb3390b283995c5b8f1bd38215ecf52b`. The radix-2 divider (`DivRadix2`)
+skips zero quotient bits, so divide and remainder latency depends on the
+operands. `rvw sec contract --manifest rvw/sec/constant-time.json` reduced the
+constant-time program to `remu x13, x6, x7`: 14 cycles for 7 % 3, 38 cycles for
+0x7fffffff % 1, with equal architectural traces. The seed-11 campaign found the
+same `remu` and `div` signatures. Do not divide secrets in constant-time code
+on this configuration. Details: `rvw/src/rvw/sec/README.md`. The RV64 divider
+witness above is the same mechanism on RV64IMA.
+
+The `rv32imasu` TLB result in the same README (a secret-selected S-mode read of
+a user page is visible to U-mode through page walks) is a true positive of the
+channel but not a defect: RISC-V does not require a TLB flush on `sret`.

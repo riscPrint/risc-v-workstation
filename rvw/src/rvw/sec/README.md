@@ -15,9 +15,9 @@ example revisions (details in the sections below).
 |---|---|---|---|---|
 | Unit IFT | `ift` | a secret input or register reaches a sink of a small unit under given stimulus | whole-core behavior; source-level provenance | seeded Verilog units |
 | Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv; cached VexRiscv: the same two results through the cache refill bus |
-| Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34); cached VexRiscv: a secret-indexed table lookup found through cache hit/miss events of public probe loads, a constant-time lookup clean |
+| Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); NaxRiscv `remu` too (7 vs 19); VexRiscv divide is fixed (34); cached VexRiscv: a secret-indexed table lookup found through cache hit/miss events of public probe loads, a constant-time lookup clean |
 | Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`); with `pmp`, what a denied access exposes | ePMP; state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles). VexiiRiscv `rv32imasu` U/S/M with Sv32: constant-time handlers clean across U-M, U-S and S-M, secret-dependent handlers flagged; a secret-selected S-mode page read is visible to U through TLB walks. VexRiscv with PMP: a denied U-mode load never reaches the bus; a dependent load sees no secret (pairs and IFT clean) |
-| Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb |
+| Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb; NaxRiscv (out of order): v1 and v2 flagged through the cache receiver, rsb and v4 clean |
 | Campaign | `campaign` | new leak signatures from generated and mutated pairs, deduplicated | coverage of the whole input space; a clean campaign is bounded by its budget | VexiiRiscv: `remu` and `div` signatures in 24 pairs; VexRiscv: none in 24 pairs |
 | Model pre-check | `model-check` | predicted timing leakage of a planned unit before RTL | transient, cache or predictor leaks; exact cycle counts | predicts the direction of both cores' divide results |
 | Unit latency | `latency` | operand-dependent latency of a unit for given operands | crypto correctness, warm pipelines | seeded units |
@@ -394,6 +394,40 @@ On both unpatched in-order cores, wrong-path loads never reach the bus.
 - `spec-suite` gadgets are short; the receivers are the bus trace and timing.
   A cacheless core has no cache receiver. A clean result does not prove that the
   core never speculates.
+
+## Runs through a project C1 adapter
+
+`python -m rvw.sec.run_adapter --binding run.json --template case.S REQUEST OUT`
+is a case adapter for cores that the native harness cannot drive: write-back
+caches, no RVFI, native refill buses. `run.json` (`rvw.sec-run/1`, see
+`docs/contracts/sec.md`) names the project's C1 adapter. Each case is one
+`ADAPTER run --rvfi-trace --probes` run. The C2 trace is cut after the `tohost`
+store, like the Spike reference (the first NaxRiscv reductions failed until
+this cut: the C1 run can commit the final `j` after `tohost`). Channels are
+`cycles`, `retire_cycles`, the probe event channels and `probe_counters`
+(whole-run totals); bus channels need the native harness. `spec-suite`
+accepts a run binding and takes `--observation`.
+
+The spec-suite gadgets now end with an architectural receiver: loads of both
+secrets' probe lines (public addresses). On a cached core, their latency shows
+which line a wrong-path load filled. On the cacheless cores they add equal bus
+entries in both runs.
+
+Results on NaxRiscv `rv32imasu` (`examples/naxriscv/rvw/sec/`, pinned
+revision, Verilator 5.049; every compared C2 trace matched Spike in all fields):
+
+| Case | Result |
+|---|---|
+| `ct.json` constant-time divide/multiply | **violation**, reduced to one `remu x13, x6, x7`: 7 cycles for 7 % 3, 19 cycles for 0x7fffffff % 1 (full program 121 against 169) |
+| `spec-suite` v1 (forward branch) | **violation** in `cycles`, `retire_cycles`, `probe_counters`: the branch mispredicts; the wrong-path `lw` fills the secret's line, so the receiver load of that line takes 4 cycles and the other 6 to 9 |
+| `spec-suite` v2 (indirect jump) | **violation**, same receiver pattern; the `jalr` target resolves late (one execute reschedule) |
+| `spec-suite` rsb, v4 | `no_leak_observed` |
+| `spec-v1-control.json` (v1 with the wrong-path load replaced by `nop`) | `no_leak_observed`: the transient load is the cause |
+
+The v1 and v2 results are the first transient leaks found by these self-tests
+on a core that really speculates. They are true positives: equal architectural
+traces, a secret-dependent cache footprint from a squashed load, and a control
+without that load stays clean. Clean rsb and v4 cover only these gadgets.
 
 ## Leakage campaigns
 
