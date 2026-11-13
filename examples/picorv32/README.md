@@ -48,8 +48,8 @@ and uses no CSRs.
   `lhu`, `sb`, `sh`) differ in `mem_rmask`/`mem_rdata` only: PicoRV32 reports
   a full-word read mask for byte and halfword loads. The checker compares the
   mask exactly. This is a cosim platform question, not a fixed core bug.
-- `rvw query build`: 5352 signals, 838 registers, one memory (`cpuregs`).
-  `path mem_rdata mem_wdata` goes through `cpuregs`.
+- `rvw query build`: 15444 signals, 1443 registers, one memory (`cpuregs`).
+  `path mem_rdata mem_wdata` finds 4-stage register paths.
 - `rvw run.sh identity` and the C1 `rtl_sha256` agree. The hash covers the
   generated wrapper, the defines and `picorv32.v`.
 

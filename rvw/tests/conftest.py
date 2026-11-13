@@ -195,7 +195,7 @@ from regress_fixtures import legacy_layout  # noqa: E402,F401  (kept for fixture
 FAST_MODULES = {
     "test_riscv.py", "test_results.py", "test_csim_formats.py", "test_release_hygiene.py",
     "test_ci.py", "test_command_reference.py", "test_project.py", "test_perf.py", "test_perf_capture.py",
-    "test_regress_submodule_checkout.py",
+    "test_regress_submodule_checkout.py", "test_init_mapped.py", "test_doctor_c1suite.py",
     "test_perf_conclusive.py", "test_arch_model.py",
     "test_query.py", "test_query_round16.py", "test_query_round16_literals.py",
     "test_query_round17.py", "test_query_round19.py", "test_debug_dm.py", "test_debug_trace.py", "test_debug_ntrace.py", "test_fault.py",
