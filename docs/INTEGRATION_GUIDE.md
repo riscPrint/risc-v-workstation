@@ -461,8 +461,8 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [bugmem](../rvw/src/rvw/bugmem/README.md) | Fixture only | No held-out real defect accuracy result exists. [#484](https://github.com/riscPrint/risc-v-workstation/pull/484). |
 | [sec](../rvw/src/rvw/sec/README.md) | Ran on RTL fixture | [#696](https://github.com/riscPrint/risc-v-workstation/pull/696) checked planted digital leaks. No whole-core, physical leakage or full dynamic provenance result follows. |
 | [common](../rvw/src/rvw/common/README.md) | Local process/fixture checks | Process cancellation and resource limits do not establish DUT acceptance. |
-| [fault](../rvw/src/rvw/fault/README.md) | Ran on RTL | A bounded VexRiscv campaign now confirms native register injection; BOOM, memories and FMEDA remain open. [#689](https://github.com/riscPrint/risc-v-workstation/pull/689). |
-| [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | Predictor tags need project wiring; BOOM tag validation remains open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451). |
+| [fault](../rvw/src/rvw/fault/README.md) | Ran on RTL | A bounded VexRiscv campaign and BOOM small register flips confirm native injection. Memories and FMEDA remain open. [#689](https://github.com/riscPrint/risc-v-workstation/pull/689), [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101). |
+| [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | BOOM small has measured stall samples and conditional branch comparisons. Prediction tags and full pipeline attribution remain open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). |
 | [ooo](../rvw/src/rvw/ooo/README.md) | Native reference parity only | Committed-trace timing has no wrong-path execution; native gem5 comparison remains NOT RUN. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
 
 ## Shared library boundaries
@@ -476,7 +476,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [SpinalBlocks](../SpinalBlocks/README.md) | Extraction/diagram tests | Native HDL diagram export in #688 did not run ELK/SVG rendering or VS Code. |
 | [SpinalChecks](../SpinalChecks/README.md) | Ran on bounded RTL fixtures | One GPIO register or a generated app is not whole-core or physical qualification. |
 | [SpinalKonata](../SpinalKonata/README.md) | Captured trace analysis | Standalone compiled-model capture is incomplete; retain its C1 error and null cache key. |
-| [RiscvSim](../RiscvSim/README.md) | Ran on RTL, selected adapters | Fault, DPI and SystemC checks have different scopes. No all-option or BOOM qualification follows. |
+| [RiscvSim](../RiscvSim/README.md) | Ran on RTL, selected adapters | Fault, DPI and SystemC checks have different scopes. BOOM small has bounded fault and DPI evidence. No all-option qualification follows. See the BOOM table below. |
 
 Do not promote an issue closure, unit test, source pin or equal record count to
 DUT qualification. Keep each new core's measured results and limits in its own
@@ -1008,3 +1008,32 @@ literal MMIO actions to a bare-metal image and a CPU-backed pyuvm virtual
 sequence. Both run on the real composed SoC. Their 24 observations match.
 They use the same CPU image. Independent stimulus executors, dynamic produced
 data, symbolic constraints, randomized schedules and PSS parsing remain open.
+
+## BOOM adapter results
+
+The [BOOM inventory](../RiscvSim/boom/README.md) separates native results from
+source bindings. The 2026-11-13 continuation used the private core clone,
+small only, the BOOM lock and nice priority 15. It used two native builds.
+No regression suite, wider-preset campaign or BOOM formal job ran.
+These rows do not qualify every workstation feature on BOOM.
+
+| Interface | Recorded BOOM evidence | Remaining gap |
+|---|---|---|
+| C1 and C2 | Bounded ISA and trap-free runs pass. Current Spike checks match add, sub, beq and fadd captures. | Stored legacy add trace still has an order gap; no broad campaign. |
+| C2/2 FP and CSR | Small exports raw FP writes, fflags/fcsr and CSR 0x340. Fadd has 40 FP writes. Reset alignment is explicit. | Other CSRs, wider per-slot capture and fault-access records. |
+| Probes and csim | Retained enqueue predictions align with C2. Fetch, execution, redirect, occupancy and lookup bindings exist. Native SFB reports 7 predicated-off commits. | One endpoint sample exceeds C1/C2. TLB fills and miss-path qualification remain open. |
+| Perf and OoO | Measured stall causes and unknown intervals are separate. Trap-free timing/model IPC ratios are 2.6875 and 1.9625. | Two-program calibration is inconclusive. No predictor fidelity or full stall-coverage claim. |
+| Fault injection | Two register flips have read-back confirmation; full-state comparison detects all affected fields. | Memory faults, other injection kinds and broad campaigns. |
+| DPI lockstep | Clean fadd matches with a complete trace and FP/CSR comparison. An injected FFLAGS bit is caught at cycle 228. Both reuse Verilator. | Online reference checkpoint and wider configurations. |
+| Checkpoint and devices | [Source gap list](../RiscvSim/boom/CHECKPOINT_GAPS.md). | No BOOM restore or device-plugin binding; native jobs NOT RUN. |
+| Stream checks | [Source review](../SpinalChecks/boom/STREAM_REVIEW.md) maps the internal source-offset A stage without a new waiver. | The original historical ID inventory remains incomplete. No new native check pass. |
+
+The DPI path samples on a simulation thread because the mailbox can yield.
+The ordinary callback path remains separate. Its post-fix beq run retains
+1844 cycles and 333 C1 instructions. Host cancellation after an injected
+mismatch can occur before the native exception log. An incomplete trace
+never earns a complete match.
+
+See the [probe/timing report](../examples/boom/ooo/PROBE_OBSERVATION.md) and
+[fault/DPI evidence](../RiscvSim/boom/NATIVE_FAULT_DPI.json) for counts, hashes
+and limits. The checkpoint and plugin gaps are documented, not implemented.
