@@ -74,3 +74,8 @@ are not sites yet. Timing differences without architectural differences are safe
   run with different architectural effects is silent corruption.
 - The adapter forces the fault: the workstation never edits the core.
 - Tests use a fake adapter that runs the debug model hart (`rvw/tests/fixtures/fault/adapter.py`).
+
+Report recomputation retains every planned fault. A missing outcome counts as
+inconclusive and appears in `missing_outcomes` and `unresolved`. Duplicate,
+unknown or conflicting outcome identities are errors. Stored evidence is not
+changed by report recomputation.
