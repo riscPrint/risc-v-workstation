@@ -150,6 +150,18 @@ def _session_open(session, root=None):
     return open_session(session, root)
 
 
+@captured
+def _value(wave, name, at, db=None, dec=False, period=None, clock=ops.CLOCK_RX):
+    from .typed import value
+    from ..query.db import default_db
+    from .vcd import WaveError
+    database = db or default_db()
+    if not database:
+        raise WaveError("no design database: pass db or set RVW_DESIGNDB")
+    t = end_time(wave) if at == "end" else time_at(wave, at, period, clock)
+    return value(database, wave, name, t, "dec" if dec else "hex")
+
+
 def mcp_tools():
     return [
         ToolSpec("wave_info", "Inspect timescale, signal count, time range and clock period of a waveform.",
@@ -206,6 +218,10 @@ def mcp_tools():
         ToolSpec("wave_session_open", "Open a debug session: locate each artifact (recorded path, or under the session "
                  "directory or root), verify SHA-256, and report missing or changed artifacts and signals.",
                  schema({"session": S, "root": S}, ["session"]), _session_open, annotations=RO),
+        ToolSpec("wave_value", "Typed value of a signal, Bundle, Stream/Flow, Vec or Area at a time: leaves nested by "
+                 "Spinal path, enum element names, and Stream fire. Needs a SpinalDB database (db or RVW_DESIGNDB).",
+                 schema({"wave": WAVE["wave"], **TIME, "name": S, "at": S, "dec": B, "db": S}, ["wave", "name", "at"]),
+                 _indexed(_value), annotations=RO),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
                          "reader": {"enum": ["auto", "vcd", "wellen"], "default": "auto"}}, ["wave", "out"]), _index),

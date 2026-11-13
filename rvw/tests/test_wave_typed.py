@@ -73,3 +73,41 @@ def test_cli(cluster_db, wave):
     assert 'TOP.GcdCluster.ctrl_fsm_stateReg = 0x2 (run)' in out.stdout
     out = run('find', wave, "ctrl_fsm_stateReg == 'done'", '--db', str(cluster_db), '--json')
     assert json.loads(out.stdout)['first'] == 25
+
+
+STREAM = """$timescale 1ns $end
+$scope module TOP $end
+$scope module GcdCluster $end
+$var wire 1 ! io_cmd_valid $end
+$var wire 1 " io_cmd_ready $end
+$var wire 16 # io_cmd_payload_0 [15:0] $end
+$var wire 16 $ io_cmd_payload_1 [15:0] $end
+$var wire 2 % ctrl_fsm_stateReg [1:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+1!
+1"
+b1100 #
+b1000 $
+b10 %
+$end
+#10
+"""
+
+
+def test_typed_bundle_value(cluster_db, tmp_path):
+    p = tmp_path / 's.vcd'
+    p.write_text(STREAM)
+    r = typed.value(str(cluster_db), str(p), 'io.cmd', 5)
+    assert r['type'] == 'Stream' and r['fire'] is True
+    assert r['value']['payload']['0']['value'] == '0xc' and r['value']['payload']['1']['value'] == '0x8'
+    assert r['value']['valid']['wave'] == 'TOP.GcdCluster.io_cmd_valid'
+    s = typed.value(str(cluster_db), str(p), 'ctrl.fsm.stateReg', 5)
+    assert s['value']['enum'] == 'run'
+    out = subprocess.run([sys.executable, '-m', 'rvw', 'wave', 'value', str(p), 'io.cmd', '--at', '5',
+                          '--db', str(cluster_db)], capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    assert 'fire=True' in out.stdout and 'payload:' in out.stdout

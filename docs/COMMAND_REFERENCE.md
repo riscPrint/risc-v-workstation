@@ -1740,7 +1740,7 @@ usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
 
 ```text
 usage: rvw wave [-h] [--project PROJECT]
-    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,info}
+    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,info}
     ...
 ```
 
@@ -1856,6 +1856,13 @@ usage: rvw wave session save [-h] --wave WAVE [--db DB] [--signal SIGNAL]
 ```text
 usage: rvw wave session open [-h] [--root ROOT] [--json] [--project PROJECT]
     session
+```
+
+### `rvw wave value`
+
+```text
+usage: rvw wave value [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] --at AT [--db DB] [--dec] [--project PROJECT] wave name
 ```
 
 ### `rvw wave info`
@@ -3211,6 +3218,14 @@ Starts a background job: no.
 Extract handshake transfers of a Stream (valid/ready) or Flow (valid) at rising clock edges: payload per transfer, wait cycles, stalls, payload_changed and valid_dropped issues. Give valid/ready/payload names, or stream (bundle path) with a design database.
 
 Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `valid`, `ready`, `payload`, `stream`, `db`, `limit`.
+
+Starts a background job: no.
+
+### `wave_value`
+
+Typed value of a signal, Bundle, Stream/Flow, Vec or Area at a time: leaves nested by Spinal path, enum element names, and Stream fire. Needs a SpinalDB database (db or RVW_DESIGNDB).
+
+Arguments: `wave` (required), `period`, `clock`, `name` (required), `at` (required), `dec`, `db`.
 
 Starts a background job: no.
 
