@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -173,17 +173,15 @@ def check(directory, results, platform, timeout=10):
         elf = directory / scenario['elf']
         if digest(elf) != scenario['elf_sha256']:
             raise ValueError('ELF changed since build')
-        candidates = [r for r in runs if r.elf_sha256 == scenario['elf_sha256']]
+        same_elf = [r for r in runs if r.elf_sha256 == scenario['elf_sha256']]
+        candidates = [r for r in same_elf if
+            all(getattr(r,'extra',{}).get(k)==v for k,v in scenario.get('options',{}).items() if k!='stimulus_file')
+            and (not scenario.get('stimulus_sha256') or getattr(r,'extra',{}).get('stimulus_sha256')==scenario['stimulus_sha256'])]
         row = dict(id=scenario['id'], status='inconclusive', bins=scenario['bins'],
                    reason='need one conclusive C1 result', comparison=None)
         if len(candidates) == 1:
             run = candidates[0]
             row['c1_sha256'] = digest(run.path / 'result.json')
-            if (any(run.extra.get(k) != v for k, v in scenario.get('options', {}).items() if k != 'stimulus_file')
-                or (scenario.get('stimulus_sha256') and run.extra.get('stimulus_sha256') != scenario['stimulus_sha256'])):
-                row['reason'] = 'C1 stimulus options differ'
-                rows.append(row)
-                continue
             if not run.why_inconclusive and run.status != 'pass':
                 row.update(status='fail', reason='C1 self-check failed')
                 rows.append(row)
@@ -222,6 +220,17 @@ def check(directory, results, platform, timeout=10):
                     row['pma_sha256'] = digest(run.path / artifact)
                 if observed['status'] != 'pass':
                     row.update(status=observed['status'], reason=observed['reason'])
+                    rows.append(row)
+                    continue
+            if scenario.get('reset_phase_contract'):
+                from .reset_phase import observe as phase_check
+                artifact=run.artifacts.get('privilege_reset_phase')
+                observed=phase_check(scenario['reset_phase_contract'],
+                                     json.loads((run.path/artifact).read_text()) if artifact else [])
+                row['reset_phase']=observed
+                if artifact:row['reset_phase_sha256']=digest(run.path/artifact)
+                if observed['status']!='pass':
+                    row.update(status=observed['status'],reason=observed.get('reason'))
                     rows.append(row)
                     continue
             if scenario.get('reset_contract'):

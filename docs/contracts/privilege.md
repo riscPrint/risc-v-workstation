@@ -157,3 +157,18 @@ to 4096. The generated manifest records `reference_options` for the matching
 native Spike cache-block size. This field configures the reference process.
 It does not configure a DUT. Native results retain the Spike self-check scope.
 DUT coverage still requires the existing C1 and strict-reference evidence.
+
+## In-flight reset observations
+
+Campaign kind `reset-inflight` uses `reset.phases`: name, prepare, cleanup,
+min_wait_ticks and state. Each state entry has value/mask fields. Events carry
+these as `phase`, `prepare`, `cleanup`, `min_wait_ticks` and `phase_gate`.
+Adapters must use PhaseDriver or enforce the same preparation and observation
+order. The driver invokes reset-prepare, the actual reset event and reset-cleanup.
+It acknowledges only after successful reset and cleanup.
+
+The `privilege_reset_phase` C1 artifact is a JSON list. Each receipt has step,
+prepared_tick, reset_tick, state and complete. Ticks use an independent reference
+clock. State is captured before the pulse. The checker binds the capture hash
+and still requires reset pulse observations and architectural evidence. C1
+selection matches ELF and requested stimulus/options before checking uniqueness.

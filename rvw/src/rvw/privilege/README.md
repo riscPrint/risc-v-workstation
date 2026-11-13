@@ -422,3 +422,30 @@ through `envcfg.block_bytes`. Native Spike gets the same `--blocksz` value.
 The project must configure its DUT with that block size. H adds real VS/VU
 entry and virtual-instruction traps. This tests zeroing behavior. It does not
 establish cache clean/flush/invalidate effects or timing.
+
+## Reset during in-flight activity
+
+`kind = "reset-inflight"` crosses cold/warm/local reset with project-selected
+fetch, load, store, trap and debug phases. The example repeats each pulse three
+times and emits 15 programs. A retained RAM cookie counts actual restarts.
+No acknowledgement can make a waiting program pass without restarting it.
+
+Each `reset.phases` entry declares a name, prepare/cleanup actions, a positive
+`min_wait_ticks` and an independent masked `state` gate. `PhaseDriver.service`
+first prepares the operation. On a later reference tick, it applies reset only
+when all state gates match. It then releases held resources and acknowledges
+the mailbox request. A failed reset still releases resources and gets no ack.
+The project resolves action names and state names to its own adapter. Example
+actions are declarations. They are not implemented RTL bindings. The plain
+MailboxDriver rejects phased events so it cannot bypass the state gate.
+
+Capture PhaseDriver receipts as `privilege_reset_phase`. The checker requires
+one complete receipt per pulse, ordered preparation/reset ticks and the actual
+in-flight state. It also requires the existing `privilege_reset` pulse/state
+capture and strict architectural comparison. Missing observations remain
+inconclusive. Native Spike CLI cannot drive these project reset phases, so
+compilation and driver fixture checks do not establish reset qualification.
+
+C1 matching uses ELF hash and requested input identity before checking result
+uniqueness. A result from another stimulus cannot hide a matching failure.
+Multiple results for the same input remain inconclusive.
