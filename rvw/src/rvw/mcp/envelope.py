@@ -22,6 +22,8 @@ def envelope(value, *, error=False):
         data["verdict"] = verdict
     evidence_status = data.get("verdict")
     default_status = evidence_status if evidence_status in VERDICTS - {"pass"} else "ok"
+    if data.get("status") == "ok" and default_status != "ok":
+        data["status"] = default_status
     data.setdefault("status", "error" if error or data.get("error") else default_status)
     data.setdefault("summary", str(data.get("error") or data.get("note") or "Command completed; inspect the returned evidence."))
     data.setdefault("artifacts", [])

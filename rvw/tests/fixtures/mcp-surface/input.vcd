@@ -1,0 +1,25 @@
+$date hand-written fixture $end
+$version rvw surface fixture $end
+$timescale 1ns $end
+$scope module TOP $end
+$var wire 1 ! clk $end
+$var wire 1 " valid $end
+$var wire 8 # value $end
+$upscope $end
+$enddefinitions $end
+#0
+0!
+0"
+b00000000 #
+#5
+1!
+1"
+b00000001 #
+#10
+0!
+#15
+1!
+b00000010 #
+#20
+0!
+0"

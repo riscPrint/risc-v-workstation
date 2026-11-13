@@ -68,6 +68,31 @@ A `long` tool returns `{"job_id": ...}` at once; the agent calls `job_status(job
 until `status` is `done` (result included), `failed` (error and log tail) or `cancelled`.
 Errors: raise `ToolError(message, data)`; the agent gets `{"error": ..., **data}` with `isError`.
 
+## Runtime audit (partial)
+
+| Item | Before fixes | After fixes and input corrections / limit |
+|---|---|---|
+| Inventory on 2026-11-13 | 334 tools | 338 at campaign end; 343 after integration; full audit incomplete |
+| Distinct tools called across both phases | 55 | 83 total; 260 tools in the integrated inventory remain uncalled |
+| Calls classified, one final call per tool | 55 | 82; 54 repeated tools plus 28 additional tools |
+| `ok` | 32 | 61 |
+| Honest non-pass | 15 | 21 |
+| Bad error | 8 | 0 in the called subset |
+| Crash/hang; wrong result | 0; 0 | 0; 0 in the called subset |
+| Median / worst call latency | 0.065 s / 61.122 s | 0.037 s / 7.250 s; includes job completion and result fetch |
+| Doctor budget | Status remained available at 60 s; cancellation completed | Not repeated; this was a budget stop with status, not an unresponsive server |
+| Load | One-minute load 55 to 155 | About 86 to 91 during the small formal calls |
+| CLI spot checks | Four metadata requests and one static ELF inspection matched | `agent_guide`, `csim_models`, `vip_list`, `regress_list`, `arch_inspect`; native RTL CLI parity remains untested |
+| Error paths repaired | Expected job errors, scenario backend, liveness result read, SVA inspection status, security adapter input | Regression tests reproduce the old failures; input failures retain a next action |
+| VexRiscv artifacts | Private core and smoke ELF prepared | Three 115 s build attempts expired; no completed C1, RVFI, wave, coverage, probe, VexRiscv database or Konata capture |
+| Small native formal inputs | Separate counter example on main | BMC, X-propagation, reset audit, equivalence and two-engine race called; bounds and timeout limits remain in results |
+| Native design queries | Not called in the first phase | 22 calls use a database built from `Uvm/pyuvm/parity.sv`; 21 returned data and PDG export named a missing artifact. This is not the VexRiscv database. |
+| Slow replay | No whole-surface runtime replay | 60 fixture calls over stdio; completed jobs fetched again; declared successful output paths checked; other tools remain outside this replay |
+| No-example input gaps | Not established | The 260 uncalled tools still need input review. Do not interpret them as verified absent-example gaps. |
+| Raw data | Outside the repository | External driver, argument rows, server logs, per-call JSONL and CLI comparison JSON; no generated evidence committed |
+| Repeat fixture replay | From the checkout root | `nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_mcp_surface_replay.py -q` |
+| Repeat external driver | Set private project, native paths and two-job limit first | `RVW_PROJECT="$PRIVATE_CORE" RVW_HOME="$CHECKOUT" RVW_VEX_LOCK=vex-mcpsmoke RVW_SBT_LOCK=sbt-mcpsmoke RISCVSIM_MAKE_JOBS=2 nice -n 15 "$CHECKOUT/rvw/.venv/bin/python" "$AUDIT_ROOT/driver.py"` |
+
 ## Code
 
 `spec.py` (`ToolSpec`, `ToolError`, `schema`; no SDK), `jobs.py` (`JobManager`, `Job`),

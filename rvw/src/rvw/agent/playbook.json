@@ -814,6 +814,7 @@
         "cov_generate",
         "cov_merge",
         "cov_mutate",
+        "cov_mutate_core",
         "cov_probe_goals",
         "cov_prove",
         "cov_rank",

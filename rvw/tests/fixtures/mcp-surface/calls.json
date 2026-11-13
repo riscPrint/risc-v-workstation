@@ -1,0 +1,318 @@
+{
+  "agent_guide": {
+    "arguments": {}
+  },
+  "csim_models": {
+    "arguments": {}
+  },
+  "debug_checks": {
+    "arguments": {}
+  },
+  "job_list": {
+    "arguments": {}
+  },
+  "memory_generate": {
+    "arguments": {}
+  },
+  "vip_list": {
+    "arguments": {}
+  },
+  "workloads_list": {
+    "arguments": {}
+  },
+  "regress_list": {
+    "arguments": {}
+  },
+  "regress_history": {
+    "arguments": {}
+  },
+  "regress_known_list": {
+    "arguments": {}
+  },
+  "sim_profile": {
+    "arguments": {}
+  },
+  "rvw_tools_search": {
+    "arguments": {
+      "keyword": "trace"
+    }
+  },
+  "rvw_tools_describe": {
+    "arguments": {
+      "name": "wave_info"
+    }
+  },
+  "rvw_tools_load": {
+    "arguments": {
+      "profile": "all"
+    }
+  },
+  "csr_describe": {
+    "arguments": {
+      "name": "mstatus"
+    }
+  },
+  "memory_directory": {
+    "arguments": {
+      "limit": 500
+    }
+  },
+  "query_info": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_hierarchy": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_component": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_regs": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_port_status": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_parameters": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_explain_module": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "query_where": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_drivers": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_loads": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_fanin": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_fanout": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_definition": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_references": {
+    "arguments": {
+      "db": "{db}",
+      "signal": "x"
+    }
+  },
+  "query_diff": {
+    "arguments": {
+      "old": "{db}",
+      "new": "{db}"
+    }
+  },
+  "query_hierarchy_diff": {
+    "arguments": {
+      "old": "{db}",
+      "new": "{db}"
+    }
+  },
+  "query_explain": {
+    "arguments": {
+      "old": "{db}",
+      "new": "{db}"
+    }
+  },
+  "query_path": {
+    "arguments": {
+      "db": "{db}",
+      "a": "io.a",
+      "b": "io.result"
+    }
+  },
+  "query_search": {
+    "arguments": {
+      "db": "{db}",
+      "pattern": "x"
+    }
+  },
+  "query_type": {
+    "arguments": {
+      "db": "{db}",
+      "expression": "x"
+    }
+  },
+  "query_export": {
+    "arguments": {
+      "db": "{db}",
+      "artifact": "pdg",
+      "out": "{out}/pdg.json"
+    }
+  },
+  "fault_sites": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "vip_buses": {
+    "arguments": {
+      "db": "{db}"
+    }
+  },
+  "wave_info": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd"
+    }
+  },
+  "wave_list": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd"
+    }
+  },
+  "wave_changes": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "regex": "value"
+    }
+  },
+  "wave_edges": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "regex": "value"
+    }
+  },
+  "wave_sample": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "regex": "value",
+      "at": "15"
+    }
+  },
+  "wave_value": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "name": "TOP.value",
+      "at": "15"
+    }
+  },
+  "wave_diff": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "other": "{fixture}/input.vcd"
+    }
+  },
+  "wave_cut": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "out": "{out}/cut.vcd",
+      "t0": "5",
+      "t1": "15"
+    }
+  },
+  "wave_session_save": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "out": "{out}/session.json"
+    }
+  },
+  "wave_session_open": {
+    "arguments": {
+      "session": "{out}/session.json"
+    }
+  },
+  "wave_index": {
+    "arguments": {
+      "wave": "{fixture}/input.vcd",
+      "out": "{out}/wave.rvwi",
+      "reader": "vcd"
+    }
+  },
+  "wave_index_verify": {
+    "arguments": {
+      "index": "{out}/wave.rvwi",
+      "source": "{fixture}/input.vcd"
+    }
+  },
+  "formal_template": {
+    "arguments": {
+      "kind": "rob",
+      "out": "{out}/template"
+    }
+  },
+  "formal_csr": {
+    "arguments": {
+      "model": "{checkout}/examples/vexriscv/csr.json",
+      "out": "{out}/csr"
+    }
+  },
+  "formal_scenario_plan": {
+    "arguments": {
+      "source": "{checkout}/examples/vexriscv/scenarios/scenario.json",
+      "backend": "baremetal",
+      "out": "{out}/scenario.json"
+    }
+  },
+  "formal_sva_lower": {
+    "arguments": {
+      "source": "{fixture}/counter.sv",
+      "out": "{out}/sva"
+    }
+  },
+  "soc_compose": {
+    "arguments": {
+      "source": "{checkout}/Uvm/examples/composed/compose.json",
+      "out": "{out}/soc"
+    }
+  },
+  "soc_export_ipxact": {
+    "arguments": {
+      "source": "{checkout}/Uvm/examples/composed/map.json",
+      "out": "{out}/ipxact"
+    }
+  },
+  "soc_new": {
+    "arguments": {
+      "name": "smoke",
+      "out": "{out}/soc_new"
+    }
+  },
+  "uvm_list": {
+    "arguments": {
+      "manifest": "{checkout}/Uvm/examples/ral/bench.json"
+    }
+  },
+  "sec_gadgets": {
+    "arguments": {
+      "out": "{out}/gadgets"
+    }
+  }
+}
