@@ -431,8 +431,24 @@ public:
     void reset_stats() { for (Cache* x : {l1i.get(), l1d.get(), l2.get(), llc.get()}) if (x) reset(*x); if (mmu) reset(*mmu); }
     void data(const Rec& r, uint64_t next_use) {
         uint64_t t = uint64_t(double(r.ord) * cpi);
-        if (mmu) t = mmu->translate(r.addr, r.pc, t);
-        l1d->access(r.addr, r.pc, t, r.kind == K_STORE, false, next_use, nullptr);
+        uint64_t address = r.addr, remaining = r.size;
+        uint64_t line_bytes = uint64_t(1) << l1d->line_bits;
+        if (remaining && remaining - 1 > UINT64_MAX - address)
+            throw Error("memory access exceeds address range");
+        if (l1d_opt && remaining > line_bytes - address % line_bytes)
+            throw Error("opt replacement does not support cross-line accesses");
+        while (remaining) {
+            uint64_t size = std::min(remaining, line_bytes - address % line_bytes);
+            uint64_t ready = t;
+            if (mmu) {
+                uint64_t page_bytes = uint64_t(1) << mmu->page_bits;
+                size = std::min(size, page_bytes - address % page_bytes);
+                ready = mmu->translate(address, r.pc, t);
+            }
+            l1d->access(address, r.pc, ready, r.kind == K_STORE, false, next_use, nullptr);
+            remaining -= size;
+            if (remaining) address += size;
+        }
     }
     // Instruction fetch lines of the block that ends at this branch (no front-end model).
     void fetch(const Rec& r) {
