@@ -5,9 +5,12 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"rvw/src"))
+from rvw.regress.dv_target import derive
 
 
-def generate(platform, out, checkout, python):
+def generate(platform, out, checkout, python, csrs=None):
     platform = Path(platform).resolve()
     data = json.loads(platform.read_text())
     xlen = data['xlen']
@@ -16,6 +19,7 @@ def generate(platform, out, checkout, python):
     base = int(data['reset_pc'], 0)
     ram = next(r for r in data['ram'] if int(r['base'], 0) == base)
     size = int(ram['size'], 0)
+    target = derive(platform, csrs) if csrs else None
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     runtime = out / 'runtime'
@@ -37,6 +41,9 @@ SECTIONS {{
                     abi='ilp32' if xlen == 32 else 'lp64',
                     compiler='riscv64-unknown-elf-gcc', linker='link.ld', runtime='runtime',
                     platform=os.path.relpath(platform, out), instructions=50, max_cycles=100000, timeout_s=180)
+    if target:
+        (out/'target.json').write_text(json.dumps(target, indent=2)+'\n')
+        settings['target_profile'] = 'target.json'
     (out/'random.toml').write_text(''.join(f'{k} = {json.dumps(v)}\n' for k, v in settings.items()))
     return settings
 
@@ -44,8 +51,9 @@ SECTIONS {{
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('platform', type=Path)
+    p.add_argument('--csrs', type=Path, help='project CSR selection from the shared catalog')
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--checkout', default='~/.cache/rvw/riscv-dv')
     p.add_argument('--python', default='~/.cache/rvw/riscv-dv-venv/bin/python')
     a = p.parse_args()
-    generate(a.platform, a.out, a.checkout, a.python)
+    generate(a.platform, a.out, a.checkout, a.python, a.csrs)

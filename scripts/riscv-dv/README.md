@@ -47,3 +47,52 @@ VexRiscv does not give that storage a defined reset value. Leaving it untouched
 can produce a real strict comparison mismatch against Spike's zero startup
 value. The software write defines an architectural input. It does not mask a
 comparison or change the observed CSR value.
+
+## Declared architectural target
+
+Pass `--csrs examples/CORE/csr.json` to `scripts/riscv-dv-project.py` to
+write `target.json` and select it with `target_profile` in the settings.
+The CSR file uses the shared CSR catalog. Only present project-selected CSRs
+enter the generator. Unknown reset state stays unknown in this metadata.
+The profile derives ISA groups, XLEN, privilege modes, alignment policy,
+PMP presence, reset address and RAM bounds. The launcher replaces architectural
+preset values before pygen imports its configuration. It does not change the
+pinned installation. The `imc` name remains an upstream module locator.
+A CSR selection can describe a subset. It does not certify a complete CSR set.
+This bare integer flow does not exercise all selected privilege modes or CSRs.
+
+## Reproduced initial-state and adapter errors
+
+`examples/vexriscv/rvw/random/uninitialized-scratch.S` is a four-instruction
+negative control. It leaves scratch state undefined. On the private VexRiscv
+sample it passed C1 at 17 cycles, then strict Spike comparison failed at order
+zero: `csr[0x340]` was `0xdba352fc` instead of zero. The normal runtime writes
+`mscratch` first. An arithmetic seed 48 run then passed C1 at 456 cycles with
+125 retirements and matched Spike without masks or synchronization.
+
+The adapter error also reproduced when the tools worktree changed from clean
+to dirty during launch. C1 passed, but its `source.tools_dirty` claim differed
+from the captured adapter identity. Keep the tools revision and worktree state
+fixed through a campaign. This check remains strict. Neither error is evidence
+of a new core difference. The original seed 48 record has the same mechanism
+with `source.tools_rev` instead of the dirty flag.
+
+Regenerate the negative control from the workstation root. Set `RVW_HOME`,
+`VEXRISCV`, `RVW_VEX_LOCK=vex-dv2`, `RVW_SBT_LOCK=sbt-dv2`, and
+`RISCVSIM_WORK` to private locations first:
+
+```sh
+python scripts/riscv-dv-project.py examples/vexriscv/rvw/platform.json \
+  --csrs examples/vexriscv/csr.json --out "$RUN_ROOT/profile"
+riscv64-unknown-elf-gcc -march=rv32im_zicsr_zifencei -mabi=ilp32 \
+  -mcmodel=medany -nostdlib -nostartfiles -static -T "$RUN_ROOT/profile/link.ld" \
+  examples/vexriscv/rvw/random/uninitialized-scratch.S -o "$RUN_ROOT/scratch.elf"
+nice -n 10 "$VEXRISCV/rvw/run.sh" run --elf "$RUN_ROOT/scratch.elf" \
+  --out "$RUN_ROOT/negative" --seed 49 --mem-latency 0 --rvfi-trace --json
+rvw cosim check --core vexriscv --elf "$RUN_ROOT/scratch.elf" \
+  --trace "$RUN_ROOT/negative/rvfi.jsonl" \
+  --platform examples/vexriscv/rvw/platform.json --strict --json
+```
+
+The last command must report mismatch. Raw runs stay outside the repository.
+This is a bounded native sample. It does not establish broad ISA coverage.

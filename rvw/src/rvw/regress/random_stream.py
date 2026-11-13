@@ -113,6 +113,8 @@ def execute_json(out, settings=None, seeds=1, seed_base=1, project=None, core=No
                        '--checkout', str(checkout), '--python', str(path('python')),
                        '--target', data['target'], '--seed', str(seed), '--instructions', str(instructions),
                        '--timeout', str(timeout), '--out', str(directory/'generated')]
+            if data.get('target_profile'):
+                command += ['--target-profile', str(path('target_profile'))]
             attempt['generate_argv'] = command
             with (directory/'generate.log').open('w') as log:
                 result = run_group(command, timeout=timeout+10, stdout=log, stderr=log)

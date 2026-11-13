@@ -144,3 +144,14 @@ becomes error if a requested hook did not attach or deliver a response.
 Speculative responses do not establish retirement. The hook does not change
 synthesis RTL or the normal path when disabled. It is not a live TestRIG
 transport implementation.
+
+## Project-derived pygen target
+
+Optional random setting `target_profile` names `rvw.dv-target/1` JSON relative
+to the settings file. `scripts/riscv-dv-project.py --csrs SELECTION` derives it
+from the platform ISA, XLEN, privilege modes, RAM and alignment policy and the
+shared-catalog CSR selection. The profile contains only present selected CSRs.
+It preserves project reset metadata. This does not assert CSR completeness.
+The launcher records its SHA-256 and replaces upstream architectural preset
+values before configuration import. Legacy settings without the profile keep
+the upstream preset. Neither path grants privilege or CSR coverage credit.
