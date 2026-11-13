@@ -1113,3 +1113,18 @@ See [the campaign interface](CAMPAIGN.md) for `rvw cov campaign`, its project
 settings, payload sampling, resume checks and unqualified CPU accounting.
 
 See [bounded sequence actions](SEQUENCES.md) for `cov actions` and the execution-loop sequence settings.
+
+### Scalar and vector encoded domains
+
+Pinned opcode plans now enumerate encoded scalar, FP and vector register fields,
+compressed register aliases, rounding fields, atomic ordering bits and bounded
+vector control fields. The raw field width comes from pinned `arg_lut.csv`.
+Rounding fields keep all eight encodings, including reserved encodings, in the
+denominator. These are encoding bins. Runtime legality still needs a reviewed
+semantic cross catalog. A trapped instruction does not earn a retired encoding hit.
+
+Integer operand classes cover I, M, A, Zicsr, Zba, Zbb, Zbc, Zbs and Zicond source
+families, including their RV32/RV64 files. FP and vector data values cannot use
+integer RVFI values. Their semantic bank/form declarations and complete
+version-bound legal/illegal/unavailable catalogs remain project-owned work.
+This extension does not establish complete ISA compliance coverage.

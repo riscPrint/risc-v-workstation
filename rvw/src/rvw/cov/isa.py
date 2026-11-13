@@ -116,8 +116,8 @@ def plan(manifest, root):
                 raise ValueError(f'unknown opcode argument {arg}')
             hi, lo = args[arg]
             # Encoded fields, not reconstructed signed immediates or FP values.
-            values = list(range(32)) if arg in ('rd', 'rs1', 'rs2', 'rs3') else (
-                [0, 1, 2, 3, 4, 7] if arg == 'rm' else None)
+            from .encoding_domains import domain
+            values = domain(arg,hi,lo)
             if values is None:
                 continue
             groups.append({'name': f"isa_{insn['name']}_{arg}", 'fields': [f'isa_{arg}'],
