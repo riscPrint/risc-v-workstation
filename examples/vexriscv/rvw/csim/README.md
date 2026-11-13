@@ -48,3 +48,26 @@ report `accuracy_status=inconclusive`. Their IPC errors are recorded.
 The model refuses `FENCE.I`. Build the throughput variant with
 `-DRVW_NO_FENCE` to replace that instruction with `nop`; run that ELF in
 RTL before calibration. Do not remove instructions from a captured trace.
+
+## Native negative probe test
+
+`../tests/test_probe_misplaced.py` copies this adapter into a temporary
+project. It moves only the copy's branch probe to decode. It then runs the
+`branches` ELF on native RTL and invokes `rvw probes check --validate` with
+the resulting C2 stream. The command must return 1 and name
+`branch/misplaced_decode_branch`. Core sources stay unchanged.
+
+Set `RVW_HOME` to this workstation and `VEXRISCV` to a private core copy.
+Use the native tool environment. Build `branches` with the example
+`rvw/build-tests.sh` setup first. Run the test with a temporary directory
+inside this worktree:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest \
+  examples/vexriscv/rvw/tests/test_probe_misplaced.py -q \
+  --basetemp examples/vexriscv/rvw/out/probe-negative-test
+```
+
+The test uses private locks and two native make jobs. Its process-group
+runner stops the full child tree on timeout. Without `VEXRISCV`, the test
+skips and does not establish native support.
