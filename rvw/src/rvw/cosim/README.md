@@ -90,3 +90,19 @@ C2/2 `hypervisor` snapshots for the existing comparator. The native tests run
 these programs on Spike. They establish reference readiness, not an H-capable
 DUT result. Two-stage stores, fault precedence and full H interrupt campaigns
 remain outside these small cases.
+
+### Pinned vector suite sources
+
+Use `rvw cosim vector-source --out /external/path/riscv-vector-tests --json`.
+The MCP tool is `cosim_vector_source`. Setup fetches CHIPS Alliance vector tests
+at `f76bff121dce91b6b23e1d37be77a5e44af914c3` and its test environment at
+`81721c126d7dd7335829948b4a19070546e465d6`. Both are ordinary external clones.
+No submodule is added to the workstation. Setup writes `rvw-source.json`.
+It does not build or run the suite.
+
+Follow [the vector suite guide](../regress/README.md#riscv-vector-tests) to build
+stage2 ELFs, register the project suite and compare captured C2/2 vector state.
+A passing self-check without vector-state comparison cannot pass that flow.
+The upstream tests derive expected values from Spike. Their self-check is not
+an independent second reference. Memory partial effects and permitted agnostic
+values remain outside the current comparator.

@@ -255,8 +255,8 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT] {dii,exchange,check,generate,live}
-    ...
+usage: rvw cosim [-h] [--project PROJECT]
+    {dii,exchange,vector-source,check,generate,live} ...
 ```
 
 ### `rvw cosim dii`
@@ -286,6 +286,13 @@ usage: rvw cosim dii serve [-h] [--listen LISTEN] --hook HOOK [--max-streams
 usage: rvw cosim exchange [-h] --source SOURCE --out OUT --from
     {c2,rvvi,spike} --to {c2,rvvi,spike,observations} [--json] [--project
     PROJECT]
+```
+
+### `rvw cosim vector-source`
+
+```text
+usage: rvw cosim vector-source [-h] --out OUT [--timeout TIMEOUT] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -2053,6 +2060,14 @@ Starts a background job: yes.
 Generate a C2 trace from Spike for an ELF, for reference fixtures or later comparison. Writes out (refused if out is the ELF or an existing file that is not a C2 trace) and returns reproduction metadata; runs as a cancellable job.
 
 Arguments: `project`, `elf` (required), `core`, `platform`, `out` (required), `max_instructions`.
+
+Starts a background job: yes.
+
+### `cosim_vector_source`
+
+Fetch pinned riscv-vector-tests and environment sources outside the workstation. No build or vector correctness claim.
+
+Arguments: `out` (required), `timeout`.
 
 Starts a background job: yes.
 

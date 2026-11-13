@@ -796,6 +796,15 @@ Spike processes a halt without executing a debug ROM instruction. Resume,
 debug ROM execution, triggers and automatic single-step transitions are not yet
 supported. Unsupported reference hooks fail; they cannot earn a match.
 
+### C2 vector source setup
+
+`rvw cosim vector-source` and MCP `cosim_vector_source` fetch pinned upstream
+vector tests outside the workstation checkout. `rvw.vector-source/1` records
+source and environment commits, output path, `built: false` and the vector-state
+comparison prerequisite. `prepared` means the source commits were checked out.
+It does not mean the tests were built or passed. A new destination is required.
+The existing strict `rvw regress vector` comparison remains the suite verdict.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
