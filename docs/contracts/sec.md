@@ -32,3 +32,11 @@ Isolation manifests declare isolation_kind, boundary, policy and contract_start_
 The reference contract starts at the first occurrence of that PC. The adapter
 must restrict microarchitectural samples to the same post-boundary window.
 Setup remains subject to complete per-case RTL/reference architectural agreement.
+
+## Security faults
+
+Security fault campaigns reuse rvw.fault-plan/1 and single-cycle flip events.
+Each C1 adapter run also writes security-observations.json with exactly the
+manifest's digital channel names. A harmless architectural trace requires equal
+security observations. A declared named detection can satisfy the detection
+check. Generic fail/assert statuses without declared names remain unresolved.
