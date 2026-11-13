@@ -985,3 +985,13 @@ The native reference reset retains reference RAM; the Spike CLI generator
 self-check still cannot drive external resets. Local, warm and cold use the
 same one-hart pin. Device reset, separate SoC reset domains, phase-gated bus
 transactions, debug reset and multi-hart repeated reset remain open.
+
+## Lazy FP context
+
+Use `kind: fp-state`, `modes: [M]`, `priv: m` and an ISA with F in the
+existing campaign description. Build with `rvw regress privilege build`.
+The slice tests FS off trapping, initial and clean readback, and clean to
+dirty after an FP register write. It supports RV32 and RV64. Example files
+are `examples/vexiiriscv/rvw/fpu/fs32.json` and `fs64.json`.
+A Spike reference pass is separate from a DUT pass and strict C2/2 match.
+Context save/restore and lower privilege modes remain outside this slice.
