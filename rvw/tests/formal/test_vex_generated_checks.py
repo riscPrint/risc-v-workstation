@@ -68,9 +68,9 @@ def test_vex_native_checks(tmp_path,programs,fault):
             'hpm.read:mcycle_machine','hpm.read:minstret_machine','hpm.read:mcycle_user','hpm.read:minstret_user'}
 
 
-def test_vex_isa_all_generated_checks_record_findings(tmp_path, programs):
+def test_vex_isa_checks_allow_legal_stream_cancellations(tmp_path, programs):
     root,model,_=programs
-    elfs=sorted(f for f in (root/'examples/vexriscv/rvw/out/isa').glob('rv32u[im]-p-*')
+    elfs=sorted(f for f in (Path(os.environ['VEXRISCV'])/'rvw/out/isa').glob('rv32u[im]-p-*')
                 if f.is_file() and f.suffix!='.dump' and f.name!='rv32ui-p-ma_data')
     if not elfs: pytest.skip('build aligned ISA ELFs with examples/vexriscv/rvw/build-tests.sh')
     out=tmp_path/'isa'
@@ -80,14 +80,19 @@ def test_vex_isa_all_generated_checks_record_findings(tmp_path, programs):
         cwd=root/'examples/vexriscv/rvw',env=dict(os.environ,RVW_HOME=str(root),RVW_CHECKS_ISA='1'),
         capture=True,timeout=240)
     (tmp_path/'native.log').write_text(r.stdout+r.stderr)
-    assert r.returncode==1 and not r.timed_out,r.stdout+r.stderr
+    assert r.returncode==0 and not r.timed_out,r.stdout+r.stderr
     from rvw.checks.qualification import summarize
     runs=sorted(out.glob('c1_*.json'))
     assert len(runs)==len(elfs)
     report=summarize(out/'checks.json',runs)
-    assert report['status']=='findings'
-    assert {k for k,v in report['counts'].items() if v['fired']}=={'stream.valid_hold'}
+    assert report['status']=='inconclusive'
+    assert not any(v['fired'] for v in report['counts'].values())
+    stream=report['counts']['stream.valid_hold']
+    assert stream['bound']==stream['generated']>0
+    assert stream['activated_simulation']>0
     for path in runs:
         run=json.loads(path.read_text())
-        assert run['status']=='fail' and run['details']['assertions_compiled'] is True
+        assert run['status']=='pass' and run['details']['assertions_compiled'] is True
+        assert run['details']['program_status']=='pass'
+        assert run['inconclusive']
         assert run['instret']>0

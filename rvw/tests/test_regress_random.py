@@ -70,6 +70,10 @@ compiler = "riscv64-unknown-elf-gcc"
     core = SimpleNamespace(default_config='test', configs=['test'], name='fixture')
     monkeypatch.setattr(random, 'load_config', lambda *a, **k: core)
     monkeypatch.setattr(random, 'source_for', lambda *a: None)
+    tools = dict(repo=str(tmp_path/'tools'), rev='a'*40, dirty=False, fingerprint='b'*64)
+    # A unit campaign needs stable tool inputs while other tests write their output.
+    monkeypatch.setattr('rvw.regress.source.describe',
+                        lambda _: SimpleNamespace(to_dict=lambda: dict(tools)))
     def command(argv, **kw):
         generation = '--checkout' in argv
         if generation and stage != 'generator':
@@ -110,6 +114,10 @@ compiler = "riscv64-unknown-elf-gcc"
         monkeypatch.setattr(random, 'run_group', no_work)
         resumed = random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48, resume=True)
         assert resumed['attempts'] == result['attempts']
+        tools['fingerprint'] = 'c'*64
+        with pytest.raises(ValueError, match='resume input changed: tools_source'):
+            random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48, resume=True)
+        tools['fingerprint'] = 'b'*64
         (tmp_path/'platform.json').write_text('{"changed":true}')
         with pytest.raises(ValueError, match='resume input changed: inputs'):
             random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48, resume=True)
