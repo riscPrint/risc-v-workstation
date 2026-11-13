@@ -471,3 +471,14 @@ the generated model hash and the existing equivalence `proof`. It copies the
 proof verdict without promotion. `rvw.memory-refinement-cases/1` is the small
 example ledger. Behavioral finite-memory refinement is distinct from a large
 RAM solver abstraction and from whole-core qualification.
+
+`rvw.nax-div-step/1` can also report `transaction_proved` with `--complete`
+at width 32. This requires the local reset/base/step/progress proof, public
+rising-edge clock checks, full-width input and response-state bindings, 48
+prefix bit-vector identities and six integer arithmetic lemmas. The
+`certificate` records the request/reset contract, proof chain and each lemma
+file hash with its expected unsat count. All obligations must close. A failed
+or unknown obligation cannot retain a successful complete-command exit.
+The unsigned quotient and remainder cover the first response, including
+zero divisors. Signed conversion, later requests and core writeback remain
+outside this helper certificate.

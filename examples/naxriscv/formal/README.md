@@ -31,3 +31,14 @@ Both eight-bit cases cover every operand pair in that configuration.
 They do not prove the core's 32-bit units. The ledger is `results.json`.
 Signed divide, remainder, high products, pipeline control, stalls and
 whole-core ISA integration were not checked.
+
+## Unsigned 32-bit transaction certificate
+
+The separate [compositional proof](../../../SpinalChecks/c2rtl/README-composition.md)
+now closes unrestricted unsigned quotient and remainder for the re-elaborated
+32-bit helper. Run `step-invariant.py --complete` with that export. It checks
+actual reset, base, active-step and progress logic, response and clock bindings,
+and all arithmetic and prefix lemmas. It covers the first response after one
+request with stable operands and no intervening reset or flush. Divide by zero
+is included. The CBMC timeouts above remain unchanged. Signed conversion and
+complete core integration remain outside this certificate.

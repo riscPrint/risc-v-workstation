@@ -63,15 +63,38 @@ miter. A one-bit remainder mutant produces a counterexample.
 quotient width bound and uniqueness of Euclidean quotient and remainder.
 These lemmas support the invariant `prefix = quotient * divisor + remainder`.
 
-The result remains `step_proved`. The checker does not yet construct and
-verify the complete transaction-level composition certificate. It therefore
-does not report unrestricted 32-bit DIVU proved. The earlier complete 32-bit
-CBMC run remains inconclusive. Zero-divisor transaction composition, signed
-conversion and plugin writeback also remain open.
+The default result remains `step_proved`. `--complete` additionally checks
+that every state cell uses the public rising-edge clock, that the input word
+ports retain all 32 bits, and that response valid, quotient and remainder
+expose the proved state. It verifies 48 fixed-counter bit-vector identities
+and six integer lemmas. The result is `transaction_proved` only if all these
+obligations close. Missing or unknown arithmetic results remain inconclusive.
+
+For a fixed request dividend A, let k be the current counter and let P be
+its processed prefix. The base checks establish remainder zero, the initial
+quotient and `numerator = A << (2*k)` without losing a nonzero skipped bit.
+For a nonzero divisor D, the invariant is `P = Q*D + R` with `0 <= R < D`.
+The prefix identities show that each step appends the next two bits of A.
+The native transition lemma preserves the invariant. The integer bounds show
+that the 34-bit conservation sums and the 32-bit quotient do not wrap.
+
+The counter advances on every active step and sets done at 15. It reaches
+completion within 16 active steps. At that point P equals A. Euclidean
+uniqueness gives the unsigned quotient and remainder. For D zero, the base
+sets all quotient bits and each step preserves them. The remainder follows
+the same bit-vector prefix recurrence and ends at A. This establishes the
+RISC-V unsigned divide-by-zero convention. Exact response-state bindings
+connect those results to the first response.
+
+The contract uses a public synchronous reset, one request, stable operands
+and no reset or flush before the first response. Later transactions, signed
+conversion, plugin writeback and complete core behavior are outside the
+certificate. This compositional proof is separate from the earlier complete
+CBMC transaction timeout, which remains inconclusive in its own ledger.
 
 ```sh
 rvw/.venv/bin/python examples/naxriscv/formal/step-invariant.py \
-  --rtl /path/to/export/DivRadix4.v --width 32 --out /path/to/new-step
+  --rtl /path/to/export/DivRadix4.v --width 32 --complete --out /path/to/new-step
 z3 -smt2 SpinalChecks/c2rtl/division-invariant.smt2
 ```
 

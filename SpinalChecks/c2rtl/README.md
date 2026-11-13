@@ -373,5 +373,6 @@ The [composition checks](README-composition.md) now close the unrestricted
 VexiiRiscv split-multiplier composition at RTL word-operator level. This trusts
 RTL `$mul` semantics. It is separate from the CBMC gate-level timeout.
 The actual NaxRiscv 32-bit divider base, active-step and progress lemmas close.
-Its complete transaction composition remains open. Negative result and
+The unsigned first-response transaction certificate also closes by compositional
+induction. It includes divide by zero. Signed conversion remains separate. Negative result and
 remainder mutants produce counterexamples. No complete-core pass follows.
