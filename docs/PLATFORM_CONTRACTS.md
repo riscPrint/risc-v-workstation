@@ -4366,6 +4366,23 @@ grant the architectural pass groups from `privilege check`.
 
 
 
+### Portable scenario plans and observations
+
+`rvw.scenario/1` declares resources, inputs, actions and backend timing bindings.
+Actions carry ordering/data dependencies, resource claims, literal argument
+constraints and expected outcomes. Planning emits `rvw.scenario-plan/1` with
+`status=planned`, logical `scenario_id`, backend `plan_id`, timing unit and
+scheduled actions. Operations do not execute during planning.
+
+`rvw.scenario-observation/1` binds supplied records to a plan id, backend and
+unit. Action records have operation, start/end, output, produced-data and
+consumed-input fields. `rvw.scenario-check/1` reports match, mismatch or
+inconclusive, comparison counts, missing evidence and failures. It checks the
+supplied outcomes, data dependencies, ordering and resource occupancy. A match
+does not infer execution provenance, hardware evidence or design acceptance.
+Missing outcomes and zero expected comparisons remain inconclusive. See
+`rvw/src/rvw/formal/SCENARIOS.md` for the finite contract and native PSS limits.
+
 ### Finite temporal SVA and parallel SBY observations
 
 `rvw formal sva-lower SOURCE --out FILE` lowers finite clocked SVA to native

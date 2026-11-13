@@ -820,7 +820,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -984,6 +984,26 @@ usage: rvw formal simulate [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ```text
 usage: rvw formal liveness [-h] --top TOP --out OUT [--run] [--timeout
     TIMEOUT] [--project PROJECT] source
+```
+
+### `rvw formal scenario`
+
+```text
+usage: rvw formal scenario [-h] [--project PROJECT] {plan,check} ...
+```
+
+### `rvw formal scenario plan`
+
+```text
+usage: rvw formal scenario plan [-h] --out OUT --backend BACKEND [--project
+    PROJECT] source
+```
+
+### `rvw formal scenario check`
+
+```text
+usage: rvw formal scenario check [-h] --out OUT --observed OBSERVED [--project
+    PROJECT] source
 ```
 
 ### `rvw formal sva-lower`
@@ -1418,8 +1438,10 @@ usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
 ### `rvw query build-hdl`
 
 ```text
-usage: rvw query build-hdl [-h] --top TOP --out OUT [--yosys YOSYS] [--timeout
-    TIMEOUT] [--json] [--project PROJECT] sources [sources ...]
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend {yosys,slang}]
+    [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std STD] [--slang SLANG]
+    [--yosys YOSYS] [--timeout TIMEOUT] [--json] [--project PROJECT] sources
+    [sources ...]
 ```
 
 ### `rvw query info`
@@ -3070,6 +3092,22 @@ Arguments: `model` (required), `compiler`, `out` (required).
 
 Starts a background job: yes.
 
+### `formal_scenario_check`
+
+Check supplied scenario outcomes and resource observations. Does not execute or infer hardware evidence.
+
+Arguments: `source` (required), `observed` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_scenario_plan`
+
+Plan deterministic resource-aware actions with backend-specific timing. Does not execute operations.
+
+Arguments: `source` (required), `backend` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `formal_security_pair`
 
 Prove declared digital two-copy observation contracts or initial-state independence.
@@ -3317,6 +3355,14 @@ Elaborate a design and write its design database (minutes for a CPU). Either `de
 Arguments: `project`, `out` (required), `design`, `entry`, `config`, `sbt_dir`, `test_classpath`, `options`.
 
 Starts a background job: yes.
+
+### `query_build_hdl`
+
+Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types.
+
+Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `timeout`.
+
+Starts a background job: no.
 
 ### `query_component`
 

@@ -150,6 +150,9 @@ def register(sub) -> None:
     live.add_argument("--timeout", type=float, default=60)
     live.set_defaults(func=liveness.run)
 
+    from .scenario import register as register_scenario
+    register_scenario(s)
+
     from . import temporal
     lowering = s.add_parser("sva-lower", help="lower finite temporal SVA to native Yosys assertions")
     lowering.add_argument("source")
