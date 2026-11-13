@@ -460,6 +460,16 @@ does not infer execution provenance, hardware evidence or design acceptance.
 Missing outcomes and zero expected comparisons remain inconclusive. See
 `rvw/src/rvw/formal/SCENARIOS.md` for the finite contract and native PSS limits.
 
+## Typed finite local captures
+
+Typed finite local captures add optional `local_variables` to each
+`rvw.sva-lowering/1` property row. The map records local names, widths and
+signedness. A named property can capture independent design expressions in one
+Boolean antecedent and use them in a finite consequent. History keeps overlapping
+attempts independent. Local-variable flow beyond this form, reassignment,
+initializers, slices and sampled uses of locals remain unsupported. The existing
+single-clock sampled history and finite deadline limits still apply.
+
 ## Finite temporal SVA and parallel SBY observations
 
 `rvw formal sva-lower SOURCE --out FILE` lowers finite clocked SVA to native

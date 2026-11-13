@@ -13,3 +13,4 @@
 | `$fell` | positive and negative native case | finite, single clock |
 | `$stable` | positive and negative native case | finite, single clock |
 | `$changed` | positive and negative native case | finite, single clock |
+| `local variables` | positive and negative native case | finite, single clock |
