@@ -124,17 +124,22 @@ def complete_assignment(assigns, conditions, width):
                         (x['parent_id'], x['component_id'], x['file_id'], x['line'], x['signal_id']) ==
                         (c['parent_id'], c['component_id'], c['file_id'], c['line'], c['signal_id'])]
             if c['kind'] in ('when', 'else'):
+                if not c['key']:
+                    continue
                 siblings = [x for x in siblings if x['kind'] in ('when', 'else') and x['key'] == c['key']]
-                exhaustive = {x['kind'] for x in siblings} == {'when', 'else'}
+                # Repeated scopes with the same predicate can assign different bits.
+                yes = set().union(*(covered.get(x['id'], set()) for x in siblings if x['kind'] == 'when'))
+                no = set().union(*(covered.get(x['id'], set()) for x in siblings if x['kind'] == 'else'))
+                common = yes & no
             else:
                 siblings = [x for x in siblings if x['kind'] in ('case', 'default')]
                 exhaustive = any(x['kind'] == 'default' for x in siblings)
-            if exhaustive and all(x['id'] in covered for x in siblings):
-                common = set.intersection(*(covered[x['id']] for x in siblings))
-                parent = covered.setdefault(c['parent_id'], set())
-                if not common <= parent:
-                    parent.update(common)
-                    changed = True
+                common = set.intersection(*(covered[x['id']] for x in siblings)) if (
+                    exhaustive and all(x['id'] in covered for x in siblings)) else set()
+            parent = covered.setdefault(c['parent_id'], set())
+            if not common <= parent:
+                parent.update(common)
+                changed = True
     return len(covered.get(None, ())) == width
 
 
