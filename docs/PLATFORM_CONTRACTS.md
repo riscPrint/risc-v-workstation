@@ -3695,6 +3695,20 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Guest pointer controls
+
+`guest_pointer_matrix = {"modes": [...]}` selects VS/VU HLV/HSV masking and
+HLVX exemption programs. Expanded scenarios have `guest_pointer` with
+`pmlen` (0/7/16), `privilege` (S/U) and optional `context` (M/U).
+The M-mode HLV/HSV accesses use
+henvcfg.PMM for VS and senvcfg.PMM for VU. PMM readback is required. Tagged
+HLVX addresses must fault regardless of PMM because HLVX is exempt from
+masking. Disabled HLV/HSV masking must fault. Enabled masking must recover
+correct data. Programs check exact cause, tval and PC on faults.
+U-mode explicit HLV/HSV accesses use hstatus.HUPMM with HU enabled and VU
+privilege. These scenarios use Ssnpm explicitly. Debug-state masking remains unsupported. Their independent nested-walk comparison remains
+inconclusive because the nested reference does not model pointer transforms.
+
 ### Independent memory-type effects
 
 A project `rvw.mmu-probes/1` declaration may also give `transactions` and
@@ -3821,8 +3835,8 @@ MPRV effective U privilege. Smmpm selects mseccfg.PMM for Bare M-mode data.
 Smnpm selects menvcfg.PMM with effective S privilege. Tagged instruction fetch
 under Ssnpm/Smnpm must fault even when data masking is enabled. The programs
 check PMM readback, exact trap cause/tval/PC and successful data values.
-Guest/debug interactions and nonstandard execution-environment controls remain
-unsupported. The backend refuses inconsistent controller declarations.
+The guest-pointer campaign below covers VS/VU HLV/HSV controls and HLVX
+exemption. Debug interactions and nonstandard environment controls remain unsupported. The backend refuses inconsistent controller declarations.
 
 ### Hypervisor MMU matrices
 

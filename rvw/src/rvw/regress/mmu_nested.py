@@ -36,7 +36,7 @@ def translate(*, vs_mode, vs_root, g_mode, g_root, va, access, memory, privilege
 
 def scenario_accesses(s, source=None):
     """Read declared table words from the generated source, never DUT data."""
-    if not s.get('guest') or s.get('guest_op', 'hlv.d') not in ('hlv.d', 'hlvx.wu', 'hsv.d') or 'ad_expect' in s or not {'A', 'D'} <= set(s['flags']):
+    if 'guest_pointer' in s or not s.get('guest') or s.get('guest_op', 'hlv.d') not in ('hlv.d', 'hlvx.wu', 'hsv.d') or 'ad_expect' in s or not {'A', 'D'} <= set(s['flags']):
         return []
     from .mmu import ROOT, number
     from .mmu_hypervisor import assembly

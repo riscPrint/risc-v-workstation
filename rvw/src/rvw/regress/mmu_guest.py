@@ -103,7 +103,7 @@ def validate(s):
         raise ValueError('invalid G-stage flags')
     if type(s.get('guest_fault', False)) is not bool or type(s.get('vmid', 0)) is not int or not 0 <= s.get('vmid', 0) < 16384:
         raise ValueError('invalid guest fault or VMID')
-    if s.keys() - {'id', 'mode', 'level', 'flags', 'access', 'expect', 'bins', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'guest_mode', 'guest_op', 'ad_mode', 'ad_expect', 'guest_trap', 'guest_switch'}:
+    if s.keys() - {'id', 'mode', 'level', 'flags', 'access', 'expect', 'bins', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'guest_mode', 'guest_op', 'ad_mode', 'ad_expect', 'guest_trap', 'guest_switch', 'guest_pointer'}:
         raise ValueError('unsupported guest scenario option')
 
     if s.get('guest_mode', 'sv39') not in ('sv39', 'sv48', 'sv57') or s.get('guest_op', 'hlv.d') not in ('hlv.d', 'hlvx.wu', 'hsv.d', 'vs-satp', 'vs-sfence', 'vs-sret'):
@@ -120,3 +120,7 @@ def validate(s):
         raise ValueError('guest_switch must be boolean')
     if s.get('guest_switch') and (s.get('guest_op', 'hlv.d') != 'hlv.d' or s['expect'] != 'success' or s.get('guest_trap', 'm') != 'm'):
         raise ValueError('guest_switch requires a successful M-mode HLV.D')
+
+    if 'guest_pointer' in s:
+        from .mmu_guest_pointer import validate as validate_pointer
+        validate_pointer(s)

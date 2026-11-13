@@ -45,7 +45,8 @@ observations and a declared platform memory-type policy are still required.
 VS page faults, G permission faults and mtval2. The G root uses Sv39x4
 alignment and width. Separate G leaves map VS tables and payload. This is
 not a complete hypervisor campaign. HFENCE scope effects, VMID reuse, nested
-A/D, other x4 modes, VS fetch and independent nested walk checks remain open.
+A/D, other x4 modes and nested checks are covered by the later matrix and
+capture checker. Full VS fetch and HFENCE scope campaigns remain open.
 
 `shootdown.json` contains three two-hart mailbox tests. The remote hart primes
 its translation. The local hart updates the PTE and publishes a request.
@@ -58,8 +59,8 @@ shared-TLB internals or hardware translation-request completion signals.
 check disabled masking and PMLEN 7/16 with a tagged data pointer. They use
 MPRV with effective S privilege and read menvcfg.PMM back before the access.
 See the [pointer-masking specification](https://docs.riscv.org/reference/isa/priv/zpm.html).
-Instruction-fetch, U-mode Ssnpm, M-mode Smmpm, debug and guest interactions
-remain open. The installed Spike must support Smnpm for this campaign.
+The later campaigns add tagged fetch, Ssnpm, Smmpm and guest data masking.
+Debug-state masking remains open. The installed Spike must support Smnpm for this campaign.
 
 `fault-walks.json` adds 84 short cases. Each mode tests an invalid PTE and a
 PMP-denied table read at every level, for loads, stores and fetches. Build these with
@@ -87,7 +88,8 @@ DUT captures, full HFENCE scopes and guest fetch matrices remain open.
 `pointer-privileges.json` adds 54 cases for Ssnpm, Smmpm, explicit Sspm/Supm
 controllers and tagged fetch faults. Select only the project's extensions.
 Sspm/Supm describe execution-environment capabilities. They need explicit
-controller choices in this backend. Guest and debug interactions remain open.
+controller choices in this backend. The guest-pointer campaign adds VS/VU
+hypervisor data masking. Debug interactions remain open.
 
 `random.json` creates eight deterministic programs with eight mappings and 32
 random accesses each. Select modes and seeds in the project. Bounds are 64
@@ -101,3 +103,8 @@ fields produce holes. Coverage observations do not establish correctness.
 of a 64 KiB NAPOT mapping, changes all PTEs and checks all new values after a
 global fence or 16 per-page fences. It makes no internal cache-granularity
 claim. The per-level fault matrix now includes instruction-fetch cases.
+
+`guest-pointer.json` contains 81 Ssnpm cases. It checks VS/VU HLV and HSV
+masking through henvcfg/senvcfg and confirms that HLVX remains unmasked.
+U-mode HUPMM controls are also checked. Debug-state masking remains open. The independent
+nested walker does not yet model pointer transforms and stays inconclusive.
