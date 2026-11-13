@@ -81,3 +81,17 @@ def test_signature_ignores_operands():
     one = campaign.signature(['remu x13, x6, x7'], ['cycles'])
     two = campaign.signature(['remu x9, x7, x6'], ['cycles'])
     assert one == two and one[0] == 'remu|cycles'
+
+
+def test_clean_campaign_needs_enough_eligible_pairs(tmp_path):
+    state = dict(signatures={}, statuses={'no_leak_observed': 1, 'ineligible': 7}, pairs=8, seconds=1.0,
+                 coverage=[], corpus=[], errors=[])
+    (tmp_path/'out').mkdir()
+    r = campaign.finish(tmp_path/'out', state, {}, 8, 600)
+    assert (r['status'], r['eligible_pairs'], r['min_eligible_pairs'], r['complete']) == ('inconclusive', 1, 4, False)
+    results = json.loads((tmp_path/'out/results.json').read_text())
+    assert results['tests'][0]['status'] == 'error' and 'minimum 4' in results['tests'][0]['inconclusive']
+    state['statuses'] = {'no_leak_observed': 4, 'ineligible': 4}
+    assert campaign.finish(tmp_path/'out', state, {}, 8, 600)['status'] == 'no_leak_observed'
+    state['statuses'] = {'no_leak_observed': 1, 'ineligible': 7}
+    assert campaign.finish(tmp_path/'out', state, {'min_eligible_fraction': 0.1}, 8, 600)['status'] == 'no_leak_observed'
