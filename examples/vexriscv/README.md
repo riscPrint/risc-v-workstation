@@ -333,3 +333,38 @@ execution. A fresh process port reports a stopped boundary before its first
 restore. Full replayed state at retirement 10 matched an independent reset run
 on 2026-11-13 with private core revision
 `a62c145aa042a5de874344e0a7683bd7c8c8c870`.
+
+## Arcilator and Verilator C1/C2 probe
+
+`rvw/engine-probe.py` runs captured `VexTop` RTL through the generic scalar
+model API. Generate the RTL with the normal private project build or use its
+captured `rtl/VexTop.v`. Keep it beside the run identity. Select the matching
+RV32IM smoke ELF. Install CIRCT with `scripts/install.sh --with-arcilator`.
+Set `RVW_CIRCT` to that install. Source the native Verilator environment.
+
+```sh
+scripts/with-lock.sh vex-simsrv nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/engine-probe.py --backend arcilator \
+  --rtl /path/to/VexTop.v --elf /path/to/smoke --out /path/to/new-arc --seed 7
+scripts/with-lock.sh vex-simsrv nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/engine-probe.py --backend verilator \
+  --rtl /path/to/VexTop.v --elf /path/to/smoke --out /path/to/new-verilator --seed 7
+cmp /path/to/new-arc/rvfi.jsonl /path/to/new-verilator/rvfi.jsonl
+```
+
+The adapter writes C1 `result.json` and C2 `rvfi.jsonl`. A retired `tohost`
+store determines pass or fail. Seeded bus-ready choices use the same sequence
+on each engine. Memory responses have one-cycle latency. The probe refuses
+traps and stores outside RAM. It has a cycle bound and no interrupt stimulus.
+Its port names and address map stay in this example. Build errors and missing
+tools return inconclusive. It does not replace the production Scala adapter.
+
+On 2026-11-13, CIRCT `firtool-1.163.0` and Verilator 5.049 ran the captured
+private VexRiscv RV32IM core at `a62c145aa042a5de874344e0a7683bd7c8c8c870`.
+Both passed 17 retired instructions in 81 cycles with seed 7. Complete C2
+files were byte-identical. This includes all observed fields, cycle numbers
+and the end event. RTL SHA-256 was
+`85901d3da9d45c0860bfa29a902d51fede05d2f7a53e85de805168e4f513a555`.
+The two short runs do not establish a speed change, ISA correctness or BOOM
+support. Medium/large BOOM, interrupts, CSR snapshots, waves, runtime effects
+and native checkpoint support remain outside this probe.
