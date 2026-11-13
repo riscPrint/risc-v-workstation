@@ -11,6 +11,11 @@ from collections import Counter
 from pathlib import Path
 
 from rvw.mcp.spec import ToolSpec, schema
+from rvw.mcp.lazy import functions
+
+cosim = functions("rvw.cosim.cli").execute_json
+owned_run_paths = functions("rvw.regress.run_evidence").owned_run_paths
+load_run = functions("rvw.results").load_run
 
 
 def _member(path, root):
@@ -70,10 +75,7 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=(), findings=
     events show asserted; the reference has no input pins) and `mmio` (DUT data for loads from
     the platform's declared MMIO regions; the reference has no device state). Anything else keeps the row
     inconclusive. A match row records its `synchronized` count."""
-    from rvw.cosim.cli import execute_json as cosim
     from rvw.regress.findings import load_findings, classify
-    from rvw.regress.run_evidence import owned_run_paths
-    from rvw.results import load_run
     allow = tuple(sorted(set(allow)))
     if set(allow) - set(ALLOW):
         raise ValueError(f'unknown --allow-sync kinds {sorted(set(allow) - set(ALLOW))}')
