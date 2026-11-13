@@ -15,7 +15,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "Spinal 1.15 Arbiter.scala:42-50 uses lambdaLock(_.isLast()) and forwards the selected current ChannelA payload to down.a. The BOOM MSHR producer can replace an unaccepted single-beat Acquire (mshrs.scala:719; Edges.scala:187-231). The receiver accepts only valid && ready; TileLink accepted-burst checks remain active.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:tile.dcache.metaReadArb.io_out",
@@ -23,7 +27,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "ChiselUtil.scala:95-113 selects current fixed-priority valid inputs each cycle. dcache.scala:487-498,526-572 drives transient LSU and replay requests; HellaCache.scala:267 samples metadata only on read.fire. A priority winner can change or vanish before acceptance.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "per_cycle_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:tile.dcache.mshrs.io_mem_acquire",
@@ -31,7 +39,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "mshrs.scala:719 and Edges.scala:187-231 reselect a lowest-index A offer until first acceptance. dcache.scala:831 connects it to TileLink A; Spinal Arbiter.scala:45-50 samples current payload on handshake. TL 1.8.1 section 4.1 permits pre-acceptance replacement; accepted-burst checks remain active.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:tile.dcache.mshrs.mshrs_0.rpq.branchKillableQueue.io_deq",
@@ -39,7 +51,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "util.scala:373-385,404-436 updates uop.br_mask during stalls and removes branch-killed entries. mshrs.scala:135-142,273-299,341-344 consumes the current valid replay or response with ready. The receiver needs the current branch mask, not a frozen mask.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "live_branch_mask_update",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Separate immutable payload fields from the live branch mask. A kill-only condition does not permit every legal mask update."
     },
     {
       "id": "stream.payload_stable:tile.dcache.mshrs.mshrs_0.rpq.io_deq",
@@ -47,7 +63,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "util.scala:373-385,404-436 updates uop.br_mask during stalls and removes branch-killed entries. mshrs.scala:135-142,273-299,341-344 consumes the current valid replay or response with ready. The receiver needs the current branch mask, not a frozen mask.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "live_branch_mask_update",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Separate immutable payload fields from the live branch mask. A kill-only condition does not permit every legal mask update."
     },
     {
       "id": "stream.payload_stable:tile.dcache.mshrs.mshrs_1.rpq.branchKillableQueue.io_deq",
@@ -55,7 +75,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "util.scala:373-385,404-436 updates uop.br_mask during stalls and removes branch-killed entries. mshrs.scala:135-142,273-299,341-344 consumes the current valid replay or response with ready. The receiver needs the current branch mask, not a frozen mask.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "live_branch_mask_update",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Separate immutable payload fields from the live branch mask. A kill-only condition does not permit every legal mask update."
     },
     {
       "id": "stream.payload_stable:tile.dcache.mshrs.mshrs_1.rpq.io_deq",
@@ -63,7 +87,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "util.scala:373-385,404-436 updates uop.br_mask during stalls and removes branch-killed entries. mshrs.scala:135-142,273-299,341-344 consumes the current valid replay or response with ready. The receiver needs the current branch mask, not a frozen mask.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "live_branch_mask_update",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Separate immutable payload fields from the live branch mask. A kill-only condition does not permit every legal mask update."
     },
     {
       "id": "stream.payload_stable:tile.lsu.io_dmem_req",
@@ -71,15 +99,23 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "lsu.scala:650-683,874-960 selects a fresh prioritized request each cycle; unaccepted stores rewind and loads retry. dcache.scala:526-536,627-655 samples the LSU request only on req.fire. No receiver keeps a stalled offer.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "per_cycle_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.valid_hold:tile.core.xcpt_pc_req",
       "explicit_binding": false,
-      "classification": "reviewed_cancellation",
+      "classification": "reviewed_offer_or_payload_change",
       "reason": "core.scala:559-575,605-607 derives the request from current decode exceptions, below flush and mispredict requests in ftq_arb. core.scala:541-542,620 removes consumed or redirected decode slots. The receiver reads the chosen FTQ address with ready=True; the canceled exception request owns no accepted work.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "per_cycle_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.valid_hold:tile.dcache.metaReadArb.io_out",
@@ -87,7 +123,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "ChiselUtil.scala:95-113 selects current fixed-priority valid inputs each cycle. dcache.scala:487-498,526-572 drives transient LSU and replay requests; HellaCache.scala:267 samples metadata only on read.fire. A priority winner can change or vanish before acceptance.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "per_cycle_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.valid_hold:tile.dcache.mshrs.mshrs_1.rpq.branchKillableQueue.io_deq",
@@ -95,7 +135,11 @@
       "classification": "reviewed_cancellation",
       "reason": "util.scala:377-385,404-436 removes branch-killed or flushed entries while stalled. mshrs.scala:135-142,273-299,341-344 consumes current valid entries on handshake. Killed speculative loads must not replay.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_branch_kill_or_flush",
+      "cancel_condition": "IsKilledByBranch(io.brupdate, False, head_uop) || (io.flush && flush_fn(head_uop))",
+      "cancel_sample": "previous; select out_uop or indexed head uop after elaboration",
+      "binding_validation": "NOT RUN",
+      "remaining": "Create an exact cancellation observation from the source guard. Verify its name and sample phase before changing channel settings."
     },
     {
       "id": "stream.valid_hold:tile.dcache.mshrs.mshrs_1.rpq.io_deq",
@@ -103,7 +147,11 @@
       "classification": "reviewed_cancellation",
       "reason": "util.scala:377-385,404-436 removes branch-killed or flushed entries while stalled. mshrs.scala:135-142,273-299,341-344 consumes current valid entries on handshake. Killed speculative loads must not replay.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_branch_kill_or_flush",
+      "cancel_condition": "IsKilledByBranch(io.brupdate, False, head_uop) || (io.flush && flush_fn(head_uop))",
+      "cancel_sample": "previous; select out_uop or indexed head uop after elaboration",
+      "binding_validation": "NOT RUN",
+      "remaining": "Create an exact cancellation observation from the source guard. Verify its name and sample phase before changing channel settings."
     },
     {
       "id": "stream.valid_hold:tile.frontend.f3.io_deq",
@@ -111,7 +159,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:318-328,533-539 drives f3_clear into Queue.flush; ChiselUtil.scala:39-42 clears occupancy without deq.fire. Receivers use valid with ready (frontend.scala:592-609); redirect discards the old fetch work (689-707,732-734).",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_queue_flush",
+      "cancel_condition": "io_flush",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Validate the existing binding name and timing in a BOOM elaboration. No native result is claimed."
     },
     {
       "id": "stream.valid_hold:tile.frontend.f3_bpd_queue.io_deq",
@@ -119,7 +171,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:318-328,533-539 drives f3_clear into Queue.flush; ChiselUtil.scala:39-42 clears occupancy without deq.fire. Receivers use valid with ready (frontend.scala:592-609); redirect discards the old fetch work (689-707,732-734).",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_queue_flush",
+      "cancel_condition": "io_flush",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Validate the existing binding name and timing in a BOOM elaboration. No native result is claimed."
     },
     {
       "id": "stream.valid_hold:tile.frontend.f4.io_deq",
@@ -127,7 +183,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:318-328,533-539 drives f4_clear into Queue.flush; ChiselUtil.scala:39-42 clears occupancy without deq.fire. Receivers use valid with ready (frontend.scala:592-609); redirect discards the old fetch work (689-707,732-734).",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_queue_flush",
+      "cancel_condition": "io_flush",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Validate the existing binding name and timing in a BOOM elaboration. No native result is claimed."
     },
     {
       "id": "stream.valid_hold:tile.frontend.f4_bpd_queue.io_deq",
@@ -135,7 +195,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:318-328,533-539 drives f3_clear into Queue.flush; ChiselUtil.scala:39-42 clears occupancy without deq.fire. Receivers use valid with ready (frontend.scala:592-609); redirect discards the old fetch work (689-707,732-734).",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_queue_flush",
+      "cancel_condition": "io_flush",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Validate the existing binding name and timing in a BOOM elaboration. No native result is claimed."
     },
     {
       "id": "stream.valid_hold:tile.frontend.io_cpu_fetchpacket",
@@ -143,7 +207,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:679,689-707,732-734 connects FetchBuffer.deq and clears it on redirect. fetch-buffer.scala:167,185-189 clears occupancy. core.scala:534-542 gates decode with fetchpacket.valid; redirected instructions must disappear even under decode stall.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_fetch_buffer_clear",
+      "cancel_condition": "FetchBuffer.io.clear",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Create an exact cancellation observation from the source guard. Verify its name and sample phase before changing channel settings."
     },
     {
       "id": "stream.valid_hold:tile.lsu.io_dmem_req",
@@ -151,7 +219,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "lsu.scala:650-683,874-960 selects a fresh prioritized request each cycle; unaccepted stores rewind and loads retry. dcache.scala:526-536,627-655 samples the LSU request only on req.fire. No receiver keeps a stalled offer.",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "per_cycle_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.valid_hold:tile.lsu.stq_execute_queue.io_deq",
@@ -159,7 +231,11 @@
       "classification": "reviewed_cancellation",
       "reason": "lsu.scala:554-564,917-920,1518-1524 flushes the execute queue on a blocked store or an older nack and rewinds stq_execute_head. ChiselUtil.scala:39-42 clears occupancy. The store scheduler uses queue valid and rebuilds from the store queue; dcache.scala:627-644 samples only accepted requests.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_queue_flush",
+      "cancel_condition": "io_flush",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Validate the existing binding name and timing in a BOOM elaboration. No native result is claimed."
     },
     {
       "id": "stream.valid_hold:tile.frontend.fb.io_deq",
@@ -167,7 +243,11 @@
       "classification": "reviewed_cancellation",
       "reason": "frontend.scala:679 directly connects FetchBuffer.deq to io.cpu.fetchpacket. fetch-buffer.scala:167,185-189 drops occupancy on io.clear from frontend.scala:689-707,732-734. core.scala:534-542 accepts only current valid decode work. The waveform valid/ready aliases are identical to io_cpu_fetchpacket; preserve the payload rule.",
       "generic_rule_explains": false,
-      "remaining": "Bind the exact cancellation signal and sample phase; retain strict checks outside cancellation."
+      "mechanism": "registered_fetch_buffer_clear",
+      "cancel_condition": "FetchBuffer.io.clear",
+      "cancel_sample": "previous",
+      "binding_validation": "NOT RUN",
+      "remaining": "Create an exact cancellation observation from the source guard. Verify its name and sample phase before changing channel settings."
     },
     {
       "id": "stream.payload_stable:io_mem_a",
@@ -175,7 +255,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "rocket TLArbiter re-arbitrates a single-beat A request until ready (legal TileLink; tilelink.burst_stable stays on)",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:arbiter.io_ups_0_a",
@@ -183,7 +267,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "same A-channel beat, at the Spinal tilelink.Arbiter input (tilelink.burst_stable stays on)",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:arbiter.a_arbiter.io_inputs_0",
@@ -191,7 +279,11 @@
       "classification": "reviewed_offer_or_payload_change",
       "reason": "same A-channel beat, inside the Spinal tilelink.Arbiter (tilelink.burst_stable stays on)",
       "generic_rule_explains": false,
-      "remaining": "Keep the exact channel disposition; cancellation alone does not explain this rule."
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     }
   ]
 }
