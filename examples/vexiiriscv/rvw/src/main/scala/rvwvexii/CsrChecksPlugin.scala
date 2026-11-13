@@ -18,7 +18,7 @@ class CsrChecksPlugin(observationFault: Boolean = false) extends FiberPlugin {
     val read = bus.read.valid && bus.read.moving && bus.read.address === 0x340
     val write = bus.write.valid && bus.write.moving && bus.write.address === 0x340
     val observed = if (observationFault) bus.read.data ^ B(1,32 bits) else bus.read.data
-    DeclaredChecks.rule("csr.read", "mscratch", "Accepted CSR reads equal the independently tracked last accepted software write") {
+    DeclaredChecks.rule("csr.read", "mscratch", "Accepted CSR reads equal the independently tracked last accepted software write", trigger = read && known) {
       read && known && observed =/= expected
     }
     when(write) { expected := bus.write.bits; known := True }

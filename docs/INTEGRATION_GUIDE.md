@@ -474,7 +474,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [SpinalWaves](../SpinalWaves/README.md) | Native checker evidence | Interactive Surfer rendering is separate; use the vendored limits. |
 | [SpinalTrace](../SpinalTrace/README.md) | Bounded VCD/Verilator validation | FST and other simulators remain unqualified. Source paths need the original sources. |
 | [SpinalBlocks](../SpinalBlocks/README.md) | Extraction/diagram tests | Native HDL diagram export in #688 did not run ELK/SVG rendering or VS Code. |
-| [SpinalChecks](../SpinalChecks/README.md) | Ran on bounded RTL fixtures | One GPIO register or a generated app is not whole-core or physical qualification. |
+| [SpinalChecks](../SpinalChecks/README.md) | Native core activation and bounded OoO fixture evidence | All bound core checks have measured triggers. Wider VexiiRiscv PC/divider findings stay open. Selected enum induction samples do not qualify a core. |
 | [SpinalKonata](../SpinalKonata/README.md) | Captured trace analysis | Standalone compiled-model capture is incomplete; retain its C1 error and null cache key. |
 | [RiscvSim](../RiscvSim/README.md) | Ran on RTL, selected adapters | Fault, DPI and SystemC checks have different scopes. BOOM small has bounded fault and DPI evidence. No all-option qualification follows. See the BOOM table below. |
 
@@ -1037,3 +1037,42 @@ never earns a complete match.
 See the [probe/timing report](../examples/boom/ooo/PROBE_OBSERVATION.md) and
 [fault/DPI evidence](../RiscvSim/boom/NATIVE_FAULT_DPI.json) for counts, hashes
 and limits. The checkpoint and plugin gaps are documented, not implemented.
+## Generated check activation and designer planning
+
+`rvw checks plan --project PROJECT --json` lists generator port or database
+requirements and current binding gaps. Add `--inventory CHECKS_JSON` to show
+native inserted IDs and signal roles. MCP tool: `checks_plan`.
+A generated or inserted check is not passing execution evidence.
+
+The new [activation campaign](../SpinalChecks/activation-results.json) is
+separate from the historical captures above. Every row keeps zero firings,
+trigger activation and formal outcomes separate.
+
+| Design | Programs | Bound | Simulation activated / no_activation / unmeasured | Fired IDs / events | Activated depth-4 bounded checks |
+|---|---:|---:|---|---:|---:|
+| VexRiscv | 49 | 57 | 37 / 20 / 0 | 0 / 0 | 2 |
+| VexiiRiscv | 51 | 25 | 7 / 18 / 0 | 2 / 139 | 1 |
+
+All programs reached software pass. The 49 wider VexiiRiscv ISA runs failed
+the check gate. PC payload stability and divider valid hold remain open
+findings. All 82 bound checks now have trigger instrumentation. An unreached
+bounded cover is `no_activation`, not passing evidence.
+
+One enum instance per core has a conditional SMTBMC prove result and a reached
+depth-8 trigger. The [record](../SpinalChecks/activated-induction-results.json)
+also retains each inconclusive engine-race result. Full input closure and
+whole-core proof remain unmeasured.
+
+The [small OoO fixture](../SpinalChecks/examples/ooo/README.md) has 11 checks.
+All seven bug variants fire in simulation and fail their selected depth-16
+formal check. Clean free-list conservation remains inconclusive at depth 16;
+it passes at depth 8. Other clean checks pass depth 16. Full template binding
+and direct perf, timing-model and fault adapters remain incomplete.
+NaxRiscv has six existing generation bindings. Free-list, multi-lane ROB,
+forwarding and full recovery bindings remain open.
+
+The [kind-level induction samples](../SpinalChecks/kind-induction-results.json)
+select one instance of each bound kind. Only the selected enum sample closes
+with activation on both cores. Unknown and no_activation results remain
+separate from passing conditional evidence. The CSR-read/state helper group
+has an ABC PDR pass, while its portfolio status stays inconclusive.
