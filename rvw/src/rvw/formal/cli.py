@@ -75,6 +75,12 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from . import csr
+    c = s.add_parser("csr", help="generate project CSR checks, assembly and coverage")
+    c.add_argument("--model", required=True)
+    c.add_argument("--out", required=True)
+    c.set_defaults(func=csr.run)
+
     from .security.cli import register as security_register
     security_register(s)
 

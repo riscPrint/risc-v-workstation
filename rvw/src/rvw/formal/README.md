@@ -1198,3 +1198,8 @@ This command accepts a single non-incremental SMT query exported by a solver
 flow. It does not convert arbitrary AIGER proofs or infer an induction query from
 an SBY PASS. Unsatisfiability applies to this query only. It does not authorize
 coverage exclusions. Use `rvw cov prove` for the existing guarded UNR export.
+`rvw formal csr --model project-csr.json --out generated` writes CSR formal
+monitors, optional project-bound SBY jobs, directed assembly and functional
+coverage groups. `formal_csr` exposes the same generator through MCP.
+See [the CSR format and limits](../../../../SpinalChecks/csr/README.md).
+Generated files carry no proof or compliance verdict.
