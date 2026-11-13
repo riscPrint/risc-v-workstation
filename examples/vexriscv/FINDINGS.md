@@ -1,8 +1,9 @@
 # VexRiscv findings
 
 Collected from the 2026-11-13 PR bodies and
-[the status audit](../../docs/status/2026-11-13/FINDINGS.md). This collection
-adds no RTL run. No upstream report was filed. Configurations differ below.
+[the status audit](../../docs/status/2026-11-13/FINDINGS.md).
+The external debug section below also records fresh RTL runs. No upstream
+report was filed. Configurations differ below.
 
 ## VEX-MTVAL-IRQ-001
 
@@ -132,3 +133,47 @@ passes with cause 2 at `0x80010008` before the third increment. Both checks
 match a fresh reference model. The complete run has 34 pass, 5 fail and
 45 unsupported or skipped checks. The five failures are the recorded target
 deviations above. The breakpoint-address fix changes no core RTL.
+
+The installed OpenOCD reports `0.12.0+dev-00519-gb6ee13720-dirty`.
+At its reported source revision,
+[`riscv013_get_register`](https://github.com/openocd-org/openocd/blob/b6ee13720/src/target/riscv/riscv-013.c#L4077)
+reads GDB PC from DPC without an offset. Its PC write path also writes DPC
+without an offset. The version string reports a dirty build; the source check
+is evidence for that reported revision, not an audit of local build changes.
+
+The corrected RTL interop run passes seven checks. Software and hardware
+breakpoints both stop at `0x80000014`. The execute-only profile reports the
+watchpoint as unsupported. No PC offset is applied to the halt result.
+
+The failed program-buffer reads in the earlier log were at `0x0`, `0x2`,
+and subsequent low addresses through `0x62`. All are outside the example's
+RAM (`0x80000000` through `0x80ffffff`). GDB attached with DPC at the suite's
+scratch idle loop, `0x800103fc`, outside the interop ELF's code. The interop
+setup now sets PC to the ELF entry after halting, before GDB attaches. The
+repeat has no failed low-address reads. Load, memory write/readback and both
+breakpoint checks pass. These observations do not indicate a failed access
+to the valid RAM region. They are separate from function-prologue skipping.
+
+Reproduce the supported interop checks with a running JTAG simulation:
+
+```sh
+rvw debug interop --profile rvw/debug/profile-jtag.toml --port "$port" \
+  --elf rvw/out/programs/debug-loop --timeout 600 --out "$RUN_ROOT/interop"
+```
+
+## VEX-DEBUG-006
+
+The new `dm.data_readback` check fails on `rv32im_dmi`: a direct write of
+DATA0=0x13579bdf does not read back without an intervening abstract command.
+This is a SpinalHDL Debug Module data-register deviation. DATA0 is R/W and
+has reset value 0 in the
+[Debug 0.13.2 register definition](https://github.com/riscv/riscv-debug-spec/blob/4e0bb0fc2d843473db2356623792c6b7603b94d4/xml/dm_registers.xml#L465).
+The final 85-check DMI run has 34 pass, 6 fail and 45 unsupported or skipped
+checks. Its other five failures are VEX-DEBUG-001 through VEX-DEBUG-005.
+The reset check now establishes a nonzero read value through a completed
+GPR read before clearing dmactive. It does not assume a direct write worked.
+
+```sh
+rvw debug suite --profile rvw/debug/profile-dmi.toml --check dm.data_readback \
+  --out "$RUN_ROOT/data-readback"
+```

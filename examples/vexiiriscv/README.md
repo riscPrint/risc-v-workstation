@@ -1089,3 +1089,48 @@ nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-re
 The gate measures both committed revisions. The table is a dated reference;
 it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
 to override the project policy explicitly. Keep all generated results out of Git.
+## Standard external debug
+
+The extra `rv32im_dmi` and `rv32im_jtag` configurations enable upstream
+privileged debug, two execute triggers and the SpinalHDL Debug Module.
+The default `rv32im` configuration stays unchanged. These configurations use
+the source pins from the Setup table. They do not edit upstream core sources.
+
+| Config | Endpoint |
+|---|---|
+| `rv32im_dmi` | Top-level DMI bus, served by generic RiscvSim `--debug dmi` |
+| `rv32im_jtag` | Top-level JTAG TAP, served by generic RiscvSim `--debug jtag:PORT` |
+
+Project profiles and signal bindings are in `rvw/debug/`. Use a private core
+copy. Set `RVW_VEX_LOCK` and `RVW_SBT_LOCK` to private lock names. Build the
+shared debug-loop ELF with `rvw/debug/build.sh`. Keep run data outside the
+repository. The DMI profile starts its configured simulation. The JTAG profile
+uses a caller-owned simulation and needs `--port`.
+
+```sh
+rvw/debug/build.sh
+rvw debug suite --profile rvw/debug/profile-dmi.toml --out "$RUN_ROOT/dmi-suite"
+rvw/run.sh run --config rv32im_jtag --elf rvw/out/programs/debug-loop \
+  --out "$RUN_ROOT/jtag" --seed 1 --mem-latency 0 --max-cycles 2000000000 \
+  --debug jtag:0 --debug-binding rvw/debug/binding.json
+```
+
+Run clients from a second terminal after `debug-port` appears:
+
+```sh
+port=$(cat "$RUN_ROOT/jtag/debug-port")
+rvw debug tap --port "$port" --out "$RUN_ROOT/tap"
+rvw debug suite --profile rvw/debug/profile-jtag.toml --port "$port" --out "$RUN_ROOT/jtag-suite"
+rvw debug interop --profile rvw/debug/profile-jtag.toml --port "$port" \
+  --elf rvw/out/programs/debug-loop --timeout 600 --out "$RUN_ROOT/interop"
+```
+
+The final 85-check DMI campaign on 2026-11-13 has 35 pass, 6 fail and
+44 unsupported or skipped checks. JTAG has 34 pass, 6 fail, 1 inconclusive
+and 44 unsupported or skipped checks. TAP passes 9 of 9 checks. Interop
+passes all 7 supported operations; the watchpoint is unsupported. See [the target findings](FINDINGS.md#external-debug-on-the-extra-rv32-configurations).
+The six failures are target deviations. The profile omits direct abstract
+CSR and FPR access, SBA, reset-halt, lower privilege modes, and load/store
+triggers. CSR access uses abstract postexec commands through the program
+buffer. `ndmreset` is exported but has no reset controller in this example.
+Its check is skipped with that reason. None of these omissions is a pass.

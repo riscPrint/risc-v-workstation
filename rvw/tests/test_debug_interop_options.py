@@ -26,3 +26,17 @@ def test_undeclared_unsupported_marker_cannot_hide_failure():
     summary = assess(output, 0, False, expect_reset=False)
     assert summary['status'] == 'fail'
     assert 'load' in summary['missing']
+
+
+def test_profile_without_transport_cannot_start_implicit_model(tmp_path):
+    from rvw.debug.api import interop_run
+    p = tmp_path / 'profile.toml'
+    p.write_text('schema = "rvw.debug-profile/1"\nname = "cpu"\n')
+    with pytest.raises(ValueError, match=r'no \[transport\]'):
+        interop_run(tmp_path / 'out', 'unused.elf', profile=p)
+
+
+def test_attach_starts_at_valid_elf_entry():
+    from rvw.debug.interop import openocd_config
+    config = openocd_config(1234, log='openocd.log', entry=0x80000000)
+    assert config.index('halt') < config.index('reg pc 0x80000000')

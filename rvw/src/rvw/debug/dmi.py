@@ -24,6 +24,7 @@ class SocketJtag:
 
     def __init__(self, host, port, timeout=5):
         self.sock = socket.create_connection((host, port), timeout=timeout)
+        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
     def clock(self, tms=0, tdi=0):
         low = (tms << 1) | tdi

@@ -2,7 +2,8 @@
 
 Collected from the 2026-11-13 PR bodies and
 [the status audit](../../docs/status/2026-11-13/FINDINGS.md). These are recorded
-results. This collection adds no new RTL run. No upstream report was filed.
+results. The external debug section below records a fresh RTL run. No upstream
+report was filed.
 
 ## VEXII-PTW-PMP-001
 
@@ -128,3 +129,47 @@ witness above is the same mechanism on RV64IMA.
 The `rv32imasu` TLB result in the same README (a secret-selected S-mode read of
 a user page is visible to U-mode through page walks) is a true positive of the
 channel but not a defect: RISC-V does not require a TLB flush on `sret`.
+
+## External debug on the extra RV32 configurations
+
+Fresh RTL runs on 2026-11-13 use VexiiRiscv `9f70315d`, SpinalHDL
+`de72faf6`, two execute triggers with equality matching and chaining.
+No upstream source was changed. The final 85-check DMI campaign has
+35 pass, 6 fail and 44 unsupported or skipped checks. JTAG has 34 pass,
+6 fail, 1 inconclusive and 44 unsupported or skipped checks.
+The busy-collision check is inconclusive because a JTAG scan cannot observe
+the short busy window. Every failing check passes on its fresh reference model.
+
+| Check | Component | Minimal operation | Observed deviation |
+|---|---|---|---|
+| `dm.dmactive_reset` | SpinalHDL Debug Module | Seed nonzero DATA0 through a completed GPR read; clear and set dmactive | DATA0 keeps its value instead of reset 0 |
+| `dm.data_readback` | SpinalHDL Debug Module | Write DATA0=0x13579bdf; read DATA0 without an abstract command | Reads 0 instead of the written value |
+| `abs.transfer_none` | SpinalHDL Debug Module | Access Register with transfer=0 and invalid aarsize | cmderr=2; aarsize must be ignored without transfer |
+| `dbg.debug_csr_hidden` | VexiiRiscv privileged unit | Clear mcause; execute M-mode csrr dpc, then ebreak | Stops at the following ebreak, mcause=0; DPC access must trap as illegal |
+| `trig.warl_action` | VexiiRiscv trigger unit | Write mcontrol action=1 with dmode=0; read back | action=1 retained although it requires dmode=1 |
+| `trig.dmode_protect` | VexiiRiscv trigger unit | Set dmode=1; execute an M-mode write to tdata1 | M-mode changes the debug-only trigger |
+
+Minimal isolated session against a running JTAG simulation:
+
+```sh
+rvw debug suite --profile rvw/debug/profile-jtag.toml --port "$port" \
+  --check dm.dmactive_reset --check dm.data_readback --check abs.transfer_none \
+  --check dbg.debug_csr_hidden --check trig.warl_action --check trig.dmode_protect \
+  --out "$RUN_ROOT/minimal-debug"
+```
+
+The DATA0 rules are its R/W access and reset value 0 in
+[Debug 0.13.2 register definitions](https://github.com/riscv/riscv-debug-spec/blob/4e0bb0fc2d843473db2356623792c6b7603b94d4/xml/dm_registers.xml#L465).
+The other rules are the Access Register aarsize rule, Debug Mode-only CSR
+access, and mcontrol action/dmode restrictions in the same specification.
+
+The initial 84-check DMI snapshot was superseded. Its reset check did not
+establish a nonzero read value, and its debug-CSR check could accept a later
+illegal word. The checks now verify their preconditions and bound the CSR
+access with ebreak. A stale-read mirror and a model that leaks DPC are both
+negative controls. A failed setup is never a reset pass.
+
+The interop campaign passes all seven supported operations. Watchpoints are
+unsupported in this execute-only profile. Sixteen single-step halts match
+Spike for all 32 GPRs, DPC, misa and mscratch. Physical JTAG and other core
+configurations are outside these results.

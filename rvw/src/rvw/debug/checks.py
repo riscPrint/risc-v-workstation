@@ -23,7 +23,12 @@ def bit(value, n):
 @check('dm.dmactive_reset')
 def dmactive_reset(ctx):
     """dmactive=0 resets the DM: dmcontrol and data registers return to reset values."""
-    ctx.write(DATA0, 0x5a5a5a5a)
+    ctx.require(ctx.p['datacount'] and 'gpr' in ctx.p['abstract'], 'needs DATA0 and an abstract GPR seed')
+    # A direct DATA0 write may itself be broken. Establish a known nonzero
+    # read value through a completed GPR read before testing reset.
+    ctx.set_gpr(S0, 0x5a5a5a5a)
+    expect(ctx.gpr(S0) == 0x5a5a5a5a, 'DATA0 seed GPR did not read back')
+    expect(ctx.read(DATA0) == 0x5a5a5a5a, 'DATA0 seed was not established before reset')
     ctx.write(DMCONTROL, 0)
     value = ctx.read(DMCONTROL)
     expect(value & 1 == 0, 'dmactive still reads 1 after writing 0')
@@ -31,6 +36,19 @@ def dmactive_reset(ctx):
     expect(ctx.read(DATA0) == 0, 'data0 kept its value across dmactive=0')
     expect((ctx.read(ABSTRACTCS) >> 8) & 7 == 0, 'cmderr not reset by dmactive=0')
     ctx.observe('data0_after_reset', 0)
+
+
+@check('dm.data_readback')
+def data_readback(ctx):
+    """A DATA0 write reads back without an intervening abstract command."""
+    ctx.require(ctx.p['datacount'] > 0, 'profile declares no data register')
+    values = []
+    for value in (0x13579bdf, 0xeca86420):
+        ctx.write(DATA0, value)
+        got = ctx.read(DATA0)
+        expect(got == value, f'DATA0 read 0x{got:x} after writing 0x{value:x}')
+        values.append(got)
+    ctx.observe('data0', values)
 
 
 @check('dm.version')
@@ -684,16 +702,20 @@ def stepie(ctx):
 def dret_illegal(ctx):
     """dret outside Debug Mode is an illegal instruction."""
     handler = ctx.install_handler()
-    cause, dpc = ctx.run([Asm.DRET])
-    expect(dpc == handler and ctx.csr(MCAUSE) == 2, f'mcause {ctx.csr(MCAUSE)}, expected 2')
+    ctx.set_csr(MCAUSE, 0)
+    cause, dpc = ctx.run([Asm.DRET, Asm.EBREAK])
+    expect(dpc == handler and ctx.csr(MCAUSE) == 2,
+           f'dpc 0x{dpc:x}, expected handler 0x{handler:x}; mcause {ctx.csr(MCAUSE)}, expected 2')
 
 
 @check('dbg.debug_csr_hidden')
 def debug_csr_hidden(ctx):
     """dpc is not accessible from M-mode outside Debug Mode."""
     handler = ctx.install_handler()
-    cause, dpc = ctx.run([Asm.csrrs(T0, DPC, 0)])
-    expect(dpc == handler and ctx.csr(MCAUSE) == 2, f'mcause {ctx.csr(MCAUSE)}, expected 2')
+    ctx.set_csr(MCAUSE, 0)
+    cause, dpc = ctx.run([Asm.csrrs(T0, DPC, 0), Asm.EBREAK])
+    expect(dpc == handler and ctx.csr(MCAUSE) == 2,
+           f'dpc 0x{dpc:x}, expected handler 0x{handler:x}; mcause {ctx.csr(MCAUSE)}, expected 2')
 
 
 # ============================================================================ triggers (#144)
@@ -975,9 +997,21 @@ def trig_chain(ctx):
     """Chained triggers fire only when every trigger in the chain matches."""
     types = _types(ctx)
     ctx.require(len(types) >= 2 and ctx.p['triggers']['chain'], 'needs two chainable triggers')
-    ctx.require({2, 3} <= set(ctx.p['triggers']['matches']), 'needs >= and < match types')
     kind = _addr_type(ctx)
     base = ctx.scratch
+    if not {2, 3} <= set(ctx.p['triggers']['matches']):
+        ctx.require(0 in ctx.p['triggers']['matches'], 'needs equality or range match types')
+        first = set_trigger(ctx, 0, mc(ctx, kind, execute=1, chain=1), base + 0x10)
+        expect(first & (1 << 11), 'declared chain bit was not kept')
+        set_trigger(ctx, 1, mc(ctx, kind, execute=1), base + 0x10)
+        inside = ctx.run(ADDI8 + [Asm.EBREAK])
+        set_trigger(ctx, 1, mc(ctx, kind, execute=1), base + 0x18)
+        never = ctx.run(ADDI8 + [Asm.EBREAK])
+        clear_triggers(ctx)
+        expect(inside == (2, base + 0x10), f'equal chain did not fire: {inside}')
+        expect(never == (1, base + 0x20), f'chain fired when only one slot matched: {never}')
+        ctx.observe('equality_chain', [inside[1] - base, never[1] - base])
+        return
     set_trigger(ctx, 0, mc(ctx, kind, execute=1, match=2, chain=1), base + 0x10)
     set_trigger(ctx, 1, mc(ctx, kind, execute=1, match=3), base + 0x18)
     inside = ctx.run(ADDI8 + [Asm.EBREAK])

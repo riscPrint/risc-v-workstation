@@ -1,0 +1,43 @@
+# Debug profile for the example's rv32im_jtag configuration: SpinalHDL DebugModule de72faf6 on VexiiRiscv.
+# Values come from spinal.lib.cpu.riscv.debug.DebugModule and the PrivilegedPlugin trigger subset.
+# They declare this example's options. They are not a VexiiRiscv default.
+schema = "rvw.debug-profile/1"
+name = "vexiiriscv-rv32im_jtag"
+version = "0.13.2"
+xlen = 32
+harts = 1
+hartsellen = 20          # hartsello and hartselhi are both implemented
+progbufsize = 2
+impebreak = true
+datacount = 1
+abstract = ["gpr"]          # Access Register for GPRs only; CSRs go through the program buffer
+aarsizes = [2]
+postincrement = false       # aarpostincrement gives cmderr 2
+hartreset = false
+resethaltreq = false
+modes = "M"
+reset_vector = 0x80000000
+scratch = 0x80010000
+memory = [{ base = 0x80000000, size = 0x1000000 }]
+
+[triggers]
+count = 2
+types = [2]                 # mcontrol, execute address match only
+accesses = ["execute"]      # tdata1 keeps only execute, m/s/u, dmode and action
+matches = [0]
+actions = [1]
+timing = [0]
+chain = true
+tcontrol = false
+unsupported_type = 2        # tdata1.type is read-only 2
+store_data_timing = "none"
+load_data_timing = "none"
+
+[skip]
+"dm.ndmreset" = "the example exports ndmreset but does not connect it to the core reset"
+
+# Start the simulation first (see the README), then pass its port with --port.
+[transport]
+kind = "remote_bitbang"
+port = 0
+irlen = 5
