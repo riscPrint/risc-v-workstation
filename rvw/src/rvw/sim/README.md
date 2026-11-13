@@ -427,3 +427,9 @@ physical time. Internal signal waves remain outside this API.
 See [the native comparison](../../../../examples/vexriscv/rvw/native-wide/README.md)
 for wide-register controls, complete whole-core C2 checks and measured engine
 throughput. Wave capture adds cost and is excluded from untraced comparisons.
+
+The native model takes a settled-port snapshot after evaluation by default.
+Input writes invalidate it. `port_snapshot=False` selects direct reads for a
+paired control. See [the native speed sample](../../../../examples/vexriscv/rvw/native-speed/README.md)
+for the profile, alternating controls and the separate 49-test persistent-JVM
+comparison. Neither measurement qualifies a general core speed profile.

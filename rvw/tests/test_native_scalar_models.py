@@ -25,7 +25,10 @@ def test_two_native_engines_observe_seeded_register_updates(tmp_path):
             expected=0;observed=[];rng=random.Random(17)
             for _ in range(40):
                 valid=rng.randrange(2);data=rng.randrange(1<<32)
-                m.write('valid',valid);m.write('data',data);m.eval()
+                m.write('valid',valid);m.write('data',data)
+                assert m.read('data')==data
+                assert m.read('value')==expected
+                m.eval()
                 m.write('clk',1);m.eval();m.write('clk',0);m.eval()
                 expected=(expected+valid*data)&0xffffffff
                 observed.append(m.read('value'))

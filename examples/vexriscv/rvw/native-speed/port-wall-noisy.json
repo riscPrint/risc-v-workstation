@@ -1,0 +1,113 @@
+{
+  "schema": "rvw.native-port-speed/1",
+  "rows": [
+    {
+      "repeat": 0,
+      "warmup": true,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 10.527357792016119,
+      "instructions_per_s": 1425.5238870461128,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 0,
+      "warmup": true,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.2125454579945654,
+      "instructions_per_s": 4671.373587151708,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.32942095794715,
+      "instructions_per_s": 6442.373564469527,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.050023457966745,
+      "instructions_per_s": 7320.404038149031,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.387940083979629,
+      "instructions_per_s": 4429.535242067237,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.105023083044216,
+      "instructions_per_s": 13580.711779031239,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 3,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.060160250053741,
+      "instructions_per_s": 7284.384794633587,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 3,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.4454939999850467,
+      "instructions_per_s": 10381.917877317543,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 4,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.1812097920337692,
+      "instructions_per_s": 12704.771075560953,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 4,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.0805737080518156,
+      "instructions_per_s": 13887.992913557346,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    }
+  ],
+  "median_instructions_per_s": {
+    "False": 8851.160957733287,
+    "True": 10432.548286832412
+  },
+  "snapshot_over_control": 1.1786643963035677,
+  "rtl_sha256": "361c0dc2afa470a76628b0d3e2620a8d6f03ba95d26034062d7e4eaafa67b0e8",
+  "elf_sha256": "df90843cf1e3628d7ba037798989c4dda604a331aaed1002406b23f5c0dc8260",
+  "scope": "Verilator Python adapter execution plus C2 write/validation; compilation excluded"
+}

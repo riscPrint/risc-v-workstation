@@ -29,7 +29,7 @@ def run(args):
         allowed=0x888 | (0x200 if 'externalInterruptS' in ports else 0)
         if any(levels & ~allowed for cycle,levels in schedule):raise ValueError('IRQ schedule requests an absent input')
     allow_traps=getattr(args,'allow_traps',False) or schedule is not None
-    model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'),profile=getattr(args,'build_profile',None),wave=args.out/'wave.vcd' if getattr(args,'wave',False) else None)
+    model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'),profile=getattr(args,'build_profile',None),wave=args.out/'wave.vcd' if getattr(args,'wave',False) else None,port_snapshot=not getattr(args,'no_port_snapshot',False))
     if model.profile and model.profile.request.get('compiler_pgo')=='generate':
         if model.profile.record['binding']['training_elf_sha256']!=hashlib.sha256(args.elf.read_bytes()).hexdigest():
             raise ValueError('training ELF differs from captured compiler profile request')
@@ -49,6 +49,7 @@ def run(args):
             dBus_cmd_ready=rng.randrange(2),dBus_rsp_ready=int(dp is not None),
             dBus_rsp_data=dp[0] if dp else 0,dBus_rsp_error=int(dp[1]) if dp else 0)
     execution_start=time.monotonic()
+    execution_cpu_start=time.process_time()
     count=0;status='timeout';cycle=0;handler=False
     try:
         for name,(direction,width) in ports.items():
@@ -105,9 +106,9 @@ def run(args):
             elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),seed=args.seed,max_cycles=args.max_cycles,
             mem_latency=1,status=status,fail_code=None if status=='pass' else 1,cycles=cycle,instret=count,
             wall_s=time.monotonic()-start,source={},tools={},artifacts=dict(rvfi_trace='rvfi.jsonl', **({'wave':'wave.vcd'} if getattr(args,'wave',False) else {})),
-            details={'c2_schema_validated':True,'execution_s':time.monotonic()-execution_start,'model_compile_s':model.build_seconds,
+            details={'c2_schema_validated':True,'execution_s':time.monotonic()-execution_start,'execution_cpu_s':time.process_time()-execution_cpu_start,'model_compile_s':model.build_seconds,
                      'child_peak_rss_bytes':model.child_peak_rss_bytes,'native_profile':model.profile.record if model.profile else None,
-                     'irq_schedule':irq_text,'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
+                     'port_snapshot':model.port_snapshot,'irq_schedule':irq_text,'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
                      'scope':'bounded seeded-ready, fixed-response-latency probe; optional project IRQ schedule; public-port eval-step waves only; no CSR snapshot or C4 acceptance'})
         save_run(RunResult.from_dict(result),args.out/'result.json')
         print(json.dumps(result))
@@ -124,6 +125,7 @@ def main():
  p.add_argument('--irq-schedule')
  p.add_argument('--allow-traps',action='store_true')
  p.add_argument('--wave',action='store_true')
+ p.add_argument('--no-port-snapshot',action='store_true')
  p.add_argument('--rtl',type=Path,required=True);p.add_argument('--elf',type=Path,required=True)
  p.add_argument('--out',type=Path,required=True);p.add_argument('--seed',type=int,default=1)
  p.add_argument('--max-cycles',type=int,default=5000);p.add_argument('--rvfi-trace',action='store_true');p.add_argument('--json',action='store_true')
