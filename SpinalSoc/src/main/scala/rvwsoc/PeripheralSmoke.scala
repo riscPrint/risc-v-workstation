@@ -49,8 +49,18 @@ object PeripheralSmoke extends App {
     dut.io.sources #= 1
     dut.clockDomain.waitSampling(3)
     assert(dut.io.irq.toBoolean)
-    assert(access(0x200004,false)==1)
+    // Threshold masks notification, but software can still poll by claiming.
+    access(0x200000,true,1)
     assert(!dut.io.irq.toBoolean)
+    assert(access(0x200004,false)==1)
+    access(0x200000,true,0)
+    assert(!dut.io.irq.toBoolean)
+    dut.clockDomain.waitSampling(3)
+    assert(!dut.io.irq.toBoolean)
+    // Completion from a context with the source disabled must be ignored.
+    access(0x2000,true,0)
+    access(0x200004,true,1)
+    access(0x2000,true,2)
     dut.clockDomain.waitSampling(3)
     assert(!dut.io.irq.toBoolean)
     access(0x200004,true,1)
@@ -62,5 +72,5 @@ object PeripheralSmoke extends App {
     dut.clockDomain.waitSampling(3)
     assert(!dut.io.irq.toBoolean)
   }
-  println("PERIPHERAL_SMOKE_PASS seed=17 clint=4 plic=6")
+  println("PERIPHERAL_SMOKE_PASS seed=17 clint=4 plic=8")
 }
